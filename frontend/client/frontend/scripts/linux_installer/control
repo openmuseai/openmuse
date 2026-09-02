@@ -1,8 +1,0 @@
-Package: dsh-office
-Version: [CHANGE_THIS]
-Depends: libkeybinder-3.0-0
-Architecture: amd64
-Essential: no
-Priority: optional
-Maintainer: OpenMuseAI
-Description: AI-native office suite built on DSH (local-first)

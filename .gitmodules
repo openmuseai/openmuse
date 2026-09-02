@@ -1,0 +1,4 @@
+[submodule "frontend/client"]
+	path = frontend/client
+	url = https://github.com/openmuseai/dsh-office-client.git
+	branch = main
