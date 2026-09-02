@@ -16,12 +16,12 @@ This public repository contains two independently runnable trees:
 | [`middlewares/`](middlewares/README.md) | DSH plugins, local sidecar, and container image |
 
 - **License**: [AGPL-3.0](LICENSE) (derived from [AppFlowy-IO](https://github.com/AppFlowy-IO); attribution in [NOTICE](NOTICE))
-- **Source**: [github.com/openmuseai/dsh-office](https://github.com/openmuseai/dsh-office)
+- **Source**: [github.com/openmuseai/openmuse](https://github.com/openmuseai/openmuse)
 
 <p align="center">
-  <a href="https://github.com/openmuseai/dsh-office/releases"><b>Releases</b></a> •
-  <a href="https://github.com/openmuseai/dsh-office/discussions"><b>Discussions</b></a> •
-  <a href="https://github.com/openmuseai/dsh-office/issues"><b>Issues</b></a>
+  <a href="https://github.com/openmuseai/openmuse/releases"><b>Releases</b></a> •
+  <a href="https://github.com/openmuseai/openmuse/discussions"><b>Discussions</b></a> •
+  <a href="https://github.com/openmuseai/openmuse/issues"><b>Issues</b></a>
 </p>
 
 ## Quick start

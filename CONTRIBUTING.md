@@ -1,6 +1,6 @@
 # Contributing to DSH Office
 
-Thanks for contributing to **DSH Office** ([openmuseai/dsh-office](https://github.com/openmuseai/dsh-office)).
+Thanks for contributing to **DSH Office** ([openmuseai/openmuse](https://github.com/openmuseai/openmuse)).
 
 This project is derived from the AppFlowy ecosystem (AGPL-3.0). By submitting a change you agree to license it under **AGPL-3.0-only** (SPDX).
 

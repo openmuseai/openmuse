@@ -6,7 +6,7 @@ DSH Office is an open-source project. If you discover a security
 vulnerability, please report it privately through GitHub Security
 Advisories:
 
-- https://github.com/openmuseai/dsh-office/security/advisories/new
+- https://github.com/openmuseai/openmuse/security/advisories/new
 
 Please do **not** disclose vulnerabilities publicly before we have had
 a reasonable opportunity to respond.
