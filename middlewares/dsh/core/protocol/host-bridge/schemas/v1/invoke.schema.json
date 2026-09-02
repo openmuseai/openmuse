@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/bridge/v1/invoke.schema.json",
+  "title": "Muse Bridge v1 invocation payloads",
+  "$defs": {
+    "request": {
+      "type": "object",
+      "required": ["traceId", "bindingId", "operationId", "input", "deadlineAt", "cancellationId"],
+      "properties": {
+        "traceId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "bindingId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "operationId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/namespacedName" },
+        "input": {},
+        "deadlineAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" },
+        "cancellationId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "idempotencyKey": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "grantId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "clientCorrelation": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/clientCorrelation" }
+      },
+      "additionalProperties": false
+    },
+    "response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["ok", "value", "receipt"],
+          "properties": {
+            "ok": { "const": true },
+            "value": {},
+            "receipt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/receipt" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["ok", "error"],
+          "properties": {
+            "ok": { "const": false },
+            "error": { "$ref": "https://muse.dev/schemas/bridge/v1/error.schema.json#/$defs/error" },
+            "receipt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/receipt" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

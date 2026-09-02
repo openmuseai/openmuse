@@ -1,0 +1,11 @@
+{
+  "name": "@muse/ecosystem-sdk", "version": "0.2.0", "private": true, "type": "module", "packageManager": "pnpm@10.34.1",
+  "bin": { "muse-sdk": "./bin/muse-sdk.mjs" },
+  "exports": { ".": { "types": "./dist/src/index.d.ts", "import": "./dist/src/index.js" } },
+  "scripts": { "build": "tsc -p tsconfig.build.json", "typecheck": "tsc --noEmit -p tsconfig.json", "test": "vitest run", "check": "pnpm typecheck && pnpm test && pnpm build" },
+  "dependencies": {
+    "@muse/plugin-graph": "link:../plugin-graph", "@muse/plugin-security": "link:../plugin-security",
+    "@muse/plugin-appflowy-database": "link:../../plugins/appflowy-database"
+  },
+  "devDependencies": { "@types/node": "26.2.0", "typescript": "7.0.2", "vitest": "4.1.11" }
+}

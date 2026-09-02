@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/bridge/v1/common.schema.json",
+  "title": "Muse Bridge v1 common values",
+  "$defs": {
+    "opaqueId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._~-]+$"
+    },
+    "namespacedName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$"
+    },
+    "sha256Digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "timestampMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "boundedMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2147483647
+    },
+    "versionRange": {
+      "type": "object",
+      "required": ["major", "minMinor", "maxMinor"],
+      "properties": {
+        "major": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "minMinor": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "maxMinor": { "type": "integer", "minimum": 0, "maximum": 65535 }
+      },
+      "additionalProperties": false
+    },
+    "negotiatedVersion": {
+      "type": "object",
+      "required": ["major", "minor"],
+      "properties": {
+        "major": { "const": 1 },
+        "minor": { "type": "integer", "minimum": 0, "maximum": 65535 }
+      },
+      "additionalProperties": false
+    },
+    "limits": {
+      "type": "object",
+      "required": [
+        "maxMessageBytes",
+        "maxInlineSchemaBytes",
+        "maxResolvedSchemaBytes",
+        "maxDiscoverPageBytes",
+        "maxDiscoverDescriptors",
+        "maxInputBytes",
+        "maxOutputBytes",
+        "maxErrorDetailsBytes",
+        "maxEventPayloadBytes",
+        "maxJsonDepth",
+        "maxContainerChildren"
+      ],
+      "properties": {
+        "maxMessageBytes": { "type": "integer", "minimum": 1024, "maximum": 2097152 },
+        "maxInlineSchemaBytes": { "type": "integer", "minimum": 256, "maximum": 65536 },
+        "maxResolvedSchemaBytes": { "type": "integer", "minimum": 256, "maximum": 1048576 },
+        "maxDiscoverPageBytes": { "type": "integer", "minimum": 1024, "maximum": 524288 },
+        "maxDiscoverDescriptors": { "type": "integer", "minimum": 1, "maximum": 256 },
+        "maxInputBytes": { "type": "integer", "minimum": 256, "maximum": 262144 },
+        "maxOutputBytes": { "type": "integer", "minimum": 256, "maximum": 1048576 },
+        "maxErrorDetailsBytes": { "type": "integer", "minimum": 128, "maximum": 32768 },
+        "maxEventPayloadBytes": { "type": "integer", "minimum": 256, "maximum": 262144 },
+        "maxJsonDepth": { "type": "integer", "minimum": 4, "maximum": 64 },
+        "maxContainerChildren": { "type": "integer", "minimum": 16, "maximum": 10000 }
+      },
+      "additionalProperties": false
+    },
+    "schemaResource": {
+      "type": "object",
+      "required": ["sha256", "byteLength", "draft"],
+      "properties": {
+        "sha256": { "$ref": "#/$defs/sha256Digest" },
+        "byteLength": { "type": "integer", "minimum": 2, "maximum": 1048576 },
+        "draft": { "const": "2020-12" },
+        "inline": {},
+        "uri": { "type": "string", "format": "uri", "maxLength": 2048 }
+      },
+      "anyOf": [
+        { "required": ["inline"] },
+        { "required": ["uri"] }
+      ],
+      "additionalProperties": false
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["kind", "instanceId"],
+      "properties": {
+        "kind": { "enum": ["desktop", "mobile"] },
+        "instanceId": { "$ref": "#/$defs/opaqueId" }
+      },
+      "additionalProperties": false
+    },
+    "clientCorrelation": {
+      "type": "object",
+      "properties": {
+        "sessionRef": { "$ref": "#/$defs/opaqueId" },
+        "turnRef": { "$ref": "#/$defs/opaqueId" },
+        "stepRef": { "$ref": "#/$defs/opaqueId" },
+        "toolCallRef": { "$ref": "#/$defs/opaqueId" }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "scopeHint": {
+      "type": "object",
+      "required": ["refs"],
+      "properties": {
+        "refs": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 16,
+          "propertyNames": { "$ref": "#/$defs/namespacedName" },
+          "additionalProperties": { "$ref": "#/$defs/opaqueId" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "effect": {
+      "enum": ["read", "local_write", "sync_write", "external_side_effect"]
+    },
+    "policyDecision": {
+      "enum": ["allow", "deny", "approval_required"]
+    },
+    "commandStatus": {
+      "enum": [
+        "accepted",
+        "running",
+        "applied_local",
+        "sync_pending",
+        "synced",
+        "rejected",
+        "failed",
+        "cancelled",
+        "unknown"
+      ]
+    },
+    "receipt": {
+      "type": "object",
+      "required": [
+        "receiptId",
+        "requestId",
+        "traceId",
+        "hostSessionId",
+        "hostGeneration",
+        "bindingId",
+        "operationId",
+        "policyDecision",
+        "status",
+        "issuedAt"
+      ],
+      "properties": {
+        "receiptId": { "$ref": "#/$defs/opaqueId" },
+        "requestId": { "$ref": "#/$defs/opaqueId" },
+        "traceId": { "$ref": "#/$defs/opaqueId" },
+        "hostSessionId": { "$ref": "#/$defs/opaqueId" },
+        "hostGeneration": { "$ref": "#/$defs/opaqueId" },
+        "bindingId": { "$ref": "#/$defs/opaqueId" },
+        "operationId": { "$ref": "#/$defs/namespacedName" },
+        "policyDecision": { "$ref": "#/$defs/policyDecision" },
+        "status": { "$ref": "#/$defs/commandStatus" },
+        "issuedAt": { "$ref": "#/$defs/timestampMs" },
+        "clientCorrelation": { "$ref": "#/$defs/clientCorrelation" },
+        "commandId": { "$ref": "#/$defs/opaqueId" },
+        "idempotencyKey": { "$ref": "#/$defs/opaqueId" },
+        "approvalId": { "$ref": "#/$defs/opaqueId" },
+        "auditRef": { "$ref": "#/$defs/opaqueId" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

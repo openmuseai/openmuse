@@ -1,0 +1,58 @@
+{
+  "id": "muse.dsh-layout-contract/v1",
+  "dshVersion": "0.1.0-rc.7",
+  "stableAttributes": {
+    "data-shell-overlay": {
+      "file": "packages/client/ui-layout/src/client/AppFrame.tsx",
+      "role": "AppFrame 浮层锚点；Mobile adapter 只允许从此向上找 frame"
+    },
+    "data-sidebar-collapsed": {
+      "file": "packages/client/ui-layout/src/client/AppFrame.tsx",
+      "role": "侧栏收起；存在即为 collapsed"
+    },
+    "data-details-collapsed": {
+      "file": "packages/client/ui-layout/src/client/AppFrame.tsx",
+      "role": "details 列为 0 宽"
+    },
+    "data-phase": {
+      "file": "packages/client/ui-conversation/src/client/skeleton/ConversationRoot.tsx",
+      "values": ["settling", "hero", "active"]
+    },
+    "data-composer-seat": {
+      "file": "packages/client/ui-conversation/src/client/skeleton/ConversationRoot.tsx",
+      "role": "Composer 座椅，含 InputBar 与 dock"
+    },
+    "data-conversation-scroll": {
+      "file": "packages/client/ui-conversation/src/client/skeleton/ConversationRoot.tsx",
+      "role": "会话滚动容器"
+    }
+  },
+  "forbiddenSelectors": [
+    "[class*=module_]",
+    "button:nth-child",
+    "[aria-label*=Sidebar]"
+  ],
+  "publicSlots": {
+    "shell.overlay": "list/root",
+    "sidebar": "single/root",
+    "conversation": "single/session-maybe",
+    "details": "single/session",
+    "conversation.hero.workspace": "single/root",
+    "conversation.hero.agentPreset": "single/root",
+    "conversation.input.left": "list/session",
+    "conversation.input.right": "list/session",
+    "conversation.input.dock": "list/session",
+    "conversation.composer.dock": "list/session",
+    "conversation.composer": "chain/session"
+  },
+  "publicServices": {
+    "ctx.layout.toggleSidebar": "packages/client/ui-layout/src/client/service.ts",
+    "ctx.layout.openDetails": "packages/client/ui-layout/src/client/service.ts",
+    "ctx.layout.closeDetails": "packages/client/ui-layout/src/client/service.ts"
+  },
+  "museOwnedAttributes": [
+    "data-muse-surface",
+    "data-muse-mobile-frame",
+    "data-muse-region"
+  ]
+}

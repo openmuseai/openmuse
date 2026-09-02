@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/bridge/v1/bind.schema.json",
+  "title": "Muse Bridge v1 binding payloads",
+  "$defs": {
+    "boundOperation": {
+      "type": "object",
+      "required": ["operationId", "effect", "inputSchemaDigest", "outputSchemaDigest", "cancellable", "idempotency"],
+      "properties": {
+        "operationId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/namespacedName" },
+        "effect": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/effect" },
+        "inputSchemaDigest": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/sha256Digest" },
+        "outputSchemaDigest": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/sha256Digest" },
+        "cancellable": { "type": "boolean" },
+        "idempotency": { "enum": ["none", "optional", "required"] }
+      },
+      "additionalProperties": false
+    },
+    "binding": {
+      "type": "object",
+      "required": [
+        "bindingId",
+        "descriptorId",
+        "descriptorRevision",
+        "providerInstanceId",
+        "hostGeneration",
+        "scopeRef",
+        "expiresAt",
+        "operations"
+      ],
+      "properties": {
+        "bindingId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "descriptorId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "descriptorRevision": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "providerInstanceId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "hostGeneration": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "scopeRef": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "expiresAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": { "$ref": "#/$defs/boundOperation" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "request": {
+      "type": "object",
+      "required": ["descriptorId", "descriptorRevision", "operationIds", "deadlineAt"],
+      "properties": {
+        "descriptorId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "descriptorRevision": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "operationIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/namespacedName" }
+        },
+        "scopeHint": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/scopeHint" },
+        "deadlineAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" }
+      },
+      "additionalProperties": false
+    },
+    "response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["ok", "value"],
+          "properties": {
+            "ok": { "const": true },
+            "value": { "$ref": "#/$defs/binding" }
+          },
+          "additionalProperties": false
+        },
+        { "$ref": "https://muse.dev/schemas/bridge/v1/error.schema.json#/$defs/errorResult" }
+      ]
+    }
+  }
+}

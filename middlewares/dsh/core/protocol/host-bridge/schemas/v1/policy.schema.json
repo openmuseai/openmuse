@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/bridge/v1/policy.schema.json",
+  "title": "Muse Bridge v1 policy payloads",
+  "$defs": {
+    "evaluateRequest": {
+      "type": "object",
+      "required": ["traceId", "bindingId", "operationId", "inputDigest", "effect", "deadlineAt"],
+      "properties": {
+        "traceId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "bindingId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "operationId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/namespacedName" },
+        "inputDigest": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/sha256Digest" },
+        "effect": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/effect" },
+        "deadlineAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" }
+      },
+      "additionalProperties": false
+    },
+    "evaluateResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["ok", "value"],
+          "properties": {
+            "ok": { "const": true },
+            "value": {
+              "type": "object",
+              "required": ["policyDecisionId", "decision", "expiresAt"],
+              "properties": {
+                "policyDecisionId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+                "decision": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/policyDecision" },
+                "expiresAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" },
+                "approvalId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+                "reason": { "type": "string", "maxLength": 1024 }
+              },
+              "allOf": [
+                {
+                  "if": { "properties": { "decision": { "const": "approval_required" } }, "required": ["decision"] },
+                  "then": { "required": ["approvalId"] },
+                  "else": { "not": { "required": ["approvalId"] } }
+                }
+              ],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        { "$ref": "https://muse.dev/schemas/bridge/v1/error.schema.json#/$defs/errorResult" }
+      ]
+    },
+    "finalizeRequest": {
+      "type": "object",
+      "required": ["traceId", "approvalId", "outcome", "approvalProofId", "deadlineAt"],
+      "properties": {
+        "traceId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "approvalId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "outcome": { "enum": ["approved", "rejected"] },
+        "approvalProofId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "deadlineAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" }
+      },
+      "additionalProperties": false
+    },
+    "finalizeResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["ok", "value"],
+          "properties": {
+            "ok": { "const": true },
+            "value": {
+              "type": "object",
+              "required": ["policyDecisionId", "outcome"],
+              "properties": {
+                "policyDecisionId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+                "outcome": { "enum": ["approved", "rejected"] },
+                "grantId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+                "expiresAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" }
+              },
+              "allOf": [
+                {
+                  "if": { "properties": { "outcome": { "const": "approved" } }, "required": ["outcome"] },
+                  "then": { "required": ["grantId", "expiresAt"] },
+                  "else": { "not": { "anyOf": [{ "required": ["grantId"] }, { "required": ["expiresAt"] }] } }
+                }
+              ],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        { "$ref": "https://muse.dev/schemas/bridge/v1/error.schema.json#/$defs/errorResult" }
+      ]
+    }
+  }
+}

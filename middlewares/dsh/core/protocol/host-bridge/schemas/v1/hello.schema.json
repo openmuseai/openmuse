@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/bridge/v1/hello.schema.json",
+  "title": "Muse Bridge v1 hello payloads",
+  "$defs": {
+    "request": {
+      "type": "object",
+      "required": ["runtime", "versions", "features"],
+      "properties": {
+        "runtime": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/runtime" },
+        "versions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/versionRange" }
+        },
+        "features": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/namespacedName" }
+        },
+        "limits": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/limits" },
+        "clientCorrelation": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/clientCorrelation" }
+      },
+      "additionalProperties": false
+    },
+    "successValue": {
+      "type": "object",
+      "required": [
+        "selectedVersion",
+        "features",
+        "limits",
+        "hostSessionId",
+        "hostGeneration",
+        "serverTime",
+        "clockSkewToleranceMs",
+        "authorityRevision"
+      ],
+      "properties": {
+        "selectedVersion": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/negotiatedVersion" },
+        "features": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/namespacedName" }
+        },
+        "limits": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/limits" },
+        "hostSessionId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "hostGeneration": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "serverTime": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" },
+        "clockSkewToleranceMs": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/boundedMs" },
+        "authorityRevision": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" }
+      },
+      "additionalProperties": true
+    },
+    "response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["ok", "value"],
+          "properties": {
+            "ok": { "const": true },
+            "value": { "$ref": "#/$defs/successValue" }
+          },
+          "additionalProperties": false
+        },
+        { "$ref": "https://muse.dev/schemas/bridge/v1/error.schema.json#/$defs/errorResult" }
+      ]
+    }
+  }
+}

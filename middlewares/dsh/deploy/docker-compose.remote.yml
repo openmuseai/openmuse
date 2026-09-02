@@ -1,0 +1,28 @@
+# Remote host compose. Image already contains entrypoint, proxy, packages.
+# Do not bind-mount repo paths — they do not exist under /opt/muse-dsh/runtime.
+services:
+  muse-dsh:
+    image: ${MUSE_DSH_IMAGE:-muse-dsh:local}
+    container_name: muse-dsh
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:${DSH_PORT:-3080}:3080"
+    env_file:
+      - ${DSH_ENV_FILE:-.env}
+    environment:
+      PORT: "3080"
+      DSH_LOOPBACK_PORT: "13080"
+      DSH_HOME: /var/lib/muse-dsh
+    volumes:
+      - muse_dsh_home:/var/lib/muse-dsh
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:13080/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  muse_dsh_home:

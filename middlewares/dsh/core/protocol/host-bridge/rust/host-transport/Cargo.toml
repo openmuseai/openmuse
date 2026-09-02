@@ -1,0 +1,23 @@
+[package]
+name = "muse-host-transport"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+description = "Runtime-authenticated lifecycle and framing core for Muse Host desktop carriers"
+publish = false
+
+[dependencies]
+async-trait = "0.1.89"
+base64 = "0.22.1"
+rand = "=0.9.1"
+sha2 = "0.11.0"
+subtle = "=2.5.0"
+thiserror = "2.0.20"
+serde_json = "1.0.151"
+tokio = { version = "1.49.0", features = ["io-util", "net", "sync", "time", "rt", "macros"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2.189"
+
+[dev-dependencies]
+tokio = { version = "1.49.0", features = ["io-util", "sync", "time", "rt", "macros", "rt-multi-thread"] }

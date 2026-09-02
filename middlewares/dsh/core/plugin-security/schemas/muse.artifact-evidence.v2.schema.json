@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.local/schemas/muse.artifact-evidence.v2.schema.json",
+  "title": "Muse Artifact Evidence v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "pluginId", "version", "digest", "publisherKeyId", "signature", "sbomDigest", "provenanceDigest"],
+  "properties": {
+    "protocol": { "const": "muse.artifact-evidence/v2" },
+    "pluginId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "version": { "type": "string" },
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "publisherKeyId": { "type": "string" },
+    "signature": { "type": "string" },
+    "sbomDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "provenanceDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "tested": { "type": "boolean" },
+    "reviewed": { "type": "boolean" },
+    "sandboxEvidence": {
+      "type": "object", "additionalProperties": false, "required": ["runner", "policyDigest"],
+      "properties": { "runner": { "type": "string" }, "policyDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" } }
+    }
+  }
+}

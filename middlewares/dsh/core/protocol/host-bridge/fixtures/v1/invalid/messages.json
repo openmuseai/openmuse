@@ -1,0 +1,124 @@
+[
+  {
+    "name": "opaque request id rejects spaces",
+    "valid": false,
+    "category": "INVALID_ENVELOPE",
+    "negotiated": false,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "hello.request",
+      "requestId": "bad request id",
+      "sentAt": 1700000000000,
+      "payload": {
+        "runtime": { "kind": "desktop", "instanceId": "runtime.1" },
+        "versions": [{ "major": 1, "minMinor": 0, "maxMinor": 0 }],
+        "features": []
+      }
+    }
+  },
+  {
+    "name": "unknown major is explicit",
+    "valid": false,
+    "category": "UNSUPPORTED_PROTOCOL",
+    "negotiated": false,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 2,
+      "minor": 0,
+      "kind": "hello.request",
+      "requestId": "request.hello.2",
+      "sentAt": 1700000000000,
+      "payload": {}
+    }
+  },
+  {
+    "name": "post hello message requires handshake",
+    "valid": false,
+    "category": "HANDSHAKE_REQUIRED",
+    "negotiated": false,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "discover.request",
+      "requestId": "request.discover.2",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000010,
+      "payload": { "deadlineAt": 1700000030010, "pageSize": 10 }
+    }
+  },
+  {
+    "name": "invoke payload requires deadline",
+    "valid": false,
+    "category": "INVALID_ENVELOPE",
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "invoke.request",
+      "requestId": "request.invoke.2",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000030,
+      "payload": {
+        "traceId": "trace.2",
+        "bindingId": "binding.1",
+        "operationId": "sample.echo",
+        "input": {},
+        "cancellationId": "cancel.2"
+      }
+    }
+  },
+  {
+    "name": "bridge error code is closed",
+    "valid": false,
+    "category": "INVALID_ENVELOPE",
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "invoke.response",
+      "requestId": "request.invoke.3",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000031,
+      "payload": {
+        "ok": false,
+        "error": {
+          "kind": "bridge",
+          "code": "FUTURE_ERROR",
+          "message": "unknown",
+          "retryable": false
+        }
+      }
+    }
+  },
+  {
+    "name": "provider error rejects secret-bearing detail keys",
+    "valid": false,
+    "category": "INVALID_ENVELOPE",
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "invoke.response",
+      "requestId": "request.invoke.4",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000031,
+      "payload": {
+        "ok": false,
+        "error": {
+          "kind": "provider",
+          "namespace": "sample.provider",
+          "code": "LEAKED_DETAIL",
+          "message": "unsafe detail should be rejected",
+          "retryable": false,
+          "details": { "access_token": "must-not-cross-boundary" }
+        }
+      }
+    }
+  }
+]

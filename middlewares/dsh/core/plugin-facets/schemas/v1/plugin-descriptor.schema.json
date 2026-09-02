@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/plugin-facets/v1/plugin-descriptor.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "pluginId", "version", "facets"],
+  "properties": {
+    "protocol": { "const": "muse.plugin-descriptor/v1" },
+    "pluginId": { "type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$", "maxLength": 160 },
+    "version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$", "maxLength": 80 },
+    "publisher": {
+      "type": "object", "additionalProperties": false, "required": ["id"],
+      "properties": { "id": { "type": "string", "minLength": 1, "maxLength": 160 }, "signatureRef": { "type": "string", "minLength": 1, "maxLength": 256 } }
+    },
+    "facets": {
+      "type": "array", "minItems": 1, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["facetKind", "artifactRef", "runtime", "requiresKernel", "publishes", "consumes"],
+        "properties": {
+          "facetKind": { "enum": ["ui", "domain", "agent"] },
+          "artifactRef": { "type": "string", "minLength": 1, "maxLength": 512 },
+          "runtime": { "enum": ["flutter", "rust-host", "dsh-cordis"] },
+          "requiresKernel": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "publishes": { "$ref": "#/$defs/contracts" },
+          "consumes": { "$ref": "#/$defs/contracts" },
+          "optionalRequires": { "type": "array", "maxItems": 32, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 160 } }
+        }
+      }
+    },
+    "metadata": { "type": "object", "maxProperties": 32 }
+  },
+  "$defs": {
+    "contracts": {
+      "type": "array", "maxItems": 64,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["kind", "type", "schemaDigest", "required"],
+        "properties": {
+          "kind": { "enum": ["context", "domain-event", "presentation-intent", "capability"] },
+          "type": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "schemaDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "required": { "type": "boolean" },
+          "versionRange": { "type": "string", "minLength": 1, "maxLength": 80 }
+        }
+      }
+    }
+  }
+}

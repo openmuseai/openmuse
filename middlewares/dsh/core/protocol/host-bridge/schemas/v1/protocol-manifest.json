@@ -1,0 +1,83 @@
+{
+  "protocol": "muse-bridge",
+  "version": { "major": 1, "minor": 0 },
+  "draft": "https://json-schema.org/draft/2020-12/schema",
+  "schemas": {
+    "common": {
+      "file": "common.schema.json",
+      "id": "https://muse.dev/schemas/bridge/v1/common.schema.json",
+      "digest": "sha256:662ebf06f98255edb8fb451cd18b7ada5d613d6232bb720b3d44b9967ac162f3"
+    },
+    "error": {
+      "file": "error.schema.json",
+      "id": "https://muse.dev/schemas/bridge/v1/error.schema.json",
+      "digest": "sha256:e2b026f0ff18d47a248d3a27df3bb49f5980ed0e48feec5c82878c0d84186bd8"
+    },
+    "envelope": {
+      "file": "envelope.schema.json",
+      "id": "https://muse.dev/schemas/bridge/v1/envelope.schema.json",
+      "digest": "sha256:74acc0b9837aa852454323d6ee668a59aafd2205ee70e652f9d2afa728a15d21"
+    },
+    "hello": {
+      "file": "hello.schema.json",
+      "id": "https://muse.dev/schemas/bridge/v1/hello.schema.json",
+      "digest": "sha256:4ee451dffa947d3a76639d79385fb3c3b8a830800bb0920bbc14905bf01268c3"
+    },
+    "discover": {
+      "file": "discover.schema.json",
+      "id": "https://muse.dev/schemas/bridge/v1/discover.schema.json",
+      "digest": "sha256:4e20e5a4f03ba77ead0055c5b895b2e437d998c0bddbcf8a6260cafdd342a82c"
+    },
+    "bind": {
+      "file": "bind.schema.json",
+      "id": "https://muse.dev/schemas/bridge/v1/bind.schema.json",
+      "digest": "sha256:e63dc37f3f1070fb1bc930df9e8cf45c0a6f0b9f5e402ba137b423b9bea209f4"
+    },
+    "invoke": {
+      "file": "invoke.schema.json",
+      "id": "https://muse.dev/schemas/bridge/v1/invoke.schema.json",
+      "digest": "sha256:45edf1ab23c49eda417fba0003b5ef6a979b18ff69ac91c54410bb3c34cd1c0f"
+    },
+    "subscribe": {
+      "file": "subscribe.schema.json",
+      "id": "https://muse.dev/schemas/bridge/v1/subscribe.schema.json",
+      "digest": "sha256:0b024f4e0a5830785222a08ee4c41f5c61b55a005db44685d45088d0c0dbf875"
+    },
+    "policy": {
+      "file": "policy.schema.json",
+      "id": "https://muse.dev/schemas/bridge/v1/policy.schema.json",
+      "digest": "sha256:eb2948bfac426312de8aabc7b053ab4ca9e885d895dec53373dea38ff962e52c"
+    },
+    "cancel": {
+      "file": "cancel.schema.json",
+      "id": "https://muse.dev/schemas/bridge/v1/cancel.schema.json",
+      "digest": "sha256:3872350711f44e305b96892d5a42a1eb57bd90745d88ed4a46f8f7fca45d5589"
+    },
+    "status": {
+      "file": "status.schema.json",
+      "id": "https://muse.dev/schemas/bridge/v1/status.schema.json",
+      "digest": "sha256:d164b2f67ccb4a9baa01cb5f240d2521e0965028dd85898483ab08661577dcce"
+    }
+  },
+  "messages": {
+    "hello.request": { "schema": "https://muse.dev/schemas/bridge/v1/hello.schema.json#/$defs/request", "direction": "client_to_host" },
+    "hello.response": { "schema": "https://muse.dev/schemas/bridge/v1/hello.schema.json#/$defs/response", "direction": "host_to_client" },
+    "discover.request": { "schema": "https://muse.dev/schemas/bridge/v1/discover.schema.json#/$defs/request", "direction": "client_to_host" },
+    "discover.response": { "schema": "https://muse.dev/schemas/bridge/v1/discover.schema.json#/$defs/response", "direction": "host_to_client" },
+    "bind.request": { "schema": "https://muse.dev/schemas/bridge/v1/bind.schema.json#/$defs/request", "direction": "client_to_host" },
+    "bind.response": { "schema": "https://muse.dev/schemas/bridge/v1/bind.schema.json#/$defs/response", "direction": "host_to_client" },
+    "invoke.request": { "schema": "https://muse.dev/schemas/bridge/v1/invoke.schema.json#/$defs/request", "direction": "client_to_host" },
+    "invoke.response": { "schema": "https://muse.dev/schemas/bridge/v1/invoke.schema.json#/$defs/response", "direction": "host_to_client" },
+    "subscribe.request": { "schema": "https://muse.dev/schemas/bridge/v1/subscribe.schema.json#/$defs/request", "direction": "client_to_host" },
+    "subscribe.response": { "schema": "https://muse.dev/schemas/bridge/v1/subscribe.schema.json#/$defs/response", "direction": "host_to_client" },
+    "bridge.event": { "schema": "https://muse.dev/schemas/bridge/v1/subscribe.schema.json#/$defs/event", "direction": "host_to_client" },
+    "policy.evaluate.request": { "schema": "https://muse.dev/schemas/bridge/v1/policy.schema.json#/$defs/evaluateRequest", "direction": "client_to_host" },
+    "policy.evaluate.response": { "schema": "https://muse.dev/schemas/bridge/v1/policy.schema.json#/$defs/evaluateResponse", "direction": "host_to_client" },
+    "policy.finalize.request": { "schema": "https://muse.dev/schemas/bridge/v1/policy.schema.json#/$defs/finalizeRequest", "direction": "client_to_host" },
+    "policy.finalize.response": { "schema": "https://muse.dev/schemas/bridge/v1/policy.schema.json#/$defs/finalizeResponse", "direction": "host_to_client" },
+    "cancel.request": { "schema": "https://muse.dev/schemas/bridge/v1/cancel.schema.json#/$defs/request", "direction": "client_to_host" },
+    "cancel.response": { "schema": "https://muse.dev/schemas/bridge/v1/cancel.schema.json#/$defs/response", "direction": "host_to_client" },
+    "status.request": { "schema": "https://muse.dev/schemas/bridge/v1/status.schema.json#/$defs/request", "direction": "client_to_host" },
+    "status.response": { "schema": "https://muse.dev/schemas/bridge/v1/status.schema.json#/$defs/response", "direction": "host_to_client" }
+  }
+}

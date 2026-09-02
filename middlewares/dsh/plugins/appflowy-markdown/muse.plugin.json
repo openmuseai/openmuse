@@ -1,0 +1,15 @@
+{
+  "protocol": "muse.plugin/v2",
+  "pluginId": "muse.appflowy.markdown",
+  "version": "2.0.0",
+  "artifacts": [
+    { "id": "agent", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "kind": "npm", "entrypoint": "@muse/plugin-appflowy-markdown/dsh" },
+    { "id": "presentation", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "kind": "flutter-bundle", "entrypoint": "MuseMarkdownUiFacet" },
+    { "id": "domain", "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "kind": "rust-builtin", "entrypoint": "appflowy.document.local" }
+  ],
+  "facets": [
+    { "id": "agent", "kind": "agent", "artifact": "agent", "runtimes": ["dsh-native", "remote-dsh"], "requires": [{ "contract": "muse.document", "range": "^2.0.0" }] },
+    { "id": "presentation", "kind": "presentation", "artifact": "presentation", "runtimes": ["flutter"], "requires": [{ "contract": "muse.document", "range": "^2.0.0" }], "contributions": [{ "slot": "workspace.editor", "contributionId": "markdown", "priority": 100 }] },
+    { "id": "domain", "kind": "domain", "artifact": "domain", "runtimes": ["rust-host"], "provides": [{ "contract": "muse.document", "version": "2.0.0", "priority": 100 }] }
+  ]
+}

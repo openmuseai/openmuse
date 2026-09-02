@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/plugin-facets/v1/context-contribution.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["protocol", "pluginId", "pluginVersion", "facetInstanceRef", "surfaceInstanceRef", "surfaceKind", "scopeRef", "contextType", "contextSchemaDigest", "contextRevision", "epochRef", "lane", "capturedAt", "expiresAt", "payload"],
+  "properties": {
+    "protocol": { "const": "muse.context-contribution/v1" },
+    "pluginId": { "$ref": "#/$defs/id" }, "pluginVersion": { "$ref": "#/$defs/nonBlank" },
+    "facetInstanceRef": { "$ref": "#/$defs/ref" }, "surfaceInstanceRef": { "$ref": "#/$defs/ref" },
+    "surfaceKind": { "$ref": "#/$defs/nonBlank" }, "scopeRef": { "$ref": "#/$defs/ref" },
+    "contextType": { "$ref": "#/$defs/nonBlank" }, "contextSchemaDigest": { "$ref": "#/$defs/digest" },
+    "contextRevision": { "$ref": "#/$defs/revision" }, "epochRef": { "$ref": "#/$defs/ref" },
+    "lane": { "enum": ["control", "state"] },
+    "capturedAt": { "$ref": "#/$defs/time" }, "expiresAt": { "$ref": "#/$defs/time" },
+    "payload": {}
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$", "maxLength": 160 },
+    "nonBlank": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "ref": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "revision": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$", "maxLength": 32 },
+    "time": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+  }
+}

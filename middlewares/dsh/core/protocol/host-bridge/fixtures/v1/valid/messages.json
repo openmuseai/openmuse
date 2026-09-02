@@ -1,0 +1,421 @@
+[
+  {
+    "name": "hello request",
+    "valid": true,
+    "negotiated": false,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "hello.request",
+      "requestId": "request.hello.1",
+      "sentAt": 1700000000000,
+      "payload": {
+        "runtime": { "kind": "desktop", "instanceId": "runtime.1" },
+        "versions": [{ "major": 1, "minMinor": 0, "maxMinor": 0 }],
+        "features": ["muse.events"]
+      }
+    }
+  },
+  {
+    "name": "hello response",
+    "valid": true,
+    "negotiated": false,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "hello.response",
+      "requestId": "request.hello.1",
+      "sentAt": 1700000000001,
+      "payload": {
+        "ok": true,
+        "value": {
+          "selectedVersion": { "major": 1, "minor": 0 },
+          "features": ["muse.events"],
+          "limits": {
+            "maxMessageBytes": 2097152,
+            "maxInlineSchemaBytes": 65536,
+            "maxResolvedSchemaBytes": 1048576,
+            "maxDiscoverPageBytes": 524288,
+            "maxDiscoverDescriptors": 256,
+            "maxInputBytes": 262144,
+            "maxOutputBytes": 1048576,
+            "maxErrorDetailsBytes": 32768,
+            "maxEventPayloadBytes": 262144,
+            "maxJsonDepth": 64,
+            "maxContainerChildren": 10000
+          },
+          "hostSessionId": "host-session.1",
+          "hostGeneration": "host-generation.1",
+          "serverTime": 1700000000001,
+          "clockSkewToleranceMs": 5000,
+          "authorityRevision": "authority.1"
+        }
+      }
+    }
+  },
+  {
+    "name": "discover request",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "discover.request",
+      "requestId": "request.discover.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000010,
+      "payload": { "deadlineAt": 1700000030010, "pageSize": 64 }
+    }
+  },
+  {
+    "name": "discover response",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "discover.response",
+      "requestId": "request.discover.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000011,
+      "payload": { "ok": true, "value": { "registryRevision": "registry.1", "descriptors": [] } }
+    }
+  },
+  {
+    "name": "bind request",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "bind.request",
+      "requestId": "request.bind.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000020,
+      "payload": {
+        "descriptorId": "descriptor.1",
+        "descriptorRevision": "revision.1",
+        "operationIds": ["sample.echo"],
+        "deadlineAt": 1700000030020
+      }
+    }
+  },
+  {
+    "name": "bind response",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "bind.response",
+      "requestId": "request.bind.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000021,
+      "payload": {
+        "ok": true,
+        "value": {
+          "bindingId": "binding.1",
+          "descriptorId": "descriptor.1",
+          "descriptorRevision": "revision.1",
+          "providerInstanceId": "provider.1",
+          "hostGeneration": "host-generation.1",
+          "scopeRef": "scope.1",
+          "expiresAt": 1700003600021,
+          "operations": [
+            {
+              "operationId": "sample.echo",
+              "effect": "read",
+              "inputSchemaDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "outputSchemaDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+              "cancellable": true,
+              "idempotency": "optional"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "invoke request",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "invoke.request",
+      "requestId": "request.invoke.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000030,
+      "payload": {
+        "traceId": "trace.1",
+        "bindingId": "binding.1",
+        "operationId": "sample.echo",
+        "input": { "value": "hello" },
+        "deadlineAt": 1700000030030,
+        "cancellationId": "cancel.1",
+        "idempotencyKey": "idempotency.1"
+      }
+    }
+  },
+  {
+    "name": "invoke response",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "invoke.response",
+      "requestId": "request.invoke.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000031,
+      "payload": {
+        "ok": true,
+        "value": { "value": "hello" },
+        "receipt": {
+          "receiptId": "receipt.1",
+          "requestId": "request.invoke.1",
+          "traceId": "trace.1",
+          "hostSessionId": "host-session.1",
+          "hostGeneration": "host-generation.1",
+          "bindingId": "binding.1",
+          "operationId": "sample.echo",
+          "policyDecision": "allow",
+          "status": "synced",
+          "issuedAt": 1700000000031,
+          "commandId": "command.1",
+          "idempotencyKey": "idempotency.1"
+        }
+      }
+    }
+  },
+  {
+    "name": "subscribe request",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "subscribe.request",
+      "requestId": "request.subscribe.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000040,
+      "payload": {
+        "filters": { "eventKinds": ["descriptor.changed", "provider.event"] },
+        "deadlineAt": 1700000030040
+      }
+    }
+  },
+  {
+    "name": "subscribe response",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "subscribe.response",
+      "requestId": "request.subscribe.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000041,
+      "payload": { "ok": true, "value": { "subscriptionId": "subscription.1", "startCursor": "cursor.1" } }
+    }
+  },
+  {
+    "name": "bridge event",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "bridge.event",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000042,
+      "payload": {
+        "subscriptionId": "subscription.1",
+        "cursor": "cursor.2",
+        "occurredAt": 1700000000042,
+        "hostGeneration": "host-generation.1",
+        "data": { "eventKind": "descriptor.changed", "descriptorId": "descriptor.1", "revision": "revision.2", "change": "updated" }
+      }
+    }
+  },
+  {
+    "name": "policy evaluate request",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "policy.evaluate.request",
+      "requestId": "request.policy.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000050,
+      "payload": {
+        "traceId": "trace.1",
+        "bindingId": "binding.1",
+        "operationId": "sample.echo",
+        "inputDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "effect": "read",
+        "deadlineAt": 1700000030050
+      }
+    }
+  },
+  {
+    "name": "policy evaluate response",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "policy.evaluate.response",
+      "requestId": "request.policy.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000051,
+      "payload": {
+        "ok": true,
+        "value": {
+          "policyDecisionId": "policy-decision.1",
+          "decision": "approval_required",
+          "approvalId": "approval.1",
+          "expiresAt": 1700000060051
+        }
+      }
+    }
+  },
+  {
+    "name": "policy finalize request",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "policy.finalize.request",
+      "requestId": "request.policy.2",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000052,
+      "payload": {
+        "traceId": "trace.1",
+        "approvalId": "approval.1",
+        "outcome": "approved",
+        "approvalProofId": "approval-proof.1",
+        "deadlineAt": 1700000030052
+      }
+    }
+  },
+  {
+    "name": "policy finalize response",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "policy.finalize.response",
+      "requestId": "request.policy.2",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000053,
+      "payload": {
+        "ok": true,
+        "value": {
+          "policyDecisionId": "policy-decision.1",
+          "outcome": "approved",
+          "grantId": "grant.1",
+          "expiresAt": 1700000060053
+        }
+      }
+    }
+  },
+  {
+    "name": "cancel request",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "cancel.request",
+      "requestId": "request.cancel.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000060,
+      "payload": { "cancellationId": "cancel.1", "deadlineAt": 1700000030060 }
+    }
+  },
+  {
+    "name": "cancel response",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "cancel.response",
+      "requestId": "request.cancel.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000061,
+      "payload": { "ok": true, "value": { "disposition": "accepted" } }
+    }
+  },
+  {
+    "name": "status request",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "status.request",
+      "requestId": "request.status.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000070,
+      "payload": { "commandId": "command.1", "deadlineAt": 1700000030070 }
+    }
+  },
+  {
+    "name": "status response",
+    "valid": true,
+    "negotiated": true,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "status.response",
+      "requestId": "request.status.1",
+      "hostSessionId": "host-session.1",
+      "sentAt": 1700000000071,
+      "payload": {
+        "ok": true,
+        "value": {
+          "status": "synced",
+          "statusRevision": "status-revision.1",
+          "updatedAt": 1700000000071,
+          "receipt": {
+            "receiptId": "receipt.1",
+            "requestId": "request.invoke.1",
+            "traceId": "trace.1",
+            "hostSessionId": "host-session.1",
+            "hostGeneration": "host-generation.1",
+            "bindingId": "binding.1",
+            "operationId": "sample.echo",
+            "policyDecision": "allow",
+            "status": "synced",
+            "issuedAt": 1700000000031,
+            "commandId": "command.1"
+          }
+        }
+      }
+    }
+  }
+]

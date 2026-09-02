@@ -1,0 +1,29 @@
+{
+  "fatal": {
+    "DSH_TLS_UNTRUSTED": "DSH 的 HTTPS 证书未通过手机验证。请检查服务器证书链、手机时间及网络；不会跳过证书验证。",
+    "DSH_DOCUMENT_LOAD_FAILED": "DSH 页面加载失败，请检查 HTTPS 连接。",
+    "DSH_CONFIG_INVALID": "DSH 页面加载失败，请检查工作区和 HTTPS 地址配置。",
+    "DSH_SCOPE_CHANGED": "账号或工作区已改变，请返回后重新打开 Agent。"
+  },
+  "degraded": {
+    "NETWORK_OFFLINE": "网络已断开，请恢复网络后重试；文档仍可离线编辑。",
+    "APP_BACKGROUNDED": "应用已进入后台，控制连接已关闭；DSH 页面保留。",
+    "BRIDGE_DISCONNECTED": "控制连接中断，可继续使用 DSH 页面。",
+    "CLOUD_LOGIN_REQUIRED": "登录 Cloud 后可尝试连接；当前仅加载 DSH 页面。",
+    "HOST_UPGRADE_REQUIRED": "DSH 服务端尚未支持 Mobile 合同桥；当前仅加载 DSH 页面。",
+    "BRIDGE_UNAVAILABLE": "控制连接暂不可用；当前仅加载 DSH 页面。",
+    "CREDENTIAL_EXPIRING": "设备凭据即将到期，请重新连接以刷新。",
+    "CONTEXT_SYNC_FAILED": "文档上下文同步失败，请重新连接。",
+    "CONTEXT_REFRESH_FAILED": "工作区上下文刷新失败。",
+    "SURFACE_CLOSE_FAILED": "关闭文档上下文失败。",
+    "NATIVE_DOCUMENT_RETURNED": "文档操作已结束，请重新连接 Agent 以刷新上下文。"
+  },
+  "capability": {
+    "CAPABILITY_UNAVAILABLE": "当前设备不提供该能力",
+    "PERMISSION_DENIED": "用户拒绝权限",
+    "CANCELLED": "用户取消",
+    "TIMEOUT": "超时",
+    "STALE_GENERATION": "页面已重载，结果已丢弃",
+    "SPEECH_ERROR": "语音识别失败"
+  }
+}

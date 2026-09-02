@@ -1,0 +1,39 @@
+{
+  "name": "@muse/plugin-appflowy-view-reference",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hot-pluggable DSH Tool for the Host-authorized AppFlowy current View reference",
+  "type": "module",
+  "packageManager": "pnpm@10.34.1",
+  "engines": { "node": ">=20.19.0" },
+  "exports": {
+    ".": { "types": "./dist/src/index.d.ts", "import": "./dist/src/index.js" },
+    "./dsh": { "types": "./dist/src/dsh.d.ts", "import": "./dist/src/dsh.js" }
+  },
+  "files": ["dist/", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "pnpm typecheck && node scripts/check-boundaries.mjs",
+    "test": "vitest run",
+    "check": "pnpm lint && pnpm test && pnpm build"
+  },
+  "dependencies": {
+    "@muse/host-bridge": "link:../../core/protocol/host-bridge",
+    "@muse/plugin-kit": "link:../../core/plugin-kit"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-tools": "0.1.0-rc.7"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "link:../../../../vendors/deepseek-harness/vendor/cordis",
+    "@deepseek-ai/dsh-system-prompt": "link:../../../../vendors/deepseek-harness/packages/core/system-prompt",
+    "@deepseek-ai/dsh-llm": "link:../../../../vendors/deepseek-harness/packages/llm/llm",
+    "@deepseek-ai/dsh-session": "link:../../../../vendors/deepseek-harness/packages/core/session",
+    "@deepseek-ai/dsh-tools": "link:../../../../vendors/deepseek-harness/packages/core/tools",
+    "@types/node": "26.2.0",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  }
+}

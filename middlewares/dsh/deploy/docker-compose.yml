@@ -1,0 +1,32 @@
+# Production-like Remote DSH. Host publish is loopback only.
+# Official DSH refuses --host 0.0.0.0, so the process listens on
+# 127.0.0.1:13080 and loopback-proxy.mjs accepts docker-proxy on :3080.
+services:
+  muse-dsh:
+    image: ${MUSE_DSH_IMAGE:-muse-dsh:local}
+    container_name: muse-dsh
+    restart: always
+    ports:
+      - "127.0.0.1:${DSH_PORT:-3080}:3080"
+    env_file:
+      - ${DSH_ENV_FILE:-.env}
+    environment:
+      PORT: "3080"
+      DSH_LOOPBACK_PORT: "13080"
+      DSH_HOME: /var/lib/muse-dsh
+    volumes:
+      - muse_dsh_home:/var/lib/muse-dsh
+      - ./entrypoint.sh:/muse/entrypoint.sh:ro
+      - ./loopback-proxy.mjs:/muse/loopback-proxy.mjs:ro
+      - ./wire-harness-aliases.py:/muse/wire-harness-aliases.py:ro
+      - ../../../scripts/lib/wire-muse-node-modules.py:/muse/wire-muse-node-modules.py:ro
+      - ..:/opt/muse/packages:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:13080/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  muse_dsh_home:

@@ -1,0 +1,21 @@
+[
+  {
+    "name": "unknown optional envelope metadata is ignored",
+    "valid": true,
+    "negotiated": false,
+    "message": {
+      "protocol": "muse-bridge",
+      "major": 1,
+      "minor": 0,
+      "kind": "hello.request",
+      "requestId": "request.compat.1",
+      "sentAt": 1700000000000,
+      "futureInformationalField": { "safe": true },
+      "payload": {
+        "runtime": { "kind": "desktop", "instanceId": "runtime.compat.1" },
+        "versions": [{ "major": 1, "minMinor": 0, "maxMinor": 1 }],
+        "features": []
+      }
+    }
+  }
+]

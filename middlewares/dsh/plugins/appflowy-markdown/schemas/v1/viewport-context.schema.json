@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["firstVisibleBlockRef", "lastVisibleBlockRef", "visibleHeadingRefs", "scrollDirection"],
+  "properties": {
+    "firstVisibleBlockRef": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "lastVisibleBlockRef": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "visibleHeadingRefs": { "type": "array", "maxItems": 128, "items": { "type": "string", "minLength": 1, "maxLength": 128 }, "uniqueItems": true },
+    "scrollDirection": { "enum": ["forward", "backward", "idle"] }
+  }
+}

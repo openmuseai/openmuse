@@ -1,0 +1,32 @@
+{
+  "workspaceId": "ws-1",
+  "viewId": "view-1",
+  "context": {
+    "protocol": "muse.context-contribution/v1",
+    "pluginId": "muse.appflowy.markdown",
+    "pluginVersion": "2.0.0",
+    "facetInstanceRef": "facet.markdown.fixture",
+    "surfaceInstanceRef": "surface.markdown.fixture",
+    "surfaceKind": "markdown.document",
+    "scopeRef": "view-1",
+    "contextType": "markdown.surface",
+    "contextSchemaDigest": "sha256:780a1eed2737ec2f9e7dd1fe56cd74a3a7803aea0fc23e37837fd33d458c7b92",
+    "contextRevision": "1",
+    "epochRef": "epoch.fixture",
+    "lane": "control",
+    "capturedAt": 1000,
+    "expiresAt": 9000,
+    "payload": { "resourceRef": "view-1", "viewRef": "view-1", "title": "文档 😀", "mode": "edit", "readOnly": false }
+  },
+  "intent": {
+    "protocol": "muse.presentation-intent/v1",
+    "pluginId": "muse.appflowy.workspace",
+    "scopeRef": "workspace.ws-1",
+    "intentType": "surface.open",
+    "intentSchemaDigest": "sha256:c6337b4511a9ef40dbae92c23784cec068a2ff355ac6bb8e95141328c34905f0",
+    "intentRef": "intent.fixture",
+    "requestedAt": 1000,
+    "expiresAt": 9000,
+    "payload": { "viewId": "view-1", "workspaceId": "ws-1" }
+  }
+}

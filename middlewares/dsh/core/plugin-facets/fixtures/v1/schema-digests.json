@@ -1,0 +1,7 @@
+{
+  "plugin-descriptor": "sha256:7cf88672d440da995e6a9a44a5a5106c970e075b92c2092e97cd05192cc34adf",
+  "context-contribution": "sha256:b577984d2f18c6c852ce6adcf713f87da3046c9a4e08bcc226764ea35246f655",
+  "domain-change": "sha256:af5225353860e737be5bfc18269cb0eb5f9c08b52015c26463cb454169ee9bc4",
+  "presentation-intent": "sha256:2b2f24a6a119eebbd218b88501ce4aaacb93531897160198ee9c22867bdb20e4",
+  "presentation-intent-result": "sha256:da895c73bb457d66e47750f2010f10c01eea548f12dd5d6e29f40e5748a553c6"
+}

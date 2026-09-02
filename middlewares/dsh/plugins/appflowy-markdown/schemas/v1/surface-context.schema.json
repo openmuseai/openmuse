@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["resourceRef", "viewRef", "title", "mode", "readOnly"],
+  "properties": {
+    "resourceRef": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "viewRef": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "title": { "type": "string", "maxLength": 256 },
+    "mode": { "enum": ["edit", "preview"] },
+    "readOnly": { "type": "boolean" }
+  }
+}

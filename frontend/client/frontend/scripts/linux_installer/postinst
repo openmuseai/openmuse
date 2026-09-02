@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+if [ -e /usr/local/bin/dsh-office ]; then
+    echo "Symlink already exists, skipping."
+else
+    echo "Creating Symlink in /usr/local/bin/dsh-office"
+    ln -s /opt/dsh-office/dsh-office /usr/local/bin/dsh-office
+fi

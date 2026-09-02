@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/bridge/v1/status.schema.json",
+  "title": "Muse Bridge v1 command status payloads",
+  "$defs": {
+    "request": {
+      "type": "object",
+      "required": ["deadlineAt"],
+      "properties": {
+        "commandId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "bindingId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "idempotencyKey": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "deadlineAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" }
+      },
+      "oneOf": [
+        {
+          "required": ["commandId"],
+          "not": { "anyOf": [{ "required": ["bindingId"] }, { "required": ["idempotencyKey"] }] }
+        },
+        {
+          "required": ["bindingId", "idempotencyKey"],
+          "not": { "required": ["commandId"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["ok", "value"],
+          "properties": {
+            "ok": { "const": true },
+            "value": {
+              "type": "object",
+              "required": ["status", "statusRevision", "updatedAt", "receipt"],
+              "properties": {
+                "status": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/commandStatus" },
+                "statusRevision": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+                "updatedAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" },
+                "receipt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/receipt" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        { "$ref": "https://muse.dev/schemas/bridge/v1/error.schema.json#/$defs/errorResult" }
+      ]
+    }
+  }
+}

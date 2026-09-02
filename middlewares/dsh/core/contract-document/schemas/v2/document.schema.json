@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.local/contracts/document/v2/document.schema.json",
+  "title": "muse.document@2",
+  "$defs": {
+    "snapshot": {
+      "type": "object",
+      "required": ["protocol", "resourceRef", "revision", "content"],
+      "properties": {
+        "protocol": { "const": "muse.document/snapshot/v2" },
+        "resourceRef": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+        "content": {
+          "type": "object",
+          "required": ["mediaType", "text", "truncated", "byteLength"],
+          "properties": {
+            "mediaType": { "type": "string" },
+            "text": { "type": "string" },
+            "truncated": { "type": "boolean" },
+            "byteLength": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["protocol", "eventId", "cursor", "resourceRef", "revision", "commandRef", "origin", "change", "occurredAt"],
+      "properties": {
+        "protocol": { "const": "muse.document/event/v2" },
+        "eventId": { "type": "string" },
+        "cursor": { "type": "string" },
+        "resourceRef": { "type": "string" },
+        "revision": { "type": "string" },
+        "commandRef": { "type": "string" },
+        "origin": { "enum": ["ui", "agent", "collaboration", "recovery"] },
+        "change": { "type": "object", "required": ["kind"], "properties": { "kind": { "enum": ["content-replaced", "content-inserted", "content-deleted", "unchanged"] } } },
+        "occurredAt": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

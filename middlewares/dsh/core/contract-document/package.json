@@ -1,0 +1,16 @@
+{
+  "name": "@muse/contract-document",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.1",
+  "exports": { ".": { "types": "./dist/src/index.d.ts", "import": "./dist/src/index.js" } },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:rust": "cargo test --manifest-path rust/Cargo.toml",
+    "check": "pnpm typecheck && pnpm test && pnpm build && pnpm test:rust"
+  },
+  "devDependencies": { "@types/node": "26.2.0", "typescript": "7.0.2", "vitest": "4.1.11" }
+}

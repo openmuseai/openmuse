@@ -1,0 +1,20 @@
+[package]
+name = "muse-host-runtime"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+description = "Domain-neutral Muse Bridge request dispatcher over Host Registry and desktop transport"
+publish = false
+
+[dependencies]
+async-trait = "0.1.89"
+muse-host-bridge-contract = { path = ".." }
+muse-host-events = { path = "../host-events" }
+muse-host-registry = { path = "../host-registry" }
+muse-host-policy = { path = "../host-policy" }
+muse-host-transport = { path = "../host-transport" }
+serde_json = "1.0.151"
+tokio = { version = "1.49.0", features = ["rt", "sync"] }
+
+[dev-dependencies]
+tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"] }

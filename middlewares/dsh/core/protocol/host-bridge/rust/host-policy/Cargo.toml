@@ -1,0 +1,17 @@
+[package]
+name = "muse-host-policy"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+description = "Domain-neutral Host-owned policy, approval proof, one-use grant and command status state machine"
+publish = false
+
+[dependencies]
+async-trait = "0.1.89"
+muse-host-bridge-contract = { path = ".." }
+muse-host-registry = { path = "../host-registry" }
+tokio = { version = "1.49.0", features = ["sync", "time", "rt", "macros"] }
+
+[dev-dependencies]
+serde_json = "1.0.149"
+tokio = { version = "1.49.0", features = ["sync", "time", "rt", "macros", "rt-multi-thread"] }

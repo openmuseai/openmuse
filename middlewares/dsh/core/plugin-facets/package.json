@@ -1,0 +1,31 @@
+{
+  "name": "@muse/plugin-facets",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Domain-neutral contracts for composing Muse UI, Domain, and Agent facets",
+  "type": "module",
+  "packageManager": "pnpm@10.34.1",
+  "engines": { "node": ">=20.19.0" },
+  "exports": {
+    ".": { "types": "./dist/src/index.d.ts", "import": "./dist/src/index.js" },
+    "./schemas/*": "./schemas/*"
+  },
+  "files": ["dist/", "schemas/", "fixtures/"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "contract:check": "node scripts/check-contract.mjs",
+    "check": "pnpm contract:check && pnpm typecheck && pnpm test && pnpm build && cargo fmt --manifest-path rust/Cargo.toml -- --check && cargo test --manifest-path rust/Cargo.toml"
+  },
+  "dependencies": {
+    "@muse/host-bridge": "link:../protocol/host-bridge",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.2.0",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  }
+}

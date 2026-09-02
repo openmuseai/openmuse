@@ -1,0 +1,18 @@
+{
+  "id": "muse.dsh-mobile-feature-matrix/v1",
+  "owner": "DSH Client unless noted",
+  "rows": [
+    { "id": "sidebar", "surface": "DSH Sidebar", "mobileM2": "off-canvas 呈现，不复制列表", "regression": "Desktop 截图不变" },
+    { "id": "session", "surface": "会话列表/新建", "mobileM2": "Header 调公开 service；列表仍是原 Sidebar", "regression": "切换/新建会话" },
+    { "id": "tool-view", "surface": "Tool View", "mobileM2": "仅响应式 CSS", "regression": "行为不变" },
+    { "id": "plugin-market", "surface": "dshmarket", "mobileM4": "全屏/底部页适配", "regression": "Market 可打开" },
+    { "id": "plan", "surface": "Plan slot", "mobileM3": "不替换 occupant", "regression": "Plan 与 Web 相同" },
+    { "id": "goal", "surface": "Goal slot", "mobileM4": "全屏约束", "regression": "Goal 可用" },
+    { "id": "command", "surface": "Command +", "mobileM3": "不可偷换成附件", "regression": "Command 语义不变" },
+    { "id": "permission", "surface": "Permission", "mobileM3": "保留 slot", "regression": "授权流不变" },
+    { "id": "model", "surface": "Model select", "mobileM3": "保留 slot", "regression": "模型选择不变" },
+    { "id": "user-question", "surface": "User Question", "mobileM4": "全屏/底部页", "regression": "提问面板可用" },
+    { "id": "composer", "surface": "InputMachine", "mobileM3": "同一 Draft；Flutter 不发送", "regression": "发送/停止/Queue" },
+    { "id": "facet-bridge", "surface": "Flutter HTTP/SSE", "mobileM1": "可选降级", "regression": "凭据失败仍显示官方 Chat" }
+  ]
+}

@@ -1,0 +1,6 @@
+# Muse Bridge is a pure composition layer over the DSH base profile. The
+# launcher provides ctx.museHostConnector before Loader activation; endpoint,
+# nonce and connection token never appear in this patch or --dump-config.
+- insert:
+    - id: muse-host-bridge
+      name: '@muse/host-bridge/dsh'

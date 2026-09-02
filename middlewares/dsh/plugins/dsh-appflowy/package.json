@@ -1,0 +1,46 @@
+{
+  "name": "@muse/dsh-appflowy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.1",
+  "exports": {
+    "./connector": { "types": "./dist/src/connector.d.ts", "import": "./dist/src/connector.js" },
+    "./webview": { "types": "./dist/src/webview.d.ts", "import": "./dist/src/webview.js" },
+    "./parent-bridge": { "types": "./dist/src/parent-bridge.d.ts", "import": "./dist/src/parent-bridge.js" },
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": ["dist/", "cordis.patch.yml", "README.md"],
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm test && pnpm build"
+  },
+  "dependencies": {
+    "@muse/host-bridge": "link:../../core/protocol/host-bridge",
+    "@muse/context-broker": "link:../../core/context-broker",
+    "@muse/plugin-facets": "link:../../core/plugin-facets",
+    "@deepseek-ai/dsh-tools": "link:../../../../vendors/deepseek-harness/packages/core/tools",
+    "@muse/plugin-appflowy-markdown": "link:../appflowy-markdown",
+    "@muse/plugin-appflowy-workspace": "link:../appflowy-workspace",
+    "@muse/plugin-appflowy-view-reference": "link:../appflowy-view-reference",
+    "@muse/plugin-appflowy-view-rename": "link:../appflowy-view-rename",
+    "@muse/dsh-mobile-surface": "link:../dsh-mobile-surface",
+    "@muse/dsh-mobile-input": "link:../dsh-mobile-input",
+    "@muse/plugin-kit": "link:../../core/plugin-kit"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-system-prompt": "0.1.0-rc.7"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-tools": "link:../../../../vendors/deepseek-harness/packages/core/tools",
+    "@deepseek-ai/dsh-system-prompt": "link:../../../../vendors/deepseek-harness/packages/core/system-prompt",
+    "@types/node": "26.2.0",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/bridge/v1/subscribe.schema.json",
+  "title": "Muse Bridge v1 subscription payloads",
+  "$defs": {
+    "eventKind": {
+      "enum": [
+        "descriptor.changed",
+        "binding.invalidated",
+        "host.generation.changed",
+        "command.status.changed",
+        "provider.event",
+        "stream.gap",
+        "stream.error"
+      ]
+    },
+    "request": {
+      "type": "object",
+      "required": ["filters", "deadlineAt"],
+      "properties": {
+        "filters": {
+          "type": "object",
+          "minProperties": 1,
+          "properties": {
+            "eventKinds": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 7,
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/eventKind" }
+            },
+            "providerEventTypes": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 256,
+              "uniqueItems": true,
+              "items": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/namespacedName" }
+            },
+            "bindingIds": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 256,
+              "uniqueItems": true,
+              "items": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" }
+            }
+          },
+          "additionalProperties": false
+        },
+        "afterCursor": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "deadlineAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" }
+      },
+      "additionalProperties": false
+    },
+    "response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["ok", "value"],
+          "properties": {
+            "ok": { "const": true },
+            "value": {
+              "type": "object",
+              "required": ["subscriptionId", "startCursor"],
+              "properties": {
+                "subscriptionId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+                "startCursor": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+                "retentionFromCursor": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        { "$ref": "https://muse.dev/schemas/bridge/v1/error.schema.json#/$defs/errorResult" }
+      ]
+    },
+    "descriptorChanged": {
+      "type": "object",
+      "required": ["eventKind", "descriptorId", "change"],
+      "properties": {
+        "eventKind": { "const": "descriptor.changed" },
+        "descriptorId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "revision": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "change": { "enum": ["added", "updated", "removed"] }
+      },
+      "additionalProperties": false
+    },
+    "bindingInvalidated": {
+      "type": "object",
+      "required": ["eventKind", "bindingId", "reason"],
+      "properties": {
+        "eventKind": { "const": "binding.invalidated" },
+        "bindingId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "reason": { "enum": ["expired", "revoked", "descriptor_stale", "generation_changed", "scope_changed"] }
+      },
+      "additionalProperties": false
+    },
+    "generationChanged": {
+      "type": "object",
+      "required": ["eventKind", "previousGeneration", "currentGeneration"],
+      "properties": {
+        "eventKind": { "const": "host.generation.changed" },
+        "previousGeneration": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "currentGeneration": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" }
+      },
+      "additionalProperties": false
+    },
+    "commandChanged": {
+      "type": "object",
+      "required": ["eventKind", "commandId", "status", "statusRevision"],
+      "properties": {
+        "eventKind": { "const": "command.status.changed" },
+        "commandId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "status": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/commandStatus" },
+        "statusRevision": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "receipt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/receipt" }
+      },
+      "additionalProperties": false
+    },
+    "providerEvent": {
+      "type": "object",
+      "required": ["eventKind", "descriptorId", "descriptorRevision", "eventType", "schemaDigest", "payload"],
+      "properties": {
+        "eventKind": { "const": "provider.event" },
+        "descriptorId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "descriptorRevision": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "eventType": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/namespacedName" },
+        "schemaDigest": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/sha256Digest" },
+        "payload": {}
+      },
+      "additionalProperties": false
+    },
+    "streamGap": {
+      "type": "object",
+      "required": ["eventKind", "reason"],
+      "properties": {
+        "eventKind": { "const": "stream.gap" },
+        "reason": { "enum": ["cursor_expired", "retention_gap", "malformed_frame", "generation_changed"] },
+        "afterCursor": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" }
+      },
+      "additionalProperties": false
+    },
+    "streamError": {
+      "type": "object",
+      "required": ["eventKind", "error"],
+      "properties": {
+        "eventKind": { "const": "stream.error" },
+        "error": { "$ref": "https://muse.dev/schemas/bridge/v1/error.schema.json#/$defs/bridgeError" }
+      },
+      "additionalProperties": false
+    },
+    "eventData": {
+      "oneOf": [
+        { "$ref": "#/$defs/descriptorChanged" },
+        { "$ref": "#/$defs/bindingInvalidated" },
+        { "$ref": "#/$defs/generationChanged" },
+        { "$ref": "#/$defs/commandChanged" },
+        { "$ref": "#/$defs/providerEvent" },
+        { "$ref": "#/$defs/streamGap" },
+        { "$ref": "#/$defs/streamError" }
+      ]
+    },
+    "event": {
+      "type": "object",
+      "required": ["subscriptionId", "cursor", "occurredAt", "hostGeneration", "data"],
+      "properties": {
+        "subscriptionId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "cursor": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "occurredAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" },
+        "hostGeneration": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "data": { "$ref": "#/$defs/eventData" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

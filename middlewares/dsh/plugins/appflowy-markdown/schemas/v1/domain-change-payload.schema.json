@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.local/schemas/plugin-appflowy-markdown/v1/domain-change-payload.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["resourceRef", "changeKind", "changedBlockRefs", "structureChanged", "selectionRebaseHint"],
+  "properties": {
+    "resourceRef": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "changeKind": { "const": "operations-applied" },
+    "changedBlockRefs": { "type": "array", "maxItems": 512, "items": { "type": "string", "minLength": 1, "maxLength": 128 }, "uniqueItems": true },
+    "structureChanged": { "type": "boolean" },
+    "selectionRebaseHint": { "enum": ["sync-required", "anchors-valid"] }
+  }
+}

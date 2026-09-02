@@ -1,0 +1,18 @@
+[
+  {
+    "name": "object key ordering and unicode",
+    "value": { "b": 1, "a": "x", "nested": { "z": true, "é": "unicode" } },
+    "canonical": "{\"a\":\"x\",\"b\":1,\"nested\":{\"z\":true,\"é\":\"unicode\"}}",
+    "schemaDigest": "sha256:b311114047851924645c1fa108096b384308a7970fd83c542f24560a764d3f9b",
+    "inputDigest": "sha256:a0f9de1f7a5c4109a3a0fdbbdaf87a3d8363a43de02c943f8fa7dea312e2ba13",
+    "grantDigest": "sha256:d2486d4156d6b581a6bb964bac1147d815ef8d7ab7e41eed47842dcb05081e2b"
+  },
+  {
+    "name": "primitive array",
+    "value": [null, true, false, 0, 42, "Muse"],
+    "canonical": "[null,true,false,0,42,\"Muse\"]",
+    "schemaDigest": "sha256:acd85581a605d0268d4c44e288cdaefb150a5c4f14546c5ea4db16c278048a1e",
+    "inputDigest": "sha256:ca254de6c43579563aa242ad994193c690ee37e1e8908039076645ea812cbbde",
+    "grantDigest": "sha256:bfb8fcabc71fb238d233c61d9e87c359dd92a73e1d3280f1f63bfd2ea6759048"
+  }
+]

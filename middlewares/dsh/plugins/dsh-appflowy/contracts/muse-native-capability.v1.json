@@ -1,0 +1,27 @@
+{
+  "id": "muse.native-capability/v1",
+  "channel": "muse.native-capability",
+  "maxBytes": 8192,
+  "operations": {
+    "capabilities.get": { "dir": "web-to-flutter", "fields": ["requestId", "sessionId", "generation"] },
+    "speech.start": { "dir": "web-to-flutter", "fields": ["requestId", "sessionId", "generation", "locale"] },
+    "speech.cancel": { "dir": "web-to-flutter", "fields": ["requestId", "sessionId", "generation"] },
+    "speech.partial": { "dir": "flutter-to-web", "fields": ["requestId", "text"] },
+    "speech.final": { "dir": "flutter-to-web", "fields": ["requestId", "text"] },
+    "speech.error": { "dir": "flutter-to-web", "fields": ["requestId", "code"] },
+    "share.open": { "dir": "web-to-flutter", "fields": ["requestId", "textOrHttpsUrl"] },
+    "back.request": { "dir": "flutter-to-web", "fields": ["requestId", "generation"] },
+    "back.result": { "dir": "web-to-flutter", "fields": ["requestId", "consumed"] },
+    "lifecycle.changed": { "dir": "flutter-to-web", "fields": ["state"] }
+  },
+  "forbidden": [
+    "token",
+    "path",
+    "contentUri",
+    "base64",
+    "arbitraryMethod",
+    "fetchUrl",
+    "intent"
+  ],
+  "lifecycleStates": ["foreground", "background"]
+}

@@ -1,0 +1,191 @@
+[
+  {
+    "name": "plugin-descriptor-valid",
+    "kind": "plugin-descriptor",
+    "valid": true,
+    "value": {
+      "protocol": "muse.plugin-descriptor/v1",
+      "pluginId": "muse.appflowy.markdown",
+      "version": "1.0.0",
+      "facets": [
+        {
+          "facetKind": "ui",
+          "artifactRef": "flutter:muse_markdown",
+          "runtime": "flutter",
+          "requiresKernel": "1.0.0",
+          "publishes": [
+            {
+              "kind": "context",
+              "type": "markdown.selection.v1",
+              "schemaDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+              "required": false
+            }
+          ],
+          "consumes": []
+        }
+      ]
+    }
+  },
+  {
+    "name": "context-valid",
+    "kind": "context-contribution",
+    "valid": true,
+    "value": {
+      "protocol": "muse.context-contribution/v1",
+      "pluginId": "muse.appflowy.markdown",
+      "pluginVersion": "1.0.0",
+      "facetInstanceRef": "facet.ui.1",
+      "surfaceInstanceRef": "surface.1",
+      "surfaceKind": "markdown.document",
+      "scopeRef": "scope.1",
+      "contextType": "markdown.selection.v1",
+      "contextSchemaDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "contextRevision": "2",
+      "epochRef": "epoch.ui.1",
+      "lane": "state",
+      "capturedAt": 1000,
+      "expiresAt": 2000,
+      "payload": { "opaque": true }
+    }
+  },
+  {
+    "name": "domain-change-valid",
+    "kind": "domain-change",
+    "valid": true,
+    "value": {
+      "protocol": "muse.domain-change/v1",
+      "pluginId": "muse.appflowy.markdown",
+      "providerInstanceRef": "provider.1",
+      "scopeRef": "scope.1",
+      "resourceRef": "resource.1",
+      "eventType": "markdown.document.changed.v1",
+      "eventSchemaDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "domainRevision": "8",
+      "epochRef": "epoch.domain.1",
+      "commandRef": "command.1",
+      "origin": "external-command",
+      "occurredAt": 1100,
+      "payload": { "opaque": true }
+    }
+  },
+  {
+    "name": "presentation-intent-valid",
+    "kind": "presentation-intent",
+    "valid": true,
+    "value": {
+      "protocol": "muse.presentation-intent/v1",
+      "pluginId": "muse.appflowy.markdown",
+      "targetSurfaceInstanceRef": "surface.1",
+      "scopeRef": "scope.1",
+      "intentType": "markdown.block.reveal.v1",
+      "intentSchemaDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "intentRef": "intent.1",
+      "requestedAt": 1200,
+      "expiresAt": 2200,
+      "payload": { "opaque": true }
+    }
+  },
+  {
+    "name": "presentation-intent-result-valid",
+    "kind": "presentation-intent-result",
+    "valid": true,
+    "value": {
+      "protocol": "muse.presentation-intent-result/v1",
+      "intentRef": "intent.1",
+      "status": "applied",
+      "appliedSurfaceInstanceRef": "surface.1",
+      "observedDomainRevision": "8",
+      "completedAt": 1300
+    }
+  },
+  {
+    "name": "context-missing-lease",
+    "kind": "context-contribution",
+    "valid": false,
+    "value": {
+      "protocol": "muse.context-contribution/v1",
+      "pluginId": "muse.appflowy.markdown",
+      "pluginVersion": "1.0.0",
+      "facetInstanceRef": "facet.ui.1",
+      "surfaceKind": "markdown.document",
+      "scopeRef": "scope.1",
+      "contextType": "markdown.selection.v1",
+      "contextSchemaDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "contextRevision": "2",
+      "epochRef": "epoch.ui.1",
+      "lane": "state",
+      "capturedAt": 1000,
+      "expiresAt": 2000,
+      "payload": {}
+    }
+  },
+  {
+    "name": "context-negative-revision",
+    "kind": "context-contribution",
+    "valid": false,
+    "value": {
+      "protocol": "muse.context-contribution/v1",
+      "pluginId": "muse.appflowy.markdown",
+      "pluginVersion": "1.0.0",
+      "facetInstanceRef": "facet.ui.1",
+      "surfaceInstanceRef": "surface.1",
+      "surfaceKind": "markdown.document",
+      "scopeRef": "scope.1",
+      "contextType": "markdown.selection.v1",
+      "contextSchemaDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "contextRevision": "-1",
+      "epochRef": "epoch.ui.1",
+      "lane": "state",
+      "capturedAt": 1000,
+      "expiresAt": 2000,
+      "payload": {}
+    }
+  },
+  {
+    "name": "domain-unknown-origin",
+    "kind": "domain-change",
+    "valid": false,
+    "value": {
+      "protocol": "muse.domain-change/v1",
+      "pluginId": "muse.appflowy.markdown",
+      "providerInstanceRef": "provider.1",
+      "scopeRef": "scope.1",
+      "resourceRef": "resource.1",
+      "eventType": "markdown.document.changed.v1",
+      "eventSchemaDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "domainRevision": "8",
+      "epochRef": "epoch.domain.1",
+      "origin": "widget-local",
+      "occurredAt": 1100,
+      "payload": {}
+    }
+  },
+  {
+    "name": "intent-extra-property",
+    "kind": "presentation-intent",
+    "valid": false,
+    "value": {
+      "protocol": "muse.presentation-intent/v1",
+      "pluginId": "muse.appflowy.markdown",
+      "scopeRef": "scope.1",
+      "intentType": "markdown.block.reveal.v1",
+      "intentSchemaDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "intentRef": "intent.1",
+      "requestedAt": 1200,
+      "expiresAt": 2200,
+      "payload": {},
+      "directFlutterCall": true
+    }
+  },
+  {
+    "name": "manifest-domain-field-leak",
+    "kind": "plugin-descriptor",
+    "valid": false,
+    "value": {
+      "protocol": "muse.plugin-descriptor/v1",
+      "pluginId": "Muse Markdown",
+      "version": "1",
+      "facets": []
+    }
+  }
+]

@@ -1,0 +1,58 @@
+- insert:
+    - id: muse-appflowy-connector
+      name: '@muse/dsh-appflowy/connector'
+
+    - id: muse-appflowy-workspace
+      name: '@muse/plugin-appflowy-workspace'
+      inject: [workspaceRegistry]
+
+    - id: muse-appflowy-webview
+      name: '@muse/dsh-appflowy/webview'
+      inject: [webServer]
+
+    - id: muse-dsh-mobile-surface
+      name: '@muse/dsh-mobile-surface'
+      inject: [webServer]
+
+    - id: muse-dsh-mobile-input
+      name: '@muse/dsh-mobile-input'
+      inject: [webServer]
+
+    - id: muse-host-bridge
+      name: '@muse/host-bridge/dsh'
+      inject: [museHostConnector]
+      config:
+        autoStart: true
+
+    - id: muse-context-broker
+      name: '@muse/context-broker/dsh'
+      inject: [museHost, systemPrompt]
+
+    # Web/Remote only: apply() no-ops on Desktop (no MUSE_DOCUMENT_CLOUD_URL).
+    - id: muse-appflowy-parent-bridge
+      name: '@muse/dsh-appflowy/parent-bridge'
+      inject: [webServer, workspaceRegistry, museContextBroker, tools]
+
+    - id: muse-appflowy-workspace-tools
+      name: '@muse/plugin-appflowy-workspace/dsh'
+      inject: [museHost, tools, systemPrompt]
+
+    - id: muse-appflowy-view-reference
+      name: '@muse/plugin-appflowy-view-reference/dsh'
+      inject: [museHost, tools]
+
+    - id: muse-appflowy-markdown
+      name: '@muse/plugin-appflowy-markdown/dsh'
+      inject: [museHost, tools, museContextBroker]
+
+    - id: muse-appflowy-view-rename
+      name: '@muse/plugin-appflowy-view-rename/dsh'
+
+    # Community plugin market (https://github.com/dsh-market/dsh-market).
+    # Inserted here — not via dsh.profile.bundles — so the package's own
+    # bundle patch cannot double-insert id dsh-market. Flutter owns the
+    # sidecar process, so restart must stay off.
+    - id: dsh-market
+      name: dshmarket
+      config:
+        allowRestart: false

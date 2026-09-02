@@ -1,0 +1,37 @@
+DSH Office — NOTICE
+===================
+SPDX-License-Identifier: AGPL-3.0-only
+
+This repository ("DSH Office", https://github.com/openmuseai/dsh-office)
+is an open-source, local-first office suite built on DSH.
+
+Derived work & upstream attribution
+-----------------------------------
+This project is a fork / derived work of the AppFlowy ecosystem
+(https://github.com/AppFlowy-IO), which is distributed under the GNU
+Affero General Public License v3.0. In accordance with AGPL-3.0, this
+project remains licensed under AGPL-3.0 (see LICENSE) and the following
+upstream source baselines are acknowledged:
+
+  - https://github.com/AppFlowy-IO/AppFlowy        @ 6da2edad7
+  - https://github.com/AppFlowy-IO/AppFlowy-Cloud  @ 7f756f9
+  - https://github.com/AppFlowy-IO/AppFlowy-Collab @ 11bba58
+  - https://github.com/AppFlowy-IO/AppFlowy-Web    @ ee7dfd7e
+  - https://github.com/AppFlowy-IO/AppFlowy-Website@ 9c89ca3
+
+Upstream copyright and license notices are retained in the corresponding
+source files and in the upstream repositories. "AppFlowy" and "Flowy" are
+trademarks of their respective owners; the DSH Office project is not
+affiliated with or endorsed by them.
+
+Additional dependency sources
+-----------------------------
+Certain build-time dependencies are pulled directly from the AppFlowy-IO
+organization (e.g. appflowy-editor, appflowy-board, AppFlowy-plugins,
+AppFlowy-Collab, AppFlowy-Cloud git dependencies). These URLs are
+intentional upstream dependency references and are governed by their own
+licenses.
+
+New contributions to this project are Copyright (C) 2026 OpenMuseAI
+contributors, licensed under AGPL-3.0 (SPDX-License-Identifier:
+AGPL-3.0-only) unless stated otherwise.

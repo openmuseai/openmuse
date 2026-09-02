@@ -1,0 +1,68 @@
+{
+  "name": "@muse/host-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Domain-neutral Muse Host Bridge v1 contracts, codecs, and conformance fixtures",
+  "type": "module",
+  "packageManager": "pnpm@10.34.1",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    },
+    "./testing": {
+      "types": "./dist/src/testing/index.d.ts",
+      "import": "./dist/src/testing/index.js"
+    },
+    "./dsh": {
+      "types": "./dist/src/dsh/index.d.ts",
+      "import": "./dist/src/dsh/index.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./schemas/*": "./schemas/*"
+  },
+  "files": [
+    "dist/",
+    "schemas/",
+    "fixtures/",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "pnpm typecheck && node scripts/check-boundaries.mjs",
+    "test": "vitest run",
+    "contract:check": "node scripts/check-contract.mjs",
+    "check": "pnpm contract:check && pnpm lint && pnpm test && pnpm build && cargo fmt --manifest-path rust/Cargo.toml -- --check && cargo test --manifest-path rust/Cargo.toml --workspace"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.3.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "canonicalize": "4.0.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/cordis-plugin-loader": "1.0.2",
+    "@types/node": "26.2.0",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  }
+}

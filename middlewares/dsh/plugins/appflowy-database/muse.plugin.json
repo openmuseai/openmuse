@@ -1,0 +1,13 @@
+{
+  "protocol": "muse.plugin/v2", "pluginId": "muse.appflowy.database", "version": "1.0.0",
+  "artifacts": [
+    { "id": "agent", "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "kind": "npm", "entrypoint": "@muse/plugin-appflowy-database" },
+    { "id": "presentation", "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "kind": "flutter-bundle", "entrypoint": "MuseDatabaseUiFacet" },
+    { "id": "domain", "digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "kind": "rust-builtin", "entrypoint": "appflowy.database.local" }
+  ],
+  "facets": [
+    { "id": "agent", "kind": "agent", "artifact": "agent", "runtimes": ["dsh-native", "remote-dsh"], "requires": [{ "contract": "muse.table", "range": "^1.0.0" }] },
+    { "id": "presentation", "kind": "presentation", "artifact": "presentation", "runtimes": ["flutter"], "requires": [{ "contract": "muse.table", "range": "^1.0.0" }], "contributions": [{ "slot": "workspace.editor", "contributionId": "database-grid", "priority": 90 }] },
+    { "id": "domain", "kind": "domain", "artifact": "domain", "runtimes": ["rust-host", "remote-dsh"], "provides": [{ "contract": "muse.table", "version": "1.0.0", "priority": 100 }] }
+  ]
+}

@@ -1,0 +1,47 @@
+# Workspace-only (not the public dsh-office tree)
+/local/
+/backend/
+/vendors/
+/frontend/*
+!/frontend/client/
+!/frontend/client/**
+
+# Client build outputs (keep sources; ignore artifacts)
+/frontend/client/dist/
+frontend/client/frontend/appflowy_flutter/build/
+frontend/client/frontend/appflowy_flutter/.dart_tool/
+frontend/client/frontend/appflowy_flutter/.gradle/
+frontend/client/frontend/appflowy_flutter/android/.gradle/
+frontend/client/frontend/appflowy_flutter/android/app/src/main/jniLibs/
+frontend/client/frontend/rust-lib/target/
+frontend/client/frontend/appflowy_flutter/linux/flutter/ephemeral/
+frontend/client/frontend/appflowy_flutter/ios/Pods/
+frontend/client/frontend/appflowy_flutter/ios/Flutter/ephemeral/
+frontend/client/frontend/appflowy_flutter/packages/appflowy_backend/ios/libdart_ffi.a
+
+# Node / TS
+node_modules/
+**/node_modules/
+middlewares/**/dist/
+**/.turbo/
+**/.cache/
+**/coverage/
+
+# Secrets / env
+**/.env
+**/.env.local
+**/.env.*.local
+middlewares/dsh/deploy/.env
+
+# IDE / OS
+.idea/
+**/.idea/
+.vscode/
+**/.vscode/
+.DS_Store
+**/.DS_Store
+*.log
+*.iml
+**/temp/
+.git_back/
+~/

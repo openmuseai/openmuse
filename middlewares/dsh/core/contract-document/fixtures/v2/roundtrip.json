@@ -1,0 +1,24 @@
+{
+  "snapshot": {
+    "protocol": "muse.document/snapshot/v2",
+    "resourceRef": "document.1",
+    "revision": "7",
+    "content": {
+      "mediaType": "text/markdown",
+      "text": "# Muse\n\nDocument contract v2",
+      "truncated": false,
+      "byteLength": 28
+    }
+  },
+  "event": {
+    "protocol": "muse.document/event/v2",
+    "eventId": "event.7",
+    "cursor": "42",
+    "resourceRef": "document.1",
+    "revision": "8",
+    "commandRef": "command.7",
+    "origin": "agent",
+    "change": { "kind": "content-replaced" },
+    "occurredAt": 1000
+  }
+}

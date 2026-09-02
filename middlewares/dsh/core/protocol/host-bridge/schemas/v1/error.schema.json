@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/bridge/v1/error.schema.json",
+  "title": "Muse Bridge v1 errors",
+  "$defs": {
+    "bridgeErrorCode": {
+      "enum": [
+        "INVALID_ENVELOPE",
+        "UNSUPPORTED_PROTOCOL",
+        "HANDSHAKE_REQUIRED",
+        "REQUEST_ID_MISMATCH",
+        "UNAUTHENTICATED",
+        "FORBIDDEN",
+        "HOST_SESSION_EXPIRED",
+        "HOST_GENERATION_STALE",
+        "CAPABILITY_NOT_FOUND",
+        "DESCRIPTOR_STALE",
+        "BINDING_NOT_FOUND",
+        "BINDING_EXPIRED",
+        "BINDING_REVOKED",
+        "SCOPE_MISMATCH",
+        "OPERATION_NOT_FOUND",
+        "SCHEMA_UNAVAILABLE",
+        "SCHEMA_DIGEST_MISMATCH",
+        "INPUT_INVALID",
+        "OUTPUT_INVALID",
+        "POLICY_DENIED",
+        "APPROVAL_REQUIRED",
+        "APPROVAL_REJECTED",
+        "GRANT_INVALID",
+        "GRANT_EXPIRED",
+        "GRANT_CONSUMED",
+        "CANCELLED",
+        "DEADLINE_EXCEEDED",
+        "CURSOR_EXPIRED",
+        "RATE_LIMITED",
+        "UNAVAILABLE",
+        "INTERNAL"
+      ]
+    },
+    "bridgeErrorDetails": {
+      "type": "object",
+      "properties": {
+        "field": { "type": "string", "maxLength": 256 },
+        "reason": { "type": "string", "maxLength": 1024 },
+        "expected": { "type": "string", "maxLength": 256 },
+        "actual": { "type": "string", "maxLength": 256 },
+        "limit": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "schemaDigest": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/sha256Digest" },
+        "bindingId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "operationId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/namespacedName" }
+      },
+      "additionalProperties": false
+    },
+    "bridgeError": {
+      "type": "object",
+      "required": ["kind", "code", "message", "retryable"],
+      "properties": {
+        "kind": { "const": "bridge" },
+        "code": { "$ref": "#/$defs/bridgeErrorCode" },
+        "message": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "retryable": { "type": "boolean" },
+        "retryAfterMs": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/boundedMs" },
+        "details": { "$ref": "#/$defs/bridgeErrorDetails" }
+      },
+      "additionalProperties": false
+    },
+    "providerError": {
+      "type": "object",
+      "required": ["kind", "namespace", "code", "message", "retryable"],
+      "properties": {
+        "kind": { "const": "provider" },
+        "namespace": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/namespacedName" },
+        "code": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+        "message": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "retryable": { "type": "boolean" },
+        "retryAfterMs": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/boundedMs" },
+        "details": {}
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "oneOf": [
+        { "$ref": "#/$defs/bridgeError" },
+        { "$ref": "#/$defs/providerError" }
+      ]
+    },
+    "errorResult": {
+      "type": "object",
+      "required": ["ok", "error"],
+      "properties": {
+        "ok": { "const": false },
+        "error": { "$ref": "#/$defs/error" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

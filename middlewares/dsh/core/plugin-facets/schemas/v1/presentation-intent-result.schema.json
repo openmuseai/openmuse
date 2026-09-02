@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/plugin-facets/v1/presentation-intent-result.schema.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["protocol", "intentRef", "status", "completedAt"],
+  "properties": {
+    "protocol": { "const": "muse.presentation-intent-result/v1" },
+    "intentRef": { "$ref": "#/$defs/ref" },
+    "status": { "enum": ["applied", "rejected", "stale", "not-found", "not-supported", "surface-closed", "timed-out"] },
+    "appliedSurfaceInstanceRef": { "$ref": "#/$defs/ref" },
+    "observedDomainRevision": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$", "maxLength": 32 },
+    "reasonCode": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,63}$" },
+    "completedAt": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+  },
+  "$defs": { "ref": { "type": "string", "minLength": 1, "maxLength": 256 } }
+}

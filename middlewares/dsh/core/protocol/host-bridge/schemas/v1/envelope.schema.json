@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muse.dev/schemas/bridge/v1/envelope.schema.json",
+  "title": "Muse Bridge v1 logical envelope",
+  "type": "object",
+  "required": ["protocol", "major", "minor", "kind", "sentAt", "payload"],
+  "properties": {
+    "protocol": { "const": "muse-bridge" },
+    "major": { "const": 1 },
+    "minor": { "type": "integer", "minimum": 0, "maximum": 65535 },
+    "kind": {
+      "enum": [
+        "hello.request",
+        "hello.response",
+        "discover.request",
+        "discover.response",
+        "bind.request",
+        "bind.response",
+        "invoke.request",
+        "invoke.response",
+        "subscribe.request",
+        "subscribe.response",
+        "bridge.event",
+        "policy.evaluate.request",
+        "policy.evaluate.response",
+        "policy.finalize.request",
+        "policy.finalize.response",
+        "cancel.request",
+        "cancel.response",
+        "status.request",
+        "status.response"
+      ]
+    },
+    "requestId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+    "hostSessionId": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/opaqueId" },
+    "sentAt": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/timestampMs" },
+    "payload": {},
+    "extensions": {
+      "type": "object",
+      "maxProperties": 32,
+      "propertyNames": { "$ref": "https://muse.dev/schemas/bridge/v1/common.schema.json#/$defs/namespacedName" },
+      "additionalProperties": {}
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "bridge.event" } }, "required": ["kind"] },
+      "then": { "required": ["hostSessionId"], "not": { "required": ["requestId"] } },
+      "else": { "required": ["requestId"] }
+    },
+    {
+      "if": {
+        "properties": { "kind": { "enum": ["hello.request", "hello.response"] } },
+        "required": ["kind"]
+      },
+      "then": { "not": { "required": ["hostSessionId"] } },
+      "else": { "required": ["hostSessionId"] }
+    }
+  ],
+  "additionalProperties": true
+}
