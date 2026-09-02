@@ -1,6 +1,6 @@
 # 包技术地图
 
-每个包一份 `TECH.zh-CN.md`。npm 名不变；目录见 [README](README.md)。
+每个包一份 `TECH.zh-CN.md`。npm 名不变；目录见 [README](README.md)。Flutter 包没有 npm 名，见下方 `mobile` 节。
 
 **先读：** 若困惑 `@muse/dsh-appflowy` 为何什么都有，见 [plugins/dsh-appflowy/docs/ROLE.zh-CN.md](plugins/dsh-appflowy/docs/ROLE.zh-CN.md)。它是装配袋，不是逻辑 Plugin。
 
@@ -31,3 +31,9 @@
 | `@muse/dsh-appflowy` | [plugins/dsh-appflowy/TECH.zh-CN.md](plugins/dsh-appflowy/TECH.zh-CN.md) · [ROLE](plugins/dsh-appflowy/docs/ROLE.zh-CN.md) |
 
 依赖方向必须向下：业务 Facet → plugin-kit → host-bridge。Bridge 永不 import Plugin。
+
+## mobile（移动端宿主侧，Flutter，非 npm）
+
+| 包 | 文档 |
+|---|---|
+| `muse_dsh_mobile`（Dart） | [mobile/muse-dsh-mobile/README.md](mobile/muse-dsh-mobile/README.md) |

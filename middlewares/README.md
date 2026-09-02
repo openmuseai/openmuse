@@ -4,7 +4,7 @@ DSH plugins and runtime used by DSH Office. Do not modify `vendors/deepseek-harn
 
 | Path | Contents |
 |---|---|
-| [`dsh/`](dsh/README.md) | `@muse/*` packages (`core/` + `plugins/`) |
+| [`dsh/`](dsh/README.md) | `@muse/*` packages (`core/` + `plugins/`) + 移动端宿主侧 Flutter 库 (`mobile/`) |
 | [`dsh/deploy/`](dsh/deploy/README.md) | Remote DSH container and compose for local/dev |
 | [`scripts/`](scripts/) | Build packages, image, stage runtime, run sidecar |
 | [`docs/remote-dsh/`](docs/remote-dsh/ARCHITECTURE.zh-CN.md) | Architecture notes |

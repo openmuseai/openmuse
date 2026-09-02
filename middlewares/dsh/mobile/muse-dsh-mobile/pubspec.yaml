@@ -1,0 +1,21 @@
+name: muse_dsh_mobile
+description: Host-agnostic Flutter shell for Remote DSH Web Client (WebView, navigation, readiness, native-capability ports). Talks to the embedding app only through host ports.
+version: 0.2.0
+publish_to: none
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.27.4"
+
+dependencies:
+  connectivity_plus: ^5.0.2
+  flutter:
+    sdk: flutter
+  webview_flutter: ^4.13.0
+  webview_flutter_android: ^4.10.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter
+  webview_flutter_platform_interface: ^2.14.0
