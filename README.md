@@ -30,8 +30,12 @@ This public repository contains two independently runnable trees:
 # TypeScript packages used by the local DSH sidecar
 ./middlewares/scripts/build-muse-packages.sh
 
-# macOS debug app
+# macOS debug app / packed .app
 ./frontend/client/scripts/build-macos-appflowy.sh
+./frontend/client/scripts/pack-macos-client.sh
+
+# Windows portable zip + optional setup.exe
+python frontend/client/scripts/pack-windows-client.py
 
 # Android debug APK → frontend/client/dist/android/
 ./frontend/client/scripts/build-android-client.sh --debug

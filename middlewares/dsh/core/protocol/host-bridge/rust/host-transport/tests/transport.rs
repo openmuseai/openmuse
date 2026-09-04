@@ -378,6 +378,99 @@ fn system_test_now_ms() -> u64 {
         .min(u64::MAX as u128) as u64
 }
 
+#[cfg(windows)]
+struct LocalPipePeer;
+#[cfg(windows)]
+impl PeerAuthenticator for LocalPipePeer {
+    fn authorize(&self, peer: &PeerIdentity, _: &str) -> bool {
+        peer.carrier == DesktopCarrierKind::WindowsNamedPipe
+    }
+}
+
+#[cfg(windows)]
+struct EchoHandler;
+#[cfg(windows)]
+#[async_trait]
+impl DesktopRequestHandler for EchoHandler {
+    async fn handle(
+        &self,
+        message: Value,
+        _: &str,
+        _: TransportCancellation,
+    ) -> Result<Value, TransportError> {
+        Ok(message)
+    }
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn named_pipe_desktop_server_exchanges_an_authenticated_unary() {
+    let address = format!(
+        r"\\.\pipe\muse-host-test-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    );
+    let server = DesktopHostServer::start(
+        TransportConfig {
+            endpoint: DesktopEndpoint {
+                kind: DesktopCarrierKind::WindowsNamedPipe,
+                address: address.clone(),
+            },
+            host_generation: "host.1".into(),
+            connection_ttl_ms: 60_000,
+            max_deadline_horizon_ms: 60_000,
+            max_connections: 2,
+            max_concurrent_requests: 2,
+            max_payload_bytes: 4096,
+            max_response_bytes: 4096,
+            clock: Arc::new(SystemTransportClock),
+        },
+        Arc::new(LocalPipePeer),
+        Arc::new(SystemSecretSource),
+        Arc::new(EchoHandler),
+    )
+    .unwrap();
+
+    let mut client = {
+        let mut opened = None;
+        for _ in 0..50 {
+            match tokio::net::windows::named_pipe::ClientOptions::new().open(&address) {
+                Ok(client) => {
+                    opened = Some(client);
+                    break;
+                }
+                Err(_) => tokio::time::sleep(std::time::Duration::from_millis(20)).await,
+            }
+        }
+        opened.expect("named pipe listener should accept a local client")
+    };
+    let connect_request = serde_json::to_vec(&json!({
+        "type": "connect",
+        "proof": {
+            "runtimeInstanceId": "runtime.1",
+            "nonce": server.launch().nonce
+        }
+    }))
+    .unwrap();
+    write_frame(&mut client, &connect_request, 4096).await.unwrap();
+    let response: Value =
+        serde_json::from_slice(&read_frame(&mut client, 4096).await.unwrap()).unwrap();
+    assert_eq!(response["ok"], true);
+    assert!(response["connection"]["token"].as_str().is_some());
+    server.shutdown().await;
+}
+
+#[test]
+fn windows_named_pipe_address_shape_is_stable() {
+    assert!(windows_named_pipe_address_valid(r"\\.\pipe\appflowy-muse-host-1"));
+    assert!(!windows_named_pipe_address_valid(r"\\.\pipe\"));
+    assert!(!windows_named_pipe_address_valid("/tmp/appflowy-muse-host-0.sock"));
+    assert!(!windows_named_pipe_address_valid("pipe\\muse"));
+}
+
 fn idempotency_identity(fingerprint: &str) -> IdempotencyIdentity {
     IdempotencyIdentity {
         runtime_instance_id: "runtime.1".into(),

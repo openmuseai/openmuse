@@ -104,6 +104,14 @@ muse_script_build_macos() {
   printf '%s\n' "$(muse_frontend_scripts)/build-macos-appflowy.sh"
 }
 
+muse_script_pack_windows() {
+  printf '%s\n' "$(muse_frontend_scripts)/pack-windows-client.py"
+}
+
+muse_script_install_windows() {
+  printf '%s\n' "$(muse_frontend_scripts)/install-windows-client.py"
+}
+
 muse_script_build_ios() {
   printf '%s\n' "$(muse_frontend_scripts)/build-ios-client.sh"
 }
