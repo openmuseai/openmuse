@@ -43,14 +43,6 @@ This public repository contains two independently runnable trees:
 ./middlewares/scripts/run-dsh-appflowy.sh
 ```
 
-Plugin checks: `cd middlewares/dsh && pnpm install && pnpm check`.
-
-Build outputs live under `frontend/client/dist/` (gitignored).
-
-## What this repo is not
-
-Cloud, Web clones, production deploy playbooks, and private plans are **not** part of the open-source tree. A full local workspace may still keep `backend/`, `vendors/`, `frontend/web/`, and a private `local/` directory beside this checkout; those paths are listed in `.gitignore`.
-
 ## Security and compliance
 
 - Report vulnerabilities: [SECURITY.md](SECURITY.md)
