@@ -39,11 +39,27 @@ HARNESS_ALIASES = {
 }
 
 
+def _remove(dest: Path) -> None:
+    if dest.is_dir() and not dest.is_symlink():
+        shutil.rmtree(dest)
+    elif dest.exists() or dest.is_symlink():
+        dest.unlink()
+
+
 def rel_symlink(target: Path, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
-    if dest.exists() or dest.is_symlink():
-        dest.unlink()
-    dest.symlink_to(os.path.relpath(target, dest.parent))
+    _remove(dest)
+    relative = os.path.relpath(target, dest.parent)
+    try:
+        dest.symlink_to(relative, target_is_directory=target.is_dir())
+        return
+    except OSError:
+        pass
+    real = target.resolve()
+    if real.is_dir():
+        shutil.copytree(real, dest, symlinks=False)
+    else:
+        shutil.copy2(real, dest)
 
 
 def package_specs(pkg_json: Path) -> list[str]:

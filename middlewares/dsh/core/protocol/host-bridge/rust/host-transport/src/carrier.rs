@@ -1,6 +1,22 @@
+use std::future::Future;
+
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::TransportError;
+
+/// Byte stream used by the desktop Host protocol. Carriers supply this; the
+/// request dispatcher does not know UDS or named pipes.
+pub trait HostByteStream: AsyncRead + AsyncWrite + Unpin + Send {
+    fn wait_readable(&self) -> impl Future<Output = std::io::Result<()>> + Send;
+    fn try_read_now(&self, buf: &mut [u8]) -> std::io::Result<usize>;
+}
+
+/// Shape of a Windows named-pipe address. Protocol-level only; binding lives in
+/// the Windows carrier.
+pub fn windows_named_pipe_address_valid(address: &str) -> bool {
+    const PREFIX: &str = r"\\.\pipe\";
+    address.starts_with(PREFIX) && !address.contains('\0') && address.len() > PREFIX.len()
+}
 
 #[cfg(unix)]
 use std::{
@@ -88,12 +104,73 @@ impl UnixDomainSocketCarrier {
 }
 
 #[cfg(unix)]
+impl HostByteStream for UnixStream {
+    fn wait_readable(&self) -> impl Future<Output = std::io::Result<()>> + Send {
+        self.readable()
+    }
+
+    fn try_read_now(&self, buf: &mut [u8]) -> std::io::Result<usize> {
+        self.try_read(buf)
+    }
+}
+
+#[cfg(unix)]
 impl Drop for UnixDomainSocketCarrier {
     fn drop(&mut self) {
         let still_owned = std::fs::metadata(&self.path)
             .is_ok_and(|metadata| metadata.dev() == self.device && metadata.ino() == self.inode);
         if still_owned {
             let _ = std::fs::remove_file(&self.path);
+        }
+    }
+}
+
+#[cfg(windows)]
+use tokio::net::windows::named_pipe::{NamedPipeServer, ServerOptions};
+
+#[cfg(windows)]
+impl HostByteStream for NamedPipeServer {
+    fn wait_readable(&self) -> impl Future<Output = std::io::Result<()>> + Send {
+        self.readable()
+    }
+
+    fn try_read_now(&self, buf: &mut [u8]) -> std::io::Result<usize> {
+        self.try_read(buf)
+    }
+}
+
+/// Windows named-pipe listener factory. Each accepted client consumes one pipe
+/// instance; the accept loop creates the next instance before handling.
+#[cfg(windows)]
+pub struct WindowsNamedPipeListener {
+    name: String,
+}
+
+#[cfg(windows)]
+impl WindowsNamedPipeListener {
+    pub fn bind(endpoint: &DesktopEndpoint) -> Result<Self, TransportError> {
+        if endpoint.kind != DesktopCarrierKind::WindowsNamedPipe
+            || !windows_named_pipe_address_valid(&endpoint.address)
+        {
+            return Err(TransportError::InvalidFrame);
+        }
+        Ok(Self {
+            name: endpoint.address.clone(),
+        })
+    }
+
+    pub fn create_instance(&self, first: bool) -> Result<NamedPipeServer, TransportError> {
+        ServerOptions::new()
+            .first_pipe_instance(first)
+            .reject_remote_clients(true)
+            .create(&self.name)
+            .map_err(|_| TransportError::Unavailable)
+    }
+
+    pub fn peer_identity(_server: &NamedPipeServer) -> PeerIdentity {
+        PeerIdentity {
+            carrier: DesktopCarrierKind::WindowsNamedPipe,
+            principal: "user.local".into(),
         }
     }
 }

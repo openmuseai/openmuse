@@ -4,9 +4,6 @@ import {
   InProcessMuseHostTransport,
   type RuntimeProof
 } from "@muse/host-bridge";
-import { readFile, stat } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { MuseHostConnectorService, setMuseApprovalProofRequester } from "@muse/host-bridge/dsh";
 import { createCloudMarkdownProvider, e2eMarkdownProvider } from "@muse/plugin-appflowy-markdown/host";
 import { getLastWorkspaceHint } from "@muse/plugin-appflowy-workspace";
@@ -16,6 +13,7 @@ import {
   COMPOSITION_HOST_GENERATION,
   InProcessCompositionHandler
 } from "./composition-host.js";
+import { loadNativeLaunch } from "./native-launch.js";
 import { getLastDeviceAuth, getLastDocumentFocus } from "./session.js";
 
 const inProcessLimits = {
@@ -69,36 +67,7 @@ export class InProcessAppFlowyConnector extends MuseHostConnectorService {
   }
 }
 
-interface NativeLaunch {
-  readonly endpoint: string;
-  readonly nonce: string;
-  readonly hostGeneration: string;
-  readonly runtimeInstanceId: string;
-}
-
-const launchPath = (): string => process.env.MUSE_APPFLOWY_LAUNCH_FILE
-  ?? join(tmpdir(), `appflowy-muse-host-${process.getuid?.() ?? 0}.json`);
-
-const validOpaque = (value: unknown): value is string =>
-  typeof value === "string" && /^[A-Za-z0-9._~-]{1,128}$/u.test(value);
-
-const loadNativeLaunch = async (): Promise<NativeLaunch> => {
-  const path = launchPath();
-  const metadata = await stat(path);
-  if (!metadata.isFile() || (process.getuid !== undefined && metadata.uid !== process.getuid())) {
-    throw new Error("AppFlowy Muse launch descriptor is not owned by the current user");
-  }
-  if ((metadata.mode & 0o077) !== 0) throw new Error("AppFlowy Muse launch descriptor is not private");
-  const value = JSON.parse(await readFile(path, "utf8")) as Partial<NativeLaunch>;
-  if (
-    typeof value.endpoint !== "string" || !value.endpoint.startsWith("/")
-    || !validOpaque(value.hostGeneration) || !validOpaque(value.runtimeInstanceId)
-    || typeof value.nonce !== "string" || value.nonce.length < 32
-  ) throw new Error("AppFlowy Muse launch descriptor is invalid");
-  return value as NativeLaunch;
-};
-
-/** Production connector: UDS on Desktop; InProcess Cloud Host assembled from Plugin providers. */
+/** Production connector: named pipe on Windows, UDS on POSIX; InProcess Cloud Host. */
 export default class AppFlowyConnector extends MuseHostConnectorService {
   constructor(ctx: ConstructorParameters<typeof MuseHostConnectorService>[0]) {
     super(ctx);
