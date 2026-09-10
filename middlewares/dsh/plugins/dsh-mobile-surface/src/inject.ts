@@ -25,17 +25,19 @@ export const MOBILE_SURFACE_CSS =
   "html[data-muse-surface=mobile] [data-muse-new-session]{" +
   "font-size:22px;font-weight:500;}" +
   "html[data-muse-surface=mobile] [data-muse-drawer-backdrop]{" +
-  "display:none;position:fixed;z-index:22;inset:0;background:#0006;}" +
+  "display:none;position:fixed;z-index:22;top:0;right:0;bottom:0;" +
+  "left:min(86vw,320px);background:#0006;pointer-events:auto;}" +
   "html[data-muse-surface=mobile] [data-muse-mobile-frame]:not([data-sidebar-collapsed]) [data-muse-drawer-backdrop]{" +
   "display:block;}" +
   "html[data-muse-surface=mobile] [data-muse-region=sidebar]{" +
-  "position:fixed;z-index:25;top:0;left:0;bottom:0;width:min(86vw,320px);" +
-  "transform:translateX(-105%);transition:transform .2s ease;" +
+  "position:fixed;z-index:25;top:0;bottom:0;width:min(86vw,320px);" +
+  "left:-110%;transition:left .2s ease;transform:none;" +
   "background:var(--dsw-specific-sidebar-fill,inherit);overflow:auto;" +
+  "pointer-events:auto;touch-action:manipulation;" +
   "padding-top:env(safe-area-inset-top);" +
   "padding-bottom:env(safe-area-inset-bottom);}" +
   "html[data-muse-surface=mobile] [data-muse-mobile-frame]:not([data-sidebar-collapsed]) [data-muse-region=sidebar]{" +
-  "transform:translateX(0);}" +
+  "left:0;transform:none;}" +
   "html[data-muse-surface=mobile] [data-muse-region=center]{" +
   "flex:1;min-width:0;min-height:0;padding-top:48px;overflow-x:hidden;}" +
   "html[data-muse-surface=mobile] [data-muse-region=details]{display:none;}" +
@@ -81,11 +83,23 @@ export const LAYOUT_ADAPTER_SCRIPT = (() => {
     "el.setAttribute(\"data-muse-region\",names[k]);" +
     "k+=1;}" +
     "return true;}" +
-    "function clickSidebar(label){" +
-    "var root=document.querySelector(\"[data-muse-region=sidebar]\");" +
-    "if(!root)return;" +
-    "var btn=root.querySelector(\"button[aria-label=\\\"\"+label+\"\\\"]\");" +
-    "if(btn)btn.click();}" +
+    "function clickByAria(labels){" +
+    "var i=0;" +
+    "while(i!==labels.length){" +
+    "var nodes=document.querySelectorAll(\"button[aria-label=\\\"\"+labels[i]+\"\\\"]\");" +
+    "if(nodes.length){nodes[0].click();return true;}" +
+    "i+=1;}" +
+    "return false;}" +
+    "function drawerOpen(){" +
+    "var frame=document.querySelector(\"[data-muse-mobile-frame]\");" +
+    "return !!(frame&&!frame.hasAttribute(\"data-sidebar-collapsed\"));}" +
+    "function openDrawer(){return clickByAria([\"打开侧边栏\",\"Open sidebar\"]);}" +
+    "function closeDrawer(){" +
+    "if(!drawerOpen())return false;" +
+    "clickByAria([\"收起侧边栏\",\"Collapse sidebar\"]);" +
+    "return true;}" +
+    "function newSession(){" +
+    "return clickByAria([\"新建会话\",\"New session\",\"新会话\",\"New Session\"]);}" +
     "function mountChrome(){" +
     "var frame=document.querySelector(\"[data-muse-mobile-frame]\");" +
     "if(!frame||frame.getAttribute(\"data-muse-chrome\")===\"1\")return;" +
@@ -98,18 +112,18 @@ export const LAYOUT_ADAPTER_SCRIPT = (() => {
     "menu.setAttribute(\"aria-label\",\"打开侧边栏\");" +
     "menu.textContent=\"\\u2261\";" +
     "menu.addEventListener(\"click\",function(){" +
-    "var collapsed=frame.hasAttribute(\"data-sidebar-collapsed\");" +
-    "clickSidebar(collapsed?\"打开侧边栏\":\"收起侧边栏\");});" +
+    "if(frame.hasAttribute(\"data-sidebar-collapsed\"))openDrawer();" +
+    "else closeDrawer();});" +
     "var neu=document.createElement(\"button\");" +
     "neu.type=\"button\";" +
     "neu.setAttribute(\"data-muse-new-session\",\"true\");" +
     "neu.setAttribute(\"aria-label\",\"新建会话\");" +
     "neu.textContent=\"+\";" +
-    "neu.addEventListener(\"click\",function(){clickSidebar(\"新建会话\");});" +
+    "neu.addEventListener(\"click\",function(){newSession();});" +
     "bar.appendChild(menu);bar.appendChild(neu);" +
     "var veil=document.createElement(\"div\");" +
     "veil.setAttribute(\"data-muse-drawer-backdrop\",\"true\");" +
-    "veil.addEventListener(\"click\",function(){clickSidebar(\"收起侧边栏\");});" +
+    "veil.addEventListener(\"click\",function(){closeDrawer();});" +
     "frame.appendChild(bar);frame.appendChild(veil);}" +
     "function hideTokenChrome(){" +
     "var card=document.querySelector(\"[data-composer-card]\");" +
@@ -119,11 +133,23 @@ export const LAYOUT_ADAPTER_SCRIPT = (() => {
     "var keep=n.hasAttribute(\"data-queue-dock\")||n.querySelector(\"[data-queue-dock]\");" +
     "if(!keep)n.setAttribute(\"data-muse-token-chrome\",\"true\");" +
     "n=n.nextElementSibling;}}" +
+    "function bindBack(){" +
+    "if(window.__museDshBackBound)return;" +
+    "window.__museDshBackBound=1;" +
+    "window.addEventListener(\"muse-native-capability\",function(ev){" +
+    "var d=ev&&ev.detail;if(!d||d.type!==\"back.request\")return;" +
+    "var consumed=closeDrawer();" +
+    "if(window.MuseNativeCapability&&typeof window.MuseNativeCapability.postMessage===\"function\"){" +
+    "window.MuseNativeCapability.postMessage(JSON.stringify({" +
+    "protocol:\"muse.native-capability/v1\",type:\"back.result\"," +
+    "requestId:d.requestId||\"back\",consumed:consumed}));}" +
+    "});}" +
     "function activate(){" +
     "if(!(window.MuseNativeCapability&&typeof window.MuseNativeCapability.postMessage===\"function\"))return;" +
     "document.documentElement.setAttribute(\"data-muse-surface\",\"mobile\");" +
     "if(!adapt())return;" +
     "mountChrome();" +
+    "bindBack();" +
     "hideTokenChrome();" +
     "var frame=document.querySelector(\"[data-muse-mobile-frame]\");" +
     "if(!frame||frame.getAttribute(\"data-muse-observed\")===\"1\")return;" +

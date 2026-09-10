@@ -6,7 +6,8 @@ describe("mobile surface inject", () => {
   it("scopes CSS to Muse markers and frozen data-* only", () => {
     expect(MOBILE_SURFACE_CSS).toContain("[data-muse-surface=mobile]");
     expect(MOBILE_SURFACE_CSS).toContain("[data-muse-mobile-frame]");
-    expect(MOBILE_SURFACE_CSS).toContain("[data-sidebar-collapsed]");
+    expect(MOBILE_SURFACE_CSS).toContain("left:-110%");
+    expect(MOBILE_SURFACE_CSS).not.toContain("translateX");
     expect(MOBILE_SURFACE_CSS).toContain("[data-muse-mobile-header]");
     expect(MOBILE_SURFACE_CSS).toContain("[data-composer-card]");
     expect(MOBILE_SURFACE_CSS).toContain("[data-time-hover-root]");
@@ -22,7 +23,11 @@ describe("mobile surface inject", () => {
     expect(body).toContain("data-shell-overlay");
     expect(body).toContain("data-muse-mobile-frame");
     expect(body).toContain("打开侧边栏");
+    expect(body).toContain("Open sidebar");
     expect(body).toContain("新建会话");
+    expect(body).toContain("New session");
+    expect(body).toContain("back.request");
+    expect(body).toContain("back.result");
     expect(body).toContain("data-muse-token-chrome");
   });
 
