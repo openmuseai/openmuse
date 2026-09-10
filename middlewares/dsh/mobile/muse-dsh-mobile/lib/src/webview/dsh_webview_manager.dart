@@ -10,6 +10,7 @@ import 'package:muse_dsh_mobile/src/webview/dsh_webview_session.dart';
 import 'package:muse_dsh_mobile/src/webview/dsh_webview_storage.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:muse_dsh_mobile/src/webview/dsh_mobile_surface_inject.dart';
 
 class DshWebViewManager {
   DshWebViewManager({
@@ -109,6 +110,7 @@ class DshWebViewManager {
     await webView.runJavaScript(
       'document.documentElement.setAttribute("data-muse-surface","mobile");',
     );
+    await webView.runJavaScript(dshMobileSurfaceRepairScript);
   }
 
   Future<void> _installAndroidFileChooser(WebViewController webView) async {

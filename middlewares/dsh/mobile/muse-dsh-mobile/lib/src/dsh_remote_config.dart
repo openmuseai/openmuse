@@ -12,6 +12,12 @@ class DshRemoteConfig {
 
   static DshRemoteConfig? fromEnvironment() => tryParse(_configuredUrl);
 
+  /// Compile-time public origin. Query strings are rejected so launch tokens
+  /// cannot be baked into the binary.
+  ///
+  /// This is an **origin allowlist**, not the WebView page URL. Production
+  /// loads `DshRemoteConfig.fromWebUrl` from `session/open`. Do not call
+  /// `loadRequest(fromEnvironment().publicUri)` when the path is `/dsh/`.
   @visibleForTesting
   static DshRemoteConfig? tryParse(String raw) {
     final uri = Uri.tryParse(raw.trim());
@@ -26,6 +32,18 @@ class DshRemoteConfig {
     return DshRemoteConfig._(
       uri.replace(path: uri.path.isEmpty ? '/' : uri.path),
     );
+  }
+
+  /// Runtime URL from `session/open` (`/dsh/` or `/u/<hash>/?token=`).
+  static DshRemoteConfig? fromWebUrl(String raw) {
+    final uri = Uri.tryParse(raw.trim());
+    if (uri == null ||
+        uri.scheme != 'https' ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty) {
+      return null;
+    }
+    return DshRemoteConfig._(uri);
   }
 
   bool allows(Uri uri) =>

@@ -16,6 +16,7 @@ class DshMobileSurfaceState {
     this.sessionReady = false,
     this.fatalMessage,
     this.bridgeWarning,
+    this.queuePosition,
     this.controller,
   });
 
@@ -27,6 +28,7 @@ class DshMobileSurfaceState {
   final bool facetReady;
   final String? fatalMessage;
   final String? bridgeWarning;
+  final int? queuePosition;
   final WebViewController? controller;
 
   DshMobileSurfaceKind get kind {
@@ -40,6 +42,9 @@ class DshMobileSurfaceState {
       controller != null && fatalMessage == null && !loading;
 
   String get statusBanner {
+    if (queuePosition != null && loading) {
+      return '排队中（第 $queuePosition 位）。首次启动可能需要一分钟。';
+    }
     if (facetReady) {
       return '独占内测 · 工作区联动已连接';
     }

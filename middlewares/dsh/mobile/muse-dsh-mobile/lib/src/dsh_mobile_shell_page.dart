@@ -8,6 +8,7 @@ import 'package:muse_dsh_mobile/src/dsh_mobile_control_host.dart';
 import 'package:muse_dsh_mobile/src/dsh_mobile_coordinator.dart';
 import 'package:muse_dsh_mobile/src/dsh_mobile_surface_state.dart';
 import 'package:muse_dsh_mobile/src/dsh_remote_config.dart';
+import 'package:muse_dsh_mobile/src/dsh_session_api.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 /// Host-agnostic DSH shell. The embedding app supplies [controlHost] and
@@ -20,6 +21,11 @@ class DshMobileShellPage extends StatefulWidget {
     this.capabilityHost,
     this.fileChooserHost,
     this.endpoint,
+    this.sessionApi,
+    this.sessionWebUrl,
+    this.sessionDeviceId,
+    this.accessToken,
+    this.requireRemoteSession = false,
     this.title = 'DeepSeek Agent',
   });
 
@@ -28,6 +34,11 @@ class DshMobileShellPage extends StatefulWidget {
   final DshNativeCapabilityHost? capabilityHost;
   final DshFileChooserHost? fileChooserHost;
   final DshRemoteConfig? endpoint;
+  final DshSessionApi? sessionApi;
+  final Uri? sessionWebUrl;
+  final String? sessionDeviceId;
+  final String? accessToken;
+  final bool requireRemoteSession;
   final String title;
 
   @override
@@ -46,6 +57,11 @@ class _DshMobileShellPageState extends State<DshMobileShellPage> {
       capabilityHost: widget.capabilityHost,
       fileChooserHost: widget.fileChooserHost,
       endpoint: widget.endpoint,
+      sessionApi: widget.sessionApi,
+      sessionWebUrl: widget.sessionWebUrl,
+      sessionDeviceId: widget.sessionDeviceId,
+      accessToken: widget.accessToken,
+      requireRemoteSession: widget.requireRemoteSession,
       notify: () {
         if (mounted) setState(() {});
       },
@@ -72,6 +88,17 @@ class _DshMobileShellPageState extends State<DshMobileShellPage> {
       },
       child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            icon: const BackButtonIcon(),
+            onPressed: () {
+              unawaited(
+                DshMobileBackDispatcher(_coordinator.capabilityBroker)
+                    .handle(context),
+              );
+            },
+          ),
           title: Text(widget.title),
           actions: [
             IconButton(
@@ -98,7 +125,21 @@ class _DshMobileShellPageState extends State<DshMobileShellPage> {
               )
             : SafeArea(
                 child: surface.loading
-                    ? const Center(child: CircularProgressIndicator.adaptive())
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const CircularProgressIndicator.adaptive(),
+                            if (surface.queuePosition != null) ...[
+                              const SizedBox(height: 12),
+                              Text(
+                                surface.statusBanner,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ],
+                        ),
+                      )
                     : Center(
                         child: Padding(
                           padding: const EdgeInsets.all(24),

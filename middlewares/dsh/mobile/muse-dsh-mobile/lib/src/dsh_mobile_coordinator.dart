@@ -9,6 +9,8 @@ import 'package:muse_dsh_mobile/src/dsh_mobile_control_host.dart';
 import 'package:muse_dsh_mobile/src/dsh_mobile_error_codes.dart';
 import 'package:muse_dsh_mobile/src/dsh_mobile_surface_state.dart';
 import 'package:muse_dsh_mobile/src/dsh_remote_config.dart';
+import 'package:muse_dsh_mobile/src/dsh_placement.dart';
+import 'package:muse_dsh_mobile/src/dsh_session_api.dart';
 import 'package:muse_dsh_mobile/src/webview/dsh_webview_manager.dart';
 import 'package:muse_dsh_mobile/src/webview/dsh_webview_session.dart';
 
@@ -18,16 +20,33 @@ class DshMobileCoordinator with WidgetsBindingObserver {
     required this.notify,
     this.controlHost,
     this.endpoint,
+    this.sessionWebUrl,
+    this.sessionApi,
+    this.sessionRef,
+    this.sessionDeviceId,
+    this.accessToken,
+    this.requireRemoteSession = false,
     this.capabilityHost,
     this.fileChooserHost,
+    this.sleep = _defaultSleep,
   });
+
+  static Future<void> _defaultSleep(Duration duration) =>
+      Future<void>.delayed(duration);
 
   final DshMobileScope scope;
   final VoidCallback notify;
   final DshMobileControlHost? controlHost;
   final DshRemoteConfig? endpoint;
+  final Uri? sessionWebUrl;
+  final DshSessionApi? sessionApi;
+  String? sessionRef;
+  final String? sessionDeviceId;
+  final String? accessToken;
+  final bool requireRemoteSession;
   final DshNativeCapabilityHost? capabilityHost;
   final DshFileChooserHost? fileChooserHost;
+  final Future<void> Function(Duration duration) sleep;
 
   final session = DshWebViewSession();
   DshWebViewManager? _manager;
@@ -37,11 +56,13 @@ class DshMobileCoordinator with WidgetsBindingObserver {
   Timer? _scopeCheck;
   String? _fatal;
   String? _bridgeWarning;
+  int? _queuePosition;
   bool _bridgeConnected = false;
   bool _loading = false;
   bool _pageLoaded = false;
   int _controlGeneration = 0;
   DateTime? facetReadyAt;
+  String? _openedDeviceId;
 
   DshNativeCapabilityBroker? get capabilityBroker => _capabilityBroker;
 
@@ -52,6 +73,7 @@ class DshMobileCoordinator with WidgetsBindingObserver {
         facetReady: _bridgeConnected,
         fatalMessage: _fatal,
         bridgeWarning: _bridgeWarning,
+        queuePosition: _queuePosition,
         controller: _manager?.controller,
       );
 
@@ -99,8 +121,12 @@ class DshMobileCoordinator with WidgetsBindingObserver {
     await previous?.dispose();
     final generation = session.generation;
     bool live() => session.isLive(generation) && scope.isCurrentScope();
+    _queuePosition = null;
     try {
-      final config = endpoint ?? DshRemoteConfig.fromEnvironment();
+      if (requireRemoteSession && sessionApi == null) {
+        throw StateError(DshMobileErrorCode.needAuth.code);
+      }
+      final config = await _resolveConfig(live);
       if (config == null ||
           scope.workspaceRef.isEmpty ||
           !scope.isCurrentScope()) {
@@ -141,18 +167,78 @@ class DshMobileCoordinator with WidgetsBindingObserver {
       if (live() && _bridgeWarning == null) {
         unawaited(_connectControl(config, generation));
       }
-    } catch (_) {
+    } catch (error) {
       if (session.isLive(generation)) {
-        _fail(DshMobileErrorCode.configInvalid.message);
+        if (error is StateError &&
+            error.message == DshMobileErrorCode.needAuth.code) {
+          _fail(DshMobileErrorCode.needAuth.message);
+        } else {
+          _fail(DshMobileErrorCode.configInvalid.message);
+        }
       }
     }
   }
 
   Future<void> _disconnect() async {
+    final api = sessionApi;
+    final ref = sessionRef;
+    final device = sessionDeviceId ?? _openedDeviceId;
+    if (api != null && ref != null && device != null) {
+      try {
+        await api.close(sessionRef: ref, deviceId: device);
+      } catch (_) {
+        /* best-effort release */
+      }
+    }
     session.bump();
     _scopeCheck?.cancel();
     await _capabilityBroker?.cancelSpeech();
     await _disconnectControl();
+  }
+
+  Future<DshRemoteConfig?> _resolveConfig(bool Function() live) async {
+    final api = sessionApi;
+    if (api != null) {
+      final device = sessionDeviceId ?? 'mobile.${scope.accountRef}';
+      _openedDeviceId = device;
+      final allowlist =
+          (endpoint ?? DshRemoteConfig.fromEnvironment())?.publicUri;
+      var opened = await api.open(
+        workspaceRef: scope.workspaceRef,
+        deviceId: device,
+      );
+      while (opened.isQueued) {
+        if (!live()) return null;
+        sessionRef = opened.sessionRef;
+        _queuePosition = opened.queuePosition;
+        notify();
+        await sleep(Duration(milliseconds: opened.retryAfterMs ?? 10000));
+        if (!live()) return null;
+        opened = await api.open(
+          workspaceRef: scope.workspaceRef,
+          deviceId: device,
+        );
+      }
+      final decision = DshPlacement.fromOpen(
+        accessToken: accessToken ?? 'session-api',
+        session: opened,
+        allowlist: allowlist,
+      );
+      if (decision.isFailed) {
+        throw StateError(decision.errorCode ?? DshMobileErrorCode.configInvalid.code);
+      }
+      sessionRef = decision.sessionRef;
+      _queuePosition = null;
+      return DshRemoteConfig.fromWebUrl(decision.webUrl!);
+    }
+    final resolved = sessionWebUrl;
+    final config = resolved != null
+        ? DshRemoteConfig.fromWebUrl(resolved.toString())
+        : endpoint ?? DshRemoteConfig.fromEnvironment();
+    if (config != null && DshPlacement.isSharedDshPath(config.publicUri)) {
+      throw StateError(DshMobileErrorCode.configInvalid.code);
+    }
+    return config;
   }
 
   Future<void> _disconnectControl() async {

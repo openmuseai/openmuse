@@ -10,6 +10,20 @@ void main() {
     expect(config.allows(Uri.parse('http://dsh.example.com/')), isFalse);
   });
 
+  test('accepts same-origin /dsh/ and session webUrl with launch token', () {
+    final sameOrigin = DshRemoteConfig.tryParse('https://app.example.com/dsh/')!;
+    expect(sameOrigin.publicUri.path, '/dsh/');
+    final session = DshRemoteConfig.fromWebUrl(
+      'https://app.example.com/u/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/?token=launch',
+    )!;
+    expect(session.allows(Uri.parse(
+      'https://app.example.com/u/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/?token=launch',
+    )), isTrue);
+    expect(DshRemoteConfig.tryParse(
+      'https://app.example.com/u/x/?token=launch',
+    ), isNull);
+  });
+
   test('rejects insecure or ambiguous configured URLs', () {
     expect(DshRemoteConfig.tryParse('http://127.0.0.1:3080'), isNull);
     expect(DshRemoteConfig.tryParse('https://user@dsh.example.com'), isNull);

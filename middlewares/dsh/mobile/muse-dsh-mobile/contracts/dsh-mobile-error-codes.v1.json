@@ -3,6 +3,7 @@
     "DSH_TLS_UNTRUSTED": "DSH 的 HTTPS 证书未通过手机验证。请检查服务器证书链、手机时间及网络；不会跳过证书验证。",
     "DSH_DOCUMENT_LOAD_FAILED": "DSH 页面加载失败，请检查 HTTPS 连接。",
     "DSH_CONFIG_INVALID": "DSH 页面加载失败，请检查工作区和 HTTPS 地址配置。",
+    "NEED_AUTH": "登录 Cloud 后才能启动远程 Agent。",
     "DSH_SCOPE_CHANGED": "账号或工作区已改变，请返回后重新打开 Agent。"
   },
   "degraded": {

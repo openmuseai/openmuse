@@ -18,6 +18,10 @@ class DshMobileErrorCode {
     'DSH_CONFIG_INVALID',
     'DSH 页面加载失败，请检查工作区和 HTTPS 地址配置。',
   );
+  static const needAuth = DshMobileErrorCode._(
+    'NEED_AUTH',
+    '登录 Cloud 后才能启动远程 Agent。',
+  );
   static const scopeChanged = DshMobileErrorCode._(
     'DSH_SCOPE_CHANGED',
     '账号或工作区已改变，请返回后重新打开 Agent。',
@@ -71,6 +75,7 @@ class DshMobileErrorCode {
     tlsUntrusted,
     documentLoadFailed,
     configInvalid,
+    needAuth,
     scopeChanged,
   ];
 

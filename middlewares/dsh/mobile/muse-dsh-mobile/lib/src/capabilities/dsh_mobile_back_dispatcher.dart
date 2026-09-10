@@ -10,7 +10,8 @@ class DshMobileBackDispatcher {
   Future<void> handle(BuildContext context) async {
     final consumed = await broker?.requestBack() ?? false;
     if (!consumed && context.mounted) {
-      Navigator.of(context).maybePop();
+      // PopScope.canPop is false so maybePop() is a no-op.
+      Navigator.of(context).pop();
     }
   }
 }
