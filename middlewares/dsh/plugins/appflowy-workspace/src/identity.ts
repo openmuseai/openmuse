@@ -3,6 +3,7 @@ import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import type { Context } from "@deepseek-ai/cordis";
+import { resetLastWorkspaceCatalog } from "./catalog.js";
 
 /** Display title used when the AppFlowy hint omits a name. */
 export const APPFLOWY_WORKSPACE_TITLE = "AppFlowy";
@@ -127,7 +128,7 @@ const writeReadme = async (canonical: string, title: string, appflowyWorkspaceId
       "This is the DSH working directory bound to an AppFlowy workspace.",
       ...(appflowyWorkspaceId === undefined ? [] : [`AppFlowy workspace id: ${appflowyWorkspaceId}`]),
       "AppFlowy pages are not files in this folder. glob/ls will only see README.md.",
-      "List pages with muse_workspace_list_views (Cloud folder collab).",
+      "List pages with muse_workspace_list_views (Host sidebar catalog, then Cloud folder collab).",
       "Newly created or imported pages appear on the next list call.",
       "Documents are read and written through Muse tools, not as files here.",
       ""
@@ -190,6 +191,7 @@ export const getLastWorkspaceHint = (): AppFlowyWorkspaceHint | undefined => las
 /** Test helper: drop the in-memory bind so list APIs see NO_WORKSPACE. */
 export const resetLastWorkspaceHint = (): void => {
   lastBoundHint = undefined;
+  resetLastWorkspaceCatalog();
 };
 
 const persistHint = async (hint: AppFlowyWorkspaceHint): Promise<void> => {
@@ -213,18 +215,21 @@ export const applyWorkspaceHint = async (
   registry: DshWorkspaceRegistry,
   hint: AppFlowyWorkspaceHint
 ): Promise<DshWorkspace> => {
+  if (lastBoundHint !== undefined && lastBoundHint.appflowyWorkspaceId !== hint.appflowyWorkspaceId) {
+    resetLastWorkspaceCatalog();
+  }
   const bound = await bindAppFlowyWorkspaceAt(registry, {
     directory: workspaceDirForId(hint.appflowyWorkspaceId),
     title: hint.title,
     appflowyWorkspaceId: hint.appflowyWorkspaceId
   });
-    lastBoundHint = hint;
-    try {
-      await persistHint(hint);
-    } catch {
-      /* bind already succeeded; hint file is best-effort for Host restart */
-    }
-    return bound;
+  lastBoundHint = hint;
+  try {
+    await persistHint(hint);
+  } catch {
+    /* bind already succeeded; hint file is best-effort for Host restart */
+  }
+  return bound;
 };
 
 export const applyHintFile = async (

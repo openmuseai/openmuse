@@ -5,12 +5,14 @@ import {
   WORKSPACE_CURRENT_OPERATION,
   WORKSPACE_FAMILY,
   WORKSPACE_TREE_OPERATION,
+  type CloudWorkspaceInvokeResult,
   currentInputSchema,
   currentOutputSchema,
   invokeCloudWorkspace,
   treeInputSchema,
   treeOutputSchema
 } from "./cloud.js";
+import { cloudTreeUnwired, projectBoundCatalogTree } from "./catalog.js";
 import { assertWorkspaceScope } from "./scope.js";
 
 const BINDING_ID = "binding.appflowy-workspace";
@@ -91,6 +93,48 @@ export const e2eWorkspaceProvider: InProcessDomainProvider = {
   }
 };
 
+export type WorkspaceTreeResolve =
+  | { readonly ok: true; readonly value: JsonValue; readonly source: "cloud.folder" | "host.catalog" }
+  | { readonly ok: false; readonly code: "UNAVAILABLE" | "OPERATION_NOT_FOUND" | "SCOPE_MISMATCH"; readonly message: string };
+
+/** Cloud folder collab first; Host catalog when the adapter is unwired. SCOPE_MISMATCH stays fail-closed. */
+export const resolveWorkspaceTree = async (options: {
+  readonly boundWorkspaceId?: string;
+  readonly input: JsonValue;
+  readonly cloudBaseUrl?: string;
+  readonly accessToken?: string;
+  readonly deviceId?: string;
+  readonly fetchImpl?: typeof fetch;
+}): Promise<WorkspaceTreeResolve> => {
+  const scoped = assertWorkspaceScope(options.boundWorkspaceId, options.input);
+  if (!scoped.ok) {
+    return { ok: false, code: scoped.code, message: scoped.message };
+  }
+  let cloud: CloudWorkspaceInvokeResult | undefined;
+  if (options.cloudBaseUrl !== undefined && options.cloudBaseUrl.length > 0) {
+    cloud = await invokeCloudWorkspace({
+      baseUrl: options.cloudBaseUrl,
+      operationId: WORKSPACE_TREE_OPERATION,
+      payload: options.input,
+      ...(options.accessToken === undefined ? {} : { accessToken: options.accessToken }),
+      ...(options.deviceId === undefined ? {} : { deviceId: options.deviceId }),
+      ...(options.fetchImpl === undefined ? {} : { fetchImpl: options.fetchImpl })
+    });
+    if (cloud.ok) {
+      return { ok: true, value: cloud.value, source: "cloud.folder" };
+    }
+    if (cloud.code === "SCOPE_MISMATCH" || !cloudTreeUnwired(cloud)) {
+      return cloud;
+    }
+  }
+  const projected = projectBoundCatalogTree(options.boundWorkspaceId, options.input);
+  if (projected !== undefined) {
+    return { ok: true, value: projected, source: "host.catalog" };
+  }
+  if (cloud !== undefined && !cloud.ok) return cloud;
+  return { ok: false, code: "UNAVAILABLE", message: "UNAVAILABLE: CLOUD_COLLAB_ADAPTER_NOT_WIRED" };
+};
+
 export const createCloudWorkspaceProvider = (): InProcessDomainProvider => ({
   descriptor: workspaceDescriptor,
   bindingId: BINDING_ID,
@@ -99,6 +143,17 @@ export const createCloudWorkspaceProvider = (): InProcessDomainProvider => ({
     const scoped = assertWorkspaceScope(ctx.boundWorkspaceId, input);
     if (!scoped.ok) {
       return { ok: false, code: scoped.code, message: scoped.message };
+    }
+    if (operationId === WORKSPACE_TREE_OPERATION) {
+      const resolved = await resolveWorkspaceTree({
+        input,
+        ...(ctx.boundWorkspaceId === undefined ? {} : { boundWorkspaceId: ctx.boundWorkspaceId }),
+        ...(ctx.cloudBaseUrl === undefined ? {} : { cloudBaseUrl: ctx.cloudBaseUrl }),
+        ...(ctx.accessToken === undefined ? {} : { accessToken: ctx.accessToken }),
+        ...(ctx.deviceId === undefined ? {} : { deviceId: ctx.deviceId })
+      });
+      if (resolved.ok) return { ok: true, value: resolved.value };
+      return resolved;
     }
     const baseUrl = ctx.cloudBaseUrl;
     if (baseUrl === undefined) {

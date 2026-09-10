@@ -1,6 +1,6 @@
 import type { JsonValue } from "@muse/host-bridge";
 import { getLastWorkspaceHint } from "./identity.js";
-import { invokeCloudWorkspace, WORKSPACE_TREE_OPERATION } from "./cloud.js";
+import { resolveWorkspaceTree } from "./host.js";
 
 export const WORKSPACE_VIEWS_PATH = "/muse/v1/workspace/views";
 
@@ -66,19 +66,16 @@ export const listBoundWorkspaceViews = async (
     return { ok: false, status: 401, error: "NO_DEVICE_TOKEN" };
   }
   const baseUrl = deps.cloudBaseUrl ?? process.env.MUSE_DOCUMENT_CLOUD_URL?.trim()?.replace(/\/$/, "");
-  if (baseUrl === undefined || baseUrl.length === 0) {
-    return { ok: false, status: 503, error: "CLOUD_UNAVAILABLE" };
-  }
-  const invoked = await invokeCloudWorkspace({
-    baseUrl,
-    operationId: WORKSPACE_TREE_OPERATION,
-    payload: {
+  const invoked = await resolveWorkspaceTree({
+    boundWorkspaceId: hint.appflowyWorkspaceId,
+    input: {
       workspaceId: hint.appflowyWorkspaceId,
       ...(query.parentViewId === undefined ? {} : { parentViewId: query.parentViewId }),
       ...(query.cursor === undefined ? {} : { cursor: query.cursor }),
       ...(query.limit === undefined ? {} : { limit: query.limit }),
       ...(query.depth === undefined ? {} : { depth: query.depth })
     },
+    ...(baseUrl === undefined || baseUrl.length === 0 ? {} : { cloudBaseUrl: baseUrl }),
     accessToken: auth.token,
     deviceId: auth.deviceId,
     ...(deps.fetchImpl === undefined ? {} : { fetchImpl: deps.fetchImpl })
@@ -97,7 +94,7 @@ export const listBoundWorkspaceViews = async (
     status: 200,
     body: {
       ok: true,
-      source: "cloud.folder",
+      source: invoked.source,
       cwdNote: "DSH cwd is README-only; this list is AppFlowy folder views",
       tree: invoked.value
     }

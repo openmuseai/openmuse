@@ -33,6 +33,9 @@ export function interpretCloudWorkspaceResponse(body: unknown): CloudWorkspaceIn
     if (message.includes("SCOPE_MISMATCH")) {
       return { ok: false, code: "SCOPE_MISMATCH", message };
     }
+    if (message === "NOT_FOUND" || message.includes("CLOUD_COLLAB_ADAPTER_NOT_WIRED")) {
+      return { ok: false, code: "UNAVAILABLE", message: "UNAVAILABLE: CLOUD_COLLAB_ADAPTER_NOT_WIRED" };
+    }
     return { ok: false, code: "UNAVAILABLE", message };
   }
   if (rec.data === undefined) {

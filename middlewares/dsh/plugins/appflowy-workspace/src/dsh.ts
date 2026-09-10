@@ -14,11 +14,12 @@ export const APPFLOWY_WORKSPACE_TREE_TOOL = "muse_workspace_list_views";
 
 /** Tells the model not to glob the DSH cwd; pages live in Cloud folder collab. */
 export const WORKSPACE_LIST_PROMPT =
-  "AppFlowy pages live in Cloud folder collab, not in the DSH cwd. "
+  "AppFlowy pages live in the Host workspace plugin (sidebar catalog) and Cloud folder collab, "
+  + "not in the DSH cwd. "
   + "The bound workspace directory only contains README.md by design; glob/ls will not list pages. "
   + "To list this workspace's files/pages, call muse_workspace_list_views. "
   + "Newly created or imported AppFlowy pages appear on the next muse_workspace_list_views call "
-  + "(Cloud folder is the source of truth; there is no cwd watcher).";
+  + "(Host catalog first while Cloud folder collab is unwired; there is no cwd watcher).";
 
 const expectedInputDigest = digestSchema(treeInputSchema);
 const expectedOutputDigest = digestSchema(treeOutputSchema);
@@ -74,7 +75,7 @@ export const appFlowyWorkspaceQueryDefinition: MusePluginDefinition = {
     tools: [{
       name: APPFLOWY_WORKSPACE_TREE_TOOL,
       description:
-        "List bounded AppFlowy folder views (id, title, layout) from Cloud collab. Does not read document bodies or DSH cwd files. Use cursor when truncated is true.",
+        "List bounded AppFlowy folder views (id, title, layout) from the Host sidebar catalog or Cloud collab. Does not read document bodies or DSH cwd files. Use cursor when truncated is true.",
       operationId: WORKSPACE_TREE_OPERATION,
       parameters: modelInputSchema,
       output: modelOutputSchema,

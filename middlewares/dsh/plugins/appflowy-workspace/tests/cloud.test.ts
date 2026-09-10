@@ -50,6 +50,14 @@ describe("Cloud workspace adapter (W7 tree)", () => {
     expect(result.code).toBe("SCOPE_MISMATCH");
   });
 
+  it("maps NOT_FOUND to CLOUD_COLLAB_ADAPTER_NOT_WIRED", () => {
+    const result = interpretCloudWorkspaceResponse({ code: 1, message: "NOT_FOUND" });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.code).toBe("UNAVAILABLE");
+    expect(result.message).toBe("UNAVAILABLE: CLOUD_COLLAB_ADAPTER_NOT_WIRED");
+  });
+
   it("posts tree query to Cloud", async () => {
     const fetchImpl = (async (_url: string, init?: RequestInit) => {
       const body = JSON.parse(String(init?.body)) as { operation?: string; workspaceId?: string };
