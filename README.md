@@ -1,12 +1,14 @@
-# DSH Office
+# OpenMuse
 
 <h1 align="center">
-  <img src="logo.png" alt="DSH Office" width="160" />
+  <img src="frontend/client/brand/logo.png" alt="OpenMuse" width="160" />
 </h1>
 
 > **AI-native office suite built on DSH.**
 
-DSH Office is a **local-only** office client: desktop (Windows / macOS) and mobile (Android / iOS). Install and use it with **no account and no login**. Documents stay on the device by default.
+OpenMuse（中文名 **思构**）是一个 **local-only** office client: desktop (Windows / macOS) and mobile (Android / iOS). Install and use it with **no account and no login**. Documents stay on the device by default.
+
+Product names are configured in [`frontend/client/brand/config.yaml`](frontend/client/brand/config.yaml).
 
 This public repository contains two independently runnable trees:
 
@@ -46,6 +48,12 @@ python frontend/client/scripts/pack-windows-client.py
 # Local DSH sidecar (default :3080)
 ./middlewares/scripts/run-dsh-appflowy.sh
 ```
+
+## Rebrand
+
+User-visible branding for the Flutter client (pages, icons, display names, links) is in [docs/rebrand-plan.md](docs/rebrand-plan.md). Package names and bundle IDs are unchanged.
+
+Web app plan: [docs/rebrand-plan-web.md](docs/rebrand-plan-web.md).
 
 ## Security and compliance
 
