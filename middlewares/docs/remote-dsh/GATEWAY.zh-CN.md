@@ -33,10 +33,14 @@ Web 的 workspace bind / context / Intent 优先走 DSH Web Client（V2-09 W4–
 
 | 路径 | 后端 | 阶段 |
 |---|---|---|
-| `https://dsh.<domain>/` | muse-dsh:3080 | D1 |
+| `https://dsh.<domain>/` | muse-dsh:3080 | D1（过渡；生产应迁走，见 MULTITENANCY v0.2） |
+| `https://<domain>/dsh/` | 共享实例 loopback（nginx `auth_request`） | P0 同源入口 |
+| `https://<domain>/u/<tenantHash>/` | Pool 反代 → 租户实例 | P1 |
 | `https://<domain>/api/muse/dsh/device-token` | Cloud BFF | W2（已实现签发/校验/撤销） |
+| `https://<domain>/api/muse/dsh/ingress-auth` | Cloud BFF（nginx `auth_request`） | P0 |
+| `https://<domain>/api/muse/dsh/session/*` | Cloud BFF → Pool | P1 |
 | `https://<domain>/api/muse/document/*` | Cloud Domain（当前 fail-closed） | W3 |
-| `wss://dsh.<domain>/muse/v2` | Gateway | A2 / 后续 |
+| `wss://<domain>/u/<tenantHash>/…` 或 Pool | 租户实例 / Gateway | P1 / A2 |
 
 未实现的路径不得写进「已部署」清单。
 

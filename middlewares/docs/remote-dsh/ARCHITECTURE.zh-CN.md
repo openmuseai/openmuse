@@ -35,6 +35,8 @@ Docker muse-dsh
 
 D1 可演示 Web iframe；账号级隔离必须在 BFF 与 Gateway 完成前，不得把该容器当多组织生产。架构上预留 `DSH_HOME` 分卷。
 
+多租户（实例池）的落地方案见 [MULTITENANCY.zh-CN.md](MULTITENANCY.zh-CN.md) v0.2：先打通 AppFlowy-Cloud 宿主鉴权通道，再 per 账号×工作区实例池；生产用 systemd-run 裸进程（非 Docker）；适配 4C/4G 宿主机。
+
 ## 4. 健康与升级
 
 - 健康：HTTP 探活 DSH web 端口（具体 path 以 harness 为准，脚本用 TCP/`/`）
