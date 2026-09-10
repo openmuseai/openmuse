@@ -1,15 +1,32 @@
 #!/bin/bash
+# Host-side DSH instance for systemd-run. No Docker, no loopback-proxy:
+# bind 127.0.0.1:$PORT; nginx /u/<hash>/ reaches this via the pool proxy.
 set -euo pipefail
 
-: "${DSH_HOME:=/var/lib/muse-dsh}"
-: "${PORT:=3080}"
-: "${DSH_LOOPBACK_PORT:=13080}"
-PATCH="${PATCH:-/muse/patch.yml}"
-HARNESS="${HARNESS:-/muse/dsh}"
-
-if [[ -z "${DEEPSEEK_API_KEY:-}" ]]; then
-  echo "DEEPSEEK_API_KEY is required in the container environment (set via ${DSH_APP_DIR:-/opt/muse-dsh}/.env)." >&2
-  exit 1
+HARNESS="${HARNESS:-/opt/muse-dsh/runtime/dsh}"
+PATCH="${PATCH:-/opt/muse-dsh/runtime/patch.yml}"
+NODE="${MUSE_DSH_NODE_BIN:-/opt/muse-dsh/runtime/bin/node}"
+ENV_FILE="${MUSE_DSH_INSTANCE_ENV_FILE:-/opt/muse-dsh/instance.env}"
+INSTANCE_PORT="${PORT:-}"
+INSTANCE_HOME="${DSH_HOME:-}"
+if [[ -f "${ENV_FILE}" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "${ENV_FILE}"
+  set +a
+fi
+# Tenant identity comes from systemd-run, not the shared template.
+if [[ -n "${INSTANCE_PORT}" ]]; then
+  export PORT="${INSTANCE_PORT}"
+fi
+if [[ -n "${INSTANCE_HOME}" ]]; then
+  export DSH_HOME="${INSTANCE_HOME}"
+fi
+: "${DSH_HOME:?DSH_HOME is required}"
+: "${PORT:?PORT is required}"
+: "${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required}"
+if [[ -z "${MUSE_DOCUMENT_CLOUD_URL:-}" ]]; then
+  echo "start-instance: MUSE_DOCUMENT_CLOUD_URL is unset; parent-bridge will not inject" >&2
 fi
 
 mkdir -p \
@@ -33,18 +50,10 @@ if [[ -d "${HARNESS}/node_modules/dshmarket" ]]; then
   ln -sfn "${HARNESS}/node_modules/dshmarket" "${DSH_HOME}/profiles/web/node_modules/dshmarket"
 fi
 
-if [[ -f /muse/wire-muse-node-modules.py && -d /opt/muse/packages ]]; then
-  python3 /muse/wire-muse-node-modules.py "${HARNESS}" /opt/muse "$(command -v node)"
-elif [[ -f /muse/wire-harness-aliases.py ]]; then
-  python3 /muse/wire-harness-aliases.py "${HARNESS}"
-else
-  echo "missing Muse package wire scripts" >&2
-  exit 1
-fi
-
 export MUSE_PLUGIN_DIAGNOSTICS="${MUSE_PLUGIN_DIAGNOSTICS:-1}"
 export PORT
-export DSH_LOOPBACK_PORT
+export DSH_LOOPBACK_PORT="${DSH_LOOPBACK_PORT:-$PORT}"
+export MUSE_REQUIRE_HOST_AUTH="${MUSE_REQUIRE_HOST_AUTH:-1}"
 
 TRUSTED_ARGS=()
 if [[ -n "${DSH_TRUSTED_HOST:-}" ]]; then
@@ -55,16 +64,10 @@ if [[ -n "${DSH_TRUSTED_HOST:-}" ]]; then
   done
 fi
 
-# Official CLI rejects --host 0.0.0.0. Proxy is reachable by docker-proxy;
-# compose still publishes 127.0.0.1 on the host. nohup + disown so exec
-# does not SIGHUP the proxy when the shell is replaced.
-nohup node /muse/loopback-proxy.mjs >/tmp/loopback-proxy.log 2>&1 &
-disown || true
-
 cd "${HARNESS}"
-exec node --import tsx/esm apps/cli/src/bin.ts \
+exec "${NODE}" --import tsx/esm apps/cli/src/bin.ts \
   --profile web \
   --patch "${PATCH}" \
   --host 127.0.0.1 \
-  --port "${DSH_LOOPBACK_PORT}" \
+  --port "${PORT}" \
   "${TRUSTED_ARGS[@]}"

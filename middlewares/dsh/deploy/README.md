@@ -40,7 +40,8 @@ docker compose -f middlewares/dsh/deploy/docker-compose.yml up -d
 ## Safety
 
 - Map the container to `127.0.0.1:${DSH_PORT}:3080`, not `0.0.0.0:3080`.
-- Public TLS, if you add it, belongs in your own reverse proxy, not this repo.
+- Public TLS belongs on Cloud nginx. Prefer same-origin `/dsh/` ([cloud-same-origin-dsh.conf](nginx/cloud-same-origin-dsh.conf)) plus `auth_request` to `/api/muse/dsh/ingress-auth`.
+- Do not install `dsh-passwords` on Remote DSH. `remote-disable-dsh-passwords.sh` refuses to run unless `ALLOW_DISABLE_DSH_PASSWORDS=1`.
 
 ## Android client (built on a developer machine)
 

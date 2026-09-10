@@ -1,0 +1,15 @@
+[Unit]
+Description=Muse DSH BFF (/api/muse) in front of official AppFlowy Cloud
+After=docker.service network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/muse-dsh/muse-bff
+EnvironmentFile=-/opt/muse-dsh/muse-bff.env
+ExecStart=/usr/bin/node dist/src/muse-bff-start.js
+Restart=on-failure
+RestartSec=2
+MemoryMax=64M
+
+[Install]
+WantedBy=multi-user.target

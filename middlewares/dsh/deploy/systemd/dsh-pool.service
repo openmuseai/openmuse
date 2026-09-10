@@ -1,0 +1,20 @@
+[Unit]
+Description=Muse DSH instance pool (control + proxy)
+After=network.target
+Documentation=file:///opt/muse-dsh/docs/MULTITENANCY.zh-CN.md
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/muse-dsh/pool
+EnvironmentFile=-/opt/muse-dsh/pool.env
+ExecStart=/opt/muse-dsh/runtime/bin/node /opt/muse-dsh/pool/dist/src/start.js
+Restart=on-failure
+RestartSec=3
+MemoryMax=256M
+TasksMax=256
+# Pool must be able to systemd-run tenant units; do not sandbox dbus/PID1.
+NoNewPrivileges=false
+
+[Install]
+WantedBy=multi-user.target

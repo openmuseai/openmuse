@@ -67,7 +67,7 @@ def ssh_connect(host: str, user: str, password: str) -> paramiko.SSHClient:
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     print(f"==> Connecting to {user}@{host}...")
-    ssh.connect(host, username=user, password=password, timeout=30)
+    ssh.connect(host, username=user, password=password, timeout=30, banner_timeout=30, auth_timeout=30)
     return ssh
 
 
@@ -327,6 +327,30 @@ def deploy_runtime(args: argparse.Namespace) -> None:
     deploy_runtime_remote(args)
 
 
+def deploy_disable_passwords(args: argparse.Namespace) -> None:
+    if args._config.is_local:
+        print("Local DSH sidecar does not use dsh-passwords.")
+        return
+    if not args.host:
+        print("ERROR: DEPLOY_HOST is empty")
+        sys.exit(1)
+    ssh = ssh_connect(args.host, args.user, args.password)
+    sftp = ssh.open_sftp()
+    try:
+        env = remote_env(args)
+        exit_code, out, err = upload_and_run_script(
+            ssh, sftp, "remote-disable-dsh-passwords.sh", env, timeout=300
+        )
+        if exit_code != 0:
+            print(f"\nERROR: disable-passwords failed with exit code {exit_code}")
+            print(err[-2000:] if err else out[-2000:])
+            sys.exit(1)
+    finally:
+        sftp.close()
+        ssh.close()
+    print("\nDisabled dsh-passwords on the DSH host.")
+
+
 def deploy_app(args: argparse.Namespace) -> None:
     if args._config.is_local:
         deploy_app_local(args)
@@ -356,6 +380,10 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("app", help="Rebuild and replace DSH image (default)")
     subparsers.add_parser("runtime", help="Load image and start compose (first time)")
     subparsers.add_parser("infra", help="Remote nginx vhost + .env skeleton")
+    subparsers.add_parser(
+        "disable-passwords",
+        help="Uninstall dsh-passwords on the DSH host (no Cloud / nginx rewrite)",
+    )
     subparsers.add_parser("all", help="infra + runtime + app")
     return parser
 
@@ -368,6 +396,7 @@ def main() -> None:
         "app": deploy_app,
         "runtime": deploy_runtime,
         "infra": deploy_infra,
+        "disable-passwords": deploy_disable_passwords,
         "all": deploy_all,
     }
     handler = handlers.get(command)

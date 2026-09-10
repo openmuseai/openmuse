@@ -68,6 +68,27 @@ if [[ -n "${APP_DOMAIN:-}" ]]; then
 fi
 
 SITE="/etc/nginx/sites-available/${DSH_HOST}"
+AUTH_LOCATION=""
+AUTH_REQUEST=""
+if [[ -n "${MUSE_DOCUMENT_CLOUD_URL}" ]]; then
+  AUTH_LOCATION="
+    location = /internal/muse-dsh-auth {
+        internal;
+        proxy_pass ${MUSE_DOCUMENT_CLOUD_URL%/}/api/muse/dsh/ingress-auth;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length \"\";
+        proxy_set_header Authorization \$http_authorization;
+        proxy_set_header Cookie \$http_cookie;
+        proxy_set_header X-Muse-Device-Token \$http_x_muse_device_token;
+    }"
+  AUTH_REQUEST="
+        auth_request /internal/muse-dsh-auth;
+        proxy_set_header Cookie \"\";"
+  echo "    P0 ingress-auth -> ${MUSE_DOCUMENT_CLOUD_URL%/}/api/muse/dsh/ingress-auth"
+else
+  echo "WARNING: MUSE_DOCUMENT_CLOUD_URL unset; DSH vhost will not auth_request (P0 incomplete)."
+fi
+
 echo "==> Writing nginx vhost ${SITE}"
 cat > "${SITE}" << NGINX_EOF
 map \$http_upgrade \$connection_upgrade {
@@ -111,9 +132,34 @@ server {
         add_header Content-Type text/plain;
         return 200 "ok\n";
     }
+${AUTH_LOCATION}
+
+    # DSH pins settings.describe / llm.discoverModels to loopback Host even
+    # when --trusted-host is set. The Muse web iframe is same-origin to this
+    # vhost; rewrite /api so the configuration plane works without dsh-passwords.
+    location /api {
+${AUTH_REQUEST}
+        proxy_pass http://127.0.0.1:${DSH_PORT};
+        proxy_hide_header X-Frame-Options;
+        proxy_hide_header Content-Security-Policy;
+        proxy_http_version 1.1;
+        proxy_set_header Host 127.0.0.1:${DSH_PORT};
+        proxy_set_header Origin http://127.0.0.1:${DSH_PORT};
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_read_timeout 86400s;
+        proxy_buffering off;
+    }
 
     location / {
+${AUTH_REQUEST}
         proxy_pass http://127.0.0.1:${DSH_PORT};
+        # Official DSH / dsh-passwords send X-Frame-Options DENY and
+        # CSP frame-ancestors 'none'. Hide them so the Muse web iframe
+        # can use the nginx frame-ancestors above.
+        proxy_hide_header X-Frame-Options;
+        proxy_hide_header Content-Security-Policy;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
