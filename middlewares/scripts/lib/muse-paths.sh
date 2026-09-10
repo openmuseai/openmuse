@@ -37,14 +37,19 @@ muse_web_dir() {
 }
 
 muse_website_dir() {
-  local root
+  local root sibling
   root="$(muse_root)"
   if [[ -d "${root}/frontend/website" ]]; then
     printf '%s\n' "${root}/frontend/website"
   elif [[ -d "${root}/AppFlowy-Website" ]]; then
     printf '%s\n' "${root}/AppFlowy-Website"
   else
-    printf '%s\n' "${root}/frontend/website"
+    sibling="$(cd "${root}/.." && pwd -P)/Muse-WebSite"
+    if [[ -d "${sibling}" ]]; then
+      printf '%s\n' "${sibling}"
+    else
+      printf '%s\n' "${root}/frontend/website"
+    fi
   fi
 }
 
