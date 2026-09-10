@@ -1,23 +1,30 @@
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { JsonValue } from "@muse/host-bridge";
 import {
   PARENT_BRIDGE_SCRIPT,
+  EMBEDDED_PATH_REWRITE_SCRIPT,
   getLastDeviceAuth,
   getLastDocumentFocus,
   handleParentInbound,
   injectParentBridgeScript,
   jsonLooksForbidden,
   listBoundWorkspaceViews,
+  makeBridgeReply,
   parseWorkspaceViewsQuery,
   parentBridgeEnabled,
+  ParentOriginBuffer,
   resetParentBridgeState,
+  rewriteEmbeddedHref,
+  rewriteEmbeddedPath,
+  embeddedPublicPrefix,
   type ParentBridgeDeps
 } from "../src/parent-bridge.js";
 import {
   applyWorkspaceHint,
+  getLastWorkspaceCatalog,
   getLastWorkspaceHint,
   type DshWorkspace,
   type DshWorkspaceRegistry
@@ -114,6 +121,17 @@ describe("parent-bridge inbound", () => {
     expect(getLastWorkspaceHint()?.appflowyWorkspaceId).toBe("kept");
   });
 
+  it("E1-T8 rejects hello JSON that contains access_token", async () => {
+    const registry = fakeRegistry();
+    const deps = depsOf(registry);
+    expect(await handleParentInbound({
+      source: "muse.appflowy-web",
+      type: "parent-hello",
+      workspaceRef: "ok",
+      access_token: "steal"
+    }, deps)).toMatchObject({ ok: false, error: "FORBIDDEN_FIELD" });
+  });
+
   it("rejects oversized payloads, forbidden fields, and unknown sources", async () => {
     const registry = fakeRegistry();
     const deps = depsOf(registry);
@@ -168,6 +186,39 @@ describe("parent-bridge inbound", () => {
     });
   });
 
+  it("remembers workspace.catalog before Facet inbox dispatch", async () => {
+    const ingested: JsonValue[] = [];
+    const envelope = {
+      protocol: "muse.context-contribution/v1",
+      pluginId: "muse.appflowy.workspace",
+      pluginVersion: "1.0.0",
+      facetInstanceRef: "facet.1",
+      surfaceInstanceRef: "surface.appflowy.workspace.w1",
+      surfaceKind: "appflowy.workspace",
+      scopeRef: "workspace.w1",
+      contextType: "workspace.catalog",
+      contextSchemaDigest: "sha256:2538c0adb882241b625b48c0013e4a0dd248d8b391cac22ebdc14e154c50548e",
+      contextRevision: "1",
+      epochRef: "epoch.w1",
+      lane: "control",
+      capturedAt: 1,
+      expiresAt: Date.now() + 60_000,
+      payload: {
+        workspaceId: "w1",
+        truncated: false,
+        items: [{ viewId: "v1", title: "Getting started", layout: "document", isSpace: false, depth: 0 }]
+      }
+    };
+    const result = await handleParentInbound({
+      source: "muse.appflowy-web",
+      type: "context.contribute",
+      envelope
+    }, depsOf(fakeRegistry(), ingested));
+    expect(result).toEqual({ ok: true });
+    expect(ingested).toEqual([envelope]);
+    expect(getLastWorkspaceCatalog()?.items[0]?.title).toBe("Getting started");
+  });
+
   it("stores a two-segment device token from parent-hello without echoing it", async () => {
     const result = await handleParentInbound({
       source: "muse.appflowy-web",
@@ -185,9 +236,92 @@ describe("parent-bridge inbound", () => {
     expect(body).not.toContain("<");
     expect(body.toLowerCase()).not.toContain("</script");
     const html = injectParentBridgeScript("<head></head>");
-    expect(html.startsWith("<head>" + PARENT_BRIDGE_SCRIPT)).toBe(true);
+    expect(html.startsWith("<head>" + EMBEDDED_PATH_REWRITE_SCRIPT + PARENT_BRIDGE_SCRIPT)).toBe(true);
     expect(body).toContain("frame-ready");
     expect(body).toContain("muse.dsh-web");
+    expect(body).toContain("bridge.reply");
+    expect(body).toContain("flushPending");
+    expect(body).toContain("./muse/v1/parent-bridge");
+    expect(body).not.toContain("\"/muse/v1/parent-bridge\"");
+  });
+
+  it("rewrites index /assets and /plugins to relative paths for /u/<hash>/ iframe", () => {
+    const html = injectParentBridgeScript(
+      [
+        "<head>",
+        '<link rel="stylesheet" href="/assets/index-CSGf6Qzd.css">',
+        '<link rel="stylesheet" href="https://cdn.example/assets/keep.css">',
+        '<script type="module" src="/assets/index-C-1AiF3k.js"></script>',
+        '<link rel="manifest" href="/manifest.webmanifest">',
+        '<script>window.__DSH_BOOT__={"entries":[{"url":"/plugins/@deepseek-ai/dsh-api-gateway/client.js?rev=abc"}]}</script>',
+        "</head>"
+      ].join("")
+    );
+    expect(html).toContain('href="./assets/index-CSGf6Qzd.css"');
+    expect(html).toContain('src="./assets/index-C-1AiF3k.js"');
+    expect(html).toContain('href="./manifest.webmanifest"');
+    expect(html).toContain('"./plugins/@deepseek-ai/dsh-api-gateway/client.js?rev=abc"');
+    expect(html).not.toContain('src="/assets/');
+    expect(html).not.toContain('href="/assets/');
+    expect(html).toContain("https://cdn.example/assets/keep.css");
+  });
+
+  it("rewrites /api/host.listDirectory under the tenant iframe prefix", () => {
+    const prefix = embeddedPublicPrefix("/u/f9f1ab4cf8aa85332e250885a52f552e/");
+    expect(prefix).toBe("/u/f9f1ab4cf8aa85332e250885a52f552e");
+    expect(rewriteEmbeddedPath("/api/host.listDirectory", prefix)).toBe(
+      "/u/f9f1ab4cf8aa85332e250885a52f552e/api/host.listDirectory"
+    );
+    expect(
+      rewriteEmbeddedHref(
+        "https://openmuseai.com/api/host.listDirectory",
+        "/u/f9f1ab4cf8aa85332e250885a52f552e/",
+        "https://openmuseai.com"
+      )
+    ).toBe("https://openmuseai.com/u/f9f1ab4cf8aa85332e250885a52f552e/api/host.listDirectory");
+    expect(
+      rewriteEmbeddedHref(
+        "https://openmuseai.com/api/muse/dsh/session/open",
+        "/u/f9f1ab4cf8aa85332e250885a52f552e/",
+        "https://openmuseai.com"
+      )
+    ).toBe("https://openmuseai.com/api/muse/dsh/session/open");
+    expect(
+      rewriteEmbeddedHref(
+        "wss://openmuseai.com/api/events.mux",
+        "/u/f9f1ab4cf8aa85332e250885a52f552e/",
+        "https://openmuseai.com"
+      )
+    ).toBe("wss://openmuseai.com/u/f9f1ab4cf8aa85332e250885a52f552e/api/events.mux");
+    expect(
+      rewriteEmbeddedHref(
+        "wss://evil.example/api/events.mux",
+        "/u/f9f1ab4cf8aa85332e250885a52f552e/",
+        "https://openmuseai.com"
+      )
+    ).toBe("wss://evil.example/api/events.mux");
+    expect(rewriteEmbeddedPath("/app/home", prefix)).toBe("/app/home");
+    const rewriteBody = EMBEDDED_PATH_REWRITE_SCRIPT.slice("<script>".length, -"</script>".length);
+    expect(rewriteBody).not.toContain("<");
+    expect(rewriteBody).toContain("window.fetch");
+    expect(rewriteBody).toContain("WebSocket");
+    expect(rewriteBody).toContain("httpish");
+  });
+
+  it("E1-T5 returns FLAG_OFF when context uplink is disabled", async () => {
+    const previous = process.env.MUSE_WEB_CONTEXT_UPLINK;
+    process.env.MUSE_WEB_CONTEXT_UPLINK = "0";
+    try {
+      const result = await handleParentInbound({
+        source: "muse.appflowy-web",
+        type: "context.contribute",
+        envelope: { protocol: "muse.context-contribution/v1" }
+      }, depsOf(fakeRegistry()));
+      expect(result).toEqual({ ok: false, error: "FLAG_OFF" });
+    } finally {
+      if (previous === undefined) delete process.env.MUSE_WEB_CONTEXT_UPLINK;
+      else process.env.MUSE_WEB_CONTEXT_UPLINK = previous;
+    }
   });
 });
 
@@ -196,6 +330,7 @@ describe("parent-bridge workspace views list", () => {
   const previousCloud = process.env.MUSE_DOCUMENT_CLOUD_URL;
   afterEach(() => {
     resetParentBridgeState();
+    vi.restoreAllMocks();
     if (previousRoot === undefined) delete process.env.MUSE_APPFLOWY_DSH_WORKSPACE_ROOT;
     else process.env.MUSE_APPFLOWY_DSH_WORKSPACE_ROOT = previousRoot;
     if (previousCloud === undefined) delete process.env.MUSE_DOCUMENT_CLOUD_URL;
@@ -227,6 +362,14 @@ describe("parent-bridge workspace views list", () => {
     const root = await mkdtemp(join(tmpdir(), "muse-views-ok-"));
     process.env.MUSE_APPFLOWY_DSH_WORKSPACE_ROOT = root;
     process.env.MUSE_DOCUMENT_CLOUD_URL = "http://cloud.test";
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      if (String(input).endsWith("/api/muse/workspace/current")) {
+        const payload = JSON.parse(String(init?.body)) as { workspaceId: string };
+        expect(payload.workspaceId).toBe("alpha-ws");
+        return Response.json({ code: 0, data: { workspaceId: "alpha-ws" } });
+      }
+      throw new Error(`unexpected fetch ${String(input)}`);
+    });
     await handleParentInbound({
       source: "muse.appflowy-web",
       type: "parent-hello",
@@ -305,5 +448,38 @@ describe("parent-bridge is Web Tx only", () => {
     process.env.MUSE_PARENT_BRIDGE = "1";
     delete process.env.MUSE_DOCUMENT_CLOUD_URL;
     expect(parentBridgeEnabled()).toBe(true);
+  });
+});
+
+describe("injected script runtime (E1-T4 / E1-T10)", () => {
+  it("E1-T4 posts bridge.reply with XHR 401", () => {
+    const reply = makeBridgeReply("req_bind_1", 401, { ok: false, error: "DEVICE_AUTH_REJECTED" });
+    expect(reply).toEqual({
+      source: "muse.dsh-web",
+      type: "bridge.reply",
+      requestId: "req_bind_1",
+      status: 401,
+      body: { ok: false, error: "DEVICE_AUTH_REJECTED" }
+    });
+    expect(PARENT_BRIDGE_SCRIPT).toContain("bridge.reply");
+    expect(PARENT_BRIDGE_SCRIPT).toContain("xhr.status");
+  });
+
+  it("E1-T10 buffers SSE intent until parentOrigin then delivers one dispatch", () => {
+    const posted: Array<{ data: unknown; origin: string }> = [];
+    const buf = new ParentOriginBuffer();
+    const intent = { source: "muse.dsh-web", type: "intent.dispatch", intent: { intentRef: "i1" } };
+    buf.onSsePayload(intent);
+    expect(posted).toHaveLength(0);
+    expect(buf.pending).toHaveLength(1);
+    buf.onParentHello("https://openmuseai.com", {
+      postMessage(data, origin) {
+        posted.push({ data, origin });
+      }
+    });
+    expect(posted).toEqual([{ data: intent, origin: "https://openmuseai.com" }]);
+    expect(buf.pending).toHaveLength(0);
+    expect(PARENT_BRIDGE_SCRIPT).toContain("pending.push");
+    expect(PARENT_BRIDGE_SCRIPT).toContain("flushPending");
   });
 });

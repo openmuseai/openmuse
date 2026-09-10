@@ -57,4 +57,18 @@ describe("exclusive test carrier lease (NOT multi-tenant authentication)", () =>
     await expect(lease.authorize(a, "ws-1")).rejects.toThrow("DEVICE_AUTH_REJECTED");
     expect(lease.occupied).toBe(false);
   });
+
+  it("E2-T12 two instance-local leases do not 409 each other", async () => {
+    const tenantA = new ExclusiveMobileLease({ verify: async () => {}, clearContext: vi.fn() });
+    const tenantB = new ExclusiveMobileLease({ verify: async () => {}, clearContext: vi.fn() });
+    try {
+      await tenantA.authorize(a, "ws-a");
+      await tenantB.authorize(b, "ws-b");
+      expect(tenantA.workspaceId).toBe("ws-a");
+      expect(tenantB.workspaceId).toBe("ws-b");
+    } finally {
+      tenantA.release();
+      tenantB.release();
+    }
+  });
 });

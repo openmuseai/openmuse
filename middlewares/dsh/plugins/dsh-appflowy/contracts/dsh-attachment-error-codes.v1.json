@@ -1,0 +1,25 @@
+{
+  "identity": {
+    "NEED_AUTH": "Sign in is required to start the agent.",
+    "NEED_WORKSPACE": "Open a workspace, then start the agent.",
+    "NEED_API_KEY": "Enter the model API key in the DeepSeek panel."
+  },
+  "placing": {
+    "SESSION_DENIED": "The agent instance did not start. Retry, or wait a minute if this is the first open today.",
+    "SCOPE_MISMATCH": "You are not a member of this workspace.",
+    "POOL_UNAVAILABLE": "The agent control plane is unavailable. Retry in a moment.",
+    "QUEUED": "Waiting in line. The first start can take a minute.",
+    "COLD_START": "Starting agent… first open can take a minute.",
+    "SIDECAR_EXIT": "The local agent process exited. Retry to start it again."
+  },
+  "presenting": {
+    "INGRESS_DENIED": "The agent page was blocked (sign-in cookie missing or expired).",
+    "FRAME_TIMEOUT": "The agent page did not become ready in time.",
+    "BRIDGE_SILENT": "The agent UI loaded but the host bridge did not respond."
+  },
+  "binding": {
+    "NO_DEVICE_TOKEN": "Device credentials are missing. Retry to issue them.",
+    "BIND_REJECTED": "The agent could not bind this workspace.",
+    "FLAG_OFF": "Workspace linking is turned off on the agent."
+  }
+}

@@ -3,6 +3,7 @@ import {
   encodeScopedPluginUrls,
   SCOPED_PLUGIN_URL_PATCH_SCRIPT,
 } from "../src/webview.js";
+import { EMBEDDED_PATH_REWRITE_SCRIPT } from "../src/parent-bridge-runtime.js";
 
 const bootScript = (url: string): string =>
   `<script>window.__DSH_BOOT__ = {"entries":[{"id":"@deepseek-ai/dsh-api-gateway","url":"${url}"}]}</script>`;
@@ -17,16 +18,16 @@ describe("WKWebView plugin URL encoding", () => {
     ].join("");
     const encoded = encodeScopedPluginUrls(html);
     expect(encoded).toContain(
-      "/plugins/%40deepseek-ai/dsh-api-gateway/client.js?rev=abc",
+      "./plugins/%40deepseek-ai/dsh-api-gateway/client.js?rev=abc",
     );
     expect(encoded).not.toContain("/plugins/@deepseek-ai/");
-    expect(encoded).toContain("/assets/shell.js");
+    expect(encoded).toContain("./assets/shell.js");
   });
 
   it("injects a runtime src patch even when the boot graph is not yet in the html", () => {
     const html = "<head><script src=/assets/shell.js></script></head>";
     const out = encodeScopedPluginUrls(html);
-    expect(out.startsWith("<head>" + SCOPED_PLUGIN_URL_PATCH_SCRIPT)).toBe(true);
+    expect(out.startsWith("<head>" + EMBEDDED_PATH_REWRITE_SCRIPT + SCOPED_PLUGIN_URL_PATCH_SCRIPT)).toBe(true);
     expect(out).toContain("HTMLScriptElement.prototype");
     expect(out).toContain("/plugins/%40");
   });

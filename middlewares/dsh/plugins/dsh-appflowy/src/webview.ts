@@ -1,4 +1,5 @@
 import type { Context } from "@deepseek-ai/cordis";
+import { EMBEDDED_PATH_REWRITE_SCRIPT, relativizeEmbeddedRootPaths } from "./parent-bridge-runtime.js";
 
 /**
  * WKWebView treats `/plugins/@scope/...` as a malformed URL (the `@` looks
@@ -43,10 +44,11 @@ export const SCOPED_PLUGIN_URL_PATCH_SCRIPT =
   "})();</script>";
 
 export const encodeScopedPluginUrls = (html: string): string => {
-  const encoded = html.replaceAll("/plugins/@", "/plugins/%40");
+  const encoded = relativizeEmbeddedRootPaths(html.replaceAll("/plugins/@", "/plugins/%40"));
   const head = encoded.indexOf("<head>");
-  if (head === -1) return `${SCOPED_PLUGIN_URL_PATCH_SCRIPT}${encoded}`;
-  return `${encoded.slice(0, head + 6)}${SCOPED_PLUGIN_URL_PATCH_SCRIPT}${encoded.slice(head + 6)}`;
+  const injected = `${EMBEDDED_PATH_REWRITE_SCRIPT}${SCOPED_PLUGIN_URL_PATCH_SCRIPT}`;
+  if (head === -1) return `${injected}${encoded}`;
+  return `${encoded.slice(0, head + 6)}${injected}${encoded.slice(head + 6)}`;
 };
 
 type WebServer = {

@@ -10,13 +10,39 @@ import {
   getLastWorkspaceHint,
   listBoundWorkspaceViews as listWorkspaceViews,
   parseWorkspaceViewsQuery,
+  rememberWorkspaceCatalogFromEnvelope,
   resetLastWorkspaceHint,
   type DshWorkspaceRegistry,
+  WORKSPACE_CATALOG_CONTEXT_TYPE,
+  WORKSPACE_CATALOG_DIGEST,
   WORKSPACE_VIEWS_PATH
 } from "@muse/plugin-appflowy-workspace";
+import {
+  MARKDOWN_SNAPSHOT_CONTEXT_TYPE,
+  rememberMarkdownSnapshotFromEnvelope,
+  resetLastMarkdownSnapshot
+} from "@muse/plugin-appflowy-markdown";
 import { getLastDeviceAuth, resetSession, setLastDeviceAuth, setLastDocumentFocus } from "./session.js";
 import { createPresentationFacetInbox } from "./presentation-facets.js";
-import { ExclusiveMobileLease, verifyMobileWorkspace, type MobileIdentity } from "./mobile-lease.js";
+import {
+  ExclusiveMobileLease,
+  resetHostVerifyCache,
+  verifyHostWorkspace,
+  verifyMobileWorkspace,
+  type MobileIdentity
+} from "./mobile-lease.js";
+import { FRAME_SOURCE, relativizeEmbeddedRootPaths, EMBEDDED_PATH_REWRITE_SCRIPT } from "./parent-bridge-runtime.js";
+
+export {
+  FRAME_SOURCE,
+  makeBridgeReply,
+  ParentOriginBuffer,
+  relativizeEmbeddedRootPaths,
+  EMBEDDED_PATH_REWRITE_SCRIPT,
+  embeddedPublicPrefix,
+  rewriteEmbeddedPath,
+  rewriteEmbeddedHref
+} from "./parent-bridge-runtime.js";
 
 export const PARENT_BRIDGE_PATH = "/muse/v1/parent-bridge";
 export const PARENT_BRIDGE_EVENTS_PATH = "/muse/v1/parent-bridge/events";
@@ -25,7 +51,6 @@ export const PARENT_BRIDGE_VIEWS_PATH = WORKSPACE_VIEWS_PATH;
 export const MAX_PARENT_MESSAGE_BYTES = 32 * 1024;
 export const PARENT_SOURCE = "muse.appflowy-web";
 export const MOBILE_SOURCE = "muse.appflowy-mobile";
-export const FRAME_SOURCE = "muse.dsh-web";
 
 export const WORKSPACE_FOCUS_DIGEST =
   "sha256:4c3a6bf1cd8249cc96f6aac63ad78b9be04172634f0313ce3ba52163f66043b7";
@@ -76,6 +101,39 @@ export const envFlagEnabled = (name: string, defaultOn = true): boolean => {
   const raw = process.env[name]?.trim().toLowerCase();
   if (raw === undefined || raw.length === 0) return defaultOn;
   return raw !== "0" && raw !== "false" && raw !== "off";
+};
+
+/** Remote (Cloud URL set) defaults on; desktop sidecar stays off unless explicitly enabled. */
+export const hostAuthRequired = (env: NodeJS.ProcessEnv = process.env): boolean => {
+  const raw = env.MUSE_REQUIRE_HOST_AUTH?.trim().toLowerCase();
+  if (raw === "0" || raw === "false" || raw === "off") return false;
+  if (raw === "1" || raw === "true" || raw === "on") return true;
+  return Boolean(env.MUSE_DOCUMENT_CLOUD_URL?.trim());
+};
+
+const workspaceBindEnabled = (): boolean => hostAuthRequired() || envFlagEnabled("MUSE_WEB_WORKSPACE_BIND");
+
+const inboundHttpStatus = (result: ParentInboundResult): number => {
+  if (result.ok) return 200;
+  return errorHttpStatus(result.error);
+};
+
+const errorHttpStatus = (message: string): number => {
+  if (message === "PAYLOAD_TOO_LARGE") return 413;
+  if (message === "HOST_IN_USE") return 409;
+  if (
+    message === "DEVICE_AUTH_REQUIRED" ||
+    message === "DEVICE_AUTH_REJECTED" ||
+    message === "NO_DEVICE_TOKEN" ||
+    message === "TOKEN_REVOKED"
+  ) {
+    return 401;
+  }
+  if (message === "SCOPE_MISMATCH" || message === "FLAG_OFF" || message === "MOBILE_DISABLED") {
+    return 403;
+  }
+  if (message === "CLOUD_UNAVAILABLE" || message === "CLOUD_TLS_REQUIRED") return 503;
+  return 400;
 };
 
 const byteLength = (value: unknown): number => {
@@ -156,6 +214,8 @@ export const resetParentBridgeState = (): void => {
   surfaceCleanup.clear();
   resetSession();
   resetLastWorkspaceHint();
+  resetLastMarkdownSnapshot();
+  resetHostVerifyCache();
   for (const client of sseClients) {
     try {
       client.end();
@@ -225,10 +285,28 @@ const bindWorkspace = async (
   rec: Record<string, unknown>,
   deps: ParentBridgeDeps
 ): Promise<ParentInboundResult> => {
-  if (!envFlagEnabled("MUSE_WEB_WORKSPACE_BIND")) return { ok: true };
+  if (!workspaceBindEnabled()) return { ok: true };
   const workspaceRef = typeof rec.workspaceRef === "string" ? rec.workspaceRef.trim() : "";
   if (workspaceRef.length === 0 || workspaceRef.length > 128) {
     return { ok: true };
+  }
+  if (hostAuthRequired()) {
+    const remembered = getLastDeviceAuth();
+    const token = typeof rec.deviceToken === "string" && rec.deviceToken.trim().length > 0
+      ? rec.deviceToken.trim()
+      : remembered?.token ?? "";
+    const deviceId = typeof rec.deviceId === "string" && rec.deviceId.trim().length > 0
+      ? rec.deviceId.trim().slice(0, 128)
+      : remembered?.deviceId ?? "";
+    if (token.length === 0 || token.startsWith("sk-") || token.split(".").length !== 2) {
+      return { ok: false, error: "NO_DEVICE_TOKEN" };
+    }
+    try {
+      await verifyHostWorkspace({ token, deviceId }, workspaceRef);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "DEVICE_AUTH_REJECTED";
+      return { ok: false, error: message };
+    }
   }
   const title = typeof rec.workspaceTitle === "string" && rec.workspaceTitle.trim().length > 0
     ? rec.workspaceTitle.trim().slice(0, 256)
@@ -282,8 +360,10 @@ export const handleParentInbound = async (
     return bindWorkspace(rec, deps);
   }
   if (type === "context.contribute") {
-    if (!envFlagEnabled("MUSE_WEB_CONTEXT_UPLINK")) return { ok: true };
+    if (!envFlagEnabled("MUSE_WEB_CONTEXT_UPLINK")) return { ok: false, error: "FLAG_OFF" };
     const envelope = rec.envelope ?? rec;
+    rememberWorkspaceCatalogFromEnvelope(envelope);
+    rememberMarkdownSnapshotFromEnvelope(envelope);
     try {
       createPresentationFacetInbox({
         contribute: value => {
@@ -294,6 +374,11 @@ export const handleParentInbound = async (
         ...(deps.pinSurface === undefined ? {} : { pinSurface: deps.pinSurface })
       }).dispatch(envelope);
     } catch {
+      const envRec = asRecord(envelope);
+      if (envRec?.contextType === WORKSPACE_CATALOG_CONTEXT_TYPE
+        || envRec?.contextType === MARKDOWN_SNAPSHOT_CONTEXT_TYPE) {
+        return { ok: true };
+      }
       return { ok: false, error: "INVALID_FACET_CONTRACT" };
     }
     return { ok: true };
@@ -400,10 +485,23 @@ export const PARENT_BRIDGE_SCRIPT =
   "if(!window.parent||window.parent===window)return;" +
   "var parentOrigin=\"\";" +
   "var parentWin=null;" +
+  "var pending=[];" +
+  "function flushPending(){" +
+  "if(!parentWin||!parentOrigin)return;" +
+  "while(pending.length)parentWin.postMessage(pending.shift(),parentOrigin);" +
+  "}" +
   "function postHost(path,body){" +
   "var xhr=new XMLHttpRequest();" +
   "xhr.open(\"POST\",path,true);" +
   "xhr.setRequestHeader(\"Content-Type\",\"application/json\");" +
+  "xhr.onload=function(){" +
+  "var parsed=null;" +
+  "try{parsed=JSON.parse(xhr.responseText);}catch(err){}" +
+  "if(parentWin&&parentOrigin)parentWin.postMessage({source:\"muse.dsh-web\",type:\"bridge.reply\",requestId:body&&body.requestId,status:xhr.status,body:parsed},parentOrigin);" +
+  "};" +
+  "xhr.onerror=function(){" +
+  "if(parentWin&&parentOrigin)parentWin.postMessage({source:\"muse.dsh-web\",type:\"bridge.reply\",requestId:body&&body.requestId,status:0,body:{ok:false,error:\"BRIDGE_SILENT\"}},parentOrigin);" +
+  "};" +
   "xhr.send(JSON.stringify(body));" +
   "}" +
   "window.addEventListener(\"message\",function(ev){" +
@@ -411,7 +509,8 @@ export const PARENT_BRIDGE_SCRIPT =
   "if(!data||data.source!==\"muse.appflowy-web\")return;" +
   "parentOrigin=ev.origin;" +
   "parentWin=ev.source;" +
-  "postHost(\"/muse/v1/parent-bridge\",data);" +
+  "flushPending();" +
+  "postHost(\"./muse/v1/parent-bridge\",data);" +
   "});" +
   "try{" +
   "if(window.parent&&window.parent!==window){" +
@@ -419,19 +518,22 @@ export const PARENT_BRIDGE_SCRIPT =
   "}" +
   "}catch(err){}" +
   "try{" +
-  "var es=new EventSource(\"/muse/v1/parent-bridge/events\");" +
+  "var es=new EventSource(\"./muse/v1/parent-bridge/events\");" +
   "es.onmessage=function(e){" +
   "var parsed;" +
   "try{parsed=JSON.parse(e.data);}catch(err){return;}" +
   "if(parentWin&&parentOrigin)parentWin.postMessage(parsed,parentOrigin);" +
+  "else pending.push(parsed);" +
   "};" +
   "}catch(err){}" +
   "})();</script>";
 
 export const injectParentBridgeScript = (html: string): string => {
+  const injected = `${EMBEDDED_PATH_REWRITE_SCRIPT}${PARENT_BRIDGE_SCRIPT}`;
   const head = html.indexOf("<head>");
-  if (head === -1) return `${PARENT_BRIDGE_SCRIPT}${html}`;
-  return `${html.slice(0, head + 6)}${PARENT_BRIDGE_SCRIPT}${html.slice(head + 6)}`;
+  const withScript =
+    head === -1 ? `${injected}${html}` : `${html.slice(0, head + 6)}${injected}${html.slice(head + 6)}`;
+  return relativizeEmbeddedRootPaths(withScript);
 };
 
 const presentTool = defineTool({
@@ -560,10 +662,10 @@ export const apply = (ctx: Context): void => {
             writeJson(res, 409, { ok: false, error: "HOST_IN_USE" }); return;
           }
           const result = await handleParentInbound(body, deps);
-          writeJson(res, result.ok ? 200 : 400, result as unknown as JsonValue);
+          writeJson(res, inboundHttpStatus(result), result as unknown as JsonValue);
         } catch (error) {
           const message = error instanceof Error ? error.message : "INVALID_JSON";
-          writeJson(res, message === "PAYLOAD_TOO_LARGE" ? 413 : message === "HOST_IN_USE" ? 409 : 400, { ok: false, error: message });
+          writeJson(res, errorHttpStatus(message), { ok: false, error: message });
         }
       }
     }),
@@ -689,6 +791,25 @@ export const apply = (ctx: Context): void => {
             ? value.expandedViewIds.slice(0, 64).map(item => clean(item, 128)).filter(item => item.length > 0)
             : [];
           return `Sidebar expanded view ids (${ids.length}): ${ids.join(", ") || "none"}.`;
+        }
+      }),
+      broker.registerProjection({
+        pluginId: "muse.appflowy.workspace",
+        contextType: WORKSPACE_CATALOG_CONTEXT_TYPE,
+        schemaDigest: WORKSPACE_CATALOG_DIGEST,
+        priority: 100,
+        maxTokens: 220,
+        render: envelope => {
+          const value = payloadObject(envelope);
+          const items = Array.isArray(value.items) ? value.items : [];
+          const titles = items.slice(0, 64).map(item => {
+            const rec = item !== null && typeof item === "object" && !Array.isArray(item)
+              ? item as Record<string, unknown>
+              : {};
+            return clean(typeof rec.title === "string" ? rec.title : "", 64);
+          }).filter(title => title.length > 0);
+          const extra = value.truncated === true ? "+" : "";
+          return `AppFlowy pages (${String(titles.length)}${extra}): ${titles.join("; ") || "none"}. DSH cwd is scratch (README only); list pages with muse_workspace_list_views.`;
         }
       })
     ];

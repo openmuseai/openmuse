@@ -1,9 +1,12 @@
 # Web 形态下 AppFlowy workspace 如何进入 DSH
 
+> **2026-09-10：** fire-and-forget 已作废。合同是带 `requestId` 的 RPC：注入脚本 XHR
+> `onload`/`onerror` 必须 `postMessage` `bridge.reply`；Host 只在
+> `body.ok && bound === workspaceId` 后进入 `HybridLive`，此前 **0 次** `context.contribute`。
+> 见 [E1-BIND-RPC](../../../../docs/remote-dsh/phases/E1-BIND-RPC.zh-CN.md)。
+>
 > 完整链路梳理：AppFlowy-Web（React）→ postMessage → DSH 注入脚本 → parent-bridge HTTP →
-> `applyWorkspaceHint` → DSH workspace 注册表。所有结论基于两端源码（AppFlowy-Web 与
-> `packages/plugins/dsh-appflowy`）逐步验证。§13–§16 补充领域分析、领域模型、关键数据结构与接口。
-> 最后更新 2026-08-28。
+> `applyWorkspaceHint` → DSH workspace 注册表。§13–§16 补充领域分析。
 
 ## 1. 一句话概括
 
@@ -66,12 +69,13 @@ export function useDshWorkspaceTitle(): string | undefined {
 | `workspace.bind` | `workspaceId / workspaceTitle / url / iframeKey` 变化 | `MUSE_WEB_WORKSPACE_BIND` |
 | `context.contribute`（×4 envelope） | 打开后 200ms 定时 + `selectionchange`（200ms debounce）+ 侧边栏展开变化 | `MUSE_WEB_CONTEXT_UPLINK` |
 
-`context.contribute` 上行的 4 类 envelope（`dsh-hybrid.ts`）：
+`context.contribute` 上行的 envelope（`dsh-hybrid.ts`）：
 
 | contextType | schemaDigest 常量 | 内容 |
 |---|---|---|
 | `workspace.focus` | `WORKSPACE_FOCUS_DIGEST` | 工作区 id / 标题 / 当前视图 |
 | `workspace.tree.ui` | `WORKSPACE_TREE_UI_DIGEST` | 侧边栏展开视图 id 列表（≤64） |
+| `workspace.catalog` | `WORKSPACE_CATALOG_DIGEST` | 侧栏页面投影（id/title/layout，≤64）；**这才是列页面的 Host 真源** |
 | `markdown.surface` | `MARKDOWN_SURFACE_DIGEST` | 当前文档标题 / 模式 / 只读态 |
 | `markdown.selection` | `MARKDOWN_SELECTION_DIGEST` | 选中文本（≤2048）/ 是否折叠 |
 
