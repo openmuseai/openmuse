@@ -16,6 +16,7 @@ import {
   statusProviderOutputSchema
 } from "./index.js";
 import { invokeCloudDocument } from "./cloud.js";
+import { cloudDocumentUnwired, projectSnapshotDocument } from "./snapshot.js";
 import { canonicalizeJson, digestSchema } from "@muse/host-bridge";
 
 const BINDING_ID = "binding.appflowy-markdown";
@@ -112,9 +113,25 @@ export const createCloudMarkdownProvider = (): InProcessDomainProvider => ({
   invoke: async ({ operationId, input, ctx }) => {
     if (operationId === APPFLOWY_MARKDOWN_READ_OPERATION) {
       const rec = input as { viewId?: unknown };
-      if (typeof rec.viewId !== "string" || rec.viewId.trim().length === 0) {
-        return { ok: false, code: "UNAVAILABLE", message: "NO_CURRENT_SELECTION: viewId required" };
+      const viewId = typeof rec.viewId === "string" ? rec.viewId.trim() : "";
+      if (viewId.length === 0) {
+        return { ok: false, code: "NO_CURRENT_SELECTION", message: "NO_CURRENT_SELECTION: no focused AppFlowy document" };
       }
+      const baseUrl = ctx.cloudBaseUrl;
+      if (baseUrl !== undefined) {
+        const cloud = await invokeCloudDocument({
+          baseUrl,
+          operationId,
+          payload: input,
+          ...(ctx.accessToken === undefined ? {} : { accessToken: ctx.accessToken }),
+          ...(ctx.deviceId === undefined ? {} : { deviceId: ctx.deviceId })
+        });
+        if (cloud.ok) return cloud;
+        if (!cloudDocumentUnwired(cloud)) return cloud;
+      }
+      const snapshot = projectSnapshotDocument(viewId);
+      if (snapshot !== undefined) return { ok: true, value: snapshot };
+      return { ok: false, code: "UNAVAILABLE", message: "UNAVAILABLE: CLOUD_COLLAB_ADAPTER_NOT_WIRED" };
     }
     const baseUrl = ctx.cloudBaseUrl;
     if (baseUrl === undefined) {

@@ -65,6 +65,9 @@ export function interpretCloudDocumentResponse(
     const message = typeof rec.message === "string" && rec.message.length > 0
       ? rec.message
       : "UNAVAILABLE: CLOUD_COLLAB_ADAPTER_NOT_WIRED";
+    if (message === "NOT_FOUND" || message.includes("CLOUD_COLLAB_ADAPTER_NOT_WIRED")) {
+      return { ok: false, code: "UNAVAILABLE", message: "UNAVAILABLE: CLOUD_COLLAB_ADAPTER_NOT_WIRED" };
+    }
     return { ok: false, code: "UNAVAILABLE", message };
   }
   const value = rec.data;

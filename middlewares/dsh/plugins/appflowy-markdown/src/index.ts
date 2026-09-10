@@ -1,5 +1,6 @@
 import { digestSchema, type JsonValue } from "@muse/host-bridge";
 export { markdownPresentationContexts } from "./presentation.js";
+export * from "./snapshot.js";
 import {
   DOCUMENT_CONTRACT,
   documentApplyInputSchema,

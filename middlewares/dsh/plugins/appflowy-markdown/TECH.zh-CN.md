@@ -18,6 +18,10 @@ DSH Agent Facet：把 **Host 当前选中文档** 暴露为 Tool。模型 **不�
 
 写路径：Tool → Bridge invoke → Domain（本机 Rust 或 Cloud）。**不在本包写 CRDT。** Cloud apply 默认 fail-closed，除非 `MUSE_DOCUMENT_CLOUD_APPLY_ENABLED=1` 且 collab 真写成功（`src/cloud.ts` + `src/host.ts`）。
 
+P0：无焦点 → `NO_CURRENT_SELECTION`；Cloud 未接线 → Host `markdown.snapshot`（须 viewId 匹配）。
+
+## 模块
+
 ## 模块
 
 - `src/index.ts`：definition、schema、Tool 名
