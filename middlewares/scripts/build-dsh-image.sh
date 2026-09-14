@@ -58,7 +58,7 @@ fi
 
 echo "==> Preparing image context at $CONTEXT"
 rm -rf "$CONTEXT"
-mkdir -p "$CONTEXT/dsh" "$CONTEXT/packages" "$CONTEXT/dshmarket-optional"
+mkdir -p "$CONTEXT/dsh" "$CONTEXT/packages" "$CONTEXT/dshmarket-optional" "$CONTEXT/dsh-model-capabilities-optional"
 
 rsync -a \
   --exclude '.git/' \
@@ -73,9 +73,13 @@ rsync -a \
 muse_copy_dsh_packages "$CONTEXT/packages"
 cp "$PATCH" "$CONTEXT/patch.yml"
 cp "$(muse_dsh_deploy_dir)/entrypoint.sh" "$CONTEXT/entrypoint.sh"
+cp "$(muse_dsh_deploy_dir)/scripts/seed-instance-settings.sh" "$CONTEXT/seed-instance-settings.sh"
+cp "$(muse_dsh_deploy_dir)/scripts/merge-default-settings.py" "$CONTEXT/merge-default-settings.py"
+mkdir -p "$CONTEXT/defaults"
+cp "$(muse_dsh_deploy_dir)/defaults/settings.yaml" "$CONTEXT/defaults/settings.yaml"
 cp "$(muse_dsh_deploy_dir)/loopback-proxy.mjs" "$CONTEXT/loopback-proxy.mjs"
 cp "$(muse_dsh_deploy_dir)/wire-harness-aliases.py" "$CONTEXT/wire-harness-aliases.py"
-chmod +x "$CONTEXT/entrypoint.sh"
+chmod +x "$CONTEXT/entrypoint.sh" "$CONTEXT/seed-instance-settings.sh"
 
 if [[ -d "$HARNESS/node_modules/dshmarket" ]]; then
   echo "==> Copying staged dshmarket into image context"
@@ -83,6 +87,15 @@ if [[ -d "$HARNESS/node_modules/dshmarket" ]]; then
 else
   echo "==> dshmarket not in harness node_modules (optional); image will omit it"
   : > "$CONTEXT/dshmarket-optional/.keep"
+fi
+
+CAP_SRC="$(muse_packages_root)/plugins/dsh-model-capabilities"
+if [[ -f "$CAP_SRC/lib/index.js" ]]; then
+  echo "==> Copying dsh-model-capabilities into image context"
+  rsync -a --exclude '.git/' "$CAP_SRC/" "$CONTEXT/dsh-model-capabilities-optional/"
+else
+  echo "==> dsh-model-capabilities missing; image will omit it"
+  : > "$CONTEXT/dsh-model-capabilities-optional/.keep"
 fi
 
 echo "==> docker buildx build --platform $PLATFORM -t $TAG --load"

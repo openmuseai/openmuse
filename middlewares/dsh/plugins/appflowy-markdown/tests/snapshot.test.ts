@@ -7,7 +7,7 @@ import {
   resetLastMarkdownSnapshot,
   MARKDOWN_SNAPSHOT_CONTEXT_TYPE
 } from "../src/snapshot.js";
-import { APPFLOWY_MARKDOWN_READ_OPERATION } from "../src/index.js";
+import { APPFLOWY_MARKDOWN_READ_OPERATION, APPFLOWY_MARKDOWN_SNAPSHOT_OPERATION } from "../src/index.js";
 
 describe("markdown Host snapshot (E4)", () => {
   afterEach(() => {
@@ -100,5 +100,47 @@ describe("markdown Host snapshot (E4)", () => {
       viewId: "v1",
       text: "leaked access_token here"
     })).toBeUndefined();
+  });
+
+  it("reads a listed workspace page by resourceRef when Cloud is unwired", async () => {
+    rememberMarkdownSnapshot({
+      viewId: "view-listed",
+      workspaceId: "ws-1",
+      text: "# Listed page\n\nBody from Host.",
+      truncated: false,
+      byteLength: Buffer.byteLength("# Listed page\n\nBody from Host.")
+    });
+    const previous = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ code: 1067, message: "UNAVAILABLE: CLOUD_COLLAB_ADAPTER_NOT_WIRED" }), {
+        status: 501
+      })
+    ) as typeof fetch;
+    try {
+      const provider = createCloudMarkdownProvider();
+      const prepared = provider.prepareInput?.(
+        { resourceRef: "view-listed" },
+        { cloudBaseUrl: "http://cloud.test", boundWorkspaceId: "ws-1" }
+      ) ?? { resourceRef: "view-listed" };
+      const missing = await provider.invoke({
+        operationId: APPFLOWY_MARKDOWN_SNAPSHOT_OPERATION,
+        input: {},
+        ctx: { cloudBaseUrl: "http://cloud.test" }
+      });
+      expect(missing.ok).toBe(false);
+      if (missing.ok) throw new Error("expected failure");
+      expect(missing.code).toBe("INVALID_INPUT");
+
+      const result = await provider.invoke({
+        operationId: APPFLOWY_MARKDOWN_SNAPSHOT_OPERATION,
+        input: prepared,
+        ctx: { cloudBaseUrl: "http://cloud.test", boundWorkspaceId: "ws-1" }
+      });
+      expect(result.ok).toBe(true);
+      if (!result.ok) throw new Error("expected ok");
+      expect(JSON.stringify(result.value)).toContain("Body from Host.");
+    } finally {
+      globalThis.fetch = previous;
+    }
   });
 });

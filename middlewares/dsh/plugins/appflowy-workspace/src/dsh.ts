@@ -18,6 +18,8 @@ export const WORKSPACE_LIST_PROMPT =
   + "not in the DSH cwd. "
   + "The bound workspace directory only contains README.md by design; glob/ls will not list pages. "
   + "To list this workspace's files/pages, call muse_workspace_list_views. "
+  + "To read a document-layout page, call muse_document_read with resourceRef set to that item's viewId. "
+  + "muse_document_read_current only reads the Host-focused page. "
   + "Newly created or imported AppFlowy pages appear on the next muse_workspace_list_views call "
   + "(Host catalog first while Cloud folder collab is unwired; there is no cwd watcher).";
 
@@ -75,7 +77,7 @@ export const appFlowyWorkspaceQueryDefinition: MusePluginDefinition = {
     tools: [{
       name: APPFLOWY_WORKSPACE_TREE_TOOL,
       description:
-        "List bounded AppFlowy folder views (id, title, layout) from the Host sidebar catalog or Cloud collab. Does not read document bodies or DSH cwd files. Use cursor when truncated is true.",
+        "List bounded AppFlowy folder views (id, title, layout) from the Host sidebar catalog or Cloud collab. Does not read document bodies or DSH cwd files. Use cursor when truncated is true. Read a document page with muse_document_read (resourceRef = viewId).",
       operationId: WORKSPACE_TREE_OPERATION,
       parameters: modelInputSchema,
       output: modelOutputSchema,

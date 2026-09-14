@@ -1,0 +1,2 @@
+#!/bin/sh
+exec '/Users/mac/src/openmuse-io/Muse-Clients/frontend/client/dist/macos/OpenMuse.app/Contents/Resources/muse/node/bin/node' '/Users/mac/src/openmuse-io/Muse-Clients/frontend/client/dist/macos/OpenMuse.app/Contents/Resources/muse/plugin-tools/pnpm-runner.mjs' '/Users/mac/src/openmuse-io/Muse-Clients/frontend/client/dist/macos/OpenMuse.app/Contents/Resources/muse/plugin-tools/pnpm/bin/pnpm.cjs' "$@"

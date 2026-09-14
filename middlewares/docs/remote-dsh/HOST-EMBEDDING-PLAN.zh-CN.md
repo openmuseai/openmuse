@@ -26,6 +26,7 @@
 | **E2** | Desktop 对齐 stage/code；Android 接 session/open | Desktop + Android | 三端合同一致 | [E2-PLATFORM-ADAPTERS](phases/E2-PLATFORM-ADAPTERS.zh-CN.md) |
 | **E3** | attachmentId 贯穿、nginx/inject/instance.env 合同、runbook | 部署 + 全端 | 可恢复追踪、防漂移 | [E3-TRACE-AND-DEPLOY](phases/E3-TRACE-AND-DEPLOY.zh-CN.md) |
 | **E4** | 工作区 Plugin：Host catalog P0；BFF 禁 `NOT_FOUND`；tree/query P1 | Web + BFF + appflowy-workspace | 能列 AppFlowy 页，不再把 README 当空工作区 | [E4-DOCUMENT-PLANE](phases/E4-DOCUMENT-PLANE.zh-CN.md) |
+| **E5** | 同一套 catalog/snapshot 合同接到 Mobile HTTP；Desktop 只落盘本地载波 | Android 先；Desktop 文档 | 远程 DSH 对手机与 Web 同一 Plugin 面 | [E5-MOBILE-DESKTOP-PLUGIN-PLANE](phases/E5-MOBILE-DESKTOP-PLUGIN-PLANE.zh-CN.md) |
 
 每个阶段文档固定三块：**设计 / 实现 / 测试矩阵**。未写进矩阵的行为不算完成。阶段出口 = 矩阵全绿 + 文档中的生产验收项（E0/E3 含现网）。
 
@@ -37,6 +38,8 @@ E0 ──► E1 ──► E2
  └────► E3 ◄────┘     E3 可与 E1 部分并行（nginx 片段），但 Host header 要等 E0 有 attachmentId
               │
               └──► E4   依赖 E1 HybridLive + E3 BFF 是 /api/muse 入口；不改 systemd
+                         │
+                         └──► E5  Mobile HTTP 载波 + 同合同 Host 投影；Desktop 不改池
 ```
 
 E0 可单独上生产 Web。不要等 E2 才修现网黑屏。
@@ -86,6 +89,7 @@ E0 可单独上生产 Web。不要等 E2 才修现网黑屏。
 3. E3 nginx/BFF 片段对齐（短，可插在 E1 旁）。
 4. E2 Android 接线；Desktop 错误码映射（不挡 Web 生产）。
 5. E4 工作区 Plugin：先 BFF 501 + Host catalog（现网即可验收「有哪些页面」），再 collab query。
+6. E5 Mobile：打开实例 `MUSE_MOBILE_BRIDGE` + ControlHost catalog/snapshot；Desktop 保持 sidecar，不挡 Mobile。
 
 ## 7. 落地状态（2026-09-10）
 
@@ -95,4 +99,5 @@ E0 可单独上生产 Web。不要等 E2 才修现网黑屏。
 | E1 | hello/bind 等 token；8s ACK；失败叠层保 iframe | T1–T12 已自动化 | 现网 `parent-bridge` 已换 RPC 并重启活实例（loopback 200）。E1-P* 需登录后看 iframe 子帧 |
 | E2 | Android Placement + session/open；Desktop errorCode | T1–T12（T8 spawn 为 controller 映射，非真进程） | E2-P* 手工 |
 | E3 | BFF attachment 日志；nginx `:8010`；instance.env 模板；runbook | T1–T8 自动化（T6 沿用 inject py） | 现网 `auth_request` 已是 BFF `:8010`；BFF 已打 `attachmentId` 结构化日志。E3-P1/P4 需登录 UI |
-| E4 | P0 已合入（catalog + snapshot + BFF 501） | T1–T6、T8 + 本地 e2e | **2026-09-10** 已打 Web dist + workspace/markdown plugin + parent-bridge + BFF；未覆盖本地 `presentation-facets.js`；活实例已停，下次 `session/open` 加载新模块 |
+| E4 | P0 已合入（catalog + snapshot + BFF 501） | T1–T6、T8 + 本地 e2e | **2026-09-10** Web Host + 插件已通；生产勿覆盖 `presentation-facets.js` stub |
+| E5 | Mobile HTTP 旗 + Flutter catalog/snapshot + **同实例 SharedHostSession** | T1–T10 本地绿 | **2026-09-11** 载波已开。共享会话需同步 `parent-bridge.js`+`mobile-lease.js` 并重启 tenant unit（不重启 pool）。Host catalog 随 Flutter 包分发 |

@@ -63,7 +63,7 @@ block = f"""    # {marker}
         auth_request /internal/muse-dsh-auth;
         proxy_pass {dsh}/;
         proxy_http_version 1.1;
-        proxy_set_header Host 127.0.0.1:3080;
+        proxy_set_header Host $http_host;
         proxy_set_header Cookie "";
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;

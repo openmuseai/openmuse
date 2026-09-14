@@ -47,9 +47,29 @@ const writeHeaderBlock = (
 };
 
 /**
- * Keep the public Host. DSH `isTrustedApiRequest` requires Origin host == Host;
- * rewriting to loopback (`127.0.0.1:port`) makes browser Origin fail with 403.
+ * DSH 0.1.x pins privileged RPCs (`settings.describe`, `llm.discoverModels`,
+ * `credentials.*`, …) to loopback by calling the Host fence with an empty
+ * trusted-host list — `--trusted-host` does not help those methods. The Web
+ * iframe's Host is the apex (`openmuseai.com`), so `/api` must arrive at the
+ * tenant as `127.0.0.1:<port>`. Origin is rewritten to the same authority
+ * because the fence also requires Origin.host === Host when Origin is present.
+ * HTML under `/u/<hash>/` keeps the public Host.
  */
+export const rewriteApiTrustHeaders = (
+  headers: Record<string, string | string[] | undefined>,
+  port: number,
+  rest: string
+): Record<string, string | string[] | undefined> => {
+  const path = rest.split("?")[0] ?? "";
+  if (!path.startsWith("/api")) return headers;
+  const authority = `127.0.0.1:${String(port)}`;
+  const next: Record<string, string | string[] | undefined> = { ...headers, host: authority };
+  if (typeof next.origin === "string" && next.origin.length > 0) {
+    next.origin = `http://${authority}`;
+  }
+  return next;
+};
+
 export const createPoolProxy = (pool: InstancePool): ReturnType<typeof createServer> => {
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     const url = req.url ?? "/";
@@ -61,7 +81,7 @@ export const createPoolProxy = (pool: InstancePool): ReturnType<typeof createSer
       res.end(JSON.stringify({ ok: false, error: route.error }));
       return;
     }
-    const headers = stripUpstreamAuth(req.headers);
+    const headers = rewriteApiTrustHeaders(stripUpstreamAuth(req.headers), route.port, route.rest);
     const upstream = httpRequest({
       host: "127.0.0.1",
       port: route.port,
@@ -88,7 +108,7 @@ export const createPoolProxy = (pool: InstancePool): ReturnType<typeof createSer
       clientSocket.destroy();
       return;
     }
-    const headers = stripUpstreamAuth(req.headers);
+    const headers = rewriteApiTrustHeaders(stripUpstreamAuth(req.headers), route.port, route.rest);
     const path = upstreamPath(url, route.rest);
     const proxySocket = connect(route.port, "127.0.0.1");
     proxySocket.on("error", () => clientSocket.destroy());

@@ -80,4 +80,21 @@ void main() {
       'DSH_CONFIG_INVALID',
     );
   });
+
+  test('E2-T13 retired dsh. dart-define does not block Cloud /u/ webUrl', () {
+    final allow = DshPlacement.pageAllowlist(
+      cloudOrigin: Uri.parse('https://openmuseai.com'),
+      compiled: Uri.parse('https://dsh.openmuseai.com/'),
+    );
+    expect(allow.host, 'openmuseai.com');
+    final decision = DshPlacement.fromOpen(
+      accessToken: 'jwt',
+      session: DshSessionOpen.fromJson({
+        'sessionRef': 'sess-1',
+        'webUrl': tenant,
+      }),
+      allowlist: allow,
+    );
+    expect(decision.isReady, isTrue);
+  });
 }

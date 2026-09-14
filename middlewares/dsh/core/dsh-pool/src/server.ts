@@ -26,7 +26,7 @@ export const createControlServer = (pool: InstancePool): ReturnType<typeof creat
       const path = req.url ?? "/";
       try {
         if (req.method === "GET" && path === "/healthz") {
-          write(res, 200, { ok: true, nodeId: "local", queue: pool.queueLength() });
+          write(res, 200, pool.status());
           return;
         }
         if (req.method === "POST" && path === "/internal/session/open") {

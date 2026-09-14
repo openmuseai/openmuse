@@ -6,6 +6,7 @@ import 'package:muse_dsh_mobile/src/capabilities/dsh_native_capability_codec.dar
 import 'package:muse_dsh_mobile/src/dsh_mobile_error_codes.dart';
 import 'package:muse_dsh_mobile/src/dsh_remote_config.dart';
 import 'package:muse_dsh_mobile/src/webview/dsh_navigation_policy.dart';
+import 'package:muse_dsh_mobile/src/webview/dsh_ssl_auth.dart';
 import 'package:muse_dsh_mobile/src/webview/dsh_webview_session.dart';
 import 'package:muse_dsh_mobile/src/webview/dsh_webview_storage.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -22,6 +23,7 @@ class DshWebViewManager {
     this.storage = const DshWebViewStorage(),
     this.capabilityBroker,
     this.fileChooserHost,
+    this.ingressAccessToken,
   }) : policy = DshNavigationPolicy(config);
 
   static const nativeCapabilitiesEnabled = bool.fromEnvironment(
@@ -42,6 +44,7 @@ class DshWebViewManager {
   final DshWebViewStorage storage;
   final DshNativeCapabilityBroker? capabilityBroker;
   final DshFileChooserHost? fileChooserHost;
+  final String? ingressAccessToken;
   final DshNavigationPolicy policy;
 
   WebViewController? controller;
@@ -74,6 +77,25 @@ class DshWebViewManager {
           }
         },
         onSslAuthError: (error) {
+          final platform = error.platform;
+          if (platform is AndroidSslAuthError) {
+            final requestUrl = Uri.tryParse(platform.url) ?? config.publicUri;
+            unawaited(
+              resolveDshSslAuthError(
+                error: platform,
+                requestUrl: requestUrl,
+                allows: policy.allows,
+                handshake: dshSystemTrustHandshake,
+                onUntrusted: () {
+                  if (isLive()) {
+                    session.enter(DshWebViewPhase.fatalError);
+                    onFatal(DshMobileErrorCode.tlsUntrusted.message);
+                  }
+                },
+              ),
+            );
+            return;
+          }
           unawaited(error.cancel());
           if (isLive()) {
             session.enter(DshWebViewPhase.fatalError);
@@ -92,9 +114,16 @@ class DshWebViewManager {
       await capabilityBroker!.installChannel(webView);
     }
     await _installAndroidFileChooser(webView);
+    await storage.seedCloudSession(
+      host: config.publicUri.host,
+      accessToken: ingressAccessToken,
+    );
     controller = webView;
     session.enter(DshWebViewPhase.loadingDocument);
-    await webView.loadRequest(config.publicUri);
+    final headers = <String, String>{};
+    final token = ingressAccessToken?.trim() ?? '';
+    if (token.isNotEmpty) headers['Authorization'] = 'Bearer $token';
+    await webView.loadRequest(config.publicUri, headers: headers);
     return webView;
   }
 

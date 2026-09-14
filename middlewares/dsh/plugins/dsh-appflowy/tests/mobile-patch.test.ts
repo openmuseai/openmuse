@@ -16,4 +16,11 @@ describe("mobile presentation patch", () => {
       patch.indexOf("@muse/dsh-mobile-surface"),
     );
   });
+
+  it("inserts the vendored model-capabilities plugin after dshmarket", () => {
+    expect(patch).toContain("name: dsh-model-capabilities");
+    expect(patch.indexOf("name: dshmarket")).toBeLessThan(
+      patch.indexOf("name: dsh-model-capabilities"),
+    );
+  });
 });

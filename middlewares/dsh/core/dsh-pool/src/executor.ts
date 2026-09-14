@@ -29,6 +29,12 @@ export class FakeExecutor implements Executor {
     return { alive: this.alive, rssBytes: this.rssBytes, memoryCurrentBytes: this.rssBytes };
   }
 
+  orphans = new Map<string, { port: number; unitName: string; pid?: number }>();
+
+  async findRunning(tenantHash: string): Promise<{ port: number; unitName: string; pid?: number } | undefined> {
+    return this.orphans.get(tenantHash);
+  }
+
   async waitReady(): Promise<void> {
     /* FakeExecutor is ready immediately. */
   }

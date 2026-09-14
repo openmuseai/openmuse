@@ -13,15 +13,21 @@ from pathlib import Path
 def _bootstrap_root() -> Path:
     cur = Path(__file__).resolve()
     for path in [cur.parent, *cur.parents]:
-        if (path / "scripts" / "deploy_config.py").is_file() and (path / "middlewares" / "dsh").is_dir():
+        if not ((path / "middlewares" / "dsh").is_dir() and (path / "frontend" / "client").is_dir()):
+            continue
+        local_scripts = path / "local"
+        if (local_scripts / "scripts" / "deploy_config.py").is_file():
+            sys.path.insert(0, str(local_scripts))
+            return path
+        if (path / "scripts" / "deploy_config.py").is_file():
+            sys.path.insert(0, str(path))
             return path
     raise SystemExit("Muse repo root not found")
 
 
 MUSE_ROOT = _bootstrap_root()
-sys.path.insert(0, str(MUSE_ROOT))
 from scripts.deploy_common import save_images
-from scripts.deploy_config import add_env_argument, load_deploy_config
+from scripts.deploy_config import add_env_argument, dsh_trusted_hosts, load_deploy_config
 
 try:
     import paramiko
@@ -125,7 +131,7 @@ def remote_env(args: argparse.Namespace, extra: str = "") -> str:
         f"APP_DIR={args.app_dir}",
         f"DSH_PORT={args.dsh_port}",
         f"IMAGE_NAME={IMAGE_NAME}",
-        f"DSH_TRUSTED_HOST={args.dsh_host}",
+        f"DSH_TRUSTED_HOST={dsh_trusted_hosts(args._config)}",
         f"MUSE_DOCUMENT_CLOUD_URL={cloud_url}",
         extra,
     ]
@@ -159,7 +165,7 @@ def seed_remote_dsh_env(sftp: paramiko.SFTPClient, args: argparse.Namespace) -> 
     values.setdefault("DSH_HOME", "/var/lib/muse-dsh")
     values.setdefault("HOST", "0.0.0.0")
     values.setdefault("PORT", "3080")
-    values["DSH_TRUSTED_HOST"] = args.dsh_host
+    values["DSH_TRUSTED_HOST"] = dsh_trusted_hosts(args._config)
     cloud_url = (args._config.public_base_url or "").rstrip("/")
     if cloud_url:
         values["MUSE_DOCUMENT_CLOUD_URL"] = cloud_url

@@ -16,6 +16,10 @@ mkdir -p \
   "${DSH_HOME}/profiles/web/node_modules/@muse" \
   "${DSH_HOME}/profiles/node_modules/@muse"
 
+bash /muse/seed-instance-settings.sh \
+  "${DSH_HOME}" \
+  "${MUSE_DSH_DEFAULT_SETTINGS:-/muse/defaults/settings.yaml}"
+
 if [[ -d "${HARNESS}/node_modules/@muse" ]]; then
   for dest in \
     "${DSH_HOME}/profiles/node_modules/@muse" \
@@ -31,6 +35,12 @@ if [[ -d "${HARNESS}/node_modules/dshmarket" ]]; then
   mkdir -p "${DSH_HOME}/profiles/node_modules" "${DSH_HOME}/profiles/web/node_modules"
   ln -sfn "${HARNESS}/node_modules/dshmarket" "${DSH_HOME}/profiles/node_modules/dshmarket"
   ln -sfn "${HARNESS}/node_modules/dshmarket" "${DSH_HOME}/profiles/web/node_modules/dshmarket"
+fi
+
+if [[ -d "${HARNESS}/node_modules/dsh-model-capabilities" ]]; then
+  mkdir -p "${DSH_HOME}/profiles/node_modules" "${DSH_HOME}/profiles/web/node_modules"
+  ln -sfn "${HARNESS}/node_modules/dsh-model-capabilities" "${DSH_HOME}/profiles/node_modules/dsh-model-capabilities"
+  ln -sfn "${HARNESS}/node_modules/dsh-model-capabilities" "${DSH_HOME}/profiles/web/node_modules/dsh-model-capabilities"
 fi
 
 if [[ -f /muse/wire-muse-node-modules.py && -d /opt/muse/packages ]]; then

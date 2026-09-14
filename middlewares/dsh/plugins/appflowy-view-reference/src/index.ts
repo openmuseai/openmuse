@@ -23,7 +23,7 @@ const providerViewSchema: JsonValue = {
   properties: {
     title: { type: "string", maxLength: 256 },
     titleTruncated: { type: "boolean" },
-    layout: { enum: ["document", "grid", "board", "calendar", "chat"] },
+    layout: { enum: ["document", "grid", "board", "calendar", "chat", "word"] },
     locked: { type: ["boolean", "null"] },
     childCount: { type: "integer", minimum: 0, maximum: 256 }
   }
@@ -36,7 +36,7 @@ const providerChildSchema: JsonValue = {
   properties: {
     title: { type: "string", maxLength: 256 },
     titleTruncated: { type: "boolean" },
-    layout: { enum: ["document", "grid", "board", "calendar", "chat"] },
+    layout: { enum: ["document", "grid", "board", "calendar", "chat", "word"] },
     locked: { type: ["boolean", "null"] }
   }
 };
@@ -67,7 +67,7 @@ const nullableBoolean: JsonSchemaNode = {
 };
 const layoutSchema: JsonSchemaNode = {
   type: "string",
-  enum: ["document", "grid", "board", "calendar", "chat"]
+  enum: ["document", "grid", "board", "calendar", "chat", "word"]
 };
 const modelChildSchema: JsonSchemaNode = {
   type: "object",

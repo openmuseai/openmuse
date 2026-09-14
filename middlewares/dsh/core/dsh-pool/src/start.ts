@@ -27,7 +27,7 @@ for (const key of ["DSH_TRUSTED_HOST", "MUSE_DOCUMENT_CLOUD_URL", "PATCH", "HARN
   const value = process.env[key]?.trim();
   if (value) instanceEnv[key] = value;
 }
-if (!instanceEnv.DSH_TRUSTED_HOST) instanceEnv.DSH_TRUSTED_HOST = "openmuseai.com,127.0.0.1";
+if (!instanceEnv.DSH_TRUSTED_HOST) instanceEnv.DSH_TRUSTED_HOST = "openmuseai.com,dsh.openmuseai.com,127.0.0.1";
 if (!instanceEnv.HARNESS) instanceEnv.HARNESS = "/opt/muse-dsh/runtime/dsh";
 if (!instanceEnv.PATCH) instanceEnv.PATCH = "/opt/muse-dsh/runtime/patch.yml";
 if (!instanceEnv.MUSE_DSH_NODE_BIN) {

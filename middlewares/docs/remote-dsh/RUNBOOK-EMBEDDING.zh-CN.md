@@ -13,8 +13,9 @@
 | POOL_UNAVAILABLE | `systemctl status dsh-pool`；`docker ps` 看 `muse-dsh-bff`（现网 BFF 是 host 网络容器，systemd unit 可能 inactive） |
 | INGRESS_DENIED | GET `/u/` 之前是否已有 cookie；`auth_request` 是否打 BFF `:8010` |
 | BRIDGE_SILENT | 实例 env `MUSE_DOCUMENT_CLOUD_URL`；capabilities |
+| HOST_UPGRADE_REQUIRED | Mobile：`GET …/parent-bridge/capabilities` 的 `nativeHttpSse` 必须 true；`instance.env` 要有 `MUSE_MOBILE_BRIDGE=1` 并重启 **unit** |
 | NO_DEVICE_TOKEN | BFF `POST /api/muse/dsh/device-token` |
-| BIND_REJECTED | iframe 子帧 `parent-bridge` 状态码 |
+| BIND_REJECTED | iframe 子帧 `parent-bridge` 状态码。403 `SCOPE_MISMATCH` = 与已 attach Host 不是同一 workspace。409 `HOST_IN_USE` = 附件已满，不是「手机占了实例」 |
 | QUEUED / COLD_START | 等；不要当修复去重启池 |
 | NEED_API_KEY | **Desktop only**：本机填 key，不要查 `/u/` |
 | SIDECAR_EXIT | Desktop sidecar 日志 |
@@ -34,6 +35,7 @@
 - BFF stdout 一行 JSON：`action` / `status` / 可选 `attachmentId`。`docker logs muse-dsh-bff` 可 grep 面板复制的 id。
 - 活实例的 `@muse/dsh-appflowy` parent-bridge 已含 RPC `bridge.reply`。新租户冷启动仍可能 >60s，属 Queued/COLD_START，不要当池挂了。
 - iframe `GET /u/<hash>/` **502**：先 `ss -lptn | grep 13081` 与 `systemctl status muse-dsh-<hash>`。实例 crash loop（插件 `Cannot find module` / 缺导出）时池仍 502，不要 `docker compose up muse-dsh`。
+- Mobile `HOST_UPGRADE_REQUIRED` / parent-bridge **403 MOBILE_DISABLED**：capabilities `nativeHttpSse:false`。设 `MUSE_MOBILE_BRIDGE=1` 后只重启 tenant unit，不要重启 `dsh-pool`。
 - `GET /u/` 200 但黑屏：看 Network 里 `/assets/*.js` 是否打到站点根路径 404。正确应变为 `/u/<hash>/assets/…`（HTML 里 `./assets/`）。
 - `transport failure for /api/host.listDirectory: HTTP 404`：DSH 的 `/api/host.*` 打到了官网 `/api`。硬刷新后应变成 `POST /u/<hash>/api/host.listDirectory`。iframe 注入会改写 fetch/XHR/WebSocket。
 

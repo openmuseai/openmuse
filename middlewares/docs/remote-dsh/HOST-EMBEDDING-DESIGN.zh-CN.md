@@ -1,6 +1,6 @@
 # Host 嵌入 DSH：目标设计与鲁棒性论证
 
-> 状态：设计 v1（2026-09-10）。诊断见 [HOST-EMBEDDING-ANALYSIS.zh-CN.md](HOST-EMBEDDING-ANALYSIS.zh-CN.md)。开发计划见 [HOST-EMBEDDING-PLAN.zh-CN.md](HOST-EMBEDDING-PLAN.zh-CN.md)。阶段：[E0](phases/E0-WEB-ATTACHMENT-SM.zh-CN.md) / [E1](phases/E1-BIND-RPC.zh-CN.md) / [E2](phases/E2-PLATFORM-ADAPTERS.zh-CN.md) / [E3](phases/E3-TRACE-AND-DEPLOY.zh-CN.md) / [E4](phases/E4-DOCUMENT-PLANE.zh-CN.md)。
+> 状态：设计 v1（2026-09-10）。诊断见 [HOST-EMBEDDING-ANALYSIS.zh-CN.md](HOST-EMBEDDING-ANALYSIS.zh-CN.md)。开发计划见 [HOST-EMBEDDING-PLAN.zh-CN.md](HOST-EMBEDDING-PLAN.zh-CN.md)。阶段：[E0](phases/E0-WEB-ATTACHMENT-SM.zh-CN.md) / [E1](phases/E1-BIND-RPC.zh-CN.md) / [E2](phases/E2-PLATFORM-ADAPTERS.zh-CN.md) / [E3](phases/E3-TRACE-AND-DEPLOY.zh-CN.md) / [E4](phases/E4-DOCUMENT-PLANE.zh-CN.md) / [E5](phases/E5-MOBILE-DESKTOP-PLUGIN-PLANE.zh-CN.md)。
 > 不替代 MULTITENANCY 的池/执行器合同。本文只规定 **Host 如何嵌 DSH**：聚合、适配器、错误码、凭据顺序、可观察性。
 
 ---
@@ -67,6 +67,10 @@
 | `inject_web_config` | 写入 `APPFLOWY_DSH_AGENT_URL=/dsh/` | CSP 需要 apex；iframe 不应使用该 path |
 | 实例 `start-instance.sh` | 默认 `MUSE_REQUIRE_HOST_AUTH=1` | 无 `MUSE_DOCUMENT_CLOUD_URL` 则 parent-bridge 不注入 |
 | 冷启动 | 首次 tsx ~170s | Host 必须能停在 `Placing`/`Queued`，不能当失败 |
+
+### 2.5 落地后对照（2026-09-11）
+
+Web Attachment + E4 catalog 已在生产 `/u/<hash>/` 打通。Android Placement（session/open → tenant URL）已在 E2 接线，但 **parent-bridge HTTP 默认关**，Host 也未投递 catalog。Desktop 仍是 sidecar + hint，正确，不要改成远程。下一跳是 [E5](phases/E5-MOBILE-DESKTOP-PLUGIN-PLANE.zh-CN.md)。
 
 ---
 
@@ -195,7 +199,7 @@ closeSurface(ref)
 | 平台 | 载波 |
 |---|---|
 | Web | postMessage → 注入脚本 **带 requestId 的 XHR** → parent-bridge |
-| Android | HTTPS parent-bridge（source 改写）；实例内 lease，禁止整机 `HOST_IN_USE` 挡其他租户 |
+| Android | HTTPS parent-bridge（source 改写）；`SharedHostSession` 与 Web 同实例同 workspace 共享 SSE/catalog；`HOST_IN_USE` 仅附件上限 |
 | Desktop | 写 hint 文件；`hello/bind` 映射为 `publish()` 成功 |
 
 Web `workspace.bind` 今日不含 token，必须纳入消息。注入脚本今日 `xhr.send` 无回调，必须 `onload`/`onerror` 回 `bridge.reply`。

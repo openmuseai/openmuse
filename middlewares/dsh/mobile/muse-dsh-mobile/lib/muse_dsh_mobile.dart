@@ -12,7 +12,7 @@ export 'src/dsh_placement.dart';
 export 'src/dsh_remote_config.dart';
 export 'src/dsh_session_api.dart';
 export 'src/dsh_session_http.dart';
-export 'src/webview/dsh_navigation_policy.dart';
+export 'src/webview/dsh_ssl_auth.dart';
 export 'src/webview/dsh_webview_manager.dart';
 export 'src/webview/dsh_webview_session.dart';
 export 'src/webview/dsh_webview_storage.dart';

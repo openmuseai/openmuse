@@ -28,6 +28,19 @@ class DshPlacement {
     return candidatePort == allowlistPort;
   }
 
+  /// Web iframe is same-origin with Cloud (`session/open` caller).
+  /// Compile-time `MUSE_DSH_PUBLIC_URL` is not a page URL; a retired
+  /// `dsh.` host must not reject an apex `/u/<hash>/` webUrl.
+  static Uri pageAllowlist({required Uri cloudOrigin, Uri? compiled}) {
+    if (compiled == null ||
+        compiled.host.isEmpty ||
+        isSharedDshPath(compiled) ||
+        compiled.host != cloudOrigin.host) {
+      return cloudOrigin;
+    }
+    return compiled;
+  }
+
   /// Reject a `session/open` webUrl. Null means the URL may be loaded.
   static String? rejectSessionWebUrl(String? raw, {Uri? allowlist}) {
     if (raw == null || raw.trim().isEmpty) return 'DSH_CONFIG_INVALID';

@@ -158,6 +158,7 @@ class DshMobileCoordinator with WidgetsBindingObserver {
         onFatal: _fail,
         capabilityBroker: broker,
         fileChooserHost: fileChooserHost,
+        ingressAccessToken: accessToken,
       );
       await manager.createAndLoad();
       if (!live()) return;
@@ -201,8 +202,10 @@ class DshMobileCoordinator with WidgetsBindingObserver {
     if (api != null) {
       final device = sessionDeviceId ?? 'mobile.${scope.accountRef}';
       _openedDeviceId = device;
-      final allowlist =
-          (endpoint ?? DshRemoteConfig.fromEnvironment())?.publicUri;
+      final allowlist = DshPlacement.pageAllowlist(
+        cloudOrigin: api.cloudOrigin,
+        compiled: (endpoint ?? DshRemoteConfig.fromEnvironment())?.publicUri,
+      );
       var opened = await api.open(
         workspaceRef: scope.workspaceRef,
         deviceId: device,

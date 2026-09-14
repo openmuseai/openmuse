@@ -34,12 +34,20 @@ export interface InspectResult {
   readonly cpuUsageUsec?: number;
 }
 
+export interface RunningInstance {
+  readonly port: number;
+  readonly unitName: string;
+  readonly pid?: number;
+}
+
 export interface Executor {
   readonly kind: ExecutorKind;
   start(spec: InstanceSpec): Promise<InstanceHandle>;
   stop(handle: InstanceHandle): Promise<void>;
   inspect(handle: InstanceHandle): Promise<InspectResult>;
   waitReady(handle: InstanceHandle, timeoutMs: number): Promise<void>;
+  /** Adopt a pool-restart orphan (systemd unit still running). */
+  findRunning?(tenantHash: string): Promise<RunningInstance | undefined>;
 }
 
 export interface SessionOpenInput {

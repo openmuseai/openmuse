@@ -9,6 +9,8 @@ import {
   documentProposeOutputSchema,
   documentQueryInputSchema,
   documentQueryOutputSchema,
+  documentSnapshotInputSchema,
+  documentSnapshotOutputSchema,
   documentStatusInputSchema,
   documentStatusOutputSchema,
   type JsonSchema
@@ -21,7 +23,9 @@ export const APPFLOWY_MARKDOWN_READ_OPERATION = DOCUMENT_CONTRACT.operations.que
 export const APPFLOWY_MARKDOWN_PROPOSE_OPERATION = DOCUMENT_CONTRACT.operations.propose;
 export const APPFLOWY_MARKDOWN_APPLY_OPERATION = DOCUMENT_CONTRACT.operations.apply;
 export const APPFLOWY_MARKDOWN_STATUS_OPERATION = DOCUMENT_CONTRACT.operations.status;
+export const APPFLOWY_MARKDOWN_SNAPSHOT_OPERATION = DOCUMENT_CONTRACT.operations.snapshot;
 export const APPFLOWY_MARKDOWN_READ_TOOL = "muse_document_read_current";
+export const APPFLOWY_MARKDOWN_SNAPSHOT_TOOL = "muse_document_read";
 export const APPFLOWY_MARKDOWN_PROPOSE_TOOL = "muse_document_propose_markdown_edit";
 export const APPFLOWY_MARKDOWN_APPLY_TOOL = "muse_document_apply_approved_edit";
 
@@ -33,8 +37,19 @@ export const applyProviderInputSchema = documentApplyInputSchema as JsonValue;
 export const applyProviderOutputSchema = documentApplyOutputSchema as JsonValue;
 export const statusProviderInputSchema = documentStatusInputSchema as JsonValue;
 export const statusProviderOutputSchema = documentStatusOutputSchema as JsonValue;
+export const snapshotProviderInputSchema = documentSnapshotInputSchema as JsonValue;
+export const snapshotProviderOutputSchema = documentSnapshotOutputSchema as JsonValue;
 
 const modelInputSchema: ObjectJsonSchema = { type: "object", additionalProperties: false, properties: {} };
+const snapshotModelInputSchema: ObjectJsonSchema = {
+  type: "object", additionalProperties: false, required: ["resourceRef"],
+  properties: {
+    resourceRef: {
+      type: "string",
+      description: "Opaque page id from muse_workspace_list_views. Only document-layout pages can be read."
+    }
+  }
+};
 const modelOutputSchema: JsonSchemaNode = {
   type: "object", additionalProperties: false, required: ["protocol", "resourceRef", "revision", "content"],
   properties: {
@@ -85,7 +100,11 @@ export const appFlowyMarkdownDefinition: MusePluginDefinition = {
   targets: [{
     familyId: DOCUMENT_CONTRACT.family,
     contract: { major: DOCUMENT_CONTRACT.major, minMinor: 0, maxMinor: DOCUMENT_CONTRACT.minor },
-    requiredOperations: [DOCUMENT_CONTRACT.operations.query, DOCUMENT_CONTRACT.operations.propose, DOCUMENT_CONTRACT.operations.apply, DOCUMENT_CONTRACT.operations.status],
+    requiredOperations: [
+      DOCUMENT_CONTRACT.operations.query, DOCUMENT_CONTRACT.operations.propose,
+      DOCUMENT_CONTRACT.operations.apply, DOCUMENT_CONTRACT.operations.status,
+      DOCUMENT_CONTRACT.operations.snapshot
+    ],
     tools: [
       {
         name: APPFLOWY_MARKDOWN_READ_TOOL,
@@ -94,6 +113,24 @@ export const appFlowyMarkdownDefinition: MusePluginDefinition = {
         adapter: {
           accepts: contract => contract.operation.effect === "read" && contract.operation.inputSchema.sha256 === digest(documentQueryInputSchema) && contract.operation.outputSchema.sha256 === digest(documentQueryOutputSchema),
           toProviderInput: () => ({}), fromProviderOutput: value => value
+        }
+      },
+      {
+        name: APPFLOWY_MARKDOWN_SNAPSHOT_TOOL,
+        description:
+          "Read a workspace document page listed by muse_workspace_list_views as a bounded Markdown projection. "
+          + "Pass resourceRef from that listing. Does not write.",
+        operationId: DOCUMENT_CONTRACT.operations.snapshot, parameters: snapshotModelInputSchema, output: modelOutputSchema,
+        adapter: {
+          accepts: contract =>
+            contract.operation.effect === "read"
+            && contract.operation.inputSchema.sha256 === digest(documentSnapshotInputSchema)
+            && contract.operation.outputSchema.sha256 === digest(documentSnapshotOutputSchema),
+          toProviderInput: args => {
+            const value = args as { resourceRef: string };
+            return { resourceRef: value.resourceRef };
+          },
+          fromProviderOutput: value => value
         }
       },
       {

@@ -27,7 +27,7 @@
 | 现状证据 | 位置 | 后果 |
 |---|---|---|
 | `lastWorkspaceSurface` / `sseClients` / `mobileLease` / `lastBoundHint` 皆是模块级变量 | `plugins/dsh-appflowy/src/parent-bridge.ts` | 后绑定的用户会 `removeSurface(previous)` **顶掉**前一个用户的 workspace |
-| `ExclusiveMobileLease` 单控制器独占，`HOST_IN_USE` | `plugins/dsh-appflowy/src/mobile-lease.ts` | 同一时刻整机只允许**一个**移动设备 |
+| `ExclusiveMobileLease` 单控制器独占，`HOST_IN_USE` | `plugins/dsh-appflowy/src/mobile-lease.ts` | **已改为** `SharedHostSession`：同实例 Web+Mobile 共享；409 仅附件上限。`ExclusiveMobileLease` 仅保留给旧测 |
 | capabilities 自述 `scopedMultiTenant: false`、`mode: "exclusive-test"` | `parent-bridge.ts` `/capabilities` | 无租户域概念 |
 | web 的 `workspace.bind` **不校验** deviceToken（只 `rememberDeviceAuth` 做句法过滤） | `parent-bridge.ts` `rememberDeviceAuth` | 任意能打到 parent-bridge 的请求都能绑任意 workspaceRef |
 | `remote-disable-dsh-passwords.sh` 删除 DSH 本地密码 | `deploy/scripts/remote-disable-dsh-passwords.sh` | 经 nginx 反代后 Web UI 入口无鉴权 |
@@ -500,7 +500,7 @@ P1：`location /u/` → Pool（`127.0.0.1:<pool-port>`）；Pool 按前缀查 `t
 | P0.4 | nginx：DSH 改挂同源 `/dsh/` + `auth_request`；上游 loopback；**不**把 JWT 转给 DSH | `middlewares/dsh/deploy/` | curl 未登录 401；登录后 iframe 可开 |
 | P0.5 | 生产禁用 `remote-disable-dsh-passwords.sh`（脚本加非交互保护 / 从 remote compose 移除） | `deploy/scripts/` | 文档与脚本一致 |
 | P0.6 | Web：iframe src 改为同源 `/dsh/`；hello 必带 deviceToken | AppFlowy-Web `DshAgentPanel.tsx` | 试点账号全链路 |
-| P0.7 | Mobile：公共 URL 改为同源路径；回归 lease | `dsh_remote_config.dart`、Flutter | 单设备仍可连；第二设备仍 `HOST_IN_USE`（预期） |
+| P0.7 | Mobile：公共 URL 改为同源路径；回归 lease | `dsh_remote_config.dart`、Flutter | 同实例多 Host 共享；第二设备同 workspace 不 409 |
 | P0.8 | 安全回归清单（未登录 / 伪 token / 跨 ws / 无 JWT 泄漏） | 测试 | §5.2.4 |
 
 并行：P0.9 基线测量（§10），不阻塞 P0 合入。

@@ -3,6 +3,7 @@ import {
   APPFLOWY_MARKDOWN_APPLY_OPERATION,
   APPFLOWY_MARKDOWN_PROPOSE_OPERATION,
   APPFLOWY_MARKDOWN_READ_OPERATION,
+  APPFLOWY_MARKDOWN_SNAPSHOT_OPERATION,
   APPFLOWY_MARKDOWN_STATUS_OPERATION
 } from "./index.js";
 
@@ -26,6 +27,7 @@ export function cloudDocumentApplyEnabled(env: NodeJS.ProcessEnv = process.env):
 export function pathForDocumentOperation(operationId: string): string | undefined {
   switch (operationId) {
     case APPFLOWY_MARKDOWN_READ_OPERATION:
+    case APPFLOWY_MARKDOWN_SNAPSHOT_OPERATION:
       return CLOUD_DOCUMENT_QUERY_PATH;
     case APPFLOWY_MARKDOWN_PROPOSE_OPERATION:
       return CLOUD_DOCUMENT_PROPOSE_PATH;

@@ -56,3 +56,9 @@
       name: dshmarket
       config:
         allowRestart: false
+
+    # Gateway headers / {{session}} substitution (vendored dsh-model-capabilities).
+    # Inserted here — not via dsh.profile.bundles — so the package's own
+    # bundle patch cannot double-insert id model-capabilities.
+    - id: model-capabilities
+      name: dsh-model-capabilities

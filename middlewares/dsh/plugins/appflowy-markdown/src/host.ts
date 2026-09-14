@@ -5,6 +5,7 @@ import {
   APPFLOWY_MARKDOWN_FAMILY,
   APPFLOWY_MARKDOWN_PROPOSE_OPERATION,
   APPFLOWY_MARKDOWN_READ_OPERATION,
+  APPFLOWY_MARKDOWN_SNAPSHOT_OPERATION,
   APPFLOWY_MARKDOWN_STATUS_OPERATION,
   applyProviderInputSchema,
   applyProviderOutputSchema,
@@ -12,6 +13,8 @@ import {
   proposeProviderOutputSchema,
   providerInputSchema,
   providerOutputSchema,
+  snapshotProviderInputSchema,
+  snapshotProviderOutputSchema,
   statusProviderInputSchema,
   statusProviderOutputSchema
 } from "./index.js";
@@ -31,7 +34,7 @@ const resource = (schema: JsonValue) => ({
 
 export const markdownDescriptor = {
   descriptorId: "appflowy.document.local",
-  revision: "3",
+  revision: "4",
   familyId: APPFLOWY_MARKDOWN_FAMILY,
   contractVersion: { major: 2, minor: 0 },
   providerInstanceId: PROVIDER_ID,
@@ -54,9 +57,16 @@ export const markdownDescriptor = {
     operationId: APPFLOWY_MARKDOWN_STATUS_OPERATION, effect: "read",
     inputSchema: resource(statusProviderInputSchema), outputSchema: resource(statusProviderOutputSchema),
     cancellable: true, idempotency: "none"
+  }, {
+    operationId: APPFLOWY_MARKDOWN_SNAPSHOT_OPERATION, effect: "read",
+    inputSchema: resource(snapshotProviderInputSchema), outputSchema: resource(snapshotProviderOutputSchema),
+    cancellable: true, idempotency: "none"
   }],
   events: []
 } as const;
+
+const asTrimmed = (value: unknown): string =>
+  typeof value === "string" ? value.trim() : "";
 
 const fillSelection = (input: JsonValue, ctx: InProcessInvokeContext): JsonValue => {
   const rec = input !== null && typeof input === "object" && !Array.isArray(input)
@@ -66,10 +76,47 @@ const fillSelection = (input: JsonValue, ctx: InProcessInvokeContext): JsonValue
     const workspaceId = ctx.documentFocus?.workspaceId ?? ctx.boundWorkspaceId;
     if (workspaceId !== undefined) rec.workspaceId = workspaceId;
   }
-  if ((typeof rec.viewId !== "string" || rec.viewId.trim().length === 0) && ctx.documentFocus?.viewId !== undefined) {
+  const resourceRef = asTrimmed(rec.resourceRef);
+  if (resourceRef.length > 0) {
+    rec.viewId = resourceRef;
+  } else if ((typeof rec.viewId !== "string" || rec.viewId.trim().length === 0) && ctx.documentFocus?.viewId !== undefined) {
     rec.viewId = ctx.documentFocus.viewId;
   }
   return rec as JsonValue;
+};
+
+const viewIdOf = (input: JsonValue): string => {
+  const rec = input !== null && typeof input === "object" && !Array.isArray(input)
+    ? input as Record<string, unknown>
+    : {};
+  const fromResource = asTrimmed(rec.resourceRef);
+  if (fromResource.length > 0) return fromResource;
+  return asTrimmed(rec.viewId);
+};
+
+const readDocument = async (
+  input: JsonValue,
+  ctx: InProcessInvokeContext
+): Promise<{ ok: true; value: JsonValue } | { ok: false; code: string; message: string }> => {
+  const viewId = viewIdOf(input);
+  if (viewId.length === 0) {
+    return { ok: false, code: "NO_CURRENT_SELECTION", message: "NO_CURRENT_SELECTION: no focused AppFlowy document" };
+  }
+  const baseUrl = ctx.cloudBaseUrl;
+  if (baseUrl !== undefined) {
+    const cloud = await invokeCloudDocument({
+      baseUrl,
+      operationId: APPFLOWY_MARKDOWN_READ_OPERATION,
+      payload: input,
+      ...(ctx.accessToken === undefined ? {} : { accessToken: ctx.accessToken }),
+      ...(ctx.deviceId === undefined ? {} : { deviceId: ctx.deviceId })
+    });
+    if (cloud.ok) return cloud;
+    if (!cloudDocumentUnwired(cloud)) return cloud;
+  }
+  const snapshot = projectSnapshotDocument(viewId);
+  if (snapshot !== undefined) return { ok: true, value: snapshot };
+  return { ok: false, code: "UNAVAILABLE", message: "UNAVAILABLE: CLOUD_COLLAB_ADAPTER_NOT_WIRED" };
 };
 
 const e2eValues = (): Record<string, JsonValue> => {
@@ -90,7 +137,11 @@ const e2eValues = (): Record<string, JsonValue> => {
       previousRevision: revision, revision: `sha256:${"2".repeat(64)}`, eventCursor: "1", eventPublicationStatus: "published",
       idempotencyKey: "e2e"
     },
-    [APPFLOWY_MARKDOWN_STATUS_OPERATION]: { status: "pending", expiresAt: Date.now() + 300_000 }
+    [APPFLOWY_MARKDOWN_STATUS_OPERATION]: { status: "pending", expiresAt: Date.now() + 300_000 },
+    [APPFLOWY_MARKDOWN_SNAPSHOT_OPERATION]: {
+      protocol: "muse.document/snapshot/v2", resourceRef: "document.e2e", revision,
+      content: { mediaType: "text/markdown", text: markdown, truncated: false, byteLength: Buffer.byteLength(markdown) }
+    }
   };
 };
 
@@ -111,27 +162,11 @@ export const createCloudMarkdownProvider = (): InProcessDomainProvider => ({
   bindingId: BINDING_ID,
   prepareInput: fillSelection,
   invoke: async ({ operationId, input, ctx }) => {
-    if (operationId === APPFLOWY_MARKDOWN_READ_OPERATION) {
-      const rec = input as { viewId?: unknown };
-      const viewId = typeof rec.viewId === "string" ? rec.viewId.trim() : "";
-      if (viewId.length === 0) {
-        return { ok: false, code: "NO_CURRENT_SELECTION", message: "NO_CURRENT_SELECTION: no focused AppFlowy document" };
+    if (operationId === APPFLOWY_MARKDOWN_READ_OPERATION || operationId === APPFLOWY_MARKDOWN_SNAPSHOT_OPERATION) {
+      if (operationId === APPFLOWY_MARKDOWN_SNAPSHOT_OPERATION && viewIdOf(input).length === 0) {
+        return { ok: false, code: "INVALID_INPUT", message: "resourceRef required" };
       }
-      const baseUrl = ctx.cloudBaseUrl;
-      if (baseUrl !== undefined) {
-        const cloud = await invokeCloudDocument({
-          baseUrl,
-          operationId,
-          payload: input,
-          ...(ctx.accessToken === undefined ? {} : { accessToken: ctx.accessToken }),
-          ...(ctx.deviceId === undefined ? {} : { deviceId: ctx.deviceId })
-        });
-        if (cloud.ok) return cloud;
-        if (!cloudDocumentUnwired(cloud)) return cloud;
-      }
-      const snapshot = projectSnapshotDocument(viewId);
-      if (snapshot !== undefined) return { ok: true, value: snapshot };
-      return { ok: false, code: "UNAVAILABLE", message: "UNAVAILABLE: CLOUD_COLLAB_ADAPTER_NOT_WIRED" };
+      return readDocument(input, ctx);
     }
     const baseUrl = ctx.cloudBaseUrl;
     if (baseUrl === undefined) {

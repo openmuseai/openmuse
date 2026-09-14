@@ -7,7 +7,7 @@ const forbidden = [
   /postgres|crdt/iu,
   /documentId|workspaceId|viewId|actorId|grantId/u
 ];
-const skip = /\/src\/(?:host|cloud)\.ts$/u;
+const skip = /\/src\/(?:host|cloud|snapshot)\.ts$/u;
 const walk = async directory => (await Promise.all((await readdir(directory, { withFileTypes: true })).map(async entry => {
   const path = join(directory, entry.name);
   return entry.isDirectory() ? walk(path) : [path];

@@ -1,0 +1,42 @@
+# Seeded once into $DSH_HOME/settings.yaml when the file is absent.
+# User edits in Settings UI win afterwards; start-instance never overwrites.
+# Secrets stay in env (apiKeyEnv). {{session}} needs dsh-model-capabilities
+# on the Host wire; without it the header is sent as the literal string.
+
+ui-onboarding:
+  welcomeNoticeVersion: 2026-08-13.1
+
+llm-pi-ai:
+  providers:
+    opencode-go:
+      apiKeyEnv: OPENCODE_GO_API_KEY
+    opencode-custom:
+      displayName: OpenCode-C
+      apiKeyEnv: OPENCODE_CUSTOM_API_KEY
+      api: openai-completions
+      baseURL: https://opencode.ai/zen/go/v1
+      models:
+        - id: deepseek-v4-pro
+          compat:
+            chatTemplateKwargs: {}
+            chatTemplateArgs: {}
+        - id: deepseek-v4-flash
+          compat:
+            chatTemplateKwargs: {}
+            chatTemplateArgs: {}
+        - id: deepseek-v4-flash-vision-exp
+          compat:
+            chatTemplateKwargs: {}
+            chatTemplateArgs: {}
+        - id: deepseek-v4.1-flash
+      defaultInput:
+        - text
+      headers:
+        x-opencode-session: "{{session}}"
+      compat:
+        chatTemplateKwargs: {}
+        chatTemplateArgs: {}
+
+agent-default-model:
+  provider: opencode-custom
+  model: deepseek-v4.1-flash

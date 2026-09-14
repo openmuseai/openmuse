@@ -159,11 +159,19 @@ void main() {
     expect(seen.any((row) => row.contains('/close')), isTrue);
   });
 
-  testWidgets('E2-T11 background degrade keeps the WebView', (tester) async {
+  testWidgets('E2-T13 loads Cloud /u/ webUrl when compile-time origin is dsh.',
+      (tester) async {
     await tester.pumpWidget(const SizedBox.shrink());
     const webUrl =
         'https://openmuseai.com/u/abcdabcdabcdabcdabcdabcdabcdabcd/?token=t';
-    final c = coordinator(
+    final c = DshMobileCoordinator(
+      scope: DshMobileScope(
+        workspaceRef: 'ws-1',
+        workspaceTitle: 'Docs',
+        accountRef: 'account-1',
+        isCloudAccount: true,
+        isCurrentScope: () => true,
+      ),
       sessionApi: api(
         replies: [
           DshSessionOpen.fromJson({
@@ -173,13 +181,12 @@ void main() {
         ],
       ),
       accessToken: 'jwt',
+      endpoint: DshRemoteConfig.fromWebUrl('https://dsh.openmuseai.com/'),
+      notify: () {},
     );
     await c.connect();
-    expect(c.surface.controller, isNotNull);
-    c.didChangeAppLifecycleState(AppLifecycleState.paused);
-    expect(c.surface.controller, isNotNull);
-    expect(c.surface.bridgeWarning, contains('后台'));
-    expect(c.surface.facetReady, isFalse);
+    expect(c.surface.fatalMessage, isNull);
+    expect(platform.controllers.single.requests.single.uri.toString(), webUrl);
     await c.dispose();
   });
 }

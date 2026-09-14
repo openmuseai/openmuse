@@ -56,9 +56,16 @@ muse_wire_muse_node_modules "$DEST/dsh"
 
 echo "==> Staging dshmarket (plugin market)"
 muse_stage_dshmarket "$DEST/dsh"
+echo "==> Staging dsh-model-capabilities (gateway headers)"
+muse_stage_dsh_model_capabilities "$DEST/dsh"
 
 echo "==> Staging Cordis patch"
 cp "$PATCH" "$DEST/patch.yml"
+mkdir -p "$DEST/defaults"
+cp "$(muse_dsh_deploy_dir)/defaults/settings.yaml" "$DEST/defaults/settings.yaml"
+cp "$(muse_dsh_deploy_dir)/scripts/seed-instance-settings.sh" "$DEST/seed-instance-settings.sh"
+cp "$(muse_dsh_deploy_dir)/scripts/merge-default-settings.py" "$DEST/merge-default-settings.py"
+chmod +x "$DEST/seed-instance-settings.sh"
 
 cat > "$DEST/README.txt" <<'EOF'
 Muse bundled DSH runtime.

@@ -1,0 +1,24 @@
+{
+  "unit": {
+    "name": "workspace",
+    "version": 2
+  },
+  "global": {
+    "initialized": true,
+    "workspaceIds": [
+      "88fa7a39-f8ca-4ba4-8e63-b199fe043963"
+    ],
+    "archivedSessionIds": []
+  },
+  "tables": {
+    "workspaces": {
+      "88fa7a39-f8ca-4ba4-8e63-b199fe043963": {
+        "path": "/Users/mac/src/openmuse-io/Muse-Clients/tmp/verify-dsh-home-macos/appflowy-workspaces/default",
+        "title": "AppFlowy",
+        "sessionIds": [],
+        "createdAt": "2026-09-14T09:36:46.041Z",
+        "updatedAt": "2026-09-14T09:36:46.041Z"
+      }
+    }
+  }
+}

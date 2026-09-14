@@ -6,6 +6,7 @@ export type {
   InstanceSpec,
   InspectResult,
   PoolOptions,
+  RunningInstance,
   SessionOpenInput,
   SessionOpenResult
 } from "./types.js";
@@ -13,7 +14,7 @@ export { FakeExecutor, isJwtAuthorization } from "./executor.js";
 export { LocalProcessExecutor } from "./local-executor.js";
 export { SystemdRunExecutor, systemdRunArgv } from "./systemd-executor.js";
 export { InstancePool } from "./pool.js";
-export { createPoolProxy, stripUpstreamAuth } from "./proxy.js";
+export { createPoolProxy, rewriteApiTrustHeaders, stripUpstreamAuth } from "./proxy.js";
 export { createControlServer } from "./server.js";
 export {
   createMuseBff,

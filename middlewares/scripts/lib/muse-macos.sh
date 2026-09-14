@@ -377,3 +377,29 @@ muse_link_dshmarket() {
   mkdir -p "$dest"
   ln -sfn "$harness/node_modules/dshmarket" "$dest/dshmarket"
 }
+
+# Vendored gateway plugin (headers / {{session}}). Copied into harness
+# node_modules so profile resolution finds `name: dsh-model-capabilities`.
+muse_stage_dsh_model_capabilities() {
+  local harness="$1"
+  local src dest
+  src="$(muse_packages_root)/plugins/dsh-model-capabilities"
+  dest="$harness/node_modules/dsh-model-capabilities"
+  if [[ ! -f "$src/lib/index.js" || ! -f "$src/package.json" ]]; then
+    echo "dsh-model-capabilities missing at $src" >&2
+    return 1
+  fi
+  mkdir -p "$dest"
+  rsync -a --delete --exclude '.git/' "$src/" "$dest/"
+  echo "Staged dsh-model-capabilities at $dest"
+}
+
+muse_link_dsh_model_capabilities() {
+  local harness="$1"
+  local dest="$2"
+  if [[ ! -d "$harness/node_modules/dsh-model-capabilities" ]]; then
+    return 0
+  fi
+  mkdir -p "$dest"
+  ln -sfn "$harness/node_modules/dsh-model-capabilities" "$dest/dsh-model-capabilities"
+}

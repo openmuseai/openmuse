@@ -12,9 +12,12 @@ COPY dsh/ /muse/dsh/
 COPY packages/ /muse/packages/
 COPY patch.yml /muse/patch.yml
 COPY entrypoint.sh /muse/entrypoint.sh
+COPY seed-instance-settings.sh /muse/seed-instance-settings.sh
+COPY merge-default-settings.py /muse/merge-default-settings.py
+COPY defaults/ /muse/defaults/
 COPY loopback-proxy.mjs /muse/loopback-proxy.mjs
 COPY wire-harness-aliases.py /muse/wire-harness-aliases.py
-RUN chmod +x /muse/entrypoint.sh
+RUN chmod +x /muse/entrypoint.sh /muse/seed-instance-settings.sh
 
 ARG NPM_REGISTRY=
 RUN { \
@@ -34,6 +37,13 @@ RUN if [ -f /tmp/dshmarket-optional/package.json ]; then \
       rm -rf /muse/dsh/node_modules/dshmarket && \
       mkdir -p /muse/dsh/node_modules/dshmarket && \
       cp -a /tmp/dshmarket-optional/. /muse/dsh/node_modules/dshmarket/; \
+    fi
+
+COPY dsh-model-capabilities-optional/ /tmp/dsh-model-capabilities-optional/
+RUN if [ -f /tmp/dsh-model-capabilities-optional/package.json ]; then \
+      rm -rf /muse/dsh/node_modules/dsh-model-capabilities && \
+      mkdir -p /muse/dsh/node_modules/dsh-model-capabilities && \
+      cp -a /tmp/dsh-model-capabilities-optional/. /muse/dsh/node_modules/dsh-model-capabilities/; \
     fi
 
 ENV DSH_HOME=/var/lib/muse-dsh

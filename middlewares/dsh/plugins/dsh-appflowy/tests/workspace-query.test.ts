@@ -15,6 +15,7 @@ describe("AppFlowy workspace tree Tool (W7)", () => {
   it("tells the model to list Cloud folder views, not DSH cwd files", () => {
     expect(workspaceQueryInject).toEqual(["museHost", "tools", "systemPrompt"]);
     expect(WORKSPACE_LIST_PROMPT).toContain("muse_workspace_list_views");
+    expect(WORKSPACE_LIST_PROMPT).toContain("muse_document_read");
     expect(WORKSPACE_LIST_PROMPT).toContain("glob/ls will not list pages");
     expect(WORKSPACE_LIST_PROMPT).toContain("README.md");
   });

@@ -25,7 +25,7 @@ import {
 import { getLastDeviceAuth, resetSession, setLastDeviceAuth, setLastDocumentFocus } from "./session.js";
 import { createPresentationFacetInbox } from "./presentation-facets.js";
 import {
-  ExclusiveMobileLease,
+  SharedHostSession,
   resetHostVerifyCache,
   verifyHostWorkspace,
   verifyMobileWorkspace,
@@ -189,8 +189,9 @@ const trackSurface = (ref: string, remove: (ref: string) => void): void => {
   surfaceCleanup.set(ref, () => remove(ref));
 };
 const sseClients = new Set<ServerResponse>();
-const mobileLease = new ExclusiveMobileLease({ verify: verifyMobileWorkspace, clearContext: () => resetParentBridgeState() });
-const mobileEnabled = (): boolean => process.env.MUSE_MOBILE_BRIDGE_EXCLUSIVE_TEST === "1";
+const hostSession = new SharedHostSession({ verify: verifyMobileWorkspace });
+const mobileEnabled = (): boolean =>
+  process.env.MUSE_MOBILE_BRIDGE === "1" || process.env.MUSE_MOBILE_BRIDGE_EXCLUSIVE_TEST === "1";
 const nativeRequest = (req: IncomingMessage): boolean => req.headers["x-muse-client"] === "mobile";
 const mobileIdentity = (req: IncomingMessage): MobileIdentity => {
   const authorization = req.headers.authorization ?? "";
@@ -208,6 +209,7 @@ const workspaceSurfaceRef = (workspaceId: string): string =>
   `surface.appflowy.workspace.${workspaceId}`;
 
 export const resetParentBridgeState = (): void => {
+  hostSession.releaseAll();
   lastWorkspaceSurface = undefined;
   focusedDocumentSurface = undefined;
   for (const cleanup of surfaceCleanup.values()) cleanup();
@@ -331,6 +333,11 @@ const bindWorkspace = async (
   lastWorkspaceSurface = nextSurface;
   trackSurface(nextSurface, deps.removeSurface);
   deps.pinSurface?.(nextSurface);
+  try {
+    hostSession.pinWorkspace(workspaceRef, { replace: hostSession.size === 0 });
+  } catch {
+    return { ok: false, error: "SCOPE_MISMATCH" };
+  }
   return { ok: true, bound: workspaceRef };
 };
 
@@ -610,7 +617,7 @@ export const apply = (ctx: Context): void => {
       broker.pinSurface(ref);
     }
   };
-  ctx.effect(() => () => { mobileLease.release(); resetParentBridgeState(); }, "muse.appflowy.parentBridgeDispose");
+  ctx.effect(() => () => { resetParentBridgeState(); }, "muse.appflowy.parentBridgeDispose");
 
   ctx.effect(
     () => server.tapIndex(injectParentBridgeScript),
@@ -623,7 +630,7 @@ export const apply = (ctx: Context): void => {
       handler: (req, res) => {
         if (req.method !== "GET") { writeJson(res, 405, { ok: false }); return; }
         writeJson(res, 200, { protocol: "muse.parent-bridge/v1", nativeHttpSse: mobileEnabled(),
-          mode: "exclusive-test", scopedMultiTenant: false, replay: false });
+          mode: "exclusive-test", sharedHosts: true, scopedMultiTenant: false, replay: false });
       }
     }), "muse.appflowy.parentBridgeCapabilities"
   );
@@ -644,22 +651,32 @@ export const apply = (ctx: Context): void => {
             const rec = asRecord(body);
             if (rec?.source !== MOBILE_SOURCE) { writeJson(res, 400, { ok: false, error: "INVALID_SOURCE" }); return; }
             const identity = mobileIdentity(req);
-            await mobileLease.authorize(identity, typeof rec.workspaceRef === "string" ? rec.workspaceRef : undefined);
+            await hostSession.authorize(identity, typeof rec.workspaceRef === "string" ? rec.workspaceRef : undefined);
             const envelope = asRecord(rec.envelope);
             const payload = asRecord(envelope?.payload);
-            if ((payload?.workspaceId !== undefined && payload.workspaceId !== mobileLease.workspaceId) ||
-                (envelope?.pluginId === "muse.appflowy.workspace" && envelope.scopeRef !== `workspace.${mobileLease.workspaceId}`)) {
+            if ((payload?.workspaceId !== undefined && payload.workspaceId !== hostSession.workspaceId) ||
+                (envelope?.pluginId === "muse.appflowy.workspace" && envelope.scopeRef !== `workspace.${hostSession.workspaceId}`)) {
               writeJson(res, 403, { ok: false, error: "SCOPE_MISMATCH" }); return;
             }
             if (rec.type === "peer.close") {
-              mobileLease.release(); writeJson(res, 200, { ok: true }); return;
+              hostSession.detach(identity); writeJson(res, 200, { ok: true }); return;
             }
             if (rec.type === "peer.ping") { writeJson(res, 200, { ok: true }); return; }
             // Carrier translation only. Both platforms enter the same Facet inbox.
             body = { ...rec, source: PARENT_SOURCE,
               ...(rec.type === "parent-hello" ? { deviceToken: identity.token, deviceId: identity.deviceId } : {}) };
-          } else if (mobileLease.occupied) {
-            writeJson(res, 409, { ok: false, error: "HOST_IN_USE" }); return;
+          } else {
+            const rec = asRecord(body);
+            const webWs = typeof rec?.workspaceRef === "string" ? rec.workspaceRef.trim() : "";
+            if (
+              (rec?.type === "parent-hello" || rec?.type === "workspace.bind")
+              && webWs.length > 0
+              && hostSession.size > 0
+              && hostSession.workspaceId !== undefined
+              && webWs !== hostSession.workspaceId
+            ) {
+              writeJson(res, 403, { ok: false, error: "SCOPE_MISMATCH" }); return;
+            }
           }
           const result = await handleParentInbound(body, deps);
           writeJson(res, inboundHttpStatus(result), result as unknown as JsonValue);
@@ -683,10 +700,8 @@ export const apply = (ctx: Context): void => {
         }
         if (nativeRequest(req)) {
           try {
-            if (!mobileEnabled() || !mobileLease.matches(mobileIdentity(req))) throw new Error("DEVICE_AUTH_REQUIRED");
+            if (!mobileEnabled() || !hostSession.matches(mobileIdentity(req))) throw new Error("DEVICE_AUTH_REQUIRED");
           } catch { writeJson(res, 403, { ok: false, error: "DEVICE_AUTH_REQUIRED" }); return; }
-        } else if (mobileLease.occupied) {
-          writeJson(res, 409, { ok: false, error: "HOST_IN_USE" }); return;
         }
         res.writeHead(200, {
           "Content-Type": "text/event-stream; charset=utf-8",
@@ -694,7 +709,7 @@ export const apply = (ctx: Context): void => {
           Connection: "keep-alive"
         });
         res.write("retry: 2000\n\n");
-        if (nativeRequest(req)) res.write(`data: ${JSON.stringify({ source: FRAME_SOURCE, type: "bridge.ready", workspaceRef: mobileLease.workspaceId })}\n\n`);
+        if (nativeRequest(req)) res.write(`data: ${JSON.stringify({ source: FRAME_SOURCE, type: "bridge.ready", workspaceRef: hostSession.workspaceId })}\n\n`);
         sseClients.add(res);
         const heartbeat = setInterval(() => res.write(": heartbeat\n\n"), 15_000);
         heartbeat.unref();
@@ -712,7 +727,6 @@ export const apply = (ctx: Context): void => {
       kind: "exact",
       path: PARENT_BRIDGE_INTENTS_PATH,
       handler: async (req, res) => {
-        if (mobileLease.occupied) { writeJson(res, 409, { ok: false, error: "HOST_IN_USE" }); return; }
         if (req.method !== "POST") {
           writeJson(res, 405, { ok: false, error: "METHOD_NOT_ALLOWED" });
           return;
@@ -750,7 +764,6 @@ export const apply = (ctx: Context): void => {
       kind: "exact",
       path: PARENT_BRIDGE_VIEWS_PATH,
       handler: async (req, res) => {
-        if (mobileLease.occupied) { writeJson(res, 409, { ok: false, error: "HOST_IN_USE" }); return; }
         if (req.method !== "GET") {
           writeJson(res, 405, { ok: false, error: "METHOD_NOT_ALLOWED" });
           return;

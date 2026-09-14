@@ -177,6 +177,22 @@ describe("E4 local end-to-end (Host catalog/snapshot → Cloud 501 → tools)", 
       expect(read.ok).toBe(true);
       expect(JSON.stringify(read.value)).toContain("Hello from Host.");
       expect(JSON.stringify(read.value)).not.toContain("NOT_FOUND");
+
+      rememberMarkdownSnapshot({
+        viewId: "view-listed",
+        workspaceId: "ws-1",
+        text: "# Listed\n\nFrom tree.",
+        truncated: false,
+        byteLength: Buffer.byteLength("# Listed\n\nFrom tree.")
+      });
+      const listedRead = await invoke(
+        withFocus,
+        "binding.appflowy-markdown",
+        "document.resource.snapshot",
+        { resourceRef: "view-listed" }
+      );
+      expect(listedRead.ok).toBe(true);
+      expect(JSON.stringify(listedRead.value)).toContain("From tree.");
     } finally {
       close();
     }

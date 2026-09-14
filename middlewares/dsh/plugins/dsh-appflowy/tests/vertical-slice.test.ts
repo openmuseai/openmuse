@@ -6,7 +6,8 @@ import { MuseHostService } from "@muse/host-bridge/dsh";
 import {
   APPFLOWY_MARKDOWN_APPLY_TOOL,
   APPFLOWY_MARKDOWN_PROPOSE_TOOL,
-  APPFLOWY_MARKDOWN_READ_TOOL
+  APPFLOWY_MARKDOWN_READ_TOOL,
+  APPFLOWY_MARKDOWN_SNAPSHOT_TOOL
 } from "@muse/plugin-appflowy-markdown";
 import { createAppFlowyMarkdownPlugin } from "@muse/plugin-appflowy-markdown/dsh";
 import { InProcessAppFlowyConnector } from "../src/connector.js";
@@ -31,11 +32,15 @@ describe("M05 deterministic DSH → Bridge → document@2 vertical slice", () =>
       approvalProofRequester: { request: async () => ({ outcome: "approved", proofId: "proof.e2e" }) }
     }));
     expect(ctx.tools.schemas().map(value => value.name)).toEqual([
-      APPFLOWY_MARKDOWN_READ_TOOL, APPFLOWY_MARKDOWN_PROPOSE_TOOL, APPFLOWY_MARKDOWN_APPLY_TOOL
+      APPFLOWY_MARKDOWN_READ_TOOL, APPFLOWY_MARKDOWN_SNAPSHOT_TOOL,
+      APPFLOWY_MARKDOWN_PROPOSE_TOOL, APPFLOWY_MARKDOWN_APPLY_TOOL
     ]);
     const read = await execute(ctx, APPFLOWY_MARKDOWN_READ_TOOL, {});
     if (read.isError) throw new Error(JSON.stringify(read));
     expect(read).toMatchObject({ isError: false, value: { protocol: "muse.document/snapshot/v2", resourceRef: "document.e2e" } });
+    const listed = await execute(ctx, APPFLOWY_MARKDOWN_SNAPSHOT_TOOL, { resourceRef: "document.e2e" });
+    if (listed.isError) throw new Error(JSON.stringify(listed));
+    expect(listed).toMatchObject({ isError: false, value: { protocol: "muse.document/snapshot/v2" } });
     const revision = (read.value as { revision: string }).revision;
     const proposed = await execute(ctx, APPFLOWY_MARKDOWN_PROPOSE_TOOL, { expectedRevision: revision, kind: "insert", text: "Muse" });
     expect(proposed).toMatchObject({ isError: false, value: { protocol: "muse.document/proposal/v2", proposalRef: "proposal.e2e" } });

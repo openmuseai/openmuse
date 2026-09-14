@@ -19,7 +19,7 @@ export const systemdRunArgv = (spec: InstanceSpec, runtimeBin: string, runtimeAr
     "--property=MemoryMax=" + `${Math.max(1, Math.ceil(spec.memoryMaxBytes / (1024 * 1024)))}M`,
     `--property=CPUWeight=${spec.cpuWeight}`,
     "--property=TasksMax=512",
-    "--property=Restart=on-failure",
+    "--property=Restart=no",
     "--property=NoNewPrivileges=yes",
     "--property=PrivateTmp=yes"
   ];
@@ -47,6 +47,16 @@ const defaultRun: RunFn = async argv => {
   return execFileAsync(bin, args, { encoding: "utf8" });
 };
 
+const parsePortFromEnviron = (raw: string): number | undefined => {
+  for (const line of raw.split("\0")) {
+    if (line.startsWith("PORT=")) {
+      const port = Number.parseInt(line.slice(5), 10);
+      if (Number.isFinite(port) && port > 0) return port;
+    }
+  }
+  return undefined;
+};
+
 export class SystemdRunExecutor implements Executor {
   readonly kind = "systemd" as const;
   constructor(
@@ -54,6 +64,23 @@ export class SystemdRunExecutor implements Executor {
     private readonly runtimeArgs: readonly string[],
     private readonly run: RunFn = defaultRun
   ) {}
+
+  async findRunning(tenantHash: string): Promise<{ port: number; unitName: string; pid?: number } | undefined> {
+    const unitName = `muse-dsh-${tenantHash}`;
+    try {
+      const { stdout } = await this.run(["systemctl", "show", unitName, "--property=ActiveState", "--property=MainPID"]);
+      const active = /^ActiveState=(.+)$/m.exec(stdout)?.[1]?.trim();
+      const pidRaw = /^MainPID=(.+)$/m.exec(stdout)?.[1]?.trim();
+      const pid = pidRaw ? Number.parseInt(pidRaw, 10) : 0;
+      if (active !== "active" || !Number.isFinite(pid) || pid <= 0) return undefined;
+      const environ = await readFile(`/proc/${pid}/environ`, "utf8");
+      const port = parsePortFromEnviron(environ);
+      if (port === undefined) return undefined;
+      return { port, unitName, pid };
+    } catch {
+      return undefined;
+    }
+  }
 
   async start(spec: InstanceSpec): Promise<InstanceHandle> {
     const unitName = `muse-dsh-${spec.tenantHash}`;

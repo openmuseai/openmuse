@@ -53,3 +53,9 @@ export const documentStatusOutputSchema: JsonSchema = {
   $schema: draft, type: "object", additionalProperties: false, required: ["status", "expiresAt"],
   properties: { status: { const: "pending" }, expiresAt: { type: "integer", minimum: 0 } }
 };
+/** Workspace-scoped read of a listed document. `resourceRef` is the page id from workspace.tree. */
+export const documentSnapshotInputSchema: JsonSchema = {
+  $schema: draft, type: "object", additionalProperties: false, required: ["resourceRef"],
+  properties: { resourceRef: opaqueRef }
+};
+export const documentSnapshotOutputSchema = documentQueryOutputSchema;

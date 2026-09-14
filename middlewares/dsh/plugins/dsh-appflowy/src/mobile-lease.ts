@@ -78,6 +78,117 @@ export class ExclusiveMobileLease {
   }
 }
 
+const SHARED_HOST_MAX = 8;
+const SHARED_HOST_TTL_MS = 60_000;
+
+interface SharedHost {
+  fingerprint: string;
+  expiresAt: number;
+  verifiedAt: number;
+}
+
+/**
+ * Same tenant instance, many Hosts (Web inject + N mobile connections).
+ * HOST_IN_USE only means the attachment cap is full — never "Web vs Mobile mutex".
+ */
+export class SharedHostSession {
+  private workspaceId_: string | undefined;
+  private readonly hosts = new Map<string, SharedHost>();
+  private pending = 0;
+  private timer: ReturnType<typeof setTimeout> | undefined;
+  constructor(private readonly deps: {
+    verify(identity: MobileIdentity, workspaceId: string): Promise<void>;
+    clock?: () => number;
+  }) {}
+
+  private now(): number { return this.deps.clock?.() ?? Date.now(); }
+  private fingerprint(identity: MobileIdentity): string {
+    return createHash("sha256").update(JSON.stringify([identity.token, identity.deviceId, identity.connectionId])).digest("hex");
+  }
+  private gc(): void {
+    const now = this.now();
+    for (const [key, host] of this.hosts) {
+      if (host.expiresAt <= now) this.hosts.delete(key);
+    }
+  }
+  pinWorkspace(workspaceId: string, options?: { replace?: boolean }): void {
+    if (workspaceId.length === 0) return;
+    if (this.workspaceId_ !== undefined && this.workspaceId_ !== workspaceId) {
+      if (!options?.replace || this.hosts.size > 0) throw new Error("SCOPE_MISMATCH");
+    }
+    this.workspaceId_ = workspaceId;
+  }
+  get occupied(): boolean {
+    this.gc();
+    return this.pending > 0 || this.hosts.size > 0;
+  }
+  get workspaceId(): string | undefined {
+    this.gc();
+    return this.workspaceId_;
+  }
+  get size(): number {
+    this.gc();
+    return this.hosts.size;
+  }
+  matches(identity: MobileIdentity): boolean {
+    this.gc();
+    return this.hosts.has(this.fingerprint(identity));
+  }
+  async authorize(identity: MobileIdentity, workspaceId?: string): Promise<void> {
+    this.gc();
+    const scope = workspaceId ?? this.workspaceId_;
+    if (!scope) throw new Error("SCOPE_MISMATCH");
+    if (this.workspaceId_ !== undefined && this.workspaceId_ !== scope) throw new Error("SCOPE_MISMATCH");
+    const fp = this.fingerprint(identity);
+    const existing = this.hosts.get(fp);
+    if (existing !== undefined && this.now() - existing.verifiedAt < HOST_VERIFY_TTL_MS) {
+      this.renew(fp);
+      return;
+    }
+    if (existing === undefined && this.hosts.size >= SHARED_HOST_MAX) throw new Error("HOST_IN_USE");
+    this.pending += 1;
+    if (this.workspaceId_ === undefined) this.workspaceId_ = scope;
+    try {
+      await this.deps.verify(identity, scope);
+      this.hosts.set(fp, { fingerprint: fp, expiresAt: this.now() + SHARED_HOST_TTL_MS, verifiedAt: this.now() });
+      this.renew(fp);
+    } catch (error) {
+      if (existing === undefined) this.hosts.delete(fp);
+      if (error instanceof Error && error.message === "SCOPE_MISMATCH") throw error;
+      throw new Error("DEVICE_AUTH_REJECTED");
+    } finally {
+      this.pending -= 1;
+    }
+  }
+  detach(identity: MobileIdentity): void {
+    this.hosts.delete(this.fingerprint(identity));
+    this.armTimer();
+  }
+  releaseAll(): void {
+    this.hosts.clear();
+    this.workspaceId_ = undefined;
+    this.pending = 0;
+    clearTimeout(this.timer);
+    this.timer = undefined;
+  }
+  private renew(fp: string): void {
+    const host = this.hosts.get(fp);
+    if (host === undefined) return;
+    host.expiresAt = this.now() + SHARED_HOST_TTL_MS;
+    this.armTimer();
+  }
+  private armTimer(): void {
+    clearTimeout(this.timer);
+    if (this.hosts.size === 0) {
+      this.timer = undefined;
+      return;
+    }
+    const next = Math.min(...[...this.hosts.values()].map(host => host.expiresAt)) - this.now();
+    this.timer = setTimeout(() => this.gc(), Math.max(1, next));
+    this.timer.unref();
+  }
+}
+
 /** Cloud already validates the token + device header and workspace membership.
  * Shared by mobile exclusive lease and web parent-bridge (P0 host channel). */
 export async function verifyMobileWorkspace(identity: MobileIdentity, workspaceId: string): Promise<void> {

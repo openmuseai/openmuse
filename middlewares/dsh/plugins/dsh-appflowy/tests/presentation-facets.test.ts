@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { createPresentationFacetInbox } from "../src/presentation-facets.js";
-import { ExclusiveMobileLease } from "../src/mobile-lease.js";
+import { ExclusiveMobileLease, SharedHostSession } from "../src/mobile-lease.js";
 
 const fixture = JSON.parse(readFileSync(new URL("../fixtures/presentation-v1.json", import.meta.url), "utf8"));
 
@@ -70,5 +70,41 @@ describe("exclusive test carrier lease (NOT multi-tenant authentication)", () =>
       tenantA.release();
       tenantB.release();
     }
+  });
+});
+
+describe("shared host session (Web + Mobile on one tenant instance)", () => {
+  const a = { token: "payload.signature-a", deviceId: "mobile.a", connectionId: "a" };
+  const b = { token: "payload.signature-b", deviceId: "mobile.b", connectionId: "b" };
+
+  it("attaches a second Host on the same workspace without HOST_IN_USE", async () => {
+    const session = new SharedHostSession({ verify: async () => {} });
+    await session.authorize(a, "ws-1");
+    await session.authorize(b, "ws-1");
+    expect(session.size).toBe(2);
+    expect(session.matches(a)).toBe(true);
+    expect(session.matches(b)).toBe(true);
+    session.detach(a);
+    expect(session.matches(b)).toBe(true);
+    expect(session.workspaceId).toBe("ws-1");
+    session.detach(b);
+    expect(session.occupied).toBe(false);
+    expect(session.workspaceId).toBe("ws-1");
+  });
+
+  it("rejects a second Host that pins a different workspace", async () => {
+    const session = new SharedHostSession({ verify: async () => {} });
+    await session.authorize(a, "ws-1");
+    await expect(session.authorize(b, "ws-2")).rejects.toThrow("SCOPE_MISMATCH");
+    expect(session.matches(a)).toBe(true);
+  });
+
+  it("rejects replacing the workspace pin while another Host is attached", async () => {
+    const session = new SharedHostSession({ verify: async () => {} });
+    await session.authorize(a, "ws-1");
+    expect(() => session.pinWorkspace("ws-2", { replace: true })).toThrow("SCOPE_MISMATCH");
+    session.detach(a);
+    expect(() => session.pinWorkspace("ws-2", { replace: true })).not.toThrow();
+    expect(session.workspaceId).toBe("ws-2");
   });
 });

@@ -13,7 +13,7 @@ SSL_DIR="${SSL_DIR:-/etc/nginx/ssl/${BASE_DOMAIN}}"
 echo "==> Creating Muse DSH directory ${APP_DIR}"
 mkdir -p "${APP_DIR}/runtime" "${APP_DIR}/images"
 
-DSH_TRUSTED_HOST="${DSH_TRUSTED_HOST:-${DSH_HOST}}"
+DSH_TRUSTED_HOST="${DSH_TRUSTED_HOST:-${BASE_DOMAIN},${DSH_HOST},127.0.0.1}"
 MUSE_DOCUMENT_CLOUD_URL="${MUSE_DOCUMENT_CLOUD_URL:-}"
 
 if [[ ! -f "${APP_DIR}/.env" ]]; then

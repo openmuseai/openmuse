@@ -1,0 +1,19 @@
+# dsh-model-capabilities bundle patch
+#
+# Mounts this plugin into a profile's composition tree. Installed through the
+# official CLI:
+#
+#   dsh plugin --profile <name> add <owner>/dsh-model-capabilities
+#
+# the reconcile step appends this package to the profile's dsh.profile.bundles
+# because package.json declares `dsh.bundle.patch`. At boot, app-boot applies
+# every bundle's patch list in bundle order; this insert list is what actually
+# mounts the row — no manual profile editing needed. The Host face is minimal
+# (the browser half owns all interaction through the official settings wire).
+#
+# Row config stays at schema defaults. To tune a value, override this row's
+# config by id in the profile's own cordis.patch.yml user layer — do NOT insert
+# a second same-id row.
+- insert:
+    - id: model-capabilities
+      name: 'dsh-model-capabilities'
