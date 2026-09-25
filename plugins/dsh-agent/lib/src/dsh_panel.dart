@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'dsh_sidecar.dart';
@@ -7,9 +8,13 @@ final class DshPanel extends StatefulWidget {
   const DshPanel({
     super.key,
     required this.supervisor,
+    required this.activeMount,
+    required this.onActivateWorkspace,
     required this.onOpenResource,
   });
   final DshSidecarSupervisor supervisor;
+  final ValueListenable<String?> activeMount;
+  final Future<void> Function(String path) onActivateWorkspace;
   final Future<void> Function(DshResourceOpenMessage request) onOpenResource;
 
   @override
@@ -28,7 +33,7 @@ final class _DshPanelState extends State<DshPanel> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: widget.supervisor,
+      listenable: Listenable.merge([widget.supervisor, widget.activeMount]),
       builder: (context, _) => ColoredBox(
         color: Theme.of(context).brightness == Brightness.dark
             ? const Color(0xff202228)
@@ -39,6 +44,8 @@ final class _DshPanelState extends State<DshPanel> {
             Expanded(
               child: _PanelBody(
                 supervisor: widget.supervisor,
+                activeMountPath: widget.activeMount.value,
+                onActivateWorkspace: widget.onActivateWorkspace,
                 onOpenResource: widget.onOpenResource,
                 reloadToken: _reloadToken,
               ),
@@ -118,10 +125,14 @@ final class _AgentHeader extends StatelessWidget {
 final class _PanelBody extends StatelessWidget {
   const _PanelBody({
     required this.supervisor,
+    required this.activeMountPath,
+    required this.onActivateWorkspace,
     required this.onOpenResource,
     required this.reloadToken,
   });
   final DshSidecarSupervisor supervisor;
+  final String? activeMountPath;
+  final Future<void> Function(String path) onActivateWorkspace;
   final Future<void> Function(DshResourceOpenMessage request) onOpenResource;
   final int reloadToken;
 
@@ -130,6 +141,8 @@ final class _PanelBody extends StatelessWidget {
     if (supervisor.state == DshSidecarState.ready) {
       return DshWebView(
         url: supervisor.endpoint!,
+        activeMountPath: activeMountPath,
+        onActivateWorkspace: onActivateWorkspace,
         onOpenResource: onOpenResource,
         reloadToken: reloadToken,
       );

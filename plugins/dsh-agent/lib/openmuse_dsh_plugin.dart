@@ -21,6 +21,7 @@ final class OpenMuseDshPlugin
   DshWorkspaceBinding? _binding;
   DshWorkspaceSynchronizer? _workspaceSync;
   OpenMusePluginContext? _context;
+  final ValueNotifier<String?> _activeMount = ValueNotifier(null);
 
   void _workspaceChanged() {
     final binding = _binding;
@@ -34,9 +35,20 @@ final class OpenMuseDshPlugin
   }
 
   void _syncWorkspaces() {
-    _workspaceSync?.sync().catchError((Object error) {
-      debugPrint('DSH workspace catalog sync failed: $error');
-    });
+    _workspaceSync
+        ?.sync()
+        .then((_) async {
+          final raw = await _context?.executeHostCommand(
+            'workspace.snapshot',
+            null,
+          );
+          if (raw is Map && raw['activeMountPath'] is String) {
+            _activeMount.value = raw['activeMountPath'] as String;
+          }
+        })
+        .catchError((Object error) {
+          debugPrint('DSH workspace catalog sync failed: $error');
+        });
   }
 
   void _sidecarChanged() {
@@ -79,8 +91,10 @@ final class OpenMuseDshPlugin
     _workspaceSync = DshWorkspaceSynchronizer(
       context: context,
       endpoint: () => _supervisor?.endpoint,
+      bridgeToken: _supervisor!.bridgeToken,
     );
     _supervisor!.addListener(_sidecarChanged);
+    _workspaceChanged();
   }
 
   @override
@@ -108,6 +122,12 @@ final class OpenMuseDshPlugin
     }
     return DshPanel(
       supervisor: supervisor,
+      activeMount: _activeMount,
+      onActivateWorkspace: (path) async {
+        await _context?.executeHostCommand('workspace.activateMount', {
+          'path': path,
+        });
+      },
       onOpenResource: (request) async {
         await _context?.executeHostCommand('workspace.openResource', {
           'path': request.path,
