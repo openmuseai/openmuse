@@ -432,7 +432,7 @@ final class _MountRow extends StatelessWidget {
                   ? Icons.folder_open_outlined
                   : Icons.folder_outlined,
               size: 16,
-              color: OpenMuseTokens.cyan,
+              color: OpenMuseTokens.textMuted,
             ),
             const SizedBox(width: 6),
             Expanded(
@@ -520,7 +520,7 @@ final class _ResourceRow extends StatelessWidget {
                     : _iconFor(entry.resource.extension),
                 size: 16,
                 color: entry.isDirectory
-                    ? OpenMuseTokens.cyan
+                    ? OpenMuseTokens.textMuted
                     : OpenMuseTokens.textMuted,
               ),
               const SizedBox(width: 7),
