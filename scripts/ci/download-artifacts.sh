@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/github.sh
 source "${SCRIPT_DIR}/lib/github.sh"
 
-REPOSITORY="${REPOSITORY:-openmuseai/muse-clients}"
+REPOSITORY="${REPOSITORY:-}"
 WORKFLOW="${WORKFLOW:-macos-build.yml}"
 RUN_ID=""
 OUT_DIR=""
@@ -45,6 +45,11 @@ while [[ $# -gt 0 ]]; do
     *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
 done
+
+if [[ -z "$REPOSITORY" ]]; then
+  echo "set REPOSITORY=<owner/repo> or pass --repo to select this project's GitHub repository" >&2
+  exit 2
+fi
 
 if ! GITHUB_TOKEN="$(github_token "$TOKEN_ARG")"; then
   echo "no GitHub token: export OPENMUSE_TOKEN=<PAT with repo>" >&2
