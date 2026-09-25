@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Build a product-neutral DeepSeek Harness npm closure.
+"""Build the pinned product-neutral DeepSeek Harness npm closure.
 
-This intentionally does not include any @muse or old-client package. The
-Workspace catalog RPC and conversation-to-Host resource bridge are verified
-against the pinned client runtime, not assumed from an HTTP 200 response.
+The lockfile pins registry integrity and the current client/API contracts are
+checked before the closure can enter a desktop package.
 """
 
 from __future__ import annotations
@@ -45,18 +44,27 @@ def verify_vendored_inputs() -> None:
     if not manifest.is_file() or not lockfile.is_file():
         raise RuntimeError("repository is missing pinned DSH manifest/lockfile")
     dependencies = json.loads(manifest.read_text(encoding="utf-8"))["dependencies"]
+    lock = json.loads(lockfile.read_text(encoding="utf-8"))
     if "@deepseek-ai/dsh" not in dependencies:
         raise RuntimeError("repository is missing the DSH CLI package")
     for name, spec in dependencies.items():
         if REMOVED_PRODUCT_IDENTIFIER in name.lower() or name.startswith("@muse/"):
             raise RuntimeError(f"old product package cannot enter closure: {name}")
-        if not isinstance(spec, str) or not spec.startswith("file:tarballs/"):
-            raise RuntimeError(f"DSH dependency is not pinned to this repository: {name}")
-        tarball = (VENDORED / spec.removeprefix("file:")).resolve(strict=True)
-        if not tarball.is_relative_to(VENDORED.resolve()):
-            raise RuntimeError(f"DSH tarball escapes repository: {tarball}")
-        if package_name(tarball) != name:
-            raise RuntimeError(f"DSH tarball package mismatch: {tarball}")
+        if not isinstance(spec, str):
+            raise RuntimeError(f"invalid DSH dependency: {name}")
+        if spec.startswith("file:tarballs/"):
+            tarball = (VENDORED / spec.removeprefix("file:")).resolve(strict=True)
+            if not tarball.is_relative_to(VENDORED.resolve()):
+                raise RuntimeError(f"DSH tarball escapes repository: {tarball}")
+            if package_name(tarball) != name:
+                raise RuntimeError(f"DSH tarball package mismatch: {tarball}")
+        elif name != "@deepseek-ai/dsh" or spec != "0.1.7-rc.1":
+            raise RuntimeError(f"DSH registry dependency must be exact and reviewed: {name}@{spec}")
+        locked = lock.get("packages", {}).get(f"node_modules/{name}", {})
+        if locked.get("version") != spec and not spec.startswith("file:"):
+            raise RuntimeError(f"DSH lockfile version mismatch: {name}")
+        if not locked.get("integrity"):
+            raise RuntimeError(f"DSH lockfile integrity missing: {name}")
 
 
 def scrub_build_paths(output: Path) -> int:
@@ -87,28 +95,30 @@ def validate(output: Path) -> None:
     entry = output / "node_modules/@deepseek-ai/dsh/lib/bin.js"
     if not entry.is_file():
         raise RuntimeError(f"DSH entry missing: {entry}")
-    conversation = (
-        output / "node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js"
-    )
-    if not conversation.is_file():
-        raise RuntimeError(f"DSH conversation client missing: {conversation}")
-    client_source = conversation.read_text(encoding="utf-8")
-    if 'type: "resource.open"' not in client_source or "MuseHostResource" not in client_source:
-        raise RuntimeError(
-            "DSH conversation client no longer emits the Host resource-open bridge"
-        )
-    proxy = output / "node_modules/@deepseek-ai/dsh-host-apiproxy/lib/index.js"
-    if not proxy.is_file():
-        raise RuntimeError(f"DSH workspace API proxy missing: {proxy}")
-    proxy_source = proxy.read_text(encoding="utf-8")
-    if '"workspace.create"' not in proxy_source or '"workspace.insertBefore"' not in proxy_source:
-        raise RuntimeError("DSH workspace catalog RPC contract changed")
+    chat = output / "node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js"
+    if not chat.is_file() or "ctx.sidebarRight.openResource(url)" not in chat.read_text(encoding="utf-8"):
+        raise RuntimeError("DSH conversation file-open contract changed")
+    controller = output / "node_modules/@deepseek-ai/dsh-api-workspace-controller/lib/index.js"
+    if not controller.is_file() or "workspaceRegistry.create(request.path)" not in controller.read_text(encoding="utf-8"):
+        raise RuntimeError("DSH Workspace controller contract changed")
+    models = output / "node_modules/@deepseek-ai/dsh-client-ui-settings-models/lib/client.js"
+    if not models.is_file() or "settings.models.provider-card" not in models.read_text(encoding="utf-8"):
+        raise RuntimeError("DSH model capability slot missing")
+    model_plugin = output / "node_modules/dsh-model-capabilities"
+    model_patch = model_plugin / "openmuse.patch.yml"
+    if not model_patch.is_file() or not (model_plugin / "LICENSE").is_file():
+        raise RuntimeError("default model capability plugin or license missing")
+    if "settings.describe()" not in (model_plugin / "lib/index.js").read_text(encoding="utf-8"):
+        raise RuntimeError("model capability plugin has not been adapted to profile settings")
+    bridge = output / "node_modules/openmuse-dsh-bridge"
+    if not (bridge / "lib/index.js").is_file() or not (bridge / "lib/client.js").is_file():
+        raise RuntimeError("OpenMuse DSH Host bridge is missing")
+    if "openmuse-host-bridge" not in model_patch.read_text(encoding="utf-8"):
+        raise RuntimeError("OpenMuse DSH Host bridge is not mounted")
     for script in (output / "node_modules/@deepseek-ai").rglob("*.js"):
         source = script.read_text(encoding="utf-8")
-        if REMOVED_PRODUCT_IDENTIFIER in source.lower() or any(
-            marker in source for marker in ("/Users/", "C:\\Users\\")
-        ):
-            raise RuntimeError(f"removed product or absolute build path found in DSH runtime: {script}")
+        if REMOVED_PRODUCT_IDENTIFIER in source.lower() or "\\0dsh-css:/Users/" in source:
+            raise RuntimeError(f"removed product or build path found in DSH runtime: {script}")
     run("node", str(entry), "--version", cwd=output)
     root = (output / "node_modules").resolve()
     links = [item for item in root.rglob("*") if item.is_symlink()]
@@ -138,9 +148,10 @@ def main() -> None:
     output.mkdir(parents=True, exist_ok=True)
     shutil.copy2(VENDORED / "package.json", output / "package.json")
     shutil.copy2(VENDORED / "package-lock.json", output / "package-lock.json")
-    shutil.copytree(VENDORED / "tarballs", output / "tarballs")
-    run("npm", "ci", "--omit=dev", "--no-audit", "--no-fund",
-        "--legacy-peer-deps", cwd=output)
+    if any(spec.startswith("file:tarballs/") for spec in
+           json.loads((VENDORED / "package.json").read_text())["dependencies"].values()):
+        shutil.copytree(VENDORED / "tarballs", output / "tarballs")
+    run("npm", "ci", "--omit=dev", "--no-audit", "--no-fund", cwd=output)
     print(f"sanitized {scrub_build_paths(output)} generated path comments")
     validate(output)
 
