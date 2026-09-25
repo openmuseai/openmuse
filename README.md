@@ -25,8 +25,9 @@ flutter build macos --debug
 ```
 
 The macOS release build is self-contained with respect to other source
-repositories: pinned Helix assets, DSH package tarballs/lockfile, and official
-Node archives live under this repository. Run `./scripts/package_macos.sh` on
+repositories: pinned Helix assets, the DSH registry lockfile plus the local
+model-plugin tarball, and official Node archives live under this repository.
+Run `./scripts/package_macos.sh` on
 macOS; it assembles the DSH npm closure in `target/`, verifies checksums, builds
 the Flutter app, and writes `dist/OpenMuse-macos.zip`. npm still downloads
 third-party registry dependencies pinned by `third_party/dsh/package-lock.json`
