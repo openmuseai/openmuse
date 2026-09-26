@@ -58,6 +58,11 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
       - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          cache: npm
+          cache-dependency-path: third_party/dsh/package-lock.json
       - name: Bootstrap
         shell: pwsh
         run: pwsh scripts/ci/bootstrap-windows.ps1 -ExpectedFlutterVersion '${{ env.FLUTTER_VERSION }}'

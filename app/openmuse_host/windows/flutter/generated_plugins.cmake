@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  openmuse_dsh_plugin
   openmuse_native_text_gate
 )
 

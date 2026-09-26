@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 
 enum DshSidecarState { stopped, configurationRequired, starting, ready, failed }
 
@@ -19,24 +20,15 @@ final class DshSidecarSupervisor extends ChangeNotifier {
   int launchCount = 0;
   final List<String> logTail = [];
 
-  String? get cliPath {
-    final explicit = environment['OPENMUSE_DSH_CLI'];
-    if (explicit != null && explicit.isNotEmpty) return explicit;
-    final executableDir = File(Platform.resolvedExecutable).parent;
-    final bundled = File(
-      '${executableDir.parent.path}/Resources/openmuse/dsh/'
-      'node_modules/@deepseek-ai/dsh/lib/bin.js',
-    );
-    return bundled.existsSync() ? bundled.path : null;
-  }
+  String? get cliPath => resolveDshRuntime(
+    executablePath: Platform.resolvedExecutable,
+    environment: environment,
+  ).cliPath;
 
-  String get nodeExecutable {
-    final executableDir = File(Platform.resolvedExecutable).parent;
-    final bundled = File(
-      '${executableDir.parent.path}/Resources/openmuse/dsh/node/bin/node',
-    );
-    return bundled.existsSync() ? bundled.path : 'node';
-  }
+  String get nodeExecutable => resolveDshRuntime(
+    executablePath: Platform.resolvedExecutable,
+    environment: environment,
+  ).nodeExecutable;
 
   bool get hasModelKey => (environment['DEEPSEEK_API_KEY'] ?? '').isNotEmpty;
 
@@ -80,12 +72,20 @@ final class DshSidecarSupervisor extends ChangeNotifier {
     logTail.clear();
     notifyListeners();
     try {
-      final command = dshWebCommand(cli, nodeExecutable: nodeExecutable);
+      final runtime = resolveDshRuntime(
+        executablePath: Platform.resolvedExecutable,
+        environment: environment,
+      );
+      final command = dshWebCommand(
+        cli,
+        nodeExecutable: runtime.nodeExecutable,
+      );
       final reportedEndpoint = Completer<Uri>();
       final process = await Process.start(
         command.executable,
         command.arguments,
-        environment: environment,
+        environment: dshLaunchEnvironment(environment, runtime.nodeExecutable),
+        workingDirectory: dshClosureRoot(cli),
       );
       _process = process;
       launchCount++;
@@ -166,6 +166,111 @@ final class DshSidecarSupervisor extends ChangeNotifier {
     _process?.kill();
     super.dispose();
   }
+}
+
+final class DshRuntimeLocation {
+  const DshRuntimeLocation({
+    required this.cliPath,
+    required this.nodeExecutable,
+  });
+
+  final String? cliPath;
+  final String nodeExecutable;
+}
+
+/// Resolves the bundled DSH CLI and Node binary.
+///
+/// macOS packages them inside `Contents/Resources/openmuse/dsh`. Windows
+/// packages them beside the executable under `openmuse/dsh`.
+DshRuntimeLocation resolveDshRuntime({
+  required String executablePath,
+  Map<String, String> environment = const {},
+  bool Function(String path)? exists,
+}) {
+  final check = exists ?? (String path) => File(path).existsSync();
+  final explicit = environment['OPENMUSE_DSH_CLI'];
+  String? cli;
+  if (explicit != null && explicit.isNotEmpty) {
+    cli = explicit;
+  } else {
+    for (final candidate in _bundledCliCandidates(executablePath)) {
+      if (check(candidate)) {
+        cli = candidate;
+        break;
+      }
+    }
+  }
+  var node = 'node';
+  for (final candidate in _bundledNodeCandidates(executablePath)) {
+    if (check(candidate)) {
+      node = candidate;
+      break;
+    }
+  }
+  return DshRuntimeLocation(cliPath: cli, nodeExecutable: node);
+}
+
+List<String> _bundledCliCandidates(String executablePath) {
+  final executableDir = p.dirname(executablePath);
+  final bundleParent = p.dirname(executableDir);
+  const tail = [
+    'openmuse',
+    'dsh',
+    'node_modules',
+    '@deepseek-ai',
+    'dsh',
+    'lib',
+    'bin.js',
+  ];
+  return [
+    p.joinAll([bundleParent, 'Resources', ...tail]),
+    p.joinAll([executableDir, ...tail]),
+  ];
+}
+
+List<String> _bundledNodeCandidates(String executablePath) {
+  final executableDir = p.dirname(executablePath);
+  final bundleParent = p.dirname(executableDir);
+  return [
+    p.join(bundleParent, 'Resources', 'openmuse', 'dsh', 'node', 'bin', 'node'),
+    p.join(executableDir, 'openmuse', 'dsh', 'node', 'node.exe'),
+    p.join(executableDir, 'openmuse', 'dsh', 'node', 'bin', 'node.exe'),
+    p.join(executableDir, 'openmuse', 'dsh', 'node', 'bin', 'node'),
+  ];
+}
+
+/// Directory that contains the closure's `node_modules`, when [cliPath] is
+/// inside one. DSH is started there so package-relative files resolve.
+String? dshClosureRoot(String cliPath) {
+  final normalized = p.normalize(cliPath);
+  final marker = '${p.separator}node_modules${p.separator}';
+  final index = normalized.lastIndexOf(marker);
+  if (index <= 0) return null;
+  return normalized.substring(0, index);
+}
+
+/// Puts the bundled Node directory first on PATH so DSH child processes find
+/// the same runtime the sidecar was launched with.
+Map<String, String> dshLaunchEnvironment(
+  Map<String, String> environment,
+  String nodeExecutable,
+) {
+  if (nodeExecutable == 'node') return environment;
+  final directory = p.dirname(nodeExecutable);
+  final updated = Map<String, String>.from(environment);
+  final separator = Platform.isWindows ? ';' : ':';
+  final keys = updated.keys
+      .where((key) => key.toUpperCase() == 'PATH')
+      .toList();
+  if (keys.isEmpty) {
+    updated[Platform.isWindows ? 'Path' : 'PATH'] = directory;
+    return updated;
+  }
+  for (final key in keys) {
+    final current = updated[key] ?? '';
+    updated[key] = current.isEmpty ? directory : '$directory$separator$current';
+  }
+  return updated;
 }
 
 ({String executable, List<String> arguments}) dshCommand(

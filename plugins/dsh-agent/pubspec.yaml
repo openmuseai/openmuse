@@ -24,3 +24,5 @@ flutter:
     platforms:
       macos:
         pluginClass: OpenMuseDshWebViewPlugin
+      windows:
+        pluginClass: OpenmuseDshPluginCApi

@@ -6,9 +6,12 @@
 
 #include "generated_plugin_registrant.h"
 
+#include <openmuse_dsh_plugin/openmuse_dsh_plugin_c_api.h>
 #include <openmuse_native_text_gate/openmuse_native_text_gate_plugin_c_api.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
+  OpenmuseDshPluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("OpenmuseDshPluginCApi"));
   OpenmuseNativeTextGatePluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("OpenmuseNativeTextGatePluginCApi"));
 }

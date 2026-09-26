@@ -63,6 +63,8 @@ $PSNativeCommandUseErrorActionPreference = $false
 $RepoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 . (Join-Path $PSScriptRoot 'lib/domains.ps1')
 . (Join-Path $PSScriptRoot 'lib/domain-plan.ps1')
+. (Join-Path $PSScriptRoot 'stage-webview2.ps1')
+. (Join-Path $PSScriptRoot 'stage-dsh-windows.ps1')
 
 $AppRoot = Join-Path $RepoRoot 'app/openmuse_host'
 $DistRoot = Join-Path $RepoRoot 'dist'
@@ -228,6 +230,9 @@ if (-not $SkipFlutterBuild) {
     if (Test-Reusable -Domain 'flutter') {
         Set-State -Domain 'flutter' 'cache'
     } else {
+        # The DSH panel links the WebView2 static loader, so the SDK has to be
+        # on disk before CMake configures the plugin.
+        Install-OpenMuseWebView2Sdk
         # pub get is idempotent and cheap; the build must never run against a
         # stale package config, which is exactly what a restored build dir can
         # hide.
@@ -252,6 +257,8 @@ if (-not $SkipZip) {
     if (-not (Test-Path $executable)) {
         throw "missing Windows executable: $executable (run without -SkipFlutterBuild)"
     }
+
+    Install-OpenMuseBundledDsh -RepoRoot $RepoRoot -BundleRoot $BundleRoot
 
     New-Item -ItemType Directory -Force -Path $DistRoot | Out-Null
     if (Test-Path $Archive) { Remove-Item $Archive -Force }
@@ -292,7 +299,13 @@ if (-not $SkipVerify) {
     $zip = [System.IO.Compression.ZipFile]::OpenRead($Archive)
     try {
         $names = @($zip.Entries | ForEach-Object { $_.FullName -replace '\\', '/' })
-        foreach ($required in @('OpenMuse.exe', 'flutter_windows.dll', 'data/app.so')) {
+        foreach ($required in @(
+                'OpenMuse.exe',
+                'flutter_windows.dll',
+                'data/app.so',
+                'openmuse/dsh/node/node.exe',
+                'openmuse/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js'
+            )) {
             if ($names -notcontains $required) {
                 throw "the archive is missing $required"
             }

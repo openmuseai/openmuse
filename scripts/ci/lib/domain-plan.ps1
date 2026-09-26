@@ -32,6 +32,7 @@ function Get-OpenMuseDomainPlan {
 
     $app = 'app/openmuse_host'
     $dartPaths = @('app', 'packages', 'plugins', 'distribution', 'contracts', 'schemas')
+    $flutterPaths = $dartPaths + @('scripts/ci/stage-webview2.ps1')
     $rustPaths = @('Cargo.toml', 'Cargo.lock', 'crates')
 
     $rustToolchain = Get-OpenMuseToolchainIdentity
@@ -60,14 +61,23 @@ function Get-OpenMuseDomainPlan {
 
     $plan['flutter'] = @{
         description = 'Flutter Windows host build'
-        paths       = $dartPaths
-        fingerprint = Get-OpenMuseFingerprint -RepoRoot $RepoRoot -Paths $dartPaths `
+        paths       = $flutterPaths
+        fingerprint = Get-OpenMuseFingerprint -RepoRoot $RepoRoot -Paths $flutterPaths `
             -Toolchain $flutterToolchain -Parameters ([ordered]@{ domain = 'flutter'; profile = $Profile })
         outputs     = @((Join-Path $RepoRoot "$app/build/windows/x64/runner/Release/OpenMuse.exe"))
         cached      = $true
     }
 
-    $packPaths = @('scripts/package_windows.ps1', 'scripts/ci/build-windows.ps1', 'scripts/ci/lib')
+    $packPaths = @(
+        'scripts/package_windows.ps1',
+        'scripts/ci/build-windows.ps1',
+        'scripts/ci/lib',
+        'scripts/ci/stage-webview2.ps1',
+        'scripts/ci/stage-dsh-windows.ps1',
+        'scripts/build_dsh_closure.py',
+        'third_party/dsh',
+        'third_party/node/v22.19.0/SHASUMS256.txt'
+    )
     $plan['pack'] = @{
         description = 'Portable archive, checksums and build info'
         paths       = $packPaths

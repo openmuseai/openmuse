@@ -562,6 +562,12 @@ Future<void> _addWorkspace(
   } on MissingPluginException {
     if (!context.mounted) return;
     path = await _promptText(context, '添加工作区', '本地目录路径');
+  } on PlatformException catch (error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('无法打开文件夹选择器：${error.message ?? error.code}')),
+    );
+    return;
   }
   if (path == null || path.trim().isEmpty || !context.mounted) return;
   try {
@@ -1727,16 +1733,14 @@ final class _SmallIconButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) => Tooltip(
-    message: tooltip,
-    child: IconButton(
-      visualDensity: VisualDensity.compact,
-      constraints: const BoxConstraints.tightFor(width: 30, height: 30),
-      padding: EdgeInsets.zero,
-      style: IconButton.styleFrom(backgroundColor: Colors.transparent),
-      onPressed: onPressed,
-      icon: Icon(icon, size: 17, color: OpenMuseTokens.textMuted),
-    ),
+  Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip,
+    visualDensity: VisualDensity.compact,
+    constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+    padding: EdgeInsets.zero,
+    style: IconButton.styleFrom(backgroundColor: Colors.transparent),
+    onPressed: onPressed,
+    icon: Icon(icon, size: 17, color: OpenMuseTokens.textMuted),
   );
 }
 

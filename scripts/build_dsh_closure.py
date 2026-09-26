@@ -23,7 +23,14 @@ REMOVED_PRODUCT_IDENTIFIER = "app" + "flow" + "y"
 
 def run(*command: str, cwd: Path) -> None:
     environment = os.environ.copy()
-    subprocess.run(command, cwd=cwd, env=environment, check=True)
+    resolved = list(command)
+    # Windows CreateProcess does not apply PATHEXT, so `npm` must be `npm.cmd`.
+    if os.name == "nt" and not os.path.splitext(resolved[0])[1]:
+        found = shutil.which(resolved[0])
+        if found is None:
+            raise RuntimeError(f"required executable is not on PATH: {resolved[0]}")
+        resolved[0] = found
+    subprocess.run(resolved, cwd=cwd, env=environment, check=True)
 
 
 def package_name(tarball: Path) -> str:

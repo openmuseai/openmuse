@@ -11,6 +11,7 @@ add_executable(${BINARY_NAME} WIN32
   "main.cpp"
   "utils.cpp"
   "win32_window.cpp"
+  "workspace_channel.cpp"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
   "Runner.rc"
   "runner.exe.manifest"
@@ -29,11 +30,14 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION_BUILD=${FLUTT
 
 # Disable Windows macros that collide with C++ standard library functions.
 target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
+# Source files contain UTF-8 string literals (folder-picker copy). The system
+# ANSI code page would otherwise reject those bytes under /WX.
+target_compile_options(${BINARY_NAME} PRIVATE /utf-8)
 
 # Add dependency libraries and include directories. Add any application-specific
 # dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
-target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
+target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib" "ole32.lib" "shell32.lib" "uuid.lib")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.

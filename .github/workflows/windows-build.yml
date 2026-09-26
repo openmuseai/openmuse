@@ -73,6 +73,13 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          cache: npm
+          cache-dependency-path: third_party/dsh/package-lock.json
+
       - name: Bootstrap
         shell: pwsh
         run: |

@@ -88,6 +88,13 @@ final class _DshWebViewState extends State<DshWebView> {
 
   @override
   Widget build(BuildContext context) {
+    if (Platform.isWindows) {
+      return _WindowsDshSlot(
+        url: widget.url,
+        onOpenResource: widget.onOpenResource,
+        reloadToken: widget.reloadToken,
+      );
+    }
     if (!Platform.isMacOS) {
       return Center(
         child: SelectableText(
@@ -102,5 +109,119 @@ final class _DshWebViewState extends State<DshWebView> {
       creationParamsCodec: const StandardMessageCodec(),
       onPlatformViewCreated: _created,
     );
+  }
+}
+
+final class _WindowsDshSlot extends StatefulWidget {
+  const _WindowsDshSlot({
+    required this.url,
+    required this.onOpenResource,
+    required this.reloadToken,
+  });
+
+  final Uri url;
+  final Future<void> Function(DshResourceOpenMessage request) onOpenResource;
+  final int reloadToken;
+
+  @override
+  State<_WindowsDshSlot> createState() => _WindowsDshSlotState();
+}
+
+final class _WindowsDshSlotState extends State<_WindowsDshSlot>
+    with WidgetsBindingObserver {
+  static const channel = MethodChannel('com.openmuse.dsh/webview');
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    channel.setMethodCallHandler(_onNativeCall);
+    _scheduleBounds();
+  }
+
+  @override
+  void didUpdateWidget(covariant _WindowsDshSlot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.reloadToken != widget.reloadToken) {
+      channel.invokeMethod<void>('reload');
+      if (_error != null) setState(() => _error = null);
+    }
+    _scheduleBounds();
+  }
+
+  @override
+  void didChangeMetrics() => _scheduleBounds();
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    channel.setMethodCallHandler(null);
+    channel.invokeMethod<void>('hide');
+    super.dispose();
+  }
+
+  Future<void> _onNativeCall(MethodCall call) async {
+    if (call.method == 'resourceOpen') {
+      try {
+        final request = DshResourceOpenMessage.parse(call.arguments);
+        await widget.onOpenResource(request);
+      } catch (error) {
+        debugPrint('Rejected DSH resource open: $error');
+      }
+      return;
+    }
+    if (call.method == 'failed' && mounted) {
+      setState(() => _error = '${call.arguments}');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _scheduleBounds();
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SelectableText(_error!, textAlign: TextAlign.center),
+        ),
+      );
+    }
+    // The panel column passes a loose width. An empty ColoredBox would
+    // collapse to that minimum and the native view would never be shown.
+    return SizedBox.expand(
+      child: ColoredBox(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xff202228)
+            : const Color(0xfffbfbfc),
+      ),
+    );
+  }
+
+  void _scheduleBounds() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _error != null) return;
+      final box = context.findRenderObject() as RenderBox?;
+      if (box == null ||
+          !box.hasSize ||
+          box.size.width < 1 ||
+          box.size.height < 1) {
+        return;
+      }
+      final origin = box.localToGlobal(Offset.zero);
+      final ratio = MediaQuery.devicePixelRatioOf(context);
+      try {
+        await channel.invokeMethod<void>('show', {
+          'x': origin.dx * ratio,
+          'y': origin.dy * ratio,
+          'width': box.size.width * ratio,
+          'height': box.size.height * ratio,
+          'url': widget.url.toString(),
+        });
+      } on PlatformException catch (error) {
+        if (!mounted || _error != null) return;
+        setState(() => _error = error.message ?? '无法嵌入 DSH 面板');
+      }
+    });
   }
 }
