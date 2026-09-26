@@ -99,9 +99,9 @@ function Get-StoredGitHubToken {
 #   credential git already stores for github.com.
 if ([string]::IsNullOrWhiteSpace($Token)) {
     foreach ($name in @('OPENMUSE_TOKEN', 'GH_TOKEN', 'GITHUB_TOKEN')) {
-        $candidate = [Environment]::GetEnvironmentVariable($name, 'Process')
-        if ([string]::IsNullOrWhiteSpace($candidate)) {
-            $candidate = [Environment]::GetEnvironmentVariable($name, 'User')
+        foreach ($scope in @('Process', 'User', 'Machine')) {
+            $candidate = [Environment]::GetEnvironmentVariable($name, $scope)
+            if (-not [string]::IsNullOrWhiteSpace($candidate)) { break }
         }
         if (-not [string]::IsNullOrWhiteSpace($candidate)) {
             $Token = $candidate.Trim()
