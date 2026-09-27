@@ -12,25 +12,14 @@ void main() {
     () async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       addTearDown(() => server.close(force: true));
-      final calls = <String>[];
+      final calls = <List<String>>[];
       server.listen((request) async {
+        expect(request.uri.path, '/openmuse-bridge/workspaces');
+        expect(request.headers.value('x-openmuse-bridge-token'), 'test-secret');
         final body = jsonDecode(await utf8.decoder.bind(request).join()) as Map;
-        final method = body['method'] as String;
-        final payload = body['payload'] as Map;
-        calls.add('$method:$payload');
-        final value = method == 'workspace.create'
-            ? {
-                'workspace': {'workspaceId': payload['path']},
-              }
-            : {'workspaceIds': const <String>[]};
+        calls.add((body['mounts'] as List).cast<String>());
         request.response.headers.contentType = ContentType.json;
-        request.response.write(
-          jsonEncode({
-            'type': 'server-response',
-            'rpcId': body['rpcId'],
-            'result': {'ok': true, 'value': value},
-          }),
-        );
+        request.response.write(jsonEncode({'items': const <Map<String, String>>[]}));
         await request.response.close();
       });
       var active = '/tmp/openmuse-two';
@@ -49,20 +38,16 @@ void main() {
       final sync = DshWorkspaceSynchronizer(
         context: context,
         endpoint: () => Uri.parse('http://127.0.0.1:${server.port}/'),
+        bridgeToken: 'test-secret',
       );
       await sync.sync();
-      expect(
-        calls.where((value) => value.startsWith('workspace.create')),
-        hasLength(2),
-      );
-      expect(calls.first, contains('/tmp/openmuse-two'));
-      expect(calls.last, contains('workspace.insertBefore'));
+      expect(calls, hasLength(1));
+      expect(calls.single, ['/tmp/openmuse-one', '/tmp/openmuse-two']);
       await sync.sync();
-      expect(calls, hasLength(3));
+      expect(calls, hasLength(1));
       active = '/tmp/openmuse-one';
       await sync.sync();
-      expect(calls, hasLength(6));
-      expect(calls[3], contains('/tmp/openmuse-one'));
+      expect(calls, hasLength(1));
     },
   );
 
@@ -91,27 +76,19 @@ void main() {
             },
           ),
           endpoint: () => supervisor.endpoint,
+          bridgeToken: supervisor.bridgeToken,
         );
         await sync.sync();
         final client = HttpClient();
         try {
-          final request = await client.postUrl(
-            supervisor.endpoint!.resolve('/api/workspace.list'),
-          );
+          final request = await client.postUrl(supervisor.endpoint!.resolve('/openmuse-bridge/workspaces'));
           request.headers.contentType = ContentType.json;
-          request.write(
-            jsonEncode({
-              'type': 'client-request',
-              'rpcId': 'openmuse-sync-test',
-              'method': 'workspace.list',
-              'payload': {},
-            }),
-          );
+          request.headers.set('x-openmuse-bridge-token', supervisor.bridgeToken);
+          request.write(jsonEncode({'mounts': [mount.path]}));
           final response = await request.close();
           final body =
               jsonDecode(await utf8.decoder.bind(response).join()) as Map;
-          final items =
-              ((body['result'] as Map)['value'] as Map)['items'] as List;
+          final items = body['items'] as List;
           expect(
             items.any(
               (item) => (item as Map)['path'].toString().endsWith('/project'),

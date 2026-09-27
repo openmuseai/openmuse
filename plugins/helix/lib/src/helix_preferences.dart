@@ -7,23 +7,42 @@ import 'package:xterm/xterm.dart';
 
 import 'helix_language_servers.dart';
 
+enum HelixInputProfile {
+  helixModal('helix-modal'),
+  standardNonmodal('standard-nonmodal');
+
+  const HelixInputProfile(this.id);
+  final String id;
+
+  static HelixInputProfile parse(Object? value) => values.firstWhere(
+    (profile) => profile.id == value,
+    orElse: () => helixModal,
+  );
+}
+
 /// Plugin-owned, non-secret preferences. Host persists this JSON opaquely.
 final class HelixPreferences {
   const HelixPreferences({
     this.theme = 'onelight',
     this.fontFamily = 'Menlo',
     this.fontSize = 14,
+    this.inputProfile = HelixInputProfile.helixModal,
     this.vscodeKeymap = false,
     this.enableLsp = true,
     this.languageServerPaths = const {},
+    this.languageServerConfigPaths = const {},
   });
 
   final String theme;
   final String fontFamily;
   final double fontSize;
+  final HelixInputProfile inputProfile;
+
+  /// Legacy shortcut preference; this does not enable nonmodal editing.
   final bool vscodeKeymap;
   final bool enableLsp;
   final Map<String, String> languageServerPaths;
+  final Map<String, String> languageServerConfigPaths;
 
   bool get dark => theme == 'openmuse_dark';
 
@@ -46,11 +65,20 @@ final class HelixPreferences {
     fontSize: value['fontSize'] is num
         ? (value['fontSize'] as num).toDouble().clamp(11, 20)
         : 14,
+    inputProfile: HelixInputProfile.parse(value['inputProfile']),
     vscodeKeymap: value['vscodeKeymap'] == true,
     enableLsp: value['enableLsp'] != false,
     languageServerPaths: value['languageServerPaths'] is Map
         ? {
             for (final entry in (value['languageServerPaths'] as Map).entries)
+              if (entry.key is String && entry.value is String)
+                entry.key as String: entry.value as String,
+          }
+        : const {},
+    languageServerConfigPaths: value['languageServerConfigPaths'] is Map
+        ? {
+            for (final entry
+                in (value['languageServerConfigPaths'] as Map).entries)
               if (entry.key is String && entry.value is String)
                 entry.key as String: entry.value as String,
           }
@@ -61,25 +89,32 @@ final class HelixPreferences {
     'theme': theme,
     'fontFamily': fontFamily,
     'fontSize': fontSize,
+    'inputProfile': inputProfile.id,
     'vscodeKeymap': vscodeKeymap,
     'enableLsp': enableLsp,
     'languageServerPaths': languageServerPaths,
+    'languageServerConfigPaths': languageServerConfigPaths,
   };
 
   HelixPreferences copyWith({
     String? theme,
     String? fontFamily,
     double? fontSize,
+    HelixInputProfile? inputProfile,
     bool? vscodeKeymap,
     bool? enableLsp,
     Map<String, String>? languageServerPaths,
+    Map<String, String>? languageServerConfigPaths,
   }) => HelixPreferences(
     theme: theme ?? this.theme,
     fontFamily: fontFamily ?? this.fontFamily,
     fontSize: fontSize ?? this.fontSize,
+    inputProfile: inputProfile ?? this.inputProfile,
     vscodeKeymap: vscodeKeymap ?? this.vscodeKeymap,
     enableLsp: enableLsp ?? this.enableLsp,
     languageServerPaths: languageServerPaths ?? this.languageServerPaths,
+    languageServerConfigPaths:
+        languageServerConfigPaths ?? this.languageServerConfigPaths,
   );
 
   String get languagesToml {
@@ -87,17 +122,50 @@ final class HelixPreferences {
       for (final spec in helixLanguageServers) spec.command: spec.arguments,
     };
     final blocks = <String>[];
-    for (final entry in languageServerPaths.entries) {
-      if (!allowed.containsKey(entry.key) ||
-          !p.isAbsolute(entry.value) ||
-          !File(entry.value).existsSync()) {
-        continue;
+    for (final spec in helixLanguageServers) {
+      final executable = languageServerPaths[spec.command];
+      if (executable != null &&
+          p.isAbsolute(executable) &&
+          File(executable).existsSync()) {
+        blocks.add(
+          '[language-server.${spec.command}]\n'
+          'command = ${jsonEncode(executable)}\n'
+          'args = ${jsonEncode(allowed[spec.command])}',
+        );
       }
-      blocks.add(
-        '[language-server.${entry.key}]\n'
-        'command = ${jsonEncode(entry.value)}\n'
-        'args = ${jsonEncode(allowed[entry.key])}',
-      );
+      final configPath = languageServerConfigPaths[spec.command];
+      if (configPath != null &&
+          p.isAbsolute(configPath) &&
+          File(configPath).existsSync()) {
+        final raw = File(configPath).readAsStringSync().trim();
+        if (raw.isEmpty) continue;
+        if (p.extension(configPath).toLowerCase() == '.json') {
+          final decoded = jsonDecode(raw);
+          if (decoded is! Map) continue;
+          final values = <String>[];
+          void writeMap(Map map, String prefix) {
+            for (final entry in map.entries) {
+              if (entry.key is! String) continue;
+              final key = prefix.isEmpty
+                  ? entry.key as String
+                  : '$prefix.${entry.key}';
+              if (entry.value is Map) {
+                writeMap(entry.value as Map, key);
+              } else if (entry.value != null) {
+                final tomlKey = key.split('.').map(jsonEncode).join('.');
+                values.add('$tomlKey = ${jsonEncode(entry.value)}');
+              }
+            }
+          }
+
+          writeMap(decoded, '');
+          blocks.add(
+            '[language-server.${spec.command}.config]\n${values.join('\n')}',
+          );
+        } else {
+          blocks.add('[language-server.${spec.command}.config]\n$raw');
+        }
+      }
     }
     return '${blocks.join('\n\n')}\n';
   }
@@ -107,6 +175,7 @@ final class HelixPreferences {
 theme = "$theme"
 
 [editor]
+${inputProfile == HelixInputProfile.standardNonmodal ? 'input-profile = "standard-nonmodal"' : ''}
 line-number = "absolute"
 mouse = true
 cursorline = true
@@ -119,7 +188,11 @@ display-inlay-hints = $enableLsp
 
 [keys.insert]
 C-s = ":write"
-${vscodeKeymap ? 'C-z = "undo"\nC-y = "redo"\n"C-left" = "move_prev_word_start"\n"C-right" = "move_next_word_end"' : ''}
+${inputProfile == HelixInputProfile.standardNonmodal
+          ? 'C-z = "undo"\nC-y = "redo"\nC-f = "search"\nC-a = "select_all"\n"C-left" = "move_prev_word_start"\n"C-right" = "move_next_word_end"'
+          : vscodeKeymap
+          ? 'C-z = "undo"\nC-y = "redo"\n"C-left" = "move_prev_word_start"\n"C-right" = "move_next_word_end"'
+          : ''}
 $_hostNavigationKeys
 
 [keys.normal]

@@ -255,6 +255,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
   }
 
   final LocalVersionStore _versionStore;
+  Future<void> Function(OpenMuseResource resource)? flushBeforeDiskRead;
   final WorkspaceMountStore? _mountStore;
   final List<WorkspaceMount> _mounts = [];
   final List<WorkspaceTab> _tabs = [];
@@ -568,6 +569,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
   }
 
   Future<LocalVersionSnapshot> captureVersion(OpenMuseResource resource) async {
+    await flushBeforeDiskRead?.call(resource);
     final snapshot = await _versionStore.capture(resource);
     notifyListeners();
     return snapshot;
@@ -589,6 +591,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
     if (afterVersion != null && beforeVersion.id == afterVersion.id) {
       throw ArgumentError('不能把同一个版本与自己比较');
     }
+    if (afterVersion == null) await flushBeforeDiskRead?.call(resource);
     final after = afterVersion == null
         ? await File.fromUri(resource.uri).readAsString()
         : await _versionStore.read(afterVersion);
@@ -633,6 +636,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
 
   void activateMount(WorkspaceMount mount) {
     if (!_mounts.contains(mount)) return;
+    if (_activeMountPath == mount.path) return;
     _activeMountPath = mount.path;
     notifyListeners();
   }
@@ -641,6 +645,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
   Future<OpenMuseResource> openHostResource({
     required String requestedPath,
     String? cwd,
+    String? editorId,
   }) async {
     if (requestedPath.isEmpty || requestedPath.length > 4096) {
       throw const FormatException('无效资源路径');
@@ -661,7 +666,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
       displayName: p.basename(canonical),
       mediaType: _mediaTypeFor(canonical),
     );
-    openResource(resource);
+    openResource(resource, editorId: editorId);
     return resource;
   }
 

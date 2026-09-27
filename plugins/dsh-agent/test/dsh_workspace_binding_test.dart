@@ -94,4 +94,27 @@ void main() {
       throwsFormatException,
     );
   });
+
+  test('DSH Workspace selection envelope rejects malformed paths', () {
+    expect(
+      parseDshWorkspaceActivation(
+        jsonEncode({'type': 'workspace.activate', 'path': '/workspace'}),
+      ),
+      '/workspace',
+    );
+    expect(
+      () => parseDshWorkspaceActivation({
+        'type': 'resource.open',
+        'path': '/workspace',
+      }),
+      throwsFormatException,
+    );
+    expect(
+      () => parseDshWorkspaceActivation({
+        'type': 'workspace.activate',
+        'path': '',
+      }),
+      throwsFormatException,
+    );
+  });
 }

@@ -1,0 +1,135 @@
+name: Build
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  merge_group:
+  schedule:
+    - cron: "00 01 * * *"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  MSRV: "1.90"
+  # This key can be changed to bust the cache of tree-sitter grammars.
+  GRAMMAR_CACHE_VERSION: ""
+
+jobs:
+  check:
+    name: Check (msrv)
+    runs-on: ubuntu-latest
+    if: github.repository == 'helix-editor/helix' || github.event_name != 'schedule'
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/rust-setup
+        with:
+          toolchain: ${{ env.MSRV }}
+          cache-key: build
+
+      - name: Run cargo check
+        run: cargo check
+
+  test:
+    name: Test Suite
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'helix-editor/helix' || github.event_name != 'schedule'
+    timeout-minutes: 30
+    env:
+      RUST_BACKTRACE: 1
+      HELIX_LOG_LEVEL: info
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/rust-setup
+        with:
+          toolchain: ${{ env.MSRV }}
+          cache-key: build
+          cache-grammars: 'true'
+          grammar-cache-version: ${{ env.GRAMMAR_CACHE_VERSION }}
+
+      - name: Run cargo test
+        run: cargo test --workspace
+
+      - name: Run cargo integration-test
+        run: cargo integration-test
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-24.04-arm, windows-11-arm]
+
+  lints:
+    name: Lints
+    runs-on: ubuntu-latest
+    if: github.repository == 'helix-editor/helix' || github.event_name != 'schedule'
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/rust-setup
+        with:
+          toolchain: ${{ env.MSRV }}
+          components: rustfmt, clippy
+          cache-key: build
+
+      - name: Run cargo fmt
+        run: cargo fmt --all --check
+
+      - name: Run cargo clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Run cargo doc
+        run: cargo doc --no-deps --workspace --document-private-items
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  docs:
+    name: Grammar Lint
+    runs-on: ubuntu-latest
+    if: github.repository == 'helix-editor/helix' || github.event_name != 'schedule'
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/rust-setup
+        with:
+          toolchain: ${{ env.MSRV }}
+          cache-key: build
+          cache-grammars: 'true'
+          grammar-cache-version: ${{ env.GRAMMAR_CACHE_VERSION }}
+
+      - name: Validate queries
+        if: always()
+        run: cargo xtask query-check
+
+      - name: Validate indents
+        if: always()
+        run: cargo xtask indent-check
+
+      - name: Validate highlights
+        if: always()
+        run: cargo xtask highlight-check
+
+      - name: Validate themes
+        if: always()
+        run: cargo xtask theme-check
+
+      - name: Generate docs
+        if: always()
+        run: cargo xtask docgen
+
+      - name: Check uncommitted documentation changes
+        if: always()
+        run: |
+          git diff
+          git diff-files --quiet \
+            || (echo "Run 'cargo xtask docgen', commit the changes and push again" \
+            && exit 1)

@@ -112,6 +112,12 @@ abstract interface class OpenMusePlugin {
   Widget? buildPanel(BuildContext context, String panelId);
 }
 
+/// Optional editor capability: settle an in-memory buffer before the Host
+/// reads that resource from disk for snapshots or comparisons.
+abstract interface class OpenMuseBufferFlushContributor {
+  Future<void> flushResource(OpenMuseResource resource);
+}
+
 /// Optional plugin-owned settings surface. Host provides the containing page
 /// and namespaced persistence; it does not know editor or agent preferences.
 abstract interface class OpenMuseSettingsContributor {

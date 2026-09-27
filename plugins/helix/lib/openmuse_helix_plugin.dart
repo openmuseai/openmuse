@@ -16,7 +16,10 @@ export 'src/helix_preferences.dart';
 export 'src/helix_language_servers.dart';
 
 final class OpenMuseHelixPlugin
-    implements OpenMusePlugin, OpenMuseSettingsContributor {
+    implements
+        OpenMusePlugin,
+        OpenMuseSettingsContributor,
+        OpenMuseBufferFlushContributor {
   OpenMuseHelixPlugin({HelixRuntimePool? runtime}) : _runtime = runtime;
 
   HelixRuntimePool? _runtime;
@@ -48,17 +51,29 @@ final class OpenMuseHelixPlugin
           'cc',
           'cpp',
           'cs',
+          'csx',
           'css',
           'diff',
           'go',
+          'html',
           'h',
           'hpp',
           'ini',
           'java',
+          'kts',
           'jsx',
           'kt',
           'log',
           'lua',
+          'vue',
+          'svelte',
+          'dockerfile',
+          'tf',
+          'ex',
+          'exs',
+          'php',
+          'graphql',
+          'proto',
           'mjs',
           'py',
           'rb',
@@ -87,6 +102,19 @@ final class OpenMuseHelixPlugin
   Future<void> activate(OpenMusePluginContext context) async {
     _context = context;
     _runtime ??= HelixRuntimePool();
+    _runtime!.onActiveResourceChanged = (path) {
+      // Host performs canonical mount authorization; PTY events cannot open
+      // arbitrary local files through the plugin.
+      _context
+          ?.executeHostCommand('workspace.openResource', {
+            'path': path,
+            'editorId': 'helix.editor',
+          })
+          .catchError((Object error) {
+            debugPrint('Helix resource event rejected: $error');
+            return null;
+          });
+    };
     final saved = await context.executeHostCommand(
       'settings.plugin.read',
       descriptor.id,
@@ -94,12 +122,14 @@ final class OpenMuseHelixPlugin
     if (saved is Map) {
       _preferences.value = HelixPreferences.fromJson(saved);
     }
+    await _runtime!.probeCapabilities();
     await _runtime!.configure(_preferences.value);
   }
 
   @override
   Future<void> deactivate() async {
     await _runtime?.stop();
+    _runtime?.onActiveResourceChanged = null;
     _runtime?.dispose();
     _runtime = null;
     _context = null;
@@ -117,13 +147,34 @@ final class OpenMuseHelixPlugin
   @override
   Widget? buildPanel(BuildContext context, String panelId) => null;
 
+  @override
+  Future<void> flushResource(OpenMuseResource resource) async {
+    if (!resource.uri.isScheme('file')) return;
+    await _runtime?.flushResource(resource.uri.toFilePath());
+  }
+
   Future<void> updatePreferences(HelixPreferences next) async {
-    _preferences.value = next;
+    await _runtime?.configure(next);
     await _context?.executeHostCommand('settings.plugin.write', {
       'pluginId': descriptor.id,
       'values': next.toJson(),
     });
-    await _runtime?.configure(next);
+    _preferences.value = next;
+  }
+
+  Future<void> _updateFromSettings(
+    BuildContext context,
+    HelixPreferences next,
+  ) async {
+    try {
+      await updatePreferences(next);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text('$error')));
+      }
+    }
   }
 
   @override
@@ -178,17 +229,30 @@ final class OpenMuseHelixPlugin
           ),
         ),
         _HelixSettingRow(
-          label: 'Keymap',
-          hint: 'Helix 模态或常用 Ctrl+Z / Ctrl+Y 快捷键',
-          trailing: DropdownButton<bool>(
-            value: value.vscodeKeymap,
-            items: const [
-              DropdownMenuItem(value: false, child: Text('Helix（模态）')),
-              DropdownMenuItem(value: true, child: Text('VS Code')),
+          label: '输入模式',
+          hint: _runtime?.nonmodalSelectable == true
+              ? '引擎级实验模式；切换前须关闭编辑会话'
+              : '非模态引擎仍在验证，发布构建暂不开放',
+          trailing: DropdownButton<HelixInputProfile>(
+            value: value.inputProfile,
+            items: [
+              const DropdownMenuItem(
+                value: HelixInputProfile.helixModal,
+                child: Text('Helix（模态）'),
+              ),
+              DropdownMenuItem(
+                value: HelixInputProfile.standardNonmodal,
+                enabled: _runtime?.nonmodalSelectable == true,
+                child: const Text('标准非模态（实验）'),
+              ),
             ],
-            onChanged: (preset) {
-              if (preset != null)
-                updatePreferences(value.copyWith(vscodeKeymap: preset));
+            onChanged: (profile) {
+              if (profile != null) {
+                _updateFromSettings(
+                  context,
+                  value.copyWith(inputProfile: profile, vscodeKeymap: false),
+                );
+              }
             },
           ),
         ),
@@ -236,7 +300,7 @@ final class OpenMuseHelixPlugin
             children: [
               TextButton(
                 onPressed: () => _configureLanguageServer(context, value),
-                child: const Text('配置本地 Language Server…'),
+                child: const Text('选择语言并配置 LS…'),
               ),
               TextButton(
                 onPressed: () => _showLanguageServerStatus(context, value),
@@ -276,38 +340,42 @@ final class OpenMuseHelixPlugin
     BuildContext context,
     HelixPreferences preferences,
   ) {
-    final statuses = inspectHelixLanguageServers(
-      preferences.languageServerPaths,
-    );
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Language Server 状态'),
-        content: SizedBox(
-          width: 540,
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              for (final status in statuses)
-                ListTile(
-                  dense: true,
-                  title: Text(status.spec.label),
-                  subtitle: Text(status.path ?? '未找到；可在本机安装后指定可执行文件'),
-                  trailing: Text(switch (status.presence) {
-                    HelixServerPresence.custom => '自定义',
-                    HelixServerPresence.system => '系统 PATH',
-                    HelixServerPresence.missing => '未安装',
-                  }),
-                ),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, _) {
+          final statuses = inspectHelixLanguageServers(
+            preferences.languageServerPaths,
+          );
+          return AlertDialog(
+            title: const Text('Language Server 状态'),
+            content: SizedBox(
+              width: 540,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final status in statuses)
+                    ListTile(
+                      dense: true,
+                      title: Text(status.spec.label),
+                      subtitle: Text(status.path ?? '未找到；可在本机安装后指定可执行文件'),
+                      trailing: Text(switch (status.presence) {
+                        HelixServerPresence.custom => '自定义',
+                        HelixServerPresence.system => '系统 PATH',
+                        HelixServerPresence.missing => '手动配置',
+                      }),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('关闭'),
+              ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -316,10 +384,10 @@ final class OpenMuseHelixPlugin
     BuildContext context,
     HelixPreferences current,
   ) async {
-    var selected = helixLanguageServers.first.command;
-    final pathController = TextEditingController(
-      text: current.languageServerPaths[selected] ?? '',
-    );
+    String? selected;
+    var installing = false;
+    final pathController = TextEditingController();
+    final configController = TextEditingController();
     String? error;
     try {
       await showDialog<void>(
@@ -343,6 +411,7 @@ final class OpenMuseHelixPlugin
                   const SizedBox(height: 14),
                   DropdownButton<String>(
                     value: selected,
+                    hint: const Text('选择语言服务'),
                     items: [
                       for (final server in helixLanguageServers)
                         DropdownMenuItem(
@@ -350,57 +419,140 @@ final class OpenMuseHelixPlugin
                           child: Text(server.label),
                         ),
                     ],
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setDialogState(() {
-                        selected = value;
-                        error = null;
-                        pathController.text =
-                            current.languageServerPaths[value] ?? '';
-                      });
-                    },
+                    onChanged: installing
+                        ? null
+                        : (value) {
+                            if (value == null) return;
+                            setDialogState(() {
+                              selected = value;
+                              error = null;
+                              pathController.text =
+                                  current.languageServerPaths[value] ?? '';
+                              configController.text =
+                                  current.languageServerConfigPaths[value] ??
+                                  '';
+                            });
+                          },
                   ),
-                  TextField(
-                    controller: pathController,
-                    decoration: InputDecoration(
-                      labelText: '可执行文件的绝对路径',
-                      errorText: error,
+                  if (selected != null) ...[
+                    TextField(
+                      controller: pathController,
+                      decoration: InputDecoration(
+                        labelText: '可执行文件的绝对路径',
+                        errorText: error,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 7),
-                  const Text(
-                    '留空并保存可移除覆盖，改用系统 PATH 中的 Language Server。',
-                    style: TextStyle(fontSize: 11),
-                  ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: configController,
+                      decoration: const InputDecoration(
+                        labelText: 'LS 配置文件绝对路径（JSON / TOML，可选）',
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    const Text(
+                      '留空并保存可移除覆盖，改用系统 PATH 中的 Language Server。',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                    if (helixLanguageServers
+                        .where((item) => item.command == selected)
+                        .single
+                        .oneClickInstallable) ...[
+                      const SizedBox(height: 12),
+                      FilledButton.tonal(
+                        onPressed: installing
+                            ? null
+                            : () async {
+                                final command = selected!;
+                                setDialogState(() {
+                                  installing = true;
+                                  error = null;
+                                });
+                                try {
+                                  final spec = helixLanguageServers
+                                      .where((item) => item.command == command)
+                                      .single;
+                                  final path = await installHelixLanguageServer(
+                                    spec,
+                                  );
+                                  final paths = Map<String, String>.of(
+                                    current.languageServerPaths,
+                                  )..[command] = path;
+                                  current = current.copyWith(
+                                    languageServerPaths: paths,
+                                  );
+                                  await updatePreferences(current);
+                                  if (dialogContext.mounted) {
+                                    setDialogState(() {
+                                      if (selected == command)
+                                        pathController.text = path;
+                                      installing = false;
+                                    });
+                                  }
+                                } catch (failure) {
+                                  if (dialogContext.mounted) {
+                                    setDialogState(() {
+                                      error = '$failure';
+                                      installing = false;
+                                    });
+                                  }
+                                }
+                              },
+                        child: Text(installing ? '正在安装…' : '一键安装此语言的 LS'),
+                      ),
+                    ],
+                  ],
                 ],
               ),
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
+                onPressed: installing
+                    ? null
+                    : () => Navigator.pop(dialogContext),
                 child: const Text('取消'),
               ),
               FilledButton(
-                onPressed: () async {
-                  final path = pathController.text.trim();
-                  if (path.isNotEmpty &&
-                      (!p.isAbsolute(path) || !File(path).existsSync())) {
-                    setDialogState(() => error = '请选择存在的绝对文件路径');
-                    return;
-                  }
-                  final paths = Map<String, String>.of(
-                    current.languageServerPaths,
-                  );
-                  if (path.isEmpty) {
-                    paths.remove(selected);
-                  } else {
-                    paths[selected] = path;
-                  }
-                  await updatePreferences(
-                    current.copyWith(languageServerPaths: paths),
-                  );
-                  if (dialogContext.mounted) Navigator.pop(dialogContext);
-                },
+                onPressed: selected == null || installing
+                    ? null
+                    : () async {
+                        final path = pathController.text.trim();
+                        final configPath = configController.text.trim();
+                        if (path.isNotEmpty &&
+                            (!p.isAbsolute(path) || !File(path).existsSync())) {
+                          setDialogState(() => error = '请选择存在的绝对文件路径');
+                          return;
+                        }
+                        if (configPath.isNotEmpty &&
+                            (!p.isAbsolute(configPath) ||
+                                !File(configPath).existsSync())) {
+                          setDialogState(() => error = '请选择存在的 LS 配置文件绝对路径');
+                          return;
+                        }
+                        final paths = Map<String, String>.of(
+                          current.languageServerPaths,
+                        );
+                        final configPaths = Map<String, String>.of(
+                          current.languageServerConfigPaths,
+                        );
+                        if (path.isEmpty) {
+                          paths.remove(selected);
+                        } else {
+                          paths[selected!] = path;
+                        }
+                        if (configPath.isEmpty) {
+                          configPaths.remove(selected);
+                        } else {
+                          configPaths[selected!] = configPath;
+                        }
+                        await updatePreferences(
+                          current.copyWith(
+                            languageServerPaths: paths,
+                            languageServerConfigPaths: configPaths,
+                          ),
+                        );
+                        if (dialogContext.mounted) Navigator.pop(dialogContext);
+                      },
                 child: const Text('保存'),
               ),
             ],
@@ -409,6 +561,7 @@ final class OpenMuseHelixPlugin
       );
     } finally {
       pathController.dispose();
+      configController.dispose();
     }
   }
 }

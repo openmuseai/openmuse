@@ -108,7 +108,26 @@ void main() {
       '127.0.0.1',
       '--port',
       '0',
+      '--no-open',
     ]);
+  });
+
+  test('bundled model plugin patch is applied before web app arguments', () {
+    final command = dshWebCommand(
+      '/bundle/node_modules/@deepseek-ai/dsh/lib/bin.js',
+      patchPath:
+          '/bundle/node_modules/dsh-model-capabilities/openmuse.patch.yml',
+    );
+    expect(
+      command.arguments,
+      containsAllInOrder([
+        'web',
+        '--patch',
+        '/bundle/node_modules/dsh-model-capabilities/openmuse.patch.yml',
+        '--host',
+        '127.0.0.1',
+      ]),
+    );
   });
 
   test(

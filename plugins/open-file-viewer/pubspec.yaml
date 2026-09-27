@@ -1,5 +1,5 @@
 name: openmuse_file_viewer
-description: Sandboxed local image and PDF viewer plugin for OpenMuse.
+description: Sandboxed local Markdown, image and PDF viewer plugin for OpenMuse.
 version: 0.1.0
 publish_to: none
 
@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_markdown_plus: 1.0.12
+  path: ^1.9.1
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
 

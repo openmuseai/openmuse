@@ -66,10 +66,10 @@ setx OPENMUSE_TOKEN "<新的 classic PAT，需 repo + workflow>"
 本地触发（不需要 gh CLI）：
 
 ```powershell
-cd D:\agentic\src\openmuse-io\muse-clients
-pwsh scripts/ci/remote-build-windows.ps1 -Push
-pwsh scripts/ci/remote-build-windows.ps1 -Inputs @{ skip_tests = 'true'; force_rebuild = 'true' }
-pwsh scripts/ci/remote-build-windows.ps1 -RunId 123456789 -DownloadLogs
+cd D:\agentic\src\openmuse-io\Muse-Client
+pwsh scripts/ci/remote-build-windows.ps1 -Repository OWNER/REPO -Push
+pwsh scripts/ci/remote-build-windows.ps1 -Repository OWNER/REPO -Inputs @{ skip_tests = 'true'; force_rebuild = 'true' }
+pwsh scripts/ci/remote-build-windows.ps1 -Repository OWNER/REPO -RunId 123456789 -DownloadLogs
 ```
 
 ## 产物
@@ -86,7 +86,7 @@ pwsh scripts/ci/remote-build-windows.ps1 -RunId 123456789 -DownloadLogs
 ## 本地复现（和 CI 完全一致）
 
 ```powershell
-cd D:\agentic\src\openmuse-io\muse-clients
+cd D:\agentic\src\openmuse-io\Muse-Client
 
 # 1. 环境：rustup target + Windows desktop + Flutter windows 产物
 pwsh scripts\ci\bootstrap-windows.ps1
@@ -160,7 +160,7 @@ job `timeout-minutes: 120`；缓存策略见 [`windows-incremental-build.md`](wi
 拉失败日志：
 
 ```powershell
-pwsh scripts/ci/remote-build-windows.ps1 -RunId <id> -DownloadLogs
+pwsh scripts/ci/remote-build-windows.ps1 -Repository OWNER/REPO -RunId 123456789 -DownloadLogs
 # 解压到 tmp/ci-logs/run-<id>/
 ```
 

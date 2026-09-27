@@ -70,14 +70,31 @@ Future<Widget> bootOpenMuseHost() async {
             }
             final path = arguments['path'];
             final cwd = arguments['cwd'];
-            if (path is! String || (cwd != null && cwd is! String)) {
+            final editorId = arguments['editorId'];
+            if (path is! String ||
+                (cwd != null && cwd is! String) ||
+                (editorId != null && editorId is! String)) {
               throw const FormatException('无效文件路径');
             }
             final resource = await controller.openHostResource(
               requestedPath: path,
               cwd: cwd as String?,
+              editorId: editorId as String?,
             );
             return {'uri': resource.uri.toString()};
+          case 'workspace.activateMount':
+            if (arguments is! Map || arguments['path'] is! String) {
+              throw const FormatException('无效工作区切换请求');
+            }
+            final path = arguments['path'] as String;
+            final matches = controller.mounts.where(
+              (mount) => mount.path == path,
+            );
+            if (matches.isEmpty) {
+              throw const FormatException('DSH 工作区未获 Host 授权');
+            }
+            controller.activateMount(matches.single);
+            return {'activeMountPath': controller.activeMountPath};
           case 'settings.plugin.read':
             if (arguments is! String) throw const FormatException('无效插件 ID');
             return settings.pluginValues(arguments);
@@ -101,6 +118,14 @@ Future<Widget> bootOpenMuseHost() async {
   for (final plugin in createOpenMuseBuiltInPlugins()) {
     registry.install(plugin);
   }
+  controller.flushBeforeDiskRead = (resource) async {
+    for (final descriptor in registry.descriptors) {
+      final plugin = registry.plugin(descriptor.id);
+      if (plugin is OpenMuseBufferFlushContributor) {
+        await (plugin as OpenMuseBufferFlushContributor).flushResource(resource);
+      }
+    }
+  };
   return OpenMuseHostApp(
     registry: registry,
     workspace: controller,

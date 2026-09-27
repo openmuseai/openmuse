@@ -4,16 +4,20 @@ import 'dart:io';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:path/path.dart' as p;
 
-/// Registers Host-granted local Mounts with the current DSH RPC catalog.
-/// It never removes user-created DSH workspaces or imports old app state.
+/// Idempotently registers Host-authorized Mounts through the local DSH plugin.
+/// The DSH 0.1.7 Remote controller is not the old /api/workspace.* RPC.
 final class DshWorkspaceSynchronizer {
-  DshWorkspaceSynchronizer({required this.context, required this.endpoint});
+  DshWorkspaceSynchronizer({
+    required this.context,
+    required this.endpoint,
+    required this.bridgeToken,
+  });
 
   final OpenMusePluginContext context;
   final Uri? Function() endpoint;
+  final String bridgeToken;
   Future<void> _pending = Future<void>.value();
   String? _fingerprint;
-  int _rpcCounter = 0;
 
   Future<void> sync() {
     _pending = _pending.catchError((Object _) {}).then((_) => _syncNow());
@@ -36,70 +40,33 @@ final class DshWorkspaceSynchronizer {
       final path = value['path'] as String;
       if (p.isAbsolute(path) && !mounts.contains(path)) mounts.add(path);
     }
-    final active = raw['activeMountPath'];
-    if (active is String && mounts.remove(active)) mounts.insert(0, active);
     final fingerprint = jsonEncode([base.toString(), mounts]);
     if (_fingerprint == fingerprint) return;
-    final ids = <String>[];
-    for (final path in mounts) {
-      final value = await _rpc(base, 'workspace.create', {'path': path});
-      final workspace = value['workspace'];
-      if (workspace is! Map || workspace['workspaceId'] is! String) {
-        throw const FormatException('DSH 返回无效 workspace.create 结果');
-      }
-      ids.add(workspace['workspaceId'] as String);
-    }
-    // Newly adopted workspaces are prepended by DSH; restore Host's order
-    // without deleting or renaming any workspace the DSH user owns.
-    for (var index = ids.length - 2; index >= 0; index--) {
-      await _rpc(base, 'workspace.insertBefore', {
-        'workspaceId': ids[index],
-        'beforeWorkspaceId': ids[index + 1],
-      });
-    }
-    _fingerprint = fingerprint;
-  }
-
-  Future<Map<String, Object?>> _rpc(
-    Uri base,
-    String method,
-    Map<String, Object?> payload,
-  ) async {
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 3);
     try {
-      final uri = base.resolve('/api/$method');
+      final uri = base.resolve('/openmuse-bridge/workspaces');
       final request = await client
           .postUrl(uri)
           .timeout(const Duration(seconds: 5));
       request.headers.contentType = ContentType.json;
-      final rpcId =
-          'openmuse-${DateTime.now().microsecondsSinceEpoch}-${_rpcCounter++}';
-      request.write(
-        jsonEncode({
-          'type': 'client-request',
-          'rpcId': rpcId,
-          'method': method,
-          'payload': payload,
-        }),
-      );
+      request.headers.set('x-openmuse-bridge-token', bridgeToken);
+      request.write(jsonEncode({'mounts': mounts}));
       final response = await request.close().timeout(
-        const Duration(seconds: 5),
+        const Duration(seconds: 10),
       );
-      if (response.statusCode != HttpStatus.ok) {
-        throw HttpException(
-          'DSH $method HTTP ${response.statusCode}',
-          uri: uri,
+      final rawBody = await utf8.decoder.bind(response).join();
+      if (rawBody.isEmpty) {
+        throw StateError(
+          'DSH 工作区同步响应为空：HTTP ${response.statusCode}, redirect=${response.redirects}',
         );
       }
-      final body = jsonDecode(await utf8.decoder.bind(response).join());
-      if (body is! Map || body['rpcId'] != rpcId || body['result'] is! Map) {
-        throw const FormatException('无效 DSH RPC 响应');
+      final body = jsonDecode(rawBody);
+      if (response.statusCode != HttpStatus.ok ||
+          body is! Map ||
+          body['items'] is! List) {
+        throw StateError('DSH 工作区同步失败：HTTP ${response.statusCode} $body');
       }
-      final result = body['result'] as Map;
-      if (result['ok'] != true || result['value'] is! Map) {
-        throw StateError('DSH $method 失败：${result['error']}');
-      }
-      return Map<String, Object?>.from(result['value'] as Map);
+      _fingerprint = fingerprint;
     } finally {
       client.close(force: true);
     }

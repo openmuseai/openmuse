@@ -62,6 +62,13 @@ app.*.map.json
 !/plugins/helix/assets/engines/helix/runtime/themes/onelight.toml
 !/plugins/helix/assets/engines/helix/runtime/themes/openmuse_dark.toml
 
+# The Helix source fork carries the OpenMuse non-modal editor bridge, so its
+# Rust source is tracked. Its runtime/ is a build product that duplicates the
+# pinned engine runtime above byte for byte, and target/ is a multi-gigabyte
+# Rust build tree, so neither belongs in git.
+/third_party/helix/runtime/
+/third_party/helix/target/
+
 # --- Release bundles ---------------------------------------------------------
 *.zip
 *.dmg

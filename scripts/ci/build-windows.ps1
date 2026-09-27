@@ -65,6 +65,7 @@ $RepoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 . (Join-Path $PSScriptRoot 'lib/domain-plan.ps1')
 . (Join-Path $PSScriptRoot 'stage-webview2.ps1')
 . (Join-Path $PSScriptRoot 'stage-dsh-windows.ps1')
+. (Join-Path $PSScriptRoot 'stage-helix-windows.ps1')
 
 $AppRoot = Join-Path $RepoRoot 'app/openmuse_host'
 $DistRoot = Join-Path $RepoRoot 'dist'
@@ -259,6 +260,7 @@ if (-not $SkipZip) {
     }
 
     Install-OpenMuseBundledDsh -RepoRoot $RepoRoot -BundleRoot $BundleRoot
+    Install-OpenMuseHelix -RepoRoot $RepoRoot -BundleRoot $BundleRoot
 
     New-Item -ItemType Directory -Force -Path $DistRoot | Out-Null
     if (Test-Path $Archive) { Remove-Item $Archive -Force }
@@ -304,7 +306,9 @@ if (-not $SkipVerify) {
                 'flutter_windows.dll',
                 'data/app.so',
                 'openmuse/dsh/node/node.exe',
-                'openmuse/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js'
+                'openmuse/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js',
+                'data/flutter_assets/packages/openmuse_helix_plugin/assets/engines/helix/hx.exe',
+                'data/flutter_assets/packages/openmuse_helix_plugin/assets/engines/helix/runtime/languages.toml'
             )) {
             if ($names -notcontains $required) {
                 throw "the archive is missing $required"

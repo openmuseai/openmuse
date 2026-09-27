@@ -39,15 +39,31 @@ final class DshResourceOpenMessage {
   final int? line;
 }
 
+String parseDshWorkspaceActivation(Object? raw) {
+  final value = raw is String ? jsonDecode(raw) : raw;
+  if (value is! Map ||
+      value['type'] != 'workspace.activate' ||
+      value['path'] is! String ||
+      (value['path'] as String).isEmpty ||
+      (value['path'] as String).length > 4096) {
+    throw const FormatException('无效 DSH 工作区切换消息');
+  }
+  return value['path'] as String;
+}
+
 final class DshWebView extends StatefulWidget {
   const DshWebView({
     super.key,
     required this.url,
+    required this.activeMountPath,
+    required this.onActivateWorkspace,
     required this.onOpenResource,
     required this.reloadToken,
   });
 
   final Uri url;
+  final String? activeMountPath;
+  final Future<void> Function(String path) onActivateWorkspace;
   final Future<void> Function(DshResourceOpenMessage request) onOpenResource;
   final int reloadToken;
 
@@ -64,6 +80,10 @@ final class _DshWebViewState extends State<DshWebView> {
     if (oldWidget.reloadToken != widget.reloadToken) {
       _channel?.invokeMethod<void>('reload');
     }
+    if (oldWidget.activeMountPath != widget.activeMountPath &&
+        widget.activeMountPath != null) {
+      _channel?.invokeMethod<void>('activateWorkspace', widget.activeMountPath);
+    }
   }
 
   @override
@@ -76,14 +96,23 @@ final class _DshWebViewState extends State<DshWebView> {
     final channel = MethodChannel('com.openmuse.dsh/webview/$viewId');
     _channel = channel;
     channel.setMethodCallHandler((call) async {
-      if (call.method != 'resourceOpen') return;
       try {
-        final request = DshResourceOpenMessage.parse(call.arguments);
-        await widget.onOpenResource(request);
+        switch (call.method) {
+          case 'resourceOpen':
+            final request = DshResourceOpenMessage.parse(call.arguments);
+            await widget.onOpenResource(request);
+          case 'workspaceActivate':
+            await widget.onActivateWorkspace(
+              parseDshWorkspaceActivation(call.arguments),
+            );
+        }
       } catch (error) {
-        debugPrint('Rejected DSH resource open: $error');
+        debugPrint('Rejected DSH Host bridge message: $error');
       }
     });
+    if (widget.activeMountPath != null) {
+      channel.invokeMethod<void>('activateWorkspace', widget.activeMountPath);
+    }
   }
 
   @override
@@ -91,6 +120,8 @@ final class _DshWebViewState extends State<DshWebView> {
     if (Platform.isWindows) {
       return _WindowsDshSlot(
         url: widget.url,
+        activeMountPath: widget.activeMountPath,
+        onActivateWorkspace: widget.onActivateWorkspace,
         onOpenResource: widget.onOpenResource,
         reloadToken: widget.reloadToken,
       );
@@ -105,7 +136,11 @@ final class _DshWebViewState extends State<DshWebView> {
     }
     return AppKitView(
       viewType: 'com.openmuse.dsh/webview',
-      creationParams: {'url': widget.url.toString()},
+      creationParams: {
+        'url': widget.url.toString(),
+        if (widget.activeMountPath != null)
+          'activeMountPath': widget.activeMountPath,
+      },
       creationParamsCodec: const StandardMessageCodec(),
       onPlatformViewCreated: _created,
     );
@@ -115,11 +150,15 @@ final class _DshWebViewState extends State<DshWebView> {
 final class _WindowsDshSlot extends StatefulWidget {
   const _WindowsDshSlot({
     required this.url,
+    required this.activeMountPath,
+    required this.onActivateWorkspace,
     required this.onOpenResource,
     required this.reloadToken,
   });
 
   final Uri url;
+  final String? activeMountPath;
+  final Future<void> Function(String path) onActivateWorkspace;
   final Future<void> Function(DshResourceOpenMessage request) onOpenResource;
   final int reloadToken;
 
@@ -171,6 +210,16 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
       }
       return;
     }
+    if (call.method == 'workspaceActivate') {
+      try {
+        await widget.onActivateWorkspace(
+          parseDshWorkspaceActivation(call.arguments),
+        );
+      } catch (error) {
+        debugPrint('Rejected DSH workspace activation: $error');
+      }
+      return;
+    }
     if (call.method == 'failed' && mounted) {
       setState(() => _error = '${call.arguments}');
     }
@@ -217,6 +266,7 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
           'width': box.size.width * ratio,
           'height': box.size.height * ratio,
           'url': widget.url.toString(),
+          if (widget.activeMountPath != null) 'mount': widget.activeMountPath,
         });
       } on PlatformException catch (error) {
         if (!mounted || _error != null) return;

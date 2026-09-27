@@ -11,8 +11,7 @@ fn shipped_manifests_parse_and_target_the_current_protocol() {
         assert_eq!(manifest.protocol, PROTOCOL_VERSION);
         assert!(!manifest.id.0.is_empty());
         assert!(
-            !manifest.contributes.editors.is_empty()
-                || !manifest.contributes.panels.is_empty()
+            !manifest.contributes.editors.is_empty() || !manifest.contributes.panels.is_empty()
         );
     }
 }

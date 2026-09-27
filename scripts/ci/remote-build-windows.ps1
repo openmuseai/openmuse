@@ -24,7 +24,7 @@ pwsh scripts/ci/remote-build-windows.ps1 -Push
 #>
 [CmdletBinding()]
 param(
-    [string] $Repository = 'openmuseai/muse-clients',
+    [string] $Repository = '',
     [string] $Workflow = 'windows-build.yml',
     [string] $Ref = '',
     [hashtable] $Inputs = @{},
@@ -41,6 +41,10 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $PSNativeCommandUseErrorActionPreference = $false
+
+if ([string]::IsNullOrWhiteSpace($Repository)) {
+    throw "Pass -Repository OWNER/REPO to select this project's GitHub repository."
+}
 
 try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12

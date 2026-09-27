@@ -48,17 +48,17 @@ GitHub UI: Actions -> "macOS build" -> Run workflow
 本机触发：
 
 ```bash
-cd /path/to/muse-clients
-./scripts/ci/remote-build-macos.sh
-./scripts/ci/remote-build-macos.sh --push
-./scripts/ci/remote-build-macos.sh --ref main -f profile=debug
-./scripts/ci/remote-build-macos.sh --run-id <id> --download-logs
+cd /path/to/Muse-Client
+./scripts/ci/remote-build-macos.sh --repo OWNER/REPO
+./scripts/ci/remote-build-macos.sh --repo OWNER/REPO --push
+./scripts/ci/remote-build-macos.sh --repo OWNER/REPO --ref main -f profile=debug
+./scripts/ci/remote-build-macos.sh --repo OWNER/REPO --run-id 123456789 --download-logs
 ```
 
 分钟级诊断：
 
 ```bash
-./scripts/ci/remote-build-macos.sh --workflow diagnose-macos.yml
+./scripts/ci/remote-build-macos.sh --repo OWNER/REPO --workflow diagnose-macos.yml
 ```
 
 ## 产物

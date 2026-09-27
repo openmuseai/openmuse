@@ -34,22 +34,58 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
       name: "com.openmuse.dsh/webview/\(viewId)",
       binaryMessenger: messenger
     )
-    let handler = DshResourceMessageHandler(channel: channel, port: port)
+    let handler = DshResourceMessageHandler(channel: channel, port: port, method: "resourceOpen")
+    let workspaceHandler = DshResourceMessageHandler(channel: channel, port: port, method: "workspaceActivate")
+    let clipboardHandler = DshClipboardMessageHandler(port: port)
     configuration.userContentController.add(handler, name: "MuseHostResource")
+    configuration.userContentController.add(workspaceHandler, name: "MuseHostWorkspace")
+    configuration.userContentController.add(clipboardHandler, name: "MuseHostClipboard")
     configuration.userContentController.addUserScript(WKUserScript(
-      source: "window.MuseHostResource = { postMessage: function(raw) { window.webkit.messageHandlers.MuseHostResource.postMessage(raw); } };",
+      source: """
+      window.MuseHostResource = { postMessage: function(raw) { window.webkit.messageHandlers.MuseHostResource.postMessage(raw); } };
+      window.MuseHostWorkspace = { postMessage: function(raw) { window.webkit.messageHandlers.MuseHostWorkspace.postMessage(raw); } };
+      window.MuseHostClipboard = { postMessage: function(raw) { window.webkit.messageHandlers.MuseHostClipboard.postMessage(raw); } };
+      window.addEventListener('keydown', function(event) {
+        if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'c') return;
+        if (typeof event.target?.closest === 'function' && event.target.closest('input, textarea, [contenteditable="true"]')) return;
+        const selected = window.getSelection()?.toString() ?? '';
+        if (!selected || selected.length > 16384) return;
+        window.MuseHostClipboard.postMessage(JSON.stringify({ type: 'clipboard.write', text: selected }));
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }, true);
+      """,
       injectionTime: .atDocumentStart,
       forMainFrameOnly: true
     ))
+    if let path = values["activeMountPath"] as? String,
+       let data = try? JSONSerialization.data(withJSONObject: [path]),
+       let json = String(data: data, encoding: .utf8) {
+      configuration.userContentController.addUserScript(WKUserScript(
+        source: "window.__OpenMuseDesiredWorkspace = \(json)[0];",
+        injectionTime: .atDocumentStart,
+        forMainFrameOnly: true
+      ))
+    }
     let webView = WKWebView(frame: .zero, configuration: configuration)
     webView.setValue(false, forKey: "drawsBackground")
     channel.setMethodCallHandler { [weak webView] call, result in
-      guard call.method == "reload" else {
+      switch call.method {
+      case "reload":
+        webView?.reload()
+        result(nil)
+      case "activateWorkspace":
+        guard let path = call.arguments as? String,
+              let data = try? JSONSerialization.data(withJSONObject: [path]),
+              let json = String(data: data, encoding: .utf8) else {
+          result(FlutterError(code: "invalid_path", message: "Expected a Workspace path", details: nil))
+          return
+        }
+        webView?.evaluateJavaScript("window.__OpenMuseDesiredWorkspace = \(json)[0]; window.OpenMuseDshWorkspace?.activate(window.__OpenMuseDesiredWorkspace);")
+        result(nil)
+      default:
         result(FlutterMethodNotImplemented)
-        return
       }
-      webView?.reload()
-      result(nil)
     }
     webView.load(URLRequest(url: url))
     return webView
@@ -60,13 +96,40 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
   }
 }
 
+private final class DshClipboardMessageHandler: NSObject, WKScriptMessageHandler {
+  private let port: Int
+
+  init(port: Int) { self.port = port }
+
+  func userContentController(_ userContentController: WKUserContentController,
+                             didReceive message: WKScriptMessage) {
+    let origin = message.frameInfo.securityOrigin
+    guard message.frameInfo.isMainFrame,
+          origin.`protocol` == "http",
+          (origin.host == "127.0.0.1" || origin.host == "localhost"),
+          origin.port == port,
+          let raw = message.body as? String,
+          raw.utf8.count <= 20_000,
+          let data = raw.data(using: .utf8),
+          let payload = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+          payload["type"] as? String == "clipboard.write",
+          let value = payload["text"] as? String,
+          !value.isEmpty,
+          value.utf8.count <= 16_384 else { return }
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(value, forType: .string)
+  }
+}
+
 private final class DshResourceMessageHandler: NSObject, WKScriptMessageHandler {
   private let channel: FlutterMethodChannel
   private let port: Int
+  private let method: String
 
-  init(channel: FlutterMethodChannel, port: Int) {
+  init(channel: FlutterMethodChannel, port: Int, method: String) {
     self.channel = channel
     self.port = port
+    self.method = method
   }
 
   func userContentController(_ userContentController: WKUserContentController,
@@ -78,6 +141,6 @@ private final class DshResourceMessageHandler: NSObject, WKScriptMessageHandler 
           origin.port == port,
           let payload = message.body as? String,
           payload.utf8.count <= 16_384 else { return }
-    channel.invokeMethod("resourceOpen", arguments: payload)
+    channel.invokeMethod(method, arguments: payload)
   }
 }

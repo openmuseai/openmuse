@@ -126,18 +126,81 @@ std::wstring UserDataFolder() {
 }
 
 constexpr wchar_t kBridgeScript[] =
-    L"window.MuseHostResource = { postMessage: function(raw) {"
-    L" if (window.chrome && window.chrome.webview) {"
-    L" window.chrome.webview.postMessage(String(raw));"
-    L" }"
-    L"} };";
+    L"window.MuseHostResource={postMessage:function(raw){"
+    L"if(window.chrome&&window.chrome.webview)"
+    L"window.chrome.webview.postMessage(String(raw));}};"
+    L"window.MuseHostWorkspace={postMessage:function(raw){"
+    L"if(window.chrome&&window.chrome.webview)"
+    L"window.chrome.webview.postMessage(String(raw));}};"
+    L"window.MuseHostClipboard={postMessage:function(raw){"
+    L"if(window.chrome&&window.chrome.webview)"
+    L"window.chrome.webview.postMessage(String(raw));}};"
+    L"window.addEventListener('keydown',function(event){"
+    L"if(!(event.metaKey||event.ctrlKey)||event.key.toLowerCase()!=='c')return;"
+    L"if(typeof event.target?.closest==='function'&&"
+    L"event.target.closest('input,textarea,[contenteditable=\"true\"]'))return;"
+    L"var selected=window.getSelection()?window.getSelection().toString():'';"
+    L"if(!selected||selected.length>16384)return;"
+    L"window.MuseHostClipboard.postMessage(JSON.stringify("
+    L"{type:'clipboard.write',text:selected}));"
+    L"event.preventDefault();event.stopImmediatePropagation();},true);";
+
+std::wstring JsonEscape(const std::wstring& value) {
+  std::wstring out;
+  out.reserve(value.size());
+  for (const wchar_t ch : value) {
+    switch (ch) {
+      case L'\\':
+        out += L"\\\\";
+        break;
+      case L'"':
+        out += L"\\\"";
+        break;
+      case L'\n':
+        out += L"\\n";
+        break;
+      case L'\r':
+        out += L"\\r";
+        break;
+      default:
+        out += ch;
+        break;
+    }
+  }
+  return out;
+}
+
+struct ChromeChildSearch {
+  HWND parent;
+  HWND found;
+};
+
+BOOL CALLBACK FindDirectChromeChild(HWND hwnd, LPARAM param) {
+  auto* search = reinterpret_cast<ChromeChildSearch*>(param);
+  if (::GetParent(hwnd) != search->parent) return TRUE;
+  wchar_t cls[64] = {};
+  ::GetClassNameW(hwnd, cls, 64);
+  if (wcsncmp(cls, L"Chrome_WidgetWin", 16) == 0) {
+    search->found = hwnd;
+    return FALSE;
+  }
+  return TRUE;
+}
 
 }  // namespace
 
 class DshView : public std::enable_shared_from_this<DshView> {
  public:
-  DshView(flutter::MethodChannel<flutter::EncodableValue>* channel, HWND parent)
-      : channel_(channel), parent_(parent) {}
+  // Flutter paints the view HWND with a composition surface that covers
+  // child windows. The WebView has to be a sibling of that view, parented
+  // to the top-level frame, and kept above it.
+  DshView(flutter::MethodChannel<flutter::EncodableValue>* channel,
+          HWND flutter_view)
+      : channel_(channel),
+        flutter_window_(flutter_view),
+        parent_(::GetAncestor(flutter_view, GA_ROOT)) {
+    if (parent_ == nullptr) parent_ = flutter_view;
+  }
 
   // Empty string means the view was accepted. Synchronous failures are
   // returned to the method channel; asynchronous WebView2 failures use Fail.
@@ -175,6 +238,12 @@ class DshView : public std::enable_shared_from_this<DshView> {
 
   void Reload() {
     if (webview_) webview_->Reload();
+  }
+
+  void ActivateWorkspace(const std::wstring& path) {
+    if (path.empty() || path == desired_workspace_) return;
+    desired_workspace_ = path;
+    PushWorkspace();
   }
 
   void Close() {
@@ -262,11 +331,25 @@ class DshView : public std::enable_shared_from_this<DshView> {
     controller_->put_IsVisible(TRUE);
     ApplyBounds();
     MaybeNavigate();
+    PushWorkspace();
   }
 
   void HookMessages() {
     const auto weak = weak_from_this();
     EventRegistrationToken token{};
+    EventRegistrationToken navigation{};
+    webview_->add_NavigationCompleted(
+        Callback<ICoreWebView2NavigationCompletedEventHandler>(
+            [weak](ICoreWebView2*,
+                   ICoreWebView2NavigationCompletedEventArgs*) -> HRESULT {
+              const auto self = weak.lock();
+              if (!self || self->closed_) return S_OK;
+              self->RaiseAboveFlutter();
+              self->PushWorkspace();
+              return S_OK;
+            })
+            .Get(),
+        &navigation);
     webview_->add_WebMessageReceived(
         Callback<ICoreWebView2WebMessageReceivedEventHandler>(
             [weak](ICoreWebView2*,
@@ -294,8 +377,13 @@ class DshView : public std::enable_shared_from_this<DshView> {
     const std::string payload = too_long ? std::string() : Utf8FromUtf16(message);
     ::CoTaskMemFree(message);
     if (too_long || payload.empty() || channel_ == nullptr) return;
+    if (payload.find("clipboard.write") != std::string::npos) return;
+    const char* method = "resourceOpen";
+    if (payload.find("\"workspace.activate\"") != std::string::npos) {
+      method = "workspaceActivate";
+    }
     channel_->InvokeMethod(
-        "resourceOpen", std::make_unique<flutter::EncodableValue>(payload));
+        method, std::make_unique<flutter::EncodableValue>(payload));
   }
 
   void MaybeNavigate() {
@@ -304,8 +392,9 @@ class DshView : public std::enable_shared_from_this<DshView> {
       if (script_adding_) return;
       script_adding_ = true;
       const auto weak = weak_from_this();
+      const std::wstring script = BridgeScript();
       webview_->AddScriptToExecuteOnDocumentCreated(
-          kBridgeScript,
+          script.c_str(),
           Callback<
               ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler>(
               [weak](HRESULT result, LPCWSTR) -> HRESULT {
@@ -332,7 +421,44 @@ class DshView : public std::enable_shared_from_this<DshView> {
 
   void ApplyBounds() {
     if (!controller_ || !has_bounds_) return;
-    controller_->put_Bounds(bounds_);
+    RECT mapped = bounds_;
+    if (flutter_window_ != nullptr && parent_ != nullptr &&
+        flutter_window_ != parent_) {
+      ::MapWindowPoints(flutter_window_, parent_,
+                        reinterpret_cast<POINT*>(&mapped), 2);
+    }
+    controller_->put_Bounds(mapped);
+    RaiseAboveFlutter();
+  }
+
+  void RaiseAboveFlutter() {
+    if (parent_ == nullptr) return;
+    ChromeChildSearch search{parent_, nullptr};
+    ::EnumChildWindows(parent_, FindDirectChromeChild,
+                       reinterpret_cast<LPARAM>(&search));
+    if (search.found == nullptr) return;
+    ::SetWindowPos(search.found, HWND_TOP, 0, 0, 0, 0,
+                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+  }
+
+  void PushWorkspace() {
+    if (!webview_ || desired_workspace_.empty()) return;
+    const std::wstring script =
+        L"window.__OpenMuseDesiredWorkspace=\"" +
+        JsonEscape(desired_workspace_) +
+        L"\";if(window.OpenMuseDshWorkspace&&"
+        L"typeof window.OpenMuseDshWorkspace.activate==='function')"
+        L"window.OpenMuseDshWorkspace.activate(window.__OpenMuseDesiredWorkspace);";
+    webview_->ExecuteScript(script.c_str(), nullptr);
+  }
+
+  std::wstring BridgeScript() const {
+    std::wstring script = kBridgeScript;
+    if (!desired_workspace_.empty()) {
+      script += L"window.__OpenMuseDesiredWorkspace=\"" +
+                JsonEscape(desired_workspace_) + L"\";";
+    }
+    return script;
   }
 
   void Fail(const std::string& message) {
@@ -344,7 +470,9 @@ class DshView : public std::enable_shared_from_this<DshView> {
   }
 
   flutter::MethodChannel<flutter::EncodableValue>* channel_;
+  HWND flutter_window_;
   HWND parent_;
+  std::wstring desired_workspace_;
   ComPtr<ICoreWebView2Environment> environment_;
   ComPtr<ICoreWebView2Controller> controller_;
   ComPtr<ICoreWebView2> webview_;
@@ -398,6 +526,16 @@ void OpenMuseDshWebViewPlugin::HandleMethodCall(
     result->Success();
     return;
   }
+  if (call.method_name() == "activateWorkspace") {
+    const auto* path = std::get_if<std::string>(call.arguments());
+    if (path == nullptr || path->empty() || !view_) {
+      result->Error("invalid-arguments", "Expected a Workspace path");
+      return;
+    }
+    view_->ActivateWorkspace(Utf16FromUtf8(*path));
+    result->Success();
+    return;
+  }
   if (call.method_name() != "show") {
     result->NotImplemented();
     return;
@@ -434,6 +572,12 @@ void OpenMuseDshWebViewPlugin::HandleMethodCall(
   bounds.top = static_cast<LONG>(ReadNumber(*arguments, "y"));
   bounds.right = bounds.left + atLeastOne(ReadNumber(*arguments, "width"));
   bounds.bottom = bounds.top + atLeastOne(ReadNumber(*arguments, "height"));
+  const auto mount = arguments->find(flutter::EncodableValue("mount"));
+  if (mount != arguments->end()) {
+    if (const auto* path = std::get_if<std::string>(&mount->second)) {
+      if (!path->empty()) view_->ActivateWorkspace(Utf16FromUtf8(*path));
+    }
+  }
   const std::string error = view_->Show(bounds, Utf16FromUtf8(*url));
   if (!error.empty()) {
     result->Error("webview-failed", error);

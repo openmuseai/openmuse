@@ -74,6 +74,7 @@ function Get-OpenMuseDomainPlan {
         'scripts/ci/lib',
         'scripts/ci/stage-webview2.ps1',
         'scripts/ci/stage-dsh-windows.ps1',
+        'scripts/ci/stage-helix-windows.ps1',
         'scripts/build_dsh_closure.py',
         'third_party/dsh',
         'third_party/node/v22.19.0/SHASUMS256.txt'

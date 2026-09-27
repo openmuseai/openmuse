@@ -37,6 +37,7 @@ fi
 cmp "$repo_root/third_party/dsh/package.json" "$dsh_closure/package.json"
 cmp "$repo_root/third_party/dsh/package-lock.json" "$dsh_closure/package-lock.json"
 python3 "$repo_root/scripts/build_dsh_closure.py" --out "$dsh_closure" --validate-only
+python3 "$repo_root/scripts/test_dsh_runtime.py" --node "$node_runtime/node" --closure "$dsh_closure"
 if [[ "${OPENMUSE_CLEAN_BUILD:-1}" == "1" ]]; then
   flutter clean
 fi

@@ -153,9 +153,11 @@ void main() {
     final opened = await controller.openHostResource(
       requestedPath: 'script.sh',
       cwd: root.path,
+      editorId: 'helix.editor',
     );
     expect(opened.displayName, 'script.sh');
     expect(controller.selected?.uri, opened.uri);
+    expect(controller.activeTab?.preferredEditorId, 'helix.editor');
     await expectLater(
       controller.openHostResource(requestedPath: other.path),
       throwsA(isA<FileSystemException>()),
@@ -236,6 +238,43 @@ void main() {
     expect(controller.activeTab?.diff?.before, 'before\n');
     expect(controller.activeTab?.diff?.after, 'before\nafter\n');
   });
+
+  test(
+    'version reads await editor flush and fail closed on flush errors',
+    () async {
+      final file = File('${root.path}/README.md');
+      await file.writeAsString('stale disk\n');
+      final resource = OpenMuseResource(
+        uri: file.uri,
+        displayName: 'README.md',
+      );
+      final store = LocalVersionStore(
+        Directory('${root.path}/.versions-flush'),
+      );
+      final controller = LocalWorkspaceController(
+        rootPath: root.path,
+        initialResources: [resource],
+        versionStore: store,
+      );
+      var flushes = 0;
+      controller.flushBeforeDiskRead = (_) async {
+        flushes++;
+        await file.writeAsString('flushed buffer\n');
+      };
+      final snapshot = await controller.captureVersion(resource);
+      expect(await store.read(snapshot), 'flushed buffer\n');
+      expect(flushes, 1);
+
+      controller.flushBeforeDiskRead = (_) async {
+        throw StateError('buffer cannot be flushed');
+      };
+      await expectLater(
+        controller.openDiff(resource, snapshot),
+        throwsStateError,
+      );
+      expect(controller.tabs, isEmpty);
+    },
+  );
 
   test(
     'two distinct saved versions compare their own immutable blobs',

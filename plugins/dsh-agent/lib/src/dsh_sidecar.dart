@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
@@ -12,6 +13,10 @@ final class DshSidecarSupervisor extends ChangeNotifier {
     : environment = environment ?? Platform.environment;
 
   final Map<String, String> environment;
+  final String bridgeToken = List<int>.generate(
+    32,
+    (_) => Random.secure().nextInt(256),
+  ).map((value) => value.toRadixString(16).padLeft(2, '0')).join();
   DshSidecarState state = DshSidecarState.stopped;
   Process? _process;
   Future<void>? _starting;
@@ -29,6 +34,16 @@ final class DshSidecarSupervisor extends ChangeNotifier {
     executablePath: Platform.resolvedExecutable,
     environment: environment,
   ).nodeExecutable;
+
+  String? get modelCapabilitiesPatch {
+    final cli = cliPath;
+    if (cli == null || !cli.endsWith('bin.js')) return null;
+    final nodeModules = File(cli).parent.parent.parent.parent;
+    final patch = File(
+      '${nodeModules.path}/dsh-model-capabilities/openmuse.patch.yml',
+    );
+    return patch.existsSync() ? patch.path : null;
+  }
 
   bool get hasModelKey => (environment['DEEPSEEK_API_KEY'] ?? '').isNotEmpty;
 
@@ -79,12 +94,16 @@ final class DshSidecarSupervisor extends ChangeNotifier {
       final command = dshWebCommand(
         cli,
         nodeExecutable: runtime.nodeExecutable,
+        patchPath: modelCapabilitiesPatch,
       );
       final reportedEndpoint = Completer<Uri>();
       final process = await Process.start(
         command.executable,
         command.arguments,
-        environment: dshLaunchEnvironment(environment, runtime.nodeExecutable),
+        environment: {
+          ...dshLaunchEnvironment(environment, runtime.nodeExecutable),
+          'OPENMUSE_DSH_BRIDGE_TOKEN': bridgeToken,
+        },
         workingDirectory: dshClosureRoot(cli),
       );
       _process = process;
@@ -286,12 +305,15 @@ Map<String, String> dshLaunchEnvironment(
 ({String executable, List<String> arguments}) dshWebCommand(
   String cli, {
   String nodeExecutable = 'node',
+  String? patchPath,
 }) => dshCommand(cli, [
   'web',
+  if (patchPath != null) ...['--patch', patchPath],
   '--host',
   '127.0.0.1',
   '--port',
   '0',
+  '--no-open',
 ], nodeExecutable: nodeExecutable);
 
 Future<void> waitForHttp(Uri uri, Duration timeout) async {
