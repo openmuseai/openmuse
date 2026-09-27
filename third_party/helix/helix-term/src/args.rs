@@ -41,7 +41,15 @@ impl Args {
                 .or_insert_with(|| vec![position]);
         };
 
-        argv.next(); // skip the program, we don't care about that
+        // flutter_pty builds a Windows command line as `<exe> <exe> <args>`,
+        // so the executable is both argv[0] and the first positional. Opening
+        // that binary is what made the editor show machine code as text.
+        let program = argv.next();
+        if let Some(program) = program {
+            if argv.peek().is_some_and(|next| next == &program) {
+                argv.next();
+            }
+        }
 
         while let Some(arg) = argv.next() {
             match arg.as_str() {

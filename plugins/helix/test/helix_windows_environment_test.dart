@@ -30,7 +30,7 @@ void main() {
     final file = File(
       '${Directory.systemTemp.path}${Platform.pathSeparator}openmuse_helix_probe.dart',
     );
-    await file.writeAsString('void main() {}\n');
+    await file.writeAsString('void main() { /* OPENMUSE_ENCODING_PROBE */ }\n');
     final pty = Pty.start(
       hx,
       arguments: [file.path],
@@ -49,7 +49,7 @@ void main() {
     });
     await Future<void>.delayed(const Duration(seconds: 2));
     expect(pty.pid, greaterThan(0));
-    expect(output.toString(), isNotEmpty);
+    expect(output.toString(), contains('OPENMUSE_ENCODING_PROBE'));
     pty.kill();
     await subscription.cancel();
   });

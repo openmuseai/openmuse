@@ -68,6 +68,7 @@ app.*.map.json
 # Rust build tree, so neither belongs in git.
 /third_party/helix/runtime/
 /third_party/helix/target/
+/vendors/
 
 # --- Release bundles ---------------------------------------------------------
 *.zip

@@ -17,7 +17,26 @@ fn setup_logging(verbosity: u64) -> Result<()> {
     Ok(())
 }
 
+/// ConPTY on a Chinese Windows install starts at code page 936. Helix writes
+/// UTF-8, and that code page treats the following bytes as one GBK character,
+/// so the editor surface turns into mojibake. UTF-8 (65001) keeps ASCII and
+/// the drawing sequences intact for the host terminal.
+#[cfg(windows)]
+fn enable_utf8_console() {
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn SetConsoleOutputCP(code_page: u32) -> i32;
+        fn SetConsoleCP(code_page: u32) -> i32;
+    }
+    unsafe {
+        SetConsoleOutputCP(65001);
+        SetConsoleCP(65001);
+    }
+}
+
 fn main() -> Result<()> {
+    #[cfg(windows)]
+    enable_utf8_console();
     let exit_code = main_impl()?;
     std::process::exit(exit_code);
 }
