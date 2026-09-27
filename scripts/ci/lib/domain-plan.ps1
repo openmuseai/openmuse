@@ -77,6 +77,8 @@ function Get-OpenMuseDomainPlan {
         'scripts/ci/stage-helix-windows.ps1',
         'scripts/build_dsh_closure.py',
         'third_party/dsh',
+        'third_party/helix',
+        'plugins/helix/assets/engines/helix/runtime',
         'third_party/node/v22.19.0/SHASUMS256.txt'
     )
     $plan['pack'] = @{

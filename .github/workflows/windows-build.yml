@@ -50,6 +50,9 @@ env:
   # non-ASCII would die with UnicodeEncodeError before doing its work.
   PYTHONUTF8: "1"
   PYTHONIOENCODING: "utf-8"
+  # Pack stages the pinned Helix runtime. The engine build.rs must not clone
+  # every tree-sitter grammar from a clean checkout.
+  HELIX_DISABLE_AUTO_GRAMMAR_BUILD: "1"
 
 jobs:
   windows:
@@ -104,6 +107,7 @@ jobs:
         with:
           path: |
             target
+            third_party/helix/target
             .muse-domain-cache/rust.json
           key: win-rust-${{ steps.domains.outputs.rust }}
 
@@ -138,6 +142,7 @@ jobs:
         with:
           path: |
             target
+            third_party/helix/target
             .muse-domain-cache/rust.json
           key: win-rust-${{ steps.domains.outputs.rust }}
 

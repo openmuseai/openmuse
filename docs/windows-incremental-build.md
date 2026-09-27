@@ -24,7 +24,7 @@ dart   ──┼─> flutter ──> pack（zip + SHA256SUMS + build-info）─�
 | `rust` | Rust crates 测试/构建 | `Cargo.toml`、`Cargo.lock`、`crates/**` 的提交、`rustc -V`、`cargo -V`、MSVC 工具集、Windows SDK | `target/` |
 | `dart` | Dart 包与 host 的分析和测试 | `app/**`、`packages/**`、`plugins/**`、`distribution/**`、`contracts/**`、`schemas/**` 的提交、Flutter/Dart 版本 | 无（纯门禁） |
 | `flutter` | Flutter Windows 宿主构建 | 同 `dart`（源码身份一致），加 Flutter/Dart 版本、MSVC/SDK/CMake/Ninja | `app/openmuse_host/build/windows/**` |
-| `pack` | 归档、校验和、构建信息 | 前三个域的指纹 + `scripts/package_windows.ps1`、`scripts/ci/build-windows.ps1`、`scripts/ci/lib/**` 的提交 | `dist/OpenMuse-windows-x64.zip` 等 |
+| `pack` | 归档、校验和、构建信息 | 前三个域的指纹 + `scripts/package_windows.ps1`、`scripts/ci/build-windows.ps1`、`scripts/ci/lib/**`、`scripts/ci/stage-dsh-windows.ps1`、`scripts/ci/stage-helix-windows.ps1`、`third_party/dsh`、`third_party/helix`、Helix runtime 的提交 | `dist/OpenMuse-windows-x64.zip` 等 |
 
 两个刻意的设计选择：
 
@@ -64,7 +64,7 @@ pwsh scripts/ci/domain-fingerprints.ps1 -Profile release -RustTarget x86_64-pc-w
 
 | 域 | 缓存路径 | key | 命中后的行为 |
 | --- | --- | --- | --- |
-| `rust` | `target`、`.muse-domain-cache/rust.json` | `win-rust-<fp>` | `build-windows.ps1` 跳过 rust 域 |
+| `rust` | `target`、`third_party/helix/target`、`.muse-domain-cache/rust.json` | `win-rust-<fp>` | `build-windows.ps1` 跳过 rust 域；Helix 的 cargo 产物留给 `pack` 增量编译 |
 | `flutter` | `app/openmuse_host/build/windows`、`.muse-domain-cache/flutter.json` | `win-flutter-<fp>` | 跳过 `flutter build windows`；`pack` 直接用已有 Release 目录 |
 
 YAML 里不出现任何构建命令（除 `build-windows.ps1` 的调用）。恢复用

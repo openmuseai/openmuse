@@ -42,6 +42,19 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $PSNativeCommandUseErrorActionPreference = $false
 
+function Get-RepoRoot {
+    return (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+}
+
+if ([string]::IsNullOrWhiteSpace($Repository)) {
+    $origin = ''
+    try {
+        $origin = (& git -C (Get-RepoRoot) remote get-url origin 2>$null | Select-Object -First 1)
+    } catch { }
+    if ($origin -match 'github\.com[:/](?<repo>[^/]+/[^/.]+?)(?:\.git)?\s*$') {
+        $Repository = $Matches['repo']
+    }
+}
 if ([string]::IsNullOrWhiteSpace($Repository)) {
     throw "Pass -Repository OWNER/REPO to select this project's GitHub repository."
 }
@@ -147,10 +160,6 @@ $headers = @{
     'X-GitHub-Api-Version' = '2022-11-28'
 }
 $api = "https://api.github.com/repos/$Repository"
-
-function Get-RepoRoot {
-    return (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
-}
 
 if ([string]::IsNullOrWhiteSpace($Ref)) {
     $Ref = (& git -C (Get-RepoRoot) rev-parse --abbrev-ref HEAD).Trim()

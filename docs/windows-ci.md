@@ -14,6 +14,8 @@ Rust crates（`crates/`）和打包脚本（`scripts/`）都在同一个 checkou
 | `.github/workflows/desktop-gates.yml` | push/PR 门禁；Windows job 调 `build-windows.ps1`，macOS job 调 `build-macos.sh` |
 | `scripts/ci/bootstrap-windows.ps1` | 装 rustup target、开 Windows desktop、precache Flutter 产物，并报告工具链身份 |
 | `scripts/ci/build-windows.ps1` | **唯一的构建入口**：rust / dart / flutter / pack / verify 五个阶段 |
+| `scripts/ci/stage-dsh-windows.ps1` | 组装固定 Node 22.19.0 + DSH npm closure，拷到 `OpenMuse.exe` 旁边 |
+| `scripts/ci/stage-helix-windows.ps1` | `cargo build -p helix-term` 产出 `hx.exe`，连同 pinned runtime 打进 Flutter assets |
 | `scripts/ci/lib/domains.ps1` | 指纹、工具链身份、域标记的读写 |
 | `scripts/ci/lib/domain-plan.ps1` | 域的定义（输入、产物、是否可缓存），指纹脚本和构建脚本共用 |
 | `scripts/ci/domain-fingerprints.ps1` | 只算 key，导出给 workflow 的 `actions/cache` |
@@ -26,14 +28,20 @@ Rust crates（`crates/`）和打包脚本（`scripts/`）都在同一个 checkou
 
 ## 前置条件
 
-- 仓库里不需要任何 vendored 二进制才能出 Windows 包：`package_windows.ps1` 只依赖 Flutter 与
-  Rust 工具链，Helix 引擎资产（`hx.exe`）尚未纳入本仓库，插件在缺少引擎时会走"引擎未内置"路径。
+- Windows 包在 `pack` 阶段现场编译 Helix：`scripts/ci/stage-helix-windows.ps1` 从
+  `third_party/helix` 打出 `hx.exe`，再把 `plugins/helix/assets/engines/helix/runtime`
+  拷进 `data/flutter_assets/.../engines/helix/`。仓库里 pin 的 `hx` 仍是 macOS 通用二进制，
+  不会打进 Windows 归档。`HELIX_DISABLE_AUTO_GRAMMAR_BUILD=1` 必须打开，否则 `helix-term`
+  的 `build.rs` 会在干净 checkout 里去 clone 全部 tree-sitter 语法。
+- DSH 同样在 `pack` 阶段组装：固定 Node `22.19.0` + `third_party/dsh` 的 npm closure，
+  落到 `openmuse/dsh/`。`verify` 会检查 `node.exe`、`bin.js`、`hx.exe` 和
+  `runtime/languages.toml`。
 - `workflow_dispatch` 要求 workflow 文件已经在该仓库的**默认分支**上。第一次添加
   `windows-build.yml` 后必须先 push 到 `main`，才能用 `remote-build-windows.ps1` 触发。
 
 ### 推送权限
 
-`scripts/ci/*` 按 `-Token` → `OPENMUSE_TOKEN`（先进程、再用户环境变量）→ `GH_TOKEN` /
+`scripts/ci/*` 按 `-Token` → `OPENMUSE_TOKEN`（进程、用户、**机器**环境变量）→ `GH_TOKEN` /
 `GITHUB_TOKEN` → `gh auth token` → git 已存凭据的顺序取用，所以推送和触发 workflow 都不需要再登录。
 换 token 时：
 
@@ -66,10 +74,11 @@ setx OPENMUSE_TOKEN "<新的 classic PAT，需 repo + workflow>"
 本地触发（不需要 gh CLI）：
 
 ```powershell
-cd D:\agentic\src\openmuse-io\Muse-Client
-pwsh scripts/ci/remote-build-windows.ps1 -Repository OWNER/REPO -Push
-pwsh scripts/ci/remote-build-windows.ps1 -Repository OWNER/REPO -Inputs @{ skip_tests = 'true'; force_rebuild = 'true' }
-pwsh scripts/ci/remote-build-windows.ps1 -Repository OWNER/REPO -RunId 123456789 -DownloadLogs
+cd D:\openmuse-io\openmuse
+# origin 指向 github.com/openmuseai/openmuse 时可省略 -Repository
+pwsh scripts/ci/remote-build-windows.ps1 -Push
+pwsh scripts/ci/remote-build-windows.ps1 -Inputs @{ skip_tests = 'true'; force_rebuild = 'true' }
+pwsh scripts/ci/remote-build-windows.ps1 -RunId 123456789 -DownloadLogs
 ```
 
 ## 产物
@@ -80,13 +89,14 @@ pwsh scripts/ci/remote-build-windows.ps1 -Repository OWNER/REPO -RunId 123456789
 - `SHA256SUMS.txt`（归档的 SHA-256）
 - `build-info.txt`（commit、profile、构建时间、工具链版本、**各域是 cache 还是 build**）
 
-`build-windows.ps1` 的 `verify` 阶段会自己校验归档里存在 `OpenMuse.exe`、`flutter_windows.dll`
-和 `data/app.so`，并核对 `SHA256SUMS.txt`，所以上传的产物不可能是半成品。
+`build-windows.ps1` 的 `verify` 阶段会自己校验归档里存在 `OpenMuse.exe`、`flutter_windows.dll`、
+`data/app.so`、随包 Node/DSH CLI 和 `hx.exe` + `runtime/languages.toml`，并核对 `SHA256SUMS.txt`，
+所以上传的产物不可能是半成品。
 
 ## 本地复现（和 CI 完全一致）
 
 ```powershell
-cd D:\agentic\src\openmuse-io\Muse-Client
+cd D:\openmuse-io\openmuse
 
 # 1. 环境：rustup target + Windows desktop + Flutter windows 产物
 pwsh scripts\ci\bootstrap-windows.ps1
@@ -123,10 +133,10 @@ pwsh scripts\ci\build-windows.ps1 -DomainCacheDir .muse-domain-cache
 | Bootstrap（`flutter precache --windows`） | 首次 36 s，Flutter 缓存命中后 7 s |
 | Domain fingerprints | 5 s |
 | rust 域（`cargo test --workspace --locked`） | 冷构建约 1 min；命中后 0 |
-| dart 域（14 个包 + host 的 pub get/analyze/test） | 3-4 min，**每次都会跑** |
+| dart 域（Dart 包 + host 的 pub get/analyze/test） | 3-4 min，**每次都会跑** |
 | flutter 域（`flutter build windows --release`） | 冷构建约 2-3 min；命中后 0 |
-| pack + verify + 上传 | <5 s |
-| **整个 job** | **冷 9m16s / 热 6m57s**（见下表） |
+| pack（DSH closure + `hx.exe` + zip + verify） | 首次编译 Helix 约 15 min，增量约 2 min；DSH npm 约 1 min |
+| **整个 job** | 含 Helix 冷构建预计 25–40 min（见下表的历史数据是 Helix 入包之前的） |
 
 job `timeout-minutes: 120`；缓存策略见 [`windows-incremental-build.md`](windows-incremental-build.md)。
 实测 CI（commit `f39d949`，同一 commit 连续两次 dispatch）：
@@ -160,34 +170,33 @@ job `timeout-minutes: 120`；缓存策略见 [`windows-incremental-build.md`](wi
 拉失败日志：
 
 ```powershell
-pwsh scripts/ci/remote-build-windows.ps1 -Repository OWNER/REPO -RunId 123456789 -DownloadLogs
+pwsh scripts/ci/remote-build-windows.ps1 -RunId 123456789 -DownloadLogs
 # 解压到 tmp/ci-logs/run-<id>/
 ```
 
 ## 已验证 / 未验证
 
-- **已验证**：
-  - 本机（Windows + Flutter 3.44.2 + MSVC 14.50）：`cargo test --workspace --locked`、14 个 Dart 包的
-    `pub get`/`analyze`/`test`、host 的 `analyze`/`test`（32 passed / 1 skipped）、
-    `flutter build windows --release` 和 `dist/OpenMuse-windows-x64.zip` + `verify` 全部通过；
-    冷构建与缓存复用两次的归档**逐字节一致**。
-  - 远程：`windows-build.yml` 冷（[35857369632](https://github.com/openmuseai/muse-clients/actions/runs/35857369632)）、
-    热（[35858799593](https://github.com/openmuseai/muse-clients/actions/runs/35858799593)）两次
-    `completed/success`，产物 `OpenMuse-windows-<sha>.zip`（12.4 MB）已下载核对，归档 SHA-256 与
-    `SHA256SUMS.txt` 一致；`diagnose-windows.yml`
-    （[35860044525](https://github.com/openmuseai/muse-clients/actions/runs/35860044525)）同样成功。
-    合并 macOS 改动之后又跑了一次（[35865981739](https://github.com/openmuseai/muse-clients/actions/runs/35865981739)，
-    `c50a192`）：477 s、`completed/success`，产物 12.4 MB / 18 个条目，里面**没有** 56 MB 的 macOS
-    引擎二进制，`openmuse_dark.toml` 在包内，归档哈希 `dd58110f63d3f3a1…` 与 `SHA256SUMS.txt` 一致。
-  - `desktop-gates.yml`（[35865929450](https://github.com/openmuseai/muse-clients/actions/runs/35865929450)）：
-    push 触发的门禁里 **Windows 和 macOS 两个 job 都是 `success`**。Windows job 与
-    `windows-build.yml` 调的是同一个 `build-windows.ps1`；macOS job 在 `f91bc1e` 之后接的是真正的
-    `scripts/ci/build-macos.sh`（`continue-on-error` 已移除），所以门禁会如实反映两个平台。
+- **已验证（本机，2026-09-27，`openmuseai/openmuse`）**：
+  - Flutter 3.44.2 + rustc 1.98.1 + MSVC 14.29：`build-windows.ps1` 产出
+    `dist/OpenMuse-windows-x64.zip`，归档 SHA-256
+    `33060096a835c10f8d3b715400d1cb1b338985ce7d0264e940271061470ccff7`。
+  - 工作区添加走原生文件夹选择器（`#32770`，标题「选择工作区文件夹」）。
+  - 随包 Node 拉起 DSH Web UI；WebView2 作为 Flutter 视图的兄弟窗口叠在右侧面板上，
+    本机 HTTP 可达。
+  - `hx.exe` 随包。`flutter_pty` 在 Windows 上会把可执行文件写进 argv 两次，Helix 必须丢掉
+    这个重复项，否则会把 `hx.exe` 当文档打开（状态栏出现 `windows-1252`，编辑区是乱码）。
+    启动时把控制台代码页设为 65001。PTY 环境必须带上 `SystemRoot` 和 `Path`。
+  - open-file-viewer 在 Windows 上用 `Image.file` 打开栅格图，Markdown/SVG 走文本预览；
+    PDF 目前只校验并显示页数，没有嵌入页面渲染器。
+- **历史远程数据**（当时仓库是 `openmuseai/muse-clients`，Helix/DSH 尚未随包）：
+  `windows-build.yml` 冷
+  [35857369632](https://github.com/openmuseai/muse-clients/actions/runs/35857369632)、
+  热 [35858799593](https://github.com/openmuseai/muse-clients/actions/runs/35858799593)
+  均为 `completed/success`。这些数字不能代表当前 `openmuseai/openmuse` 的产物体积或耗时。
 - **未验证**：Windows 安装器（Inno Setup / MSIX）、代码签名、SBOM 与完整第三方 notices；
-  Windows 上的 PNG/PDF Viewer 原生渲染；**Windows 的 Helix 引擎资产**——仓库里 pin 的
-  `plugins/helix/assets/engines/helix/hx` 是 macOS 通用二进制（56 MB，Mach-O `cafebabe`），
-  Windows 需要的 `hx.exe` 不在仓库里，`resolveHelixExecutable()` 因此会退回到 PATH 上的 `hx`，
-  打包目录里没有引擎可执行文件，编辑器面板在真机上只能显示"引擎未内置"。
+  Windows 上的 PDF 页面渲染；tree-sitter 语法高亮用的 `.dll`（当前 runtime 仍以 macOS
+  `.dylib` 为主，不影响打开文件）；正式 GitHub Windows 出包在本页更新后的下一次
+  `windows-build.yml` 运行中验收。
 
 
 ## macOS

@@ -1,6 +1,6 @@
 # OpenMuse 本地工作台功能对齐矩阵
 
-更新：2026-09-24。范围仅为 `Muse-Client` 新工程与历史客户端中可证明为自研的功能语义；历史工程中的 UI、账号/云/协作代码不迁入。本表中的“旧”路径是历史客户端源码树内的相对路径，仅作来源记录；“新”路径均相对于 `Muse-Client/`。截图仅用于验收样式，不是实现规范或授权证明。发布边界仍以 `CODE-REUSE-PROVENANCE.zh-CN.md` 为准。
+更新：2026-09-27。范围仅为本仓库与历史客户端中可证明为自研的功能语义；历史工程中的 UI、账号/云/协作代码不迁入。本表中的“旧”路径是历史客户端源码树内的相对路径，仅作来源记录；“新”路径均相对于仓库根。截图仅用于验收样式，不是实现规范或授权证明。发布边界仍以 `CODE-REUSE-PROVENANCE.zh-CN.md` 为准。
 
 ## 功能、实现逻辑与落点
 
@@ -11,8 +11,8 @@
 | 资源抽象与编辑器注册 | `plugins/resource_surface/engine_registry.dart`、`engines/{register,ioffice,helix,open_file_viewer}.dart`：格式在引擎内声明，priority iOffice 30 / Helix 20 / Viewer 10，Viewer catch-all；`resource_surface_session.dart` 管理活动会话 | `packages/openmuse_plugin_sdk/lib/openmuse_plugin_sdk.dart` 的 Contribution/Registry；`plugins/{helix,open-file-viewer}` 自声明扩展名；`app/.../local_settings.dart` 持久化默认引擎 | 已移除 Host 格式表；默认引擎优先于优先级，Viewer catch-all 给未知类型说明页；iOffice 尚未通过许可证/运行时门禁，因此菜单禁用，不假装可用。长线应适配已迁入的 `muse_resource_contract`/`muse_surface_orchestrator`，避免双状态机 |
 | “打开方式”与默认引擎 | `resource_open_with_menu.dart`：二级菜单列出三个引擎，不支持的灰掉、当前引擎打勾；`resource_open_defaults.dart` 按扩展名持久化；`resource_tab_actions.dart` 注册菜单 | `workbench_shell.dart` `_showOpenWithMenu`，`local_settings.dart` 默认映射，`_EditorArea` 选择默认引擎 | 树/Tab 均只有一项“打开方式”，可向右进入引擎及默认设置；当前实现为点击级联，尚未达到旧版鼠标悬停级联，列为视觉/交互门禁 |
 | 版本保存与历史 | `plugins/version_diff/application/text_version_repository.dart`、`text_version_diff_service.dart` 保存 committed / working 状态；`presentation/resource_version_pane.dart` 打开前 flush 编辑器、自动保存脏内容，历史版本可对当前版本或另一版本比较；`version_history_dialog.dart` 审计 | `workspace_controller.dart` `LocalVersionStore`/`openVersionComparison`；`workbench_shell.dart` 版本历史与 Diff | 已能比较两个不同历史 blob，拒绝同一版本自比，Diff Tab ID 含两端身份；**未完成** Helix buffer flush/自动保存、审计图和统一/并排算法与旧版同级验证；二进制不应进文本 Diff |
-| Helix PTY、启动、导航、语法、LS | `plugins/resource_surface/helix/{helix_commands,helix_settings,helix_language_servers}.dart`，`surfaces/helix_resource_surface.dart`：PTY、快捷键、tree-sitter 安装/状态、各语言 LS 安装/覆盖/检查、`languages.toml` 生成 | `plugins/helix/lib/src/{helix_runtime,helix_preferences,helix_editor_surface,helix_language_servers}.dart`，`openmuse_helix_plugin.dart` | `.sh` 等格式登记已补齐；不同文件使用独立 PTY、已开文件会话复用。新增 Helix 编辑区右键导航菜单、17 种 LS 条目、可执行文件及配置路径；Rust 与部分 npm 来源可一键安装。跨文件导航后 Host Tab 仍不会跟随，属于发布阻断项。首帧闪烁、安装进度/取消/供应链锁定、Windows 尚需验证 |
-| Viewer PNG/PDF/未知格式 | `plugins/resource_surface/engines/open_file_viewer.dart` + `surfaces/open_file_viewer_resource_surface.dart` | `plugins/open-file-viewer/lib/openmuse_file_viewer.dart` + macOS AppKit native view | PNG/PDF 由原生适配器处理，未知格式显示安装插件提示而非错误渲染；Windows 原生 viewer 尚未过门禁 |
+| Helix PTY、启动、导航、语法、LS | `plugins/resource_surface/helix/{helix_commands,helix_settings,helix_language_servers}.dart`，`surfaces/helix_resource_surface.dart`：PTY、快捷键、tree-sitter 安装/状态、各语言 LS 安装/覆盖/检查、`languages.toml` 生成 | `plugins/helix/lib/src/{helix_runtime,helix_preferences,helix_editor_surface,helix_language_servers}.dart`，`openmuse_helix_plugin.dart` | `.sh` 等格式登记已补齐；不同文件使用独立 PTY、已开文件会话复用。新增 Helix 编辑区右键导航菜单、17 种 LS 条目、可执行文件及配置路径；Rust 与部分 npm 来源可一键安装。Windows 包由 `stage-helix-windows.ps1` 现场编译 `hx.exe` 并随包；`flutter_pty` 重复 argv 已在引擎侧丢掉。跨文件导航后 Host Tab 仍不会跟随，属于发布阻断项。首帧闪烁、安装进度/取消/供应链锁定仍需验证 |
+| Viewer PNG/PDF/未知格式 | `plugins/resource_surface/engines/open_file_viewer.dart` + `surfaces/open_file_viewer_resource_surface.dart` | `plugins/open-file-viewer/lib/openmuse_file_viewer.dart` + macOS AppKit native view | macOS 仍走 AppKit；Windows 栅格图用 `Image.file`，Markdown/SVG 走文本预览，PDF 只校验并显示页数，没有嵌入页面渲染器 |
 | DSH 本地 sidecar 与模型选择 | `plugins/dsh_agent/{dsh_sidecar,dsh_runtime,dsh_embedded_view}.dart`；旧 sidecar 错误地将 DeepSeek Key 作为启动前提，最新 DSH 浏览器 UI 可以启动后再配置 provider/model | `plugins/dsh-agent/lib/src/{dsh_sidecar,dsh_panel,dsh_web_view}.dart`；Host 只提供 Workspace 快照与受控 openResource command；`scripts/build_dsh_closure.py` 从本仓库 `third_party/dsh` 固定 tarballs/lockfile 组装产品中立的 DSH npm closure，`scripts/package_macos.sh` 直接装入本仓库固定 Node 输入构成的 Universal Node + closure | 已去掉 DeepSeek Key 启动门槛、移除最新版不接受的 `--no-open`、将工作区 Home 正确传给 `DSH_HOME`。面板默认可见且仅设置控制。真实 Release App 已显示最新版 DSH 对话、模型选择器与 Workspace 列表，当前还保留 DSH 自身侧栏，和旧单列面板样式不一致；模型配置交互仍需无 Key 点选门禁 |
 | Workspace ↔ DSH 同步 | `plugins/dsh_agent/dsh_workspace_bridge.dart` 发布 binding、locator 与 active Mount intent；旧 DSH 侧由产品专用 Workspace adapter 消费，该插件属隔离清单，不能直接带入 | `plugins/dsh-agent/lib/src/{dsh_workspace_binding,dsh_workspace_sync}.dart` 订阅 Host `hostChanges`，通过新第一方 `openmuse-dsh-bridge` 的带 token HTTP 接口登记 Mount；WKWebView 的 `MuseHostWorkspace` 与 DSH 客户端插件处理当前工作区双向切换 | 最新版 DSH 0.1.7-rc.1 不提供旧 `/api/workspace.*` RPC。新版真实 sidecar 登记、缺失 token 拒绝、Flutter 集成及客户端单元测试通过；真实 WKWebView 双向切换仍待手测。不会删除用户独立创建的 DSH workspace |
 | DSH 对话中打开文件 | `plugins/dsh_agent/dsh_embedded_view.dart` 的 `resource.open` bridge，Host 端解路径并进入资源 Tab | 官方 `@deepseek-ai/dsh-client-ui-chat` 默认调用 `sidebarRight.openResource`，所以文件在 DSH 自己的预览区打开；新第一方 `openmuse-dsh-bridge` 仅在嵌入 Host 时接管文件地址，走 `MuseHostResource` → Swift/Dart → Host `workspace.openResource` | 客户端模块图、桥单元测试、Host 路径边界测试通过；真实会话中点击文件尚未端到端验证，不能称已完全修复；Windows WebView 尚缺 |
@@ -71,6 +71,14 @@
 - `third_party/helix` 固定上游 Helix `079a789e` 源码并在引擎内实现版本化 `input-profile`、非模态首次输入、Esc 不进入 Normal/Select、空闲/粘贴撤销检查点。旧 `vscodeKeymap` 不会自动升级。macOS 双架构 `hx` 从本仓库源码重建，版本标记为 `openmuse-nonmodal.2`；其独立本地 socket 已输出活动文件/dirty/save 事件，Host 仅在工作区路径授权成功后跟随活动文件并指定 Helix Tab。真实 LSP 跨文件、Cmd/剪贴板/IME 与双向 buffer flush 门禁未完成，发布 UI 仍禁用实验 profile。
 - 13 个测试专用 macOS arm64 tree-sitter 语法库与许可证已收入本仓库，不进入产品包。Helix term/view 库测试 15 + 68 项、完整终端集成测试 178 项、Helix 插件 6 项、Host 33 项均通过；`cargo fmt --check`、macOS Release 构建、深度签名与 ZIP 完整性校验通过。
 - 该阶段 macOS ZIP 的 SHA-256 为 `f36bcaa58a27e9f48e806fd6739ac8999da9f2c4db9e604c75d41c9c00e03e7f`；已被后续构建替换。
+
+### 2026-09-27 Windows 宿主、DSH 与 Helix
+
+- 添加工作区走原生文件夹选择器，不再手输路径。
+- DSH sidecar 用随包 Node 启动，`--patch` + `OPENMUSE_DSH_BRIDGE_TOKEN` + closure 工作目录一并传入；WebView2 挂在顶层窗口并叠在 Flutter 视图之上。
+- Helix：`hx.exe` 与 runtime 打进 Windows 归档；PTY 转发完整 Windows 环境；引擎忽略 `flutter_pty` 重复的可执行文件参数，并把控制台代码页设为 UTF-8。
+- Viewer：Windows 栅格图可预览，Markdown/SVG 可读，PDF 尚无页面渲染。
+- 出包入口仍是 `scripts/ci/build-windows.ps1`。GitHub 仓库是 `openmuseai/openmuse`，`windows-build.yml` 仅 `workflow_dispatch` 与 `v*` tag。
 
 ### 2026-09-26 Helix 非模态引擎第三阶段
 

@@ -21,6 +21,9 @@ function Install-OpenMuseHelix {
 
     Push-Location $source
     try {
+        # The Host stages the already-pinned runtime from plugins/helix.
+        # Helix's build.rs would otherwise clone every tree-sitter grammar.
+        $env:HELIX_DISABLE_AUTO_GRAMMAR_BUILD = '1'
         & cargo build -p helix-term --release --locked
         if ($LASTEXITCODE -ne 0) { throw "cargo build helix-term failed ($LASTEXITCODE)" }
     } finally {
