@@ -103,6 +103,13 @@ migrate_working_dir/
 *.class
 *.pyc
 
+# --- Local credentials (never commit) ----------------------------------------
+/chelsea-muse
+/chelsea-muse.pub
+id_rsa
+id_rsa.pub
+*.pem
+
 # --- OS noise ----------------------------------------------------------------
 .DS_Store
 ._*
