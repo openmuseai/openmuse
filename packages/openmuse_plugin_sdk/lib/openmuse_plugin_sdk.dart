@@ -38,6 +38,14 @@ final class OpenMuseEditorCandidate {
 }
 
 @immutable
+final class OpenMusePanelCandidate {
+  const OpenMusePanelCandidate({required this.plugin, required this.panel});
+
+  final OpenMusePlugin plugin;
+  final OpenMusePanelContribution panel;
+}
+
+@immutable
 final class OpenMuseEditorContribution {
   const OpenMuseEditorContribution({
     required this.id,
@@ -98,6 +106,22 @@ final class OpenMusePluginContext {
 
   /// Invalidates read-only Host snapshots; plugins re-query through commands.
   final Listenable? hostChanges;
+}
+
+/// Host chrome that a panel can place on its own toolbar instead of a
+/// dedicated title row. `trailing` is typically the pane overflow menu.
+final class OpenMuseSurfaceChrome extends InheritedWidget {
+  const OpenMuseSurfaceChrome({super.key, this.trailing, required super.child});
+
+  final Widget? trailing;
+
+  static Widget? trailingOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<OpenMuseSurfaceChrome>()
+      ?.trailing;
+
+  @override
+  bool updateShouldNotify(OpenMuseSurfaceChrome oldWidget) =>
+      trailing != oldWidget.trailing;
 }
 
 abstract interface class OpenMusePlugin {
@@ -229,6 +253,24 @@ final class OpenMusePluginRegistry extends ChangeNotifier {
       ),
       orElse: () => null,
     );
+  }
+
+  List<OpenMusePanelCandidate> panelCandidates({
+    OpenMuseSurfaceRegion? defaultRegion,
+  }) => [
+    for (final plugin in _plugins.values)
+      for (final panel in plugin.descriptor.panels)
+        if (defaultRegion == null || panel.region == defaultRegion)
+          OpenMusePanelCandidate(plugin: plugin, panel: panel),
+  ];
+
+  OpenMusePlugin? panelProviderById(String panelId) {
+    for (final plugin in _plugins.values) {
+      if (plugin.descriptor.panels.any((panel) => panel.id == panelId)) {
+        return plugin;
+      }
+    }
+    return null;
   }
 
   Future<void> ensureActive(OpenMusePlugin plugin) =>

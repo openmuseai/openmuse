@@ -43,6 +43,11 @@ void main() {
     expect(registry.editorFor(markdown), same(text));
     expect(registry.editorFor(unknown), same(fallback));
     expect(registry.editorFor(markdown, editorId: 'fallback'), same(fallback));
+    expect(registry.panelProviderById('test.panel'), same(text));
+    expect(
+      registry.panelCandidates().map((candidate) => candidate.panel.id),
+      contains('test.panel'),
+    );
   });
 }
 
@@ -85,6 +90,12 @@ final class _TestPlugin implements OpenMusePlugin {
     runtime: OpenMusePluginRuntime.builtIn,
     editors: [
       OpenMuseEditorContribution(id: 'test', extensions: {'md'}, priority: 1),
+    ],
+    panels: [
+      OpenMusePanelContribution(
+        id: 'test.panel',
+        region: OpenMuseSurfaceRegion.rightSidebar,
+      ),
     ],
   );
 
