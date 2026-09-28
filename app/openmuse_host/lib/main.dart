@@ -8,6 +8,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'src/host/design_system.dart';
+import 'src/host/layout/layout.dart';
+import 'src/host/layout/surface_mutation_guard.dart';
 import 'src/host/local_settings.dart';
 import 'src/host/openmuse_app.dart';
 import 'src/host/workspace_controller.dart';
@@ -25,6 +27,11 @@ Future<Widget> bootOpenMuseHost() async {
     file: File(p.join(support.path, 'OpenMuse', 'settings-v1.json')),
   );
   await settings.load();
+  final layoutStore = LayoutStore(
+    File(p.join(support.path, 'OpenMuse', 'layout-v1.json')),
+    fallback: _layoutFallback(settings),
+  );
+  final layoutController = WorkbenchLayoutController(await layoutStore.load());
   final mountStore = WorkspaceMountStore(
     File(p.join(support.path, 'OpenMuse', 'workspace-mounts-v1.json')),
   );
@@ -122,7 +129,9 @@ Future<Widget> bootOpenMuseHost() async {
     for (final descriptor in registry.descriptors) {
       final plugin = registry.plugin(descriptor.id);
       if (plugin is OpenMuseBufferFlushContributor) {
-        await (plugin as OpenMuseBufferFlushContributor).flushResource(resource);
+        await (plugin as OpenMuseBufferFlushContributor).flushResource(
+          resource,
+        );
       }
     }
   };
@@ -130,6 +139,25 @@ Future<Widget> bootOpenMuseHost() async {
     registry: registry,
     workspace: controller,
     settings: settings,
+    layoutController: layoutController,
+    layoutStore: layoutStore,
+    mutationGuards: SurfaceMutationGuards(),
+  );
+}
+
+WorkbenchLayoutSnapshot _layoutFallback(OpenMuseLocalSettings settings) {
+  const assumedWindowWidth = 1440.0;
+  final sidebarRatio = ((settings.sidebarWidth ?? 300) / assumedWindowWidth)
+      .clamp(0.12, 0.36)
+      .toDouble();
+  final remaining = assumedWindowWidth * (1 - sidebarRatio);
+  final assistant = settings.assistantWidth ?? 420;
+  final editorRatio = ((remaining - assistant) / remaining)
+      .clamp(0.45, 0.82)
+      .toDouble();
+  return createDefaultWorkbenchLayout(
+    sidebarRatio: sidebarRatio,
+    editorRatio: editorRatio,
   );
 }
 

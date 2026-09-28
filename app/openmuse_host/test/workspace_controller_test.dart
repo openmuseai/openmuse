@@ -220,6 +220,45 @@ void main() {
     expect(controller.selected, isNull);
   });
 
+  test(
+    'editor groups keep independent active tabs and share resource authority',
+    () {
+      final first = OpenMuseResource(
+        uri: Uri.file('${root.path}/README.md'),
+        displayName: 'README.md',
+      );
+      final second = OpenMuseResource(
+        uri: Uri.file('${root.path}/notes.md'),
+        displayName: 'notes.md',
+      );
+      final controller = LocalWorkspaceController(
+        rootPath: root.path,
+        initialResources: [first, second],
+      );
+      final secondary = controller.createEditorGroup();
+
+      controller.openResource(first);
+      controller.focusEditorGroup(secondary.id);
+      controller.openResource(second);
+
+      expect(
+        controller
+            .activeTabFor(LocalWorkspaceController.primaryEditorGroupId)
+            ?.resource
+            .uri,
+        first.uri,
+      );
+      expect(controller.activeTabFor(secondary.id)?.resource.uri, second.uri);
+      expect(controller.focusedEditorGroupId, secondary.id);
+
+      controller.removeEditorGroup(secondary.id);
+      expect(
+        controller.focusedEditorGroupId,
+        LocalWorkspaceController.primaryEditorGroupId,
+      );
+    },
+  );
+
   test('content addressed versions open a diff tab', () async {
     final file = File('${root.path}/README.md');
     await file.writeAsString('before\n');

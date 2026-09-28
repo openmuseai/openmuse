@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -7,106 +7,551 @@ import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'design_system.dart';
+import 'layout/layout.dart';
+import 'layout/surface_mutation_guard.dart';
 import 'local_settings.dart';
-import 'settings_dialog.dart';
 import 'plugin_surface_host.dart';
+import 'settings_dialog.dart';
 import 'workspace_controller.dart';
 import 'workspace_picker.dart';
 
-final class OpenMuseWorkbench extends StatelessWidget {
+final class OpenMuseWorkbench extends StatefulWidget {
   const OpenMuseWorkbench({
     super.key,
     required this.registry,
     required this.workspace,
     required this.settings,
+    this.layoutController,
+    this.layoutStore,
+    this.mutationGuards,
   });
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
+  final WorkbenchLayoutController? layoutController;
+  final LayoutSnapshotWriter? layoutStore;
+  final SurfaceMutationGuards? mutationGuards;
+
+  @override
+  State<OpenMuseWorkbench> createState() => _OpenMuseWorkbenchState();
+}
+
+final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
+  static const _gutter = 6.0;
+  late final WorkbenchLayoutController _layout =
+      widget.layoutController ??
+      WorkbenchLayoutController(createDefaultWorkbenchLayout());
+  late final bool _ownsLayout = widget.layoutController == null;
+  Timer? _saveDebounce;
+  Size _lastSize = Size.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _ensureEditorGroups();
+    _layout.addListener(_layoutChanged);
+  }
+
+  @override
+  void dispose() {
+    final shouldFlush = _saveDebounce?.isActive ?? false;
+    _saveDebounce?.cancel();
+    if (shouldFlush) _persistLayout();
+    _layout.removeListener(_layoutChanged);
+    if (_ownsLayout) _layout.dispose();
+    super.dispose();
+  }
+
+  void _layoutChanged() {
+    _ensureEditorGroups();
+    final store = widget.layoutStore;
+    if (store == null) return;
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(milliseconds: 350), _persistLayout);
+  }
+
+  void _persistLayout() {
+    final store = widget.layoutStore;
+    if (store == null) return;
+    unawaited(
+      store.save(_layout.snapshot).catchError((Object error) {
+        debugPrint('Unable to persist workbench layout: $error');
+      }),
+    );
+  }
+
+  void _ensureEditorGroups() {
+    final existing = widget.workspace.editorGroups
+        .map((group) => group.id)
+        .toSet();
+    for (final binding in _layout.snapshot.bindings.values) {
+      const prefix = 'host.editorGroup:';
+      if (!binding.surfaceRef.startsWith(prefix)) continue;
+      final groupId = binding.surfaceRef.substring(prefix.length);
+      if (existing.add(groupId)) {
+        widget.workspace.createEditorGroup(groupId: groupId);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: Listenable.merge([workspace, settings]),
-    builder: (context, _) {
-      final rightPlugin = registry.panelProvider(
-        OpenMuseSurfaceRegion.rightSidebar,
-        panelId: 'dsh.agent',
-      );
-      final windowWidth = MediaQuery.sizeOf(context).width;
-      final hasRight = rightPlugin != null && settings.assistantVisible;
-      final sidebarWidth = workspace.sidebarVisible
-          ? (settings.sidebarWidth ??
-                    OpenMuseTokens.sidebarWidthFor(windowWidth))
-                .clamp(
-                  180.0,
-                  math.max(180.0, windowWidth - (hasRight ? 560 : 280)),
-                )
-                .toDouble()
-          : 0.0;
-      final assistantWidth = hasRight
-          ? (settings.assistantWidth ??
-                    OpenMuseTokens.assistantWidthFor(windowWidth))
-                .clamp(280.0, math.max(280.0, windowWidth - sidebarWidth - 280))
-                .toDouble()
-          : 0.0;
-      return Scaffold(
-        body: Row(
-          children: [
-            if (workspace.sidebarVisible) ...[
-              SizedBox(
-                width: sidebarWidth,
-                child: _WorkspaceSidebar(
-                  registry: registry,
-                  workspace: workspace,
-                  settings: settings,
-                ),
+    listenable: Listenable.merge([
+      widget.workspace,
+      widget.settings,
+      widget.registry,
+      _layout,
+    ]),
+    builder: (context, _) => Scaffold(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          _lastSize = constraints.biggest;
+          final snapshot = _layout.snapshot;
+          final hiddenPanes = _hiddenPaneIds(snapshot);
+          final visibleRoot = _withoutPanes(snapshot.root, hiddenPanes);
+          if (visibleRoot == null) {
+            return const Center(child: Text('没有可见窗格。请重置布局。'));
+          }
+          final geometry = const WorkbenchLayoutSolver().solve(
+            visibleRoot,
+            constraints.biggest,
+            gutter: _gutter,
+          );
+          final positionedBindings =
+              snapshot.bindings.entries
+                  .where((entry) => geometry.paneRects.containsKey(entry.key))
+                  .toList()
+                ..sort(
+                  (a, b) => a.value.instanceRef.compareTo(b.value.instanceRef),
+                );
+          return Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              const Positioned.fill(
+                child: ColoredBox(color: OpenMuseTokens.canvas),
               ),
-              _PaneResizer(
-                onDelta: (delta) => settings.setPaneWidth(
-                  sidebar: (settings.sidebarWidth ?? sidebarWidth) + delta,
+              for (final entry in geometry.paneRects.entries)
+                Positioned.fromRect(
+                  key: ValueKey('pane-background:${entry.key}'),
+                  rect: entry.value,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      border: Border.all(
+                        color: snapshot.focusedPaneId == entry.key
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).dividerColor,
+                      ),
+                    ),
+                  ),
                 ),
-                onEnd: settings.save,
-              ),
+              for (final entry in positionedBindings)
+                Positioned.fromRect(
+                  key: ValueKey(entry.value.instanceRef),
+                  rect: geometry.paneRects[entry.key]!,
+                  child: _BoundSurface(
+                    binding: entry.value,
+                    registry: widget.registry,
+                    workspace: widget.workspace,
+                    settings: widget.settings,
+                    paneMenu: _embeddedPaneMenu(context, snapshot, entry.key),
+                    onFocus: () => _focusPane(entry.key, entry.value),
+                  ),
+                ),
+              for (final divider in geometry.dividers)
+                Positioned.fromRect(
+                  key: ValueKey('layout-divider:${divider.path.join('.')}'),
+                  rect: divider.rect,
+                  child: _PaneResizer(
+                    axis: divider.axis,
+                    onDelta: (delta) {
+                      final extent = divider.axis == Axis.horizontal
+                          ? divider.containerRect.width - _gutter
+                          : divider.containerRect.height - _gutter;
+                      if (extent <= 0) return;
+                      final current = _layout.ratioBetween(
+                        divider.leadingPaneId,
+                        divider.trailingPaneId,
+                      );
+                      _layout.resizeBetween(
+                        divider.leadingPaneId,
+                        divider.trailingPaneId,
+                        (current + delta / extent).clamp(
+                          minSplitRatio,
+                          maxSplitRatio,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              for (final entry in geometry.paneRects.entries)
+                if (_showsOverlayPaneMenu(snapshot, entry.key))
+                  Positioned(
+                    key: ValueKey('pane-menu:${entry.key}'),
+                    left: entry.value.right - 30,
+                    top: entry.value.top + 8,
+                    width: 26,
+                    height: 26,
+                    child: _paneMenuButton(context, snapshot, entry.key),
+                  ),
             ],
-            Expanded(
-              child: _EditorArea(
-                registry: registry,
-                workspace: workspace,
-                settings: settings,
-              ),
-            ),
-            if (hasRight) ...[
-              _PaneResizer(
-                onDelta: (delta) => settings.setPaneWidth(
-                  assistant:
-                      (settings.assistantWidth ?? assistantWidth) - delta,
-                ),
-                onEnd: settings.save,
-              ),
-              SizedBox(
-                width: assistantWidth,
-                child: PluginPanelHost(
-                  registry: registry,
-                  plugin: rightPlugin,
-                  panelId: 'dsh.agent',
-                ),
-              ),
-            ],
-          ],
-        ),
-      );
-    },
+          );
+        },
+      ),
+    ),
   );
+
+  void _focusPane(String paneId, SurfaceBinding binding) {
+    _layout.focus(paneId);
+    const prefix = 'host.editorGroup:';
+    if (binding.surfaceRef.startsWith(prefix)) {
+      widget.workspace.focusEditorGroup(
+        binding.surfaceRef.substring(prefix.length),
+      );
+    }
+  }
+
+  bool _isPrimaryWorkspacePane(
+    WorkbenchLayoutSnapshot snapshot,
+    String paneId,
+  ) => snapshot.bindingFor(paneId)?.surfaceRef == 'host.workspaceExplorer';
+
+  bool _isEditorPane(WorkbenchLayoutSnapshot snapshot, String paneId) =>
+      snapshot.bindingFor(paneId)?.surfaceRef.startsWith('host.editorGroup:') ??
+      false;
+
+  bool _isDshPane(WorkbenchLayoutSnapshot snapshot, String paneId) =>
+      snapshot.bindingFor(paneId)?.surfaceRef == 'plugin.panel:dsh.agent';
+
+  bool _showsOverlayPaneMenu(WorkbenchLayoutSnapshot snapshot, String paneId) {
+    if (_isPrimaryWorkspacePane(snapshot, paneId) ||
+        _isEditorPane(snapshot, paneId)) {
+      return false;
+    }
+    if (_isDshPane(snapshot, paneId) &&
+        widget.registry.panelProviderById('dsh.agent') != null) {
+      return false;
+    }
+    return true;
+  }
+
+  Widget _paneMenuButton(
+    BuildContext context,
+    WorkbenchLayoutSnapshot snapshot,
+    String paneId,
+  ) => _PaneMenuButton(
+    paneId: paneId,
+    hasBinding: snapshot.bindingFor(paneId) != null,
+    panelCandidates: widget.registry.panelCandidates(),
+    onAction: (action) => _handlePaneAction(context, paneId, action),
+  );
+
+  Widget? _embeddedPaneMenu(
+    BuildContext context,
+    WorkbenchLayoutSnapshot snapshot,
+    String paneId,
+  ) => (_isEditorPane(snapshot, paneId) || _isDshPane(snapshot, paneId))
+      ? _paneMenuButton(context, snapshot, paneId)
+      : null;
+
+  Future<void> _handlePaneAction(
+    BuildContext context,
+    String paneId,
+    Object action,
+  ) async {
+    if (_isPrimaryWorkspacePane(_layout.snapshot, paneId)) return;
+    if (action case _BindPanelAction(:final candidate)) {
+      await _bindPluginPanel(context, paneId, candidate);
+      return;
+    }
+    if (action is! _PaneAction) {
+      throw ArgumentError.value(action, 'action', 'Unknown pane action.');
+    }
+    switch (action) {
+      case _PaneAction.splitRight:
+        _layout.splitPane(paneId, axis: Axis.horizontal);
+      case _PaneAction.splitDown:
+        _layout.splitPane(paneId, axis: Axis.vertical);
+      case _PaneAction.bindNewEditor:
+        final group = widget.workspace.createEditorGroup();
+        _layout.bind(
+          paneId,
+          SurfaceBinding(
+            bindingId: 'binding.${group.id}',
+            surfaceRef: 'host.editorGroup:${group.id}',
+            instanceRef: 'surface.${group.id}',
+            mobility: SurfaceMobility.snapshotRestore,
+          ),
+        );
+      case _PaneAction.swapLeft:
+        await _swapWithNeighbor(context, paneId, PaneDirection.left);
+      case _PaneAction.swapRight:
+        await _swapWithNeighbor(context, paneId, PaneDirection.right);
+      case _PaneAction.swapUp:
+        await _swapWithNeighbor(context, paneId, PaneDirection.up);
+      case _PaneAction.swapDown:
+        await _swapWithNeighbor(context, paneId, PaneDirection.down);
+      case _PaneAction.close:
+        await _closePane(context, paneId);
+      case _PaneAction.reset:
+        _layout.reset();
+        _removeUnboundEditorGroups();
+    }
+  }
+
+  Future<void> _bindPluginPanel(
+    BuildContext context,
+    String paneId,
+    OpenMusePanelCandidate candidate,
+  ) async {
+    final surfaceRef = 'plugin.panel:${candidate.panel.id}';
+    final source = _layout.snapshot.bindings.entries
+        .where((entry) => entry.value.surfaceRef == surfaceRef)
+        .firstOrNull;
+    if (source != null) {
+      await _moveSingletonTo(context, paneId, surfaceRef);
+      return;
+    }
+    if (_layout.snapshot.bindingFor(paneId) != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请先切分或选择一个空窗格，再绑定新的插件面板。')));
+      return;
+    }
+    final identity = '${candidate.plugin.descriptor.id}.${candidate.panel.id}';
+    _layout.bind(
+      paneId,
+      SurfaceBinding(
+        bindingId: 'binding.panel.$identity',
+        surfaceRef: surfaceRef,
+        instanceRef: 'surface.panel.$identity',
+        mobility: SurfaceMobility.snapshotRestore,
+      ),
+    );
+  }
+
+  Future<void> _moveSingletonTo(
+    BuildContext context,
+    String paneId,
+    String surfaceRef,
+  ) async {
+    final source = _layout.snapshot.bindings.entries
+        .where((entry) => entry.value.surfaceRef == surfaceRef)
+        .firstOrNull;
+    if (source == null || source.key == paneId) return;
+    final target = _layout.snapshot.bindingFor(paneId);
+    if (!await _prepareMutation(context, [
+      source.value.instanceRef,
+      if (target != null) target.instanceRef,
+    ], target == null ? SurfaceMutationKind.move : SurfaceMutationKind.swap)) {
+      return;
+    }
+    if (_layout.snapshot.bindingFor(paneId) == null) {
+      _layout.move(source.key, paneId);
+    } else {
+      _layout.swap(source.key, paneId);
+    }
+  }
+
+  Future<void> _swapWithNeighbor(
+    BuildContext context,
+    String paneId,
+    PaneDirection direction,
+  ) async {
+    final visibleRoot = _withoutPanes(
+      _layout.snapshot.root,
+      _hiddenPaneIds(_layout.snapshot),
+    );
+    final neighbor = visibleRoot == null
+        ? null
+        : const WorkbenchLayoutSolver()
+              .solve(visibleRoot, _lastSize, gutter: _gutter)
+              .findNeighbor(paneId, direction);
+    if (neighbor == null) return;
+    if (_isPrimaryWorkspacePane(_layout.snapshot, paneId) ||
+        _isPrimaryWorkspacePane(_layout.snapshot, neighbor)) {
+      return;
+    }
+    final refs = [
+      _layout.snapshot.bindingFor(paneId)?.instanceRef,
+      _layout.snapshot.bindingFor(neighbor)?.instanceRef,
+    ].whereType<String>();
+    if (await _prepareMutation(context, refs, SurfaceMutationKind.swap)) {
+      _layout.swap(paneId, neighbor);
+    }
+  }
+
+  Set<String> _hiddenPaneIds(WorkbenchLayoutSnapshot snapshot) => {
+    for (final entry in snapshot.bindings.entries)
+      if ((!widget.workspace.sidebarVisible &&
+              entry.value.surfaceRef == 'host.workspaceExplorer') ||
+          (!widget.settings.assistantVisible &&
+              entry.value.surfaceRef == 'plugin.panel:dsh.agent'))
+        entry.key,
+  };
+
+  void _removeUnboundEditorGroups() {
+    const prefix = 'host.editorGroup:';
+    final bound = _layout.snapshot.bindings.values
+        .where((binding) => binding.surfaceRef.startsWith(prefix))
+        .map((binding) => binding.surfaceRef.substring(prefix.length))
+        .toSet();
+    for (final group in widget.workspace.editorGroups.toList()) {
+      if (group.id != LocalWorkspaceController.primaryEditorGroupId &&
+          !bound.contains(group.id)) {
+        widget.workspace.removeEditorGroup(group.id);
+      }
+    }
+  }
+
+  Future<void> _closePane(BuildContext context, String paneId) async {
+    final binding = _layout.snapshot.bindingFor(paneId);
+    if (binding != null) {
+      if (!await _prepareMutation(context, [
+        binding.instanceRef,
+      ], SurfaceMutationKind.close)) {
+        return;
+      }
+      if (!context.mounted) return;
+      final confirmed =
+          await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('关闭窗格和内容？'),
+              content: const Text('该操作会销毁此内容的视图状态。可先使用方向交换将内容移动到相邻窗格。'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('取消'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('关闭'),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+      if (!confirmed || !mounted) return;
+      _layout.unbind(paneId);
+      const prefix = 'host.editorGroup:';
+      if (binding.surfaceRef.startsWith(prefix)) {
+        widget.workspace.removeEditorGroup(
+          binding.surfaceRef.substring(prefix.length),
+        );
+      }
+    }
+    _layout.closeEmptyPane(paneId);
+  }
+
+  Future<bool> _prepareMutation(
+    BuildContext context,
+    Iterable<String> instanceRefs,
+    SurfaceMutationKind kind,
+  ) async {
+    final guards = widget.mutationGuards;
+    if (guards == null) return true;
+    final result = await guards.prepare(instanceRefs, kind);
+    if (result.decision == SurfaceMutationDecision.allow) return true;
+    if (!context.mounted) return false;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.reason ??
+              (result.decision == SurfaceMutationDecision.defer
+                  ? '原生输入正在进行，窗格操作已延迟。'
+                  : '当前内容不允许执行此窗格操作。'),
+        ),
+      ),
+    );
+    return false;
+  }
+}
+
+LayoutNode? _withoutPanes(LayoutNode node, Set<String> hiddenPaneIds) {
+  switch (node) {
+    case PaneNode(:final paneId):
+      return hiddenPaneIds.contains(paneId) ? null : node;
+    case SplitNode(:final first, :final second):
+      final visibleFirst = _withoutPanes(first, hiddenPaneIds);
+      final visibleSecond = _withoutPanes(second, hiddenPaneIds);
+      if (visibleFirst == null) return visibleSecond;
+      if (visibleSecond == null) return visibleFirst;
+      return node.copyWith(first: visibleFirst, second: visibleSecond);
+  }
+}
+
+final class _BoundSurface extends StatelessWidget {
+  const _BoundSurface({
+    required this.binding,
+    required this.registry,
+    required this.workspace,
+    required this.settings,
+    required this.onFocus,
+    this.paneMenu,
+  });
+
+  final SurfaceBinding binding;
+  final OpenMusePluginRegistry registry;
+  final LocalWorkspaceController workspace;
+  final OpenMuseLocalSettings settings;
+  final VoidCallback onFocus;
+  final Widget? paneMenu;
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    behavior: HitTestBehavior.translucent,
+    onPointerDown: (_) => onFocus(),
+    child: _surface(context),
+  );
+
+  Widget _surface(BuildContext context) {
+    if (binding.surfaceRef == 'host.workspaceExplorer') {
+      return _WorkspaceSidebar(
+        registry: registry,
+        workspace: workspace,
+        settings: settings,
+      );
+    }
+    const editorPrefix = 'host.editorGroup:';
+    if (binding.surfaceRef.startsWith(editorPrefix)) {
+      return _EditorArea(
+        registry: registry,
+        workspace: workspace,
+        settings: settings,
+        groupId: binding.surfaceRef.substring(editorPrefix.length),
+        paneMenu: paneMenu,
+      );
+    }
+    const panelPrefix = 'plugin.panel:';
+    if (binding.surfaceRef.startsWith(panelPrefix)) {
+      final panelId = binding.surfaceRef.substring(panelPrefix.length);
+      final plugin = registry.panelProviderById(panelId);
+      if (plugin != null) {
+        final panel = PluginPanelHost(
+          registry: registry,
+          plugin: plugin,
+          panelId: panelId,
+        );
+        if (panelId == 'dsh.agent' && paneMenu != null) {
+          return OpenMuseSurfaceChrome(trailing: paneMenu, child: panel);
+        }
+        return panel;
+      }
+      return Center(child: Text('插件面板不可用：$panelId'));
+    }
+    return Center(child: Text('未知 Surface：${binding.surfaceRef}'));
+  }
 }
 
 /// Tracks pointer movement globally so dragging remains reliable over the
 /// embedded DSH WebView, whose native surface can swallow local mouse-up.
 final class _PaneResizer extends StatefulWidget {
-  const _PaneResizer({required this.onDelta, required this.onEnd});
+  const _PaneResizer({required this.axis, required this.onDelta});
 
+  final Axis axis;
   final ValueChanged<double> onDelta;
-  final Future<void> Function() onEnd;
 
   @override
   State<_PaneResizer> createState() => _PaneResizerState();
@@ -114,15 +559,17 @@ final class _PaneResizer extends StatefulWidget {
 
 final class _PaneResizerState extends State<_PaneResizer> {
   int? _pointer;
-  double _lastX = 0;
+  Offset _lastPosition = Offset.zero;
   bool _hovered = false;
   bool _dragging = false;
 
   void _onGlobalPointer(PointerEvent event) {
     if (event.pointer != _pointer) return;
     if (event is PointerMoveEvent) {
-      final delta = event.position.dx - _lastX;
-      _lastX = event.position.dx;
+      final delta = widget.axis == Axis.horizontal
+          ? event.position.dx - _lastPosition.dx
+          : event.position.dy - _lastPosition.dy;
+      _lastPosition = event.position;
       widget.onDelta(delta);
     } else if (event is PointerUpEvent || event is PointerCancelEvent) {
       _finish();
@@ -134,7 +581,6 @@ final class _PaneResizerState extends State<_PaneResizer> {
     GestureBinding.instance.pointerRouter.removeGlobalRoute(_onGlobalPointer);
     _pointer = null;
     if (mounted) setState(() => _dragging = false);
-    widget.onEnd();
   }
 
   @override
@@ -147,7 +593,9 @@ final class _PaneResizerState extends State<_PaneResizer> {
 
   @override
   Widget build(BuildContext context) => MouseRegion(
-    cursor: SystemMouseCursors.resizeLeftRight,
+    cursor: widget.axis == Axis.horizontal
+        ? SystemMouseCursors.resizeLeftRight
+        : SystemMouseCursors.resizeUpDown,
     onEnter: (_) => setState(() => _hovered = true),
     onExit: (_) => setState(() => _hovered = false),
     child: Listener(
@@ -156,18 +604,94 @@ final class _PaneResizerState extends State<_PaneResizer> {
         if (event.buttons != kPrimaryButton) return;
         _finish();
         _pointer = event.pointer;
-        _lastX = event.position.dx;
+        _lastPosition = event.position;
         setState(() => _dragging = true);
         GestureBinding.instance.pointerRouter.addGlobalRoute(_onGlobalPointer);
       },
       child: Container(
         key: const Key('pane-resizer'),
-        width: 6,
+        width: widget.axis == Axis.horizontal ? 6 : null,
+        height: widget.axis == Axis.vertical ? 6 : null,
         color: _hovered || _dragging
             ? OpenMuseTokens.cyan.withValues(alpha: 0.65)
             : Theme.of(context).dividerColor.withValues(alpha: 0.5),
       ),
     ),
+  );
+}
+
+enum _PaneAction {
+  splitRight,
+  splitDown,
+  bindNewEditor,
+  swapLeft,
+  swapRight,
+  swapUp,
+  swapDown,
+  close,
+  reset,
+}
+
+final class _BindPanelAction {
+  const _BindPanelAction(this.candidate);
+  final OpenMusePanelCandidate candidate;
+}
+
+final class _PaneMenuButton extends StatelessWidget {
+  const _PaneMenuButton({
+    required this.paneId,
+    required this.hasBinding,
+    required this.panelCandidates,
+    required this.onAction,
+  });
+
+  final String paneId;
+  final bool hasBinding;
+  final List<OpenMusePanelCandidate> panelCandidates;
+  final ValueChanged<Object> onAction;
+
+  @override
+  Widget build(BuildContext context) => PopupMenuButton<Object>(
+    key: Key('pane-menu-button:$paneId'),
+    tooltip: '窗格操作',
+    padding: EdgeInsets.zero,
+    iconSize: 17,
+    splashRadius: 14,
+    constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+    style: const ButtonStyle(
+      visualDensity: VisualDensity.compact,
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      padding: WidgetStatePropertyAll(EdgeInsets.zero),
+      minimumSize: WidgetStatePropertyAll(Size(26, 26)),
+    ),
+    color: Theme.of(context).colorScheme.surface,
+    onSelected: onAction,
+    itemBuilder: (context) => [
+      const PopupMenuItem(value: _PaneAction.splitRight, child: Text('向右切分')),
+      const PopupMenuItem(value: _PaneAction.splitDown, child: Text('向下切分')),
+      const PopupMenuDivider(),
+      const PopupMenuItem(value: _PaneAction.swapLeft, child: Text('与左侧交换')),
+      const PopupMenuItem(value: _PaneAction.swapRight, child: Text('与右侧交换')),
+      const PopupMenuItem(value: _PaneAction.swapUp, child: Text('与上方交换')),
+      const PopupMenuItem(value: _PaneAction.swapDown, child: Text('与下方交换')),
+      const PopupMenuDivider(),
+      if (!hasBinding)
+        const PopupMenuItem(
+          value: _PaneAction.bindNewEditor,
+          child: Text('绑定新编辑组'),
+        ),
+      for (final candidate in panelCandidates)
+        PopupMenuItem(
+          value: _BindPanelAction(candidate),
+          child: Text(
+            '绑定/交换 ${candidate.plugin.descriptor.name}'
+            ' · ${candidate.panel.id}',
+          ),
+        ),
+      const PopupMenuDivider(),
+      const PopupMenuItem(value: _PaneAction.close, child: Text('关闭窗格')),
+      const PopupMenuItem(value: _PaneAction.reset, child: Text('重置默认布局')),
+    ],
   );
 }
 
@@ -924,6 +1448,7 @@ Future<void> _showTabMenu(
   OpenMusePluginRegistry registry,
   LocalWorkspaceController workspace,
   OpenMuseLocalSettings settings,
+  String groupId,
 ) async {
   final command = await _showWorkbenchMenu(
     context,
@@ -961,9 +1486,9 @@ Future<void> _showTabMenu(
   );
   if (command == null || !context.mounted) return;
   if (command == 'close') {
-    workspace.closeTab(tab);
+    workspace.closeTab(tab, groupId: groupId);
   } else if (command == 'close-others') {
-    workspace.closeOtherTabs(tab);
+    workspace.closeOtherTabs(tab, groupId: groupId);
   } else if (command == 'pin') {
     workspace.togglePinned(tab);
   } else if (command == 'open-with') {
@@ -1139,15 +1664,19 @@ final class _EditorArea extends StatelessWidget {
     required this.registry,
     required this.workspace,
     required this.settings,
+    this.groupId = LocalWorkspaceController.primaryEditorGroupId,
+    this.paneMenu,
   });
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
+  final String groupId;
+  final Widget? paneMenu;
 
   @override
   Widget build(BuildContext context) {
-    final tab = workspace.activeTab;
+    final tab = workspace.activeTabFor(groupId);
     final current = tab?.resource;
     final plugin = current == null || tab?.kind == WorkspaceTabKind.diff
         ? null
@@ -1159,7 +1688,13 @@ final class _EditorArea extends StatelessWidget {
           );
     return Column(
       children: [
-        _TabStrip(registry: registry, workspace: workspace, settings: settings),
+        _TabStrip(
+          registry: registry,
+          workspace: workspace,
+          settings: settings,
+          groupId: groupId,
+          paneMenu: paneMenu,
+        ),
         if (tab?.kind != WorkspaceTabKind.diff && current != null)
           Container(
             height: 28,
@@ -1198,11 +1733,15 @@ final class _TabStrip extends StatelessWidget {
     required this.registry,
     required this.workspace,
     required this.settings,
+    required this.groupId,
+    this.paneMenu,
   });
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
+  final String groupId;
+  final Widget? paneMenu;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -1225,7 +1764,7 @@ final class _TabStrip extends StatelessWidget {
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
-              if (workspace.tabs.isEmpty)
+              if (workspace.tabsFor(groupId).isEmpty)
                 SizedBox(
                   width: 112,
                   child: Center(
@@ -1237,16 +1776,18 @@ final class _TabStrip extends StatelessWidget {
                     ),
                   ),
                 ),
-              for (final tab in workspace.tabs)
+              for (final tab in workspace.tabsFor(groupId))
                 _WorkbenchTab(
                   tab: tab,
                   workspace: workspace,
                   registry: registry,
                   settings: settings,
+                  groupId: groupId,
                 ),
             ],
           ),
         ),
+        ?paneMenu,
         const SizedBox(width: 4),
       ],
     ),
@@ -1259,12 +1800,14 @@ final class _WorkbenchTab extends StatefulWidget {
     required this.workspace,
     required this.registry,
     required this.settings,
+    required this.groupId,
   });
 
   final WorkspaceTab tab;
   final LocalWorkspaceController workspace;
   final OpenMusePluginRegistry registry;
   final OpenMuseLocalSettings settings;
+  final String groupId;
 
   @override
   State<_WorkbenchTab> createState() => _WorkbenchTabState();
@@ -1275,7 +1818,8 @@ final class _WorkbenchTabState extends State<_WorkbenchTab> {
 
   @override
   Widget build(BuildContext context) {
-    final active = identical(widget.tab, widget.workspace.activeTab);
+    final active =
+        widget.tab.id == widget.workspace.activeTabFor(widget.groupId)?.id;
     return MouseRegion(
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
@@ -1287,13 +1831,17 @@ final class _WorkbenchTabState extends State<_WorkbenchTab> {
           widget.registry,
           widget.workspace,
           widget.settings,
+          widget.groupId,
         ),
         child: Material(
           color: Theme.of(context).brightness == Brightness.dark
               ? (active ? const Color(0xff292c34) : const Color(0xff202228))
               : (active ? Colors.white : const Color(0xfff7f8fb)),
           child: InkWell(
-            onTap: () => widget.workspace.activateTab(widget.tab),
+            onTap: () => widget.workspace.activateTab(
+              widget.tab,
+              groupId: widget.groupId,
+            ),
             child: Container(
               constraints: BoxConstraints(
                 minWidth: widget.tab.pinned ? 54 : (active ? 128 : 88),
@@ -1336,7 +1884,10 @@ final class _WorkbenchTabState extends State<_WorkbenchTab> {
                         height: 24,
                       ),
                       padding: EdgeInsets.zero,
-                      onPressed: () => widget.workspace.closeTab(widget.tab),
+                      onPressed: () => widget.workspace.closeTab(
+                        widget.tab,
+                        groupId: widget.groupId,
+                      ),
                       icon: const Icon(Icons.close, size: 14),
                     ),
                 ],

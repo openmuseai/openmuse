@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_host/src/host/openmuse_app.dart';
+import 'package:openmuse_host/src/host/layout/layout.dart';
 import 'package:openmuse_host/src/host/local_settings.dart';
 import 'package:openmuse_host/src/host/workspace_controller.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -123,11 +124,13 @@ void main() {
     tester,
   ) async {
     final settings = OpenMuseLocalSettings();
+    final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
     await tester.pumpWidget(
       OpenMuseHostApp(
         registry: registry,
         workspace: workspace,
         settings: settings,
+        layoutController: layout,
       ),
     );
     final divider = find.byKey(const Key('pane-resizer')).first;
@@ -136,7 +139,7 @@ void main() {
     await gesture.moveBy(const Offset(42, 0));
     await tester.pump();
     await gesture.up();
-    expect(settings.sidebarWidth, greaterThan(250));
+    expect((layout.snapshot.root as SplitNode).ratio, greaterThan(0.22));
   });
 
   testWidgets('Project Workspace section can collapse independently', (
@@ -155,6 +158,240 @@ void main() {
     expect(find.text(label), findsNothing);
   });
 
+  testWidgets('swapping adjacent panes keeps the same surface State mounted', (
+    tester,
+  ) async {
+    final plugin = _StatefulPanelPlugin();
+    registry.install(plugin);
+    final layout = WorkbenchLayoutController(
+      WorkbenchLayoutSnapshot(
+        root: SplitNode(
+          axis: Axis.horizontal,
+          ratio: 0.5,
+          first: PaneNode(paneId: 'left'),
+          second: PaneNode(paneId: 'right'),
+        ),
+        bindings: {
+          'left': SurfaceBinding(
+            bindingId: 'panel',
+            surfaceRef: 'plugin.panel:test.panel',
+            instanceRef: 'surface.panel',
+          ),
+          'right': SurfaceBinding(
+            bindingId: 'workspace',
+            surfaceRef: 'host.workspaceExplorer',
+            instanceRef: 'surface.workspace',
+          ),
+        },
+      ),
+    );
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: workspace,
+        layoutController: layout,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(plugin.created, 1);
+    expect(plugin.disposed, 0);
+    final before = tester.getTopLeft(find.byKey(const Key('surface-probe')));
+
+    layout.swap('left', 'right');
+    await tester.pump();
+
+    expect(plugin.created, 1);
+    expect(plugin.disposed, 0);
+    final after = tester.getTopLeft(find.byKey(const Key('surface-probe')));
+    expect(after.dx, greaterThan(before.dx));
+  });
+
+  testWidgets('layout mutations are persisted after the debounce', (
+    tester,
+  ) async {
+    final store = _RecordingLayoutWriter();
+    final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: workspace,
+        layoutController: layout,
+        layoutStore: store,
+      ),
+    );
+
+    layout.splitPane('editor', axis: Axis.vertical, newPaneId: 'editor-bottom');
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(store.snapshots.single.paneIds, contains('editor-bottom'));
+  });
+
+  testWidgets('pending layout save is flushed when workbench disposes', (
+    tester,
+  ) async {
+    final store = _RecordingLayoutWriter();
+    final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: workspace,
+        layoutController: layout,
+        layoutStore: store,
+      ),
+    );
+
+    layout.splitPane('editor', axis: Axis.vertical, newPaneId: 'dispose-flush');
+    await tester.pump();
+    await tester.pumpWidget(const SizedBox.shrink());
+
+    expect(store.snapshots.single.paneIds, contains('dispose-flush'));
+  });
+
+  testWidgets('pane menu can split vertically and bind a new editor group', (
+    tester,
+  ) async {
+    final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: workspace,
+        layoutController: layout,
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('pane-menu-button:editor')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('向下切分'));
+    await tester.pumpAndSettle();
+    expect(layout.snapshot.paneIds, contains('pane-1'));
+    expect(layout.snapshot.bindingFor('pane-1'), isNull);
+
+    await tester.tap(find.byKey(const Key('pane-menu-button:pane-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('绑定新编辑组'));
+    await tester.pumpAndSettle();
+
+    expect(
+      layout.snapshot.bindingFor('pane-1')?.surfaceRef,
+      'host.editorGroup:editor.2',
+    );
+    expect(
+      workspace.editorGroups.map((group) => group.id),
+      contains('editor.2'),
+    );
+
+    await tester.tap(find.byKey(const Key('pane-menu-button:pane-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('重置默认布局'));
+    await tester.pumpAndSettle();
+    expect(layout.snapshot.paneIds, isNot(contains('pane-1')));
+    expect(
+      workspace.editorGroups.map((group) => group.id),
+      isNot(contains('editor.2')),
+    );
+  });
+
+  testWidgets('workspace pane is primary and has no pane menu', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: workspace,
+        layoutController: layout,
+      ),
+    );
+
+    expect(find.byKey(const Key('pane-menu-button:workspace')), findsNothing);
+    expect(find.byKey(const Key('pane-menu-button:editor')), findsOneWidget);
+    expect(find.byKey(const Key('pane-menu-button:dsh')), findsOneWidget);
+
+    final menu = tester.getRect(
+      find.byKey(const Key('pane-menu-button:editor')),
+    );
+    final tabLabel = tester.getRect(find.text('Blank page'));
+    expect(menu.center.dy, closeTo(tabLabel.center.dy, 12));
+
+    final workspaceBinding = layout.snapshot.bindingFor('workspace');
+    final editorBinding = layout.snapshot.bindingFor('editor');
+    await tester.tap(find.byKey(const Key('pane-menu-button:editor')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('与左侧交换'));
+    await tester.pumpAndSettle();
+    expect(layout.snapshot.bindingFor('workspace'), workspaceBinding);
+    expect(layout.snapshot.bindingFor('editor'), editorBinding);
+  });
+
+  testWidgets('directional swap ignores panes hidden by visibility settings', (
+    tester,
+  ) async {
+    final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: workspace,
+        layoutController: layout,
+      ),
+    );
+    workspace.toggleSidebar();
+    await tester.pump();
+
+    final editorBinding = layout.snapshot.bindingFor('editor');
+    final workspaceBinding = layout.snapshot.bindingFor('workspace');
+    await tester.tap(find.byKey(const Key('pane-menu-button:editor')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('与左侧交换'));
+    await tester.pumpAndSettle();
+
+    expect(layout.snapshot.bindingFor('editor'), editorBinding);
+    expect(layout.snapshot.bindingFor('workspace'), workspaceBinding);
+  });
+
+  testWidgets('an empty pane can bind a contributed plugin panel', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    registry.install(_StatefulPanelPlugin());
+    final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+    layout.splitPane(
+      'editor',
+      axis: Axis.horizontal,
+      newPaneId: 'plugin-target',
+    );
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: workspace,
+        layoutController: layout,
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('pane-menu-button:plugin-target')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('绑定/交换 Stateful Panel'));
+    await tester.pumpAndSettle();
+
+    expect(
+      layout.snapshot.bindingFor('plugin-target')?.surfaceRef,
+      'plugin.panel:test.panel',
+    );
+
+    await tester.tap(find.byKey(const Key('pane-menu-button:editor')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('绑定/交换 Stateful Panel'));
+    await tester.pumpAndSettle();
+    expect(
+      layout.snapshot.bindingFor('editor')?.surfaceRef,
+      'plugin.panel:test.panel',
+    );
+    expect(
+      layout.snapshot.bindingFor('plugin-target')?.surfaceRef,
+      'host.editorGroup:editor.primary',
+    );
+  });
+
   testWidgets('resource menu groups opening and versions into cascades', (
     tester,
   ) async {
@@ -171,4 +408,74 @@ void main() {
     expect(find.text('iOffice'), findsOneWidget);
     expect(find.text('默认打开方式'), findsOneWidget);
   });
+}
+
+final class _RecordingLayoutWriter implements LayoutSnapshotWriter {
+  final List<WorkbenchLayoutSnapshot> snapshots = [];
+
+  @override
+  Future<void> save(WorkbenchLayoutSnapshot snapshot) async {
+    snapshots.add(snapshot);
+  }
+}
+
+final class _StatefulPanelPlugin implements OpenMusePlugin {
+  int created = 0;
+  int disposed = 0;
+
+  @override
+  final descriptor = const OpenMusePluginDescriptor(
+    id: 'test.stateful-panel',
+    name: 'Stateful Panel',
+    version: '1.0.0',
+    runtime: OpenMusePluginRuntime.builtIn,
+    panels: [
+      OpenMusePanelContribution(
+        id: 'test.panel',
+        region: OpenMuseSurfaceRegion.rightSidebar,
+      ),
+    ],
+  );
+
+  @override
+  Future<void> activate(OpenMusePluginContext context) async {}
+
+  @override
+  Future<void> deactivate() async {}
+
+  @override
+  Widget buildEditor(BuildContext context, OpenMuseResource resource) =>
+      const SizedBox.shrink();
+
+  @override
+  Widget? buildPanel(BuildContext context, String panelId) =>
+      _SurfaceProbe(onInit: () => created++, onDispose: () => disposed++);
+}
+
+final class _SurfaceProbe extends StatefulWidget {
+  const _SurfaceProbe({required this.onInit, required this.onDispose});
+
+  final VoidCallback onInit;
+  final VoidCallback onDispose;
+
+  @override
+  State<_SurfaceProbe> createState() => _SurfaceProbeState();
+}
+
+final class _SurfaceProbeState extends State<_SurfaceProbe> {
+  @override
+  void initState() {
+    super.initState();
+    widget.onInit();
+  }
+
+  @override
+  void dispose() {
+    widget.onDispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      const ColoredBox(key: Key('surface-probe'), color: Colors.blue);
 }

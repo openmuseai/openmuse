@@ -205,22 +205,12 @@ final class _WorkspaceSettings extends StatelessWidget {
       ),
       const SizedBox(height: 7),
       Text(
-        '拖动工作区或 Agent 边缘可调节宽度，松开后自动保存。',
+        '拖动任意分隔线可调整窗格大小，布局会自动保存。使用窗格右上角菜单可横向或纵向切分、'
+        '绑定内容、交换相邻窗格、关闭窗格或恢复默认布局。',
         style: TextStyle(
           fontSize: 12,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
-      ),
-      const SizedBox(height: 12),
-      _SettingRow(
-        '工作区侧栏',
-        '${settings.sidebarWidth?.round() ?? '自动'} px',
-        onReset: () => settings.resetPaneWidth(sidebar: true),
-      ),
-      _SettingRow(
-        'Agent 侧栏',
-        '${settings.assistantWidth?.round() ?? '自动'} px',
-        onReset: () => settings.resetPaneWidth(sidebar: false),
       ),
       const SizedBox(height: 24),
       Text(
@@ -301,10 +291,9 @@ final class _AppearanceCard extends StatelessWidget {
 }
 
 final class _SettingRow extends StatelessWidget {
-  const _SettingRow(this.label, this.value, {this.onReset});
+  const _SettingRow(this.label, this.value);
   final String label;
   final String value;
-  final VoidCallback? onReset;
   @override
   Widget build(BuildContext context) => SizedBox(
     height: 46,
@@ -312,12 +301,6 @@ final class _SettingRow extends StatelessWidget {
       children: [
         Expanded(child: Text(label, style: const TextStyle(fontSize: 13))),
         Text(value, style: const TextStyle(fontSize: 12)),
-        if (onReset != null)
-          IconButton(
-            tooltip: '重置宽度',
-            onPressed: onReset,
-            icon: const Icon(Icons.history, size: 17),
-          ),
       ],
     ),
   );

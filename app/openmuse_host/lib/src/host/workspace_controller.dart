@@ -94,6 +94,19 @@ final class WorkspaceTab {
   bool pinned = false;
 }
 
+/// Host-owned tab state for one editor surface. Workspace/resource authority
+/// remains in [LocalWorkspaceController]; groups only own presentation state.
+final class WorkspaceEditorGroup {
+  WorkspaceEditorGroup(this.id);
+
+  final String id;
+  final List<WorkspaceTab> _tabs = [];
+  WorkspaceTab? _activeTab;
+
+  List<WorkspaceTab> get tabs => List.unmodifiable(_tabs);
+  WorkspaceTab? get activeTab => _activeTab;
+}
+
 final class LocalVersionSnapshot {
   const LocalVersionSnapshot({
     required this.id,
@@ -219,6 +232,8 @@ final class WorkspaceMountStore {
 /// Host-owned Resource Authority. It owns mounts, tabs and filesystem safety;
 /// concrete editors/viewers/agents remain plugin responsibilities.
 final class LocalWorkspaceController extends ChangeNotifier {
+  static const primaryEditorGroupId = 'editor.primary';
+
   LocalWorkspaceController({
     required String rootPath,
     required Iterable<OpenMuseResource> initialResources,
@@ -252,27 +267,33 @@ final class LocalWorkspaceController extends ChangeNotifier {
       }
       _mounts.add(WorkspaceMount(path: normalized)..root.expanded = true);
     }
+    _editorGroups[primaryEditorGroupId] = WorkspaceEditorGroup(
+      primaryEditorGroupId,
+    );
   }
 
   final LocalVersionStore _versionStore;
   Future<void> Function(OpenMuseResource resource)? flushBeforeDiskRead;
   final WorkspaceMountStore? _mountStore;
   final List<WorkspaceMount> _mounts = [];
-  final List<WorkspaceTab> _tabs = [];
+  final Map<String, WorkspaceEditorGroup> _editorGroups = {};
   final Set<Uri> _favorites = <Uri>{};
   final Map<String, StreamSubscription<FileSystemEvent>> _watchers = {};
   Timer? _watchDebounce;
   bool _disposed = false;
-  WorkspaceTab? _activeTab;
+  String _focusedEditorGroupId = primaryEditorGroupId;
   bool _sidebarVisible = true;
   bool _projectSectionExpanded = true;
   String? _activeMountPath;
 
   String get rootPath => _mounts.first.path;
   List<WorkspaceMount> get mounts => List.unmodifiable(_mounts);
-  List<WorkspaceTab> get tabs => List.unmodifiable(_tabs);
-  WorkspaceTab? get activeTab => _activeTab;
-  OpenMuseResource? get selected => _activeTab?.resource;
+  List<WorkspaceEditorGroup> get editorGroups =>
+      List.unmodifiable(_editorGroups.values);
+  String get focusedEditorGroupId => _focusedEditorGroupId;
+  List<WorkspaceTab> get tabs => tabsFor(_focusedEditorGroupId);
+  WorkspaceTab? get activeTab => activeTabFor(_focusedEditorGroupId);
+  OpenMuseResource? get selected => activeTab?.resource;
   bool get sidebarVisible => _sidebarVisible;
   bool get projectSectionExpanded => _projectSectionExpanded;
   String get activeMountPath => _activeMountPath ?? rootPath;
@@ -298,7 +319,45 @@ final class LocalWorkspaceController extends ChangeNotifier {
 
   void select(OpenMuseResource resource) => openResource(resource);
 
-  void openResource(OpenMuseResource resource, {String? editorId}) {
+  List<WorkspaceTab> tabsFor(String groupId) =>
+      _requireEditorGroup(groupId).tabs;
+
+  WorkspaceTab? activeTabFor(String groupId) =>
+      _requireEditorGroup(groupId).activeTab;
+
+  WorkspaceEditorGroup createEditorGroup({String? groupId}) {
+    final id = groupId ?? _nextEditorGroupId();
+    if (_editorGroups.containsKey(id)) {
+      throw StateError('Editor group already exists: $id');
+    }
+    final group = WorkspaceEditorGroup(id);
+    _editorGroups[id] = group;
+    notifyListeners();
+    return group;
+  }
+
+  void removeEditorGroup(String groupId) {
+    if (groupId == primaryEditorGroupId || _editorGroups.length == 1) return;
+    if (_editorGroups.remove(groupId) == null) return;
+    if (_focusedEditorGroupId == groupId) {
+      _focusedEditorGroupId = primaryEditorGroupId;
+    }
+    notifyListeners();
+  }
+
+  void focusEditorGroup(String groupId) {
+    _requireEditorGroup(groupId);
+    if (_focusedEditorGroupId == groupId) return;
+    _focusedEditorGroupId = groupId;
+    notifyListeners();
+  }
+
+  void openResource(
+    OpenMuseResource resource, {
+    String? editorId,
+    String? groupId,
+  }) {
+    final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
     final path = resource.uri.toFilePath();
     for (final mount in _mounts) {
       if (mount.path == path || p.isWithin(mount.path, path)) {
@@ -307,7 +366,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
       }
     }
     WorkspaceTab? existing;
-    for (final tab in _tabs) {
+    for (final tab in group._tabs) {
       if (tab.kind == WorkspaceTabKind.resource &&
           tab.resource.uri == resource.uri) {
         existing = tab;
@@ -318,34 +377,41 @@ final class LocalWorkspaceController extends ChangeNotifier {
         existing ??
         WorkspaceTab.resource(resource, preferredEditorId: editorId);
     if (editorId != null) tab.preferredEditorId = editorId;
-    if (existing == null) _tabs.add(tab);
-    _activeTab = tab;
+    if (existing == null) group._tabs.add(tab);
+    group._activeTab = tab;
+    _focusedEditorGroupId = group.id;
     notifyListeners();
   }
 
-  void activateTab(WorkspaceTab tab) {
-    _activeTab = tab;
+  void activateTab(WorkspaceTab tab, {String? groupId}) {
+    final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
+    if (!group._tabs.contains(tab)) return;
+    group._activeTab = tab;
+    _focusedEditorGroupId = group.id;
     notifyListeners();
   }
 
-  void closeTab(WorkspaceTab tab) {
+  void closeTab(WorkspaceTab tab, {String? groupId}) {
     if (tab.pinned) return;
-    final index = _tabs.indexOf(tab);
+    final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
+    final index = group._tabs.indexOf(tab);
     if (index < 0) return;
-    _tabs.removeAt(index);
-    if (identical(_activeTab, tab)) {
-      _activeTab = _tabs.isEmpty
+    group._tabs.removeAt(index);
+    if (identical(group._activeTab, tab)) {
+      group._activeTab = group._tabs.isEmpty
           ? null
-          : _tabs[index.clamp(0, _tabs.length - 1)];
+          : group._tabs[index.clamp(0, group._tabs.length - 1)];
     }
     notifyListeners();
   }
 
-  void closeOtherTabs(WorkspaceTab tab) {
-    _tabs.removeWhere(
+  void closeOtherTabs(WorkspaceTab tab, {String? groupId}) {
+    final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
+    group._tabs.removeWhere(
       (candidate) => !identical(candidate, tab) && !candidate.pinned,
     );
-    _activeTab = tab;
+    group._activeTab = tab;
+    _focusedEditorGroupId = group.id;
     notifyListeners();
   }
 
@@ -580,14 +646,17 @@ final class LocalWorkspaceController extends ChangeNotifier {
 
   Future<void> openDiff(
     OpenMuseResource resource,
-    LocalVersionSnapshot snapshot,
-  ) => openVersionComparison(resource, snapshot);
+    LocalVersionSnapshot snapshot, {
+    String? groupId,
+  }) => openVersionComparison(resource, snapshot, groupId: groupId);
 
   Future<void> openVersionComparison(
     OpenMuseResource resource,
     LocalVersionSnapshot beforeVersion, {
     LocalVersionSnapshot? afterVersion,
+    String? groupId,
   }) async {
+    final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
     if (afterVersion != null && beforeVersion.id == afterVersion.id) {
       throw ArgumentError('不能把同一个版本与自己比较');
     }
@@ -607,15 +676,16 @@ final class LocalWorkspaceController extends ChangeNotifier {
     );
     WorkspaceTab? existing;
     final id = 'diff:${resource.uri}:${diff.comparisonId}';
-    for (final candidate in _tabs) {
+    for (final candidate in group._tabs) {
       if (candidate.id == id) {
         existing = candidate;
         break;
       }
     }
     final tab = existing ?? WorkspaceTab.diff(diff);
-    if (existing == null) _tabs.add(tab);
-    _activeTab = tab;
+    if (existing == null) group._tabs.add(tab);
+    group._activeTab = tab;
+    _focusedEditorGroupId = group.id;
     notifyListeners();
   }
 
@@ -707,42 +777,60 @@ final class LocalWorkspaceController extends ChangeNotifier {
       Future<void>.value();
 
   void _retargetTabs(String oldPath, String newPath) {
-    for (var index = 0; index < _tabs.length; index++) {
-      final tab = _tabs[index];
-      final path = tab.resource.uri.toFilePath();
-      if (path != oldPath && !p.isWithin(oldPath, path)) continue;
-      if (tab.kind == WorkspaceTabKind.diff) {
-        _tabs.removeAt(index--);
-        if (identical(_activeTab, tab)) _activeTab = null;
-        continue;
+    for (final group in _editorGroups.values) {
+      for (var index = 0; index < group._tabs.length; index++) {
+        final tab = group._tabs[index];
+        final path = tab.resource.uri.toFilePath();
+        if (path != oldPath && !p.isWithin(oldPath, path)) continue;
+        if (tab.kind == WorkspaceTabKind.diff) {
+          group._tabs.removeAt(index--);
+          if (identical(group._activeTab, tab)) group._activeTab = null;
+          continue;
+        }
+        final target = path == oldPath
+            ? newPath
+            : p.join(newPath, p.relative(path, from: oldPath));
+        final replacement = WorkspaceTab.resource(
+          OpenMuseResource(
+            uri: Uri.file(target),
+            displayName: p.basename(target),
+            mediaType: _mediaTypeFor(target),
+          ),
+          preferredEditorId: tab.preferredEditorId,
+        )..pinned = tab.pinned;
+        group._tabs[index] = replacement;
+        if (identical(group._activeTab, tab)) group._activeTab = replacement;
       }
-      final target = path == oldPath
-          ? newPath
-          : p.join(newPath, p.relative(path, from: oldPath));
-      final replacement = WorkspaceTab.resource(
-        OpenMuseResource(
-          uri: Uri.file(target),
-          displayName: p.basename(target),
-          mediaType: _mediaTypeFor(target),
-        ),
-        preferredEditorId: tab.preferredEditorId,
-      )..pinned = tab.pinned;
-      _tabs[index] = replacement;
-      if (identical(_activeTab, tab)) _activeTab = replacement;
+      group._activeTab ??= group._tabs.lastOrNull;
     }
-    _activeTab ??= _tabs.lastOrNull;
     notifyListeners();
   }
 
   void _removeTabsWithin(String path) {
-    _tabs.removeWhere((tab) {
-      final resourcePath = tab.resource.uri.toFilePath();
-      return resourcePath == path || p.isWithin(path, resourcePath);
-    });
-    if (_activeTab != null && !_tabs.contains(_activeTab)) {
-      _activeTab = _tabs.lastOrNull;
+    for (final group in _editorGroups.values) {
+      group._tabs.removeWhere((tab) {
+        final resourcePath = tab.resource.uri.toFilePath();
+        return resourcePath == path || p.isWithin(path, resourcePath);
+      });
+      if (group._activeTab != null && !group._tabs.contains(group._activeTab)) {
+        group._activeTab = group._tabs.lastOrNull;
+      }
     }
     notifyListeners();
+  }
+
+  WorkspaceEditorGroup _requireEditorGroup(String groupId) {
+    final group = _editorGroups[groupId];
+    if (group == null) throw StateError('Unknown editor group: $groupId');
+    return group;
+  }
+
+  String _nextEditorGroupId() {
+    var index = 2;
+    while (_editorGroups.containsKey('editor.$index')) {
+      index++;
+    }
+    return 'editor.$index';
   }
 
   bool _containsEntry(WorkspaceEntry entry) => _mounts.any(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'design_system.dart';
+import 'layout/layout.dart';
+import 'layout/surface_mutation_guard.dart';
 import 'local_settings.dart';
 import 'workbench_shell.dart';
 import 'workspace_controller.dart';
@@ -12,11 +14,17 @@ final class OpenMuseHostApp extends StatelessWidget {
     required this.registry,
     required this.workspace,
     this.settings,
+    this.layoutController,
+    this.layoutStore,
+    this.mutationGuards,
   });
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings? settings;
+  final WorkbenchLayoutController? layoutController;
+  final LayoutSnapshotWriter? layoutStore;
+  final SurfaceMutationGuards? mutationGuards;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +41,9 @@ final class OpenMuseHostApp extends StatelessWidget {
           registry: registry,
           workspace: workspace,
           settings: preferences,
+          layoutController: layoutController,
+          layoutStore: layoutStore,
+          mutationGuards: mutationGuards,
         ),
       ),
     );
