@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'dsh_sidecar.dart';
 import 'dsh_web_view.dart';
@@ -32,26 +33,56 @@ final class _DshPanelState extends State<DshPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final paneMenu = OpenMuseSurfaceChrome.trailingOf(context);
     return ListenableBuilder(
       listenable: Listenable.merge([widget.supervisor, widget.activeMount]),
       builder: (context, _) => ColoredBox(
         color: Theme.of(context).brightness == Brightness.dark
             ? const Color(0xff202228)
             : const Color(0xfffbfbfc),
-        child: Column(
+        child: Stack(
           children: [
-            _AgentHeader(onReload: () => setState(() => _reloadToken++)),
-            Expanded(
-              child: _PanelBody(
-                supervisor: widget.supervisor,
-                activeMountPath: widget.activeMount.value,
-                onActivateWorkspace: widget.onActivateWorkspace,
-                onOpenResource: widget.onOpenResource,
-                reloadToken: _reloadToken,
+            Column(
+              children: [
+                Expanded(
+                  child: _PanelBody(
+                    supervisor: widget.supervisor,
+                    activeMountPath: widget.activeMount.value,
+                    onActivateWorkspace: widget.onActivateWorkspace,
+                    onOpenResource: widget.onOpenResource,
+                    reloadToken: _reloadToken,
+                  ),
+                ),
+                if (widget.supervisor.state != DshSidecarState.ready)
+                  _Composer(onStart: _start),
+              ],
+            ),
+            Positioned(
+              top: 8,
+              right: 6,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    key: const Key('dsh-reload'),
+                    tooltip: '刷新 DSH 面板',
+                    onPressed: () => setState(() => _reloadToken++),
+                    icon: Icon(
+                      Icons.refresh,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      size: 16,
+                    ),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 26,
+                      minHeight: 26,
+                    ),
+                  ),
+                  ?paneMenu,
+                ],
               ),
             ),
-            if (widget.supervisor.state != DshSidecarState.ready)
-              _Composer(onStart: _start),
           ],
         ),
       ),
@@ -65,61 +96,6 @@ final class _DshPanelState extends State<DshPanel> {
       // State and redacted diagnostics remain inside the plugin panel.
     }
   }
-}
-
-final class _AgentHeader extends StatelessWidget {
-  const _AgentHeader({required this.onReload});
-  final VoidCallback onReload;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    height: 64,
-    padding: const EdgeInsets.fromLTRB(14, 10, 10, 0),
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surface,
-      border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.auto_awesome_outlined,
-              color: Theme.of(context).colorScheme.onSurface,
-              size: 16,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'DSH Agent',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 13,
-              ),
-            ),
-            const Spacer(),
-            IconButton(
-              tooltip: '刷新 DSH 面板',
-              onPressed: onReload,
-              icon: Icon(
-                Icons.refresh,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                size: 16,
-              ),
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-            ),
-          ],
-        ),
-        const SizedBox(height: 11),
-        const Text(
-          '对话',
-          style: TextStyle(color: Color(0xff2f6de1), fontSize: 12),
-        ),
-      ],
-    ),
-  );
 }
 
 final class _PanelBody extends StatelessWidget {

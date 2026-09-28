@@ -135,6 +135,7 @@ final class _DshWebViewState extends State<DshWebView> {
       );
     }
     return AppKitView(
+      key: const Key('dsh-platform-view'),
       viewType: 'com.openmuse.dsh/webview',
       creationParams: {
         'url': widget.url.toString(),

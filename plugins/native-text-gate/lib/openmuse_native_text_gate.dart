@@ -45,6 +45,7 @@ final class _NativeTextSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     if (Platform.isMacOS) {
       return const AppKitView(
+        key: Key('native-text-platform-view'),
         viewType: 'com.openmuse.native-text',
         creationParams: <String, Object?>{
           'text': 'OpenMuse Native View 插件\n\n请测试中文输入法、焦点、选择、复制粘贴与窗口缩放。',

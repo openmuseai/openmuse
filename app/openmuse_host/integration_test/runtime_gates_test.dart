@@ -1,11 +1,13 @@
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
 import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
 import 'package:openmuse_helix_plugin/openmuse_helix_plugin.dart';
 import 'package:openmuse_host/src/host/openmuse_app.dart';
+import 'package:openmuse_host/src/host/layout/layout.dart';
 import 'package:openmuse_host/src/host/workspace_controller.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
@@ -17,6 +19,7 @@ void main() {
   ) async {
     final samples = await OpenMuseDemoWorkspace.create();
     final registry = _registry();
+    final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
     await tester.pumpWidget(
       OpenMuseHostApp(
         registry: registry,
@@ -37,16 +40,29 @@ void main() {
             ),
           ],
         ),
+        layoutController: layout,
       ),
     );
     await tester.pumpAndSettle();
     expect(find.text('Project Workspace'), findsOneWidget);
-    expect(find.text('DSH Agent'), findsOneWidget);
+    expect(find.byTooltip('刷新 DSH 面板'), findsOneWidget);
 
     await tester.tap(find.text('Native View Gate'));
     await tester.pumpAndSettle();
+    final nativeView = find.byKey(const Key('native-text-platform-view'));
+    final nativeState = tester.state(nativeView);
+    layout.swap('editor', 'dsh');
+    await tester.pumpAndSettle();
+    expect(tester.state(nativeView), same(nativeState));
+
     await tester.tap(find.text('preview.png'));
     await tester.pumpAndSettle();
+    final viewerView = find.byKey(ValueKey(samples.pngPath));
+    final viewerState = tester.state(viewerView);
+    layout.swap('editor', 'dsh');
+    await tester.pumpAndSettle();
+    expect(tester.state(viewerView), same(viewerState));
+
     await tester.tap(find.text('specification.pdf'));
     await tester.pumpAndSettle();
   });
@@ -94,17 +110,49 @@ void main() {
     await supervisor.ensureStarted();
     expect(supervisor.state, DshSidecarState.ready);
     expect(supervisor.launchCount, 1);
-    await supervisor.stop();
-    supervisor.dispose();
+
+    final dshPlugin = OpenMuseDshPlugin(supervisor: supervisor);
+    final registry = _registry(dshPlugin: dshPlugin);
+    final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: LocalWorkspaceController(
+          rootPath: dshHome.path,
+          initialResources: const [],
+        ),
+        layoutController: layout,
+      ),
+    );
+    final dshView = find.byKey(const Key('dsh-platform-view'));
+    for (
+      var attempt = 0;
+      attempt < 50 && dshView.evaluate().isEmpty;
+      attempt++
+    ) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(dshView, findsOneWidget);
+    final dshState = tester.state(dshView);
+    layout.swap('editor', 'dsh');
+    await tester.pumpAndSettle();
+    expect(tester.state(dshView), same(dshState));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await registry.uninstall(dshPlugin.descriptor.id);
   });
 }
 
-OpenMusePluginRegistry _registry() {
+OpenMusePluginRegistry _registry({OpenMuseDshPlugin? dshPlugin}) {
   final registry = OpenMusePluginRegistry(
     context: OpenMusePluginContext(executeHostCommand: (_, _) async => null),
   );
   for (final plugin in createOpenMuseBuiltInPlugins()) {
+    if (dshPlugin != null && plugin.descriptor.id == dshPlugin.descriptor.id) {
+      continue;
+    }
     registry.install(plugin);
   }
+  if (dshPlugin != null) registry.install(dshPlugin);
   return registry;
 }
