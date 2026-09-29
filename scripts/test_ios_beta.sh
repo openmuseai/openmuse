@@ -7,6 +7,7 @@ rm -rf "$evidence_dir"
 mkdir -p "$evidence_dir"
 
 OPENMUSE_DOCX_PLATFORMS=ios "$repo_root/scripts/build_office_docx_mobile_artifacts.sh"
+OPENMUSE_PAIRED_PLATFORMS=ios "$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
 
 (cd "$repo_root/app/openmuse_mobile" && flutter analyze && flutter test && flutter build ios --release --no-codesign)
 
@@ -41,6 +42,8 @@ if find "$app" -type f | grep -Eiq '(^|/)(node|helix|dsh-closure|sandbox-worker)
 fi
 nm -gU "$app/Runner" | grep -q '_openmuse_docx_abi_version'
 nm -gU "$app/Runner" | grep -q '_openmuse_docx_inspect'
+nm -gU "$app/Runner" | grep -q '_openmuse_paired_abi_version'
+nm -gU "$app/Runner" | grep -q '_openmuse_paired_device_public'
 
 if codesign --verify --deep --strict "$app" 2>"$evidence_dir/codesign.txt"; then
   echo "The no-codesign artifact unexpectedly has a valid signature" >&2

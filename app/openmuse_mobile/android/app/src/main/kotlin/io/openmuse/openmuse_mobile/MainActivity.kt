@@ -15,6 +15,7 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.GCMParameterSpec
 
 class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -47,11 +48,48 @@ private class DeviceKeyStoreBridge(context: Context) {
                         delete(requireRef(call.argument<String>("keyRef")))
                         result.success(null)
                     }
+                    "publicIdentity" -> result.success(
+                        publicIdentity(requireRef(call.argument<String>("keyRef"))),
+                    )
                     else -> result.notImplemented()
                 }
             } catch (error: Exception) {
                 result.error("device_keystore", "Device key operation failed", null)
             }
+        }
+    }
+
+    private fun publicIdentity(keyRef: String): Map<String, ByteArray> {
+        val digest = validatedDigest(keyRef)
+        val alias = "openmuse.device.wrap.$digest"
+        val encoded = preferences.getString(keyRef, null)
+            ?: error("device seed is missing")
+        val blob = Base64.decode(encoded, Base64.NO_WRAP)
+        require(blob.size > GCM_IV_BYTES + GCM_TAG_BYTES)
+        val encrypted = blob.copyOfRange(GCM_IV_BYTES, blob.size)
+        val key = keyStore.getKey(alias, null) as? SecretKey
+            ?: error("device wrapping key is missing")
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(
+            Cipher.DECRYPT_MODE,
+            key,
+            GCMParameterSpec(GCM_TAG_BYTES * 8, blob.copyOfRange(0, GCM_IV_BYTES)),
+        )
+        val seed = cipher.doFinal(encrypted)
+        require(seed.size == 32)
+        var public: ByteArray? = null
+        try {
+            public = PairedCryptoNative.devicePublic(seed)
+            require(public != null && public.size == 64)
+            return mapOf(
+                "signingPublic" to public.copyOfRange(0, 32),
+                "agreementPublic" to public.copyOfRange(32, 64),
+            )
+        } finally {
+            seed.fill(0)
+            public?.fill(0)
+            encrypted.fill(0)
+            blob.fill(0)
         }
     }
 
@@ -115,14 +153,33 @@ private class DeviceKeyStoreBridge(context: Context) {
     }
 
     private fun delete(keyRef: String) {
-        val digest = keyRef.removePrefix("device-key:")
-        require(digest.length == 64 && digest.all { it in "0123456789abcdef" })
+        val digest = validatedDigest(keyRef)
         keyStore.deleteEntry("openmuse.device.wrap.$digest")
         preferences.edit().remove(keyRef).apply()
+    }
+
+    private fun validatedDigest(keyRef: String): String {
+        require(keyRef.startsWith("device-key:"))
+        val digest = keyRef.removePrefix("device-key:")
+        require(digest.length == 64 && digest.all { it in "0123456789abcdef" })
+        return digest
     }
 
     private fun requireRef(value: String?): String {
         require(value != null && value.isNotEmpty() && value.length <= 256 && !value.contains('\u0000'))
         return value
     }
+
+    private companion object {
+        const val GCM_IV_BYTES = 12
+        const val GCM_TAG_BYTES = 16
+    }
+}
+
+private object PairedCryptoNative {
+    init {
+        System.loadLibrary("openmuse_paired_relay")
+    }
+
+    external fun devicePublic(seed: ByteArray): ByteArray?
 }

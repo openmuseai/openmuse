@@ -15,6 +15,7 @@ fi
 
 # The Android app links the DOCX engine during every native build.
 OPENMUSE_DOCX_PLATFORMS=android "$repo_root/scripts/build_office_docx_mobile_artifacts.sh"
+OPENMUSE_PAIRED_PLATFORMS=android "$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
 (
   cd "$repo_root/app/openmuse_mobile"
   flutter test integration_test/device_keystore_test.dart -d "$serial"

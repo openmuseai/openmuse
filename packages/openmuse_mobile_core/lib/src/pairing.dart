@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'dsh_connector.dart';
 import 'resource_client.dart';
 
@@ -18,6 +20,21 @@ final class DeviceKeyDescriptor {
   final bool created;
 }
 
+final class DevicePublicIdentity {
+  DevicePublicIdentity({
+    required Uint8List signingPublic,
+    required Uint8List agreementPublic,
+  }) : signingPublic = Uint8List.fromList(signingPublic),
+       agreementPublic = Uint8List.fromList(agreementPublic) {
+    if (this.signingPublic.length != 32 || this.agreementPublic.length != 32) {
+      throw ArgumentError('device public keys must be 32 bytes');
+    }
+  }
+
+  final Uint8List signingPublic;
+  final Uint8List agreementPublic;
+}
+
 /// Platform-owned device-key storage. No method returns seed/private material.
 /// Cryptographic operations must be added behind the same native boundary.
 abstract interface class DeviceKeyStorePort {
@@ -25,6 +42,7 @@ abstract interface class DeviceKeyStorePort {
     required String accountRef,
     required String deviceRef,
   });
+  Future<DevicePublicIdentity> publicIdentity(String keyRef);
   Future<void> delete(String keyRef);
 }
 

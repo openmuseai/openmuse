@@ -26,8 +26,9 @@ android {
         ndk { abiFilters += "arm64-v8a" }
     }
 
-    sourceSets.getByName("main").jniLibs.srcDir(
+    sourceSets.getByName("main").jniLibs.srcDirs(
         rootProject.file("../../../target/office-docx/android"),
+        rootProject.file("../../../target/paired-relay/android"),
     )
 
     val releaseKeystore = providers.environmentVariable("OPENMUSE_ANDROID_KEYSTORE").orNull
@@ -61,7 +62,21 @@ val verifyOpenMuseDocxNative by tasks.registering {
     }
 }
 
-tasks.named("preBuild").configure { dependsOn(verifyOpenMuseDocxNative) }
+val verifyOpenMusePairedNative by tasks.registering {
+    val library = rootProject.file(
+        "../../../target/paired-relay/android/arm64-v8a/libopenmuse_paired_relay.so",
+    )
+    inputs.file(library)
+    doLast {
+        check(library.isFile) {
+            "Missing Paired native bridge. Run scripts/build_paired_relay_mobile_artifacts.sh"
+        }
+    }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn(verifyOpenMuseDocxNative, verifyOpenMusePairedNative)
+}
 
 kotlin {
     compilerOptions {

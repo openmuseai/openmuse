@@ -55,4 +55,29 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('public identity accepts only two bounded public keys', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          expect(call.method, 'publicIdentity');
+          return {
+            'signingPublic': Uint8List(32),
+            'agreementPublic': Uint8List.fromList(List.filled(32, 1)),
+          };
+        });
+    final identity = await store.publicIdentity('device-key:abc');
+    expect(identity.signingPublic, hasLength(32));
+    expect(identity.agreementPublic, hasLength(32));
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          channel,
+          (call) async => {
+            'signingPublic': Uint8List(32),
+            'agreementPublic': Uint8List(32),
+            'privateKey': Uint8List(32),
+          },
+        );
+    await expectLater(store.publicIdentity('device-key:abc'), throwsStateError);
+  });
 }

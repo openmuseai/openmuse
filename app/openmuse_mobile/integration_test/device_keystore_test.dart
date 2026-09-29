@@ -24,6 +24,11 @@ void main() {
     expect(second.created, isFalse);
     expect(second.keyRef, startsWith('device-key:'));
     expect(second.keyRef, isNot(contains('seed')));
+    final firstIdentity = await store.publicIdentity(first.keyRef);
+    final secondIdentity = await store.publicIdentity(second.keyRef);
+    expect(secondIdentity.signingPublic, firstIdentity.signingPublic);
+    expect(secondIdentity.agreementPublic, firstIdentity.agreementPublic);
+    expect(firstIdentity.signingPublic, isNot(firstIdentity.agreementPublic));
 
     await store.delete(first.keyRef);
     final recreated = await store.ensure(
@@ -32,5 +37,7 @@ void main() {
     );
     expect(recreated.keyRef, first.keyRef);
     expect(recreated.created, isTrue);
+    final recreatedIdentity = await store.publicIdentity(recreated.keyRef);
+    expect(recreatedIdentity.signingPublic, isNot(firstIdentity.signingPublic));
   });
 }

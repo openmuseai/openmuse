@@ -6,6 +6,17 @@ import UIKit
 @_silgen_name("openmuse_docx_abi_version")
 private func openMuseDocxAbiVersion() -> UInt32
 
+@_silgen_name("openmuse_paired_abi_version")
+private func openMusePairedAbiVersion() -> UInt32
+
+@_silgen_name("openmuse_paired_device_public")
+private func openMusePairedDevicePublic(
+  _ seed: UnsafePointer<UInt8>?,
+  _ seedLength: Int,
+  _ output: UnsafeMutablePointer<UInt8>?,
+  _ outputLength: Int
+) -> Int32
+
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
@@ -13,6 +24,7 @@ private func openMuseDocxAbiVersion() -> UInt32
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     precondition(openMuseDocxAbiVersion() == 1, "Unsupported OpenMuse DOCX ABI")
+    precondition(openMusePairedAbiVersion() == 1, "Unsupported OpenMuse Paired ABI")
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
@@ -43,6 +55,9 @@ private enum DeviceKeyStoreBridge {
             let arguments = try dictionary(call.arguments)
             try delete(keyRef: try reference(arguments["keyRef"]))
             result(nil)
+          case "publicIdentity":
+            let arguments = try dictionary(call.arguments)
+            result(try publicIdentity(keyRef: try reference(arguments["keyRef"])))
           default:
             result(FlutterMethodNotImplemented)
           }
@@ -56,6 +71,46 @@ private enum DeviceKeyStoreBridge {
           )
         }
       }
+  }
+
+  private static func publicIdentity(keyRef: String) throws -> [String: Any] {
+    try validateKeyRef(keyRef)
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service,
+      kSecAttrAccount as String: keyRef,
+      kSecAttrSynchronizable as String: kCFBooleanFalse as Any,
+      kSecReturnData as String: kCFBooleanTrue as Any,
+      kSecMatchLimit as String: kSecMatchLimitOne,
+    ]
+    var item: CFTypeRef?
+    guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
+      var seed = item as? Data,
+      seed.count == 32
+    else { throw KeyStoreError.operation }
+    defer { seed.resetBytes(in: 0..<seed.count) }
+
+    var output = [UInt8](repeating: 0, count: 64)
+    defer {
+      output.withUnsafeMutableBytes { buffer in
+        buffer.initializeMemory(as: UInt8.self, repeating: 0)
+      }
+    }
+    let status = seed.withUnsafeBytes { seedBuffer in
+      output.withUnsafeMutableBytes { outputBuffer in
+        openMusePairedDevicePublic(
+          seedBuffer.bindMemory(to: UInt8.self).baseAddress,
+          seedBuffer.count,
+          outputBuffer.bindMemory(to: UInt8.self).baseAddress,
+          outputBuffer.count
+        )
+      }
+    }
+    guard status == 0 else { throw KeyStoreError.operation }
+    return [
+      "signingPublic": Data(output[0..<32]),
+      "agreementPublic": Data(output[32..<64]),
+    ]
   }
 
   private static func ensure(accountRef: String, deviceRef: String) throws -> [String: Any] {
@@ -102,8 +157,7 @@ private enum DeviceKeyStoreBridge {
   }
 
   private static func delete(keyRef: String) throws {
-    guard keyRef.range(of: #"^device-key:[0-9a-f]{64}$"#, options: .regularExpression) != nil
-    else { throw KeyStoreError.invalid }
+    try validateKeyRef(keyRef)
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: service,
@@ -114,6 +168,11 @@ private enum DeviceKeyStoreBridge {
     guard status == errSecSuccess || status == errSecItemNotFound else {
       throw KeyStoreError.operation
     }
+  }
+
+  private static func validateKeyRef(_ keyRef: String) throws {
+    guard keyRef.range(of: #"^device-key:[0-9a-f]{64}$"#, options: .regularExpression) != nil
+    else { throw KeyStoreError.invalid }
   }
 
   private static func dictionary(_ value: Any?) throws -> [String: Any] {

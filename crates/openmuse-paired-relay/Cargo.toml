@@ -5,6 +5,9 @@ edition.workspace = true
 rust-version.workspace = true
 license = "AGPL-3.0-only"
 
+[lib]
+crate-type = ["rlib", "cdylib", "staticlib"]
+
 [dependencies]
 chacha20poly1305.workspace = true
 ed25519-dalek.workspace = true
@@ -14,3 +17,6 @@ sha2.workspace = true
 thiserror.workspace = true
 x25519-dalek.workspace = true
 zeroize.workspace = true
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21.1"

@@ -17,6 +17,8 @@ use x25519_dalek::{PublicKey as AgreementPublicKey, StaticSecret};
 use zeroize::Zeroize;
 
 pub const MAX_RELAY_CIPHERTEXT_BYTES: usize = 64 * 1024 + 16;
+pub const ABI_VERSION: u32 = 1;
+pub const DEVICE_PUBLIC_BYTES: usize = 64;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -84,13 +86,15 @@ pub struct DeviceKeyPair {
 impl DeviceKeyPair {
     /// Deterministic constructor for a secret supplied by a platform keystore.
     /// Production callers must generate and retain a random 32-byte seed there.
-    pub fn from_seed(seed: [u8; 32]) -> Self {
-        let signing_seed = domain_hash(b"openmuse.device.signing.v1", &seed);
-        let agreement_seed = domain_hash(b"openmuse.device.agreement.v1", &seed);
-        Self {
-            signing: SigningKey::from_bytes(&signing_seed),
-            agreement: StaticSecret::from(agreement_seed),
-        }
+    pub fn from_seed(mut seed: [u8; 32]) -> Self {
+        let mut signing_seed = domain_hash(b"openmuse.device.signing.v1", &seed);
+        let mut agreement_seed = domain_hash(b"openmuse.device.agreement.v1", &seed);
+        seed.zeroize();
+        let signing = SigningKey::from_bytes(&signing_seed);
+        let agreement = StaticSecret::from(agreement_seed);
+        signing_seed.zeroize();
+        agreement_seed.zeroize();
+        Self { signing, agreement }
     }
 
     pub fn signing_public(&self) -> [u8; 32] {
@@ -100,6 +104,76 @@ impl DeviceKeyPair {
     pub fn agreement_public(&self) -> [u8; 32] {
         AgreementPublicKey::from(&self.agreement).to_bytes()
     }
+}
+
+/// Public device identity encoded as Ed25519 bytes followed by X25519 bytes.
+pub fn device_public_from_seed(mut seed: [u8; 32]) -> [u8; DEVICE_PUBLIC_BYTES] {
+    let keys = DeviceKeyPair::from_seed(seed);
+    seed.zeroize();
+    let mut output = [0_u8; DEVICE_PUBLIC_BYTES];
+    output[..32].copy_from_slice(&keys.signing_public());
+    output[32..].copy_from_slice(&keys.agreement_public());
+    output
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn openmuse_paired_abi_version() -> u32 {
+    ABI_VERSION
+}
+
+#[unsafe(no_mangle)]
+/// Derive only the public identity from a platform-owned device seed.
+///
+/// # Safety
+/// `seed` must reference exactly `seed_len` readable bytes and `output` must
+/// reference `output_len` writable bytes for this call. The seed is copied to
+/// a zeroized Rust buffer and is never retained.
+pub unsafe extern "C" fn openmuse_paired_device_public(
+    seed: *const u8,
+    seed_len: usize,
+    output: *mut u8,
+    output_len: usize,
+) -> i32 {
+    std::panic::catch_unwind(|| {
+        if seed.is_null() || output.is_null() || seed_len != 32 || output_len < DEVICE_PUBLIC_BYTES
+        {
+            return 1;
+        }
+        let mut owned_seed = [0_u8; 32];
+        owned_seed.copy_from_slice(unsafe { std::slice::from_raw_parts(seed, seed_len) });
+        let public = device_public_from_seed(owned_seed);
+        owned_seed.zeroize();
+        unsafe {
+            std::ptr::copy_nonoverlapping(public.as_ptr(), output, DEVICE_PUBLIC_BYTES);
+        }
+        0
+    })
+    .unwrap_or(2)
+}
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_io_openmuse_openmuse_1mobile_PairedCryptoNative_devicePublic(
+    env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+    seed: jni::objects::JByteArray,
+) -> jni::sys::jbyteArray {
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let mut bytes = env.convert_byte_array(&seed).ok()?;
+        if bytes.len() != 32 {
+            bytes.zeroize();
+            return None;
+        }
+        let mut owned_seed = [0_u8; 32];
+        owned_seed.copy_from_slice(&bytes);
+        bytes.zeroize();
+        let public = device_public_from_seed(owned_seed);
+        owned_seed.zeroize();
+        env.byte_array_from_slice(&public)
+            .ok()
+            .map(jni::objects::JByteArray::into_raw)
+    }));
+    result.ok().flatten().unwrap_or(std::ptr::null_mut())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

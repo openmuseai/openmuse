@@ -1,6 +1,6 @@
 # Paired Desktop E2E Channel 与 Opaque Relay
 
-> 状态：Engineering Accepted；Mobile 平台密钥存储已实现，native crypto bridge/真实 Relay 部署门禁待完成
+> 状态：Engineering Accepted；Mobile 平台密钥存储与 public-identity native bridge 已实现，完整配对操作/真实 Relay 部署门禁待完成
 >
 > 子需求：M5 integration increment
 >
@@ -86,9 +86,21 @@ OPENMUSE_ANDROID_SERIAL=<serial> ./scripts/test_mobile_device_keystore_android.s
 可见对象保持 opaque。iOS 当前由 `scripts/test_ios_beta.sh` 做无签名 arm64 编译门禁；
 Keychain 真机行为仍需 Apple 签名设备证据。
 
-这个增量只完成 at-rest key storage。iOS Secure Enclave 不原生支持本协议采用的
-Ed25519/X25519，因此下一增量必须让 Swift/Kotlin 在原生边界内取 seed 并调用 Rust crypto
-bridge；不能为了接入而把 seed 返回 Dart。
+`openmuse-paired-relay` 同时产出 Android `libopenmuse_paired_relay.so` 与 iOS
+`OpenMusePaired.xcframework`。Kotlin/Swift 在原生层解密/读取 seed，调用同一 Rust ABI
+派生 Ed25519 signing public 与 X25519 agreement public，随后清零 seed 和中间 buffer；
+Dart 只收到两段 32-byte public key。Android JNI 与 iOS C ABI 都不提供“读取 seed”的
+接口。构建入口是：
+
+```bash
+./scripts/build_paired_relay_mobile_artifacts.sh
+```
+
+当前 native bridge 有意只开放 public identity，这是账号设备注册的最小前置能力。下一
+增量仍需以 opaque operation API 暴露 offer 签名、X25519 handshake 和 channel seal/open，
+不能为了复用 Rust 领域核而把 seed 或派生私钥返回 Dart。iOS Secure Enclave 不原生支持
+本协议采用的 Ed25519/X25519，因此 Keychain seed + 进程内 Rust operation boundary 是当前
+可实现边界，后续仍须密码学与内存取证审计。
 
 ## 7. 剩余发布门禁
 
@@ -97,7 +109,7 @@ bridge；不能为了接入而把 seed 返回 Dart。
 - Desktop Keystore adapter、Mobile/Desktop 备份策略与 key rotation；
 - 账号服务签发、防回滚和撤销 `DeviceRegistration`；
 - 真实 WSS/QUIC outbound relay 的限流、backpressure、离线队列上限和多地域故障；
-- Rust Core 到 platform/Desktop 的最小 native bridge 与内存清零审计；
+- Rust Core 的 offer/handshake/channel opaque operation bridge 与内存取证审计；
 - 第三方密码学评审、移动端抓包、代理/恶意 relay 和设备被替换演练。
 
 这些需要平台签名环境和部署基础设施；在证据完成前，M5 维持 Engineering Accepted。

@@ -46,6 +46,30 @@ final class PlatformDeviceKeyStore implements DeviceKeyStorePort {
   }
 
   @override
+  Future<DevicePublicIdentity> publicIdentity(String keyRef) async {
+    _validateRef(keyRef);
+    final value = await channel.invokeMapMethod<String, Object?>(
+      'publicIdentity',
+      {'keyRef': keyRef},
+    );
+    if (value == null ||
+        value.keys.any(
+          (key) => const {'seed', 'privateKey', 'secret'}.contains(key),
+        )) {
+      throw StateError('invalid device public identity response');
+    }
+    final signingPublic = value['signingPublic'];
+    final agreementPublic = value['agreementPublic'];
+    if (signingPublic is! Uint8List || agreementPublic is! Uint8List) {
+      throw StateError('invalid device public identity');
+    }
+    return DevicePublicIdentity(
+      signingPublic: signingPublic,
+      agreementPublic: agreementPublic,
+    );
+  }
+
+  @override
   Future<void> delete(String keyRef) async {
     _validateRef(keyRef);
     await channel.invokeMethod<void>('delete', {'keyRef': keyRef});
