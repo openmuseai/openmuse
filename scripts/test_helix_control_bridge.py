@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Exercise the packaged hx over a real PTY and authenticated Host socket."""
 
+from __future__ import annotations
+
 import json
 import os
 import pty
@@ -82,16 +84,19 @@ def main() -> None:
                     if dirty["type"] == "state" and dirty["dirty"]:
                         break
 
-                def request(request_id: int, command: str, revision: int) -> tuple[dict, list]:
+                def request(request_id: int, command: str, revision: int, text: str | None = None) -> tuple[dict, list]:
+                    message = {
+                        "version": 1,
+                        "type": "command",
+                        "id": request_id,
+                        "command": command,
+                        "path": dirty["path"],
+                        "revision": revision,
+                    }
+                    if text is not None:
+                        message["text"] = text
                     peer.sendall(
-                        (json.dumps({
-                            "version": 1,
-                            "type": "command",
-                            "id": request_id,
-                            "command": command,
-                            "path": dirty["path"],
-                            "revision": revision,
-                        }) + "\n").encode("utf-8")
+                        (json.dumps(message) + "\n").encode("utf-8")
                     )
                     events = []
                     while True:
@@ -113,13 +118,23 @@ def main() -> None:
                 assert redone["ok"], redone
                 selected, _ = request(5, "select_all", redone["revision"])
                 assert selected["ok"], selected
-                searched, _ = request(6, "find", selected["revision"])
+                copied, _ = request(6, "copy", selected["revision"])
+                assert copied["ok"] and copied["text"].startswith("x"), copied
+                unsafe_cut, _ = request(7, "cut", copied["revision"], "different")
+                assert not unsafe_cut["ok"] and unsafe_cut["error"] == "selection_changed", unsafe_cut
+                cut, _ = request(8, "cut", copied["revision"], copied["text"])
+                assert cut["ok"] and cut["dirty"], cut
+                pasted, _ = request(9, "paste", cut["revision"], copied["text"])
+                assert pasted["ok"] and pasted["dirty"], pasted
+                searched, _ = request(10, "find", pasted["revision"])
                 assert searched["ok"], searched
-                flushed, flush_events = request(7, "flush", searched["revision"])
+                flushed, flush_events = request(11, "flush", searched["revision"])
                 assert flushed["ok"] and not flushed["dirty"], flushed
                 assert any(event["type"] == "saved" for event in flush_events), flush_events
                 assert source.read_text(encoding="utf-8").startswith("x"), flushed
-                print("Helix PTY/control bridge: authenticated commands, durable flush and undo/redo OK")
+                prepared, _ = request(12, "prepare_switch", flushed["revision"])
+                assert prepared["ok"] and not prepared["dirty"], prepared
+                print("Helix PTY/control bridge: clipboard, safe switch and durable flush OK")
         finally:
             process.terminate()
             try:

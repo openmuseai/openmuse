@@ -30,6 +30,39 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
       GlobalKey<TerminalViewState>();
   int _pointerDownButtons = 0;
 
+  void _runShortcut(Future<void> Function() action) {
+    unawaited(
+      action().catchError((Object error, StackTrace _) {
+        if (!mounted) return;
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text('$error')));
+      }),
+    );
+  }
+
+  Future<void> _copySelection({required bool cut}) async {
+    final selected = await widget.runtime.semanticCommand('copy');
+    final text = selected.text;
+    if (text == null) throw StateError('没有可复制的文本选区');
+    await Clipboard.setData(ClipboardData(text: text));
+    if (cut) {
+      await widget.runtime.semanticCommand(
+        'cut',
+        text: text,
+        expectedRevision: selected.revision,
+        expectedPath: selected.path,
+      );
+    }
+  }
+
+  Future<void> _pasteClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data?.text case final text?) {
+      await widget.runtime.semanticCommand('paste', text: text);
+    }
+  }
+
   KeyEventResult _handlePlatformShortcut(FocusNode _, KeyEvent event) {
     if (widget.runtime.isSwitching) return KeyEventResult.handled;
     if (widget.runtime.preferences.inputProfile !=
@@ -43,8 +76,21 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
         : !keyboard.isControlPressed) {
       return KeyEventResult.ignored;
     }
+    if (keyboard.isAltPressed) return KeyEventResult.ignored;
     final key = event.logicalKey;
-    final String? command;
+    if (key == LogicalKeyboardKey.keyC) {
+      _runShortcut(() => _copySelection(cut: false));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.keyX) {
+      _runShortcut(() => _copySelection(cut: true));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.keyV) {
+      _runShortcut(_pasteClipboard);
+      return KeyEventResult.handled;
+    }
+    final String command;
     if (key == LogicalKeyboardKey.keyS) {
       command = 'save';
     } else if (key == LogicalKeyboardKey.keyF) {
@@ -58,19 +104,9 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
     } else {
       return KeyEventResult.ignored;
     }
-    unawaited(
-      widget.runtime
-          .semanticCommand(command)
-          .then<void>(
-            (_) {},
-            onError: (Object error, StackTrace _) {
-              if (!mounted) return;
-              ScaffoldMessenger.maybeOf(
-                context,
-              )?.showSnackBar(SnackBar(content: Text('$error')));
-            },
-          ),
-    );
+    _runShortcut(() async {
+      await widget.runtime.semanticCommand(command);
+    });
     return KeyEventResult.handled;
   }
 

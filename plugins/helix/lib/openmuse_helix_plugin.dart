@@ -29,6 +29,7 @@ final class OpenMuseHelixPlugin
   final ValueNotifier<HelixPreferences> _preferences = ValueNotifier(
     const HelixPreferences(),
   );
+  HelixPreferences get currentPreferences => _preferences.value;
 
   @override
   final descriptor = const OpenMusePluginDescriptor(
@@ -184,11 +185,17 @@ final class OpenMuseHelixPlugin
   }
 
   Future<void> updatePreferences(HelixPreferences next) async {
+    final previous = _preferences.value;
     await _runtime?.configure(next);
-    await _context?.executeHostCommand('settings.plugin.write', {
-      'pluginId': descriptor.id,
-      'values': next.toJson(),
-    });
+    try {
+      await _context?.executeHostCommand('settings.plugin.write', {
+        'pluginId': descriptor.id,
+        'values': next.toJson(),
+      });
+    } catch (_) {
+      await _runtime?.configure(previous);
+      rethrow;
+    }
     _preferences.value = next;
   }
 
@@ -261,19 +268,19 @@ final class OpenMuseHelixPlugin
         _HelixSettingRow(
           label: '输入模式',
           hint: _runtime?.nonmodalSelectable == true
-              ? '引擎级实验模式；切换前须关闭编辑会话'
-              : '非模态引擎仍在验证，发布构建暂不开放',
+              ? '切换时会先保存所有打开的编辑缓冲区，再恢复文件会话'
+              : '当前安装的 Helix 引擎不支持 VS Code 模式',
           trailing: DropdownButton<HelixInputProfile>(
             value: value.inputProfile,
             items: [
               const DropdownMenuItem(
                 value: HelixInputProfile.helixModal,
-                child: Text('Helix（模态）'),
+                child: Text('Vim 模式'),
               ),
               DropdownMenuItem(
                 value: HelixInputProfile.standardNonmodal,
                 enabled: _runtime?.nonmodalSelectable == true,
-                child: const Text('标准非模态（实验）'),
+                child: const Text('VS Code 模式'),
               ),
             ],
             onChanged: (profile) {

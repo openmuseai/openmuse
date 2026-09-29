@@ -45,9 +45,7 @@ final class HelixRuntimePool extends ChangeNotifier {
   bool _capabilityChecked = false;
   File? _configFile;
   String? _resolvedRustAnalyzer;
-  bool get nonmodalSelectable =>
-      supportsNonmodal &&
-      Platform.environment['OPENMUSE_EXPERIMENTAL_NONMODAL'] == '1';
+  bool get nonmodalSelectable => supportsNonmodal;
   final String _configInstance = DateTime.now().microsecondsSinceEpoch
       .toString();
   String get _generatedConfigDirectory =>
@@ -61,11 +59,12 @@ final class HelixRuntimePool extends ChangeNotifier {
     if (!_capabilityChecked) await probeCapabilities();
     if (value.inputProfile == HelixInputProfile.standardNonmodal &&
         !nonmodalSelectable) {
-      throw StateError('非模态模式尚未通过跨平台输入、剪贴板和 Host 事件门禁');
+      throw StateError('当前 Helix 引擎不支持 VS Code 输入模式');
     }
     if (_sessions.isNotEmpty &&
         value.inputProfile != preferences.inputProfile) {
-      throw StateError('请先关闭所有 Helix 编辑会话，再切换输入模式');
+      await _switchActiveSessions(value);
+      return;
     }
     if (_sessions.isNotEmpty &&
         preferences.inputProfile == HelixInputProfile.standardNonmodal &&
@@ -94,6 +93,48 @@ final class HelixRuntimePool extends ChangeNotifier {
     }
   }
 
+  Future<void> _switchActiveSessions(HelixPreferences next) async {
+    final previous = preferences;
+    final paths = _sessions.keys.toList(growable: false);
+    final previouslyActive = activePath;
+    for (final session in _sessions.values.toList(growable: false)) {
+      final channel = session.channel;
+      if (channel == null) throw StateError('当前 Helix 会话不支持安全切换输入模式');
+      await channel.firstState.timeout(const Duration(seconds: 8));
+      await _semanticForSession(session, 'prepare_switch');
+    }
+
+    await stop();
+    try {
+      preferences = next;
+      await _writeConfig();
+      await _reopenSessions(paths, previouslyActive);
+      notifyListeners();
+    } catch (error) {
+      await stop();
+      preferences = previous;
+      await _writeConfig();
+      try {
+        await _reopenSessions(paths, previouslyActive);
+      } catch (restoreError) {
+        lastError = StateError('模式切换失败，旧模式也未能重新启动：$restoreError');
+        notifyListeners();
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> _reopenSessions(List<String> paths, String? selected) async {
+    for (final path in paths) {
+      await openDocument(path);
+    }
+    if (selected != null && _sessions.containsKey(selected)) {
+      activePath = selected;
+      state = HelixRuntimeState.ready;
+      notifyListeners();
+    }
+  }
+
   Future<bool> probeCapabilities() async {
     _capabilityChecked = true;
     // The bundled fork is pinned by the application build. Starting another
@@ -108,7 +149,7 @@ final class HelixRuntimePool extends ChangeNotifier {
       final result = await Process.run(executable, const ['--version']);
       supportsNonmodal =
           result.exitCode == 0 &&
-          result.stdout.toString().contains('openmuse-nonmodal.3');
+          result.stdout.toString().contains('openmuse-nonmodal.4');
     } on ProcessException {
       supportsNonmodal = false;
     }
@@ -149,10 +190,21 @@ final class HelixRuntimePool extends ChangeNotifier {
     pty.write(Uint8List.fromList(const [0x0d]));
   }
 
-  Future<HelixCommandResult> semanticCommand(String name) async {
+  Future<HelixCommandResult> semanticCommand(
+    String name, {
+    String? text,
+    int? expectedRevision,
+    String? expectedPath,
+  }) async {
     final session = _sessions[activePath];
     if (session == null) throw StateError('Helix 尚未启动');
-    return _semanticForSession(session, name);
+    return _semanticForSession(
+      session,
+      name,
+      text: text,
+      expectedRevision: expectedRevision,
+      expectedPath: expectedPath,
+    );
   }
 
   Future<void> flushResource(String path) async {
@@ -172,8 +224,11 @@ final class HelixRuntimePool extends ChangeNotifier {
 
   Future<HelixCommandResult> _semanticForSession(
     _HelixSession session,
-    String name,
-  ) async {
+    String name, {
+    String? text,
+    int? expectedRevision,
+    String? expectedPath,
+  }) async {
     final state = session.latestState;
     final channel = session.channel;
     if (state == null || channel == null) {
@@ -181,13 +236,22 @@ final class HelixRuntimePool extends ChangeNotifier {
     }
     for (var attempt = 0; attempt < 2; attempt++) {
       final observed = session.latestState ?? state;
+      if (expectedPath != null && observed.path != expectedPath) {
+        throw StateError('Helix 活动文件已变化，请重试');
+      }
+      if (expectedRevision != null && observed.revision != expectedRevision) {
+        throw StateError('Helix 选区已变化，请重试');
+      }
       final result = await channel.command(
         name: name,
         path: observed.path,
-        revision: observed.revision,
+        revision: expectedRevision ?? observed.revision,
+        text: text,
       );
       if (result.ok) return result;
-      if (result.error == 'stale_revision' && attempt == 0) {
+      if (result.error == 'stale_revision' &&
+          attempt == 0 &&
+          expectedRevision == null) {
         continue;
       }
       throw StateError('Helix $name 失败：${result.error ?? '未知错误'}');

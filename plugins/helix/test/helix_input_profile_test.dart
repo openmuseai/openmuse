@@ -14,6 +14,12 @@ void main() {
           .configToml,
       contains('input-profile = "standard-nonmodal"'),
     );
+    final insertBindings = legacy
+        .copyWith(inputProfile: HelixInputProfile.standardNonmodal)
+        .configToml
+        .split('[keys.insert]')[1]
+        .split('[keys.normal]')[0];
+    expect(insertBindings, isNot(contains('C-s = ":write"')));
     expect(
       HelixPreferences.fromJson(
         legacy

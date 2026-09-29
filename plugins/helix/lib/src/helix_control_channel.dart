@@ -25,6 +25,7 @@ final class HelixCommandResult {
     required this.dirty,
     this.path,
     this.error,
+    this.text,
   });
 
   final bool ok;
@@ -32,6 +33,7 @@ final class HelixCommandResult {
   final int revision;
   final bool dirty;
   final String? error;
+  final String? text;
 }
 
 /// One loopback listener per PTY. A random token and the spawned PID authenticate
@@ -107,7 +109,7 @@ final class HelixControlChannel {
         }
       } else {
         _pending.add(byte);
-        if (_pending.length > 16384) {
+        if (_pending.length > 2 * 1024 * 1024) {
           socket.destroy();
           _pending.clear();
           return;
@@ -141,13 +143,16 @@ final class HelixControlChannel {
       final dirty = decoded['dirty'];
       final path = decoded['path'];
       final error = decoded['error'];
+      final text = decoded['text'];
       if (id is! int ||
           ok is! bool ||
           revision is! int ||
           revision < 0 ||
           dirty is! bool ||
           (path != null && (path is! String || !File(path).isAbsolute)) ||
-          (error != null && error is! String)) {
+          (error != null && error is! String) ||
+          (text != null &&
+              (text is! String || utf8.encode(text).length > 1024 * 1024))) {
         return;
       }
       _pendingCommands
@@ -159,6 +164,7 @@ final class HelixControlChannel {
               revision: revision,
               dirty: dirty,
               error: error as String?,
+              text: text as String?,
             ),
           );
       return;
@@ -190,12 +196,16 @@ final class HelixControlChannel {
     required String name,
     required String path,
     required int revision,
+    String? text,
   }) async {
     final peer = _peer;
     if (_closed || !_authenticated || peer == null) {
       throw StateError('Helix 控制通道尚未就绪');
     }
-    if (name.length > 32 || !File(path).isAbsolute || revision < 0) {
+    if (name.length > 32 ||
+        !File(path).isAbsolute ||
+        revision < 0 ||
+        (text != null && utf8.encode(text).length > 1024 * 1024)) {
       throw const FormatException('无效 Helix 语义命令');
     }
     final id = _nextRequestId++;
@@ -203,7 +213,7 @@ final class HelixControlChannel {
     _pendingCommands[id] = pending;
     try {
       peer.write(
-        '${jsonEncode({'version': 1, 'type': 'command', 'id': id, 'command': name, 'path': path, 'revision': revision})}\n',
+        '${jsonEncode({'version': 1, 'type': 'command', 'id': id, 'command': name, 'path': path, 'revision': revision, if (text != null) 'text': text})}\n',
       );
       await peer.flush();
       return await pending.future.timeout(const Duration(seconds: 30));

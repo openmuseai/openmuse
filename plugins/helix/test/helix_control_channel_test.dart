@@ -98,19 +98,26 @@ void main() {
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .first;
-    final future = channel.command(name: 'save', path: activePath, revision: 3);
+    final future = channel.command(
+      name: 'paste',
+      path: activePath,
+      revision: 3,
+      text: '中文 🧪',
+    );
     final request = jsonDecode(await incoming) as Map<String, dynamic>;
     expect(request['type'], 'command');
-    expect(request['command'], 'save');
+    expect(request['command'], 'paste');
     expect(request['path'], activePath);
     expect(request['revision'], 3);
+    expect(request['text'], '中文 🧪');
     socket.write(
-      '${jsonEncode({'version': 1, 'type': 'result', 'id': request['id'], 'ok': true, 'path': activePath, 'revision': 4, 'dirty': false})}\n',
+      '${jsonEncode({'version': 1, 'type': 'result', 'id': request['id'], 'ok': true, 'path': activePath, 'revision': 4, 'dirty': false, 'text': 'copied'})}\n',
     );
     await socket.flush();
     final result = await future.timeout(const Duration(seconds: 2));
     expect(result.ok, isTrue);
     expect(result.revision, 4);
     expect(result.dirty, isFalse);
+    expect(result.text, 'copied');
   });
 }

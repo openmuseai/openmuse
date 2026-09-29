@@ -187,7 +187,7 @@ display-messages = true
 display-inlay-hints = $enableLsp
 
 [keys.insert]
-C-s = ":write"
+${inputProfile == HelixInputProfile.standardNonmodal ? '' : 'C-s = ":write"'}
 ${inputProfile == HelixInputProfile.standardNonmodal
           ? 'C-z = "undo"\nC-y = "redo"\nC-f = "search"\nC-a = "select_all"\n"C-left" = "move_prev_word_start"\n"C-right" = "move_next_word_end"'
           : vscodeKeymap
