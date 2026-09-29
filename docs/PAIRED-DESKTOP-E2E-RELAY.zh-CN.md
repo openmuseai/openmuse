@@ -1,6 +1,6 @@
 # Paired Desktop E2E Channel 与 Opaque Relay
 
-> 状态：Engineering Accepted；Mobile 平台密钥、signed offer 与 Rust opaque channel handle ABI 已实现，平台 channel binding/真实 Relay 部署门禁待完成
+> 状态：Engineering Accepted；Mobile 平台密钥与完整 opaque channel binding 已实现，账号服务/真实 Relay 部署门禁待完成
 >
 > 子需求：M5 integration increment
 >
@@ -110,12 +110,18 @@ Rust mobile artifact 进一步提供 process-local opaque handle ABI：
    handle，错误 SAS 同样消费握手，避免反复猜测；
 3. `channel_seal/open` 只通过 handle 操作 bounded frame；channel key、nonce prefix 与
    sequence 始终位于 Rust，重放/乱序继续 fail closed；
-4. `native_handle_close` 触发 Drop 清零。进程重启后 handle 必然失效，不做磁盘持久化。
+4. `native_handle_close` 触发 Drop 清零；单进程 handshake + channel 总数硬限制为 128。
+   进程重启后 handle 必然失效，不做磁盘持久化。
 
 FFI TCK 用两个独立 seed 完成双向 begin/confirm/seal/open，并验证 ciphertext 不含明文、
-重放拒绝和 close。Android/iOS artifacts 均已构建并核对导出符号。下一增量仍需把这组 ABI
-绑定到 Kotlin/Swift typed operations；不能为了复用 Rust 领域核而把 seed 或派生私钥返回
-Dart。iOS Secure Enclave 不原生支持
+重放拒绝和 close。`PairedCryptoPort` 将它绑定为 Flutter typed operations；Dart 只持有
+process-local handle、SAS、relay envelope 与被请求的 capability response，不持有 seed、
+private key、shared secret 或 channel key。
+
+Android 真机门禁使用两个独立 Keystore identity 完成 offer→双端 SAS→confirm→seal/open→
+replay reject→close，贯通 Dart/MethodChannel/Kotlin/JNI/Rust。iOS Swift binding 已通过 arm64
+无签名构建及最终 App 符号检查，仍需签名真机证据。不能为了复用 Rust 领域核而把 seed
+或派生私钥返回 Dart。iOS Secure Enclave 不原生支持
 本协议采用的 Ed25519/X25519，因此 Keychain seed + 进程内 Rust operation boundary 是当前
 可实现边界，后续仍须密码学与内存取证审计。
 
@@ -126,7 +132,7 @@ Dart。iOS Secure Enclave 不原生支持
 - Desktop Keystore adapter、Mobile/Desktop 备份策略与 key rotation；
 - 账号服务签发、防回滚和撤销 `DeviceRegistration`；
 - 真实 WSS/QUIC outbound relay 的限流、backpressure、离线队列上限和多地域故障；
-- Kotlin/Swift 的 handshake/channel typed binding 与内存取证审计；
+- Mobile/Desktop 原生边界的第三方内存取证审计；
 - 第三方密码学评审、移动端抓包、代理/恶意 relay 和设备被替换演练。
 
 这些需要平台签名环境和部署基础设施；在证据完成前，M5 维持 Engineering Accepted。

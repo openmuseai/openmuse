@@ -40,6 +40,39 @@ private func openMusePairedIssueOffer(
 @_silgen_name("openmuse_paired_buffer_free")
 private func openMusePairedBufferFree(_ buffer: OpenMusePairedBuffer)
 
+@_silgen_name("openmuse_paired_begin_handshake")
+private func openMusePairedBeginHandshake(
+  _ seed: UnsafePointer<UInt8>?, _ seedLength: Int,
+  _ localOffer: UnsafePointer<UInt8>?, _ localOfferLength: Int,
+  _ remoteOffer: UnsafePointer<UInt8>?, _ remoteOfferLength: Int,
+  _ localRegistration: UnsafePointer<UInt8>?, _ localRegistrationLength: Int,
+  _ remoteRegistration: UnsafePointer<UInt8>?, _ remoteRegistrationLength: Int
+) -> OpenMusePairedBuffer
+
+@_silgen_name("openmuse_paired_confirm_handshake")
+private func openMusePairedConfirmHandshake(
+  _ handshakeHandle: UInt64,
+  _ confirmationCode: UnsafePointer<UInt8>?,
+  _ confirmationCodeLength: Int
+) -> OpenMusePairedBuffer
+
+@_silgen_name("openmuse_paired_channel_seal")
+private func openMusePairedChannelSeal(
+  _ channelHandle: UInt64,
+  _ plaintext: UnsafePointer<UInt8>?,
+  _ plaintextLength: Int
+) -> OpenMusePairedBuffer
+
+@_silgen_name("openmuse_paired_channel_open")
+private func openMusePairedChannelOpen(
+  _ channelHandle: UInt64,
+  _ envelope: UnsafePointer<UInt8>?,
+  _ envelopeLength: Int
+) -> OpenMusePairedBuffer
+
+@_silgen_name("openmuse_paired_native_handle_close")
+private func openMusePairedNativeHandleClose(_ handle: UInt64) -> Int32
+
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
@@ -91,6 +124,48 @@ private enum DeviceKeyStoreBridge {
                 registrationGeneration: try generation(arguments["registrationGeneration"])
               )
             )
+          case "beginHandshake":
+            let arguments = try dictionary(call.arguments)
+            result(
+              try beginHandshake(
+                keyRef: try reference(arguments["keyRef"]),
+                localOfferJson: try json(arguments["localOfferJson"]),
+                remoteOfferJson: try json(arguments["remoteOfferJson"]),
+                localRegistrationJson: try json(arguments["localRegistrationJson"]),
+                remoteRegistrationJson: try json(arguments["remoteRegistrationJson"])
+              )
+            )
+          case "confirmHandshake":
+            let arguments = try dictionary(call.arguments)
+            result(
+              try confirmHandshake(
+                handle: try handle(arguments["handshakeHandle"]),
+                code: try confirmationCode(arguments["confirmationCode"])
+              )
+            )
+          case "channelSeal":
+            let arguments = try dictionary(call.arguments)
+            result(
+              try channelSeal(
+                handle: try handle(arguments["channelHandle"]),
+                plaintext: try bytes(arguments["plaintext"])
+              )
+            )
+          case "channelOpen":
+            let arguments = try dictionary(call.arguments)
+            result(
+              FlutterStandardTypedData(
+                bytes: try channelOpen(
+                  handle: try handle(arguments["channelHandle"]),
+                  envelopeJson: try json(arguments["envelopeJson"])
+                )
+              )
+            )
+          case "closeNativeHandle":
+            let arguments = try dictionary(call.arguments)
+            guard openMusePairedNativeHandleClose(try handle(arguments["handle"])) == 0
+            else { throw KeyStoreError.operation }
+            result(nil)
           default:
             result(FlutterMethodNotImplemented)
           }
@@ -171,6 +246,91 @@ private enum DeviceKeyStoreBridge {
       else { throw KeyStoreError.operation }
       return value
     }
+  }
+
+  private static func beginHandshake(
+    keyRef: String,
+    localOfferJson: String,
+    remoteOfferJson: String,
+    localRegistrationJson: String,
+    remoteRegistrationJson: String
+  ) throws -> String {
+    let localOffer = Data(localOfferJson.utf8)
+    let remoteOffer = Data(remoteOfferJson.utf8)
+    let localRegistration = Data(localRegistrationJson.utf8)
+    let remoteRegistration = Data(remoteRegistrationJson.utf8)
+    return try withDeviceSeed(keyRef: keyRef) { seed in
+      let buffer = seed.withUnsafeBytes { seedBytes in
+        localOffer.withUnsafeBytes { localOfferBytes in
+          remoteOffer.withUnsafeBytes { remoteOfferBytes in
+            localRegistration.withUnsafeBytes { localRegistrationBytes in
+              remoteRegistration.withUnsafeBytes { remoteRegistrationBytes in
+                openMusePairedBeginHandshake(
+                  seedBytes.bindMemory(to: UInt8.self).baseAddress, seedBytes.count,
+                  localOfferBytes.bindMemory(to: UInt8.self).baseAddress, localOfferBytes.count,
+                  remoteOfferBytes.bindMemory(to: UInt8.self).baseAddress, remoteOfferBytes.count,
+                  localRegistrationBytes.bindMemory(to: UInt8.self).baseAddress,
+                  localRegistrationBytes.count,
+                  remoteRegistrationBytes.bindMemory(to: UInt8.self).baseAddress,
+                  remoteRegistrationBytes.count
+                )
+              }
+            }
+          }
+        }
+      }
+      guard let value = String(data: try consume(buffer), encoding: .utf8)
+      else { throw KeyStoreError.operation }
+      return value
+    }
+  }
+
+  private static func confirmHandshake(handle: UInt64, code: String) throws -> String {
+    let codeData = Data(code.utf8)
+    let buffer = codeData.withUnsafeBytes { codeBytes in
+      openMusePairedConfirmHandshake(
+        handle,
+        codeBytes.bindMemory(to: UInt8.self).baseAddress,
+        codeBytes.count
+      )
+    }
+    guard let value = String(data: try consume(buffer), encoding: .utf8)
+    else { throw KeyStoreError.operation }
+    return value
+  }
+
+  private static func channelSeal(handle: UInt64, plaintext: Data) throws -> String {
+    guard !plaintext.isEmpty, plaintext.count <= 64 * 1024 else { throw KeyStoreError.invalid }
+    let buffer = plaintext.withUnsafeBytes { plaintextBytes in
+      openMusePairedChannelSeal(
+        handle,
+        plaintextBytes.bindMemory(to: UInt8.self).baseAddress,
+        plaintextBytes.count
+      )
+    }
+    guard let value = String(data: try consume(buffer), encoding: .utf8)
+    else { throw KeyStoreError.operation }
+    return value
+  }
+
+  private static func channelOpen(handle: UInt64, envelopeJson: String) throws -> Data {
+    let envelope = Data(envelopeJson.utf8)
+    let buffer = envelope.withUnsafeBytes { envelopeBytes in
+      openMusePairedChannelOpen(
+        handle,
+        envelopeBytes.bindMemory(to: UInt8.self).baseAddress,
+        envelopeBytes.count
+      )
+    }
+    return try consume(buffer)
+  }
+
+  private static func consume(_ buffer: OpenMusePairedBuffer) throws -> Data {
+    defer { openMusePairedBufferFree(buffer) }
+    guard buffer.status == 0, let pointer = buffer.ptr else {
+      throw KeyStoreError.operation
+    }
+    return Data(bytes: pointer, count: buffer.len)
   }
 
   private static func withDeviceSeed<T>(
@@ -275,6 +435,31 @@ private enum DeviceKeyStoreBridge {
     guard let number = value as? NSNumber, number.int64Value > 0
     else { throw KeyStoreError.invalid }
     return number.uint64Value
+  }
+
+  private static func handle(_ value: Any?) throws -> UInt64 {
+    guard let number = value as? NSNumber, number.int64Value > 0
+    else { throw KeyStoreError.invalid }
+    return number.uint64Value
+  }
+
+  private static func confirmationCode(_ value: Any?) throws -> String {
+    guard let code = value as? String,
+      code.range(of: #"^[0-9]{6}$"#, options: .regularExpression) != nil
+    else { throw KeyStoreError.invalid }
+    return code
+  }
+
+  private static func json(_ value: Any?) throws -> String {
+    guard let json = value as? String, !json.isEmpty, json.utf8.count <= 64 * 1024
+    else { throw KeyStoreError.invalid }
+    return json
+  }
+
+  private static func bytes(_ value: Any?) throws -> Data {
+    if let typed = value as? FlutterStandardTypedData { return typed.data }
+    if let data = value as? Data { return data }
+    throw KeyStoreError.invalid
   }
 
   private enum KeyStoreError: Error { case invalid, operation }

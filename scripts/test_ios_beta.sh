@@ -46,6 +46,11 @@ nm -gU "$app/Runner" | grep -q '_openmuse_paired_abi_version'
 nm -gU "$app/Runner" | grep -q '_openmuse_paired_device_public'
 nm -gU "$app/Runner" | grep -q '_openmuse_paired_issue_offer'
 nm -gU "$app/Runner" | grep -q '_openmuse_paired_buffer_free'
+nm -gU "$app/Runner" | grep -q '_openmuse_paired_begin_handshake'
+nm -gU "$app/Runner" | grep -q '_openmuse_paired_confirm_handshake'
+nm -gU "$app/Runner" | grep -q '_openmuse_paired_channel_seal'
+nm -gU "$app/Runner" | grep -q '_openmuse_paired_channel_open'
+nm -gU "$app/Runner" | grep -q '_openmuse_paired_native_handle_close'
 
 if codesign --verify --deep --strict "$app" 2>"$evidence_dir/codesign.txt"; then
   echo "The no-codesign artifact unexpectedly has a valid signature" >&2

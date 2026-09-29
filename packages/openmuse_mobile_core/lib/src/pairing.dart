@@ -66,6 +66,77 @@ final class SignedDeviceOffer {
   final Uint8List nonce;
   final int registrationGeneration;
   final Uint8List signature;
+
+  Map<String, Object> toJson() => {
+    'accountRef': accountRef,
+    'deviceRef': deviceRef,
+    'signingPublic': signingPublic.toList(growable: false),
+    'agreementPublic': agreementPublic.toList(growable: false),
+    'nonce': nonce.toList(growable: false),
+    'registrationGeneration': registrationGeneration,
+    'signature': signature.toList(growable: false),
+  };
+}
+
+final class TrustedDeviceRegistration {
+  TrustedDeviceRegistration({
+    required this.accountRef,
+    required this.deviceRef,
+    required Uint8List signingPublic,
+    required Uint8List agreementPublic,
+    required this.generation,
+    required this.revoked,
+  }) : signingPublic = Uint8List.fromList(signingPublic),
+       agreementPublic = Uint8List.fromList(agreementPublic) {
+    if (accountRef.isEmpty ||
+        deviceRef.isEmpty ||
+        this.signingPublic.length != 32 ||
+        this.agreementPublic.length != 32 ||
+        generation <= 0) {
+      throw ArgumentError('invalid trusted device registration');
+    }
+  }
+
+  factory TrustedDeviceRegistration.fromOffer(SignedDeviceOffer offer) =>
+      TrustedDeviceRegistration(
+        accountRef: offer.accountRef,
+        deviceRef: offer.deviceRef,
+        signingPublic: offer.signingPublic,
+        agreementPublic: offer.agreementPublic,
+        generation: offer.registrationGeneration,
+        revoked: false,
+      );
+
+  final String accountRef;
+  final String deviceRef;
+  final Uint8List signingPublic;
+  final Uint8List agreementPublic;
+  final int generation;
+  final bool revoked;
+
+  Map<String, Object> toJson() => {
+    'accountRef': accountRef,
+    'deviceRef': deviceRef,
+    'signingPublic': signingPublic.toList(growable: false),
+    'agreementPublic': agreementPublic.toList(growable: false),
+    'generation': generation,
+    'revoked': revoked,
+  };
+}
+
+final class NativePairingHandshake {
+  const NativePairingHandshake({
+    required this.handle,
+    required this.confirmationCode,
+  });
+  final int handle;
+  final String confirmationCode;
+}
+
+final class NativePairedChannel {
+  const NativePairedChannel({required this.handle, required this.channelRef});
+  final int handle;
+  final String channelRef;
 }
 
 /// Platform-owned device-key storage. No method returns seed/private material.
@@ -83,6 +154,29 @@ abstract interface class DeviceKeyStorePort {
     required int registrationGeneration,
   });
   Future<void> delete(String keyRef);
+}
+
+abstract interface class PairedCryptoPort {
+  Future<NativePairingHandshake> beginHandshake({
+    required String keyRef,
+    required SignedDeviceOffer localOffer,
+    required SignedDeviceOffer remoteOffer,
+    required TrustedDeviceRegistration localRegistration,
+    required TrustedDeviceRegistration remoteRegistration,
+  });
+  Future<NativePairedChannel> confirmHandshake({
+    required int handshakeHandle,
+    required String confirmationCode,
+  });
+  Future<RelayEnvelope> seal({
+    required int channelHandle,
+    required List<int> plaintext,
+  });
+  Future<Uint8List> open({
+    required int channelHandle,
+    required RelayEnvelope envelope,
+  });
+  Future<void> close(int handle);
 }
 
 final class PairedGrant {

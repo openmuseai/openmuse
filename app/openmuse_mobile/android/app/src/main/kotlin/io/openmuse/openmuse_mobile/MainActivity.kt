@@ -60,6 +60,38 @@ private class DeviceKeyStoreBridge(context: Context) {
                                 ?: error("registration generation is missing"),
                         ),
                     )
+                    "beginHandshake" -> result.success(
+                        beginHandshake(
+                            requireRef(call.argument<String>("keyRef")),
+                            requireJson(call.argument<String>("localOfferJson")),
+                            requireJson(call.argument<String>("remoteOfferJson")),
+                            requireJson(call.argument<String>("localRegistrationJson")),
+                            requireJson(call.argument<String>("remoteRegistrationJson")),
+                        ),
+                    )
+                    "confirmHandshake" -> result.success(
+                        confirmHandshake(
+                            requireHandle(call.argument<Number>("handshakeHandle")),
+                            requireCode(call.argument<String>("confirmationCode")),
+                        ),
+                    )
+                    "channelSeal" -> result.success(
+                        channelSeal(
+                            requireHandle(call.argument<Number>("channelHandle")),
+                            call.argument<ByteArray>("plaintext")
+                                ?: error("plaintext is missing"),
+                        ),
+                    )
+                    "channelOpen" -> result.success(
+                        channelOpen(
+                            requireHandle(call.argument<Number>("channelHandle")),
+                            requireJson(call.argument<String>("envelopeJson")),
+                        ),
+                    )
+                    "closeNativeHandle" -> {
+                        closeNativeHandle(requireHandle(call.argument<Number>("handle")))
+                        result.success(null)
+                    }
                     else -> result.notImplemented()
                 }
             } catch (error: Exception) {
@@ -110,6 +142,56 @@ private class DeviceKeyStoreBridge(context: Context) {
         } finally {
             nonce.fill(0)
         }
+    }
+
+    private fun beginHandshake(
+        keyRef: String,
+        localOfferJson: String,
+        remoteOfferJson: String,
+        localRegistrationJson: String,
+        remoteRegistrationJson: String,
+    ): String = withDeviceSeed(keyRef) { seed ->
+        val json = PairedCryptoNative.beginHandshake(
+            seed,
+            localOfferJson,
+            remoteOfferJson,
+            localRegistrationJson,
+            remoteRegistrationJson,
+        ) ?: error("pairing handshake failed")
+        try {
+            json.toString(Charsets.UTF_8)
+        } finally {
+            json.fill(0)
+        }
+    }
+
+    private fun confirmHandshake(handle: Long, code: String): String {
+        val json = PairedCryptoNative.confirmHandshake(handle, code)
+            ?: error("pairing confirmation failed")
+        try {
+            return json.toString(Charsets.UTF_8)
+        } finally {
+            json.fill(0)
+        }
+    }
+
+    private fun channelSeal(handle: Long, plaintext: ByteArray): String {
+        require(plaintext.isNotEmpty() && plaintext.size <= 64 * 1024)
+        val json = PairedCryptoNative.channelSeal(handle, plaintext)
+            ?: error("channel seal failed")
+        try {
+            return json.toString(Charsets.UTF_8)
+        } finally {
+            json.fill(0)
+        }
+    }
+
+    private fun channelOpen(handle: Long, envelopeJson: String): ByteArray =
+        PairedCryptoNative.channelOpen(handle, envelopeJson.toByteArray(Charsets.UTF_8))
+            ?: error("channel open failed")
+
+    private fun closeNativeHandle(handle: Long) {
+        check(PairedCryptoNative.closeHandle(handle) == 0) { "native handle close failed" }
     }
 
     private fun <T> withDeviceSeed(keyRef: String, operation: (ByteArray) -> T): T {
@@ -216,6 +298,22 @@ private class DeviceKeyStoreBridge(context: Context) {
         return value
     }
 
+    private fun requireJson(value: String?): String {
+        require(value != null && value.isNotEmpty() && value.length <= 64 * 1024)
+        return value
+    }
+
+    private fun requireHandle(value: Number?): Long {
+        val handle = value?.toLong() ?: error("native handle is missing")
+        require(handle > 0)
+        return handle
+    }
+
+    private fun requireCode(value: String?): String {
+        require(value != null && value.matches(Regex("[0-9]{6}")))
+        return value
+    }
+
     private companion object {
         const val GCM_IV_BYTES = 12
         const val GCM_TAG_BYTES = 16
@@ -236,4 +334,20 @@ private object PairedCryptoNative {
         nonce: ByteArray,
         registrationGeneration: Long,
     ): ByteArray?
+
+    external fun beginHandshake(
+        seed: ByteArray,
+        localOfferJson: String,
+        remoteOfferJson: String,
+        localRegistrationJson: String,
+        remoteRegistrationJson: String,
+    ): ByteArray?
+
+    external fun confirmHandshake(handshakeHandle: Long, confirmationCode: String): ByteArray?
+
+    external fun channelSeal(channelHandle: Long, plaintext: ByteArray): ByteArray?
+
+    external fun channelOpen(channelHandle: Long, envelopeJson: ByteArray): ByteArray?
+
+    external fun closeHandle(handle: Long): Int
 }

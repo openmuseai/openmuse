@@ -27,6 +27,7 @@ pub const ABI_VERSION: u32 = 1;
 pub const DEVICE_PUBLIC_BYTES: usize = 64;
 pub const MAX_PLATFORM_REF_BYTES: usize = 256;
 pub const MAX_CONTROL_JSON_BYTES: usize = 64 * 1024;
+pub const MAX_NATIVE_SESSIONS: usize = 128;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -339,11 +340,13 @@ pub unsafe extern "C" fn openmuse_paired_begin_handshake(
             confirmation_code: handshake.confirmation_code(),
         })
         .map_err(|_| PairedRelayError::CryptoFailure)?;
-        native_sessions()
+        let mut sessions = native_sessions()
             .lock()
-            .map_err(|_| PairedRelayError::CryptoFailure)?
-            .handshakes
-            .insert(handle, handshake);
+            .map_err(|_| PairedRelayError::CryptoFailure)?;
+        if sessions.handshakes.len() + sessions.channels.len() >= MAX_NATIVE_SESSIONS {
+            return Err(PairedRelayError::NativeSessionLimit);
+        }
+        sessions.handshakes.insert(handle, handshake);
         Ok(response)
     })
 }
@@ -536,6 +539,122 @@ pub extern "system" fn Java_io_openmuse_openmuse_1mobile_PairedCryptoNative_issu
             .map(jni::objects::JByteArray::into_raw)
     }));
     result.ok().flatten().unwrap_or(std::ptr::null_mut())
+}
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_io_openmuse_openmuse_1mobile_PairedCryptoNative_beginHandshake(
+    mut env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+    seed: jni::objects::JByteArray,
+    local_offer_json: jni::objects::JString,
+    remote_offer_json: jni::objects::JString,
+    local_registration_json: jni::objects::JString,
+    remote_registration_json: jni::objects::JString,
+) -> jni::sys::jbyteArray {
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let local_offer: String = env.get_string(&local_offer_json).ok()?.into();
+        let remote_offer: String = env.get_string(&remote_offer_json).ok()?.into();
+        let local_registration: String = env.get_string(&local_registration_json).ok()?.into();
+        let remote_registration: String = env.get_string(&remote_registration_json).ok()?.into();
+        let mut seed_bytes = env.convert_byte_array(&seed).ok()?;
+        let buffer = unsafe {
+            openmuse_paired_begin_handshake(
+                seed_bytes.as_ptr(),
+                seed_bytes.len(),
+                local_offer.as_ptr(),
+                local_offer.len(),
+                remote_offer.as_ptr(),
+                remote_offer.len(),
+                local_registration.as_ptr(),
+                local_registration.len(),
+                remote_registration.as_ptr(),
+                remote_registration.len(),
+            )
+        };
+        seed_bytes.zeroize();
+        jni_buffer(&env, buffer)
+    }));
+    result.ok().flatten().unwrap_or(std::ptr::null_mut())
+}
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_io_openmuse_openmuse_1mobile_PairedCryptoNative_confirmHandshake(
+    mut env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+    handshake_handle: jni::sys::jlong,
+    confirmation_code: jni::objects::JString,
+) -> jni::sys::jbyteArray {
+    let code: String = match env.get_string(&confirmation_code) {
+        Ok(value) => value.into(),
+        Err(_) => return std::ptr::null_mut(),
+    };
+    jni_buffer(&env, unsafe {
+        openmuse_paired_confirm_handshake(handshake_handle as u64, code.as_ptr(), code.len())
+    })
+    .unwrap_or(std::ptr::null_mut())
+}
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_io_openmuse_openmuse_1mobile_PairedCryptoNative_channelSeal(
+    env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+    channel_handle: jni::sys::jlong,
+    plaintext: jni::objects::JByteArray,
+) -> jni::sys::jbyteArray {
+    let plaintext = match env.convert_byte_array(&plaintext) {
+        Ok(value) => value,
+        Err(_) => return std::ptr::null_mut(),
+    };
+    jni_buffer(&env, unsafe {
+        openmuse_paired_channel_seal(channel_handle as u64, plaintext.as_ptr(), plaintext.len())
+    })
+    .unwrap_or(std::ptr::null_mut())
+}
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_io_openmuse_openmuse_1mobile_PairedCryptoNative_channelOpen(
+    env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+    channel_handle: jni::sys::jlong,
+    envelope_json: jni::objects::JByteArray,
+) -> jni::sys::jbyteArray {
+    let envelope = match env.convert_byte_array(&envelope_json) {
+        Ok(value) => value,
+        Err(_) => return std::ptr::null_mut(),
+    };
+    jni_buffer(&env, unsafe {
+        openmuse_paired_channel_open(channel_handle as u64, envelope.as_ptr(), envelope.len())
+    })
+    .unwrap_or(std::ptr::null_mut())
+}
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_io_openmuse_openmuse_1mobile_PairedCryptoNative_closeHandle(
+    _env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+    handle: jni::sys::jlong,
+) -> jni::sys::jint {
+    openmuse_paired_native_handle_close(handle as u64)
+}
+
+#[cfg(target_os = "android")]
+fn jni_buffer(env: &jni::JNIEnv, buffer: OpenMusePairedBuffer) -> Option<jni::sys::jbyteArray> {
+    if buffer.status != 0 || buffer.ptr.is_null() {
+        openmuse_paired_buffer_free(buffer);
+        return None;
+    }
+    let bytes = unsafe { std::slice::from_raw_parts(buffer.ptr, buffer.len) };
+    let result = env
+        .byte_array_from_slice(bytes)
+        .ok()
+        .map(jni::objects::JByteArray::into_raw);
+    openmuse_paired_buffer_free(buffer);
+    result
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1035,6 +1154,8 @@ pub enum PairedRelayError {
     FrameTooLarge,
     #[error("sequence exhausted")]
     SequenceExhausted,
+    #[error("native session limit reached")]
+    NativeSessionLimit,
     #[error("cryptographic operation failed")]
     CryptoFailure,
 }
