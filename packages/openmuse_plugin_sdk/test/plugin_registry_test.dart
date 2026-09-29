@@ -49,6 +49,64 @@ void main() {
       contains('test.panel'),
     );
   });
+
+  test('authentication contributor is visible only while active', () async {
+    final registry = OpenMusePluginRegistry(
+      context: OpenMusePluginContext(executeHostCommand: (_, _) async => null),
+    );
+    final plugin = _AuthPlugin();
+    registry.install(plugin);
+    expect(registry.authenticationContributor(), isNull);
+    await registry.activate(plugin.descriptor.id);
+    expect(registry.authenticationContributor(), same(plugin));
+    await registry.deactivate(plugin.descriptor.id);
+    expect(registry.authenticationContributor(), isNull);
+  });
+}
+
+final class _AuthController extends ChangeNotifier
+    implements OpenMuseAuthenticationController {
+  @override
+  OpenMuseAuthenticationSnapshot snapshot =
+      const OpenMuseAuthenticationSnapshot.signedOut();
+
+  @override
+  Future<String?> accessToken({bool forceRefresh = false}) async => null;
+  @override
+  Future<void> restore() async {}
+  @override
+  Future<void> signInWithPassword(String email, String password) async {}
+  @override
+  Future<void> signOut() async {}
+}
+
+final class _AuthPlugin
+    implements OpenMusePlugin, OpenMuseAuthenticationContributor {
+  final _controller = _AuthController();
+
+  @override
+  OpenMuseAuthenticationController get authentication => _controller;
+  @override
+  final descriptor = const OpenMusePluginDescriptor(
+    id: 'test.auth',
+    name: 'Test Auth',
+    version: '1.0.0',
+    runtime: OpenMusePluginRuntime.builtIn,
+  );
+  @override
+  Future<void> activate(OpenMusePluginContext context) async {}
+  @override
+  Future<void> deactivate() async {}
+  @override
+  Widget buildAuthenticationGate(
+    BuildContext context, {
+    required Widget authenticatedChild,
+  }) => authenticatedChild;
+  @override
+  Widget buildEditor(BuildContext context, OpenMuseResource resource) =>
+      const SizedBox();
+  @override
+  Widget? buildPanel(BuildContext context, String panelId) => null;
 }
 
 final class _FallbackPlugin implements OpenMusePlugin {

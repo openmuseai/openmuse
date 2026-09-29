@@ -1,0 +1,21 @@
+name: openmuse_auth_gotrue
+description: Built-in GoTrue authentication provider for OpenMuse hosts.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

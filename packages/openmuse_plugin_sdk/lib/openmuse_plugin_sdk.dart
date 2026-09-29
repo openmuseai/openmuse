@@ -4,7 +4,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'src/authentication.dart';
+
 export 'src/manifest_v2.dart';
+export 'src/authentication.dart';
 
 enum OpenMusePluginRuntime { builtIn, nativeProcess, webView }
 
@@ -343,6 +346,34 @@ final class OpenMusePluginRegistry extends ChangeNotifier {
       }
     }
     return null;
+  }
+
+  List<OpenMuseAuthenticationContributor> authenticationContributors() => [
+    for (final plugin in _plugins.values)
+      if (_states[plugin.descriptor.id] == OpenMusePluginState.active &&
+          plugin is OpenMuseAuthenticationContributor)
+        plugin as OpenMuseAuthenticationContributor,
+  ];
+
+  OpenMuseAuthenticationContributor? authenticationContributor({
+    String? pluginId,
+  }) {
+    if (pluginId != null) {
+      final plugin = _plugins[pluginId];
+      if (plugin == null ||
+          _states[pluginId] != OpenMusePluginState.active ||
+          plugin is! OpenMuseAuthenticationContributor) {
+        return null;
+      }
+      return plugin as OpenMuseAuthenticationContributor;
+    }
+    final candidates = authenticationContributors();
+    if (candidates.length > 1) {
+      throw StateError(
+        'Multiple authentication contributors are active; select one by id.',
+      );
+    }
+    return candidates.firstOrNull;
   }
 
   Future<void> ensureActive(OpenMusePlugin plugin) =>
