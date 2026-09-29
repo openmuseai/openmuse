@@ -117,7 +117,13 @@ final class HelixPreferences {
         languageServerConfigPaths ?? this.languageServerConfigPaths,
   );
 
-  String get languagesToml {
+  String get languagesToml => languagesTomlFor();
+
+  /// [rustLinkedProjects] lists Cargo manifests handed to rust-analyzer through
+  /// `linkedProjects`, so navigation also works for a Rust buffer that lives
+  /// outside every crate. An explicit configuration file for the server always
+  /// wins over this generated block.
+  String languagesTomlFor({List<String> rustLinkedProjects = const []}) {
     final allowed = {
       for (final spec in helixLanguageServers) spec.command: spec.arguments,
     };
@@ -133,6 +139,7 @@ final class HelixPreferences {
           'args = ${jsonEncode(allowed[spec.command])}',
         );
       }
+      var userConfigWritten = false;
       final configPath = languageServerConfigPaths[spec.command];
       if (configPath != null &&
           p.isAbsolute(configPath) &&
@@ -162,9 +169,19 @@ final class HelixPreferences {
           blocks.add(
             '[language-server.${spec.command}.config]\n${values.join('\n')}',
           );
+          userConfigWritten = true;
         } else {
           blocks.add('[language-server.${spec.command}.config]\n$raw');
+          userConfigWritten = true;
         }
+      }
+      if (!userConfigWritten &&
+          spec.command == 'rust-analyzer' &&
+          rustLinkedProjects.isNotEmpty) {
+        blocks.add(
+          '[language-server.rust-analyzer.config]\n'
+          'linkedProjects = ${jsonEncode(rustLinkedProjects)}',
+        );
       }
     }
     return '${blocks.join('\n\n')}\n';

@@ -148,6 +148,80 @@ Future<String?> resolveRustAnalyzerExecutable() async {
   return null;
 }
 
+/// Helix roots the Rust language server with the `roots` markers of the bundled
+/// runtime definition (`Cargo.toml`, `Cargo.lock`), walking up from the opened
+/// document. When no ancestor matches, rust-analyzer starts at the document's
+/// own directory and answers with "failed to find any projects", so code
+/// navigation silently stays dead.
+String? rustLanguageServerRoot(String documentPath) {
+  var directory = Directory(p.dirname(p.normalize(p.absolute(documentPath))));
+  while (true) {
+    for (final marker in const ['Cargo.toml', 'Cargo.lock']) {
+      if (File(p.join(directory.path, marker)).existsSync()) {
+        return directory.path;
+      }
+    }
+    final parent = directory.parent;
+    if (parent.path == directory.path) return null;
+    directory = parent;
+  }
+}
+
+const _rustProjectSkippedDirectories = {
+  'target',
+  'node_modules',
+  '.git',
+  'vendor',
+};
+
+/// Cargo manifests of the Rust projects inside the mounted workspaces. The
+/// result feeds rust-analyzer's `linkedProjects`, so a Rust buffer that lives
+/// outside every crate (a scratch file, a repository root, a polyglot folder)
+/// can still resolve navigation through the projects the user mounted.
+List<String> discoverRustProjectManifests(
+  Iterable<String> workspaceRoots, {
+  int maxDepth = 3,
+  int maxProjects = 8,
+}) {
+  if (maxDepth < 0 || maxProjects < 1) return const [];
+  final manifests = <String>[];
+  final seen = <String>{};
+  for (final root in workspaceRoots) {
+    if (manifests.length >= maxProjects) break;
+    final base = Directory(p.normalize(p.absolute(root)));
+    if (!base.existsSync()) continue;
+    final pending = <(Directory, int)>[(base, 0)];
+    while (pending.isNotEmpty && manifests.length < maxProjects) {
+      final (directory, depth) = pending.removeAt(0);
+      final manifest = File(p.join(directory.path, 'Cargo.toml'));
+      if (manifest.existsSync()) {
+        final normalized = p.normalize(manifest.path);
+        if (seen.add(normalized.toLowerCase())) manifests.add(normalized);
+        // A crate manifest already covers everything below it.
+        continue;
+      }
+      if (depth >= maxDepth) continue;
+      final List<FileSystemEntity> children;
+      try {
+        children = directory.listSync(followLinks: false);
+      } on FileSystemException {
+        continue;
+      }
+      for (final child in children) {
+        if (child is! Directory) continue;
+        final name = p.basename(child.path).toLowerCase();
+        if (name.startsWith('.') ||
+            _rustProjectSkippedDirectories.contains(name)) {
+          continue;
+        }
+        pending.add((child, depth + 1));
+      }
+    }
+  }
+  manifests.sort();
+  return manifests;
+}
+
 final class HelixServerStatus {
   const HelixServerStatus(this.spec, this.presence, this.path);
   final HelixLanguageServerSpec spec;

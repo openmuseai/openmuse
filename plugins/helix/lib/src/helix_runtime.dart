@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 import 'package:xterm/xterm.dart';
 
 import 'helix_preferences.dart';
@@ -40,6 +41,10 @@ final class HelixRuntimePool extends ChangeNotifier {
   String? activePath;
   HelixPreferences preferences = const HelixPreferences();
   bool supportsNonmodal = false;
+  /// Mounted workspaces the host reported. Rust projects found inside them are
+  /// linked into rust-analyzer while the opened buffer sits outside every crate.
+  List<String> rustWorkspaceRoots = const [];
+  List<String> _linkedRustProjects = const [];
   final bool reuseSessions =
       Platform.environment['OPENMUSE_HELIX_REUSE'] != '0';
   bool _capabilityChecked = false;
@@ -55,6 +60,23 @@ final class HelixRuntimePool extends ChangeNotifier {
       File('$_generatedConfigDirectory/helix/languages.toml');
 
   File get logFile => File('$_generatedConfigDirectory/helix.log');
+
+  /// Cargo manifests to hand to rust-analyzer for [documentPath]. Empty while
+  /// the buffer already belongs to a crate, while LSP is disabled, or while the
+  /// user configured rust-analyzer themselves — then their choice wins.
+  List<String> linkedRustProjectsFor(String documentPath) {
+    if (!preferences.enableLsp) return const [];
+    if (p.extension(documentPath).toLowerCase() != '.rs') return const [];
+    if (rustLanguageServerRoot(documentPath) != null) return const [];
+    final configured = preferences.languageServerConfigPaths['rust-analyzer'];
+    if (configured != null &&
+        p.isAbsolute(configured) &&
+        File(configured).existsSync() &&
+        File(configured).readAsStringSync().trim().isNotEmpty) {
+      return const [];
+    }
+    return discoverRustProjectManifests(rustWorkspaceRoots);
+  }
 
   Future<void> configure(HelixPreferences value) async {
     if (!_capabilityChecked) await probeCapabilities();
@@ -158,7 +180,7 @@ final class HelixRuntimePool extends ChangeNotifier {
     return supportsNonmodal;
   }
 
-  Future<File> _writeConfig() async {
+  Future<File> _writeConfig({List<String> rustLinkedProjects = const []}) async {
     final directory = Directory(_generatedConfigDirectory);
     await directory.create(recursive: true);
     final config = File('${directory.path}/config.toml');
@@ -176,9 +198,12 @@ final class HelixRuntimePool extends ChangeNotifier {
       }
     }
     await languages.writeAsString(
-      preferences.copyWith(languageServerPaths: serverPaths).languagesToml,
+      preferences
+          .copyWith(languageServerPaths: serverPaths)
+          .languagesTomlFor(rustLinkedProjects: rustLinkedProjects),
       flush: true,
     );
+    _linkedRustProjects = rustLinkedProjects;
     _configFile = config;
     return config;
   }
@@ -394,7 +419,12 @@ final class HelixRuntimePool extends ChangeNotifier {
       if (Platform.isWindows && !File(executable).existsSync()) {
         throw StateError('未找到 Windows Helix 可执行文件 hx.exe');
       }
-      final config = _configFile ?? await _writeConfig();
+      final linkedProjects = linkedRustProjectsFor(path);
+      final config =
+          _configFile != null &&
+              listEquals(linkedProjects, _linkedRustProjects)
+          ? _configFile!
+          : await _writeConfig(rustLinkedProjects: linkedProjects);
       HelixOpenTrace.mark(
         'config_written',
         elapsedMs: watch.elapsedMilliseconds,
