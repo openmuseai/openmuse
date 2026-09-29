@@ -724,6 +724,8 @@ Fail-closed admission、攻击面测试和审计链见 [`SANDBOX-PRODUCTION-SECU
 
 ### M4：Cloud Workspace + Mobile + Remote DSH 纵切
 
+**实施状态：Accepted（fixture account）**（`feature/m4-cloud-mobile-vertical-slice`）
+
 **目标**
 
 形成第一个可用户验证的 Cloud-only 流程，而不等待 Pairing/BYOS/RustFS/全部 Office。
