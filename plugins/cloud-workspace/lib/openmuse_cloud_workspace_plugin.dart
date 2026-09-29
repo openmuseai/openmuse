@@ -97,7 +97,8 @@ final class CloudWorkspacePluginSnapshot {
 
   DshSessionSummary? sessionFor(String workspaceRef) {
     for (final session in sessions) {
-      if (session.workspaceRef == workspaceRef && session.state == 'running') {
+      if (session.workspaceRef == workspaceRef &&
+          (session.state == 'running' || session.state == 'ready')) {
         return session;
       }
     }

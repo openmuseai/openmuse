@@ -16,6 +16,13 @@ final class FlutterSecureValueStore implements SecureValueStore {
     FlutterSecureStorage storage = const FlutterSecureStorage(),
   }) : _storage = storage;
 
+  /// Uses the login Keychain on macOS so unsigned/ad-hoc development builds
+  /// can persist sessions without a provisioning-profile access group.
+  const FlutterSecureValueStore.macOsCompatible()
+    : _storage = const FlutterSecureStorage(
+        mOptions: MacOsOptions(useDataProtectionKeyChain: false),
+      );
+
   final FlutterSecureStorage _storage;
 
   @override

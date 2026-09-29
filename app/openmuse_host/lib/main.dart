@@ -141,6 +141,9 @@ Future<Widget> bootOpenMuseHost() async {
     'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
     defaultValue: !kReleaseMode,
   );
+  const authSessionStore = SecureAuthSessionStore(
+    values: FlutterSecureValueStore.macOsCompatible(),
+  );
   final authenticationController = GoTrueAuthenticationController(
     provider: GoTrueHttpClient(
       config: GoTrueClientConfig(
@@ -148,7 +151,7 @@ Future<Widget> bootOpenMuseHost() async {
         allowInsecureLoopback: allowInsecureLoopback,
       ),
     ),
-    store: const SecureAuthSessionStore(values: FlutterSecureValueStore()),
+    store: authSessionStore,
   );
   final authenticationPlugin = OpenMuseGoTruePlugin(
     authentication: authenticationController,

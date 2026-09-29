@@ -19,6 +19,7 @@
 | SDK-U1 | Plugin SDK | 多认证贡献者选择 | 未显式选择时 fail closed | 通过 |
 | CLOUD-U1 | Cloud adapter | `/api/workspace` envelope 映射 | 只接受 `code=0`；映射可写状态 | 通过 |
 | CLOUD-U2 | Cloud adapter | 401 后强制刷新 | 最多重试一次且不持有凭据 | 通过 |
+| CLOUD-U3 | Cloud Workspace plugin | Pool `ready` 会话投影 | `ready` 与兼容态 `running` 均显示为可复用的运行中会话 | 通过 |
 | DSH-U1 | DSH Pool | 同账号、同 Workspace 重复 open | 相同 `sessionRef` / `instanceRef` | 通过 |
 | DSH-U2 | DSH Pool | 账号会话列表 | 只返回该账号的 running/queued 投影，不泄露路径、端口、token、设备 ID | 通过 |
 | DSH-U3 | DSH Pool | 跨账号 close/heartbeat | 不改变目标会话附件与活跃时间 | 通过 |
@@ -52,7 +53,8 @@
 | DEVICE-M2 | Android 冷启动 | 进入 OpenMuse 登录页，无崩溃 | 通过 |
 | DEVICE-M3 | 真机同账号密码登录 | 显示当前账号的 Cloud Workspace | 通过 |
 | DEVICE-M4 | 真机运行中会话投影 | 对已由 Desktop transport 打开的 Workspace 显示 `DSH running` | 通过 |
-| DEVICE-D1 | Desktop 真机 UI 登录 | Desktop 构建成功；工作站处于锁屏，未进行 UI 输入 | 阻塞于人工解锁 |
+| DEVICE-D1 | Desktop 本机 UI 登录与恢复 | 同账号安全会话写入 Keychain；移除测试播种钩子并重建后仍可自动恢复 | 通过 |
+| DEVICE-D2 | Desktop Cloud Workspace/DSH 投影 | 显示 `My Workspace`、`Remote DSH 运行中` 与“复用”入口 | 通过 |
 
 ## 5. 回归门槛
 

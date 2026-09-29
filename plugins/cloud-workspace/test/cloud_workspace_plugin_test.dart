@@ -8,7 +8,7 @@ import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 void main() {
-  test('plugin discovers a running account-scoped DSH session', () async {
+  test('plugin discovers a ready account-scoped DSH session', () async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     addTearDown(server.close);
     unawaited(
@@ -36,7 +36,7 @@ void main() {
                   {
                     'sessionRef': 'session-1',
                     'workspaceRef': 'workspace-1',
-                    'state': 'running',
+                    'state': 'ready',
                     'instanceRef': 'instance-1',
                     'nodeId': 'node-1',
                     'createdAt': 1,
