@@ -21,5 +21,5 @@ cargo build -p helix-term --release --locked --target x86_64-apple-darwin
   -output "$engine/hx"
 chmod 755 "$engine/hx"
 test "$(/usr/bin/lipo -archs "$engine/hx")" = "x86_64 arm64"
-"$engine/hx" --version | grep -q 'openmuse-nonmodal.3'
+"$engine/hx" --version | grep -q 'openmuse-nonmodal.4'
 shasum -a 256 "$engine/hx"

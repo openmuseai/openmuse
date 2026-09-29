@@ -12,7 +12,7 @@ test -d "$engine/runtime/grammars"
 test -d "$engine/runtime/queries"
 test -f "$engine/runtime/themes/onelight.toml"
 test -f "$engine/runtime/themes/openmuse_dark.toml"
-expected="cb81c9fba915c66f1d2c5b42debb7585eaffa64d74c3f9d2f06570c0781acae8"
+expected="2cba366f4275d4102929ceb7c413c4c328fab3dc9030785cf218169c447cf1a6"
 actual="$(shasum -a 256 "$engine/hx" | awk '{ print $1 }')"
 if [[ "$actual" != "$expected" ]]; then
   echo "pinned Helix binary checksum mismatch" >&2
@@ -20,4 +20,4 @@ if [[ "$actual" != "$expected" ]]; then
 fi
 test "$(/usr/bin/lipo -archs "$engine/hx")" = "x86_64 arm64"
 "$engine/hx" --version
-"$engine/hx" --version | grep -q 'openmuse-nonmodal.3'
+"$engine/hx" --version | grep -q 'openmuse-nonmodal.4'

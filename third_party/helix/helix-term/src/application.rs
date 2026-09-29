@@ -430,14 +430,18 @@ impl Application {
             Err("stale_revision")
         } else {
             match command.name.as_str() {
-                "save" | "flush" => {
+                "save" | "flush" | "prepare_switch" => {
                     let save_result = {
                         let mut cx = crate::compositor::Context {
                             editor: &mut self.editor,
                             jobs: &mut self.jobs,
                             scroll: None,
                         };
-                        crate::commands::typed::openmuse_save(&mut cx)
+                        if command.name == "prepare_switch" {
+                            crate::commands::typed::openmuse_prepare_switch(&mut cx)
+                        } else {
+                            crate::commands::typed::openmuse_save(&mut cx)
+                        }
                     };
                     if let Err(err) = save_result {
                         self.editor.set_error(err.to_string());
@@ -452,6 +456,10 @@ impl Application {
                     } else if let Err(err) = self.editor.flush_writes().await {
                         self.editor.set_error(err.to_string());
                         Err("save_failed")
+                    } else if command.name == "prepare_switch"
+                        && self.editor.documents().any(|doc| doc.is_modified())
+                    {
+                        Err("unsaved_buffers")
                     } else if doc!(self.editor).is_modified() {
                         Err("save_failed")
                     } else {
@@ -459,7 +467,53 @@ impl Application {
                         if let Some(bridge) = self.openmuse_bridge.as_mut() {
                             let _ = bridge.publish_save(Path::new(&command.path), revision);
                         }
-                        Ok(())
+                        Ok(None)
+                    }
+                }
+                "copy" | "cut" | "paste"
+                    if self.editor.config().input_profile
+                        == helix_view::editor::InputProfile::StandardNonmodal =>
+                {
+                    match command.name.as_str() {
+                        "copy" => crate::commands::openmuse_selected_text(&self.editor)
+                            .filter(|text| text.len() <= 1024 * 1024)
+                            .map(Some)
+                            .ok_or("no_selection_or_too_large"),
+                        "cut" => {
+                            if crate::commands::openmuse_selected_text(&self.editor).as_deref()
+                                != command.text.as_deref()
+                                || command.text.is_none()
+                            {
+                                Err("selection_changed")
+                            } else {
+                                let mut cx = crate::commands::Context {
+                                    register: None,
+                                    count: None,
+                                    editor: &mut self.editor,
+                                    callback: Vec::new(),
+                                    on_next_key_callback: None,
+                                    jobs: &mut self.jobs,
+                                };
+                                crate::commands::openmuse_delete_selection(&mut cx);
+                                Ok(None)
+                            }
+                        }
+                        _ => {
+                            if let Some(text) = command.text.as_deref() {
+                                let mut cx = crate::commands::Context {
+                                    register: None,
+                                    count: None,
+                                    editor: &mut self.editor,
+                                    callback: Vec::new(),
+                                    on_next_key_callback: None,
+                                    jobs: &mut self.jobs,
+                                };
+                                crate::commands::openmuse_replace_selection(&mut cx, text);
+                                Ok(None)
+                            } else {
+                                Err("missing_clipboard_text")
+                            }
+                        }
                     }
                 }
                 "undo" | "redo" | "find" | "select_all"
@@ -494,7 +548,7 @@ impl Application {
                         };
                         callback(&mut self.compositor, &mut compositor_context);
                     }
-                    Ok(())
+                    Ok(None)
                 }
                 _ => Err("unsupported_command"),
             }

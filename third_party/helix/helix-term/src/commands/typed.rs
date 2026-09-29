@@ -476,6 +476,21 @@ pub(crate) fn openmuse_save(cx: &mut compositor::Context) -> anyhow::Result<()> 
     )
 }
 
+/// Persist every named buffer before replacing an editor process. An unnamed
+/// modified buffer is an error: the Host must never discard it during a mode
+/// switch.
+pub(crate) fn openmuse_prepare_switch(cx: &mut compositor::Context) -> anyhow::Result<()> {
+    write_all_impl(
+        cx,
+        WriteAllOptions {
+            force: false,
+            write_scratch: true,
+            auto_format: true,
+            code_actions: true,
+        },
+    )
+}
+
 /// Trim all whitespace preceding line-endings in a document.
 fn trim_trailing_whitespace(doc: &mut Document, view_id: ViewId) {
     let text = doc.text();

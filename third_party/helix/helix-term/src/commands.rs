@@ -2188,6 +2188,47 @@ fn select_all(cx: &mut Context) {
     doc.set_selection(view.id, Selection::single(0, end))
 }
 
+/// Copy only a real text selection. An insert-mode cursor must not silently
+/// copy the character under it (the modal Helix selection convention).
+pub(crate) fn openmuse_selected_text(editor: &Editor) -> Option<String> {
+    let (view, doc) = current_ref!(editor);
+    let selection = doc.selection(view.id);
+    if selection.iter().all(Range::is_empty) {
+        return None;
+    }
+    let text = doc.text().slice(..);
+    Some(
+        selection
+            .iter()
+            .filter(|range| !range.is_empty())
+            .map(|range| range.fragment(text).into_owned())
+            .collect::<Vec<_>>()
+            .join("\n"),
+    )
+}
+
+pub(crate) fn openmuse_delete_selection(cx: &mut Context) {
+    let (view, doc) = current!(cx.editor);
+    doc.append_changes_to_history(view);
+    let transaction =
+        Transaction::delete_by_selection(doc.text(), doc.selection(view.id), |range| {
+            (range.from(), range.to())
+        });
+    doc.apply(&transaction, view.id);
+    doc.append_changes_to_history(view);
+}
+
+pub(crate) fn openmuse_replace_selection(cx: &mut Context, contents: &str) {
+    let (view, doc) = current!(cx.editor);
+    doc.append_changes_to_history(view);
+    let transaction =
+        Transaction::change_by_selection(doc.text(), doc.selection(view.id), |range| {
+            (range.from(), range.to(), Some(Tendril::from(contents)))
+        });
+    doc.apply(&transaction, view.id);
+    doc.append_changes_to_history(view);
+}
+
 fn select_regex(cx: &mut Context) {
     let reg = cx.register.unwrap_or('/');
     ui::regex_prompt(

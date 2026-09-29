@@ -18,6 +18,7 @@ pub struct OpenMuseCommand {
     pub name: String,
     pub path: String,
     pub revision: i32,
+    pub text: Option<String>,
 }
 
 impl OpenMuseCommand {
@@ -30,7 +31,16 @@ impl OpenMuseCommand {
         let name = message.get("command")?.as_str()?.to_owned();
         let path = message.get("path")?.as_str()?.to_owned();
         let revision = i32::try_from(message.get("revision")?.as_i64()?).ok()?;
-        if id == 0 || name.len() > 32 || path.len() > 4096 || !Path::new(&path).is_absolute() {
+        let text = match message.get("text") {
+            Some(value) => Some(value.as_str()?.to_owned()),
+            None => None,
+        };
+        if id == 0
+            || name.len() > 32
+            || path.len() > 4096
+            || text.as_ref().is_some_and(|value| value.len() > 1024 * 1024)
+            || !Path::new(&path).is_absolute()
+        {
             return None;
         }
         Some(Self {
@@ -38,6 +48,7 @@ impl OpenMuseCommand {
             name,
             path,
             revision,
+            text,
         })
     }
 }
@@ -110,7 +121,7 @@ impl OpenMuseBridge {
                         pending.clear();
                     } else {
                         pending.push(byte);
-                        if pending.len() > 16384 {
+                        if pending.len() > 2 * 1024 * 1024 {
                             return;
                         }
                     }
@@ -154,16 +165,21 @@ impl OpenMuseBridge {
     pub fn publish_result(
         &mut self,
         id: u64,
-        result: Result<(), &'static str>,
+        result: Result<Option<String>, &'static str>,
         editor: &Editor,
     ) -> std::io::Result<()> {
         let state = ResourceState::current(editor);
+        let (ok, text, error) = match result {
+            Ok(text) => (true, text, None),
+            Err(error) => (false, None, Some(error)),
+        };
         self.send(json!({
             "version": 1,
             "type": "result",
             "id": id,
-            "ok": result.is_ok(),
-            "error": result.err(),
+            "ok": ok,
+            "error": error,
+            "text": text,
             "path": state.path,
             "revision": state.revision,
             "dirty": state.dirty,

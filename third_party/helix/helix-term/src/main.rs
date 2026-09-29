@@ -123,7 +123,7 @@ FLAGS:
     }
 
     if args.display_version {
-        println!("helix {} openmuse-nonmodal.3", VERSION_AND_GIT_HASH);
+        println!("helix {} openmuse-nonmodal.4", VERSION_AND_GIT_HASH);
         std::process::exit(0);
     }
 
