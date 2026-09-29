@@ -754,7 +754,9 @@ login → Cloud catalog → choose Workspace
 
 ### M5：Paired Desktop、Relay 与 Desktop Workspace Provider
 
-**实施状态：Accepted（contract/TCK）**（`feature/m5-paired-desktop-relay`）
+**实施状态：Engineering Accepted（cryptographic core + adapter TCK；平台 Keystore/真实 Relay 待外部环境）**（contract：`feature/m5-paired-desktop-relay`；crypto integration：`feature/m5-paired-desktop-crypto-relay-integration`）
+
+签名配对、可信设备注册、双向 E2E channel、opaque outbound relay、Flutter connector/resource adapter 与剩余门禁见 [`PAIRED-DESKTOP-E2E-RELAY.zh-CN.md`](PAIRED-DESKTOP-E2E-RELAY.zh-CN.md) 和 `scripts/test_paired_relay.sh`。
 
 **目标**
 
