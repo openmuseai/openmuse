@@ -120,6 +120,16 @@ def validate(output: Path) -> None:
     bridge = output / "node_modules/openmuse-dsh-bridge"
     if not (bridge / "lib/index.js").is_file() or not (bridge / "lib/client.js").is_file():
         raise RuntimeError("OpenMuse DSH Host bridge is missing")
+    remote_runtime = output / "node_modules/@openmuse/dsh-workspace-runtime"
+    remote_patch = remote_runtime / "cordis.patch.yml"
+    if not (remote_runtime / "lib/index.js").is_file() or not remote_patch.is_file():
+        raise RuntimeError("OpenMuse remote Workspace Runtime Provider group is missing")
+    remote_patch_source = remote_patch.read_text(encoding="utf-8")
+    for provider in ("subprocess", "sandbox", "fs-sandbox"):
+        if f"id: {provider}" not in remote_patch_source:
+            raise RuntimeError(f"remote Workspace Runtime patch is missing {provider} replacement")
+    if "agent-loop" in remote_patch_source:
+        raise RuntimeError("remote Workspace Runtime must not patch the DSH Agent Loop")
     if "openmuse-host-bridge" not in model_patch.read_text(encoding="utf-8"):
         raise RuntimeError("OpenMuse DSH Host bridge is not mounted")
     for script in (output / "node_modules/@deepseek-ai").rglob("*.js"):

@@ -497,9 +497,9 @@ Fail-closed 判定器、证据账本和长期运行要求见 [`RUSTFS-QUALIFICAT
 
 ### X2：Cloud Execution Runtime 与 DSH Provider 组
 
-**实施状态：Accepted**（`feature/x2-cloud-execution-runtime`）
+**实施状态：Accepted**（reference pool：`feature/x2-cloud-execution-runtime`；实际 DSH Provider 集成：`feature/x2-cloud-dsh-provider-integration`）
 
-Runtime pool、同执行世界 Provider TCK 与验收入口见 [`CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md`](CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md) 和 `scripts/test_cloud_execution_runtime.sh`。
+Runtime pool、实际 `@openmuse/dsh-workspace-runtime` Provider 包、产品 closure 锁定、同执行世界 Provider TCK 与验收入口见 [`CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md`](CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md)、`scripts/test_cloud_execution_runtime.sh` 和 `scripts/test_dsh_remote_provider.sh`。
 
 **目标**
 
