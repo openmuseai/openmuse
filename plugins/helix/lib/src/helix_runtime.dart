@@ -51,9 +51,10 @@ final class HelixRuntimePool extends ChangeNotifier {
   String get _generatedConfigDirectory =>
       '${Directory.systemTemp.path}/openmuse-helix-$_configInstance';
 
-  @visibleForTesting
   File get generatedLanguagesFile =>
       File('$_generatedConfigDirectory/helix/languages.toml');
+
+  File get logFile => File('$_generatedConfigDirectory/helix.log');
 
   Future<void> configure(HelixPreferences value) async {
     if (!_capabilityChecked) await probeCapabilities();
@@ -349,8 +350,10 @@ final class HelixRuntimePool extends ChangeNotifier {
     var sawState = false;
     try {
       final runtimePath = File(executable).parent.path;
-      final environment = helixProcessEnvironment(Platform.environment);
-      environment['XDG_CONFIG_HOME'] = _generatedConfigDirectory;
+      final environment = helixProcessEnvironment(
+        Platform.environment,
+        configHome: _generatedConfigDirectory,
+      );
       if (supportsNonmodal) {
         channel = await HelixControlChannel.bind((event) {
           if (event.type == 'state' && !sawState) {
@@ -405,7 +408,7 @@ final class HelixRuntimePool extends ChangeNotifier {
       );
       final pty = await HelixPty.start(
         executable,
-        arguments: ['--config', config.path, path],
+        arguments: ['--config', config.path, '--log', logFile.path, path],
         workingDirectory: File(path).parent.path,
         environment: environment,
         rows: 30,
@@ -538,10 +541,19 @@ final class _HelixSession {
 /// The Windows backend builds a fresh environment block and only copies
 /// `HOME` and `PATH` from the parent. Entries supplied here are kept, so
 /// Windows must forward `SystemRoot` and `Path` or CreateProcess fails.
-Map<String, String> helixProcessEnvironment(Map<String, String> parent) {
+Map<String, String> helixProcessEnvironment(
+  Map<String, String> parent, {
+  String? configHome,
+}) {
   final environment = Platform.isWindows
       ? Map<String, String>.from(parent)
       : <String, String>{};
+  if (configHome != null) {
+    environment['XDG_CONFIG_HOME'] = configHome;
+    // etcetera's Windows strategy reads APPDATA, not XDG_CONFIG_HOME.
+    // Helix loads languages.toml from config_dir() independently of --config.
+    if (Platform.isWindows) environment['APPDATA'] = configHome;
+  }
   return environment;
 }
 

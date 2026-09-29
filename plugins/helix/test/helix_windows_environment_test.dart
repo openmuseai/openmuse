@@ -22,6 +22,51 @@ void main() {
     }
   });
 
+  test('Helix language configuration uses the generated directory', () {
+    final environment = helixProcessEnvironment({
+      'APPDATA': r'C:\Users\openmuse\AppData\Roaming',
+    }, configHome: r'C:\Temp\openmuse-helix-test');
+    expect(environment['XDG_CONFIG_HOME'], r'C:\Temp\openmuse-helix-test');
+    if (Platform.isWindows) {
+      expect(environment['APPDATA'], r'C:\Temp\openmuse-helix-test');
+    }
+  });
+
+  test(
+    'bundled Windows hx reads the generated language server override',
+    () async {
+      final hx = Platform.environment['OPENMUSE_HELIX_BIN'];
+      if (!Platform.isWindows || hx == null || !File(hx).existsSync()) {
+        markTestSkipped('OPENMUSE_HELIX_BIN is not a Windows hx.exe');
+        return;
+      }
+      final root = await Directory.systemTemp.createTemp(
+        'openmuse-helix-config-',
+      );
+      addTearDown(() => root.delete(recursive: true));
+      final languages = File('${root.path}/helix/languages.toml');
+      await languages.parent.create(recursive: true);
+      await languages.writeAsString(
+        HelixPreferences(
+          languageServerPaths: {'rust-analyzer': hx},
+        ).languagesToml,
+      );
+      final result = await Process.run(
+        hx,
+        ['--health', 'rust'],
+        environment: {
+          ...helixProcessEnvironment(
+            Platform.environment,
+            configHome: root.path,
+          ),
+          'HELIX_RUNTIME': '${File(hx).parent.path}/runtime',
+        },
+      ).timeout(const Duration(seconds: 15));
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect(result.stdout, contains('rust-analyzer: $hx'));
+    },
+  );
+
   test('Windows PTY start reports a missing executable cleanly', () async {
     if (!Platform.isWindows) return;
     await expectLater(
@@ -152,7 +197,16 @@ void main() {
       addTearDown(() async {
         await runtime.stop();
         runtime.dispose();
-        await directory.delete(recursive: true);
+        // ConPTY releases the process working directory after its exit event.
+        for (var attempt = 0; attempt < 20; attempt++) {
+          try {
+            await directory.delete(recursive: true);
+            break;
+          } on PathAccessException {
+            if (attempt == 19) rethrow;
+            await Future<void>.delayed(const Duration(milliseconds: 100));
+          }
+        }
       });
       final states = <HelixResourceEvent>[];
       runtime.onResourceEvent = states.add;
