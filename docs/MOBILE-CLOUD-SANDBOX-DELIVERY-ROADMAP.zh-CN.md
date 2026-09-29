@@ -700,6 +700,8 @@ Fail-closed admission、攻击面测试和审计链见 [`SANDBOX-PRODUCTION-SECU
 
 ### M3：Mobile Resource Client、Viewer 与 Capability Bridge
 
+**实施状态：Accepted**（`feature/m3-mobile-resource-client`）
+
 **目标**
 
 让 Mobile 全程使用 ResourceRef/handle 打开 Cloud/Paired 资源，并安全桥接 picker/share/camera 等原生能力。
