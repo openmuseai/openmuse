@@ -1,0 +1,17 @@
+{
+  "profile": "desktop",
+  "target": { "os": "macos", "arch": "aarch64", "libc": "darwin" },
+  "allowedArtifactKinds": ["host-bundle", "native-executable", "runtime-closure", "web-bundle"],
+  "allowedPlugins": [
+    "com.openmuse.helix",
+    "com.openmuse.dsh-agent",
+    "com.openmuse.native-text-gate",
+    "com.openmuse.open-file-viewer"
+  ],
+  "requiredPlugins": [
+    "com.openmuse.helix",
+    "com.openmuse.dsh-agent",
+    "com.openmuse.native-text-gate",
+    "com.openmuse.open-file-viewer"
+  ]
+}

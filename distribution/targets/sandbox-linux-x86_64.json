@@ -1,0 +1,7 @@
+{
+  "profile": "sandbox",
+  "target": { "os": "linux", "arch": "x86_64", "libc": "gnu" },
+  "allowedArtifactKinds": ["sandbox-worker"],
+  "allowedPlugins": [],
+  "requiredPlugins": []
+}

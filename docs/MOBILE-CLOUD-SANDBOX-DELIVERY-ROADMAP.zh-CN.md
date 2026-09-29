@@ -264,6 +264,10 @@ Provider port、事务边界与验收入口见 [`WORKSPACE-RESOURCE-AUTHORITY-V1
 
 ### C4：Distribution Lock、SBOM 与闭包门禁
 
+**实施状态：已完成**（`feature/c4-distribution-lock`）
+
+实现、发行流水线合同与统一验收入口见 [`DISTRIBUTION-LOCK-SBOM-CLOSURE-GATE.zh-CN.md`](DISTRIBUTION-LOCK-SBOM-CLOSURE-GATE.zh-CN.md) 和 `scripts/test_distribution_lock.sh`。
+
 **目标**
 
 让“插件是否打包”成为构建期事实，而不是运行时隐藏；同时支撑 Mobile 与 Sandbox worker artifact 的目标平台选择。
