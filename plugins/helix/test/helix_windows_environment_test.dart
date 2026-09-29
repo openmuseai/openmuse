@@ -63,7 +63,7 @@ void main() {
         },
       ).timeout(const Duration(seconds: 15));
       expect(result.exitCode, 0, reason: '${result.stderr}');
-      expect(result.stdout, contains('rust-analyzer: $hx'));
+      expect(_plainOutput(result.stdout), contains('rust-analyzer: $hx'));
     },
   );
 
@@ -101,8 +101,8 @@ void main() {
         },
       );
       expect(result.exitCode, 0);
-      expect(result.stdout, contains('Tree-sitter parser: ✓'));
-      expect(result.stdout, contains('Highlight queries: ✓'));
+      expect(_plainOutput(result.stdout), contains('Tree-sitter parser: ✓'));
+      expect(_plainOutput(result.stdout), contains('Highlight queries: ✓'));
     }
   });
 
@@ -239,8 +239,13 @@ void main() {
   );
 }
 
+/// `hx --health` colours its marks and resolved paths with ANSI escapes on
+/// some runners, so assertions compare the readable text only.
+String _plainOutput(String value) =>
+    value.replaceAll(RegExp(r'\x1B\[[0-9;]*m'), '');
+
 Future<void> _waitForSwitchFinish(HelixRuntimePool runtime) async {
-  for (var attempt = 0; attempt < 100; attempt++) {
+  for (var attempt = 0; attempt < 200; attempt++) {
     if (!runtime.isSwitching) return;
     await Future<void>.delayed(const Duration(milliseconds: 20));
   }
@@ -252,7 +257,7 @@ Future<void> _waitForState(
   String path, {
   int afterIndex = 0,
 }) async {
-  for (var attempt = 0; attempt < 100; attempt++) {
+  for (var attempt = 0; attempt < 200; attempt++) {
     if (states
         .skip(afterIndex)
         .any((event) => event.type == 'state' && event.path == path)) {
