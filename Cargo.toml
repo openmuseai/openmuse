@@ -5,6 +5,8 @@ members = [
   "crates/openmuse-plugin-protocol",
   "crates/openmuse-platform-runtime",
   "crates/openmuse-storage-contract",
+  "crates/openmuse-storage-credentials",
+  "crates/openmuse-storage-s3",
   "crates/openmuse-storage-tck",
 ]
 
@@ -19,3 +21,10 @@ sha2 = "0.10.9"
 thiserror = "2.0.17"
 async-trait = "0.1.89"
 futures = "0.3.31"
+tokio = { version = "1.47.1", features = ["fs", "io-util", "net", "rt", "sync"] }
+url = "=2.5.4"
+aws-sdk-s3 = { version = "=1.88.0", features = ["behavior-version-latest", "rt-tokio"] }
+aws-smithy-http-client = { version = "=1.0.2", features = ["rustls-aws-lc"] }
+aws-smithy-runtime-api = "=1.8.0"
+tempfile = "3.23.0"
+zeroize = "1.8.1"

@@ -1,0 +1,36 @@
+{
+  "generatedAtUnixMs": 1790675517457,
+  "providerVersion": "RustFS 1.0.0 image sha256:8cc9801755448b71a786705ce76692c77e14936cccd87cf2fc31842e58f4d1ff",
+  "adapterRevision": "d951b13281a8c5803d29dacca97dbae46ae7c48b",
+  "adapterSourceDigest": "1f55cb72fc026fa2771ce97d92618874b5001b5d21dd931dc82da02581536579",
+  "endpointMode": "loopback_development",
+  "addressingStyle": "path",
+  "tck": {
+    "capabilitySnapshot": {
+      "profile": "openmuse.s3-data-plane",
+      "profileMajor": 1,
+      "providerRef": "provider.live.Rustfs",
+      "providerKind": "rustfs",
+      "providerVersion": "aws-sdk-s3/1.88",
+      "tls": true,
+      "addressingStyles": ["path"],
+      "checksumSha256": true,
+      "rangeRead": true,
+      "multipart": true,
+      "maintenanceList": true,
+      "minimumPartSize": 5242880
+    },
+    "passed": [
+      "profile-capabilities",
+      "put-head-get-range-delete",
+      "zero-byte-object",
+      "five-mib-boundary",
+      "interrupted-upload-retry",
+      "checksum-failure",
+      "multipart-abort-retry",
+      "maintenance-list",
+      "multipart-100-mib-plus"
+    ],
+    "failures": []
+  }
+}

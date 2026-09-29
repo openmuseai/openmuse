@@ -316,6 +316,10 @@ ABI、reference fake、黑盒场景和统一验收入口见 [`STORAGE-CONTRACT-S
 
 ### ST1：S3 Adapter、Credential/Vault 与 Endpoint 安全
 
+**实施状态：Accepted**（`feature/st1-s3-adapter-security`）
+
+实现边界、风险和验收入口见 [`S3-ADAPTER-CREDENTIAL-ENDPOINT-SECURITY.zh-CN.md`](S3-ADAPTER-CREDENTIAL-ENDPOINT-SECURITY.zh-CN.md) 与 `scripts/test_storage_s3.sh`。MinIO/RustFS 已用 HTTPS、CA bundle 和固定 DNS connector 通过完整 TCK并固化报告；产品负责人于 2026-09-29 明确豁免本阶段真实 AWS S3 验证，详见 [`qualification/storage/ST1-ACCEPTANCE.zh-CN.md`](qualification/storage/ST1-ACCEPTANCE.zh-CN.md)。
+
 **目标**
 
 实现可生产化的 `aws-sdk-s3` adapter，同时确保 Mobile、DSH、Office 和普通 Sandbox 子进程永远不接收永久 S3 Secret。

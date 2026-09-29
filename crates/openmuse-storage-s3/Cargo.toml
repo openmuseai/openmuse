@@ -1,0 +1,23 @@
+[package]
+name = "openmuse-storage-s3"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+aws-sdk-s3.workspace = true
+aws-smithy-http-client.workspace = true
+aws-smithy-runtime-api.workspace = true
+openmuse-storage-contract = { path = "../openmuse-storage-contract" }
+openmuse-storage-credentials = { path = "../openmuse-storage-credentials" }
+serde.workspace = true
+sha2.workspace = true
+tokio.workspace = true
+tempfile.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+futures.workspace = true
+openmuse-storage-tck = { path = "../openmuse-storage-tck" }
+serde_json.workspace = true

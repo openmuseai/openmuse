@@ -1,0 +1,13 @@
+[package]
+name = "openmuse-storage-credentials"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+openmuse-storage-contract = { path = "../openmuse-storage-contract" }
+zeroize.workspace = true
+
+[dev-dependencies]
+futures.workspace = true
