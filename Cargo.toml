@@ -19,6 +19,7 @@ members = [
   "crates/openmuse-worker-supervisor",
   "crates/openmuse-sandbox-security",
   "crates/openmuse-paired-relay",
+  "crates/openmuse-office-docx",
 ]
 
 [workspace.package]
@@ -43,3 +44,5 @@ chacha20poly1305 = "0.10.1"
 ed25519-dalek = "2.2.0"
 hkdf = "0.12.4"
 x25519-dalek = { version = "2.0.1", features = ["static_secrets"] }
+quick-xml = "0.38.3"
+zip = { version = "2.4.2", default-features = false, features = ["deflate"] }

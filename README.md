@@ -62,6 +62,7 @@ Sandbox production security gate: [`docs/SANDBOX-PRODUCTION-SECURITY-GATE.zh-CN.
 Mobile app root and shared Host shell: [`docs/MOBILE-APP-ROOT-HOST-SHELL.zh-CN.md`](docs/MOBILE-APP-ROOT-HOST-SHELL.zh-CN.md).
 Mobile Cloud Workspace service integration: [`docs/MOBILE-CLOUD-SERVICE-INTEGRATION.zh-CN.md`](docs/MOBILE-CLOUD-SERVICE-INTEGRATION.zh-CN.md).
 Paired Desktop E2E channel and opaque relay: [`docs/PAIRED-DESKTOP-E2E-RELAY.zh-CN.md`](docs/PAIRED-DESKTOP-E2E-RELAY.zh-CN.md).
+Mobile Office DOCX Rust engine and platform artifacts: [`docs/MOBILE-OFFICE-DOCX-ENGINE.zh-CN.md`](docs/MOBILE-OFFICE-DOCX-ENGINE.zh-CN.md).
 
 OpenMuse source uses the repository's AGPL-3.0 `LICENSE`, as selected by the
 project owner. Third-party components retain their own licenses; see

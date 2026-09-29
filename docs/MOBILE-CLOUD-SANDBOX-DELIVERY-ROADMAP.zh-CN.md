@@ -780,7 +780,9 @@ login → Cloud catalog → choose Workspace
 
 ### M6：Mobile Office Format Plugin（逐格式）
 
-**实施状态：Accepted（capability/ABI gate）**（`feature/m6-mobile-office-formats`）
+**实施状态：DOCX Engineering Accepted（Rust Core/C ABI/platform artifact gate；App bundling/signing 待完成）；Sheet/Slides/PDF 未实现**（capability contract：`feature/m6-mobile-office-formats`；DOCX engine：`feature/m6-docx-rust-engine-integration`）
+
+DOCX profile、输入安全、C ABI、Android/iOS artifact 构建、TCK 和逐项剩余门禁见 [`MOBILE-OFFICE-DOCX-ENGINE.zh-CN.md`](MOBILE-OFFICE-DOCX-ENGINE.zh-CN.md)、`scripts/test_office_docx_engine.sh` 和 `scripts/build_office_docx_mobile_artifacts.sh`。
 
 **目标**
 
