@@ -52,6 +52,7 @@ Cloud Workspace metadata, CAS and outbox: [`docs/CLOUD-WORKSPACE-METADATA-CAS-OU
 Workspace Sync Plugin policy, durable orchestration and conflicts: [`docs/WORKSPACE-SYNC-PLUGIN.zh-CN.md`](docs/WORKSPACE-SYNC-PLUGIN.zh-CN.md).
 BYOS, provider migration and portable export: [`docs/BYOS-PROVIDER-MIGRATION-PORTABILITY.zh-CN.md`](docs/BYOS-PROVIDER-MIGRATION-PORTABILITY.zh-CN.md).
 RustFS qualification and managed rollout gate: [`docs/RUSTFS-QUALIFICATION-MANAGED-ROLLOUT.zh-CN.md`](docs/RUSTFS-QUALIFICATION-MANAGED-ROLLOUT.zh-CN.md).
+DSH 0.1.7 provider contract and execution-world TCK: [`docs/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md`](docs/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md).
 
 OpenMuse source uses the repository's AGPL-3.0 `LICENSE`, as selected by the
 project owner. Third-party components retain their own licenses; see

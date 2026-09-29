@@ -447,6 +447,10 @@ Fail-closed 判定器、证据账本和长期运行要求见 [`RUSTFS-QUALIFICAT
 
 ### X0：DSH Contract Spike 与 Provider TCK
 
+**实施状态：Accepted**（`feature/x0-dsh-contract-tck`）
+
+实际 `0.1.7-rc.1` 闭包合同、Provider seam 差异与统一验收入口见 [`DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md`](DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md) 和 `scripts/test_dsh_provider_contract.sh`。
+
 **目标**
 
 针对实际打包的 DSH `0.1.7-rc.1` 锁定 `ctx.fs/subprocess/shell/sandbox` 契约，消除 vendor source 与 npm closure 版本差异。
