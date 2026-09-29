@@ -1,6 +1,6 @@
 # Paired Desktop E2E Channel 与 Opaque Relay
 
-> 状态：Engineering Accepted；平台 Keystore/真实 Relay 部署门禁待完成
+> 状态：Engineering Accepted；Mobile 平台密钥存储已实现，native crypto bridge/真实 Relay 部署门禁待完成
 >
 > 子需求：M5 integration increment
 >
@@ -63,14 +63,41 @@ generation。`read/propose/apply` 分开授权；revoke、过期、设备 replac
 乱序、frame bound、离线和 grant scope；Dart TCK 覆盖 M2/M3 adapter 在发请求前执行
 grant，以及没有 Cloud fallback。
 
-## 6. 剩余发布门禁
+## 6. Mobile 平台密钥边界
+
+Flutter 只依赖 `DeviceKeyStorePort`，并且只接收 `keyRef/storage/hardwareBacked/created`
+四个描述字段；adapter 对包含 `seed/privateKey/secret` 的平台响应 fail closed。
+
+- Android 使用 Android Keystore 中的 AES-256-GCM wrapping key，加密随机 32-byte seed 后
+  存入 app-private `SharedPreferences`。返回值报告 wrapping key 是否由安全硬件承载；
+- iOS 使用 non-synchronizable、`AfterFirstUnlockThisDeviceOnly` 的 Keychain generic
+  password 保存随机 32-byte seed，不参与 iCloud 同步；
+- account/device ref 仅用于导出稳定 SHA-256 `keyRef`，删除操作只接受严格格式的
+  `device-key:<64 hex>`；
+- 两端 seed 临时 buffer 在原生创建路径完成后清零，MethodChannel 从不返回 seed。
+
+Android 真机门禁：
+
+```bash
+OPENMUSE_ANDROID_SERIAL=<serial> ./scripts/test_mobile_device_keystore_android.sh
+```
+
+门禁验证相同 identity 的 keyRef 稳定、第二次 ensure 不轮换、删除后重新创建，以及 Dart
+可见对象保持 opaque。iOS 当前由 `scripts/test_ios_beta.sh` 做无签名 arm64 编译门禁；
+Keychain 真机行为仍需 Apple 签名设备证据。
+
+这个增量只完成 at-rest key storage。iOS Secure Enclave 不原生支持本协议采用的
+Ed25519/X25519，因此下一增量必须让 Swift/Kotlin 在原生边界内取 seed 并调用 Rust crypto
+bridge；不能为了接入而把 seed 返回 Dart。
+
+## 7. 剩余发布门禁
 
 本增量没有把本机参考队列伪装成生产 Relay。Production Accepted 还需要：
 
-- Android Keystore、iOS Keychain 和 Desktop Keystore adapter/备份与 key rotation；
+- Desktop Keystore adapter、Mobile/Desktop 备份策略与 key rotation；
 - 账号服务签发、防回滚和撤销 `DeviceRegistration`；
 - 真实 WSS/QUIC outbound relay 的限流、backpressure、离线队列上限和多地域故障；
-- Rust Core 到 Flutter/Desktop 的最小 FFI bridge 与内存清零审计；
+- Rust Core 到 platform/Desktop 的最小 native bridge 与内存清零审计；
 - 第三方密码学评审、移动端抓包、代理/恶意 relay 和设备被替换演练。
 
 这些需要平台签名环境和部署基础设施；在证据完成前，M5 维持 Engineering Accepted。

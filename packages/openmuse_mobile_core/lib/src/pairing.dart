@@ -5,6 +5,29 @@ enum PairedPermission { read, propose, apply }
 
 enum DevicePresence { online, offline, sleeping, replaced }
 
+final class DeviceKeyDescriptor {
+  const DeviceKeyDescriptor({
+    required this.keyRef,
+    required this.storage,
+    required this.hardwareBacked,
+    required this.created,
+  });
+  final String keyRef;
+  final String storage;
+  final bool hardwareBacked;
+  final bool created;
+}
+
+/// Platform-owned device-key storage. No method returns seed/private material.
+/// Cryptographic operations must be added behind the same native boundary.
+abstract interface class DeviceKeyStorePort {
+  Future<DeviceKeyDescriptor> ensure({
+    required String accountRef,
+    required String deviceRef,
+  });
+  Future<void> delete(String keyRef);
+}
+
 final class PairedGrant {
   const PairedGrant({
     required this.deviceRef,
