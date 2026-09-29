@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
 
 import 'design_system.dart';
 import 'layout/layout.dart';
@@ -37,6 +38,7 @@ final class OpenMuseHostApp extends StatelessWidget {
         theme: buildOpenMuseTheme(),
         darkTheme: buildOpenMuseTheme(brightness: Brightness.dark),
         themeMode: preferences.themeMode,
+        navigatorObservers: [DshPopupRouteObserver.instance],
         home: OpenMuseWorkbench(
           registry: registry,
           workspace: workspace,

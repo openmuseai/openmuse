@@ -125,6 +125,13 @@ Future<Widget> bootOpenMuseHost() async {
   for (final plugin in createOpenMuseBuiltInPlugins()) {
     registry.install(plugin);
   }
+  unawaited(() async {
+    try {
+      await registry.activate('com.openmuse.dsh-agent');
+    } catch (error) {
+      debugPrint('DSH plugin activate deferred: $error');
+    }
+  }());
   controller.flushBeforeDiskRead = (resource) async {
     for (final descriptor in registry.descriptors) {
       final plugin = registry.plugin(descriptor.id);

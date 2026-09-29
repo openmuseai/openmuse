@@ -14,6 +14,8 @@ dependencies:
     path: ../../distribution/openmuse_builtin_plugins
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
+  openmuse_dsh_plugin:
+    path: ../../plugins/dsh-agent
   path: ^1.9.1
   path_provider: ^2.1.5
 
@@ -23,8 +25,6 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  openmuse_dsh_plugin:
-    path: ../../plugins/dsh-agent
   openmuse_helix_plugin:
     path: ../../plugins/helix
 
