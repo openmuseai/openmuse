@@ -825,7 +825,9 @@ DOCX profile、输入安全、C ABI、Android/iOS artifact 构建、TCK 和逐�
 
 ### M8：iOS Beta
 
-**实施状态：Accepted（no-codesign build gate）**（`feature/m8-ios-beta`）
+**实施状态：Engineering Accepted（unsigned arm64 build/bundle gate；TestFlight 发布门禁待完成）**（initial build：`feature/m8-ios-beta`；verification：`feature/m8-ios-beta-verification`）
+
+可重复的 bundle verification、artifact digest 和签名边界见 [`IOS-UNSIGNED-BUILD-GATE.zh-CN.md`](IOS-UNSIGNED-BUILD-GATE.zh-CN.md)。当前源码已通过 iPhoneOS arm64 release、Privacy Manifest、bundle identity 和禁止 Desktop/runtime 内容检查；Apple 签名、IPA、App Store Connect 与 TestFlight 真机仍需外部凭据和设备证据。
 
 **目标与计划**
 

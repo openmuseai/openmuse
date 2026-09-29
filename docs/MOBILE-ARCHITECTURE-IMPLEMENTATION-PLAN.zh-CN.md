@@ -665,6 +665,8 @@ distribution/openmuse_mobile_plugins/    # cloud/paired workspace/viewer/dsh-rem
 
 ### M8：iOS Beta（2–3 周）
 
+**当前状态：Engineering Accepted（unsigned iPhoneOS arm64 build/bundle）；TestFlight 门禁待完成。** 复现方式、artifact verification 与签名边界见 [`IOS-UNSIGNED-BUILD-GATE.zh-CN.md`](IOS-UNSIGNED-BUILD-GATE.zh-CN.md)。
+
 交付：
 
 - bundle ID、entitlements、签名/TestFlight；
