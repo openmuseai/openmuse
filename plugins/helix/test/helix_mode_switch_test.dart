@@ -34,6 +34,10 @@ void main() {
         return;
       }
       final directory = await Directory.systemTemp.createTemp('openmuse-mode-');
+      // Helix reports the resolved buffer path, so drive the pool from the
+      // canonical location the engine will echo back: a machine can hand out
+      // 8.3 short names or a symlinked temp root.
+      final root = directory.resolveSymbolicLinksSync();
       addTearDown(() async {
         // ConPTY releases each session's working directory after its exit
         // event, and a mode switch leaves several sessions behind, so give
@@ -57,15 +61,9 @@ void main() {
       }
       Directory.current = directory;
       addTearDown(() => Directory.current = originalDirectory);
-      // Helix reports the buffer path it was handed, so these must use the
-      // native separator to match the engine's state events.
-      final source = File(
-        '${directory.path}${Platform.pathSeparator}example.txt',
-      );
+      final source = File('$root${Platform.pathSeparator}example.txt');
       await source.writeAsString('hello\n');
-      final secondSource = File(
-        '${directory.path}${Platform.pathSeparator}second.txt',
-      );
+      final secondSource = File('$root${Platform.pathSeparator}second.txt');
       await secondSource.writeAsString('world\n');
       final runtime = HelixRuntimePool(executable: executable);
       addTearDown(() async {
@@ -81,7 +79,7 @@ void main() {
       await runtime.openDocument(source.path);
       final dirty = Completer<void>();
       runtime.onResourceEvent = (event) {
-        if (event.path == source.path &&
+        if (_samePath(event.path, source.path) &&
             event.dirty == true &&
             !dirty.isCompleted) {
           dirty.complete();
@@ -92,7 +90,7 @@ void main() {
       await runtime.openDocument(secondSource.path);
       final secondDirty = Completer<void>();
       runtime.onResourceEvent = (event) {
-        if (event.path == secondSource.path &&
+        if (_samePath(event.path, secondSource.path) &&
             event.dirty == true &&
             !secondDirty.isCompleted) {
           secondDirty.complete();
@@ -127,3 +125,17 @@ void main() {
     },
   );
 }
+
+/// Helix reports the resolved buffer path, which can differ from the string a
+/// machine handed out (`C:\Users\RUNNER~1\...` short names, `/var` symlinks on
+/// macOS), so state events are matched by canonical location.
+String _canonicalPath(String path) {
+  try {
+    return File(path).resolveSymbolicLinksSync();
+  } on FileSystemException {
+    return path;
+  }
+}
+
+bool _samePath(String left, String right) =>
+    _canonicalPath(left) == _canonicalPath(right);

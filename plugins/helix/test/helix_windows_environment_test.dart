@@ -186,10 +186,12 @@ void main() {
       final directory = await Directory.systemTemp.createTemp(
         'openmuse-helix-reuse-',
       );
-      final first = File('${directory.path}${Platform.pathSeparator}first.txt');
-      final second = File(
-        '${directory.path}${Platform.pathSeparator}second.txt',
-      );
+      // Helix reports the resolved buffer path, so drive the pool from the
+      // canonical location the engine will echo back (a runner can hand out
+      // 8.3 short names).
+      final root = directory.resolveSymbolicLinksSync();
+      final first = File('$root${Platform.pathSeparator}first.txt');
+      final second = File('$root${Platform.pathSeparator}second.txt');
       await first.writeAsString('FIRST_OPENMUSE_BUFFER\n');
       await second.writeAsString('SECOND_OPENMUSE_BUFFER\n');
 
@@ -260,10 +262,24 @@ Future<void> _waitForState(
   for (var attempt = 0; attempt < 200; attempt++) {
     if (states
         .skip(afterIndex)
-        .any((event) => event.type == 'state' && event.path == path)) {
+        .any((event) => event.type == 'state' && _samePath(event.path, path))) {
       return;
     }
     await Future<void>.delayed(const Duration(milliseconds: 50));
   }
   fail('Helix did not report $path as its active buffer');
 }
+
+/// Helix reports the resolved buffer path, which can differ from the string a
+/// machine handed out (`C:\Users\RUNNER~1\...` short names, `/var` symlinks on
+/// macOS), so state events are matched by canonical location.
+String _canonicalPath(String path) {
+  try {
+    return File(path).resolveSymbolicLinksSync();
+  } on FileSystemException {
+    return path;
+  }
+}
+
+bool _samePath(String left, String right) =>
+    _canonicalPath(left) == _canonicalPath(right);
