@@ -1,10 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_mobile/main.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 void main() {
+  testWidgets('mobile distribution loads the GoTrue login plugin by default', (
+    tester,
+  ) async {
+    final authentication = _FakeAuthenticationController();
+    await tester.pumpWidget(
+      OpenMuseMobileApplication(
+        authenticationPlugin: OpenMuseGoTruePlugin(
+          authentication: authentication,
+          cloudLabel: 'https://cloud.openmuse.test',
+        ),
+        cloudOrigin: Uri.parse('https://cloud.openmuse.test'),
+        allowInsecureLoopback: false,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(authentication.restoreCalls, 1);
+    expect(find.text('Welcome to OpenMuse'), findsOneWidget);
+    expect(find.byKey(const ValueKey('auth.email')), findsOneWidget);
+    expect(find.text('请登录以访问 Cloud Workspace'), findsNothing);
+  });
+
   test('DOCX capability is advertised only when an engine is injected', () {
     expect(
       mobileComposition().capabilitySnapshot.capabilities,
@@ -187,6 +211,29 @@ void main() {
       expect(find.byIcon(Icons.save), findsNothing);
     },
   );
+}
+
+final class _FakeAuthenticationController extends ChangeNotifier
+    implements OpenMuseAuthenticationController {
+  int restoreCalls = 0;
+
+  @override
+  OpenMuseAuthenticationSnapshot snapshot =
+      const OpenMuseAuthenticationSnapshot.signedOut();
+
+  @override
+  Future<String?> accessToken({bool forceRefresh = false}) async => null;
+
+  @override
+  Future<void> restore() async {
+    restoreCalls++;
+  }
+
+  @override
+  Future<void> signInWithPassword(String email, String password) async {}
+
+  @override
+  Future<void> signOut() async {}
 }
 
 final class _FakeOfficeEngine implements OfficeEnginePort {

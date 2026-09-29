@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  openmuse_auth_gotrue:
+    path: ../../plugins/auth-gotrue
   openmuse_host_shell:
     path: ../../packages/openmuse_host_shell
   openmuse_mobile_core:
@@ -40,6 +42,8 @@ dependencies:
     path: ../../packages/openmuse_office_docx
   openmuse_office_viewers:
     path: ../../packages/openmuse_office_viewers
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
 
 dev_dependencies:
   flutter_test:

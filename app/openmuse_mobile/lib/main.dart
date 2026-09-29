@@ -1,20 +1,163 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_mobile_cloud/openmuse_mobile_cloud.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 import 'package:openmuse_office_docx/openmuse_office_docx.dart';
 import 'package:openmuse_office_viewers/openmuse_office_viewers.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'docx_editor_screen.dart';
 import 'office_viewer_screen.dart';
 
 void main() {
   final officeEngine = _loadPackagedOfficeEngine();
+  final endpoints = MobileEndpointConfig.fromEnvironment();
+  final authentication = GoTrueAuthenticationController(
+    provider: GoTrueHttpClient(
+      config: GoTrueClientConfig(
+        origin: endpoints.gotrueOrigin,
+        allowInsecureLoopback: endpoints.allowInsecureLoopback,
+      ),
+    ),
+    store: const SecureAuthSessionStore(values: FlutterSecureValueStore()),
+  );
+  final authPlugin = OpenMuseGoTruePlugin(
+    authentication: authentication,
+    cloudLabel: endpoints.cloudOrigin.toString(),
+  );
   runApp(
-    OpenMuseHostShell(
-      composition: mobileComposition(officeEngine: officeEngine),
+    OpenMuseMobileApplication(
+      authenticationPlugin: authPlugin,
+      cloudOrigin: endpoints.cloudOrigin,
+      allowInsecureLoopback: endpoints.allowInsecureLoopback,
+      officeEngine: officeEngine,
     ),
   );
+}
+
+@immutable
+final class MobileEndpointConfig {
+  const MobileEndpointConfig({
+    required this.gotrueOrigin,
+    required this.cloudOrigin,
+    required this.allowInsecureLoopback,
+  });
+
+  factory MobileEndpointConfig.fromEnvironment() => MobileEndpointConfig(
+    gotrueOrigin: Uri.parse(
+      const String.fromEnvironment(
+        'OPENMUSE_GOTRUE_ORIGIN',
+        defaultValue: 'http://127.0.0.1:9999',
+      ),
+    ),
+    cloudOrigin: Uri.parse(
+      const String.fromEnvironment(
+        'OPENMUSE_CLOUD_ORIGIN',
+        defaultValue: 'http://127.0.0.1:8000',
+      ),
+    ),
+    allowInsecureLoopback: const bool.fromEnvironment(
+      'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
+      defaultValue: !kReleaseMode,
+    ),
+  );
+
+  final Uri gotrueOrigin;
+  final Uri cloudOrigin;
+  final bool allowInsecureLoopback;
+}
+
+final class OpenMuseMobileApplication extends StatefulWidget {
+  const OpenMuseMobileApplication({
+    super.key,
+    required this.authenticationPlugin,
+    required this.cloudOrigin,
+    required this.allowInsecureLoopback,
+    this.officeEngine,
+  });
+
+  final OpenMuseGoTruePlugin authenticationPlugin;
+  final Uri cloudOrigin;
+  final bool allowInsecureLoopback;
+  final OfficeEnginePort? officeEngine;
+
+  @override
+  State<OpenMuseMobileApplication> createState() =>
+      _OpenMuseMobileApplicationState();
+}
+
+final class _OpenMuseMobileApplicationState
+    extends State<OpenMuseMobileApplication> {
+  late final OpenMusePluginRegistry _plugins;
+
+  @override
+  void initState() {
+    super.initState();
+    _plugins = OpenMusePluginRegistry(
+      context: OpenMusePluginContext(executeHostCommand: (_, _) async => null),
+    )..install(widget.authenticationPlugin);
+    unawaited(_plugins.activate(widget.authenticationPlugin.descriptor.id));
+  }
+
+  @override
+  void dispose() {
+    unawaited(
+      _plugins
+          .deactivate(widget.authenticationPlugin.descriptor.id)
+          .whenComplete(_plugins.dispose),
+    );
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: 'OpenMuse',
+    home: Builder(
+      builder: (context) => widget.authenticationPlugin.buildAuthenticationGate(
+        context,
+        authenticatedChild: _AuthenticatedMobileHost(
+          authentication: widget.authenticationPlugin.authentication,
+          cloudOrigin: widget.cloudOrigin,
+          allowInsecureLoopback: widget.allowInsecureLoopback,
+          officeEngine: widget.officeEngine,
+        ),
+      ),
+    ),
+  );
+}
+
+final class _AuthenticatedMobileHost extends StatelessWidget {
+  const _AuthenticatedMobileHost({
+    required this.authentication,
+    required this.cloudOrigin,
+    required this.allowInsecureLoopback,
+    this.officeEngine,
+  });
+
+  final OpenMuseAuthenticationController authentication;
+  final Uri cloudOrigin;
+  final bool allowInsecureLoopback;
+  final OfficeEnginePort? officeEngine;
+
+  @override
+  Widget build(BuildContext context) {
+    final identity = authentication.snapshot.identity;
+    if (identity == null) return const SizedBox.shrink();
+    return OpenMuseHostShell(
+      composition: connectedCloudMobileComposition(
+        session: MobileAccountSession.authenticated(identity.email),
+        apiOrigin: cloudOrigin,
+        accessToken: () => authentication.accessToken(),
+        allowHttpForTesting: allowInsecureLoopback,
+        officeEngine: officeEngine,
+      ),
+    );
+  }
 }
 
 OfficeEnginePort? _loadPackagedOfficeEngine() {
@@ -44,11 +187,13 @@ OpenMuseHostComposition connectedCloudMobileComposition({
   required OpenMuseSessionPort session,
   required Uri apiOrigin,
   required AccessTokenProvider accessToken,
+  bool allowHttpForTesting = false,
   OfficeEnginePort? officeEngine,
 }) {
   final service = HttpCloudWorkspaceService(
     baseUri: apiOrigin,
     accessToken: accessToken,
+    allowHttpForTesting: allowHttpForTesting,
   );
   return mobileComposition(
     session: session,
