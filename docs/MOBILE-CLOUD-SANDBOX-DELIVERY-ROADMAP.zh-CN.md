@@ -548,6 +548,10 @@ Draft Transaction、内容扫描、expected-base CAS 和崩溃恢复见 [`DRAFT-
 
 ### X4：Plugin CLI Registry 与 Artifact Resolver
 
+**实施状态：Accepted**（`feature/x4-plugin-cli-registry`）
+
+冻结 registry、artifact admission 与 capability discovery 见 [`PLUGIN-CLI-REGISTRY-ARTIFACT-RESOLVER.zh-CN.md`](PLUGIN-CLI-REGISTRY-ARTIFACT-RESOLVER.zh-CN.md) 和 `scripts/test_cli_registry.sh`。
+
 **目标**
 
 把已安装 Plugin 的 Agent CLI contribution 解析成某次 Lease 的冻结能力快照。

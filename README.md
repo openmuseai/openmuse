@@ -56,6 +56,7 @@ DSH 0.1.7 provider contract and execution-world TCK: [`docs/DSH-0.1.7-PROVIDER-C
 Host Sandbox Service, lease and local isolated runtime: [`docs/HOST-SANDBOX-SERVICE-LOCAL-RUNTIME.zh-CN.md`](docs/HOST-SANDBOX-SERVICE-LOCAL-RUNTIME.zh-CN.md).
 Cloud execution runtime and DSH provider group: [`docs/CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md`](docs/CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md).
 Draft transaction, checkpoint, quiescence and recovery: [`docs/DRAFT-CHECKPOINT-QUIESCENCE-RECOVERY.zh-CN.md`](docs/DRAFT-CHECKPOINT-QUIESCENCE-RECOVERY.zh-CN.md).
+Plugin CLI registry and artifact resolver: [`docs/PLUGIN-CLI-REGISTRY-ARTIFACT-RESOLVER.zh-CN.md`](docs/PLUGIN-CLI-REGISTRY-ARTIFACT-RESOLVER.zh-CN.md).
 
 OpenMuse source uses the repository's AGPL-3.0 `LICENSE`, as selected by the
 project owner. Third-party components retain their own licenses; see

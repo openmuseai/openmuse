@@ -15,6 +15,7 @@ members = [
   "crates/openmuse-workspace-sandbox",
   "crates/openmuse-cloud-execution-runtime",
   "crates/openmuse-draft-transaction",
+  "crates/openmuse-cli-registry",
 ]
 
 [workspace.package]
