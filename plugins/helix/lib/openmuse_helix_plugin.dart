@@ -40,6 +40,20 @@ final class OpenMuseHelixPlugin
       if (runtime?.lastError != null) '运行错误: ${runtime!.lastError}',
       'Rust LS 配置: ${_preferences.value.languageServerPaths['rust-analyzer'] ?? '自动检测'}',
     ];
+    final documentPath = runtime?.activePath;
+    if (documentPath != null) {
+      final root = rustLanguageServerRoot(documentPath);
+      if (root == null) {
+        final linked = runtime!.linkedRustProjectsFor(documentPath);
+        lines.add(
+          'Rust LS 根目录: 无（$documentPath 不在任何 Cargo 项目内'
+          '${linked.isEmpty ? '，未找到已挂载的 Rust 项目' : '，已关联 ${linked.length} 个 Rust 项目'}）',
+        );
+        if (linked.isNotEmpty) lines.add('Rust LS 关联项目: ${linked.join(', ')}');
+      } else {
+        lines.add('Rust LS 根目录: $root');
+      }
+    }
     if (runtime != null) {
       final config = runtime.generatedLanguagesFile;
       lines.add('运行配置: ${config.path}');
@@ -176,6 +190,7 @@ final class OpenMuseHelixPlugin
     if (saved is Map) {
       _preferences.value = HelixPreferences.fromJson(saved);
     }
+    await _refreshRustWorkspaceRoots(context);
     await _runtime!.probeCapabilities();
     HelixOpenTrace.mark(
       'probe_done',
@@ -186,6 +201,29 @@ final class OpenMuseHelixPlugin
       'activate_done',
       elapsedMs: activationWatch.elapsedMilliseconds,
     );
+  }
+
+  /// rust-analyzer can only answer navigation inside a project, and the host
+  /// owns the mounted workspaces. Ask it for them so the runtime can link the
+  /// mounted Rust projects when a buffer lives outside every crate.
+  Future<void> _refreshRustWorkspaceRoots(OpenMusePluginContext context) async {
+    final runtime = _runtime;
+    if (runtime == null) return;
+    try {
+      final snapshot = await context.executeHostCommand(
+        'workspace.snapshot',
+        null,
+      );
+      if (snapshot is! Map) return;
+      final mounts = snapshot['mounts'];
+      if (mounts is! List) return;
+      runtime.rustWorkspaceRoots = [
+        for (final mount in mounts)
+          if (mount is Map && mount['path'] is String) mount['path'] as String,
+      ];
+    } catch (error) {
+      debugPrint('Helix workspace snapshot unavailable: $error');
+    }
   }
 
   @override
@@ -234,6 +272,8 @@ final class OpenMuseHelixPlugin
 
   Future<void> updatePreferences(HelixPreferences next) async {
     final previous = _preferences.value;
+    final context = _context;
+    if (context != null) await _refreshRustWorkspaceRoots(context);
     await _runtime?.configure(next);
     try {
       await _context?.executeHostCommand('settings.plugin.write', {
