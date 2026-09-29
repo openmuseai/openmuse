@@ -48,6 +48,16 @@ if [[ "$skip_tests" -eq 0 ]]; then
 fi
 flutter build macos "--${profile}"
 
+if [[ "$skip_tests" -eq 0 ]]; then
+  (
+    cd "$repo_root/plugins/helix"
+    flutter analyze
+    OPENMUSE_REQUIRE_PTY_TEST=1 \
+      OPENMUSE_PTY_LIBRARY_DIR="$app_path/Contents/Frameworks" \
+      flutter test
+  )
+fi
+
 test -d "$app_path"
 bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app_path/Contents/Info.plist")"
 test "$bundle_id" = "com.openmuseai.office"

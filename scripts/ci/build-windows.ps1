@@ -262,6 +262,27 @@ if (-not $SkipZip) {
     Install-OpenMuseBundledDsh -RepoRoot $RepoRoot -BundleRoot $BundleRoot
     Install-OpenMuseHelix -RepoRoot $RepoRoot -BundleRoot $BundleRoot
 
+    if (-not $SkipTests) {
+        $priorHelix = $env:OPENMUSE_HELIX_BIN
+        $priorLibrary = $env:OPENMUSE_PTY_LIBRARY_DIR
+        $priorRequired = $env:OPENMUSE_REQUIRE_PTY_TEST
+        $priorPath = $env:Path
+        try {
+            $env:OPENMUSE_HELIX_BIN = Join-Path $BundleRoot 'data\flutter_assets\packages\openmuse_helix_plugin\assets\engines\helix\hx.exe'
+            $env:OPENMUSE_PTY_LIBRARY_DIR = $BundleRoot
+            $env:OPENMUSE_REQUIRE_PTY_TEST = '1'
+            $env:Path = "$BundleRoot;$priorPath"
+            Invoke-Native -FilePath 'flutter' -Arguments @(
+                'test', 'test/helix_mode_switch_test.dart', 'test/helix_windows_environment_test.dart'
+            ) -WorkingDirectory (Join-Path $RepoRoot 'plugins\helix')
+        } finally {
+            $env:OPENMUSE_HELIX_BIN = $priorHelix
+            $env:OPENMUSE_PTY_LIBRARY_DIR = $priorLibrary
+            $env:OPENMUSE_REQUIRE_PTY_TEST = $priorRequired
+            $env:Path = $priorPath
+        }
+    }
+
     New-Item -ItemType Directory -Force -Path $DistRoot | Out-Null
     if (Test-Path $Archive) { Remove-Item $Archive -Force }
     # ZipFile rather than Compress-Archive: it writes ZIP-spec forward slashes,

@@ -33,6 +33,7 @@ Rust crates（`crates/`）和打包脚本（`scripts/`）都在同一个 checkou
   拷进 `data/flutter_assets/.../engines/helix/`。仓库里 pin 的 `hx` 仍是 macOS 通用二进制，
   不会打进 Windows 归档。`HELIX_DISABLE_AUTO_GRAMMAR_BUILD=1` 必须打开，否则 `helix-term`
   的 `build.rs` 会在干净 checkout 里去 clone 全部 tree-sitter 语法。
+- `pack` 在写 ZIP 前会以随包 `hx.exe` 和 `flutter_pty.dll` 强制运行 Windows PTY 打开文件测试、两个脏文件会话的 Vim/VS Code 双向切换测试；缺失原生库或版本标记 `openmuse-nonmodal.4` 时直接失败。此门禁须在 Windows runner 实际执行，macOS 上的脚本语法检查不能代替实机结果。
 - DSH 同样在 `pack` 阶段组装：固定 Node `22.19.0` + `third_party/dsh` 的 npm closure，
   落到 `openmuse/dsh/`。`verify` 会检查 `node.exe`、`bin.js`、`hx.exe` 和
   `runtime/languages.toml`。

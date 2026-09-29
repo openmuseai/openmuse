@@ -85,8 +85,10 @@ function Install-OpenMuseHelix {
         Copy-Item -LiteralPath (Join-Path $builtGrammars "$name.dll") -Destination (Join-Path $grammarDestination "$name.dll") -Force
     }
     Write-Host "    $($grammarNames.Count) Tree-sitter grammars staged for Windows"
-    & (Join-Path $destination 'hx.exe') --version
+    $version = & (Join-Path $destination 'hx.exe') --version
     if ($LASTEXITCODE -ne 0) { throw 'staged hx.exe did not print its version' }
+    if ($version -notmatch 'openmuse-nonmodal\.4') { throw 'staged hx.exe does not support the two input modes' }
+    Write-Host $version
     Write-Host '    Helix runtime staged beside OpenMuse.exe'
 }
 

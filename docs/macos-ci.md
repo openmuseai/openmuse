@@ -18,7 +18,7 @@
 | `scripts/ci/diagnose-macos.sh` | Xcode / Flutter / rust / node，以及可选的空项目 `flutter build macos` |
 | `scripts/ci/remote-build-macos.sh` | 用 `OPENMUSE_TOKEN` 触发并跟踪 run（不依赖 `gh`） |
 | `scripts/ci/download-artifacts.sh` | 下载成功 run 的产物并核对 `SHA256SUMS.txt` |
-| `scripts/package_macos.sh` | 组装 DSH closure、编 Flutter、ad-hoc 签名、写 `dist/OpenMuse-macos.zip` |
+| `scripts/package_macos.sh` | 组装 DSH closure、编 Flutter、强制运行 Helix 原生 PTY 模式切换测试、ad-hoc 签名、写 `dist/OpenMuse-macos.zip` |
 
 ## 前置条件
 
