@@ -54,9 +54,13 @@ final class _OfficeViewerScreenState extends State<OfficeViewerScreen> {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Chip(
+            Chip(
               key: ValueKey('office-view-only'),
-              label: Text('XLSX · 只读兼容视图'),
+              label: Text(
+                widget.format == OfficeFormat.slides
+                    ? 'PPTX · 只读兼容视图'
+                    : 'XLSX · 只读兼容视图',
+              ),
             ),
             const SizedBox(height: 8),
             for (

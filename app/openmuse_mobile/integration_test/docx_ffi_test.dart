@@ -23,6 +23,10 @@ void main() {
       engine.inspect(OfficeFormat.sheet, const [1, 2, 3]),
       throwsA(isA<OfficeViewerException>()),
     );
+    await expectLater(
+      engine.inspect(OfficeFormat.slides, const [1, 2, 3]),
+      throwsA(isA<OfficeViewerException>()),
+    );
     expect(
       () => engine.exportSimple(OfficeFormat.sheet, const [1], const ['x']),
       throwsA(isA<OfficeViewerException>()),

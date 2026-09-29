@@ -25,7 +25,9 @@ OfficeEnginePort? _loadPackagedOfficeEngine() {
     // A missing or incompatible artifact removes only this capability.
   }
   try {
-    engines[OfficeFormat.sheet] = OfficeViewersFfiEngine.open();
+    final viewers = OfficeViewersFfiEngine.open();
+    engines[OfficeFormat.sheet] = viewers;
+    engines[OfficeFormat.slides] = viewers;
   } on Object {
     // A missing or incompatible artifact removes only this capability.
   }
@@ -76,6 +78,7 @@ OpenMuseHostComposition mobileComposition({
       cloudService != null,
       _supportsFormat(officeEngine, OfficeFormat.word),
       _supportsFormat(officeEngine, OfficeFormat.sheet),
+      _supportsFormat(officeEngine, OfficeFormat.slides),
     ),
     workspaceBuilder: (context, workspace) {
       final record = catalog.record(workspace.workspaceRef);
@@ -146,7 +149,9 @@ bool _supportsFormat(OfficeEnginePort? engine, OfficeFormat format) {
   if (engine == null) return false;
   if (engine is MultiFormatOfficeEngine) return engine.formats.contains(format);
   if (engine is DocxFfiEngine) return format == OfficeFormat.word;
-  if (engine is OfficeViewersFfiEngine) return format == OfficeFormat.sheet;
+  if (engine is OfficeViewersFfiEngine) {
+    return format == OfficeFormat.sheet || format == OfficeFormat.slides;
+  }
   return format == OfficeFormat.word;
 }
 
@@ -155,10 +160,12 @@ final class _MobileCapabilities implements CapabilitySnapshotPort {
     this.cloudConnected,
     this.docxEngineConnected,
     this.xlsxEngineConnected,
+    this.pptxEngineConnected,
   );
   final bool cloudConnected;
   final bool docxEngineConnected;
   final bool xlsxEngineConnected;
+  final bool pptxEngineConnected;
   @override
   Set<String> get capabilities => {
     'resource.viewer',
@@ -166,6 +173,7 @@ final class _MobileCapabilities implements CapabilitySnapshotPort {
     if (cloudConnected) 'dsh.remote',
     if (docxEngineConnected) 'office.docx.engine',
     if (xlsxEngineConnected) 'office.xlsx.engine',
+    if (pptxEngineConnected) 'office.pptx.engine',
   };
 }
 
@@ -225,6 +233,11 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
       value.mediaType == 'application/xlsx';
 
+  bool _isPptx(CloudResourceRecord value) =>
+      value.mediaType ==
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+      value.mediaType == 'application/pptx';
+
   Future<void> _openDocx(CloudResourceRecord resource) async {
     final engine = widget.officeEngine;
     final commits = widget.officeCommits;
@@ -266,9 +279,16 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
     }
   }
 
-  Future<void> _openXlsx(CloudResourceRecord resource) async {
+  Future<void> _openViewer(
+    CloudResourceRecord resource,
+    OfficeFormat format,
+  ) async {
     final engine = widget.officeEngine;
-    if (engine == null || !_isXlsx(resource)) return;
+    if (engine == null ||
+        (format == OfficeFormat.sheet && !_isXlsx(resource)) ||
+        (format == OfficeFormat.slides && !_isPptx(resource))) {
+      return;
+    }
     try {
       final generation = coordinator.flow.generation;
       final handle = await widget.service.issueResourceHandle(
@@ -288,7 +308,7 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
         MaterialPageRoute(
           builder: (_) => OfficeViewerScreen(
             title: resource.title,
-            format: OfficeFormat.sheet,
+            format: format,
             handle: handle,
             engine: engine,
             ranges: widget.resources,
@@ -301,7 +321,7 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('XLSX 打开失败')));
+        ).showSnackBar(const SnackBar(content: Text('Office 文件打开失败')));
       }
     }
   }
@@ -350,10 +370,17 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
                     (_isDocx(resource) &&
                         widget.officeEngine != null &&
                         widget.officeCommits != null) ||
-                    (_isXlsx(resource) && widget.officeEngine != null),
-                onTap: () => _isXlsx(resource)
-                    ? _openXlsx(resource)
-                    : _openDocx(resource),
+                    (_isXlsx(resource) && widget.officeEngine != null) ||
+                    (_isPptx(resource) && widget.officeEngine != null),
+                onTap: () {
+                  if (_isXlsx(resource)) {
+                    _openViewer(resource, OfficeFormat.sheet);
+                  } else if (_isPptx(resource)) {
+                    _openViewer(resource, OfficeFormat.slides);
+                  } else {
+                    _openDocx(resource);
+                  }
+                },
               ),
           ],
         );

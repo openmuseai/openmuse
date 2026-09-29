@@ -118,6 +118,38 @@ void main() {
     expect(find.textContaining('Sheet A'), findsOneWidget);
     expect(find.byIcon(Icons.save), findsNothing);
   });
+
+  testWidgets('authorized PPTX catalog route remains view only', (
+    tester,
+  ) async {
+    final service = _FakeCloudService(pptx: true);
+    final viewers = _FakeSlidesEngine();
+    final engine = MultiFormatOfficeEngine({
+      OfficeFormat.word: _FakeOfficeEngine(),
+      OfficeFormat.slides: viewers,
+    });
+    await tester.pumpWidget(
+      OpenMuseHostShell(
+        composition: mobileComposition(
+          session: const MobileAccountSession.authenticated('Test Account'),
+          cloudService: service,
+          dshConnector: service,
+          resources: service,
+          resourceCatalog: service,
+          officeCommits: service,
+          officeEngine: engine,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cloud Project'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Deck.pptx'));
+    await tester.pumpAndSettle();
+    expect(find.text('PPTX · 只读兼容视图'), findsOneWidget);
+    expect(find.textContaining('Slide 1'), findsOneWidget);
+    expect(find.byIcon(Icons.save), findsNothing);
+  });
 }
 
 final class _FakeOfficeEngine implements OfficeEnginePort {
@@ -170,6 +202,29 @@ final class _FakeSheetEngine implements OfficeEnginePort {
   ) => throw UnsupportedError('view only');
 }
 
+final class _FakeSlidesEngine implements OfficeEnginePort {
+  @override
+  String get abi => 'openmuse-office-viewers-ffi@1';
+
+  @override
+  Future<OfficeEngineInspection> inspect(
+    OfficeFormat format,
+    List<int> bytes,
+  ) async => const OfficeEngineInspection(
+    format: OfficeFormat.slides,
+    profile: 'view-only',
+    paragraphs: ['Slide 1\tHello'],
+    capabilities: {OfficeCapability.view},
+  );
+
+  @override
+  Future<List<int>> exportSimple(
+    OfficeFormat format,
+    List<int> originalBytes,
+    List<String> paragraphs,
+  ) => throw UnsupportedError('view only');
+}
+
 final class _FakeCloudService
     implements
         CloudWorkspaceService,
@@ -177,8 +232,9 @@ final class _FakeCloudService
         DshRuntimeConnector,
         ResourceRangePort,
         OfficeResourceCommitPort {
-  _FakeCloudService({this.xlsx = false});
+  _FakeCloudService({this.xlsx = false, this.pptx = false});
   final bool xlsx;
+  final bool pptx;
 
   @override
   DshPlacement get placement => DshPlacement.cloudRemote;
@@ -200,7 +256,7 @@ final class _FakeCloudService
     required String revision,
     required int generation,
   }) async => [
-    if (!xlsx)
+    if (!xlsx && !pptx)
       const CloudResourceRecord(
         resourceRef: 'resource:docx',
         title: 'Document.docx',
@@ -218,6 +274,16 @@ final class _FakeCloudService
         size: 3,
         mediaType:
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        writable: false,
+      ),
+    if (pptx)
+      const CloudResourceRecord(
+        resourceRef: 'resource:pptx',
+        title: 'Deck.pptx',
+        revision: 'pptx-r1',
+        size: 3,
+        mediaType:
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         writable: false,
       ),
   ];
@@ -250,9 +316,14 @@ final class _FakeCloudService
     generation: generation,
     expiresAtMs: DateTime.now().millisecondsSinceEpoch + 60000,
     size: 3,
-    mediaType: resourceRef == 'resource:xlsx'
-        ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    mediaType: switch (resourceRef) {
+      'resource:xlsx' =>
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'resource:pptx' =>
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      _ =>
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    },
   );
 
   @override
