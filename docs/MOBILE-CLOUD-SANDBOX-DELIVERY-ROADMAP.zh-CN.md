@@ -676,6 +676,8 @@ Fail-closed admission、攻击面测试和审计链见 [`SANDBOX-PRODUCTION-SECU
 
 ### M2：DSH Core/Connector 拆分与 Remote Presentation
 
+**实施状态：Accepted**（`feature/m2-dsh-connectors`）
+
 **目标**
 
 同一个 DSH Plugin Core 支持 local-sidecar、cloud-remote、paired-desktop，不出现两套业务状态机。
