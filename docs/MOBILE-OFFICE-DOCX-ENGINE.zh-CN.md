@@ -89,11 +89,17 @@ Cloud adapter 以 `application/octet-stream` 向 `/v1/resources/commit` 流式�
 CAS 元数据位于专用 header，Bearer token 仍只属于 adapter。loopback HTTP TCK 已验证
 请求体和 receipt；这不把 Cloud/S3 凭据交给 DOCX engine。
 
+`DocxEditorScreen` 是独立 Flutter presentation adapter，只接收 ResourceHandle、Engine、
+range port 和 commit port。simple-text 文档提供逐段编辑与 receipt-backed 保存；view-only
+文档的输入框只读且根本不渲染保存按钮；打开失败和提交冲突不会伪造成功 revision。
+Widget TCK 已覆盖可编辑保存与复杂文档降级。该组件不自行列举 Workspace 或构造 handle，
+后续只能由通过授权的 Resource catalog 路由进入。
+
 ## 6. 剩余门禁
 
 - 将 `.so`/XCFramework 纳入正式 release 签名、SBOM 和 notices；
 - FFI isolate/crash/低内存恢复和更大规模 fuzz/corpus；
-- 将已通过 TCK 的 ResourceHandle/CAS transaction 接入真实账号下的打开—编辑—保存 UI；
+- 将已通过 TCK 的 DOCX editor 接入真实账号下的 Resource catalog 路由与授权 handle；
 - 来自多 Office 版本/字体/语言/损坏样本的扩展 corpus 与视觉分页基线；
 - x86_64 Android（若产品支持）、iOS 签名 archive 和真机性能数据。
 
