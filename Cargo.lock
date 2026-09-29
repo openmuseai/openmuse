@@ -1383,6 +1383,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "openmuse-storage-qualification"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "openmuse-storage-s3"
 version = "0.1.0"
 dependencies = [

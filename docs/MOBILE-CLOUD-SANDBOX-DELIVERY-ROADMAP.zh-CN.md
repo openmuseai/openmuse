@@ -420,6 +420,10 @@ BYOS 执行放置、迁移状态机、可移植导出和统一验收入口见 [`
 
 ### ST5：RustFS Qualification 与 Managed Rollout
 
+**实施状态：Engineering Accepted；Managed 默认 Provider Gate 未通过（长期证据进行中）**（`feature/st5-rustfs-qualification`）
+
+Fail-closed 判定器、证据账本和长期运行要求见 [`RUSTFS-QUALIFICATION-MANAGED-ROLLOUT.zh-CN.md`](RUSTFS-QUALIFICATION-MANAGED-ROLLOUT.zh-CN.md) 和 `scripts/test_rustfs_qualification.sh`。当前未伪造 ≥90 天 soak，RustFS 默认切换保持禁止；此长期 Gate 按计划不阻塞后续工作流。
+
 **目标**
 
 验证 RustFS 是否可成为 OpenMuse Managed Storage 的默认实现，不阻塞产品先使用已认证成熟 S3。

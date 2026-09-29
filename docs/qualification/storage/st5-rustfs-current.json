@@ -1,0 +1,23 @@
+{
+  "schema": "openmuse.rustfs-qualification@1",
+  "recordedAtMs": 1790697600000,
+  "providerVersion": "1.0.0",
+  "imageDigest": "",
+  "artifactSignatureVerified": false,
+  "sbomDigest": "",
+  "securityCriticalOpen": 0,
+  "securityHighOpen": 0,
+  "clusterNodes": 0,
+  "drivesPerNode": 0,
+  "rpoObjectiveSeconds": 60,
+  "rtoObjectiveSeconds": 600,
+  "drills": [],
+  "productionEquivalentSoakHours": 0,
+  "digestScrubObjects": 0,
+  "digestMismatches": 0,
+  "canaryTenants": 0,
+  "shadowReads": 0,
+  "shadowReadMismatches": 0,
+  "canaryRollbackRehearsed": false,
+  "fallbackProviders": []
+}
