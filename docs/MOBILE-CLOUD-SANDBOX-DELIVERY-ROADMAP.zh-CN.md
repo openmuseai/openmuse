@@ -752,6 +752,8 @@ login → Cloud catalog → choose Workspace
 
 ### M5：Paired Desktop、Relay 与 Desktop Workspace Provider
 
+**实施状态：Accepted（contract/TCK）**（`feature/m5-paired-desktop-relay`）
+
 **目标**
 
 让 Mobile 在 Desktop 在线时访问真实 Local Workspace 和本地 DSH，不自动上传数据。
