@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
   "crates/openmuse-contract",
+  "crates/openmuse-cloud-resource-authority",
   "crates/openmuse-plugin-protocol",
   "crates/openmuse-platform-runtime",
   "crates/openmuse-storage-contract",

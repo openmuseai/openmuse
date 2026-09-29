@@ -342,6 +342,10 @@ ABI、reference fake、黑盒场景和统一验收入口见 [`STORAGE-CONTRACT-S
 
 ### ST2：Cloud Workspace Metadata、CAS 与 Outbox
 
+**实施状态：Accepted**（`feature/st2-cloud-resource-authority`）
+
+领域边界、事务语义与统一验收入口见 [`CLOUD-WORKSPACE-METADATA-CAS-OUTBOX.zh-CN.md`](CLOUD-WORKSPACE-METADATA-CAS-OUTBOX.zh-CN.md) 和 `scripts/test_cloud_resource_authority.sh`。
+
 **目标**
 
 提供 Cloud Workspace 的 Resource Authority，而不是把 S3 bucket 直接当作文件树。
