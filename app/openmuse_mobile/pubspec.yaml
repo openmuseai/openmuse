@@ -32,6 +32,8 @@ dependencies:
     sdk: flutter
   openmuse_auth_gotrue:
     path: ../../plugins/auth-gotrue
+  openmuse_cloud_workspace_plugin:
+    path: ../../plugins/cloud-workspace
   openmuse_host_shell:
     path: ../../packages/openmuse_host_shell
   openmuse_mobile_core:

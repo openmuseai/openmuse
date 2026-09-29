@@ -56,4 +56,30 @@ void main() {
     controller.disconnected();
     expect(controller.state, DshPresentationState.reconnecting);
   });
+
+  test('accepts an authenticated DSH pool path over HTTPS', () async {
+    final controller = DshPresentationController();
+    await controller.open(_PoolPathConnector(), 'workspace-1');
+    expect(controller.session?.path, '/u/tenant/?token=launch');
+    expect(controller.state, DshPresentationState.loading);
+  });
+}
+
+final class _PoolPathConnector implements DshRuntimeConnector {
+  @override
+  DshPlacement get placement => DshPlacement.cloudRemote;
+
+  @override
+  Future<void> close(String sessionRef) async {}
+
+  @override
+  Future<DshSessionDescriptor> open(
+    String workspaceRef,
+    int generation,
+  ) async => DshSessionDescriptor(
+    sessionRef: 'session-1',
+    origin: 'https://dsh.openmuse.test',
+    path: '/u/tenant/?token=launch',
+    generation: generation,
+  );
 }

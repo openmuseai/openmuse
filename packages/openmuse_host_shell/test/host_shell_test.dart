@@ -17,6 +17,7 @@ final class _Catalog implements WorkspaceCatalogPort {
       title: 'Cloud Project',
       placement: WorkspacePlacement.cloud,
       writable: true,
+      runningSessionRef: 'session-1',
     ),
   ];
 }
@@ -42,6 +43,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Cloud Project'), findsOneWidget);
+    expect(find.text('Cloud Workspace · DSH running'), findsOneWidget);
     expect(find.text('user@example.test'), findsOneWidget);
   });
 }

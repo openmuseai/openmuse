@@ -18,11 +18,44 @@ final class DshSessionDescriptor {
     required this.origin,
     required this.path,
     required this.generation,
+    this.allowInsecureLoopback = false,
   });
   final String sessionRef;
   final String origin;
   final String path;
   final int generation;
+  final bool allowInsecureLoopback;
+}
+
+final class DshSessionSummary {
+  const DshSessionSummary({
+    required this.sessionRef,
+    required this.workspaceRef,
+    required this.state,
+    required this.nodeId,
+    required this.createdAtMs,
+    required this.lastActiveAtMs,
+    required this.attachedDeviceCount,
+    this.instanceRef,
+    this.queuePosition,
+  });
+
+  final String sessionRef;
+  final String workspaceRef;
+  final String state;
+  final String nodeId;
+  final int createdAtMs;
+  final int lastActiveAtMs;
+  final int attachedDeviceCount;
+  final String? instanceRef;
+  final int? queuePosition;
+
+  bool get isRunning =>
+      state == 'starting' || state == 'ready' || state == 'idle';
+}
+
+abstract interface class DshSessionCatalogPort {
+  Future<List<DshSessionSummary>> listSessions();
 }
 
 abstract interface class DshRuntimeConnector {
@@ -72,10 +105,19 @@ final class DshPresentationController {
   bool _current(int value) => value == generation && session != null;
   bool _safe(DshSessionDescriptor value) {
     final uri = Uri.tryParse(value.origin);
-    return uri != null &&
-        uri.scheme == 'https' &&
+    final loopback =
+        uri != null &&
+        (uri.host == 'localhost' ||
+            uri.host == '127.0.0.1' ||
+            uri.host == '::1' ||
+            uri.host == '10.0.2.2');
+    final safeOrigin =
+        uri != null &&
         uri.host.isNotEmpty &&
-        value.path.startsWith('/session/') &&
-        !value.path.contains('..');
+        (uri.scheme == 'https' ||
+            (value.allowInsecureLoopback && uri.scheme == 'http' && loopback));
+    final safePath =
+        value.path.startsWith('/session/') || value.path.startsWith('/u/');
+    return safeOrigin && safePath && !value.path.contains('..');
   }
 }

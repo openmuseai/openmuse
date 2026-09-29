@@ -10,11 +10,13 @@ final class WorkspaceSummary {
     required this.title,
     required this.placement,
     required this.writable,
+    this.runningSessionRef,
   });
   final String workspaceRef;
   final String title;
   final WorkspacePlacement placement;
   final bool writable;
+  final String? runningSessionRef;
 }
 
 abstract interface class OpenMuseSessionPort {

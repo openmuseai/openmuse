@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
+import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_mobile_cloud/openmuse_mobile_cloud.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
@@ -12,6 +13,9 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'docx_editor_screen.dart';
 import 'office_viewer_screen.dart';
+
+final String _runtimeMobileDeviceId =
+    'mobile.flutter.${DateTime.now().microsecondsSinceEpoch}';
 
 void main() {
   final officeEngine = _loadPackagedOfficeEngine();
@@ -29,11 +33,16 @@ void main() {
     authentication: authentication,
     cloudLabel: endpoints.cloudOrigin.toString(),
   );
+  final cloudPlugin = OpenMuseCloudWorkspacePlugin(
+    authentication: authentication,
+    cloudOrigin: endpoints.cloudOrigin,
+    deviceId: _runtimeMobileDeviceId,
+    allowInsecureLoopback: endpoints.allowInsecureLoopback,
+  );
   runApp(
     OpenMuseMobileApplication(
       authenticationPlugin: authPlugin,
-      cloudOrigin: endpoints.cloudOrigin,
-      allowInsecureLoopback: endpoints.allowInsecureLoopback,
+      cloudWorkspacePlugin: cloudPlugin,
       officeEngine: officeEngine,
     ),
   );
@@ -75,14 +84,12 @@ final class OpenMuseMobileApplication extends StatefulWidget {
   const OpenMuseMobileApplication({
     super.key,
     required this.authenticationPlugin,
-    required this.cloudOrigin,
-    required this.allowInsecureLoopback,
+    required this.cloudWorkspacePlugin,
     this.officeEngine,
   });
 
   final OpenMuseGoTruePlugin authenticationPlugin;
-  final Uri cloudOrigin;
-  final bool allowInsecureLoopback;
+  final OpenMuseCloudWorkspacePlugin cloudWorkspacePlugin;
   final OfficeEnginePort? officeEngine;
 
   @override
@@ -97,18 +104,27 @@ final class _OpenMuseMobileApplicationState
   @override
   void initState() {
     super.initState();
-    _plugins = OpenMusePluginRegistry(
-      context: OpenMusePluginContext(executeHostCommand: (_, _) async => null),
-    )..install(widget.authenticationPlugin);
-    unawaited(_plugins.activate(widget.authenticationPlugin.descriptor.id));
+    _plugins =
+        OpenMusePluginRegistry(
+            context: OpenMusePluginContext(
+              executeHostCommand: (_, _) async => null,
+            ),
+          )
+          ..install(widget.authenticationPlugin)
+          ..install(widget.cloudWorkspacePlugin);
+    unawaited(() async {
+      await _plugins.activate(widget.authenticationPlugin.descriptor.id);
+      await _plugins.activate(widget.cloudWorkspacePlugin.descriptor.id);
+    }());
   }
 
   @override
   void dispose() {
     unawaited(
-      _plugins
-          .deactivate(widget.authenticationPlugin.descriptor.id)
-          .whenComplete(_plugins.dispose),
+      Future.wait([
+        _plugins.deactivate(widget.cloudWorkspacePlugin.descriptor.id),
+        _plugins.deactivate(widget.authenticationPlugin.descriptor.id),
+      ]).whenComplete(_plugins.dispose),
     );
     super.dispose();
   }
@@ -122,8 +138,7 @@ final class _OpenMuseMobileApplicationState
         context,
         authenticatedChild: _AuthenticatedMobileHost(
           authentication: widget.authenticationPlugin.authentication,
-          cloudOrigin: widget.cloudOrigin,
-          allowInsecureLoopback: widget.allowInsecureLoopback,
+          cloudService: widget.cloudWorkspacePlugin.service,
           officeEngine: widget.officeEngine,
         ),
       ),
@@ -134,14 +149,12 @@ final class _OpenMuseMobileApplicationState
 final class _AuthenticatedMobileHost extends StatelessWidget {
   const _AuthenticatedMobileHost({
     required this.authentication,
-    required this.cloudOrigin,
-    required this.allowInsecureLoopback,
+    required this.cloudService,
     this.officeEngine,
   });
 
   final OpenMuseAuthenticationController authentication;
-  final Uri cloudOrigin;
-  final bool allowInsecureLoopback;
+  final AppFlowyCloudWorkspaceService cloudService;
   final OfficeEnginePort? officeEngine;
 
   @override
@@ -151,9 +164,11 @@ final class _AuthenticatedMobileHost extends StatelessWidget {
     return OpenMuseHostShell(
       composition: connectedCloudMobileComposition(
         session: MobileAccountSession.authenticated(identity.email),
-        apiOrigin: cloudOrigin,
+        apiOrigin: cloudService.baseUri,
         accessToken: () => authentication.accessToken(),
-        allowHttpForTesting: allowInsecureLoopback,
+        refreshAccessToken: () =>
+            authentication.accessToken(forceRefresh: true),
+        service: cloudService,
         officeEngine: officeEngine,
       ),
     );
@@ -187,21 +202,28 @@ OpenMuseHostComposition connectedCloudMobileComposition({
   required OpenMuseSessionPort session,
   required Uri apiOrigin,
   required AccessTokenProvider accessToken,
+  RefreshAccessTokenProvider? refreshAccessToken,
+  String deviceId = 'mobile.openmuse',
   bool allowHttpForTesting = false,
+  AppFlowyCloudWorkspaceService? service,
   OfficeEnginePort? officeEngine,
 }) {
-  final service = HttpCloudWorkspaceService(
-    baseUri: apiOrigin,
-    accessToken: accessToken,
-    allowHttpForTesting: allowHttpForTesting,
-  );
+  final cloud =
+      service ??
+      AppFlowyCloudWorkspaceService(
+        baseUri: apiOrigin,
+        accessToken: accessToken,
+        refreshAccessToken: refreshAccessToken,
+        deviceId: deviceId,
+        allowHttpForTesting: allowHttpForTesting,
+      );
   return mobileComposition(
     session: session,
-    cloudService: service,
-    dshConnector: service,
-    resources: service,
-    resourceCatalog: service,
-    officeCommits: service,
+    cloudService: cloud,
+    dshConnector: cloud,
+    resources: cloud,
+    resourceCatalog: cloud,
+    officeCommits: cloud,
     officeEngine: officeEngine ?? _loadPackagedOfficeEngine(),
   );
 }
@@ -274,6 +296,13 @@ final class _CloudCatalogAdapter implements WorkspaceCatalogPort {
     final provider = service;
     if (provider == null) return const [];
     final values = await provider.listWorkspaces();
+    final sessions = provider is DshSessionCatalogPort
+        ? await (provider as DshSessionCatalogPort).listSessions()
+        : const <DshSessionSummary>[];
+    final runningByWorkspace = {
+      for (final session in sessions.where((value) => value.isRunning))
+        session.workspaceRef: session.sessionRef,
+    };
     _records
       ..clear()
       ..addEntries(values.map((value) => MapEntry(value.workspaceRef, value)));
@@ -286,6 +315,7 @@ final class _CloudCatalogAdapter implements WorkspaceCatalogPort {
             writable:
                 value.writable &&
                 value.storageState == CloudStorageState.available,
+            runningSessionRef: runningByWorkspace[value.workspaceRef],
           ),
         )
         .toList(growable: false);

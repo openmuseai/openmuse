@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
+import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:path/path.dart' as p;
@@ -140,19 +141,27 @@ Future<Widget> bootOpenMuseHost() async {
     'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
     defaultValue: !kReleaseMode,
   );
-  final authenticationPlugin = OpenMuseGoTruePlugin(
-    authentication: GoTrueAuthenticationController(
-      provider: GoTrueHttpClient(
-        config: GoTrueClientConfig(
-          origin: gotrueOrigin,
-          allowInsecureLoopback: allowInsecureLoopback,
-        ),
+  final authenticationController = GoTrueAuthenticationController(
+    provider: GoTrueHttpClient(
+      config: GoTrueClientConfig(
+        origin: gotrueOrigin,
+        allowInsecureLoopback: allowInsecureLoopback,
       ),
-      store: const SecureAuthSessionStore(values: FlutterSecureValueStore()),
     ),
+    store: const SecureAuthSessionStore(values: FlutterSecureValueStore()),
+  );
+  final authenticationPlugin = OpenMuseGoTruePlugin(
+    authentication: authenticationController,
     cloudLabel: cloudOrigin.toString(),
   );
+  final cloudWorkspacePlugin = OpenMuseCloudWorkspacePlugin(
+    authentication: authenticationController,
+    cloudOrigin: cloudOrigin,
+    deviceId: 'desktop.flutter.${rootPath.hashCode.toUnsigned(32)}',
+    allowInsecureLoopback: allowInsecureLoopback,
+  );
   registry.install(authenticationPlugin);
+  registry.install(cloudWorkspacePlugin);
   for (final plugin in createOpenMuseBuiltInPlugins()) {
     registry.install(plugin);
   }
@@ -161,6 +170,13 @@ Future<Widget> bootOpenMuseHost() async {
       await registry.activate(authenticationPlugin.descriptor.id);
     } catch (error) {
       debugPrint('Authentication plugin activation failed: $error');
+    }
+  }());
+  unawaited(() async {
+    try {
+      await registry.activate(cloudWorkspacePlugin.descriptor.id);
+    } catch (error) {
+      debugPrint('Cloud Workspace plugin activation failed: $error');
     }
   }());
   unawaited(() async {

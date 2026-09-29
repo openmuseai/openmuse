@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
+import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_mobile/main.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
@@ -11,14 +12,18 @@ void main() {
     tester,
   ) async {
     final authentication = _FakeAuthenticationController();
+    final cloudPlugin = OpenMuseCloudWorkspacePlugin(
+      authentication: authentication,
+      cloudOrigin: Uri.parse('https://cloud.openmuse.test'),
+      deviceId: 'mobile-test',
+    );
     await tester.pumpWidget(
       OpenMuseMobileApplication(
         authenticationPlugin: OpenMuseGoTruePlugin(
           authentication: authentication,
           cloudLabel: 'https://cloud.openmuse.test',
         ),
-        cloudOrigin: Uri.parse('https://cloud.openmuse.test'),
-        allowInsecureLoopback: false,
+        cloudWorkspacePlugin: cloudPlugin,
       ),
     );
     await tester.pumpAndSettle();

@@ -1119,7 +1119,12 @@ WorkbenchLayoutSnapshot createDefaultWorkbenchLayout({
       axis: Axis.horizontal,
       ratio: editorRatio,
       first: PaneNode(paneId: 'editor'),
-      second: PaneNode(paneId: 'dsh'),
+      second: SplitNode(
+        axis: Axis.vertical,
+        ratio: 0.62,
+        first: PaneNode(paneId: 'dsh'),
+        second: PaneNode(paneId: 'cloud-workspace'),
+      ),
     ),
   ),
   bindings: {
@@ -1139,6 +1144,12 @@ WorkbenchLayoutSnapshot createDefaultWorkbenchLayout({
       bindingId: 'binding.dsh',
       surfaceRef: 'plugin.panel:dsh.agent',
       instanceRef: 'surface.dsh',
+      mobility: SurfaceMobility.snapshotRestore,
+    ),
+    'cloud-workspace': SurfaceBinding(
+      bindingId: 'binding.cloud-workspace',
+      surfaceRef: 'plugin.panel:cloud.workspace',
+      instanceRef: 'surface.cloud-workspace',
       mobility: SurfaceMobility.snapshotRestore,
     ),
   },
