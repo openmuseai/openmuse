@@ -641,10 +641,7 @@ fn require_nonempty(field: &'static str, value: &str) -> Result<(), ManifestV2Er
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
-    Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
+    format!("{:x}", Sha256::digest(bytes))
 }
 
 impl From<&Contributions> for ContributionsV2 {

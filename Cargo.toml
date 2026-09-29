@@ -9,6 +9,7 @@ members = [
   "crates/openmuse-storage-credentials",
   "crates/openmuse-storage-s3",
   "crates/openmuse-storage-tck",
+  "crates/openmuse-workspace-sync",
 ]
 
 [workspace.package]

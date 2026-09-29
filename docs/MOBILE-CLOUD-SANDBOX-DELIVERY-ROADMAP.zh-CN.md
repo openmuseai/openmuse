@@ -368,6 +368,10 @@ ABI、reference fake、黑盒场景和统一验收入口见 [`STORAGE-CONTRACT-S
 
 ### ST3：Workspace Sync Plugin
 
+**实施状态：Accepted**（`feature/st3-workspace-sync`）
+
+策略状态机、Provider-neutral 端口和统一验收入口见 [`WORKSPACE-SYNC-PLUGIN.zh-CN.md`](WORKSPACE-SYNC-PLUGIN.zh-CN.md) 和 `scripts/test_workspace_sync.sh`。
+
 **目标**
 
 独立实现 local-only/snapshot/mirror/migrate，不让 Local Provider、Cloud Provider 或 S3 Provider互相拥有同步逻辑。
