@@ -18,6 +18,7 @@ final class OpenMuseHostApp extends StatelessWidget {
     this.layoutController,
     this.layoutStore,
     this.mutationGuards,
+    this.authentication,
   });
 
   final OpenMusePluginRegistry registry;
@@ -26,6 +27,7 @@ final class OpenMuseHostApp extends StatelessWidget {
   final WorkbenchLayoutController? layoutController;
   final LayoutSnapshotWriter? layoutStore;
   final SurfaceMutationGuards? mutationGuards;
+  final OpenMuseAuthenticationContributor? authentication;
 
   @override
   Widget build(BuildContext context) {
@@ -39,13 +41,23 @@ final class OpenMuseHostApp extends StatelessWidget {
         darkTheme: buildOpenMuseTheme(brightness: Brightness.dark),
         themeMode: preferences.themeMode,
         navigatorObservers: [DshPopupRouteObserver.instance],
-        home: OpenMuseWorkbench(
-          registry: registry,
-          workspace: workspace,
-          settings: preferences,
-          layoutController: layoutController,
-          layoutStore: layoutStore,
-          mutationGuards: mutationGuards,
+        home: Builder(
+          builder: (context) {
+            final workbench = OpenMuseWorkbench(
+              registry: registry,
+              workspace: workspace,
+              settings: preferences,
+              layoutController: layoutController,
+              layoutStore: layoutStore,
+              mutationGuards: mutationGuards,
+            );
+            final auth = authentication;
+            if (auth == null) return workbench;
+            return auth.buildAuthenticationGate(
+              context,
+              authenticatedChild: workbench,
+            );
+          },
         ),
       ),
     );

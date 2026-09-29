@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:path/path.dart' as p;
@@ -122,9 +124,45 @@ Future<Widget> bootOpenMuseHost() async {
       },
     ),
   );
+  final gotrueOrigin = Uri.parse(
+    const String.fromEnvironment(
+      'OPENMUSE_GOTRUE_ORIGIN',
+      defaultValue: 'http://127.0.0.1:9999',
+    ),
+  );
+  final cloudOrigin = Uri.parse(
+    const String.fromEnvironment(
+      'OPENMUSE_CLOUD_ORIGIN',
+      defaultValue: 'http://127.0.0.1:8000',
+    ),
+  );
+  final allowInsecureLoopback = const bool.fromEnvironment(
+    'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
+    defaultValue: !kReleaseMode,
+  );
+  final authenticationPlugin = OpenMuseGoTruePlugin(
+    authentication: GoTrueAuthenticationController(
+      provider: GoTrueHttpClient(
+        config: GoTrueClientConfig(
+          origin: gotrueOrigin,
+          allowInsecureLoopback: allowInsecureLoopback,
+        ),
+      ),
+      store: const SecureAuthSessionStore(values: FlutterSecureValueStore()),
+    ),
+    cloudLabel: cloudOrigin.toString(),
+  );
+  registry.install(authenticationPlugin);
   for (final plugin in createOpenMuseBuiltInPlugins()) {
     registry.install(plugin);
   }
+  unawaited(() async {
+    try {
+      await registry.activate(authenticationPlugin.descriptor.id);
+    } catch (error) {
+      debugPrint('Authentication plugin activation failed: $error');
+    }
+  }());
   unawaited(() async {
     try {
       await registry.activate('com.openmuse.dsh-agent');
@@ -149,6 +187,7 @@ Future<Widget> bootOpenMuseHost() async {
     layoutController: layoutController,
     layoutStore: layoutStore,
     mutationGuards: SurfaceMutationGuards(),
+    authentication: authenticationPlugin,
   );
 }
 

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
 import 'package:openmuse_host/src/host/openmuse_app.dart';
 import 'package:openmuse_host/src/host/layout/layout.dart';
@@ -74,6 +75,28 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(workspace.selected?.displayName, 'preview.png');
+  });
+
+  testWidgets('authentication gate hides the desktop workbench', (
+    tester,
+  ) async {
+    final authentication = _SignedOutAuthenticationController();
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: workspace,
+        authentication: OpenMuseGoTruePlugin(
+          authentication: authentication,
+          cloudLabel: 'https://cloud.openmuse.test',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome to OpenMuse'), findsOneWidget);
+    expect(find.byKey(const ValueKey('auth.email')), findsOneWidget);
+    expect(find.text('搜索'), findsNothing);
+    expect(find.text('新建文档'), findsNothing);
   });
 
   testWidgets('new document dialog is local-only', (tester) async {
@@ -416,6 +439,22 @@ void main() {
     expect(find.text('iOffice'), findsOneWidget);
     expect(find.text('默认打开方式'), findsOneWidget);
   });
+}
+
+final class _SignedOutAuthenticationController extends ChangeNotifier
+    implements OpenMuseAuthenticationController {
+  @override
+  OpenMuseAuthenticationSnapshot snapshot =
+      const OpenMuseAuthenticationSnapshot.signedOut();
+
+  @override
+  Future<String?> accessToken({bool forceRefresh = false}) async => null;
+  @override
+  Future<void> restore() async {}
+  @override
+  Future<void> signInWithPassword(String email, String password) async {}
+  @override
+  Future<void> signOut() async {}
 }
 
 final class _RecordingLayoutWriter implements LayoutSnapshotWriter {

@@ -10,6 +10,8 @@ dependencies:
   crypto: ^3.0.6
   flutter:
     sdk: flutter
+  openmuse_auth_gotrue:
+    path: ../../plugins/auth-gotrue
   openmuse_builtin_plugins:
     path: ../../distribution/openmuse_builtin_plugins
   openmuse_plugin_sdk:
