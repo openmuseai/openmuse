@@ -3,24 +3,35 @@ import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_mobile_cloud/openmuse_mobile_cloud.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 import 'package:openmuse_office_docx/openmuse_office_docx.dart';
+import 'package:openmuse_office_viewers/openmuse_office_viewers.dart';
 
 import 'docx_editor_screen.dart';
+import 'office_viewer_screen.dart';
 
 void main() {
-  final docxEngine = _loadPackagedDocxEngine();
+  final officeEngine = _loadPackagedOfficeEngine();
   runApp(
-    OpenMuseHostShell(composition: mobileComposition(officeEngine: docxEngine)),
+    OpenMuseHostShell(
+      composition: mobileComposition(officeEngine: officeEngine),
+    ),
   );
 }
 
-OfficeEnginePort? _loadPackagedDocxEngine() {
+OfficeEnginePort? _loadPackagedOfficeEngine() {
+  final engines = <OfficeFormat, OfficeEnginePort>{};
   try {
-    return DocxFfiEngine.open();
+    engines[OfficeFormat.word] = DocxFfiEngine.open();
   } on Object {
-    // Packaging and ABI mismatches fail closed: no Office capability is
-    // advertised and the rest of the Mobile Host remains usable.
-    return null;
+    // A missing or incompatible artifact removes only this capability.
   }
+  try {
+    engines[OfficeFormat.sheet] = OfficeViewersFfiEngine.open();
+  } on Object {
+    // A missing or incompatible artifact removes only this capability.
+  }
+  if (engines.isEmpty) return null;
+  if (engines.length == 1) return engines.values.single;
+  return MultiFormatOfficeEngine(engines);
 }
 
 /// Composition entry used by the login/bootstrap layer after it has obtained
@@ -43,7 +54,7 @@ OpenMuseHostComposition connectedCloudMobileComposition({
     resources: service,
     resourceCatalog: service,
     officeCommits: service,
-    officeEngine: officeEngine ?? _loadPackagedDocxEngine(),
+    officeEngine: officeEngine ?? _loadPackagedOfficeEngine(),
   );
 }
 
@@ -63,7 +74,8 @@ OpenMuseHostComposition mobileComposition({
     workspaceCatalog: catalog,
     capabilitySnapshot: _MobileCapabilities(
       cloudService != null,
-      officeEngine != null,
+      _supportsFormat(officeEngine, OfficeFormat.word),
+      _supportsFormat(officeEngine, OfficeFormat.sheet),
     ),
     workspaceBuilder: (context, workspace) {
       final record = catalog.record(workspace.workspaceRef);
@@ -130,16 +142,30 @@ final class _CloudCatalogAdapter implements WorkspaceCatalogPort {
   }
 }
 
+bool _supportsFormat(OfficeEnginePort? engine, OfficeFormat format) {
+  if (engine == null) return false;
+  if (engine is MultiFormatOfficeEngine) return engine.formats.contains(format);
+  if (engine is DocxFfiEngine) return format == OfficeFormat.word;
+  if (engine is OfficeViewersFfiEngine) return format == OfficeFormat.sheet;
+  return format == OfficeFormat.word;
+}
+
 final class _MobileCapabilities implements CapabilitySnapshotPort {
-  const _MobileCapabilities(this.cloudConnected, this.docxEngineConnected);
+  const _MobileCapabilities(
+    this.cloudConnected,
+    this.docxEngineConnected,
+    this.xlsxEngineConnected,
+  );
   final bool cloudConnected;
   final bool docxEngineConnected;
+  final bool xlsxEngineConnected;
   @override
   Set<String> get capabilities => {
     'resource.viewer',
     if (cloudConnected) 'workspace.cloud',
     if (cloudConnected) 'dsh.remote',
     if (docxEngineConnected) 'office.docx.engine',
+    if (xlsxEngineConnected) 'office.xlsx.engine',
   };
 }
 
@@ -194,6 +220,11 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       value.mediaType == 'application/docx';
 
+  bool _isXlsx(CloudResourceRecord value) =>
+      value.mediaType ==
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      value.mediaType == 'application/xlsx';
+
   Future<void> _openDocx(CloudResourceRecord resource) async {
     final engine = widget.officeEngine;
     final commits = widget.officeCommits;
@@ -231,6 +262,46 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('DOCX 打开失败')));
+      }
+    }
+  }
+
+  Future<void> _openXlsx(CloudResourceRecord resource) async {
+    final engine = widget.officeEngine;
+    if (engine == null || !_isXlsx(resource)) return;
+    try {
+      final generation = coordinator.flow.generation;
+      final handle = await widget.service.issueResourceHandle(
+        workspaceRef: widget.record.workspaceRef,
+        resourceRef: resource.resourceRef,
+        revision: resource.revision,
+        audience: 'openmuse-mobile-office',
+        generation: generation,
+      );
+      if (!mounted ||
+          handle.resourceRef != resource.resourceRef ||
+          handle.revision != resource.revision ||
+          handle.generation != generation) {
+        throw StateError('late or cross-resource Office handle');
+      }
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => OfficeViewerScreen(
+            title: resource.title,
+            format: OfficeFormat.sheet,
+            handle: handle,
+            engine: engine,
+            ranges: widget.resources,
+            generation: generation,
+            nowMs: () => DateTime.now().millisecondsSinceEpoch,
+          ),
+        ),
+      );
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('XLSX 打开失败')));
       }
     }
   }
@@ -276,10 +347,13 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
                 title: Text(resource.title),
                 subtitle: Text(resource.mediaType),
                 enabled:
-                    _isDocx(resource) &&
-                    widget.officeEngine != null &&
-                    widget.officeCommits != null,
-                onTap: () => _openDocx(resource),
+                    (_isDocx(resource) &&
+                        widget.officeEngine != null &&
+                        widget.officeCommits != null) ||
+                    (_isXlsx(resource) && widget.officeEngine != null),
+                onTap: () => _isXlsx(resource)
+                    ? _openXlsx(resource)
+                    : _openDocx(resource),
               ),
           ],
         );

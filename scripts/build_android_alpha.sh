@@ -5,6 +5,7 @@ alpha_dir="$repo_root/target/android-alpha"
 keystore="$alpha_dir/openmuse-alpha.p12"
 mkdir -p "$alpha_dir"
 OPENMUSE_DOCX_PLATFORMS=android "$repo_root/scripts/build_office_docx_mobile_artifacts.sh"
+OPENMUSE_VIEWERS_PLATFORMS=android "$repo_root/scripts/build_office_viewers_mobile_artifacts.sh"
 if [[ ! -f "$keystore" ]]; then
   keytool -genkeypair -keystore "$keystore" -storetype PKCS12 -storepass openmuse-alpha \
     -alias openmuse-alpha -keypass openmuse-alpha -keyalg RSA -keysize 3072 -validity 3650 \

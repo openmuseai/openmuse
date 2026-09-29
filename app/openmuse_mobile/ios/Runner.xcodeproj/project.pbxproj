@@ -19,6 +19,7 @@
 		A10000000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* PrivacyInfo.xcprivacy */; };
 		A20000000000000000000001 /* OpenMuseDocx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* OpenMuseDocx.xcframework */; };
 		A30000000000000000000001 /* OpenMusePaired.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* OpenMusePaired.xcframework */; };
+		A40000000000000000000001 /* OpenMuseOfficeViewers.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A40000000000000000000002 /* OpenMuseOfficeViewers.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,6 +66,7 @@
 		A10000000000000000000002 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A20000000000000000000002 /* OpenMuseDocx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = OpenMuseDocx.xcframework; path = ../../../target/office-docx/ios/OpenMuseDocx.xcframework; sourceTree = "<group>"; };
 		A30000000000000000000002 /* OpenMusePaired.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = OpenMusePaired.xcframework; path = ../../../target/paired-relay/ios/OpenMusePaired.xcframework; sourceTree = "<group>"; };
+		A40000000000000000000002 /* OpenMuseOfficeViewers.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = OpenMuseOfficeViewers.xcframework; path = ../../../target/office-viewers/ios/OpenMuseOfficeViewers.xcframework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +76,7 @@
 			files = (
 				A20000000000000000000001 /* OpenMuseDocx.xcframework in Frameworks */,
 				A30000000000000000000001 /* OpenMusePaired.xcframework in Frameworks */,
+				A40000000000000000000001 /* OpenMuseOfficeViewers.xcframework in Frameworks */,
 				78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -107,6 +110,7 @@
 				9740EEB11CF90186004384FC /* Flutter */,
 				A20000000000000000000002 /* OpenMuseDocx.xcframework */,
 				A30000000000000000000002 /* OpenMusePaired.xcframework */,
+				A40000000000000000000002 /* OpenMuseOfficeViewers.xcframework */,
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,

@@ -87,6 +87,37 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('已保存 · docx-r2'), findsOneWidget);
   });
+
+  testWidgets('authorized XLSX catalog route remains view only', (
+    tester,
+  ) async {
+    final service = _FakeCloudService(xlsx: true);
+    final engine = MultiFormatOfficeEngine({
+      OfficeFormat.word: _FakeOfficeEngine(),
+      OfficeFormat.sheet: _FakeSheetEngine(),
+    });
+    await tester.pumpWidget(
+      OpenMuseHostShell(
+        composition: mobileComposition(
+          session: const MobileAccountSession.authenticated('Test Account'),
+          cloudService: service,
+          dshConnector: service,
+          resources: service,
+          resourceCatalog: service,
+          officeCommits: service,
+          officeEngine: engine,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cloud Project'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Budget.xlsx'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('office-view-only')), findsOneWidget);
+    expect(find.textContaining('Sheet A'), findsOneWidget);
+    expect(find.byIcon(Icons.save), findsNothing);
+  });
 }
 
 final class _FakeOfficeEngine implements OfficeEnginePort {
@@ -116,6 +147,29 @@ final class _FakeOfficeEngine implements OfficeEnginePort {
   ) async => const [9, 8, 7];
 }
 
+final class _FakeSheetEngine implements OfficeEnginePort {
+  @override
+  String get abi => 'openmuse-office-viewers-ffi@1';
+
+  @override
+  Future<OfficeEngineInspection> inspect(
+    OfficeFormat format,
+    List<int> bytes,
+  ) async => const OfficeEngineInspection(
+    format: OfficeFormat.sheet,
+    profile: 'view-only',
+    paragraphs: ['Sheet A\t42'],
+    capabilities: {OfficeCapability.view},
+  );
+
+  @override
+  Future<List<int>> exportSimple(
+    OfficeFormat format,
+    List<int> originalBytes,
+    List<String> paragraphs,
+  ) => throw UnsupportedError('view only');
+}
+
 final class _FakeCloudService
     implements
         CloudWorkspaceService,
@@ -123,6 +177,9 @@ final class _FakeCloudService
         DshRuntimeConnector,
         ResourceRangePort,
         OfficeResourceCommitPort {
+  _FakeCloudService({this.xlsx = false});
+  final bool xlsx;
+
   @override
   DshPlacement get placement => DshPlacement.cloudRemote;
 
@@ -142,16 +199,27 @@ final class _FakeCloudService
     required String workspaceRef,
     required String revision,
     required int generation,
-  }) async => const [
-    CloudResourceRecord(
-      resourceRef: 'resource:docx',
-      title: 'Document.docx',
-      revision: 'docx-r1',
-      size: 3,
-      mediaType:
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      writable: true,
-    ),
+  }) async => [
+    if (!xlsx)
+      const CloudResourceRecord(
+        resourceRef: 'resource:docx',
+        title: 'Document.docx',
+        revision: 'docx-r1',
+        size: 3,
+        mediaType:
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        writable: true,
+      ),
+    if (xlsx)
+      const CloudResourceRecord(
+        resourceRef: 'resource:xlsx',
+        title: 'Budget.xlsx',
+        revision: 'xlsx-r1',
+        size: 3,
+        mediaType:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        writable: false,
+      ),
   ];
 
   @override
@@ -182,8 +250,9 @@ final class _FakeCloudService
     generation: generation,
     expiresAtMs: DateTime.now().millisecondsSinceEpoch + 60000,
     size: 3,
-    mediaType:
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    mediaType: resourceRef == 'resource:xlsx'
+        ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   );
 
   @override

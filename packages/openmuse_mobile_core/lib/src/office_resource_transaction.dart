@@ -48,7 +48,7 @@ final class OfficeResourceTransaction {
   OfficeResourceTransaction({
     required this.engine,
     required this.ranges,
-    required this.commits,
+    this.commits,
     this.format = OfficeFormat.word,
     this.audience = 'openmuse-mobile-office',
     this.maxDocumentBytes = 64 * 1024 * 1024,
@@ -61,7 +61,7 @@ final class OfficeResourceTransaction {
 
   final OfficeEnginePort engine;
   final ResourceRangePort ranges;
-  final OfficeResourceCommitPort commits;
+  final OfficeResourceCommitPort? commits;
   final OfficeFormat format;
   final String audience;
   final int maxDocumentBytes;
@@ -117,7 +117,9 @@ final class OfficeResourceTransaction {
     if (output.isEmpty || output.length > maxDocumentBytes) {
       throw StateError('invalid Office export');
     }
-    final receipt = await commits.commit(
+    final committer = commits;
+    if (committer == null) throw StateError('Office commit unavailable');
+    final receipt = await committer.commit(
       resourceRef: session.handle.resourceRef,
       expectedRevision: expectedRevision,
       bytes: output,

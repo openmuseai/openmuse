@@ -9,6 +9,25 @@ private func openMuseDocxAbiVersion() -> UInt32
 @_silgen_name("openmuse_paired_abi_version")
 private func openMusePairedAbiVersion() -> UInt32
 
+@_silgen_name("openmuse_office_viewers_abi_version")
+private func openMuseOfficeViewersAbiVersion() -> UInt32
+
+private struct OpenMuseOfficeViewerBuffer {
+  var ptr: UnsafeMutablePointer<UInt8>?
+  var len: Int
+  var capacity: Int
+  var status: Int32
+}
+
+@_silgen_name("openmuse_xlsx_inspect")
+private func openMuseXlsxInspect(
+  _ bytes: UnsafePointer<UInt8>?,
+  _ length: Int
+) -> OpenMuseOfficeViewerBuffer
+
+@_silgen_name("openmuse_office_viewer_buffer_free")
+private func openMuseOfficeViewerBufferFree(_ buffer: OpenMuseOfficeViewerBuffer)
+
 @_silgen_name("openmuse_paired_device_public")
 private func openMusePairedDevicePublic(
   _ seed: UnsafePointer<UInt8>?,
@@ -81,6 +100,10 @@ private func openMusePairedNativeHandleClose(_ handle: UInt64) -> Int32
   ) -> Bool {
     precondition(openMuseDocxAbiVersion() == 1, "Unsupported OpenMuse DOCX ABI")
     precondition(openMusePairedAbiVersion() == 1, "Unsupported OpenMuse Paired ABI")
+    precondition(openMuseOfficeViewersAbiVersion() == 1, "Unsupported Office Viewers ABI")
+    let viewerProbe = openMuseXlsxInspect(nil, 0)
+    precondition(viewerProbe.status != 0, "Office Viewers fail-closed probe failed")
+    openMuseOfficeViewerBufferFree(viewerProbe)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

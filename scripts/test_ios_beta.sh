@@ -8,6 +8,7 @@ mkdir -p "$evidence_dir"
 
 OPENMUSE_DOCX_PLATFORMS=ios "$repo_root/scripts/build_office_docx_mobile_artifacts.sh"
 OPENMUSE_PAIRED_PLATFORMS=ios "$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
+OPENMUSE_VIEWERS_PLATFORMS=ios "$repo_root/scripts/build_office_viewers_mobile_artifacts.sh"
 
 (cd "$repo_root/app/openmuse_mobile" && flutter analyze && flutter test && flutter build ios --release --no-codesign)
 
@@ -51,6 +52,9 @@ nm -gU "$app/Runner" | grep -q '_openmuse_paired_confirm_handshake'
 nm -gU "$app/Runner" | grep -q '_openmuse_paired_channel_seal'
 nm -gU "$app/Runner" | grep -q '_openmuse_paired_channel_open'
 nm -gU "$app/Runner" | grep -q '_openmuse_paired_native_handle_close'
+nm -gU "$app/Runner" | grep -q '_openmuse_office_viewers_abi_version'
+nm -gU "$app/Runner" | grep -q '_openmuse_xlsx_inspect'
+nm -gU "$app/Runner" | grep -q '_openmuse_office_viewer_buffer_free'
 
 if codesign --verify --deep --strict "$app" 2>"$evidence_dir/codesign.txt"; then
   echo "The no-codesign artifact unexpectedly has a valid signature" >&2

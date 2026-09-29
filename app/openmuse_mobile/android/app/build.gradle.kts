@@ -29,6 +29,7 @@ android {
     sourceSets.getByName("main").jniLibs.srcDirs(
         rootProject.file("../../../target/office-docx/android"),
         rootProject.file("../../../target/paired-relay/android"),
+        rootProject.file("../../../target/office-viewers/android"),
     )
 
     val releaseKeystore = providers.environmentVariable("OPENMUSE_ANDROID_KEYSTORE").orNull
@@ -74,8 +75,24 @@ val verifyOpenMusePairedNative by tasks.registering {
     }
 }
 
+val verifyOpenMuseOfficeViewersNative by tasks.registering {
+    val library = rootProject.file(
+        "../../../target/office-viewers/android/arm64-v8a/libopenmuse_office_viewers.so",
+    )
+    inputs.file(library)
+    doLast {
+        check(library.isFile) {
+            "Missing Office viewers engine. Run scripts/build_office_viewers_mobile_artifacts.sh"
+        }
+    }
+}
+
 tasks.named("preBuild").configure {
-    dependsOn(verifyOpenMuseDocxNative, verifyOpenMusePairedNative)
+    dependsOn(
+        verifyOpenMuseDocxNative,
+        verifyOpenMusePairedNative,
+        verifyOpenMuseOfficeViewersNative,
+    )
 }
 
 kotlin {

@@ -15,6 +15,7 @@ fi
 
 OPENMUSE_DOCX_PLATFORMS=android "$repo_root/scripts/build_office_docx_mobile_artifacts.sh"
 OPENMUSE_PAIRED_PLATFORMS=android "$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
+OPENMUSE_VIEWERS_PLATFORMS=android "$repo_root/scripts/build_office_viewers_mobile_artifacts.sh"
 (
   cd "$repo_root/app/openmuse_mobile"
   flutter test integration_test/docx_ffi_test.dart -d "$serial"
