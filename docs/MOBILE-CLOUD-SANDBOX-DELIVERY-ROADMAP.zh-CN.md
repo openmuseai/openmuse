@@ -800,6 +800,8 @@ login → Cloud catalog → choose Workspace
 
 ### M7：Android Alpha
 
+**实施状态：Accepted（内部 Alpha build gate）**（`feature/m7-android-alpha`）
+
 **目标与计划**
 
 - release signing、applicationId、arm64/Play ABI；

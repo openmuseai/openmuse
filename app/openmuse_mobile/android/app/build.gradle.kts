@@ -23,13 +23,24 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        ndk { abiFilters += "arm64-v8a" }
+    }
+
+    val releaseKeystore = providers.environmentVariable("OPENMUSE_ANDROID_KEYSTORE").orNull
+    if (releaseKeystore != null) {
+        signingConfigs.create("release") {
+            storeFile = file(releaseKeystore)
+            storePassword = providers.environmentVariable("OPENMUSE_ANDROID_STORE_PASSWORD").orNull
+            keyAlias = providers.environmentVariable("OPENMUSE_ANDROID_KEY_ALIAS").orNull
+            keyPassword = providers.environmentVariable("OPENMUSE_ANDROID_KEY_PASSWORD").orNull
+        }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
         }
     }
 }
