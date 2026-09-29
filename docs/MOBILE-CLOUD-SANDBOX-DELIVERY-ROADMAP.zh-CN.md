@@ -806,7 +806,9 @@ DOCX profile、输入安全、C ABI、Android/iOS artifact 构建、TCK 和逐�
 
 ### M7：Android Alpha
 
-**实施状态：Accepted（内部 Alpha build gate）**（`feature/m7-android-alpha`）
+**实施状态：Engineering Accepted（内部 Alpha build + 单台 arm64 真机安装/生命周期 gate；连接态产品 gate 待完成）**（build：`feature/m7-android-alpha`；device soak：`feature/m7-android-device-soak`）
+
+可重复的 ADB gate、2026-09-29 真机证据和未完成边界见 [`ANDROID-DEVICE-SOAK-GATE.zh-CN.md`](ANDROID-DEVICE-SOAK-GATE.zh-CN.md)。当前候选 APK 已通过覆盖安装、生产未登录 composition、50 次前后台和 100 次方向变化，且未发现本包 crash/ANR；真实账号、30 分钟 Agent、Workspace/Window 切换以及多设备矩阵没有被 fixture 替代，仍是发布门禁。
 
 **目标与计划**
 

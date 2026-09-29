@@ -651,6 +651,8 @@ distribution/openmuse_mobile_plugins/    # cloud/paired workspace/viewer/dsh-rem
 
 ### M7：Android Alpha（2 周）
 
+**当前状态：Engineering Accepted（build + 单台 arm64 真机安装/生命周期）；连接态发布门禁待完成。** 复现命令、证据范围与剩余项见 [`ANDROID-DEVICE-SOAK-GATE.zh-CN.md`](ANDROID-DEVICE-SOAK-GATE.zh-CN.md)。
+
 交付：
 
 - applicationId、release signing、arm64 + Play 要求 ABI；
