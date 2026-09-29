@@ -341,6 +341,18 @@ final class HelixRuntimePool extends ChangeNotifier {
       }
       session.reportedPath = path;
       session.expectedPath = null;
+      // A reused session keeps the configuration it launched with, and Helix
+      // only reads `languages.toml` at startup or on `:config-reload`. Switching
+      // into a Rust buffer that lives outside every crate therefore has to
+      // re-issue the generated `linkedProjects` and restart the server.
+      final linkedProjects = linkedRustProjectsFor(path);
+      if (!listEquals(linkedProjects, _linkedRustProjects)) {
+        await _writeConfig(rustLinkedProjects: linkedProjects);
+        await _sendCommand(session.pty, ':config-reload');
+        if (p.extension(path).toLowerCase() == '.rs') {
+          await _sendCommand(session.pty, ':lsp-restart rust-analyzer');
+        }
+      }
       state = HelixRuntimeState.ready;
       notifyListeners();
       HelixOpenTrace.mark(
