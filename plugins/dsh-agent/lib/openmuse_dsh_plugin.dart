@@ -52,20 +52,9 @@ final class OpenMuseDshPlugin
   }
 
   void _syncWorkspaces() {
-    _workspaceSync
-        ?.sync()
-        .then((_) async {
-          final raw = await _context?.executeHostCommand(
-            'workspace.snapshot',
-            null,
-          );
-          if (raw is Map && raw['activeMountPath'] is String) {
-            _activeMount.value = raw['activeMountPath'] as String;
-          }
-        })
-        .catchError((Object error) {
-          debugPrint('DSH workspace catalog sync failed: $error');
-        });
+    _workspaceSync?.sync().catchError((Object error) {
+      debugPrint('DSH workspace catalog sync failed: $error');
+    });
   }
 
   void _sidecarChanged() {
@@ -96,7 +85,17 @@ final class OpenMuseDshPlugin
   @override
   Future<void> activate(OpenMusePluginContext context) async {
     _context = context;
-    _binding = DshWorkspaceBinding(context);
+    final snapshot = await context.executeHostCommand(
+      'workspace.snapshot',
+      null,
+    );
+    if (snapshot is Map && snapshot['activeMountPath'] is String) {
+      _activeMount.value = snapshot['activeMountPath'] as String;
+    }
+    _binding = DshWorkspaceBinding(
+      context,
+      activeMountPath: () => _activeMount.value,
+    );
     await _binding!.publish();
     context.hostChanges?.addListener(_workspaceChanged);
     _supervisor ??= DshSidecarSupervisor(
@@ -150,6 +149,8 @@ final class OpenMuseDshPlugin
       supervisor: supervisor,
       activeMount: _activeMount,
       onActivateWorkspace: (path) async {
+        _activeMount.value = path;
+        await _binding?.publish();
         await _context?.executeHostCommand('workspace.activateMount', {
           'path': path,
         });
