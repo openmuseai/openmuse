@@ -59,10 +59,15 @@ simulator `OpenMuseDocx.xcframework`，并输出相对路径 SHA-256 manifest。
 
 ## 5. 当前验收证据
 
-6 项 Rust TCK 覆盖：Unicode/tab/break 文本、simple profile DOCX round-trip、复杂文档
+9 项 Rust TCK 覆盖：Unicode/tab/break 文本、simple profile DOCX round-trip、复杂文档
 view-only gate、损坏/外链/DTD 拒绝、traversal/非可移植 entry path、archive limit 与真实 C ABI ownership/free。
 Android ELF 已验证为 AArch64 且包含全部四个 ABI symbol；XCFramework 同时包含
 `ios-arm64` 和 `ios-arm64-simulator` static library/header slice。
+
+扩展 corpus 增加中日韩、RTL/Indic、emoji/combining characters、XML 特殊字符、tab/换行
+的确定性 round-trip，以及 hyperlink、tracked change、drawing、formula 的 view-only
+降级。`.rels` 外链检查已从脆弱的字符串包含判断改为 XML attribute parser，覆盖属性空格、
+单双引号、大小写、DOCTYPE 和损坏关系 XML，避免 `TargetMode = "External"` 绕过。
 
 `openmuse_office_docx` Dart package 只实现 `OfficeEnginePort` 的 bytes ABI，不取得任何
 Workspace、Resource、S3、账号、DSH、文件系统或网络 handle。native buffer 在 Dart 复制
@@ -104,7 +109,7 @@ Widget TCK 已覆盖可编辑保存与复杂文档降级。该组件不自行列
 ## 6. 剩余门禁
 
 - 将 `.so`/XCFramework 纳入正式 release 签名、SBOM 和 notices；
-- FFI isolate/crash/低内存恢复和更大规模 fuzz/corpus；
+- FFI isolate/crash/低内存恢复，以及真实 Office 文件/字体/分页的更大规模 fuzz/corpus；
 - 用真实账号和部署后的 Resource catalog/commit endpoint 重跑同一打开—编辑—保存链；
 - 来自多 Office 版本/字体/语言/损坏样本的扩展 corpus 与视觉分页基线；
 - x86_64 Android（若产品支持）、iOS 签名 archive 和真机性能数据。

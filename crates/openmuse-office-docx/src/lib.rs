@@ -147,12 +147,35 @@ fn validate_package(parts: &[PackagePart]) -> Result<(), DocxError> {
         }
     }
     for part in parts.iter().filter(|part| part.name.ends_with(".rels")) {
-        let text = std::str::from_utf8(&part.bytes).map_err(|_| DocxError::InvalidXml)?;
-        if text.contains("TargetMode=\"External\"") || text.contains("TargetMode='External'") {
-            return Err(DocxError::ExternalRelationship);
-        }
+        validate_relationships(&part.bytes)?;
     }
     Ok(())
+}
+
+fn validate_relationships(xml: &[u8]) -> Result<(), DocxError> {
+    let mut reader = Reader::from_reader(xml);
+    loop {
+        match reader.read_event().map_err(|_| DocxError::InvalidXml)? {
+            Event::Start(tag) | Event::Empty(tag)
+                if local_name(tag.name().as_ref()) == b"Relationship" =>
+            {
+                for attribute in tag.attributes().with_checks(true) {
+                    let attribute = attribute.map_err(|_| DocxError::InvalidXml)?;
+                    if local_name(attribute.key.as_ref()) == b"TargetMode"
+                        && attribute
+                            .decode_and_unescape_value(reader.decoder())
+                            .map_err(|_| DocxError::InvalidXml)?
+                            .eq_ignore_ascii_case("external")
+                    {
+                        return Err(DocxError::ExternalRelationship);
+                    }
+                }
+            }
+            Event::DocType(_) => return Err(DocxError::DocTypeDenied),
+            Event::Eof => return Ok(()),
+            _ => {}
+        }
+    }
 }
 
 struct ParsedDocument {

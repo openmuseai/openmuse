@@ -780,7 +780,7 @@ login → Cloud catalog → choose Workspace
 
 ### M6：Mobile Office Format Plugin（逐格式）
 
-**实施状态：DOCX Engineering Accepted（Rust Core/C ABI、Dart FFI、Android/iOS App bundling、Android 真机 FFI、ResourceHandle/CAS transaction、capability-gated editor、Resource catalog route；真实服务/签名/corpus 待完成）；Sheet/Slides/PDF 未实现**（capability contract：`feature/m6-mobile-office-formats`；DOCX engine：`feature/m6-docx-rust-engine-integration`；App binding：`feature/m6-docx-mobile-app-binding`；Resource transaction：`feature/m6-docx-resource-transaction`；Mobile UI：`feature/m6-docx-mobile-ui`；catalog route：`feature/m6-docx-resource-catalog-route`）
+**实施状态：DOCX Engineering Accepted（Rust Core/C ABI、Dart FFI、Android/iOS App bundling、Android 真机 FFI、ResourceHandle/CAS transaction、capability-gated editor、Resource catalog route、扩展安全 corpus；真实服务/签名/视觉 corpus 待完成）；Sheet/Slides/PDF 未实现**（capability contract：`feature/m6-mobile-office-formats`；DOCX engine：`feature/m6-docx-rust-engine-integration`；App binding：`feature/m6-docx-mobile-app-binding`；Resource transaction：`feature/m6-docx-resource-transaction`；Mobile UI：`feature/m6-docx-mobile-ui`；catalog route：`feature/m6-docx-resource-catalog-route`；corpus：`feature/m6-docx-corpus-gate`）
 
 DOCX profile、输入安全、C ABI/FFI、Android/iOS artifact 构建、App packaging、真机 TCK 和逐项剩余门禁见 [`MOBILE-OFFICE-DOCX-ENGINE.zh-CN.md`](MOBILE-OFFICE-DOCX-ENGINE.zh-CN.md)、`scripts/test_office_docx_engine.sh`、`scripts/build_office_docx_mobile_artifacts.sh` 和 `scripts/test_mobile_docx_android.sh`。
 
