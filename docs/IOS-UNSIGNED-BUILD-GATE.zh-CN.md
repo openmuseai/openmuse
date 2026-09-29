@@ -27,14 +27,14 @@ M8 在没有 Apple Team、distribution certificate 和 provisioning profile 的�
 | 项目 | 结果 |
 |---|---|
 | Flutter analyze/test | PASS |
-| iPhoneOS release build | PASS，14.1 MB Runner.app |
+| iPhoneOS release build | PASS，15.0 MB Runner.app（含静态链接 DOCX engine） |
 | Bundle ID | `io.openmuse.mobile` |
 | Version/build | `1.0.0 (1)` |
 | Device architecture | `arm64` |
 | Privacy plist | PASS |
 | Desktop/runtime scan | PASS |
 | 签名 | 按设计不存在 |
-| unsigned zip SHA-256 | `2f7c93f7f4e0de57fce46edfb68c1a7b2061a6eb392c20304ebc331e82047de7` |
+| unsigned zip SHA-256 | `fff162edcefd0240998284c7354b7c23b7a441f536de1be3b4a2f77d1855e0cf` |
 
 ## 4. TestFlight 前剩余门禁
 

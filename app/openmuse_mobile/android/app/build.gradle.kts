@@ -26,6 +26,10 @@ android {
         ndk { abiFilters += "arm64-v8a" }
     }
 
+    sourceSets.getByName("main").jniLibs.srcDir(
+        rootProject.file("../../../target/office-docx/android"),
+    )
+
     val releaseKeystore = providers.environmentVariable("OPENMUSE_ANDROID_KEYSTORE").orNull
     if (releaseKeystore != null) {
         signingConfigs.create("release") {
@@ -44,6 +48,20 @@ android {
         }
     }
 }
+
+val verifyOpenMuseDocxNative by tasks.registering {
+    val library = rootProject.file(
+        "../../../target/office-docx/android/arm64-v8a/libopenmuse_office_docx.so",
+    )
+    inputs.file(library)
+    doLast {
+        check(library.isFile) {
+            "Missing DOCX native engine. Run scripts/build_office_docx_mobile_artifacts.sh"
+        }
+    }
+}
+
+tasks.named("preBuild").configure { dependsOn(verifyOpenMuseDocxNative) }
 
 kotlin {
     compilerOptions {

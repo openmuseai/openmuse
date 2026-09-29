@@ -5,6 +5,19 @@ import 'package:openmuse_mobile/main.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 
 void main() {
+  test('DOCX capability is advertised only when an engine is injected', () {
+    expect(
+      mobileComposition().capabilitySnapshot.capabilities,
+      isNot(contains('office.docx.engine')),
+    );
+    expect(
+      mobileComposition(
+        officeEngine: _FakeOfficeEngine(),
+      ).capabilitySnapshot.capabilities,
+      contains('office.docx.engine'),
+    );
+  });
+
   testWidgets('signed-out production composition has no fixture account', (
     tester,
   ) async {
@@ -41,6 +54,24 @@ void main() {
     expect(find.text('DSH · binding'), findsOneWidget);
     expect(find.byKey(const ValueKey('remote-dsh-session')), findsOneWidget);
   });
+}
+
+final class _FakeOfficeEngine implements OfficeEnginePort {
+  @override
+  String get abi => 'openmuse-docx-ffi@1';
+
+  @override
+  Future<OfficeEngineInspection> inspect(
+    OfficeFormat format,
+    List<int> bytes,
+  ) => throw UnimplementedError();
+
+  @override
+  Future<List<int>> exportSimple(
+    OfficeFormat format,
+    List<int> originalBytes,
+    List<String> paragraphs,
+  ) => throw UnimplementedError();
 }
 
 final class _FakeCloudService

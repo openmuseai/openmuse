@@ -4,6 +4,7 @@ repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 alpha_dir="$repo_root/target/android-alpha"
 keystore="$alpha_dir/openmuse-alpha.p12"
 mkdir -p "$alpha_dir"
+OPENMUSE_DOCX_PLATFORMS=android "$repo_root/scripts/build_office_docx_mobile_artifacts.sh"
 if [[ ! -f "$keystore" ]]; then
   keytool -genkeypair -keystore "$keystore" -storetype PKCS12 -storepass openmuse-alpha \
     -alias openmuse-alpha -keypass openmuse-alpha -keyalg RSA -keysize 3072 -validity 3650 \
@@ -18,8 +19,16 @@ export OPENMUSE_ANDROID_KEY_PASSWORD="openmuse-alpha"
 apk="$repo_root/app/openmuse_mobile/build/app/outputs/flutter-apk/app-release.apk"
 apksigner="$ANDROID_HOME/build-tools/36.0.0/apksigner"
 "$apksigner" verify --verbose --print-certs "$apk" | tee "$alpha_dir/apksigner-report.txt"
-if unzip -l "$apk" | grep -Eiq '(^|/)(node|helix|pty)(/|$)|libnode|flutter_pty|dsh-closure'; then
+apk_listing="$(unzip -Z1 "$apk")"
+if grep -Eiq '(^|/)(node|helix|pty)(/|$)|libnode|flutter_pty|dsh-closure' <<<"$apk_listing"; then
   echo "Android Alpha contains a Desktop runtime" >&2
   exit 1
 fi
+grep -q 'lib/arm64-v8a/libopenmuse_office_docx.so' <<<"$apk_listing"
+artifact_check_dir="$(mktemp -d)"
+trap 'rm -rf "$artifact_check_dir"' EXIT
+unzip -p "$apk" lib/arm64-v8a/libopenmuse_office_docx.so > "$artifact_check_dir/libopenmuse_office_docx.so"
+for symbol in abi_version inspect export_simple buffer_free; do
+  nm -D "$artifact_check_dir/libopenmuse_office_docx.so" | grep -q "openmuse_docx_$symbol"
+done
 cp "$apk" "$alpha_dir/OpenMuse-Android-Alpha-arm64.apk"

@@ -1,6 +1,6 @@
 # Mobile Office DOCX Rust Engine
 
-> 状态：DOCX Engineering Accepted；App bundling/signing/UI corpus gate 待完成
+> 状态：DOCX Engineering Accepted；Android/iOS App bundling 与 Android 真机 FFI 已通过，签名/UI corpus gate 待完成
 >
 > 子需求：M6 first-format increment
 >
@@ -64,12 +64,27 @@ view-only gate、损坏/外链/DTD 拒绝、traversal/非可移植 entry path、
 Android ELF 已验证为 AArch64 且包含全部四个 ABI symbol；XCFramework 同时包含
 `ios-arm64` 和 `ios-arm64-simulator` static library/header slice。
 
+`openmuse_office_docx` Dart package 只实现 `OfficeEnginePort` 的 bytes ABI，不取得任何
+Workspace、Resource、S3、账号、DSH、文件系统或网络 handle。native buffer 在 Dart 复制
+完成后必定调用 Rust free，输入 malloc 也在 `finally` 释放；未知 schema、profile、capability
+或 ABI 均 fail closed。
+
+App packaging gate 已进一步通过：
+
+- Android Gradle 从 `target/office-docx/android` 打包 arm64 `.so`，release APK 中四个符号可见；
+- `scripts/test_mobile_docx_android.sh` 在 PKM110 真机上实际加载 `.so`、读取 ABI 并跨 FFI
+  触发受控错误，测试通过且进程未崩溃；
+- iOS Runner 链接 XCFramework、启动时校验 ABI，unsigned arm64 bundle 中可见 inspect/ABI
+  符号；
+- production composition 只有在 native engine 成功加载时才声明内部
+  `office.docx.engine` capability，打包/ABI 错误不会影响 Host 其余功能。
+
 ## 6. 剩余门禁
 
-- 将 `.so`/XCFramework 纳入 C4 native artifact kind、签名、SBOM 和 notices；
-- Flutter FFI adapter 的平台加载、生命周期、isolate/crash/低内存恢复；
+- 将 `.so`/XCFramework 纳入正式 release 签名、SBOM 和 notices；
+- FFI isolate/crash/低内存恢复和更大规模 fuzz/corpus；
 - 在 App 中用真实 ResourceHandle、expectedRevision/receipt 走完打开—编辑—保存；
 - 来自多 Office 版本/字体/语言/损坏样本的扩展 corpus 与视觉分页基线；
 - x86_64 Android（若产品支持）、iOS 签名 archive 和真机性能数据。
 
-在这些完成前，DOCX 不进入生产菜单；其他格式更不能继承 DOCX 的验收结论。
+在这些完成前，DOCX engine 虽随内部候选包分发，但不进入生产菜单；其他格式更不能继承 DOCX 的验收结论。

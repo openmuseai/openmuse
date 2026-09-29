@@ -6,12 +6,19 @@ evidence_dir="$repo_root/target/ios-beta"
 rm -rf "$evidence_dir"
 mkdir -p "$evidence_dir"
 
+OPENMUSE_DOCX_PLATFORMS=ios "$repo_root/scripts/build_office_docx_mobile_artifacts.sh"
+
 (cd "$repo_root/app/openmuse_mobile" && flutter analyze && flutter test && flutter build ios --release --no-codesign)
 
 app="$repo_root/app/openmuse_mobile/build/ios/iphoneos/Runner.app"
 test -f "$app/PrivacyInfo.xcprivacy"
+test -f "$app/Frameworks/Flutter.framework/PrivacyInfo.xcprivacy"
 test -f "$app/Runner"
-plutil -lint "$app/Info.plist" "$app/PrivacyInfo.xcprivacy" | tee "$evidence_dir/plist-lint.txt"
+plutil -lint \
+  "$app/Info.plist" \
+  "$app/PrivacyInfo.xcprivacy" \
+  "$app/Frameworks/Flutter.framework/PrivacyInfo.xcprivacy" \
+  | tee "$evidence_dir/plist-lint.txt"
 
 bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Info.plist")"
 version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Info.plist")"
@@ -32,6 +39,8 @@ if find "$app" -type f | grep -Eiq '(^|/)(node|helix|dsh-closure|sandbox-worker)
   echo "iOS bundle contains downloadable/native execution runtime" >&2
   exit 1
 fi
+nm -gU "$app/Runner" | grep -q '_openmuse_docx_abi_version'
+nm -gU "$app/Runner" | grep -q '_openmuse_docx_inspect'
 
 if codesign --verify --deep --strict "$app" 2>"$evidence_dir/codesign.txt"; then
   echo "The no-codesign artifact unexpectedly has a valid signature" >&2

@@ -17,6 +17,7 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		A10000000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* PrivacyInfo.xcprivacy */; };
+		A20000000000000000000001 /* OpenMuseDocx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* OpenMuseDocx.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +62,7 @@
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A10000000000000000000002 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A20000000000000000000002 /* OpenMuseDocx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = OpenMuseDocx.xcframework; path = ../../../target/office-docx/ios/OpenMuseDocx.xcframework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +70,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A20000000000000000000001 /* OpenMuseDocx.xcframework in Frameworks */,
 				78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -99,6 +102,7 @@
 			isa = PBXGroup;
 			children = (
 				9740EEB11CF90186004384FC /* Flutter */,
+				A20000000000000000000002 /* OpenMuseDocx.xcframework */,
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
@@ -386,6 +390,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-Wl,-u,_openmuse_docx_abi_version",
+					"-Wl,-u,_openmuse_docx_inspect",
+					"-Wl,-u,_openmuse_docx_export_simple",
+					"-Wl,-u,_openmuse_docx_buffer_free",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = io.openmuse.mobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -565,6 +576,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-Wl,-u,_openmuse_docx_abi_version",
+					"-Wl,-u,_openmuse_docx_inspect",
+					"-Wl,-u,_openmuse_docx_export_simple",
+					"-Wl,-u,_openmuse_docx_buffer_free",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = io.openmuse.mobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -586,6 +604,13 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-Wl,-u,_openmuse_docx_abi_version",
+					"-Wl,-u,_openmuse_docx_inspect",
+					"-Wl,-u,_openmuse_docx_export_simple",
+					"-Wl,-u,_openmuse_docx_buffer_free",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = io.openmuse.mobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";

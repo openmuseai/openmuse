@@ -2,8 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_mobile_cloud/openmuse_mobile_cloud.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
+import 'package:openmuse_office_docx/openmuse_office_docx.dart';
 
-void main() => runApp(OpenMuseHostShell(composition: mobileComposition()));
+void main() {
+  final docxEngine = _loadPackagedDocxEngine();
+  runApp(
+    OpenMuseHostShell(composition: mobileComposition(officeEngine: docxEngine)),
+  );
+}
+
+OfficeEnginePort? _loadPackagedDocxEngine() {
+  try {
+    return DocxFfiEngine.open();
+  } on Object {
+    // Packaging and ABI mismatches fail closed: no Office capability is
+    // advertised and the rest of the Mobile Host remains usable.
+    return null;
+  }
+}
 
 /// Composition entry used by the login/bootstrap layer after it has obtained
 /// an account session and a short-lived access-token provider. No credential is
@@ -12,6 +28,7 @@ OpenMuseHostComposition connectedCloudMobileComposition({
   required OpenMuseSessionPort session,
   required Uri apiOrigin,
   required AccessTokenProvider accessToken,
+  OfficeEnginePort? officeEngine,
 }) {
   final service = HttpCloudWorkspaceService(
     baseUri: apiOrigin,
@@ -22,6 +39,7 @@ OpenMuseHostComposition connectedCloudMobileComposition({
     cloudService: service,
     dshConnector: service,
     resources: service,
+    officeEngine: officeEngine ?? _loadPackagedDocxEngine(),
   );
 }
 
@@ -30,13 +48,17 @@ OpenMuseHostComposition mobileComposition({
   CloudWorkspaceService? cloudService,
   DshRuntimeConnector? dshConnector,
   ResourceRangePort? resources,
+  OfficeEnginePort? officeEngine,
 }) {
   final catalog = _CloudCatalogAdapter(cloudService);
   return OpenMuseHostComposition(
     platform: OpenMuseHostPlatform.mobile,
     session: session,
     workspaceCatalog: catalog,
-    capabilitySnapshot: _MobileCapabilities(cloudService != null),
+    capabilitySnapshot: _MobileCapabilities(
+      cloudService != null,
+      officeEngine != null,
+    ),
     workspaceBuilder: (context, workspace) {
       final record = catalog.record(workspace.workspaceRef);
       if (record == null ||
@@ -100,13 +122,15 @@ final class _CloudCatalogAdapter implements WorkspaceCatalogPort {
 }
 
 final class _MobileCapabilities implements CapabilitySnapshotPort {
-  const _MobileCapabilities(this.cloudConnected);
+  const _MobileCapabilities(this.cloudConnected, this.docxEngineConnected);
   final bool cloudConnected;
+  final bool docxEngineConnected;
   @override
   Set<String> get capabilities => {
     'resource.viewer',
     if (cloudConnected) 'workspace.cloud',
     if (cloudConnected) 'dsh.remote',
+    if (docxEngineConnected) 'office.docx.engine',
   };
 }
 

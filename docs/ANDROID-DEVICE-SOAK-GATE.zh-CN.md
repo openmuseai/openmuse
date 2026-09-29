@@ -34,7 +34,8 @@ OPENMUSE_ANDROID_SERIAL=<serial> ./scripts/test_android_device_soak.sh
 |---|---|
 | 设备 | `PKM110`，Android API 36，`arm64-v8a` |
 | APK | `OpenMuse-Android-Alpha-arm64.apk` |
-| SHA-256 | `aeb88a68282c817fcacab6147d972d4c2def20fe758ada23cb52137eb2aceef8` |
+| SHA-256 | `f1539b90d2024827f55e29cd9ee5c42a3d38c16b4a0ed52fe22561855b415e0d` |
+| DOCX native engine | arm64 `.so` 已打包，四个 ABI symbol 验证通过；真机 FFI TCK PASS |
 | 覆盖安装 / 冷启动 | PASS |
 | 生产 composition | PASS，显示“未登录 / 请登录以访问 Cloud Workspace” |
 | 前后台 | 50/50 PASS |
