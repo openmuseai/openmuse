@@ -11,6 +11,7 @@ void main() {
   final requests = <String>[];
 
   setUp(() async {
+    requests.clear();
     server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     service = HttpCloudWorkspaceService(
       baseUri: Uri.parse('http://${server.address.address}:${server.port}'),
@@ -23,6 +24,33 @@ void main() {
         request.headers.value(HttpHeaders.authorizationHeader),
         'Bearer account-token',
       );
+      if (request.uri.path == '/v1/resources/commit') {
+        expect(
+          request.headers.contentType?.mimeType,
+          'application/octet-stream',
+        );
+        expect(request.headers.value('OpenMuse-Resource-Ref'), 'resource:docx');
+        expect(request.headers.value('OpenMuse-Expected-Revision'), 'r1');
+        expect(request.headers.value('Idempotency-Key'), 'save:docx:1');
+        expect(request.headers.value('OpenMuse-Generation'), '7');
+        expect(
+          await request.fold<List<int>>([], (all, part) => all..addAll(part)),
+          [9, 8, 7],
+        );
+        request.response
+          ..headers.contentType = ContentType.json
+          ..write(
+            jsonEncode({
+              'commitRef': 'commit:c1',
+              'resourceRef': 'resource:docx',
+              'previousRevision': 'r1',
+              'newRevision': 'r2',
+              'generation': 7,
+            }),
+          )
+          ..close();
+        return;
+      }
       final body = request.method == 'POST'
           ? jsonDecode(await utf8.decoder.bind(request).join())
                 as Map<String, Object?>
@@ -166,4 +194,18 @@ void main() {
       );
     },
   );
+
+  test('Office commit streams bytes and returns a CAS receipt', () async {
+    final receipt = await service.commit(
+      resourceRef: 'resource:docx',
+      expectedRevision: 'r1',
+      bytes: const [9, 8, 7],
+      idempotencyKey: 'save:docx:1',
+      generation: 7,
+    );
+    expect(receipt.commitRef, 'commit:c1');
+    expect(receipt.previousRevision, 'r1');
+    expect(receipt.newRevision, 'r2');
+    expect(requests, ['POST /v1/resources/commit']);
+  });
 }

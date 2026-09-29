@@ -24,14 +24,19 @@ fixture 被误认为真实账号。
   generation，不 import Flutter、`dart:io` 或 Cloud SDK。
 - `openmuse_mobile_cloud`：唯一拥有 `HttpClient`、HTTPS/JSON、Bearer header、状态码
   映射与响应大小边界的 adapter；同时实现 `CloudWorkspaceService`、
-  `DshRuntimeConnector` 和 `ResourceRangePort`，但三个 capability 在 Core 仍是独立
-  port。
+  `DshRuntimeConnector`、`ResourceRangePort` 和 `OfficeResourceCommitPort`，但四个
+  capability 在 Core 仍是独立 port。
 - `app/openmuse_mobile`：composition root 将登录态和 adapter 注入 Host Shell；UI 只
   显示 placement、revision、Storage 可写性、DSH binding 状态及服务端 session 地址。
 
 HTTP adapter 只接受 origin-only HTTPS URL，不跟随 redirect。Resource range 必须返回
 请求的精确字节数；JSON 有 1 MiB 上限。401/403、409、424/503 分别映射为登录、
 stale revision、Storage unavailable 领域错误。
+
+Office commit 使用 `POST /v1/resources/commit`：正文是有界
+`application/octet-stream`，resourceRef、expectedRevision、idempotency key 和 generation
+分别进入专用 header，响应必须是包含 previous/new revision 的 receipt。它不使用
+base64 JSON 扩张大文件，也不向 Engine 暴露 Bearer token。
 
 ## 3. Service-backed TCK
 
@@ -52,6 +57,7 @@ Bearer login → GET catalog → POST DSH session
 TCK 同时验证生产拒绝 HTTP origin、缺失 token fail closed、请求顺序、generation、
 workspaceRef 与 revision receipt。Flutter widget 测试验证默认制品不再出现 fixture
 账号，以及注入 service 后 catalog 与 Remote DSH session 能到达 Mobile 页面。
+同一 loopback TCK 还验证 DOCX bytes commit 的 header、原始正文和 CAS receipt。
 
 ## 4. 尚未被本地测试替代的发布门禁
 

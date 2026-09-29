@@ -79,11 +79,21 @@ App packaging gate 已进一步通过：
 - production composition 只有在 native engine 成功加载时才声明内部
   `office.docx.engine` capability，打包/ABI 错误不会影响 Host 其余功能。
 
+`OfficeResourceTransaction` 已补齐应用层事务：校验 audience/generation/expiry/media type
+和 64 MiB 上限，按 512 KiB range 读取，Engine 只收到复制后的 bytes；保存时只有
+simple-text 的 edit/export capability 可进入导出，并把 bytes、`expectedRevision`、
+idempotency key 和 generation 交给独立 `OfficeResourceCommitPort`。跨资源、短 range、
+过期/超限 handle、stale revision、view-only export 和伪造/晚到 receipt 全部失败。
+
+Cloud adapter 以 `application/octet-stream` 向 `/v1/resources/commit` 流式提交 bytes，
+CAS 元数据位于专用 header，Bearer token 仍只属于 adapter。loopback HTTP TCK 已验证
+请求体和 receipt；这不把 Cloud/S3 凭据交给 DOCX engine。
+
 ## 6. 剩余门禁
 
 - 将 `.so`/XCFramework 纳入正式 release 签名、SBOM 和 notices；
 - FFI isolate/crash/低内存恢复和更大规模 fuzz/corpus；
-- 在 App 中用真实 ResourceHandle、expectedRevision/receipt 走完打开—编辑—保存；
+- 将已通过 TCK 的 ResourceHandle/CAS transaction 接入真实账号下的打开—编辑—保存 UI；
 - 来自多 Office 版本/字体/语言/损坏样本的扩展 corpus 与视觉分页基线；
 - x86_64 Android（若产品支持）、iOS 签名 archive 和真机性能数据。
 
