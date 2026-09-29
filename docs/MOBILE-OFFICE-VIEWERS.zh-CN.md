@@ -1,7 +1,6 @@
 # Mobile Office View Engines
 
-> 状态：XLSX/PPTX Engineering Accepted（Engine + Android/iOS App binding）；PDF Engine
-> Engineering Accepted（App binding 待独立验收）
+> 状态：XLSX/PPTX/PDF Engineering Accepted（Engine + Android/iOS App binding）
 >
 > 子需求：M6 XLSX/PPTX view-only engine、PDF text-view-only engine
 >
@@ -51,14 +50,13 @@ arm64 `.so`、iOS device/simulator XCFramework 和 SHA-256 manifest。
 
 ## 4. Mobile App binding
 
-App 使用 `MultiFormatOfficeEngine` 精确路由 DOCX/XLSX/PPTX。XLSX/PPTX 通过与 DOCX 相同的
+App 使用 `MultiFormatOfficeEngine` 精确路由 DOCX/XLSX/PPTX/PDF。三个只读格式通过与 DOCX 相同的
 ResourceHandle audience/generation/expiry、bounded range 和 media admission 打开，但
 `OfficeViewerScreen` 不取得 `OfficeResourceCommitPort`，界面固定显示“只读兼容视图”且
-没有保存入口。Cloud catalog 的 XLSX item 只有在 packaged engine 存在时可点击。
+没有保存入口。PDF 还会显式标为“文本兼容只读视图”；Cloud catalog item 只有在对应的
+packaged engine capability 存在时可点击。
 
-Android 真机已实际加载 `libopenmuse_office_viewers.so` 并跨 Dart FFI 调用 XLSX/PPTX
-inspect fail-closed；iOS unsigned arm64 build 已链接 XCFramework，并核对 ABI、两个
-inspect 和 free 的最终 App symbols。签名 iOS 真机与更大真实文件视觉 corpus 仍是发布门禁。
-
-PDF 本轮只验收 Rust Engine、C ABI、Dart FFI 以及 Android/iOS artifact 可构建性；App 路由、
-最终包符号、Android 真机 FFI 和 iOS unsigned App 链接在独立 App-binding 子需求中验收。
+Android 真机已实际加载 `libopenmuse_office_viewers.so` 并跨 Dart FFI 调用 XLSX/PPTX/PDF
+inspect fail-closed；iOS unsigned arm64 build 已链接 XCFramework，并核对 ABI、三个 inspect
+和 free 的最终 App symbols。签名 iOS 真机、敌意 PDF fuzz/worker 隔离与更大真实文件视觉
+corpus 仍是发布门禁。

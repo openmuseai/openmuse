@@ -55,6 +55,7 @@ nm -gU "$app/Runner" | grep -q '_openmuse_paired_native_handle_close'
 nm -gU "$app/Runner" | grep -q '_openmuse_office_viewers_abi_version'
 nm -gU "$app/Runner" | grep -q '_openmuse_xlsx_inspect'
 nm -gU "$app/Runner" | grep -q '_openmuse_pptx_inspect'
+nm -gU "$app/Runner" | grep -q '_openmuse_pdf_inspect'
 nm -gU "$app/Runner" | grep -q '_openmuse_office_viewer_buffer_free'
 
 if codesign --verify --deep --strict "$app" 2>"$evidence_dir/codesign.txt"; then

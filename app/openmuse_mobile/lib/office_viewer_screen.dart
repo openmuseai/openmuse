@@ -56,11 +56,11 @@ final class _OfficeViewerScreenState extends State<OfficeViewerScreen> {
           children: [
             Chip(
               key: ValueKey('office-view-only'),
-              label: Text(
-                widget.format == OfficeFormat.slides
-                    ? 'PPTX · 只读兼容视图'
-                    : 'XLSX · 只读兼容视图',
-              ),
+              label: Text(switch (widget.format) {
+                OfficeFormat.slides => 'PPTX · 只读兼容视图',
+                OfficeFormat.pdf => 'PDF · 文本兼容只读视图',
+                _ => 'XLSX · 只读兼容视图',
+              }),
             ),
             const SizedBox(height: 8),
             for (

@@ -31,6 +31,12 @@ private func openMusePptxInspect(
   _ length: Int
 ) -> OpenMuseOfficeViewerBuffer
 
+@_silgen_name("openmuse_pdf_inspect")
+private func openMusePdfInspect(
+  _ bytes: UnsafePointer<UInt8>?,
+  _ length: Int
+) -> OpenMuseOfficeViewerBuffer
+
 @_silgen_name("openmuse_office_viewer_buffer_free")
 private func openMuseOfficeViewerBufferFree(_ buffer: OpenMuseOfficeViewerBuffer)
 
@@ -113,6 +119,9 @@ private func openMusePairedNativeHandleClose(_ handle: UInt64) -> Int32
     let slidesProbe = openMusePptxInspect(nil, 0)
     precondition(slidesProbe.status != 0, "Office Slides fail-closed probe failed")
     openMuseOfficeViewerBufferFree(slidesProbe)
+    let pdfProbe = openMusePdfInspect(nil, 0)
+    precondition(pdfProbe.status != 0, "Office PDF fail-closed probe failed")
+    openMuseOfficeViewerBufferFree(pdfProbe)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

@@ -10,6 +10,13 @@ void main() {
       mobileComposition().capabilitySnapshot.capabilities,
       isNot(contains('office.docx.engine')),
     );
+    final viewers = MultiFormatOfficeEngine({
+      OfficeFormat.pdf: _FakePdfEngine(),
+    });
+    expect(
+      mobileComposition(officeEngine: viewers).capabilitySnapshot.capabilities,
+      contains('office.pdf.engine'),
+    );
     expect(
       mobileComposition(
         officeEngine: _FakeOfficeEngine(),
@@ -150,6 +157,36 @@ void main() {
     expect(find.textContaining('Slide 1'), findsOneWidget);
     expect(find.byIcon(Icons.save), findsNothing);
   });
+
+  testWidgets(
+    'authorized PDF catalog route is a text-only compatibility view',
+    (tester) async {
+      final service = _FakeCloudService(pdf: true);
+      final engine = MultiFormatOfficeEngine({
+        OfficeFormat.pdf: _FakePdfEngine(),
+      });
+      await tester.pumpWidget(
+        OpenMuseHostShell(
+          composition: mobileComposition(
+            session: const MobileAccountSession.authenticated('Test Account'),
+            cloudService: service,
+            dshConnector: service,
+            resources: service,
+            resourceCatalog: service,
+            officeEngine: engine,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cloud Project'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Notes.pdf'));
+      await tester.pumpAndSettle();
+      expect(find.text('PDF · 文本兼容只读视图'), findsOneWidget);
+      expect(find.textContaining('Page 1'), findsOneWidget);
+      expect(find.byIcon(Icons.save), findsNothing);
+    },
+  );
 }
 
 final class _FakeOfficeEngine implements OfficeEnginePort {
@@ -225,6 +262,29 @@ final class _FakeSlidesEngine implements OfficeEnginePort {
   ) => throw UnsupportedError('view only');
 }
 
+final class _FakePdfEngine implements OfficeEnginePort {
+  @override
+  String get abi => 'openmuse-office-viewers-ffi@1';
+
+  @override
+  Future<OfficeEngineInspection> inspect(
+    OfficeFormat format,
+    List<int> bytes,
+  ) async => const OfficeEngineInspection(
+    format: OfficeFormat.pdf,
+    profile: 'text-view-only',
+    paragraphs: ['Page 1\tHello PDF'],
+    capabilities: {OfficeCapability.view},
+  );
+
+  @override
+  Future<List<int>> exportSimple(
+    OfficeFormat format,
+    List<int> originalBytes,
+    List<String> paragraphs,
+  ) => throw UnsupportedError('view only');
+}
+
 final class _FakeCloudService
     implements
         CloudWorkspaceService,
@@ -232,9 +292,10 @@ final class _FakeCloudService
         DshRuntimeConnector,
         ResourceRangePort,
         OfficeResourceCommitPort {
-  _FakeCloudService({this.xlsx = false, this.pptx = false});
+  _FakeCloudService({this.xlsx = false, this.pptx = false, this.pdf = false});
   final bool xlsx;
   final bool pptx;
+  final bool pdf;
 
   @override
   DshPlacement get placement => DshPlacement.cloudRemote;
@@ -256,7 +317,7 @@ final class _FakeCloudService
     required String revision,
     required int generation,
   }) async => [
-    if (!xlsx && !pptx)
+    if (!xlsx && !pptx && !pdf)
       const CloudResourceRecord(
         resourceRef: 'resource:docx',
         title: 'Document.docx',
@@ -284,6 +345,15 @@ final class _FakeCloudService
         size: 3,
         mediaType:
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        writable: false,
+      ),
+    if (pdf)
+      const CloudResourceRecord(
+        resourceRef: 'resource:pdf',
+        title: 'Notes.pdf',
+        revision: 'pdf-r1',
+        size: 3,
+        mediaType: 'application/pdf',
         writable: false,
       ),
   ];
@@ -321,6 +391,7 @@ final class _FakeCloudService
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'resource:pptx' =>
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'resource:pdf' => 'application/pdf',
       _ =>
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     },

@@ -16,7 +16,7 @@ void main() {
     );
   });
 
-  testWidgets('packaged XLSX ABI is callable and view only', (tester) async {
+  testWidgets('packaged viewer ABI is callable and view only', (tester) async {
     final engine = OfficeViewersFfiEngine.open();
     expect(engine.abi, 'openmuse-office-viewers-ffi@1');
     await expectLater(
@@ -25,6 +25,10 @@ void main() {
     );
     await expectLater(
       engine.inspect(OfficeFormat.slides, const [1, 2, 3]),
+      throwsA(isA<OfficeViewerException>()),
+    );
+    await expectLater(
+      engine.inspect(OfficeFormat.pdf, const [1, 2, 3]),
       throwsA(isA<OfficeViewerException>()),
     );
     expect(

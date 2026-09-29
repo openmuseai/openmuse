@@ -28,6 +28,7 @@ OfficeEnginePort? _loadPackagedOfficeEngine() {
     final viewers = OfficeViewersFfiEngine.open();
     engines[OfficeFormat.sheet] = viewers;
     engines[OfficeFormat.slides] = viewers;
+    engines[OfficeFormat.pdf] = viewers;
   } on Object {
     // A missing or incompatible artifact removes only this capability.
   }
@@ -79,6 +80,7 @@ OpenMuseHostComposition mobileComposition({
       _supportsFormat(officeEngine, OfficeFormat.word),
       _supportsFormat(officeEngine, OfficeFormat.sheet),
       _supportsFormat(officeEngine, OfficeFormat.slides),
+      _supportsFormat(officeEngine, OfficeFormat.pdf),
     ),
     workspaceBuilder: (context, workspace) {
       final record = catalog.record(workspace.workspaceRef);
@@ -150,7 +152,9 @@ bool _supportsFormat(OfficeEnginePort? engine, OfficeFormat format) {
   if (engine is MultiFormatOfficeEngine) return engine.formats.contains(format);
   if (engine is DocxFfiEngine) return format == OfficeFormat.word;
   if (engine is OfficeViewersFfiEngine) {
-    return format == OfficeFormat.sheet || format == OfficeFormat.slides;
+    return format == OfficeFormat.sheet ||
+        format == OfficeFormat.slides ||
+        format == OfficeFormat.pdf;
   }
   return format == OfficeFormat.word;
 }
@@ -161,11 +165,13 @@ final class _MobileCapabilities implements CapabilitySnapshotPort {
     this.docxEngineConnected,
     this.xlsxEngineConnected,
     this.pptxEngineConnected,
+    this.pdfEngineConnected,
   );
   final bool cloudConnected;
   final bool docxEngineConnected;
   final bool xlsxEngineConnected;
   final bool pptxEngineConnected;
+  final bool pdfEngineConnected;
   @override
   Set<String> get capabilities => {
     'resource.viewer',
@@ -174,6 +180,7 @@ final class _MobileCapabilities implements CapabilitySnapshotPort {
     if (docxEngineConnected) 'office.docx.engine',
     if (xlsxEngineConnected) 'office.xlsx.engine',
     if (pptxEngineConnected) 'office.pptx.engine',
+    if (pdfEngineConnected) 'office.pdf.engine',
   };
 }
 
@@ -238,6 +245,9 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
           'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
       value.mediaType == 'application/pptx';
 
+  bool _isPdf(CloudResourceRecord value) =>
+      value.mediaType == 'application/pdf';
+
   Future<void> _openDocx(CloudResourceRecord resource) async {
     final engine = widget.officeEngine;
     final commits = widget.officeCommits;
@@ -286,7 +296,8 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
     final engine = widget.officeEngine;
     if (engine == null ||
         (format == OfficeFormat.sheet && !_isXlsx(resource)) ||
-        (format == OfficeFormat.slides && !_isPptx(resource))) {
+        (format == OfficeFormat.slides && !_isPptx(resource)) ||
+        (format == OfficeFormat.pdf && !_isPdf(resource))) {
       return;
     }
     try {
@@ -371,12 +382,15 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
                         widget.officeEngine != null &&
                         widget.officeCommits != null) ||
                     (_isXlsx(resource) && widget.officeEngine != null) ||
-                    (_isPptx(resource) && widget.officeEngine != null),
+                    (_isPptx(resource) && widget.officeEngine != null) ||
+                    (_isPdf(resource) && widget.officeEngine != null),
                 onTap: () {
                   if (_isXlsx(resource)) {
                     _openViewer(resource, OfficeFormat.sheet);
                   } else if (_isPptx(resource)) {
                     _openViewer(resource, OfficeFormat.slides);
+                  } else if (_isPdf(resource)) {
+                    _openViewer(resource, OfficeFormat.pdf);
                   } else {
                     _openDocx(resource);
                   }
