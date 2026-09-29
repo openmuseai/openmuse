@@ -817,6 +817,8 @@ login → Cloud catalog → choose Workspace
 
 ### M8：iOS Beta
 
+**实施状态：Accepted（no-codesign build gate）**（`feature/m8-ios-beta`）
+
 **目标与计划**
 
 - bundle ID、entitlements、TestFlight signing；
