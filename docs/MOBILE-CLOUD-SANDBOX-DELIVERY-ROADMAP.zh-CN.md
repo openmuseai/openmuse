@@ -652,6 +652,8 @@ Fail-closed admission、攻击面测试和审计链见 [`SANDBOX-PRODUCTION-SECU
 
 ### M1：Adaptive Windows 与 Surface 生命周期
 
+**实施状态：Accepted**（`feature/m1-adaptive-windows`）
+
 **目标**
 
 独立实现 Compact/Medium/Expanded 的 1/2/3 Window 投影，不等待 Mobile App Root、Cloud API 或 DSH。

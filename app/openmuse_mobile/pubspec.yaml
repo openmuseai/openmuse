@@ -32,6 +32,8 @@ dependencies:
     sdk: flutter
   openmuse_host_shell:
     path: ../../packages/openmuse_host_shell
+  openmuse_mobile_core:
+    path: ../../packages/openmuse_mobile_core
 
 dev_dependencies:
   flutter_test:
