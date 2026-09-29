@@ -5,6 +5,7 @@ alpha_dir="$repo_root/target/android-alpha"
 keystore="$alpha_dir/openmuse-alpha.p12"
 mkdir -p "$alpha_dir"
 OPENMUSE_DOCX_PLATFORMS=android "$repo_root/scripts/build_office_docx_mobile_artifacts.sh"
+OPENMUSE_PAIRED_PLATFORMS=android "$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
 OPENMUSE_VIEWERS_PLATFORMS=android "$repo_root/scripts/build_office_viewers_mobile_artifacts.sh"
 if [[ ! -f "$keystore" ]]; then
   keytool -genkeypair -keystore "$keystore" -storetype PKCS12 -storepass openmuse-alpha \
@@ -26,10 +27,21 @@ if grep -Eiq '(^|/)(node|helix|pty)(/|$)|libnode|flutter_pty|dsh-closure' <<<"$a
   exit 1
 fi
 grep -q 'lib/arm64-v8a/libopenmuse_office_docx.so' <<<"$apk_listing"
+grep -q 'lib/arm64-v8a/libopenmuse_paired_relay.so' <<<"$apk_listing"
+grep -q 'lib/arm64-v8a/libopenmuse_office_viewers.so' <<<"$apk_listing"
 artifact_check_dir="$(mktemp -d)"
 trap 'rm -rf "$artifact_check_dir"' EXIT
 unzip -p "$apk" lib/arm64-v8a/libopenmuse_office_docx.so > "$artifact_check_dir/libopenmuse_office_docx.so"
+unzip -p "$apk" lib/arm64-v8a/libopenmuse_paired_relay.so > "$artifact_check_dir/libopenmuse_paired_relay.so"
+unzip -p "$apk" lib/arm64-v8a/libopenmuse_office_viewers.so > "$artifact_check_dir/libopenmuse_office_viewers.so"
 for symbol in abi_version inspect export_simple buffer_free; do
   nm -D "$artifact_check_dir/libopenmuse_office_docx.so" | grep -q "openmuse_docx_$symbol"
 done
+for symbol in abi_version device_public issue_offer begin_handshake confirm_handshake channel_seal channel_open native_handle_close; do
+  nm -D "$artifact_check_dir/libopenmuse_paired_relay.so" | grep -q "openmuse_paired_$symbol"
+done
+for symbol in office_viewers_abi_version xlsx_inspect pptx_inspect pdf_inspect office_viewer_buffer_free; do
+  nm -D "$artifact_check_dir/libopenmuse_office_viewers.so" | grep -q "openmuse_$symbol"
+done
 cp "$apk" "$alpha_dir/OpenMuse-Android-Alpha-arm64.apk"
+shasum -a 256 "$alpha_dir/OpenMuse-Android-Alpha-arm64.apk" > "$alpha_dir/artifact.sha256"

@@ -34,8 +34,8 @@ OPENMUSE_ANDROID_SERIAL=<serial> ./scripts/test_android_device_soak.sh
 |---|---|
 | 设备 | `PKM110`，Android API 36，`arm64-v8a` |
 | APK | `OpenMuse-Android-Alpha-arm64.apk` |
-| SHA-256 | `f1539b90d2024827f55e29cd9ee5c42a3d38c16b4a0ed52fe22561855b415e0d` |
-| DOCX native engine | arm64 `.so` 已打包，四个 ABI symbol 验证通过；真机 FFI TCK PASS |
+| SHA-256 | `41f01a15a8cc724d1681b544e353297bef6ba3fc39f697c6ba1d402bcd090e98` |
+| Native engines | DOCX、Paired channel、XLSX/PPTX/PDF arm64 `.so` 已打包，公开 ABI symbols 验证通过；真机 FFI TCK PASS |
 | 覆盖安装 / 冷启动 | PASS |
 | 生产 composition | PASS，显示“未登录 / 请登录以访问 Cloud Workspace” |
 | 前后台 | 50/50 PASS |
@@ -44,9 +44,12 @@ OPENMUSE_ANDROID_SERIAL=<serial> ./scripts/test_android_device_soak.sh
 
 该结果只接受 Engineering device gate。由于没有向本次验收提供真实账号和 Cloud DSH，30 分钟 Agent 与 Workspace/Window 切换未执行，Connected product gate 仍为待验收。
 
-在 DOCX Resource transaction 与 editor widget 合入后，2026-09-29T13:01:01Z 又从当前
-累计源码重建同一 digest 的 release APK，ADB 覆盖安装、冷启动、5 次前后台、10 次方向
-变化和 crash/ANR 检查再次 PASS；因此真机当前安装的是最新累计候选，而不是此前的测试 APK。
+在 Paired Desktop native binding、XLSX/PPTX view engine 和 PDF text-view-only engine/App
+binding 全部合入后，2026-09-29T14:02:18Z 从当前累计源码重建 release APK。该候选通过
+ADB 覆盖安装、冷启动、50 次前后台、100 次方向变化和 crash/ANR 检查；随后从设备拉取
+`base.apk`，其 SHA-256 与构建 artifact 完全一致。因此真机当前安装的是包含全部已验收
+Mobile capability 的累计候选，而不是此前的测试 APK。证据目录为
+`target/android-soak/20260929T140218Z/`。
 
 ## 4. 发布前剩余证据
 
