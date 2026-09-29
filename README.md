@@ -38,6 +38,7 @@ Workbench parity specification: [`docs/WORKBENCH-PARITY-SPEC.zh-CN.md`](docs/WOR
 Code reuse and provenance: [`docs/CODE-REUSE-PROVENANCE.zh-CN.md`](docs/CODE-REUSE-PROVENANCE.zh-CN.md).
 Mobile product design: [`docs/MOBILE-PRODUCT-PRD.zh-CN.md`](docs/MOBILE-PRODUCT-PRD.zh-CN.md).
 Mobile architecture and implementation plan: [`docs/MOBILE-ARCHITECTURE-IMPLEMENTATION-PLAN.zh-CN.md`](docs/MOBILE-ARCHITECTURE-IMPLEMENTATION-PLAN.zh-CN.md).
+GoTrue authentication plugin migration and cross-device session design: [`docs/AUTH-GOTRUE-PLUGIN-MIGRATION.zh-CN.md`](docs/AUTH-GOTRUE-PLUGIN-MIGRATION.zh-CN.md).
 S3 Storage ABI and MinIO/RustFS selection: [`docs/S3-STORAGE-TECHNICAL-SELECTION.zh-CN.md`](docs/S3-STORAGE-TECHNICAL-SELECTION.zh-CN.md).
 OpenMuse Workspace Sandbox and DSH execution plane: [`docs/DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md`](docs/DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md).
 Mobile/Cloud/Sandbox delivery roadmap: [`docs/MOBILE-CLOUD-SANDBOX-DELIVERY-ROADMAP.zh-CN.md`](docs/MOBILE-CLOUD-SANDBOX-DELIVERY-ROADMAP.zh-CN.md).
