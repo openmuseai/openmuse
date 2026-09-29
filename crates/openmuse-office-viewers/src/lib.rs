@@ -89,6 +89,223 @@ pub fn inspect_xlsx(bytes: &[u8]) -> Result<ViewerInspection, ViewerError> {
     })
 }
 
+pub fn inspect_pptx(bytes: &[u8]) -> Result<ViewerInspection, ViewerError> {
+    let parts = read_parts(bytes)?;
+    for required in [
+        "[Content_Types].xml",
+        "_rels/.rels",
+        "ppt/presentation.xml",
+        "ppt/_rels/presentation.xml.rels",
+    ] {
+        if !parts.iter().any(|part| part.name == required) {
+            return Err(ViewerError::MissingPart(required));
+        }
+    }
+    for part in parts.iter().filter(|part| part.name.ends_with(".rels")) {
+        reject_external_relationships(&part.bytes)?;
+    }
+    let presentation = parts
+        .iter()
+        .find(|part| part.name == "ppt/presentation.xml")
+        .expect("required part checked");
+    let presentation_relationships = parts
+        .iter()
+        .find(|part| part.name == "ppt/_rels/presentation.xml.rels")
+        .expect("required part checked");
+    let slide_ids = parse_slide_order(&presentation.bytes)?;
+    let targets = parse_presentation_relationships(&presentation_relationships.bytes)?;
+    let mut paragraphs = Vec::new();
+    let mut text_runs = 0_usize;
+    for (index, relationship_id) in slide_ids.iter().enumerate() {
+        let target = targets
+            .get(relationship_id)
+            .ok_or(ViewerError::InvalidRelationship)?;
+        let slide = parts
+            .iter()
+            .find(|part| &part.name == target)
+            .ok_or(ViewerError::InvalidRelationship)?;
+        parse_slide(index + 1, &slide.bytes, &mut text_runs, &mut paragraphs)?;
+    }
+    Ok(ViewerInspection {
+        schema: "openmuse.office.pptx-inspection@1",
+        profile: "view-only",
+        paragraphs,
+        capabilities: vec!["view"],
+    })
+}
+
+fn parse_slide_order(xml: &[u8]) -> Result<Vec<String>, ViewerError> {
+    let mut reader = Reader::from_reader(xml);
+    let mut ids = Vec::new();
+    loop {
+        match reader.read_event().map_err(|_| ViewerError::InvalidXml)? {
+            Event::Start(tag) | Event::Empty(tag)
+                if local_name(tag.name().as_ref()) == b"sldId" =>
+            {
+                let mut relationship_id = None;
+                for attribute in tag.attributes().with_checks(true) {
+                    let attribute = attribute.map_err(|_| ViewerError::InvalidXml)?;
+                    if local_name(attribute.key.as_ref()) == b"id"
+                        && attribute.key.as_ref().contains(&b':')
+                    {
+                        relationship_id = Some(
+                            attribute
+                                .decode_and_unescape_value(reader.decoder())
+                                .map_err(|_| ViewerError::InvalidXml)?
+                                .into_owned(),
+                        );
+                    }
+                }
+                ids.push(relationship_id.ok_or(ViewerError::InvalidRelationship)?);
+                if ids.len() > 10_000 {
+                    return Err(ViewerError::LimitExceeded);
+                }
+            }
+            Event::DocType(_) => return Err(ViewerError::DocTypeDenied),
+            Event::Eof if ids.is_empty() => return Err(ViewerError::InvalidRelationship),
+            Event::Eof => return Ok(ids),
+            _ => {}
+        }
+    }
+}
+
+fn parse_presentation_relationships(xml: &[u8]) -> Result<HashMap<String, String>, ViewerError> {
+    let mut reader = Reader::from_reader(xml);
+    let mut relationships = HashMap::new();
+    loop {
+        match reader.read_event().map_err(|_| ViewerError::InvalidXml)? {
+            Event::Start(tag) | Event::Empty(tag)
+                if local_name(tag.name().as_ref()) == b"Relationship" =>
+            {
+                let mut id = None;
+                let mut target = None;
+                let mut relationship_type = None;
+                let mut external = false;
+                for attribute in tag.attributes().with_checks(true) {
+                    let attribute = attribute.map_err(|_| ViewerError::InvalidXml)?;
+                    let value = attribute
+                        .decode_and_unescape_value(reader.decoder())
+                        .map_err(|_| ViewerError::InvalidXml)?
+                        .into_owned();
+                    match local_name(attribute.key.as_ref()) {
+                        b"Id" => id = Some(value),
+                        b"Target" => target = Some(value),
+                        b"Type" => relationship_type = Some(value),
+                        b"TargetMode" if value.eq_ignore_ascii_case("external") => external = true,
+                        _ => {}
+                    }
+                }
+                if external {
+                    return Err(ViewerError::ExternalRelationship);
+                }
+                if relationship_type
+                    .as_deref()
+                    .is_some_and(|value| value.ends_with("/slide"))
+                {
+                    let id = id.ok_or(ViewerError::InvalidRelationship)?;
+                    let target = normalize_part_target(
+                        &target.ok_or(ViewerError::InvalidRelationship)?,
+                        "ppt",
+                        "ppt/slides/",
+                    )?;
+                    if relationships.insert(id, target).is_some() {
+                        return Err(ViewerError::InvalidRelationship);
+                    }
+                }
+            }
+            Event::DocType(_) => return Err(ViewerError::DocTypeDenied),
+            Event::Eof => return Ok(relationships),
+            _ => {}
+        }
+    }
+}
+
+fn normalize_part_target(
+    target: &str,
+    root: &str,
+    required_prefix: &str,
+) -> Result<String, ViewerError> {
+    if target.is_empty()
+        || target.contains('\\')
+        || target.contains(':')
+        || target.split('/').any(|segment| segment == "..")
+    {
+        return Err(ViewerError::InvalidRelationship);
+    }
+    let trimmed = target.trim_start_matches('/');
+    let resolved = if trimmed.starts_with(&format!("{root}/")) {
+        trimmed.to_owned()
+    } else {
+        format!("{root}/{trimmed}")
+    };
+    if !resolved.starts_with(required_prefix) || !resolved.ends_with(".xml") {
+        return Err(ViewerError::InvalidRelationship);
+    }
+    Ok(resolved)
+}
+
+fn parse_slide(
+    slide_number: usize,
+    xml: &[u8],
+    text_runs: &mut usize,
+    output: &mut Vec<String>,
+) -> Result<(), ViewerError> {
+    let mut reader = Reader::from_reader(xml);
+    let mut paragraph = String::new();
+    let mut in_paragraph = false;
+    let mut in_text = false;
+    let mut emitted = false;
+    loop {
+        match reader.read_event().map_err(|_| ViewerError::InvalidXml)? {
+            Event::Start(tag) => match local_name(tag.name().as_ref()) {
+                b"p" => {
+                    in_paragraph = true;
+                    paragraph.clear();
+                }
+                b"t" if in_paragraph => in_text = true,
+                _ => {}
+            },
+            Event::Text(text) if in_text => {
+                paragraph.push_str(&text.decode().map_err(|_| ViewerError::InvalidXml)?);
+                if paragraph.len() > MAX_CELL_BYTES {
+                    return Err(ViewerError::LimitExceeded);
+                }
+            }
+            Event::CData(text) if in_text => {
+                paragraph.push_str(&text.decode().map_err(|_| ViewerError::InvalidXml)?);
+                if paragraph.len() > MAX_CELL_BYTES {
+                    return Err(ViewerError::LimitExceeded);
+                }
+            }
+            Event::End(tag) => match local_name(tag.name().as_ref()) {
+                b"t" => {
+                    in_text = false;
+                    *text_runs = text_runs.checked_add(1).ok_or(ViewerError::LimitExceeded)?;
+                    if *text_runs > MAX_CELLS {
+                        return Err(ViewerError::LimitExceeded);
+                    }
+                }
+                b"p" => {
+                    in_paragraph = false;
+                    if !paragraph.is_empty() {
+                        output.push(format!("Slide {slide_number}\t{paragraph}"));
+                        emitted = true;
+                    }
+                }
+                _ => {}
+            },
+            Event::DocType(_) => return Err(ViewerError::DocTypeDenied),
+            Event::Eof => {
+                if !emitted {
+                    output.push(format!("Slide {slide_number}"));
+                }
+                return Ok(());
+            }
+            _ => {}
+        }
+    }
+}
+
 fn parse_workbook(xml: &[u8]) -> Result<Vec<(String, String)>, ViewerError> {
     let mut reader = Reader::from_reader(xml);
     let mut sheets = Vec::new();
@@ -487,6 +704,26 @@ pub unsafe extern "C" fn openmuse_xlsx_inspect(
         }
         let bytes = unsafe { std::slice::from_raw_parts(xlsx, xlsx_len) };
         let inspection = inspect_xlsx(bytes)?;
+        serde_json::to_vec(&inspection).map_err(|_| ViewerError::InvalidXml)
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Inspect a bounded PPTX buffer.
+///
+/// # Safety
+/// `pptx` must point to `pptx_len` readable bytes. The returned buffer must be
+/// freed exactly once with [`openmuse_office_viewer_buffer_free`].
+pub unsafe extern "C" fn openmuse_pptx_inspect(
+    pptx: *const u8,
+    pptx_len: usize,
+) -> OpenMuseOfficeViewerBuffer {
+    ffi_call(|| {
+        if pptx.is_null() || pptx_len == 0 || pptx_len > MAX_ARCHIVE_BYTES {
+            return Err(ViewerError::LimitExceeded);
+        }
+        let bytes = unsafe { std::slice::from_raw_parts(pptx, pptx_len) };
+        let inspection = inspect_pptx(bytes)?;
         serde_json::to_vec(&inspection).map_err(|_| ViewerError::InvalidXml)
     })
 }

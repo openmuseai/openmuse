@@ -21,6 +21,9 @@ uint32_t openmuse_office_viewers_abi_version(void);
 OpenMuseOfficeViewerBuffer openmuse_xlsx_inspect(
     const uint8_t *xlsx,
     size_t xlsx_len);
+OpenMuseOfficeViewerBuffer openmuse_pptx_inspect(
+    const uint8_t *pptx,
+    size_t pptx_len);
 void openmuse_office_viewer_buffer_free(OpenMuseOfficeViewerBuffer buffer);
 
 #ifdef __cplusplus

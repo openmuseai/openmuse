@@ -1,6 +1,6 @@
 # Mobile Office View Engines
 
-> 状态：XLSX Engineering Accepted（Engine + Android/iOS App binding）
+> 状态：XLSX Engineering Accepted（Engine + Android/iOS App binding）；PPTX Engine Accepted（App binding 待完成）
 >
 > 子需求：M6 XLSX view-only engine
 >
@@ -9,7 +9,7 @@
 ## 1. 能力边界
 
 `openmuse-office-viewers` 是无网络、无文件系统、无 Workspace/S3/账号 capability 的
-Rust bytes engine。XLSX 当前只声明 `view`，不声明 `edit/export`，也不会把“能读 XML”
+Rust bytes engine。XLSX/PPTX 当前只声明 `view`，不声明 `edit/export`，也不会把“能读 XML”
 包装成可靠的原格式 round-trip。
 
 输入门禁包括 64 MiB archive、128 MiB 总解压、32 MiB 单 entry、4096 entries、200 倍
@@ -24,6 +24,10 @@ engine 解析 shared string、inline string、数字/布尔/公式缓存值，�
 
 这不是 Excel layout renderer；合并单元格、图表、条件格式、宏、公式重算与打印分页不会
 被错误声明为已支持。后续 App adapter 必须明确显示 view-only 和兼容性边界。
+
+PPTX 按 `presentation.xml` 的 slide order 和 relationship 精确定位实际 slide part，提取
+DrawingML paragraph/text run 为稳定的 `Slide N` 文本视图。它不会声称支持母版视觉还原、
+动画、视频、图表渲染、字体替换或可编辑 round-trip；所有 `.rels` 仍执行外链拒绝。
 
 ## 3. 验收
 

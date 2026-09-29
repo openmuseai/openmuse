@@ -42,6 +42,9 @@ final class OfficeViewersFfiEngine implements OfficeEnginePort {
       _inspectXlsx = library.lookupFunction<_InspectNative, _InspectDart>(
         'openmuse_xlsx_inspect',
       ),
+      _inspectPptx = library.lookupFunction<_InspectNative, _InspectDart>(
+        'openmuse_pptx_inspect',
+      ),
       _free = library.lookupFunction<_FreeNative, _FreeDart>(
         'openmuse_office_viewer_buffer_free',
       ) {
@@ -61,6 +64,7 @@ final class OfficeViewersFfiEngine implements OfficeEnginePort {
 
   final _AbiDart _abiVersion;
   final _InspectDart _inspectXlsx;
+  final _InspectDart _inspectPptx;
   final _FreeDart _free;
 
   @override
@@ -71,15 +75,22 @@ final class OfficeViewersFfiEngine implements OfficeEnginePort {
     OfficeFormat format,
     List<int> bytes,
   ) async {
-    if (format != OfficeFormat.sheet) {
-      throw const OfficeViewerException('viewer format is not implemented');
-    }
+    final (operation, schema) = switch (format) {
+      OfficeFormat.sheet => (_inspectXlsx, 'openmuse.office.xlsx-inspection@1'),
+      OfficeFormat.slides => (
+        _inspectPptx,
+        'openmuse.office.pptx-inspection@1',
+      ),
+      _ => throw const OfficeViewerException(
+        'viewer format is not implemented',
+      ),
+    };
     final input = _allocate(bytes);
     try {
-      final payload = _copyAndFree(_inspectXlsx(input.pointer, input.length));
+      final payload = _copyAndFree(operation(input.pointer, input.length));
       final decoded = jsonDecode(utf8.decode(payload));
       if (decoded is! Map<String, dynamic> ||
-          decoded['schema'] != 'openmuse.office.xlsx-inspection@1' ||
+          decoded['schema'] != schema ||
           decoded['profile'] != 'view-only' ||
           decoded['paragraphs'] is! List ||
           decoded['capabilities'] is! List) {
@@ -93,7 +104,7 @@ final class OfficeViewersFfiEngine implements OfficeEnginePort {
         throw const OfficeViewerException('invalid XLSX capability payload');
       }
       return OfficeEngineInspection(
-        format: OfficeFormat.sheet,
+        format: format,
         profile: 'view-only',
         paragraphs: paragraphs.cast<String>().toList(growable: false),
         capabilities: const {OfficeCapability.view},
@@ -109,7 +120,7 @@ final class OfficeViewersFfiEngine implements OfficeEnginePort {
     List<int> originalBytes,
     List<String> paragraphs,
   ) => throw const OfficeViewerException(
-    'original-format export is unavailable for XLSX',
+    'original-format export is unavailable for view engines',
   );
 
   Uint8List _copyAndFree(_NativeViewerBuffer result) {
