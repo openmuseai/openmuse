@@ -60,6 +60,28 @@ void main() {
     expect(find.byKey(const ValueKey('auth.password')), findsNothing);
   });
 
+  testWidgets('email flow requests a code and renders passcode page', (
+    tester,
+  ) async {
+    final controller = _FakeController();
+    await tester.pumpWidget(_app(controller));
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.email')),
+      'muse@example.com',
+    );
+    await tester.tap(find.byKey(const ValueKey('auth.continue-email')));
+    await tester.pump();
+
+    expect(controller.codeRequests, 1);
+    expect(find.byKey(const ValueKey('auth.passcode')), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.passcode')),
+      '123456',
+    );
+    await tester.tap(find.byKey(const ValueKey('auth.submit-passcode')));
+    expect(controller.codeSignIns, 1);
+  });
+
   testWidgets('password submission is disabled while submitting', (
     tester,
   ) async {
@@ -110,11 +132,15 @@ Widget _app(_FakeController controller) => MaterialApp(
 );
 
 final class _FakeController extends ChangeNotifier
-    implements OpenMuseAuthenticationController {
+    implements
+        OpenMuseAuthenticationController,
+        OpenMuseEmailCodeAuthenticationController {
   @override
   OpenMuseAuthenticationSnapshot snapshot =
       const OpenMuseAuthenticationSnapshot.signedOut();
   int signInCalls = 0;
+  int codeRequests = 0;
+  int codeSignIns = 0;
 
   @override
   Future<String?> accessToken({bool forceRefresh = false}) async => null;
@@ -131,6 +157,20 @@ final class _FakeController extends ChangeNotifier
 
   @override
   Future<void> signOut() async {}
+
+  @override
+  Future<void> requestSignInCode(String email) async {
+    codeRequests++;
+    snapshot = const OpenMuseAuthenticationSnapshot(
+      phase: OpenMuseAuthenticationPhase.awaitingPasscode,
+    );
+    notifyListeners();
+  }
+
+  @override
+  Future<void> signInWithCode(String email, String code) async {
+    codeSignIns++;
+  }
 
   void fail(String message) {
     snapshot = OpenMuseAuthenticationSnapshot(

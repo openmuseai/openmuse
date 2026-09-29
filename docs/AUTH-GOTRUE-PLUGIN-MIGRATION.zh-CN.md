@@ -39,7 +39,7 @@
 - 重置数据库中的账号密码。
 - 让客户端绕过 Cloud/BFF 直接访问 DSH Pool 的内部会话状态。
 - 将 refresh token 交给 DSH、Agent 或普通业务插件。
-- 匿名账号合并、注册、找回密码和 magic link 的完整产品化；保留协议与 UI 扩展位，后续独立验收。
+- 匿名账号合并、注册、找回密码和 OAuth 的完整产品化；保留协议与 UI 扩展位，后续独立验收。GoTrue magic-link/passcode 的 `/otp`、`/verify` 核心路径已保留，但邮件投递与 deep-link 的生产配置仍需部署验收。
 
 ## 3. 旧版实现梳理
 

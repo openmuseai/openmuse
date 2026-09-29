@@ -74,6 +74,27 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
   }
 
   @override
+  Future<void> requestSignInCode(String email) async {
+    await _jsonRequest(
+      'POST',
+      '/otp',
+      body: {'email': email.trim(), 'create_user': false},
+      acceptEmpty: true,
+    );
+  }
+
+  @override
+  Future<GoTrueSession> signInWithCode(String email, String code) async {
+    final result = await _jsonRequest(
+      'POST',
+      '/verify',
+      body: {'type': 'email', 'email': email.trim(), 'token': code.trim()},
+      invalidCredentialsOnUnauthorized: true,
+    );
+    return GoTrueSession.fromJson(result, clock: _clock);
+  }
+
+  @override
   Future<GoTrueSession> refresh(String refreshToken) async {
     try {
       final result = await _jsonRequest(

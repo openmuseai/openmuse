@@ -2,6 +2,8 @@ import 'auth_models.dart';
 
 abstract interface class GoTrueAuthProvider {
   Future<GoTrueSession> signInWithPassword(String email, String password);
+  Future<void> requestSignInCode(String email);
+  Future<GoTrueSession> signInWithCode(String email, String code);
   Future<GoTrueSession> refresh(String refreshToken);
   Future<GoTrueUser> currentUser(String accessToken);
   Future<void> logout(String accessToken);

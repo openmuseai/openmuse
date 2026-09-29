@@ -7,7 +7,9 @@ import 'auth_models.dart';
 import 'auth_ports.dart';
 
 final class GoTrueAuthenticationController extends ChangeNotifier
-    implements OpenMuseAuthenticationController {
+    implements
+        OpenMuseAuthenticationController,
+        OpenMuseEmailCodeAuthenticationController {
   GoTrueAuthenticationController({
     required GoTrueAuthProvider provider,
     required AuthSessionStore store,
@@ -75,6 +77,67 @@ final class GoTrueAuthenticationController extends ChangeNotifier
     );
     try {
       final session = await _provider.signInWithPassword(email, password);
+      _setSnapshot(
+        const OpenMuseAuthenticationSnapshot(
+          phase: OpenMuseAuthenticationPhase.bootstrapping,
+        ),
+      );
+      await _bootstrap(session);
+      await _store.write(session);
+      _session = session;
+      _publishAuthenticated(session);
+    } on AuthFailure catch (error) {
+      _publishFailure(error);
+    } catch (_) {
+      _publishFailure(
+        const AuthFailure(
+          AuthFailureKind.bootstrap,
+          'The account workspace could not be initialized.',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<void> requestSignInCode(String email) async {
+    if (_snapshot.phase == OpenMuseAuthenticationPhase.submitting) return;
+    _setSnapshot(
+      const OpenMuseAuthenticationSnapshot(
+        phase: OpenMuseAuthenticationPhase.submitting,
+      ),
+    );
+    try {
+      await _provider.requestSignInCode(email);
+      _setSnapshot(
+        const OpenMuseAuthenticationSnapshot(
+          phase: OpenMuseAuthenticationPhase.awaitingPasscode,
+        ),
+      );
+    } on AuthFailure catch (error) {
+      _publishFailure(error);
+    } catch (_) {
+      _publishFailure(
+        const AuthFailure(
+          AuthFailureKind.server,
+          'The sign-in email could not be sent.',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<void> signInWithCode(String email, String code) async {
+    if (_snapshot.phase == OpenMuseAuthenticationPhase.submitting ||
+        _snapshot.phase == OpenMuseAuthenticationPhase.bootstrapping) {
+      return;
+    }
+    _setSnapshot(
+      const OpenMuseAuthenticationSnapshot(
+        phase: OpenMuseAuthenticationPhase.submitting,
+      ),
+    );
+    try {
+      final session = await _provider.signInWithCode(email, code);
       _setSnapshot(
         const OpenMuseAuthenticationSnapshot(
           phase: OpenMuseAuthenticationPhase.bootstrapping,

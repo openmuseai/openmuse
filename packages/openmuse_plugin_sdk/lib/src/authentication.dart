@@ -5,6 +5,7 @@ enum OpenMuseAuthenticationPhase {
   signedOut,
   submitting,
   bootstrapping,
+  awaitingPasscode,
   authenticated,
   refreshing,
   failure,
@@ -57,6 +58,15 @@ abstract interface class OpenMuseAuthenticationController
   Future<String?> accessToken({bool forceRefresh = false});
 
   Future<void> signOut();
+}
+
+/// Optional email magic-link/passcode capability. Hosts and login surfaces
+/// feature-detect it instead of forcing every authentication provider to
+/// implement GoTrue-specific flows.
+abstract interface class OpenMuseEmailCodeAuthenticationController {
+  Future<void> requestSignInCode(String email);
+
+  Future<void> signInWithCode(String email, String code);
 }
 
 /// Optional, privileged contribution supplied by a built-in authentication

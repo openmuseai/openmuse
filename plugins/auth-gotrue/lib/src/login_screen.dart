@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'login_theme.dart';
 
-enum OpenMuseLoginPage { email, password }
+enum OpenMuseLoginPage { email, password, passcode }
 
 final class OpenMuseLoginScreen extends StatefulWidget {
   const OpenMuseLoginScreen({
@@ -41,21 +43,34 @@ final class _OpenMuseLoginScreenState extends State<OpenMuseLoginScreen> {
   Widget build(BuildContext context) => Theme(
     data: OpenMuseLoginTheme.data(),
     child: Builder(
-      builder: (context) => _page == OpenMuseLoginPage.email
-          ? _EmailPage(
-              controller: _emailController,
-              errorText: _emailError,
-              cloudLabel: widget.cloudLabel,
-              onSettings: widget.onSettings,
-              termsUri: widget.termsUri,
-              privacyUri: widget.privacyUri,
-              onContinue: _continueWithPassword,
-            )
-          : _PasswordPage(
-              authentication: widget.authentication,
-              email: _emailController.text.trim(),
-              onBack: () => setState(() => _page = OpenMuseLoginPage.email),
-            ),
+      builder: (context) => switch (_page) {
+        OpenMuseLoginPage.email => _EmailPage(
+          controller: _emailController,
+          errorText: _emailError,
+          cloudLabel: widget.cloudLabel,
+          onSettings: widget.onSettings,
+          termsUri: widget.termsUri,
+          privacyUri: widget.privacyUri,
+          onContinueWithEmail:
+              widget.authentication is OpenMuseEmailCodeAuthenticationController
+              ? _continueWithEmail
+              : null,
+          onContinueWithPassword: _continueWithPassword,
+        ),
+        OpenMuseLoginPage.password => _PasswordPage(
+          authentication: widget.authentication,
+          email: _emailController.text.trim(),
+          onBack: () => setState(() => _page = OpenMuseLoginPage.email),
+        ),
+        OpenMuseLoginPage.passcode => _PasscodePage(
+          authentication:
+              widget.authentication
+                  as OpenMuseEmailCodeAuthenticationController,
+          listenable: widget.authentication,
+          email: _emailController.text.trim(),
+          onBack: () => setState(() => _page = OpenMuseLoginPage.email),
+        ),
+      },
     ),
   );
 
@@ -70,13 +85,33 @@ final class _OpenMuseLoginScreenState extends State<OpenMuseLoginScreen> {
       _page = OpenMuseLoginPage.password;
     });
   }
+
+  void _continueWithEmail() {
+    final email = _validatedEmail();
+    if (email == null) return;
+    final authentication =
+        widget.authentication as OpenMuseEmailCodeAuthenticationController;
+    setState(() => _page = OpenMuseLoginPage.passcode);
+    unawaited(authentication.requestSignInCode(email));
+  }
+
+  String? _validatedEmail() {
+    final email = _emailController.text.trim();
+    if (!_looksLikeEmail(email)) {
+      setState(() => _emailError = 'Please enter a valid email address.');
+      return null;
+    }
+    setState(() => _emailError = null);
+    return email;
+  }
 }
 
 final class _EmailPage extends StatelessWidget {
   const _EmailPage({
     required this.controller,
     required this.errorText,
-    required this.onContinue,
+    required this.onContinueWithPassword,
+    this.onContinueWithEmail,
     this.cloudLabel,
     this.onSettings,
     this.termsUri,
@@ -85,7 +120,8 @@ final class _EmailPage extends StatelessWidget {
 
   final TextEditingController controller;
   final String? errorText;
-  final VoidCallback onContinue;
+  final VoidCallback onContinueWithPassword;
+  final VoidCallback? onContinueWithEmail;
   final String? cloudLabel;
   final VoidCallback? onSettings;
   final Uri? termsUri;
@@ -126,19 +162,21 @@ final class _EmailPage extends StatelessWidget {
               hintText: 'Please enter your email',
               errorText: errorText,
             ),
-            onSubmitted: (_) => onContinue(),
+            onSubmitted: (_) => onContinueWithPassword(),
           ),
-          const SizedBox(height: OpenMuseLoginSpacing.l),
-          _PrimaryButton(
-            key: const ValueKey('auth.continue-email'),
-            label: 'Continue with email',
-            onPressed: onContinue,
-          ),
+          if (onContinueWithEmail != null) ...[
+            const SizedBox(height: OpenMuseLoginSpacing.l),
+            _PrimaryButton(
+              key: const ValueKey('auth.continue-email'),
+              label: 'Continue with email',
+              onPressed: onContinueWithEmail,
+            ),
+          ],
           const SizedBox(height: OpenMuseLoginSpacing.l),
           _OutlinedButton(
             key: const ValueKey('auth.continue-password'),
             label: 'Continue with password',
-            onPressed: onContinue,
+            onPressed: onContinueWithPassword,
           ),
           const SizedBox(height: OpenMuseLoginSpacing.xxl),
           _Agreement(termsUri: termsUri, privacyUri: privacyUri),
@@ -146,6 +184,100 @@ final class _EmailPage extends StatelessWidget {
       ),
     ),
   );
+}
+
+final class _PasscodePage extends StatefulWidget {
+  const _PasscodePage({
+    required this.authentication,
+    required this.listenable,
+    required this.email,
+    required this.onBack,
+  });
+
+  final OpenMuseEmailCodeAuthenticationController authentication;
+  final OpenMuseAuthenticationController listenable;
+  final String email;
+  final VoidCallback onBack;
+
+  @override
+  State<_PasscodePage> createState() => _PasscodePageState();
+}
+
+final class _PasscodePageState extends State<_PasscodePage> {
+  final _codeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.listenable.addListener(_changed);
+  }
+
+  @override
+  void dispose() {
+    widget.listenable.removeListener(_changed);
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  void _changed() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final snapshot = widget.listenable.snapshot;
+    final busy =
+        snapshot.phase == OpenMuseAuthenticationPhase.submitting ||
+        snapshot.phase == OpenMuseAuthenticationPhase.bootstrapping;
+    final error = snapshot.phase == OpenMuseAuthenticationPhase.failure
+        ? snapshot.failureMessage
+        : null;
+    return _ResponsiveLoginScaffold(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const _LogoTitle(title: 'Check your email'),
+          const SizedBox(height: OpenMuseLoginSpacing.l),
+          Text(
+            'We sent a sign-in link and passcode to ${widget.email}.',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: OpenMuseLoginSpacing.xxl),
+          TextField(
+            key: const ValueKey('auth.passcode'),
+            controller: _codeController,
+            enabled: !busy,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(
+              hintText: 'Enter passcode',
+              errorText: error,
+            ),
+            onSubmitted: busy ? null : (_) => _submit(),
+          ),
+          const SizedBox(height: OpenMuseLoginSpacing.xxl),
+          _PrimaryButton(
+            key: const ValueKey('auth.submit-passcode'),
+            label: busy ? 'Verifying…' : 'Continue',
+            onPressed: busy ? null : _submit,
+            busy: busy,
+          ),
+          const SizedBox(height: OpenMuseLoginSpacing.l),
+          TextButton(
+            key: const ValueKey('auth.back'),
+            onPressed: busy ? null : widget.onBack,
+            child: const Text('Back to login'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submit() {
+    final code = _codeController.text.trim();
+    if (code.isEmpty) return;
+    widget.authentication.signInWithCode(widget.email, code);
+  }
 }
 
 final class _PasswordPage extends StatefulWidget {

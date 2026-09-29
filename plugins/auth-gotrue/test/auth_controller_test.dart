@@ -58,6 +58,31 @@ void main() {
     expect(store.writes, 0);
   });
 
+  test(
+    'email passcode flow requests code then persists verified session',
+    () async {
+      final provider = _FakeProvider(signInResult: session());
+      final store = _RecordingStore();
+      final controller = GoTrueAuthenticationController(
+        provider: provider,
+        store: store,
+        clock: () => now,
+      );
+
+      await controller.requestSignInCode(' muse@example.com ');
+      expect(provider.requestedCodeEmail, ' muse@example.com ');
+      expect(
+        controller.snapshot.phase,
+        OpenMuseAuthenticationPhase.awaitingPasscode,
+      );
+
+      await controller.signInWithCode('muse@example.com', '123456');
+      expect(provider.signInCode, '123456');
+      expect(store.writes, 1);
+      expect(controller.snapshot.isAuthenticated, isTrue);
+    },
+  );
+
   test('restore refreshes a near-expiry session and rotates store', () async {
     final old = session(lifetime: const Duration(seconds: 30));
     final fresh = session(access: 'access-two', refresh: 'refresh-two');
@@ -201,6 +226,8 @@ final class _FakeProvider implements GoTrueAuthProvider {
   final Object? logoutError;
   int refreshCalls = 0;
   String? signInEmail;
+  String? requestedCodeEmail;
+  String? signInCode;
 
   @override
   Future<GoTrueUser> currentUser(String accessToken) async =>
@@ -224,6 +251,18 @@ final class _FakeProvider implements GoTrueAuthProvider {
     String password,
   ) async {
     signInEmail = email;
+    if (signInError != null) throw signInError!;
+    return signInResult!;
+  }
+
+  @override
+  Future<void> requestSignInCode(String email) async {
+    requestedCodeEmail = email;
+  }
+
+  @override
+  Future<GoTrueSession> signInWithCode(String email, String code) async {
+    signInCode = code;
     if (signInError != null) throw signInError!;
     return signInResult!;
   }

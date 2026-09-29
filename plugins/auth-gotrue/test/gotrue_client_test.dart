@@ -107,4 +107,61 @@ void main() {
       expect(captured.toString(), isNot(contains('secret server diagnostic')));
     },
   );
+
+  test(
+    'email passcode requests follow GoTrue otp and verify contracts',
+    () async {
+      final requests = <Map<String, Object?>>[];
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final serving = server.forEach((request) async {
+        final body = jsonDecode(await utf8.decoder.bind(request).join()) as Map;
+        requests.add({
+          'path': request.uri.path,
+          'body': body.cast<String, Object?>(),
+        });
+        if (request.uri.path == '/verify') {
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(
+            jsonEncode({
+              'access_token': 'access-code',
+              'refresh_token': 'refresh-code',
+              'expires_in': 3600,
+              'user': {'id': 'user-1', 'email': 'muse@example.com'},
+            }),
+          );
+        }
+        await request.response.close();
+      });
+      final client = GoTrueHttpClient(
+        config: GoTrueClientConfig(
+          origin: Uri.parse('http://127.0.0.1:${server.port}'),
+          allowInsecureLoopback: true,
+        ),
+      );
+
+      await client.requestSignInCode(' muse@example.com ');
+      final session = await client.signInWithCode(
+        ' muse@example.com ',
+        ' 123456 ',
+      );
+      await server.close(force: true);
+      await serving;
+
+      expect(session.accessToken, 'access-code');
+      expect(requests, [
+        {
+          'path': '/otp',
+          'body': {'email': 'muse@example.com', 'create_user': false},
+        },
+        {
+          'path': '/verify',
+          'body': {
+            'type': 'email',
+            'email': 'muse@example.com',
+            'token': '123456',
+          },
+        },
+      ]);
+    },
+  );
 }
