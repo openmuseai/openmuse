@@ -4,9 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Counts Host popup routes so the Windows WebView2 sibling can hide while a
-/// Flutter dialog (settings, search, menus) is open. WebView2 is parented above
-/// the Flutter view and would otherwise cover those overlays.
+/// Counts modal Host routes. WebView2 is parented above Flutter, so modal
+/// dialogs need the native view hidden. Menus outside the DSH pane do not.
 final class DshNativeOverlay {
   DshNativeOverlay._();
 
@@ -21,7 +20,7 @@ final class DshPopupRouteObserver extends NavigatorObserver {
   static final instance = DshPopupRouteObserver._();
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    if (route is PopupRoute) {
+    if (_coversDsh(route)) {
       DshNativeOverlay.popupRoutes.value++;
     }
   }
@@ -39,16 +38,19 @@ final class DshPopupRouteObserver extends NavigatorObserver {
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     _release(oldRoute);
-    if (newRoute is PopupRoute) {
+    if (_coversDsh(newRoute)) {
       DshNativeOverlay.popupRoutes.value++;
     }
   }
 
   void _release(Route<dynamic>? route) {
-    if (route is! PopupRoute) return;
+    if (!_coversDsh(route)) return;
     if (DshNativeOverlay.popupRoutes.value <= 0) return;
     DshNativeOverlay.popupRoutes.value--;
   }
+
+  bool _coversDsh(Route<dynamic>? route) =>
+      route is PopupRoute && route.barrierColor != null;
 }
 
 final class DshResourceOpenMessage {
