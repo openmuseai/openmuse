@@ -1455,6 +1455,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "openmuse-worker-supervisor"
+version = "0.1.0"
+dependencies = [
+ "openmuse-cli-registry",
+ "openmuse-plugin-protocol",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "openmuse-workspace-sandbox"
 version = "0.1.0"
 dependencies = [

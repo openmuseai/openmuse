@@ -573,6 +573,10 @@ Draft Transaction、内容扫描、expected-base CAS 和崩溃恢复见 [`DRAFT-
 
 ### X5：Dispatcher 与首个 Office Worker
 
+**实施状态：Accepted**（`feature/x5-office-dispatcher-worker`）
+
+稳定 CLI、Supervisor admission 与只读 DOCX worker 见 [`OFFICE-DISPATCHER-WORKER-SUPERVISOR.zh-CN.md`](OFFICE-DISPATCHER-WORKER-SUPERVISOR.zh-CN.md) 和 `scripts/test_worker_supervisor.sh`。
+
 **目标**
 
 只向 Agent 暴露稳定 `office/openmuse` CLI，通过 Supervisor 启动不可直接寻址的 headless worker。

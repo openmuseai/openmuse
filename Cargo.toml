@@ -16,6 +16,7 @@ members = [
   "crates/openmuse-cloud-execution-runtime",
   "crates/openmuse-draft-transaction",
   "crates/openmuse-cli-registry",
+  "crates/openmuse-worker-supervisor",
 ]
 
 [workspace.package]
