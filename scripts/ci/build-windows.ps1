@@ -308,7 +308,10 @@ if (-not $SkipVerify) {
                 'openmuse/dsh/node/node.exe',
                 'openmuse/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js',
                 'data/flutter_assets/packages/openmuse_helix_plugin/assets/engines/helix/hx.exe',
-                'data/flutter_assets/packages/openmuse_helix_plugin/assets/engines/helix/runtime/languages.toml'
+                'data/flutter_assets/packages/openmuse_helix_plugin/assets/engines/helix/runtime/languages.toml',
+                'data/flutter_assets/packages/openmuse_helix_plugin/assets/engines/helix/runtime/grammars/rust.dll',
+                'data/flutter_assets/packages/openmuse_helix_plugin/assets/engines/helix/runtime/grammars/python.dll',
+                'data/flutter_assets/packages/openmuse_helix_plugin/assets/engines/helix/runtime/grammars/javascript.dll'
             )) {
             if ($names -notcontains $required) {
                 throw "the archive is missing $required"

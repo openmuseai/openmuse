@@ -65,6 +65,7 @@ rsync -a --delete-excluded \
   --include='/themes/openmuse_dark.toml' \
   --exclude='*' \
   "$repo_root/plugins/helix/assets/engines/helix/runtime/" "$bundled_helix/runtime/"
+bash "$repo_root/scripts/ci/stage-helix-grammars-macos.sh" "$bundled_helix/runtime"
 test -f "$bundled_helix/runtime/themes/onelight.toml"
 test -f "$bundled_helix/runtime/themes/openmuse_dark.toml"
 test -f "$bundled_helix/config.toml"
