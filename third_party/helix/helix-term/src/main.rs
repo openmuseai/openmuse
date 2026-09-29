@@ -3,6 +3,34 @@ use helix_loader::VERSION_AND_GIT_HASH;
 use helix_term::application::Application;
 use helix_term::args::Args;
 use helix_term::config::{Config, ConfigLoadError};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
+
+fn openmuse_trace(event: &str, start: Instant) {
+    let Ok(path) = std::env::var("OPENMUSE_HELIX_TRACE") else {
+        return;
+    };
+    use std::io::Write;
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+    {
+        let at_unix_ms = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_or(0, |duration| duration.as_millis());
+        let _ = writeln!(
+            file,
+            "{}",
+            serde_json::json!({
+                "at_unix_ms": at_unix_ms,
+                "source": "hx",
+                "event": event,
+                "pid": std::process::id(),
+                "elapsed_ms": start.elapsed().as_millis(),
+            })
+        );
+    }
+}
 
 fn setup_logging(verbosity: u64) -> Result<()> {
     let level = match verbosity {
@@ -43,7 +71,9 @@ fn main() -> Result<()> {
 
 #[tokio::main]
 async fn main_impl() -> Result<i32> {
+    let start = Instant::now();
     let args = Args::parse_args().context("could not parse arguments")?;
+    openmuse_trace("args_parsed", start);
 
     helix_loader::initialize_config_file(args.config_file.clone());
     helix_loader::initialize_log_file(args.log_file.clone());
@@ -148,6 +178,7 @@ FLAGS:
             Config::default()
         }
     };
+    openmuse_trace("config_loaded", start);
 
     let workspace_trust =
         helix_loader::workspace_trust::WorkspaceTrust::new((&config.editor.workspace_trust).into());
@@ -161,10 +192,12 @@ FLAGS:
             let _ = std::io::stdin().read(&mut []);
             helix_core::config::default_lang_loader()
         });
+    openmuse_trace("languages_loaded", start);
 
     // TODO: use the thread local executor to spawn the application task separately from the work pool
     let mut app = Application::new(args, config, lang_loader, workspace_trust)
         .context("unable to start Helix")?;
+    openmuse_trace("application_created", start);
     let mut events = app.event_stream();
 
     let exit_code = app.run(&mut events).await?;

@@ -66,6 +66,29 @@ use arc_swap::{
 pub const DIR_STACK_CAP: usize = 10;
 pub const DEFAULT_AUTO_SAVE_DELAY: u64 = 3000;
 
+fn openmuse_trace_open(event: &str, start: Instant) {
+    let Ok(path) = std::env::var("OPENMUSE_HELIX_TRACE") else {
+        return;
+    };
+    use std::io::Write;
+    if let Ok(mut file) = fs::OpenOptions::new().create(true).append(true).open(path) {
+        let at_unix_ms = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |duration| duration.as_millis());
+        let _ = writeln!(
+            file,
+            "{}",
+            serde_json::json!({
+                "at_unix_ms": at_unix_ms,
+                "source": "hx",
+                "event": event,
+                "pid": std::process::id(),
+                "elapsed_ms": start.elapsed().as_millis(),
+            })
+        );
+    }
+}
+
 fn deserialize_duration_millis<'de, D>(deserializer: D) -> Result<Duration, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -2123,10 +2146,12 @@ impl Editor {
 
     // ??? possible use for integration tests
     pub fn open(&mut self, path: &Path, action: Action) -> Result<DocumentId, DocumentOpenError> {
+        let open_started = Instant::now();
         let path = helix_stdx::path::canonicalize(path);
         let id = self.document_id_by_path(&path);
 
         let id = if let Some(id) = id {
+            openmuse_trace_open("editor_existing_buffer", open_started);
             id
         } else {
             let mut doc = Document::open(
@@ -2136,6 +2161,7 @@ impl Editor {
                 self.config.clone(),
                 self.syn_loader.clone(),
             )?;
+            openmuse_trace_open("editor_document_loaded", open_started);
 
             let diagnostics =
                 Editor::doc_diagnostics(&self.language_servers, &self.diagnostics, &doc);
@@ -2151,6 +2177,7 @@ impl Editor {
             doc.set_version_control_head(
                 self.diff_providers.get_current_head_name(&path, trust_full),
             );
+            openmuse_trace_open("editor_vcs_loaded", open_started);
 
             let id = self.new_document(doc);
             self.launch_language_servers(id);
@@ -2159,11 +2186,13 @@ impl Editor {
                 editor: self,
                 doc: id,
             });
+            openmuse_trace_open("editor_document_ready", open_started);
 
             id
         };
 
         self.switch(id, action);
+        openmuse_trace_open("editor_open_complete", open_started);
 
         Ok(id)
     }
