@@ -84,4 +84,11 @@
 
 - `openmuse-nonmodal.3` 双向控制通道加入请求 ID、目标路径、预期 revision 和明确结果；重复请求/错误目标/过期 revision 均被引擎拒绝。`save`/`flush` 走引擎现有格式化与写入队列并等待落盘 ACK，`undo`/`redo`/`find`/`select_all` 由引擎语义命令直接执行。Host 的版本快照和工作副本比较经插件能力接口先 flush，失败则不创建可能过期的差异。非模态终端的 Cmd/Ctrl+S、F、Z、A 经 Flutter 键盘事件转为上述命令，不注入 PTY 字符。
 - Helix term/view 单元测试 17 + 68 项、终端集成测试 178 项、真实 PTY 控制通道冒烟测试、Helix 插件 10 项、Host 34 项（另 1 项跳过）、SDK 2 项均通过；Helix 子工程 `cargo fmt --check`、各 Flutter 工程 `analyze`、`git diff --check` 通过。
-- 最新 `dist/OpenMuse-macos.zip` SHA-256 为 `5c023ba0198e4bddf10f963473bb0ebb83454a5ad83aae544c9d00c40afc95af`。系统剪贴板、中文 IME、真实 GUI 快捷键焦点与 LSP 跨文件、会话切换时脏 buffer、Windows 实机仍是独立发行门禁，**实验 profile 保持禁用**。
+- 该阶段 `dist/OpenMuse-macos.zip` SHA-256 为 `5c023ba0198e4bddf10f963473bb0ebb83454a5ad83aae544c9d00c40afc95af`；已被后续构建替换。
+
+### 2026-09-28 输入模式切换第四阶段
+
+- 插件设置现显示「Vim 模式」与「VS Code 模式」，由引擎 `openmuse-nonmodal.4` 能力检测决定第二项是否可选，不再依赖开发环境开关。活动会话切换先走认证 `prepare_switch`，保存并检查进程内所有 buffer，随后重启并恢复原有文件会话；失败时尝试恢复原模式。macOS 原生 PTY 测试覆盖两个脏文件的双向切换与落盘。
+- 非模态 Cmd/Ctrl+C/X/V 通过 Flutter 系统剪贴板与引擎语义通道处理；复制只接受真实选区，剪切再核对源文件、revision 与文字，粘贴替换选区。真实 PTY 测试覆盖成功路径和选区不符的拒绝路径。合成中文 IME 测试覆盖“组合期间不输出、提交后只输出一次”。
+- macOS 打包流程在 Release App 构建后强制运行 Helix 插件分析、测试及原生 PTY 切换门禁。**尚不能宣布跨平台可发布**：真实 macOS GUI 输入法/快捷键焦点、LSP 跨文件回归、Windows 包与实机输入/剪贴板仍待验收。
+- 本轮 macOS ZIP：`dist/OpenMuse-macos.zip`，SHA-256 `38009545aed75198975351e4c2e9a2952e87afa52e8b2a32201f183b39835396`；Host 60 项、Helix 插件 14 项通过（Windows PTY 项在 macOS 跳过），Helix term/view 17 + 68 项与 178 项终端集成测试通过，ad-hoc 签名深度校验和 ZIP 完整性通过。Windows 打包脚本已加入随包原生双向切换测试并通过 PowerShell 语法检查，仍需 Windows runner 的实际结果。macOS 包尚无 Developer ID/公证，`spctl --assess` 拒绝，**不是可公开分发的签名包**。

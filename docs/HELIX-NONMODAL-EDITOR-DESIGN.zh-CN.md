@@ -1,6 +1,6 @@
 # Helix 模态与 VS Code 式非模态编辑：引擎级设计
 
-状态：2026-09-26 引擎级原型进入第三阶段，**尚未通过发行门禁，不得称为已交付的 VS Code 模式**。
+状态：2026-09-28 已实现两种模式的设置切换与 macOS 原生 PTY 回归，**尚未通过完整桌面发行门禁**。
 
 ## 当前实现进度
 
@@ -10,17 +10,19 @@
 
 第三阶段 `openmuse-nonmodal.3` 在同一认证通道加入带 request ID、目标绝对路径和预期 revision 的语义命令及结果 ACK。引擎直接执行 `save`/`flush`、`undo`、`redo`、`find`、`select_all`，拒绝重复请求、错误文件和过期 revision；保存复用 Helix 自身的格式化/写入流程，并在异步写入完成后才返回成功。Host 的版本快照和“与当前工作版本比较”先要求插件 flush；无法确认活动 buffer 落盘时终止操作，避免以旧磁盘内容生成误导性差异。Flutter 终端仅在非模态 profile 下把 Cmd/Ctrl+S、F、Z、A 送往语义通道，不通过 PTY 注入 `:write` 等字符。Rust 单元/集成测试、打包二进制的真实 PTY 冒烟测试和 Flutter 协议/工作区测试覆盖了这条链；这些测试不等同于 macOS GUI 输入法和 Windows 实机验收。
 
-当前发行设置中非模态选项仍保持禁用；仅当二进制包含 `openmuse-nonmodal.3` 标记且开发环境显式设置 `OPENMUSE_EXPERIMENTAL_NONMODAL=1` 才能试用。系统剪贴板的复制/剪切/粘贴、中文 IME、真实 GUI 焦点与 Cmd 分发、真实 LSP 跨文件跳转端到端测试、会话切换时脏 buffer 处理及 Windows 实机验收**均未完成**。用户现有 `vscodeKeymap` 只作为旧设置兼容，不会自动升级为非模态。
+第四阶段 `openmuse-nonmodal.4` 在设置中提供「Vim 模式」和「VS Code 模式」，仅当随包引擎报告对应能力时允许切换。运行中切换先通过 `prepare_switch` 保存并验证该进程内**所有** buffer；未命名脏 buffer、写入失败或缺少认证事件均阻止切换。之后重启原有文件会话并恢复活动文件；新模式启动失败则尝试按旧设置恢复。macOS 原生 Flutter/PTY 测试覆盖两个脏文件会话的双向切换及落盘。Cmd/Ctrl+C/X/V 经系统剪贴板和引擎语义命令交互，剪切会校验复制时的文件、revision 和选区文字，真实 PTY 测试覆盖复制、拒绝不匹配的剪切、剪切与粘贴。旧 `vscodeKeymap` 只作历史兼容，不会自动升级为非模态。
+
+这些自动化测试不等于正式发行验收。中文 IME 的真实 macOS GUI 组合输入、快捷键在搜索/补全焦点下的分发、LSP 跨文件跳转与返回，以及 Windows 安装包和输入/剪贴板实机测试仍需完成。当前 macOS 包是 ad-hoc 签名，`spctl --assess` 拒绝，仍需 Developer ID 签名与公证。可以在本地构建中试用「VS Code 模式」，但**不得把目前构建标为已通过跨平台发布门禁**。
 
 ## 为什么仅重映射快捷键不可行
 
 当前插件启动的是随包 `hx` PTY。Helix 默认以 Normal mode 启动；Insert mode 的撤销检查点主要在退出该模式时提交。现有 `vscodeKeymap` 只在 `[keys.insert]` 添加了少量 Ctrl 绑定，仍能通过 Esc 进入 Normal mode，Ctrl+F 在 Normal mode 还是翻页。这会同时呈现两套互相冲突的编辑语义。Helix 官方文档也明确将其定义为模态编辑器；单靠 `config.toml` 不能从引擎根部删除 Normal/Command 状态。
 
-设置现在显示“Helix（模态）”与禁用的“标准非模态（实验）”；旧 `vscodeKeymap` 只读取历史偏好，不再作为一个模式选项。产品发布前须完成以下引擎门禁。
+设置现在显示「Vim 模式」和「VS Code 模式」；旧 `vscodeKeymap` 只读取历史偏好，不再作为一个模式选项。产品发布前须完成以下工程门禁。
 
 ## 目标契约
 
-插件设置引入版本化 `inputProfile`：`helix-modal` 与 `standard-nonmodal`。Host 只持久化 profile 和调度资源 Tab，不解释单个按键。插件声明 profile 能力；安装包未包含通过门禁的非模态引擎时禁用第二项并给出原因，绝不静默回退成混合模式。
+插件设置引入版本化 `inputProfile`：`helix-modal` 与 `standard-nonmodal`。Host 只持久化插件设置和调度资源 Tab，不解释单个按键。插件声明 profile 能力；安装包未包含支持非模态的引擎时禁用第二项并给出原因，绝不静默回退成混合模式。
 
 `standard-nonmodal` 从文件第一帧起直接接受文本输入，无 Normal/Select/Command mode 可由普通键入或 Esc 到达。Esc 只关闭补全、搜索、重命名、命令面板等临时 UI；命令面板由显式快捷键打开，不暴露 `:` 模式。选择、输入、退格、鼠标与多光标遵守常见桌面编辑器语义。
 
@@ -38,7 +40,7 @@
 
 推荐在本仓库维护可审计的 Helix 引擎源码分支，而非继续以终端按键注入模拟非模态。其输入状态机新增 `standard-nonmodal` profile：启动直接进入常驻文本输入；普通字符不经过 Normal mode dispatcher；撤销检查点按输入批次/暂停/命令边界提交；搜索、LSP、重命名、保存使用显式命令分发；为 Host 输出可信的 `activeResourceChanged(uri)`、`dirtyChanged`、`saveCompleted` 事件。PTY ANSI 输出仅用于绘制，不用于猜测活动文件路径。
 
-短期继续用 PTY 绘制。双向结构化通道已经覆盖保存、撤销/重做、查找、全选及比较前 flush；后续还需为系统剪贴板、LSP 导航、搜索框焦点与重命名增加完整语义和 UI 验收。长期可将 Helix core 通过 FFI/IPC 嵌入插件，分离文本核心与终端 UI。非模态 profile 的核心状态和撤销模型必须由引擎实现，Host 只负责标准平台快捷键转成语义命令。不得通过“启动后发送 `i`、屏蔽 Esc、把鼠标动作改成字符序列”作为发行实现。
+短期继续用 PTY 绘制。双向结构化通道已覆盖保存、撤销/重做、查找、全选、复制/剪切/粘贴、比较前 flush 与切换前全 buffer 保存；后续还需为 LSP 导航、搜索框焦点与重命名补齐语义和真实 UI 验收。长期可将 Helix core 通过 FFI/IPC 嵌入插件，分离文本核心与终端 UI。非模态 profile 的核心状态和撤销模型必须由引擎实现，Host 只负责标准平台快捷键转成语义命令。不得通过“启动后发送 `i`、屏蔽 Esc、把鼠标动作改成字符序列”作为发行实现。
 
 若 Helix 源码层的维护成本或协议限制不可接受，替代方案是在同一插件位提供独立 GUI 文本引擎，并共享 Resource/Tab/LSP 契约；此时 UI 应标为“标准编辑器”，不能称为 Helix 非模态。
 
