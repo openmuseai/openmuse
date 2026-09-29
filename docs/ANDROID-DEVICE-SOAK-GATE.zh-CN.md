@@ -44,6 +44,10 @@ OPENMUSE_ANDROID_SERIAL=<serial> ./scripts/test_android_device_soak.sh
 
 该结果只接受 Engineering device gate。由于没有向本次验收提供真实账号和 Cloud DSH，30 分钟 Agent 与 Workspace/Window 切换未执行，Connected product gate 仍为待验收。
 
+在 DOCX Resource transaction 与 editor widget 合入后，2026-09-29T13:01:01Z 又从当前
+累计源码重建同一 digest 的 release APK，ADB 覆盖安装、冷启动、5 次前后台、10 次方向
+变化和 crash/ANR 检查再次 PASS；因此真机当前安装的是最新累计候选，而不是此前的测试 APK。
+
 ## 4. 发布前剩余证据
 
 - 使用同一份候选 artifact 在 phone、tablet、foldable 的支持矩阵重复 gate；
