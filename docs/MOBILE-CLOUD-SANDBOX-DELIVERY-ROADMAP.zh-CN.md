@@ -627,6 +627,10 @@ Fail-closed admission、攻击面测试和审计链见 [`SANDBOX-PRODUCTION-SECU
 
 ### M0：Mobile App Root 与共享 Host Shell
 
+**实施状态：Accepted**（`feature/m0-mobile-app-root`）
+
+共享 shell、Mobile composition 和制品隔离验收见 [`MOBILE-APP-ROOT-HOST-SHELL.zh-CN.md`](MOBILE-APP-ROOT-HOST-SHELL.zh-CN.md) 与 `scripts/test_mobile_app_root.sh`。
+
 **目标**
 
 建立不含 Desktop runtime 的 Mobile 壳，让 Desktop/Mobile composition 在源码依赖层真实分离。

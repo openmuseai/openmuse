@@ -14,6 +14,8 @@ dependencies:
     path: ../../distribution/openmuse_builtin_plugins
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
+  openmuse_host_shell:
+    path: ../../packages/openmuse_host_shell
   openmuse_dsh_plugin:
     path: ../../plugins/dsh-agent
   path: ^1.9.1
