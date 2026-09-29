@@ -231,6 +231,10 @@ effective grants
 
 ### C3：Workspace/Resource Authority v1
 
+**实施状态：已完成**（`feature/c3-workspace-resource-authority`）
+
+Provider port、事务边界与验收入口见 [`WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md`](WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md) 和 `scripts/test_workspace_resource_authority.sh`。
+
 **目标**
 
 建立 Mobile、Storage、Sync、Sandbox 和 Office 共用的资源真源，彻底把绝对 path 限制在 Local Provider 内。

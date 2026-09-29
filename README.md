@@ -44,6 +44,7 @@ Mobile/Cloud/Sandbox delivery roadmap: [`docs/MOBILE-CLOUD-SANDBOX-DELIVERY-ROAD
 Cross-domain contract baseline v1: [`docs/CONTRACT-BASELINE-V1.zh-CN.md`](docs/CONTRACT-BASELINE-V1.zh-CN.md).
 Plugin Manifest v2: [`docs/PLUGIN-MANIFEST-V2.zh-CN.md`](docs/PLUGIN-MANIFEST-V2.zh-CN.md).
 Broker delegation, policy and audit: [`docs/BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md`](docs/BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md).
+Workspace / Resource Authority v1: [`docs/WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md`](docs/WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md).
 
 OpenMuse source uses the repository's AGPL-3.0 `LICENSE`, as selected by the
 project owner. Third-party components retain their own licenses; see
