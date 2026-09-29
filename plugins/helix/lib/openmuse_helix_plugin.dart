@@ -21,7 +21,8 @@ final class OpenMuseHelixPlugin
         OpenMusePlugin,
         OpenMuseSettingsContributor,
         OpenMuseBufferFlushContributor,
-        OpenMuseEditorBannerContributor {
+        OpenMuseEditorBannerContributor,
+        OpenMusePluginLogContributor {
   OpenMuseHelixPlugin({HelixRuntimePool? runtime}) : _runtime = runtime;
 
   HelixRuntimePool? _runtime;
@@ -30,6 +31,53 @@ final class OpenMuseHelixPlugin
     const HelixPreferences(),
   );
   HelixPreferences get currentPreferences => _preferences.value;
+
+  @override
+  Future<String> readLog() async {
+    final runtime = _runtime;
+    final lines = <String>[
+      'Helix 状态: ${runtime?.state.name ?? '未启动'}',
+      if (runtime?.lastError != null) '运行错误: ${runtime!.lastError}',
+      'Rust LS 配置: ${_preferences.value.languageServerPaths['rust-analyzer'] ?? '自动检测'}',
+    ];
+    if (runtime != null) {
+      final config = runtime.generatedLanguagesFile;
+      lines.add('运行配置: ${config.path}');
+      if (await config.exists()) {
+        final content = await config.readAsString();
+        final command = RegExp(
+          r'^command\s*=\s*.+$',
+          multiLine: true,
+        ).firstMatch(content)?.group(0);
+        if (command != null) lines.add('实际 Rust LS: $command');
+      }
+    }
+    final candidates = runtime == null
+        ? <String>[
+            if (Platform.environment['HELIX_LOG'] case final path?) path,
+            if (Platform.environment['LOCALAPPDATA'] case final local?)
+              p.join(local, 'helix', 'helix.log'),
+            if (Platform.environment['HOME'] case final home?)
+              p.join(home, '.cache', 'helix', 'helix.log'),
+          ]
+        : <String>[runtime.logFile.path];
+    for (final path in candidates) {
+      final file = File(path);
+      if (!await file.exists()) continue;
+      final logLines = await file.readAsLines();
+      lines.add('Helix 日志: $path');
+      lines.addAll(
+        logLines.length > 300
+            ? logLines.sublist(logLines.length - 300)
+            : logLines,
+      );
+      break;
+    }
+    if (!lines.any((line) => line.startsWith('Helix 日志:'))) {
+      lines.add('本次 Helix 会话暂无日志。');
+    }
+    return lines.join('\n');
+  }
 
   @override
   final descriptor = const OpenMusePluginDescriptor(
