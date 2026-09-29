@@ -90,6 +90,64 @@ const helixLanguageServers = <HelixLanguageServerSpec>[
 
 enum HelixServerPresence { custom, system, missing }
 
+/// rustup installs proxy commands in Cargo's bin directory. The proxy selects
+/// a toolchain from the opened file's working directory, which may lack the
+/// rust-analyzer component even when the proxy file exists.
+bool isRustupProxyAnalyzer(String path, {String? cargoHome}) {
+  if (p.basename(path).toLowerCase() !=
+      (Platform.isWindows ? 'rust-analyzer.exe' : 'rust-analyzer')) {
+    return false;
+  }
+  final parent = p.normalize(p.dirname(path)).toLowerCase();
+  final home = cargoHome ?? Platform.environment['CARGO_HOME'];
+  if (home != null &&
+      parent == p.normalize(p.join(home, 'bin')).toLowerCase()) {
+    return true;
+  }
+  return p.basename(parent).toLowerCase() == 'bin' &&
+      p.basename(p.dirname(parent)).toLowerCase() == '.cargo';
+}
+
+/// rustup's PATH shim exists even when the selected toolchain has no analyzer.
+/// Resolve an installed component to its real binary so opening a workspace
+/// with a different toolchain override cannot silently break LSP startup.
+Future<String?> resolveRustAnalyzerExecutable() async {
+  try {
+    final toolchains = await Process.run('rustup', ['toolchain', 'list']);
+    if (toolchains.exitCode != 0) return null;
+    final lines = toolchains.stdout.toString().split(RegExp(r'\r?\n'));
+    final names = <String>[
+      for (final line in lines)
+        if (line.contains('(active') || line.contains('(default)'))
+          line.trim().split(' ').first,
+      for (final line in lines)
+        if (line.trim().isNotEmpty &&
+            !line.contains('(active') &&
+            !line.contains('(default)'))
+          line.trim().split(' ').first,
+    ];
+    for (final name in names.toSet()) {
+      final found = await Process.run('rustup', [
+        'which',
+        '--toolchain',
+        name,
+        'rust-analyzer',
+      ]);
+      final path = found.stdout.toString().trim();
+      if (found.exitCode != 0 ||
+          !p.isAbsolute(path) ||
+          !File(path).existsSync()) {
+        continue;
+      }
+      final version = await Process.run(path, ['--version']);
+      if (version.exitCode == 0) return path;
+    }
+  } on ProcessException {
+    // Rust is optional; Helix can still edit files without an LSP.
+  }
+  return null;
+}
+
 final class HelixServerStatus {
   const HelixServerStatus(this.spec, this.presence, this.path);
   final HelixLanguageServerSpec spec;
