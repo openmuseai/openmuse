@@ -15,7 +15,10 @@ export 'src/dsh_sidecar.dart';
 export 'src/dsh_web_view.dart' show DshNativeOverlay, DshPopupRouteObserver;
 
 final class OpenMuseDshPlugin
-    implements OpenMusePlugin, OpenMuseSettingsContributor {
+    implements
+        OpenMusePlugin,
+        OpenMuseSettingsContributor,
+        OpenMusePluginLogContributor {
   OpenMuseDshPlugin({DshSidecarSupervisor? supervisor})
     : _supervisor = supervisor;
 
@@ -24,6 +27,18 @@ final class OpenMuseDshPlugin
   DshWorkspaceSynchronizer? _workspaceSync;
   OpenMusePluginContext? _context;
   final ValueNotifier<String?> _activeMount = ValueNotifier(null);
+
+  @override
+  Future<String> readLog() async {
+    final supervisor = _supervisor;
+    if (supervisor == null) return 'DSH Sidecar 尚未启动。';
+    return [
+      'DSH 状态: ${supervisor.state.name}',
+      if (supervisor.lastError != null) '运行错误: ${supervisor.lastError}',
+      '运行时: ${supervisor.cliPath ?? '未配置'}',
+      ...supervisor.logTail,
+    ].join('\n');
+  }
 
   void _workspaceChanged() {
     final binding = _binding;
