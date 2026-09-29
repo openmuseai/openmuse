@@ -423,6 +423,10 @@ final class HelixRuntimePool extends ChangeNotifier {
       channel?.expectedPid = pty.pid;
       final session = _HelixSession(pty, channel, path);
       session.terminal.onOutput = (data) {
+        HelixOpenTrace.mark('terminal_input', data: {
+          'length': data.runes.length,
+          'printable': data.runes.every((code) => code >= 32 && code != 127),
+        });
         pty.write(Uint8List.fromList(utf8.encode(data)));
       };
       session.terminal.onResize = (width, height, _, _) =>
