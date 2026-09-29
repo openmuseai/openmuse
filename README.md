@@ -46,6 +46,7 @@ Plugin Manifest v2: [`docs/PLUGIN-MANIFEST-V2.zh-CN.md`](docs/PLUGIN-MANIFEST-V2
 Broker delegation, policy and audit: [`docs/BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md`](docs/BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md).
 Workspace / Resource Authority v1: [`docs/WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md`](docs/WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md).
 Distribution lock, SBOM and closure gate: [`docs/DISTRIBUTION-LOCK-SBOM-CLOSURE-GATE.zh-CN.md`](docs/DISTRIBUTION-LOCK-SBOM-CLOSURE-GATE.zh-CN.md).
+BlobStorePort, S3 profile and provider TCK: [`docs/STORAGE-CONTRACT-S3-PROFILE-TCK.zh-CN.md`](docs/STORAGE-CONTRACT-S3-PROFILE-TCK.zh-CN.md).
 
 OpenMuse source uses the repository's AGPL-3.0 `LICENSE`, as selected by the
 project owner. Third-party components retain their own licenses; see

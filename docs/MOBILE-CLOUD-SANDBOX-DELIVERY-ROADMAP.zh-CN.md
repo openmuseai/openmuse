@@ -290,6 +290,10 @@ Provider port、事务边界与验收入口见 [`WORKSPACE-RESOURCE-AUTHORITY-V1
 
 ### ST0：BlobStorePort、S3 Profile 与 Provider TCK
 
+**实施状态：已完成（合同/TCK）**（`feature/st0-storage-contract-tck`）
+
+ABI、reference fake、黑盒场景和统一验收入口见 [`STORAGE-CONTRACT-S3-PROFILE-TCK.zh-CN.md`](STORAGE-CONTRACT-S3-PROFILE-TCK.zh-CN.md) 和 `scripts/test_storage_contract.sh`。真实 AWS S3/MinIO/RustFS snapshot 必须由 ST1 adapter 针对具体环境运行同一 TCK；ST0 不在没有 adapter/凭据时伪造认证。
+
 **目标**
 
 冻结 OpenMuse 实际依赖的 S3 子集，并用黑盒测试替代厂商 feature table。
@@ -304,7 +308,8 @@ Provider port、事务边界与验收入口见 [`WORKSPACE-RESOURCE-AUTHORITY-V1
 
 **验收**
 
-- 三种 Provider 的基础矩阵可重复运行并生成 capability snapshot；
+- reference fake 的完整基础矩阵可重复运行并生成 capability snapshot；
+- 同一 TCK 可直接用于 AWS S3、MinIO、RustFS；三者的真实 snapshot 是 ST1 adapter 集成 Gate；
 - trait 不泄漏 `aws_sdk_s3::ByteStream` 或厂商错误；
 - ETag 不被当作内容 hash；
 - 0B、5MiB 边界、100MiB+、中断/重试都有覆盖。
