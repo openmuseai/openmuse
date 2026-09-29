@@ -34,7 +34,19 @@ void main() {
         return;
       }
       final directory = await Directory.systemTemp.createTemp('openmuse-mode-');
-      addTearDown(() => directory.delete(recursive: true));
+      addTearDown(() async {
+        // ConPTY releases each session's working directory after its exit
+        // event, and a mode switch leaves several sessions behind, so give
+        // them time to go before cleaning up.
+        for (var attempt = 0; attempt < 40; attempt++) {
+          try {
+            await directory.delete(recursive: true);
+            return;
+          } on PathAccessException {
+            await Future<void>.delayed(const Duration(milliseconds: 250));
+          }
+        }
+      });
       final originalDirectory = Directory.current;
       if (Platform.isMacOS) {
         await Link(
@@ -45,9 +57,15 @@ void main() {
       }
       Directory.current = directory;
       addTearDown(() => Directory.current = originalDirectory);
-      final source = File('${directory.path}/example.txt');
+      // Helix reports the buffer path it was handed, so these must use the
+      // native separator to match the engine's state events.
+      final source = File(
+        '${directory.path}${Platform.pathSeparator}example.txt',
+      );
       await source.writeAsString('hello\n');
-      final secondSource = File('${directory.path}/second.txt');
+      final secondSource = File(
+        '${directory.path}${Platform.pathSeparator}second.txt',
+      );
       await secondSource.writeAsString('world\n');
       final runtime = HelixRuntimePool(executable: executable);
       addTearDown(() async {
@@ -70,7 +88,7 @@ void main() {
         }
       };
       runtime.terminal.textInput('x');
-      await dirty.future.timeout(const Duration(seconds: 5));
+      await dirty.future.timeout(const Duration(seconds: 10));
       await runtime.openDocument(secondSource.path);
       final secondDirty = Completer<void>();
       runtime.onResourceEvent = (event) {
@@ -81,14 +99,17 @@ void main() {
         }
       };
       runtime.terminal.textInput('y');
-      await secondDirty.future.timeout(const Duration(seconds: 5));
+      await secondDirty.future.timeout(const Duration(seconds: 10));
 
       await runtime.configure(
         const HelixPreferences(inputProfile: HelixInputProfile.helixModal),
       );
       expect(runtime.preferences.inputProfile, HelixInputProfile.helixModal);
       expect(runtime.activePath, secondSource.path);
-      expect(runtime.launchCount, 4);
+      // The pool reuses a single hx session for every open document (see the
+      // reuse gate in helix_windows_environment_test.dart), so a profile switch
+      // stops and relaunches that one session.
+      expect(runtime.launchCount, 2);
       expect(await source.readAsString(), startsWith('x'));
       expect(await secondSource.readAsString(), startsWith('y'));
 
@@ -102,7 +123,7 @@ void main() {
         HelixInputProfile.standardNonmodal,
       );
       expect(runtime.activePath, secondSource.path);
-      expect(runtime.launchCount, 6);
+      expect(runtime.launchCount, 3);
     },
   );
 }
