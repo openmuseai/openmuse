@@ -1,0 +1,17 @@
+{
+  "protocol": { "name": "openmuse.contract", "major": 1, "minor": 0 },
+  "kind": "request",
+  "requestId": "request.fixture.echo",
+  "actor": { "principalRef": "actor.fixture.user", "kind": "user" },
+  "caller": { "principalRef": "plugin.fixture.agent", "kind": "plugin" },
+  "scope": {
+    "authorityRef": "authority.fixture.tenant",
+    "workspaceRef": "workspace.fixture.primary",
+    "resourceRef": "resource.fixture.report"
+  },
+  "generation": 3,
+  "deadlineAtMs": 1790640000000,
+  "cancellationRef": "cancellation.fixture.echo",
+  "operation": "fixture.echo",
+  "payload": { "message": "hello" }
+}

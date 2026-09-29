@@ -1,0 +1,45 @@
+{
+  "protocol": { "name": "openmuse.contract", "major": 1, "minor": 0 },
+  "descriptor": {
+    "descriptorRef": "descriptor.fixture.report",
+    "generation": 3,
+    "revision": "revision.fixture.3",
+    "issuedAtMs": 1790639900000,
+    "value": { "mediaType": "application.fixture" }
+  },
+  "handle": {
+    "handleRef": "handle.fixture.report",
+    "audience": { "principalRef": "plugin.fixture.agent", "kind": "plugin" },
+    "scope": {
+      "authorityRef": "authority.fixture.tenant",
+      "workspaceRef": "workspace.fixture.primary",
+      "resourceRef": "resource.fixture.report"
+    },
+    "access": ["resource.read"],
+    "generation": 3,
+    "issuedAtMs": 1790639900000,
+    "expiresAtMs": 1790640000000,
+    "state": "active"
+  },
+  "lease": {
+    "leaseRef": "lease.fixture.report",
+    "holder": { "principalRef": "plugin.fixture.agent", "kind": "plugin" },
+    "scope": {
+      "authorityRef": "authority.fixture.tenant",
+      "workspaceRef": "workspace.fixture.primary",
+      "resourceRef": "resource.fixture.report"
+    },
+    "generation": 3,
+    "issuedAtMs": 1790639900000,
+    "expiresAtMs": 1790640000000,
+    "state": "active"
+  },
+  "receipt": {
+    "receiptRef": "receipt.fixture.lifecycle",
+    "requestId": "request.fixture.lifecycle",
+    "generation": 3,
+    "state": "committed",
+    "issuedAtMs": 1790639999000,
+    "effects": ["descriptor.observe"]
+  }
+}

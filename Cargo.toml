@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+  "crates/openmuse-contract",
   "crates/openmuse-plugin-protocol",
   "crates/openmuse-platform-runtime",
 ]

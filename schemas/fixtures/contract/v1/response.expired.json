@@ -1,0 +1,28 @@
+{
+  "protocol": { "name": "openmuse.contract", "major": 1, "minor": 0 },
+  "kind": "response",
+  "requestId": "request.fixture.expired",
+  "actor": { "principalRef": "actor.fixture.user", "kind": "user" },
+  "caller": { "principalRef": "plugin.fixture.agent", "kind": "plugin" },
+  "scope": { "authorityRef": "authority.fixture.tenant", "workspaceRef": "workspace.fixture.primary" },
+  "generation": 3,
+  "deadlineAtMs": 1790640000000,
+  "cancellationRef": "cancellation.fixture.expired",
+  "outcome": {
+    "status": "error",
+    "receipt": {
+      "receiptRef": "receipt.fixture.expired",
+      "requestId": "request.fixture.expired",
+      "generation": 3,
+      "state": "expired",
+      "issuedAtMs": 1790640000000,
+      "effects": []
+    },
+    "error": {
+      "code": "EXPIRED",
+      "message": "the request deadline elapsed before commit",
+      "retryable": false,
+      "details": { "deadlineAtMs": 1790640000000 }
+    }
+  }
+}

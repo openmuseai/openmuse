@@ -126,6 +126,10 @@
 
 ### C0：合同基线、错误词汇与跨语言 Fixtures
 
+**实施状态：已完成**（`feature/c0-contract-baseline`）
+
+实现合同、canonical fixtures 与统一验收入口见 [`CONTRACT-BASELINE-V1.zh-CN.md`](CONTRACT-BASELINE-V1.zh-CN.md) 和 `scripts/test_contract_baseline.sh`。
+
 **目标**
 
 在任何大型实现前冻结跨域 identity、generation、deadline、cancellation、receipt 和错误分类，避免 Dart/Rust/TypeScript/Server 各自创造相似但不兼容的结构。

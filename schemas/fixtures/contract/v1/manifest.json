@@ -1,0 +1,17 @@
+{
+  "protocol": "openmuse.contract",
+  "major": 1,
+  "owner": "OpenMuse Platform Architecture",
+  "schema": "../../../openmuse.contract.v1.schema.json",
+  "schemaSha256": "7d43d49727298097147082316d9662c954e865b731e2e6b9694cbbbdd7be291b",
+  "fixtures": [
+    { "file": "request.success.json", "kind": "request", "expectation": "accept", "generation": 3 },
+    { "file": "response.success.json", "kind": "response", "expectation": "accept", "generation": 3 },
+    { "file": "response.denied.json", "kind": "response", "expectation": "accept", "generation": 3 },
+    { "file": "response.expired.json", "kind": "response", "expectation": "accept", "generation": 3 },
+    { "file": "response.conflict.json", "kind": "response", "expectation": "accept", "generation": 3 },
+    { "file": "response.stale-generation.json", "kind": "response", "expectation": "reject-generation", "generation": 3 },
+    { "file": "request.unknown-major.json", "kind": "request", "expectation": "reject-protocol", "generation": 3 },
+    { "file": "lifecycle.snapshot.json", "kind": "lifecycle", "expectation": "accept" }
+  ]
+}

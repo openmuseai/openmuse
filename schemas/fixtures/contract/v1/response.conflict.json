@@ -1,0 +1,32 @@
+{
+  "protocol": { "name": "openmuse.contract", "major": 1, "minor": 0 },
+  "kind": "response",
+  "requestId": "request.fixture.conflict",
+  "actor": { "principalRef": "actor.fixture.user", "kind": "user" },
+  "caller": { "principalRef": "plugin.fixture.agent", "kind": "plugin" },
+  "scope": {
+    "authorityRef": "authority.fixture.tenant",
+    "workspaceRef": "workspace.fixture.primary",
+    "resourceRef": "resource.fixture.report"
+  },
+  "generation": 3,
+  "deadlineAtMs": 1790640000000,
+  "cancellationRef": "cancellation.fixture.conflict",
+  "outcome": {
+    "status": "error",
+    "receipt": {
+      "receiptRef": "receipt.fixture.conflict",
+      "requestId": "request.fixture.conflict",
+      "generation": 3,
+      "state": "rejected",
+      "issuedAtMs": 1790639999000,
+      "effects": []
+    },
+    "error": {
+      "code": "CONFLICT",
+      "message": "the expected revision is no longer current",
+      "retryable": false,
+      "details": { "currentRevision": "revision.fixture.4" }
+    }
+  }
+}

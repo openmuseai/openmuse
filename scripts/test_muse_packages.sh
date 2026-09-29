@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 packages=(
+  openmuse_contract
   muse_resource_contract
   muse_engine_adapter
   muse_engine_tck
