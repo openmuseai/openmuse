@@ -12,6 +12,7 @@ members = [
   "crates/openmuse-storage-portability",
   "crates/openmuse-storage-qualification",
   "crates/openmuse-workspace-sync",
+  "crates/openmuse-workspace-sandbox",
 ]
 
 [workspace.package]

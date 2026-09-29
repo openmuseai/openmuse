@@ -472,6 +472,10 @@ Fail-closed 判定器、证据账本和长期运行要求见 [`RUSTFS-QUALIFICAT
 
 ### X1：Host Sandbox Service、Lease 与 Local Runtime
 
+**实施状态：Accepted**（`feature/x1-host-sandbox-local-runtime`）
+
+实现与统一验收入口见 [`HOST-SANDBOX-SERVICE-LOCAL-RUNTIME.zh-CN.md`](HOST-SANDBOX-SERVICE-LOCAL-RUNTIME.zh-CN.md) 和 `scripts/test_workspace_sandbox.sh`。
+
 **目标**
 
 建立独立 `workspace.sandbox@1` Service Plugin，并先在 Desktop Local Workspace 跑通，不等待 Cloud/S3。
