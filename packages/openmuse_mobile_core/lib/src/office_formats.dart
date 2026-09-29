@@ -42,6 +42,40 @@ abstract interface class OfficeEnginePort {
   );
 }
 
+/// Dispatches each format to an independently packaged engine. Engines never
+/// receive a fallback format: an absent binding fails closed.
+final class MultiFormatOfficeEngine implements OfficeEnginePort {
+  MultiFormatOfficeEngine(Map<OfficeFormat, OfficeEnginePort> engines)
+    : _engines = Map.unmodifiable(engines) {
+    if (_engines.isEmpty) throw ArgumentError('at least one Office engine');
+  }
+
+  final Map<OfficeFormat, OfficeEnginePort> _engines;
+
+  @override
+  String get abi => 'openmuse-office-router@1';
+
+  Set<OfficeFormat> get formats => Set.unmodifiable(_engines.keys);
+
+  @override
+  Future<OfficeEngineInspection> inspect(OfficeFormat format, List<int> bytes) {
+    final engine = _engines[format];
+    if (engine == null) throw StateError('Office format engine unavailable');
+    return engine.inspect(format, bytes);
+  }
+
+  @override
+  Future<List<int>> exportSimple(
+    OfficeFormat format,
+    List<int> originalBytes,
+    List<String> paragraphs,
+  ) {
+    final engine = _engines[format];
+    if (engine == null) throw StateError('Office format engine unavailable');
+    return engine.exportSimple(format, originalBytes, paragraphs);
+  }
+}
+
 final class OfficeFormatRegistry {
   const OfficeFormatRegistry(this.artifacts);
   final List<OfficeArtifact> artifacts;

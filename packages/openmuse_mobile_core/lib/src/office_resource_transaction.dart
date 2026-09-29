@@ -42,13 +42,14 @@ final class OfficeDocumentSession {
   final List<int> bytes;
 }
 
-/// Coordinates bounded Resource I/O and DOCX export without giving the engine
+/// Coordinates bounded Resource I/O and Office export without giving the engine
 /// a Resource, Workspace, network, account, or storage-provider capability.
 final class OfficeResourceTransaction {
   OfficeResourceTransaction({
     required this.engine,
     required this.ranges,
     required this.commits,
+    this.format = OfficeFormat.word,
     this.audience = 'openmuse-mobile-office',
     this.maxDocumentBytes = 64 * 1024 * 1024,
     this.chunkBytes = 512 * 1024,
@@ -61,6 +62,7 @@ final class OfficeResourceTransaction {
   final OfficeEnginePort engine;
   final ResourceRangePort ranges;
   final OfficeResourceCommitPort commits;
+  final OfficeFormat format;
   final String audience;
   final int maxDocumentBytes;
   final int chunkBytes;
@@ -84,10 +86,10 @@ final class OfficeResourceTransaction {
     if (bytes.length != handle.size) {
       throw StateError('incomplete Office Resource');
     }
-    final inspection = await engine.inspect(OfficeFormat.word, bytes);
-    if (inspection.format != OfficeFormat.word ||
+    final inspection = await engine.inspect(format, bytes);
+    if (inspection.format != format ||
         !inspection.capabilities.contains(OfficeCapability.view)) {
-      throw StateError('DOCX view capability unavailable');
+      throw StateError('Office view capability unavailable');
     }
     return OfficeDocumentSession(
       handle: handle,
@@ -109,15 +111,11 @@ final class OfficeResourceTransaction {
         idempotencyKey.trim().isEmpty ||
         !session.inspection.capabilities.contains(OfficeCapability.edit) ||
         !session.inspection.capabilities.contains(OfficeCapability.export)) {
-      throw StateError('DOCX export not admitted');
+      throw StateError('Office export not admitted');
     }
-    final output = await engine.exportSimple(
-      OfficeFormat.word,
-      session.bytes,
-      paragraphs,
-    );
+    final output = await engine.exportSimple(format, session.bytes, paragraphs);
     if (output.isEmpty || output.length > maxDocumentBytes) {
-      throw StateError('invalid DOCX export');
+      throw StateError('invalid Office export');
     }
     final receipt = await commits.commit(
       resourceRef: session.handle.resourceRef,
@@ -147,10 +145,24 @@ final class OfficeResourceTransaction {
         nowMs >= handle.expiresAtMs ||
         handle.size <= 0 ||
         handle.size > maxDocumentBytes ||
-        (handle.mediaType !=
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document' &&
-            handle.mediaType != 'application/docx')) {
+        !_mediaTypes(format).contains(handle.mediaType)) {
       throw StateError('Office Resource handle denied');
     }
   }
+
+  static Set<String> _mediaTypes(OfficeFormat format) => switch (format) {
+    OfficeFormat.word => const {
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/docx',
+    },
+    OfficeFormat.sheet => const {
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/xlsx',
+    },
+    OfficeFormat.slides => const {
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/pptx',
+    },
+    OfficeFormat.pdf => const {'application/pdf'},
+  };
 }

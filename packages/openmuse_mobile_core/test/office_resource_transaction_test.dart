@@ -132,6 +132,35 @@ void main() {
       );
     },
   );
+
+  test('sheet format admits only sheet media and dispatches sheet', () async {
+    final sheetHandle = ResourceHandle(
+      resourceRef: 'resource:xlsx',
+      revision: 'r1',
+      audience: 'openmuse-mobile-office',
+      generation: 7,
+      expiresAtMs: 2000,
+      size: bytes.length,
+      mediaType:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    final transaction = OfficeResourceTransaction(
+      engine: _Engine(editable: false),
+      ranges: _Ranges(bytes),
+      commits: _Commits(),
+      format: OfficeFormat.sheet,
+    );
+    final session = await transaction.open(
+      sheetHandle,
+      generation: 7,
+      nowMs: 1000,
+    );
+    expect(session.inspection.format, OfficeFormat.sheet);
+    await expectLater(
+      transaction.open(handle, generation: 7, nowMs: 1000),
+      throwsStateError,
+    );
+  });
 }
 
 final class _Ranges implements ResourceRangePort {

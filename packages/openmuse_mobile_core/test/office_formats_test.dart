@@ -86,4 +86,48 @@ void main() {
       );
     },
   );
+
+  test('multi-format engine dispatches exactly and never falls back', () async {
+    final word = _FormatEngine(OfficeFormat.word);
+    final sheet = _FormatEngine(OfficeFormat.sheet);
+    final router = MultiFormatOfficeEngine({
+      OfficeFormat.word: word,
+      OfficeFormat.sheet: sheet,
+    });
+    final inspected = await router.inspect(OfficeFormat.sheet, const [1]);
+    expect(inspected.format, OfficeFormat.sheet);
+    expect(sheet.inspections, 1);
+    expect(word.inspections, 0);
+    expect(() => router.inspect(OfficeFormat.pdf, const [1]), throwsStateError);
+  });
+}
+
+final class _FormatEngine implements OfficeEnginePort {
+  _FormatEngine(this.format);
+  final OfficeFormat format;
+  int inspections = 0;
+
+  @override
+  String get abi => 'test@1';
+
+  @override
+  Future<OfficeEngineInspection> inspect(
+    OfficeFormat requested,
+    List<int> bytes,
+  ) async {
+    inspections++;
+    return OfficeEngineInspection(
+      format: format,
+      profile: 'view-only',
+      paragraphs: const ['value'],
+      capabilities: const {OfficeCapability.view},
+    );
+  }
+
+  @override
+  Future<List<int>> exportSimple(
+    OfficeFormat format,
+    List<int> originalBytes,
+    List<String> paragraphs,
+  ) => throw UnsupportedError('view only');
 }
