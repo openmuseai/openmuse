@@ -20,6 +20,7 @@ members = [
   "crates/openmuse-sandbox-security",
   "crates/openmuse-paired-relay",
   "crates/openmuse-office-docx",
+  "crates/openmuse-office-viewers",
 ]
 
 [workspace.package]

@@ -1618,6 +1618,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "openmuse-office-viewers"
+version = "0.1.0"
+dependencies = [
+ "quick-xml",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "zip",
+]
+
+[[package]]
 name = "openmuse-paired-relay"
 version = "0.1.0"
 dependencies = [
