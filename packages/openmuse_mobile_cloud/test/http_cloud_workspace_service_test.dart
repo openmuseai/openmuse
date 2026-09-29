@@ -93,6 +93,20 @@ void main() {
             'size': 5,
             'mediaType': 'text/plain',
           });
+        case '/v1/resources/list':
+          json({
+            'items': [
+              {
+                'resourceRef': 'resource:docx',
+                'title': 'Document.docx',
+                'revision': 'docx-r1',
+                'size': 3,
+                'mediaType':
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'writable': true,
+              },
+            ],
+          });
         case '/v1/resources/range':
           request.response
             ..statusCode = 200
@@ -207,5 +221,16 @@ void main() {
     expect(receipt.previousRevision, 'r1');
     expect(receipt.newRevision, 'r2');
     expect(requests, ['POST /v1/resources/commit']);
+  });
+
+  test('resource catalog remains revision and generation scoped', () async {
+    final values = await service.listResources(
+      workspaceRef: 'cloud:w1',
+      revision: 'r1',
+      generation: 7,
+    );
+    expect(values.single.resourceRef, 'resource:docx');
+    expect(values.single.mediaType, contains('wordprocessingml'));
+    expect(requests, ['POST /v1/resources/list']);
   });
 }

@@ -38,6 +38,10 @@ Office commit 使用 `POST /v1/resources/commit`：正文是有界
 分别进入专用 header，响应必须是包含 previous/new revision 的 receipt。它不使用
 base64 JSON 扩张大文件，也不向 Engine 暴露 Bearer token。
 
+Resource catalog 使用 `POST /v1/resources/list`，请求必须携带 workspaceRef、当前
+workspace revision 和 generation。响应只形成 `CloudResourceRecord`，不能直接充当读取
+权限；打开时仍必须单独调用 `/v1/resources/handles` 获取 audience-bound 短期 handle。
+
 ## 3. Service-backed TCK
 
 统一入口：
@@ -58,6 +62,8 @@ TCK 同时验证生产拒绝 HTTP origin、缺失 token fail closed、请求顺�
 workspaceRef 与 revision receipt。Flutter widget 测试验证默认制品不再出现 fixture
 账号，以及注入 service 后 catalog 与 Remote DSH session 能到达 Mobile 页面。
 同一 loopback TCK 还验证 DOCX bytes commit 的 header、原始正文和 CAS receipt。
+Resource catalog TCK 另行验证 revision/generation scoped 请求；Flutter E2E 验证 catalog
+条目不能绕过 handle issuance，并走到 receipt-backed DOCX 保存。
 
 ## 4. 尚未被本地测试替代的发布门禁
 

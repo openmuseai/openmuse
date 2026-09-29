@@ -4,6 +4,8 @@ import 'package:openmuse_mobile_cloud/openmuse_mobile_cloud.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 import 'package:openmuse_office_docx/openmuse_office_docx.dart';
 
+import 'docx_editor_screen.dart';
+
 void main() {
   final docxEngine = _loadPackagedDocxEngine();
   runApp(
@@ -39,6 +41,8 @@ OpenMuseHostComposition connectedCloudMobileComposition({
     cloudService: service,
     dshConnector: service,
     resources: service,
+    resourceCatalog: service,
+    officeCommits: service,
     officeEngine: officeEngine ?? _loadPackagedDocxEngine(),
   );
 }
@@ -48,6 +52,8 @@ OpenMuseHostComposition mobileComposition({
   CloudWorkspaceService? cloudService,
   DshRuntimeConnector? dshConnector,
   ResourceRangePort? resources,
+  CloudResourceCatalogPort? resourceCatalog,
+  OfficeResourceCommitPort? officeCommits,
   OfficeEnginePort? officeEngine,
 }) {
   final catalog = _CloudCatalogAdapter(cloudService);
@@ -75,6 +81,9 @@ OpenMuseHostComposition mobileComposition({
         service: cloudService,
         connector: dshConnector,
         resources: resources,
+        resourceCatalog: resourceCatalog,
+        officeEngine: officeEngine,
+        officeCommits: officeCommits,
       );
     },
   );
@@ -141,11 +150,17 @@ final class CloudWorkspaceScreen extends StatefulWidget {
     required this.service,
     required this.connector,
     required this.resources,
+    this.resourceCatalog,
+    this.officeEngine,
+    this.officeCommits,
   });
   final CloudWorkspaceRecord record;
   final CloudWorkspaceService service;
   final DshRuntimeConnector connector;
   final ResourceRangePort resources;
+  final CloudResourceCatalogPort? resourceCatalog;
+  final OfficeEnginePort? officeEngine;
+  final OfficeResourceCommitPort? officeCommits;
 
   @override
   State<CloudWorkspaceScreen> createState() => _CloudWorkspaceScreenState();
@@ -153,7 +168,7 @@ final class CloudWorkspaceScreen extends StatefulWidget {
 
 final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
   late final CloudWorkspaceCoordinator coordinator;
-  late final Future<void> opening;
+  late final Future<List<CloudResourceRecord>> opening;
 
   @override
   void initState() {
@@ -163,13 +178,67 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
       connector: widget.connector,
       resources: widget.resources,
     );
-    opening = coordinator.select(widget.record);
+    opening = coordinator.select(widget.record).then((_) {
+      final catalog = widget.resourceCatalog;
+      if (catalog == null) return const <CloudResourceRecord>[];
+      return catalog.listResources(
+        workspaceRef: widget.record.workspaceRef,
+        revision: widget.record.revision,
+        generation: coordinator.flow.generation,
+      );
+    });
+  }
+
+  bool _isDocx(CloudResourceRecord value) =>
+      value.mediaType ==
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      value.mediaType == 'application/docx';
+
+  Future<void> _openDocx(CloudResourceRecord resource) async {
+    final engine = widget.officeEngine;
+    final commits = widget.officeCommits;
+    if (engine == null || commits == null || !_isDocx(resource)) return;
+    try {
+      final generation = coordinator.flow.generation;
+      final handle = await widget.service.issueResourceHandle(
+        workspaceRef: widget.record.workspaceRef,
+        resourceRef: resource.resourceRef,
+        revision: resource.revision,
+        audience: 'openmuse-mobile-office',
+        generation: generation,
+      );
+      if (!mounted ||
+          handle.resourceRef != resource.resourceRef ||
+          handle.revision != resource.revision ||
+          handle.generation != generation) {
+        throw StateError('late or cross-resource Office handle');
+      }
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => DocxEditorScreen(
+            title: resource.title,
+            handle: handle,
+            engine: engine,
+            ranges: widget.resources,
+            commits: commits,
+            generation: generation,
+            nowMs: () => DateTime.now().millisecondsSinceEpoch,
+          ),
+        ),
+      );
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('DOCX 打开失败')));
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(widget.record.title)),
-    body: FutureBuilder<void>(
+    body: FutureBuilder<List<CloudResourceRecord>>(
       future: opening,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -179,6 +248,7 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
           return const Center(child: Text('Cloud Workspace · Queued'));
         }
         final session = coordinator.presentation.session;
+        final resources = snapshot.data ?? const <CloudResourceRecord>[];
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -198,6 +268,18 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
               Text(
                 '${session.origin}${session.path}',
                 key: const ValueKey('remote-dsh-session'),
+              ),
+            if (resources.isNotEmpty) const Divider(),
+            for (final resource in resources)
+              ListTile(
+                key: ValueKey('resource-${resource.resourceRef}'),
+                title: Text(resource.title),
+                subtitle: Text(resource.mediaType),
+                enabled:
+                    _isDocx(resource) &&
+                    widget.officeEngine != null &&
+                    widget.officeCommits != null,
+                onTap: () => _openDocx(resource),
               ),
           ],
         );

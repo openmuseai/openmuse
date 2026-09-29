@@ -54,6 +54,39 @@ void main() {
     expect(find.text('DSH · binding'), findsOneWidget);
     expect(find.byKey(const ValueKey('remote-dsh-session')), findsOneWidget);
   });
+
+  testWidgets('authorized DOCX catalog route opens and commits by receipt', (
+    tester,
+  ) async {
+    final service = _FakeCloudService();
+    await tester.pumpWidget(
+      OpenMuseHostShell(
+        composition: mobileComposition(
+          session: const MobileAccountSession.authenticated('Test Account'),
+          cloudService: service,
+          dshConnector: service,
+          resources: service,
+          resourceCatalog: service,
+          officeCommits: service,
+          officeEngine: _FakeOfficeEngine(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cloud Project'));
+    await tester.pumpAndSettle();
+    expect(find.text('Document.docx'), findsOneWidget);
+    await tester.tap(find.text('Document.docx'));
+    await tester.pumpAndSettle();
+    expect(find.text('DOCX · simple-text'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const ValueKey('docx-paragraph-0')),
+      'changed',
+    );
+    await tester.tap(find.byKey(const ValueKey('docx-save')));
+    await tester.pumpAndSettle();
+    expect(find.text('已保存 · docx-r2'), findsOneWidget);
+  });
 }
 
 final class _FakeOfficeEngine implements OfficeEnginePort {
@@ -64,18 +97,32 @@ final class _FakeOfficeEngine implements OfficeEnginePort {
   Future<OfficeEngineInspection> inspect(
     OfficeFormat format,
     List<int> bytes,
-  ) => throw UnimplementedError();
+  ) async => const OfficeEngineInspection(
+    format: OfficeFormat.word,
+    profile: 'simple-text',
+    paragraphs: ['original'],
+    capabilities: {
+      OfficeCapability.view,
+      OfficeCapability.edit,
+      OfficeCapability.export,
+    },
+  );
 
   @override
   Future<List<int>> exportSimple(
     OfficeFormat format,
     List<int> originalBytes,
     List<String> paragraphs,
-  ) => throw UnimplementedError();
+  ) async => const [9, 8, 7];
 }
 
 final class _FakeCloudService
-    implements CloudWorkspaceService, DshRuntimeConnector, ResourceRangePort {
+    implements
+        CloudWorkspaceService,
+        CloudResourceCatalogPort,
+        DshRuntimeConnector,
+        ResourceRangePort,
+        OfficeResourceCommitPort {
   @override
   DshPlacement get placement => DshPlacement.cloudRemote;
 
@@ -87,6 +134,23 @@ final class _FakeCloudService
       revision: 'r1',
       writable: true,
       storageState: CloudStorageState.available,
+    ),
+  ];
+
+  @override
+  Future<List<CloudResourceRecord>> listResources({
+    required String workspaceRef,
+    required String revision,
+    required int generation,
+  }) async => const [
+    CloudResourceRecord(
+      resourceRef: 'resource:docx',
+      title: 'Document.docx',
+      revision: 'docx-r1',
+      size: 3,
+      mediaType:
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      writable: true,
     ),
   ];
 
@@ -111,7 +175,16 @@ final class _FakeCloudService
     required String revision,
     required String audience,
     required int generation,
-  }) => throw UnimplementedError();
+  }) async => ResourceHandle(
+    resourceRef: resourceRef,
+    revision: revision,
+    audience: audience,
+    generation: generation,
+    expiresAtMs: DateTime.now().millisecondsSinceEpoch + 60000,
+    size: 3,
+    mediaType:
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  );
 
   @override
   Future<CloudChangeProposal> propose({
@@ -129,5 +202,20 @@ final class _FakeCloudService
 
   @override
   Future<List<int>> read(ResourceHandle handle, int start, int endExclusive) =>
-      throw UnimplementedError();
+      Future.value(const [1, 2, 3].sublist(start, endExclusive));
+
+  @override
+  Future<OfficeResourceCommitReceipt> commit({
+    required String resourceRef,
+    required String expectedRevision,
+    required List<int> bytes,
+    required String idempotencyKey,
+    required int generation,
+  }) async => OfficeResourceCommitReceipt(
+    commitRef: 'commit:docx',
+    resourceRef: resourceRef,
+    previousRevision: expectedRevision,
+    newRevision: 'docx-r2',
+    generation: generation,
+  );
 }

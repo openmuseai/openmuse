@@ -19,6 +19,31 @@ final class CloudWorkspaceRecord {
   final CloudStorageState storageState;
 }
 
+final class CloudResourceRecord {
+  const CloudResourceRecord({
+    required this.resourceRef,
+    required this.title,
+    required this.revision,
+    required this.size,
+    required this.mediaType,
+    required this.writable,
+  });
+  final String resourceRef;
+  final String title;
+  final String revision;
+  final int size;
+  final String mediaType;
+  final bool writable;
+}
+
+abstract interface class CloudResourceCatalogPort {
+  Future<List<CloudResourceRecord>> listResources({
+    required String workspaceRef,
+    required String revision,
+    required int generation,
+  });
+}
+
 final class CloudChangeProposal {
   const CloudChangeProposal({
     required this.proposalRef,

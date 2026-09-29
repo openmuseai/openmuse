@@ -93,13 +93,19 @@ CAS 元数据位于专用 header，Bearer token 仍只属于 adapter。loopback 
 range port 和 commit port。simple-text 文档提供逐段编辑与 receipt-backed 保存；view-only
 文档的输入框只读且根本不渲染保存按钮；打开失败和提交冲突不会伪造成功 revision。
 Widget TCK 已覆盖可编辑保存与复杂文档降级。该组件不自行列举 Workspace 或构造 handle，
-后续只能由通过授权的 Resource catalog 路由进入。
+只能由通过授权的 Resource catalog 路由进入。
+
+该路由现已接通：`CloudResourceCatalogPort` 按 workspace revision + generation 列举资源；
+只有 DOCX、Engine 与 commit capability 同时存在的条目可进入。点击后仍需由
+`CloudWorkspaceService` 换取 audience 为 `openmuse-mobile-office` 的短期 handle，客户端
+再次核对 resourceRef/revision/generation 才导航。Widget E2E 从 Workspace 列表走到 DOCX
+编辑并收到 `docx-r2` receipt；未授权或晚到 handle 没有降级旁路。
 
 ## 6. 剩余门禁
 
 - 将 `.so`/XCFramework 纳入正式 release 签名、SBOM 和 notices；
 - FFI isolate/crash/低内存恢复和更大规模 fuzz/corpus；
-- 将已通过 TCK 的 DOCX editor 接入真实账号下的 Resource catalog 路由与授权 handle；
+- 用真实账号和部署后的 Resource catalog/commit endpoint 重跑同一打开—编辑—保存链；
 - 来自多 Office 版本/字体/语言/损坏样本的扩展 corpus 与视觉分页基线；
 - x86_64 Android（若产品支持）、iOS 签名 archive 和真机性能数据。
 

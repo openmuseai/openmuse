@@ -8,6 +8,7 @@ typedef AccessTokenProvider = Future<String?> Function();
 final class HttpCloudWorkspaceService
     implements
         CloudWorkspaceService,
+        CloudResourceCatalogPort,
         DshRuntimeConnector,
         ResourceRangePort,
         OfficeResourceCommitPort {
@@ -58,6 +59,36 @@ final class HttpCloudWorkspaceService
             storageState: CloudStorageState.values.byName(
               _string(map, 'storageState'),
             ),
+          );
+        })
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<CloudResourceRecord>> listResources({
+    required String workspaceRef,
+    required String revision,
+    required int generation,
+  }) async {
+    final value = await _json(
+      'POST',
+      '/v1/resources/list',
+      body: {
+        'workspaceRef': workspaceRef,
+        'revision': revision,
+        'generation': generation,
+      },
+    );
+    return _list(value, 'items')
+        .map((item) {
+          final map = _map(item, 'resource');
+          return CloudResourceRecord(
+            resourceRef: _string(map, 'resourceRef'),
+            title: _string(map, 'title'),
+            revision: _string(map, 'revision'),
+            size: _integer(map, 'size'),
+            mediaType: _string(map, 'mediaType'),
+            writable: _bool(map, 'writable'),
           );
         })
         .toList(growable: false);
