@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:path/path.dart' as p;
 
+import 'resource_inspector.dart';
+
 enum WorkspaceTabKind { resource, diff }
 
 final class WorkspaceMount {
@@ -88,10 +90,12 @@ final class WorkspaceTab {
   final String id;
   final String title;
   final WorkspaceTabKind kind;
-  final OpenMuseResource resource;
+  OpenMuseResource resource;
   final WorkspaceDiff? diff;
   String? preferredEditorId;
   bool pinned = false;
+  bool inspecting = false;
+  Future<void>? inspection;
 }
 
 /// Host-owned tab state for one editor surface. Workspace/resource authority
@@ -240,12 +244,14 @@ final class LocalWorkspaceController extends ChangeNotifier {
     LocalVersionStore? versionStore,
     WorkspaceMountStore? mountStore,
     Iterable<String> additionalMountPaths = const [],
+    Future<OpenMuseResource> Function(OpenMuseResource)? resourceInspector,
   }) : _versionStore =
            versionStore ??
            LocalVersionStore(
              Directory(p.join(Directory.systemTemp.path, 'openmuse-versions')),
            ),
-       _mountStore = _mountStoreValue(mountStore) {
+       _mountStore = _mountStoreValue(mountStore),
+       _resourceInspector = resourceInspector ?? inspectLocalResource {
     final mount = WorkspaceMount(path: _canonicalMountPath(rootPath));
     mount.root
       ..expanded = true
@@ -275,6 +281,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
   final LocalVersionStore _versionStore;
   Future<void> Function(OpenMuseResource resource)? flushBeforeDiskRead;
   final WorkspaceMountStore? _mountStore;
+  final Future<OpenMuseResource> Function(OpenMuseResource) _resourceInspector;
   final List<WorkspaceMount> _mounts = [];
   final Map<String, WorkspaceEditorGroup> _editorGroups = {};
   final Set<Uri> _favorites = <Uri>{};
@@ -377,10 +384,41 @@ final class LocalWorkspaceController extends ChangeNotifier {
         existing ??
         WorkspaceTab.resource(resource, preferredEditorId: editorId);
     if (editorId != null) tab.preferredEditorId = editorId;
-    if (existing == null) group._tabs.add(tab);
+    if (existing == null) {
+      group._tabs.add(tab);
+      _inspectTab(tab, group);
+    }
     group._activeTab = tab;
     _focusedEditorGroupId = group.id;
     notifyListeners();
+  }
+
+  Future<OpenMuseResource> inspectResource(OpenMuseResource resource) =>
+      _resourceInspector(resource);
+
+  void _inspectTab(WorkspaceTab tab, WorkspaceEditorGroup group) {
+    if (!tab.resource.uri.isScheme('file')) return;
+    tab.inspecting = true;
+    final pending = () async {
+      final inspected = await _resourceInspector(tab.resource);
+      if (_disposed || !group._tabs.contains(tab)) return;
+      tab.resource = inspected;
+      tab.inspecting = false;
+      notifyListeners();
+    }();
+    tab.inspection = pending;
+    unawaited(pending);
+  }
+
+  Future<void> _awaitInspectionsWithin(String path) async {
+    await Future.wait([
+      for (final group in _editorGroups.values)
+        for (final tab in group._tabs)
+          if (tab.resource.uri.isScheme('file') &&
+              (tab.resource.uri.toFilePath() == path ||
+                  p.isWithin(path, tab.resource.uri.toFilePath())))
+            ?tab.inspection,
+    ]);
   }
 
   void activateTab(WorkspaceTab tab, {String? groupId}) {
@@ -611,6 +649,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
         FileSystemEntityType.notFound) {
       throw FileSystemException('目标已存在', target);
     }
+    await _awaitInspectionsWithin(entry.path);
     if (entry.isDirectory) {
       await Directory(entry.path).rename(target);
     } else {
@@ -625,6 +664,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
         _mounts.any((m) => identical(m.root, entry))) {
       throw const FormatException('不能删除工作区根目录');
     }
+    await _awaitInspectionsWithin(entry.path);
     if (entry.isDirectory) {
       await Directory(entry.path).delete(recursive: true);
     } else {
@@ -800,6 +840,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
         )..pinned = tab.pinned;
         group._tabs[index] = replacement;
         if (identical(group._activeTab, tab)) group._activeTab = replacement;
+        _inspectTab(replacement, group);
       }
       group._activeTab ??= group._tabs.lastOrNull;
     }
