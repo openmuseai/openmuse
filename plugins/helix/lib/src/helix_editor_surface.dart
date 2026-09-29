@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:xterm/xterm.dart';
+import 'package:xterm/src/ui/input_map.dart' show keyToTerminalKey;
 
 import 'helix_runtime.dart';
 import 'helix_preferences.dart';
@@ -28,7 +30,67 @@ final class HelixEditorSurface extends StatefulWidget {
 final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
   final GlobalKey<TerminalViewState> _terminalKey =
       GlobalKey<TerminalViewState>();
+  final FocusNode _terminalFocusNode = FocusNode();
+  final FocusNode _windowsInputFocusNode = FocusNode();
+  final TextEditingController _windowsInputController = TextEditingController();
   int _pointerDownButtons = 0;
+  bool _clearingWindowsInput = false;
+
+  void _flushWindowsInput() {
+    if (_clearingWindowsInput || widget.runtime.isSwitching) return;
+    final value = _windowsInputController.value;
+    if (!value.composing.isCollapsed || value.text.isEmpty) return;
+    _clearingWindowsInput = true;
+    _windowsInputController.clear();
+    _clearingWindowsInput = false;
+    HelixOpenTrace.mark(
+      'windows_text_commit',
+      data: {'length': value.text.length},
+    );
+    widget.runtime.terminal.textInput(value.text);
+  }
+
+  bool _handleWindowsHardwareKey(KeyEvent event) {
+    if (!_windowsInputFocusNode.hasPrimaryFocus) return false;
+    if (widget.runtime.isSwitching) return true;
+    if (_handlePlatformShortcut(_windowsInputFocusNode, event) ==
+        KeyEventResult.handled) {
+      return true;
+    }
+    if (event is! KeyDownEvent) return false;
+    if (!_windowsInputController.value.composing.isCollapsed) return false;
+    final logicalKey = event.logicalKey;
+    if (logicalKey == LogicalKeyboardKey.space ||
+        (logicalKey.keyLabel.length == 1 &&
+            !HardwareKeyboard.instance.isControlPressed &&
+            !HardwareKeyboard.instance.isAltPressed)) {
+      return false;
+    }
+    final key = keyToTerminalKey(logicalKey);
+    if (key == null) return false;
+    return widget.runtime.terminal.keyInput(
+      key,
+      ctrl: HardwareKeyboard.instance.isControlPressed,
+      alt: HardwareKeyboard.instance.isAltPressed,
+      shift: HardwareKeyboard.instance.isShiftPressed,
+    );
+  }
+
+  void _focusWindowsInput() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {});
+      _windowsInputFocusNode.requestFocus();
+      scheduleMicrotask(() {
+        if (mounted) {
+          HelixOpenTrace.mark(
+            'windows_text_focus',
+            data: {'input_focus': _windowsInputFocusNode.hasFocus},
+          );
+        }
+      });
+    });
+  }
 
   void _runShortcut(Future<void> Function() action) {
     unawaited(
@@ -64,6 +126,16 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
   }
 
   KeyEventResult _handlePlatformShortcut(FocusNode _, KeyEvent event) {
+    if (Platform.isWindows && event is KeyDownEvent) {
+      HelixOpenTrace.mark(
+        'windows_key_down',
+        data: {
+          'has_character': event.character?.isNotEmpty == true,
+          'input_focus': _windowsInputFocusNode.hasPrimaryFocus,
+          'composing': !_windowsInputController.value.composing.isCollapsed,
+        },
+      );
+    }
     if (widget.runtime.isSwitching) return KeyEventResult.handled;
     if (widget.runtime.preferences.inputProfile !=
             HelixInputProfile.standardNonmodal ||
@@ -181,6 +253,10 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
   @override
   void initState() {
     super.initState();
+    if (Platform.isWindows) {
+      _windowsInputController.addListener(_flushWindowsInput);
+      HardwareKeyboard.instance.addHandler(_handleWindowsHardwareKey);
+    }
     widget.runtime.onFirstOutput = (childPid) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) HelixOpenTrace.mark('first_frame', childPid: childPid);
@@ -192,6 +268,13 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
   @override
   void dispose() {
     widget.runtime.onFirstOutput = null;
+    if (Platform.isWindows) {
+      HardwareKeyboard.instance.removeHandler(_handleWindowsHardwareKey);
+      _windowsInputController.removeListener(_flushWindowsInput);
+    }
+    _windowsInputController.dispose();
+    _windowsInputFocusNode.dispose();
+    _terminalFocusNode.dispose();
     super.dispose();
   }
 
@@ -227,6 +310,13 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
                     if (event.buttons == kSecondaryMouseButton) {
                       _placeCursor(event.position);
                       unawaited(_showContextMenu(event.position));
+                    } else if (event.buttons == kPrimaryMouseButton) {
+                      if (Platform.isWindows) {
+                        _focusWindowsInput();
+                      } else {
+                        _terminalFocusNode.requestFocus();
+                        _terminalKey.currentState?.requestKeyboard();
+                      }
                     }
                   },
                   onPointerUp: (event) {
@@ -246,6 +336,11 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
                   child: TerminalView(
                     widget.runtime.terminal,
                     key: _terminalKey,
+                    focusNode: _terminalFocusNode,
+                    keyboardType: TextInputType.text,
+                    hardwareKeyboardOnly: Platform.isWindows,
+                    readOnly: Platform.isWindows,
+                    alwaysShowCursor: Platform.isWindows,
                     theme: widget.runtime.preferences.terminalTheme,
                     textStyle: widget.runtime.preferences.terminalStyle,
                     keyboardAppearance: widget.runtime.preferences.dark
@@ -257,6 +352,49 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
                 ),
               ),
             ),
+            if (Platform.isWindows)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final cursor = _terminalKey.currentState?.cursorRect;
+                      final left = math.max(0.0, cursor?.left ?? 0.0);
+                      final top = math.max(0.0, cursor?.top ?? 0.0);
+                      return Stack(
+                        children: [
+                          Positioned(
+                            left: math.min(left, constraints.maxWidth - 1),
+                            top: math.min(top, constraints.maxHeight - 1),
+                            width: math.max(
+                              1,
+                              math.min(320, constraints.maxWidth - left),
+                            ),
+                            height: math.max(24, cursor?.height ?? 24),
+                            child: EditableText(
+                              controller: _windowsInputController,
+                              focusNode: _windowsInputFocusNode,
+                              style: widget.runtime.preferences.terminalStyle
+                                  .toTextStyle(
+                                    color: widget
+                                        .runtime
+                                        .preferences
+                                        .terminalTheme
+                                        .foreground,
+                                  ),
+                              cursorColor: Colors.transparent,
+                              backgroundCursorColor: Colors.transparent,
+                              selectionColor: Colors.transparent,
+                              keyboardType: TextInputType.text,
+                              autocorrect: false,
+                              enableSuggestions: false,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
             if (widget.runtime.isSwitching)
               Positioned.fill(
                 child: ColoredBox(
