@@ -1,0 +1,11 @@
+{
+  "schema": "openmuse.sandbox-security-findings@1",
+  "evaluatedAt": "2026-09-29",
+  "scope": "X6 automated engineering gate",
+  "openFindings": [],
+  "releaseRequirements": [
+    "independent penetration test for each production substrate",
+    "capacity and cost limits configured in production",
+    "artifact signing keys held outside the runtime plane"
+  ]
+}

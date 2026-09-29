@@ -1379,6 +1379,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "openmuse-sandbox-security"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+ "url",
+]
+
+[[package]]
 name = "openmuse-storage-contract"
 version = "0.1.0"
 dependencies = [

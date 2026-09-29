@@ -17,6 +17,7 @@ members = [
   "crates/openmuse-draft-transaction",
   "crates/openmuse-cli-registry",
   "crates/openmuse-worker-supervisor",
+  "crates/openmuse-sandbox-security",
 ]
 
 [workspace.package]

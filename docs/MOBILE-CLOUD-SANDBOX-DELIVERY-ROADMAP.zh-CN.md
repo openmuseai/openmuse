@@ -599,6 +599,10 @@ Draft Transaction、内容扫描、expected-base CAS 和崩溃恢复见 [`DRAFT-
 
 ### X6：Sandbox 生产安全与多租户 Gate
 
+**实施状态：Accepted（工程 Gate）**（`feature/x6-sandbox-production-security`）
+
+Fail-closed admission、攻击面测试和审计链见 [`SANDBOX-PRODUCTION-SECURITY-GATE.zh-CN.md`](SANDBOX-PRODUCTION-SECURITY-GATE.zh-CN.md) 与 `scripts/test_sandbox_security_gate.sh`。
+
 **目标**
 
 把“任意程序执行”从功能 PoC 提升为可上线边界。
