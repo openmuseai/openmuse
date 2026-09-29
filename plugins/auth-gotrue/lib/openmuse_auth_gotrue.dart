@@ -5,3 +5,5 @@ export 'src/auth_models.dart';
 export 'src/auth_plugin.dart';
 export 'src/auth_ports.dart';
 export 'src/gotrue_client.dart';
+export 'src/login_screen.dart';
+export 'src/login_theme.dart';

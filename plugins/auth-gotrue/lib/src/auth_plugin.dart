@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
+import 'login_screen.dart';
+
 final class OpenMuseGoTruePlugin
     implements OpenMusePlugin, OpenMuseAuthenticationContributor {
-  OpenMuseGoTruePlugin({required this.authentication});
+  OpenMuseGoTruePlugin({
+    required this.authentication,
+    this.cloudLabel,
+    this.onSettings,
+    this.termsUri,
+    this.privacyUri,
+  });
 
   @override
   final OpenMuseAuthenticationController authentication;
+  final String? cloudLabel;
+  final VoidCallback? onSettings;
+  final Uri? termsUri;
+  final Uri? privacyUri;
 
   @override
   final descriptor = const OpenMusePluginDescriptor(
@@ -37,7 +49,13 @@ final class OpenMuseGoTruePlugin
       if (snapshot.phase == OpenMuseAuthenticationPhase.restoring) {
         return const Center(child: CircularProgressIndicator());
       }
-      return const Center(child: Text('Sign in to OpenMuse'));
+      return OpenMuseLoginScreen(
+        authentication: authentication,
+        cloudLabel: cloudLabel,
+        onSettings: onSettings,
+        termsUri: termsUri,
+        privacyUri: privacyUri,
+      );
     },
   );
 
