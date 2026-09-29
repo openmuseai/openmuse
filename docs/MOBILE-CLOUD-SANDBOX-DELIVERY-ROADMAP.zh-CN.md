@@ -523,6 +523,10 @@ Runtime pool、同执行世界 Provider TCK 与验收入口见 [`CLOUD-EXECUTION
 
 ### X3：Draft、Checkpoint、Quiescence 与恢复
 
+**实施状态：Accepted**（`feature/x3-draft-checkpoint-recovery`）
+
+Draft Transaction、内容扫描、expected-base CAS 和崩溃恢复见 [`DRAFT-CHECKPOINT-QUIESCENCE-RECOVERY.zh-CN.md`](DRAFT-CHECKPOINT-QUIESCENCE-RECOVERY.zh-CN.md) 与 `scripts/test_draft_checkpoint.sh`。
+
 **目标**
 
 让 Bash 任意文件修改可以安全转成 Workspace Revision，而不是依赖不可靠 watcher 或每命令自动上传。

@@ -1336,6 +1336,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "openmuse-draft-transaction"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+]
+
+[[package]]
 name = "openmuse-platform-runtime"
 version = "0.1.0"
 dependencies = [
