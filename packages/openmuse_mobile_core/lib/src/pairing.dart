@@ -35,6 +35,39 @@ final class DevicePublicIdentity {
   final Uint8List agreementPublic;
 }
 
+final class SignedDeviceOffer {
+  SignedDeviceOffer({
+    required this.accountRef,
+    required this.deviceRef,
+    required Uint8List signingPublic,
+    required Uint8List agreementPublic,
+    required Uint8List nonce,
+    required this.registrationGeneration,
+    required Uint8List signature,
+  }) : signingPublic = Uint8List.fromList(signingPublic),
+       agreementPublic = Uint8List.fromList(agreementPublic),
+       nonce = Uint8List.fromList(nonce),
+       signature = Uint8List.fromList(signature) {
+    if (accountRef.isEmpty ||
+        deviceRef.isEmpty ||
+        this.signingPublic.length != 32 ||
+        this.agreementPublic.length != 32 ||
+        this.nonce.length != 32 ||
+        this.signature.length != 64 ||
+        registrationGeneration <= 0) {
+      throw ArgumentError('invalid signed device offer');
+    }
+  }
+
+  final String accountRef;
+  final String deviceRef;
+  final Uint8List signingPublic;
+  final Uint8List agreementPublic;
+  final Uint8List nonce;
+  final int registrationGeneration;
+  final Uint8List signature;
+}
+
 /// Platform-owned device-key storage. No method returns seed/private material.
 /// Cryptographic operations must be added behind the same native boundary.
 abstract interface class DeviceKeyStorePort {
@@ -43,6 +76,12 @@ abstract interface class DeviceKeyStorePort {
     required String deviceRef,
   });
   Future<DevicePublicIdentity> publicIdentity(String keyRef);
+  Future<SignedDeviceOffer> issueOffer({
+    required String keyRef,
+    required String accountRef,
+    required String deviceRef,
+    required int registrationGeneration,
+  });
   Future<void> delete(String keyRef);
 }
 

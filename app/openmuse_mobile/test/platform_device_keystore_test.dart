@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_mobile/platform_device_keystore.dart';
@@ -79,5 +81,30 @@ void main() {
           },
         );
     await expectLater(store.publicIdentity('device-key:abc'), throwsStateError);
+  });
+
+  test('signed offer is strictly decoded without secret fields', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          expect(call.method, 'issueOffer');
+          return jsonEncode({
+            'accountRef': 'account:a',
+            'deviceRef': 'mobile:1',
+            'signingPublic': List.filled(32, 1),
+            'agreementPublic': List.filled(32, 2),
+            'nonce': List.filled(32, 3),
+            'registrationGeneration': 4,
+            'signature': List.filled(64, 5),
+          });
+        });
+    final offer = await store.issueOffer(
+      keyRef: 'device-key:abc',
+      accountRef: 'account:a',
+      deviceRef: 'mobile:1',
+      registrationGeneration: 4,
+    );
+    expect(offer.accountRef, 'account:a');
+    expect(offer.signature, hasLength(64));
+    expect(offer.registrationGeneration, 4);
   });
 }

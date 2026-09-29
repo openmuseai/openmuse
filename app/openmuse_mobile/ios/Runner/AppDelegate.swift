@@ -17,6 +17,29 @@ private func openMusePairedDevicePublic(
   _ outputLength: Int
 ) -> Int32
 
+private struct OpenMusePairedBuffer {
+  var ptr: UnsafeMutablePointer<UInt8>?
+  var len: Int
+  var capacity: Int
+  var status: Int32
+}
+
+@_silgen_name("openmuse_paired_issue_offer")
+private func openMusePairedIssueOffer(
+  _ seed: UnsafePointer<UInt8>?,
+  _ seedLength: Int,
+  _ accountRef: UnsafePointer<UInt8>?,
+  _ accountRefLength: Int,
+  _ deviceRef: UnsafePointer<UInt8>?,
+  _ deviceRefLength: Int,
+  _ nonce: UnsafePointer<UInt8>?,
+  _ nonceLength: Int,
+  _ registrationGeneration: UInt64
+) -> OpenMusePairedBuffer
+
+@_silgen_name("openmuse_paired_buffer_free")
+private func openMusePairedBufferFree(_ buffer: OpenMusePairedBuffer)
+
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
@@ -58,6 +81,16 @@ private enum DeviceKeyStoreBridge {
           case "publicIdentity":
             let arguments = try dictionary(call.arguments)
             result(try publicIdentity(keyRef: try reference(arguments["keyRef"])))
+          case "issueOffer":
+            let arguments = try dictionary(call.arguments)
+            result(
+              try issueOffer(
+                keyRef: try reference(arguments["keyRef"]),
+                accountRef: try reference(arguments["accountRef"]),
+                deviceRef: try reference(arguments["deviceRef"]),
+                registrationGeneration: try generation(arguments["registrationGeneration"])
+              )
+            )
           default:
             result(FlutterMethodNotImplemented)
           }
@@ -74,6 +107,76 @@ private enum DeviceKeyStoreBridge {
   }
 
   private static func publicIdentity(keyRef: String) throws -> [String: Any] {
+    try withDeviceSeed(keyRef: keyRef) { seed in
+      var output = [UInt8](repeating: 0, count: 64)
+      defer {
+        output.withUnsafeMutableBytes { buffer in
+          buffer.initializeMemory(as: UInt8.self, repeating: 0)
+        }
+      }
+      let status = seed.withUnsafeBytes { seedBuffer in
+        output.withUnsafeMutableBytes { outputBuffer in
+          openMusePairedDevicePublic(
+            seedBuffer.bindMemory(to: UInt8.self).baseAddress,
+            seedBuffer.count,
+            outputBuffer.bindMemory(to: UInt8.self).baseAddress,
+            outputBuffer.count
+          )
+        }
+      }
+      guard status == 0 else { throw KeyStoreError.operation }
+      return [
+        "signingPublic": Data(output[0..<32]),
+        "agreementPublic": Data(output[32..<64]),
+      ]
+    }
+  }
+
+  private static func issueOffer(
+    keyRef: String,
+    accountRef: String,
+    deviceRef: String,
+    registrationGeneration: UInt64
+  ) throws -> String {
+    var nonce = Data(count: 32)
+    guard nonce.withUnsafeMutableBytes({ buffer in
+      SecRandomCopyBytes(kSecRandomDefault, buffer.count, buffer.baseAddress!)
+    }) == errSecSuccess else { throw KeyStoreError.operation }
+    defer { nonce.resetBytes(in: 0..<nonce.count) }
+    let account = Data(accountRef.utf8)
+    let device = Data(deviceRef.utf8)
+    return try withDeviceSeed(keyRef: keyRef) { seed in
+      let buffer = seed.withUnsafeBytes { seedBuffer in
+        account.withUnsafeBytes { accountBuffer in
+          device.withUnsafeBytes { deviceBuffer in
+            nonce.withUnsafeBytes { nonceBuffer in
+              openMusePairedIssueOffer(
+                seedBuffer.bindMemory(to: UInt8.self).baseAddress,
+                seedBuffer.count,
+                accountBuffer.bindMemory(to: UInt8.self).baseAddress,
+                accountBuffer.count,
+                deviceBuffer.bindMemory(to: UInt8.self).baseAddress,
+                deviceBuffer.count,
+                nonceBuffer.bindMemory(to: UInt8.self).baseAddress,
+                nonceBuffer.count,
+                registrationGeneration
+              )
+            }
+          }
+        }
+      }
+      defer { openMusePairedBufferFree(buffer) }
+      guard buffer.status == 0, let pointer = buffer.ptr,
+        let value = String(bytes: UnsafeBufferPointer(start: pointer, count: buffer.len), encoding: .utf8)
+      else { throw KeyStoreError.operation }
+      return value
+    }
+  }
+
+  private static func withDeviceSeed<T>(
+    keyRef: String,
+    operation: (Data) throws -> T
+  ) throws -> T {
     try validateKeyRef(keyRef)
     let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
@@ -89,28 +192,7 @@ private enum DeviceKeyStoreBridge {
       seed.count == 32
     else { throw KeyStoreError.operation }
     defer { seed.resetBytes(in: 0..<seed.count) }
-
-    var output = [UInt8](repeating: 0, count: 64)
-    defer {
-      output.withUnsafeMutableBytes { buffer in
-        buffer.initializeMemory(as: UInt8.self, repeating: 0)
-      }
-    }
-    let status = seed.withUnsafeBytes { seedBuffer in
-      output.withUnsafeMutableBytes { outputBuffer in
-        openMusePairedDevicePublic(
-          seedBuffer.bindMemory(to: UInt8.self).baseAddress,
-          seedBuffer.count,
-          outputBuffer.bindMemory(to: UInt8.self).baseAddress,
-          outputBuffer.count
-        )
-      }
-    }
-    guard status == 0 else { throw KeyStoreError.operation }
-    return [
-      "signingPublic": Data(output[0..<32]),
-      "agreementPublic": Data(output[32..<64]),
-    ]
+    return try operation(seed)
   }
 
   private static func ensure(accountRef: String, deviceRef: String) throws -> [String: Any] {
@@ -187,6 +269,12 @@ private enum DeviceKeyStoreBridge {
       !result.contains("\0")
     else { throw KeyStoreError.invalid }
     return result
+  }
+
+  private static func generation(_ value: Any?) throws -> UInt64 {
+    guard let number = value as? NSNumber, number.int64Value > 0
+    else { throw KeyStoreError.invalid }
+    return number.uint64Value
   }
 
   private enum KeyStoreError: Error { case invalid, operation }

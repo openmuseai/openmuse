@@ -1626,6 +1626,7 @@ dependencies = [
  "hkdf",
  "jni",
  "serde",
+ "serde_json",
  "sha2",
  "thiserror 2.0.20",
  "x25519-dalek",

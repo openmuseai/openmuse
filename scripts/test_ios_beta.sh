@@ -44,6 +44,8 @@ nm -gU "$app/Runner" | grep -q '_openmuse_docx_abi_version'
 nm -gU "$app/Runner" | grep -q '_openmuse_docx_inspect'
 nm -gU "$app/Runner" | grep -q '_openmuse_paired_abi_version'
 nm -gU "$app/Runner" | grep -q '_openmuse_paired_device_public'
+nm -gU "$app/Runner" | grep -q '_openmuse_paired_issue_offer'
+nm -gU "$app/Runner" | grep -q '_openmuse_paired_buffer_free'
 
 if codesign --verify --deep --strict "$app" 2>"$evidence_dir/codesign.txt"; then
   echo "The no-codesign artifact unexpectedly has a valid signature" >&2

@@ -19,6 +19,7 @@ use zeroize::Zeroize;
 pub const MAX_RELAY_CIPHERTEXT_BYTES: usize = 64 * 1024 + 16;
 pub const ABI_VERSION: u32 = 1;
 pub const DEVICE_PUBLIC_BYTES: usize = 64;
+pub const MAX_PLATFORM_REF_BYTES: usize = 256;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -116,6 +117,57 @@ pub fn device_public_from_seed(mut seed: [u8; 32]) -> [u8; DEVICE_PUBLIC_BYTES] 
     output
 }
 
+pub fn issue_pairing_offer_from_seed(
+    mut seed: [u8; 32],
+    account_ref: &str,
+    device_ref: &str,
+    nonce: [u8; 32],
+    registration_generation: u64,
+) -> Result<PairingOffer, PairedRelayError> {
+    if account_ref.contains('\0')
+        || device_ref.contains('\0')
+        || account_ref.len() > MAX_PLATFORM_REF_BYTES
+        || device_ref.len() > MAX_PLATFORM_REF_BYTES
+    {
+        seed.zeroize();
+        return Err(PairedRelayError::InvalidOffer);
+    }
+    let keys = DeviceKeyPair::from_seed(seed);
+    seed.zeroize();
+    PairingOffer::issue(
+        &keys,
+        account_ref,
+        device_ref,
+        nonce,
+        registration_generation,
+    )
+}
+
+#[repr(C)]
+pub struct OpenMusePairedBuffer {
+    pub ptr: *mut u8,
+    pub len: usize,
+    pub capacity: usize,
+    pub status: i32,
+}
+
+impl OpenMusePairedBuffer {
+    fn from_vec(mut bytes: Vec<u8>, status: i32) -> Self {
+        let result = Self {
+            ptr: bytes.as_mut_ptr(),
+            len: bytes.len(),
+            capacity: bytes.capacity(),
+            status,
+        };
+        std::mem::forget(bytes);
+        result
+    }
+
+    fn failure(message: &str) -> Self {
+        Self::from_vec(message.as_bytes().to_vec(), 1)
+    }
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn openmuse_paired_abi_version() -> u32 {
     ABI_VERSION
@@ -151,6 +203,73 @@ pub unsafe extern "C" fn openmuse_paired_device_public(
     .unwrap_or(2)
 }
 
+#[unsafe(no_mangle)]
+/// Issue a signed pairing offer while keeping the device seed native-only.
+///
+/// # Safety
+/// Every pointer must reference its declared readable length for this call.
+/// The returned buffer must be freed exactly once with
+/// [`openmuse_paired_buffer_free`].
+pub unsafe extern "C" fn openmuse_paired_issue_offer(
+    seed: *const u8,
+    seed_len: usize,
+    account_ref: *const u8,
+    account_ref_len: usize,
+    device_ref: *const u8,
+    device_ref_len: usize,
+    nonce: *const u8,
+    nonce_len: usize,
+    registration_generation: u64,
+) -> OpenMusePairedBuffer {
+    match std::panic::catch_unwind(|| {
+        if seed.is_null()
+            || account_ref.is_null()
+            || device_ref.is_null()
+            || nonce.is_null()
+            || seed_len != 32
+            || nonce_len != 32
+            || account_ref_len == 0
+            || device_ref_len == 0
+            || account_ref_len > MAX_PLATFORM_REF_BYTES
+            || device_ref_len > MAX_PLATFORM_REF_BYTES
+        {
+            return Err(PairedRelayError::InvalidOffer);
+        }
+        let account_ref = std::str::from_utf8(unsafe {
+            std::slice::from_raw_parts(account_ref, account_ref_len)
+        })
+        .map_err(|_| PairedRelayError::InvalidOffer)?;
+        let device_ref =
+            std::str::from_utf8(unsafe { std::slice::from_raw_parts(device_ref, device_ref_len) })
+                .map_err(|_| PairedRelayError::InvalidOffer)?;
+        let mut owned_seed = [0_u8; 32];
+        owned_seed.copy_from_slice(unsafe { std::slice::from_raw_parts(seed, seed_len) });
+        let mut owned_nonce = [0_u8; 32];
+        owned_nonce.copy_from_slice(unsafe { std::slice::from_raw_parts(nonce, nonce_len) });
+        let offer_result = issue_pairing_offer_from_seed(
+            owned_seed,
+            account_ref,
+            device_ref,
+            owned_nonce,
+            registration_generation,
+        );
+        owned_seed.zeroize();
+        let offer = offer_result?;
+        serde_json::to_vec(&offer).map_err(|_| PairedRelayError::CryptoFailure)
+    }) {
+        Ok(Ok(bytes)) => OpenMusePairedBuffer::from_vec(bytes, 0),
+        Ok(Err(error)) => OpenMusePairedBuffer::failure(&error.to_string()),
+        Err(_) => OpenMusePairedBuffer::failure("paired operation panic contained"),
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn openmuse_paired_buffer_free(buffer: OpenMusePairedBuffer) {
+    if !buffer.ptr.is_null() {
+        unsafe { drop(Vec::from_raw_parts(buffer.ptr, buffer.len, buffer.capacity)) };
+    }
+}
+
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_io_openmuse_openmuse_1mobile_PairedCryptoNative_devicePublic(
@@ -170,6 +289,48 @@ pub extern "system" fn Java_io_openmuse_openmuse_1mobile_PairedCryptoNative_devi
         let public = device_public_from_seed(owned_seed);
         owned_seed.zeroize();
         env.byte_array_from_slice(&public)
+            .ok()
+            .map(jni::objects::JByteArray::into_raw)
+    }));
+    result.ok().flatten().unwrap_or(std::ptr::null_mut())
+}
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_io_openmuse_openmuse_1mobile_PairedCryptoNative_issueOffer(
+    mut env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+    seed: jni::objects::JByteArray,
+    account_ref: jni::objects::JString,
+    device_ref: jni::objects::JString,
+    nonce: jni::objects::JByteArray,
+    registration_generation: jni::sys::jlong,
+) -> jni::sys::jbyteArray {
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let account: String = env.get_string(&account_ref).ok()?.into();
+        let device: String = env.get_string(&device_ref).ok()?.into();
+        let mut seed_bytes = env.convert_byte_array(&seed).ok()?;
+        let nonce_bytes = env.convert_byte_array(&nonce).ok()?;
+        if seed_bytes.len() != 32 || nonce_bytes.len() != 32 || registration_generation <= 0 {
+            seed_bytes.zeroize();
+            return None;
+        }
+        let mut owned_seed = [0_u8; 32];
+        owned_seed.copy_from_slice(&seed_bytes);
+        seed_bytes.zeroize();
+        let mut owned_nonce = [0_u8; 32];
+        owned_nonce.copy_from_slice(&nonce_bytes);
+        let offer_result = issue_pairing_offer_from_seed(
+            owned_seed,
+            &account,
+            &device,
+            owned_nonce,
+            registration_generation as u64,
+        );
+        owned_seed.zeroize();
+        let offer = offer_result.ok()?;
+        let json = serde_json::to_vec(&offer).ok()?;
+        env.byte_array_from_slice(&json)
             .ok()
             .map(jni::objects::JByteArray::into_raw)
     }));

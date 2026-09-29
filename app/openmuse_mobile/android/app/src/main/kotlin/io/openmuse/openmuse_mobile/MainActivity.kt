@@ -51,6 +51,15 @@ private class DeviceKeyStoreBridge(context: Context) {
                     "publicIdentity" -> result.success(
                         publicIdentity(requireRef(call.argument<String>("keyRef"))),
                     )
+                    "issueOffer" -> result.success(
+                        issueOffer(
+                            requireRef(call.argument<String>("keyRef")),
+                            requireRef(call.argument<String>("accountRef")),
+                            requireRef(call.argument<String>("deviceRef")),
+                            call.argument<Number>("registrationGeneration")?.toLong()
+                                ?: error("registration generation is missing"),
+                        ),
+                    )
                     else -> result.notImplemented()
                 }
             } catch (error: Exception) {
@@ -60,6 +69,50 @@ private class DeviceKeyStoreBridge(context: Context) {
     }
 
     private fun publicIdentity(keyRef: String): Map<String, ByteArray> {
+        return withDeviceSeed(keyRef) { seed ->
+            val public = PairedCryptoNative.devicePublic(seed)
+                ?: error("public identity derivation failed")
+            try {
+                require(public.size == 64)
+                mapOf(
+                    "signingPublic" to public.copyOfRange(0, 32),
+                    "agreementPublic" to public.copyOfRange(32, 64),
+                )
+            } finally {
+                public.fill(0)
+            }
+        }
+    }
+
+    private fun issueOffer(
+        keyRef: String,
+        accountRef: String,
+        deviceRef: String,
+        registrationGeneration: Long,
+    ): String {
+        require(registrationGeneration > 0)
+        val nonce = ByteArray(32).also(SecureRandom()::nextBytes)
+        return try {
+            withDeviceSeed(keyRef) { seed ->
+                val json = PairedCryptoNative.issueOffer(
+                    seed,
+                    accountRef,
+                    deviceRef,
+                    nonce,
+                    registrationGeneration,
+                ) ?: error("pairing offer operation failed")
+                try {
+                    json.toString(Charsets.UTF_8)
+                } finally {
+                    json.fill(0)
+                }
+            }
+        } finally {
+            nonce.fill(0)
+        }
+    }
+
+    private fun <T> withDeviceSeed(keyRef: String, operation: (ByteArray) -> T): T {
         val digest = validatedDigest(keyRef)
         val alias = "openmuse.device.wrap.$digest"
         val encoded = preferences.getString(keyRef, null)
@@ -77,17 +130,10 @@ private class DeviceKeyStoreBridge(context: Context) {
         )
         val seed = cipher.doFinal(encrypted)
         require(seed.size == 32)
-        var public: ByteArray? = null
         try {
-            public = PairedCryptoNative.devicePublic(seed)
-            require(public != null && public.size == 64)
-            return mapOf(
-                "signingPublic" to public.copyOfRange(0, 32),
-                "agreementPublic" to public.copyOfRange(32, 64),
-            )
+            return operation(seed)
         } finally {
             seed.fill(0)
-            public?.fill(0)
             encrypted.fill(0)
             blob.fill(0)
         }
@@ -182,4 +228,12 @@ private object PairedCryptoNative {
     }
 
     external fun devicePublic(seed: ByteArray): ByteArray?
+
+    external fun issueOffer(
+        seed: ByteArray,
+        accountRef: String,
+        deviceRef: String,
+        nonce: ByteArray,
+        registrationGeneration: Long,
+    ): ByteArray?
 }

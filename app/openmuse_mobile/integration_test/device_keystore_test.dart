@@ -29,6 +29,23 @@ void main() {
     expect(secondIdentity.signingPublic, firstIdentity.signingPublic);
     expect(secondIdentity.agreementPublic, firstIdentity.agreementPublic);
     expect(firstIdentity.signingPublic, isNot(firstIdentity.agreementPublic));
+    final firstOffer = await store.issueOffer(
+      keyRef: first.keyRef,
+      accountRef: 'account:android-device-keystore-integration',
+      deviceRef: 'mobile:android-device-keystore-integration',
+      registrationGeneration: 7,
+    );
+    final secondOffer = await store.issueOffer(
+      keyRef: first.keyRef,
+      accountRef: 'account:android-device-keystore-integration',
+      deviceRef: 'mobile:android-device-keystore-integration',
+      registrationGeneration: 7,
+    );
+    expect(firstOffer.signingPublic, firstIdentity.signingPublic);
+    expect(firstOffer.agreementPublic, firstIdentity.agreementPublic);
+    expect(firstOffer.signature, hasLength(64));
+    expect(firstOffer.registrationGeneration, 7);
+    expect(secondOffer.nonce, isNot(firstOffer.nonce));
 
     await store.delete(first.keyRef);
     final recreated = await store.ensure(

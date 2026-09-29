@@ -1,6 +1,6 @@
 # Paired Desktop E2E Channel 与 Opaque Relay
 
-> 状态：Engineering Accepted；Mobile 平台密钥存储与 public-identity native bridge 已实现，完整配对操作/真实 Relay 部署门禁待完成
+> 状态：Engineering Accepted；Mobile 平台密钥存储、public identity 与 signed-offer native operation 已实现，handshake/channel/真实 Relay 部署门禁待完成
 >
 > 子需求：M5 integration increment
 >
@@ -96,9 +96,14 @@ Dart 只收到两段 32-byte public key。Android JNI 与 iOS C ABI 都不提供
 ./scripts/build_paired_relay_mobile_artifacts.sh
 ```
 
-当前 native bridge 有意只开放 public identity，这是账号设备注册的最小前置能力。下一
-增量仍需以 opaque operation API 暴露 offer 签名、X25519 handshake 和 channel seal/open，
-不能为了复用 Rust 领域核而把 seed 或派生私钥返回 Dart。iOS Secure Enclave 不原生支持
+native bridge 还提供 `issueOffer` typed operation：nonce 由 Android/iOS 原生 CSPRNG
+生成，Rust 使用平台 seed 签发完整 `PairingOffer`，Dart 只收到含 public keys、nonce、
+generation 和 Ed25519 signature 的严格 JSON。Rust FFI 测试会重新解析并验证签名，
+Android 真机测试还验证 offer public identity 与 Keystore identity 一致、连续 offer nonce
+不同。
+
+下一增量仍需以 opaque operation API 暴露 X25519 handshake 和 channel seal/open，不能
+为了复用 Rust 领域核而把 seed 或派生私钥返回 Dart。iOS Secure Enclave 不原生支持
 本协议采用的 Ed25519/X25519，因此 Keychain seed + 进程内 Rust operation boundary 是当前
 可实现边界，后续仍须密码学与内存取证审计。
 

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 
@@ -70,6 +72,56 @@ final class PlatformDeviceKeyStore implements DeviceKeyStorePort {
   }
 
   @override
+  Future<SignedDeviceOffer> issueOffer({
+    required String keyRef,
+    required String accountRef,
+    required String deviceRef,
+    required int registrationGeneration,
+  }) async {
+    _validateRef(keyRef);
+    _validateRef(accountRef);
+    _validateRef(deviceRef);
+    if (registrationGeneration <= 0) {
+      throw ArgumentError('registration generation must be positive');
+    }
+    final encoded = await channel.invokeMethod<String>('issueOffer', {
+      'keyRef': keyRef,
+      'accountRef': accountRef,
+      'deviceRef': deviceRef,
+      'registrationGeneration': registrationGeneration,
+    });
+    if (encoded == null) {
+      throw StateError('invalid signed device offer response');
+    }
+    final value = jsonDecode(encoded);
+    if (value is! Map<String, Object?> ||
+        value.keys.toSet().difference(const {
+          'accountRef',
+          'deviceRef',
+          'signingPublic',
+          'agreementPublic',
+          'nonce',
+          'registrationGeneration',
+          'signature',
+        }).isNotEmpty) {
+      throw StateError('invalid signed device offer');
+    }
+    try {
+      return SignedDeviceOffer(
+        accountRef: value['accountRef']! as String,
+        deviceRef: value['deviceRef']! as String,
+        signingPublic: _jsonBytes(value['signingPublic']),
+        agreementPublic: _jsonBytes(value['agreementPublic']),
+        nonce: _jsonBytes(value['nonce']),
+        registrationGeneration: value['registrationGeneration']! as int,
+        signature: _jsonBytes(value['signature']),
+      );
+    } on Object {
+      throw StateError('invalid signed device offer');
+    }
+  }
+
+  @override
   Future<void> delete(String keyRef) async {
     _validateRef(keyRef);
     await channel.invokeMethod<void>('delete', {'keyRef': keyRef});
@@ -79,5 +131,13 @@ final class PlatformDeviceKeyStore implements DeviceKeyStorePort {
     if (value.isEmpty || value.length > 256 || value.contains('\u0000')) {
       throw ArgumentError('invalid device keystore ref');
     }
+  }
+
+  static Uint8List _jsonBytes(Object? value) {
+    if (value is! List<Object?> ||
+        value.any((byte) => byte is! int || byte < 0 || byte > 255)) {
+      throw const FormatException('invalid byte array');
+    }
+    return Uint8List.fromList(value.cast<int>());
   }
 }
