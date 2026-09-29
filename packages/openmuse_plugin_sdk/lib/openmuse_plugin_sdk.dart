@@ -2,7 +2,7 @@ library;
 
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 enum OpenMusePluginRuntime { builtIn, nativeProcess, webView }
 
@@ -51,16 +51,32 @@ final class OpenMuseEditorContribution {
     required this.id,
     required this.extensions,
     required this.priority,
+    this.mediaTypes = const {},
     this.catchAll = false,
   });
 
   final String id;
   final Set<String> extensions;
+
+  /// Content types take precedence when the Host has inspected local bytes.
+  /// A trailing `/*` accepts a media type family such as `text/*`.
+  final Set<String> mediaTypes;
   final int priority;
   final bool catchAll;
 
-  bool accepts(OpenMuseResource resource) =>
-      catchAll || extensions.contains(resource.extension);
+  bool accepts(OpenMuseResource resource) {
+    if (catchAll) return true;
+    final type = resource.mediaType;
+    if (type != null && mediaTypes.isNotEmpty) {
+      return mediaTypes.any(
+        (accepted) =>
+            accepted == type ||
+            (accepted.endsWith('/*') &&
+                type.startsWith(accepted.substring(0, accepted.length - 1))),
+      );
+    }
+    return extensions.contains(resource.extension);
+  }
 }
 
 @immutable
@@ -134,6 +150,60 @@ abstract interface class OpenMusePlugin {
   Widget buildEditor(BuildContext context, OpenMuseResource resource);
 
   Widget? buildPanel(BuildContext context, String panelId);
+}
+
+/// Optional plugin-owned editor chrome. The Host only places the widget above
+/// the surface and routes an explicit editor switch within the active tab.
+abstract interface class OpenMuseEditorBannerContributor {
+  Widget? buildEditorBanner(
+    BuildContext context,
+    OpenMuseResource resource, {
+    required bool Function(String editorId) canOpenWith,
+    required void Function(String editorId) openWith,
+  });
+}
+
+final class OpenMuseEditorBanner extends StatelessWidget {
+  const OpenMuseEditorBanner({
+    super.key,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    height: 28,
+    padding: const EdgeInsets.symmetric(horizontal: 10),
+    color: const Color(0xff202329),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            message,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Color(0xffc9cbd1), fontSize: 11),
+          ),
+        ),
+        if (actionLabel != null && onAction != null)
+          TextButton(
+            onPressed: onAction,
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xffaabaff),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              minimumSize: const Size(0, 26),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(actionLabel!, style: const TextStyle(fontSize: 11)),
+          ),
+      ],
+    ),
+  );
 }
 
 /// Optional editor capability: settle an in-memory buffer before the Host
