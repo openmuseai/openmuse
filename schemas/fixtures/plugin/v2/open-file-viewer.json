@@ -1,0 +1,54 @@
+{
+  "manifest_version": 2,
+  "id": "com.openmuse.open-file-viewer",
+  "name": "Open File Viewer",
+  "version": "0.1.0",
+  "protocol": { "major": 1, "minor": 0 },
+  "ui_runtime": { "kind": "web-view" },
+  "execution_connector": { "kind": "none" },
+  "compatibility": {
+    "targets": [
+      { "target": { "os": "macos", "arch": "aarch64", "libc": "darwin" }, "status": "supported" },
+      { "target": { "os": "macos", "arch": "x86_64", "libc": "darwin" }, "status": "supported" },
+      { "target": { "os": "windows", "arch": "x86_64", "libc": "msvc" }, "status": "unsupported", "reason": "Windows platform registration is not present" },
+      { "target": { "os": "linux", "arch": "x86_64", "libc": "gnu" }, "status": "unsupported", "reason": "Linux platform registration is not present" },
+      { "target": { "os": "android", "arch": "aarch64", "libc": "bionic" }, "status": "unsupported", "reason": "Mobile Resource viewer integration is delivered by M3" },
+      { "target": { "os": "ios", "arch": "aarch64", "libc": "darwin" }, "status": "unsupported", "reason": "Mobile Resource viewer integration is delivered by M3" }
+    ]
+  },
+  "artifacts": [
+    {
+      "id": "viewer.host.macos-aarch64",
+      "kind": "host-bundle",
+      "target": { "os": "macos", "arch": "aarch64", "libc": "darwin" },
+      "digest": { "algorithm": "sha256", "value": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" },
+      "license": "AGPL-3.0-only",
+      "abi": "openmuse.plugin-ui/v2"
+    },
+    {
+      "id": "viewer.host.macos-x86_64",
+      "kind": "host-bundle",
+      "target": { "os": "macos", "arch": "x86_64", "libc": "darwin" },
+      "digest": { "algorithm": "sha256", "value": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789" },
+      "license": "AGPL-3.0-only",
+      "abi": "openmuse.plugin-ui/v2"
+    }
+  ],
+  "activation_events": ["onFileType:image", "onFileType:pdf"],
+  "requested_permissions": ["filesystem.workspace.read"],
+  "presentation": { "surfaces": ["editor"], "remote_capable": false },
+  "contributes": {
+    "commands": [
+      { "id": "viewer.open", "title": "Open Preview", "required_permissions": ["filesystem.workspace.read"] }
+    ],
+    "services": [
+      { "id": "resource.preview", "version": 1, "priority": 10, "required_permissions": ["filesystem.workspace.read"] }
+    ],
+    "editors": [
+      { "id": "viewer.image", "extensions": ["png", "jpg", "jpeg", "gif", "webp", "svg"], "priority": 20 },
+      { "id": "viewer.pdf", "extensions": ["pdf"], "priority": 20 }
+    ],
+    "panels": [],
+    "agent_cli": []
+  }
+}

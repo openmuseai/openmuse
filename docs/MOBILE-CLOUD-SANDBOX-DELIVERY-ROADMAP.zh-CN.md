@@ -157,6 +157,10 @@
 
 ### C1：Manifest v2、Artifact、Target 与 Agent CLI Schema
 
+**实施状态：已完成**（`feature/c1-manifest-v2`）
+
+实现与验收入口见 [`PLUGIN-MANIFEST-V2.zh-CN.md`](PLUGIN-MANIFEST-V2.zh-CN.md) 和 `scripts/test_plugin_manifest_v2.sh`。
+
 **目标**
 
 一次完成 Mobile target 裁剪和 Sandbox Agent CLI 扩展，避免先做 Mobile manifest v2、随后再做不兼容的 CLI v3。

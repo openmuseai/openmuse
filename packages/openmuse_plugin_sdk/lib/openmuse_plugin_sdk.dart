@@ -4,6 +4,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+export 'src/manifest_v2.dart';
+
 enum OpenMusePluginRuntime { builtIn, nativeProcess, webView }
 
 enum OpenMusePluginState { installed, activating, active, deactivating, failed }

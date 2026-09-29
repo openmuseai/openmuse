@@ -4,6 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 packages=(
   openmuse_contract
+  openmuse_plugin_sdk
   muse_resource_contract
   muse_engine_adapter
   muse_engine_tck

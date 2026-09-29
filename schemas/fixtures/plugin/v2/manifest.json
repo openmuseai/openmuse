@@ -1,0 +1,11 @@
+{
+  "schema": "../../../openmuse.plugin.v2.schema.json",
+  "schemaSha256": "3ba97f749861daaf5656d6a044ed7d0e27c43172384521027c63b3fbf896e69d",
+  "owner": "OpenMuse Plugin Platform",
+  "fixtures": [
+    "helix.json",
+    "dsh-agent.json",
+    "native-text-gate.json",
+    "open-file-viewer.json"
+  ]
+}

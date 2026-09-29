@@ -9,9 +9,14 @@ use serde_json::Value;
 use std::collections::BTreeSet;
 use std::fmt::{Display, Formatter};
 
+mod manifest_v2;
+
+pub use manifest_v2::*;
+
 pub const PROTOCOL_VERSION: ProtocolVersion = ProtocolVersion { major: 1, minor: 0 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ProtocolVersion {
     pub major: u16,
     pub minor: u16,
@@ -58,6 +63,7 @@ pub enum RuntimeKind {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PluginManifest {
     pub id: PluginId,
     pub name: String,
@@ -73,6 +79,7 @@ pub struct PluginManifest {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Contributions {
     #[serde(default)]
     pub commands: Vec<CommandContribution>,
@@ -85,6 +92,7 @@ pub struct Contributions {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CommandContribution {
     pub id: String,
     pub title: String,
@@ -93,6 +101,7 @@ pub struct CommandContribution {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ServiceContribution {
     pub id: String,
     pub version: u16,
@@ -103,6 +112,7 @@ pub struct ServiceContribution {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct EditorContribution {
     pub id: String,
     pub extensions: Vec<String>,
@@ -111,6 +121,7 @@ pub struct EditorContribution {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PanelContribution {
     pub id: String,
     pub region: String,

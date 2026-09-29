@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openmuse.local/schemas/openmuse.plugin.v2.schema.json",
+  "title": "OpenMuse Plugin Manifest v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_version",
+    "id",
+    "name",
+    "version",
+    "protocol",
+    "ui_runtime",
+    "execution_connector",
+    "compatibility",
+    "artifacts",
+    "activation_events",
+    "requested_permissions",
+    "presentation",
+    "contributes"
+  ],
+  "properties": {
+    "manifest_version": { "const": 2 },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+$" },
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+].*)?$" },
+    "protocol": { "$ref": "#/$defs/protocol" },
+    "ui_runtime": { "$ref": "#/$defs/uiRuntime" },
+    "execution_connector": { "$ref": "#/$defs/executionConnector" },
+    "compatibility": { "$ref": "#/$defs/compatibility" },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "activation_events": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "requested_permissions": { "$ref": "#/$defs/stringSet" },
+    "presentation": { "$ref": "#/$defs/presentation" },
+    "contributes": { "$ref": "#/$defs/contributions" }
+  },
+  "$defs": {
+    "stringSet": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["major", "minor"],
+      "properties": {
+        "major": { "type": "integer", "minimum": 1 },
+        "minor": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "uiRuntime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["none", "flutter", "web-view"] },
+        "entrypoint": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "none" } } },
+          "then": { "not": { "required": ["entrypoint"] } }
+        }
+      ]
+    },
+    "executionConnector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["none", "host-process", "remote-dsh", "sandbox-provider"] },
+        "protocol": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "none" } } },
+          "then": { "not": { "required": ["protocol"] } }
+        }
+      ]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "arch", "libc"],
+      "properties": {
+        "os": { "enum": ["macos", "windows", "linux", "android", "ios", "web"] },
+        "arch": { "enum": ["aarch64", "x86_64", "wasm32"] },
+        "libc": { "enum": ["darwin", "msvc", "gnu", "musl", "bionic", "none"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "os": { "enum": ["macos", "ios"] } } }, "then": { "properties": { "libc": { "const": "darwin" } } } },
+        { "if": { "properties": { "os": { "const": "windows" } } }, "then": { "properties": { "libc": { "const": "msvc" } } } },
+        { "if": { "properties": { "os": { "const": "android" } } }, "then": { "properties": { "libc": { "const": "bionic" } } } },
+        { "if": { "properties": { "os": { "const": "linux" } } }, "then": { "properties": { "libc": { "enum": ["gnu", "musl"] } } } },
+        { "if": { "properties": { "os": { "const": "web" } } }, "then": { "properties": { "arch": { "const": "wasm32" }, "libc": { "const": "none" } } } }
+      ]
+    },
+    "targetDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "status"],
+      "properties": {
+        "target": { "$ref": "#/$defs/target" },
+        "status": { "enum": ["supported", "unsupported"] },
+        "reason": { "type": "string", "minLength": 1 }
+      },
+      "oneOf": [
+        {
+          "properties": { "status": { "const": "supported" } },
+          "not": { "required": ["reason"] }
+        },
+        {
+          "properties": { "status": { "const": "unsupported" } },
+          "required": ["reason"]
+        }
+      ]
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targets"],
+      "properties": {
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/targetDecision" }
+        }
+      }
+    },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": { "const": "sha256" },
+        "value": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "key_id", "value"],
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "key_id": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1 }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "target", "digest", "license", "abi"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["host-bundle", "web-bundle", "native-executable", "runtime-closure", "sandbox-worker"] },
+        "target": { "$ref": "#/$defs/target" },
+        "digest": { "$ref": "#/$defs/digest" },
+        "signature": { "$ref": "#/$defs/signature" },
+        "license": { "type": "string", "minLength": 1 },
+        "abi": { "type": "string", "minLength": 1 }
+      }
+    },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surfaces", "remote_capable"],
+      "properties": {
+        "surfaces": {
+          "type": "array",
+          "items": { "enum": ["editor", "left-sidebar", "right-sidebar", "bottom-panel"] },
+          "uniqueItems": true
+        },
+        "remote_capable": { "type": "boolean" }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "required_permissions": { "$ref": "#/$defs/stringSet" }
+      }
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "integer", "minimum": 1 },
+        "priority": { "type": "integer" },
+        "required_permissions": { "$ref": "#/$defs/stringSet" }
+      }
+    },
+    "editor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "extensions"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "extensions": { "$ref": "#/$defs/stringSet" },
+        "priority": { "type": "integer" }
+      }
+    },
+    "panel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "region"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "region": { "enum": ["left-sidebar", "editor", "right-sidebar", "bottom-panel"] },
+        "priority": { "type": "integer" }
+      }
+    },
+    "agentCli": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["group", "namespace", "command", "schema", "required_permissions", "effects"],
+      "properties": {
+        "group": { "type": "string", "minLength": 1 },
+        "namespace": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "schema": { "type": "object" },
+        "required_permissions": { "$ref": "#/$defs/stringSet" },
+        "effects": { "$ref": "#/$defs/stringSet" }
+      }
+    },
+    "contributions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "commands": { "type": "array", "items": { "$ref": "#/$defs/command" } },
+        "services": { "type": "array", "items": { "$ref": "#/$defs/service" } },
+        "editors": { "type": "array", "items": { "$ref": "#/$defs/editor" } },
+        "panels": { "type": "array", "items": { "$ref": "#/$defs/panel" } },
+        "agent_cli": { "type": "array", "items": { "$ref": "#/$defs/agentCli" } }
+      }
+    }
+  }
+}

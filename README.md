@@ -42,6 +42,7 @@ S3 Storage ABI and MinIO/RustFS selection: [`docs/S3-STORAGE-TECHNICAL-SELECTION
 OpenMuse Workspace Sandbox and DSH execution plane: [`docs/DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md`](docs/DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md).
 Mobile/Cloud/Sandbox delivery roadmap: [`docs/MOBILE-CLOUD-SANDBOX-DELIVERY-ROADMAP.zh-CN.md`](docs/MOBILE-CLOUD-SANDBOX-DELIVERY-ROADMAP.zh-CN.md).
 Cross-domain contract baseline v1: [`docs/CONTRACT-BASELINE-V1.zh-CN.md`](docs/CONTRACT-BASELINE-V1.zh-CN.md).
+Plugin Manifest v2: [`docs/PLUGIN-MANIFEST-V2.zh-CN.md`](docs/PLUGIN-MANIFEST-V2.zh-CN.md).
 
 OpenMuse source uses the repository's AGPL-3.0 `LICENSE`, as selected by the
 project owner. Third-party components retain their own licenses; see

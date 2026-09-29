@@ -1,0 +1,57 @@
+{
+  "manifest_version": 2,
+  "id": "com.openmuse.native-text-gate",
+  "name": "Native Text Gate",
+  "version": "0.1.0",
+  "protocol": { "major": 1, "minor": 0 },
+  "ui_runtime": { "kind": "flutter" },
+  "execution_connector": { "kind": "none" },
+  "compatibility": {
+    "targets": [
+      { "target": { "os": "macos", "arch": "aarch64", "libc": "darwin" }, "status": "supported" },
+      { "target": { "os": "macos", "arch": "x86_64", "libc": "darwin" }, "status": "supported" },
+      { "target": { "os": "windows", "arch": "x86_64", "libc": "msvc" }, "status": "supported" },
+      { "target": { "os": "linux", "arch": "x86_64", "libc": "gnu" }, "status": "unsupported", "reason": "Linux native view implementation is not present" },
+      { "target": { "os": "android", "arch": "aarch64", "libc": "bionic" }, "status": "unsupported", "reason": "Android platform view implementation is not present" },
+      { "target": { "os": "ios", "arch": "aarch64", "libc": "darwin" }, "status": "unsupported", "reason": "iOS platform view implementation is not present" }
+    ]
+  },
+  "artifacts": [
+    {
+      "id": "native-text.host.macos-aarch64",
+      "kind": "host-bundle",
+      "target": { "os": "macos", "arch": "aarch64", "libc": "darwin" },
+      "digest": { "algorithm": "sha256", "value": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" },
+      "license": "AGPL-3.0-only",
+      "abi": "openmuse.plugin-ui/v2"
+    },
+    {
+      "id": "native-text.host.macos-x86_64",
+      "kind": "host-bundle",
+      "target": { "os": "macos", "arch": "x86_64", "libc": "darwin" },
+      "digest": { "algorithm": "sha256", "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" },
+      "license": "AGPL-3.0-only",
+      "abi": "openmuse.plugin-ui/v2"
+    },
+    {
+      "id": "native-text.host.windows-x86_64",
+      "kind": "host-bundle",
+      "target": { "os": "windows", "arch": "x86_64", "libc": "msvc" },
+      "digest": { "algorithm": "sha256", "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "license": "AGPL-3.0-only",
+      "abi": "openmuse.plugin-ui/v2"
+    }
+  ],
+  "activation_events": ["onFileType:native-gate"],
+  "requested_permissions": [],
+  "presentation": { "surfaces": ["editor"], "remote_capable": false },
+  "contributes": {
+    "commands": [],
+    "services": [],
+    "editors": [
+      { "id": "native-text.gate", "extensions": ["native-gate"], "priority": 100 }
+    ],
+    "panels": [],
+    "agent_cli": []
+  }
+}
