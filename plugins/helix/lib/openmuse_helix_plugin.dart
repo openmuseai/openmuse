@@ -10,6 +10,7 @@ import 'src/helix_editor_surface.dart';
 import 'src/helix_language_servers.dart';
 import 'src/helix_preferences.dart';
 import 'src/helix_runtime.dart';
+import 'src/helix_open_trace.dart';
 
 export 'src/helix_runtime.dart';
 export 'src/helix_preferences.dart';
@@ -19,7 +20,8 @@ final class OpenMuseHelixPlugin
     implements
         OpenMusePlugin,
         OpenMuseSettingsContributor,
-        OpenMuseBufferFlushContributor {
+        OpenMuseBufferFlushContributor,
+        OpenMuseEditorBannerContributor {
   OpenMuseHelixPlugin({HelixRuntimePool? runtime}) : _runtime = runtime;
 
   HelixRuntimePool? _runtime;
@@ -43,6 +45,7 @@ final class OpenMuseHelixPlugin
     editors: [
       OpenMuseEditorContribution(
         id: 'helix.editor',
+        mediaTypes: {'text/*'},
         extensions: {
           'txt',
           'md',
@@ -100,6 +103,8 @@ final class OpenMuseHelixPlugin
 
   @override
   Future<void> activate(OpenMusePluginContext context) async {
+    final activationWatch = Stopwatch()..start();
+    HelixOpenTrace.mark('activate_begin');
     _context = context;
     _runtime ??= HelixRuntimePool();
     _runtime!.onActiveResourceChanged = (path) {
@@ -123,7 +128,15 @@ final class OpenMuseHelixPlugin
       _preferences.value = HelixPreferences.fromJson(saved);
     }
     await _runtime!.probeCapabilities();
+    HelixOpenTrace.mark(
+      'probe_done',
+      elapsedMs: activationWatch.elapsedMilliseconds,
+    );
     await _runtime!.configure(_preferences.value);
+    HelixOpenTrace.mark(
+      'activate_done',
+      elapsedMs: activationWatch.elapsedMilliseconds,
+    );
   }
 
   @override
@@ -143,6 +156,23 @@ final class OpenMuseHelixPlugin
     }
     return HelixEditorSurface(runtime: runtime, resource: resource);
   }
+
+  @override
+  Widget? buildEditorBanner(
+    BuildContext context,
+    OpenMuseResource resource, {
+    required bool Function(String editorId) canOpenWith,
+    required void Function(String editorId) openWith,
+  }) => OpenMuseEditorBanner(
+    message: 'Helix 编辑 · Ctrl+S 保存 · Esc 进入命令模式',
+    actionLabel:
+        resource.mediaType == 'text/markdown' && canOpenWith('viewer.markdown')
+        ? 'Preview'
+        : null,
+    onAction: resource.mediaType == 'text/markdown'
+        ? () => openWith('viewer.markdown')
+        : null,
+  );
 
   @override
   Widget? buildPanel(BuildContext context, String panelId) => null;

@@ -404,6 +404,26 @@ impl Application {
         let target_matches = state.path().and_then(Path::to_str) == Some(command.path.as_str());
         let result = if command.id <= self.openmuse_last_request_id {
             Err("duplicate_request")
+        } else if command.name == "open" {
+            // The authenticated Host has already admitted this resource. Switch
+            // buffers directly so a second file does not restart the engine or
+            // type a path through the command prompt and its completion UI.
+            if state.version() != command.revision {
+                Err("stale_revision")
+            } else if !Path::new(&command.path).is_file() {
+                Err("invalid_target")
+            } else {
+                match self.editor.open(
+                    Path::new(&command.path),
+                    helix_view::editor::Action::Replace,
+                ) {
+                    Ok(_) => Ok(()),
+                    Err(err) => {
+                        self.editor.set_error(err.to_string());
+                        Err("open_failed")
+                    }
+                }
+            }
         } else if !target_matches {
             Err("invalid_target")
         } else if state.version() != command.revision {

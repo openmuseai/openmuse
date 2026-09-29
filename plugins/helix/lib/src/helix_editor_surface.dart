@@ -9,6 +9,7 @@ import 'package:xterm/xterm.dart';
 
 import 'helix_runtime.dart';
 import 'helix_preferences.dart';
+import 'helix_open_trace.dart';
 
 final class HelixEditorSurface extends StatefulWidget {
   const HelixEditorSurface({
@@ -30,6 +31,7 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
   int _pointerDownButtons = 0;
 
   KeyEventResult _handlePlatformShortcut(FocusNode _, KeyEvent event) {
+    if (widget.runtime.isSwitching) return KeyEventResult.handled;
     if (widget.runtime.preferences.inputProfile !=
             HelixInputProfile.standardNonmodal ||
         event is! KeyDownEvent) {
@@ -143,7 +145,18 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
   @override
   void initState() {
     super.initState();
+    widget.runtime.onFirstOutput = (childPid) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) HelixOpenTrace.mark('first_frame', childPid: childPid);
+      });
+    };
     unawaited(_open());
+  }
+
+  @override
+  void dispose() {
+    widget.runtime.onFirstOutput = null;
+    super.dispose();
   }
 
   @override
@@ -170,41 +183,51 @@ final class _HelixEditorSurfaceState extends State<HelixEditorSurface> {
         child: Stack(
           children: [
             Positioned.fill(
-              child: Listener(
-                onPointerDown: (event) {
-                  _pointerDownButtons = event.buttons;
-                  if (event.buttons == kSecondaryMouseButton) {
-                    _placeCursor(event.position);
-                    unawaited(_showContextMenu(event.position));
-                  }
-                },
-                onPointerUp: (event) {
-                  final primary = _pointerDownButtons == kPrimaryMouseButton;
-                  _pointerDownButtons = 0;
-                  if (primary &&
-                      (HardwareKeyboard.instance.isMetaPressed ||
-                          HardwareKeyboard.instance.isControlPressed)) {
-                    unawaited(
-                      Future<void>.delayed(
-                        const Duration(milliseconds: 40),
-                        () => _navigate(_HelixNavCommand.definition),
-                      ),
-                    );
-                  }
-                },
-                child: TerminalView(
-                  widget.runtime.terminal,
-                  key: _terminalKey,
-                  theme: widget.runtime.preferences.terminalTheme,
-                  textStyle: widget.runtime.preferences.terminalStyle,
-                  keyboardAppearance: widget.runtime.preferences.dark
-                      ? Brightness.dark
-                      : Brightness.light,
-                  onKeyEvent: _handlePlatformShortcut,
-                  autofocus: true,
+              child: AbsorbPointer(
+                absorbing: widget.runtime.isSwitching,
+                child: Listener(
+                  onPointerDown: (event) {
+                    _pointerDownButtons = event.buttons;
+                    if (event.buttons == kSecondaryMouseButton) {
+                      _placeCursor(event.position);
+                      unawaited(_showContextMenu(event.position));
+                    }
+                  },
+                  onPointerUp: (event) {
+                    final primary = _pointerDownButtons == kPrimaryMouseButton;
+                    _pointerDownButtons = 0;
+                    if (primary &&
+                        (HardwareKeyboard.instance.isMetaPressed ||
+                            HardwareKeyboard.instance.isControlPressed)) {
+                      unawaited(
+                        Future<void>.delayed(
+                          const Duration(milliseconds: 40),
+                          () => _navigate(_HelixNavCommand.definition),
+                        ),
+                      );
+                    }
+                  },
+                  child: TerminalView(
+                    widget.runtime.terminal,
+                    key: _terminalKey,
+                    theme: widget.runtime.preferences.terminalTheme,
+                    textStyle: widget.runtime.preferences.terminalStyle,
+                    keyboardAppearance: widget.runtime.preferences.dark
+                        ? Brightness.dark
+                        : Brightness.light,
+                    onKeyEvent: _handlePlatformShortcut,
+                    autofocus: true,
+                  ),
                 ),
               ),
             ),
+            if (widget.runtime.isSwitching)
+              Positioned.fill(
+                child: ColoredBox(
+                  color: widget.runtime.preferences.terminalTheme.background,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+              ),
             if (widget.runtime.lastError case final error?)
               Center(
                 child: Container(
