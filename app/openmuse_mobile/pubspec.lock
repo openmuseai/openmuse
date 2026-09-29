@@ -130,6 +130,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  openmuse_mobile_cloud:
+    dependency: "direct main"
+    description:
+      path: "../../packages/openmuse_mobile_cloud"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_mobile_core:
     dependency: "direct main"
     description:

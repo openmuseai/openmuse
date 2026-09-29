@@ -60,6 +60,7 @@ Plugin CLI registry and artifact resolver: [`docs/PLUGIN-CLI-REGISTRY-ARTIFACT-R
 Office dispatcher and worker supervisor: [`docs/OFFICE-DISPATCHER-WORKER-SUPERVISOR.zh-CN.md`](docs/OFFICE-DISPATCHER-WORKER-SUPERVISOR.zh-CN.md).
 Sandbox production security gate: [`docs/SANDBOX-PRODUCTION-SECURITY-GATE.zh-CN.md`](docs/SANDBOX-PRODUCTION-SECURITY-GATE.zh-CN.md).
 Mobile app root and shared Host shell: [`docs/MOBILE-APP-ROOT-HOST-SHELL.zh-CN.md`](docs/MOBILE-APP-ROOT-HOST-SHELL.zh-CN.md).
+Mobile Cloud Workspace service integration: [`docs/MOBILE-CLOUD-SERVICE-INTEGRATION.zh-CN.md`](docs/MOBILE-CLOUD-SERVICE-INTEGRATION.zh-CN.md).
 
 OpenMuse source uses the repository's AGPL-3.0 `LICENSE`, as selected by the
 project owner. Third-party components retain their own licenses; see

@@ -34,6 +34,8 @@ dependencies:
     path: ../../packages/openmuse_host_shell
   openmuse_mobile_core:
     path: ../../packages/openmuse_mobile_core
+  openmuse_mobile_cloud:
+    path: ../../packages/openmuse_mobile_cloud
 
 dev_dependencies:
   flutter_test:

@@ -724,7 +724,9 @@ Fail-closed admission、攻击面测试和审计链见 [`SANDBOX-PRODUCTION-SECU
 
 ### M4：Cloud Workspace + Mobile + Remote DSH 纵切
 
-**实施状态：Accepted（fixture account）**（`feature/m4-cloud-mobile-vertical-slice`）
+**实施状态：Engineering Accepted（service-backed TCK；生产账号/WebView 门禁待外部环境）**（fixture：`feature/m4-cloud-mobile-vertical-slice`；service integration：`feature/m4-cloud-mobile-service-integration`）
+
+领域合同、HTTPS adapter、去 fixture composition 与验收入口见 [`MOBILE-CLOUD-SERVICE-INTEGRATION.zh-CN.md`](MOBILE-CLOUD-SERVICE-INTEGRATION.zh-CN.md) 和 `scripts/test_mobile_cloud_service.sh`。
 
 **目标**
 

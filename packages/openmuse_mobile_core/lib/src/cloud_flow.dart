@@ -47,4 +47,5 @@ final class CloudWorkspaceFlow {
   }
 
   void storageFailed() => state = CloudFlowState.storageUnavailable;
+  void degraded() => state = CloudFlowState.degraded;
 }
