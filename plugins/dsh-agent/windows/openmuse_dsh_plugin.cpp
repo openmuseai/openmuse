@@ -145,6 +145,89 @@ constexpr wchar_t kBridgeScript[] =
     L"{type:'clipboard.write',text:selected}));"
     L"event.preventDefault();event.stopImmediatePropagation();},true);";
 
+// Keep in sync with OpenMuseDshWebViewPlugin.swift DshCompactSidebarStyle.
+// The embedded DSH icon rail is always a top strip. Class hashes are pinned
+// to DSH 0.1.7-rc.1/rc.2.
+constexpr wchar_t kCompactSidebarScript[] =
+    LR"JS((function() {
+    const STYLE_ID = 'openmuse-dsh-compact-sidebar';
+    const CSS = '.pI_x6G_frame{grid-template-rows:52px minmax(0,1fr)!important;grid-template-columns:minmax(0,1fr) 0 0!important}.pI_x6G_frame:not([data-rightbar-collapsed]){grid-template-columns:minmax(0,1fr) 0 minmax(0,45vw)!important}.pI_x6G_sidebarCol{grid-area:1/1/2/-1!important;border-right:none!important;border-bottom:0.5px solid var(--dsw-alias-border-l3,#ececf0);min-height:52px;max-height:52px;overflow:hidden}.pI_x6G_centerCol{grid-area:2/1/3/2!important}.pI_x6G_rightbarCol{grid-area:2/3/3/4!important}.hHd-Xa_root{flex-direction:row!important;align-items:center!important;padding:8px 40px 8px 10px!important;height:52px!important;max-height:52px!important;gap:4px}.hHd-Xa_topStrip,.hHd-Xa_regionArea,.hHd-Xa_brandName,.hHd-Xa_fallbackBrandName,.hHd-Xa_localBuildBrand,.hHd-Xa_newSessionLabel{display:none!important}.hHd-Xa_logoRow,.hHd-Xa_newSession{margin:0!important;height:36px!important;width:36px!important}.hHd-Xa_panelList,.hHd-Xa_footArea,.hHd-Xa_footerActions,.hHd-Xa_settingsArea{flex-direction:row!important;margin:0!important;width:auto!important;gap:4px!important}.hHd-Xa_footArea{margin-left:0!important;align-items:center!important;order:-1}.hHd-Xa_railIn .hHd-Xa_iconButton,.hHd-Xa_railIn .hHd-Xa_newSession,.hHd-Xa_railIn .hHd-Xa_panelList,.hHd-Xa_railIn .hHd-Xa_regionArea,.hHd-Xa_railIn .hHd-Xa_footArea{animation:none!important;transform:none!important}#openmuse-dsh-reload{flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin:0;padding:0;border:none;border-radius:50%;background:transparent;color:inherit;cursor:pointer}#openmuse-dsh-reload:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.06))}';
+    function ensureStyle() {
+      let style = document.getElementById(STYLE_ID);
+      if (!style) {
+        style = document.createElement('style');
+        style.id = STYLE_ID;
+        (document.head || document.documentElement).appendChild(style);
+      }
+      if (style.textContent !== CSS) style.textContent = CSS;
+    }
+    function setImp(el, name, value) {
+      if (!el) return;
+      if (el.style.getPropertyValue(name) === value && el.style.getPropertyPriority(name) === 'important') return;
+      el.style.setProperty(name, value, 'important');
+    }
+    function applyLayout() {
+      const frame = document.querySelector('.pI_x6G_frame');
+      if (frame) {
+        const rightOpen = !frame.hasAttribute('data-rightbar-collapsed');
+        setImp(frame, 'grid-template-rows', '52px minmax(0,1fr)');
+        setImp(frame, 'grid-template-columns', rightOpen ? 'minmax(0,1fr) 0 minmax(0,45vw)' : 'minmax(0,1fr) 0 0');
+        setImp(frame, 'display', 'grid');
+      }
+      const side = document.querySelector('.pI_x6G_sidebarCol');
+      setImp(side, 'grid-row', '1');
+      setImp(side, 'grid-column', '1 / -1');
+      setImp(side, 'max-height', '52px');
+      setImp(side, 'min-height', '52px');
+      setImp(side, 'height', '52px');
+      setImp(side, 'overflow', 'hidden');
+      const center = document.querySelector('.pI_x6G_centerCol');
+      setImp(center, 'grid-row', '2');
+      setImp(center, 'grid-column', '1 / -1');
+      const root = document.querySelector('.hHd-Xa_root');
+      setImp(root, 'flex-direction', 'row');
+      setImp(root, 'align-items', 'center');
+      setImp(root, 'height', '52px');
+      setImp(root, 'max-height', '52px');
+      setImp(root, 'width', '100%');
+      setImp(root, 'padding', '8px 40px 8px 10px');
+    }
+    function ensureReload() {
+      if (document.getElementById('openmuse-dsh-reload')) return;
+      const root = document.querySelector('.hHd-Xa_root');
+      if (!root) return;
+      const btn = document.createElement('button');
+      btn.id = 'openmuse-dsh-reload';
+      btn.type = 'button';
+      btn.title = '刷新 DSH 面板';
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+      btn.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        location.reload();
+      });
+      const list = document.querySelector('.hHd-Xa_panelList');
+      if (list && list.parentNode) {
+        list.parentNode.insertBefore(btn, list.nextSibling);
+      } else {
+        root.appendChild(btn);
+      }
+    }
+    let scheduled = false;
+    function tick() {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(function() {
+        scheduled = false;
+        ensureStyle();
+        applyLayout();
+        ensureReload();
+      });
+    }
+    tick();
+    new MutationObserver(tick).observe(document.documentElement, {childList:true, subtree:true, attributes:true});
+  })();)JS";
+
 std::wstring JsonEscape(const std::wstring& value) {
   std::wstring out;
   out.reserve(value.size());
@@ -206,6 +289,7 @@ class DshView : public std::enable_shared_from_this<DshView> {
   // returned to the method channel; asynchronous WebView2 failures use Fail.
   std::string Show(RECT bounds, const std::wstring& url) {
     if (closed_) return "DSH WebView 已关闭";
+    hidden_ = false;
     bounds_ = bounds;
     has_bounds_ = true;
     const int port = ParseLoopbackPort(url);
@@ -233,7 +317,9 @@ class DshView : public std::enable_shared_from_this<DshView> {
   }
 
   void Hide() {
+    hidden_ = true;
     if (controller_) controller_->put_IsVisible(FALSE);
+    HideChromeWindow();
   }
 
   void Reload() {
@@ -328,8 +414,13 @@ class DshView : public std::enable_shared_from_this<DshView> {
       settings->put_IsStatusBarEnabled(FALSE);
     }
     HookMessages();
-    controller_->put_IsVisible(TRUE);
-    ApplyBounds();
+    if (hidden_) {
+      controller_->put_IsVisible(FALSE);
+      HideChromeWindow();
+    } else {
+      controller_->put_IsVisible(TRUE);
+      ApplyBounds();
+    }
     MaybeNavigate();
     PushWorkspace();
   }
@@ -344,7 +435,10 @@ class DshView : public std::enable_shared_from_this<DshView> {
                    ICoreWebView2NavigationCompletedEventArgs*) -> HRESULT {
               const auto self = weak.lock();
               if (!self || self->closed_) return S_OK;
-              self->RaiseAboveFlutter();
+              if (!self->hidden_) self->RaiseAboveFlutter();
+              if (self->webview_) {
+                self->webview_->ExecuteScript(kCompactSidebarScript, nullptr);
+              }
               self->PushWorkspace();
               return S_OK;
             })
@@ -420,7 +514,7 @@ class DshView : public std::enable_shared_from_this<DshView> {
   }
 
   void ApplyBounds() {
-    if (!controller_ || !has_bounds_) return;
+    if (!controller_ || !has_bounds_ || hidden_) return;
     RECT mapped = bounds_;
     if (flutter_window_ != nullptr && parent_ != nullptr &&
         flutter_window_ != parent_) {
@@ -432,13 +526,21 @@ class DshView : public std::enable_shared_from_this<DshView> {
   }
 
   void RaiseAboveFlutter() {
-    if (parent_ == nullptr) return;
+    if (parent_ == nullptr || hidden_) return;
     ChromeChildSearch search{parent_, nullptr};
     ::EnumChildWindows(parent_, FindDirectChromeChild,
                        reinterpret_cast<LPARAM>(&search));
     if (search.found == nullptr) return;
     ::SetWindowPos(search.found, HWND_TOP, 0, 0, 0, 0,
                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+  }
+
+  void HideChromeWindow() {
+    if (parent_ == nullptr) return;
+    ChromeChildSearch search{parent_, nullptr};
+    ::EnumChildWindows(parent_, FindDirectChromeChild,
+                       reinterpret_cast<LPARAM>(&search));
+    if (search.found != nullptr) ::ShowWindow(search.found, SW_HIDE);
   }
 
   void PushWorkspace() {
@@ -454,6 +556,7 @@ class DshView : public std::enable_shared_from_this<DshView> {
 
   std::wstring BridgeScript() const {
     std::wstring script = kBridgeScript;
+    script += kCompactSidebarScript;
     if (!desired_workspace_.empty()) {
       script += L"window.__OpenMuseDesiredWorkspace=\"" +
                 JsonEscape(desired_workspace_) + L"\";";
@@ -486,6 +589,7 @@ class DshView : public std::enable_shared_from_this<DshView> {
   bool navigate_pending_ = false;
   bool script_added_ = false;
   bool script_adding_ = false;
+  bool hidden_ = false;
 };
 
 void OpenMuseDshWebViewPlugin::RegisterWithRegistrar(

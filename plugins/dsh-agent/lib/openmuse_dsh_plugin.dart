@@ -1,5 +1,6 @@
 library;
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'src/dsh_workspace_binding.dart';
 import 'src/dsh_workspace_sync.dart';
 
 export 'src/dsh_sidecar.dart';
+export 'src/dsh_web_view.dart' show DshNativeOverlay, DshPopupRouteObserver;
 
 final class OpenMuseDshPlugin
     implements OpenMusePlugin, OpenMuseSettingsContributor {
@@ -61,7 +63,7 @@ final class OpenMuseDshPlugin
     name: 'DSH Agent',
     version: '0.1.0',
     runtime: OpenMusePluginRuntime.nativeProcess,
-    activationEvents: ['onPanel:dsh.agent'],
+    activationEvents: ['onStartup', 'onPanel:dsh.agent'],
     permissions: {
       'workspace.context.read',
       'resource.open.request',
@@ -95,6 +97,15 @@ final class OpenMuseDshPlugin
     );
     _supervisor!.addListener(_sidecarChanged);
     _workspaceChanged();
+    unawaited(_startSidecar());
+  }
+
+  Future<void> _startSidecar() async {
+    try {
+      await _supervisor?.ensureStarted();
+    } catch (error) {
+      debugPrint('DSH sidecar start deferred: $error');
+    }
   }
 
   @override

@@ -1,8 +1,55 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+/// Counts Host popup routes so the Windows WebView2 sibling can hide while a
+/// Flutter dialog (settings, search, menus) is open. WebView2 is parented above
+/// the Flutter view and would otherwise cover those overlays.
+final class DshNativeOverlay {
+  DshNativeOverlay._();
+
+  static final ValueNotifier<int> popupRoutes = ValueNotifier(0);
+
+  static bool get obscured => popupRoutes.value > 0;
+}
+
+final class DshPopupRouteObserver extends NavigatorObserver {
+  DshPopupRouteObserver._();
+
+  static final instance = DshPopupRouteObserver._();
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PopupRoute) {
+      DshNativeOverlay.popupRoutes.value++;
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _release(route);
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _release(route);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    _release(oldRoute);
+    if (newRoute is PopupRoute) {
+      DshNativeOverlay.popupRoutes.value++;
+    }
+  }
+
+  void _release(Route<dynamic>? route) {
+    if (route is! PopupRoute) return;
+    if (DshNativeOverlay.popupRoutes.value <= 0) return;
+    DshNativeOverlay.popupRoutes.value--;
+  }
+}
 
 final class DshResourceOpenMessage {
   const DshResourceOpenMessage({
@@ -176,6 +223,7 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    DshNativeOverlay.popupRoutes.addListener(_onHostOverlay);
     channel.setMethodCallHandler(_onNativeCall);
     _scheduleBounds();
   }
@@ -196,9 +244,18 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    DshNativeOverlay.popupRoutes.removeListener(_onHostOverlay);
     channel.setMethodCallHandler(null);
     channel.invokeMethod<void>('hide');
     super.dispose();
+  }
+
+  void _onHostOverlay() {
+    if (DshNativeOverlay.obscured) {
+      channel.invokeMethod<void>('hide');
+      return;
+    }
+    _scheduleBounds();
   }
 
   Future<void> _onNativeCall(MethodCall call) async {
@@ -250,7 +307,7 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
 
   void _scheduleBounds() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted || _error != null) return;
+      if (!mounted || _error != null || DshNativeOverlay.obscured) return;
       final box = context.findRenderObject() as RenderBox?;
       if (box == null ||
           !box.hasSize ||

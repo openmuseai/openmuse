@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -53,36 +55,31 @@ final class _DshPanelState extends State<DshPanel> {
                     reloadToken: _reloadToken,
                   ),
                 ),
-                if (widget.supervisor.state != DshSidecarState.ready)
-                  _Composer(onStart: _start),
               ],
             ),
-            Positioned(
-              top: 8,
-              right: 6,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    key: const Key('dsh-reload'),
-                    tooltip: '刷新 DSH 面板',
-                    onPressed: () => setState(() => _reloadToken++),
-                    icon: Icon(
-                      Icons.refresh,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      size: 16,
-                    ),
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 26,
-                      minHeight: 26,
-                    ),
+            if (!Platform.isWindows)
+              Positioned(
+                top: 8,
+                left: 210,
+                child: IconButton(
+                  key: const Key('dsh-reload'),
+                  tooltip: '刷新 DSH 面板',
+                  onPressed: () => setState(() => _reloadToken++),
+                  icon: Icon(
+                    Icons.refresh,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 16,
                   ),
-                  ?paneMenu,
-                ],
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                ),
               ),
-            ),
+            if (paneMenu != null)
+              Positioned(top: 8, right: 6, child: paneMenu),
           ],
         ),
       ),
@@ -123,6 +120,16 @@ final class _PanelBody extends StatelessWidget {
         reloadToken: reloadToken,
       );
     }
+    if (supervisor.state == DshSidecarState.starting ||
+        supervisor.state == DshSidecarState.stopped) {
+      return const Center(
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
       child: Align(
@@ -148,7 +155,7 @@ final class _PanelBody extends StatelessWidget {
               const SizedBox(height: 7),
               Text(
                 _friendlyError(supervisor.lastError) ??
-                    '仅在首次使用时启动 DSH sidecar；它不会阻塞本地 Workspace。',
+                    'DSH sidecar 未能自动启动。',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 12,
@@ -163,7 +170,7 @@ final class _PanelBody extends StatelessWidget {
                   foregroundColor: const Color(0xff2f6de1),
                   padding: EdgeInsets.zero,
                 ),
-                child: const Text('启动插件'),
+                child: const Text('重试启动'),
               ),
             ],
           ),
@@ -171,52 +178,6 @@ final class _PanelBody extends StatelessWidget {
       ),
     );
   }
-}
-
-final class _Composer extends StatelessWidget {
-  const _Composer({required this.onStart});
-  final VoidCallback onStart;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.fromLTRB(12, 0, 12, 14),
-    padding: const EdgeInsets.fromLTRB(12, 11, 10, 9),
-    height: 82,
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: Theme.of(context).dividerColor),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '给智能体发消息',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 12,
-          ),
-        ),
-        const Spacer(),
-        Row(
-          children: [
-            const Icon(Icons.add, color: Color(0xff777b84), size: 18),
-            const Spacer(),
-            IconButton(
-              onPressed: onStart,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-              icon: const Icon(Icons.arrow_upward, size: 16),
-              color: const Color(0xffdfe5ff),
-              style: IconButton.styleFrom(
-                backgroundColor: const Color(0xff496bb8),
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
 }
 
 String? _friendlyError(Object? error) {
