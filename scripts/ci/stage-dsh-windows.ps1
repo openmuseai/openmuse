@@ -133,6 +133,15 @@ function Install-OpenMuseBundledDsh {
     $closure = Build-OpenMuseDshClosure -RepoRoot $RepoRoot
     $node = Install-OpenMuseNodeRuntime -RepoRoot $RepoRoot
     $destination = Join-Path $BundleRoot 'openmuse\dsh'
+    $bundleRoot = [System.IO.Path]::GetFullPath($BundleRoot).TrimEnd('\')
+    Get-CimInstance Win32_Process | Where-Object {
+        $_.ExecutablePath -and
+        $_.ExecutablePath.StartsWith($bundleRoot, [StringComparison]::OrdinalIgnoreCase)
+    } | ForEach-Object {
+        Write-Host "    stopping $($_.Name) (pid $($_.ProcessId)) so the bundle can be rewritten"
+        Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+    }
+    Start-Sleep -Seconds 1
     $modules = Join-Path $destination 'node_modules'
     if (Test-Path $modules) {
         & cmd.exe /c "rmdir /s /q \\?\$modules" | Out-Null
