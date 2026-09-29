@@ -92,10 +92,23 @@ void main() {
   });
 
   test('bundled node directory is prepended to Path', () {
+    if (!Platform.isWindows) return;
     final env = dshLaunchEnvironment({
       'Path': r'C:\Windows',
     }, r'D:\OpenMuse\openmuse\dsh\node\node.exe');
     expect(env['Path'], r'D:\OpenMuse\openmuse\dsh\node;C:\Windows');
+  });
+
+  test('bundled node directory is prepended to PATH on macOS', () {
+    if (!Platform.isMacOS) return;
+    final env = dshLaunchEnvironment(
+      {'PATH': '/usr/bin'},
+      '/Applications/OpenMuse.app/Contents/Resources/openmuse/dsh/node/bin/node',
+    );
+    expect(
+      env['PATH'],
+      '/Applications/OpenMuse.app/Contents/Resources/openmuse/dsh/node/bin:/usr/bin',
+    );
   });
 
   test('web sidecar asks DSH itself for an ephemeral loopback port', () {
