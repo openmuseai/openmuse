@@ -61,4 +61,33 @@ void main() {
     expect(rendered.data, contains('**local**'));
     expect(rendered.selectable, isTrue);
   });
+
+  testWidgets('Markdown preview banner offers Edit through the host callback', (
+    tester,
+  ) async {
+    String? requestedEditor;
+    final plugin = OpenMuseFileViewerPlugin();
+    final resource = OpenMuseResource(
+      uri: Uri(path: '/notes.md', scheme: 'file'),
+      displayName: 'notes.md',
+      mediaType: 'text/markdown',
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => plugin.buildEditorBanner(
+              context,
+              resource,
+              canOpenWith: (id) => id == 'helix.editor',
+              openWith: (id) => requestedEditor = id,
+            )!,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Edit'), findsOneWidget);
+    await tester.tap(find.text('Edit'));
+    expect(requestedEditor, 'helix.editor');
+  });
 }

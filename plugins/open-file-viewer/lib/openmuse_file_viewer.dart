@@ -9,7 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
-final class OpenMuseFileViewerPlugin implements OpenMusePlugin {
+final class OpenMuseFileViewerPlugin
+    implements OpenMusePlugin, OpenMuseEditorBannerContributor {
   @override
   final descriptor = const OpenMusePluginDescriptor(
     id: 'com.openmuse.open-file-viewer',
@@ -25,16 +26,19 @@ final class OpenMuseFileViewerPlugin implements OpenMusePlugin {
     editors: [
       OpenMuseEditorContribution(
         id: 'viewer.markdown',
+        mediaTypes: {'text/markdown'},
         extensions: {'md', 'markdown', 'mdown'},
         priority: 20,
       ),
       OpenMuseEditorContribution(
         id: 'viewer.image',
+        mediaTypes: {'image/*'},
         extensions: {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'},
         priority: 20,
       ),
       OpenMuseEditorContribution(
         id: 'viewer.pdf',
+        mediaTypes: {'application/pdf'},
         extensions: {'pdf'},
         priority: 20,
       ),
@@ -77,17 +81,50 @@ final class OpenMuseFileViewerPlugin implements OpenMusePlugin {
       );
     }
     final extension = p.extension(path).toLowerCase();
-    if (const {'.png', '.jpg', '.jpeg', '.gif', '.webp'}.contains(extension)) {
+    final mediaType = resource.mediaType;
+    if (const {
+          'image/png',
+          'image/jpeg',
+          'image/gif',
+          'image/webp',
+        }.contains(mediaType) ||
+        (mediaType == null &&
+            const {
+              '.png',
+              '.jpg',
+              '.jpeg',
+              '.gif',
+              '.webp',
+            }.contains(extension))) {
       return _LocalImagePreview(key: ValueKey(path), path: path);
     }
-    if (extension == '.svg') {
+    if (mediaType == 'image/svg+xml' ||
+        (mediaType == null && extension == '.svg')) {
       return _LocalTextPreview(key: ValueKey(path), path: path, title: 'SVG');
     }
-    if (extension == '.pdf') {
+    if (mediaType == 'application/pdf' ||
+        (mediaType == null && extension == '.pdf')) {
       return _LocalPdfPreview(key: ValueKey(path), path: path);
     }
     return const _ViewerMessage('此文件类型尚无可用预览器。可安装对应格式的插件。');
   }
+
+  @override
+  Widget? buildEditorBanner(
+    BuildContext context,
+    OpenMuseResource resource, {
+    required bool Function(String editorId) canOpenWith,
+    required void Function(String editorId) openWith,
+  }) => OpenMuseEditorBanner(
+    message: '文件预览 · 只读',
+    actionLabel:
+        resource.mediaType == 'text/markdown' && canOpenWith('helix.editor')
+        ? 'Edit'
+        : null,
+    onAction: resource.mediaType == 'text/markdown'
+        ? () => openWith('helix.editor')
+        : null,
+  );
 
   @override
   Widget? buildPanel(BuildContext context, String panelId) => null;
