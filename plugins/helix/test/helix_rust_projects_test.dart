@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -13,7 +14,12 @@ void main() {
   });
 
   tearDown(() {
-    if (sandbox.existsSync()) sandbox.deleteSync(recursive: true);
+    if (!sandbox.existsSync()) return;
+    try {
+      sandbox.deleteSync(recursive: true);
+    } on FileSystemException {
+      // A just-stopped engine may still hold the sandbox for a moment.
+    }
   });
 
   File writeFile(String relative, [String content = '']) {
@@ -163,6 +169,46 @@ void main() {
       addTearDown(runtime.dispose);
       expect(runtime.linkedRustProjectsFor(path('scratch/notes.rs')), isEmpty);
     });
+  });
+
+  test('a reused session links the projects when it switches out of a crate',
+      () async {
+    final hx = Platform.environment['OPENMUSE_HELIX_BIN'];
+    if (hx == null || !File(hx).existsSync()) {
+      markTestSkipped('OPENMUSE_HELIX_BIN is not an hx executable');
+      return;
+    }
+    writeFile('ws/helix/Cargo.toml', '[package]\nname = "helix"\n');
+    writeFile('ws/helix/src/lib.rs', 'pub fn answer() -> u32 { 42 }\n');
+    writeFile('scratch/notes.rs', 'fn main() {}\n');
+    final runtime = HelixRuntimePool(executable: hx)
+      ..rustWorkspaceRoots = [path('ws')];
+    addTearDown(() async {
+      await runtime.stop();
+      runtime.dispose();
+    });
+    await runtime.configure(
+      const HelixPreferences(
+        inputProfile: HelixInputProfile.standardNonmodal,
+        languageServerPaths: {},
+      ),
+    );
+    if (!runtime.supportsNonmodal) {
+      markTestSkipped('the engine does not offer the reusable nonmodal session');
+      return;
+    }
+    await runtime.openDocument(path('ws/helix/src/lib.rs'));
+    expect(
+      runtime.generatedLanguagesFile.readAsStringSync(),
+      isNot(contains('linkedProjects')),
+    );
+    await runtime.openDocument(path('scratch/notes.rs'));
+    final config = runtime.generatedLanguagesFile.readAsStringSync();
+    expect(config, contains('[language-server.rust-analyzer.config]'));
+    expect(
+      config,
+      contains('linkedProjects = ${jsonEncode([path('ws/helix/Cargo.toml')])}'),
+    );
   });
 
   test('activation hands the mounted workspaces to the runtime', () async {
