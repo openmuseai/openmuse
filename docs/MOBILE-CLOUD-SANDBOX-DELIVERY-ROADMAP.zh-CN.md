@@ -394,6 +394,10 @@ ABI、reference fake、黑盒场景和统一验收入口见 [`STORAGE-CONTRACT-S
 
 ### ST4：BYOS、Provider 迁移与数据可移植
 
+**实施状态：Accepted**（`feature/st4-byos-provider-portability`）
+
+BYOS 执行放置、迁移状态机、可移植导出和统一验收入口见 [`BYOS-PROVIDER-MIGRATION-PORTABILITY.zh-CN.md`](BYOS-PROVIDER-MIGRATION-PORTABILITY.zh-CN.md) 和 `scripts/test_storage_portability.sh`。
+
 **目标**
 
 把“数据自主”做成可测试的配置、迁移、验证、撤销和删除能力。

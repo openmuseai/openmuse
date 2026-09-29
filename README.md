@@ -50,6 +50,7 @@ BlobStorePort, S3 profile and provider TCK: [`docs/STORAGE-CONTRACT-S3-PROFILE-T
 S3 adapter, credentials and endpoint security: [`docs/S3-ADAPTER-CREDENTIAL-ENDPOINT-SECURITY.zh-CN.md`](docs/S3-ADAPTER-CREDENTIAL-ENDPOINT-SECURITY.zh-CN.md).
 Cloud Workspace metadata, CAS and outbox: [`docs/CLOUD-WORKSPACE-METADATA-CAS-OUTBOX.zh-CN.md`](docs/CLOUD-WORKSPACE-METADATA-CAS-OUTBOX.zh-CN.md).
 Workspace Sync Plugin policy, durable orchestration and conflicts: [`docs/WORKSPACE-SYNC-PLUGIN.zh-CN.md`](docs/WORKSPACE-SYNC-PLUGIN.zh-CN.md).
+BYOS, provider migration and portable export: [`docs/BYOS-PROVIDER-MIGRATION-PORTABILITY.zh-CN.md`](docs/BYOS-PROVIDER-MIGRATION-PORTABILITY.zh-CN.md).
 
 OpenMuse source uses the repository's AGPL-3.0 `LICENSE`, as selected by the
 project owner. Third-party components retain their own licenses; see

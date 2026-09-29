@@ -1369,6 +1369,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "openmuse-storage-portability"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "openmuse-contract",
+ "openmuse-storage-contract",
+ "openmuse-storage-tck",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "openmuse-storage-s3"
 version = "0.1.0"
 dependencies = [
