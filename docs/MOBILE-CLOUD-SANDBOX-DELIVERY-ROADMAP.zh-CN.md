@@ -189,6 +189,10 @@
 
 ### C2：Broker Delegation、Policy Decision 与 Audit Context
 
+**实施状态：已完成**（`feature/c2-broker-delegation`）
+
+安全模型、实现与验收入口见 [`BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md`](BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md) 和 `scripts/test_broker_delegation.sh`。
+
 **目标**
 
 支持“用户授权 DSH，DSH 代表用户调用 Sandbox，Sandbox 再启动目标 Plugin worker”的多主体调用，而不把某个 Plugin 的 ambient authority 借给另一个主体。

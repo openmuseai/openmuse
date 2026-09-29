@@ -5,8 +5,8 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+openmuse-contract = { path = "../openmuse-contract" }
 openmuse-plugin-protocol = { path = "../openmuse-plugin-protocol" }
-serde_json.workspace = true
-
-[dev-dependencies]
 serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

@@ -87,15 +87,18 @@ dependencies = [
 name = "openmuse-platform-runtime"
 version = "0.1.0"
 dependencies = [
+ "openmuse-contract",
  "openmuse-plugin-protocol",
  "serde",
  "serde_json",
+ "thiserror",
 ]
 
 [[package]]
 name = "openmuse-plugin-protocol"
 version = "0.1.0"
 dependencies = [
+ "openmuse-contract",
  "serde",
  "serde_json",
  "sha2",

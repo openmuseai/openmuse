@@ -4,6 +4,7 @@
 //! native view handles, and renderer-specific values. They are suitable for
 //! JSON today and a binary IPC encoding later without changing semantics.
 
+use openmuse_contract::{ContractScope, PrincipalRef};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeSet;
@@ -138,6 +139,23 @@ pub struct RequestEnvelope {
     /// means the host policy supplies the deadline; it never means infinity.
     pub deadline_ms: Option<u64>,
     pub operation: Operation,
+}
+
+/// Multi-subject request context used when one plugin delegates execution to
+/// another provider. Authorization remains a Host/Broker responsibility.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DelegatedRequestContext {
+    pub request_id: String,
+    pub actor: PrincipalRef,
+    pub caller: PluginId,
+    pub target_provider: PluginId,
+    pub scope: ContractScope,
+    pub revision: String,
+    pub generation: u64,
+    pub deadline_at_ms: u64,
+    pub handle_ref: String,
+    pub operation: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

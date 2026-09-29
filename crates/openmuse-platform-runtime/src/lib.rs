@@ -8,6 +8,10 @@ use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
+mod delegation;
+
+pub use delegation::*;
+
 pub type Handler =
     Arc<dyn Fn(&PluginId, &str, Value) -> Result<Value, ProtocolError> + Send + Sync>;
 
