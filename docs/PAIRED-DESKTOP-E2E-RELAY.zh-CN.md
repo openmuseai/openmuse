@@ -1,6 +1,6 @@
 # Paired Desktop E2E Channel 与 Opaque Relay
 
-> 状态：Engineering Accepted；Mobile 平台密钥存储、public identity 与 signed-offer native operation 已实现，handshake/channel/真实 Relay 部署门禁待完成
+> 状态：Engineering Accepted；Mobile 平台密钥、signed offer 与 Rust opaque channel handle ABI 已实现，平台 channel binding/真实 Relay 部署门禁待完成
 >
 > 子需求：M5 integration increment
 >
@@ -102,8 +102,20 @@ generation 和 Ed25519 signature 的严格 JSON。Rust FFI 测试会重新解析
 Android 真机测试还验证 offer public identity 与 Keystore identity 一致、连续 offer nonce
 不同。
 
-下一增量仍需以 opaque operation API 暴露 X25519 handshake 和 channel seal/open，不能
-为了复用 Rust 领域核而把 seed 或派生私钥返回 Dart。iOS Secure Enclave 不原生支持
+Rust mobile artifact 进一步提供 process-local opaque handle ABI：
+
+1. `begin_handshake` 同时验证双方 signed offer 与账号服务 registration，把 X25519
+   shared secret 留在 Rust `PairingHandshake`；
+2. UI 只能读取 6 位 SAS，`confirm_handshake` 消费旧 handle 并创建 `SecureChannel`
+   handle，错误 SAS 同样消费握手，避免反复猜测；
+3. `channel_seal/open` 只通过 handle 操作 bounded frame；channel key、nonce prefix 与
+   sequence 始终位于 Rust，重放/乱序继续 fail closed；
+4. `native_handle_close` 触发 Drop 清零。进程重启后 handle 必然失效，不做磁盘持久化。
+
+FFI TCK 用两个独立 seed 完成双向 begin/confirm/seal/open，并验证 ciphertext 不含明文、
+重放拒绝和 close。Android/iOS artifacts 均已构建并核对导出符号。下一增量仍需把这组 ABI
+绑定到 Kotlin/Swift typed operations；不能为了复用 Rust 领域核而把 seed 或派生私钥返回
+Dart。iOS Secure Enclave 不原生支持
 本协议采用的 Ed25519/X25519，因此 Keychain seed + 进程内 Rust operation boundary 是当前
 可实现边界，后续仍须密码学与内存取证审计。
 
@@ -114,7 +126,7 @@ Android 真机测试还验证 offer public identity 与 Keystore identity 一致
 - Desktop Keystore adapter、Mobile/Desktop 备份策略与 key rotation；
 - 账号服务签发、防回滚和撤销 `DeviceRegistration`；
 - 真实 WSS/QUIC outbound relay 的限流、backpressure、离线队列上限和多地域故障；
-- Rust Core 的 offer/handshake/channel opaque operation bridge 与内存取证审计；
+- Kotlin/Swift 的 handshake/channel typed binding 与内存取证审计；
 - 第三方密码学评审、移动端抓包、代理/恶意 relay 和设备被替换演练。
 
 这些需要平台签名环境和部署基础设施；在证据完成前，M5 维持 Engineering Accepted。

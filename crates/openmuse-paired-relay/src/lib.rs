@@ -12,7 +12,13 @@ use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use hkdf::Hkdf;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    sync::{
+        Mutex, OnceLock,
+        atomic::{AtomicU64, Ordering},
+    },
+};
 use x25519_dalek::{PublicKey as AgreementPublicKey, StaticSecret};
 use zeroize::Zeroize;
 
@@ -20,6 +26,7 @@ pub const MAX_RELAY_CIPHERTEXT_BYTES: usize = 64 * 1024 + 16;
 pub const ABI_VERSION: u32 = 1;
 pub const DEVICE_PUBLIC_BYTES: usize = 64;
 pub const MAX_PLATFORM_REF_BYTES: usize = 256;
+pub const MAX_CONTROL_JSON_BYTES: usize = 64 * 1024;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -270,6 +277,200 @@ pub extern "C" fn openmuse_paired_buffer_free(buffer: OpenMusePairedBuffer) {
     }
 }
 
+#[unsafe(no_mangle)]
+/// Begin a verified pairing handshake and return an opaque native handle.
+///
+/// # Safety
+/// All pointers must reference their declared readable lengths. Returned
+/// buffers must be released with [`openmuse_paired_buffer_free`].
+pub unsafe extern "C" fn openmuse_paired_begin_handshake(
+    seed: *const u8,
+    seed_len: usize,
+    local_offer_json: *const u8,
+    local_offer_json_len: usize,
+    remote_offer_json: *const u8,
+    remote_offer_json_len: usize,
+    local_registration_json: *const u8,
+    local_registration_json_len: usize,
+    remote_registration_json: *const u8,
+    remote_registration_json_len: usize,
+) -> OpenMusePairedBuffer {
+    paired_buffer_call(|| {
+        if seed.is_null() || seed_len != 32 {
+            return Err(PairedRelayError::PairingDenied);
+        }
+        let local_offer: PairingOffer = unsafe {
+            serde_json::from_slice(control_json(local_offer_json, local_offer_json_len)?)
+        }
+        .map_err(|_| PairedRelayError::InvalidOffer)?;
+        let remote_offer: PairingOffer = unsafe {
+            serde_json::from_slice(control_json(remote_offer_json, remote_offer_json_len)?)
+        }
+        .map_err(|_| PairedRelayError::InvalidOffer)?;
+        let local_registration: DeviceRegistration = unsafe {
+            serde_json::from_slice(control_json(
+                local_registration_json,
+                local_registration_json_len,
+            )?)
+        }
+        .map_err(|_| PairedRelayError::PairingDenied)?;
+        let remote_registration: DeviceRegistration = unsafe {
+            serde_json::from_slice(control_json(
+                remote_registration_json,
+                remote_registration_json_len,
+            )?)
+        }
+        .map_err(|_| PairedRelayError::PairingDenied)?;
+
+        let mut owned_seed = [0_u8; 32];
+        owned_seed.copy_from_slice(unsafe { std::slice::from_raw_parts(seed, seed_len) });
+        let keys = DeviceKeyPair::from_seed(owned_seed);
+        owned_seed.zeroize();
+        let handshake = PairingHandshake::begin(
+            &keys,
+            &local_offer,
+            &remote_offer,
+            &local_registration,
+            &remote_registration,
+        )?;
+        let handle = next_native_handle()?;
+        let response = serde_json::to_vec(&NativeHandshakeDescriptor {
+            handshake_handle: handle,
+            confirmation_code: handshake.confirmation_code(),
+        })
+        .map_err(|_| PairedRelayError::CryptoFailure)?;
+        native_sessions()
+            .lock()
+            .map_err(|_| PairedRelayError::CryptoFailure)?
+            .handshakes
+            .insert(handle, handshake);
+        Ok(response)
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Confirm a manual SAS and replace the handshake with an opaque channel.
+///
+/// # Safety
+/// `confirmation_code` must reference its declared readable length.
+pub unsafe extern "C" fn openmuse_paired_confirm_handshake(
+    handshake_handle: u64,
+    confirmation_code: *const u8,
+    confirmation_code_len: usize,
+) -> OpenMusePairedBuffer {
+    paired_buffer_call(|| {
+        if confirmation_code.is_null() || confirmation_code_len != 6 {
+            return Err(PairedRelayError::ConfirmationMismatch);
+        }
+        let code = std::str::from_utf8(unsafe {
+            std::slice::from_raw_parts(confirmation_code, confirmation_code_len)
+        })
+        .map_err(|_| PairedRelayError::ConfirmationMismatch)?;
+        let handshake = native_sessions()
+            .lock()
+            .map_err(|_| PairedRelayError::CryptoFailure)?
+            .handshakes
+            .remove(&handshake_handle)
+            .ok_or(PairedRelayError::PairingDenied)?;
+        let channel = handshake.confirm(code)?;
+        let handle = next_native_handle()?;
+        let response = serde_json::to_vec(&NativeChannelDescriptor {
+            channel_handle: handle,
+            channel_ref: channel.channel_ref(),
+        })
+        .map_err(|_| PairedRelayError::CryptoFailure)?;
+        native_sessions()
+            .lock()
+            .map_err(|_| PairedRelayError::CryptoFailure)?
+            .channels
+            .insert(handle, channel);
+        Ok(response)
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Seal one bounded plaintext frame and return a JSON relay envelope.
+///
+/// # Safety
+/// `plaintext` must reference its declared readable length.
+pub unsafe extern "C" fn openmuse_paired_channel_seal(
+    channel_handle: u64,
+    plaintext: *const u8,
+    plaintext_len: usize,
+) -> OpenMusePairedBuffer {
+    paired_buffer_call(|| {
+        if plaintext.is_null() || plaintext_len > MAX_RELAY_CIPHERTEXT_BYTES - 16 {
+            return Err(PairedRelayError::FrameTooLarge);
+        }
+        let plaintext = unsafe { std::slice::from_raw_parts(plaintext, plaintext_len) };
+        let mut sessions = native_sessions()
+            .lock()
+            .map_err(|_| PairedRelayError::CryptoFailure)?;
+        let envelope = sessions
+            .channels
+            .get_mut(&channel_handle)
+            .ok_or(PairedRelayError::PairingDenied)?
+            .seal(plaintext)?;
+        serde_json::to_vec(&envelope).map_err(|_| PairedRelayError::CryptoFailure)
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Open one JSON relay envelope and return plaintext bytes.
+///
+/// # Safety
+/// `envelope_json` must reference its declared readable length.
+pub unsafe extern "C" fn openmuse_paired_channel_open(
+    channel_handle: u64,
+    envelope_json: *const u8,
+    envelope_json_len: usize,
+) -> OpenMusePairedBuffer {
+    paired_buffer_call(|| {
+        let envelope: RelayEnvelope =
+            unsafe { serde_json::from_slice(control_json(envelope_json, envelope_json_len)?) }
+                .map_err(|_| PairedRelayError::EnvelopeDenied)?;
+        native_sessions()
+            .lock()
+            .map_err(|_| PairedRelayError::CryptoFailure)?
+            .channels
+            .get_mut(&channel_handle)
+            .ok_or(PairedRelayError::PairingDenied)?
+            .open(&envelope)
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn openmuse_paired_native_handle_close(handle: u64) -> i32 {
+    match native_sessions().lock() {
+        Ok(mut sessions) => {
+            let removed = sessions.handshakes.remove(&handle).is_some()
+                || sessions.channels.remove(&handle).is_some();
+            if removed { 0 } else { 1 }
+        }
+        Err(_) => 2,
+    }
+}
+
+fn paired_buffer_call(
+    operation: impl FnOnce() -> Result<Vec<u8>, PairedRelayError>,
+) -> OpenMusePairedBuffer {
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(operation)) {
+        Ok(Ok(bytes)) => OpenMusePairedBuffer::from_vec(bytes, 0),
+        Ok(Err(error)) => OpenMusePairedBuffer::failure(&error.to_string()),
+        Err(_) => OpenMusePairedBuffer::failure("paired operation panic contained"),
+    }
+}
+
+unsafe fn control_json<'a>(
+    pointer: *const u8,
+    length: usize,
+) -> Result<&'a [u8], PairedRelayError> {
+    if pointer.is_null() || length == 0 || length > MAX_CONTROL_JSON_BYTES {
+        return Err(PairedRelayError::PairingDenied);
+    }
+    Ok(unsafe { std::slice::from_raw_parts(pointer, length) })
+}
+
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_io_openmuse_openmuse_1mobile_PairedCryptoNative_devicePublic(
@@ -351,7 +552,8 @@ pub struct PairingOffer {
 
 /// Trusted account-service result. Pairing never treats a device's self-claimed
 /// `account_ref` as proof that it belongs to the logged-in account.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DeviceRegistration {
     pub account_ref: String,
     pub device_ref: String,
@@ -648,6 +850,41 @@ impl SecureChannel {
             .ok_or(PairedRelayError::SequenceExhausted)?;
         Ok(plaintext)
     }
+}
+
+#[derive(Default)]
+struct NativeSessions {
+    handshakes: HashMap<u64, PairingHandshake>,
+    channels: HashMap<u64, SecureChannel>,
+}
+
+static NATIVE_SESSIONS: OnceLock<Mutex<NativeSessions>> = OnceLock::new();
+static NEXT_NATIVE_HANDLE: AtomicU64 = AtomicU64::new(1);
+
+fn native_sessions() -> &'static Mutex<NativeSessions> {
+    NATIVE_SESSIONS.get_or_init(|| Mutex::new(NativeSessions::default()))
+}
+
+fn next_native_handle() -> Result<u64, PairedRelayError> {
+    let handle = NEXT_NATIVE_HANDLE.fetch_add(1, Ordering::Relaxed);
+    if handle == 0 || handle == u64::MAX {
+        return Err(PairedRelayError::SequenceExhausted);
+    }
+    Ok(handle)
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NativeHandshakeDescriptor<'a> {
+    handshake_handle: u64,
+    confirmation_code: &'a str,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NativeChannelDescriptor<'a> {
+    channel_handle: u64,
+    channel_ref: &'a str,
 }
 
 impl Drop for SecureChannel {

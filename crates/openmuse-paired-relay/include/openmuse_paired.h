@@ -35,6 +35,30 @@ OpenMusePairedBuffer openmuse_paired_issue_offer(
     size_t nonce_len,
     uint64_t registration_generation);
 void openmuse_paired_buffer_free(OpenMusePairedBuffer buffer);
+OpenMusePairedBuffer openmuse_paired_begin_handshake(
+    const uint8_t *seed,
+    size_t seed_len,
+    const uint8_t *local_offer_json,
+    size_t local_offer_json_len,
+    const uint8_t *remote_offer_json,
+    size_t remote_offer_json_len,
+    const uint8_t *local_registration_json,
+    size_t local_registration_json_len,
+    const uint8_t *remote_registration_json,
+    size_t remote_registration_json_len);
+OpenMusePairedBuffer openmuse_paired_confirm_handshake(
+    uint64_t handshake_handle,
+    const uint8_t *confirmation_code,
+    size_t confirmation_code_len);
+OpenMusePairedBuffer openmuse_paired_channel_seal(
+    uint64_t channel_handle,
+    const uint8_t *plaintext,
+    size_t plaintext_len);
+OpenMusePairedBuffer openmuse_paired_channel_open(
+    uint64_t channel_handle,
+    const uint8_t *envelope_json,
+    size_t envelope_json_len);
+int32_t openmuse_paired_native_handle_close(uint64_t handle);
 
 #ifdef __cplusplus
 }
