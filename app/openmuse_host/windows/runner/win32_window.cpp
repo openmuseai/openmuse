@@ -134,8 +134,12 @@ bool Win32Window::Create(const std::wstring& title,
   UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
   double scale_factor = dpi / 96.0;
 
+  // Flutter paints the caption in the same row as the app controls. Removing
+  // WS_CAPTION is essential: WM_NCCALCSIZE alone still leaves a native title
+  // row on some Windows configurations. Keep the sizing and system-menu bits.
+  constexpr DWORD kWindowStyle = WS_OVERLAPPEDWINDOW & ~WS_CAPTION;
   HWND window = CreateWindow(
-      window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
+      window_class, title.c_str(), kWindowStyle,
       Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
       Scale(size.width, scale_factor), Scale(size.height, scale_factor),
       nullptr, nullptr, GetModuleHandle(nullptr), this);
@@ -145,8 +149,17 @@ bool Win32Window::Create(const std::wstring& title,
   }
 
   UpdateTheme(window);
+  if (!OnCreate()) return false;
 
-  return OnCreate();
+  // Force Windows to recalculate the non-client area after Flutter has
+  // attached its child view. Without SWP_FRAMECHANGED some systems keep the
+  // caption rectangle from the initial overlapped-window calculation.
+  const LONG_PTR style = ::GetWindowLongPtr(window, GWL_STYLE);
+  ::SetWindowLongPtr(window, GWL_STYLE, style & ~WS_CAPTION);
+  ::SetWindowPos(window, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE |
+                     SWP_FRAMECHANGED);
+  return true;
 }
 
 bool Win32Window::Show() {
@@ -179,6 +192,26 @@ Win32Window::MessageHandler(HWND hwnd,
                             WPARAM const wparam,
                             LPARAM const lparam) noexcept {
   switch (message) {
+    case WM_NCCALCSIZE:
+      if (wparam == TRUE) {
+        auto* params = reinterpret_cast<NCCALCSIZE_PARAMS*>(lparam);
+        const UINT dpi = ::GetDpiForWindow(hwnd);
+        const int frame_x =
+            ::GetSystemMetricsForDpi(SM_CXFRAME, dpi) +
+            ::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+        const int frame_y =
+            ::GetSystemMetricsForDpi(SM_CYFRAME, dpi) +
+            ::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+        params->rgrc[0].left += frame_x;
+        params->rgrc[0].right -= frame_x;
+        params->rgrc[0].bottom -= frame_y;
+        if (::IsZoomed(hwnd)) {
+          params->rgrc[0].top += frame_y;
+        }
+        return 0;
+      }
+      break;
+
     case WM_DESTROY:
       window_handle_ = nullptr;
       Destroy();
@@ -257,6 +290,35 @@ RECT Win32Window::GetClientArea() {
 
 HWND Win32Window::GetHandle() {
   return window_handle_;
+}
+
+void Win32Window::StartCaptionDrag() {
+  if (window_handle_ == nullptr) return;
+  POINT cursor{};
+  if (!::GetCursorPos(&cursor)) return;
+  ::ReleaseCapture();
+  ::SendMessage(window_handle_, WM_NCLBUTTONDOWN, HTCAPTION,
+                MAKELPARAM(cursor.x, cursor.y));
+}
+
+bool Win32Window::IsMaximized() const {
+  return window_handle_ != nullptr && ::IsZoomed(window_handle_);
+}
+
+void Win32Window::Minimize() {
+  if (window_handle_ != nullptr) ::ShowWindow(window_handle_, SW_MINIMIZE);
+}
+
+void Win32Window::ToggleMaximized() {
+  if (window_handle_ == nullptr) return;
+  ::ShowWindow(window_handle_,
+               ::IsZoomed(window_handle_) ? SW_RESTORE : SW_MAXIMIZE);
+}
+
+void Win32Window::RequestClose() {
+  if (window_handle_ != nullptr) {
+    ::PostMessage(window_handle_, WM_CLOSE, 0, 0);
+  }
 }
 
 void Win32Window::SetQuitOnClose(bool quit_on_close) {

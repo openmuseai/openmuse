@@ -12,6 +12,7 @@ import 'layout/surface_mutation_guard.dart';
 import 'local_settings.dart';
 import 'plugin_surface_host.dart';
 import 'settings_dialog.dart';
+import 'window_chrome.dart';
 import 'workspace_controller.dart';
 import 'workspace_picker.dart';
 
@@ -104,100 +105,121 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
       _layout,
     ]),
     builder: (context, _) => Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          _lastSize = constraints.biggest;
-          final snapshot = _layout.snapshot;
-          final hiddenPanes = _hiddenPaneIds(snapshot);
-          final visibleRoot = _withoutPanes(snapshot.root, hiddenPanes);
-          if (visibleRoot == null) {
-            return const Center(child: Text('没有可见窗格。请重置布局。'));
-          }
-          final geometry = const WorkbenchLayoutSolver().solve(
-            visibleRoot,
-            constraints.biggest,
-            gutter: _gutter,
-          );
-          final positionedBindings =
-              snapshot.bindings.entries
-                  .where((entry) => geometry.paneRects.containsKey(entry.key))
-                  .toList()
-                ..sort(
-                  (a, b) => a.value.instanceRef.compareTo(b.value.instanceRef),
+      body: Column(
+        children: [
+          if (Platform.isWindows)
+            _WindowsTitleStrip(
+              registry: widget.registry,
+              workspace: widget.workspace,
+              settings: widget.settings,
+            ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                _lastSize = constraints.biggest;
+                final snapshot = _layout.snapshot;
+                final hiddenPanes = _hiddenPaneIds(snapshot);
+                final visibleRoot = _withoutPanes(snapshot.root, hiddenPanes);
+                if (visibleRoot == null) {
+                  return const Center(child: Text('没有可见窗格。请重置布局。'));
+                }
+                final geometry = const WorkbenchLayoutSolver().solve(
+                  visibleRoot,
+                  constraints.biggest,
+                  gutter: _gutter,
                 );
-          return Stack(
-            clipBehavior: Clip.hardEdge,
-            children: [
-              const Positioned.fill(
-                child: ColoredBox(color: OpenMuseTokens.canvas),
-              ),
-              for (final entry in geometry.paneRects.entries)
-                Positioned.fromRect(
-                  key: ValueKey('pane-background:${entry.key}'),
-                  rect: entry.value,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      border: Border.all(
-                        color: snapshot.focusedPaneId == entry.key
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).dividerColor,
-                      ),
+                final positionedBindings =
+                    snapshot.bindings.entries
+                        .where(
+                          (entry) => geometry.paneRects.containsKey(entry.key),
+                        )
+                        .toList()
+                      ..sort(
+                        (a, b) =>
+                            a.value.instanceRef.compareTo(b.value.instanceRef),
+                      );
+                return Stack(
+                  clipBehavior: Clip.hardEdge,
+                  children: [
+                    const Positioned.fill(
+                      child: ColoredBox(color: OpenMuseTokens.canvas),
                     ),
-                  ),
-                ),
-              for (final entry in positionedBindings)
-                Positioned.fromRect(
-                  key: ValueKey(entry.value.instanceRef),
-                  rect: geometry.paneRects[entry.key]!,
-                  child: _BoundSurface(
-                    binding: entry.value,
-                    registry: widget.registry,
-                    workspace: widget.workspace,
-                    settings: widget.settings,
-                    paneMenu: _embeddedPaneMenu(context, snapshot, entry.key),
-                    onFocus: () => _focusPane(entry.key, entry.value),
-                  ),
-                ),
-              for (final divider in geometry.dividers)
-                Positioned.fromRect(
-                  key: ValueKey('layout-divider:${divider.path.join('.')}'),
-                  rect: divider.rect,
-                  child: _PaneResizer(
-                    axis: divider.axis,
-                    onDelta: (delta) {
-                      final extent = divider.axis == Axis.horizontal
-                          ? divider.containerRect.width - _gutter
-                          : divider.containerRect.height - _gutter;
-                      if (extent <= 0) return;
-                      final current = _layout.ratioBetween(
-                        divider.leadingPaneId,
-                        divider.trailingPaneId,
-                      );
-                      _layout.resizeBetween(
-                        divider.leadingPaneId,
-                        divider.trailingPaneId,
-                        (current + delta / extent).clamp(
-                          minSplitRatio,
-                          maxSplitRatio,
+                    for (final entry in geometry.paneRects.entries)
+                      Positioned.fromRect(
+                        key: ValueKey('pane-background:${entry.key}'),
+                        rect: entry.value,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            border: Border.all(
+                              color: snapshot.focusedPaneId == entry.key
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).dividerColor,
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                ),
-              for (final entry in geometry.paneRects.entries)
-                if (_showsOverlayPaneMenu(snapshot, entry.key))
-                  Positioned(
-                    key: ValueKey('pane-menu:${entry.key}'),
-                    left: entry.value.right - 30,
-                    top: entry.value.top + 8,
-                    width: 26,
-                    height: 26,
-                    child: _paneMenuButton(context, snapshot, entry.key),
-                  ),
-            ],
-          );
-        },
+                      ),
+                    for (final entry in positionedBindings)
+                      Positioned.fromRect(
+                        key: ValueKey(entry.value.instanceRef),
+                        rect: geometry.paneRects[entry.key]!,
+                        child: _BoundSurface(
+                          binding: entry.value,
+                          registry: widget.registry,
+                          workspace: widget.workspace,
+                          settings: widget.settings,
+                          paneMenu: _embeddedPaneMenu(
+                            context,
+                            snapshot,
+                            entry.key,
+                          ),
+                          onFocus: () => _focusPane(entry.key, entry.value),
+                        ),
+                      ),
+                    for (final divider in geometry.dividers)
+                      Positioned.fromRect(
+                        key: ValueKey(
+                          'layout-divider:${divider.path.join('.')}',
+                        ),
+                        rect: divider.rect,
+                        child: _PaneResizer(
+                          axis: divider.axis,
+                          onDelta: (delta) {
+                            final extent = divider.axis == Axis.horizontal
+                                ? divider.containerRect.width - _gutter
+                                : divider.containerRect.height - _gutter;
+                            if (extent <= 0) return;
+                            final current = _layout.ratioBetween(
+                              divider.leadingPaneId,
+                              divider.trailingPaneId,
+                            );
+                            _layout.resizeBetween(
+                              divider.leadingPaneId,
+                              divider.trailingPaneId,
+                              (current + delta / extent).clamp(
+                                minSplitRatio,
+                                maxSplitRatio,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    for (final entry in geometry.paneRects.entries)
+                      if (_showsOverlayPaneMenu(snapshot, entry.key))
+                        Positioned(
+                          key: ValueKey('pane-menu:${entry.key}'),
+                          left: entry.value.right - 30,
+                          top: entry.value.top + 8,
+                          width: 26,
+                          height: 26,
+                          child: _paneMenuButton(context, snapshot, entry.key),
+                        ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     ),
   );
@@ -717,44 +739,35 @@ final class _WorkspaceSidebar extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: const Color(0xffe8ebff),
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.auto_awesome,
-                      color: OpenMuseTokens.accent,
-                      size: 13,
+            if (!Platform.isWindows) ...[
+              Row(
+                children: [
+                  const _OpenMuseBrandMark(),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'OpenMuse',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'OpenMuse',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  _SmallIconButton(
+                    tooltip: '本地设置',
+                    icon: Icons.settings_outlined,
+                    onPressed: () =>
+                        showOpenMuseSettings(context, settings, registry),
                   ),
-                ),
-                _SmallIconButton(
-                  tooltip: '本地设置',
-                  icon: Icons.settings_outlined,
-                  onPressed: () =>
-                      showOpenMuseSettings(context, settings, registry),
-                ),
-                _SmallIconButton(
-                  tooltip: '收起侧栏',
-                  icon: Icons.view_sidebar_outlined,
-                  onPressed: workspace.toggleSidebar,
-                ),
-              ],
-            ),
-            const SizedBox(height: 11),
+                  _SmallIconButton(
+                    tooltip: '收起侧栏',
+                    icon: Icons.view_sidebar_outlined,
+                    onPressed: workspace.toggleSidebar,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 11),
+            ],
             _SidebarAction(
               icon: Icons.search,
               label: '搜索',
@@ -1177,6 +1190,13 @@ Future<void> _showOpenWithMenu(
   OpenMuseLocalSettings settings, {
   bool defaultsOnly = false,
 }) async {
+  if (registry.descriptors.isNotEmpty &&
+      registry
+          .editorCandidates(resource)
+          .every((item) => item.editor.catchAll)) {
+    resource = await workspace.inspectResource(resource);
+    if (!context.mounted) return;
+  }
   final unique = <String, OpenMuseEditorCandidate>{};
   for (final candidate in registry.editorCandidates(resource)) {
     unique.putIfAbsent(candidate.plugin.descriptor.id, () => candidate);
@@ -1678,14 +1698,29 @@ final class _EditorArea extends StatelessWidget {
   Widget build(BuildContext context) {
     final tab = workspace.activeTabFor(groupId);
     final current = tab?.resource;
-    final plugin = current == null || tab?.kind == WorkspaceTabKind.diff
+    final plugin =
+        current == null || tab?.kind == WorkspaceTabKind.diff || tab!.inspecting
         ? null
         : registry.editorFor(
             current,
             editorId:
-                tab?.preferredEditorId ??
+                tab.preferredEditorId ??
                 settings.defaultEditorFor(current.extension),
           );
+    final banner = current != null && plugin is OpenMuseEditorBannerContributor
+        ? (plugin as OpenMuseEditorBannerContributor).buildEditorBanner(
+            context,
+            current,
+            canOpenWith: (editorId) => registry
+                .editorCandidates(current)
+                .any((candidate) => candidate.editor.id == editorId),
+            openWith: (editorId) => workspace.openResource(
+              current,
+              editorId: editorId,
+              groupId: groupId,
+            ),
+          )
+        : null;
     return Column(
       children: [
         _TabStrip(
@@ -1695,17 +1730,7 @@ final class _EditorArea extends StatelessWidget {
           groupId: groupId,
           paneMenu: paneMenu,
         ),
-        if (tab?.kind != WorkspaceTabKind.diff && current != null)
-          Container(
-            height: 28,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            color: const Color(0xff202329),
-            alignment: Alignment.centerLeft,
-            child: const Text(
-              '右键标签或文件打开菜单 · Ctrl+S 保存 · Esc 进入 Helix 命令模式',
-              style: TextStyle(color: Color(0xffc9cbd1), fontSize: 11),
-            ),
-          ),
+        ?banner,
         Expanded(
           child: tab == null
               ? _Welcome(
@@ -1714,6 +1739,8 @@ final class _EditorArea extends StatelessWidget {
                 )
               : tab.kind == WorkspaceTabKind.diff
               ? _DiffWorkbench(diff: tab.diff!)
+              : tab.inspecting
+              ? const Center(child: Text('正在识别文件格式…'))
               : plugin == null
               ? const Center(child: Text('没有已安装的插件可以打开这个资源。'))
               : PluginEditorHost(
@@ -1754,7 +1781,7 @@ final class _TabStrip extends StatelessWidget {
     ),
     child: Row(
       children: [
-        if (!workspace.sidebarVisible)
+        if (!workspace.sidebarVisible && !Platform.isWindows)
           _SmallIconButton(
             tooltip: '展开侧栏',
             icon: Icons.view_sidebar_outlined,
@@ -2268,6 +2295,179 @@ final class _Welcome extends StatelessWidget {
           ),
         ],
       ),
+    ),
+  );
+}
+
+final class _WindowsTitleStrip extends StatelessWidget {
+  const _WindowsTitleStrip({
+    required this.registry,
+    required this.workspace,
+    required this.settings,
+  });
+
+  final OpenMusePluginRegistry registry;
+  final LocalWorkspaceController workspace;
+  final OpenMuseLocalSettings settings;
+
+  @override
+  Widget build(BuildContext context) {
+    OpenMuseWindowChrome.ensureBound();
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      height: OpenMuseTokens.topBarHeight,
+      decoration: BoxDecoration(
+        color: dark ? const Color(0xff202228) : OpenMuseTokens.sidebar,
+        border: Border(
+          bottom: BorderSide(color: Theme.of(context).dividerColor),
+        ),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 10),
+          const _OpenMuseBrandMark(),
+          const SizedBox(width: 8),
+          const Text(
+            'OpenMuse',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(width: 4),
+          _SmallIconButton(
+            tooltip: '本地设置',
+            icon: Icons.settings_outlined,
+            onPressed: () => showOpenMuseSettings(context, settings, registry),
+          ),
+          _SmallIconButton(
+            tooltip: workspace.sidebarVisible ? '收起侧栏' : '展开侧栏',
+            icon: Icons.view_sidebar_outlined,
+            onPressed: workspace.toggleSidebar,
+          ),
+          Expanded(
+            child: Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (event) {
+                if ((event.buttons & kPrimaryMouseButton) != 0) {
+                  OpenMuseWindowChrome.startDrag();
+                }
+              },
+              child: const SizedBox.expand(),
+            ),
+          ),
+          const _WindowsCaptionButtons(),
+        ],
+      ),
+    );
+  }
+}
+
+final class _WindowsCaptionButtons extends StatelessWidget {
+  const _WindowsCaptionButtons();
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
+    valueListenable: OpenMuseWindowChrome.maximized,
+    builder: (context, maximized, _) {
+      final color = OpenMuseTokens.textMuted;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _CaptionButton(
+            tooltip: '最小化',
+            icon: Icons.remove,
+            color: color,
+            onPressed: OpenMuseWindowChrome.minimize,
+          ),
+          _CaptionButton(
+            tooltip: maximized ? '还原' : '最大化',
+            icon: maximized ? Icons.filter_none : Icons.crop_square,
+            color: color,
+            iconSize: maximized ? 12 : 14,
+            onPressed: OpenMuseWindowChrome.toggleMaximized,
+          ),
+          _CaptionButton(
+            tooltip: '关闭',
+            icon: Icons.close,
+            color: color,
+            destructive: true,
+            onPressed: OpenMuseWindowChrome.close,
+          ),
+        ],
+      );
+    },
+  );
+}
+
+final class _CaptionButton extends StatefulWidget {
+  const _CaptionButton({
+    required this.tooltip,
+    required this.icon,
+    required this.color,
+    required this.onPressed,
+    this.iconSize = 16,
+    this.destructive = false,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onPressed;
+  final double iconSize;
+  final bool destructive;
+
+  @override
+  State<_CaptionButton> createState() => _CaptionButtonState();
+}
+
+final class _CaptionButtonState extends State<_CaptionButton> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final background = !_hover
+        ? Colors.transparent
+        : widget.destructive
+        ? const Color(0xffe81123)
+        : Theme.of(context).brightness == Brightness.dark
+        ? const Color(0x22ffffff)
+        : const Color(0x14000000);
+    final iconColor = _hover && widget.destructive
+        ? Colors.white
+        : widget.color;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: Tooltip(
+        message: widget.tooltip,
+        waitDuration: const Duration(milliseconds: 400),
+        child: GestureDetector(
+          onTap: widget.onPressed,
+          child: ColoredBox(
+            color: background,
+            child: SizedBox(
+              width: 46,
+              height: OpenMuseTokens.topBarHeight,
+              child: Icon(widget.icon, size: widget.iconSize, color: iconColor),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _OpenMuseBrandMark extends StatelessWidget {
+  const _OpenMuseBrandMark();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 22,
+    height: 22,
+    decoration: BoxDecoration(
+      color: const Color(0xffe8ebff),
+      borderRadius: BorderRadius.circular(7),
+    ),
+    child: const Center(
+      child: Icon(Icons.auto_awesome, color: OpenMuseTokens.accent, size: 13),
     ),
   );
 }

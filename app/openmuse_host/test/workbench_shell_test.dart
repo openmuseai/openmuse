@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
 import 'package:openmuse_host/src/host/openmuse_app.dart';
 import 'package:openmuse_host/src/host/layout/layout.dart';
 import 'package:openmuse_host/src/host/local_settings.dart';
@@ -17,11 +18,16 @@ void main() {
 
   setUp(() async {
     root = await Directory.systemTemp.createTemp('openmuse-shell-test-');
+    File('${root.path}/README.md').writeAsStringSync('# Notes\n');
+    File(
+      '${root.path}/preview.png',
+    ).writeAsBytesSync([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
     registry = OpenMusePluginRegistry(
       context: OpenMusePluginContext(executeHostCommand: (_, _) async => null),
     );
     workspace = LocalWorkspaceController(
       rootPath: root.path,
+      resourceInspector: (resource) async => resource,
       initialResources: [
         OpenMuseResource(
           uri: Uri.file('${root.path}/README.md'),
@@ -33,6 +39,7 @@ void main() {
         ),
       ],
     );
+    DshNativeOverlay.popupRoutes.value = 0;
   });
 
   tearDown(() async {
@@ -88,6 +95,7 @@ void main() {
       OpenMuseHostApp(registry: registry, workspace: workspace),
     );
 
+    expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
     await tester.tap(find.byTooltip('本地设置'));
     await tester.pumpAndSettle();
 

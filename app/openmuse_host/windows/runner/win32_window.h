@@ -55,6 +55,13 @@ class Win32Window {
   // Return a RECT representing the bounds of the current client area.
   RECT GetClientArea();
 
+  // Caption overlay: the Flutter title strip owns min/max/close and dragging.
+  void StartCaptionDrag();
+  bool IsMaximized() const;
+  void Minimize();
+  void ToggleMaximized();
+  void RequestClose();
+
  protected:
   // Processes and route salient window messages for mouse handling,
   // size change and DPI. Delegates handling of these to member overloads that
