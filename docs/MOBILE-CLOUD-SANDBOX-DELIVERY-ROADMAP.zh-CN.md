@@ -776,6 +776,8 @@ login → Cloud catalog → choose Workspace
 
 ### M6：Mobile Office Format Plugin（逐格式）
 
+**实施状态：Accepted（capability/ABI gate）**（`feature/m6-mobile-office-formats`）
+
 **目标**
 
 按 Word、Sheet、Slides、PDF 独立接入 Flutter + Rust Engine，不把适配器排期当作底层 Engine 能力。
