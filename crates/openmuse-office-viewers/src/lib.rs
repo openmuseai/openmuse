@@ -15,6 +15,9 @@ pub const MAX_TOTAL_UNCOMPRESSED_BYTES: u64 = 128 * 1024 * 1024;
 pub const MAX_ENTRIES: usize = 4096;
 pub const MAX_CELLS: usize = 1_000_000;
 pub const MAX_CELL_BYTES: usize = 1024 * 1024;
+pub const MAX_PDF_OBJECTS: usize = 200_000;
+pub const MAX_PDF_PAGES: usize = 10_000;
+pub const MAX_PDF_TEXT_BYTES: usize = 16 * 1024 * 1024;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -132,6 +135,98 @@ pub fn inspect_pptx(bytes: &[u8]) -> Result<ViewerInspection, ViewerError> {
         paragraphs,
         capabilities: vec!["view"],
     })
+}
+
+pub fn inspect_pdf(bytes: &[u8]) -> Result<ViewerInspection, ViewerError> {
+    if bytes.is_empty() || bytes.len() > MAX_ARCHIVE_BYTES || !bytes.starts_with(b"%PDF-") {
+        return Err(ViewerError::InvalidPdf);
+    }
+    let document = lopdf::Document::load_mem(bytes).map_err(|_| ViewerError::InvalidPdf)?;
+    if document.is_encrypted() {
+        return Err(ViewerError::EncryptedPdfDenied);
+    }
+    if document.objects.len() > MAX_PDF_OBJECTS {
+        return Err(ViewerError::LimitExceeded);
+    }
+    for object in document.objects.values() {
+        reject_active_pdf_object(object)?;
+    }
+    let pages = document.get_pages();
+    if pages.is_empty() || pages.len() > MAX_PDF_PAGES {
+        return Err(ViewerError::LimitExceeded);
+    }
+    let mut paragraphs = Vec::new();
+    let mut total_text = 0_usize;
+    for page_number in pages.keys() {
+        let text = document
+            .extract_text(&[*page_number])
+            .map_err(|_| ViewerError::InvalidPdf)?;
+        let mut emitted = false;
+        for line in text.lines().map(str::trim).filter(|line| !line.is_empty()) {
+            if line.contains('\0') || line.len() > MAX_CELL_BYTES {
+                return Err(ViewerError::LimitExceeded);
+            }
+            total_text = total_text
+                .checked_add(line.len())
+                .ok_or(ViewerError::LimitExceeded)?;
+            if total_text > MAX_PDF_TEXT_BYTES {
+                return Err(ViewerError::LimitExceeded);
+            }
+            paragraphs.push(format!("Page {page_number}\t{line}"));
+            emitted = true;
+        }
+        if !emitted {
+            paragraphs.push(format!("Page {page_number}\t[无可提取文本]"));
+        }
+    }
+    Ok(ViewerInspection {
+        schema: "openmuse.office.pdf-inspection@1",
+        profile: "text-view-only",
+        paragraphs,
+        capabilities: vec!["view"],
+    })
+}
+
+fn reject_active_pdf_object(object: &lopdf::Object) -> Result<(), ViewerError> {
+    match object {
+        lopdf::Object::Dictionary(dictionary) => reject_active_pdf_dictionary(dictionary),
+        lopdf::Object::Stream(stream) => reject_active_pdf_dictionary(&stream.dict),
+        lopdf::Object::Array(values) => {
+            for value in values {
+                reject_active_pdf_object(value)?;
+            }
+            Ok(())
+        }
+        lopdf::Object::Name(name) if denied_pdf_name(name) => Err(ViewerError::ActivePdfDenied),
+        _ => Ok(()),
+    }
+}
+
+fn reject_active_pdf_dictionary(dictionary: &lopdf::Dictionary) -> Result<(), ViewerError> {
+    for (key, value) in dictionary.iter() {
+        if denied_pdf_name(key) {
+            return Err(ViewerError::ActivePdfDenied);
+        }
+        reject_active_pdf_object(value)?;
+    }
+    Ok(())
+}
+
+fn denied_pdf_name(value: &[u8]) -> bool {
+    const DENIED: &[&[u8]] = &[
+        b"AA",
+        b"AcroForm",
+        b"EmbeddedFile",
+        b"Filespec",
+        b"JavaScript",
+        b"JS",
+        b"Launch",
+        b"OpenAction",
+        b"RichMedia",
+        b"URI",
+        b"XFA",
+    ];
+    DENIED.contains(&value)
 }
 
 fn parse_slide_order(xml: &[u8]) -> Result<Vec<String>, ViewerError> {
@@ -660,6 +755,12 @@ pub enum ViewerError {
     InvalidCellReference,
     #[error("invalid workbook relationship")]
     InvalidRelationship,
+    #[error("invalid PDF")]
+    InvalidPdf,
+    #[error("encrypted PDF is denied")]
+    EncryptedPdfDenied,
+    #[error("active PDF content is denied")]
+    ActivePdfDenied,
 }
 
 #[repr(C)]
@@ -725,6 +826,26 @@ pub unsafe extern "C" fn openmuse_pptx_inspect(
         let bytes = unsafe { std::slice::from_raw_parts(pptx, pptx_len) };
         let inspection = inspect_pptx(bytes)?;
         serde_json::to_vec(&inspection).map_err(|_| ViewerError::InvalidXml)
+    })
+}
+
+#[unsafe(no_mangle)]
+/// Inspect a bounded PDF into a text-only compatibility view.
+///
+/// # Safety
+/// `pdf` must point to `pdf_len` readable bytes. The returned buffer must be
+/// freed exactly once with [`openmuse_office_viewer_buffer_free`].
+pub unsafe extern "C" fn openmuse_pdf_inspect(
+    pdf: *const u8,
+    pdf_len: usize,
+) -> OpenMuseOfficeViewerBuffer {
+    ffi_call(|| {
+        if pdf.is_null() || pdf_len == 0 || pdf_len > MAX_ARCHIVE_BYTES {
+            return Err(ViewerError::LimitExceeded);
+        }
+        let bytes = unsafe { std::slice::from_raw_parts(pdf, pdf_len) };
+        let inspection = inspect_pdf(bytes)?;
+        serde_json::to_vec(&inspection).map_err(|_| ViewerError::InvalidPdf)
     })
 }
 

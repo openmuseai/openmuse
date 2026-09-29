@@ -45,6 +45,9 @@ final class OfficeViewersFfiEngine implements OfficeEnginePort {
       _inspectPptx = library.lookupFunction<_InspectNative, _InspectDart>(
         'openmuse_pptx_inspect',
       ),
+      _inspectPdf = library.lookupFunction<_InspectNative, _InspectDart>(
+        'openmuse_pdf_inspect',
+      ),
       _free = library.lookupFunction<_FreeNative, _FreeDart>(
         'openmuse_office_viewer_buffer_free',
       ) {
@@ -65,6 +68,7 @@ final class OfficeViewersFfiEngine implements OfficeEnginePort {
   final _AbiDart _abiVersion;
   final _InspectDart _inspectXlsx;
   final _InspectDart _inspectPptx;
+  final _InspectDart _inspectPdf;
   final _FreeDart _free;
 
   @override
@@ -75,11 +79,21 @@ final class OfficeViewersFfiEngine implements OfficeEnginePort {
     OfficeFormat format,
     List<int> bytes,
   ) async {
-    final (operation, schema) = switch (format) {
-      OfficeFormat.sheet => (_inspectXlsx, 'openmuse.office.xlsx-inspection@1'),
+    final (operation, schema, profile) = switch (format) {
+      OfficeFormat.sheet => (
+        _inspectXlsx,
+        'openmuse.office.xlsx-inspection@1',
+        'view-only',
+      ),
       OfficeFormat.slides => (
         _inspectPptx,
         'openmuse.office.pptx-inspection@1',
+        'view-only',
+      ),
+      OfficeFormat.pdf => (
+        _inspectPdf,
+        'openmuse.office.pdf-inspection@1',
+        'text-view-only',
       ),
       _ => throw const OfficeViewerException(
         'viewer format is not implemented',
@@ -91,21 +105,25 @@ final class OfficeViewersFfiEngine implements OfficeEnginePort {
       final decoded = jsonDecode(utf8.decode(payload));
       if (decoded is! Map<String, dynamic> ||
           decoded['schema'] != schema ||
-          decoded['profile'] != 'view-only' ||
+          decoded['profile'] != profile ||
           decoded['paragraphs'] is! List ||
           decoded['capabilities'] is! List) {
-        throw const OfficeViewerException('invalid XLSX inspection envelope');
+        throw OfficeViewerException(
+          'invalid ${format.name} inspection envelope',
+        );
       }
       final paragraphs = decoded['paragraphs'] as List;
       final capabilities = decoded['capabilities'] as List;
       if (paragraphs.any((value) => value is! String) ||
           capabilities.length != 1 ||
           capabilities.single != 'view') {
-        throw const OfficeViewerException('invalid XLSX capability payload');
+        throw OfficeViewerException(
+          'invalid ${format.name} capability payload',
+        );
       }
       return OfficeEngineInspection(
         format: format,
-        profile: 'view-only',
+        profile: profile,
         paragraphs: paragraphs.cast<String>().toList(growable: false),
         capabilities: const {OfficeCapability.view},
       );

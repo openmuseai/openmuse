@@ -8,7 +8,7 @@ void main() {
   final libraryPath = Platform.environment['OPENMUSE_VIEWERS_TEST_LIBRARY'];
 
   test(
-    'loads XLSX ABI and keeps unsupported formats fail closed',
+    'loads viewer ABI and keeps invalid inputs fail closed',
     () async {
       final engine = OfficeViewersFfiEngine.open(libraryPath: libraryPath);
       expect(engine.abi, 'openmuse-office-viewers-ffi@1');
@@ -18,6 +18,10 @@ void main() {
       );
       await expectLater(
         engine.inspect(OfficeFormat.slides, const [1]),
+        throwsA(isA<OfficeViewerException>()),
+      );
+      await expectLater(
+        engine.inspect(OfficeFormat.pdf, const [1]),
         throwsA(isA<OfficeViewerException>()),
       );
       expect(
