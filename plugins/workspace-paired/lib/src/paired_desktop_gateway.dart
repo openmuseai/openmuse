@@ -260,7 +260,12 @@ final class PairedDesktopGateway {
       // the cookie is installed on the paired origin.
       outbound.followRedirects = false;
       _copyRequestHeaders(request, outbound, upstreamUri: upstreamUri);
-      await outbound.addStream(request);
+      // Android WebView may keep an empty GET request stream open while the
+      // response is pending. Waiting for that stream before close() deadlocks
+      // the bootstrap navigation through adb reverse.
+      if (request.method != 'GET' && request.method != 'HEAD') {
+        await outbound.addStream(request);
+      }
       final upstreamResponse = await outbound.close();
       request.response.statusCode = upstreamResponse.statusCode;
       _copyResponseHeaders(
