@@ -160,10 +160,11 @@ Future<Widget> bootOpenMuseHost() async {
     authentication: authenticationController,
     cloudLabel: cloudOrigin.toString(),
   );
+  final desktopDeviceId = 'desktop.flutter.${rootPath.hashCode.toUnsigned(32)}';
   final cloudWorkspacePlugin = OpenMuseCloudWorkspacePlugin(
     authentication: authenticationController,
     cloudOrigin: cloudOrigin,
-    deviceId: 'desktop.flutter.${rootPath.hashCode.toUnsigned(32)}',
+    deviceId: desktopDeviceId,
     allowInsecureLoopback: allowInsecureLoopback,
   );
   final dshSupervisor = DshSidecarSupervisor(
@@ -184,6 +185,7 @@ Future<Widget> bootOpenMuseHost() async {
     },
     workspaceRef: 'openmuse.local.default',
     workspaceTitle: 'Project Workspace',
+    deviceRef: desktopDeviceId,
     port:
         int.tryParse(
           Platform.environment['OPENMUSE_PAIRED_DESKTOP_PORT'] ?? '',
@@ -192,7 +194,32 @@ Future<Widget> bootOpenMuseHost() async {
     fixedPairingCode:
         Platform.environment['OPENMUSE_PAIRED_DESKTOP_PAIRING_CODE'],
   );
-  final pairedDesktopPlugin = OpenMusePairedDesktopHostPlugin(pairedGateway);
+  final deviceDirectory = AccountDeviceDirectoryController(
+    authentication: authenticationController,
+    client: AccountDeviceDirectoryClient(
+      cloudOrigin: cloudOrigin,
+      accessToken: authenticationController.accessToken,
+      allowInsecureLoopback: allowInsecureLoopback,
+    ),
+    registration: () => AccountDeviceRegistration(
+      deviceRef: desktopDeviceId,
+      displayName: Platform.localHostname.isEmpty
+          ? 'OpenMuse Desktop'
+          : Platform.localHostname,
+      platform: Platform.operatingSystem,
+      kind: AccountDeviceKind.desktop,
+      capabilities: const {
+        'workspace.local',
+        'dsh.local',
+        'paired-desktop.transport',
+      },
+      transportOrigin: pairedGateway.origin,
+    ),
+  );
+  final pairedDesktopPlugin = OpenMusePairedDesktopHostPlugin(
+    pairedGateway,
+    directory: deviceDirectory,
+  );
   registry.install(authenticationPlugin);
   registry.install(cloudWorkspacePlugin);
   registry.install(pairedDesktopPlugin);

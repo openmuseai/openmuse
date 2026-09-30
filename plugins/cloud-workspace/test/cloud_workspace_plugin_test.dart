@@ -71,6 +71,55 @@ void main() {
       'session-1',
     );
   });
+
+  test('plugin keeps workspaces when the DSH pool is unavailable', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(server.close);
+    unawaited(
+      server.forEach((request) async {
+        request.response.headers.contentType = ContentType.json;
+        if (request.uri.path == '/api/workspace') {
+          request.response.write(
+            jsonEncode({
+              'code': 0,
+              'data': [
+                {
+                  'workspace_id': 'workspace-1',
+                  'workspace_name': 'Shared Office',
+                  'role': 'Owner',
+                },
+              ],
+            }),
+          );
+        } else if (request.uri.path == '/api/muse/dsh/sessions') {
+          request.response.write(
+            jsonEncode({
+              'code': 1067,
+              'message': 'UNAVAILABLE: dsh.session: POOL_UNAVAILABLE',
+            }),
+          );
+        } else {
+          request.response.statusCode = HttpStatus.notFound;
+        }
+        await request.response.close();
+      }),
+    );
+    final authentication = _Authentication();
+    final plugin = OpenMuseCloudWorkspacePlugin(
+      authentication: authentication,
+      cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+      deviceId: 'desktop-test',
+      allowInsecureLoopback: true,
+    );
+    addTearDown(plugin.deactivate);
+    await plugin.activate(
+      OpenMusePluginContext(executeHostCommand: (_, _) async => null),
+    );
+
+    expect(plugin.controller.snapshot.workspaces.single.title, 'Shared Office');
+    expect(plugin.controller.snapshot.sessions, isEmpty);
+    expect(plugin.controller.snapshot.failureMessage, isNull);
+  });
 }
 
 final class _Authentication extends ChangeNotifier

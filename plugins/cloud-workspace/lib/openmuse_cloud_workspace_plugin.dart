@@ -142,14 +142,18 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
       ),
     );
     try {
-      final values = await Future.wait<Object>([
-        service.listWorkspaces(),
-        service.listSessions(),
-      ]);
+      final workspaces = await service.listWorkspaces();
+      var sessions = const <DshSessionSummary>[];
+      try {
+        sessions = await service.listSessions();
+      } on Object {
+        // DSH session presence is optional catalog enrichment. Keep the
+        // account's workspaces usable while the execution pool recovers.
+      }
       _publish(
         CloudWorkspacePluginSnapshot(
-          workspaces: values[0] as List<CloudWorkspaceRecord>,
-          sessions: values[1] as List<DshSessionSummary>,
+          workspaces: workspaces,
+          sessions: sessions,
         ),
       );
     } catch (_) {

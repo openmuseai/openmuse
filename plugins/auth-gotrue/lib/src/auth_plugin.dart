@@ -4,7 +4,10 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'login_screen.dart';
 
 final class OpenMuseGoTruePlugin
-    implements OpenMusePlugin, OpenMuseAuthenticationContributor {
+    implements
+        OpenMusePlugin,
+        OpenMuseAuthenticationContributor,
+        OpenMuseSettingsContributor {
   OpenMuseGoTruePlugin({
     required this.authentication,
     this.cloudLabel,
@@ -65,4 +68,32 @@ final class OpenMuseGoTruePlugin
 
   @override
   Widget? buildPanel(BuildContext context, String panelId) => null;
+
+  @override
+  Widget buildSettings(BuildContext context) => AnimatedBuilder(
+    animation: authentication,
+    builder: (context, _) {
+      final identity = authentication.snapshot.identity;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '登录账号',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Text(identity?.email ?? '未登录', key: const ValueKey('account-email')),
+          if (identity != null) ...[
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              key: const ValueKey('desktop-sign-out'),
+              onPressed: authentication.signOut,
+              icon: const Icon(Icons.logout),
+              label: const Text('退出登录'),
+            ),
+          ],
+        ],
+      );
+    },
+  );
 }

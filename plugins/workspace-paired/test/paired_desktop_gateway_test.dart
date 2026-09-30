@@ -22,7 +22,8 @@ void main() {
         )) {
           observedOrigin = request.headers.value('origin');
           observedReferer = request.headers.value(HttpHeaders.refererHeader);
-          request.response.write('desktop-live-history');
+          request.response.headers.set(HttpHeaders.contentEncodingHeader, 'gzip');
+          request.response.add(gzip.encode(utf8.encode('desktop-live-history')));
         } else {
           request.response.statusCode = HttpStatus.unauthorized;
         }
@@ -76,6 +77,10 @@ void main() {
           '${Uri.parse(connection.session.origin).origin}/',
         );
       final historyResponse = await history.close();
+      expect(
+        historyResponse.headers.value(HttpHeaders.contentEncodingHeader),
+        isNull,
+      );
       expect(await utf8.decodeStream(historyResponse), 'desktop-live-history');
       expect(observedOrigin, 'http://127.0.0.1:${upstream.port}');
       expect(observedReferer, 'http://127.0.0.1:${upstream.port}/');
@@ -112,6 +117,43 @@ void main() {
           (value) => value.code,
           'code',
           'ACCOUNT_MISMATCH',
+        ),
+      ),
+    );
+
+    client.close();
+    await gateway.stop();
+  });
+
+  test('selected device must match the receiving Desktop', () async {
+    final gateway = PairedDesktopGateway(
+      currentAccountRef: () => 'account-1',
+      validateToken: (_) async => 'account-1',
+      dshEndpoint: () async => Uri.parse('http://127.0.0.1:54321/?token=x'),
+      workspaceRef: 'openmuse.local.default',
+      workspaceTitle: 'Project Workspace',
+      deviceRef: 'desktop.expected',
+      port: 0,
+      fixedPairingCode: '123456',
+    );
+    await gateway.start();
+    final client = PairedDesktopClient(
+      origin: gateway.origin!,
+      accessToken: () async => 'same-account',
+      deviceRef: 'mobile-1',
+      allowInsecureLoopback: true,
+    );
+
+    await expectLater(
+      client.pair(
+        pairingCode: '123456',
+        targetDeviceRef: 'desktop.another',
+      ),
+      throwsA(
+        isA<PairedDesktopFailure>().having(
+          (value) => value.code,
+          'code',
+          'WORKSPACE_GRANT_DENIED',
         ),
       ),
     );

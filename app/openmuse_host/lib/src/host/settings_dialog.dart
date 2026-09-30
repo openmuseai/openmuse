@@ -25,9 +25,10 @@ final class _SettingsDialog extends StatefulWidget {
 }
 
 final class _SettingsDialogState extends State<_SettingsDialog> {
-  int selected = 0;
+  int selected = 1;
 
   static const sections = <(IconData, String)>[
+    (Icons.account_circle_outlined, '账号与设备'),
     (Icons.dashboard_outlined, '工作区'),
     (Icons.extension_outlined, '插件'),
     (Icons.smart_toy_outlined, 'Agent'),
@@ -96,13 +97,14 @@ final class _SettingsDialogState extends State<_SettingsDialog> {
                       child: ListenableBuilder(
                         listenable: widget.settings,
                         builder: (context, _) => switch (selected) {
-                          0 => _WorkspaceSettings(settings: widget.settings),
-                          1 => _PluginSettings(registry: widget.registry),
-                          2 => _AgentSettings(
+                          0 => _AccountSettings(registry: widget.registry),
+                          1 => _WorkspaceSettings(settings: widget.settings),
+                          2 => _PluginSettings(registry: widget.registry),
+                          3 => _AgentSettings(
                             settings: widget.settings,
                             registry: widget.registry,
                           ),
-                          3 => const _StaticSettings(
+                          4 => const _StaticSettings(
                             title: '快捷键',
                             description: '编辑器按键映射可在插件设置中调整。',
                           ),
@@ -129,6 +131,27 @@ final class _SettingsDialogState extends State<_SettingsDialog> {
           ),
         ),
       ),
+    );
+  }
+}
+
+final class _AccountSettings extends StatelessWidget {
+  const _AccountSettings({required this.registry});
+  final OpenMusePluginRegistry registry;
+
+  @override
+  Widget build(BuildContext context) {
+    final contributors = [
+      registry.plugin('com.openmuse.auth.gotrue'),
+      registry.plugin('com.openmuse.workspace.paired.host'),
+    ].whereType<OpenMuseSettingsContributor>().toList(growable: false);
+    return _SettingsBody(
+      title: '账号与设备',
+      description: '登录同一账号后查看设备在线状态，并只与在线 Desktop 建立 Workspace 配对。',
+      children: [
+        for (final contributor in contributors)
+          contributor.buildSettings(context),
+      ],
     );
   }
 }
@@ -358,7 +381,6 @@ final class _AgentSettings extends StatelessWidget {
   Widget build(BuildContext context) {
     final contributors = [
       registry.plugin('com.openmuse.dsh-agent'),
-      registry.plugin('com.openmuse.workspace.paired.host'),
     ].whereType<OpenMuseSettingsContributor>().toList(growable: false);
     return _SettingsBody(
       title: 'Agent',

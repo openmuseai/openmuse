@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,12 +17,12 @@ import 'docx_editor_screen.dart';
 import 'office_viewer_screen.dart';
 import 'remote_dsh_page.dart';
 
-final String _runtimeMobileDeviceId =
-    'mobile.flutter.${DateTime.now().microsecondsSinceEpoch}';
-
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   final officeEngine = _loadPackagedOfficeEngine();
   final endpoints = MobileEndpointConfig.fromEnvironment();
+  const secureValues = FlutterSecureValueStore();
+  final deviceId = await _persistentMobileDeviceId(secureValues);
   final authentication = GoTrueAuthenticationController(
     provider: GoTrueHttpClient(
       config: GoTrueClientConfig(
@@ -29,7 +30,7 @@ void main() {
         allowInsecureLoopback: endpoints.allowInsecureLoopback,
       ),
     ),
-    store: const SecureAuthSessionStore(values: FlutterSecureValueStore()),
+    store: const SecureAuthSessionStore(values: secureValues),
   );
   final authPlugin = OpenMuseGoTruePlugin(
     authentication: authentication,
@@ -38,18 +39,31 @@ void main() {
   final cloudPlugin = OpenMuseCloudWorkspacePlugin(
     authentication: authentication,
     cloudOrigin: endpoints.cloudOrigin,
-    deviceId: _runtimeMobileDeviceId,
+    deviceId: deviceId,
     allowInsecureLoopback: endpoints.allowInsecureLoopback,
   );
-  final pairedPlugin = OpenMusePairedDesktopMobilePlugin(
-    client: PairedDesktopClient(
-      origin: endpoints.pairedDesktopOrigin,
+  final deviceDirectory = AccountDeviceDirectoryController(
+    authentication: authentication,
+    client: AccountDeviceDirectoryClient(
+      cloudOrigin: endpoints.cloudOrigin,
       accessToken: authentication.accessToken,
-      deviceRef: _runtimeMobileDeviceId,
       allowInsecureLoopback: endpoints.allowInsecureLoopback,
-      allowInsecurePrivateNetworkForTesting:
-          endpoints.allowInsecurePrivateNetworkForTesting,
     ),
+    registration: () => AccountDeviceRegistration(
+      deviceRef: deviceId,
+      displayName: 'OpenMuse Mobile',
+      platform: defaultTargetPlatform.name,
+      kind: AccountDeviceKind.mobile,
+      capabilities: const {'workspace.cloud', 'paired-desktop.client'},
+    ),
+  );
+  final pairedPlugin = OpenMusePairedDesktopMobilePlugin.discovered(
+    directory: deviceDirectory,
+    accessToken: authentication.accessToken,
+    deviceRef: deviceId,
+    allowInsecureLoopback: endpoints.allowInsecureLoopback,
+    allowInsecurePrivateNetworkForTesting:
+        endpoints.allowInsecurePrivateNetworkForTesting,
   );
   runApp(
     OpenMuseMobileApplication(
@@ -59,6 +73,24 @@ void main() {
       officeEngine: officeEngine,
     ),
   );
+}
+
+Future<String> _persistentMobileDeviceId(SecureValueStore values) async {
+  const key = 'openmuse.device.id.v1';
+  final existing = await values.read(key);
+  if (existing != null &&
+      existing.startsWith('mobile.') &&
+      existing.length <= 160) {
+    return existing;
+  }
+  final random = Random.secure();
+  final suffix = List.generate(
+    20,
+    (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join();
+  final value = 'mobile.$suffix';
+  await values.write(key, value);
+  return value;
 }
 
 @immutable
@@ -201,9 +233,13 @@ final class _AuthenticatedMobileHost extends StatefulWidget {
 
 final class _AuthenticatedMobileHostState
     extends State<_AuthenticatedMobileHost> {
+  late OpenMuseHostComposition _composition;
+  String? _pairedGrantRef;
+
   @override
   void initState() {
     super.initState();
+    _recompose();
     widget.pairedDesktop.addListener(_pairedChanged);
   }
 
@@ -214,10 +250,36 @@ final class _AuthenticatedMobileHostState
       oldWidget.pairedDesktop.removeListener(_pairedChanged);
       widget.pairedDesktop.addListener(_pairedChanged);
     }
+    if (oldWidget.authentication != widget.authentication ||
+        oldWidget.cloudService != widget.cloudService ||
+        oldWidget.pairedDesktop != widget.pairedDesktop ||
+        oldWidget.officeEngine != widget.officeEngine) {
+      _recompose();
+    }
   }
 
   void _pairedChanged() {
-    if (mounted) setState(() {});
+    final nextGrantRef = widget.pairedDesktop.snapshot.connection?.grantRef;
+    if (!mounted || nextGrantRef == _pairedGrantRef) return;
+    setState(_recompose);
+  }
+
+  void _recompose() {
+    final identity = widget.authentication.snapshot.identity;
+    _pairedGrantRef = widget.pairedDesktop.snapshot.connection?.grantRef;
+    _composition = connectedCloudMobileComposition(
+      session: identity == null
+          ? const MobileAccountSession.signedOut()
+          : MobileAccountSession.authenticated(identity.email),
+      apiOrigin: widget.cloudService.baseUri,
+      accessToken: () => widget.authentication.accessToken(),
+      refreshAccessToken: () =>
+          widget.authentication.accessToken(forceRefresh: true),
+      service: widget.cloudService,
+      officeEngine: widget.officeEngine,
+      pairedDesktop: widget.pairedDesktop,
+      onSignOut: widget.authentication.signOut,
+    );
   }
 
   @override
@@ -231,16 +293,11 @@ final class _AuthenticatedMobileHostState
     final identity = widget.authentication.snapshot.identity;
     if (identity == null) return const SizedBox.shrink();
     return OpenMuseHostShell(
-      composition: connectedCloudMobileComposition(
-        session: MobileAccountSession.authenticated(identity.email),
-        apiOrigin: widget.cloudService.baseUri,
-        accessToken: () => widget.authentication.accessToken(),
-        refreshAccessToken: () =>
-            widget.authentication.accessToken(forceRefresh: true),
-        service: widget.cloudService,
-        officeEngine: widget.officeEngine,
-        pairedDesktop: widget.pairedDesktop,
-      ),
+      // Directory heartbeats notify the paired controller every 20 seconds.
+      // Keep the workspace request stable across those rebuilds, while a new
+      // pairing grant deliberately creates a fresh shell and catalog snapshot.
+      key: ValueKey(_pairedGrantRef ?? 'unpaired'),
+      composition: _composition,
     );
   }
 }
@@ -278,6 +335,7 @@ OpenMuseHostComposition connectedCloudMobileComposition({
   AppFlowyCloudWorkspaceService? service,
   OfficeEnginePort? officeEngine,
   PairedDesktopMobileController? pairedDesktop,
+  Future<void> Function()? onSignOut,
 }) {
   final cloud =
       service ??
@@ -297,6 +355,7 @@ OpenMuseHostComposition connectedCloudMobileComposition({
     officeCommits: cloud,
     officeEngine: officeEngine ?? _loadPackagedOfficeEngine(),
     pairedDesktop: pairedDesktop,
+    onSignOut: onSignOut,
   );
 }
 
@@ -309,6 +368,7 @@ OpenMuseHostComposition mobileComposition({
   OfficeResourceCommitPort? officeCommits,
   OfficeEnginePort? officeEngine,
   PairedDesktopMobileController? pairedDesktop,
+  Future<void> Function()? onSignOut,
 }) {
   final catalog = _MobileCatalogAdapter(cloudService, pairedDesktop);
   return OpenMuseHostComposition(
@@ -357,6 +417,10 @@ OpenMuseHostComposition mobileComposition({
         officeCommits: officeCommits,
       );
     },
+    accountDevicesBuilder: pairedDesktop?.directory == null
+        ? null
+        : (_) => AccountDevicesScreen(controller: pairedDesktop!),
+    onSignOut: onSignOut,
   );
 }
 
@@ -386,9 +450,15 @@ final class _MobileCatalogAdapter implements WorkspaceCatalogPort {
     final values = provider == null
         ? const <CloudWorkspaceRecord>[]
         : await provider.listWorkspaces();
-    final sessions = provider is DshSessionCatalogPort
-        ? await (provider as DshSessionCatalogPort).listSessions()
-        : const <DshSessionSummary>[];
+    var sessions = const <DshSessionSummary>[];
+    if (provider is DshSessionCatalogPort) {
+      try {
+        sessions = await (provider as DshSessionCatalogPort).listSessions();
+      } on Object {
+        // Session presence enriches the catalog but does not own it. A DSH
+        // pool outage must not hide otherwise usable Cloud workspaces.
+      }
+    }
     final runningByWorkspace = {
       for (final session in sessions.where((value) => value.isRunning))
         session.workspaceRef: session.sessionRef,
@@ -426,10 +496,52 @@ final class _MobileCatalogAdapter implements WorkspaceCatalogPort {
   }
 }
 
-final class PairedDesktopConnectScreen extends StatefulWidget {
-  const PairedDesktopConnectScreen({super.key, required this.controller});
+final class AccountDevicesScreen extends StatelessWidget {
+  const AccountDevicesScreen({super.key, required this.controller});
 
   final PairedDesktopMobileController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final directory = controller.directory;
+    return Scaffold(
+      appBar: AppBar(title: const Text('账号设备')),
+      body: directory == null
+          ? const Center(child: Text('设备目录插件未加载'))
+          : ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                const Text('同一账号下的设备', style: TextStyle(fontSize: 20)),
+                const SizedBox(height: 6),
+                const Text('在线 Desktop 可以发起配对；离线设备仅供识别，不能连接。'),
+                const SizedBox(height: 16),
+                AccountDeviceList(
+                  controller: directory,
+                  excludeDeviceRef: controller.requesterDeviceRef,
+                  onSelect: (device) => Navigator.of(context).push<void>(
+                    MaterialPageRoute(
+                      builder: (_) => PairedDesktopConnectScreen(
+                        controller: controller,
+                        initialDevice: device,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+final class PairedDesktopConnectScreen extends StatefulWidget {
+  const PairedDesktopConnectScreen({
+    super.key,
+    required this.controller,
+    this.initialDevice,
+  });
+
+  final PairedDesktopMobileController controller;
+  final AccountDevice? initialDevice;
 
   @override
   State<PairedDesktopConnectScreen> createState() =>
@@ -439,6 +551,13 @@ final class PairedDesktopConnectScreen extends StatefulWidget {
 final class _PairedDesktopConnectScreenState
     extends State<PairedDesktopConnectScreen> {
   final TextEditingController _code = TextEditingController();
+  AccountDevice? _selectedDevice;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDevice = widget.initialDevice;
+  }
 
   @override
   void dispose() {
@@ -447,7 +566,9 @@ final class _PairedDesktopConnectScreenState
   }
 
   Future<void> _pair() async {
-    final connected = await widget.controller.pair(_code.text);
+    final target = _selectedDevice;
+    if (target == null) return;
+    final connected = await widget.controller.pairDevice(target, _code.text);
     if (connected && mounted) Navigator.of(context).pop();
   }
 
@@ -464,9 +585,17 @@ final class _PairedDesktopConnectScreenState
             const Icon(Icons.phonelink, size: 48),
             const SizedBox(height: 18),
             const Text(
-              '在 Desktop 的 Agent 设置中生成配对码。两端必须登录同一个账号；授权只覆盖当前本地 Workspace。',
+              '先选择同账号下在线的 Desktop，再输入该 Desktop 显示的配对码。授权只覆盖当前本地 Workspace。',
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 18),
+            if (widget.controller.directory case final directory?)
+              AccountDeviceList(
+                controller: directory,
+                excludeDeviceRef: widget.controller.requesterDeviceRef,
+                selectedDeviceRef: _selectedDevice?.deviceRef,
+                onSelect: (device) => setState(() => _selectedDevice = device),
+              ),
             const SizedBox(height: 24),
             TextField(
               key: const ValueKey('paired-desktop-code'),
@@ -479,12 +608,18 @@ final class _PairedDesktopConnectScreenState
                 border: OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() {}),
+              enabled: _selectedDevice?.online == true,
               onSubmitted: snapshot.connecting ? null : (_) => _pair(),
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
               key: const ValueKey('paired-desktop-connect'),
-              onPressed: snapshot.connecting ? null : _pair,
+              onPressed:
+                  snapshot.connecting ||
+                      _selectedDevice?.online != true ||
+                      _code.text.trim().length != 6
+                  ? null
+                  : _pair,
               icon: snapshot.connecting
                   ? const SizedBox(
                       width: 18,
@@ -492,7 +627,11 @@ final class _PairedDesktopConnectScreenState
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.link),
-              label: const Text('连接 Desktop'),
+              label: Text(
+                _selectedDevice == null
+                    ? '请选择在线 Desktop'
+                    : '连接 ${_selectedDevice!.displayName}',
+              ),
             ),
             if (snapshot.failureMessage case final message?) ...[
               const SizedBox(height: 16),

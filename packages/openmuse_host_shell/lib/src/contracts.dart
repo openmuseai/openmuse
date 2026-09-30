@@ -39,10 +39,14 @@ final class OpenMuseHostComposition {
     required this.workspaceCatalog,
     required this.capabilitySnapshot,
     required this.workspaceBuilder,
+    this.accountDevicesBuilder,
+    this.onSignOut,
   });
   final OpenMuseHostPlatform platform;
   final OpenMuseSessionPort session;
   final WorkspaceCatalogPort workspaceCatalog;
   final CapabilitySnapshotPort capabilitySnapshot;
   final Widget Function(BuildContext, WorkspaceSummary) workspaceBuilder;
+  final WidgetBuilder? accountDevicesBuilder;
+  final Future<void> Function()? onSignOut;
 }

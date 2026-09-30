@@ -18,6 +18,8 @@ Future<void> main() async {
     dshEndpoint: () => _readDshEndpoint(dshLog),
     workspaceRef: 'openmuse.local.default',
     workspaceTitle: 'Project Workspace',
+    deviceRef:
+        Platform.environment['OPENMUSE_DESKTOP_DEVICE_REF'] ?? 'desktop.local',
     port: 13180,
     bindAddress: Platform.environment['OPENMUSE_GATEWAY_BIND_ALL'] == '1'
         ? InternetAddress.anyIPv4

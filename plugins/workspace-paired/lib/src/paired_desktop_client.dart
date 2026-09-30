@@ -29,6 +29,7 @@ final class PairedDesktopClient {
 
   Future<PairedDesktopConnection> pair({
     required String pairingCode,
+    String? targetDeviceRef,
     String workspaceRef = 'openmuse.local.default',
   }) async {
     _validateOrigin();
@@ -47,6 +48,7 @@ final class PairedDesktopClient {
         jsonEncode({
           'pairingCode': pairingCode.trim(),
           'deviceRef': deviceRef,
+          if (targetDeviceRef != null) 'targetDeviceRef': targetDeviceRef,
           'workspaceRef': workspaceRef,
         }),
       ),

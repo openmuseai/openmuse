@@ -13,6 +13,7 @@ final class PairedDesktopGateway {
     required this.dshEndpoint,
     required this.workspaceRef,
     required this.workspaceTitle,
+    this.deviceRef = 'desktop.local',
     this.port = 13180,
     this.bindAddress,
     this.grantTtl = const Duration(minutes: 30),
@@ -24,6 +25,7 @@ final class PairedDesktopGateway {
   final PairedDshEndpointProvider dshEndpoint;
   final String workspaceRef;
   final String workspaceTitle;
+  final String deviceRef;
   final int port;
   final InternetAddress? bindAddress;
   final Duration grantTtl;
@@ -148,7 +150,8 @@ final class PairedDesktopGateway {
     }
     final body = decoded.cast<String, Object?>();
     final code = body['pairingCode'];
-    final deviceRef = body['deviceRef'];
+    final requesterDeviceRef = body['deviceRef'];
+    final targetDeviceRef = body['targetDeviceRef'];
     final requestedWorkspace = body['workspaceRef'];
     final now = DateTime.now().millisecondsSinceEpoch;
     if (code is! String ||
@@ -161,9 +164,10 @@ final class PairedDesktopGateway {
         '配对码无效或已过期。',
       );
     }
-    if (deviceRef is! String ||
-        deviceRef.isEmpty ||
-        deviceRef.length > 160 ||
+    if (requesterDeviceRef is! String ||
+        requesterDeviceRef.isEmpty ||
+        requesterDeviceRef.length > 160 ||
+        (targetDeviceRef != null && targetDeviceRef != deviceRef) ||
         requestedWorkspace != workspaceRef) {
       throw const _GatewayFailure(
         HttpStatus.forbidden,
@@ -200,7 +204,7 @@ final class PairedDesktopGateway {
     _grants[grantRef] = _DesktopGrant(
       grantRef: grantRef,
       accountRef: desktopAccountRef,
-      deviceRef: deviceRef,
+      deviceRef: requesterDeviceRef,
       workspaceRef: workspaceRef,
       expiresAtMs: expiresAtMs,
       upstream: upstream,
@@ -384,6 +388,10 @@ final class PairedDesktopGateway {
     source.headers.forEach((name, values) {
       final lower = name.toLowerCase();
       if (lower == HttpHeaders.contentLengthHeader ||
+          // Dart HttpClient transparently decodes gzip by default. Forwarding
+          // the upstream encoding after that would make WebView try to decode
+          // the already-decoded bytes a second time and render a blank page.
+          lower == HttpHeaders.contentEncodingHeader ||
           lower == HttpHeaders.transferEncodingHeader ||
           lower == HttpHeaders.connectionHeader ||
           lower == HttpHeaders.locationHeader) {

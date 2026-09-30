@@ -6,8 +6,10 @@
 
 ## 1. 产品边界
 
-Mobile 默认使用 Cloud Workspace；用户也可在同账号的 Desktop 上生成一次性
-6 位配对码，将某个本地 Workspace 的 DSH 运行面授权给 Mobile。Mobile 不会：
+Mobile 默认使用 Cloud Workspace；登录后先从同账号设备目录选择一台在线 Desktop，
+再输入该 Desktop 生成的一次性 6 位配对码，将某个本地 Workspace 的 DSH 运行面
+授权给 Mobile。完整设备发现与 presence 设计见
+`ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md`。Mobile 不会：
 
 - 直接扫描 Desktop 文件系统；
 - 在 Desktop 离线后将同名 Workspace 静默切换成 Cloud Workspace；
@@ -41,15 +43,19 @@ Mobile Host                         Desktop Host
 
 ## 3. 配对与连接协议
 
-1. Desktop 内建插件仅在 loopback 监听，启动时生成 15 分钟有效的一次性配对码。
-2. Mobile `POST /v1/pair/open`，携带 GoTrue bearer、device ref、配对码和精确
+1. Desktop/Mobile 登录后向 Cloud 设备控制面登记，并每 20 秒 heartbeat；服务端以
+   60 秒 TTL 投影 online/offline。
+2. Mobile 从同账号设备目录选择 online 且支持 paired transport 的 Desktop；offline
+   设备不可发起配对。
+3. Desktop 内建插件仅在 loopback 监听，启动时生成 15 分钟有效的一次性配对码。
+4. Mobile `POST /v1/pair/open`，携带 GoTrue bearer、请求设备 ref、目标 Desktop ref、配对码和精确
    `workspaceRef`。
-3. Desktop 实时调用 GoTrue `/user` 验证 Mobile token，并与 Desktop 当前账号
+5. Desktop 校验目标 device ref，实时调用 GoTrue `/user` 验证 Mobile token，并与 Desktop 当前账号
    ref 精确比较；账号不同、Desktop 未登录、Workspace 不匹配均 fail closed。
-4. 验证通过后签发默认 30 分钟的随机 grant，且配对码立即失效。
-5. Mobile 只收到 paired origin + `/u/<grant>`。网关在 Desktop 内部消费真实 DSH
+6. 验证通过后签发默认 30 分钟的随机 grant，且配对码立即失效。
+7. Mobile 只收到 paired origin + `/u/<grant>`。网关在 Desktop 内部消费真实 DSH
    bootstrap URL，把 DSH auth cookie 和 HttpOnly paired cookie 安装到 Mobile WebView。
-6. 后续 HTTP 与 WebSocket 都转发到同一 DSH；网关将 `Origin/Referer` 重写为内部
+8. 后续 HTTP 与 WebSocket 都转发到同一 DSH；网关将 `Origin/Referer` 重写为内部
    DSH origin，既保留 DSH CSRF 同源检查，又不对 Mobile 暴露内部 endpoint。
 
 ## 4. 安全不变式
