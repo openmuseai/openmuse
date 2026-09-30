@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
+import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -144,13 +146,14 @@ Future<Widget> bootOpenMuseHost() async {
   const authSessionStore = SecureAuthSessionStore(
     values: FlutterSecureValueStore.macOsCompatible(),
   );
-  final authenticationController = GoTrueAuthenticationController(
-    provider: GoTrueHttpClient(
-      config: GoTrueClientConfig(
-        origin: gotrueOrigin,
-        allowInsecureLoopback: allowInsecureLoopback,
-      ),
+  final goTrueClient = GoTrueHttpClient(
+    config: GoTrueClientConfig(
+      origin: gotrueOrigin,
+      allowInsecureLoopback: allowInsecureLoopback,
     ),
+  );
+  final authenticationController = GoTrueAuthenticationController(
+    provider: goTrueClient,
     store: authSessionStore,
   );
   final authenticationPlugin = OpenMuseGoTruePlugin(
@@ -163,9 +166,39 @@ Future<Widget> bootOpenMuseHost() async {
     deviceId: 'desktop.flutter.${rootPath.hashCode.toUnsigned(32)}',
     allowInsecureLoopback: allowInsecureLoopback,
   );
+  final dshSupervisor = DshSidecarSupervisor(
+    environment: {...Platform.environment, 'DSH_HOME': _dshHome(support.path)},
+  );
+  final pairedGateway = PairedDesktopGateway(
+    currentAccountRef: () =>
+        authenticationController.snapshot.identity?.subject,
+    validateToken: (token) async {
+      final user = await goTrueClient.currentUser(token);
+      return user.id;
+    },
+    dshEndpoint: () async {
+      await dshSupervisor.ensureStarted();
+      final endpoint = dshSupervisor.endpoint;
+      if (endpoint == null) throw StateError('DSH endpoint unavailable');
+      return endpoint;
+    },
+    workspaceRef: 'openmuse.local.default',
+    workspaceTitle: 'Project Workspace',
+    port:
+        int.tryParse(
+          Platform.environment['OPENMUSE_PAIRED_DESKTOP_PORT'] ?? '',
+        ) ??
+        13180,
+    fixedPairingCode:
+        Platform.environment['OPENMUSE_PAIRED_DESKTOP_PAIRING_CODE'],
+  );
+  final pairedDesktopPlugin = OpenMusePairedDesktopHostPlugin(pairedGateway);
   registry.install(authenticationPlugin);
   registry.install(cloudWorkspacePlugin);
-  for (final plugin in createOpenMuseBuiltInPlugins()) {
+  registry.install(pairedDesktopPlugin);
+  for (final plugin in createOpenMuseBuiltInPlugins(
+    dshSupervisor: dshSupervisor,
+  )) {
     registry.install(plugin);
   }
   unawaited(() async {
@@ -173,6 +206,13 @@ Future<Widget> bootOpenMuseHost() async {
       await registry.activate(authenticationPlugin.descriptor.id);
     } catch (error) {
       debugPrint('Authentication plugin activation failed: $error');
+    }
+  }());
+  unawaited(() async {
+    try {
+      await registry.activate(pairedDesktopPlugin.descriptor.id);
+    } catch (error) {
+      debugPrint('Paired Desktop plugin activation failed: $error');
     }
   }());
   unawaited(() async {

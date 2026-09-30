@@ -17,8 +17,12 @@ Uri resolveRemoteDshUri(DshSessionDescriptor session) {
       origin.host == '127.0.0.1' ||
       origin.host == '::1' ||
       origin.host == '10.0.2.2';
+  final privateNetwork = _isPrivateIpv4(origin.host);
   if (origin.scheme != 'https' &&
-      !(session.allowInsecureLoopback && origin.scheme == 'http' && loopback)) {
+      !(session.allowInsecureLoopback && origin.scheme == 'http' && loopback) &&
+      !(session.allowInsecurePrivateNetworkForTesting &&
+          origin.scheme == 'http' &&
+          privateNetwork)) {
     throw const FormatException('insecure Remote DSH origin');
   }
   if ((!session.path.startsWith('/session/') &&
@@ -32,6 +36,16 @@ Uri resolveRemoteDshUri(DshSessionDescriptor session) {
     throw const FormatException('cross-origin Remote DSH URL');
   }
   return target;
+}
+
+bool _isPrivateIpv4(String host) {
+  final parts = host.split('.').map(int.tryParse).toList(growable: false);
+  if (parts.length != 4 || parts.any((value) => value == null)) return false;
+  final first = parts[0]!;
+  final second = parts[1]!;
+  return first == 10 ||
+      (first == 192 && second == 168) ||
+      (first == 172 && second >= 16 && second <= 31);
 }
 
 bool isAllowedRemoteDshNavigation(Uri target, Uri origin) =>

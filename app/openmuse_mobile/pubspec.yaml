@@ -46,6 +46,8 @@ dependencies:
     path: ../../packages/openmuse_office_viewers
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
+  openmuse_workspace_paired:
+    path: ../../plugins/workspace-paired
   webview_flutter: ^4.13.0
 
 dev_dependencies:

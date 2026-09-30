@@ -356,11 +356,10 @@ final class _AgentSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final plugin = registry.plugin('com.openmuse.dsh-agent');
-    final OpenMuseSettingsContributor? contributor =
-        plugin is OpenMuseSettingsContributor
-        ? plugin as OpenMuseSettingsContributor
-        : null;
+    final contributors = [
+      registry.plugin('com.openmuse.dsh-agent'),
+      registry.plugin('com.openmuse.workspace.paired.host'),
+    ].whereType<OpenMuseSettingsContributor>().toList(growable: false);
     return _SettingsBody(
       title: 'Agent',
       description: '配置本机 DSH 助手及右侧面板。',
@@ -376,7 +375,8 @@ final class _AgentSettings extends StatelessWidget {
           value: settings.assistantVisible,
           onChanged: settings.setAssistantVisible,
         ),
-        if (contributor != null) contributor.buildSettings(context),
+        for (final contributor in contributors)
+          contributor.buildSettings(context),
       ],
     );
   }

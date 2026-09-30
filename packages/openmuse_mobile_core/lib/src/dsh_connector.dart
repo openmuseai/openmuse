@@ -19,12 +19,14 @@ final class DshSessionDescriptor {
     required this.path,
     required this.generation,
     this.allowInsecureLoopback = false,
+    this.allowInsecurePrivateNetworkForTesting = false,
   });
   final String sessionRef;
   final String origin;
   final String path;
   final int generation;
   final bool allowInsecureLoopback;
+  final bool allowInsecurePrivateNetworkForTesting;
 }
 
 final class DshSessionSummary {
@@ -115,9 +117,22 @@ final class DshPresentationController {
         uri != null &&
         uri.host.isNotEmpty &&
         (uri.scheme == 'https' ||
-            (value.allowInsecureLoopback && uri.scheme == 'http' && loopback));
+            (value.allowInsecureLoopback && uri.scheme == 'http' && loopback) ||
+            (value.allowInsecurePrivateNetworkForTesting &&
+                uri.scheme == 'http' &&
+                _isPrivateIpv4(uri.host)));
     final safePath =
         value.path.startsWith('/session/') || value.path.startsWith('/u/');
     return safeOrigin && safePath && !value.path.contains('..');
   }
+}
+
+bool _isPrivateIpv4(String host) {
+  final parts = host.split('.').map(int.tryParse).toList(growable: false);
+  if (parts.length != 4 || parts.any((value) => value == null)) return false;
+  final first = parts[0]!;
+  final second = parts[1]!;
+  return first == 10 ||
+      (first == 192 && second == 168) ||
+      (first == 172 && second >= 16 && second <= 31);
 }

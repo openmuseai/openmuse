@@ -6,6 +6,7 @@ import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_mobile/main.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 void main() {
   testWidgets('mobile distribution loads the GoTrue login plugin by default', (
@@ -24,6 +25,13 @@ void main() {
           cloudLabel: 'https://cloud.openmuse.test',
         ),
         cloudWorkspacePlugin: cloudPlugin,
+        pairedDesktopPlugin: OpenMusePairedDesktopMobilePlugin(
+          client: PairedDesktopClient(
+            origin: Uri.parse('https://desktop.openmuse.test'),
+            accessToken: authentication.accessToken,
+            deviceRef: 'mobile-test',
+          ),
+        ),
       ),
     );
     await tester.pumpAndSettle();

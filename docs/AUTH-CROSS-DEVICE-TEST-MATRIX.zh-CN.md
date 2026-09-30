@@ -28,6 +28,9 @@
 | MOBILE-U1 | Mobile distribution | 默认插件集合 | 默认加载 GoTrue 与 Cloud Workspace 插件 | 通过 |
 | MOBILE-U2 | Remote DSH WebView | URL 与导航约束 | 只接受 HTTPS 或 debug loopback HTTP；只允许 `/u/`、`/session/` 与同源导航 | 通过 |
 | DSH-U4 | DSH Pool local executor | 真实 runtime 启动与就绪探测 | 按配置启动 DSH，透传隔离目录/端口/Host auth；失败时回收子进程 | 通过 |
+| PAIR-U1 | Paired Desktop gateway | 一次性码、同账号、Workspace scope | 匹配时签发短期 grant；账号/范围不匹配 fail closed | 通过 |
+| PAIR-U2 | DSH bootstrap proxy | 303 + DSH/paired HttpOnly cookie | 跳转回 paired origin，后续 HTTP/WS 复用同一 DSH | 通过 |
+| PAIR-U3 | DSH CSRF boundary | Browser Origin/Referer 与上游 origin 不同 | 网关安全重写为 DSH loopback origin，不放宽 DSH 验证 | 通过 |
 
 ## 3. 本地集成测试
 
@@ -51,12 +54,16 @@
 | ID | 场景 | 期望 | 结果 |
 |---|---|---|---|
 | BUILD-D1 | macOS Desktop debug build | 生成 `OpenMuse.app` | 通过 |
-| BUILD-M1 | Android debug APK | 构建成功；SHA-256 `222d1cdaa983295608972e17261262edf331d8a24155d9634317e205fe01afe8`；205,766,002 bytes | 通过 |
+| BUILD-M1 | Android debug APK | 构建成功；SHA-256 `aba0c98287cc14c547bce446a9bded993922606b40fe8774ef6f4671f1b2237d`；205,807,520 bytes | 通过 |
 | DEVICE-M1 | ADB 安装 | 当前 APK 安装成功 | 通过 |
 | DEVICE-M2 | Android 冷启动 | 进入 OpenMuse 登录页，无崩溃 | 通过 |
 | DEVICE-M3 | 真机同账号密码登录 | 显示当前账号的 Cloud Workspace | 通过 |
 | DEVICE-M4 | 真机运行中会话投影 | 对已由 Desktop transport 打开的 Workspace 显示 `DSH running` | 通过 |
-| DEVICE-M5 | 真机 Cloud DSH 消息闭环 | 打开受约束 WebView；发送 `MOBILE-CLOUD-E2E-20260930-0840`；显示用户消息与响应 `CLOUD-E2E-20260930-0840`，会话统计为 1 轮/1 步 | 通过 |
+| DEVICE-M5 | 真机 Cloud DSH 消息闭环 | 最终安装 APK 打开受约束 WebView；发送 `CLOUD-FINAL-E2E-20260930-0942`；显示同值模型响应，会话统计增至 3 轮/3 步 | 通过 |
+| DEVICE-M6 | 真机同账号配对 Desktop | 错误码拒绝；正确一次性码后显示账号已验证、Workspace grant 已授权、Desktop DSH 已连接 | 通过 |
+| DEVICE-M7 | Desktop DSH 会话全量同步 | 同一 DSH runtime 返回 55 条；9 条非空会话可见，47 条 blank 占位由 DSH UI 隐藏 | 通过 |
+| DEVICE-M8 | running 会话同步 | Mobile 发送消息时 Mobile 与 Desktop 独立观测均为 1 条 running | 通过 |
+| DEVICE-M9 | Mobile → Desktop 会话消息 | Mobile 显示发送内容和 DSH 回复；Desktop 权威会话存储包含同一验收 nonce | 通过 |
 | DEVICE-D1 | Desktop 本机 UI 登录与恢复 | 同账号安全会话写入 Keychain；移除测试播种钩子并重建后仍可自动恢复 | 通过 |
 | DEVICE-D2 | Desktop Cloud Workspace/DSH 投影 | 显示 `My Workspace`、`Remote DSH 运行中` 与“复用”入口 | 通过 |
 
@@ -65,4 +72,5 @@
 - Auth plugin、Cloud Workspace plugin、Mobile core/cloud、Host shell、Desktop Host、Mobile App 的 test 与 analyze 必须全部通过。
 - Server `cargo check` 必须通过；DSH Pool test/build 必须通过。
 - Android release 不允许明文 HTTP；本地 debug 的 loopback HTTP 必须同时满足显式 debug 配置与 loopback host。
+- Paired Desktop 回归必须覆盖 DSH 303 cookie、HTTP/WS、Origin/Referer 重写、同账号与 Workspace grant scope。
 - 任何日志、测试输出和文档不得包含密码、JWT、refresh token、DSH launch token 或用户本地绝对工作区路径。

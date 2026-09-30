@@ -22,6 +22,8 @@ dependencies:
     path: ../../packages/openmuse_host_shell
   openmuse_dsh_plugin:
     path: ../../plugins/dsh-agent
+  openmuse_workspace_paired:
+    path: ../../plugins/workspace-paired
   path: ^1.9.1
   path_provider: ^2.1.5
 

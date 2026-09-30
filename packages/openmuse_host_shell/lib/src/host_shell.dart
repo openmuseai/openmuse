@@ -52,7 +52,9 @@ final class OpenMuseHostShell extends StatelessWidget {
                         ? (workspace.runningSessionRef == null
                               ? 'Cloud Workspace'
                               : 'Cloud Workspace · DSH running')
-                        : 'Paired Desktop · 需在线与授权',
+                        : (workspace.runningSessionRef == null
+                              ? 'Paired Desktop · 需在线与授权'
+                              : 'Paired Desktop · DSH running'),
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(

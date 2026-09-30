@@ -8,9 +8,11 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 export 'src/demo_workspace.dart';
 
-List<OpenMusePlugin> createOpenMuseBuiltInPlugins() => [
+List<OpenMusePlugin> createOpenMuseBuiltInPlugins({
+  DshSidecarSupervisor? dshSupervisor,
+}) => [
   OpenMuseHelixPlugin(),
   OpenMuseFileViewerPlugin(),
-  OpenMuseDshPlugin(),
+  OpenMuseDshPlugin(supervisor: dshSupervisor),
   OpenMuseNativeTextGatePlugin(),
 ];
