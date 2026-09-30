@@ -58,4 +58,29 @@ void main() {
       await OpenMuseLocalSettings(file: file).load();
     },
   );
+
+  test(
+    'fresh and concurrent profile saves use independent temp files',
+    () async {
+      final root = await Directory.systemTemp.createTemp('openmuse-settings-');
+      addTearDown(() => root.delete(recursive: true));
+      final file = File('${root.path}/new/profile/settings.json');
+      final first = OpenMuseLocalSettings(file: file);
+      final second = OpenMuseLocalSettings(file: file);
+
+      await Future.wait([
+        first.updatePluginValues('com.openmuse.device.one', {'value': 1}),
+        second.updatePluginValues('com.openmuse.device.two', {'value': 2}),
+      ]);
+
+      expect(await file.exists(), isTrue);
+      expect(
+        file.parent.listSync().whereType<File>().where(
+          (entry) => entry.path.contains('.tmp.'),
+        ),
+        isEmpty,
+      );
+      await OpenMuseLocalSettings(file: file).load();
+    },
+  );
 }

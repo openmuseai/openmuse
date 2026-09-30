@@ -232,13 +232,15 @@ final class _AuthenticatedMobileHost extends StatefulWidget {
 }
 
 final class _AuthenticatedMobileHostState
-    extends State<_AuthenticatedMobileHost> {
+    extends State<_AuthenticatedMobileHost>
+    with WidgetsBindingObserver {
   late OpenMuseHostComposition _composition;
   String? _pairedGrantRef;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _recompose();
     widget.pairedDesktop.addListener(_pairedChanged);
   }
@@ -284,8 +286,16 @@ final class _AuthenticatedMobileHostState
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.pairedDesktop.removeListener(_pairedChanged);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(widget.pairedDesktop.directory?.reconcile());
+    }
   }
 
   @override
@@ -513,7 +523,7 @@ final class AccountDevicesScreen extends StatelessWidget {
               children: [
                 const Text('同一账号下的设备', style: TextStyle(fontSize: 20)),
                 const SizedBox(height: 6),
-                const Text('在线 Desktop 可以发起配对；离线设备仅供识别，不能连接。'),
+                const Text('在线 Desktop 可直接连接；离线设备保留在列表中，但不可进入。'),
                 const SizedBox(height: 16),
                 AccountDeviceList(
                   controller: directory,
@@ -550,7 +560,6 @@ final class PairedDesktopConnectScreen extends StatefulWidget {
 
 final class _PairedDesktopConnectScreenState
     extends State<PairedDesktopConnectScreen> {
-  final TextEditingController _code = TextEditingController();
   AccountDevice? _selectedDevice;
 
   @override
@@ -559,22 +568,23 @@ final class _PairedDesktopConnectScreenState
     _selectedDevice = widget.initialDevice;
   }
 
-  @override
-  void dispose() {
-    _code.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pair() async {
+  Future<void> _connect() async {
     final target = _selectedDevice;
     if (target == null) return;
-    final connected = await widget.controller.pairDevice(target, _code.text);
-    if (connected && mounted) Navigator.of(context).pop();
+    final connected = await widget.controller.connectDevice(target);
+    final connection = widget.controller.snapshot.connection;
+    if (connected && connection != null && mounted) {
+      await Navigator.of(context).pushReplacement<void, void>(
+        MaterialPageRoute(
+          builder: (_) => PairedDesktopWorkspaceScreen(connection: connection),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('连接本地 Desktop')),
+    appBar: AppBar(title: const Text('选择电脑')),
     body: ListenableBuilder(
       listenable: widget.controller,
       builder: (context, _) {
@@ -582,10 +592,10 @@ final class _PairedDesktopConnectScreenState
         return ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            const Icon(Icons.phonelink, size: 48),
+            const Icon(Icons.devices_outlined, size: 48),
             const SizedBox(height: 18),
             const Text(
-              '先选择同账号下在线的 Desktop，再输入该 Desktop 显示的配对码。授权只覆盖当前本地 Workspace。',
+              '选择同账号下在线的电脑。无需配对码，连接后即可查看电脑上的 Workspace、全部对话与运行状态。',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 18),
@@ -596,41 +606,23 @@ final class _PairedDesktopConnectScreenState
                 selectedDeviceRef: _selectedDevice?.deviceRef,
                 onSelect: (device) => setState(() => _selectedDevice = device),
               ),
-            const SizedBox(height: 24),
-            TextField(
-              key: const ValueKey('paired-desktop-code'),
-              controller: _code,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              textAlign: TextAlign.center,
-              decoration: const InputDecoration(
-                labelText: '6 位配对码',
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (_) => setState(() {}),
-              enabled: _selectedDevice?.online == true,
-              onSubmitted: snapshot.connecting ? null : (_) => _pair(),
-            ),
             const SizedBox(height: 12),
             FilledButton.icon(
               key: const ValueKey('paired-desktop-connect'),
-              onPressed:
-                  snapshot.connecting ||
-                      _selectedDevice?.online != true ||
-                      _code.text.trim().length != 6
+              onPressed: snapshot.connecting || _selectedDevice?.online != true
                   ? null
-                  : _pair,
+                  : _connect,
               icon: snapshot.connecting
                   ? const SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.link),
+                  : const Icon(Icons.arrow_forward),
               label: Text(
                 _selectedDevice == null
-                    ? '请选择在线 Desktop'
-                    : '连接 ${_selectedDevice!.displayName}',
+                    ? '请选择在线电脑'
+                    : '进入 ${_selectedDevice!.displayName}',
               ),
             ),
             if (snapshot.failureMessage case final message?) ...[
@@ -653,36 +645,69 @@ final class PairedDesktopWorkspaceScreen extends StatelessWidget {
 
   final PairedDesktopConnection connection;
 
+  void _openAgent(BuildContext context) => Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) => RemoteDshPage(
+        session: connection.session,
+        workspaceTitle: connection.workspaceTitle,
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(connection.workspaceTitle)),
+    appBar: AppBar(
+      title: Row(
+        children: [
+          const Icon(Icons.desktop_windows_outlined),
+          const SizedBox(width: 8),
+          Expanded(child: Text(connection.deviceName)),
+          const Icon(Icons.circle, size: 10, color: Color(0xff00b894)),
+        ],
+      ),
+    ),
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        const Text(
-          'Paired Desktop · Local Workspace',
-          key: ValueKey('paired-workspace-placement'),
-        ),
-        const SizedBox(height: 8),
-        const Text('账号 · 已验证'),
-        const Text('Workspace Grant · 已授权'),
-        const Text('Desktop DSH · 已连接'),
-        const SizedBox(height: 12),
-        FilledButton.icon(
-          key: const ValueKey('open-paired-desktop-dsh'),
-          onPressed: () => Navigator.of(context).push<void>(
-            MaterialPageRoute(
-              builder: (_) => RemoteDshPage(
-                session: connection.session,
-                workspaceTitle: connection.workspaceTitle,
-              ),
-            ),
+        OutlinedButton.icon(
+          key: const ValueKey('new-desktop-task'),
+          onPressed: () => _openAgent(context),
+          icon: const Icon(Icons.add_comment_outlined),
+          label: const Padding(
+            padding: EdgeInsets.symmetric(vertical: 14),
+            child: Text('新建任务'),
           ),
-          icon: const Icon(Icons.computer_outlined),
-          label: const Text('打开 Desktop 会话'),
+        ),
+        const SizedBox(height: 24),
+        Text('任务', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            key: const ValueKey('open-paired-desktop-dsh'),
+            leading: const Icon(Icons.forum_outlined),
+            title: const Text('全部对话'),
+            subtitle: const Text('进行中、等待输入与已完成任务实时同步'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _openAgent(context),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text('空间', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.folder_outlined),
+            title: Text(connection.workspaceTitle),
+            subtitle: Text('运行于 ${connection.deviceName}'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _openAgent(context),
+          ),
         ),
         const SizedBox(height: 16),
-        const Text('会话列表、运行状态、历史和消息均来自 Desktop 正在使用的同一个 DSH runtime。'),
+        const Text(
+          '消息、停止操作和任务状态均由电脑端同一个 DSH runtime 提供；手机只承担远程控制台职责。',
+          key: ValueKey('paired-workspace-placement'),
+        ),
       ],
     ),
   );

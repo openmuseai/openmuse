@@ -4,6 +4,7 @@ final class PairedDesktopConnection {
   const PairedDesktopConnection({
     required this.accountRef,
     required this.deviceRef,
+    required this.deviceName,
     required this.workspaceRef,
     required this.workspaceTitle,
     required this.grantRef,
@@ -13,6 +14,7 @@ final class PairedDesktopConnection {
 
   final String accountRef;
   final String deviceRef;
+  final String deviceName;
   final String workspaceRef;
   final String workspaceTitle;
   final String grantRef;
@@ -25,6 +27,7 @@ final class PairedDesktopConnection {
   }) {
     final accountRef = json['accountRef'];
     final deviceRef = json['deviceRef'];
+    final deviceName = json['deviceName'];
     final workspaceRef = json['workspaceRef'];
     final workspaceTitle = json['workspaceTitle'];
     final grantRef = json['grantRef'];
@@ -34,6 +37,7 @@ final class PairedDesktopConnection {
         accountRef.isEmpty ||
         deviceRef is! String ||
         deviceRef.isEmpty ||
+        (deviceName != null && deviceName is! String) ||
         workspaceRef is! String ||
         workspaceRef.isEmpty ||
         workspaceTitle is! String ||
@@ -59,6 +63,9 @@ final class PairedDesktopConnection {
     return PairedDesktopConnection(
       accountRef: accountRef,
       deviceRef: deviceRef,
+      deviceName: deviceName is String && deviceName.isNotEmpty
+          ? deviceName
+          : 'OpenMuse Desktop',
       workspaceRef: workspaceRef,
       workspaceTitle: workspaceTitle,
       grantRef: grantRef,

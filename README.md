@@ -40,6 +40,8 @@ Mobile product design: [`docs/MOBILE-PRODUCT-PRD.zh-CN.md`](docs/MOBILE-PRODUCT-
 Mobile architecture and implementation plan: [`docs/MOBILE-ARCHITECTURE-IMPLEMENTATION-PLAN.zh-CN.md`](docs/MOBILE-ARCHITECTURE-IMPLEMENTATION-PLAN.zh-CN.md).
 GoTrue authentication plugin migration and cross-device session design: [`docs/AUTH-GOTRUE-PLUGIN-MIGRATION.zh-CN.md`](docs/AUTH-GOTRUE-PLUGIN-MIGRATION.zh-CN.md).
 Account device directory, presence and Desktop pairing: [`docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md`](docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md).
+Same-account multi-device product and interaction design: [`docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md`](docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md).
+Device presence and realtime protocol ADR: [`docs/DEVICE-PRESENCE-REALTIME-ARCHITECTURE.zh-CN.md`](docs/DEVICE-PRESENCE-REALTIME-ARCHITECTURE.zh-CN.md).
 Authentication, Cloud Workspace and DSH cross-device test matrix: [`docs/AUTH-CROSS-DEVICE-TEST-MATRIX.zh-CN.md`](docs/AUTH-CROSS-DEVICE-TEST-MATRIX.zh-CN.md).
 S3 Storage ABI and MinIO/RustFS selection: [`docs/S3-STORAGE-TECHNICAL-SELECTION.zh-CN.md`](docs/S3-STORAGE-TECHNICAL-SELECTION.zh-CN.md).
 OpenMuse Workspace Sandbox and DSH execution plane: [`docs/DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md`](docs/DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md).

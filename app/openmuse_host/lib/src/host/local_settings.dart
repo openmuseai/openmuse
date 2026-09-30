@@ -116,7 +116,12 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
     final target = file;
     if (target == null) return;
     await target.parent.create(recursive: true);
-    final temporary = File('${target.path}.tmp');
+    // Distinct Host instances (for example during an app update handoff) can
+    // briefly save the same profile. A shared `.tmp` name lets one instance
+    // rename the other's file and makes the loser fail at startup.
+    final temporary = File(
+      '${target.path}.tmp.$pid.${DateTime.now().microsecondsSinceEpoch}',
+    );
     await temporary.writeAsString(
       jsonEncode({
         'version': 1,
@@ -129,7 +134,13 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
       }),
       flush: true,
     );
-    if (await target.exists()) await target.delete();
-    await temporary.rename(target.path);
+    try {
+      await temporary.rename(target.path);
+    } on FileSystemException {
+      // Windows does not replace an existing destination atomically.
+      if (!Platform.isWindows || !await target.exists()) rethrow;
+      await target.delete();
+      await temporary.rename(target.path);
+    }
   }
 }

@@ -78,9 +78,8 @@ void main() {
       allowInsecurePrivateNetworkForTesting: false,
     );
 
-    final paired = await controller.pairDevice(
+    final paired = await controller.connectDevice(
       AccountDevice.fromJson(_deviceJson(online: false)),
-      '123456',
     );
 
     expect(paired, isFalse);
@@ -88,6 +87,99 @@ void main() {
     controller.dispose();
     directory.dispose();
   });
+
+  test(
+    'failed initial registration retries and recovers without relogin',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      var registrations = 0;
+      server.listen((request) async {
+        if (request.uri.path == '/api/muse/devices/events') {
+          request.response.statusCode = HttpStatus.notFound;
+          await request.response.close();
+          return;
+        }
+        request.response.headers.contentType = ContentType.json;
+        if (request.method == 'POST') {
+          registrations++;
+          if (registrations == 1) {
+            request.response
+              ..statusCode = HttpStatus.serviceUnavailable
+              ..write(jsonEncode({'code': 1}));
+            await request.response.close();
+            return;
+          }
+        }
+        request.response.write(
+          jsonEncode({
+            'code': 0,
+            'data': request.method == 'GET'
+                ? [_deviceJson(online: true)]
+                : _deviceJson(online: true),
+          }),
+        );
+        await request.response.close();
+      });
+      final auth = _Authentication(authenticated: true);
+      final controller = AccountDeviceDirectoryController(
+        authentication: auth,
+        client: AccountDeviceDirectoryClient(
+          cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+          accessToken: auth.accessToken,
+          allowInsecureLoopback: true,
+        ),
+        registration: () => const AccountDeviceRegistration(
+          deviceRef: 'mobile.1',
+          displayName: 'Phone',
+          platform: 'android',
+          kind: AccountDeviceKind.mobile,
+        ),
+        heartbeatInterval: const Duration(seconds: 30),
+        maxReconnectDelay: const Duration(milliseconds: 5),
+      );
+
+      await controller.activate();
+      for (
+        var attempt = 0;
+        attempt < 20 && !controller.snapshot.registered;
+        attempt++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+
+      expect(registrations, greaterThanOrEqualTo(2));
+      expect(controller.snapshot.registered, isTrue);
+      controller.dispose();
+      await server.close(force: true);
+    },
+  );
+
+  test(
+    'device event websocket authenticates and delivers refresh hints',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((request) async {
+        expect(
+          request.headers.value(HttpHeaders.authorizationHeader),
+          'Bearer access',
+        );
+        final socket = await WebSocketTransformer.upgrade(request);
+        socket.add(jsonEncode({'type': 'device.snapshot-required'}));
+      });
+      final client = AccountDeviceDirectoryClient(
+        cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+        accessToken: () async => 'access',
+        allowInsecureLoopback: true,
+      );
+
+      final socket = await client.connectEvents();
+      expect(await socket.first, contains('snapshot-required'));
+
+      await socket.close();
+      client.close();
+      await server.close(force: true);
+    },
+  );
 }
 
 Map<String, Object?> _deviceJson({required bool online}) => {
@@ -103,9 +195,20 @@ Map<String, Object?> _deviceJson({required bool online}) => {
 
 final class _Authentication extends ChangeNotifier
     implements OpenMuseAuthenticationController {
+  _Authentication({this.authenticated = false});
+
+  final bool authenticated;
+
   @override
-  OpenMuseAuthenticationSnapshot get snapshot =>
-      const OpenMuseAuthenticationSnapshot.signedOut();
+  OpenMuseAuthenticationSnapshot get snapshot => authenticated
+      ? const OpenMuseAuthenticationSnapshot(
+          phase: OpenMuseAuthenticationPhase.authenticated,
+          identity: OpenMuseAuthenticatedIdentity(
+            subject: 'account.1',
+            email: 'account@example.test',
+          ),
+        )
+      : const OpenMuseAuthenticationSnapshot.signedOut();
 
   @override
   Future<String?> accessToken({bool forceRefresh = false}) async => 'access';

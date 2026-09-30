@@ -3,6 +3,9 @@
 > 状态：Implemented / Android real-device E2E verified
 >
 > 日期：2026-09-30
+>
+> 注：同账号配对码方案已被《同账号多端协同产品稿》和《设备 Presence 与多端实时同步架构》取代；
+> 本文保留为上一阶段实施记录。
 
 ## 1. Review 结论
 

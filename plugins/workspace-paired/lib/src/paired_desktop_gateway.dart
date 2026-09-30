@@ -14,6 +14,7 @@ final class PairedDesktopGateway {
     required this.workspaceRef,
     required this.workspaceTitle,
     this.deviceRef = 'desktop.local',
+    this.deviceName = 'OpenMuse Desktop',
     this.port = 13180,
     this.bindAddress,
     this.grantTtl = const Duration(minutes: 30),
@@ -26,6 +27,7 @@ final class PairedDesktopGateway {
   final String workspaceRef;
   final String workspaceTitle;
   final String deviceRef;
+  final String deviceName;
   final int port;
   final InternetAddress? bindAddress;
   final Duration grantTtl;
@@ -53,7 +55,7 @@ final class PairedDesktopGateway {
         port,
       );
       _server = server;
-      armPairing();
+      lastError = null;
       unawaited(_serve(server));
       _changed();
     } catch (error) {
@@ -92,7 +94,11 @@ final class PairedDesktopGateway {
   Future<void> _handle(HttpRequest request) async {
     try {
       if (request.method == 'POST' && request.uri.path == '/v1/pair/open') {
-        await _pair(request);
+        await _open(request, requirePairingCode: true);
+        return;
+      }
+      if (request.method == 'POST' && request.uri.path == '/v1/account/open') {
+        await _open(request, requirePairingCode: false);
         return;
       }
       if (request.method == 'GET' && request.uri.path == '/v1/status') {
@@ -118,7 +124,10 @@ final class PairedDesktopGateway {
     }
   }
 
-  Future<void> _pair(HttpRequest request) async {
+  Future<void> _open(
+    HttpRequest request, {
+    required bool requirePairingCode,
+  }) async {
     final authorization = request.headers.value(
       HttpHeaders.authorizationHeader,
     );
@@ -154,10 +163,11 @@ final class PairedDesktopGateway {
     final targetDeviceRef = body['targetDeviceRef'];
     final requestedWorkspace = body['workspaceRef'];
     final now = DateTime.now().millisecondsSinceEpoch;
-    if (code is! String ||
-        code != _pairingCode ||
-        _pairingExpiresAtMs == null ||
-        now >= _pairingExpiresAtMs!) {
+    if (requirePairingCode &&
+        (code is! String ||
+            code != _pairingCode ||
+            _pairingExpiresAtMs == null ||
+            now >= _pairingExpiresAtMs!)) {
       throw const _GatewayFailure(
         HttpStatus.forbidden,
         'PAIRING_CODE_DENIED',
@@ -209,8 +219,10 @@ final class PairedDesktopGateway {
       expiresAtMs: expiresAtMs,
       upstream: upstream,
     );
-    _pairingCode = null;
-    _pairingExpiresAtMs = null;
+    if (requirePairingCode) {
+      _pairingCode = null;
+      _pairingExpiresAtMs = null;
+    }
     final publicOrigin = Uri(
       scheme: 'http',
       host: _publicHost(request.headers.host),
@@ -219,6 +231,7 @@ final class PairedDesktopGateway {
     _json(request.response, HttpStatus.ok, {
       'accountRef': desktopAccountRef,
       'deviceRef': deviceRef,
+      'deviceName': deviceName,
       'workspaceRef': workspaceRef,
       'workspaceTitle': workspaceTitle,
       'grantRef': grantRef,

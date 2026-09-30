@@ -6,7 +6,7 @@ import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 void main() {
   test(
-    'same-account one-time code grants the real Desktop DSH endpoint',
+    'same-account device opens the real Desktop DSH without a code',
     () async {
       final upstream = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       String? observedOrigin;
@@ -22,8 +22,13 @@ void main() {
         )) {
           observedOrigin = request.headers.value('origin');
           observedReferer = request.headers.value(HttpHeaders.refererHeader);
-          request.response.headers.set(HttpHeaders.contentEncodingHeader, 'gzip');
-          request.response.add(gzip.encode(utf8.encode('desktop-live-history')));
+          request.response.headers.set(
+            HttpHeaders.contentEncodingHeader,
+            'gzip',
+          );
+          request.response.add(
+            gzip.encode(utf8.encode('desktop-live-history')),
+          );
         } else {
           request.response.statusCode = HttpStatus.unauthorized;
         }
@@ -48,7 +53,9 @@ void main() {
         allowInsecureLoopback: true,
       );
 
-      final connection = await client.pair(pairingCode: '123456');
+      final connection = await client.connectSameAccount(
+        targetDeviceRef: 'desktop.local',
+      );
       expect(connection.accountRef, 'account-1');
       expect(connection.workspaceRef, 'openmuse.local.default');
       expect(connection.session.path, startsWith('/u/'));
@@ -111,7 +118,7 @@ void main() {
     );
 
     await expectLater(
-      client.pair(pairingCode: '123456'),
+      client.connectSameAccount(targetDeviceRef: 'desktop.local'),
       throwsA(
         isA<PairedDesktopFailure>().having(
           (value) => value.code,
@@ -145,10 +152,7 @@ void main() {
     );
 
     await expectLater(
-      client.pair(
-        pairingCode: '123456',
-        targetDeviceRef: 'desktop.another',
-      ),
+      client.connectSameAccount(targetDeviceRef: 'desktop.another'),
       throwsA(
         isA<PairedDesktopFailure>().having(
           (value) => value.code,

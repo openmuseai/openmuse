@@ -124,8 +124,8 @@ final class _OpenMuseHostShellState extends State<OpenMuseHostShell> {
                               ? 'Cloud Workspace'
                               : 'Cloud Workspace · DSH running')
                         : (workspace.runningSessionRef == null
-                              ? 'Paired Desktop · 需在线与授权'
-                              : 'Paired Desktop · DSH running'),
+                              ? 'Desktop · 同账号免码连接'
+                              : 'Desktop · DSH running'),
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(

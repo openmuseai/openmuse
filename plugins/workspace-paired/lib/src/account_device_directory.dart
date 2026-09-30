@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -166,6 +167,33 @@ final class AccountDeviceDirectoryClient {
         .toList(growable: false);
   }
 
+  Future<WebSocket> connectEvents() async {
+    final token = await accessToken();
+    if (token == null || token.isEmpty) {
+      throw const AccountDeviceDirectoryFailure('SIGNED_OUT', '请先登录账号。');
+    }
+    final scheme = cloudOrigin.scheme == 'https' ? 'wss' : 'ws';
+    final uri = cloudOrigin.replace(
+      scheme: scheme,
+      path: '/api/muse/devices/events',
+      query: null,
+      fragment: null,
+    );
+    try {
+      return await WebSocket.connect(
+        uri.toString(),
+        headers: {HttpHeaders.authorizationHeader: 'Bearer $token'},
+      ).timeout(requestTimeout, onTimeout: _timeout);
+    } on AccountDeviceDirectoryFailure {
+      rethrow;
+    } on Object {
+      throw const AccountDeviceDirectoryFailure(
+        'EVENT_STREAM_UNAVAILABLE',
+        '设备实时通道暂时不可用。',
+      );
+    }
+  }
+
   Future<void> revoke(String deviceRef) async {
     await _envelope(
       'POST',
@@ -261,12 +289,16 @@ final class AccountDeviceDirectorySnapshot {
   const AccountDeviceDirectorySnapshot({
     this.loading = false,
     this.registered = false,
+    this.realtimeConnected = false,
+    this.reconnecting = false,
     this.devices = const [],
     this.failureMessage,
   });
 
   final bool loading;
   final bool registered;
+  final bool realtimeConnected;
+  final bool reconnecting;
   final List<AccountDevice> devices;
   final String? failureMessage;
 }
@@ -277,18 +309,25 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
     required this.client,
     required this.registration,
     this.heartbeatInterval = const Duration(seconds: 20),
+    this.maxReconnectDelay = const Duration(seconds: 30),
   });
 
   final OpenMuseAuthenticationController authentication;
   final AccountDeviceDirectoryClient client;
   final AccountDeviceRegistration Function() registration;
   final Duration heartbeatInterval;
+  final Duration maxReconnectDelay;
   AccountDeviceDirectorySnapshot _snapshot =
       const AccountDeviceDirectorySnapshot();
   Timer? _heartbeat;
+  Timer? _retry;
+  WebSocket? _events;
+  StreamSubscription<Object?>? _eventSubscription;
   bool _active = false;
   bool _operationInFlight = false;
   int _identityGeneration = 0;
+  int _consecutiveFailures = 0;
+  final Random _jitter = Random();
 
   AccountDeviceDirectorySnapshot get snapshot => _snapshot;
 
@@ -304,7 +343,7 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
   void _authenticationChanged() {
     _identityGeneration++;
     if (!authentication.snapshot.isAuthenticated) {
-      _heartbeat?.cancel();
+      _stopTransports();
       _publish(const AccountDeviceDirectorySnapshot());
       return;
     }
@@ -319,6 +358,8 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
       AccountDeviceDirectorySnapshot(
         loading: true,
         registered: _snapshot.registered,
+        realtimeConnected: _snapshot.realtimeConnected,
+        reconnecting: _snapshot.reconnecting,
         devices: _snapshot.devices,
       ),
     );
@@ -328,14 +369,18 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
       _publish(
         AccountDeviceDirectorySnapshot(
           registered: _snapshot.registered,
+          realtimeConnected: _snapshot.realtimeConnected,
           devices: devices,
         ),
       );
     } on AccountDeviceDirectoryFailure catch (error) {
       if (!_isCurrent(generation)) return;
+      debugPrint('OpenMuse device refresh: ${error.code}');
       _publish(
         AccountDeviceDirectorySnapshot(
           registered: _snapshot.registered,
+          realtimeConnected: _snapshot.realtimeConnected,
+          reconnecting: _snapshot.reconnecting,
           devices: _snapshot.devices,
           failureMessage: error.safeMessage,
         ),
@@ -345,6 +390,12 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
     }
   }
 
+  Future<void> reconcile() async {
+    if (!_active || !authentication.snapshot.isAuthenticated) return;
+    _retry?.cancel();
+    await _registerAndRefresh(_identityGeneration);
+  }
+
   Future<void> _registerAndRefresh(int generation) async {
     if (_operationInFlight) return;
     _operationInFlight = true;
@@ -352,6 +403,8 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
       AccountDeviceDirectorySnapshot(
         loading: true,
         registered: _snapshot.registered,
+        realtimeConnected: _snapshot.realtimeConnected,
+        reconnecting: _snapshot.reconnecting,
         devices: _snapshot.devices,
       ),
     );
@@ -359,19 +412,30 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
       await client.register(registration());
       final devices = await client.list();
       if (!_isCurrent(generation)) return;
+      _consecutiveFailures = 0;
+      _retry?.cancel();
       _publish(
-        AccountDeviceDirectorySnapshot(registered: true, devices: devices),
+        AccountDeviceDirectorySnapshot(
+          registered: true,
+          realtimeConnected: _snapshot.realtimeConnected,
+          devices: devices,
+        ),
       );
       _heartbeat?.cancel();
       _heartbeat = Timer.periodic(heartbeatInterval, (_) => _tick());
+      unawaited(_connectEventStream(generation));
     } on AccountDeviceDirectoryFailure catch (error) {
       if (!_isCurrent(generation)) return;
+      debugPrint('OpenMuse device registration: ${error.code}');
       _publish(
         AccountDeviceDirectorySnapshot(
+          registered: false,
+          reconnecting: true,
           devices: _snapshot.devices,
           failureMessage: error.safeMessage,
         ),
       );
+      _scheduleRetry(generation);
     } finally {
       _operationInFlight = false;
       if (_active &&
@@ -391,22 +455,112 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
         await client.heartbeat(registration().deviceRef);
         final devices = await client.list();
         if (!_isCurrent(generation)) return;
+        _consecutiveFailures = 0;
         _publish(
-          AccountDeviceDirectorySnapshot(registered: true, devices: devices),
+          AccountDeviceDirectorySnapshot(
+            registered: true,
+            realtimeConnected: _snapshot.realtimeConnected,
+            devices: devices,
+          ),
         );
       } on AccountDeviceDirectoryFailure catch (error) {
         if (!_isCurrent(generation)) return;
         _publish(
           AccountDeviceDirectorySnapshot(
             registered: false,
+            realtimeConnected: _snapshot.realtimeConnected,
+            reconnecting: true,
             devices: _snapshot.devices,
             failureMessage: error.safeMessage,
           ),
         );
+        _scheduleRetry(generation);
       } finally {
         _operationInFlight = false;
       }
     }());
+  }
+
+  Future<void> _connectEventStream(int generation) async {
+    if (!_isCurrent(generation) || _events != null) return;
+    try {
+      final socket = await client.connectEvents();
+      if (!_isCurrent(generation)) {
+        await socket.close();
+        return;
+      }
+      _events = socket;
+      _consecutiveFailures = 0;
+      _publish(
+        AccountDeviceDirectorySnapshot(
+          registered: _snapshot.registered,
+          realtimeConnected: true,
+          devices: _snapshot.devices,
+        ),
+      );
+      _eventSubscription = socket.listen(
+        (_) => unawaited(refresh()),
+        onError: (_) => _eventStreamEnded(generation),
+        onDone: () => _eventStreamEnded(generation),
+        cancelOnError: true,
+      );
+    } on AccountDeviceDirectoryFailure catch (error) {
+      if (!_isCurrent(generation)) return;
+      _publish(
+        AccountDeviceDirectorySnapshot(
+          registered: _snapshot.registered,
+          reconnecting: true,
+          devices: _snapshot.devices,
+          failureMessage: error.safeMessage,
+        ),
+      );
+      _scheduleRetry(generation, eventsOnly: true);
+    }
+  }
+
+  void _eventStreamEnded(int generation) {
+    _eventSubscription = null;
+    _events = null;
+    if (!_isCurrent(generation)) return;
+    _publish(
+      AccountDeviceDirectorySnapshot(
+        registered: _snapshot.registered,
+        reconnecting: true,
+        devices: _snapshot.devices,
+        failureMessage: '设备实时通道已断开，正在重连。',
+      ),
+    );
+    _scheduleRetry(generation, eventsOnly: true);
+  }
+
+  void _scheduleRetry(int generation, {bool eventsOnly = false}) {
+    if (!_isCurrent(generation) || _retry?.isActive == true) return;
+    final exponent = min(_consecutiveFailures++, 5);
+    final baseMs = min(
+      maxReconnectDelay.inMilliseconds,
+      1000 * (1 << exponent),
+    );
+    final jitterMs = baseMs <= 4 ? 0 : _jitter.nextInt(baseMs ~/ 4);
+    _retry = Timer(Duration(milliseconds: baseMs + jitterMs), () {
+      if (!_isCurrent(generation)) return;
+      if (eventsOnly && _snapshot.registered) {
+        unawaited(_connectEventStream(generation));
+      } else {
+        unawaited(_registerAndRefresh(generation));
+      }
+    });
+  }
+
+  void _stopTransports() {
+    _heartbeat?.cancel();
+    _heartbeat = null;
+    _retry?.cancel();
+    _retry = null;
+    unawaited(_eventSubscription?.cancel());
+    _eventSubscription = null;
+    unawaited(_events?.close());
+    _events = null;
+    _consecutiveFailures = 0;
   }
 
   bool _isCurrent(int generation) =>
@@ -422,7 +576,7 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
   @override
   void dispose() {
     _active = false;
-    _heartbeat?.cancel();
+    _stopTransports();
     authentication.removeListener(_authenticationChanged);
     client.close();
     super.dispose();

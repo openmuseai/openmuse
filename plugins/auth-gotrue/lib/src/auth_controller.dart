@@ -246,7 +246,12 @@ final class GoTrueAuthenticationController extends ChangeNotifier
   Future<void> _clearSession() async {
     _session = null;
     _refreshInFlight = null;
-    await _store.delete();
+    try {
+      await _store.delete();
+    } catch (_) {
+      // A Keychain ACL or transient storage failure must not leave the UI in
+      // the restoring phase forever. The in-memory credential is still gone.
+    }
   }
 
   void _publishAuthenticated(GoTrueSession session) {

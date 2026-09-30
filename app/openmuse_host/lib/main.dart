@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -143,8 +144,13 @@ Future<Widget> bootOpenMuseHost() async {
     'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
     defaultValue: !kReleaseMode,
   );
-  const authSessionStore = SecureAuthSessionStore(
-    values: FlutterSecureValueStore.macOsCompatible(),
+  final authSessionStore = SecureAuthSessionStore(
+    values: FlutterSecureValueStore.macOsCompatible(
+      accountName: String.fromEnvironment(
+        'OPENMUSE_AUTH_KEYCHAIN_ACCOUNT',
+        defaultValue: 'flutter_secure_storage_service',
+      ),
+    ),
   );
   final goTrueClient = GoTrueHttpClient(
     config: GoTrueClientConfig(
@@ -156,11 +162,21 @@ Future<Widget> bootOpenMuseHost() async {
     provider: goTrueClient,
     store: authSessionStore,
   );
+  if (kDebugMode) {
+    authenticationController.addListener(() {
+      debugPrint(
+        'OpenMuse authentication: ${authenticationController.snapshot.phase.name}',
+      );
+    });
+  }
   final authenticationPlugin = OpenMuseGoTruePlugin(
     authentication: authenticationController,
     cloudLabel: cloudOrigin.toString(),
   );
-  final desktopDeviceId = 'desktop.flutter.${rootPath.hashCode.toUnsigned(32)}';
+  final desktopDeviceId = await _persistentDesktopDeviceId(settings);
+  final desktopDisplayName = Platform.localHostname.isEmpty
+      ? 'OpenMuse Desktop'
+      : Platform.localHostname;
   final cloudWorkspacePlugin = OpenMuseCloudWorkspacePlugin(
     authentication: authenticationController,
     cloudOrigin: cloudOrigin,
@@ -186,6 +202,7 @@ Future<Widget> bootOpenMuseHost() async {
     workspaceRef: 'openmuse.local.default',
     workspaceTitle: 'Project Workspace',
     deviceRef: desktopDeviceId,
+    deviceName: desktopDisplayName,
     port:
         int.tryParse(
           Platform.environment['OPENMUSE_PAIRED_DESKTOP_PORT'] ?? '',
@@ -203,9 +220,7 @@ Future<Widget> bootOpenMuseHost() async {
     ),
     registration: () => AccountDeviceRegistration(
       deviceRef: desktopDeviceId,
-      displayName: Platform.localHostname.isEmpty
-          ? 'OpenMuse Desktop'
-          : Platform.localHostname,
+      displayName: desktopDisplayName,
       platform: Platform.operatingSystem,
       kind: AccountDeviceKind.desktop,
       capabilities: const {
@@ -299,6 +314,26 @@ String _dshHome(String supportPath) {
     return p.normalize(configured);
   }
   return p.join(supportPath, 'OpenMuse', 'dsh');
+}
+
+Future<String> _persistentDesktopDeviceId(
+  OpenMuseLocalSettings settings,
+) async {
+  const namespace = 'com.openmuse.device.identity';
+  final existing = settings.pluginValues(namespace)['deviceId'];
+  if (existing is String &&
+      existing.startsWith('desktop.') &&
+      existing.length <= 160) {
+    return existing;
+  }
+  final random = Random.secure();
+  final suffix = List.generate(
+    20,
+    (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join();
+  final value = 'desktop.$suffix';
+  await settings.updatePluginValues(namespace, {'deviceId': value});
+  return value;
 }
 
 final class OpenMuseLaunchApp extends StatefulWidget {

@@ -17,6 +17,8 @@ final class OpenMusePairedDesktopHostPlugin
   final PairedDesktopGateway gateway;
   final AccountDeviceDirectoryController? directory;
   final _GatewayChanges _changes = _GatewayChanges();
+  Timer? _gatewayRetry;
+  int _gatewayFailureCount = 0;
 
   @override
   final descriptor = const OpenMusePluginDescriptor(
@@ -35,14 +37,38 @@ final class OpenMusePairedDesktopHostPlugin
 
   @override
   Future<void> activate(OpenMusePluginContext context) async {
-    await gateway.start();
+    // Presence is the control plane and must remain available even when the
+    // local data-plane port is temporarily occupied.
     await directory?.activate();
+    await _ensureGateway();
   }
 
   @override
   Future<void> deactivate() async {
+    _gatewayRetry?.cancel();
+    _gatewayRetry = null;
     directory?.dispose();
     await gateway.stop();
+  }
+
+  Future<void> _ensureGateway() async {
+    if (gateway.running) return;
+    try {
+      await gateway.start();
+      _gatewayFailureCount = 0;
+      _gatewayRetry?.cancel();
+      _gatewayRetry = null;
+      // Republish the transport origin/capability after a successful retry.
+      await directory?.reconcile();
+    } catch (_) {
+      final delays = <int>[1, 2, 4, 8, 16, 30];
+      final index = _gatewayFailureCount.clamp(0, delays.length - 1);
+      _gatewayFailureCount += 1;
+      _gatewayRetry?.cancel();
+      _gatewayRetry = Timer(Duration(seconds: delays[index]), () {
+        unawaited(_ensureGateway());
+      });
+    }
   }
 
   @override
@@ -60,7 +86,7 @@ final class OpenMusePairedDesktopHostPlugin
       children: [
         const SizedBox(height: 18),
         const Text(
-          'Mobile 配对',
+          '多端协同',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
@@ -69,20 +95,24 @@ final class OpenMusePairedDesktopHostPlugin
           key: const ValueKey('desktop-device-presence'),
         ),
         const SizedBox(height: 4),
-        Text('传输：${gateway.running ? '已就绪' : '未启动'}'),
-        if (directory?.snapshot.registered == true &&
-            gateway.pairingCode != null)
-          SelectableText(
-            '配对码：${gateway.pairingCode!}',
-            key: const ValueKey('pairing-code'),
-          ),
-        const SizedBox(height: 8),
-        OutlinedButton(
-          onPressed: gateway.running && directory?.snapshot.registered == true
-              ? gateway.armPairing
-              : null,
-          child: const Text('生成新配对码'),
+        Text(
+          '实时通道：${directory?.snapshot.realtimeConnected == true
+              ? '已连接'
+              : directory?.snapshot.reconnecting == true
+              ? '正在重连'
+              : '未连接'}',
+          key: const ValueKey('desktop-device-realtime'),
         ),
+        const SizedBox(height: 4),
+        Text(
+          '传输：${gateway.running
+              ? '已就绪'
+              : gateway.lastError != null
+              ? '端口不可用，正在重试'
+              : '未启动'}',
+        ),
+        const SizedBox(height: 8),
+        const Text('同账号设备在线后可直接访问；跨账号授权将在后续版本通过独立配对流程提供。'),
         if (directory case final value?) ...[
           const SizedBox(height: 18),
           const Text(
@@ -155,11 +185,11 @@ final class PairedDesktopMobileController extends ChangeNotifier {
     return _pairWithClient(client, code);
   }
 
-  Future<bool> pairDevice(AccountDevice device, String code) async {
+  Future<bool> connectDevice(AccountDevice device) async {
     if (!device.online) {
       _publish(
         const PairedDesktopMobileSnapshot(
-          failureMessage: '这台 Desktop 当前离线，无法配对。',
+          failureMessage: '这台 Desktop 当前离线，无法连接。',
         ),
       );
       return false;
@@ -167,7 +197,7 @@ final class PairedDesktopMobileController extends ChangeNotifier {
     if (!device.supportsPairedDesktop) {
       _publish(
         const PairedDesktopMobileSnapshot(
-          failureMessage: '这台设备不支持 Desktop Workspace 配对。',
+          failureMessage: '这台设备不支持 Desktop Workspace。',
         ),
       );
       return false;
@@ -181,13 +211,39 @@ final class PairedDesktopMobileController extends ChangeNotifier {
           allowInsecurePrivateNetworkForTesting,
     );
     try {
-      return await _pairWithClient(
-        client,
-        code,
-        targetDeviceRef: device.deviceRef,
-      );
+      return await _connectWithClient(client, device.deviceRef);
     } finally {
       client.close();
+    }
+  }
+
+  Future<bool> _connectWithClient(
+    PairedDesktopClient client,
+    String targetDeviceRef,
+  ) async {
+    if (_snapshot.connecting) return false;
+    _publish(
+      PairedDesktopMobileSnapshot(
+        connecting: true,
+        connection: _snapshot.connection,
+      ),
+    );
+    try {
+      final connection = await client.connectSameAccount(
+        targetDeviceRef: targetDeviceRef,
+      );
+      _publish(PairedDesktopMobileSnapshot(connection: connection));
+      return true;
+    } on PairedDesktopFailure catch (error) {
+      _publish(PairedDesktopMobileSnapshot(failureMessage: error.safeMessage));
+      return false;
+    } catch (_) {
+      _publish(
+        const PairedDesktopMobileSnapshot(
+          failureMessage: '无法连接 Desktop，请确认设备在线且网络可达。',
+        ),
+      );
+      return false;
     }
   }
 

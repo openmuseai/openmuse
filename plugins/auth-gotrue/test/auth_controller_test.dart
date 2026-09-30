@@ -141,6 +141,19 @@ void main() {
     expect(controller.snapshot.failureCode, 'session_expired');
   });
 
+  test('restore exits restoring state when secure deletion fails', () async {
+    final controller = GoTrueAuthenticationController(
+      provider: _FakeProvider(),
+      store: _FailingStore(),
+      clock: () => now,
+    );
+
+    await controller.restore();
+
+    expect(controller.snapshot.phase, OpenMuseAuthenticationPhase.failure);
+    expect(controller.snapshot.failureCode, 'invalid_response');
+  });
+
   test('local sign-out succeeds even if remote logout fails', () async {
     final provider = _FakeProvider(
       signInResult: session(),
@@ -177,6 +190,16 @@ void main() {
     expect(store.writes, 0);
     expect(controller.snapshot.failureCode, 'bootstrap');
   });
+}
+
+final class _FailingStore implements AuthSessionStore {
+  @override
+  Future<void> delete() => Future<void>.error(StateError('keychain denied'));
+  @override
+  Future<GoTrueSession?> read() =>
+      Future<GoTrueSession?>.error(StateError('keychain denied'));
+  @override
+  Future<void> write(GoTrueSession session) async {}
 }
 
 final class _RecordingStore implements AuthSessionStore {

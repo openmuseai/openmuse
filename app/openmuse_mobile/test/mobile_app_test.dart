@@ -74,6 +74,72 @@ void main() {
     expect(find.text('OpenMuse Cloud'), findsNothing);
   });
 
+  testWidgets('same-account Desktop screen has no pairing-code step', (
+    tester,
+  ) async {
+    final controller = PairedDesktopMobileController.direct(
+      PairedDesktopClient(
+        origin: Uri.parse('https://desktop.openmuse.test'),
+        accessToken: () async => 'token',
+        deviceRef: 'mobile.test',
+      ),
+    );
+    final device = AccountDevice.fromJson({
+      'deviceId': 'desktop.test',
+      'displayName': 'MacBook Pro',
+      'platform': 'macos',
+      'deviceKind': 'desktop',
+      'capabilities': ['paired-desktop.transport'],
+      'transportOrigin': 'https://desktop.openmuse.test',
+      'lastSeenAt': DateTime.now().millisecondsSinceEpoch,
+      'online': true,
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PairedDesktopConnectScreen(
+          controller: controller,
+          initialDevice: device,
+        ),
+      ),
+    );
+
+    expect(find.text('选择电脑'), findsOneWidget);
+    expect(find.text('进入 MacBook Pro'), findsOneWidget);
+    expect(find.byKey(const ValueKey('paired-desktop-code')), findsNothing);
+    controller.dispose();
+  });
+
+  testWidgets('Desktop workspace hub mirrors device, tasks and spaces', (
+    tester,
+  ) async {
+    const connection = PairedDesktopConnection(
+      accountRef: 'account.1',
+      deviceRef: 'desktop.1',
+      deviceName: 'DESKTOP-FBRL8RL',
+      workspaceRef: 'workspace.1',
+      workspaceTitle: 'openmuse-io',
+      grantRef: 'grant.1',
+      expiresAtMs: 4102444800000,
+      session: DshSessionDescriptor(
+        sessionRef: 'session.1',
+        origin: 'https://desktop.openmuse.test',
+        path: '/u/grant.1',
+        generation: 1,
+      ),
+    );
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: PairedDesktopWorkspaceScreen(connection: connection),
+      ),
+    );
+
+    expect(find.text('DESKTOP-FBRL8RL'), findsOneWidget);
+    expect(find.text('新建任务'), findsOneWidget);
+    expect(find.text('全部对话'), findsOneWidget);
+    expect(find.text('进行中、等待输入与已完成任务实时同步'), findsOneWidget);
+    expect(find.text('openmuse-io'), findsOneWidget);
+  });
+
   testWidgets('service-backed composition opens a Remote DSH session', (
     tester,
   ) async {

@@ -147,7 +147,7 @@ final class _AccountSettings extends StatelessWidget {
     ].whereType<OpenMuseSettingsContributor>().toList(growable: false);
     return _SettingsBody(
       title: '账号与设备',
-      description: '登录同一账号后查看设备在线状态，并只与在线 Desktop 建立 Workspace 配对。',
+      description: '登录同一账号后查看设备在线状态，并直接访问在线 Desktop 的 Workspace。',
       children: [
         for (final contributor in contributors)
           contributor.buildSettings(context),

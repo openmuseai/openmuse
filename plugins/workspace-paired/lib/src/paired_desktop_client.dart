@@ -31,6 +31,27 @@ final class PairedDesktopClient {
     required String pairingCode,
     String? targetDeviceRef,
     String workspaceRef = 'openmuse.local.default',
+  }) => _open(
+    '/v1/pair/open',
+    pairingCode: pairingCode,
+    targetDeviceRef: targetDeviceRef,
+    workspaceRef: workspaceRef,
+  );
+
+  Future<PairedDesktopConnection> connectSameAccount({
+    required String targetDeviceRef,
+    String workspaceRef = 'openmuse.local.default',
+  }) => _open(
+    '/v1/account/open',
+    targetDeviceRef: targetDeviceRef,
+    workspaceRef: workspaceRef,
+  );
+
+  Future<PairedDesktopConnection> _open(
+    String path, {
+    String? pairingCode,
+    String? targetDeviceRef,
+    required String workspaceRef,
   }) async {
     _validateOrigin();
     final token = await accessToken();
@@ -38,7 +59,7 @@ final class PairedDesktopClient {
       throw const PairedDesktopFailure('SIGNED_OUT', '请先登录同一个账号。');
     }
     final request = await _client
-        .postUrl(origin.resolve('/v1/pair/open'))
+        .postUrl(origin.resolve(path))
         .timeout(requestTimeout, onTimeout: _pairTimeout);
     request.headers
       ..contentType = ContentType.json
@@ -46,7 +67,7 @@ final class PairedDesktopClient {
     request.add(
       utf8.encode(
         jsonEncode({
-          'pairingCode': pairingCode.trim(),
+          if (pairingCode != null) 'pairingCode': pairingCode.trim(),
           'deviceRef': deviceRef,
           if (targetDeviceRef != null) 'targetDeviceRef': targetDeviceRef,
           'workspaceRef': workspaceRef,
