@@ -26,6 +26,8 @@
 | HOST-U1 | Shared Host shell | running session 标记 | Workspace 列表显示 `DSH running` | 通过 |
 | HOST-U2 | Desktop layout | Local DSH 与 Cloud Workspace | 两个 transport 面板可同时存在 | 通过 |
 | MOBILE-U1 | Mobile distribution | 默认插件集合 | 默认加载 GoTrue 与 Cloud Workspace 插件 | 通过 |
+| MOBILE-U2 | Remote DSH WebView | URL 与导航约束 | 只接受 HTTPS 或 debug loopback HTTP；只允许 `/u/`、`/session/` 与同源导航 | 通过 |
+| DSH-U4 | DSH Pool local executor | 真实 runtime 启动与就绪探测 | 按配置启动 DSH，透传隔离目录/端口/Host auth；失败时回收子进程 | 通过 |
 
 ## 3. 本地集成测试
 
@@ -40,19 +42,21 @@
 | E2E-5 | 无 JWT 查询会话 | 请求被拒绝 | 通过 |
 | E2E-6 | 非成员 Workspace open | envelope 返回 `SCOPE_MISMATCH` | 通过 |
 | E2E-7 | 另一账号猜测 sessionRef 并 close | 原会话附件设备数仍为 2 | 通过 |
+| E2E-8 | 真实 DSH runtime 创建会话并 prompt | `session.create`、`session.prompt` 成功，history 中出现 1 条匹配的 assistant 消息 | 通过 |
 
-本地集成的 DSH Pool 使用 fake executor 验证控制面和确定性复用，不把它表述为真实 Agent runtime 渲染验收。真实 DSH UI/runtime 是独立部署验收项；客户端对返回的 `/u/` 或 `/session/` URL 只负责受约束 transport。
+本地集成使用真实 DSH runtime、Pool、Cloud 鉴权和 proxy。由于外部 DeepSeek 测试账号返回配额不足（HTTP 402），消息闭环使用本地 OpenAI-compatible 确定性模型响应器；替换范围仅限模型供应商，不替换 DSH 的会话创建、prompt、持久化、Web UI、Pool、Cloud 鉴权或 proxy。客户端对返回的 `/u/` 或 `/session/` URL 执行同源且路径受约束的 transport。
 
 ## 4. 构建与设备测试
 
 | ID | 场景 | 期望 | 结果 |
 |---|---|---|---|
 | BUILD-D1 | macOS Desktop debug build | 生成 `OpenMuse.app` | 通过 |
-| BUILD-M1 | Android debug APK | 构建成功；SHA-256 `c53dac6be158f129880f02a620a0c494f882a3a617405c4cac672207e3ac0d59`；205,326,727 bytes | 通过 |
+| BUILD-M1 | Android debug APK | 构建成功；SHA-256 `222d1cdaa983295608972e17261262edf331d8a24155d9634317e205fe01afe8`；205,766,002 bytes | 通过 |
 | DEVICE-M1 | ADB 安装 | 当前 APK 安装成功 | 通过 |
 | DEVICE-M2 | Android 冷启动 | 进入 OpenMuse 登录页，无崩溃 | 通过 |
 | DEVICE-M3 | 真机同账号密码登录 | 显示当前账号的 Cloud Workspace | 通过 |
 | DEVICE-M4 | 真机运行中会话投影 | 对已由 Desktop transport 打开的 Workspace 显示 `DSH running` | 通过 |
+| DEVICE-M5 | 真机 Cloud DSH 消息闭环 | 打开受约束 WebView；发送 `MOBILE-CLOUD-E2E-20260930-0840`；显示用户消息与响应 `CLOUD-E2E-20260930-0840`，会话统计为 1 轮/1 步 | 通过 |
 | DEVICE-D1 | Desktop 本机 UI 登录与恢复 | 同账号安全会话写入 Keychain；移除测试播种钩子并重建后仍可自动恢复 | 通过 |
 | DEVICE-D2 | Desktop Cloud Workspace/DSH 投影 | 显示 `My Workspace`、`Remote DSH 运行中` 与“复用”入口 | 通过 |
 
