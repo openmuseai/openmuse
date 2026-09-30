@@ -54,7 +54,7 @@
 | ID | 场景 | 期望 | 结果 |
 |---|---|---|---|
 | BUILD-D1 | macOS Desktop debug build | 生成 `OpenMuse.app` | 通过 |
-| BUILD-M1 | Android debug APK | 构建成功；SHA-256 `aba0c98287cc14c547bce446a9bded993922606b40fe8774ef6f4671f1b2237d`；205,807,520 bytes | 通过 |
+| BUILD-M1 | Android debug APK | 构建成功；SHA-256 `06056bd26da9c5f98389da3b9e24a69acd5b9a922faf30e6193f6f176ef4cf92`；205,810,012 bytes | 通过 |
 | DEVICE-M1 | ADB 安装 | 当前 APK 安装成功 | 通过 |
 | DEVICE-M2 | Android 冷启动 | 进入 OpenMuse 登录页，无崩溃 | 通过 |
 | DEVICE-M3 | 真机同账号密码登录 | 显示当前账号的 Cloud Workspace | 通过 |
