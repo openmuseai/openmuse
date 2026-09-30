@@ -134,7 +134,7 @@ Mobile：
 | A9 | 登录账号在请求途中切换 | generation fencing 丢弃旧响应 | PASS：directory controller 自动化测试 |
 | A10 | Mobile 打开配对 Workspace | 会话列表、running/等待输入、history 来自同一 Desktop DSH | PASS：Android WebView 显示真实 DSH 历史与运行会话 |
 | A11 | Mobile 向既有/运行中会话发消息 | Desktop 与 Mobile 同步显示消息与响应 | PASS：真机发送并收到 `OPENMUSE_MOBILE_OK` |
-| A12 | Mobile Cloud Workspace | 不受配对插件影响，仍可发送消息并收到响应 | PARTIAL：Cloud Pool 恢复后可发现 running session、打开历史并发送；当次 Cloud DSH model provider 两次 retry 后未返回新响应 |
+| A12 | Mobile Cloud Workspace | 不受配对插件影响，仍可发送消息并收到响应 | PASS：Android 真机发现 running session、打开历史、新建会话并发送消息，收到 `OPENMUSE-DETERMINISTIC-RESPONSE` |
 
 ## 8. 发布边界
 
