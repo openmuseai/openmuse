@@ -13,6 +13,7 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'docx_editor_screen.dart';
 import 'office_viewer_screen.dart';
+import 'remote_dsh_page.dart';
 
 final String _runtimeMobileDeviceId =
     'mobile.flutter.${DateTime.now().microsecondsSinceEpoch}';
@@ -543,9 +544,25 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
             Text('DSH · ${coordinator.flow.state.name}'),
             if (session != null)
               Text(
-                '${session.origin}${session.path}',
+                'Remote DSH · 已连接',
                 key: const ValueKey('remote-dsh-session'),
               ),
+            if (session != null) ...[
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                key: const ValueKey('open-remote-dsh'),
+                onPressed: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute(
+                    builder: (_) => RemoteDshPage(
+                      session: session,
+                      workspaceTitle: widget.record.title,
+                    ),
+                  ),
+                ),
+                icon: const Icon(Icons.auto_awesome_outlined),
+                label: const Text('打开 Agent'),
+              ),
+            ],
             if (resources.isNotEmpty) const Divider(),
             for (final resource in resources)
               ListTile(

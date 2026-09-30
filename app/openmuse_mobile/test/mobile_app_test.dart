@@ -89,6 +89,10 @@ void main() {
     expect(find.text('Storage · 可写'), findsOneWidget);
     expect(find.text('DSH · binding'), findsOneWidget);
     expect(find.byKey(const ValueKey('remote-dsh-session')), findsOneWidget);
+    expect(find.byKey(const ValueKey('open-remote-dsh')), findsOneWidget);
+    expect(find.text('打开 Agent'), findsOneWidget);
+    expect(find.textContaining('dsh.example.test'), findsNothing);
+    expect(find.textContaining('/session/s1'), findsNothing);
   });
 
   testWidgets('authorized DOCX catalog route opens and commits by receipt', (
