@@ -28,7 +28,10 @@ void main() {
           'mounts': mounts,
         },
       );
-      final binding = DshWorkspaceBinding(context);
+      final binding = DshWorkspaceBinding(
+        context,
+        activeMountPath: () => first.path,
+      );
       await binding.publish();
       final file = File(p.join(home, 'bindings', 'workspace-binding.json'));
       final firstDocument = jsonDecode(await file.readAsString()) as Map;
@@ -53,7 +56,7 @@ void main() {
       expect((updated['mounts'] as List), hasLength(2));
       expect(
         updated['activeMountRef'],
-        (updated['mounts'] as List).last['mountRef'],
+        (updated['mounts'] as List).first['mountRef'],
       );
       mounts = [
         {'path': second.path, 'name': 'second'},
@@ -61,6 +64,7 @@ void main() {
       await binding.publish();
       final pruned = jsonDecode(await file.readAsString()) as Map;
       expect((pruned['mounts'] as List), hasLength(1));
+      expect(pruned.containsKey('activeMountRef'), isFalse);
       expect(
         await File(
           p.join(home, 'bindings', 'materialized', '$firstRef.path'),

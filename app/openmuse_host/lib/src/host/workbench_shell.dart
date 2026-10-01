@@ -858,7 +858,7 @@ final class _WorkspaceSidebar extends StatelessWidget {
                   child: _FooterAction(
                     icon: Icons.extension_outlined,
                     label: '插件',
-                    onTap: () => _showPlugins(context, registry),
+                    onTap: () => _showPlugins(context, registry, workspace),
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -2714,15 +2714,17 @@ final class _CreateDocumentDialogState extends State<_CreateDocumentDialog> {
 Future<void> _showPlugins(
   BuildContext context,
   OpenMusePluginRegistry registry,
+  LocalWorkspaceController workspace,
 ) => showDialog<void>(
   context: context,
-  builder: (context) => _PluginDialog(registry: registry),
+  builder: (context) => _PluginDialog(registry: registry, workspace: workspace),
 );
 
 final class _PluginDialog extends StatelessWidget {
-  const _PluginDialog({required this.registry});
+  const _PluginDialog({required this.registry, required this.workspace});
 
   final OpenMusePluginRegistry registry;
+  final LocalWorkspaceController workspace;
 
   @override
   Widget build(BuildContext context) => Dialog(
@@ -2769,7 +2771,22 @@ final class _PluginDialog extends StatelessWidget {
                     subtitle: Text(
                       '${descriptor.id}  ·  ${descriptor.version}  ·  ${descriptor.runtime.name}',
                     ),
-                    trailing: _StatePill(state: state),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _StatePill(state: state),
+                        const SizedBox(width: 8),
+                        TextButton(
+                          onPressed: () => _openPluginLog(
+                            context,
+                            registry,
+                            workspace,
+                            descriptor,
+                          ),
+                          child: const Text('日志输出'),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -2791,6 +2808,49 @@ final class _PluginDialog extends StatelessWidget {
   );
 }
 
+Future<void> _openPluginLog(
+  BuildContext context,
+  OpenMusePluginRegistry registry,
+  LocalWorkspaceController workspace,
+  OpenMusePluginDescriptor descriptor,
+) async {
+  try {
+    final plugin = registry.plugin(descriptor.id);
+    final runtimeLog = plugin is OpenMusePluginLogContributor
+        ? await (plugin as OpenMusePluginLogContributor).readLog()
+        : '插件没有提供运行时日志。';
+    final directory = Directory(
+      '${Directory.systemTemp.path}/openmuse-plugin-logs',
+    );
+    await directory.create(recursive: true);
+    final safeId = descriptor.id.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    final file = File(
+      '${directory.path}/$safeId-${DateTime.now().microsecondsSinceEpoch}.log',
+    );
+    await file.writeAsString(
+      '${descriptor.name} (${descriptor.id})\n'
+      '状态: ${registry.stateOf(descriptor.id)?.name ?? '未知'}\n\n'
+      '${registry.logOf(descriptor.id)}\n\n$runtimeLog\n',
+      flush: true,
+    );
+    if (!context.mounted) return;
+    Navigator.pop(context);
+    workspace.openResource(
+      OpenMuseResource(
+        uri: file.uri,
+        displayName: '${descriptor.name} 日志.log',
+        mediaType: 'text/plain',
+      ),
+      editorId: 'viewer.text',
+    );
+  } catch (error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('无法打开插件日志：$error')));
+  }
+}
+
 final class _StatePill extends StatelessWidget {
   const _StatePill({required this.state});
 
@@ -2799,17 +2859,33 @@ final class _StatePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = state == OpenMusePluginState.active;
+    final failed = state == OpenMusePluginState.failed;
+    final label = switch (state) {
+      OpenMusePluginState.active => '运行中',
+      OpenMusePluginState.activating => '启动中',
+      OpenMusePluginState.deactivating => '停止中',
+      OpenMusePluginState.failed => '启动失败',
+      _ => '已安装',
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: active ? const Color(0xffe9f7ec) : const Color(0xfff0f1f5),
+        color: failed
+            ? const Color(0xffffece8)
+            : active
+            ? const Color(0xffe9f7ec)
+            : const Color(0xfff0f1f5),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        active ? '运行中' : '已安装',
+        label,
         style: TextStyle(
           fontSize: 11,
-          color: active ? const Color(0xff267a3b) : OpenMuseTokens.textMuted,
+          color: failed
+              ? const Color(0xffb42318)
+              : active
+              ? const Color(0xff267a3b)
+              : OpenMuseTokens.textMuted,
         ),
       ),
     );

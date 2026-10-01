@@ -417,7 +417,7 @@ impl Application {
                     Path::new(&command.path),
                     helix_view::editor::Action::Replace,
                 ) {
-                    Ok(_) => Ok(()),
+                    Ok(_) => Ok(None),
                     Err(err) => {
                         self.editor.set_error(err.to_string());
                         Err("open_failed")

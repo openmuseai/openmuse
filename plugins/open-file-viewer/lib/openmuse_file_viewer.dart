@@ -31,6 +31,12 @@ final class OpenMuseFileViewerPlugin
         priority: 20,
       ),
       OpenMuseEditorContribution(
+        id: 'viewer.text',
+        mediaTypes: {'text/plain'},
+        extensions: {'txt', 'log'},
+        priority: 20,
+      ),
+      OpenMuseEditorContribution(
         id: 'viewer.image',
         mediaTypes: {'image/*'},
         extensions: {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'},
@@ -66,8 +72,11 @@ final class OpenMuseFileViewerPlugin
     if (descriptor.editors.first.accepts(resource)) {
       return OpenMuseMarkdownPreview(key: ValueKey(path), path: path);
     }
+    if (descriptor.editors[1].accepts(resource)) {
+      return _LocalTextPreview(key: ValueKey(path), path: path, title: '日志输出');
+    }
     if (!descriptor.editors
-        .skip(1)
+        .skip(2)
         .take(2)
         .any((editor) => editor.accepts(resource))) {
       return const _ViewerMessage('此文件类型尚无可用预览器。可安装对应格式的插件。');

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 import 'package:xterm/xterm.dart';
 
 import 'helix_preferences.dart';
@@ -40,6 +41,10 @@ final class HelixRuntimePool extends ChangeNotifier {
   String? activePath;
   HelixPreferences preferences = const HelixPreferences();
   bool supportsNonmodal = false;
+  /// Mounted workspaces the host reported. Rust projects found inside them are
+  /// linked into rust-analyzer while the opened buffer sits outside every crate.
+  List<String> rustWorkspaceRoots = const [];
+  List<String> _linkedRustProjects = const [];
   final bool reuseSessions =
       Platform.environment['OPENMUSE_HELIX_REUSE'] != '0';
   bool _capabilityChecked = false;
@@ -51,9 +56,27 @@ final class HelixRuntimePool extends ChangeNotifier {
   String get _generatedConfigDirectory =>
       '${Directory.systemTemp.path}/openmuse-helix-$_configInstance';
 
-  @visibleForTesting
   File get generatedLanguagesFile =>
       File('$_generatedConfigDirectory/helix/languages.toml');
+
+  File get logFile => File('$_generatedConfigDirectory/helix.log');
+
+  /// Cargo manifests to hand to rust-analyzer for [documentPath]. Empty while
+  /// the buffer already belongs to a crate, while LSP is disabled, or while the
+  /// user configured rust-analyzer themselves — then their choice wins.
+  List<String> linkedRustProjectsFor(String documentPath) {
+    if (!preferences.enableLsp) return const [];
+    if (p.extension(documentPath).toLowerCase() != '.rs') return const [];
+    if (rustLanguageServerRoot(documentPath) != null) return const [];
+    final configured = preferences.languageServerConfigPaths['rust-analyzer'];
+    if (configured != null &&
+        p.isAbsolute(configured) &&
+        File(configured).existsSync() &&
+        File(configured).readAsStringSync().trim().isNotEmpty) {
+      return const [];
+    }
+    return discoverRustProjectManifests(rustWorkspaceRoots);
+  }
 
   Future<void> configure(HelixPreferences value) async {
     if (!_capabilityChecked) await probeCapabilities();
@@ -157,7 +180,7 @@ final class HelixRuntimePool extends ChangeNotifier {
     return supportsNonmodal;
   }
 
-  Future<File> _writeConfig() async {
+  Future<File> _writeConfig({List<String> rustLinkedProjects = const []}) async {
     final directory = Directory(_generatedConfigDirectory);
     await directory.create(recursive: true);
     final config = File('${directory.path}/config.toml');
@@ -175,9 +198,12 @@ final class HelixRuntimePool extends ChangeNotifier {
       }
     }
     await languages.writeAsString(
-      preferences.copyWith(languageServerPaths: serverPaths).languagesToml,
+      preferences
+          .copyWith(languageServerPaths: serverPaths)
+          .languagesTomlFor(rustLinkedProjects: rustLinkedProjects),
       flush: true,
     );
+    _linkedRustProjects = rustLinkedProjects;
     _configFile = config;
     return config;
   }
@@ -315,6 +341,18 @@ final class HelixRuntimePool extends ChangeNotifier {
       }
       session.reportedPath = path;
       session.expectedPath = null;
+      // A reused session keeps the configuration it launched with, and Helix
+      // only reads `languages.toml` at startup or on `:config-reload`. Switching
+      // into a Rust buffer that lives outside every crate therefore has to
+      // re-issue the generated `linkedProjects` and restart the server.
+      final linkedProjects = linkedRustProjectsFor(path);
+      if (!listEquals(linkedProjects, _linkedRustProjects)) {
+        await _writeConfig(rustLinkedProjects: linkedProjects);
+        await _sendCommand(session.pty, ':config-reload');
+        if (p.extension(path).toLowerCase() == '.rs') {
+          await _sendCommand(session.pty, ':lsp-restart rust-analyzer');
+        }
+      }
       state = HelixRuntimeState.ready;
       notifyListeners();
       HelixOpenTrace.mark(
@@ -349,8 +387,10 @@ final class HelixRuntimePool extends ChangeNotifier {
     var sawState = false;
     try {
       final runtimePath = File(executable).parent.path;
-      final environment = helixProcessEnvironment(Platform.environment);
-      environment['XDG_CONFIG_HOME'] = _generatedConfigDirectory;
+      final environment = helixProcessEnvironment(
+        Platform.environment,
+        configHome: _generatedConfigDirectory,
+      );
       if (supportsNonmodal) {
         channel = await HelixControlChannel.bind((event) {
           if (event.type == 'state' && !sawState) {
@@ -391,7 +431,12 @@ final class HelixRuntimePool extends ChangeNotifier {
       if (Platform.isWindows && !File(executable).existsSync()) {
         throw StateError('未找到 Windows Helix 可执行文件 hx.exe');
       }
-      final config = _configFile ?? await _writeConfig();
+      final linkedProjects = linkedRustProjectsFor(path);
+      final config =
+          _configFile != null &&
+              listEquals(linkedProjects, _linkedRustProjects)
+          ? _configFile!
+          : await _writeConfig(rustLinkedProjects: linkedProjects);
       HelixOpenTrace.mark(
         'config_written',
         elapsedMs: watch.elapsedMilliseconds,
@@ -405,7 +450,7 @@ final class HelixRuntimePool extends ChangeNotifier {
       );
       final pty = await HelixPty.start(
         executable,
-        arguments: ['--config', config.path, path],
+        arguments: ['--config', config.path, '--log', logFile.path, path],
         workingDirectory: File(path).parent.path,
         environment: environment,
         rows: 30,
@@ -420,6 +465,10 @@ final class HelixRuntimePool extends ChangeNotifier {
       channel?.expectedPid = pty.pid;
       final session = _HelixSession(pty, channel, path);
       session.terminal.onOutput = (data) {
+        HelixOpenTrace.mark('terminal_input', data: {
+          'length': data.runes.length,
+          'printable': data.runes.every((code) => code >= 32 && code != 127),
+        });
         pty.write(Uint8List.fromList(utf8.encode(data)));
       };
       session.terminal.onResize = (width, height, _, _) =>
@@ -538,10 +587,19 @@ final class _HelixSession {
 /// The Windows backend builds a fresh environment block and only copies
 /// `HOME` and `PATH` from the parent. Entries supplied here are kept, so
 /// Windows must forward `SystemRoot` and `Path` or CreateProcess fails.
-Map<String, String> helixProcessEnvironment(Map<String, String> parent) {
+Map<String, String> helixProcessEnvironment(
+  Map<String, String> parent, {
+  String? configHome,
+}) {
   final environment = Platform.isWindows
       ? Map<String, String>.from(parent)
       : <String, String>{};
+  if (configHome != null) {
+    environment['XDG_CONFIG_HOME'] = configHome;
+    // etcetera's Windows strategy reads APPDATA, not XDG_CONFIG_HOME.
+    // Helix loads languages.toml from config_dir() independently of --config.
+    if (Platform.isWindows) environment['APPDATA'] = configHome;
+  }
   return environment;
 }
 

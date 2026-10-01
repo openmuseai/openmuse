@@ -8,9 +8,10 @@ import 'package:path/path.dart' as p;
 /// DSH plugin-owned projection of the Host's local Mount catalog.
 /// The v1 document contains no device paths; each path has a separate locator.
 final class DshWorkspaceBinding {
-  DshWorkspaceBinding(this.context);
+  DshWorkspaceBinding(this.context, {this.activeMountPath});
 
   final OpenMusePluginContext context;
+  final String? Function()? activeMountPath;
   String? _fingerprint;
   Future<void> _pending = Future<void>.value();
   String? dshHome;
@@ -27,7 +28,7 @@ final class DshWorkspaceBinding {
     final home = snapshot['dshHome'];
     final workspaceRef = snapshot['workspaceRef'];
     final title = snapshot['title'];
-    final activePath = snapshot['activeMountPath'];
+    final activePath = activeMountPath?.call() ?? snapshot['activeMountPath'];
     final rawMounts = snapshot['mounts'];
     if (home is! String ||
         !p.isAbsolute(home) ||

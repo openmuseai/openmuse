@@ -22,6 +22,51 @@ void main() {
     }
   });
 
+  test('Helix language configuration uses the generated directory', () {
+    final environment = helixProcessEnvironment({
+      'APPDATA': r'C:\Users\openmuse\AppData\Roaming',
+    }, configHome: r'C:\Temp\openmuse-helix-test');
+    expect(environment['XDG_CONFIG_HOME'], r'C:\Temp\openmuse-helix-test');
+    if (Platform.isWindows) {
+      expect(environment['APPDATA'], r'C:\Temp\openmuse-helix-test');
+    }
+  });
+
+  test(
+    'bundled Windows hx reads the generated language server override',
+    () async {
+      final hx = Platform.environment['OPENMUSE_HELIX_BIN'];
+      if (!Platform.isWindows || hx == null || !File(hx).existsSync()) {
+        markTestSkipped('OPENMUSE_HELIX_BIN is not a Windows hx.exe');
+        return;
+      }
+      final root = await Directory.systemTemp.createTemp(
+        'openmuse-helix-config-',
+      );
+      addTearDown(() => root.delete(recursive: true));
+      final languages = File('${root.path}/helix/languages.toml');
+      await languages.parent.create(recursive: true);
+      await languages.writeAsString(
+        HelixPreferences(
+          languageServerPaths: {'rust-analyzer': hx},
+        ).languagesToml,
+      );
+      final result = await Process.run(
+        hx,
+        ['--health', 'rust'],
+        environment: {
+          ...helixProcessEnvironment(
+            Platform.environment,
+            configHome: root.path,
+          ),
+          'HELIX_RUNTIME': '${File(hx).parent.path}/runtime',
+        },
+      ).timeout(const Duration(seconds: 15));
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect(_plainOutput(result.stdout), contains('rust-analyzer: $hx'));
+    },
+  );
+
   test('Windows PTY start reports a missing executable cleanly', () async {
     if (!Platform.isWindows) return;
     await expectLater(
@@ -56,8 +101,8 @@ void main() {
         },
       );
       expect(result.exitCode, 0);
-      expect(result.stdout, contains('Tree-sitter parser: ✓'));
-      expect(result.stdout, contains('Highlight queries: ✓'));
+      expect(_plainOutput(result.stdout), contains('Tree-sitter parser: ✓'));
+      expect(_plainOutput(result.stdout), contains('Highlight queries: ✓'));
     }
   });
 
@@ -141,10 +186,12 @@ void main() {
       final directory = await Directory.systemTemp.createTemp(
         'openmuse-helix-reuse-',
       );
-      final first = File('${directory.path}${Platform.pathSeparator}first.txt');
-      final second = File(
-        '${directory.path}${Platform.pathSeparator}second.txt',
-      );
+      // Helix reports the resolved buffer path, so drive the pool from the
+      // canonical location the engine will echo back (a runner can hand out
+      // 8.3 short names).
+      final root = directory.resolveSymbolicLinksSync();
+      final first = File('$root${Platform.pathSeparator}first.txt');
+      final second = File('$root${Platform.pathSeparator}second.txt');
       await first.writeAsString('FIRST_OPENMUSE_BUFFER\n');
       await second.writeAsString('SECOND_OPENMUSE_BUFFER\n');
 
@@ -152,7 +199,16 @@ void main() {
       addTearDown(() async {
         await runtime.stop();
         runtime.dispose();
-        await directory.delete(recursive: true);
+        // ConPTY releases the process working directory after its exit event.
+        for (var attempt = 0; attempt < 20; attempt++) {
+          try {
+            await directory.delete(recursive: true);
+            break;
+          } on PathAccessException {
+            if (attempt == 19) rethrow;
+            await Future<void>.delayed(const Duration(milliseconds: 100));
+          }
+        }
       });
       final states = <HelixResourceEvent>[];
       runtime.onResourceEvent = states.add;
@@ -185,8 +241,13 @@ void main() {
   );
 }
 
+/// `hx --health` colours its marks and resolved paths with ANSI escapes on
+/// some runners, so assertions compare the readable text only.
+String _plainOutput(String value) =>
+    value.replaceAll(RegExp(r'\x1B\[[0-9;]*m'), '');
+
 Future<void> _waitForSwitchFinish(HelixRuntimePool runtime) async {
-  for (var attempt = 0; attempt < 100; attempt++) {
+  for (var attempt = 0; attempt < 200; attempt++) {
     if (!runtime.isSwitching) return;
     await Future<void>.delayed(const Duration(milliseconds: 20));
   }
@@ -198,13 +259,27 @@ Future<void> _waitForState(
   String path, {
   int afterIndex = 0,
 }) async {
-  for (var attempt = 0; attempt < 100; attempt++) {
+  for (var attempt = 0; attempt < 200; attempt++) {
     if (states
         .skip(afterIndex)
-        .any((event) => event.type == 'state' && event.path == path)) {
+        .any((event) => event.type == 'state' && _samePath(event.path, path))) {
       return;
     }
     await Future<void>.delayed(const Duration(milliseconds: 50));
   }
   fail('Helix did not report $path as its active buffer');
 }
+
+/// Helix reports the resolved buffer path, which can differ from the string a
+/// machine handed out (`C:\Users\RUNNER~1\...` short names, `/var` symlinks on
+/// macOS), so state events are matched by canonical location.
+String _canonicalPath(String path) {
+  try {
+    return File(path).resolveSymbolicLinksSync();
+  } on FileSystemException {
+    return path;
+  }
+}
+
+bool _samePath(String left, String right) =>
+    _canonicalPath(left) == _canonicalPath(right);

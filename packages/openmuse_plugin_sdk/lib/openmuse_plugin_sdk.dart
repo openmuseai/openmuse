@@ -223,6 +223,11 @@ abstract interface class OpenMuseSettingsContributor {
   Widget buildSettings(BuildContext context);
 }
 
+/// Optional runtime diagnostics shown from the Host's plugin list.
+abstract interface class OpenMusePluginLogContributor {
+  Future<String> readLog();
+}
+
 final class OpenMusePluginRegistry extends ChangeNotifier {
   OpenMusePluginRegistry({required OpenMusePluginContext context})
     : _context = context;
@@ -231,6 +236,7 @@ final class OpenMusePluginRegistry extends ChangeNotifier {
   final Map<String, OpenMusePlugin> _plugins = {};
   final Map<String, OpenMusePluginState> _states = {};
   final Map<String, Future<void>> _transitions = {};
+  final Map<String, List<String>> _logs = {};
 
   Iterable<OpenMusePluginDescriptor> get descriptors =>
       _plugins.values.map((plugin) => plugin.descriptor);
@@ -239,6 +245,15 @@ final class OpenMusePluginRegistry extends ChangeNotifier {
 
   OpenMusePlugin? plugin(String pluginId) => _plugins[pluginId];
 
+  String logOf(String pluginId) => (_logs[pluginId] ?? const []).join('\n');
+
+  void _log(String pluginId, String message) {
+    final lines = _logs.putIfAbsent(pluginId, () => []);
+    lines.add('${DateTime.now().toIso8601String()} $message');
+    if (lines.length > 100) lines.removeAt(0);
+    notifyListeners();
+  }
+
   void install(OpenMusePlugin plugin) {
     final id = plugin.descriptor.id;
     if (_plugins.containsKey(id)) {
@@ -246,6 +261,7 @@ final class OpenMusePluginRegistry extends ChangeNotifier {
     }
     _plugins[id] = plugin;
     _states[id] = OpenMusePluginState.installed;
+    _log(id, '已安装 ${plugin.descriptor.version}');
     notifyListeners();
   }
 
@@ -255,6 +271,7 @@ final class OpenMusePluginRegistry extends ChangeNotifier {
     await deactivate(pluginId);
     _plugins.remove(pluginId);
     _states.remove(pluginId);
+    _logs.remove(pluginId);
     notifyListeners();
   }
 
@@ -263,12 +280,15 @@ final class OpenMusePluginRegistry extends ChangeNotifier {
       final plugin = _requirePlugin(pluginId);
       if (_states[pluginId] == OpenMusePluginState.active) return;
       _states[pluginId] = OpenMusePluginState.activating;
+      _log(pluginId, '正在启动');
       notifyListeners();
       try {
         await plugin.activate(_context);
         _states[pluginId] = OpenMusePluginState.active;
-      } catch (_) {
+        _log(pluginId, '启动成功');
+      } catch (error, stack) {
         _states[pluginId] = OpenMusePluginState.failed;
+        _log(pluginId, '启动失败: $error\n$stack');
         rethrow;
       } finally {
         notifyListeners();
@@ -284,12 +304,15 @@ final class OpenMusePluginRegistry extends ChangeNotifier {
         return;
       }
       _states[pluginId] = OpenMusePluginState.deactivating;
+      _log(pluginId, '正在停止');
       notifyListeners();
       try {
         await plugin.deactivate();
         _states[pluginId] = OpenMusePluginState.installed;
-      } catch (_) {
+        _log(pluginId, '已停止');
+      } catch (error, stack) {
         _states[pluginId] = OpenMusePluginState.failed;
+        _log(pluginId, '停止失败: $error\n$stack');
         rethrow;
       } finally {
         notifyListeners();
