@@ -70,6 +70,15 @@ app.*.map.json
 /third_party/helix/target/
 /vendors/
 
+# A local clone of an unrelated upstream project. It carries its own .git and a
+# .env holding a live API key, and it is not a build input of this repository.
+# Ignore the whole tree so neither can ever be committed from here.
+/third_party/openmuse/
+
+# Gradle wrote a literal "~" directory here through an unexpanded home path.
+# It holds a partially downloaded 212 MB distribution, not source.
+/app/openmuse_mobile/android/~/
+
 # --- Release bundles ---------------------------------------------------------
 *.zip
 *.dmg
