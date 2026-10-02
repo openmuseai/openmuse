@@ -37,8 +37,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(authentication.restoreCalls, 1);
-    expect(find.text('Welcome to OpenMuse'), findsOneWidget);
-    expect(find.byKey(const ValueKey('auth.email')), findsOneWidget);
+    expect(find.text('OpenMuse，与你一起创造'), findsOneWidget);
+    expect(find.text('发消息或按住说话'), findsOneWidget);
+    expect(find.text('Welcome to OpenMuse'), findsNothing);
     expect(find.text('请登录以访问 Cloud Workspace'), findsNothing);
   });
 
@@ -109,7 +110,7 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('Desktop workspace hub mirrors device, tasks and spaces', (
+  testWidgets('Desktop workspace route enters the native catalog shell', (
     tester,
   ) async {
     const connection = PairedDesktopConnection(
@@ -133,11 +134,11 @@ void main() {
       ),
     );
 
-    expect(find.text('DESKTOP-FBRL8RL'), findsOneWidget);
-    expect(find.text('新建任务'), findsOneWidget);
-    expect(find.text('全部对话'), findsOneWidget);
-    expect(find.text('进行中、等待输入与已完成任务实时同步'), findsOneWidget);
-    expect(find.text('openmuse-io'), findsOneWidget);
+    await tester.pump();
+    expect(find.text('DESKTOP-FBRL8RL'), findsWidgets);
+    expect(find.byKey(const ValueKey('native-desktop-shell')), findsOneWidget);
+    expect(find.text('新建任务'), findsNothing);
+    expect(find.text('全部对话'), findsNothing);
   });
 
   testWidgets('service-backed composition opens a Remote DSH session', (

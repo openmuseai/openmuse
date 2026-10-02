@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -14,8 +15,12 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 import 'docx_editor_screen.dart';
+import 'native_dsh_page.dart';
+import 'native_desktop_shell.dart';
 import 'office_viewer_screen.dart';
-import 'remote_dsh_page.dart';
+import 'workbuddy/workbuddy_controller.dart';
+import 'workbuddy/workbuddy_shell.dart';
+import 'workbuddy/workbuddy_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +36,10 @@ Future<void> main() async {
       ),
     ),
     store: const SecureAuthSessionStore(values: secureValues),
+    bootstrapper: AppFlowyAccountBootstrapper(
+      cloudOrigin: endpoints.cloudOrigin,
+      allowInsecureLoopback: endpoints.allowInsecureLoopback,
+    ),
   );
   final authPlugin = OpenMuseGoTruePlugin(
     authentication: authentication,
@@ -105,20 +114,27 @@ final class MobileEndpointConfig {
 
   factory MobileEndpointConfig.fromEnvironment() => MobileEndpointConfig(
     gotrueOrigin: Uri.parse(
-      const String.fromEnvironment(
-        'OPENMUSE_GOTRUE_ORIGIN',
-        defaultValue: 'http://127.0.0.1:9999',
+      _mobileEndpoint(
+        key: 'OPENMUSE_GOTRUE_ORIGIN',
+        dartDefine: const String.fromEnvironment('OPENMUSE_GOTRUE_ORIGIN'),
+        debugDefault: 'http://127.0.0.1:9999',
+        releaseDefault: 'https://openmuseai.com/gotrue',
       ),
     ),
     cloudOrigin: Uri.parse(
-      const String.fromEnvironment(
-        'OPENMUSE_CLOUD_ORIGIN',
-        defaultValue: 'http://127.0.0.1:8000',
+      _mobileEndpoint(
+        key: 'OPENMUSE_CLOUD_ORIGIN',
+        dartDefine: const String.fromEnvironment('OPENMUSE_CLOUD_ORIGIN'),
+        debugDefault: 'http://127.0.0.1:8000',
+        releaseDefault: 'https://openmuseai.com',
       ),
     ),
-    allowInsecureLoopback: const bool.fromEnvironment(
-      'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
-      defaultValue: !kReleaseMode,
+    allowInsecureLoopback: _mobileBool(
+      key: 'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
+      dartDefine: const String.fromEnvironment(
+        'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
+      ),
+      fallback: !kReleaseMode,
     ),
     pairedDesktopOrigin: Uri.parse(
       const String.fromEnvironment(
@@ -139,6 +155,32 @@ final class MobileEndpointConfig {
   final bool allowInsecureLoopback;
   final Uri pairedDesktopOrigin;
   final bool allowInsecurePrivateNetworkForTesting;
+}
+
+String _mobileEndpoint({
+  required String key,
+  required String dartDefine,
+  required String debugDefault,
+  required String releaseDefault,
+}) {
+  final compiled = dartDefine.trim();
+  if (compiled.isNotEmpty) return compiled;
+  final environment = Platform.environment[key]?.trim();
+  if (environment != null && environment.isNotEmpty) return environment;
+  return kReleaseMode ? releaseDefault : debugDefault;
+}
+
+bool _mobileBool({
+  required String key,
+  required String dartDefine,
+  required bool fallback,
+}) {
+  final raw = dartDefine.trim().isNotEmpty
+      ? dartDefine.trim()
+      : Platform.environment[key]?.trim().toLowerCase();
+  if (raw == 'true' || raw == '1') return true;
+  if (raw == 'false' || raw == '0') return false;
+  return fallback;
 }
 
 final class OpenMuseMobileApplication extends StatefulWidget {
@@ -198,77 +240,67 @@ final class _OpenMuseMobileApplicationState
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
-    title: 'OpenMuse',
-    home: Builder(
-      builder: (context) => widget.authenticationPlugin.buildAuthenticationGate(
-        context,
-        authenticatedChild: _AuthenticatedMobileHost(
-          authentication: widget.authenticationPlugin.authentication,
-          cloudService: widget.cloudWorkspacePlugin.service,
-          pairedDesktop: widget.pairedDesktopPlugin.controller,
-          officeEngine: widget.officeEngine,
-        ),
-      ),
+    title: 'WorkBuddy',
+    theme: workBuddyTheme(),
+    home: _WorkBuddyHost(
+      authentication: widget.authenticationPlugin.authentication,
+      cloudLabel: widget.authenticationPlugin.cloudLabel,
+      cloudService: widget.cloudWorkspacePlugin.service,
+      pairedDesktop: widget.pairedDesktopPlugin.controller,
+      officeEngine: widget.officeEngine,
     ),
   );
 }
 
-final class _AuthenticatedMobileHost extends StatefulWidget {
-  const _AuthenticatedMobileHost({
+final class _WorkBuddyHost extends StatefulWidget {
+  const _WorkBuddyHost({
     required this.authentication,
     required this.cloudService,
     required this.pairedDesktop,
+    this.cloudLabel,
     this.officeEngine,
   });
 
   final OpenMuseAuthenticationController authentication;
+  final String? cloudLabel;
   final AppFlowyCloudWorkspaceService cloudService;
   final PairedDesktopMobileController pairedDesktop;
   final OfficeEnginePort? officeEngine;
 
   @override
-  State<_AuthenticatedMobileHost> createState() =>
-      _AuthenticatedMobileHostState();
+  State<_WorkBuddyHost> createState() => _WorkBuddyHostState();
 }
 
-final class _AuthenticatedMobileHostState
-    extends State<_AuthenticatedMobileHost>
+final class _WorkBuddyHostState extends State<_WorkBuddyHost>
     with WidgetsBindingObserver {
+  final WorkBuddyController _buddy = WorkBuddyController();
   late OpenMuseHostComposition _composition;
-  String? _pairedGrantRef;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.authentication.addListener(_onAuth);
     _recompose();
-    widget.pairedDesktop.addListener(_pairedChanged);
   }
 
   @override
-  void didUpdateWidget(covariant _AuthenticatedMobileHost oldWidget) {
+  void didUpdateWidget(covariant _WorkBuddyHost oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.pairedDesktop != widget.pairedDesktop) {
-      oldWidget.pairedDesktop.removeListener(_pairedChanged);
-      widget.pairedDesktop.addListener(_pairedChanged);
+    if (oldWidget.authentication != widget.authentication) {
+      oldWidget.authentication.removeListener(_onAuth);
+      widget.authentication.addListener(_onAuth);
     }
-    if (oldWidget.authentication != widget.authentication ||
-        oldWidget.cloudService != widget.cloudService ||
-        oldWidget.pairedDesktop != widget.pairedDesktop ||
-        oldWidget.officeEngine != widget.officeEngine) {
-      _recompose();
-    }
+    _recompose();
   }
 
-  void _pairedChanged() {
-    final nextGrantRef = widget.pairedDesktop.snapshot.connection?.grantRef;
-    if (!mounted || nextGrantRef == _pairedGrantRef) return;
+  void _onAuth() {
+    if (!mounted) return;
     setState(_recompose);
   }
 
   void _recompose() {
     final identity = widget.authentication.snapshot.identity;
-    _pairedGrantRef = widget.pairedDesktop.snapshot.connection?.grantRef;
     _composition = connectedCloudMobileComposition(
       session: identity == null
           ? const MobileAccountSession.signedOut()
@@ -287,7 +319,8 @@ final class _AuthenticatedMobileHostState
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    widget.pairedDesktop.removeListener(_pairedChanged);
+    widget.authentication.removeListener(_onAuth);
+    _buddy.dispose();
     super.dispose();
   }
 
@@ -299,17 +332,14 @@ final class _AuthenticatedMobileHostState
   }
 
   @override
-  Widget build(BuildContext context) {
-    final identity = widget.authentication.snapshot.identity;
-    if (identity == null) return const SizedBox.shrink();
-    return OpenMuseHostShell(
-      // Directory heartbeats notify the paired controller every 20 seconds.
-      // Keep the workspace request stable across those rebuilds, while a new
-      // pairing grant deliberately creates a fresh shell and catalog snapshot.
-      key: ValueKey(_pairedGrantRef ?? 'unpaired'),
-      composition: _composition,
-    );
-  }
+  Widget build(BuildContext context) => WorkBuddyShell(
+    controller: _buddy,
+    authentication: widget.authentication,
+    pairedDesktop: widget.pairedDesktop,
+    catalog: _composition.workspaceCatalog,
+    cloudLabel: widget.cloudLabel,
+    onSignOut: widget.authentication.signOut,
+  );
 }
 
 OfficeEnginePort? _loadPackagedOfficeEngine() {
@@ -645,72 +675,9 @@ final class PairedDesktopWorkspaceScreen extends StatelessWidget {
 
   final PairedDesktopConnection connection;
 
-  void _openAgent(BuildContext context) => Navigator.of(context).push<void>(
-    MaterialPageRoute(
-      builder: (_) => RemoteDshPage(
-        session: connection.session,
-        workspaceTitle: connection.workspaceTitle,
-      ),
-    ),
-  );
-
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Row(
-        children: [
-          const Icon(Icons.desktop_windows_outlined),
-          const SizedBox(width: 8),
-          Expanded(child: Text(connection.deviceName)),
-          const Icon(Icons.circle, size: 10, color: Color(0xff00b894)),
-        ],
-      ),
-    ),
-    body: ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        OutlinedButton.icon(
-          key: const ValueKey('new-desktop-task'),
-          onPressed: () => _openAgent(context),
-          icon: const Icon(Icons.add_comment_outlined),
-          label: const Padding(
-            padding: EdgeInsets.symmetric(vertical: 14),
-            child: Text('新建任务'),
-          ),
-        ),
-        const SizedBox(height: 24),
-        Text('任务', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Card(
-          child: ListTile(
-            key: const ValueKey('open-paired-desktop-dsh'),
-            leading: const Icon(Icons.forum_outlined),
-            title: const Text('全部对话'),
-            subtitle: const Text('进行中、等待输入与已完成任务实时同步'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _openAgent(context),
-          ),
-        ),
-        const SizedBox(height: 24),
-        Text('空间', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.folder_outlined),
-            title: Text(connection.workspaceTitle),
-            subtitle: Text('运行于 ${connection.deviceName}'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _openAgent(context),
-          ),
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          '消息、停止操作和任务状态均由电脑端同一个 DSH runtime 提供；手机只承担远程控制台职责。',
-          key: ValueKey('paired-workspace-placement'),
-        ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) =>
+      NativeDesktopShell(connection: connection);
 }
 
 bool _supportsFormat(OfficeEnginePort? engine, OfficeFormat format) {
@@ -947,7 +914,7 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
                 key: const ValueKey('open-remote-dsh'),
                 onPressed: () => Navigator.of(context).push<void>(
                   MaterialPageRoute(
-                    builder: (_) => RemoteDshPage(
+                    builder: (_) => NativeDshPage(
                       session: session,
                       workspaceTitle: widget.record.title,
                     ),

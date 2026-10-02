@@ -30,6 +30,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  muse_dsh_conversation_core:
+    path: ../../packages/muse_dsh_conversation_core
+  muse_dsh_conversation_flutter:
+    path: ../../packages/muse_dsh_conversation_flutter
+  muse_dsh_conversation_protocol:
+    path: ../../packages/muse_dsh_conversation_protocol
   openmuse_auth_gotrue:
     path: ../../plugins/auth-gotrue
   openmuse_cloud_workspace_plugin:
@@ -73,6 +79,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/mascot.jpg
 
   # To add assets to your application, add an assets section, like this:
   # assets:
