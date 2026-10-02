@@ -1,0 +1,20 @@
+name: muse_dsh_conversation_flutter
+description: Native Flutter conversation surface for the pinned DSH contract.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_markdown_plus: 1.0.12
+  muse_dsh_conversation_core:
+    path: ../muse_dsh_conversation_core
+  muse_dsh_conversation_protocol:
+    path: ../muse_dsh_conversation_protocol
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true

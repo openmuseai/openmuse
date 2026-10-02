@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openmuse.io/schema/native-conversation/v1/plugin-manifest.schema.json",
+  "title": "OpenMuse Native Conversation Plugin Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "impact", "contributions"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "impact": {
+      "enum": ["none", "outside-conversation", "native-covered", "conversation"]
+    },
+    "contributions": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/contribution" }
+    }
+  },
+  "$defs": {
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bind"],
+      "properties": {
+        "bind": {
+          "type": "string",
+          "pattern": "^(session|turn|message|tool|plugin\\.state)(\\.[A-Za-z0-9_-]+)+$",
+          "maxLength": 256
+        },
+        "fallback": { "type": ["string", "number", "boolean", "null"] }
+      }
+    },
+    "requires": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nativeUiApi", "components"],
+      "properties": {
+        "nativeUiApi": { "const": 1 },
+        "components": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*@1$" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "condition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["field", "equals"],
+          "properties": {
+            "field": { "$ref": "#/$defs/binding/properties/bind" },
+            "equals": { "type": ["string", "number", "boolean", "null"] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["all"],
+          "properties": {
+            "all": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": { "$ref": "#/$defs/condition" }
+            }
+          }
+        }
+      ]
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component"],
+      "properties": {
+        "component": {
+          "enum": [
+            "text", "markdown", "code", "badge", "status", "progress",
+            "keyValue", "table", "image", "gallery", "fileLink",
+            "resourceLink", "button", "iconButton", "menu",
+            "segmentedControl", "textField", "select", "checkbox",
+            "disclosure", "toolCard", "messageAddon", "turnTail",
+            "approvalForm", "questionForm", "selectionForm", "column", "row",
+            "section"
+          ]
+        },
+        "visibleWhen": { "$ref": "#/$defs/condition" },
+        "tone": { "enum": ["neutral", "info", "success", "warning", "danger"] },
+        "density": { "enum": ["compact", "regular", "comfortable"] },
+        "emphasis": { "enum": ["primary", "secondary", "tertiary"] },
+        "text": { "oneOf": [{ "type": "string", "maxLength": 8192 }, { "$ref": "#/$defs/binding" }] },
+        "label": { "oneOf": [{ "type": "string", "maxLength": 256 }, { "$ref": "#/$defs/binding" }] },
+        "value": { "oneOf": [{ "type": ["string", "number", "boolean", "null"] }, { "$ref": "#/$defs/binding" }] },
+        "command": { "type": "string", "pattern": "^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)+$", "maxLength": 128 },
+        "arguments": { "type": "object", "maxProperties": 32 },
+        "children": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/node" }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "command"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+        "label": { "type": "string", "maxLength": 128 },
+        "command": { "type": "string", "pattern": "^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)+$", "maxLength": 128 },
+        "arguments": { "type": "object", "maxProperties": 32 }
+      }
+    },
+    "contribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot", "key", "template", "requires", "fallback"],
+      "properties": {
+        "slot": {
+          "enum": [
+            "conversation.chat.node", "tool.call.toolview",
+            "conversation.chat.assistant-actions", "conversation.chat.turnTail",
+            "conversation.input.dock", "conversation.input.left",
+            "conversation.input.right", "conversation.session.header.actions",
+            "conversation.composer"
+          ]
+        },
+        "key": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "template": { "enum": ["toolCard", "messageAddon", "turnTail", "approvalForm", "questionForm", "selectionForm", "section"] },
+        "requires": { "$ref": "#/$defs/requires" },
+        "fallback": { "enum": ["genericToolCard", "omit", "web"] },
+        "title": { "oneOf": [{ "type": "string", "maxLength": 256 }, { "$ref": "#/$defs/binding" }] },
+        "body": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/node" } },
+        "actions": { "type": "array", "maxItems": 16, "items": { "$ref": "#/$defs/action" } },
+        "visibleWhen": { "$ref": "#/$defs/condition" }
+      }
+    }
+  }
+}
