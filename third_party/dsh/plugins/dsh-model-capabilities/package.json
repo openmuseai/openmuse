@@ -1,6 +1,6 @@
 {
   "name": "dsh-model-capabilities",
-  "version": "0.5.0-openmuse.3",
+  "version": "0.5.0-openmuse.4",
   "description": "DSH web plugin: per-model thinking-intensity tiers, provider default reasoning, modalities, gateway compat switches and custom request headers with the {{session}} placeholder (auto-filled per request with the current DSH session SHA-256 token; opencode Go session affinity), plus automatic stamping on matching hosts. 模型能力：思考强度/模态/兼容开关/自定义请求头（{{session}} 占位按会话自动填充）。",
   "type": "module",
   "license": "MIT",
@@ -39,6 +39,13 @@
         "@deepseek-ai/dsh-client-ui-primitives"
       ],
       "platform": "web"
+    }
+  },
+  "openmuse": {
+    "nativeConversation": {
+      "schemaVersion": 1,
+      "impact": "outside-conversation",
+      "contributions": []
     }
   },
   "peerDependencies": {

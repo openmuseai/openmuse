@@ -1,6 +1,6 @@
 {
   "name": "openmuse-dsh-bridge",
-  "version": "0.1.5",
+  "version": "0.1.14",
   "type": "module",
   "license": "AGPL-3.0-only",
   "main": "lib/index.js",
@@ -14,6 +14,9 @@
     "lib/client.js",
     "LICENSE"
   ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
   "dsh": {
     "client": {
       "inject": [
@@ -22,6 +25,13 @@
         "@deepseek-ai/dsh-client-ui-workspace"
       ],
       "platform": "web"
+    }
+  },
+  "openmuse": {
+    "nativeConversation": {
+      "schemaVersion": 1,
+      "impact": "native-covered",
+      "contributions": []
     }
   }
 }
