@@ -84,8 +84,14 @@ test -x "$node_runtime/node"
 test -f "$node_runtime/LICENSE"
 test -f "$repo_root/third_party/dsh/LICENSE"
 dsh_dest="$app_path/Contents/Resources/openmuse/dsh"
+if [[ -L "$dsh_dest/node_modules" ]]; then
+  rm "$dsh_dest/node_modules"
+fi
 mkdir -p "$dsh_dest/node_modules" "$dsh_dest/node/bin" "$dsh_dest/licenses"
 rsync -a --delete "$dsh_closure/node_modules/" "$dsh_dest/node_modules/"
+if [[ -L "$dsh_dest/node/bin/node" ]]; then
+  rm "$dsh_dest/node/bin/node"
+fi
 install -m 755 "$node_runtime/node" "$dsh_dest/node/bin/node"
 cp "$repo_root/third_party/dsh/LICENSE" "$dsh_dest/licenses/DSH-LICENSE"
 cp "$node_runtime/LICENSE" "$dsh_dest/licenses/NODE-LICENSE"

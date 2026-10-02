@@ -18,6 +18,7 @@ from pathlib import Path
 
 VENDORED = Path(__file__).resolve().parent.parent / "third_party/dsh"
 REMOVED_PRODUCT_IDENTIFIER = "app" + "flow" + "y"
+CREATED_FILE_SINGLE_PANE_MARKER = "data-openmuse-created-single-pane"
 
 
 def run(*command: str, cwd: Path) -> None:
@@ -98,6 +99,48 @@ def scrub_build_paths(output: Path) -> int:
     return count
 
 
+def apply_openmuse_product_patches(output: Path) -> None:
+    """Apply small, fail-closed UI policy overlays to the pinned DSH build.
+
+    The upstream review tab starts every file in split mode.  A newly-created
+    file has no meaningful left side, so OpenMuse presents it as one unified
+    pane on Desktop.  Exact-source guards deliberately fail the build when the
+    pinned DSH implementation changes instead of silently shipping a stale
+    patch.
+    """
+    deliverables = (
+        output
+        / "node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js"
+    )
+    source = deliverables.read_text(encoding="utf-8")
+    replacements = (
+        (
+            "\t\t\tconst split = state?.split === true;\n"
+            "\t\t\tconst wrap = state?.wrap === true;",
+            "\t\t\tconst created = typeof diffState === \"object\" && "
+            "diffState.kind === \"text\" && diffState.before === false && "
+            "diffState.after === true;\n"
+            "\t\t\tconst split = state?.split === true && !created;\n"
+            "\t\t\tconst wrap = state?.wrap === true;",
+        ),
+        (
+            "\"data-review-tool\": \"split\",\n",
+            "\"data-review-tool\": \"split\",\n"
+            f"\t\t\t\t\t\t\t\"{CREATED_FILE_SINGLE_PANE_MARKER}\": "
+            "created || void 0,\n"
+            "\t\t\t\t\t\t\thidden: created || void 0,\n",
+        ),
+    )
+    for old, new in replacements:
+        if source.count(old) != 1:
+            raise RuntimeError(
+                "pinned DSH deliverables contract changed; cannot apply "
+                "created-file single-pane overlay"
+            )
+        source = source.replace(old, new)
+    deliverables.write_text(source, encoding="utf-8")
+
+
 def validate(output: Path) -> None:
     entry = output / "node_modules/@deepseek-ai/dsh/lib/bin.js"
     if not entry.is_file():
@@ -120,6 +163,22 @@ def validate(output: Path) -> None:
     bridge = output / "node_modules/openmuse-dsh-bridge"
     if not (bridge / "lib/index.js").is_file() or not (bridge / "lib/client.js").is_file():
         raise RuntimeError("OpenMuse DSH Host bridge is missing")
+    bridge_source = (bridge / "lib/index.js").read_text(encoding="utf-8")
+    bridge_manifest = json.loads((bridge / "package.json").read_text(encoding="utf-8"))
+    native_contract_markers = (
+        "/openmuse-native/v1/negotiate",
+        "/openmuse-native/v1/workspaces",
+        "/openmuse-native/v1/session/create",
+        "controller.follow",
+    )
+    if any(marker not in bridge_source for marker in native_contract_markers):
+        raise RuntimeError("OpenMuse DSH Native Gateway is missing")
+    deliverables = output / "node_modules/@deepseek-ai/dsh-client-ui-deliverables/lib/client.js"
+    if CREATED_FILE_SINGLE_PANE_MARKER not in deliverables.read_text(encoding="utf-8"):
+        raise RuntimeError("OpenMuse created-file single-pane overlay is missing")
+    native_manifest = bridge_manifest.get("openmuse", {}).get("nativeConversation", {})
+    if native_manifest.get("schemaVersion") != 1:
+        raise RuntimeError("OpenMuse native conversation manifest is missing")
     remote_runtime = output / "node_modules/@openmuse/dsh-workspace-runtime"
     remote_patch = remote_runtime / "cordis.patch.yml"
     if not (remote_runtime / "lib/index.js").is_file() or not remote_patch.is_file():
@@ -169,6 +228,7 @@ def main() -> None:
            json.loads((VENDORED / "package.json").read_text())["dependencies"].values()):
         shutil.copytree(VENDORED / "tarballs", output / "tarballs")
     run("npm", "ci", "--omit=dev", "--no-audit", "--no-fund", cwd=output)
+    apply_openmuse_product_patches(output)
     print(f"sanitized {scrub_build_paths(output)} generated path comments")
     validate(output)
 

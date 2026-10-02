@@ -36,6 +36,7 @@ def main() -> None:
                 environment.pop(name)
         environment["DSH_HOME"] = home
         environment["OPENMUSE_DSH_BRIDGE_TOKEN"] = bridge_token
+        environment["OPENMUSE_DSH_NATIVE_EXPERIMENTAL"] = "1"
         command = [
             str(args.node.resolve()), str(cli), "web", "--patch", str(patch),
             "--host", "127.0.0.1", "--port", "0", "--no-open",
@@ -93,6 +94,34 @@ def main() -> None:
             with client.open(authorized, timeout=10) as response:
                 if response.status != 200 or home not in response.read().decode():
                     raise RuntimeError("DSH bridge failed to register local workspace")
+            native_hello = urllib.request.Request(
+                base + "/openmuse-native/v1/hello",
+                headers={"X-OpenMuse-Bridge-Token": bridge_token},
+            )
+            with client.open(native_hello, timeout=10) as response:
+                hello = json.load(response)
+                if hello.get("protocolVersion") != 1 or hello.get("dshVersion") != "0.1.7-rc.1":
+                    raise RuntimeError("DSH Native Gateway handshake mismatch")
+            native_negotiate = urllib.request.Request(
+                base + "/openmuse-native/v1/negotiate",
+                data=json.dumps({
+                    "nativeUiApi": 1,
+                    "components": ["toolCard@1", "keyValue@1"],
+                    "slots": ["tool.call.toolview"],
+                }).encode(),
+                headers={
+                    "Content-Type": "application/json",
+                    "X-OpenMuse-Bridge-Token": bridge_token,
+                },
+                method="POST",
+            )
+            with client.open(native_negotiate, timeout=10) as response:
+                negotiation = json.load(response)
+                if negotiation.get("schemaVersion") != 1 or negotiation.get("mode") != "native":
+                    raise RuntimeError(
+                        f"DSH Native UI negotiation failed: {negotiation}; "
+                        f"active={hello.get('compatibility', {}).get('activePlugins')}"
+                    )
             try:
                 client.open(base + "/model-capabilities?provider=missing", timeout=10)
             except urllib.error.HTTPError as error:
