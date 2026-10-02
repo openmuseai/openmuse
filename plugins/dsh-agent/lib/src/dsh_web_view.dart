@@ -183,16 +183,21 @@ final class _DshWebViewState extends State<DshWebView> {
         ),
       );
     }
-    return AppKitView(
-      key: const Key('dsh-platform-view'),
-      viewType: 'com.openmuse.dsh/webview',
-      creationParams: {
-        'url': widget.url.toString(),
-        if (widget.activeMountPath != null)
-          'activeMountPath': widget.activeMountPath,
-      },
-      creationParamsCodec: const StandardMessageCodec(),
-      onPlatformViewCreated: _created,
+    return SizedBox.expand(
+      child: AppKitView(
+        // creationParams are read only when the platform view is created.
+        // A restarted sidecar gets a new loopback port; a stable key would
+        // keep the previous page, whose follow stream never resolves.
+        key: ValueKey<String>(widget.url.toString()),
+        viewType: 'com.openmuse.dsh/webview',
+        creationParams: {
+          'url': widget.url.toString(),
+          if (widget.activeMountPath != null)
+            'activeMountPath': widget.activeMountPath,
+        },
+        creationParamsCodec: const StandardMessageCodec(),
+        onPlatformViewCreated: _created,
+      ),
     );
   }
 }

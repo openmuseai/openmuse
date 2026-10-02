@@ -113,6 +113,7 @@ final class _PanelBody extends StatelessWidget {
   Widget build(BuildContext context) {
     if (supervisor.state == DshSidecarState.ready) {
       return DshWebView(
+        key: ValueKey<String>(supervisor.endpoint.toString()),
         url: supervisor.endpoint!,
         activeMountPath: activeMountPath,
         onActivateWorkspace: onActivateWorkspace,

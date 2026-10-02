@@ -75,6 +75,9 @@ final class DshSidecarSupervisor extends ChangeNotifier {
 
   Future<void> _start() async {
     final cli = cliPath;
+    debugPrint(
+      'OpenMuse dsh: start executable=${Platform.resolvedExecutable} cli=${cli ?? 'missing'} node=$nodeExecutable',
+    );
     if (cli == null || cli.isEmpty) {
       state = DshSidecarState.configurationRequired;
       lastError = StateError('DSH runtime 尚未安装。');
@@ -136,10 +139,14 @@ final class DshSidecarSupervisor extends ChangeNotifier {
       await waitForHttp(candidate, const Duration(seconds: 45));
       endpoint = candidate;
       state = DshSidecarState.ready;
+      debugPrint('OpenMuse dsh: ready endpoint=$candidate');
       notifyListeners();
     } catch (error) {
       state = DshSidecarState.failed;
       lastError = error;
+      debugPrint(
+        'OpenMuse dsh: failed type=${error.runtimeType} error=$error tail=${logTail.join(' | ')}',
+      );
       notifyListeners();
       rethrow;
     }
