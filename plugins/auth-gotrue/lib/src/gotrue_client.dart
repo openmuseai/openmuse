@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 import 'auth_models.dart';
 import 'auth_ports.dart';
 
@@ -15,20 +17,27 @@ final class GoTrueClientConfig {
   final bool allowInsecureLoopback;
 
   static Uri _validateOrigin(Uri value, bool allowInsecureLoopback) {
-    final cleanPath = value.path.isEmpty || value.path == '/';
+    final segments = value.pathSegments.where((item) => item.isNotEmpty);
+    final safePrefix =
+        segments.every(
+          (item) => RegExp(r'^[A-Za-z0-9._-]+$').hasMatch(item),
+        ) &&
+        segments.length <= 4 &&
+        !value.path.contains('..');
     if (!value.hasScheme ||
         value.host.isEmpty ||
         value.userInfo.isNotEmpty ||
         value.hasQuery ||
         value.hasFragment ||
-        !cleanPath) {
+        !safePrefix) {
       throw const AuthFailure(
         AuthFailureKind.invalidConfiguration,
         'The authentication endpoint is invalid.',
       );
     }
+    final path = segments.isEmpty ? '' : '/${segments.join('/')}';
     if (value.scheme == 'https') {
-      return value.replace(path: '');
+      return value.replace(path: path);
     }
     final loopback =
         value.host == 'localhost' ||
@@ -41,7 +50,7 @@ final class GoTrueClientConfig {
         'The authentication endpoint must use HTTPS.',
       );
     }
-    return value.replace(path: '');
+    return value.replace(path: path);
   }
 }
 
@@ -154,8 +163,13 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
     bool invalidCredentialsOnUnauthorized = false,
   }) async {
     final client = _clientFactory();
+    client.connectionTimeout = const Duration(seconds: 15);
     try {
-      final uri = _origin.replace(path: path, queryParameters: query);
+      final suffix = path.startsWith('/') ? path : '/$path';
+      final uri = _origin.replace(
+        path: '${_origin.path}$suffix',
+        queryParameters: query,
+      );
       final request = await client.openUrl(method, uri);
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       if (accessToken != null) {
@@ -170,6 +184,9 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
       }
       final response = await request.close();
       final responseText = await utf8.decoder.bind(response).join();
+      debugPrint(
+        'OpenMuse auth: $method $path status=${response.statusCode} bytes=${responseText.length}',
+      );
       if (response.statusCode < 200 || response.statusCode >= 300) {
         if (invalidCredentialsOnUnauthorized &&
             (response.statusCode == 400 || response.statusCode == 401)) {
@@ -192,6 +209,16 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
     } on AuthFailure {
       rethrow;
     } on SocketException {
+      throw const AuthFailure(
+        AuthFailureKind.network,
+        'Cannot reach the authentication service.',
+      );
+    } on HttpException {
+      throw const AuthFailure(
+        AuthFailureKind.network,
+        'Cannot reach the authentication service.',
+      );
+    } on TlsException {
       throw const AuthFailure(
         AuthFailureKind.network,
         'Cannot reach the authentication service.',

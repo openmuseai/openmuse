@@ -5,18 +5,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 
 void main() {
-  test('production config rejects insecure and path-bearing origins', () {
+  test('production config rejects insecure and unsafe origins', () {
     expect(
       () => GoTrueClientConfig(origin: Uri.parse('http://example.com')),
       throwsA(isA<AuthFailure>()),
     );
     expect(
-      () => GoTrueClientConfig(origin: Uri.parse('https://example.com/auth')),
+      () => GoTrueClientConfig(
+        origin: Uri.parse('https://user:secret@example.com/gotrue'),
+      ),
+      throwsA(isA<AuthFailure>()),
+    );
+    expect(
+      () => GoTrueClientConfig(
+        origin: Uri.parse('https://example.com/gotrue?next=1'),
+      ),
       throwsA(isA<AuthFailure>()),
     );
     expect(
       GoTrueClientConfig(origin: Uri.parse('https://example.com')).origin,
       Uri.parse('https://example.com'),
+    );
+    expect(
+      GoTrueClientConfig(origin: Uri.parse('https://example.com/gotrue')).origin,
+      Uri.parse('https://example.com/gotrue'),
     );
   });
 
@@ -164,4 +176,35 @@ void main() {
       ]);
     },
   );
+
+  test('account bootstrap calls the verify endpoint once', () async {
+    final seen = <String>[];
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    final serving = server.forEach((request) async {
+      seen.add(request.uri.path);
+      request.response.headers.contentType = ContentType.json;
+      request.response.write(
+        jsonEncode({
+          'code': 0,
+          'data': {'is_new': false},
+        }),
+      );
+      await request.response.close();
+    });
+    final bootstrapper = AppFlowyAccountBootstrapper(
+      cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+      allowInsecureLoopback: true,
+    );
+    await bootstrapper.bootstrap(
+      GoTrueSession(
+        accessToken: 'access token',
+        refreshToken: 'refresh',
+        expiresAt: DateTime.utc(2026, 10, 2),
+        user: const GoTrueUser(id: 'user-1', email: 'muse@example.com'),
+      ),
+    );
+    await server.close(force: true);
+    await serving;
+    expect(seen, ['/api/user/verify/access%20token']);
+  });
 }

@@ -1,5 +1,6 @@
 library openmuse_auth_gotrue;
 
+export 'src/account_bootstrap.dart';
 export 'src/auth_controller.dart';
 export 'src/auth_models.dart';
 export 'src/auth_plugin.dart';

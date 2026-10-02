@@ -68,8 +68,10 @@ final class GoTrueAuthenticationController extends ChangeNotifier
   Future<void> signInWithPassword(String email, String password) async {
     if (_snapshot.phase == OpenMuseAuthenticationPhase.submitting ||
         _snapshot.phase == OpenMuseAuthenticationPhase.bootstrapping) {
+      _authLog('password sign-in ignored phase=${_snapshot.phase.name}');
       return;
     }
+    _authLog('password sign-in started');
     _setSnapshot(
       const OpenMuseAuthenticationSnapshot(
         phase: OpenMuseAuthenticationPhase.submitting,
@@ -77,18 +79,22 @@ final class GoTrueAuthenticationController extends ChangeNotifier
     );
     try {
       final session = await _provider.signInWithPassword(email, password);
+      _authLog('password sign-in accepted user=${session.user.id}');
       _setSnapshot(
         const OpenMuseAuthenticationSnapshot(
           phase: OpenMuseAuthenticationPhase.bootstrapping,
         ),
       );
-      await _bootstrap(session);
-      await _store.write(session);
-      _session = session;
-      _publishAuthenticated(session);
+      await _finishSignIn(session);
     } on AuthFailure catch (error) {
+      _authLog(
+        'password sign-in AuthFailure code=${error.code} status=${error.statusCode} message=${error.safeMessage}',
+      );
       _publishFailure(error);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      _authLog(
+        'password sign-in failed type=${error.runtimeType} error=$error\n$stackTrace',
+      );
       _publishFailure(
         const AuthFailure(
           AuthFailureKind.bootstrap,
@@ -143,13 +149,11 @@ final class GoTrueAuthenticationController extends ChangeNotifier
           phase: OpenMuseAuthenticationPhase.bootstrapping,
         ),
       );
-      await _bootstrap(session);
-      await _store.write(session);
-      _session = session;
-      _publishAuthenticated(session);
+      await _finishSignIn(session);
     } on AuthFailure catch (error) {
       _publishFailure(error);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('OpenMuse code sign-in failed: $error\n$stackTrace');
       _publishFailure(
         const AuthFailure(
           AuthFailureKind.bootstrap,
@@ -230,17 +234,47 @@ final class GoTrueAuthenticationController extends ChangeNotifier
     return tracked;
   }
 
+  Future<void> _finishSignIn(GoTrueSession session) async {
+    _authLog('bootstrap started');
+    await _bootstrap(session);
+    _authLog('bootstrap finished');
+    try {
+      _authLog('session persist started');
+      await _store.write(session);
+      _authLog('session persist finished');
+    } catch (error, stackTrace) {
+      // Keychain entitlement or ACL failures must not discard a session that
+      // GoTrue and the account workspace already accepted.
+      _authLog(
+        'session persist failed type=${error.runtimeType} error=$error\n$stackTrace',
+      );
+    }
+    _session = session;
+    _publishAuthenticated(session);
+    _authLog('sign-in completed phase=${_snapshot.phase.name}');
+  }
+
   Future<void> _bootstrap(GoTrueSession session) async {
     try {
       await _bootstrapper.bootstrap(session);
-    } on AuthFailure {
+    } on AuthFailure catch (error) {
+      _authLog(
+        'bootstrap AuthFailure code=${error.code} status=${error.statusCode} message=${error.safeMessage}',
+      );
       rethrow;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      _authLog(
+        'bootstrap failed type=${error.runtimeType} error=$error\n$stackTrace',
+      );
       throw const AuthFailure(
         AuthFailureKind.bootstrap,
         'The account workspace could not be initialized.',
       );
     }
+  }
+
+  void _authLog(String message) {
+    debugPrint('OpenMuse auth: $message');
   }
 
   Future<void> _clearSession() async {

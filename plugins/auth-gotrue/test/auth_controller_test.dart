@@ -190,6 +190,34 @@ void main() {
     expect(store.writes, 0);
     expect(controller.snapshot.failureCode, 'bootstrap');
   });
+
+  test('keychain write failure still completes sign-in', () async {
+    final controller = GoTrueAuthenticationController(
+      provider: _FakeProvider(signInResult: session()),
+      store: _ThrowingWriteStore(),
+      clock: () => now,
+    );
+
+    await controller.signInWithPassword('muse@example.com', 'secret');
+
+    expect(
+      controller.snapshot.phase,
+      OpenMuseAuthenticationPhase.authenticated,
+    );
+    expect(await controller.accessToken(), 'access-one');
+  });
+}
+
+final class _ThrowingWriteStore implements AuthSessionStore {
+  @override
+  Future<void> delete() async {}
+
+  @override
+  Future<GoTrueSession?> read() async => null;
+
+  @override
+  Future<void> write(GoTrueSession session) =>
+      Future<void>.error(StateError('keychain denied'));
 }
 
 final class _FailingStore implements AuthSessionStore {
