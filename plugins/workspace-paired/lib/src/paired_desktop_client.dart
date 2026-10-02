@@ -41,11 +41,48 @@ final class PairedDesktopClient {
   Future<PairedDesktopConnection> connectSameAccount({
     required String targetDeviceRef,
     String workspaceRef = 'openmuse.local.default',
-  }) => _open(
-    '/v1/account/open',
-    targetDeviceRef: targetDeviceRef,
-    workspaceRef: workspaceRef,
-  );
+  }) async {
+    final deadline = DateTime.now().add(const Duration(seconds: 45));
+    var delaySeconds = 1;
+    while (true) {
+      try {
+        return await _open(
+          '/v1/account/open',
+          targetDeviceRef: targetDeviceRef,
+          workspaceRef: workspaceRef,
+        );
+      } on PairedDesktopFailure catch (error) {
+        if (!_retryableRelayFailure(error.code) ||
+            DateTime.now().add(Duration(seconds: delaySeconds)).isAfter(
+              deadline,
+            )) {
+          rethrow;
+        }
+      } on SocketException {
+        if (DateTime.now().add(Duration(seconds: delaySeconds)).isAfter(
+          deadline,
+        )) {
+          rethrow;
+        }
+      } on HttpException {
+        if (DateTime.now().add(Duration(seconds: delaySeconds)).isAfter(
+          deadline,
+        )) {
+          rethrow;
+        }
+      }
+      await Future<void>.delayed(Duration(seconds: delaySeconds));
+      delaySeconds = delaySeconds >= 8 ? 8 : delaySeconds * 2;
+    }
+  }
+
+  bool _retryableRelayFailure(String code) => const {
+    'RELAY_DETACHED',
+    'RELAY_BUSY',
+    'RELAY_TIMEOUT',
+    'PAIRED_DESKTOP_UNAVAILABLE',
+    'PAIR_TIMEOUT',
+  }.contains(code);
 
   Future<PairedDesktopConnection> _open(
     String path, {

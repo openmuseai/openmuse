@@ -4,18 +4,26 @@ import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'account_device_directory.dart';
+import 'desktop_outbound_relay.dart';
 import 'paired_desktop_client.dart';
 import 'paired_desktop_gateway.dart';
 import 'paired_desktop_models.dart';
 
 final class OpenMusePairedDesktopHostPlugin
     implements OpenMusePlugin, OpenMuseSettingsContributor {
-  OpenMusePairedDesktopHostPlugin(this.gateway, {this.directory}) {
+  OpenMusePairedDesktopHostPlugin(
+    this.gateway, {
+    this.directory,
+    this.relay,
+  }) {
     gateway.onChanged = _changes.changed;
     directory?.addListener(_changes.changed);
+    final outbound = relay;
+    if (outbound != null) outbound.onChanged = _changes.changed;
   }
   final PairedDesktopGateway gateway;
   final AccountDeviceDirectoryController? directory;
+  final DesktopOutboundRelay? relay;
   final _GatewayChanges _changes = _GatewayChanges();
   Timer? _gatewayRetry;
   int _gatewayFailureCount = 0;
@@ -40,6 +48,7 @@ final class OpenMusePairedDesktopHostPlugin
     // Presence is the control plane and must remain available even when the
     // local data-plane port is temporarily occupied.
     await directory?.activate();
+    await relay?.start();
     await _ensureGateway();
   }
 
@@ -47,6 +56,7 @@ final class OpenMusePairedDesktopHostPlugin
   Future<void> deactivate() async {
     _gatewayRetry?.cancel();
     _gatewayRetry = null;
+    await relay?.stop();
     directory?.dispose();
     await gateway.stop();
   }
@@ -60,7 +70,8 @@ final class OpenMusePairedDesktopHostPlugin
       _gatewayRetry = null;
       // Republish the transport origin/capability after a successful retry.
       await directory?.reconcile();
-    } catch (_) {
+    } catch (error) {
+      debugPrint('OpenMuse paired gateway: $error');
       final delays = <int>[1, 2, 4, 8, 16, 30];
       final index = _gatewayFailureCount.clamp(0, delays.length - 1);
       _gatewayFailureCount += 1;
@@ -110,6 +121,17 @@ final class OpenMusePairedDesktopHostPlugin
               : gateway.lastError != null
               ? '端口不可用，正在重试'
               : '未启动'}',
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '公网通道：${switch (relay?.phase) {
+            null => '未启用',
+            DesktopRelayPhase.attached => '已连接',
+            DesktopRelayPhase.reconnecting => '正在重连',
+            DesktopRelayPhase.connecting => '正在连接',
+            DesktopRelayPhase.idle => '未连接',
+          }}',
+          key: const ValueKey('desktop-relay-phase'),
         ),
         const SizedBox(height: 8),
         const Text('同账号设备在线后可直接访问；跨账号授权将在后续版本通过独立配对流程提供。'),

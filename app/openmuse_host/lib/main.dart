@@ -129,20 +129,27 @@ Future<Widget> bootOpenMuseHost() async {
     ),
   );
   final gotrueOrigin = Uri.parse(
-    const String.fromEnvironment(
-      'OPENMUSE_GOTRUE_ORIGIN',
-      defaultValue: 'http://127.0.0.1:9999',
+    _configuredEndpoint(
+      key: 'OPENMUSE_GOTRUE_ORIGIN',
+      dartDefine: const String.fromEnvironment('OPENMUSE_GOTRUE_ORIGIN'),
+      debugDefault: 'http://127.0.0.1:9999',
+      releaseDefault: 'https://openmuseai.com/gotrue',
     ),
   );
   final cloudOrigin = Uri.parse(
-    const String.fromEnvironment(
-      'OPENMUSE_CLOUD_ORIGIN',
-      defaultValue: 'http://127.0.0.1:8000',
+    _configuredEndpoint(
+      key: 'OPENMUSE_CLOUD_ORIGIN',
+      dartDefine: const String.fromEnvironment('OPENMUSE_CLOUD_ORIGIN'),
+      debugDefault: 'http://127.0.0.1:8000',
+      releaseDefault: 'https://openmuseai.com',
     ),
   );
-  final allowInsecureLoopback = const bool.fromEnvironment(
-    'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
-    defaultValue: !kReleaseMode,
+  final allowInsecureLoopback = _configuredBool(
+    key: 'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
+    dartDefine: const String.fromEnvironment(
+      'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
+    ),
+    fallback: !kReleaseMode,
   );
   final authSessionStore = SecureAuthSessionStore(
     values: FlutterSecureValueStore.macOsCompatible(
@@ -161,11 +168,16 @@ Future<Widget> bootOpenMuseHost() async {
   final authenticationController = GoTrueAuthenticationController(
     provider: goTrueClient,
     store: authSessionStore,
+    bootstrapper: AppFlowyAccountBootstrapper(
+      cloudOrigin: cloudOrigin,
+      allowInsecureLoopback: allowInsecureLoopback,
+    ),
   );
   if (kDebugMode) {
     authenticationController.addListener(() {
+      final snapshot = authenticationController.snapshot;
       debugPrint(
-        'OpenMuse authentication: ${authenticationController.snapshot.phase.name}',
+        'OpenMuse authentication: phase=${snapshot.phase.name} code=${snapshot.failureCode} message=${snapshot.failureMessage}',
       );
     });
   }
@@ -186,6 +198,22 @@ Future<Widget> bootOpenMuseHost() async {
   final dshSupervisor = DshSidecarSupervisor(
     environment: {...Platform.environment, 'DSH_HOME': _dshHome(support.path)},
   );
+  const relayFromDefine = String.fromEnvironment(
+    'OPENMUSE_RELAY_PUBLIC_ORIGIN',
+  );
+  final relayFromEnvironment =
+      Platform.environment['OPENMUSE_RELAY_PUBLIC_ORIGIN'] ?? '';
+  final relayConfigured = relayFromDefine.isNotEmpty
+      ? relayFromDefine
+      : relayFromEnvironment.isNotEmpty
+      ? relayFromEnvironment
+      : cloudOrigin.host == 'openmuseai.com'
+      ? 'https://openmuseai.com:8443'
+      : '';
+  final relayOrigin = desktopRelayPublicOrigin(
+    cloudOrigin: cloudOrigin,
+    configured: relayConfigured,
+  );
   final pairedGateway = PairedDesktopGateway(
     currentAccountRef: () =>
         authenticationController.snapshot.identity?.subject,
@@ -201,6 +229,7 @@ Future<Widget> bootOpenMuseHost() async {
     },
     workspaceRef: 'openmuse.local.default',
     workspaceTitle: 'Project Workspace',
+    nativeApiToken: dshSupervisor.bridgeToken,
     deviceRef: desktopDeviceId,
     deviceName: desktopDisplayName,
     port:
@@ -228,12 +257,22 @@ Future<Widget> bootOpenMuseHost() async {
         'dsh.local',
         'paired-desktop.transport',
       },
-      transportOrigin: pairedGateway.origin,
+      transportOrigin: relayOrigin ?? pairedGateway.origin,
     ),
   );
+  final relay = relayOrigin == null
+      ? null
+      : DesktopOutboundRelay(
+          attachUri: relayOrigin.replace(scheme: 'wss', path: '/attach'),
+          accessToken: () => authenticationController.accessToken(),
+          deviceId: desktopDeviceId,
+          localGateway: () => pairedGateway.origin,
+          publicOrigin: relayOrigin,
+        );
   final pairedDesktopPlugin = OpenMusePairedDesktopHostPlugin(
     pairedGateway,
     directory: deviceDirectory,
+    relay: relay,
   );
   registry.install(authenticationPlugin);
   registry.install(cloudWorkspacePlugin);
@@ -314,6 +353,32 @@ String _dshHome(String supportPath) {
     return p.normalize(configured);
   }
   return p.join(supportPath, 'OpenMuse', 'dsh');
+}
+
+String _configuredEndpoint({
+  required String key,
+  required String dartDefine,
+  required String debugDefault,
+  required String releaseDefault,
+}) {
+  final compiled = dartDefine.trim();
+  if (compiled.isNotEmpty) return compiled;
+  final environment = Platform.environment[key]?.trim();
+  if (environment != null && environment.isNotEmpty) return environment;
+  return kReleaseMode ? releaseDefault : debugDefault;
+}
+
+bool _configuredBool({
+  required String key,
+  required String dartDefine,
+  required bool fallback,
+}) {
+  final raw = dartDefine.trim().isNotEmpty
+      ? dartDefine.trim()
+      : Platform.environment[key]?.trim().toLowerCase();
+  if (raw == 'true' || raw == '1') return true;
+  if (raw == 'false' || raw == '0') return false;
+  return fallback;
 }
 
 Future<String> _persistentDesktopDeviceId(

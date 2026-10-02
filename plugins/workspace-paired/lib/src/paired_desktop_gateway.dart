@@ -18,6 +18,7 @@ final class PairedDesktopGateway {
     this.port = 13180,
     this.bindAddress,
     this.grantTtl = const Duration(minutes: 30),
+    this.nativeApiToken,
     String? fixedPairingCode,
   }) : _fixedPairingCode = fixedPairingCode;
 
@@ -31,6 +32,10 @@ final class PairedDesktopGateway {
   final int port;
   final InternetAddress? bindAddress;
   final Duration grantTtl;
+
+  /// Host-only token injected for the native conversation API. It is never
+  /// returned to, or accepted from, the paired mobile client.
+  final String? nativeApiToken;
   final String? _fixedPairingCode;
   final Random _random = Random.secure();
   final Map<String, _DesktopGrant> _grants = {};
@@ -117,10 +122,14 @@ final class PairedDesktopGateway {
     } catch (error) {
       lastError = error;
       _changed();
-      _json(request.response, HttpStatus.badGateway, {
-        'code': 'PAIRED_DESKTOP_UNAVAILABLE',
-        'message': 'Desktop transport 暂时不可用。',
-      });
+      try {
+        _json(request.response, HttpStatus.badGateway, {
+          'code': 'PAIRED_DESKTOP_UNAVAILABLE',
+          'message': 'Desktop transport 暂时不可用。',
+        });
+      } on StateError {
+        // The DSH response was already streaming.
+      }
     }
   }
 
@@ -223,11 +232,14 @@ final class PairedDesktopGateway {
       _pairingCode = null;
       _pairingExpiresAtMs = null;
     }
-    final publicOrigin = Uri(
-      scheme: 'http',
-      host: _publicHost(request.headers.host),
-      port: _server!.port,
-    );
+    final advertised = _advertisedPublicOrigin(request);
+    final publicOrigin =
+        advertised ??
+        Uri(
+          scheme: 'http',
+          host: _publicHost(request.headers.host),
+          port: _server!.port,
+        );
     _json(request.response, HttpStatus.ok, {
       'accountRef': desktopAccountRef,
       'deviceRef': deviceRef,
@@ -241,7 +253,7 @@ final class PairedDesktopGateway {
         'origin': publicOrigin.toString(),
         'path': '/u/$grantRef',
         'generation': 1,
-        'allowInsecureLoopback': true,
+        'allowInsecureLoopback': advertised == null,
       },
     });
     _changed();
@@ -285,21 +297,40 @@ final class PairedDesktopGateway {
       }
       final upstreamResponse = await outbound.close();
       request.response.statusCode = upstreamResponse.statusCode;
+      // Dart otherwise holds the first 8KB until the upstream ends or the
+      // buffer fills. A DSH follow snapshot is often smaller than that and
+      // the stream never ends, so Mobile stays on "正在连接 DSH".
+      request.response.bufferOutput = false;
       _copyResponseHeaders(
         upstreamResponse,
         request.response,
         upstreamUri: upstreamUri,
       );
       if (initial != null) {
+        final advertised = _advertisedPublicOrigin(request);
         request.response.cookies.add(
           Cookie('OpenMuse-Paired', grant.grantRef)
             ..httpOnly = true
+            ..secure = advertised != null
             ..sameSite = SameSite.strict
             ..path = '/'
             ..maxAge = grantTtl.inSeconds,
         );
       }
-      await request.response.addStream(upstreamResponse);
+      final label = _proxyLabel(request);
+      final eventStream =
+          upstreamResponse.headers
+              .value(HttpHeaders.contentTypeHeader)
+              ?.contains('text/event-stream') ??
+          false;
+      stderr.writeln(
+        'OpenMuse gateway: $label status=${upstreamResponse.statusCode} '
+        'type=${upstreamResponse.headers.value(HttpHeaders.contentTypeHeader)} '
+        'stream=$eventStream',
+      );
+      await request.response.addStream(
+        _tapProxyBody(label: label, eventStream: eventStream, source: upstreamResponse),
+      );
       await request.response.close();
     } finally {
       client.close(force: true);
@@ -369,8 +400,10 @@ final class PairedDesktopGateway {
           lower == HttpHeaders.connectionHeader ||
           lower == HttpHeaders.authorizationHeader ||
           lower == HttpHeaders.cookieHeader ||
+          lower == 'x-openmuse-bridge-token' ||
           lower == 'origin' ||
-          lower == HttpHeaders.refererHeader) {
+          lower == HttpHeaders.refererHeader ||
+          lower == 'x-openmuse-paired-public-origin') {
         return;
       }
       target.headers.set(name, values);
@@ -391,6 +424,129 @@ final class PairedDesktopGateway {
     }
     final cookie = _upstreamCookie(source.cookies);
     if (cookie.isNotEmpty) target.headers.set(HttpHeaders.cookieHeader, cookie);
+    final nativeToken = nativeApiToken;
+    if (source.uri.path.startsWith('/openmuse-native/') &&
+        nativeToken != null &&
+        nativeToken.length >= 32) {
+      target.headers.set('x-openmuse-bridge-token', nativeToken);
+    }
+  }
+
+  String _proxyLabel(HttpRequest request) {
+    final sessionId = request.uri.queryParameters['sessionId'];
+    final query = sessionId == null ? '' : '?sessionId=$sessionId';
+    return '${request.method} ${request.uri.path}$query';
+  }
+
+  Stream<List<int>> _tapProxyBody({
+    required String label,
+    required bool eventStream,
+    required Stream<List<int>> source,
+  }) async* {
+    var bytes = 0;
+    var frames = 0;
+    var carry = '';
+    final jsonBody = StringBuffer();
+    final captureJson =
+        !eventStream &&
+        (label.contains('/sessions') ||
+            label.contains('/workspaces') ||
+            label.contains('/prompt') ||
+            label.contains('/session/create'));
+    await for (final chunk in source) {
+      bytes += chunk.length;
+      if (eventStream) {
+        carry += utf8.decode(chunk, allowMalformed: true);
+        while (true) {
+          final end = carry.indexOf('\n\n');
+          if (end < 0) break;
+          final block = carry.substring(0, end);
+          carry = carry.substring(end + 2);
+          frames += 1;
+          stderr.writeln(
+            'OpenMuse gateway: $label frame#$frames ${_frameSummary(block)}',
+          );
+        }
+      } else if (captureJson && jsonBody.length < 65536) {
+        jsonBody.write(utf8.decode(chunk, allowMalformed: true));
+      }
+      yield chunk;
+    }
+    if (eventStream) {
+      stderr.writeln(
+        'OpenMuse gateway: $label end bytes=$bytes frames=$frames tail=${carry.length}',
+      );
+    } else if (captureJson) {
+      stderr.writeln(
+        'OpenMuse gateway: $label end bytes=$bytes ${_jsonSummary(label, jsonBody.toString())}',
+      );
+    } else {
+      stderr.writeln('OpenMuse gateway: $label end bytes=$bytes');
+    }
+  }
+
+  String _frameSummary(String block) {
+    final dataIndex = block.indexOf('data:');
+    if (dataIndex < 0) return 'nodata bytes=${block.length}';
+    final data = block.substring(dataIndex + 5).trim();
+    try {
+      final decoded = jsonDecode(data);
+      if (decoded is! Map) return 'non-object';
+      final type = decoded['type'];
+      if (type == 'snapshot') {
+        final records = decoded['records'];
+        final count = records is List ? records.length : -1;
+        var last = '-';
+        if (records is List && records.isNotEmpty && records.last is Map) {
+          final event = (records.last as Map)['event'];
+          if (event is Map) last = '${event['type']}@${event['seq']}';
+        }
+        return 'snapshot cursor=${decoded['cursor']} records=$count last=$last';
+      }
+      if (type == 'event' && decoded['event'] is Map) {
+        final event = decoded['event'] as Map;
+        final source = event['source'];
+        final rpc = source is Map && source['rpcId'] is String;
+        return 'event ${event['type']}@${event['seq']} rpc=$rpc';
+      }
+      if (type == 'assistant-stream' && decoded['frame'] is Map) {
+        return 'assistant-stream ${(decoded['frame'] as Map)['type']}';
+      }
+      return 'type=$type';
+    } catch (error) {
+      return 'parse-failed bytes=${data.length}';
+    }
+  }
+
+  String _jsonSummary(String label, String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is! Map) return 'non-object';
+      if (label.contains('/prompt') || label.contains('/session/create')) {
+        return 'accepted=${decoded['accepted']} session=${decoded['sessionId']}';
+      }
+      final items = decoded['items'];
+      if (items is! List) return 'keys=${decoded.keys.join(",")}';
+      if (label.contains('/sessions')) {
+        final lines = <String>[];
+        for (final item in items) {
+          if (item is! Map) continue;
+          final values = item['projections'] is Map
+              ? (item['projections'] as Map)['values']
+              : null;
+          final title = values is Map ? values['title'] : null;
+          lines.add(
+            '${item['sessionId']} running=${item['running']} '
+            'blank=${item['blank']} updated=${item['updatedAt']} '
+            'title=${title is String ? title : ''}',
+          );
+        }
+        return 'sessions=${items.length} ${lines.join(' | ')}';
+      }
+      return 'workspaces=${items.length}';
+    } catch (error) {
+      return 'parse-failed bytes=${body.length}';
+    }
   }
 
   void _copyResponseHeaders(
@@ -446,6 +602,24 @@ final class PairedDesktopGateway {
       ..headers.contentType = ContentType.json
       ..write(jsonEncode(value))
       ..close();
+  }
+
+  Uri? _advertisedPublicOrigin(HttpRequest request) {
+    final remote = request.connectionInfo?.remoteAddress;
+    if (remote == null || !remote.isLoopback) return null;
+    final raw = request.headers.value('x-openmuse-paired-public-origin');
+    if (raw == null || raw.isEmpty) return null;
+    final uri = Uri.tryParse(raw);
+    if (uri == null ||
+        uri.scheme != 'https' ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasQuery ||
+        uri.hasFragment ||
+        (uri.path.isNotEmpty && uri.path != '/')) {
+      return null;
+    }
+    return uri.replace(path: '', query: null, fragment: null);
   }
 
   bool _isLoopbackHttp(Uri uri) =>
