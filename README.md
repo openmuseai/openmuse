@@ -38,6 +38,7 @@ Workbench parity specification: [`docs/WORKBENCH-PARITY-SPEC.zh-CN.md`](docs/WOR
 Code reuse and provenance: [`docs/CODE-REUSE-PROVENANCE.zh-CN.md`](docs/CODE-REUSE-PROVENANCE.zh-CN.md).
 Mobile product design: [`docs/MOBILE-PRODUCT-PRD.zh-CN.md`](docs/MOBILE-PRODUCT-PRD.zh-CN.md).
 Mobile architecture and implementation plan: [`docs/MOBILE-ARCHITECTURE-IMPLEMENTATION-PLAN.zh-CN.md`](docs/MOBILE-ARCHITECTURE-IMPLEMENTATION-PLAN.zh-CN.md).
+Mobile ASR Plugin architecture, engine selection and delivery plan: [`docs/MOBILE-ASR-PLUGIN-ARCHITECTURE.zh-CN.md`](docs/MOBILE-ASR-PLUGIN-ARCHITECTURE.zh-CN.md); implementation and device validation: [`docs/MOBILE-ASR-IMPLEMENTATION-PLAN.zh-CN.md`](docs/MOBILE-ASR-IMPLEMENTATION-PLAN.zh-CN.md).
 GoTrue authentication plugin migration and cross-device session design: [`docs/AUTH-GOTRUE-PLUGIN-MIGRATION.zh-CN.md`](docs/AUTH-GOTRUE-PLUGIN-MIGRATION.zh-CN.md).
 Account device directory, presence and Desktop pairing: [`docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md`](docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md).
 Same-account multi-device product and interaction design: [`docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md`](docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md).
