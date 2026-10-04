@@ -15,16 +15,45 @@ final class DshConversationController {
   final DshConversationStore store;
   final Duration reconciliationInterval;
   bool _closed = false;
+  bool _active = false;
+  int _generation = 0;
+  String? _sessionId;
+  StreamIterator<DshFollowFrame>? _followIterator;
   Future<void>? _followTask;
   Future<void>? _reconcileTask;
   int _requestSequence = 0;
 
   Future<void> start(String sessionId, {bool running = false}) async {
-    if (_followTask != null) throw StateError('conversation already started');
+    if (_sessionId != null) throw StateError('conversation already started');
+    _sessionId = sessionId;
     store.setRunning(running);
-    _followTask = _follow(sessionId);
-    _reconcileTask = _reconcile(sessionId);
+    resume();
   }
+
+  /// Keeps the projected conversation in memory without holding a Desktop
+  /// follow stream or polling an offstage session.
+  void pause() {
+    if (!_active) return;
+    _active = false;
+    _generation++;
+    final iterator = _followIterator;
+    _followIterator = null;
+    if (iterator != null) {
+      unawaited(iterator.cancel().catchError((Object _) {}));
+    }
+  }
+
+  void resume() {
+    final sessionId = _sessionId;
+    if (_closed || _active || sessionId == null) return;
+    _active = true;
+    final generation = ++_generation;
+    _followTask = _follow(sessionId, generation);
+    _reconcileTask = _reconcile(sessionId, generation);
+  }
+
+  bool _isCurrent(int generation) =>
+      !_closed && _active && generation == _generation;
 
   Future<void> send(String text, {String mode = 'queue'}) async {
     final sessionId = store.snapshot.sessionId;
@@ -60,40 +89,55 @@ final class DshConversationController {
     if (sessionId != null) await client.cancel(sessionId);
   }
 
-  Future<void> _follow(String sessionId) async {
+  Future<void> _follow(String sessionId, int generation) async {
     var attempt = 0;
-    while (!_closed) {
-      store.connecting(sessionId, reconnecting: attempt > 0);
+    while (_isCurrent(generation)) {
+      if (store.snapshot.rows.isEmpty) {
+        store.connecting(sessionId, reconnecting: attempt > 0);
+      }
       print(
         'OpenMuse follow: ${attempt == 0 ? 'start' : 'retry'} '
         'session=$sessionId attempt=$attempt',
       );
+      StreamIterator<DshFollowFrame>? iterator;
       try {
-        await for (final frame in client.follow(sessionId)) {
-          if (_closed) return;
+        iterator = StreamIterator(client.follow(sessionId));
+        _followIterator = iterator;
+        while (await iterator.moveNext()) {
+          if (!_isCurrent(generation)) return;
+          final frame = iterator.current;
           attempt = 0;
           print('OpenMuse follow: ${_frameLog(frame)}');
           store.apply(frame);
         }
-        if (_closed) return;
+        if (!_isCurrent(generation)) return;
         throw const DshNativeGatewayException('DSH follow stream ended');
       } catch (error) {
-        if (_closed) return;
+        if (!_isCurrent(generation)) return;
         print('OpenMuse follow: error session=$sessionId error=$error');
         store.failed(error);
         attempt += 1;
         final seconds = 1 << (attempt.clamp(1, 5) - 1);
         await Future<void>.delayed(Duration(seconds: seconds));
+      } finally {
+        if (identical(_followIterator, iterator)) _followIterator = null;
+        if (iterator != null) {
+          try {
+            await iterator.cancel();
+          } on Object {
+            // Closing an in-flight SSE response can surface a socket error.
+          }
+        }
       }
     }
   }
 
-  Future<void> _reconcile(String sessionId) async {
+  Future<void> _reconcile(String sessionId, int generation) async {
     var failures = 0;
-    while (!_closed) {
+    while (_isCurrent(generation)) {
       try {
         final sessions = await client.listSessions();
-        if (_closed) return;
+        if (!_isCurrent(generation)) return;
         DshNativeSessionSummary? authoritative;
         for (final session in sessions) {
           if (session.sessionId == sessionId) {
@@ -111,7 +155,7 @@ final class DshConversationController {
             current.phase != DshConnectionPhase.live;
         if (needsPage) {
           final page = await client.sessionPage(authoritative);
-          if (_closed) return;
+          if (!_isCurrent(generation)) return;
           store.apply(page);
           print(
             'OpenMuse reconcile: session=$sessionId '
@@ -122,7 +166,7 @@ final class DshConversationController {
         store.setRunning(authoritative.running);
         failures = 0;
       } catch (error) {
-        if (_closed) return;
+        if (!_isCurrent(generation)) return;
         failures += 1;
         print(
           'OpenMuse reconcile: error session=$sessionId '
@@ -144,6 +188,7 @@ final class DshConversationController {
 
   Future<void> dispose() async {
     _closed = true;
+    pause();
     client.close();
     store.close();
     // The tasks observe [_closed] after their active I/O/delay. They are kept

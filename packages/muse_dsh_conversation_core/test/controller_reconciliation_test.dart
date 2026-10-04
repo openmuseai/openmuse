@@ -8,6 +8,87 @@ import 'package:test/test.dart';
 
 void main() {
   test(
+    'inactive conversations stop polling and resume with cached rows',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final releaseFollows = Completer<void>();
+      var followRequests = 0;
+      var sessionRequests = 0;
+      server.listen((request) async {
+        switch (request.uri.path) {
+          case '/openmuse-native/v1/session/follow':
+            followRequests++;
+            request.response
+              ..bufferOutput = false
+              ..headers.contentType = ContentType('text', 'event-stream')
+              ..write(
+                'event: frame\ndata: ${jsonEncode({
+                  'type': 'snapshot',
+                  'header': {'id': 's-1'},
+                  'cursor': 1,
+                  'records': [
+                    _record('user/message', 1, {
+                      'content': [
+                        {'type': 'text', 'text': 'cached message'},
+                      ],
+                    }),
+                  ],
+                  'hasMore': false,
+                  'projections': {'asOfSeq': 1, 'values': <String, Object?>{}},
+                })}\n\n',
+              );
+            await request.response.flush();
+            await releaseFollows.future;
+            await request.response.close();
+          case '/openmuse-native/v1/sessions':
+            sessionRequests++;
+            _json(request.response, {
+              'items': [
+                {
+                  'sessionId': 's-1',
+                  'updatedAt': 1,
+                  'running': false,
+                  'blank': false,
+                  'headSeq': 1,
+                  'projections': {'asOfSeq': 1, 'values': <String, Object?>{}},
+                },
+              ],
+            });
+          default:
+            request.response.statusCode = HttpStatus.notFound;
+            await request.response.close();
+        }
+      });
+      final client = DshNativeGatewayClient(
+        origin: Uri.parse('http://127.0.0.1:${server.port}'),
+        bootstrapPath: '',
+        allowInsecureLoopback: true,
+      );
+      final controller = DshConversationController(
+        client: client,
+        reconciliationInterval: const Duration(milliseconds: 20),
+      );
+      await controller.start('s-1');
+      await _until(() => controller.store.snapshot.rows.isNotEmpty);
+      controller.pause();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      final pausedRequests = sessionRequests;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(sessionRequests, pausedRequests);
+      expect(controller.store.snapshot.rows.single.text, 'cached message');
+
+      controller.resume();
+      await _until(() => followRequests >= 2);
+      expect(controller.store.snapshot.rows.single.text, 'cached message');
+      expect(controller.store.snapshot.phase, DshConnectionPhase.live);
+
+      releaseFollows.complete();
+      await controller.dispose();
+      await server.close(force: true);
+    },
+  );
+
+  test(
     'durable page repairs a silent follow stream and retires pending',
     () async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -53,18 +134,18 @@ void main() {
                 },
               ],
             });
-        case '/openmuse-native/v1/session/page':
-          final body = jsonDecode(await utf8.decodeStream(request)) as Map;
-          final throughSeq = body['throughSeq'] as int;
-          _json(request.response, {
-            'records': records
-                .where(
-                  (record) =>
-                      ((record['event'] as Map)['seq'] as int) <= throughSeq,
-                )
-                .toList(growable: false),
-            'hasMore': false,
-          });
+          case '/openmuse-native/v1/session/page':
+            final body = jsonDecode(await utf8.decodeStream(request)) as Map;
+            final throughSeq = body['throughSeq'] as int;
+            _json(request.response, {
+              'records': records
+                  .where(
+                    (record) =>
+                        ((record['event'] as Map)['seq'] as int) <= throughSeq,
+                  )
+                  .toList(growable: false),
+              'hasMore': false,
+            });
           case '/openmuse-native/v1/session/prompt':
             final body = jsonDecode(await utf8.decodeStream(request));
             final requestId = (body as Map)['requestId'] as String;
