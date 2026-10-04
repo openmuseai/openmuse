@@ -110,6 +110,7 @@ final class NativeDshPage extends StatefulWidget {
     required this.session,
     required this.workspaceTitle,
     this.requestedSessionId,
+    this.active = true,
     this.embedded = false,
     this.showComposer = true,
     this.handle,
@@ -120,6 +121,7 @@ final class NativeDshPage extends StatefulWidget {
   final DshSessionDescriptor session;
   final String workspaceTitle;
   final String? requestedSessionId;
+  final bool active;
   final bool embedded;
   final bool showComposer;
   final NativeDshSessionHandle? handle;
@@ -134,70 +136,136 @@ final class _NativeDshPageState extends State<NativeDshPage> {
   DshNativeGatewayClient? _client;
   DshConversationController? _conversation;
   DshNativeNegotiation? _negotiation;
+  DshNativeSessionOptions? _options;
   String? _failure;
   bool _webFallback = false;
+  bool _started = false;
 
   @override
   void initState() {
     super.initState();
-    unawaited(_open());
+    if (widget.active) _ensureOpen();
+  }
+
+  void _ensureOpen() {
+    if (_started) return;
+    _started = true;
+    unawaited(_openWithRetry());
+  }
+
+  @override
+  void didUpdateWidget(covariant NativeDshPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) _ensureOpen();
+    final conversation = _conversation;
+    if (conversation == null) return;
+    if (oldWidget.active != widget.active) {
+      if (widget.active) {
+        conversation.resume();
+      } else {
+        conversation.pause();
+      }
+    }
+    if (oldWidget.handle != widget.handle) {
+      oldWidget.handle?.detach(conversation);
+      widget.handle?.attach(conversation, _options);
+    }
+  }
+
+  Future<void> _openWithRetry() async {
+    var attempt = 0;
+    while (mounted) {
+      if (!widget.active) {
+        _started = false;
+        return;
+      }
+      try {
+        await _open();
+        return;
+      } catch (error) {
+        _client?.close();
+        _client = null;
+        if (!mounted) return;
+        debugPrint('OpenMuse native DSH open: attempt=$attempt error=$error');
+        setState(() => _failure = 'Desktop 连接暂时不可用，正在自动重试…');
+        final seconds = 1 << attempt.clamp(0, 3);
+        attempt++;
+        await Future<void>.delayed(Duration(seconds: seconds));
+      }
+    }
   }
 
   Future<void> _open() async {
-    try {
-      final client = DshNativeGatewayClient(
-        origin: Uri.parse(widget.session.origin),
-        bootstrapPath: widget.session.path,
-        allowInsecureLoopback: widget.session.allowInsecureLoopback,
-        allowInsecurePrivateNetworkForTesting:
-            widget.session.allowInsecurePrivateNetworkForTesting,
+    final client = DshNativeGatewayClient(
+      origin: Uri.parse(widget.session.origin),
+      bootstrapPath: widget.session.path,
+      allowInsecureLoopback: widget.session.allowInsecureLoopback,
+      allowInsecurePrivateNetworkForTesting:
+          widget.session.allowInsecurePrivateNetworkForTesting,
+    );
+    _client = client;
+    final hello = await client.initialize();
+    if (!hello.contractSupported) {
+      client.close();
+      _useWebFallback();
+      return;
+    }
+    final values = await Future.wait<Object>([
+      client.negotiate(DshNativeCapabilities.standard()),
+      client.listSessions(),
+    ]);
+    final negotiation = values[0] as DshNativeNegotiation;
+    final sessions = values[1] as List<DshNativeSessionSummary>;
+    final selected = chooseNativeDshSession(
+      widget.session,
+      sessions,
+      requestedSessionId: widget.requestedSessionId,
+    );
+    if (selected == null) {
+      client.close();
+      debugPrint(
+        'OpenMuse native DSH: session ${widget.requestedSessionId} '
+        'is absent from Desktop catalog',
       );
-      _client = client;
-      final hello = await client.initialize();
-      if (!hello.contractSupported) {
-        _useWebFallback();
-        return;
-      }
-      final negotiation = await client.negotiate(
-        DshNativeCapabilities.standard(),
-      );
-      final sessions = await client.listSessions();
-      final selected = chooseNativeDshSession(
-        widget.session,
-        sessions,
-        requestedSessionId: widget.requestedSessionId,
-      );
-      if (selected == null) {
-        _useWebFallback();
-        return;
-      }
-      final conversation = DshConversationController(client: client);
-      await conversation.start(selected.sessionId, running: selected.running);
-      DshNativeSessionOptions? options;
+      _useWebFallback();
+      return;
+    }
+    final conversation = DshConversationController(client: client);
+    await conversation.start(selected.sessionId, running: selected.running);
+    if (!widget.active) conversation.pause();
+    if (!mounted) {
+      await conversation.dispose();
+      return;
+    }
+    setState(() {
+      _conversation = conversation;
+      _negotiation = negotiation;
+      _failure = null;
+    });
+    widget.handle?.attach(conversation, null);
+    unawaited(_loadOptions(conversation, selected.sessionId));
+    final initialPrompt = widget.initialPrompt?.trim();
+    if (initialPrompt != null && initialPrompt.isNotEmpty) {
       try {
-        options = await client.sessionOptions(selected.sessionId);
-      } on Object {
-        // Older pinned bridge builds can still render and send safely.
-      }
-      if (!mounted) {
-        await conversation.dispose();
-        return;
-      }
-      setState(() {
-        _conversation = conversation;
-        _negotiation = negotiation;
-        _failure = null;
-      });
-      widget.handle?.attach(conversation, options);
-      final initialPrompt = widget.initialPrompt?.trim();
-      if (initialPrompt != null && initialPrompt.isNotEmpty) {
         await conversation.send(initialPrompt);
         widget.onInitialPromptConsumed?.call();
+      } catch (error) {
+        debugPrint('OpenMuse native DSH prompt: $error');
       }
-    } catch (error) {
-      if (!mounted) return;
-      // Old/cloud runtimes without the native contract remain fully usable.
-      _useWebFallback(failure: error.toString());
+    }
+  }
+
+  Future<void> _loadOptions(
+    DshConversationController conversation,
+    String sessionId,
+  ) async {
+    try {
+      final options = await conversation.client.sessionOptions(sessionId);
+      if (!mounted || !identical(_conversation, conversation)) return;
+      _options = options;
+      widget.handle?.attach(conversation, options);
+    } on Object {
+      // Older pinned bridge builds can still render and send safely.
     }
   }
 
