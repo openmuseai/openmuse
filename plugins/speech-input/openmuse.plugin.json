@@ -1,0 +1,25 @@
+{
+  "id": "com.openmuse.speech.input",
+  "name": "OpenMuse Speech Input",
+  "version": "0.1.0",
+  "protocol": { "major": 1, "minor": 0 },
+  "runtime": "built-in",
+  "activation_events": ["onStartup", "onCapability:speech.recognition"],
+  "permissions": [
+    "device.microphone.capture",
+    "speech.recognition.provide"
+  ],
+  "contributes": {
+    "commands": [],
+    "services": [
+      {
+        "id": "openmuse.speech.recognition",
+        "version": 1,
+        "priority": 100,
+        "required_permissions": ["speech.recognition.use"]
+      }
+    ],
+    "editors": [],
+    "panels": []
+  }
+}
