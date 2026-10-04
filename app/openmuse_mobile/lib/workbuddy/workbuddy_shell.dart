@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
+import 'package:muse_speech_contract/muse_speech_contract.dart';
+import 'package:muse_speech_core/muse_speech_core.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -23,6 +26,8 @@ final class WorkBuddyShell extends StatefulWidget {
     this.catalog,
     this.cloudLabel,
     this.onSignOut,
+    this.speechRecognition,
+    this.debugSpeechSource,
   });
 
   final WorkBuddyController controller;
@@ -31,6 +36,11 @@ final class WorkBuddyShell extends StatefulWidget {
   final WorkspaceCatalogPort? catalog;
   final String? cloudLabel;
   final Future<void> Function()? onSignOut;
+  final SpeechRecognitionPort? speechRecognition;
+
+  /// Debug-only E2E seam supplied by the Mobile Host. It is never populated
+  /// from a plugin wire request or other untrusted input.
+  final SpeechAudioSource? debugSpeechSource;
 
   @override
   State<WorkBuddyShell> createState() => _WorkBuddyShellState();
@@ -41,8 +51,19 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   late final AnimationController _drawer;
   final _composer = TextEditingController();
   final _focus = FocusNode();
+  bool _voiceMode = false;
   bool _holdingVoice = false;
+  bool _voiceReleased = false;
+  bool _cancelVoiceOnRelease = false;
+  bool _speechOpening = false;
+  bool _stopSpeechWhenOpened = false;
+  bool _cancelSpeechWhenOpened = false;
+  SpeechSession? _speechSession;
+  StreamSubscription<SpeechEvent>? _speechEvents;
+  SpeechDraftBuffer? _speechDraft;
   final NativeDshSessionHandle _sessionHandle = NativeDshSessionHandle();
+  final List<String> _recentNativeSessionIds = [];
+  String? _nativeConnectionKey;
   String? _pendingSessionId;
   String? _pendingPrompt;
 
@@ -63,6 +84,11 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     _syncDevices();
     _sessionHandle.addListener(_syncSession);
     unawaited(_loadCloud());
+    if (widget.debugSpeechSource != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_startVoice(source: widget.debugSpeechSource));
+      });
+    }
   }
 
   void _syncSession() {
@@ -87,6 +113,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
 
   void _syncDrawer() {
     if (!mounted) return;
+    _rememberNativeSession();
     if (controller.drawerOpen) {
       _drawer.forward();
     } else {
@@ -103,6 +130,14 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   void _syncDevices() {
     final paired = widget.pairedDesktop;
     if (paired == null) return;
+    final connection = paired.snapshot.connection;
+    final connectionKey = connection == null
+        ? null
+        : '${connection.deviceRef}:${connection.grantRef}';
+    if (_nativeConnectionKey != connectionKey) {
+      _nativeConnectionKey = connectionKey;
+      _recentNativeSessionIds.clear();
+    }
     for (final device in paired.devices.where(
       (device) => device.kind == AccountDeviceKind.desktop,
     )) {
@@ -115,7 +150,6 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         ),
       );
     }
-    final connection = paired.snapshot.connection;
     if (connection != null) {
       controller.upsertDevice(
         WbDevice(
@@ -124,6 +158,20 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
           kind: WbDeviceKind.local,
         ),
       );
+    }
+    _rememberNativeSession();
+  }
+
+  void _rememberNativeSession() {
+    if (_nativeConnectionKey == null) return;
+    final task = controller.openTask;
+    if (task == null || !task.id.startsWith('dsh.session.')) return;
+    final id = task.id.substring('dsh.session.'.length);
+    _recentNativeSessionIds.remove(id);
+    _recentNativeSessionIds.add(id);
+    const maxRetainedSessions = 4;
+    if (_recentNativeSessionIds.length > maxRetainedSessions) {
+      _recentNativeSessionIds.removeAt(0);
     }
   }
 
@@ -154,12 +202,25 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     widget.authentication?.removeListener(_syncAccount);
     widget.pairedDesktop?.removeListener(_syncDevices);
     _drawer.dispose();
+    final speechSession = _speechSession;
+    if (speechSession != null) {
+      unawaited(_cancelSpeechOnDispose(speechSession));
+    }
+    unawaited(_speechEvents?.cancel());
     _composer.dispose();
     _focus.dispose();
     _sessionHandle
       ..removeListener(_syncSession)
       ..dispose();
     super.dispose();
+  }
+
+  Future<void> _cancelSpeechOnDispose(SpeechSession session) async {
+    try {
+      await widget.speechRecognition?.cancel(session.ref);
+    } on Object {
+      // Plugin deactivation may have won the shutdown race.
+    }
   }
 
   Future<void> _openLogin() async {
@@ -240,11 +301,18 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       );
       final device = matches == null || matches.isEmpty ? null : matches.first;
       if (device != null) {
+        final previousConnection = widget.pairedDesktop?.snapshot.connection;
+        final hasCatalog = controller
+            .workspacesFor(picked)
+            .any((workspace) => workspace.id.startsWith('dsh.workspace.'));
         final connected = await widget.pairedDesktop?.connectDevice(device);
         final connection = widget.pairedDesktop?.snapshot.connection;
         if (connected == true && connection != null && mounted) {
           controller.selectDevice(picked);
-          await _publishDesktopCatalog(connection, picked);
+          if (!hasCatalog ||
+              previousConnection?.grantRef != connection.grantRef) {
+            await _publishDesktopCatalog(connection, picked);
+          }
           return;
         }
         final message = widget.pairedDesktop?.snapshot.failureMessage;
@@ -272,8 +340,12 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     );
     try {
       await client.initialize();
-      final workspaces = await client.listWorkspaces();
-      final sessions = await client.listSessions();
+      final values = await Future.wait<Object>([
+        client.listWorkspaces(),
+        client.listSessions(),
+      ]);
+      final workspaces = values[0] as List<DshNativeWorkspaceSummary>;
+      final sessions = values[1] as List<DshNativeSessionSummary>;
       if (!mounted) return;
       final byId = {for (final session in sessions) session.sessionId: session};
       controller.replacePairedCatalog(
@@ -451,6 +523,183 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('请先从设备列表连接一台在线 Desktop，再发送消息。')),
     );
+  }
+
+  Future<void> _startVoice({SpeechAudioSource? source}) async {
+    final speech = widget.speechRecognition;
+    if (speech == null || _speechOpening || _speechSession != null) return;
+
+    final selection = _composer.selection;
+    final textLength = _composer.text.length;
+    final rawStart = selection.isValid ? selection.start : textLength;
+    final rawEnd = selection.isValid ? selection.end : textLength;
+    _speechDraft = SpeechDraftBuffer.begin(
+      text: _composer.text,
+      selectionStart: rawStart.clamp(0, textLength),
+      selectionEnd: rawEnd.clamp(0, textLength),
+    );
+    _speechOpening = true;
+    _stopSpeechWhenOpened = false;
+    _cancelSpeechWhenOpened = false;
+    _cancelVoiceOnRelease = false;
+    _voiceReleased = false;
+    setState(() => _holdingVoice = true);
+
+    try {
+      final session = await speech.open(
+        SpeechStartRequest(
+          requestId:
+              'mobile-${DateTime.now().microsecondsSinceEpoch.toRadixString(16)}',
+          source: source ?? const SpeechMicrophoneSource(),
+          context: const SpeechContext(localeHints: ['zh-CN', 'en-US']),
+        ),
+      );
+      if (!mounted) {
+        await speech.cancel(session.ref);
+        return;
+      }
+      _speechSession = session;
+      _speechEvents = session.events.listen(_onSpeechEvent);
+      if (_cancelSpeechWhenOpened) {
+        await speech.cancel(session.ref);
+        if (_speechSession == session) _restoreSpeechDraft();
+      } else if (_stopSpeechWhenOpened) {
+        await speech.stop(session.ref);
+      }
+    } on SpeechException catch (error) {
+      _restoreSpeechDraft();
+      _showSpeechFailure(error.safeMessage);
+    } on Object {
+      _restoreSpeechDraft();
+      _showSpeechFailure('无法启动语音输入，请稍后重试。');
+    } finally {
+      _speechOpening = false;
+    }
+  }
+
+  Future<void> _stopVoice() async {
+    if (_cancelVoiceOnRelease) {
+      await _cancelVoice();
+      return;
+    }
+    if (mounted && _holdingVoice) setState(() => _voiceReleased = true);
+    _stopSpeechWhenOpened = true;
+    final speech = widget.speechRecognition;
+    final session = _speechSession;
+    if (speech == null || session == null) return;
+    try {
+      await speech.stop(session.ref);
+    } on SpeechException catch (error) {
+      _restoreSpeechDraft();
+      _showSpeechFailure(error.safeMessage);
+    } on Object {
+      _restoreSpeechDraft();
+      _showSpeechFailure('无法结束语音输入，请稍后重试。');
+    }
+  }
+
+  Future<void> _cancelVoice() async {
+    _cancelSpeechWhenOpened = true;
+    final speech = widget.speechRecognition;
+    final session = _speechSession;
+    if (speech == null || session == null) return;
+    try {
+      await speech.cancel(session.ref);
+      if (_speechSession == session) _restoreSpeechDraft();
+    } on Object {
+      _restoreSpeechDraft();
+      _showSpeechFailure('无法取消语音输入，请稍后重试。');
+    }
+  }
+
+  void _updateVoiceGesture(LongPressMoveUpdateDetails details) {
+    final cancel = details.offsetFromOrigin.dy < -72;
+    if (cancel != _cancelVoiceOnRelease && mounted) {
+      setState(() => _cancelVoiceOnRelease = cancel);
+    }
+  }
+
+  void _toggleInputMode() {
+    if (_holdingVoice || _speechOpening) return;
+    final nextVoiceMode = !_voiceMode;
+    if (nextVoiceMode) {
+      _focus.unfocus();
+      unawaited(SystemChannels.textInput.invokeMethod<void>('TextInput.hide'));
+    }
+    setState(() => _voiceMode = nextVoiceMode);
+    if (!nextVoiceMode) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focus.requestFocus();
+      });
+    }
+  }
+
+  void _onSpeechEvent(SpeechEvent event) {
+    if (!mounted || event.session != _speechSession?.ref) return;
+    switch (event.kind) {
+      case SpeechEventKind.partial:
+        _applySpeechSnapshot(_speechDraft?.applyPartial(event.text ?? ''));
+      case SpeechEventKind.finalResult:
+        final result = event.text?.trim() ?? '';
+        if (result.isEmpty) {
+          _restoreSpeechDraft();
+          _showSpeechFailure('未识别到语音，请重试。');
+          break;
+        }
+        _applySpeechSnapshot(_speechDraft?.applyFinal(result));
+        if (widget.debugSpeechSource != null) {
+          debugPrint('OPENMUSE_ASR_E2E_FINAL=$result');
+        }
+        _finishSpeech(revealText: true);
+      case SpeechEventKind.error:
+        _restoreSpeechDraft();
+        _showSpeechFailure(event.safeMessage ?? '语音识别失败，请重试。');
+      case SpeechEventKind.state:
+        if (event.phase == SpeechSessionPhase.cancelled) {
+          _restoreSpeechDraft();
+        }
+    }
+  }
+
+  void _applySpeechSnapshot(SpeechDraftSnapshot? snapshot) {
+    if (snapshot == null) return;
+    _composer.value = TextEditingValue(
+      text: snapshot.text,
+      selection: TextSelection(
+        baseOffset: snapshot.selectionStart,
+        extentOffset: snapshot.selectionEnd,
+      ),
+    );
+  }
+
+  void _restoreSpeechDraft() {
+    _applySpeechSnapshot(_speechDraft?.cancel());
+    _finishSpeech();
+  }
+
+  void _finishSpeech({bool revealText = false}) {
+    unawaited(_speechEvents?.cancel());
+    _speechEvents = null;
+    _speechSession = null;
+    _speechDraft = null;
+    _stopSpeechWhenOpened = false;
+    _cancelSpeechWhenOpened = false;
+    _cancelVoiceOnRelease = false;
+    if (mounted) {
+      setState(() {
+        _holdingVoice = false;
+        _voiceReleased = false;
+        if (revealText) _voiceMode = false;
+      });
+    }
+  }
+
+  void _showSpeechFailure(String message) {
+    debugPrint('OPENMUSE_ASR_E2E_ERROR=$message');
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _choosePermission() async {
@@ -667,7 +916,10 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                     controller: controller,
                     composer: _composer,
                     focus: _focus,
+                    voiceMode: _voiceMode,
                     holdingVoice: _holdingVoice,
+                    voiceReleased: _voiceReleased,
+                    cancellingVoice: _cancelVoiceOnRelease,
                     onMenu: () {
                       final connection =
                           widget.pairedDesktop?.snapshot.connection;
@@ -684,8 +936,10 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                     },
                     onRunSettings: _openRunSettings,
                     onSubmit: _submit,
-                    onVoiceDown: () => setState(() => _holdingVoice = true),
-                    onVoiceUp: () => setState(() => _holdingVoice = false),
+                    onInputModeToggle: _toggleInputMode,
+                    onVoiceDown: () => unawaited(_startVoice()),
+                    onVoiceUp: () => unawaited(_stopVoice()),
+                    onVoiceMove: _updateVoiceGesture,
                     onNewTask: () async {
                       setState(() {
                         _pendingSessionId = null;
@@ -695,7 +949,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                       await _openRunSettings();
                       if (mounted) _focus.requestFocus();
                     },
-                    conversation: _nativeConversation(),
+                    conversationBuilder: _nativeConversation,
                     sessionHandle: _sessionHandle,
                     onPermission: _choosePermission,
                     onModel: _chooseModel,
@@ -742,32 +996,59 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
 
   Widget? _nativeConversation() {
     final connection = widget.pairedDesktop?.snapshot.connection;
-    final task = controller.openTask;
-    if (connection == null ||
-        task == null ||
-        !task.id.startsWith('dsh.session.')) {
-      return null;
-    }
-    final sessionId = task.id.substring('dsh.session.'.length);
-    final initialPrompt = _pendingSessionId == sessionId
-        ? _pendingPrompt
+    if (connection == null) return null;
+    final tasksBySessionId = {
+      for (final task in controller.tasks)
+        if (task.id.startsWith('dsh.session.') &&
+            task.deviceId == 'paired.${connection.deviceRef}')
+          task.id.substring('dsh.session.'.length): task,
+    };
+    final cached = _recentNativeSessionIds
+        .where(tasksBySessionId.containsKey)
+        .toList(growable: false);
+    if (cached.isEmpty) return null;
+    final selectedTask = controller.openTask;
+    final selectedId =
+        selectedTask != null &&
+            selectedTask.deviceId == 'paired.${connection.deviceRef}' &&
+            selectedTask.id.startsWith('dsh.session.')
+        ? selectedTask.id.substring('dsh.session.'.length)
         : null;
-    return NativeDshPage(
-      key: ValueKey('wb-native-session-$sessionId'),
-      session: connection.session,
-      workspaceTitle: controller.selectedWorkspace.name,
-      requestedSessionId: sessionId,
-      embedded: true,
-      showComposer: false,
-      handle: _sessionHandle,
-      initialPrompt: initialPrompt,
-      onInitialPromptConsumed: () {
-        if (!mounted || _pendingSessionId != sessionId) return;
-        setState(() {
-          _pendingSessionId = null;
-          _pendingPrompt = null;
-        });
-      },
+    final index = cached.indexOf(selectedId ?? '');
+    final workspaceNames = {
+      for (final workspace in controller.workspaces)
+        workspace.id: workspace.name,
+    };
+    return IndexedStack(
+      index: index < 0 ? 0 : index,
+      children: [
+        for (final sessionId in cached)
+          NativeDshPage(
+            key: ValueKey(
+              'wb-native-session-${connection.grantRef}-$sessionId',
+            ),
+            session: connection.session,
+            workspaceTitle:
+                workspaceNames[tasksBySessionId[sessionId]!.workspaceId] ?? '',
+            requestedSessionId: sessionId,
+            active: selectedId == sessionId && controller.tab == WbTab.tasks,
+            embedded: true,
+            showComposer: false,
+            handle: selectedId == sessionId && controller.tab == WbTab.tasks
+                ? _sessionHandle
+                : null,
+            initialPrompt: _pendingSessionId == sessionId
+                ? _pendingPrompt
+                : null,
+            onInitialPromptConsumed: () {
+              if (!mounted || _pendingSessionId != sessionId) return;
+              setState(() {
+                _pendingSessionId = null;
+                _pendingPrompt = null;
+              });
+            },
+          ),
+      ],
     );
   }
 
@@ -842,14 +1123,19 @@ final class _MainColumn extends StatelessWidget {
     required this.controller,
     required this.composer,
     required this.focus,
+    required this.voiceMode,
     required this.holdingVoice,
+    required this.voiceReleased,
+    required this.cancellingVoice,
     required this.onMenu,
     required this.onRunSettings,
     required this.onSubmit,
+    required this.onInputModeToggle,
     required this.onVoiceDown,
     required this.onVoiceUp,
+    required this.onVoiceMove,
     required this.onNewTask,
-    required this.conversation,
+    required this.conversationBuilder,
     required this.sessionHandle,
     required this.onPermission,
     required this.onModel,
@@ -859,14 +1145,19 @@ final class _MainColumn extends StatelessWidget {
   final WorkBuddyController controller;
   final TextEditingController composer;
   final FocusNode focus;
+  final bool voiceMode;
   final bool holdingVoice;
+  final bool voiceReleased;
+  final bool cancellingVoice;
   final VoidCallback onMenu;
   final VoidCallback onRunSettings;
   final VoidCallback onSubmit;
+  final VoidCallback onInputModeToggle;
   final VoidCallback onVoiceDown;
   final VoidCallback onVoiceUp;
+  final ValueChanged<LongPressMoveUpdateDetails> onVoiceMove;
   final VoidCallback onNewTask;
-  final Widget? conversation;
+  final Widget? Function() conversationBuilder;
   final NativeDshSessionHandle sessionHandle;
   final VoidCallback onPermission;
   final VoidCallback onModel;
@@ -878,6 +1169,10 @@ final class _MainColumn extends StatelessWidget {
     builder: (context, _) {
       final showComposer = controller.tab == WbTab.tasks;
       final snapshot = sessionHandle.snapshot;
+      final conversation = conversationBuilder();
+      final selectedTask = controller.openTask;
+      final nativeTaskSelected =
+          selectedTask != null && selectedTask.id.startsWith('dsh.session.');
       return ColoredBox(
         color: WbColors.canvas,
         child: SafeArea(
@@ -905,10 +1200,13 @@ final class _MainColumn extends StatelessWidget {
                     _Composer(
                       controller: composer,
                       focus: focus,
+                      voiceMode: voiceMode,
                       holding: holdingVoice,
                       onSubmit: onSubmit,
+                      onInputModeToggle: onInputModeToggle,
                       onVoiceDown: onVoiceDown,
                       onVoiceUp: onVoiceUp,
+                      onVoiceMove: onVoiceMove,
                       onPermission: onPermission,
                       onModel: onModel,
                       onAttachment: onAttachment,
@@ -921,17 +1219,23 @@ final class _MainColumn extends StatelessWidget {
                         snapshot?.reasoningEffort,
                       ),
                       running: snapshot?.running ?? false,
-                      enabled: conversation == null || sessionHandle.ready,
+                      enabled: !nativeTaskSelected || sessionHandle.ready,
                     ),
                   _TabBar(controller: controller),
                 ],
               ),
               if (holdingVoice)
-                const Positioned(
-                  left: 24,
-                  right: 24,
-                  bottom: 150,
-                  child: _VoiceHold(),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: IgnorePointer(
+                    child: _VoiceHold(
+                      cancelling: cancellingVoice,
+                      released: voiceReleased,
+                      composer: composer,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -1025,63 +1329,93 @@ final class _TabBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final task = controller.openTask;
-    if (controller.tab == WbTab.tasks && task != null) {
-      if (task.id.startsWith('dsh.session.') && conversation != null) {
-        return conversation!;
-      }
-      return _Conversation(task: task);
-    }
-    return switch (controller.tab) {
-      WbTab.tasks => const _HomeEmpty(),
-      WbTab.experts => _SimpleList(
-        title: '专家',
-        lines: const ['通用助手', '编程', '写作', '研究'],
-      ),
-      WbTab.library => _SimpleList(
-        title: '资料库',
-        lines: const ['openmuse/README.md', 'muse-clients/README.md'],
-      ),
-      WbTab.schedule => const _SimpleList(title: '定时任务', lines: ['还没有定时任务']),
-      WbTab.projects => _SimpleList(
-        title: '项目',
-        lines: [
-          for (final workspace in controller.workspacesFor(
-            controller.selectedDeviceId,
-          ))
-            workspace.name,
-        ],
-      ),
-    };
+    final nativeSelected =
+        controller.tab == WbTab.tasks &&
+        task != null &&
+        task.id.startsWith('dsh.session.');
+    final ordinary = controller.tab == WbTab.tasks && task != null
+        ? nativeSelected
+              ? const SizedBox.shrink()
+              : _Conversation(task: task)
+        : _ordinaryTab();
+    final cachedConversation = conversation;
+    if (cachedConversation == null) return ordinary;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Offstage(offstage: nativeSelected, child: ordinary),
+        Offstage(offstage: !nativeSelected, child: cachedConversation),
+      ],
+    );
   }
+
+  Widget _ordinaryTab() => switch (controller.tab) {
+    WbTab.tasks => const _HomeEmpty(),
+    WbTab.experts => _SimpleList(
+      title: '专家',
+      lines: const ['通用助手', '编程', '写作', '研究'],
+    ),
+    WbTab.library => _SimpleList(
+      title: '资料库',
+      lines: const ['openmuse/README.md', 'muse-clients/README.md'],
+    ),
+    WbTab.schedule => const _SimpleList(title: '定时任务', lines: ['还没有定时任务']),
+    WbTab.projects => _SimpleList(
+      title: '项目',
+      lines: [
+        for (final workspace in controller.workspacesFor(
+          controller.selectedDeviceId,
+        ))
+          workspace.name,
+      ],
+    ),
+  };
 }
 
 final class _HomeEmpty extends StatelessWidget {
   const _HomeEmpty();
 
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      const Spacer(flex: 4),
-      Image.asset(
-        'assets/mascot.jpg',
-        key: const ValueKey('wb-mascot'),
-        width: 176,
-        height: 156,
-        fit: BoxFit.contain,
-        errorBuilder: (_, _, _) => const SizedBox(
-          width: 176,
-          height: 156,
-          child: CustomPaint(painter: _MascotFallbackPainter()),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final height = constraints.maxHeight;
+      final showSlogan = height >= 145;
+      final gap = height >= 300 ? 28.0 : 12.0;
+      final imageHeight = showSlogan
+          ? (height - gap - 64).clamp(0.0, 156.0)
+          : height.clamp(0.0, 120.0);
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/mascot.jpg',
+              key: const ValueKey('wb-mascot'),
+              width: 176,
+              height: imageHeight,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => SizedBox(
+                width: 176,
+                height: imageHeight,
+                child: CustomPaint(painter: _MascotFallbackPainter()),
+              ),
+            ),
+            if (showSlogan) ...[
+              SizedBox(height: gap),
+              const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'OpenMuse，与你一起创造',
+                  key: ValueKey('wb-slogan'),
+                  maxLines: 1,
+                  style: wbSlogan,
+                ),
+              ),
+            ],
+          ],
         ),
-      ),
-      const SizedBox(height: 28),
-      const Text(
-        'OpenMuse，与你一起创造',
-        key: ValueKey('wb-slogan'),
-        style: wbSlogan,
-      ),
-      const Spacer(flex: 6),
-    ],
+      );
+    },
   );
 }
 
@@ -1224,10 +1558,13 @@ final class _Composer extends StatelessWidget {
   const _Composer({
     required this.controller,
     required this.focus,
+    required this.voiceMode,
     required this.holding,
     required this.onSubmit,
+    required this.onInputModeToggle,
     required this.onVoiceDown,
     required this.onVoiceUp,
+    required this.onVoiceMove,
     required this.onPermission,
     required this.onModel,
     required this.onAttachment,
@@ -1240,10 +1577,13 @@ final class _Composer extends StatelessWidget {
 
   final TextEditingController controller;
   final FocusNode focus;
+  final bool voiceMode;
   final bool holding;
   final VoidCallback onSubmit;
+  final VoidCallback onInputModeToggle;
   final VoidCallback onVoiceDown;
   final VoidCallback onVoiceUp;
+  final ValueChanged<LongPressMoveUpdateDetails> onVoiceMove;
   final VoidCallback onPermission;
   final VoidCallback onModel;
   final VoidCallback onAttachment;
@@ -1269,42 +1609,86 @@ final class _Composer extends StatelessWidget {
           children: [
             Row(
               children: [
-                GestureDetector(
-                  key: const ValueKey('wb-voice'),
-                  onLongPressStart: (_) => onVoiceDown(),
-                  onLongPressEnd: (_) => onVoiceUp(),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child: WbIcon(
-                      WbGlyph.voice,
-                      size: 21,
-                      color: WbColors.textMuted,
-                    ),
+                IconButton(
+                  key: const ValueKey('wb-input-mode-toggle'),
+                  tooltip: voiceMode ? '切换到键盘输入' : '切换到语音输入',
+                  onPressed: enabled && !holding ? onInputModeToggle : null,
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
                   ),
+                  icon: voiceMode
+                      ? const Icon(
+                          Icons.keyboard_alt_outlined,
+                          size: 22,
+                          color: WbColors.textMuted,
+                        )
+                      : const WbIcon(
+                          WbGlyph.voice,
+                          size: 21,
+                          color: WbColors.textMuted,
+                        ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 Expanded(
-                  child: TextField(
-                    key: const ValueKey('wb-composer'),
-                    controller: controller,
-                    focusNode: focus,
-                    enabled: enabled,
-                    minLines: 1,
-                    maxLines: 4,
-                    style: const TextStyle(color: WbColors.text, fontSize: 16),
-                    cursorColor: Colors.white,
-                    textInputAction: TextInputAction.send,
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                      hintText: '发消息或按住说话',
-                      hintStyle: TextStyle(
-                        color: Color(0xFF8A8A8A),
-                        fontSize: 16,
-                      ),
-                    ),
-                    onSubmitted: (_) => onSubmit(),
-                  ),
+                  child: voiceMode
+                      ? GestureDetector(
+                          key: const ValueKey('wb-voice-hold'),
+                          behavior: HitTestBehavior.opaque,
+                          onLongPressStart: enabled
+                              ? (_) => onVoiceDown()
+                              : null,
+                          onLongPressMoveUpdate: enabled ? onVoiceMove : null,
+                          onLongPressEnd: enabled ? (_) => onVoiceUp() : null,
+                          onLongPressCancel: enabled ? onVoiceUp : null,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 160),
+                            height: 42,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: holding
+                                  ? const Color(0x263DD8BC)
+                                  : const Color(0xFF25272D),
+                              borderRadius: BorderRadius.circular(21),
+                            ),
+                            child: Text(
+                              holding ? '松开完成 · 上滑取消' : '按住说话',
+                              style: TextStyle(
+                                color: holding
+                                    ? const Color(0xFF8EF5E1)
+                                    : WbColors.text,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        )
+                      : TextField(
+                          key: const ValueKey('wb-composer'),
+                          controller: controller,
+                          focusNode: focus,
+                          enabled: enabled,
+                          minLines: 1,
+                          maxLines: 4,
+                          style: const TextStyle(
+                            color: WbColors.text,
+                            fontSize: 16,
+                          ),
+                          cursorColor: Colors.white,
+                          textInputAction: TextInputAction.send,
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            border: InputBorder.none,
+                            hintText: '发消息',
+                            hintStyle: TextStyle(
+                              color: Color(0xFF8A8A8A),
+                              fontSize: 16,
+                            ),
+                          ),
+                          onSubmitted: (_) => onSubmit(),
+                        ),
                 ),
                 IconButton(
                   key: const ValueKey('wb-plus'),
@@ -1423,24 +1807,173 @@ String _workBuddyModelLabel(String? model, String? effort) {
   return effort == null || effort.isEmpty ? value : '$value · $effort';
 }
 
-final class _VoiceHold extends StatelessWidget {
-  const _VoiceHold();
+final class _VoiceHold extends StatefulWidget {
+  const _VoiceHold({
+    required this.cancelling,
+    required this.released,
+    required this.composer,
+  });
+
+  final bool cancelling;
+  final bool released;
+  final TextEditingController composer;
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: const Color(0xFF2A2A2A),
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      child: Text(
-        '松开发送，上滑取消',
-        textAlign: TextAlign.center,
-        style: TextStyle(color: WbColors.text),
+  State<_VoiceHold> createState() => _VoiceHoldState();
+}
+
+final class _VoiceHoldState extends State<_VoiceHold>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animation = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _animation.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final height = (MediaQuery.sizeOf(context).height * 0.38).clamp(
+      250.0,
+      340.0,
+    );
+    final accent = widget.cancelling
+        ? const Color(0xFFFF8D85)
+        : const Color(0xFF7FF5DF);
+    return AnimatedContainer(
+      key: const ValueKey('wb-voice-overlay'),
+      duration: const Duration(milliseconds: 180),
+      height: height,
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(34)),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: widget.cancelling
+              ? const [Color(0x001F2026), Color(0xB35C3438), Color(0xFF7B3F43)]
+              : const [Color(0x0018CDB0), Color(0xC82CD4B8), Color(0xFF35CDB5)],
+          stops: const [0, 0.26, 1],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.22),
+            blurRadius: 42,
+            spreadRadius: 12,
+            offset: const Offset(0, -16),
+          ),
+        ],
       ),
-    ),
-  );
+      child: Semantics(
+        liveRegion: true,
+        label: widget.cancelling
+            ? '松手取消语音输入'
+            : widget.released
+            ? '正在完成语音识别'
+            : '正在聆听，松手完成，上滑取消',
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(28, 62, 28, 34),
+          child: Column(
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 140),
+                child: Text(
+                  widget.cancelling
+                      ? '松手取消'
+                      : widget.released
+                      ? '正在完成识别…'
+                      : '松手完成，上滑取消',
+                  key: ValueKey((widget.cancelling, widget.released)),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: widget.cancelling
+                        ? const Color(0xFFFFE7E4)
+                        : const Color(0xFF062E28),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: widget.composer,
+                builder: (context, draft, _) => Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Text(
+                    draft.text.trim(),
+                    key: const ValueKey('wb-voice-transcript'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: widget.cancelling
+                          ? const Color(0xFFFFE7E4)
+                          : const Color(0xFF06352E),
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, _) => SizedBox(
+                      width: double.infinity,
+                      height: 72,
+                      child: CustomPaint(
+                        key: const ValueKey('wb-voice-waveform'),
+                        painter: _VoiceWaveformPainter(
+                          phase: _animation.value,
+                          color: widget.cancelling
+                              ? const Color(0xFFFFD8D4)
+                              : Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _VoiceWaveformPainter extends CustomPainter {
+  const _VoiceWaveformPainter({required this.phase, required this.color});
+
+  final double phase;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const bars = 27;
+    final spacing = size.width / bars;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = math.min(5, spacing * 0.42)
+      ..strokeCap = StrokeCap.round;
+    for (var index = 0; index < bars; index += 1) {
+      final x = spacing * (index + 0.5);
+      final wave = (math.sin(index * 0.77 + phase * math.pi * 2) + 1) / 2;
+      final envelope = 0.62 + 0.38 * math.sin(index / (bars - 1) * math.pi);
+      final barHeight = 12 + 46 * wave * envelope;
+      canvas.drawLine(
+        Offset(x, (size.height - barHeight) / 2),
+        Offset(x, (size.height + barHeight) / 2),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _VoiceWaveformPainter oldDelegate) =>
+      oldDelegate.phase != phase || oldDelegate.color != color;
 }
 
 final class _TabBar extends StatelessWidget {
@@ -2033,25 +2566,27 @@ final class _ChoiceSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SafeArea(
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: WbColors.text,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+    child: SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: WbColors.text,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          ...children,
-        ],
+            ...children,
+          ],
+        ),
       ),
     ),
   );

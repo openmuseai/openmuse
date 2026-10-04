@@ -33,6 +33,7 @@ final class WorkBuddyController extends ChangeNotifier {
   String? accountName;
   bool signedIn = false;
   int _serial = 0;
+  final Map<String, String> _lastTaskByWorkspace = {};
 
   List<WbDevice> get devices => List.unmodifiable(_devices);
   List<WbWorkspace> get workspaces => List.unmodifiable(_workspaces);
@@ -115,6 +116,14 @@ final class WorkBuddyController extends ChangeNotifier {
     final workspace = match.first;
     selectedDeviceId = workspace.deviceId;
     selectedWorkspaceId = workspace.id;
+    final remembered = _lastTaskByWorkspace[id];
+    openTaskId =
+        remembered != null &&
+            _tasks.any(
+              (task) => task.id == remembered && task.workspaceId == id,
+            )
+        ? remembered
+        : null;
     notifyListeners();
   }
 
@@ -148,6 +157,7 @@ final class WorkBuddyController extends ChangeNotifier {
     if (task != null) {
       selectedDeviceId = task.deviceId;
       selectedWorkspaceId = task.workspaceId;
+      _lastTaskByWorkspace[task.workspaceId] = task.id;
     }
     notifyListeners();
   }
@@ -214,6 +224,7 @@ final class WorkBuddyController extends ChangeNotifier {
     required List<WbTask> sessions,
   }) {
     final previousWorkspaceId = selectedWorkspaceId;
+    final wasSelected = selectedDeviceId == deviceId;
     _workspaces = [
       ..._workspaces.where((workspace) => workspace.deviceId != deviceId),
       ...workspaces,
@@ -225,23 +236,28 @@ final class WorkBuddyController extends ChangeNotifier {
       ),
       ...sessions,
     ];
-    if (_devices.any((device) => device.id == deviceId)) {
-      selectedDeviceId = deviceId;
+    _lastTaskByWorkspace.removeWhere(
+      (workspaceId, taskId) => !_tasks.any(
+        (task) => task.id == taskId && task.workspaceId == workspaceId,
+      ),
+    );
+    if (openTaskId != null && !_tasks.any((task) => task.id == openTaskId)) {
+      openTaskId = null;
     }
-    if (workspaces.isEmpty) {
+    if (wasSelected && workspaces.isEmpty) {
       if (selectedDeviceId == deviceId) {
         selectedWorkspaceId = _workspaces.isEmpty
             ? previousWorkspaceId
             : _workspaces.first.id;
       }
-    } else {
+    } else if (wasSelected) {
       selectedWorkspaceId =
           workspaces.any((workspace) => workspace.id == previousWorkspaceId)
           ? previousWorkspaceId
           : workspaces.first.id;
-      for (final workspace in workspaces) {
-        expandedWorkspaces.add(workspace.id);
-      }
+    }
+    for (final workspace in workspaces) {
+      expandedWorkspaces.add(workspace.id);
     }
     notifyListeners();
   }
