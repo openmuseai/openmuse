@@ -38,9 +38,25 @@ void main() {
 
     expect(authentication.restoreCalls, 1);
     expect(find.text('OpenMuse，与你一起创造'), findsOneWidget);
-    expect(find.text('发消息或按住说话'), findsOneWidget);
+    expect(find.text('发消息'), findsOneWidget);
     expect(find.text('Welcome to OpenMuse'), findsNothing);
     expect(find.text('请登录以访问 Cloud Workspace'), findsNothing);
+  });
+
+  test('physical-device defaults never point authentication at loopback', () {
+    expect(
+      MobileEndpointConfig.defaultGoTrueOrigin,
+      'https://openmuseai.com/gotrue',
+    );
+    expect(MobileEndpointConfig.defaultCloudOrigin, 'https://openmuseai.com');
+    expect(
+      Uri.parse(MobileEndpointConfig.defaultGoTrueOrigin).isScheme('https'),
+      isTrue,
+    );
+    expect(
+      Uri.parse(MobileEndpointConfig.defaultGoTrueOrigin).host,
+      isNot(anyOf('127.0.0.1', 'localhost')),
+    );
   });
 
   test('DOCX capability is advertised only when an engine is injected', () {
