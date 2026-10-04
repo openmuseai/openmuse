@@ -36,6 +36,10 @@ dependencies:
     path: ../../packages/muse_dsh_conversation_flutter
   muse_dsh_conversation_protocol:
     path: ../../packages/muse_dsh_conversation_protocol
+  muse_speech_contract:
+    path: ../../packages/muse_speech_contract
+  muse_speech_core:
+    path: ../../packages/muse_speech_core
   openmuse_auth_gotrue:
     path: ../../plugins/auth-gotrue
   openmuse_cloud_workspace_plugin:
@@ -52,8 +56,11 @@ dependencies:
     path: ../../packages/openmuse_office_viewers
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
+  openmuse_speech_input:
+    path: ../../plugins/speech-input
   openmuse_workspace_paired:
     path: ../../plugins/workspace-paired
+  path_provider: ^2.1.5
   webview_flutter: ^4.13.0
 
 dev_dependencies:

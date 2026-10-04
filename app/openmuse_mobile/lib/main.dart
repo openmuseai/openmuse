@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:muse_speech_contract/muse_speech_contract.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
@@ -12,7 +13,9 @@ import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 import 'package:openmuse_office_docx/openmuse_office_docx.dart';
 import 'package:openmuse_office_viewers/openmuse_office_viewers.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_speech_input/openmuse_speech_input.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'docx_editor_screen.dart';
 import 'native_dsh_page.dart';
@@ -74,12 +77,29 @@ Future<void> main() async {
     allowInsecurePrivateNetworkForTesting:
         endpoints.allowInsecurePrivateNetworkForTesting,
   );
+  const configuredSpeechModelDirectory = String.fromEnvironment(
+    'OPENMUSE_SPEECH_MODEL_DIR',
+  );
+  final speechModelDirectory = configuredSpeechModelDirectory.isNotEmpty
+      ? configuredSpeechModelDirectory
+      : '${(await getApplicationSupportDirectory()).path}/speech-model';
+  final speechPlugin = OpenMuseSpeechInputPlugin(
+    localModel: SherpaZipformerConfig.zh14m(speechModelDirectory),
+  );
+  const speechTestAudio = String.fromEnvironment('OPENMUSE_SPEECH_TEST_AUDIO');
   runApp(
     OpenMuseMobileApplication(
       authenticationPlugin: authPlugin,
       cloudWorkspacePlugin: cloudPlugin,
       pairedDesktopPlugin: pairedPlugin,
+      speechInputPlugin: speechPlugin,
       officeEngine: officeEngine,
+      debugSpeechSource:
+          !kReleaseMode &&
+              const bool.fromEnvironment('OPENMUSE_SPEECH_E2E_AUTORUN') &&
+              speechTestAudio.isNotEmpty
+          ? const SpeechFileSource(speechTestAudio)
+          : null,
     ),
   );
 }
@@ -104,6 +124,9 @@ Future<String> _persistentMobileDeviceId(SecureValueStore values) async {
 
 @immutable
 final class MobileEndpointConfig {
+  static const defaultGoTrueOrigin = 'https://openmuseai.com/gotrue';
+  static const defaultCloudOrigin = 'https://openmuseai.com';
+
   const MobileEndpointConfig({
     required this.gotrueOrigin,
     required this.cloudOrigin,
@@ -117,16 +140,18 @@ final class MobileEndpointConfig {
       _mobileEndpoint(
         key: 'OPENMUSE_GOTRUE_ORIGIN',
         dartDefine: const String.fromEnvironment('OPENMUSE_GOTRUE_ORIGIN'),
-        debugDefault: 'http://127.0.0.1:9999',
-        releaseDefault: 'https://openmuseai.com/gotrue',
+        // A physical Mobile device resolves loopback to itself. Local backend
+        // development remains available through an explicit dart-define.
+        debugDefault: defaultGoTrueOrigin,
+        releaseDefault: defaultGoTrueOrigin,
       ),
     ),
     cloudOrigin: Uri.parse(
       _mobileEndpoint(
         key: 'OPENMUSE_CLOUD_ORIGIN',
         dartDefine: const String.fromEnvironment('OPENMUSE_CLOUD_ORIGIN'),
-        debugDefault: 'http://127.0.0.1:8000',
-        releaseDefault: 'https://openmuseai.com',
+        debugDefault: defaultCloudOrigin,
+        releaseDefault: defaultCloudOrigin,
       ),
     ),
     allowInsecureLoopback: _mobileBool(
@@ -189,13 +214,17 @@ final class OpenMuseMobileApplication extends StatefulWidget {
     required this.authenticationPlugin,
     required this.cloudWorkspacePlugin,
     required this.pairedDesktopPlugin,
+    this.speechInputPlugin,
     this.officeEngine,
+    this.debugSpeechSource,
   });
 
   final OpenMuseGoTruePlugin authenticationPlugin;
   final OpenMuseCloudWorkspacePlugin cloudWorkspacePlugin;
   final OpenMusePairedDesktopMobilePlugin pairedDesktopPlugin;
+  final OpenMuseSpeechInputPlugin? speechInputPlugin;
   final OfficeEnginePort? officeEngine;
+  final SpeechAudioSource? debugSpeechSource;
 
   @override
   State<OpenMuseMobileApplication> createState() =>
@@ -218,7 +247,10 @@ final class _OpenMuseMobileApplicationState
           ..install(widget.authenticationPlugin)
           ..install(widget.cloudWorkspacePlugin)
           ..install(widget.pairedDesktopPlugin);
+    final speech = widget.speechInputPlugin;
+    if (speech != null) _plugins.install(speech);
     unawaited(() async {
+      if (speech != null) await _plugins.activate(speech.descriptor.id);
       await _plugins.activate(widget.authenticationPlugin.descriptor.id);
       await _plugins.activate(widget.cloudWorkspacePlugin.descriptor.id);
       await _plugins.activate(widget.pairedDesktopPlugin.descriptor.id);
@@ -232,6 +264,8 @@ final class _OpenMuseMobileApplicationState
         _plugins.deactivate(widget.cloudWorkspacePlugin.descriptor.id),
         _plugins.deactivate(widget.pairedDesktopPlugin.descriptor.id),
         _plugins.deactivate(widget.authenticationPlugin.descriptor.id),
+        if (widget.speechInputPlugin case final speech?)
+          _plugins.deactivate(speech.descriptor.id),
       ]).whenComplete(_plugins.dispose),
     );
     super.dispose();
@@ -247,7 +281,9 @@ final class _OpenMuseMobileApplicationState
       cloudLabel: widget.authenticationPlugin.cloudLabel,
       cloudService: widget.cloudWorkspacePlugin.service,
       pairedDesktop: widget.pairedDesktopPlugin.controller,
+      speechRecognition: widget.speechInputPlugin,
       officeEngine: widget.officeEngine,
+      debugSpeechSource: widget.debugSpeechSource,
     ),
   );
 }
@@ -257,15 +293,19 @@ final class _WorkBuddyHost extends StatefulWidget {
     required this.authentication,
     required this.cloudService,
     required this.pairedDesktop,
+    this.speechRecognition,
     this.cloudLabel,
     this.officeEngine,
+    this.debugSpeechSource,
   });
 
   final OpenMuseAuthenticationController authentication;
   final String? cloudLabel;
   final AppFlowyCloudWorkspaceService cloudService;
   final PairedDesktopMobileController pairedDesktop;
+  final SpeechRecognitionPort? speechRecognition;
   final OfficeEnginePort? officeEngine;
+  final SpeechAudioSource? debugSpeechSource;
 
   @override
   State<_WorkBuddyHost> createState() => _WorkBuddyHostState();
@@ -337,6 +377,8 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
     authentication: widget.authentication,
     pairedDesktop: widget.pairedDesktop,
     catalog: _composition.workspaceCatalog,
+    speechRecognition: widget.speechRecognition,
+    debugSpeechSource: widget.debugSpeechSource,
     cloudLabel: widget.cloudLabel,
     onSignOut: widget.authentication.signOut,
   );
