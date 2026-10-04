@@ -1,0 +1,10 @@
+name: muse_speech_contract
+description: Transport-neutral speech recognition contracts for OpenMuse hosts and plugins.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+dev_dependencies:
+  test: ^1.26.0
