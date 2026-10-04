@@ -224,6 +224,15 @@ final class PairedDesktopMobileController extends ChangeNotifier {
       );
       return false;
     }
+    final existing = _snapshot.connection;
+    if (existing != null &&
+        existing.deviceRef == device.deviceRef &&
+        existing.expiresAtMs >
+            DateTime.now()
+                .add(const Duration(minutes: 1))
+                .millisecondsSinceEpoch) {
+      return true;
+    }
     final client = PairedDesktopClient(
       origin: device.transportOrigin!,
       accessToken: accessToken!,
