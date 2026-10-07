@@ -12,7 +12,7 @@ test -d "$engine/runtime/grammars"
 test -d "$engine/runtime/queries"
 test -f "$engine/runtime/themes/onelight.toml"
 test -f "$engine/runtime/themes/openmuse_dark.toml"
-expected="2cba366f4275d4102929ceb7c413c4c328fab3dc9030785cf218169c447cf1a6"
+expected="a8c8f24494686e155e0d03a5dd4e516c8d1fa754716011ae681563e32c491b58"
 actual="$(shasum -a 256 "$engine/hx" | awk '{ print $1 }')"
 if [[ "$actual" != "$expected" ]]; then
   echo "pinned Helix binary checksum mismatch" >&2

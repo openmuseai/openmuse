@@ -49,6 +49,12 @@ final class OpenMuseFileViewerPlugin
         priority: 20,
       ),
       OpenMuseEditorContribution(
+        id: 'viewer.video',
+        mediaTypes: {'video/mp4', 'video/webm', 'video/quicktime'},
+        extensions: {'mp4', 'm4v', 'mov', 'webm'},
+        priority: 20,
+      ),
+      OpenMuseEditorContribution(
         id: 'viewer.fallback',
         extensions: {},
         priority: 0,
@@ -77,7 +83,7 @@ final class OpenMuseFileViewerPlugin
     }
     if (!descriptor.editors
         .skip(2)
-        .take(2)
+        .take(3)
         .any((editor) => editor.accepts(resource))) {
       return const _ViewerMessage('此文件类型尚无可用预览器。可安装对应格式的插件。');
     }

@@ -8,6 +8,9 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:path/path.dart' as p;
 
 import 'resource_inspector.dart';
+import 'workspace_mount_store.dart';
+
+export 'workspace_mount_store.dart';
 
 enum WorkspaceTabKind { resource, diff }
 
@@ -209,27 +212,6 @@ final class LocalVersionStore {
     await temporary.writeAsString(jsonEncode(value), flush: true);
     if (await target.exists()) await target.delete();
     await temporary.rename(target.path);
-  }
-}
-
-final class WorkspaceMountStore {
-  const WorkspaceMountStore(this.file);
-
-  final File file;
-
-  Future<List<String>> load() async {
-    if (!await file.exists()) return const [];
-    final decoded = jsonDecode(await file.readAsString());
-    if (decoded is! List) return const [];
-    return decoded.whereType<String>().toList(growable: false);
-  }
-
-  Future<void> save(Iterable<String> paths) async {
-    await file.parent.create(recursive: true);
-    final temporary = File('${file.path}.tmp');
-    await temporary.writeAsString(jsonEncode(paths.toList()), flush: true);
-    if (await file.exists()) await file.delete();
-    await temporary.rename(file.path);
   }
 }
 
@@ -456,6 +438,39 @@ final class LocalWorkspaceController extends ChangeNotifier {
   void togglePinned(WorkspaceTab tab) {
     tab.pinned = !tab.pinned;
     notifyListeners();
+  }
+
+  /// Mounts the directory the plugin configured at install. The user's active
+  /// mount is left unchanged, and nothing is written into [path].
+  Future<String> ensurePluginWorkspace({
+    required String pluginId,
+    required String path,
+  }) async {
+    if (!_pluginWorkspaceId.hasMatch(pluginId)) {
+      throw FormatException('无效插件 ID', pluginId);
+    }
+    if (!p.isAbsolute(path)) throw FormatException('插件工作区必须是绝对路径', path);
+    final directory = Directory(path);
+    if (!await directory.exists()) {
+      throw FileSystemException('插件工作区不存在', path);
+    }
+    final canonical = await directory.resolveSymbolicLinks();
+    if (_mounts.any((mount) => mount.path == canonical)) return canonical;
+    final mount = WorkspaceMount(path: canonical)..root.expanded = true;
+    _mounts.add(mount);
+    await refreshDirectory(mount.root);
+    _watchMount(mount);
+    await _persistMounts();
+    return canonical;
+  }
+
+  /// Drops the plugin mount from the sidebar. Files stay on disk.
+  Future<void> releasePluginWorkspace(String path) async {
+    final canonical = _canonicalMountPath(path);
+    if (canonical == rootPath) return;
+    final matches = _mounts.where((mount) => mount.path == canonical);
+    if (matches.isEmpty) return;
+    await removeWorkspace(matches.single);
   }
 
   Future<void> addWorkspace(String path) async {
@@ -926,10 +941,16 @@ String? _mediaTypeFor(String name) => switch (p.extension(name).toLowerCase()) {
   '.png' => 'image/png',
   '.jpg' || '.jpeg' => 'image/jpeg',
   '.pdf' => 'application/pdf',
+  '.mp4' || '.m4v' || '.mov' => 'video/mp4',
+  '.webm' => 'video/webm',
   _ => null,
 };
 
 WorkspaceMountStore? _mountStoreValue(WorkspaceMountStore? value) => value;
+
+final _pluginWorkspaceId = RegExp(
+  r'^com\.openmuse\.[A-Za-z0-9][A-Za-z0-9._-]{0,100}$',
+);
 
 String _canonicalMountPath(String path) {
   final absolute = p.normalize(p.absolute(path));

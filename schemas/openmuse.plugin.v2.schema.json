@@ -39,7 +39,8 @@
     },
     "requested_permissions": { "$ref": "#/$defs/stringSet" },
     "presentation": { "$ref": "#/$defs/presentation" },
-    "contributes": { "$ref": "#/$defs/contributions" }
+    "contributes": { "$ref": "#/$defs/contributions" },
+    "install": { "$ref": "#/$defs/install" }
   },
   "$defs": {
     "stringSet": {
@@ -235,6 +236,42 @@
         "effects": { "$ref": "#/$defs/stringSet" }
       }
     },
+    "humanCli": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["group", "namespace", "command", "artifact", "entrypoint", "runtime", "argv_prefix", "options", "effects"],
+      "properties": {
+        "group": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+        "namespace": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+        "command": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+        "artifact": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+        "entrypoint": { "type": "string", "pattern": "^[A-Za-z0-9._/-]+$" },
+        "runtime": { "const": "python3" },
+        "argv_prefix": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "options": { "type": "array", "items": { "type": "string", "pattern": "^--[a-z][a-z0-9-]*$" }, "uniqueItems": true },
+        "switches": { "type": "array", "items": { "type": "string", "pattern": "^--[a-z][a-z0-9-]*$" }, "uniqueItems": true },
+        "description": { "type": "string" },
+        "input_schema": { "type": "object" },
+        "output_schema": { "type": "object" },
+        "effects": { "$ref": "#/$defs/stringSet" }
+      }
+    },
+    "install": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps"],
+      "properties": {
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/installStep" } }
+      }
+    },
+    "installStep": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["type", "id", "title"], "properties": { "type": { "const": "workspace.choose" }, "id": { "type": "string" }, "title": { "type": "string" } } },
+        { "type": "object", "additionalProperties": false, "required": ["type", "directories"], "properties": { "type": { "const": "workspace.layout" }, "directories": { "type": "array", "items": { "type": "string" } } } },
+        { "type": "object", "additionalProperties": false, "required": ["type", "artifact", "into"], "properties": { "type": { "const": "workspace.materialize" }, "artifact": { "type": "string" }, "into": { "type": "string" } } },
+        { "type": "object", "additionalProperties": false, "required": ["type", "artifact", "into"], "properties": { "type": { "const": "runtime.prepare" }, "artifact": { "type": "string" }, "into": { "type": "string" }, "entrypoint": { "type": "string", "pattern": "^[A-Za-z0-9._/-]+$" }, "runtime": { "const": "python3" } } }
+      ]
+    },
     "contributions": {
       "type": "object",
       "additionalProperties": false,
@@ -243,7 +280,8 @@
         "services": { "type": "array", "items": { "$ref": "#/$defs/service" } },
         "editors": { "type": "array", "items": { "$ref": "#/$defs/editor" } },
         "panels": { "type": "array", "items": { "$ref": "#/$defs/panel" } },
-        "agent_cli": { "type": "array", "items": { "$ref": "#/$defs/agentCli" } }
+        "agent_cli": { "type": "array", "items": { "$ref": "#/$defs/agentCli" } },
+        "cli": { "type": "array", "items": { "$ref": "#/$defs/humanCli" } }
       }
     }
   }

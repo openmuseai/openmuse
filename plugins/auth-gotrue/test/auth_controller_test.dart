@@ -18,6 +18,41 @@ void main() {
     user: const GoTrueUser(id: 'user-1', email: 'muse@example.com'),
   );
 
+  test('anonymous mode opens a local session without a cloud token', () async {
+    final provider = _FakeProvider();
+    final store = _RecordingStore();
+    final bootstrap = _RecordingBootstrapper();
+    final controller = GoTrueAuthenticationController(
+      provider: provider,
+      store: store,
+      bootstrapper: bootstrap,
+      clock: () => now,
+    );
+
+    await controller.signInAnonymously();
+
+    expect(bootstrap.calls, 0);
+    expect(provider.refreshCalls, 0);
+    expect(store.value?.user.id, localAnonymousUserId);
+    expect(controller.snapshot.isAuthenticated, isTrue);
+    expect(await controller.accessToken(), isNull);
+
+    final restored = GoTrueAuthenticationController(
+      provider: provider,
+      store: store,
+      bootstrapper: bootstrap,
+      clock: () => now,
+    );
+    await restored.restore();
+    expect(restored.snapshot.identity?.subject, localAnonymousUserId);
+    expect(provider.refreshCalls, 0);
+    expect(await restored.accessToken(forceRefresh: true), isNull);
+
+    await restored.signOut();
+    expect(store.value, isNull);
+    expect(restored.snapshot.phase, OpenMuseAuthenticationPhase.signedOut);
+  });
+
   test('password sign-in bootstraps before persisting', () async {
     final provider = _FakeProvider(signInResult: session());
     final store = _RecordingStore();

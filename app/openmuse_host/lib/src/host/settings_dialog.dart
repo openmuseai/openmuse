@@ -1,24 +1,59 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:path/path.dart' as p;
 
 import 'design_system.dart';
 import 'local_settings.dart';
+import 'plugin_distribution.dart';
+import 'workspace_controller.dart';
+
+typedef OpenMusePluginWorkspaceChoice =
+    Future<void> Function({
+      required String pluginId,
+      required String path,
+      required bool enabled,
+    });
+
+Future<void> choosePluginWorkspace({
+  required LocalWorkspaceController workspace,
+  required String pluginId,
+  required String path,
+  required bool enabled,
+}) async {
+  if (enabled) {
+    await workspace.ensurePluginWorkspace(pluginId: pluginId, path: path);
+    return;
+  }
+  await workspace.releasePluginWorkspace(path);
+}
 
 Future<void> showOpenMuseSettings(
   BuildContext context,
   OpenMuseLocalSettings settings,
-  OpenMusePluginRegistry registry,
-) => showDialog<void>(
+  OpenMusePluginRegistry registry, {
+  OpenMusePluginWorkspaceChoice? onPluginWorkspace,
+}) => showDialog<void>(
   context: context,
   barrierColor: OpenMuseTokens.scrim,
-  builder: (_) => _SettingsDialog(settings: settings, registry: registry),
+  builder: (_) => _SettingsDialog(
+    settings: settings,
+    registry: registry,
+    onPluginWorkspace: onPluginWorkspace,
+  ),
 );
 
 final class _SettingsDialog extends StatefulWidget {
-  const _SettingsDialog({required this.settings, required this.registry});
+  const _SettingsDialog({
+    required this.settings,
+    required this.registry,
+    this.onPluginWorkspace,
+  });
 
   final OpenMuseLocalSettings settings;
   final OpenMusePluginRegistry registry;
+  final OpenMusePluginWorkspaceChoice? onPluginWorkspace;
 
   @override
   State<_SettingsDialog> createState() => _SettingsDialogState();
@@ -99,7 +134,11 @@ final class _SettingsDialogState extends State<_SettingsDialog> {
                         builder: (context, _) => switch (selected) {
                           0 => _AccountSettings(registry: widget.registry),
                           1 => _WorkspaceSettings(settings: widget.settings),
-                          2 => _PluginSettings(registry: widget.registry),
+                          2 => _PluginSettings(
+                            settings: widget.settings,
+                            registry: widget.registry,
+                            onPluginWorkspace: widget.onPluginWorkspace,
+                          ),
                           3 => _AgentSettings(
                             settings: widget.settings,
                             registry: widget.registry,
@@ -330,8 +369,15 @@ final class _SettingRow extends StatelessWidget {
 }
 
 final class _PluginSettings extends StatelessWidget {
-  const _PluginSettings({required this.registry});
+  const _PluginSettings({
+    required this.settings,
+    required this.registry,
+    this.onPluginWorkspace,
+  });
+
+  final OpenMuseLocalSettings settings;
   final OpenMusePluginRegistry registry;
+  final OpenMusePluginWorkspaceChoice? onPluginWorkspace;
 
   @override
   Widget build(BuildContext context) {
@@ -344,6 +390,20 @@ final class _PluginSettings extends StatelessWidget {
       title: 'Plugin',
       description: '配置 Host 内嵌的编辑器插件；部分选项在下次打开文件时生效。',
       children: [
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('底部 CLI 控制台'),
+          subtitle: const Text('在编辑区下方运行本机终端；关闭会结束控制台会话。'),
+          value: settings.pluginValues('com.openmuse.cli')['enabled'] != false,
+          onChanged: (enabled) async {
+            final current = settings.pluginValues('com.openmuse.cli');
+            await settings.updatePluginValues('com.openmuse.cli', {
+              ...current,
+              'enabled': enabled,
+            });
+            if (!enabled) await registry.deactivate('com.openmuse.cli');
+          },
+        ),
         if (contributor != null)
           FutureBuilder<void>(
             future: registry.activate(plugin!.descriptor.id),
@@ -365,9 +425,123 @@ final class _PluginSettings extends StatelessWidget {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
+        for (final receipt in _distributedPlugins(settings))
+          _DistributedPluginRow(receipt),
         for (final descriptor in registry.descriptors)
-          _SettingRow(descriptor.name, descriptor.version),
+          if (descriptor.workspace == null)
+            _SettingRow(descriptor.name, descriptor.version)
+          else
+            _PluginWorkspaceRow(
+              descriptor: descriptor,
+              enabled:
+                  settings.pluginValues(descriptor.id)['workspaceEnabled'] !=
+                  false,
+              onChanged: (enabled) async {
+                final workspace = descriptor.workspace!;
+                final current = settings.pluginValues(descriptor.id);
+                await settings.updatePluginValues(descriptor.id, {
+                  ...current,
+                  'workspaceEnabled': enabled,
+                  if (enabled) 'workspacePath': workspace.path,
+                });
+                if (onPluginWorkspace != null) {
+                  await onPluginWorkspace!(
+                    pluginId: descriptor.id,
+                    path: workspace.path,
+                    enabled: enabled,
+                  );
+                }
+              },
+            ),
       ],
+    );
+  }
+}
+
+List<DistributedPluginReceipt> _distributedPlugins(
+  OpenMuseLocalSettings settings,
+) {
+  final file = settings.file;
+  if (file == null) return const [];
+  return readInstalledPlugins(Directory(p.join(file.parent.path, 'plugins')));
+}
+
+final class _DistributedPluginRow extends StatelessWidget {
+  const _DistributedPluginRow(this.receipt);
+
+  final DistributedPluginReceipt receipt;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      key: ValueKey('distributed-plugin-${receipt.pluginId}'),
+      height: 52,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(receipt.name, style: const TextStyle(fontSize: 13)),
+                Text(
+                  receipt.workspacePath,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          Text(receipt.version, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 12),
+          const Text('已安装', style: TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+final class _PluginWorkspaceRow extends StatelessWidget {
+  const _PluginWorkspaceRow({
+    required this.descriptor,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final OpenMusePluginDescriptor descriptor;
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final workspace = descriptor.workspace!;
+    return SizedBox(
+      height: 52,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(descriptor.name, style: const TextStyle(fontSize: 13)),
+                Text(
+                  enabled ? workspace.path : '未挂载插件工作区',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          Text(descriptor.version, style: const TextStyle(fontSize: 12)),
+          if (workspace.optional)
+            Switch(value: enabled, onChanged: onChanged)
+          else
+            const Switch(value: true, onChanged: null),
+        ],
+      ),
     );
   }
 }

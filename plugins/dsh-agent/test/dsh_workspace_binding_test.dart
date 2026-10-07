@@ -33,6 +33,12 @@ void main() {
         activeMountPath: () => first.path,
       );
       await binding.publish();
+      final cliSkill = File(p.join(home, 'skills', 'openmuse-cli', 'SKILL.md'));
+      expect(await cliSkill.exists(), isTrue);
+      expect(
+        await cliSkill.readAsString(),
+        contains('openmuse commands --json'),
+      );
       final file = File(p.join(home, 'bindings', 'workspace-binding.json'));
       final firstDocument = jsonDecode(await file.readAsString()) as Map;
       expect(firstDocument['protocol'], 'muse.workspace/binding/v1');

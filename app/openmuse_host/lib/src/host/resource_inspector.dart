@@ -34,6 +34,16 @@ String identifyLocalMediaType(Uint8List bytes, String name) {
         signature.length,
       ).every((index) => bytes[index] == signature[index]);
 
+  final extension = p.extension(name).toLowerCase();
+  if (const {'.mp4', '.m4v', '.mov'}.contains(extension) ||
+      (bytes.length >= 8 &&
+          ascii.decode(bytes.sublist(4, 8), allowInvalid: true) == 'ftyp')) {
+    return 'video/mp4';
+  }
+  if (extension == '.webm' ||
+      begins([0x1a, 0x45, 0xdf, 0xa3])) {
+    return 'video/webm';
+  }
   if (begins([0x25, 0x50, 0x44, 0x46, 0x2d])) return 'application/pdf';
   if (begins([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) {
     return 'image/png';
@@ -76,7 +86,6 @@ String identifyLocalMediaType(Uint8List bytes, String name) {
     if (prefix == null) return 'application/octet-stream';
     content = prefix;
   }
-  final extension = p.extension(name).toLowerCase();
   if (extension == '.svg' ||
       content.trimLeft().startsWith('<svg') ||
       (content.trimLeft().startsWith('<?xml') && content.contains('<svg'))) {

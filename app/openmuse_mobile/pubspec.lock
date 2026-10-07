@@ -316,6 +316,20 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  muse_remote_surface_contract:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_remote_surface_contract"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_remote_surface_core:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_remote_surface_core"
+      relative: true
+    source: path
+    version: "0.1.0"
   muse_speech_contract:
     dependency: "direct main"
     description:
@@ -391,6 +405,13 @@ packages:
     dependency: "direct main"
     description:
       path: "../../packages/openmuse_plugin_sdk"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_remote_workbench:
+    dependency: "direct main"
+    description:
+      path: "../../plugins/remote-workbench"
       relative: true
     source: path
     version: "0.1.0"

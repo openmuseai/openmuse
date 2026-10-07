@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
+import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
 import 'package:openmuse_host/src/host/openmuse_app.dart';
 import 'package:openmuse_host/src/host/layout/layout.dart';
 import 'package:openmuse_host/src/host/local_settings.dart';
@@ -129,6 +130,46 @@ void main() {
     expect(find.text('账号'), findsNothing);
     expect(find.text('云服务'), findsNothing);
     expect(find.text('协作'), findsNothing);
+  });
+
+  testWidgets('CLI plugin docks below the editor and can be disabled', (
+    tester,
+  ) async {
+    registry.install(
+      createOpenMuseBuiltInPlugins().singleWhere(
+        (plugin) => plugin.descriptor.id == 'com.openmuse.cli',
+      ),
+    );
+    final settings = OpenMuseLocalSettings();
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: workspace,
+        settings: settings,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('cli-bottom-panel')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cli-bottom-resizer')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('cli-new-terminal')).hitTestable(),
+      findsOneWidget,
+    );
+    final initialHeight = tester
+        .getSize(find.byKey(const ValueKey('cli-bottom-panel')))
+        .height;
+    await tester.drag(
+      find.byKey(const ValueKey('cli-bottom-resizer')),
+      const Offset(0, -70),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSize(find.byKey(const ValueKey('cli-bottom-panel'))).height,
+      greaterThan(initialHeight),
+    );
+    await settings.updatePluginValues('com.openmuse.cli', {'enabled': false});
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('cli-bottom-panel')), findsNothing);
   });
 
   testWidgets('theme selection changes the app immediately', (tester) async {

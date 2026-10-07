@@ -1,3 +1,5 @@
+import AVFoundation
+import AVKit
 import Cocoa
 import FlutterMacOS
 import WebKit
@@ -11,6 +13,10 @@ public final class OpenMuseFileViewerPlugin: NSObject, FlutterPlugin {
 final class OpenMuseViewerFactory: NSObject, FlutterPlatformViewFactory {
   private static let allowedExtensions: Set<String> = [
     "png", "jpg", "jpeg", "gif", "webp", "svg", "pdf",
+    "mp4", "m4v", "mov", "webm",
+  ]
+  private static let videoExtensions: Set<String> = [
+    "mp4", "m4v", "mov", "webm",
   ]
 
   func create(withViewIdentifier viewId: Int64, arguments args: Any?) -> NSView {
@@ -37,6 +43,9 @@ final class OpenMuseViewerFactory: NSObject, FlutterPlatformViewFactory {
       showError("Local file does not exist", in: webView)
       return webView
     }
+    if Self.videoExtensions.contains(url.pathExtension.lowercased()) {
+      return OpenMuseVideoView(url: url)
+    }
     webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
     return webView
   }
@@ -54,5 +63,30 @@ final class OpenMuseViewerFactory: NSObject, FlutterPlatformViewFactory {
       "<html><body style='font: 15px -apple-system; padding: 24px'>\(escaped)</body></html>",
       baseURL: nil
     )
+  }
+}
+
+final class OpenMuseVideoView: NSView {
+  private let player: AVPlayer
+  private let playerView: AVPlayerView
+
+  init(url: URL) {
+    player = AVPlayer(url: url)
+    playerView = AVPlayerView(frame: .zero)
+    super.init(frame: .zero)
+    playerView.player = player
+    playerView.controlsStyle = .floating
+    playerView.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(playerView)
+    NSLayoutConstraint.activate([
+      playerView.leadingAnchor.constraint(equalTo: leadingAnchor),
+      playerView.trailingAnchor.constraint(equalTo: trailingAnchor),
+      playerView.topAnchor.constraint(equalTo: topAnchor),
+      playerView.bottomAnchor.constraint(equalTo: bottomAnchor),
+    ])
+  }
+
+  required init?(coder: NSCoder) {
+    return nil
   }
 }

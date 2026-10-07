@@ -13,7 +13,7 @@ enum OpenMusePluginRuntime { builtIn, nativeProcess, webView }
 
 enum OpenMusePluginState { installed, activating, active, deactivating, failed }
 
-enum OpenMuseSurfaceRegion { editor, rightSidebar }
+enum OpenMuseSurfaceRegion { editor, rightSidebar, bottomPanel }
 
 @immutable
 final class OpenMuseResource {
@@ -92,6 +92,17 @@ final class OpenMusePanelContribution {
   final OpenMuseSurfaceRegion region;
 }
 
+/// Install-time workspace for a plugin that owns configuration, skills, or
+/// scripts. The plugin supplies [path]. The Host only mounts that directory,
+/// so the DSH session sandbox is the plugin's own tree.
+@immutable
+final class OpenMusePluginWorkspace {
+  const OpenMusePluginWorkspace({required this.path, this.optional = true});
+
+  final String path;
+  final bool optional;
+}
+
 @immutable
 final class OpenMusePluginDescriptor {
   const OpenMusePluginDescriptor({
@@ -103,6 +114,7 @@ final class OpenMusePluginDescriptor {
     this.permissions = const {},
     this.editors = const [],
     this.panels = const [],
+    this.workspace,
   });
 
   final String id;
@@ -113,6 +125,10 @@ final class OpenMusePluginDescriptor {
   final Set<String> permissions;
   final List<OpenMuseEditorContribution> editors;
   final List<OpenMusePanelContribution> panels;
+
+  /// Set when the plugin has configuration, skills, or scripts that must
+  /// live inside a Workspace mount.
+  final OpenMusePluginWorkspace? workspace;
 }
 
 @immutable

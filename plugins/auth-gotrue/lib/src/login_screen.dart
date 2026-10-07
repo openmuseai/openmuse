@@ -14,6 +14,7 @@ final class OpenMuseLoginScreen extends StatefulWidget {
     required this.authentication,
     this.cloudLabel,
     this.onSettings,
+    this.onAnonymous,
     this.termsUri,
     this.privacyUri,
   });
@@ -21,6 +22,7 @@ final class OpenMuseLoginScreen extends StatefulWidget {
   final OpenMuseAuthenticationController authentication;
   final String? cloudLabel;
   final VoidCallback? onSettings;
+  final VoidCallback? onAnonymous;
   final Uri? termsUri;
   final Uri? privacyUri;
 
@@ -49,6 +51,7 @@ final class _OpenMuseLoginScreenState extends State<OpenMuseLoginScreen> {
           errorText: _emailError,
           cloudLabel: widget.cloudLabel,
           onSettings: widget.onSettings,
+          onAnonymous: widget.onAnonymous,
           termsUri: widget.termsUri,
           privacyUri: widget.privacyUri,
           onContinueWithEmail:
@@ -114,6 +117,7 @@ final class _EmailPage extends StatelessWidget {
     this.onContinueWithEmail,
     this.cloudLabel,
     this.onSettings,
+    this.onAnonymous,
     this.termsUri,
     this.privacyUri,
   });
@@ -124,19 +128,13 @@ final class _EmailPage extends StatelessWidget {
   final VoidCallback? onContinueWithEmail;
   final String? cloudLabel;
   final VoidCallback? onSettings;
+  final VoidCallback? onAnonymous;
   final Uri? termsUri;
   final Uri? privacyUri;
 
   @override
   Widget build(BuildContext context) => _ResponsiveLoginScaffold(
-    bottom: onSettings == null
-        ? null
-        : TextButton.icon(
-            key: const ValueKey('auth.settings'),
-            onPressed: onSettings,
-            icon: const Icon(Icons.settings_outlined, size: 20),
-            label: const Text('Settings'),
-          ),
+    bottom: _loginFooter(onSettings: onSettings, onAnonymous: onAnonymous),
     child: AutofillGroup(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -571,6 +569,37 @@ final class _Agreement extends StatelessWidget {
       style: Theme.of(context).textTheme.bodySmall,
     ),
     textAlign: TextAlign.center,
+  );
+}
+
+Widget? _loginFooter({
+  required VoidCallback? onSettings,
+  required VoidCallback? onAnonymous,
+}) {
+  final settings = onSettings == null
+      ? null
+      : TextButton.icon(
+          key: const ValueKey('auth.settings'),
+          onPressed: onSettings,
+          icon: const Icon(Icons.settings_outlined, size: 20),
+          label: const Text('Settings'),
+        );
+  final anonymous = onAnonymous == null
+      ? null
+      : TextButton.icon(
+          key: const ValueKey('auth.anonymous'),
+          onPressed: onAnonymous,
+          icon: const Icon(Icons.person_outline, size: 20),
+          label: const Text('Anonymous mode'),
+        );
+  if (settings == null && anonymous == null) return null;
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      ?settings,
+      if (settings != null && anonymous != null) const SizedBox(width: 20),
+      ?anonymous,
+    ],
   );
 }
 

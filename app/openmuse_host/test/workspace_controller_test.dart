@@ -355,4 +355,52 @@ void main() {
       );
     },
   );
+
+  test('a plugin workspace mounts the directory the plugin configured', () async {
+    final controller = LocalWorkspaceController(
+      rootPath: root.path,
+      initialResources: const [],
+    );
+    addTearDown(controller.dispose);
+    final pluginRoot = Directory('${root.path}/easel-tree')..createSync();
+    File('${pluginRoot.path}/skills.txt').writeAsStringSync('skill');
+    final active = controller.activeMountPath;
+
+    final path = await controller.ensurePluginWorkspace(
+      pluginId: 'com.openmuse.easel',
+      path: pluginRoot.path,
+    );
+
+    expect(path, endsWith('easel-tree'));
+    expect(controller.activeMountPath, active);
+    expect(controller.mounts.map((mount) => mount.path), contains(path));
+    expect(File('$path/skills.txt').existsSync(), isTrue);
+    expect(Directory('${root.path}/plugins').existsSync(), isFalse);
+
+    final again = await controller.ensurePluginWorkspace(
+      pluginId: 'com.openmuse.easel',
+      path: pluginRoot.path,
+    );
+    expect(again, path);
+    expect(controller.mounts.where((mount) => mount.path == path), hasLength(1));
+
+    await controller.releasePluginWorkspace(path);
+    expect(controller.mounts.map((mount) => mount.path), isNot(contains(path)));
+    expect(Directory(path).existsSync(), isTrue);
+
+    await expectLater(
+      controller.ensurePluginWorkspace(
+        pluginId: 'com.other.plugin',
+        path: pluginRoot.path,
+      ),
+      throwsFormatException,
+    );
+    await expectLater(
+      controller.ensurePluginWorkspace(
+        pluginId: 'com.openmuse.easel',
+        path: '${root.path}/missing-easel',
+      ),
+      throwsA(isA<FileSystemException>()),
+    );
+  });
 }

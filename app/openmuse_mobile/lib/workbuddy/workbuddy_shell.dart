@@ -9,9 +9,11 @@ import 'package:muse_speech_core/muse_speech_core.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_remote_workbench/openmuse_remote_workbench.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 import '../native_dsh_page.dart';
+import '../plugin_interaction_remote.dart';
 import 'workbuddy_controller.dart';
 import 'workbuddy_icons.dart';
 import 'workbuddy_models.dart';
@@ -28,6 +30,7 @@ final class WorkBuddyShell extends StatefulWidget {
     this.onSignOut,
     this.speechRecognition,
     this.debugSpeechSource,
+    this.remoteWorkbench,
   });
 
   final WorkBuddyController controller;
@@ -41,6 +44,7 @@ final class WorkBuddyShell extends StatefulWidget {
   /// Debug-only E2E seam supplied by the Mobile Host. It is never populated
   /// from a plugin wire request or other untrusted input.
   final SpeechAudioSource? debugSpeechSource;
+  final RemoteWorkbenchController? remoteWorkbench;
 
   @override
   State<WorkBuddyShell> createState() => _WorkBuddyShellState();
@@ -305,7 +309,10 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         final hasCatalog = controller
             .workspacesFor(picked)
             .any((workspace) => workspace.id.startsWith('dsh.workspace.'));
-        final connected = await widget.pairedDesktop?.connectDevice(device);
+        final connected = await widget.pairedDesktop?.connectDevice(
+          device,
+          force: true,
+        );
         final connection = widget.pairedDesktop?.snapshot.connection;
         if (connected == true && connection != null && mounted) {
           controller.selectDevice(picked);
@@ -486,12 +493,30 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       }
       _composer.clear();
       _focus.unfocus();
+      var sessionConnection = connection;
+      final paired = widget.pairedDesktop;
+      final devices = paired?.devices.where(
+        (device) => device.deviceRef == connection.deviceRef,
+      );
+      if (paired != null && devices != null && devices.isNotEmpty) {
+        final renewed = await paired.connectDevice(devices.first, force: true);
+        if (!renewed || paired.snapshot.connection == null) {
+          if (mounted) {
+            _composer.text = text;
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Desktop 配对授权已失效，请重新连接后发送。'),
+            ));
+          }
+          return;
+        }
+        sessionConnection = paired.snapshot.connection!;
+      }
       final client = DshNativeGatewayClient(
-        origin: Uri.parse(connection.session.origin),
-        bootstrapPath: connection.session.path,
-        allowInsecureLoopback: connection.session.allowInsecureLoopback,
+        origin: Uri.parse(sessionConnection.session.origin),
+        bootstrapPath: sessionConnection.session.path,
+        allowInsecureLoopback: sessionConnection.session.allowInsecureLoopback,
         allowInsecurePrivateNetworkForTesting:
-            connection.session.allowInsecurePrivateNetworkForTesting,
+            sessionConnection.session.allowInsecurePrivateNetworkForTesting,
       );
       try {
         await client.initialize();
@@ -499,8 +524,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
           workspaceId: workspaceId.substring('dsh.workspace.'.length),
         );
         await _publishDesktopCatalog(
-          connection,
-          'paired.${connection.deviceRef}',
+          sessionConnection,
+          'paired.${sessionConnection.deviceRef}',
         );
         if (!mounted) return;
         setState(() {
@@ -972,6 +997,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                       onDevice: _chooseDevice,
                       onAccount: _openAccount,
                       onOpenSession: _openDesktopSession,
+                      onOpenWorkbench: _openRemoteWorkbench,
                     ),
                   ),
                 if (_drawer.value > 0.95)
@@ -986,6 +1012,10 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                       onTap: controller.closeDrawer,
                     ),
                   ),
+                if (widget.pairedDesktop?.snapshot.connection case final connection?)
+                  if (controller.selectedDeviceId ==
+                      'paired.${connection.deviceRef}')
+                    PairedPluginInteractionLayer(connection: connection),
               ],
             );
           },
@@ -1049,6 +1079,21 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
             },
           ),
       ],
+    );
+  }
+
+  void _openRemoteWorkbench() {
+    controller.closeDrawer();
+    final remote = widget.remoteWorkbench;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => remote == null
+            ? Scaffold(
+                appBar: AppBar(title: const Text('远程工作台')),
+                body: const RemoteWorkbenchUnavailable(),
+              )
+            : RemoteWorkbenchPage(controller: remote),
+      ),
     );
   }
 
@@ -2079,6 +2124,7 @@ final class _DrawerPanel extends StatelessWidget {
     required this.onDevice,
     required this.onAccount,
     required this.onOpenSession,
+    required this.onOpenWorkbench,
   });
 
   final WorkBuddyController controller;
@@ -2086,6 +2132,7 @@ final class _DrawerPanel extends StatelessWidget {
   final VoidCallback onDevice;
   final VoidCallback onAccount;
   final ValueChanged<WbTask> onOpenSession;
+  final VoidCallback onOpenWorkbench;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -2218,6 +2265,13 @@ final class _DrawerPanel extends StatelessWidget {
                               ),
                         ],
                       const SizedBox(height: 8),
+                      _DrawerRow(
+                        key: const ValueKey('wb-remote-workbench'),
+                        title: '远程工作台',
+                        icon: WbGlyph.desktop,
+                        indent: 0,
+                        onTap: onOpenWorkbench,
+                      ),
                       const _DrawerRow(
                         title: '助理',
                         icon: WbGlyph.personPlus,

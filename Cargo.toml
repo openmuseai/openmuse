@@ -4,6 +4,7 @@ members = [
   "crates/openmuse-contract",
   "crates/openmuse-cloud-resource-authority",
   "crates/openmuse-plugin-protocol",
+  "crates/openmuse-remote-surface",
   "crates/openmuse-platform-runtime",
   "crates/openmuse-storage-contract",
   "crates/openmuse-storage-credentials",

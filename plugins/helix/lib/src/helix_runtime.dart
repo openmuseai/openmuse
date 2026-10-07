@@ -312,10 +312,12 @@ final class HelixRuntimePool extends ChangeNotifier {
     _sessions[path] = session;
     activePath = path;
     lastError = null;
-    isSwitching = session.latestState?.path != path;
+    final shown = session.latestState?.path;
+    isSwitching = shown == null || !sameHelixFile(shown, path);
     notifyListeners();
     try {
-      if (session.latestState?.path != path) {
+      final currentPath = session.latestState?.path;
+      if (currentPath == null || !sameHelixFile(currentPath, path)) {
         final channel = session.channel;
         if (channel == null) {
           throw StateError('Helix 控制通道尚未就绪');
@@ -326,7 +328,7 @@ final class HelixRuntimePool extends ChangeNotifier {
         for (var attempt = 0; attempt < 2; attempt++) {
           final observed = session.latestState;
           if (observed == null) throw StateError('Helix 尚未提供活动文件状态');
-          if (observed.path == path) break;
+          if (sameHelixFile(observed.path, path)) break;
           session.expectedPath = path;
           session.switchWatch = watch;
           final result = await channel.command(
@@ -407,9 +409,10 @@ final class HelixRuntimePool extends ChangeNotifier {
           }
           if (event.type == 'state' &&
               session != null &&
-              session.reportedPath != event.path) {
+              !sameHelixFile(session.reportedPath, event.path)) {
             session.reportedPath = event.path;
-            if (session.expectedPath == event.path) {
+            if (session.expectedPath != null &&
+                sameHelixFile(session.expectedPath!, event.path)) {
               session.expectedPath = null;
               session.awaitingSwitchOutput = true;
             } else if (_sessions[activePath] == session) {
@@ -587,6 +590,20 @@ final class _HelixSession {
 /// The Windows backend builds a fresh environment block and only copies
 /// `HOME` and `PATH` from the parent. Entries supplied here are kept, so
 /// Windows must forward `SystemRoot` and `Path` or CreateProcess fails.
+/// Helix canonicalizes the buffer path. The Host path and that buffer path
+/// can differ by a symlink (`/tmp` versus `/private/tmp`) and still be the
+/// same file. Treating them as different makes the open command retarget a
+/// file Helix already has.
+bool sameHelixFile(String left, String right) {
+  if (left == right) return true;
+  try {
+    return File(left).resolveSymbolicLinksSync() ==
+        File(right).resolveSymbolicLinksSync();
+  } on FileSystemException {
+    return false;
+  }
+}
+
 Map<String, String> helixProcessEnvironment(
   Map<String, String> parent, {
   String? configHome,

@@ -100,11 +100,24 @@ final class DshSidecarSupervisor extends ChangeNotifier {
         patchPath: modelCapabilitiesPatch,
       );
       final reportedEndpoint = Completer<Uri>();
+      final launchEnvironment = dshLaunchEnvironment(
+        environment,
+        runtime.nodeExecutable,
+      );
+      final cliBin = _openMuseCliBin(environment);
+      if (cliBin != null) {
+        final key = launchEnvironment.keys.firstWhere(
+          (candidate) => candidate.toUpperCase() == 'PATH',
+          orElse: () => Platform.isWindows ? 'Path' : 'PATH',
+        );
+        launchEnvironment[key] =
+            '${p.dirname(cliBin)}${Platform.isWindows ? ';' : ':'}${launchEnvironment[key] ?? ''}';
+      }
       final process = await Process.start(
         command.executable,
         command.arguments,
         environment: {
-          ...dshLaunchEnvironment(environment, runtime.nodeExecutable),
+          ...launchEnvironment,
           'OPENMUSE_DSH_BRIDGE_TOKEN': bridgeToken,
         },
         workingDirectory: dshClosureRoot(cli),
@@ -192,6 +205,35 @@ final class DshSidecarSupervisor extends ChangeNotifier {
     _process?.kill();
     super.dispose();
   }
+}
+
+String? _openMuseCliBin(Map<String, String> environment) {
+  final explicit = environment['OPENMUSE_CLI_BIN'];
+  if (explicit != null && File(explicit).existsSync()) return explicit;
+  final executable = Platform.resolvedExecutable;
+  final directory = p.dirname(executable);
+  final candidates = [
+    if (Platform.isMacOS)
+      p.join(
+        p.dirname(directory),
+        'Resources',
+        'openmuse',
+        'cli',
+        'bin',
+        'openmuse',
+      ),
+    p.join(
+      directory,
+      'openmuse',
+      'cli',
+      'bin',
+      Platform.isWindows ? 'openmuse.exe' : 'openmuse',
+    ),
+  ];
+  for (final candidate in candidates) {
+    if (File(candidate).existsSync()) return candidate;
+  }
+  return null;
 }
 
 final class DshRuntimeLocation {

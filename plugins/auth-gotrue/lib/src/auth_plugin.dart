@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
+import 'auth_controller.dart';
 import 'login_screen.dart';
 
 final class OpenMuseGoTruePlugin
@@ -14,6 +17,7 @@ final class OpenMuseGoTruePlugin
     this.onSettings,
     this.termsUri,
     this.privacyUri,
+    this.allowAnonymous = false,
   });
 
   @override
@@ -22,6 +26,7 @@ final class OpenMuseGoTruePlugin
   final VoidCallback? onSettings;
   final Uri? termsUri;
   final Uri? privacyUri;
+  final bool allowAnonymous;
 
   @override
   final descriptor = const OpenMusePluginDescriptor(
@@ -52,12 +57,16 @@ final class OpenMuseGoTruePlugin
       if (snapshot.phase == OpenMuseAuthenticationPhase.restoring) {
         return const Center(child: CircularProgressIndicator());
       }
+      final gotrue = authentication;
       return OpenMuseLoginScreen(
         authentication: authentication,
         cloudLabel: cloudLabel,
         onSettings: onSettings,
         termsUri: termsUri,
         privacyUri: privacyUri,
+        onAnonymous: allowAnonymous && gotrue is GoTrueAuthenticationController
+            ? () => unawaited(gotrue.signInAnonymously())
+            : null,
       );
     },
   );

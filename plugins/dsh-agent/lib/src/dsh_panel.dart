@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -6,16 +7,19 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'dsh_sidecar.dart';
 import 'dsh_web_view.dart';
+import 'plugin_interaction.dart';
 
 final class DshPanel extends StatefulWidget {
   const DshPanel({
     super.key,
     required this.supervisor,
+    required this.desktopInteraction,
     required this.activeMount,
     required this.onActivateWorkspace,
     required this.onOpenResource,
   });
   final DshSidecarSupervisor supervisor;
+  final ValueNotifier<PluginInteraction?> desktopInteraction;
   final ValueListenable<String?> activeMount;
   final Future<void> Function(String path) onActivateWorkspace;
   final Future<void> Function(DshResourceOpenMessage request) onOpenResource;
@@ -30,7 +34,33 @@ final class _DshPanelState extends State<DshPanel> {
   @override
   void initState() {
     super.initState();
+    widget.desktopInteraction.addListener(_presentDesktopInteraction);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _presentDesktopInteraction());
     Future<void>.microtask(_start);
+  }
+
+  @override
+  void didUpdateWidget(covariant DshPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.desktopInteraction != widget.desktopInteraction) {
+      oldWidget.desktopInteraction.removeListener(_presentDesktopInteraction);
+      widget.desktopInteraction.addListener(_presentDesktopInteraction);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _presentDesktopInteraction());
+    }
+  }
+
+  void _presentDesktopInteraction() {
+    if (!mounted) return;
+    final interaction = widget.desktopInteraction.value;
+    if (interaction == null) return;
+    widget.desktopInteraction.value = null;
+    unawaited(showPluginInteraction(context, interaction));
+  }
+
+  @override
+  void dispose() {
+    widget.desktopInteraction.removeListener(_presentDesktopInteraction);
+    super.dispose();
   }
 
   @override
@@ -78,8 +108,7 @@ final class _DshPanelState extends State<DshPanel> {
                   ),
                 ),
               ),
-            if (paneMenu != null)
-              Positioned(top: 8, right: 6, child: paneMenu),
+            if (paneMenu != null) Positioned(top: 8, right: 6, child: paneMenu),
           ],
         ),
       ),
@@ -155,8 +184,7 @@ final class _PanelBody extends StatelessWidget {
               ),
               const SizedBox(height: 7),
               Text(
-                _friendlyError(supervisor.lastError) ??
-                    'DSH sidecar 未能自动启动。',
+                _friendlyError(supervisor.lastError) ?? 'DSH sidecar 未能自动启动。',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 12,

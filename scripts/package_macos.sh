@@ -48,6 +48,19 @@ if [[ "$skip_tests" -eq 0 ]]; then
 fi
 flutter build macos "--${profile}"
 
+# The CLI plugin ships a native launcher beside the GUI. It remains callable
+# from a regular terminal and is placed on PATH for the in-app console.
+dart build cli -t bin/openmuse.dart -o "$app_root/build/openmuse-cli"
+cli_bundle="$app_root/build/openmuse-cli/bundle"
+cli_dest="$app_path/Contents/Resources/openmuse/cli"
+mkdir -p "$cli_dest"
+rsync -a --delete "$cli_bundle/" "$cli_dest/"
+test -x "$cli_dest/bin/openmuse"
+for library in "$cli_dest"/lib/*.dylib; do
+  if [[ -f "$library" ]]; then codesign --force --sign - "$library"; fi
+done
+codesign --force --sign - "$cli_dest/bin/openmuse"
+
 if [[ "$skip_tests" -eq 0 ]]; then
   (
     cd "$repo_root/plugins/helix"

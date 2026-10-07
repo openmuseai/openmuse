@@ -6,6 +6,6 @@
     "@deepseek-ai/dsh": "0.1.7-rc.1",
     "@openmuse/dsh-workspace-runtime": "file:tarballs/openmuse-dsh-workspace-runtime-0.1.0.tgz",
     "dsh-model-capabilities": "file:tarballs/dsh-model-capabilities-0.5.0-openmuse.4.tgz",
-    "openmuse-dsh-bridge": "file:tarballs/openmuse-dsh-bridge-0.1.14.tgz"
+    "openmuse-dsh-bridge": "file:tarballs/openmuse-dsh-bridge-0.1.15.tgz"
   }
 }

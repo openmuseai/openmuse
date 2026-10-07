@@ -1,0 +1,23 @@
+name: openmuse_cli_plugin
+description: Optional desktop console surface for the OpenMuse CLI.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_pty: ^0.4.2
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+  xterm: ^4.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

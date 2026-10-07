@@ -1,0 +1,25 @@
+name: openmuse_remote_workbench
+description: Default Mobile plugin that renders remote Desktop surfaces.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  muse_remote_surface_contract:
+    path: ../../packages/muse_remote_surface_contract
+  muse_remote_surface_core:
+    path: ../../packages/muse_remote_surface_core
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

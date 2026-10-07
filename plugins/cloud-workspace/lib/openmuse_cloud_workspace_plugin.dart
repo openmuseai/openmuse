@@ -134,6 +134,11 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
 
   Future<void> refresh() async {
     if (!authentication.snapshot.isAuthenticated || _snapshot.loading) return;
+    final token = await authentication.accessToken();
+    if (token == null || token.isEmpty) {
+      _publish(const CloudWorkspacePluginSnapshot());
+      return;
+    }
     _publish(
       CloudWorkspacePluginSnapshot(
         loading: true,

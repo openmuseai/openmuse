@@ -1958,6 +1958,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "openmuse-remote-surface"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "openmuse-sandbox-security"
 version = "0.1.0"
 dependencies = [

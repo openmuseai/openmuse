@@ -3,6 +3,8 @@
 状态：技术方案建议，待 PoC 验证（2026-10-05，按通用 Mobile 预览/控制协议修订）  
 目标：复用 Easel 的素材加工、平台适配、社媒登录和发布能力；OpenClaw 完全退出运行链路；Easel 业务插件不随 OpenMuse 默认发行，在 Desktop 运行，Mobile 通过默认安装的 [`remote-workbench`](MOBILE-REMOTE-PLUGIN-SURFACE-PROTOCOL.zh-CN.md) 操控流水线。
 
+当前包的真实安装、DSH 会话驱动的视频加工和通用 CLI 控制台见 [`OPENMUSE-CLI-PLUGIN-DESIGN.zh-CN.md`](OPENMUSE-CLI-PLUGIN-DESIGN.zh-CN.md)。`dist/easel` 0.3.0 不含 OpenClaw 技能或 Web 后端；原 DSH 插件内的 Easel/OpenClaw 兼容桥已移除。2026-10-06 已验证 `发现命令 → 加封面加工 → ffprobe 复核 → 抖音离线 plan`，正式发布与统一 Job/权限链路仍未完成。
+
 ## 1. 结论与边界
 
 **有条件可行。** Easel 的 Python 媒体与发布脚本可作为 Desktop 执行体；DSH 负责对话、技能选择、内容适配和工具编排；Mobile 默认安装的通用插件负责发现、预览、交互、确认和状态恢复。Easel 只提供 Desktop 业务插件，不包含 Mobile 代码。当前仓库已经具备 DSH Desktop sidecar、配对 Desktop 的远程 DSH 页面、Manifest v2、资源与 Broker 的协议/参考实现，但尚未具备通用远程 surface 协议、运行时插件装载器、生产级资源物化/授权接线及社媒业务 API。
@@ -103,7 +105,7 @@ DSH 负责“理解需求、生成平台草案、选择工具”；所有有副�
 ## 6. 实施顺序与验收门槛
 
 1. **运行时装载 PoC**：无插件启动；用户安装包后发现/验签/启用；停用和卸载后清除 surface、工具与进程；默认安装包和 Mobile 包中无 Easel artifact。DSH 只加载被选技能，确认可动态注册或界定 sidecar 重启行为。
-2. **Desktop 垂直切片**：先选小红书图文，打通 `ResourceRef → 临时副本 → 加工 → 预览 → 已登录账号 → 人工确认 → 真发 → 回读`。Worker 使用 Easel 原脚本的受控 wrapper，记录需修改的路径和输出约定；不接 Easel Web/CLI/OpenClaw。
+2. **Desktop 垂直切片**：现已通过可选 Easel CLI 插件验证本地视频加工和抖音离线 plan。下一阶段接入 `ResourceRef → 临时副本 → 加工 → 预览 → 已登录账号 → 人工确认 → 真发 → 回读`；Worker 使用 Easel 原脚本的受控 wrapper，不接 Easel Web/OpenClaw。
 3. **通用 Mobile 控制面**：先交付并默认安装 `remote-workbench`，用 fake 业务插件验证原生组件、图片、视频、受限网页、动作、事件恢复和断线重连；然后 Easel 只提供 Desktop remote-surface service，验证**不重新安装 APK**即可在手机端出现社媒流水线并完成预览、确认和查结果。此阶段可使用 Desktop 预授权账号。
 4. **授权与平台扩展**：逐平台实现 challenge 状态机、账号多开/撤销、抖音视频、其他平台；每个平台分别验收登录、预检、发布、回读和失效恢复。
 5. **生产门禁**：持久 Policy/Audit、发行 artifact 与依赖 SBOM、逐文件许可审查、平台发布条件审查、故障演练。无这些门禁时只用于隔离试验环境和测试账号。
@@ -121,3 +123,13 @@ DSH 负责“理解需求、生成平台草案、选择工具”；所有有副�
 - 逐文件许可与第三方依赖检查；Easel 根许可为 Apache-2.0，不能据此推定所有 SKILL 和脚本来源均相同。
 
 关键代码依据：[`packages/openmuse_plugin_sdk/lib/openmuse_plugin_sdk.dart`](../packages/openmuse_plugin_sdk/lib/openmuse_plugin_sdk.dart)、[`app/openmuse_host/lib/main.dart`](../app/openmuse_host/lib/main.dart)、[`app/openmuse_mobile/lib/main.dart`](../app/openmuse_mobile/lib/main.dart)、[`plugins/dsh-agent/lib/src/dsh_sidecar.dart`](../plugins/dsh-agent/lib/src/dsh_sidecar.dart)、[`plugins/workspace-paired/lib/src/paired_desktop_gateway.dart`](../plugins/workspace-paired/lib/src/paired_desktop_gateway.dart)、[`third_party/Easel/skills/openclaw/skill-cross-platform-publish/scripts/publish_dispatch.py`](../third_party/Easel/skills/openclaw/skill-cross-platform-publish/scripts/publish_dispatch.py)。
+
+## 8. 2026-10-06 知乎图文与授权切片的实际边界
+
+Easel 0.4.2 已把知乎命令和安装引导放入可选包。`easel zhihu inspect` 校验 Markdown 标题及本地图片；授权命令运行 Easel 自己的浏览器流程，发出 `openmuse.plugin-interaction/v1` 图片挑战事件，由通用桌面面板显示二维码与状态。DSH 不需要知道知乎 DOM、二维码截图或 Python 入口。`docs/meterails/OPENMUSE-VS-DSH-知乎图文.md` 的 4 张本地图片已通过检查，DSH 会话实际运行了 `inspect/check/plan/login` 并触发桌面二维码弹窗；未扫码后以 `expired` 结束。
+
+这还不是完整图文发布：当前知乎网页脚本只有标题与纯文本正文输入，没有正文图片上传和账号授权后的发布读回。`inspect.canPublishRequestedArticle=false` 是硬阻断，不能把纯文本 `publish` 结果称为图文发布。下一步需由 Easel 插件实现并真机验证文章编辑器图片插入、上传完成判定、发布确认与读回；Host 保持无知乎业务逻辑。另需将 DSH 从任意会话 cwd 调用插件的写入请求接到受控 CLI Job Broker；当前 DSH `workspace-write` 只覆盖其会话根目录，从仓库会话直接写独立插件工作区会被 Seatbelt 拒绝。把整个 Agent 提升到 `danger-full-access` 不符合隔离目标。
+
+### 后续真机验收更新（2026-10-06）
+
+上述 0.4.2 阶段的阻断已由 Easel 0.4.5 的 `zhihu publish-article` 和 Host 通用 CLI broker 消除：手机 DSH 对话可启动插件命令、手机弹出二维码并在知乎 App 同机相册扫码，Desktop Easel `whoami` 验证登录。DSH 会话调用 Easel 完成四图稿提交，手机知乎 App 可打开[已发布文章](https://zhuanlan.zhihu.com/p/2090890406376498467)。知乎桌面网页发布后读回返回 `40362`，插件只报告 URL 与提交前图片数，不能据此声称发布后的四图都已自动核验。详细设备、会话和剩余门槛见 `MOBILE-DESKTOP-PLUGIN-INTERACTION-ROUTING.zh-CN.md`。

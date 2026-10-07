@@ -7,6 +7,21 @@ import 'package:openmuse_file_viewer/openmuse_file_viewer.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 void main() {
+  test('video files are claimed by the local viewer', () {
+    final plugin = OpenMuseFileViewerPlugin();
+    final resource = OpenMuseResource(
+      uri: Uri.file('/tmp/openmuse-vs-dsh-20s.mp4'),
+      displayName: 'openmuse-vs-dsh-20s.mp4',
+      mediaType: 'video/mp4',
+    );
+    expect(
+      plugin.descriptor.editors.any(
+        (editor) => editor.id == 'viewer.video' && editor.accepts(resource),
+      ),
+      isTrue,
+    );
+  });
+
   test('reads the authorized local Markdown file', () async {
     final directory = Directory.systemTemp.createTempSync('openmuse-md-read-');
     addTearDown(() => directory.deleteSync(recursive: true));

@@ -79,6 +79,7 @@ fn installed(
                 }],
                 ..Default::default()
             },
+            install: None,
         },
         granted_permissions: BTreeSet::from([permission]),
         artifacts: vec![ArtifactEvidence {

@@ -36,6 +36,27 @@ void main() {
     },
   );
 
+  test('mp4 bytes are a video the text editor does not claim', () async {
+    final root = await Directory.systemTemp.createTemp('openmuse-inspect-');
+    addTearDown(() => root.delete(recursive: true));
+    final file = File('${root.path}/openmuse-vs-dsh-20s.mp4')
+      ..writeAsBytesSync([
+        0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, // ....ftyp
+        0x69, 0x73, 0x6f, 0x6d, 0x00, 0x00, 0x00, 0x00,
+      ]);
+    final resource = await inspectLocalResource(
+      OpenMuseResource(
+        uri: file.uri,
+        displayName: 'openmuse-vs-dsh-20s.mp4',
+      ),
+    );
+    expect(resource.mediaType, 'video/mp4');
+    expect(
+      OpenMuseHelixPlugin().descriptor.editors.single.accepts(resource),
+      isFalse,
+    );
+  });
+
   test('binary signature overrides a misleading code suffix', () async {
     final root = await Directory.systemTemp.createTemp('openmuse-inspect-');
     addTearDown(() => root.delete(recursive: true));

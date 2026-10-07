@@ -10,23 +10,32 @@ import 'src/dsh_panel.dart';
 import 'src/dsh_sidecar.dart';
 import 'src/dsh_workspace_binding.dart';
 import 'src/dsh_workspace_sync.dart';
+import 'src/plugin_interaction.dart';
 
 export 'src/dsh_sidecar.dart';
 export 'src/dsh_web_view.dart' show DshNativeOverlay, DshPopupRouteObserver;
+export 'src/plugin_interaction.dart' show PluginInteraction;
 
 final class OpenMuseDshPlugin
     implements
         OpenMusePlugin,
         OpenMuseSettingsContributor,
         OpenMusePluginLogContributor {
-  OpenMuseDshPlugin({DshSidecarSupervisor? supervisor})
-    : _supervisor = supervisor;
+  OpenMuseDshPlugin({
+    DshSidecarSupervisor? supervisor,
+    Future<bool> Function(PluginInteraction)? routeInteraction,
+  }) : _supervisor = supervisor,
+       _routeInteraction = routeInteraction;
 
   DshSidecarSupervisor? _supervisor;
+  final Future<bool> Function(PluginInteraction)? _routeInteraction;
   DshWorkspaceBinding? _binding;
   DshWorkspaceSynchronizer? _workspaceSync;
   OpenMusePluginContext? _context;
   final ValueNotifier<String?> _activeMount = ValueNotifier(null);
+  final ValueNotifier<PluginInteraction?> _desktopInteraction = ValueNotifier(null);
+  String? _pluginInteractionDir;
+  PluginInteractionListener? _interactionListener;
 
   @override
   Future<String> readLog() async {
@@ -58,7 +67,8 @@ final class OpenMuseDshPlugin
   }
 
   void _sidecarChanged() {
-    if (_supervisor?.state == DshSidecarState.ready) _syncWorkspaces();
+    if (_supervisor?.state != DshSidecarState.ready) return;
+    _syncWorkspaces();
   }
 
   @override
@@ -92,6 +102,21 @@ final class OpenMuseDshPlugin
     if (snapshot is Map && snapshot['activeMountPath'] is String) {
       _activeMount.value = snapshot['activeMountPath'] as String;
     }
+    if (snapshot is Map && snapshot['pluginInteractionDir'] is String) {
+      _pluginInteractionDir = snapshot['pluginInteractionDir'] as String;
+    }
+    if (_pluginInteractionDir case final directory?) {
+      _interactionListener = PluginInteractionListener(directory, (interaction) {
+        unawaited(() async {
+          try {
+            if (await _routeInteraction?.call(interaction) == true) return;
+          } catch (error) {
+            debugPrint('Plugin interaction routing failed: $error');
+          }
+          _desktopInteraction.value = interaction;
+        }());
+      })..start();
+    }
     _binding = DshWorkspaceBinding(
       context,
       activeMountPath: () => _activeMount.value,
@@ -124,6 +149,9 @@ final class OpenMuseDshPlugin
 
   @override
   Future<void> deactivate() async {
+    _interactionListener?.stop();
+    _interactionListener = null;
+    _desktopInteraction.value = null;
     _context?.hostChanges?.removeListener(_workspaceChanged);
     _supervisor?.removeListener(_sidecarChanged);
     _context = null;
@@ -147,6 +175,7 @@ final class OpenMuseDshPlugin
     }
     return DshPanel(
       supervisor: supervisor,
+      desktopInteraction: _desktopInteraction,
       activeMount: _activeMount,
       onActivateWorkspace: (path) async {
         _activeMount.value = path;

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -8,6 +9,7 @@ import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
 import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
+import 'package:muse_remote_surface_core/muse_remote_surface_core.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:path/path.dart' as p;
@@ -18,6 +20,8 @@ import 'src/host/layout/layout.dart';
 import 'src/host/layout/surface_mutation_guard.dart';
 import 'src/host/local_settings.dart';
 import 'src/host/openmuse_app.dart';
+import 'src/host/plugin_distribution.dart';
+import 'src/host/plugin_cli_broker.dart';
 import 'src/host/workspace_controller.dart';
 
 Future<void> main() async {
@@ -72,6 +76,11 @@ Future<Widget> bootOpenMuseHost() async {
               'title': 'Project Workspace',
               'activeMountPath': controller.activeMountPath,
               'dshHome': _dshHome(support.path),
+              'pluginInteractionDir': p.join(
+                support.path,
+                'OpenMuse',
+                'plugin-interactions',
+              ),
               'mounts': [
                 for (final mount in controller.mounts)
                   {'path': mount.path, 'name': mount.name},
@@ -108,6 +117,43 @@ Future<Widget> bootOpenMuseHost() async {
             }
             controller.activateMount(matches.single);
             return {'activeMountPath': controller.activeMountPath};
+          case 'workspace.plugin.ensure':
+            if (arguments is! Map ||
+                arguments['pluginId'] is! String ||
+                arguments['path'] is! String) {
+              throw const FormatException('无效插件工作区');
+            }
+            final pluginId = arguments['pluginId'] as String;
+            final path = await controller.ensurePluginWorkspace(
+              pluginId: pluginId,
+              path: arguments['path'] as String,
+            );
+            final current = settings.pluginValues(pluginId);
+            await settings.updatePluginValues(pluginId, {
+              ...current,
+              'workspaceEnabled': true,
+              'workspacePath': path,
+            });
+            return {'enabled': true, 'path': path};
+          case 'plugin.installFromCatalog':
+            if (arguments is! Map ||
+                arguments['catalogUri'] is! String ||
+                arguments['pluginId'] is! String ||
+                arguments['workspacePath'] is! String) {
+              throw const FormatException('无效插件安装请求');
+            }
+            final receipt = await acceptDistributedPlugin(
+              catalogUri: Uri.parse(arguments['catalogUri'] as String),
+              pluginId: arguments['pluginId'] as String,
+              workspacePath: arguments['workspacePath'] as String,
+              installRoot: Directory(
+                p.join(support.path, 'OpenMuse', 'plugins'),
+              ),
+              target: currentDesktopPluginTarget(),
+              workspace: controller,
+              settings: settings,
+            );
+            return receipt.toJson();
           case 'settings.plugin.read':
             if (arguments is! String) throw const FormatException('无效插件 ID');
             return settings.pluginValues(arguments);
@@ -184,6 +230,7 @@ Future<Widget> bootOpenMuseHost() async {
   final authenticationPlugin = OpenMuseGoTruePlugin(
     authentication: authenticationController,
     cloudLabel: cloudOrigin.toString(),
+    allowAnonymous: true,
   );
   final desktopDeviceId = await _persistentDesktopDeviceId(settings);
   final desktopDisplayName = Platform.localHostname.isEmpty
@@ -195,8 +242,17 @@ Future<Widget> bootOpenMuseHost() async {
     deviceId: desktopDeviceId,
     allowInsecureLoopback: allowInsecureLoopback,
   );
+  final cliBroker = PluginCliBroker(
+    installRoot: Directory(p.join(support.path, 'OpenMuse', 'plugins')),
+  );
+  await cliBroker.start();
   final dshSupervisor = DshSidecarSupervisor(
-    environment: {...Platform.environment, 'DSH_HOME': _dshHome(support.path)},
+    environment: {
+      ...Platform.environment,
+      'DSH_HOME': _dshHome(support.path),
+      'OPENMUSE_CLI_BROKER_URL': cliBroker.origin.toString(),
+      'OPENMUSE_CLI_BROKER_TOKEN': cliBroker.token,
+    },
   );
   const relayFromDefine = String.fromEnvironment(
     'OPENMUSE_RELAY_PUBLIC_ORIGIN',
@@ -213,6 +269,10 @@ Future<Widget> bootOpenMuseHost() async {
   final relayOrigin = desktopRelayPublicOrigin(
     cloudOrigin: cloudOrigin,
     configured: relayConfigured,
+  );
+  final surfaceLab = _acceptanceSurface(
+    workspaceRef: 'openmuse.local.default',
+    desktopDeviceRef: desktopDeviceId,
   );
   final pairedGateway = PairedDesktopGateway(
     currentAccountRef: () =>
@@ -239,6 +299,19 @@ Future<Widget> bootOpenMuseHost() async {
         13180,
     fixedPairingCode:
         Platform.environment['OPENMUSE_PAIRED_DESKTOP_PAIRING_CODE'],
+    remoteSurface: (request) => dispatchRemoteSurface(
+      host: surfaceLab.host,
+      operation: request.operation,
+      body: request.body,
+      context: RemoteConnectionContext(
+        actorRef: request.accountRef,
+        mobileDeviceRef: request.deviceRef,
+        desktopDeviceRef: desktopDeviceId,
+        workspaceRef: request.workspaceRef,
+        permissions: surfaceLab.permissions,
+      ),
+    ),
+    remoteMedia: (query) async => _mediaSlice(surfaceLab.media, query),
   );
   final deviceDirectory = AccountDeviceDirectoryController(
     authentication: authenticationController,
@@ -279,6 +352,34 @@ Future<Widget> bootOpenMuseHost() async {
   registry.install(pairedDesktopPlugin);
   for (final plugin in createOpenMuseBuiltInPlugins(
     dshSupervisor: dshSupervisor,
+    routeInteraction: (interaction) async {
+      try {
+        final image = await File(interaction.imagePath).readAsBytes();
+        if (image.isEmpty || image.length > 2 * 1024 * 1024) return false;
+        final id = List.generate(
+          16,
+          (_) => Random.secure().nextInt(256).toRadixString(16).padLeft(2, '0'),
+        ).join();
+        return pairedGateway.offerPluginInteraction(
+          PairedPluginInteraction(
+            id: id,
+            pluginId: interaction.pluginId,
+            title: interaction.title,
+            imageBytes: Uint8List.fromList(image),
+            readStatus: () async {
+              final file = File(interaction.statusPath);
+              if (await file.length() > 4096) return {'state': 'error'};
+              final decoded = jsonDecode(await file.readAsString());
+              return decoded is Map
+                  ? {'state': decoded['state'], 'message': decoded['message']}
+                  : {'state': 'error'};
+            },
+          ),
+        );
+      } catch (_) {
+        return false;
+      }
+    },
   )) {
     registry.install(plugin);
   }
@@ -455,4 +556,54 @@ final class _OpenMuseLaunchAppState extends State<OpenMuseLaunchApp> {
       ),
     );
   }
+}
+
+final class _DesktopSurface {
+  _DesktopSurface.lab(AcceptanceDesktop desktop)
+    : host = desktop.host,
+      media = desktop.media,
+      permissions = desktop.connection.permissions;
+
+  _DesktopSurface.empty()
+    : host = RemoteSurfaceHost(),
+      media = RemoteMediaAuthority(),
+      permissions = const {'workspace.resource.read'};
+
+  final RemoteSurfaceHost host;
+  final RemoteMediaAuthority media;
+  final Set<String> permissions;
+}
+
+_DesktopSurface _acceptanceSurface({
+  required String workspaceRef,
+  required String desktopDeviceRef,
+}) {
+  const enabled = bool.fromEnvironment('OPENMUSE_REMOTE_SURFACE_ACCEPTANCE');
+  if (kReleaseMode && !enabled) return _DesktopSurface.empty();
+  return _DesktopSurface.lab(
+    AcceptanceDesktop(
+      workspaceRef: workspaceRef,
+      desktopDeviceRef: desktopDeviceRef,
+    ),
+  );
+}
+
+Future<RemoteMediaSlice> _mediaSlice(
+  RemoteMediaAuthority media,
+  RemoteMediaQuery query,
+) async {
+  final read = media.readRange(
+    handle: query.handle,
+    workspaceRef: query.workspaceRef,
+    deviceRef: query.desktopDeviceRef,
+    now: DateTime.now(),
+    start: query.start,
+    endInclusive: query.endInclusive,
+  );
+  return switch (read) {
+    RemoteMediaDenied() => const RemoteMediaSliceDenied(),
+    RemoteMediaUnsatisfiable() => const RemoteMediaSliceUnsatisfiable(),
+    RemoteMediaBytes(:final bytes, :final total, :final start) =>
+      RemoteMediaSliceBody(bytes: bytes, total: total, start: start),
+  };
 }

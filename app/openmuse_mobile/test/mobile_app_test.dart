@@ -37,6 +37,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(authentication.restoreCalls, 1);
+    final application = tester.state<OpenMuseMobileApplicationState>(
+      find.byType(OpenMuseMobileApplication),
+    );
+    expect(
+      application.installedPluginIds,
+      contains('com.openmuse.remote-workbench'),
+    );
     expect(find.text('OpenMuse，与你一起创造'), findsOneWidget);
     expect(find.text('发消息'), findsOneWidget);
     expect(find.text('Welcome to OpenMuse'), findsNothing);

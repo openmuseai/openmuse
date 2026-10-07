@@ -660,6 +660,21 @@ async function handleNative(ctx, interactions, req, res, url) {
 export function apply(ctx) {
   const token = process.env.OPENMUSE_DSH_BRIDGE_TOKEN;
   if (typeof token !== 'string' || token.length < 32) return;
+  const cliBrokerUrl = process.env.OPENMUSE_CLI_BROKER_URL;
+  const cliBrokerToken = process.env.OPENMUSE_CLI_BROKER_TOKEN;
+  if (cliBrokerUrl && cliBrokerToken) ctx.inject(['shellEnv'], (runtimeCtx) => {
+    runtimeCtx.shellEnv.register({
+      name: 'openmuse-cli-broker',
+      variables: {
+        DSH_OPENMUSE_CLI_BROKER_URL: { description: 'Loopback OpenMuse plugin CLI broker URL.' },
+        DSH_OPENMUSE_CLI_BROKER_TOKEN: { description: 'Per-process OpenMuse plugin CLI broker credential.' },
+      },
+      resolve: () => ({
+        DSH_OPENMUSE_CLI_BROKER_URL: cliBrokerUrl,
+        DSH_OPENMUSE_CLI_BROKER_TOKEN: cliBrokerToken,
+      }),
+    });
+  });
   let registered = false;
   const interactions = createNativeInteractionCoordinator();
   ctx.on('user-questions/request', function(request, next) {

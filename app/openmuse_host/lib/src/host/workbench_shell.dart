@@ -538,12 +538,31 @@ final class _BoundSurface extends StatelessWidget {
     }
     const editorPrefix = 'host.editorGroup:';
     if (binding.surfaceRef.startsWith(editorPrefix)) {
-      return _EditorArea(
+      final editor = _EditorArea(
         registry: registry,
         workspace: workspace,
         settings: settings,
         groupId: binding.surfaceRef.substring(editorPrefix.length),
         paneMenu: paneMenu,
+      );
+      if (binding.surfaceRef !=
+              'host.editorGroup:${LocalWorkspaceController.primaryEditorGroupId}' ||
+          settings.pluginValues('com.openmuse.cli')['enabled'] == false) {
+        return editor;
+      }
+      final plugin = registry.panelProvider(
+        OpenMuseSurfaceRegion.bottomPanel,
+        panelId: 'cli.console',
+      );
+      if (plugin == null) return editor;
+      return _EditorCliDock(
+        editor: editor,
+        console: PluginPanelHost(
+          key: const ValueKey('cli-bottom-panel'),
+          registry: registry,
+          plugin: plugin,
+          panelId: 'cli.console',
+        ),
       );
     }
     const panelPrefix = 'plugin.panel:';
@@ -565,6 +584,92 @@ final class _BoundSurface extends StatelessWidget {
     }
     return Center(child: Text('未知 Surface：${binding.surfaceRef}'));
   }
+}
+
+final class _EditorCliDock extends StatefulWidget {
+  const _EditorCliDock({required this.editor, required this.console});
+
+  final Widget editor;
+  final Widget console;
+
+  @override
+  State<_EditorCliDock> createState() => _EditorCliDockState();
+}
+
+final class _EditorCliDockState extends State<_EditorCliDock> {
+  double _height = 230;
+  bool _collapsed = false;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final available = constraints.maxHeight;
+      if (available < 220) return widget.editor;
+      final height = _collapsed ? 30.0 : _height.clamp(120.0, available * 0.65);
+      return Column(
+        children: [
+          Expanded(child: widget.editor),
+          MouseRegion(
+            cursor: SystemMouseCursors.resizeRow,
+            child: GestureDetector(
+              key: const ValueKey('cli-bottom-resizer'),
+              behavior: HitTestBehavior.opaque,
+              onVerticalDragUpdate: (details) {
+                setState(
+                  () => _height = (_height - details.delta.dy).clamp(
+                    120.0,
+                    available * 0.65,
+                  ),
+                );
+              },
+              child: Container(
+                height: 12,
+                color: Theme.of(context).dividerColor,
+                child: Row(
+                  children: [
+                    const Spacer(),
+                    Container(
+                      width: 42,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: Colors.white54,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const Spacer(),
+                    InkWell(
+                      key: const ValueKey('cli-bottom-collapse'),
+                      onTap: () => setState(() => _collapsed = !_collapsed),
+                      child: Icon(
+                        _collapsed
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        size: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SizedBox(
+            height: height,
+            child: _collapsed
+                ? Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => setState(() => _collapsed = false),
+                      icon: const Icon(Icons.terminal, size: 16),
+                      label: const Text('打开控制台'),
+                    ),
+                  )
+                : widget.console,
+          ),
+        ],
+      );
+    },
+  );
 }
 
 /// Tracks pointer movement globally so dragging remains reliable over the
@@ -756,8 +861,22 @@ final class _WorkspaceSidebar extends StatelessWidget {
                   _SmallIconButton(
                     tooltip: '本地设置',
                     icon: Icons.settings_outlined,
-                    onPressed: () =>
-                        showOpenMuseSettings(context, settings, registry),
+                    onPressed: () => showOpenMuseSettings(
+                      context,
+                      settings,
+                      registry,
+                      onPluginWorkspace:
+                          ({
+                            required pluginId,
+                            required path,
+                            required enabled,
+                          }) => choosePluginWorkspace(
+                            workspace: workspace,
+                            pluginId: pluginId,
+                            path: path,
+                            enabled: enabled,
+                          ),
+                    ),
                   ),
                   _SmallIconButton(
                     tooltip: '收起侧栏',
@@ -773,12 +892,6 @@ final class _WorkspaceSidebar extends StatelessWidget {
               label: '搜索',
               shortcut: '⌘ K',
               onTap: () => _showSearch(context, workspace),
-            ),
-            _SidebarAction(
-              icon: Icons.add_circle,
-              label: '新建文档',
-              accent: true,
-              onTap: () => _createDocument(context, workspace),
             ),
             const SizedBox(height: 20),
             Padding(
@@ -878,13 +991,11 @@ final class _SidebarAction extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.shortcut,
-    this.accent = false,
   });
 
   final IconData icon;
   final String label;
   final String? shortcut;
-  final bool accent;
   final VoidCallback onTap;
 
   @override
@@ -901,7 +1012,7 @@ final class _SidebarAction extends StatelessWidget {
             Icon(
               icon,
               size: 17,
-              color: accent ? OpenMuseTokens.cyan : OpenMuseTokens.textMuted,
+              color: OpenMuseTokens.textMuted,
             ),
             const SizedBox(width: 9),
             Text(
@@ -2335,7 +2446,19 @@ final class _WindowsTitleStrip extends StatelessWidget {
           _SmallIconButton(
             tooltip: '本地设置',
             icon: Icons.settings_outlined,
-            onPressed: () => showOpenMuseSettings(context, settings, registry),
+            onPressed: () => showOpenMuseSettings(
+              context,
+              settings,
+              registry,
+              onPluginWorkspace:
+                  ({required pluginId, required path, required enabled}) =>
+                      choosePluginWorkspace(
+                        workspace: workspace,
+                        pluginId: pluginId,
+                        path: path,
+                        enabled: enabled,
+                      ),
+            ),
           ),
           _SmallIconButton(
             tooltip: workspace.sidebarVisible ? '收起侧栏' : '展开侧栏',

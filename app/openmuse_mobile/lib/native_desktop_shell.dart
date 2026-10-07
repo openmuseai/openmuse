@@ -5,6 +5,7 @@ import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.da
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 import 'native_dsh_page.dart';
+import 'plugin_interaction_remote.dart';
 
 /// Native Mobile information architecture for one paired Desktop.
 ///
@@ -157,8 +158,8 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
       final newest = sessions.isEmpty
           ? null
           : (sessions.toList()
-              ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt)))
-              .first;
+                  ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt)))
+                .first;
       final summary =
           'OpenMuse catalog: follow=$_followDesktopActivity '
           'select=$selectActive before=$_sessionId chosen=$sessionId '
@@ -327,7 +328,12 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
           ),
         ],
       ),
-      body: _body(workspace),
+      body: Stack(
+        children: [
+          Positioned.fill(child: _body(workspace)),
+          PairedPluginInteractionLayer(connection: widget.connection),
+        ],
+      ),
     );
   }
 

@@ -2,9 +2,92 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 typedef PairedTokenValidator = Future<String> Function(String accessToken);
 typedef PairedDshEndpointProvider = Future<Uri> Function();
+typedef RemoteSurfaceDispatcher =
+    Future<Map<String, Object?>> Function(RemoteSurfaceDispatch request);
+typedef RemoteMediaReader =
+    Future<RemoteMediaSlice> Function(RemoteMediaQuery query);
+
+/// A validated plugin interaction handed to the paired window. The gateway
+/// only knows presentation data; plugin files and business logic stay outside.
+final class PairedPluginInteraction {
+  const PairedPluginInteraction({
+    required this.id,
+    required this.pluginId,
+    required this.title,
+    required this.imageBytes,
+    required this.readStatus,
+  });
+
+  final String id;
+  final String pluginId;
+  final String title;
+  final Uint8List imageBytes;
+  final Future<Map<String, Object?>> Function() readStatus;
+}
+
+final class RemoteSurfaceDispatch {
+  const RemoteSurfaceDispatch({
+    required this.operation,
+    required this.body,
+    required this.accountRef,
+    required this.deviceRef,
+    required this.workspaceRef,
+  });
+
+  final String operation;
+  final Map<String, Object?> body;
+  final String accountRef;
+  final String deviceRef;
+  final String workspaceRef;
+}
+
+final class RemoteMediaQuery {
+  const RemoteMediaQuery({
+    required this.handle,
+    required this.accountRef,
+    required this.mobileDeviceRef,
+    required this.desktopDeviceRef,
+    required this.workspaceRef,
+    required this.start,
+    required this.endInclusive,
+  });
+
+  final String handle;
+  final String accountRef;
+  final String mobileDeviceRef;
+  final String desktopDeviceRef;
+  final String workspaceRef;
+  final int start;
+  final int? endInclusive;
+}
+
+sealed class RemoteMediaSlice {
+  const RemoteMediaSlice();
+}
+
+final class RemoteMediaSliceDenied extends RemoteMediaSlice {
+  const RemoteMediaSliceDenied();
+}
+
+final class RemoteMediaSliceUnsatisfiable extends RemoteMediaSlice {
+  const RemoteMediaSliceUnsatisfiable();
+}
+
+final class RemoteMediaSliceBody extends RemoteMediaSlice {
+  const RemoteMediaSliceBody({
+    required this.bytes,
+    required this.total,
+    required this.start,
+  });
+
+  final Uint8List bytes;
+  final int total;
+  final int start;
+}
 
 final class PairedDesktopGateway {
   PairedDesktopGateway({
@@ -19,6 +102,8 @@ final class PairedDesktopGateway {
     this.bindAddress,
     this.grantTtl = const Duration(minutes: 30),
     this.nativeApiToken,
+    this.remoteSurface,
+    this.remoteMedia,
     String? fixedPairingCode,
   }) : _fixedPairingCode = fixedPairingCode;
 
@@ -36,9 +121,14 @@ final class PairedDesktopGateway {
   /// Host-only token injected for the native conversation API. It is never
   /// returned to, or accepted from, the paired mobile client.
   final String? nativeApiToken;
+  final RemoteSurfaceDispatcher? remoteSurface;
+  final RemoteMediaReader? remoteMedia;
   final String? _fixedPairingCode;
   final Random _random = Random.secure();
   final Map<String, _DesktopGrant> _grants = {};
+  final Map<String, PairedPluginInteraction> _interactions = {};
+  String? _activeMobileGrantRef;
+  DateTime? _activeMobilePromptAt;
   HttpServer? _server;
   String? _pairingCode;
   int? _pairingExpiresAtMs;
@@ -51,6 +141,24 @@ final class PairedDesktopGateway {
       : Uri(scheme: 'http', host: '127.0.0.1', port: _server!.port);
   String? get pairingCode => _pairingCode;
   int? get pairingExpiresAtMs => _pairingExpiresAtMs;
+
+  /// Route to the mobile window that most recently submitted a DSH prompt.
+  /// A desktop-origin prompt has no grant, so its interaction stays local.
+  bool offerPluginInteraction(PairedPluginInteraction interaction) {
+    final grantRef = _activeMobileGrantRef;
+    final promptAt = _activeMobilePromptAt;
+    final grant = grantRef == null ? null : _grants[grantRef];
+    if (grantRef == null ||
+        grant == null ||
+        promptAt == null ||
+        DateTime.now().difference(promptAt) > const Duration(minutes: 10) ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+      return false;
+    }
+    _interactions[grantRef] = interaction;
+    _changed();
+    return true;
+  }
 
   Future<void> start() async {
     if (_server != null) return;
@@ -70,6 +178,34 @@ final class PairedDesktopGateway {
     }
   }
 
+  /// In-process grant for the Desktop operator preview. This is not an HTTP
+  /// route: a remote client still has to pair.
+  String issueLoopbackOperatorGrant({
+    required String accountRef,
+    required String deviceRef,
+  }) {
+    final server = _server;
+    if (server == null) {
+      throw StateError('Paired Desktop gateway is not running.');
+    }
+    final grantRef = _randomHex(32);
+    _grants[grantRef] = _DesktopGrant(
+      grantRef: grantRef,
+      accountRef: accountRef,
+      deviceRef: deviceRef,
+      workspaceRef: workspaceRef,
+      expiresAtMs: DateTime.now().add(grantTtl).millisecondsSinceEpoch,
+      upstream: Uri(
+        scheme: 'http',
+        host: server.address.host,
+        port: server.port,
+        path: '/',
+      ),
+    );
+    _changed();
+    return grantRef;
+  }
+
   void armPairing() {
     _pairingCode =
         _fixedPairingCode ??
@@ -84,6 +220,8 @@ final class PairedDesktopGateway {
     final server = _server;
     _server = null;
     _grants.clear();
+    _interactions.clear();
+    _activeMobileGrantRef = null;
     _pairingCode = null;
     _pairingExpiresAtMs = null;
     await server?.close(force: true);
@@ -111,6 +249,25 @@ final class PairedDesktopGateway {
           'ready': running,
           'pairingArmed': _pairingCode != null,
         });
+        return;
+      }
+      if (request.method == 'POST' &&
+          request.uri.path == '/openmuse/remote-surface/v1') {
+        await _remoteSurface(request);
+        return;
+      }
+      if (request.method == 'GET' &&
+          request.uri.path == '/openmuse/plugin-interaction/v1') {
+        await _pluginInteraction(request);
+        return;
+      }
+      if (request.method == 'GET' &&
+          request.uri.path == '/openmuse/plugin-interaction/media/v1') {
+        await _pluginInteractionMedia(request);
+        return;
+      }
+      if (request.uri.path.startsWith('/openmuse/remote-surface/media/')) {
+        await _remoteMedia(request);
         return;
       }
       await _proxy(request);
@@ -259,6 +416,237 @@ final class PairedDesktopGateway {
     _changed();
   }
 
+  Future<void> _remoteSurface(HttpRequest request) async {
+    final dispatcher = remoteSurface;
+    if (dispatcher == null) {
+      throw const _GatewayFailure(
+        HttpStatus.serviceUnavailable,
+        'SURFACE_UNAVAILABLE',
+        '远程工作台未在这台 Desktop 上启用。',
+      );
+    }
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant 无效或已过期。',
+      );
+    }
+    final bytes = await request.fold<List<int>>(<int>[], (value, chunk) {
+      if (value.length + chunk.length > 65536) {
+        throw const _GatewayFailure(
+          HttpStatus.requestEntityTooLarge,
+          'REQUEST_TOO_LARGE',
+          '远程工作台请求过大。',
+        );
+      }
+      value.addAll(chunk);
+      return value;
+    });
+    final decoded = jsonDecode(utf8.decode(bytes));
+    const operations = {
+      'discover',
+      'open',
+      'submit',
+      'lookup',
+      'snapshot',
+      'events',
+    };
+    if (decoded is! Map ||
+        decoded['operation'] is! String ||
+        !operations.contains(decoded['operation']) ||
+        decoded['body'] is! Map) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'SURFACE_REQUEST_INVALID',
+        '远程工作台请求无效。',
+      );
+    }
+    final result = await dispatcher(
+      RemoteSurfaceDispatch(
+        operation: decoded['operation'] as String,
+        body: Map<String, Object?>.from(decoded['body'] as Map),
+        accountRef: grant.accountRef,
+        deviceRef: grant.deviceRef,
+        workspaceRef: grant.workspaceRef,
+      ),
+    );
+    _json(request.response, HttpStatus.ok, result);
+  }
+
+  _DesktopGrant _requireInteractionGrant(HttpRequest request) {
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant 无效或已过期。',
+      );
+    }
+    return grant;
+  }
+
+  Future<void> _pluginInteraction(HttpRequest request) async {
+    final grant = _requireInteractionGrant(request);
+    final interaction = _interactions[grant.grantRef];
+    if (interaction == null) {
+      _json(request.response, HttpStatus.ok, {'interaction': null});
+      return;
+    }
+    final status = await interaction.readStatus();
+    final state = status['state'];
+    final safeState =
+        state is String &&
+            {
+              'starting',
+              'qr_ready',
+              'success',
+              'expired',
+              'error',
+            }.contains(state)
+        ? state
+        : 'error';
+    final message = status['message'];
+    _json(request.response, HttpStatus.ok, {
+      'interaction': {
+        'protocol': 'openmuse.plugin-interaction/v1',
+        'type': 'image.challenge',
+        'id': interaction.id,
+        'pluginId': interaction.pluginId,
+        'title': interaction.title,
+        'state': safeState,
+        'message': message is String
+            ? message.substring(0, min(message.length, 200))
+            : '',
+        'mediaHandle': interaction.id,
+      },
+    });
+  }
+
+  Future<void> _pluginInteractionMedia(HttpRequest request) async {
+    final grant = _requireInteractionGrant(request);
+    final interaction = _interactions[grant.grantRef];
+    if (interaction == null ||
+        request.uri.queryParameters['handle'] != interaction.id) {
+      throw const _GatewayFailure(
+        HttpStatus.notFound,
+        'MEDIA_NOT_FOUND',
+        '交互图片不可用。',
+      );
+    }
+    request.response.headers.contentType = ContentType('image', 'png');
+    request.response.headers.set(HttpHeaders.cacheControlHeader, 'no-store');
+    request.response.add(interaction.imageBytes);
+    await request.response.close();
+  }
+
+  Future<void> _remoteMedia(HttpRequest request) async {
+    final reader = remoteMedia;
+    if (reader == null) {
+      throw const _GatewayFailure(
+        HttpStatus.serviceUnavailable,
+        'MEDIA_UNAVAILABLE',
+        '远程媒体未在这台 Desktop 上启用。',
+      );
+    }
+    if (request.method != 'GET') {
+      throw const _GatewayFailure(
+        HttpStatus.methodNotAllowed,
+        'MEDIA_REQUEST_INVALID',
+        '远程媒体请求无效。',
+      );
+    }
+    final segments = request.uri.pathSegments;
+    final handle =
+        segments.length == 5 &&
+            segments[0] == 'openmuse' &&
+            segments[1] == 'remote-surface' &&
+            segments[2] == 'media' &&
+            segments[3] == 'v1'
+        ? segments[4]
+        : null;
+    if (handle == null ||
+        !RegExp(r'^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$').hasMatch(handle)) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'MEDIA_REQUEST_INVALID',
+        '远程媒体请求无效。',
+      );
+    }
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant 无效或已过期。',
+      );
+    }
+    final range = _byteRange(request.headers.value(HttpHeaders.rangeHeader));
+    if (range == null) {
+      throw const _GatewayFailure(
+        HttpStatus.requestedRangeNotSatisfiable,
+        'RANGE_NOT_SATISFIABLE',
+        '远程媒体范围无效。',
+      );
+    }
+    final slice = await reader(
+      RemoteMediaQuery(
+        handle: handle,
+        accountRef: grant.accountRef,
+        mobileDeviceRef: grant.deviceRef,
+        desktopDeviceRef: deviceRef,
+        workspaceRef: grant.workspaceRef,
+        start: range.start,
+        endInclusive: range.endInclusive,
+      ),
+    );
+    if (slice is RemoteMediaSliceDenied) {
+      throw const _GatewayFailure(
+        HttpStatus.notFound,
+        'MEDIA_UNAVAILABLE',
+        '远程媒体不可用。',
+      );
+    }
+    if (slice is! RemoteMediaSliceBody) {
+      throw const _GatewayFailure(
+        HttpStatus.requestedRangeNotSatisfiable,
+        'RANGE_NOT_SATISFIABLE',
+        '远程媒体范围无效。',
+      );
+    }
+    final end = slice.start + slice.bytes.length - 1;
+    final response = request.response
+      ..statusCode = range.explicit ? HttpStatus.partialContent : HttpStatus.ok
+      ..headers.set(HttpHeaders.acceptRangesHeader, 'bytes')
+      ..headers.contentType = ContentType.binary
+      ..contentLength = slice.bytes.length;
+    if (range.explicit && slice.bytes.isNotEmpty) {
+      response.headers.set(
+        HttpHeaders.contentRangeHeader,
+        'bytes ${slice.start}-$end/${slice.total}',
+      );
+    }
+    response.add(slice.bytes);
+    await response.close();
+  }
+
+  ({int start, int? endInclusive, bool explicit})? _byteRange(String? header) {
+    if (header == null || header.isEmpty) {
+      return (start: 0, endInclusive: null, explicit: false);
+    }
+    final match = RegExp(r'^bytes=(\d+)-(\d*)$').firstMatch(header.trim());
+    if (match == null) return null;
+    final start = int.parse(match.group(1)!);
+    final endText = match.group(2)!;
+    final end = endText.isEmpty ? null : int.parse(endText);
+    if (end != null && end < start) return null;
+    return (start: start, endInclusive: end, explicit: true);
+  }
+
   Future<void> _proxy(HttpRequest request) async {
     final initial = _grantFromInitialPath(request.uri.path);
     final grant = initial ?? _grantFromCookie(request.cookies);
@@ -292,7 +680,23 @@ final class PairedDesktopGateway {
       // Android WebView may keep an empty GET request stream open while the
       // response is pending. Waiting for that stream before close() deadlocks
       // the bootstrap navigation through adb reverse.
-      if (request.method != 'GET' && request.method != 'HEAD') {
+      if (request.method == 'POST' &&
+          request.uri.path == '/openmuse-native/v1/session/prompt') {
+        final body = await request.fold<List<int>>(<int>[], (bytes, chunk) {
+          if (bytes.length + chunk.length > 65536) {
+            throw const _GatewayFailure(
+              HttpStatus.requestEntityTooLarge,
+              'REQUEST_TOO_LARGE',
+              '对话请求过大。',
+            );
+          }
+          return bytes..addAll(chunk);
+        });
+        outbound.add(body);
+        _activeMobileGrantRef = grant.grantRef;
+        _activeMobilePromptAt = DateTime.now();
+        _interactions.remove(grant.grantRef);
+      } else if (request.method != 'GET' && request.method != 'HEAD') {
         await outbound.addStream(request);
       }
       final upstreamResponse = await outbound.close();
@@ -329,7 +733,11 @@ final class PairedDesktopGateway {
         'stream=$eventStream',
       );
       await request.response.addStream(
-        _tapProxyBody(label: label, eventStream: eventStream, source: upstreamResponse),
+        _tapProxyBody(
+          label: label,
+          eventStream: eventStream,
+          source: upstreamResponse,
+        ),
       );
       await request.response.close();
     } finally {

@@ -29,6 +29,8 @@ pub struct PluginManifestV2 {
     pub presentation: Presentation,
     #[serde(default)]
     pub contributes: ContributionsV2,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub install: Option<PluginInstallV2>,
 }
 
 impl PluginManifestV2 {
@@ -98,7 +100,18 @@ impl PluginManifestV2 {
                 return Err(ManifestV2Error::MissingArtifact(decision.target));
             }
         }
-        self.contributes.validate()
+        self.contributes.validate()?;
+        for command in &self.contributes.cli {
+            if !self.artifacts.iter().any(|artifact| {
+                artifact.id == command.artifact && artifact.kind == ArtifactKind::RuntimeClosure
+            }) {
+                return Err(ManifestV2Error::InvalidField("cli.artifact"));
+            }
+        }
+        if let Some(install) = &self.install {
+            install.validate()?;
+        }
+        Ok(())
     }
 
     pub fn resolve_artifacts(
@@ -417,6 +430,8 @@ pub struct ContributionsV2 {
     pub panels: Vec<PanelContribution>,
     #[serde(default)]
     pub agent_cli: Vec<AgentCliContribution>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cli: Vec<HumanCliContribution>,
 }
 
 impl ContributionsV2 {
@@ -431,6 +446,17 @@ impl ContributionsV2 {
             );
             if !identities.insert(identity) {
                 return Err(ManifestV2Error::DuplicateAgentCli(format!(
+                    "{}/{}/{}",
+                    command.group, command.namespace, command.command
+                )));
+            }
+        }
+        let mut human_identities = BTreeSet::new();
+        for command in &self.cli {
+            command.validate()?;
+            let identity = (&command.group, &command.namespace, &command.command);
+            if !human_identities.insert(identity) {
+                return Err(ManifestV2Error::DuplicateCli(format!(
                     "{}/{}/{}",
                     command.group, command.namespace, command.command
                 )));
@@ -468,6 +494,152 @@ impl AgentCliContribution {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct HumanCliContribution {
+    pub group: String,
+    pub namespace: String,
+    pub command: String,
+    pub artifact: String,
+    pub entrypoint: String,
+    pub runtime: String,
+    pub argv_prefix: Vec<String>,
+    pub options: Vec<String>,
+    pub effects: BTreeSet<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub switches: Vec<String>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub description: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub input_schema: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub output_schema: Option<Value>,
+}
+
+impl HumanCliContribution {
+    fn validate(&self) -> Result<(), ManifestV2Error> {
+        for value in [&self.group, &self.namespace, &self.command, &self.artifact] {
+            if value.is_empty()
+                || value.len() > 64
+                || !value.as_bytes()[0].is_ascii_lowercase()
+                || !value
+                    .bytes()
+                    .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+            {
+                return Err(ManifestV2Error::InvalidField("cli.identity"));
+            }
+        }
+        if self.runtime != "python3"
+            || self.entrypoint.starts_with('/')
+            || self.entrypoint.split('/').any(|segment| {
+                segment.is_empty()
+                    || segment == "."
+                    || segment == ".."
+                    || !segment.bytes().all(|byte| {
+                        byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-')
+                    })
+            })
+            || self
+                .argv_prefix
+                .iter()
+                .any(|value| value.is_empty() || value.starts_with('-'))
+            || self
+                .options
+                .iter()
+                .any(|value| !value.starts_with("--") || value.len() < 3)
+            || self.options.iter().collect::<BTreeSet<_>>().len() != self.options.len()
+            || self
+                .switches
+                .iter()
+                .any(|value| !value.starts_with("--") || value.len() < 3)
+            || self.switches.iter().collect::<BTreeSet<_>>().len() != self.switches.len()
+            || self
+                .switches
+                .iter()
+                .any(|value| self.options.contains(value))
+            || self
+                .input_schema
+                .as_ref()
+                .is_some_and(|value| !value.is_object())
+            || self
+                .output_schema
+                .as_ref()
+                .is_some_and(|value| !value.is_object())
+        {
+            return Err(ManifestV2Error::InvalidField("cli.entrypoint"));
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PluginInstallV2 {
+    pub steps: Vec<InstallStepV2>,
+}
+
+impl PluginInstallV2 {
+    fn validate(&self) -> Result<(), ManifestV2Error> {
+        if self
+            .steps
+            .iter()
+            .filter(|step| matches!(step, InstallStepV2::WorkspaceChoose { .. }))
+            .count()
+            != 1
+        {
+            return Err(ManifestV2Error::InvalidField("install.steps"));
+        }
+        for step in &self.steps {
+            if let InstallStepV2::RuntimePrepare {
+                entrypoint,
+                runtime,
+                ..
+            } = step
+            {
+                if let Some(path) = entrypoint {
+                    if runtime.as_deref() != Some("python3")
+                        || path.starts_with('/')
+                        || path.split('/').any(|segment| {
+                            segment.is_empty()
+                                || segment == "."
+                                || segment == ".."
+                                || !segment.bytes().all(|byte| {
+                                    byte.is_ascii_alphanumeric()
+                                        || matches!(byte, b'.' | b'_' | b'-')
+                                })
+                        })
+                    {
+                        return Err(ManifestV2Error::InvalidField("install.entrypoint"));
+                    }
+                } else if runtime.is_some() {
+                    return Err(ManifestV2Error::InvalidField("install.runtime"));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", deny_unknown_fields)]
+pub enum InstallStepV2 {
+    #[serde(rename = "workspace.choose")]
+    WorkspaceChoose { id: String, title: String },
+    #[serde(rename = "workspace.layout")]
+    WorkspaceLayout { directories: Vec<String> },
+    #[serde(rename = "workspace.materialize")]
+    WorkspaceMaterialize { artifact: String, into: String },
+    #[serde(rename = "runtime.prepare")]
+    RuntimePrepare {
+        artifact: String,
+        into: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        entrypoint: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        runtime: Option<String>,
+    },
+}
+
 pub trait ArtifactSignatureVerifier {
     fn verify(
         &self,
@@ -501,6 +673,8 @@ pub enum ManifestV2Error {
     DuplicateArtifact(String),
     #[error("duplicate Agent CLI command {0}")]
     DuplicateAgentCli(String),
+    #[error("duplicate human CLI command {0}")]
+    DuplicateCli(String),
     #[error("unsupported target {0}")]
     UnsupportedTarget(TargetTriple),
     #[error("supported target {0} has no artifact")]
@@ -579,7 +753,9 @@ pub fn migrate_manifest_v1(manifest: &PluginManifest) -> PluginManifestV2 {
             editors: manifest.contributes.editors.clone(),
             panels: manifest.contributes.panels.clone(),
             agent_cli: Vec::new(),
+            cli: Vec::new(),
         },
+        install: None,
     }
 }
 
@@ -652,6 +828,7 @@ impl From<&Contributions> for ContributionsV2 {
             editors: value.editors.clone(),
             panels: value.panels.clone(),
             agent_cli: Vec::new(),
+            cli: Vec::new(),
         }
     }
 }

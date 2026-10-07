@@ -207,7 +207,7 @@ final class PairedDesktopMobileController extends ChangeNotifier {
     return _pairWithClient(client, code);
   }
 
-  Future<bool> connectDevice(AccountDevice device) async {
+  Future<bool> connectDevice(AccountDevice device, {bool force = false}) async {
     if (!device.online) {
       _publish(
         const PairedDesktopMobileSnapshot(
@@ -225,7 +225,8 @@ final class PairedDesktopMobileController extends ChangeNotifier {
       return false;
     }
     final existing = _snapshot.connection;
-    if (existing != null &&
+    if (!force &&
+        existing != null &&
         existing.deviceRef == device.deviceRef &&
         existing.expiresAtMs >
             DateTime.now()

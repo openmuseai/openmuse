@@ -95,4 +95,75 @@ void main() {
       expect(command.effects, contains('workspace.read'));
     },
   );
+
+  test('install steps round trip and unknown steps fail closed', () async {
+    final input = await fixture('helix.json');
+    input['install'] = {
+      'steps': [
+        {'type': 'workspace.choose', 'id': 'workspace', 'title': '选择工作区'},
+        {
+          'type': 'workspace.layout',
+          'directories': ['profiles', 'cache'],
+        },
+        {'type': 'runtime.prepare', 'artifact': 'runtime', 'into': 'skills', 'entrypoint': 'runtime/install.py', 'runtime': 'python3'},
+      ],
+    };
+    final manifest = OpenMusePluginManifestV2.fromJson(input);
+    expect(manifest.toJson(), equals(input));
+    expect(manifest.install?.steps, hasLength(3));
+
+    final shell = await fixture('helix.json');
+    shell['install'] = {
+      'steps': [
+        {'type': 'workspace.choose', 'id': 'workspace', 'title': '选择工作区'},
+        {'type': 'shell', 'command': 'rm'},
+      ],
+    };
+    expect(
+      () => OpenMusePluginManifestV2.fromJson(shell),
+      throwsA(isA<OpenMuseManifestFormatException>()),
+    );
+  });
+
+  test(
+    'human CLI declaration requires a runtime artifact and safe entrypoint',
+    () async {
+      final input = await fixture('helix.json');
+      final artifacts = input['artifacts'] as List;
+      final artifact = Map<String, Object?>.from(artifacts.first as Map);
+      artifact['id'] = 'test-cli';
+      artifact['kind'] = 'runtime-closure';
+      artifacts.add(artifact);
+      final contributes = input['contributes'] as Map;
+      contributes['cli'] = [
+        {
+          'group': 'test',
+          'namespace': 'script',
+          'command': 'plan',
+          'artifact': 'test-cli',
+          'entrypoint': 'scripts/plan.py',
+          'runtime': 'python3',
+          'argv_prefix': ['plan'],
+          'options': ['--title'],
+          'switches': ['--verbose'],
+          'description': 'Plan work',
+          'input_schema': {'type': 'object', 'required': ['--title']},
+          'output_schema': {'contentType': 'text/plain'},
+          'effects': ['workspace.read'],
+        },
+      ];
+      final manifest = OpenMusePluginManifestV2.fromJson(input);
+      expect(manifest.contributes.cli.single.identity, 'test/script/plan');
+      expect(
+        manifest.toJson()['contributes'],
+        containsPair('cli', contributes['cli']),
+      );
+
+      (contributes['cli'] as List).first['entrypoint'] = '../escape.py';
+      expect(
+        () => OpenMusePluginManifestV2.fromJson(input),
+        throwsA(isA<OpenMuseManifestFormatException>()),
+      );
+    },
+  );
 }

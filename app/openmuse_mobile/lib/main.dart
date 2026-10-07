@@ -13,6 +13,7 @@ import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 import 'package:openmuse_office_docx/openmuse_office_docx.dart';
 import 'package:openmuse_office_viewers/openmuse_office_viewers.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_remote_workbench/openmuse_remote_workbench.dart';
 import 'package:openmuse_speech_input/openmuse_speech_input.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:path_provider/path_provider.dart';
@@ -215,6 +216,7 @@ final class OpenMuseMobileApplication extends StatefulWidget {
     required this.cloudWorkspacePlugin,
     required this.pairedDesktopPlugin,
     this.speechInputPlugin,
+    this.remoteWorkbenchPlugin,
     this.officeEngine,
     this.debugSpeechSource,
   });
@@ -223,21 +225,29 @@ final class OpenMuseMobileApplication extends StatefulWidget {
   final OpenMuseCloudWorkspacePlugin cloudWorkspacePlugin;
   final OpenMusePairedDesktopMobilePlugin pairedDesktopPlugin;
   final OpenMuseSpeechInputPlugin? speechInputPlugin;
+  final OpenMuseRemoteWorkbenchPlugin? remoteWorkbenchPlugin;
   final OfficeEnginePort? officeEngine;
   final SpeechAudioSource? debugSpeechSource;
 
   @override
   State<OpenMuseMobileApplication> createState() =>
-      _OpenMuseMobileApplicationState();
+      OpenMuseMobileApplicationState();
 }
 
-final class _OpenMuseMobileApplicationState
+final class OpenMuseMobileApplicationState
     extends State<OpenMuseMobileApplication> {
   late final OpenMusePluginRegistry _plugins;
+  late final OpenMuseRemoteWorkbenchPlugin _workbench;
+
+  @visibleForTesting
+  List<String> get installedPluginIds =>
+      _plugins.descriptors.map((descriptor) => descriptor.id).toList();
 
   @override
   void initState() {
     super.initState();
+    _workbench =
+        widget.remoteWorkbenchPlugin ?? OpenMuseRemoteWorkbenchPlugin();
     _plugins =
         OpenMusePluginRegistry(
             context: OpenMusePluginContext(
@@ -246,11 +256,13 @@ final class _OpenMuseMobileApplicationState
           )
           ..install(widget.authenticationPlugin)
           ..install(widget.cloudWorkspacePlugin)
-          ..install(widget.pairedDesktopPlugin);
+          ..install(widget.pairedDesktopPlugin)
+          ..install(_workbench);
     final speech = widget.speechInputPlugin;
     if (speech != null) _plugins.install(speech);
     unawaited(() async {
       if (speech != null) await _plugins.activate(speech.descriptor.id);
+      await _plugins.activate(_workbench.descriptor.id);
       await _plugins.activate(widget.authenticationPlugin.descriptor.id);
       await _plugins.activate(widget.cloudWorkspacePlugin.descriptor.id);
       await _plugins.activate(widget.pairedDesktopPlugin.descriptor.id);
@@ -266,6 +278,7 @@ final class _OpenMuseMobileApplicationState
         _plugins.deactivate(widget.authenticationPlugin.descriptor.id),
         if (widget.speechInputPlugin case final speech?)
           _plugins.deactivate(speech.descriptor.id),
+        _plugins.deactivate(_workbench.descriptor.id),
       ]).whenComplete(_plugins.dispose),
     );
     super.dispose();
@@ -314,6 +327,7 @@ final class _WorkBuddyHost extends StatefulWidget {
 final class _WorkBuddyHostState extends State<_WorkBuddyHost>
     with WidgetsBindingObserver {
   final WorkBuddyController _buddy = WorkBuddyController();
+  final AcceptanceDesktop? _acceptance = debugAcceptanceDesktop();
   late OpenMuseHostComposition _composition;
 
   @override
@@ -361,6 +375,7 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
     WidgetsBinding.instance.removeObserver(this);
     widget.authentication.removeListener(_onAuth);
     _buddy.dispose();
+    _acceptance?.controller.dispose();
     super.dispose();
   }
 
@@ -379,6 +394,7 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
     catalog: _composition.workspaceCatalog,
     speechRecognition: widget.speechRecognition,
     debugSpeechSource: widget.debugSpeechSource,
+    remoteWorkbench: _acceptance?.controller,
     cloudLabel: widget.cloudLabel,
     onSignOut: widget.authentication.signOut,
   );

@@ -4,7 +4,7 @@ use openmuse_plugin_protocol::{
     SignatureAlgorithm, TargetArch, TargetDecision, TargetLibc, TargetOs, TargetStatus,
     TargetTriple, migrate_manifest_v1,
 };
-use serde_json::Value;
+use serde_json::{Value, json};
 
 const HELIX_V1: &str = include_str!("../../../plugins/helix/openmuse.plugin.json");
 
@@ -103,6 +103,53 @@ fn unknown_fields_and_targets_fail_closed() {
     assert!(matches!(
         PluginManifestV2::from_json_slice(&serde_json::to_vec(&value).unwrap()),
         Err(ManifestV2Error::InvalidJson(_))
+    ));
+}
+
+#[test]
+fn human_cli_uses_a_runtime_closure_and_rejects_unsafe_paths() {
+    let mut value: Value = serde_json::from_slice(V2_FIXTURES[0].1).unwrap();
+    let mut artifact = value["artifacts"][0].clone();
+    artifact["id"] = json!("test-cli");
+    artifact["kind"] = json!("runtime-closure");
+    value["artifacts"].as_array_mut().unwrap().push(artifact);
+    value["contributes"]["cli"] = json!([{
+        "group": "test", "namespace": "script", "command": "plan",
+        "artifact": "test-cli", "entrypoint": "scripts/plan.py",
+        "runtime": "python3", "argv_prefix": ["plan"],
+        "options": ["--title"], "switches": ["--verbose"],
+        "description": "Plan work",
+        "input_schema": {"type":"object","required":["--title"]},
+        "output_schema": {"contentType":"text/plain"},
+        "effects": ["workspace.read"]
+    }]);
+    let manifest = PluginManifestV2::from_json_slice(&serde_json::to_vec(&value).unwrap()).unwrap();
+    assert_eq!(manifest.contributes.cli[0].entrypoint, "scripts/plan.py");
+    assert_eq!(manifest.contributes.cli[0].switches, vec!["--verbose"]);
+
+    value["contributes"]["cli"][0]["entrypoint"] = json!("../escape.py");
+    assert!(matches!(
+        PluginManifestV2::from_json_slice(&serde_json::to_vec(&value).unwrap()),
+        Err(ManifestV2Error::InvalidField("cli.entrypoint"))
+    ));
+}
+
+#[test]
+fn runtime_prepare_accepts_a_plugin_owned_install_entrypoint() {
+    let mut value: Value = serde_json::from_slice(V2_FIXTURES[0].1).unwrap();
+    value["install"] = json!({"steps":[
+        {"type":"workspace.choose","id":"workspace","title":"Choose"},
+        {"type":"runtime.prepare","artifact":"runtime","into":"skills","entrypoint":"runtime/install.py","runtime":"python3"}
+    ]});
+    let manifest = PluginManifestV2::from_json_slice(&serde_json::to_vec(&value).unwrap()).unwrap();
+    assert_eq!(
+        serde_json::to_value(&manifest).unwrap()["install"],
+        value["install"]
+    );
+    value["install"]["steps"][1]["entrypoint"] = json!("../escape.py");
+    assert!(matches!(
+        PluginManifestV2::from_json_slice(&serde_json::to_vec(&value).unwrap()),
+        Err(ManifestV2Error::InvalidField("install.entrypoint"))
     ));
 }
 

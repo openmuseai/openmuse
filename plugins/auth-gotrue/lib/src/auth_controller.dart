@@ -6,6 +6,22 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'auth_models.dart';
 import 'auth_ports.dart';
 
+const localAnonymousUserId = 'local.anonymous';
+
+bool _isLocalAnonymous(GoTrueSession session) =>
+    session.user.id == localAnonymousUserId &&
+    session.accessToken == localAnonymousUserId;
+
+GoTrueSession _localAnonymousMarker() => GoTrueSession(
+  accessToken: localAnonymousUserId,
+  refreshToken: localAnonymousUserId,
+  expiresAt: DateTime.utc(9999),
+  user: const GoTrueUser(
+    id: localAnonymousUserId,
+    email: 'anonymous@local.invalid',
+  ),
+);
+
 final class GoTrueAuthenticationController extends ChangeNotifier
     implements
         OpenMuseAuthenticationController,
@@ -30,6 +46,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
 
   GoTrueSession? _session;
   Future<GoTrueSession>? _refreshInFlight;
+  var _anonymous = false;
   OpenMuseAuthenticationSnapshot _snapshot =
       const OpenMuseAuthenticationSnapshot.restoring();
 
@@ -43,9 +60,17 @@ final class GoTrueAuthenticationController extends ChangeNotifier
       final restored = await _store.read();
       if (restored == null) {
         _session = null;
+        _anonymous = false;
         _setSnapshot(const OpenMuseAuthenticationSnapshot.signedOut());
         return;
       }
+      if (_isLocalAnonymous(restored)) {
+        _session = null;
+        _anonymous = true;
+        _publishAnonymous();
+        return;
+      }
+      _anonymous = false;
       _session = restored;
       final usable = await _usableSession();
       await _bootstrap(usable);
@@ -163,9 +188,29 @@ final class GoTrueAuthenticationController extends ChangeNotifier
     }
   }
 
+  /// Local workspace entry from the previous desktop sign-in screen.
+  /// No GoTrue request is made and no credential is exposed to Cloud calls.
+  Future<void> signInAnonymously() async {
+    if (_snapshot.phase == OpenMuseAuthenticationPhase.submitting ||
+        _snapshot.phase == OpenMuseAuthenticationPhase.bootstrapping) {
+      return;
+    }
+    _session = null;
+    _refreshInFlight = null;
+    _anonymous = true;
+    try {
+      await _store.write(_localAnonymousMarker());
+    } catch (error, stackTrace) {
+      _authLog(
+        'anonymous persist failed type=${error.runtimeType} error=$error\n$stackTrace',
+      );
+    }
+    _publishAnonymous();
+  }
+
   @override
   Future<String?> accessToken({bool forceRefresh = false}) async {
-    if (_session == null) return null;
+    if (_anonymous || _session == null) return null;
     try {
       final session = forceRefresh
           ? await _refreshSession()
@@ -182,7 +227,8 @@ final class GoTrueAuthenticationController extends ChangeNotifier
 
   @override
   Future<void> signOut() async {
-    final session = _session;
+    final session = _anonymous ? null : _session;
+    _anonymous = false;
     try {
       if (session != null) await _provider.logout(session.accessToken);
     } catch (_) {
@@ -235,6 +281,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
   }
 
   Future<void> _finishSignIn(GoTrueSession session) async {
+    _anonymous = false;
     _authLog('bootstrap started');
     await _bootstrap(session);
     _authLog('bootstrap finished');
@@ -277,8 +324,21 @@ final class GoTrueAuthenticationController extends ChangeNotifier
     debugPrint('OpenMuse auth: $message');
   }
 
+  void _publishAnonymous() {
+    _setSnapshot(
+      const OpenMuseAuthenticationSnapshot(
+        phase: OpenMuseAuthenticationPhase.authenticated,
+        identity: OpenMuseAuthenticatedIdentity(
+          subject: localAnonymousUserId,
+          email: 'Anonymous mode',
+        ),
+      ),
+    );
+  }
+
   Future<void> _clearSession() async {
     _session = null;
+    _anonymous = false;
     _refreshInFlight = null;
     try {
       await _store.delete();

@@ -56,6 +56,8 @@ dependencies:
     path: ../../packages/openmuse_office_viewers
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
+  openmuse_remote_workbench:
+    path: ../../plugins/remote-workbench
   openmuse_speech_input:
     path: ../../plugins/speech-input
   openmuse_workspace_paired:

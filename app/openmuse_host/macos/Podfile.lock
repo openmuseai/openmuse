@@ -38,7 +38,7 @@ SPEC CHECKSUMS:
   flutter_secure_storage_macos: 7f45e30f838cf2659862a4e4e3ee1c347c2b3b54
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   openmuse_dsh_plugin: 5f8716962236c0ca7f90a80f5f5074ec9cd692cb
-  openmuse_file_viewer: 3a156b24fb05760af92557feb35125acea5986d0
+  openmuse_file_viewer: 69820774a1fd25a625a9324d1807cc1beec8c858
   openmuse_native_text_gate: 2524a8796b346bd1033fdf4cfd864aaa8c2816d8
 
 PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009

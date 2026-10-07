@@ -1,0 +1,2 @@
+Pillow>=10,<13
+playwright==1.63.0

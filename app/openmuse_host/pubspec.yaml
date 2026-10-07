@@ -16,6 +16,8 @@ dependencies:
     path: ../../plugins/cloud-workspace
   openmuse_builtin_plugins:
     path: ../../distribution/openmuse_builtin_plugins
+  muse_remote_surface_core:
+    path: ../../packages/muse_remote_surface_core
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
   openmuse_host_shell:
@@ -26,6 +28,7 @@ dependencies:
     path: ../../plugins/workspace-paired
   path: ^1.9.1
   path_provider: ^2.1.5
+  archive: ^3.6.1
 
 dev_dependencies:
   flutter_test:

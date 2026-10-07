@@ -435,6 +435,140 @@ final class OpenMuseAgentCliContributionV2 {
   };
 }
 
+/// Human-invoked CLI command backed by a verified installed artifact.
+/// The launcher passes argv directly to the runtime; it never invokes a shell.
+final class OpenMuseCliContributionV2 {
+  const OpenMuseCliContributionV2({
+    required this.group,
+    required this.namespace,
+    required this.command,
+    required this.artifact,
+    required this.entrypoint,
+    required this.runtime,
+    required this.argvPrefix,
+    required this.options,
+    required this.effects,
+    this.switches = const [],
+    this.description = '',
+    this.inputSchema = const {},
+    this.outputSchema = const {},
+  });
+
+  final String group;
+  final String namespace;
+  final String command;
+  final String artifact;
+  final String entrypoint;
+  final String runtime;
+  final List<String> argvPrefix;
+  final List<String> options;
+  final Set<String> effects;
+  final List<String> switches;
+  final String description;
+  final Map<String, Object?> inputSchema;
+  final Map<String, Object?> outputSchema;
+
+  String get identity => '$group/$namespace/$command';
+
+  factory OpenMuseCliContributionV2.fromJson(Object? value) {
+    final map = _object(value, 'cli');
+    _keys(
+      map,
+      required: const {
+        'group',
+        'namespace',
+        'command',
+        'artifact',
+        'entrypoint',
+        'runtime',
+        'argv_prefix',
+        'options',
+        'effects',
+      },
+      optional: const {
+        'switches',
+        'description',
+        'input_schema',
+        'output_schema',
+      },
+    );
+    final group = _string(map, 'group');
+    final namespace = _string(map, 'namespace');
+    final command = _string(map, 'command');
+    final artifact = _string(map, 'artifact');
+    final entrypoint = _string(map, 'entrypoint');
+    for (final part in [group, namespace, command, artifact]) {
+      if (!RegExp(r'^[a-z][a-z0-9-]{0,63}$').hasMatch(part)) {
+        throw OpenMuseManifestFormatException('invalid CLI identifier $part');
+      }
+    }
+    if (!RegExp(r'^[A-Za-z0-9._/-]+$').hasMatch(entrypoint) ||
+        entrypoint.startsWith('/') ||
+        entrypoint.contains('\\') ||
+        entrypoint
+            .split('/')
+            .any(
+              (segment) => segment == '..' || segment == '.' || segment.isEmpty,
+            )) {
+      throw const OpenMuseManifestFormatException('invalid CLI entrypoint');
+    }
+    final runtime = _string(map, 'runtime');
+    if (runtime != 'python3') {
+      throw OpenMuseManifestFormatException('unsupported CLI runtime $runtime');
+    }
+    final prefix = _stringList(map['argv_prefix'], 'argv_prefix');
+    final options = _stringList(map['options'], 'options');
+    final switches = map.containsKey('switches')
+        ? _stringList(map['switches'], 'switches')
+        : <String>[];
+    if (prefix.any((arg) => arg.startsWith('-') || arg.isEmpty) ||
+        options.any((arg) => !RegExp(r'^--[a-z][a-z0-9-]*$').hasMatch(arg)) ||
+        switches.any((arg) => !RegExp(r'^--[a-z][a-z0-9-]*$').hasMatch(arg)) ||
+        options.toSet().length != options.length ||
+        switches.toSet().length != switches.length ||
+        options.toSet().intersection(switches.toSet()).isNotEmpty) {
+      throw const OpenMuseManifestFormatException('invalid CLI arguments');
+    }
+    return OpenMuseCliContributionV2(
+      group: group,
+      namespace: namespace,
+      command: command,
+      artifact: artifact,
+      entrypoint: entrypoint,
+      runtime: runtime,
+      argvPrefix: prefix,
+      options: options,
+      effects: _stringSet(map['effects'], 'effects'),
+      switches: switches,
+      description: map['description'] is String
+          ? map['description'] as String
+          : '',
+      inputSchema: map.containsKey('input_schema')
+          ? _copyMap(_object(map['input_schema'], 'cli.input_schema'))
+          : const {},
+      outputSchema: map.containsKey('output_schema')
+          ? _copyMap(_object(map['output_schema'], 'cli.output_schema'))
+          : const {},
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'group': group,
+    'namespace': namespace,
+    'command': command,
+    'artifact': artifact,
+    'entrypoint': entrypoint,
+    'runtime': runtime,
+    'argv_prefix': argvPrefix,
+    'options': options,
+    'effects': effects.toList(),
+    if (switches.isNotEmpty) 'switches': switches,
+    if (description.isNotEmpty) 'description': description,
+    if (inputSchema.isNotEmpty) 'input_schema': inputSchema,
+    if (outputSchema.isNotEmpty) 'output_schema': outputSchema,
+  };
+}
+
 final class OpenMuseContributionsV2 {
   const OpenMuseContributionsV2({
     required this.commands,
@@ -442,6 +576,7 @@ final class OpenMuseContributionsV2 {
     required this.editors,
     required this.panels,
     required this.agentCli,
+    this.cli = const [],
   });
 
   final List<Map<String, Object?>> commands;
@@ -449,6 +584,7 @@ final class OpenMuseContributionsV2 {
   final List<Map<String, Object?>> editors;
   final List<Map<String, Object?>> panels;
   final List<OpenMuseAgentCliContributionV2> agentCli;
+  final List<OpenMuseCliContributionV2> cli;
 
   factory OpenMuseContributionsV2.fromJson(Object? value) {
     final map = _object(value, 'contributes');
@@ -461,6 +597,7 @@ final class OpenMuseContributionsV2 {
         'editors',
         'panels',
         'agent_cli',
+        'cli',
       },
     );
     final commands = _contributions(
@@ -491,11 +628,18 @@ final class OpenMuseContributionsV2 {
       map['agent_cli'],
       'agent_cli',
     ).map(OpenMuseAgentCliContributionV2.fromJson).toList(growable: false);
+    final cli = _list(
+      map['cli'],
+      'cli',
+    ).map(OpenMuseCliContributionV2.fromJson).toList(growable: false);
     final identities = agentCli.map((item) => item.identity).toSet();
     if (identities.length != agentCli.length) {
       throw const OpenMuseManifestFormatException(
         'duplicate Agent CLI identity',
       );
+    }
+    if (cli.map((item) => item.identity).toSet().length != cli.length) {
+      throw const OpenMuseManifestFormatException('duplicate CLI identity');
     }
     return OpenMuseContributionsV2(
       commands: commands,
@@ -503,6 +647,7 @@ final class OpenMuseContributionsV2 {
       editors: editors,
       panels: panels,
       agentCli: agentCli,
+      cli: cli,
     );
   }
 
@@ -512,7 +657,125 @@ final class OpenMuseContributionsV2 {
     'editors': editors.map(_copyMap).toList(),
     'panels': panels.map(_copyMap).toList(),
     'agent_cli': agentCli.map((item) => item.toJson()).toList(),
+    if (cli.isNotEmpty) 'cli': cli.map((item) => item.toJson()).toList(),
   };
+}
+
+enum OpenMuseInstallStepType {
+  workspaceChoose,
+  workspaceLayout,
+  workspaceMaterialize,
+  runtimePrepare,
+}
+
+/// One Host-executed install step. Packages choose and order these steps.
+/// The Host rejects any step type it does not implement.
+final class OpenMuseInstallStep {
+  const OpenMuseInstallStep._(this.type, this.fields);
+
+  final OpenMuseInstallStepType type;
+  final Map<String, Object?> fields;
+
+  String get id => fields['id'] as String? ?? type.name;
+
+  factory OpenMuseInstallStep.fromJson(Object? value) {
+    final map = _object(value, 'install.steps');
+    final typeName = _string(map, 'type');
+    final type = switch (typeName) {
+      'workspace.choose' => OpenMuseInstallStepType.workspaceChoose,
+      'workspace.layout' => OpenMuseInstallStepType.workspaceLayout,
+      'workspace.materialize' => OpenMuseInstallStepType.workspaceMaterialize,
+      'runtime.prepare' => OpenMuseInstallStepType.runtimePrepare,
+      _ => throw OpenMuseManifestFormatException(
+        'unknown install step $typeName',
+      ),
+    };
+    switch (type) {
+      case OpenMuseInstallStepType.workspaceChoose:
+        _keys(map, required: const {'type', 'id', 'title'});
+      case OpenMuseInstallStepType.workspaceLayout:
+        _keys(map, required: const {'type', 'directories'});
+        final directories = _stringList(map['directories'], 'directories');
+        if (directories.isEmpty) {
+          throw const OpenMuseManifestFormatException(
+            'workspace.layout directories must not be empty',
+          );
+        }
+        for (final name in directories) {
+          _installSegment(name);
+        }
+      case OpenMuseInstallStepType.workspaceMaterialize:
+        _keys(map, required: const {'type', 'artifact', 'into'});
+        _installSegment(_string(map, 'into'));
+      case OpenMuseInstallStepType.runtimePrepare:
+        _keys(
+          map,
+          required: const {'type', 'artifact', 'into'},
+          optional: const {'entrypoint', 'runtime'},
+        );
+        _installSegment(_string(map, 'into'));
+        if (map.containsKey('entrypoint')) {
+          final entrypoint = _string(map, 'entrypoint');
+          if (entrypoint.startsWith('/') ||
+              entrypoint
+                  .split('/')
+                  .any((part) => part == '..' || part == '.' || part.isEmpty)) {
+            throw const OpenMuseManifestFormatException(
+              'invalid install entrypoint',
+            );
+          }
+          if (_string(map, 'runtime') != 'python3') {
+            throw const OpenMuseManifestFormatException(
+              'unsupported install runtime',
+            );
+          }
+        }
+    }
+    return OpenMuseInstallStep._(type, _copyMap(map));
+  }
+
+  Map<String, Object?> toJson() => _copyMap(fields);
+}
+
+final class OpenMusePluginInstallV2 {
+  const OpenMusePluginInstallV2({required this.steps});
+
+  final List<OpenMuseInstallStep> steps;
+
+  factory OpenMusePluginInstallV2.fromJson(Object? value) {
+    final map = _object(value, 'install');
+    _keys(map, required: const {'steps'});
+    final steps = _list(
+      map['steps'],
+      'install.steps',
+    ).map(OpenMuseInstallStep.fromJson).toList(growable: false);
+    if (steps.isEmpty) {
+      throw const OpenMuseManifestFormatException(
+        'install.steps must not be empty',
+      );
+    }
+    final chooses = steps
+        .where((step) => step.type == OpenMuseInstallStepType.workspaceChoose)
+        .length;
+    if (chooses != 1) {
+      throw const OpenMuseManifestFormatException(
+        'install must contain exactly one workspace.choose step',
+      );
+    }
+    return OpenMusePluginInstallV2(steps: steps);
+  }
+
+  Map<String, Object?> toJson() => {
+    'steps': steps.map((step) => step.toJson()).toList(),
+  };
+}
+
+void _installSegment(String value) {
+  if (!RegExp(r'^[A-Za-z0-9._-]{1,64}$').hasMatch(value) ||
+      value == '.' ||
+      value == '..') {
+    throw OpenMuseManifestFormatException('invalid install path $value');
+  }
 }
 
 final class OpenMusePluginManifestV2 {
@@ -529,6 +792,7 @@ final class OpenMusePluginManifestV2 {
     required this.requestedPermissions,
     required this.presentation,
     required this.contributes,
+    this.install,
   });
 
   final String id;
@@ -543,6 +807,7 @@ final class OpenMusePluginManifestV2 {
   final Set<String> requestedPermissions;
   final OpenMusePresentationV2 presentation;
   final OpenMuseContributionsV2 contributes;
+  final OpenMusePluginInstallV2? install;
 
   factory OpenMusePluginManifestV2.fromJson(Object? value) {
     final map = _object(value, 'manifest');
@@ -563,6 +828,7 @@ final class OpenMusePluginManifestV2 {
         'presentation',
         'contributes',
       },
+      optional: const {'install'},
     );
     if (_integer(map, 'manifest_version') != 2) {
       throw const OpenMuseManifestFormatException('manifest_version must be 2');
@@ -603,6 +869,9 @@ final class OpenMusePluginManifestV2 {
       ),
       presentation: OpenMusePresentationV2.fromJson(map['presentation']),
       contributes: OpenMuseContributionsV2.fromJson(map['contributes']),
+      install: map.containsKey('install')
+          ? OpenMusePluginInstallV2.fromJson(map['install'])
+          : null,
     );
     manifest._validateResolution();
     return manifest;
@@ -642,6 +911,15 @@ final class OpenMusePluginManifestV2 {
         );
       }
     }
+    for (final command in contributes.cli) {
+      final matches = artifacts.where((item) => item.id == command.artifact);
+      if (matches.length != 1 ||
+          matches.single.kind != OpenMuseArtifactKind.runtimeClosure) {
+        throw OpenMuseManifestFormatException(
+          'CLI ${command.identity} requires a runtime-closure artifact',
+        );
+      }
+    }
   }
 
   List<OpenMusePluginArtifactV2> resolveArtifacts(OpenMuseTarget target) {
@@ -678,6 +956,7 @@ final class OpenMusePluginManifestV2 {
     'requested_permissions': requestedPermissions.toList(),
     'presentation': presentation.toJson(),
     'contributes': contributes.toJson(),
+    if (install != null) 'install': install!.toJson(),
   };
 }
 

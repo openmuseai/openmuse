@@ -50,6 +50,25 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('anonymous mode skips the login form', (tester) async {
+    var anonymous = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: OpenMuseLoginScreen(
+          authentication: _FakeController(),
+          onAnonymous: () => anonymous++,
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('auth.anonymous')));
+    await tester.pump();
+
+    expect(find.text('Anonymous mode'), findsOneWidget);
+    expect(anonymous, 1);
+    expect(find.byKey(const ValueKey('auth.password')), findsNothing);
+  });
+
   testWidgets('invalid email stays on the email page', (tester) async {
     await tester.pumpWidget(_app(_FakeController()));
     await tester.enterText(find.byKey(const ValueKey('auth.email')), 'invalid');
