@@ -404,6 +404,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  openmuse_file_viewer_flutter:
+    dependency: transitive
+    description:
+      path: "../../packages/openmuse_file_viewer_flutter"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_helix_plugin:
     dependency: "direct dev"
     description:
@@ -443,6 +450,13 @@ packages:
     dependency: "direct main"
     description:
       path: "../../packages/openmuse_plugin_sdk"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_workbench_layout:
+    dependency: "direct main"
+    description:
+      path: "../../packages/openmuse_workbench_layout"
       relative: true
     source: path
     version: "0.1.0"
