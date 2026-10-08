@@ -407,6 +407,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  openmuse_office_flutter:
+    dependency: "direct main"
+    description:
+      path: "../../packages/openmuse_office_flutter"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_office_viewers:
     dependency: "direct main"
     description:
