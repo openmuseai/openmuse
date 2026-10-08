@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-enum OpenMuseHostPlatform { desktop, mobile }
+enum OpenMuseHostPlatform { desktop, mobile, web }
 
 enum WorkspacePlacement { cloud, pairedDesktop }
 

@@ -1,0 +1,32 @@
+name: openmuse_web
+description: OpenMuse browser entry with shared Flutter UI and a direct DSH Web route.
+version: 0.1.0+1
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  openmuse_host_shell:
+    path: ../../packages/openmuse_host_shell
+  openmuse_auth_gotrue:
+    path: ../../plugins/auth-gotrue
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+  openmuse_workbench_layout:
+    path: ../../packages/openmuse_workbench_layout
+  openmuse_mobile_core:
+    path: ../../packages/openmuse_mobile_core
+  openmuse_office_flutter:
+    path: ../../packages/openmuse_office_flutter
+  openmuse_file_viewer_flutter:
+    path: ../../packages/openmuse_file_viewer_flutter
+  web: ^1.1.1
+  http: ^1.6.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
