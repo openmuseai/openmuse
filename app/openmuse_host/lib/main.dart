@@ -23,6 +23,7 @@ import 'src/host/openmuse_app.dart';
 import 'src/host/plugin_distribution.dart';
 import 'src/host/plugin_cli_broker.dart';
 import 'src/host/workspace_controller.dart';
+import 'src/host/workspace_mirror_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -274,6 +275,7 @@ Future<Widget> bootOpenMuseHost() async {
     workspaceRef: 'openmuse.local.default',
     desktopDeviceRef: desktopDeviceId,
   );
+  final workspaceMirrorService = DesktopWorkspaceMirrorService(controller);
   final pairedGateway = PairedDesktopGateway(
     currentAccountRef: () =>
         authenticationController.snapshot.identity?.subject,
@@ -289,6 +291,8 @@ Future<Widget> bootOpenMuseHost() async {
     },
     workspaceRef: 'openmuse.local.default',
     workspaceTitle: 'Project Workspace',
+    workspaceMirror: workspaceMirrorService.handle,
+    workspaceMirrorResource: workspaceMirrorService.readResource,
     nativeApiToken: dshSupervisor.bridgeToken,
     deviceRef: desktopDeviceId,
     deviceName: desktopDisplayName,

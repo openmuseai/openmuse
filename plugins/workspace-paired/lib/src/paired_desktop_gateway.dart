@@ -10,6 +10,53 @@ typedef RemoteSurfaceDispatcher =
     Future<Map<String, Object?>> Function(RemoteSurfaceDispatch request);
 typedef RemoteMediaReader =
     Future<RemoteMediaSlice> Function(RemoteMediaQuery query);
+typedef WorkspaceMirrorReader =
+    Future<Map<String, Object?>> Function(WorkspaceMirrorQuery query);
+typedef WorkspaceMirrorResourceReader =
+    Future<WorkspaceMirrorResource> Function(
+      WorkspaceMirrorResourceQuery query,
+    );
+
+final class WorkspaceMirrorResourceQuery {
+  const WorkspaceMirrorResourceQuery({
+    required this.accountRef,
+    required this.deviceRef,
+    required this.workspaceRef,
+    required this.resourceRef,
+  });
+  final String accountRef;
+  final String deviceRef;
+  final String workspaceRef;
+  final String resourceRef;
+}
+
+final class WorkspaceMirrorResource {
+  const WorkspaceMirrorResource({required this.bytes, required this.mediaType});
+  final Uint8List bytes;
+  final String mediaType;
+}
+
+final class WorkspaceMirrorQuery {
+  const WorkspaceMirrorQuery({
+    required this.operation,
+    required this.accountRef,
+    required this.deviceRef,
+    required this.workspaceRef,
+    this.mountRef,
+    this.parentRef,
+    this.cursor,
+    this.limit = 100,
+  });
+
+  final String operation;
+  final String accountRef;
+  final String deviceRef;
+  final String workspaceRef;
+  final String? mountRef;
+  final String? parentRef;
+  final String? cursor;
+  final int limit;
+}
 
 /// A validated plugin interaction handed to the paired window. The gateway
 /// only knows presentation data; plugin files and business logic stay outside.
@@ -104,6 +151,8 @@ final class PairedDesktopGateway {
     this.nativeApiToken,
     this.remoteSurface,
     this.remoteMedia,
+    this.workspaceMirror,
+    this.workspaceMirrorResource,
     String? fixedPairingCode,
   }) : _fixedPairingCode = fixedPairingCode;
 
@@ -123,6 +172,8 @@ final class PairedDesktopGateway {
   final String? nativeApiToken;
   final RemoteSurfaceDispatcher? remoteSurface;
   final RemoteMediaReader? remoteMedia;
+  final WorkspaceMirrorReader? workspaceMirror;
+  final WorkspaceMirrorResourceReader? workspaceMirrorResource;
   final String? _fixedPairingCode;
   final Random _random = Random.secure();
   final Map<String, _DesktopGrant> _grants = {};
@@ -254,6 +305,16 @@ final class PairedDesktopGateway {
       if (request.method == 'POST' &&
           request.uri.path == '/openmuse/remote-surface/v1') {
         await _remoteSurface(request);
+        return;
+      }
+      if (request.method == 'GET' &&
+          request.uri.path == '/openmuse/workspace-mirror/v1') {
+        await _workspaceMirror(request);
+        return;
+      }
+      if (request.method == 'GET' &&
+          request.uri.path == '/openmuse/workspace-mirror/resource/v1') {
+        await _workspaceMirrorResource(request);
         return;
       }
       if (request.method == 'GET' &&
@@ -474,6 +535,117 @@ final class PairedDesktopGateway {
       ),
     );
     _json(request.response, HttpStatus.ok, result);
+  }
+
+  Future<void> _workspaceMirror(HttpRequest request) async {
+    final reader = workspaceMirror;
+    if (reader == null) {
+      throw const _GatewayFailure(
+        HttpStatus.serviceUnavailable,
+        'WORKSPACE_MIRROR_UNAVAILABLE',
+        'Workspace 镜像未启用。',
+      );
+    }
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant 无效或已过期。',
+      );
+    }
+    final query = request.uri.queryParameters;
+    final operation = query['operation'];
+    final limit = int.tryParse(query['limit'] ?? '100');
+    if ((operation != 'mounts' && operation != 'children') ||
+        query['workspaceRef'] != grant.workspaceRef ||
+        limit == null ||
+        limit < 1 ||
+        limit > 200 ||
+        (operation == 'children' &&
+            (query['mountRef']?.isNotEmpty != true ||
+                query['parentRef']?.isNotEmpty != true))) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'WORKSPACE_MIRROR_REQUEST_INVALID',
+        'Workspace 镜像请求无效。',
+      );
+    }
+    try {
+      final result = await reader(
+        WorkspaceMirrorQuery(
+          operation: operation!,
+          accountRef: grant.accountRef,
+          deviceRef: grant.deviceRef,
+          workspaceRef: grant.workspaceRef,
+          mountRef: query['mountRef'],
+          parentRef: query['parentRef'],
+          cursor: query['cursor'],
+          limit: limit,
+        ),
+      );
+      _json(request.response, HttpStatus.ok, result);
+    } on FormatException {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'WORKSPACE_MIRROR_REF_INVALID',
+        'Workspace 目录引用无效。',
+      );
+    }
+  }
+
+  Future<void> _workspaceMirrorResource(HttpRequest request) async {
+    final reader = workspaceMirrorResource;
+    if (reader == null) {
+      throw const _GatewayFailure(
+        HttpStatus.serviceUnavailable,
+        'WORKSPACE_RESOURCE_UNAVAILABLE',
+        'Workspace 资源预览未启用。',
+      );
+    }
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant 无效或已过期。',
+      );
+    }
+    final query = request.uri.queryParameters;
+    final resourceRef = query['resourceRef'];
+    if (query['workspaceRef'] != grant.workspaceRef ||
+        resourceRef?.isNotEmpty != true) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'WORKSPACE_RESOURCE_REQUEST_INVALID',
+        'Workspace 资源请求无效。',
+      );
+    }
+    try {
+      final resource = await reader(
+        WorkspaceMirrorResourceQuery(
+          accountRef: grant.accountRef,
+          deviceRef: grant.deviceRef,
+          workspaceRef: grant.workspaceRef,
+          resourceRef: resourceRef!,
+        ),
+      );
+      request.response
+        ..statusCode = HttpStatus.ok
+        ..headers.contentType = ContentType.parse(resource.mediaType)
+        ..headers.set(HttpHeaders.cacheControlHeader, 'no-store')
+        ..contentLength = resource.bytes.length
+        ..add(resource.bytes);
+      await request.response.close();
+    } on FormatException {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'WORKSPACE_RESOURCE_REF_INVALID',
+        'Workspace 资源引用无效。',
+      );
+    }
   }
 
   _DesktopGrant _requireInteractionGrant(HttpRequest request) {

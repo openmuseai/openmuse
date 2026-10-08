@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
@@ -116,79 +117,82 @@ void main() {
     },
   );
 
-  test('a short live follow reaches the client before the stream ends', () async {
-    final upstream = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-    final release = Completer<void>();
-    upstream.listen((request) async {
-      if (!request.uri.path.contains('follow')) {
-        request.response.write('ok');
+  test(
+    'a short live follow reaches the client before the stream ends',
+    () async {
+      final upstream = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final release = Completer<void>();
+      upstream.listen((request) async {
+        if (!request.uri.path.contains('follow')) {
+          request.response.write('ok');
+          await request.response.close();
+          return;
+        }
+        request.response
+          ..bufferOutput = false
+          ..headers.set(HttpHeaders.contentTypeHeader, 'text/event-stream')
+          ..write('event: frame\ndata: {"type":"snapshot"}\n\n');
+        await request.response.flush();
+        await release.future;
         await request.response.close();
-        return;
+      });
+      final gateway = PairedDesktopGateway(
+        currentAccountRef: () => 'account-1',
+        validateToken: (token) async => 'account-1',
+        dshEndpoint: () async =>
+            Uri.parse('http://127.0.0.1:${upstream.port}/'),
+        workspaceRef: 'openmuse.local.default',
+        workspaceTitle: 'Project Workspace',
+        port: 0,
+        fixedPairingCode: '123456',
+        nativeApiToken: List.filled(32, 'n').join(),
+      );
+      await gateway.start();
+      final client = PairedDesktopClient(
+        origin: gateway.origin!,
+        accessToken: () async => 'same-account',
+        deviceRef: 'mobile-1',
+        allowInsecureLoopback: true,
+      );
+      final connection = await client.connectSameAccount(
+        targetDeviceRef: 'desktop.local',
+      );
+      final browser = HttpClient();
+      final opened = await browser.getUrl(
+        Uri.parse(connection.session.origin).resolve(connection.session.path),
+      );
+      opened.followRedirects = false;
+      final openedResponse = await opened.close();
+      final cookies = openedResponse.cookies;
+      await openedResponse.drain<void>();
+      final follow = await browser.getUrl(
+        Uri.parse(
+          connection.session.origin,
+        ).resolve('/openmuse-native/v1/session/follow?sessionId=s-1'),
+      );
+      follow.cookies.addAll(cookies);
+      final response = await follow.close().timeout(const Duration(seconds: 3));
+      final body = StringBuffer();
+      final lines = StreamIterator<String>(
+        response
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())
+            .timeout(const Duration(seconds: 3)),
+      );
+      while (await lines.moveNext()) {
+        body.write(lines.current);
+        if (body.toString().contains('snapshot')) break;
       }
-      request.response
-        ..bufferOutput = false
-        ..headers.set(HttpHeaders.contentTypeHeader, 'text/event-stream')
-        ..write('event: frame\ndata: {"type":"snapshot"}\n\n');
-      await request.response.flush();
-      await release.future;
-      await request.response.close();
-    });
-    final gateway = PairedDesktopGateway(
-      currentAccountRef: () => 'account-1',
-      validateToken: (token) async => 'account-1',
-      dshEndpoint: () async =>
-          Uri.parse('http://127.0.0.1:${upstream.port}/'),
-      workspaceRef: 'openmuse.local.default',
-      workspaceTitle: 'Project Workspace',
-      port: 0,
-      fixedPairingCode: '123456',
-      nativeApiToken: List.filled(32, 'n').join(),
-    );
-    await gateway.start();
-    final client = PairedDesktopClient(
-      origin: gateway.origin!,
-      accessToken: () async => 'same-account',
-      deviceRef: 'mobile-1',
-      allowInsecureLoopback: true,
-    );
-    final connection = await client.connectSameAccount(
-      targetDeviceRef: 'desktop.local',
-    );
-    final browser = HttpClient();
-    final opened = await browser.getUrl(
-      Uri.parse(connection.session.origin).resolve(connection.session.path),
-    );
-    opened.followRedirects = false;
-    final openedResponse = await opened.close();
-    final cookies = openedResponse.cookies;
-    await openedResponse.drain<void>();
-    final follow = await browser.getUrl(
-      Uri.parse(connection.session.origin).resolve(
-        '/openmuse-native/v1/session/follow?sessionId=s-1',
-      ),
-    );
-    follow.cookies.addAll(cookies);
-    final response = await follow.close().timeout(const Duration(seconds: 3));
-    final body = StringBuffer();
-    final lines = StreamIterator<String>(
-      response
-          .transform(utf8.decoder)
-          .transform(const LineSplitter())
-          .timeout(const Duration(seconds: 3)),
-    );
-    while (await lines.moveNext()) {
-      body.write(lines.current);
-      if (body.toString().contains('snapshot')) break;
-    }
-    expect(body.toString(), contains('snapshot'));
-    release.complete();
-    while (await lines.moveNext()) {}
-    await lines.cancel();
-    browser.close(force: true);
-    client.close();
-    await gateway.stop();
-    await upstream.close(force: true);
-  });
+      expect(body.toString(), contains('snapshot'));
+      release.complete();
+      while (await lines.moveNext()) {}
+      await lines.cancel();
+      browser.close(force: true);
+      client.close();
+      await gateway.stop();
+      await upstream.close(force: true);
+    },
+  );
 
   test('account mismatch and invalid workspace fail closed', () async {
     final gateway = PairedDesktopGateway(
@@ -275,10 +279,7 @@ void main() {
     request.headers
       ..contentType = ContentType.json
       ..set(HttpHeaders.authorizationHeader, 'Bearer token')
-      ..set(
-        'x-openmuse-paired-public-origin',
-        'https://link.openmuse.test',
-      );
+      ..set('x-openmuse-paired-public-origin', 'https://link.openmuse.test');
     request.add(
       utf8.encode(
         jsonEncode({
@@ -291,12 +292,79 @@ void main() {
     final response = await request.close();
     final body = jsonDecode(await utf8.decodeStream(response)) as Map;
     expect(response.statusCode, HttpStatus.ok);
-    expect(
-      (body['session'] as Map)['origin'],
-      'https://link.openmuse.test',
-    );
+    expect((body['session'] as Map)['origin'], 'https://link.openmuse.test');
     expect((body['session'] as Map)['allowInsecureLoopback'], isFalse);
     client.close(force: true);
     await gateway.stop();
+  });
+
+  test('workspace mirror requires grant and matching workspace', () async {
+    final calls = <WorkspaceMirrorQuery>[];
+    final gateway = PairedDesktopGateway(
+      currentAccountRef: () => 'account-1',
+      validateToken: (_) async => 'account-1',
+      dshEndpoint: () async => Uri.parse('http://127.0.0.1:54321/'),
+      workspaceRef: 'workspace-1',
+      workspaceTitle: 'Workspace',
+      port: 0,
+      workspaceMirror: (query) async {
+        calls.add(query);
+        return {'mounts': <Object>[]};
+      },
+      workspaceMirrorResource: (query) async => WorkspaceMirrorResource(
+        bytes: Uint8List.fromList(utf8.encode('file-body')),
+        mediaType: 'text/plain; charset=utf-8',
+      ),
+    );
+    await gateway.start();
+    addTearDown(gateway.stop);
+    final client = HttpClient();
+    addTearDown(() => client.close(force: true));
+    Future<int> status(String workspaceRef, {String? grant}) async {
+      final request = await client.getUrl(
+        gateway.origin!.replace(
+          path: '/openmuse/workspace-mirror/v1',
+          queryParameters: {
+            'operation': 'mounts',
+            'workspaceRef': workspaceRef,
+          },
+        ),
+      );
+      if (grant != null) {
+        request.cookies.add(Cookie('OpenMuse-Paired', grant));
+      }
+      final response = await request.close();
+      await response.drain<void>();
+      return response.statusCode;
+    }
+
+    expect(await status('workspace-1'), HttpStatus.unauthorized);
+    final grant = gateway.issueLoopbackOperatorGrant(
+      accountRef: 'account-1',
+      deviceRef: 'browser-1',
+    );
+    expect(await status('workspace-2', grant: grant), HttpStatus.badRequest);
+    expect(await status('workspace-1', grant: grant), HttpStatus.ok);
+    expect(calls.single.deviceRef, 'browser-1');
+    expect(calls.single.workspaceRef, 'workspace-1');
+    Future<(int, String)> resourceStatus({String? grant}) async {
+      final request = await client.getUrl(
+        gateway.origin!.replace(
+          path: '/openmuse/workspace-mirror/resource/v1',
+          queryParameters: {
+            'workspaceRef': 'workspace-1',
+            'resourceRef': 'opaque-ref',
+          },
+        ),
+      );
+      if (grant != null) {
+        request.cookies.add(Cookie('OpenMuse-Paired', grant));
+      }
+      final response = await request.close();
+      return (response.statusCode, await utf8.decodeStream(response));
+    }
+
+    expect((await resourceStatus()).$1, HttpStatus.unauthorized);
+    expect(await resourceStatus(grant: grant), (HttpStatus.ok, 'file-body'));
   });
 }
