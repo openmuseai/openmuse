@@ -287,7 +287,7 @@ final class OpenMuseMobileApplicationState
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
-    title: 'WorkBuddy',
+    title: 'OpenMuse',
     theme: workBuddyTheme(),
     localizationsDelegates: OpenMuseAuthLocalizations.localizationsDelegates,
     supportedLocales: OpenMuseAuthLocalizations.supportedLocales,

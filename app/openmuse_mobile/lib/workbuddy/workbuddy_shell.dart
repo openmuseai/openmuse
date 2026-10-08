@@ -1434,7 +1434,7 @@ final class _HomeEmpty extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              'assets/mascot.jpg',
+              'assets/brand.png',
               key: const ValueKey('wb-mascot'),
               width: 176,
               height: imageHeight,
