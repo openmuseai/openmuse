@@ -76,6 +76,17 @@ app.*.map.json
 /third_party/openmuse/
 /third_party/Easel/
 
+# dsh-market source is tracked. These paths are generated or downloaded, matching
+# the upstream ignore list. node_modules is already ignored above.
+/third_party/dsh-market/lib/
+/third_party/dsh-market/research/
+/third_party/dsh-market/docs/
+/third_party/dsh-market/npm-cache/
+/third_party/dsh-market/data/readmes-snapshot.json
+/third_party/dsh-market/data/registry-snapshot.json
+/third_party/dsh-market/client/*.map
+/third_party/dsh-market/*.tgz
+
 # Gradle wrote a literal "~" directory here through an unexpanded home path.
 # It holds a partially downloaded 212 MB distribution, not source.
 /app/openmuse_mobile/android/~/

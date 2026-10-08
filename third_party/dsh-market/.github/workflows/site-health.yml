@@ -1,0 +1,49 @@
+name: Site health
+
+# The 2026-09-09 → 2026-09-25 freeze was silent. Every scheduled `build-site`
+# run failed for 18 days while dshmarket.com kept serving the 2026-09-08
+# catalog — 3,363 plugin pages live against 4,347 in the catalog, so 1,082
+# plugins answered 404 and nothing outside the repository changed to say so.
+#
+# This watches the deployed site for exactly that, and fails loudly when it
+# falls behind the catalog. It reads the site rather than trusting CI's own
+# report, so it also catches a build that never runs at all.
+#
+# Deliberately not at 03:41, when `build-site` runs: this must read a finished
+# deploy, not one in flight.
+
+on:
+  schedule:
+    - cron: '17 7 * * *'
+  workflow_dispatch:
+    inputs:
+      tolerance:
+        description: How many catalog entries the site may lag before this fails
+        type: number
+        default: 300
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-health
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # The catalog is upstream's, not ours: this site builds from
+      # awesome-dsh-plugin's published list, so that list is the truth the
+      # deploy has to keep up with.
+      - name: dshmarket.com is not stale
+        run: |
+          node scripts/check-site-health.mjs \
+            --live https://dshmarket.com/browse/ \
+            --catalog-url https://awesome-dsh-plugin.com/plugins.json \
+            --tolerance ${{ inputs.tolerance || 300 }}

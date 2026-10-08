@@ -1,0 +1,6 @@
+# Bundle patch: inserts this fixture into the profile's layer stack, the
+# same way a real community plugin does. A plain insert list is what the
+# market can hot-mount, so this fixture exercises the no-restart path.
+- insert:
+    - id: dshm-fixture-a
+      name: 'dshm-e2e-fixture-a'

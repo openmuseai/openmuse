@@ -1,0 +1,76 @@
+name: Build site
+
+on:
+  # The catalog changes upstream, not here, so the site has to rebuild on a
+  # clock as well as on pushes — otherwise a plugin listed today would not get
+  # a page until someone happened to touch this repository.
+  schedule:
+    - cron: '41 3 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'scripts/build-site.mjs'
+      - '.github/workflows/build-site.yml'
+
+# The build never writes to the repository: snapshots are fetched into the
+# ephemeral checkout and docs/ ships as a Pages artifact.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# docs/ is a pure function of the catalog and main's tip, so an older run can
+# only produce staler output — supersede it rather than queueing it.
+concurrency:
+  group: build-site
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install
+
+      # Both come from awesome-dsh-plugin, which owns the list, and both are
+      # build inputs only — fetched into a checkout that is thrown away and
+      # never committed. The market itself reads the live catalog; the
+      # bundled fallback it used to have was removed on purpose, because for
+      # a catalog stale is not a degraded answer but a wrong one.
+      - name: Fetch catalog
+        run: |
+          # data/ is generated, so a fresh checkout does not contain it — git
+          # does not track empty directories. Without this, curl dies on its
+          # first write with exit code 23 before it ever reaches the network,
+          # which is how every build from 2026-09-09 until 2026-09-25 failed.
+          mkdir -p data
+          curl -sfL --retry 3 --retry-delay 5 \
+            https://awesome-dsh-plugin.com/plugins.json -o data/registry-snapshot.json
+          # READMEs are a nice-to-have: without them pages still build, they
+          # just carry no body text. A catalog hiccup should degrade the pages,
+          # not cancel the deploy that would have refreshed them.
+          curl -sfL --retry 3 --retry-delay 5 \
+            https://awesome-dsh-plugin.com/readmes.json -o data/readmes-snapshot.json \
+            || echo "readmes.json unavailable — building without README bodies"
+
+      # Unset until the AdSense review clears these domains; while unset the
+      # build emits no ad markup and no third-party script, so the site is
+      # byte-identical to an ad-free one. A variable rather than a secret:
+      # the publisher id ships in the HTML either way.
+      - run: node scripts/build-site.mjs
+        env:
+          ADSENSE_CLIENT: ${{ vars.ADSENSE_CLIENT }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@v4

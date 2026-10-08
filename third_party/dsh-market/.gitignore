@@ -1,0 +1,16 @@
+node_modules/
+lib/
+research/
+*.tgz
+.DS_Store
+npm-cache/
+docs/
+data/readmes-snapshot.json
+
+# Generated when a local build enables sourcemaps; never committed (#533).
+client/*.map
+
+# Catalog copies: downloaded when needed, never committed (#545). The site
+# build fetches its own into a throwaway checkout, and the market reads the
+# live catalog.
+data/registry-snapshot.json

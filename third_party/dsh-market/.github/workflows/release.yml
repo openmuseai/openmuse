@@ -1,0 +1,136 @@
+name: release
+#
+# Every publish goes through THIS file, and it has to.
+#
+# npm trusted publishing (OIDC) is registered against one repository and one
+# workflow FILENAME. A second workflow — even in the same repo, with the same
+# `id-token: write` — gets an OIDC token npm does not recognise and the
+# publish fails as `E404 ... you do not have permission`, which reads like a
+# missing package rather than an untrusted publisher. So the dev channel
+# lives here as a second trigger instead of in a file of its own.
+#
+# Two ways in, and they differ in what they leave behind:
+#
+#   push of a v* tag   → `latest` or `beta`, plus a GitHub Release. A real
+#                        release, cut from a commit on main.
+#   workflow_dispatch  → `dev`, from ANY branch, leaving NOTHING: no commit,
+#                        no tag, no Release. `npm version --no-git-tag-version`
+#                        rewrites package.json inside the runner, which is
+#                        thrown away.
+#
+# The second exists because cutting a beta used to be the only way to get a
+# build into anyone's hands, so betas were being cut to FIND OUT whether
+# something worked. That is backwards: dev is where a change gets tried,
+# beta is what it is promoted to once it survived being tried.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: What is being tested (shown in the run summary)
+        required: false
+        default: ''
+
+permissions:
+  contents: write # GitHub Release creation
+  id-token: write # npm trusted publishing (OIDC)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      DEV: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      # trusted publishing needs npm >= 11.5
+      - run: npm install -g npm@latest
+      - run: npm install
+      - run: npm run check
+      # A dev build is unreviewed, not unverified. Skipping the suite would
+      # make "it is broken on dev" mean nothing, and learning something the
+      # suite cannot tell you is the entire reason to try one.
+      - if: env.DEV == 'true'
+        run: npm test
+      - run: node scripts/preflight.mjs
+
+      - name: tag must match package.json version
+        if: env.DEV != 'true'
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          TAG=${GITHUB_REF_NAME#v}
+          if [ "$PKG" != "$TAG" ]; then
+            echo "tag v$TAG != package.json $PKG" >&2
+            exit 1
+          fi
+
+      # A prerelease tag (v1.14.0-beta.1) publishes under the `beta` dist-tag
+      # and NEVER moves `latest`. Without this every fix reached every user the
+      # moment it was tagged, before anyone had clicked the thing it changed —
+      # which is how 1.13.0 shipped a restart button that could not work.
+      - name: choose the version and the npm dist-tag
+        id: channel
+        run: |
+          if [ "$DEV" = "true" ]; then
+            # Next MINOR plus a timestamp and the short SHA. The minor bump
+            # keeps a dev build ahead of every 1.14.x, so a tester is never
+            # offered a "downgrade" back to the beta they came from; the
+            # timestamp and SHA make it unique and traceable to one commit,
+            # and npm refuses a duplicate version outright.
+            BASE=$(node -p "require('./package.json').version.replace(/-.*/, '')")
+            NEXT=$(node -p "const [a,b]=process.argv[1].split('.'); \`\${a}.\${Number(b)+1}.0\`" "$BASE")
+            VERSION="$NEXT-dev.$(date -u +%Y%m%d%H%M)-$(git rev-parse --short HEAD)"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "dist=dev" >> "$GITHUB_OUTPUT"
+            echo "pre=true" >> "$GITHUB_OUTPUT"
+          else
+            TAG=${GITHUB_REF_NAME#v}
+            echo "version=$TAG" >> "$GITHUB_OUTPUT"
+            case "$TAG" in
+              *-*) echo "dist=beta"    >> "$GITHUB_OUTPUT"; echo "pre=true"  >> "$GITHUB_OUTPUT" ;;
+              *)   echo "dist=latest"  >> "$GITHUB_OUTPUT"; echo "pre=false" >> "$GITHUB_OUTPUT" ;;
+            esac
+          fi
+
+      # --no-git-tag-version is the whole design of the dev path: package.json
+      # is rewritten in the runner and never committed anywhere.
+      - if: env.DEV == 'true'
+        run: npm version "${{ steps.channel.outputs.version }}" --no-git-tag-version
+
+      - run: npm publish --tag ${{ steps.channel.outputs.dist }}
+
+      - name: create GitHub release
+        if: env.DEV != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "dshmarket ${GITHUB_REF_NAME#v}" \
+            --generate-notes \
+            ${{ steps.channel.outputs.pre == 'true' && '--prerelease' || '' }} \
+            --notes "npm: https://www.npmjs.com/package/dshmarket/v/${GITHUB_REF_NAME#v} · dist-tag: ${{ steps.channel.outputs.dist }}"
+
+      - name: say how to install the dev build
+        if: env.DEV == 'true'
+        run: |
+          V='${{ steps.channel.outputs.version }}'
+          {
+            echo "### dshmarket@$V"
+            echo ''
+            echo '```sh'
+            echo "dsh plugin --profile web add dshmarket@$V"
+            echo '```'
+            echo ''
+            echo "Or switch the market to the **Dev** channel — it appears once developer"
+            echo "mode is on, in the market's card under Settings → Plugins → Plugin configuration."
+            echo ''
+            echo "branch: \`${GITHUB_REF_NAME}\` · commit: \`$(git rev-parse --short HEAD)\`"
+            [ -n '${{ inputs.reason }}' ] && echo "reason: ${{ inputs.reason }}"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,15 @@
+# A CARRIER bundle: it ships no plugin of its own, and exists only to mount
+# ANOTHER package with its own configuration. Real example from #156:
+# @tt-a1i/archify-dsh inserts an entry named @deepseek-ai/dsh-skill-filesystem.
+#
+# The loader entry therefore carries the OTHER package's name, so nothing in
+# the live inventory is ever called `dshm-e2e-fixture-carrier` — which is how
+# the market came to keep saying "restart to activate" about a plugin that
+# had already been running since the restart.
+#
+# The config row also makes this restart-only, exactly as the report describes.
+- insert:
+    - id: carrier-mounted-b
+      name: 'dshm-e2e-fixture-b'
+      config:
+        carried: true

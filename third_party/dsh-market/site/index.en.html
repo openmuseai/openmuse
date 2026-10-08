@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dsh-market — the plugin market inside DeepSeek Harness</title>
+<meta name="description" content="Browse, search, and one-click install __COUNT__ community plugins for DeepSeek Harness. Most installs go live without a restart. No telemetry.">
+<link rel="sitemap" type="application/xml" href="https://dshmarket.com/sitemap.xml">
+    <link rel="canonical" href="https://dshmarket.com/">
+<link rel="alternate" hreflang="en" href="https://dshmarket.com/">
+<link rel="alternate" hreflang="zh" href="https://dshmarket.com/zh/">
+<link rel="alternate" hreflang="x-default" href="https://dshmarket.com/">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<meta property="og:title" content="dsh-market — the plugin market inside DeepSeek Harness">
+<meta property="og:description" content="Browse, search, one-click install. Most plugins go live without a restart.">
+<meta property="og:image" content="https://dshmarket.com/assets/demo-en.png">
+<meta property="og:url" content="https://dshmarket.com/">
+<style>
+:root{--accent:#c0392b;--accent-soft:#f7e5e2;--ink:#101722;--ink2:#5b6472;--ink3:#9aa3b2;--line:#e7eaf0;--bg:#fafbfd;--card:#fff}
+*{margin:0;box-sizing:border-box}
+body{font-family:-apple-system,"SF Pro Text","Segoe UI","PingFang SC",sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
+.wrap{max-width:64rem;margin:0 auto;padding:0 1.5rem}
+header{display:flex;align-items:center;gap:.8rem;padding:1.4rem 0}
+header img{height:34px}
+header .grow{flex:1}
+header a{color:var(--ink2);text-decoration:none;font-size:.9rem;margin-left:1.2rem}
+header a:hover{color:var(--accent)}
+.hero{text-align:center;padding:2.2rem 0 1.4rem}
+.hero h1{font-size:clamp(1.9rem,5vw,3.1rem);font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{font-size:1.1rem;color:var(--ink2);margin:1rem auto 0;max-width:36rem}
+/* The plugin count ships at its build-time value and is replaced with the live
+   one by the fetch at the end of this file. Tabular digits keep both the same
+   width, so that swap cannot nudge the sentence around it. */
+#count{font-variant-numeric:tabular-nums}
+.install{display:inline-flex;align-items:center;gap:.8rem;margin-top:2rem;background:var(--ink);color:#e8ecf4;border-radius:12px;padding:.9rem 1.2rem;font-family:ui-monospace,Menlo,monospace;font-size:.95rem}
+/* Width is reserved for the longest label this button ever shows. It swaps to
+   "Copied!" on click and back 1.5s later — and that revert lands outside the
+   500ms window CLS forgives after an interaction, so an unreserved button
+   resizes the install box and counts as an unexpected shift. It was the single
+   largest CLS source on this page. */
+.install button{border:none;background:var(--accent);color:#fff;border-radius:8px;padding:.4rem .9rem;font-size:.8rem;cursor:pointer;font-weight:600;min-width:5.5rem}
+.install button:hover{filter:brightness(1.1)}
+.sub{margin-top:.8rem;font-size:.85rem;color:var(--ink3)}
+.sub a{color:var(--accent);text-decoration:none}
+.about{margin-top:3.5rem;border-top:1px solid var(--line);padding-top:2.5rem}
+.about h2{font-size:1.15rem;text-align:center}
+.demo{margin:1.4rem auto 0;max-width:52rem;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(16,23,34,.12)}
+.demo img{display:block;width:100%}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:2rem 0 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.3rem 1.4rem}
+.card .ic{font-size:1.4rem}
+.card h3{font-size:1rem;margin:.6rem 0 .3rem}
+.card p{font-size:.88rem;color:var(--ink2)}
+footer{border-top:1px solid var(--line);margin-top:2rem;padding:2rem 0 3rem;font-size:.85rem;color:var(--ink3);display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between}
+footer a{color:var(--ink2);text-decoration:none}
+footer a:hover{color:var(--accent)}
+@media(max-width:640px){.install{flex-direction:column;font-size:.8rem}}
+</style>
+__HOME_CSS__
+__AD_HEAD__
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "6fdc1fdb390e417599a363e3109357b2"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+<div class="wrap">
+<header>
+  <img src="assets/wordmark.svg" alt="dsh-market">
+  <span class="grow"></span>
+  <a href="__BROWSE__">Browse __COUNT__ plugins</a>
+  <a href="https://github.com/dsh-market/dsh-market">GitHub</a>
+  <a href="https://www.npmjs.com/package/dshmarket">npm</a>
+  <a href="zh/">中文</a>
+</header>
+
+<section class="hero">
+  <h1>The plugin market<br><em>inside</em> DeepSeek Harness</h1>
+  <p>Browse and search <b><span id="count">__COUNT__</span> community plugins</b>, install with one click — most go live without even a restart. Updates, uninstall, live install progress. No telemetry, ever.</p>
+  <div class="install"><code>dsh plugin --profile web add dshmarket</code><button onclick="navigator.clipboard.writeText('dsh plugin --profile web add dshmarket');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button></div>
+  <div class="sub">Then restart <code>dsh web</code> → Settings → <b>Plugin Market</b>. That's the whole setup.</div>
+</section>
+
+__HOME_CATALOG__
+
+<section class="about">
+  <h2>What dsh-market is</h2>
+  <div class="demo"><img src="assets/demo-en.png" alt="dsh-market screenshot" loading="lazy"></div>
+  <div class="grid">
+  <div class="card"><div class="ic">🛒</div><h3>Everything, in one place</h3><p>The full curated catalog from awesome-dsh-plugin — categories, star counts, top/new sorting, bilingual descriptions.</p></div>
+  <div class="card"><div class="ic">⚡</div><h3>Fast installs</h3><p>npm tarballs are preferred over full-repo GitHub downloads whenever a plugin publishes to npm — typically seconds.</p></div>
+  <div class="card"><div class="ic">✨</div><h3>No restart, mostly</h3><p>Most plugins are live right after a page refresh. Updates and uninstalls take one click too — the market even updates itself.</p></div>
+  <div class="card"><div class="ic">🧩</div><h3>Zero jargon</h3><p>Missing a component? The market detects it and fixes it with one button. You never see a terminal.</p></div>
+  <div class="card"><div class="ic">🔒</div><h3>Guard rails</h3><p>Installs are restricted to the curated registry, build scripts stay blocked by default, and terminal-surface plugins are flagged before you install them.</p></div>
+  <div class="card"><div class="ic">🕊️</div><h3>Private by default</h3><p>The market never phones home. Even the bug-report log export is sanitized and stays on your machine until you share it.</p></div>
+  </div>
+</section>
+
+<footer>
+  <span>MIT · <a href="https://github.com/dsh-market/dsh-market">dsh-market/dsh-market</a></span>
+  <span>Data: <a href="https://awesome-dsh-plugin.com">awesome-dsh-plugin</a> · refreshed daily by CI</span>
+  <span><a href="/privacy/">Privacy</a></span>
+</footer>
+</div>
+<script>
+fetch('https://awesome-dsh-plugin.com/plugins.json').then(r=>r.json()).then(d=>{if(d.count)document.getElementById('count').textContent=d.count}).catch(()=>{})
+</script>
+</body>
+</html>

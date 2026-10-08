@@ -1,0 +1,6 @@
+# Deliberately claims the SAME loader entry id as fixture-a. cordis refuses
+# to boot a tree with two entries under one id, so an install that lets this
+# through bricks the next start — the failure #122 fixed.
+- insert:
+    - id: dshm-fixture-a
+      name: 'dshm-e2e-fixture-clash'
