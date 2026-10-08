@@ -40,6 +40,14 @@ ThemeData buildOpenMuseTheme({Brightness brightness = Brightness.light}) =>
         brightness: brightness,
       ),
       fontFamily: 'SF Pro Text',
+      fontFamilyFallback: const [
+        'packages/openmuse_host_shell/OpenMuse UI CJK',
+        'PingFang SC',
+        'Hiragino Sans GB',
+        'Microsoft YaHei',
+        'Noto Sans CJK SC',
+        'sans-serif',
+      ],
       textTheme: TextTheme(
         bodyMedium: OpenMuseTokens.compactText.copyWith(
           color: brightness == Brightness.light

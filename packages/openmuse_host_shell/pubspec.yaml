@@ -13,3 +13,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 flutter:
   uses-material-design: true
+  fonts:
+    - family: OpenMuse UI CJK
+      fonts:
+        - asset: assets/fonts/OpenMuseUI-CJK.otf
