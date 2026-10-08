@@ -1,0 +1,68 @@
+name: clients
+
+# Browser and mobile packages. Desktop macOS and Windows stay in
+# desktop-gates.yml so a client failure does not cancel those builds.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      FLUTTER_VERSION: "3.44.2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter config --enable-web
+      - name: Test and build
+        working-directory: app/openmuse_web
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+          flutter build web --release --base-href /app/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenMuse-web
+          path: app/openmuse_web/build/web
+          if-no-files-found: error
+
+  mobile:
+    name: Mobile
+    runs-on: macos-14
+    timeout-minutes: 180
+    env:
+      FLUTTER_VERSION: "3.44.2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,aarch64-apple-ios,aarch64-apple-ios-sim
+      - name: Android NDK
+        run: |
+          sdk="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Library/Android/sdk}}"
+          ndk="$(find "$sdk/ndk" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
+          test -n "$ndk"
+          echo "ANDROID_NDK_HOME=$ndk" >> "$GITHUB_ENV"
+      - name: cargo-ndk
+        run: cargo install cargo-ndk --version 4.1.2
+      - name: Test and build
+        run: ./scripts/test_mobile_app_root.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenMuse-mobile-debug
+          path: app/openmuse_mobile/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
