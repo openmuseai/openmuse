@@ -27,7 +27,9 @@ void main() {
       Uri.parse('https://example.com'),
     );
     expect(
-      GoTrueClientConfig(origin: Uri.parse('https://example.com/gotrue')).origin,
+      GoTrueClientConfig(
+        origin: Uri.parse('https://example.com/gotrue'),
+      ).origin,
       Uri.parse('https://example.com/gotrue'),
     );
   });
@@ -206,5 +208,85 @@ void main() {
     await server.close(force: true);
     await serving;
     expect(seen, ['/api/user/verify/access%20token']);
+  });
+
+  test('signup, confirmation and recovery use the GoTrue contracts', () async {
+    final requests = <Map<String, Object?>>[];
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    final serving = server.forEach((request) async {
+      final body = jsonDecode(await utf8.decoder.bind(request).join()) as Map;
+      requests.add({
+        'method': request.method,
+        'path': request.uri.path,
+        'body': body.cast<String, Object?>(),
+        'authorization': request.headers.value(HttpHeaders.authorizationHeader),
+      });
+      request.response.headers.contentType = ContentType.json;
+      if (request.uri.path == '/signup') {
+        request.response.write(
+          jsonEncode({'id': 'user-1', 'email': 'muse@example.com'}),
+        );
+      } else if (request.uri.path == '/verify') {
+        request.response.write(
+          jsonEncode({
+            'access_token': 'access-code',
+            'refresh_token': 'refresh-code',
+            'expires_in': 3600,
+            'user': {'id': 'user-1', 'email': 'muse@example.com'},
+          }),
+        );
+      } else {
+        request.response.write('{}');
+      }
+      await request.response.close();
+    });
+    final client = GoTrueHttpClient(
+      config: GoTrueClientConfig(
+        origin: Uri.parse('http://127.0.0.1:${server.port}'),
+        allowInsecureLoopback: true,
+      ),
+    );
+
+    final registration = await client.signUp(' muse@example.com ', 'secret123');
+    expect(registration.session, isNull);
+    await client.resendSignUpCode('muse@example.com');
+    await client.verifySignUpCode('muse@example.com', '123456');
+    await client.requestPasswordRecovery('muse@example.com');
+    final recovery = await client.verifyRecoveryCode(
+      'muse@example.com',
+      '654321',
+    );
+    await client.updatePassword(recovery.accessToken, 'new-secret');
+    await server.close(force: true);
+    await serving;
+
+    expect(requests.map((r) => r['path']), [
+      '/signup',
+      '/resend',
+      '/verify',
+      '/recover',
+      '/verify',
+      '/user',
+    ]);
+    expect(requests[0]['body'], {
+      'email': 'muse@example.com',
+      'password': 'secret123',
+    });
+    expect(requests[1]['body'], {
+      'type': 'signup',
+      'email': 'muse@example.com',
+    });
+    expect(requests[2]['body'], {
+      'type': 'signup',
+      'email': 'muse@example.com',
+      'token': '123456',
+    });
+    expect(requests[4]['body'], {
+      'type': 'recovery',
+      'email': 'muse@example.com',
+      'token': '654321',
+    });
+    expect(requests[5]['authorization'], 'Bearer access-code');
+    expect(requests[5]['body'], {'password': 'new-secret'});
   });
 }

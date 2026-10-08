@@ -4,9 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
+import 'auth_localizations.dart';
 import 'login_theme.dart';
 
-enum OpenMuseLoginPage { email, password, passcode }
+enum OpenMuseLoginPage {
+  email,
+  password,
+  passcode,
+  signUp,
+  signUpCode,
+  recoveryCode,
+  resetPassword,
+}
 
 final class OpenMuseLoginScreen extends StatefulWidget {
   const OpenMuseLoginScreen({
@@ -33,7 +42,10 @@ final class OpenMuseLoginScreen extends StatefulWidget {
 final class _OpenMuseLoginScreenState extends State<OpenMuseLoginScreen> {
   final _emailController = TextEditingController();
   OpenMuseLoginPage _page = OpenMuseLoginPage.email;
-  String? _emailError;
+
+  /// Kept as a flag rather than a message so the error follows the active
+  /// locale instead of freezing the language it was raised in.
+  bool _emailInvalid = false;
 
   @override
   void dispose() {
@@ -42,69 +54,183 @@ final class _OpenMuseLoginScreenState extends State<OpenMuseLoginScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Theme(
-    data: OpenMuseLoginTheme.data(),
-    child: Builder(
-      builder: (context) => switch (_page) {
-        OpenMuseLoginPage.email => _EmailPage(
-          controller: _emailController,
-          errorText: _emailError,
-          cloudLabel: widget.cloudLabel,
-          onSettings: widget.onSettings,
-          onAnonymous: widget.onAnonymous,
-          termsUri: widget.termsUri,
-          privacyUri: widget.privacyUri,
-          onContinueWithEmail:
-              widget.authentication is OpenMuseEmailCodeAuthenticationController
-              ? _continueWithEmail
-              : null,
-          onContinueWithPassword: _continueWithPassword,
-        ),
-        OpenMuseLoginPage.password => _PasswordPage(
-          authentication: widget.authentication,
-          email: _emailController.text.trim(),
-          onBack: () => setState(() => _page = OpenMuseLoginPage.email),
-        ),
-        OpenMuseLoginPage.passcode => _PasscodePage(
-          authentication:
-              widget.authentication
-                  as OpenMuseEmailCodeAuthenticationController,
-          listenable: widget.authentication,
-          email: _emailController.text.trim(),
-          onBack: () => setState(() => _page = OpenMuseLoginPage.email),
-        ),
-      },
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: widget.authentication,
+    builder: (context, _) => Theme(
+      data: OpenMuseLoginTheme.data(),
+      child: Builder(
+        builder: (context) {
+          final l10n = openMuseAuthLocalizations(context);
+          return switch (_page) {
+            OpenMuseLoginPage.email => _EmailPage(
+              controller: _emailController,
+              errorText: _emailInvalid ? l10n.invalidEmail : null,
+              cloudLabel: widget.cloudLabel,
+              onSettings: widget.onSettings,
+              onAnonymous: widget.onAnonymous,
+              termsUri: widget.termsUri,
+              privacyUri: widget.privacyUri,
+              onContinueWithEmail:
+                  widget.authentication
+                      is OpenMuseEmailCodeAuthenticationController
+                  ? _continueWithEmail
+                  : null,
+              onContinueWithPassword: _continueWithPassword,
+              onSignUp:
+                  widget.authentication
+                      is OpenMuseAccountAuthenticationController
+                  ? () {
+                      if (_validatedEmail() != null)
+                        setState(() => _page = OpenMuseLoginPage.signUp);
+                    }
+                  : null,
+              failure: _page == OpenMuseLoginPage.email
+                  ? _failure(context)
+                  : null,
+            ),
+            OpenMuseLoginPage.password => _PasswordPage(
+              authentication: widget.authentication,
+              email: _emailController.text.trim(),
+              onBack: _backToEmail,
+              onForgotPassword:
+                  widget.authentication
+                      is OpenMuseAccountAuthenticationController
+                  ? _requestRecovery
+                  : null,
+            ),
+            OpenMuseLoginPage.passcode => _PasscodePage(
+              listenable: widget.authentication,
+              email: _emailController.text.trim(),
+              onBack: _backToEmail,
+              onVerify: (code) =>
+                  (widget.authentication
+                          as OpenMuseEmailCodeAuthenticationController)
+                      .signInWithCode(_emailController.text.trim(), code),
+              onResend: () =>
+                  (widget.authentication
+                          as OpenMuseEmailCodeAuthenticationController)
+                      .requestSignInCode(_emailController.text.trim()),
+            ),
+            OpenMuseLoginPage.signUp => _SignUpPage(
+              authentication:
+                  widget.authentication
+                      as OpenMuseAccountAuthenticationController,
+              listenable: widget.authentication,
+              email: _emailController.text.trim(),
+              onBack: _backToEmail,
+              onCodeSent: () =>
+                  setState(() => _page = OpenMuseLoginPage.signUpCode),
+            ),
+            OpenMuseLoginPage.signUpCode => _PasscodePage(
+              listenable: widget.authentication,
+              email: _emailController.text.trim(),
+              onBack: _backToEmail,
+              onVerify: (code) =>
+                  (widget.authentication
+                          as OpenMuseAccountAuthenticationController)
+                      .verifySignUpCode(_emailController.text.trim(), code),
+              onResend: () =>
+                  (widget.authentication
+                          as OpenMuseAccountAuthenticationController)
+                      .resendSignUpCode(_emailController.text.trim()),
+              description: l10n.signUpCodeSent(_emailController.text.trim()),
+            ),
+            OpenMuseLoginPage.recoveryCode => _PasscodePage(
+              listenable: widget.authentication,
+              email: _emailController.text.trim(),
+              onBack: _backToEmail,
+              onVerify: _verifyRecovery,
+              onResend: () =>
+                  (widget.authentication
+                          as OpenMuseAccountAuthenticationController)
+                      .requestPasswordRecovery(_emailController.text.trim()),
+              description: l10n.recoveryCodeSent(_emailController.text.trim()),
+            ),
+            OpenMuseLoginPage.resetPassword => _ResetPasswordPage(
+              authentication:
+                  widget.authentication
+                      as OpenMuseAccountAuthenticationController,
+              listenable: widget.authentication,
+              onBack: _backToEmail,
+            ),
+          };
+        },
+      ),
     ),
   );
+
+  String? _failure(BuildContext context) {
+    final snapshot = widget.authentication.snapshot;
+    if (snapshot.phase != OpenMuseAuthenticationPhase.failure) return null;
+    return openMuseAuthFailureMessage(
+      context,
+      code: snapshot.failureCode,
+      fallback: snapshot.failureMessage,
+    );
+  }
+
+  void _backToEmail() {
+    if (widget.authentication is OpenMuseAccountAuthenticationController) {
+      (widget.authentication as OpenMuseAccountAuthenticationController)
+          .cancelPendingFlow();
+    }
+    setState(() => _page = OpenMuseLoginPage.email);
+  }
+
+  Future<void> _requestRecovery() async {
+    final account =
+        widget.authentication as OpenMuseAccountAuthenticationController;
+    await account.requestPasswordRecovery(_emailController.text.trim());
+    if (mounted &&
+        widget.authentication.snapshot.phase ==
+            OpenMuseAuthenticationPhase.awaitingPasscode) {
+      setState(() => _page = OpenMuseLoginPage.recoveryCode);
+    }
+  }
+
+  Future<void> _verifyRecovery(String code) async {
+    final account =
+        widget.authentication as OpenMuseAccountAuthenticationController;
+    await account.verifyRecoveryCode(_emailController.text.trim(), code);
+    if (mounted &&
+        widget.authentication.snapshot.phase ==
+            OpenMuseAuthenticationPhase.awaitingPasswordReset) {
+      setState(() => _page = OpenMuseLoginPage.resetPassword);
+    }
+  }
 
   void _continueWithPassword() {
     final email = _emailController.text.trim();
     if (!_looksLikeEmail(email)) {
-      setState(() => _emailError = 'Please enter a valid email address.');
+      setState(() => _emailInvalid = true);
       return;
     }
     setState(() {
-      _emailError = null;
+      _emailInvalid = false;
       _page = OpenMuseLoginPage.password;
     });
   }
 
-  void _continueWithEmail() {
+  Future<void> _continueWithEmail() async {
     final email = _validatedEmail();
     if (email == null) return;
     final authentication =
         widget.authentication as OpenMuseEmailCodeAuthenticationController;
-    setState(() => _page = OpenMuseLoginPage.passcode);
-    unawaited(authentication.requestSignInCode(email));
+    await authentication.requestSignInCode(email);
+    if (mounted &&
+        widget.authentication.snapshot.phase ==
+            OpenMuseAuthenticationPhase.awaitingPasscode) {
+      setState(() => _page = OpenMuseLoginPage.passcode);
+    }
   }
 
   String? _validatedEmail() {
     final email = _emailController.text.trim();
     if (!_looksLikeEmail(email)) {
-      setState(() => _emailError = 'Please enter a valid email address.');
+      setState(() => _emailInvalid = true);
       return null;
     }
-    setState(() => _emailError = null);
+    setState(() => _emailInvalid = false);
     return email;
   }
 }
@@ -114,6 +240,8 @@ final class _EmailPage extends StatelessWidget {
     required this.controller,
     required this.errorText,
     required this.onContinueWithPassword,
+    this.onSignUp,
+    this.failure,
     this.onContinueWithEmail,
     this.cloudLabel,
     this.onSettings,
@@ -125,6 +253,8 @@ final class _EmailPage extends StatelessWidget {
   final TextEditingController controller;
   final String? errorText;
   final VoidCallback onContinueWithPassword;
+  final VoidCallback? onSignUp;
+  final String? failure;
   final VoidCallback? onContinueWithEmail;
   final String? cloudLabel;
   final VoidCallback? onSettings;
@@ -133,69 +263,92 @@ final class _EmailPage extends StatelessWidget {
   final Uri? privacyUri;
 
   @override
-  Widget build(BuildContext context) => _ResponsiveLoginScaffold(
-    bottom: _loginFooter(onSettings: onSettings, onAnonymous: onAnonymous),
-    child: AutofillGroup(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const _LogoTitle(title: 'Welcome to OpenMuse'),
-          if (cloudLabel != null) ...[
-            const SizedBox(height: OpenMuseLoginSpacing.l),
-            Text(
-              'Cloud: $cloudLabel',
-              key: const ValueKey('auth.cloud-label'),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-          const SizedBox(height: OpenMuseLoginSpacing.xxl),
-          TextField(
-            key: const ValueKey('auth.email'),
-            controller: controller,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.next,
-            autofillHints: const [AutofillHints.email],
-            decoration: InputDecoration(
-              hintText: 'Please enter your email',
-              errorText: errorText,
-            ),
-            onSubmitted: (_) => onContinueWithPassword(),
-          ),
-          if (onContinueWithEmail != null) ...[
-            const SizedBox(height: OpenMuseLoginSpacing.l),
-            _PrimaryButton(
-              key: const ValueKey('auth.continue-email'),
-              label: 'Continue with email',
-              onPressed: onContinueWithEmail,
-            ),
-          ],
-          const SizedBox(height: OpenMuseLoginSpacing.l),
-          _OutlinedButton(
-            key: const ValueKey('auth.continue-password'),
-            label: 'Continue with password',
-            onPressed: onContinueWithPassword,
-          ),
-          const SizedBox(height: OpenMuseLoginSpacing.xxl),
-          _Agreement(termsUri: termsUri, privacyUri: privacyUri),
-        ],
+  Widget build(BuildContext context) {
+    final l10n = openMuseAuthLocalizations(context);
+    return _ResponsiveLoginScaffold(
+      bottom: _loginFooter(
+        l10n: l10n,
+        onSettings: onSettings,
+        onAnonymous: onAnonymous,
       ),
-    ),
-  );
+      child: AutofillGroup(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _LogoTitle(title: l10n.welcomeTitle),
+            if (cloudLabel != null) ...[
+              const SizedBox(height: OpenMuseLoginSpacing.l),
+              Text(
+                l10n.cloudLabel(cloudLabel!),
+                key: const ValueKey('auth.cloud-label'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            const SizedBox(height: OpenMuseLoginSpacing.xxl),
+            TextField(
+              key: const ValueKey('auth.email'),
+              controller: controller,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              autofillHints: const [AutofillHints.email],
+              decoration: InputDecoration(
+                hintText: l10n.emailHint,
+                errorText: errorText,
+              ),
+              onSubmitted: (_) => onContinueWithPassword(),
+            ),
+            if (onContinueWithEmail != null) ...[
+              const SizedBox(height: OpenMuseLoginSpacing.l),
+              _PrimaryButton(
+                key: const ValueKey('auth.continue-email'),
+                label: l10n.continueWithEmail,
+                onPressed: onContinueWithEmail,
+              ),
+            ],
+            const SizedBox(height: OpenMuseLoginSpacing.l),
+            _OutlinedButton(
+              key: const ValueKey('auth.continue-password'),
+              label: l10n.continueWithPassword,
+              onPressed: onContinueWithPassword,
+            ),
+            if (onSignUp != null) ...[
+              const SizedBox(height: OpenMuseLoginSpacing.m),
+              TextButton(
+                key: const ValueKey('auth.sign-up'),
+                onPressed: onSignUp,
+                child: Text(l10n.createAccount),
+              ),
+            ],
+            if (failure != null) ...[
+              const SizedBox(height: OpenMuseLoginSpacing.m),
+              Text(failure!, style: const TextStyle(color: Colors.red)),
+            ],
+            const SizedBox(height: OpenMuseLoginSpacing.xxl),
+            _Agreement(termsUri: termsUri, privacyUri: privacyUri),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 final class _PasscodePage extends StatefulWidget {
   const _PasscodePage({
-    required this.authentication,
     required this.listenable,
     required this.email,
     required this.onBack,
+    required this.onResend,
+    required this.onVerify,
+    this.description,
   });
 
-  final OpenMuseEmailCodeAuthenticationController authentication;
   final OpenMuseAuthenticationController listenable;
   final String email;
   final VoidCallback onBack;
+  final Future<void> Function() onResend;
+  final Future<void> Function(String) onVerify;
+  final String? description;
 
   @override
   State<_PasscodePage> createState() => _PasscodePageState();
@@ -203,16 +356,20 @@ final class _PasscodePage extends StatefulWidget {
 
 final class _PasscodePageState extends State<_PasscodePage> {
   final _codeController = TextEditingController();
+  Timer? _resendTimer;
+  int _resendSeconds = 30;
 
   @override
   void initState() {
     super.initState();
     widget.listenable.addListener(_changed);
+    _startResendTimer();
   }
 
   @override
   void dispose() {
     widget.listenable.removeListener(_changed);
+    _resendTimer?.cancel();
     _codeController.dispose();
     super.dispose();
   }
@@ -223,21 +380,26 @@ final class _PasscodePageState extends State<_PasscodePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = openMuseAuthLocalizations(context);
     final snapshot = widget.listenable.snapshot;
     final busy =
         snapshot.phase == OpenMuseAuthenticationPhase.submitting ||
         snapshot.phase == OpenMuseAuthenticationPhase.bootstrapping;
     final error = snapshot.phase == OpenMuseAuthenticationPhase.failure
-        ? snapshot.failureMessage
+        ? openMuseAuthFailureMessage(
+            context,
+            code: snapshot.failureCode,
+            fallback: snapshot.failureMessage,
+          )
         : null;
     return _ResponsiveLoginScaffold(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const _LogoTitle(title: 'Check your email'),
+          _LogoTitle(title: l10n.checkYourEmailTitle),
           const SizedBox(height: OpenMuseLoginSpacing.l),
           Text(
-            'We sent a sign-in link and passcode to ${widget.email}.',
+            widget.description ?? l10n.signInCodeSent(widget.email),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: OpenMuseLoginSpacing.xxl),
@@ -246,9 +408,13 @@ final class _PasscodePageState extends State<_PasscodePage> {
             controller: _codeController,
             enabled: !busy,
             keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(8),
+            ],
             textInputAction: TextInputAction.done,
             decoration: InputDecoration(
-              hintText: 'Enter passcode',
+              hintText: l10n.passcodeHint,
               errorText: error,
             ),
             onSubmitted: busy ? null : (_) => _submit(),
@@ -256,15 +422,25 @@ final class _PasscodePageState extends State<_PasscodePage> {
           const SizedBox(height: OpenMuseLoginSpacing.xxl),
           _PrimaryButton(
             key: const ValueKey('auth.submit-passcode'),
-            label: busy ? 'Verifying…' : 'Continue',
+            label: busy ? l10n.verifying : l10n.continueAction,
             onPressed: busy ? null : _submit,
             busy: busy,
+          ),
+          const SizedBox(height: OpenMuseLoginSpacing.m),
+          TextButton(
+            key: const ValueKey('auth.resend-code'),
+            onPressed: busy || _resendSeconds > 0 ? null : _resend,
+            child: Text(
+              _resendSeconds > 0
+                  ? l10n.resendCodeCountdown(_resendSeconds)
+                  : l10n.resendCode,
+            ),
           ),
           const SizedBox(height: OpenMuseLoginSpacing.l),
           TextButton(
             key: const ValueKey('auth.back'),
             onPressed: busy ? null : widget.onBack,
-            child: const Text('Back to login'),
+            child: Text(l10n.backToLogin),
           ),
         ],
       ),
@@ -274,7 +450,29 @@ final class _PasscodePageState extends State<_PasscodePage> {
   void _submit() {
     final code = _codeController.text.trim();
     if (code.isEmpty) return;
-    widget.authentication.signInWithCode(widget.email, code);
+    unawaited(widget.onVerify(code));
+  }
+
+  void _startResendTimer() {
+    _resendTimer?.cancel();
+    _resendSeconds = 30;
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() => _resendSeconds--);
+      if (_resendSeconds <= 0) timer.cancel();
+    });
+  }
+
+  Future<void> _resend() async {
+    await widget.onResend();
+    if (mounted &&
+        widget.listenable.snapshot.phase ==
+            OpenMuseAuthenticationPhase.awaitingPasscode) {
+      setState(_startResendTimer);
+    }
   }
 }
 
@@ -283,11 +481,13 @@ final class _PasswordPage extends StatefulWidget {
     required this.authentication,
     required this.email,
     required this.onBack,
+    this.onForgotPassword,
   });
 
   final OpenMuseAuthenticationController authentication;
   final String email;
   final VoidCallback onBack;
+  final Future<void> Function()? onForgotPassword;
 
   @override
   State<_PasswordPage> createState() => _PasswordPageState();
@@ -321,24 +521,29 @@ final class _PasswordPageState extends State<_PasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = openMuseAuthLocalizations(context);
     final snapshot = widget.authentication.snapshot;
     final submitting =
         snapshot.phase == OpenMuseAuthenticationPhase.submitting ||
         snapshot.phase == OpenMuseAuthenticationPhase.bootstrapping;
     final error = snapshot.phase == OpenMuseAuthenticationPhase.failure
-        ? snapshot.failureMessage
+        ? openMuseAuthFailureMessage(
+            context,
+            code: snapshot.failureCode,
+            fallback: snapshot.failureMessage,
+          )
         : null;
     return _ResponsiveLoginScaffold(
       child: AutofillGroup(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const _LogoTitle(title: 'Enter password'),
+            _LogoTitle(title: l10n.enterPasswordTitle),
             const SizedBox(height: OpenMuseLoginSpacing.xxl),
             Text.rich(
               TextSpan(
                 children: [
-                  const TextSpan(text: 'Login as'),
+                  TextSpan(text: l10n.loginAsLabel),
                   TextSpan(
                     text: ' ${widget.email}',
                     style: const TextStyle(fontWeight: FontWeight.w600),
@@ -356,7 +561,7 @@ final class _PasswordPageState extends State<_PasswordPage> {
               autofillHints: const [AutofillHints.password],
               textInputAction: TextInputAction.done,
               decoration: InputDecoration(
-                hintText: 'Enter password',
+                hintText: l10n.passwordHint,
                 errorText: error,
                 suffixIcon: IconButton(
                   key: const ValueKey('auth.password-visibility'),
@@ -372,20 +577,20 @@ final class _PasswordPageState extends State<_PasswordPage> {
               onSubmitted: submitting ? null : (_) => _submit(),
             ),
             const SizedBox(height: OpenMuseLoginSpacing.m),
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
-                onPressed: null,
-                style: ButtonStyle(
+                onPressed: submitting ? null : widget.onForgotPassword,
+                style: const ButtonStyle(
                   padding: WidgetStatePropertyAll(EdgeInsets.zero),
                 ),
-                child: Text('Forgot password?'),
+                child: Text(l10n.forgotPassword),
               ),
             ),
             const SizedBox(height: OpenMuseLoginSpacing.xxl),
             _PrimaryButton(
               key: const ValueKey('auth.submit-password'),
-              label: submitting ? 'Verifying…' : 'Continue',
+              label: submitting ? l10n.verifying : l10n.continueAction,
               onPressed: submitting ? null : _submit,
               busy: submitting,
             ),
@@ -393,7 +598,7 @@ final class _PasswordPageState extends State<_PasswordPage> {
             TextButton(
               key: const ValueKey('auth.back'),
               onPressed: submitting ? null : widget.onBack,
-              child: const Text('Back to login'),
+              child: Text(l10n.backToLogin),
             ),
           ],
         ),
@@ -408,6 +613,185 @@ final class _PasswordPageState extends State<_PasswordPage> {
       widget.email,
       _passwordController.text,
     );
+  }
+}
+
+final class _SignUpPage extends StatelessWidget {
+  const _SignUpPage({
+    required this.authentication,
+    required this.listenable,
+    required this.email,
+    required this.onBack,
+    required this.onCodeSent,
+  });
+
+  final OpenMuseAccountAuthenticationController authentication;
+  final OpenMuseAuthenticationController listenable;
+  final String email;
+  final VoidCallback onBack;
+  final VoidCallback onCodeSent;
+
+  @override
+  Widget build(BuildContext context) => _PasswordFormPage(
+    title: openMuseAuthLocalizations(context).createAccountTitle,
+    email: email,
+    listenable: listenable,
+    onBack: onBack,
+    onSubmit: (password) async {
+      await authentication.signUp(email, password);
+      if (listenable.snapshot.phase ==
+          OpenMuseAuthenticationPhase.awaitingPasscode) {
+        onCodeSent();
+      }
+    },
+  );
+}
+
+final class _ResetPasswordPage extends StatelessWidget {
+  const _ResetPasswordPage({
+    required this.authentication,
+    required this.listenable,
+    required this.onBack,
+  });
+
+  final OpenMuseAccountAuthenticationController authentication;
+  final OpenMuseAuthenticationController listenable;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) => _PasswordFormPage(
+    title: openMuseAuthLocalizations(context).resetPasswordTitle,
+    listenable: listenable,
+    onBack: onBack,
+    onSubmit: authentication.resetPassword,
+  );
+}
+
+final class _PasswordFormPage extends StatefulWidget {
+  const _PasswordFormPage({
+    required this.title,
+    required this.listenable,
+    required this.onBack,
+    required this.onSubmit,
+    this.email,
+  });
+
+  final String title;
+  final String? email;
+  final OpenMuseAuthenticationController listenable;
+  final VoidCallback onBack;
+  final Future<void> Function(String) onSubmit;
+
+  @override
+  State<_PasswordFormPage> createState() => _PasswordFormPageState();
+}
+
+final class _PasswordFormPageState extends State<_PasswordFormPage> {
+  final _password = TextEditingController();
+  final _confirmation = TextEditingController();
+  String? _validation;
+  bool _obscure = true;
+
+  @override
+  void dispose() {
+    _password.dispose();
+    _confirmation.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = openMuseAuthLocalizations(context);
+    final snapshot = widget.listenable.snapshot;
+    final busy =
+        snapshot.phase == OpenMuseAuthenticationPhase.submitting ||
+        snapshot.phase == OpenMuseAuthenticationPhase.bootstrapping;
+    final failure = snapshot.phase == OpenMuseAuthenticationPhase.failure
+        ? openMuseAuthFailureMessage(
+            context,
+            code: snapshot.failureCode,
+            fallback: snapshot.failureMessage,
+          )
+        : null;
+    return _ResponsiveLoginScaffold(
+      child: AutofillGroup(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _LogoTitle(title: widget.title),
+            if (widget.email != null) ...[
+              const SizedBox(height: OpenMuseLoginSpacing.l),
+              Text(widget.email!, textAlign: TextAlign.center),
+            ],
+            const SizedBox(height: OpenMuseLoginSpacing.xxl),
+            TextField(
+              key: const ValueKey('auth.new-password'),
+              controller: _password,
+              enabled: !busy,
+              obscureText: _obscure,
+              autofillHints: const [AutofillHints.newPassword],
+              decoration: InputDecoration(
+                hintText: l10n.newPassword,
+                suffixIcon: IconButton(
+                  onPressed: () => setState(() => _obscure = !_obscure),
+                  icon: Icon(
+                    _obscure
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: OpenMuseLoginSpacing.l),
+            TextField(
+              key: const ValueKey('auth.confirm-password'),
+              controller: _confirmation,
+              enabled: !busy,
+              obscureText: _obscure,
+              autofillHints: const [AutofillHints.newPassword],
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(
+                hintText: l10n.confirmPassword,
+                errorText: _validation ?? failure,
+              ),
+              onSubmitted: busy ? null : (_) => _submit(),
+            ),
+            const SizedBox(height: OpenMuseLoginSpacing.xxl),
+            _PrimaryButton(
+              key: const ValueKey('auth.submit-new-password'),
+              label: busy
+                  ? l10n.verifying
+                  : widget.email == null
+                  ? l10n.setNewPassword
+                  : l10n.createAccount,
+              onPressed: busy ? null : _submit,
+              busy: busy,
+            ),
+            const SizedBox(height: OpenMuseLoginSpacing.l),
+            TextButton(
+              key: const ValueKey('auth.back'),
+              onPressed: busy ? null : widget.onBack,
+              child: Text(l10n.backToLogin),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _submit() {
+    final l10n = openMuseAuthLocalizations(context);
+    if (_password.text.length < 8) {
+      setState(() => _validation = l10n.passwordTooShort);
+      return;
+    }
+    if (_password.text != _confirmation.text) {
+      setState(() => _validation = l10n.passwordMismatch);
+      return;
+    }
+    setState(() => _validation = null);
+    TextInput.finishAutofillContext();
+    unawaited(widget.onSubmit(_password.text));
   }
 }
 
@@ -543,36 +927,40 @@ final class _Agreement extends StatelessWidget {
   final Uri? privacyUri;
 
   @override
-  Widget build(BuildContext context) => Text.rich(
-    TextSpan(
-      children: [
-        const TextSpan(text: 'By continuing, you agree to our '),
-        TextSpan(
-          text: 'Terms of Service',
-          style: TextStyle(
-            color: termsUri == null
-                ? OpenMuseLoginColors.tertiaryText
-                : OpenMuseLoginColors.action,
+  Widget build(BuildContext context) {
+    final l10n = openMuseAuthLocalizations(context);
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: l10n.agreementPrefix),
+          TextSpan(
+            text: l10n.termsOfService,
+            style: TextStyle(
+              color: termsUri == null
+                  ? OpenMuseLoginColors.tertiaryText
+                  : OpenMuseLoginColors.action,
+            ),
           ),
-        ),
-        const TextSpan(text: ' and '),
-        TextSpan(
-          text: 'Privacy Policy',
-          style: TextStyle(
-            color: privacyUri == null
-                ? OpenMuseLoginColors.tertiaryText
-                : OpenMuseLoginColors.action,
+          TextSpan(text: l10n.agreementConjunction),
+          TextSpan(
+            text: l10n.privacyPolicy,
+            style: TextStyle(
+              color: privacyUri == null
+                  ? OpenMuseLoginColors.tertiaryText
+                  : OpenMuseLoginColors.action,
+            ),
           ),
-        ),
-        const TextSpan(text: '.'),
-      ],
-      style: Theme.of(context).textTheme.bodySmall,
-    ),
-    textAlign: TextAlign.center,
-  );
+          TextSpan(text: l10n.agreementSuffix),
+        ],
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
 }
 
 Widget? _loginFooter({
+  required OpenMuseAuthLocalizations l10n,
   required VoidCallback? onSettings,
   required VoidCallback? onAnonymous,
 }) {
@@ -582,7 +970,7 @@ Widget? _loginFooter({
           key: const ValueKey('auth.settings'),
           onPressed: onSettings,
           icon: const Icon(Icons.settings_outlined, size: 20),
-          label: const Text('Settings'),
+          label: Text(l10n.settings),
         );
   final anonymous = onAnonymous == null
       ? null
@@ -590,7 +978,7 @@ Widget? _loginFooter({
           key: const ValueKey('auth.anonymous'),
           onPressed: onAnonymous,
           icon: const Icon(Icons.person_outline, size: 20),
-          label: const Text('Anonymous mode'),
+          label: Text(l10n.anonymousMode),
         );
   if (settings == null && anonymous == null) return null;
   return Row(

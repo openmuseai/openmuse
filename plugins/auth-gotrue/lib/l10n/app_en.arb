@@ -1,0 +1,166 @@
+{
+  "@@locale": "en",
+  "welcomeTitle": "Welcome to OpenMuse",
+  "@welcomeTitle": {
+    "description": "Headline on the email step of the sign-in page."
+  },
+  "cloudLabel": "Cloud: {label}",
+  "@cloudLabel": {
+    "description": "Shows which cloud endpoint the sign-in page will authenticate against.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "https://cloud.openmuse.ai"
+      }
+    }
+  },
+  "emailHint": "Please enter your email",
+  "@emailHint": {
+    "description": "Placeholder inside the email field."
+  },
+  "continueWithEmail": "Continue with email",
+  "@continueWithEmail": {
+    "description": "Primary button that requests a one-time sign-in code by email."
+  },
+  "continueWithPassword": "Continue with password",
+  "@continueWithPassword": {
+    "description": "Secondary button that switches to the password step."
+  },
+  "invalidEmail": "Please enter a valid email address.",
+  "@invalidEmail": {
+    "description": "Validation error shown under the email field."
+  },
+  "checkYourEmailTitle": "Check your email",
+  "@checkYourEmailTitle": {
+    "description": "Headline on the passcode step."
+  },
+  "signInCodeSent": "We sent a sign-in code to {email}.",
+  "@signInCodeSent": {
+    "description": "Explains where the one-time code was sent.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "muse@example.com"
+      }
+    }
+  },
+  "passcodeHint": "Enter passcode",
+  "@passcodeHint": {
+    "description": "Placeholder inside the one-time code field."
+  },
+  "verifying": "Verifying…",
+  "@verifying": {
+    "description": "Label of the submit button while a request is in flight."
+  },
+  "continueAction": "Continue",
+  "@continueAction": {
+    "description": "Label of the primary submit button when idle."
+  },
+  "backToLogin": "Back to login",
+  "@backToLogin": {
+    "description": "Returns from the password or passcode step to the email step."
+  },
+  "enterPasswordTitle": "Enter password",
+  "@enterPasswordTitle": {
+    "description": "Headline on the password step."
+  },
+  "passwordHint": "Enter password",
+  "@passwordHint": {
+    "description": "Placeholder inside the password field."
+  },
+  "loginAsLabel": "Login as",
+  "@loginAsLabel": {
+    "description": "Precedes the email address on the password step."
+  },
+  "forgotPassword": "Forgot password?",
+  "createAccount": "Create account",
+  "createAccountTitle": "Create your account",
+  "signUpCodeSent": "Enter the verification code sent to {email} to confirm your account.",
+  "@signUpCodeSent": {"placeholders": {"email": {"type": "String"}}},
+  "recoveryCodeSent": "Enter the recovery code sent to {email}.",
+  "@recoveryCodeSent": {"placeholders": {"email": {"type": "String"}}},
+  "resendCode": "Resend code",
+  "resendCodeCountdown": "Resend code in {seconds}s",
+  "@resendCodeCountdown": {"placeholders": {"seconds": {"type": "int"}}},
+  "resetPasswordTitle": "Reset your password",
+  "newPassword": "New password",
+  "confirmPassword": "Confirm password",
+  "setNewPassword": "Set new password",
+  "passwordTooShort": "Use at least 8 characters.",
+  "passwordMismatch": "Passwords do not match.",
+  "@forgotPassword": {
+    "description": "Opens email code password recovery."
+  },
+  "agreementPrefix": "By continuing, you agree to our ",
+  "@agreementPrefix": {
+    "description": "Leading text of the terms sentence. Keep the trailing space."
+  },
+  "termsOfService": "Terms of Service",
+  "@termsOfService": {
+    "description": "Linked segment of the terms sentence."
+  },
+  "agreementConjunction": " and ",
+  "@agreementConjunction": {
+    "description": "Joins the two linked segments. Keep the surrounding spaces."
+  },
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Second linked segment of the terms sentence."
+  },
+  "agreementSuffix": ".",
+  "@agreementSuffix": {
+    "description": "Ends the terms sentence."
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Footer button that opens host settings."
+  },
+  "anonymousMode": "Anonymous mode",
+  "@anonymousMode": {
+    "description": "Footer button that skips sign-in."
+  },
+  "accountSectionTitle": "Account",
+  "@accountSectionTitle": {
+    "description": "Heading of the account section in host settings."
+  },
+  "notSignedIn": "Not signed in",
+  "@notSignedIn": {
+    "description": "Shown in host settings when there is no identity."
+  },
+  "signOut": "Sign out",
+  "@signOut": {
+    "description": "Signs the current identity out from host settings."
+  },
+  "errorInvalidCredentials": "The email or password is incorrect.",
+  "@errorInvalidCredentials": {
+    "description": "Failure message for the invalid_credentials code."
+  },
+  "errorInvalidResponse": "The authentication service returned an unexpected response.",
+  "@errorInvalidResponse": {
+    "description": "Failure message for the invalid_response code."
+  },
+  "errorSessionExpired": "Your session has expired. Please sign in again.",
+  "@errorSessionExpired": {
+    "description": "Failure message for the session_expired code."
+  },
+  "errorNetwork": "Cannot reach the service. Check your connection and try again.",
+  "@errorNetwork": {
+    "description": "Failure message for the network code."
+  },
+  "errorServer": "The service could not complete the request. Try again later.",
+  "@errorServer": {
+    "description": "Failure message for the server code."
+  },
+  "errorBootstrap": "The account workspace could not be initialized.",
+  "@errorBootstrap": {
+    "description": "Failure message for the bootstrap code."
+  },
+  "errorInvalidConfiguration": "The service endpoint is not configured correctly.",
+  "errorInvalidCode": "The code is invalid or has expired.",
+  "errorAccountExists": "An account already exists for this email. Sign in instead.",
+  "errorWeakPassword": "Please choose a stronger password.",
+  "errorRateLimited": "Too many requests. Please wait and try again.",
+  "@errorInvalidConfiguration": {
+    "description": "Failure message for the invalid_configuration code."
+  }
+}

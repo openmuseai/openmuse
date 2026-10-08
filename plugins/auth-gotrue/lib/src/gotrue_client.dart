@@ -19,9 +19,7 @@ final class GoTrueClientConfig {
   static Uri _validateOrigin(Uri value, bool allowInsecureLoopback) {
     final segments = value.pathSegments.where((item) => item.isNotEmpty);
     final safePrefix =
-        segments.every(
-          (item) => RegExp(r'^[A-Za-z0-9._-]+$').hasMatch(item),
-        ) &&
+        segments.every((item) => RegExp(r'^[A-Za-z0-9._-]+$').hasMatch(item)) &&
         segments.length <= 4 &&
         !value.path.contains('..');
     if (!value.hasScheme ||
@@ -66,6 +64,72 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
   final Uri _origin;
   final AuthHttpClientFactory _clientFactory;
   final DateTime Function() _clock;
+
+  @override
+  Future<GoTrueSignUpResult> signUp(String email, String password) async {
+    final result = await _jsonRequest(
+      'POST',
+      '/signup',
+      body: {'email': email.trim(), 'password': password},
+    );
+    if (result['access_token'] is String) {
+      final session = GoTrueSession.fromJson(result, clock: _clock);
+      return GoTrueSignUpResult(user: session.user, session: session);
+    }
+    return GoTrueSignUpResult(user: GoTrueUser.fromJson(result));
+  }
+
+  @override
+  Future<GoTrueSession> verifySignUpCode(String email, String code) =>
+      _verifyCode(email, code, 'signup');
+
+  @override
+  Future<void> resendSignUpCode(String email) async {
+    await _jsonRequest(
+      'POST',
+      '/resend',
+      body: {'type': 'signup', 'email': email.trim()},
+      acceptEmpty: true,
+    );
+  }
+
+  @override
+  Future<void> requestPasswordRecovery(String email) async {
+    await _jsonRequest(
+      'POST',
+      '/recover',
+      body: {'email': email.trim()},
+      acceptEmpty: true,
+    );
+  }
+
+  @override
+  Future<GoTrueSession> verifyRecoveryCode(String email, String code) =>
+      _verifyCode(email, code, 'recovery');
+
+  @override
+  Future<void> updatePassword(String accessToken, String password) async {
+    await _jsonRequest(
+      'PUT',
+      '/user',
+      accessToken: accessToken,
+      body: {'password': password},
+    );
+  }
+
+  Future<GoTrueSession> _verifyCode(
+    String email,
+    String code,
+    String type,
+  ) async {
+    final result = await _jsonRequest(
+      'POST',
+      '/verify',
+      body: {'type': type, 'email': email.trim(), 'token': code.trim()},
+      invalidCredentialsOnUnauthorized: true,
+    );
+    return GoTrueSession.fromJson(result, clock: _clock);
+  }
 
   @override
   Future<GoTrueSession> signInWithPassword(
@@ -188,6 +252,40 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
         'OpenMuse auth: $method $path status=${response.statusCode} bytes=${responseText.length}',
       );
       if (response.statusCode < 200 || response.statusCode >= 300) {
+        if (response.statusCode == 429) {
+          throw const AuthFailure(
+            AuthFailureKind.rateLimited,
+            'Too many requests. Please wait and try again.',
+          );
+        }
+        String? errorCode;
+        try {
+          final errorBody = jsonDecode(responseText);
+          if (errorBody is Map) errorCode = errorBody['error_code']?.toString();
+        } on FormatException {
+          // Server response text is never shown to the user or logged.
+        }
+        if (errorCode == 'user_already_exists' || errorCode == 'email_exists') {
+          throw const AuthFailure(
+            AuthFailureKind.accountExists,
+            'An account already exists for this email.',
+          );
+        }
+        if (errorCode == 'weak_password') {
+          throw const AuthFailure(
+            AuthFailureKind.weakPassword,
+            'Please choose a stronger password.',
+          );
+        }
+        if (path == '/verify' &&
+            (response.statusCode == 400 ||
+                response.statusCode == 401 ||
+                response.statusCode == 422)) {
+          throw const AuthFailure(
+            AuthFailureKind.invalidCode,
+            'The code is invalid or has expired.',
+          );
+        }
         if (invalidCredentialsOnUnauthorized &&
             (response.statusCode == 400 || response.statusCode == 401)) {
           throw const AuthFailure.invalidCredentials();

@@ -6,6 +6,7 @@ enum OpenMuseAuthenticationPhase {
   submitting,
   bootstrapping,
   awaitingPasscode,
+  awaitingPasswordReset,
   authenticated,
   refreshing,
   failure,
@@ -67,6 +68,17 @@ abstract interface class OpenMuseEmailCodeAuthenticationController {
   Future<void> requestSignInCode(String email);
 
   Future<void> signInWithCode(String email, String code);
+}
+
+/// Optional account lifecycle capability used by the shared auth screen.
+abstract interface class OpenMuseAccountAuthenticationController {
+  Future<void> signUp(String email, String password);
+  Future<void> verifySignUpCode(String email, String code);
+  Future<void> resendSignUpCode(String email);
+  Future<void> requestPasswordRecovery(String email);
+  Future<void> verifyRecoveryCode(String email, String code);
+  Future<void> resetPassword(String password);
+  void cancelPendingFlow();
 }
 
 /// Optional, privileged contribution supplied by a built-in authentication

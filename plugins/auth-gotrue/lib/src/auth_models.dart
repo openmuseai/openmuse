@@ -79,6 +79,14 @@ final class GoTrueSession {
   };
 }
 
+/// GoTrue returns a user without tokens when email confirmation is required.
+final class GoTrueSignUpResult {
+  const GoTrueSignUpResult({required this.user, this.session});
+
+  final GoTrueUser user;
+  final GoTrueSession? session;
+}
+
 enum AuthFailureKind {
   invalidCredentials,
   network,
@@ -87,6 +95,10 @@ enum AuthFailureKind {
   sessionExpired,
   bootstrap,
   invalidConfiguration,
+  invalidCode,
+  accountExists,
+  weakPassword,
+  rateLimited,
 }
 
 final class AuthFailure implements Exception {
@@ -122,6 +134,10 @@ final class AuthFailure implements Exception {
     AuthFailureKind.sessionExpired => 'session_expired',
     AuthFailureKind.bootstrap => 'bootstrap',
     AuthFailureKind.invalidConfiguration => 'invalid_configuration',
+    AuthFailureKind.invalidCode => 'invalid_code',
+    AuthFailureKind.accountExists => 'account_exists',
+    AuthFailureKind.weakPassword => 'weak_password',
+    AuthFailureKind.rateLimited => 'rate_limited',
   };
 
   @override

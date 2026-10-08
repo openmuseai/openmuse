@@ -141,9 +141,124 @@ void main() {
 
     expect(find.text('The email or password is incorrect.'), findsOneWidget);
   });
+
+  testWidgets('renders Simplified Chinese when the locale is zh', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(_FakeController(), locale: const Locale('zh')),
+    );
+
+    expect(find.text('欢迎使用 OpenMuse'), findsOneWidget);
+    expect(find.text('使用密码继续'), findsOneWidget);
+    expect(find.textContaining('服务条款'), findsOneWidget);
+  });
+
+  testWidgets('localizes a known failure code in Chinese', (tester) async {
+    final controller = _FakeController();
+    await tester.pumpWidget(_app(controller, locale: const Locale('zh')));
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.email')),
+      'muse@example.com',
+    );
+    await tester.tap(find.byKey(const ValueKey('auth.continue-password')));
+    await tester.pumpAndSettle();
+    controller.fail('The email or password is incorrect.');
+    await tester.pump();
+
+    expect(find.text('邮箱或密码不正确。'), findsOneWidget);
+  });
+
+  testWidgets('keeps the controller message for an unmapped failure code', (
+    tester,
+  ) async {
+    final controller = _FakeController();
+    await tester.pumpWidget(_app(controller));
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.email')),
+      'muse@example.com',
+    );
+    await tester.tap(find.byKey(const ValueKey('auth.continue-password')));
+    await tester.pumpAndSettle();
+    controller.fail('Something new happened.', code: 'unmapped_code');
+    await tester.pump();
+
+    expect(find.text('Something new happened.'), findsOneWidget);
+  });
+
+  testWidgets('signup validates password and opens confirmation step', (
+    tester,
+  ) async {
+    final controller = _FakeController();
+    await tester.pumpWidget(_app(controller));
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.email')),
+      'muse@example.com',
+    );
+    await tester.tap(find.byKey(const ValueKey('auth.sign-up')));
+    await tester.pump();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.new-password')),
+      'short',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.confirm-password')),
+      'short',
+    );
+    await tester.tap(find.byKey(const ValueKey('auth.submit-new-password')));
+    await tester.pump();
+    expect(find.text('Use at least 8 characters.'), findsOneWidget);
+    expect(controller.signUps, 0);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.new-password')),
+      'long-password',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.confirm-password')),
+      'long-password',
+    );
+    await tester.tap(find.byKey(const ValueKey('auth.submit-new-password')));
+    await tester.pump();
+    expect(controller.signUps, 1);
+    expect(find.byKey(const ValueKey('auth.passcode')), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.passcode')),
+      '123456',
+    );
+    await tester.tap(find.byKey(const ValueKey('auth.submit-passcode')));
+    expect(controller.signupVerifications, 1);
+  });
+
+  testWidgets('forgot password requests recovery code and new password', (
+    tester,
+  ) async {
+    final controller = _FakeController();
+    await tester.pumpWidget(_app(controller));
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.email')),
+      'muse@example.com',
+    );
+    await tester.tap(find.byKey(const ValueKey('auth.continue-password')));
+    await tester.pump();
+    await tester.tap(find.text('Forgot password?'));
+    await tester.pump();
+    expect(controller.recoveryRequests, 1);
+    await tester.enterText(
+      find.byKey(const ValueKey('auth.passcode')),
+      '123456',
+    );
+    await tester.tap(find.byKey(const ValueKey('auth.submit-passcode')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('auth.new-password')), findsOneWidget);
+  });
 }
 
-Widget _app(_FakeController controller) => MaterialApp(
+Widget _app(_FakeController controller, {Locale? locale}) => MaterialApp(
+  locale: locale,
+  localizationsDelegates: OpenMuseAuthLocalizations.localizationsDelegates,
+  supportedLocales: OpenMuseAuthLocalizations.supportedLocales,
   home: OpenMuseLoginScreen(
     authentication: controller,
     cloudLabel: 'http://127.0.0.1:8000',
@@ -153,13 +268,60 @@ Widget _app(_FakeController controller) => MaterialApp(
 final class _FakeController extends ChangeNotifier
     implements
         OpenMuseAuthenticationController,
-        OpenMuseEmailCodeAuthenticationController {
+        OpenMuseEmailCodeAuthenticationController,
+        OpenMuseAccountAuthenticationController {
   @override
   OpenMuseAuthenticationSnapshot snapshot =
       const OpenMuseAuthenticationSnapshot.signedOut();
   int signInCalls = 0;
   int codeRequests = 0;
   int codeSignIns = 0;
+  int signUps = 0;
+  int signupVerifications = 0;
+  int recoveryRequests = 0;
+
+  @override
+  Future<void> signUp(String email, String password) async {
+    signUps++;
+    snapshot = const OpenMuseAuthenticationSnapshot(
+      phase: OpenMuseAuthenticationPhase.awaitingPasscode,
+    );
+    notifyListeners();
+  }
+
+  @override
+  Future<void> verifySignUpCode(String email, String code) async {
+    signupVerifications++;
+  }
+
+  @override
+  Future<void> resendSignUpCode(String email) async {}
+
+  @override
+  Future<void> requestPasswordRecovery(String email) async {
+    recoveryRequests++;
+    snapshot = const OpenMuseAuthenticationSnapshot(
+      phase: OpenMuseAuthenticationPhase.awaitingPasscode,
+    );
+    notifyListeners();
+  }
+
+  @override
+  Future<void> verifyRecoveryCode(String email, String code) async {
+    snapshot = const OpenMuseAuthenticationSnapshot(
+      phase: OpenMuseAuthenticationPhase.awaitingPasswordReset,
+    );
+    notifyListeners();
+  }
+
+  @override
+  Future<void> resetPassword(String password) async {}
+
+  @override
+  void cancelPendingFlow() {
+    snapshot = const OpenMuseAuthenticationSnapshot.signedOut();
+    notifyListeners();
+  }
 
   @override
   Future<String?> accessToken({bool forceRefresh = false}) async => null;
@@ -191,10 +353,10 @@ final class _FakeController extends ChangeNotifier
     codeSignIns++;
   }
 
-  void fail(String message) {
+  void fail(String message, {String code = 'invalid_credentials'}) {
     snapshot = OpenMuseAuthenticationSnapshot(
       phase: OpenMuseAuthenticationPhase.failure,
-      failureCode: 'invalid_credentials',
+      failureCode: code,
       failureMessage: message,
     );
     notifyListeners();

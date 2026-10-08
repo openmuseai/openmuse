@@ -540,6 +540,8 @@ final class _OpenMuseLaunchAppState extends State<OpenMuseLaunchApp> {
       debugShowCheckedModeBanner: false,
       title: 'OpenMuse',
       theme: buildOpenMuseTheme(),
+      localizationsDelegates: OpenMuseAuthLocalizations.localizationsDelegates,
+      supportedLocales: OpenMuseAuthLocalizations.supportedLocales,
       home: Scaffold(
         backgroundColor: OpenMuseTokens.canvas,
         body: Center(

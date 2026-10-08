@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'auth_controller.dart';
+import 'auth_localizations.dart';
 import 'login_screen.dart';
 
 final class OpenMuseGoTruePlugin
@@ -82,23 +83,27 @@ final class OpenMuseGoTruePlugin
   Widget buildSettings(BuildContext context) => AnimatedBuilder(
     animation: authentication,
     builder: (context, _) {
+      final l10n = openMuseAuthLocalizations(context);
       final identity = authentication.snapshot.identity;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '登录账号',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          Text(
+            l10n.accountSectionTitle,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          Text(identity?.email ?? '未登录', key: const ValueKey('account-email')),
+          Text(
+            identity?.email ?? l10n.notSignedIn,
+            key: const ValueKey('account-email'),
+          ),
           if (identity != null) ...[
             const SizedBox(height: 10),
             OutlinedButton.icon(
               key: const ValueKey('desktop-sign-out'),
               onPressed: authentication.signOut,
               icon: const Icon(Icons.logout),
-              label: const Text('退出登录'),
+              label: Text(l10n.signOut),
             ),
           ],
         ],

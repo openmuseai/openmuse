@@ -241,6 +241,67 @@ void main() {
     );
     expect(await controller.accessToken(), 'access-one');
   });
+
+  test(
+    'signup waits for email verification before creating a session',
+    () async {
+      final provider = _FakeProvider(signInResult: session());
+      final store = _RecordingStore();
+      final bootstrap = _RecordingBootstrapper();
+      final controller = GoTrueAuthenticationController(
+        provider: provider,
+        store: store,
+        bootstrapper: bootstrap,
+        clock: () => now,
+      );
+
+      await controller.signUp('muse@example.com', 'long-password');
+      expect(
+        controller.snapshot.phase,
+        OpenMuseAuthenticationPhase.awaitingPasscode,
+      );
+      expect(store.writes, 0);
+      expect(bootstrap.calls, 0);
+      await controller.resendSignUpCode('muse@example.com');
+      expect(provider.signupResends, 1);
+
+      await controller.verifySignUpCode('muse@example.com', '123456');
+      expect(
+        controller.snapshot.phase,
+        OpenMuseAuthenticationPhase.authenticated,
+      );
+      expect(store.writes, 1);
+      expect(bootstrap.calls, 1);
+    },
+  );
+
+  test('recovery credential stays transient until password changes', () async {
+    final provider = _FakeProvider(signInResult: session());
+    final store = _RecordingStore();
+    final controller = GoTrueAuthenticationController(
+      provider: provider,
+      store: store,
+      clock: () => now,
+    );
+
+    await controller.requestPasswordRecovery('muse@example.com');
+    await controller.verifyRecoveryCode('muse@example.com', '123456');
+    expect(
+      controller.snapshot.phase,
+      OpenMuseAuthenticationPhase.awaitingPasswordReset,
+    );
+    expect(store.writes, 0);
+    expect(await controller.accessToken(), isNull);
+
+    await controller.resetPassword('new-long-password');
+    expect(provider.updatedPassword, 'new-long-password');
+    expect(provider.signInEmail, 'muse@example.com');
+    expect(store.writes, 1);
+    expect(
+      controller.snapshot.phase,
+      OpenMuseAuthenticationPhase.authenticated,
+    );
+  });
 }
 
 final class _ThrowingWriteStore implements AuthSessionStore {
@@ -314,6 +375,38 @@ final class _FakeProvider implements GoTrueAuthProvider {
   String? signInEmail;
   String? requestedCodeEmail;
   String? signInCode;
+  GoTrueSignUpResult? signUpResult;
+  GoTrueSession? recoveryResult;
+  String? updatedPassword;
+  int signupResends = 0;
+
+  @override
+  Future<GoTrueSignUpResult> signUp(String email, String password) async =>
+      signUpResult ??
+      GoTrueSignUpResult(
+        user: const GoTrueUser(id: 'user-1', email: 'muse@example.com'),
+      );
+
+  @override
+  Future<GoTrueSession> verifySignUpCode(String email, String code) async =>
+      signInResult!;
+
+  @override
+  Future<void> resendSignUpCode(String email) async {
+    signupResends++;
+  }
+
+  @override
+  Future<void> requestPasswordRecovery(String email) async {}
+
+  @override
+  Future<GoTrueSession> verifyRecoveryCode(String email, String code) async =>
+      recoveryResult ?? signInResult!;
+
+  @override
+  Future<void> updatePassword(String accessToken, String password) async {
+    updatedPassword = password;
+  }
 
   @override
   Future<GoTrueUser> currentUser(String accessToken) async =>

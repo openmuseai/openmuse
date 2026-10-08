@@ -289,6 +289,8 @@ final class OpenMuseMobileApplicationState
     debugShowCheckedModeBanner: false,
     title: 'WorkBuddy',
     theme: workBuddyTheme(),
+    localizationsDelegates: OpenMuseAuthLocalizations.localizationsDelegates,
+    supportedLocales: OpenMuseAuthLocalizations.supportedLocales,
     home: _WorkBuddyHost(
       authentication: widget.authenticationPlugin.authentication,
       cloudLabel: widget.authenticationPlugin.cloudLabel,

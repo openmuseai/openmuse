@@ -25,7 +25,8 @@ GoTrueSession _localAnonymousMarker() => GoTrueSession(
 final class GoTrueAuthenticationController extends ChangeNotifier
     implements
         OpenMuseAuthenticationController,
-        OpenMuseEmailCodeAuthenticationController {
+        OpenMuseEmailCodeAuthenticationController,
+        OpenMuseAccountAuthenticationController {
   GoTrueAuthenticationController({
     required GoTrueAuthProvider provider,
     required AuthSessionStore store,
@@ -45,6 +46,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
   final Duration refreshSkew;
 
   GoTrueSession? _session;
+  GoTrueSession? _recoverySession;
   Future<GoTrueSession>? _refreshInFlight;
   var _anonymous = false;
   OpenMuseAuthenticationSnapshot _snapshot =
@@ -53,8 +55,179 @@ final class GoTrueAuthenticationController extends ChangeNotifier
   @override
   OpenMuseAuthenticationSnapshot get snapshot => _snapshot;
 
+  bool get _busy =>
+      _snapshot.phase == OpenMuseAuthenticationPhase.submitting ||
+      _snapshot.phase == OpenMuseAuthenticationPhase.bootstrapping;
+
+  @override
+  Future<void> signUp(String email, String password) async {
+    if (_busy) return;
+    _setSnapshot(
+      const OpenMuseAuthenticationSnapshot(
+        phase: OpenMuseAuthenticationPhase.submitting,
+      ),
+    );
+    try {
+      final result = await _provider.signUp(email, password);
+      if (result.session == null) {
+        _setSnapshot(
+          const OpenMuseAuthenticationSnapshot(
+            phase: OpenMuseAuthenticationPhase.awaitingPasscode,
+          ),
+        );
+      } else {
+        _setSnapshot(
+          const OpenMuseAuthenticationSnapshot(
+            phase: OpenMuseAuthenticationPhase.bootstrapping,
+          ),
+        );
+        await _finishSignIn(result.session!);
+      }
+    } on AuthFailure catch (error) {
+      _publishFailure(error);
+    } catch (_) {
+      _publishFailure(
+        const AuthFailure(
+          AuthFailureKind.server,
+          'The account could not be created.',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<void> verifySignUpCode(String email, String code) async {
+    if (_busy) return;
+    _setSnapshot(
+      const OpenMuseAuthenticationSnapshot(
+        phase: OpenMuseAuthenticationPhase.submitting,
+      ),
+    );
+    try {
+      final session = await _provider.verifySignUpCode(email, code);
+      _setSnapshot(
+        const OpenMuseAuthenticationSnapshot(
+          phase: OpenMuseAuthenticationPhase.bootstrapping,
+        ),
+      );
+      await _finishSignIn(session);
+    } on AuthFailure catch (error) {
+      _publishFailure(error);
+    } catch (_) {
+      _publishFailure(
+        const AuthFailure(
+          AuthFailureKind.server,
+          'The email code could not be verified.',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<void> resendSignUpCode(String email) =>
+      _requestCode(() => _provider.resendSignUpCode(email));
+
+  @override
+  Future<void> requestPasswordRecovery(String email) =>
+      _requestCode(() => _provider.requestPasswordRecovery(email));
+
+  Future<void> _requestCode(Future<void> Function() request) async {
+    if (_busy) return;
+    _setSnapshot(
+      const OpenMuseAuthenticationSnapshot(
+        phase: OpenMuseAuthenticationPhase.submitting,
+      ),
+    );
+    try {
+      await request();
+      _setSnapshot(
+        const OpenMuseAuthenticationSnapshot(
+          phase: OpenMuseAuthenticationPhase.awaitingPasscode,
+        ),
+      );
+    } on AuthFailure catch (error) {
+      _publishFailure(error);
+    } catch (_) {
+      _publishFailure(
+        const AuthFailure(
+          AuthFailureKind.server,
+          'The email could not be sent.',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<void> verifyRecoveryCode(String email, String code) async {
+    if (_busy) return;
+    _setSnapshot(
+      const OpenMuseAuthenticationSnapshot(
+        phase: OpenMuseAuthenticationPhase.submitting,
+      ),
+    );
+    try {
+      _recoverySession = await _provider.verifyRecoveryCode(email, code);
+      _setSnapshot(
+        const OpenMuseAuthenticationSnapshot(
+          phase: OpenMuseAuthenticationPhase.awaitingPasswordReset,
+        ),
+      );
+    } on AuthFailure catch (error) {
+      _publishFailure(error);
+    } catch (_) {
+      _publishFailure(
+        const AuthFailure(
+          AuthFailureKind.server,
+          'The recovery code could not be verified.',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<void> resetPassword(String password) async {
+    final recovery = _recoverySession;
+    if (_busy || recovery == null) return;
+    _setSnapshot(
+      const OpenMuseAuthenticationSnapshot(
+        phase: OpenMuseAuthenticationPhase.submitting,
+      ),
+    );
+    try {
+      await _provider.updatePassword(recovery.accessToken, password);
+      _recoverySession = null;
+      final freshSession = await _provider.signInWithPassword(
+        recovery.user.email,
+        password,
+      );
+      _setSnapshot(
+        const OpenMuseAuthenticationSnapshot(
+          phase: OpenMuseAuthenticationPhase.bootstrapping,
+        ),
+      );
+      await _finishSignIn(freshSession);
+    } on AuthFailure catch (error) {
+      _publishFailure(error);
+    } catch (_) {
+      _publishFailure(
+        const AuthFailure(
+          AuthFailureKind.server,
+          'The password could not be updated.',
+        ),
+      );
+    }
+  }
+
+  @override
+  void cancelPendingFlow() {
+    if (_busy) return;
+    _recoverySession = null;
+    _setSnapshot(const OpenMuseAuthenticationSnapshot.signedOut());
+  }
+
   @override
   Future<void> restore() async {
+    _recoverySession = null;
     _setSnapshot(const OpenMuseAuthenticationSnapshot.restoring());
     try {
       final restored = await _store.read();
@@ -196,6 +369,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
       return;
     }
     _session = null;
+    _recoverySession = null;
     _refreshInFlight = null;
     _anonymous = true;
     try {
@@ -227,6 +401,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
 
   @override
   Future<void> signOut() async {
+    _recoverySession = null;
     final session = _anonymous ? null : _session;
     _anonymous = false;
     try {
@@ -338,6 +513,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
 
   Future<void> _clearSession() async {
     _session = null;
+    _recoverySession = null;
     _anonymous = false;
     _refreshInFlight = null;
     try {
