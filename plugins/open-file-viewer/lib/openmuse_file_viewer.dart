@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/services.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:openmuse_file_viewer_flutter/openmuse_file_viewer_flutter.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 final class OpenMuseFileViewerPlugin
@@ -167,15 +167,7 @@ final class _MarkdownPreviewState extends State<OpenMuseMarkdownPreview> {
         return _ViewerMessage('无法读取 Markdown：${snapshot.error}');
       if (!snapshot.hasData)
         return const Center(child: CircularProgressIndicator());
-      return Markdown(
-        data: snapshot.data!,
-        selectable: true,
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-        // A local document must not trigger remote image fetches or silently
-        // open links outside the Host's resource router.
-        imageBuilder: (_, _, alt) => Text(alt ?? '[图片]'),
-        onTapLink: (_, _, _) {},
-      );
+      return OpenMuseMarkdownBody(contents: snapshot.data!);
     },
   );
 }
@@ -223,13 +215,7 @@ final class _LocalTextPreview extends StatelessWidget {
       if (!snapshot.hasData) {
         return const Center(child: CircularProgressIndicator());
       }
-      return ColoredBox(
-        color: const Color(0xfff1f2f5),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: SelectableText(snapshot.data!),
-        ),
-      );
+      return OpenMuseTextBody(contents: snapshot.data!);
     },
   );
 }

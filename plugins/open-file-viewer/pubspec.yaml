@@ -10,6 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_markdown_plus: 1.0.12
+  openmuse_file_viewer_flutter:
+    path: ../../packages/openmuse_file_viewer_flutter
   path: ^1.9.1
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
