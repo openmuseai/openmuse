@@ -35,13 +35,22 @@ final class DshSidecarSupervisor extends ChangeNotifier {
     environment: environment,
   ).nodeExecutable;
 
-  String? get modelCapabilitiesPatch {
+  String? get modelCapabilitiesPatch => _bundledPatch(
+    'dsh-model-capabilities/openmuse.patch.yml',
+  );
+
+  String? get marketPatch => _bundledPatch('dshmarket/openmuse.patch.yml');
+
+  List<String> get defaultPatchPaths => [
+    for (final path in [modelCapabilitiesPatch, marketPatch])
+      if (path != null) path,
+  ];
+
+  String? _bundledPatch(String relative) {
     final cli = cliPath;
     if (cli == null || !cli.endsWith('bin.js')) return null;
     final nodeModules = File(cli).parent.parent.parent.parent;
-    final patch = File(
-      '${nodeModules.path}/dsh-model-capabilities/openmuse.patch.yml',
-    );
+    final patch = File('${nodeModules.path}/$relative');
     return patch.existsSync() ? patch.path : null;
   }
 
@@ -97,7 +106,7 @@ final class DshSidecarSupervisor extends ChangeNotifier {
       final command = dshWebCommand(
         cli,
         nodeExecutable: runtime.nodeExecutable,
-        patchPath: modelCapabilitiesPatch,
+        patchPaths: defaultPatchPaths,
       );
       final reportedEndpoint = Completer<Uri>();
       final launchEnvironment = dshLaunchEnvironment(
@@ -354,10 +363,10 @@ Map<String, String> dshLaunchEnvironment(
 ({String executable, List<String> arguments}) dshWebCommand(
   String cli, {
   String nodeExecutable = 'node',
-  String? patchPath,
+  List<String> patchPaths = const [],
 }) => dshCommand(cli, [
   'web',
-  if (patchPath != null) ...['--patch', patchPath],
+  for (final patchPath in patchPaths) ...['--patch', patchPath],
   '--host',
   '127.0.0.1',
   '--port',

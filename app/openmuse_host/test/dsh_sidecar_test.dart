@@ -125,11 +125,13 @@ void main() {
     ]);
   });
 
-  test('bundled model plugin patch is applied before web app arguments', () {
+  test('bundled model and market patches are applied before web app arguments', () {
     final command = dshWebCommand(
       '/bundle/node_modules/@deepseek-ai/dsh/lib/bin.js',
-      patchPath:
-          '/bundle/node_modules/dsh-model-capabilities/openmuse.patch.yml',
+      patchPaths: const [
+        '/bundle/node_modules/dsh-model-capabilities/openmuse.patch.yml',
+        '/bundle/node_modules/dshmarket/openmuse.patch.yml',
+      ],
     );
     expect(
       command.arguments,
@@ -137,6 +139,8 @@ void main() {
         'web',
         '--patch',
         '/bundle/node_modules/dsh-model-capabilities/openmuse.patch.yml',
+        '--patch',
+        '/bundle/node_modules/dshmarket/openmuse.patch.yml',
         '--host',
         '127.0.0.1',
       ]),

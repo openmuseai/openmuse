@@ -191,6 +191,14 @@ def validate(output: Path) -> None:
         raise RuntimeError("remote Workspace Runtime must not patch the DSH Agent Loop")
     if "openmuse-host-bridge" not in model_patch.read_text(encoding="utf-8"):
         raise RuntimeError("OpenMuse DSH Host bridge is not mounted")
+    market = output / "node_modules/dshmarket"
+    market_patch = market / "openmuse.patch.yml"
+    if not (market / "lib/index.js").is_file() or not (market / "client/client.js").is_file():
+        raise RuntimeError("default dsh-market plugin is missing")
+    if "id: dsh-market" not in market_patch.read_text(encoding="utf-8"):
+        raise RuntimeError("dsh-market is not mounted by its default patch")
+    if not (market / "LICENSE").is_file():
+        raise RuntimeError("dsh-market license is missing")
     for script in (output / "node_modules/@deepseek-ai").rglob("*.js"):
         source = script.read_text(encoding="utf-8")
         if REMOVED_PRODUCT_IDENTIFIER in source.lower() or "\\0dsh-css:/Users/" in source:

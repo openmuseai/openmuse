@@ -25,8 +25,9 @@ def main() -> None:
     root = args.closure.resolve()
     cli = root / "node_modules/@deepseek-ai/dsh/lib/bin.js"
     patch = root / "node_modules/dsh-model-capabilities/openmuse.patch.yml"
-    if not cli.is_file() or not patch.is_file():
-        raise RuntimeError("pinned DSH CLI/model plugin is incomplete")
+    market_patch = root / "node_modules/dshmarket/openmuse.patch.yml"
+    if not cli.is_file() or not patch.is_file() or not market_patch.is_file():
+        raise RuntimeError("pinned DSH CLI/model/market plugin is incomplete")
 
     with tempfile.TemporaryDirectory(prefix="openmuse-dsh-smoke-") as home:
         bridge_token = "openmuse-smoke-bridge-token-0123456789abcdef"
@@ -38,7 +39,8 @@ def main() -> None:
         environment["OPENMUSE_DSH_BRIDGE_TOKEN"] = bridge_token
         environment["OPENMUSE_DSH_NATIVE_EXPERIMENTAL"] = "1"
         command = [
-            str(args.node.resolve()), str(cli), "web", "--patch", str(patch),
+            str(args.node.resolve()), str(cli), "web",
+            "--patch", str(patch), "--patch", str(market_patch),
             "--host", "127.0.0.1", "--port", "0", "--no-open",
         ]
         process = subprocess.Popen(
@@ -71,9 +73,15 @@ def main() -> None:
                 html = response.read().decode("utf-8", errors="replace")
             if "dsh-model-capabilities" not in html:
                 raise RuntimeError("default model plugin missing from DSH client graph")
+            if "dshmarket" not in html:
+                raise RuntimeError("default market plugin missing from DSH client graph")
             if "openmuse-dsh-bridge" not in html:
                 raise RuntimeError("OpenMuse DSH Host bridge missing from client graph")
             base = endpoint.split("/?", 1)[0]
+            with client.open(base + "/dsh-market/api/v1/capabilities", timeout=10) as response:
+                capabilities = json.load(response)
+                if response.status != 200 or capabilities.get("marketVersion") in (None, ""):
+                    raise RuntimeError("default market plugin did not serve its API")
             bridge_url = base + "/openmuse-bridge/workspaces"
             payload = json.dumps({"mounts": [home]}).encode()
             unauthorized = urllib.request.Request(
