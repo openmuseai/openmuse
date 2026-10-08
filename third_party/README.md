@@ -10,7 +10,7 @@ read another product's checkout.
 | dsh-model-capabilities 0.5.0-openmuse.3 | `dsh/plugins/dsh-model-capabilities/` and its local tarball | MIT LICENSE retained; profile-settings adaptation documented in `README.openmuse.md` |
 | openmuse-dsh-bridge 0.1.5 | `dsh/plugins/openmuse-dsh-bridge/` and its local tarball | First-party AGPL-3.0; token-gated local Workspace registry, active Mount, Host file-open, selection-copy and path menu bridge |
 | Node.js 22.19.0 | `node/v22.19.0/node-v22.19.0-darwin-{arm64,x64}.tar.gz` | Official `SHASUMS256.txt` retained here; Node's bundled `LICENSE` is extracted into the app |
-| dsh-market 1.66.9 (`fcbbb6c`) | `dsh-market/` source. The closure still installs `dsh/tarballs/dshmarket-1.66.9.tgz` | MIT (`dsh-market/LICENSE`) |
+| dsh-market 1.66.9 (`fcbbb6c`) | `dsh-market/` source. The closure still installs `dsh/tarballs/dshmarket-1.66.9.tgz`; OpenMuse mounts it with `dsh-market/openmuse.patch.yml` | MIT (`dsh-market/LICENSE`) |
 
 The retained DSH 0.1.0-rc.7 tarballs were assembled from source revision
 `99f6f02fecdb7dff40c3fbc9470f5907c29f74ca` but are no longer build

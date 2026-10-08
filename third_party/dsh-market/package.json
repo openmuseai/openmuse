@@ -41,7 +41,7 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-settings": "^0.1.0-rc.7 || ^0.1.1-rc.2 || ^0.1.2-alpha.2 || ^0.2.0-rc.1",
+    "@deepseek-ai/dsh-settings": "^0.1.0-rc.7 || ^0.1.1-rc.2 || ^0.1.2-alpha.2 || 0.1.7-rc.1 || ^0.2.0-rc.1",
     "@deepseek-ai/schemastery": "^3.18.1"
   },
   "dsh": {
@@ -78,6 +78,7 @@
     "client",
     "UPDATE-API-V1.md",
     "cordis.patch.yml",
+    "openmuse.patch.yml",
     "LICENSE"
   ],
   "devDependencies": {
@@ -102,6 +103,13 @@
     "tsdown": "^0.22.14",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
+  },
+  "openmuse": {
+    "nativeConversation": {
+      "schemaVersion": 1,
+      "impact": "outside-conversation",
+      "contributions": []
+    }
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
