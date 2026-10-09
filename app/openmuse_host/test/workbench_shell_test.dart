@@ -119,8 +119,11 @@ void main() {
       OpenMuseHostApp(registry: registry, workspace: workspace),
     );
 
-    expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
-    await tester.tap(find.byTooltip('本地设置'));
+    final settingsButton = Platform.isWindows
+        ? find.byKey(const ValueKey('title-settings'))
+        : find.byTooltip('本地设置');
+    expect(settingsButton, findsOneWidget);
+    await tester.tap(settingsButton);
     await tester.pumpAndSettle();
 
     expect(find.text('Appearance'), findsOneWidget);
@@ -132,45 +135,60 @@ void main() {
     expect(find.text('协作'), findsNothing);
   });
 
-  testWidgets('CLI plugin docks below the editor and can be disabled', (
-    tester,
-  ) async {
-    registry.install(
-      createOpenMuseBuiltInPlugins().singleWhere(
-        (plugin) => plugin.descriptor.id == 'com.openmuse.cli',
-      ),
-    );
-    final settings = OpenMuseLocalSettings();
-    await tester.pumpWidget(
-      OpenMuseHostApp(
-        registry: registry,
-        workspace: workspace,
-        settings: settings,
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('cli-bottom-panel')), findsOneWidget);
-    expect(find.byKey(const ValueKey('cli-bottom-resizer')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('cli-new-terminal')).hitTestable(),
-      findsOneWidget,
-    );
-    final initialHeight = tester
-        .getSize(find.byKey(const ValueKey('cli-bottom-panel')))
-        .height;
-    await tester.drag(
-      find.byKey(const ValueKey('cli-bottom-resizer')),
-      const Offset(0, -70),
-    );
-    await tester.pumpAndSettle();
-    expect(
-      tester.getSize(find.byKey(const ValueKey('cli-bottom-panel'))).height,
-      greaterThan(initialHeight),
-    );
-    await settings.updatePluginValues('com.openmuse.cli', {'enabled': false});
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('cli-bottom-panel')), findsNothing);
-  });
+  testWidgets(
+    'CLI plugin docks below the editor and can be disabled',
+    (tester) async {
+      registry.install(
+        createOpenMuseBuiltInPlugins().singleWhere(
+          (plugin) => plugin.descriptor.id == 'com.openmuse.cli',
+        ),
+      );
+      final settings = OpenMuseLocalSettings();
+      await tester.pumpWidget(
+        OpenMuseHostApp(
+          registry: registry,
+          workspace: workspace,
+          settings: settings,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('cli-bottom-panel')), findsNothing);
+      if (Platform.isWindows) {
+        expect(
+          find.byKey(const ValueKey('title-sidebar-toggle')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey('title-settings')), findsOneWidget);
+        expect(find.byKey(const ValueKey('title-terminal')), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('title-terminal')));
+        await tester.pump();
+      }
+      expect(find.byKey(const ValueKey('cli-bottom-panel')), findsOneWidget);
+      expect(find.byKey(const ValueKey('cli-bottom-resizer')), findsOneWidget);
+      final initialHeight = tester
+          .getSize(find.byKey(const ValueKey('cli-bottom-panel')))
+          .height;
+      await tester.drag(
+        find.byKey(const ValueKey('cli-bottom-resizer')),
+        const Offset(0, -70),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSize(find.byKey(const ValueKey('cli-bottom-panel'))).height,
+        greaterThan(initialHeight),
+      );
+      await tester.tap(find.byKey(const ValueKey('cli-bottom-collapse')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('cli-bottom-panel')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('title-terminal')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('cli-bottom-panel')), findsOneWidget);
+      await settings.updatePluginValues('com.openmuse.cli', {'enabled': false});
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('cli-bottom-panel')), findsNothing);
+    },
+    skip: !Platform.isWindows,
+  );
 
   testWidgets('theme selection changes the app immediately', (tester) async {
     final settings = OpenMuseLocalSettings();
@@ -181,7 +199,11 @@ void main() {
         settings: settings,
       ),
     );
-    await tester.tap(find.byTooltip('本地设置'));
+    await tester.tap(
+      Platform.isWindows
+          ? find.byKey(const ValueKey('title-settings'))
+          : find.byTooltip('本地设置'),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Dark'));
     await tester.pumpAndSettle();
@@ -479,6 +501,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('iOffice'), findsOneWidget);
     expect(find.text('默认打开方式'), findsOneWidget);
+  });
+
+  testWidgets('workspace menu offers opening its directory in a terminal', (
+    tester,
+  ) async {
+    registry.install(
+      createOpenMuseBuiltInPlugins().singleWhere(
+        (plugin) => plugin.descriptor.id == 'com.openmuse.cli',
+      ),
+    );
+    await tester.pumpWidget(
+      OpenMuseHostApp(registry: registry, workspace: workspace),
+    );
+    await tester.tap(
+      find.text(workspace.mounts.first.name).first,
+      buttons: kSecondaryButton,
+    );
+    await tester.pumpAndSettle();
+    final action = find.byWidgetPredicate(
+      (widget) => widget is PopupMenuItem<String> && widget.value == 'terminal',
+    );
+    expect(action, findsOneWidget);
+    expect(tester.widget<PopupMenuItem<String>>(action).enabled, isTrue);
   });
 }
 

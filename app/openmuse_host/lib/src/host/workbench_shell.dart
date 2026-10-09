@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:openmuse_cli_plugin/openmuse_cli_plugin.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'design_system.dart';
@@ -46,6 +47,17 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   late final bool _ownsLayout = widget.layoutController == null;
   Timer? _saveDebounce;
   Size _lastSize = Size.zero;
+  final OpenMuseCliController _terminalController = OpenMuseCliController();
+  bool _terminalVisible = false;
+  bool _hasOpenedTerminal = false;
+
+  bool get _terminalAvailable =>
+      widget.settings.pluginValues('com.openmuse.cli')['enabled'] != false &&
+      widget.registry.panelProvider(
+            OpenMuseSurfaceRegion.bottomPanel,
+            panelId: 'cli.console',
+          ) !=
+          null;
 
   @override
   void initState() {
@@ -61,7 +73,30 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     if (shouldFlush) _persistLayout();
     _layout.removeListener(_layoutChanged);
     if (_ownsLayout) _layout.dispose();
+    _terminalController.dispose();
     super.dispose();
+  }
+
+  void _openTerminal([String? directory]) {
+    if (!_terminalAvailable) return;
+    setState(() => _terminalVisible = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _terminalController.open(directory ?? widget.workspace.activeMountPath);
+        _hasOpenedTerminal = true;
+      }
+    });
+  }
+
+  void _toggleTerminal() {
+    if (!_terminalAvailable) return;
+    if (_terminalVisible) {
+      setState(() => _terminalVisible = false);
+    } else if (_hasOpenedTerminal) {
+      setState(() => _terminalVisible = true);
+    } else {
+      _openTerminal();
+    }
   }
 
   void _layoutChanged() {
@@ -112,6 +147,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
               registry: widget.registry,
               workspace: widget.workspace,
               settings: widget.settings,
+              onTerminal: _terminalAvailable ? _toggleTerminal : null,
             ),
           Expanded(
             child: WorkbenchCanvas(
@@ -126,6 +162,11 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
                       registry: widget.registry,
                       workspace: widget.workspace,
                       settings: widget.settings,
+                      terminalController: _terminalController,
+                      terminalVisible: _terminalVisible,
+                      onCloseTerminal: () =>
+                          setState(() => _terminalVisible = false),
+                      onOpenTerminal: _openTerminal,
                       paneMenu: _embeddedPaneMenu(
                         context,
                         _layout.snapshot,
@@ -430,6 +471,10 @@ final class _BoundSurface extends StatelessWidget {
     required this.registry,
     required this.workspace,
     required this.settings,
+    required this.terminalController,
+    required this.terminalVisible,
+    required this.onCloseTerminal,
+    required this.onOpenTerminal,
     required this.onFocus,
     this.paneMenu,
   });
@@ -438,6 +483,10 @@ final class _BoundSurface extends StatelessWidget {
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
+  final OpenMuseCliController terminalController;
+  final bool terminalVisible;
+  final VoidCallback onCloseTerminal;
+  final ValueChanged<String> onOpenTerminal;
   final VoidCallback onFocus;
   final Widget? paneMenu;
 
@@ -454,6 +503,7 @@ final class _BoundSurface extends StatelessWidget {
         registry: registry,
         workspace: workspace,
         settings: settings,
+        onOpenTerminal: onOpenTerminal,
       );
     }
     const editorPrefix = 'host.editorGroup:';
@@ -477,11 +527,12 @@ final class _BoundSurface extends StatelessWidget {
       if (plugin == null) return editor;
       return _EditorCliDock(
         editor: editor,
-        console: PluginPanelHost(
+        visible: terminalVisible,
+        console: OpenMuseCliConsole(
           key: const ValueKey('cli-bottom-panel'),
-          registry: registry,
-          plugin: plugin,
-          panelId: 'cli.console',
+          workingDirectory: workspace.activeMountPath,
+          controller: terminalController,
+          onMinimize: onCloseTerminal,
         ),
       );
     }
@@ -507,10 +558,15 @@ final class _BoundSurface extends StatelessWidget {
 }
 
 final class _EditorCliDock extends StatefulWidget {
-  const _EditorCliDock({required this.editor, required this.console});
+  const _EditorCliDock({
+    required this.editor,
+    required this.console,
+    required this.visible,
+  });
 
   final Widget editor;
   final Widget console;
+  final bool visible;
 
   @override
   State<_EditorCliDock> createState() => _EditorCliDockState();
@@ -518,73 +574,42 @@ final class _EditorCliDock extends StatefulWidget {
 
 final class _EditorCliDockState extends State<_EditorCliDock> {
   double _height = 230;
-  bool _collapsed = false;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final available = constraints.maxHeight;
       if (available < 220) return widget.editor;
-      final height = _collapsed ? 30.0 : _height.clamp(120.0, available * 0.65);
+      final height = _height.clamp(120.0, available * 0.65);
       return Column(
         children: [
           Expanded(child: widget.editor),
-          MouseRegion(
-            cursor: SystemMouseCursors.resizeRow,
-            child: GestureDetector(
-              key: const ValueKey('cli-bottom-resizer'),
-              behavior: HitTestBehavior.opaque,
-              onVerticalDragUpdate: (details) {
-                setState(
-                  () => _height = (_height - details.delta.dy).clamp(
-                    120.0,
-                    available * 0.65,
-                  ),
-                );
-              },
-              child: Container(
-                height: 12,
-                color: Theme.of(context).dividerColor,
-                child: Row(
-                  children: [
-                    const Spacer(),
-                    Container(
-                      width: 42,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: Colors.white54,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+          if (widget.visible)
+            MouseRegion(
+              cursor: SystemMouseCursors.resizeRow,
+              child: GestureDetector(
+                key: const ValueKey('cli-bottom-resizer'),
+                behavior: HitTestBehavior.opaque,
+                onVerticalDragUpdate: (details) {
+                  setState(
+                    () => _height = (_height - details.delta.dy).clamp(
+                      120.0,
+                      available * 0.65,
                     ),
-                    const Spacer(),
-                    InkWell(
-                      key: const ValueKey('cli-bottom-collapse'),
-                      onTap: () => setState(() => _collapsed = !_collapsed),
-                      child: Icon(
-                        _collapsed
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                        size: 12,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
+                  );
+                },
+                child: Container(
+                  height: 5,
+                  color: Theme.of(context).dividerColor,
                 ),
               ),
             ),
-          ),
-          SizedBox(
-            height: height,
-            child: _collapsed
-                ? Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: () => setState(() => _collapsed = false),
-                      icon: const Icon(Icons.terminal, size: 16),
-                      label: const Text('打开控制台'),
-                    ),
-                  )
-                : widget.console,
+          ExcludeFocus(
+            excluding: !widget.visible,
+            child: Offstage(
+              offstage: !widget.visible,
+              child: SizedBox(height: height, child: widget.console),
+            ),
           ),
         ],
       );
@@ -642,11 +667,13 @@ final class _WorkspaceSidebar extends StatelessWidget {
     required this.registry,
     required this.workspace,
     required this.settings,
+    required this.onOpenTerminal,
   });
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
+  final ValueChanged<String> onOpenTerminal;
 
   @override
   Widget build(BuildContext context) => OpenMuseWorkspaceSidebar(
@@ -678,6 +705,7 @@ final class _WorkspaceSidebar extends StatelessWidget {
             registry: registry,
             workspace: workspace,
             settings: settings,
+            onOpenTerminal: onOpenTerminal,
           ),
           for (final entry in workspace.visibleEntries(mount))
             _ResourceRow(
@@ -685,6 +713,7 @@ final class _WorkspaceSidebar extends StatelessWidget {
               registry: registry,
               workspace: workspace,
               settings: settings,
+              onOpenTerminal: onOpenTerminal,
               selected: entry.path == workspace.selected?.uri.toFilePath(),
             ),
         ],
@@ -699,12 +728,14 @@ final class _MountRow extends StatelessWidget {
     required this.registry,
     required this.workspace,
     required this.settings,
+    required this.onOpenTerminal,
   });
 
   final WorkspaceMount mount;
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
+  final ValueChanged<String> onOpenTerminal;
 
   @override
   Widget build(BuildContext context) => OpenMuseWorkspaceRow(
@@ -722,6 +753,7 @@ final class _MountRow extends StatelessWidget {
       registry,
       workspace,
       settings,
+      onOpenTerminal,
     ),
   );
 }
@@ -732,6 +764,7 @@ final class _ResourceRow extends StatelessWidget {
     required this.registry,
     required this.workspace,
     required this.settings,
+    required this.onOpenTerminal,
     required this.selected,
   });
 
@@ -739,6 +772,7 @@ final class _ResourceRow extends StatelessWidget {
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
+  final ValueChanged<String> onOpenTerminal;
   final bool selected;
 
   @override
@@ -760,6 +794,7 @@ final class _ResourceRow extends StatelessWidget {
       registry,
       workspace,
       settings,
+      onOpenTerminal,
     ),
   );
 }
@@ -989,6 +1024,7 @@ Future<void> _showResourceMenu(
   OpenMusePluginRegistry registry,
   LocalWorkspaceController workspace,
   OpenMuseLocalSettings settings,
+  ValueChanged<String> onOpenTerminal,
 ) async {
   final resource = entry.resource;
   final isMountRoot = workspace.mounts.any((m) => identical(m.root, entry));
@@ -1010,6 +1046,18 @@ Future<void> _showResourceMenu(
           Icons.create_new_folder_outlined,
         ),
         _menuAction('refresh', 'Refresh', Icons.refresh),
+        _menuAction(
+          'terminal',
+          _hostText('在终端中打开', 'Open in Terminal'),
+          Icons.terminal,
+          enabled:
+              settings.pluginValues('com.openmuse.cli')['enabled'] != false &&
+              registry.panelProvider(
+                    OpenMuseSurfaceRegion.bottomPanel,
+                    panelId: 'cli.console',
+                  ) !=
+                  null,
+        ),
       ],
       if (!entry.isDirectory)
         _menuAction(
@@ -1111,6 +1159,8 @@ Future<void> _showResourceMenu(
     }
   } else if (command == 'refresh') {
     await workspace.refreshDirectory(entry);
+  } else if (command == 'terminal') {
+    onOpenTerminal(entry.path);
   } else if (command == 'copy') {
     await Clipboard.setData(ClipboardData(text: entry.path));
   } else if (command == 'copy-relative') {
@@ -1812,11 +1862,13 @@ final class _WindowsTitleStrip extends StatelessWidget {
     required this.registry,
     required this.workspace,
     required this.settings,
+    this.onTerminal,
   });
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
+  final VoidCallback? onTerminal;
 
   @override
   Widget build(BuildContext context) {
@@ -1839,10 +1891,17 @@ final class _WindowsTitleStrip extends StatelessWidget {
             'OpenMuse',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(width: 4),
-          OpenMuseSmallIconButton(
-            tooltip: '本地设置',
-            icon: Icons.settings_outlined,
+          const SizedBox(width: 12),
+          IconButton(
+            key: const ValueKey('title-sidebar-toggle'),
+            tooltip: workspace.sidebarVisible
+                ? _hostText('收起侧边栏', 'Collapse Sidebar')
+                : _hostText('展开侧边栏', 'Expand Sidebar'),
+            onPressed: workspace.toggleSidebar,
+            icon: const _SidebarToggleIcon(),
+          ),
+          TextButton(
+            key: const ValueKey('title-settings'),
             onPressed: () => showOpenMuseSettings(
               context,
               settings,
@@ -1856,11 +1915,12 @@ final class _WindowsTitleStrip extends StatelessWidget {
                         enabled: enabled,
                       ),
             ),
+            child: Text(_hostText('设置', 'Settings')),
           ),
-          OpenMuseSmallIconButton(
-            tooltip: workspace.sidebarVisible ? '收起侧栏' : '展开侧栏',
-            icon: Icons.view_sidebar_outlined,
-            onPressed: workspace.toggleSidebar,
+          TextButton(
+            key: const ValueKey('title-terminal'),
+            onPressed: onTerminal,
+            child: Text(_hostText('终端', 'Terminal')),
           ),
           Expanded(
             child: Listener(
@@ -1878,6 +1938,52 @@ final class _WindowsTitleStrip extends StatelessWidget {
       ),
     );
   }
+}
+
+String _hostText(String zh, String en) =>
+    WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'zh'
+    ? zh
+    : en;
+
+final class _SidebarToggleIcon extends StatelessWidget {
+  const _SidebarToggleIcon();
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    size: const Size(17, 15),
+    painter: _SidebarTogglePainter(
+      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+    ),
+  );
+}
+
+final class _SidebarTogglePainter extends CustomPainter {
+  const _SidebarTogglePainter(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.3;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(1, 1, size.width - 2, size.height - 2),
+        const Radius.circular(3),
+      ),
+      stroke,
+    );
+    canvas.drawLine(
+      const Offset(6.5, 1.5),
+      Offset(6.5, size.height - 1.5),
+      stroke,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _SidebarTogglePainter oldDelegate) =>
+      color != oldDelegate.color;
 }
 
 final class _WindowsCaptionButtons extends StatelessWidget {
