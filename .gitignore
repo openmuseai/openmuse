@@ -105,7 +105,7 @@ app.*.map.json
 /notes/
 # Marketing and social write-ups with their screenshots, slide-build scripts
 # and a login QR image. Draft material, not product source or a release input.
-/docs/meterails/
+/docs/meterials/
 *.local.md
 *.draft.md
 *.tmp
