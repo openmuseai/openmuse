@@ -65,10 +65,19 @@ async function installDshBootstrap(path) {
     if (assetBase.origin !== location.origin) {
       throw new Error('DSH 资源来源无效。')
     }
+    // Desktop DSH addresses itself from the origin root. On this host that
+    // root is the web app, so the bootstrap redirect is mounted at
+    // /openmuse/dsh and every root-absolute URL has to stay there.
+    const dshMount = documentUrl.pathname.startsWith('/openmuse/dsh/')
+      ? '/openmuse/dsh/'
+      : ''
     const sameOriginAsset = (reference, kind) => {
       const url = new URL(reference, assetBase)
       if (url.origin !== location.origin || !['http:', 'https:'].includes(url.protocol)) {
         throw new Error(`DSH ${kind}来源无效。`)
+      }
+      if (dshMount && !url.pathname.startsWith(dshMount)) {
+        url.pathname = dshMount + url.pathname.replace(/^\//, '')
       }
       return url.href
     }
@@ -105,8 +114,7 @@ async function installDshBootstrap(path) {
     if (!globalThis.__DSH_BOOT__ || !globalThis.__ModuleLoader__) {
       throw new Error('DSH 启动清单不完整。')
     }
-    // The Host serves plugin URLs relative to its own page. The Flutter shell
-    // keeps /app/ as its document base, so resolve the Host manifest once here.
+    // Plugin URLs are relative to the DSH document, not the Flutter page.
     for (const entry of globalThis.__DSH_BOOT__.entries ?? []) {
       entry.url = sameOriginAsset(entry.url, '插件')
     }
