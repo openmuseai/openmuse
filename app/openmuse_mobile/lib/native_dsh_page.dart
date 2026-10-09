@@ -116,6 +116,7 @@ final class NativeDshPage extends StatefulWidget {
     this.handle,
     this.initialPrompt,
     this.onInitialPromptConsumed,
+    this.onConnectionFailure,
   });
 
   final DshSessionDescriptor session;
@@ -127,6 +128,7 @@ final class NativeDshPage extends StatefulWidget {
   final NativeDshSessionHandle? handle;
   final String? initialPrompt;
   final VoidCallback? onInitialPromptConsumed;
+  final VoidCallback? onConnectionFailure;
 
   @override
   State<NativeDshPage> createState() => _NativeDshPageState();
@@ -188,6 +190,7 @@ final class _NativeDshPageState extends State<NativeDshPage> {
         if (!mounted) return;
         debugPrint('OpenMuse native DSH open: attempt=$attempt error=$error');
         setState(() => _failure = 'Desktop 连接暂时不可用，正在自动重试…');
+        widget.onConnectionFailure?.call();
         final seconds = 1 << attempt.clamp(0, 3);
         attempt++;
         await Future<void>.delayed(Duration(seconds: seconds));
@@ -230,7 +233,10 @@ final class _NativeDshPageState extends State<NativeDshPage> {
       _useWebFallback();
       return;
     }
-    final conversation = DshConversationController(client: client);
+    final conversation = DshConversationController(
+      client: client,
+      onConnectionFailure: (_) => widget.onConnectionFailure?.call(),
+    );
     await conversation.start(selected.sessionId, running: selected.running);
     if (!widget.active) conversation.pause();
     if (!mounted) {

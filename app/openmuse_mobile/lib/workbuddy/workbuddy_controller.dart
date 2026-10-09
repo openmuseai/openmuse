@@ -5,9 +5,20 @@ import 'workbuddy_models.dart';
 final class WorkBuddyController extends ChangeNotifier {
   WorkBuddyController({List<WbWorkspace>? extraWorkspaces}) {
     _devices = const [
+      WbDevice(
+        id: kPendingDeviceId,
+        name: '选择 Desktop',
+        kind: WbDeviceKind.local,
+        online: false,
+      ),
       WbDevice(id: kCloudDeviceId, name: '云端', kind: WbDeviceKind.cloud),
     ];
     _workspaces = [
+      const WbWorkspace(
+        id: 'paired.pending.workspace',
+        name: '连接 Desktop 后选择工作空间',
+        deviceId: kPendingDeviceId,
+      ),
       const WbWorkspace(
         id: 'cloud.pending',
         name: '登录后加载 Workspace',
@@ -22,8 +33,8 @@ final class WorkBuddyController extends ChangeNotifier {
   late List<WbWorkspace> _workspaces;
   late List<WbTask> _tasks;
 
-  String selectedDeviceId = kCloudDeviceId;
-  String selectedWorkspaceId = 'cloud.pending';
+  String selectedDeviceId = kPendingDeviceId;
+  String selectedWorkspaceId = 'paired.pending.workspace';
   WbTab tab = WbTab.tasks;
   bool drawerOpen = false;
   String? openTaskId;
@@ -96,7 +107,11 @@ final class WorkBuddyController extends ChangeNotifier {
     if (spaces.isEmpty) {
       final created = WbWorkspace(
         id: 'ws.$id.default',
-        name: id == kCloudDeviceId ? 'Cloud Workspace' : '任务',
+        name: id == kCloudDeviceId
+            ? 'Cloud Workspace'
+            : id.startsWith('paired.')
+            ? '连接后加载 Workspace'
+            : '任务',
         deviceId: id,
       );
       _workspaces = [..._workspaces, created];
@@ -255,9 +270,6 @@ final class WorkBuddyController extends ChangeNotifier {
           workspaces.any((workspace) => workspace.id == previousWorkspaceId)
           ? previousWorkspaceId
           : workspaces.first.id;
-    }
-    for (final workspace in workspaces) {
-      expandedWorkspaces.add(workspace.id);
     }
     notifyListeners();
   }

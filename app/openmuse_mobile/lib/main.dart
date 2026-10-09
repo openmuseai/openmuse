@@ -328,13 +328,15 @@ final class _WorkBuddyHost extends StatefulWidget {
 
 final class _WorkBuddyHostState extends State<_WorkBuddyHost>
     with WidgetsBindingObserver {
-  final WorkBuddyController _buddy = WorkBuddyController();
+  WorkBuddyController _buddy = WorkBuddyController();
+  String? _accountSubject;
   final AcceptanceDesktop? _acceptance = debugAcceptanceDesktop();
   late OpenMuseHostComposition _composition;
 
   @override
   void initState() {
     super.initState();
+    _accountSubject = widget.authentication.snapshot.identity?.subject;
     WidgetsBinding.instance.addObserver(this);
     widget.authentication.addListener(_onAuth);
     _recompose();
@@ -352,6 +354,14 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
 
   void _onAuth() {
     if (!mounted) return;
+    final subject = widget.authentication.snapshot.identity?.subject;
+    if (subject != _accountSubject) {
+      final previous = _buddy;
+      _buddy = WorkBuddyController();
+      _accountSubject = subject;
+      widget.pairedDesktop.disconnect();
+      WidgetsBinding.instance.addPostFrameCallback((_) => previous.dispose());
+    }
     setState(_recompose);
   }
 
@@ -390,9 +400,11 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
 
   @override
   Widget build(BuildContext context) => WorkBuddyShell(
+    key: ValueKey('workbuddy.${_accountSubject ?? 'signed-out'}'),
     controller: _buddy,
     authentication: widget.authentication,
     pairedDesktop: widget.pairedDesktop,
+    deviceSelectionStore: const FlutterSecureValueStore(),
     catalog: _composition.workspaceCatalog,
     speechRecognition: widget.speechRecognition,
     debugSpeechSource: widget.debugSpeechSource,

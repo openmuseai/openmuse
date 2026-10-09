@@ -34,8 +34,9 @@ void main() {
       await tester.pump();
 
       expect(find.text('OpenMuse，与你一起创造'), findsOneWidget);
+      expect(find.byKey(const ValueKey('wb-cloud-developing')), findsNothing);
       expect(find.text('OpenMuse'), findsOneWidget);
-      expect(find.text('云端'), findsOneWidget);
+      expect(find.text('选择 Desktop'), findsWidgets);
       expect(find.text('任务'), findsWidgets);
       expect(find.text('专家'), findsOneWidget);
       expect(find.text('资料库'), findsOneWidget);
@@ -48,7 +49,7 @@ void main() {
       expect(find.text('任务运行设置'), findsOneWidget);
       expect(find.text('设备'), findsOneWidget);
       expect(find.text('工作空间'), findsOneWidget);
-      expect(find.text('登录后加载 Workspace'), findsWidgets);
+      expect(find.text('连接 Desktop 后选择工作空间'), findsWidgets);
       await tester.tap(find.byKey(const ValueKey('wb-run-settings-close')));
       await tester.pumpAndSettle();
       expect(find.text('OpenMuse，与你一起创造'), findsOneWidget);
@@ -56,6 +57,8 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('wb-menu')));
       await tester.pumpAndSettle();
       expect(find.text('新建任务'), findsOneWidget);
+      expect(find.textContaining('任务 ('), findsNothing);
+      expect(find.text('开发中'), findsNothing);
       expect(find.text('撰写俄乌战争背景与最新情况'), findsNothing);
       expect(find.text('制作大模型架构PPT'), findsNothing);
       expect(find.text('再分析一下它的结构'), findsNothing);
@@ -74,7 +77,7 @@ void main() {
       );
       await tester.testTextInput.receiveAction(TextInputAction.send);
       await tester.pumpAndSettle();
-      expect(find.textContaining('请先从设备列表连接'), findsOneWidget);
+      expect(find.textContaining('请先连接 Desktop'), findsWidgets);
       expect(controller.tasks, isEmpty);
     },
   );
@@ -198,6 +201,72 @@ void main() {
 
     expect(find.text('Welcome to OpenMuse'), findsOneWidget);
     expect(find.byKey(const ValueKey('auth.email')), findsOneWidget);
+
+    authentication.authenticate();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('auth.email')), findsNothing);
+    expect(find.byKey(const ValueKey('wb-menu')), findsOneWidget);
+  });
+
+  testWidgets('restored account does not reopen Desktop binding', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = WorkBuddyController();
+    final authentication = _SignedInAuth();
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
+      authentication.dispose();
+    });
+    const deviceId = 'paired.desktop';
+    controller.upsertDevice(
+      const WbDevice(id: deviceId, name: 'Desktop', kind: WbDeviceKind.local),
+    );
+    controller.selectDevice(deviceId);
+    controller.replacePairedCatalog(
+      deviceId: deviceId,
+      workspaces: const [
+        WbWorkspace(
+          id: 'dsh.workspace.client',
+          name: 'Muse-Client',
+          deviceId: deviceId,
+        ),
+      ],
+      sessions: const [
+        WbTask(
+          id: 'dsh.session.one',
+          title: 'OpenMuse 应用改名与重建',
+          workspaceId: 'dsh.workspace.client',
+          deviceId: deviceId,
+          status: WbTaskStatus.completed,
+          messages: [],
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: workBuddyTheme(),
+        home: WorkBuddyShell(
+          controller: controller,
+          authentication: authentication,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('wb-bind-desktop')), findsNothing);
+
+    expect(find.byKey(const ValueKey('wb-cloud-developing')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('wb-menu')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('任务 ('), findsNothing);
+    expect(find.text('Muse-Client'), findsWidgets);
+    expect(find.text('OpenMuse 应用改名与重建'), findsNothing);
   });
 
   testWidgets(
@@ -431,11 +500,49 @@ final class _FakeSpeechSession implements SpeechSession {
   Stream<SpeechEvent> get events => controller.stream;
 }
 
-final class _SignedOutAuth extends ChangeNotifier
+final class _SignedInAuth extends ChangeNotifier
     implements OpenMuseAuthenticationController {
   @override
   OpenMuseAuthenticationSnapshot get snapshot =>
+      const OpenMuseAuthenticationSnapshot(
+        phase: OpenMuseAuthenticationPhase.authenticated,
+        identity: OpenMuseAuthenticatedIdentity(
+          subject: 'user-1',
+          email: 'test_user1@example.com',
+        ),
+      );
+
+  @override
+  Future<String?> accessToken({bool forceRefresh = false}) async => null;
+
+  @override
+  Future<void> restore() async {}
+
+  @override
+  Future<void> signInWithPassword(String email, String password) async {}
+
+  @override
+  Future<void> signOut() async {}
+}
+
+final class _SignedOutAuth extends ChangeNotifier
+    implements OpenMuseAuthenticationController {
+  OpenMuseAuthenticationSnapshot _snapshot =
       const OpenMuseAuthenticationSnapshot.signedOut();
+
+  @override
+  OpenMuseAuthenticationSnapshot get snapshot => _snapshot;
+
+  void authenticate() {
+    _snapshot = const OpenMuseAuthenticationSnapshot(
+      phase: OpenMuseAuthenticationPhase.authenticated,
+      identity: OpenMuseAuthenticatedIdentity(
+        subject: 'user-1',
+        email: 'test_user1@example.com',
+      ),
+    );
+    notifyListeners();
+  }
 
   @override
   Future<String?> accessToken({bool forceRefresh = false}) async => null;

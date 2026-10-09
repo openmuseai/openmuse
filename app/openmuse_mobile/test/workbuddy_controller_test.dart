@@ -53,5 +53,6 @@ void main() {
     controller.selectWorkspace(second.id);
     expect(controller.openTask?.id, secondTask.id);
     expect(controller.workspacesFor(deviceId), hasLength(2));
+    expect(controller.expandedWorkspaces, isEmpty);
   });
 }

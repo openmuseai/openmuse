@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -31,6 +32,7 @@ final class WorkBuddyShell extends StatefulWidget {
     this.speechRecognition,
     this.debugSpeechSource,
     this.remoteWorkbench,
+    this.deviceSelectionStore,
   });
 
   final WorkBuddyController controller;
@@ -45,13 +47,14 @@ final class WorkBuddyShell extends StatefulWidget {
   /// from a plugin wire request or other untrusted input.
   final SpeechAudioSource? debugSpeechSource;
   final RemoteWorkbenchController? remoteWorkbench;
+  final SecureValueStore? deviceSelectionStore;
 
   @override
   State<WorkBuddyShell> createState() => _WorkBuddyShellState();
 }
 
 final class _WorkBuddyShellState extends State<WorkBuddyShell>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _drawer;
   final _composer = TextEditingController();
   final _focus = FocusNode();
@@ -70,12 +73,20 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   String? _nativeConnectionKey;
   String? _pendingSessionId;
   String? _pendingPrompt;
+  bool _desktopBindOffered = false;
+  bool _initialAuthResolved = false;
+  int _desktopBindAttempts = 0;
+  Timer? _desktopRenewalTimer;
+  Future<void>? _desktopRestoreTask;
+  bool _appForeground = true;
+  DateTime? _backgroundedAt;
 
   WorkBuddyController get controller => widget.controller;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _drawer = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 240),
@@ -83,6 +94,11 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     );
     controller.addListener(_syncDrawer);
     widget.authentication?.addListener(_syncAccount);
+    final initial = widget.authentication?.snapshot;
+    _initialAuthResolved =
+        initial == null ||
+        initial.phase == OpenMuseAuthenticationPhase.signedOut ||
+        initial.isAuthenticated;
     widget.pairedDesktop?.addListener(_syncDevices);
     _syncAccount();
     _syncDevices();
@@ -109,10 +125,29 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     }
     if (oldWidget.pairedDesktop != widget.pairedDesktop) {
       oldWidget.pairedDesktop?.removeListener(_syncDevices);
+      _desktopRenewalTimer?.cancel();
+      _nativeConnectionKey = null;
       widget.pairedDesktop?.addListener(_syncDevices);
       _syncDevices();
     }
     if (oldWidget.catalog != widget.catalog) unawaited(_loadCloud());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final wasAway =
+          _backgroundedAt != null &&
+          DateTime.now().difference(_backgroundedAt!) >=
+              const Duration(seconds: 30);
+      _backgroundedAt = null;
+      _appForeground = true;
+      unawaited(_restoreDesktopConnection(force: wasAway));
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _appForeground = false;
+      _backgroundedAt ??= DateTime.now();
+    }
   }
 
   void _syncDrawer() {
@@ -126,9 +161,182 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   void _syncAccount() {
-    final identity = widget.authentication?.snapshot.identity;
+    final snapshot = widget.authentication?.snapshot;
+    final identity = snapshot?.identity;
+    final firstResolvedState =
+        !_initialAuthResolved &&
+        (snapshot?.phase == OpenMuseAuthenticationPhase.signedOut ||
+            snapshot?.isAuthenticated == true ||
+            snapshot?.phase == OpenMuseAuthenticationPhase.failure);
+    if (firstResolvedState) _initialAuthResolved = true;
+    final becameSignedIn = identity != null && !controller.signedIn;
     controller.setAccount(signedIn: identity != null, name: identity?.email);
-    if (identity != null) unawaited(_loadCloud());
+    if (identity == null) {
+      _desktopBindOffered = false;
+      _desktopBindAttempts = 0;
+      return;
+    }
+    unawaited(_loadCloud());
+    if (becameSignedIn) {
+      unawaited(_restoreSavedDesktop(identity.subject, !firstResolvedState));
+    }
+  }
+
+  String _desktopSelectionKey(String subject) =>
+      'openmuse.mobile.desktop.${base64Url.encode(utf8.encode(subject))}';
+
+  Future<void> _restoreSavedDesktop(String subject, bool interactive) async {
+    final store = widget.deviceSelectionStore;
+    String? deviceRef;
+    if (store != null) {
+      try {
+        deviceRef = await store.read(_desktopSelectionKey(subject));
+      } on Object catch (error) {
+        debugPrint('OpenMuse Desktop selection restore: $error');
+      }
+    }
+    if (!mounted ||
+        widget.authentication?.snapshot.identity?.subject != subject) {
+      return;
+    }
+    if (deviceRef == null ||
+        deviceRef.isEmpty ||
+        widget.pairedDesktop == null) {
+      if (interactive) _offerDesktopBind();
+      return;
+    }
+    _desktopBindOffered = true;
+    final id = 'paired.$deviceRef';
+    final matches = widget.pairedDesktop!.devices.where(
+      (device) => device.deviceRef == deviceRef,
+    );
+    controller.upsertDevice(
+      WbDevice(
+        id: id,
+        name: matches.isEmpty ? 'Desktop' : matches.first.displayName,
+        kind: WbDeviceKind.local,
+        online: matches.isNotEmpty && matches.first.online,
+      ),
+    );
+    controller.selectDevice(id);
+    unawaited(_restoreDesktopConnection(deviceRef: deviceRef, force: true));
+  }
+
+  Future<void> _rememberDesktop(String deviceRef) async {
+    final subject = widget.authentication?.snapshot.identity?.subject;
+    final store = widget.deviceSelectionStore;
+    if (subject == null || store == null) return;
+    try {
+      await store.write(_desktopSelectionKey(subject), deviceRef);
+    } on Object catch (error) {
+      debugPrint('OpenMuse Desktop selection save: $error');
+    }
+  }
+
+  void _offerDesktopBind() {
+    if (_desktopBindOffered ||
+        !mounted ||
+        widget.pairedDesktop?.directory == null) {
+      return;
+    }
+    if (widget.pairedDesktop?.snapshot.connection != null) {
+      _desktopBindOffered = true;
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _desktopBindOffered || !controller.signedIn) return;
+      if (widget.pairedDesktop?.snapshot.connection != null) {
+        _desktopBindOffered = true;
+        return;
+      }
+      final route = ModalRoute.of(context);
+      if (route != null && !route.isCurrent && _desktopBindAttempts < 20) {
+        _desktopBindAttempts += 1;
+        _offerDesktopBind();
+        return;
+      }
+      _desktopBindOffered = true;
+      unawaited(_promptBindDesktop());
+    });
+  }
+
+  Future<void> _promptBindDesktop() async {
+    if (!mounted || widget.pairedDesktop?.snapshot.connection != null) return;
+    unawaited(
+      widget.pairedDesktop?.directory?.refresh() ?? Future<void>.value(),
+    );
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: WbColors.sheet,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) => _DesktopBindSheet(
+        paired: widget.pairedDesktop,
+        onConnect: (device) async {
+          if (!device.online || !device.supportsPairedDesktop) {
+            final deviceId = 'paired.${device.deviceRef}';
+            controller.upsertDevice(
+              WbDevice(
+                id: deviceId,
+                name: device.displayName,
+                kind: WbDeviceKind.local,
+                online: device.online,
+              ),
+            );
+            controller.selectDevice(deviceId);
+            unawaited(_rememberDesktop(device.deviceRef));
+            if (mounted) {
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                const SnackBar(
+                  content: Text('已选择 Desktop，连接就绪后会自动加载 Workspace。'),
+                ),
+              );
+            }
+            if (context.mounted) Navigator.pop(context);
+            unawaited(
+              _restoreDesktopConnection(
+                deviceRef: device.deviceRef,
+                force: true,
+              ),
+            );
+            return;
+          }
+          final connected = await widget.pairedDesktop?.connectDevice(device);
+          final connection = widget.pairedDesktop?.snapshot.connection;
+          if (connected == true && connection != null && mounted) {
+            final deviceId = 'paired.${connection.deviceRef}';
+            controller.selectDevice(deviceId);
+            unawaited(_rememberDesktop(connection.deviceRef));
+            await _publishDesktopCatalog(connection, deviceId);
+            if (context.mounted) Navigator.pop(context);
+            return;
+          }
+          final message = widget.pairedDesktop?.snapshot.failureMessage;
+          final deviceId = 'paired.${device.deviceRef}';
+          controller.upsertDevice(
+            WbDevice(
+              id: deviceId,
+              name: device.displayName,
+              kind: WbDeviceKind.local,
+              online: device.online,
+            ),
+          );
+          controller.selectDevice(deviceId);
+          unawaited(_rememberDesktop(device.deviceRef));
+          if (mounted && message != null && message.isNotEmpty) {
+            ScaffoldMessenger.of(
+              this.context,
+            ).showSnackBar(SnackBar(content: Text(message)));
+          }
+          if (context.mounted) Navigator.pop(context);
+          unawaited(
+            _restoreDesktopConnection(deviceRef: device.deviceRef, force: true),
+          );
+        },
+      ),
+    );
   }
 
   void _syncDevices() {
@@ -141,6 +349,19 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     if (_nativeConnectionKey != connectionKey) {
       _nativeConnectionKey = connectionKey;
       _recentNativeSessionIds.clear();
+      _desktopRenewalTimer?.cancel();
+      if (connection != null) {
+        final renewAt =
+            connection.expiresAtMs - const Duration(minutes: 1).inMilliseconds;
+        final delayMs = math.max(
+          0,
+          renewAt - DateTime.now().millisecondsSinceEpoch,
+        );
+        _desktopRenewalTimer = Timer(
+          Duration(milliseconds: delayMs),
+          () => unawaited(_restoreDesktopConnection(force: true)),
+        );
+      }
     }
     for (final device in paired.devices.where(
       (device) => device.kind == AccountDeviceKind.desktop,
@@ -164,6 +385,80 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       );
     }
     _rememberNativeSession();
+  }
+
+  Future<void> _restoreDesktopConnection({
+    String? deviceRef,
+    bool force = false,
+  }) {
+    final paired = widget.pairedDesktop;
+    if (paired == null ||
+        paired.directory == null ||
+        !mounted ||
+        widget.authentication?.snapshot.isAuthenticated == false) {
+      return Future<void>.value();
+    }
+    final connection = paired.snapshot.connection;
+    final ref =
+        deviceRef ??
+        connection?.deviceRef ??
+        (controller.selectedDeviceId.startsWith('paired.')
+            ? controller.selectedDeviceId.substring('paired.'.length)
+            : null);
+    if (ref == null) return Future<void>.value();
+    if (!force &&
+        connection != null &&
+        connection.expiresAtMs >
+            DateTime.now()
+                .add(const Duration(minutes: 1))
+                .millisecondsSinceEpoch) {
+      return Future<void>.value();
+    }
+    return _desktopRestoreTask ??= _retryDesktopConnection(paired, ref)
+        .whenComplete(() {
+          _desktopRestoreTask = null;
+        });
+  }
+
+  Future<void> _retryDesktopConnection(
+    PairedDesktopMobileController paired,
+    String deviceRef,
+  ) async {
+    while (mounted &&
+        _appForeground &&
+        identical(widget.pairedDesktop, paired)) {
+      if (widget.authentication?.snapshot.isAuthenticated == false ||
+          (paired.snapshot.connection?.deviceRef != deviceRef &&
+              controller.selectedDeviceId != 'paired.$deviceRef')) {
+        return;
+      }
+      try {
+        await paired.directory?.reconcile();
+        if (!mounted ||
+            !_appForeground ||
+            !identical(widget.pairedDesktop, paired)) {
+          return;
+        }
+        final devices = paired.devices.where(
+          (device) => device.deviceRef == deviceRef,
+        );
+        if (devices.isNotEmpty && devices.first.online) {
+          final connected = await paired.connectDevice(
+            devices.first,
+            force: true,
+          );
+          if (!mounted || !identical(widget.pairedDesktop, paired)) return;
+          final connection = paired.snapshot.connection;
+          if (connected && connection != null) {
+            unawaited(_publishDesktopCatalog(connection, 'paired.$deviceRef'));
+            return;
+          }
+        }
+      } on Object catch (error) {
+        debugPrint('OpenMuse Desktop reconnect: $error');
+      }
+      await Future<void>.delayed(const Duration(seconds: 8));
+    }
   }
 
   void _rememberNativeSession() {
@@ -202,6 +497,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _desktopRenewalTimer?.cancel();
     controller.removeListener(_syncDrawer);
     widget.authentication?.removeListener(_syncAccount);
     widget.pairedDesktop?.removeListener(_syncDevices);
@@ -239,7 +536,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     try {
       await Navigator.of(context).push<void>(
         MaterialPageRoute(
-          builder: (_) => OpenMuseLoginScreen(
+          builder: (_) => _MobileLoginRoute(
             authentication: authentication,
             cloudLabel: widget.cloudLabel,
           ),
@@ -254,6 +551,10 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   Future<void> _chooseDevice() async {
+    if (widget.pairedDesktop?.directory != null) {
+      await _promptBindDesktop();
+      return;
+    }
     final picked = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: WbColors.sheet,
@@ -264,39 +565,51 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         title: '选择设备',
         children: [
           for (final device in controller.devices)
-            ListTile(
-              key: ValueKey('device-${device.id}'),
-              leading: WbIcon(
-                device.kind == WbDeviceKind.cloud
-                    ? WbGlyph.project
-                    : WbGlyph.desktop,
-                size: 20,
-                color: WbColors.textMuted,
+            if (device.id != kPendingDeviceId)
+              ListTile(
+                key: ValueKey('device-${device.id}'),
+                leading: WbIcon(
+                  device.kind == WbDeviceKind.cloud
+                      ? WbGlyph.project
+                      : WbGlyph.desktop,
+                  size: 20,
+                  color: WbColors.textMuted,
+                ),
+                title: Text(
+                  device.kind == WbDeviceKind.local ? device.name : '云端',
+                  style: const TextStyle(color: WbColors.text),
+                ),
+                subtitle: Text(
+                  device.kind == WbDeviceKind.local
+                      ? (device.online ? '本机电脑 · 在线' : '本机电脑 · 离线')
+                      : '开发中',
+                  style: wbSub,
+                ),
+                trailing: device.id == controller.selectedDeviceId
+                    ? const WbIcon(
+                        WbGlyph.check,
+                        size: 18,
+                        color: WbColors.text,
+                      )
+                    : null,
+                onTap: () => Navigator.pop(context, device.id),
               ),
-              title: Text(
-                device.kind == WbDeviceKind.local ? device.name : '云端',
-                style: const TextStyle(color: WbColors.text),
-              ),
-              subtitle: Text(
-                device.kind == WbDeviceKind.local
-                    ? (device.online ? '本机电脑 · 在线' : '本机电脑 · 离线')
-                    : '账号下的 Cloud Workspace',
-                style: wbSub,
-              ),
-              trailing: device.id == controller.selectedDeviceId
-                  ? const WbIcon(WbGlyph.check, size: 18, color: WbColors.text)
-                  : null,
-              onTap: () => Navigator.pop(context, device.id),
-            ),
         ],
       ),
     );
-    if (picked == null) return;
-    if (picked == kCloudDeviceId &&
-        widget.authentication?.snapshot.isAuthenticated != true) {
-      await _openLogin();
-      if (widget.authentication?.snapshot.isAuthenticated != true) return;
-      await _loadCloud();
+    if (picked == null || !mounted) return;
+    if (picked == kCloudDeviceId) {
+      if (widget.authentication?.snapshot.isAuthenticated != true) {
+        await _openLogin();
+        if (!mounted ||
+            widget.authentication?.snapshot.isAuthenticated != true) {
+          return;
+        }
+        await _loadCloud();
+      }
+      controller.selectDevice(picked);
+      _showCloudDeveloping();
+      return;
     }
     if (picked.startsWith('paired.')) {
       final ref = picked.substring('paired.'.length);
@@ -316,6 +629,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         final connection = widget.pairedDesktop?.snapshot.connection;
         if (connected == true && connection != null && mounted) {
           controller.selectDevice(picked);
+          unawaited(_rememberDesktop(connection.deviceRef));
           if (!hasCatalog ||
               previousConnection?.grantRef != connection.grantRef) {
             await _publishDesktopCatalog(connection, picked);
@@ -424,6 +738,9 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                 workspace.name,
                 style: const TextStyle(color: WbColors.text),
               ),
+              subtitle: workspace.deviceId == kCloudDeviceId
+                  ? const Text('开发中', style: wbSub)
+                  : null,
               trailing: workspace.id == controller.selectedWorkspaceId
                   ? const WbIcon(WbGlyph.check, size: 18)
                   : null,
@@ -432,7 +749,12 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         ],
       ),
     );
-    if (picked != null) controller.selectWorkspace(picked);
+    if (picked != null) {
+      controller.selectWorkspace(picked);
+      if (controller.selectedWorkspace.deviceId == kCloudDeviceId) {
+        _showCloudDeveloping();
+      }
+    }
   }
 
   Future<void> _openRunSettings() => showModalBottomSheet<void>(
@@ -461,6 +783,17 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   Future<void> _submit() async {
     final text = _composer.text.trim();
     if (text.isEmpty) return;
+    if (controller.selectedDeviceId == kPendingDeviceId) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请先连接 Desktop。')));
+      return;
+    }
+    if (controller.selectedDeviceId == kCloudDeviceId ||
+        controller.selectedWorkspace.deviceId == kCloudDeviceId) {
+      _showCloudDeveloping();
+      return;
+    }
     final connection = widget.pairedDesktop?.snapshot.connection;
     if (connection != null) {
       final task = controller.openTask;
@@ -503,9 +836,9 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         if (!renewed || paired.snapshot.connection == null) {
           if (mounted) {
             _composer.text = text;
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Desktop 配对授权已失效，请重新连接后发送。'),
-            ));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Desktop 配对授权已失效，请重新连接后发送。')),
+            );
           }
           return;
         }
@@ -1012,7 +1345,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                       onTap: controller.closeDrawer,
                     ),
                   ),
-                if (widget.pairedDesktop?.snapshot.connection case final connection?)
+                if (widget.pairedDesktop?.snapshot.connection
+                    case final connection?)
                   if (controller.selectedDeviceId ==
                       'paired.${connection.deviceRef}')
                     PairedPluginInteractionLayer(connection: connection),
@@ -1077,6 +1411,18 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                 _pendingPrompt = null;
               });
             },
+            onConnectionFailure: () {
+              if (widget.pairedDesktop?.snapshot.connection?.grantRef !=
+                  connection.grantRef) {
+                return;
+              }
+              unawaited(
+                _restoreDesktopConnection(
+                  deviceRef: connection.deviceRef,
+                  force: true,
+                ),
+              );
+            },
           ),
       ],
     );
@@ -1095,6 +1441,12 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
             : RemoteWorkbenchPage(controller: remote),
       ),
     );
+  }
+
+  void _showCloudDeveloping() {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('云端会话开发中')));
   }
 
   Future<void> _openAccount() async {
@@ -1234,6 +1586,21 @@ final class _MainColumn extends StatelessWidget {
                     onMenu: onMenu,
                     onSubtitle: onRunSettings,
                   ),
+                  if (controller.selectedDevice.kind == WbDeviceKind.cloud)
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, 4),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '云端会话开发中',
+                          key: ValueKey('wb-cloud-developing'),
+                          style: TextStyle(
+                            color: WbColors.textMuted,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
                   Expanded(
                     child: _TabBody(
                       controller: controller,
@@ -1411,7 +1778,9 @@ final class _TabBody extends StatelessWidget {
         for (final workspace in controller.workspacesFor(
           controller.selectedDeviceId,
         ))
-          workspace.name,
+          workspace.deviceId == kCloudDeviceId
+              ? '${workspace.name} · 开发中'
+              : workspace.name,
       ],
     ),
   };
@@ -2145,7 +2514,6 @@ final class _DrawerPanel extends StatelessWidget {
           : '未登录';
       final mark = signedIn ? name.substring(0, 1) : '未';
       final spaces = controller.workspacesFor(controller.selectedDeviceId);
-      final tasks = controller.taskList;
       return Material(
         color: WbColors.drawer,
         child: SafeArea(
@@ -2216,22 +2584,6 @@ final class _DrawerPanel extends StatelessWidget {
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [
-                      _SectionLabel(
-                        label: '任务 (${tasks.length})',
-                        expanded: controller.tasksExpanded,
-                        onTap: controller.toggleTasks,
-                      ),
-                      if (controller.tasksExpanded)
-                        for (final task in tasks)
-                          _DrawerRow(
-                            key: ValueKey('wb-task-${task.id}'),
-                            title: task.title,
-                            indent: 8,
-                            onTap: () => task.id.startsWith('dsh.session.')
-                                ? onOpenSession(task)
-                                : controller.openTaskById(task.id),
-                          ),
-                      const SizedBox(height: 8),
                       _SectionLabel(
                         label: '空间 (${spaces.length})',
                         expanded: controller.spacesExpanded,
@@ -2433,6 +2785,14 @@ final class _WorkspaceRow extends StatelessWidget {
             style: const TextStyle(color: WbColors.text, fontSize: 16),
           ),
         ),
+        if (workspace.deviceId == kCloudDeviceId)
+          const Padding(
+            padding: EdgeInsets.only(right: 4),
+            child: Text(
+              '开发中',
+              style: TextStyle(color: WbColors.textMuted, fontSize: 12),
+            ),
+          ),
         IconButton(
           onPressed: onToggle,
           icon: WbIcon(
@@ -2731,4 +3091,144 @@ final class _MascotFallbackPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+final class _MobileLoginRoute extends StatefulWidget {
+  const _MobileLoginRoute({required this.authentication, this.cloudLabel});
+
+  final OpenMuseAuthenticationController authentication;
+  final String? cloudLabel;
+
+  @override
+  State<_MobileLoginRoute> createState() => _MobileLoginRouteState();
+}
+
+final class _MobileLoginRouteState extends State<_MobileLoginRoute> {
+  bool _closing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.authentication.addListener(_onAuthenticationChanged);
+    _onAuthenticationChanged();
+  }
+
+  @override
+  void dispose() {
+    widget.authentication.removeListener(_onAuthenticationChanged);
+    super.dispose();
+  }
+
+  void _onAuthenticationChanged() {
+    if (_closing || !widget.authentication.snapshot.isAuthenticated) return;
+    _closing = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => OpenMuseLoginScreen(
+    authentication: widget.authentication,
+    cloudLabel: widget.cloudLabel,
+  );
+}
+
+final class _DesktopBindSheet extends StatelessWidget {
+  const _DesktopBindSheet({required this.paired, required this.onConnect});
+
+  final PairedDesktopMobileController? paired;
+  final Future<void> Function(AccountDevice device) onConnect;
+
+  @override
+  Widget build(BuildContext context) {
+    final source = paired;
+    if (source == null) return _body(context, const []);
+    return ListenableBuilder(
+      listenable: source,
+      builder: (context, _) => _body(
+        context,
+        source.devices
+            .where((device) => device.kind == AccountDeviceKind.desktop)
+            .toList(growable: false),
+      ),
+    );
+  }
+
+  Widget _body(BuildContext context, List<AccountDevice> desktops) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                '绑定 Desktop',
+                key: ValueKey('wb-bind-desktop'),
+                style: TextStyle(
+                  color: WbColors.text,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '请先在 Desktop 上登录同一账号，然后在这里绑定这台电脑。绑定之后，手机上的对话会打开那台电脑里的会话。',
+                style: wbSub,
+              ),
+              const SizedBox(height: 8),
+              const Text('云端会话开发中，入口仍会保留。', style: wbSub),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                key: const ValueKey('wb-refresh-desktops'),
+                onPressed: paired?.directory?.snapshot.loading == true
+                    ? null
+                    : () => unawaited(
+                        paired?.directory?.refresh() ?? Future<void>.value(),
+                      ),
+                icon: const Icon(Icons.refresh),
+                label: const Text('刷新设备'),
+              ),
+              if (paired?.directory?.snapshot.loading == true)
+                const LinearProgressIndicator(),
+              if (desktops.isEmpty)
+                const Text(
+                  '当前账号还没有可绑定的 Desktop。请先在电脑上打开 OpenMuse 并登录。',
+                  style: wbSub,
+                )
+              else
+                for (final device in desktops)
+                  ListTile(
+                    key: ValueKey('wb-desktop-${device.deviceRef}'),
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      device.displayName,
+                      style: const TextStyle(color: WbColors.text),
+                    ),
+                    subtitle: Text(
+                      !device.online
+                          ? '离线，可先选择，登录 Desktop 后连接'
+                          : device.supportsPairedDesktop
+                          ? '在线，可绑定'
+                          : '在线，但远程通道未就绪',
+                      style: wbSub,
+                    ),
+                    onTap: () => onConnect(device),
+                  ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  key: const ValueKey('wb-bind-later'),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('稍后'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

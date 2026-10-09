@@ -93,6 +93,7 @@ final class WbWorkspace {
 }
 
 const kLocalDeviceId = 'local.desktop';
+const kPendingDeviceId = 'paired.pending';
 const kCloudDeviceId = 'cloud';
 const kTaskWorkspaceId = 'ws.tasks';
 const kOpenMuseWorkspaceId = 'ws.openmuse-io';
