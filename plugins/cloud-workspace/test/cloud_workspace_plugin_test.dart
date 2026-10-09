@@ -70,6 +70,9 @@ void main() {
       plugin.controller.snapshot.sessionFor('workspace-1')?.sessionRef,
       'session-1',
     );
+    authentication.switchSubject('account-2');
+    expect(plugin.controller.snapshot.workspaces, isEmpty);
+    expect(plugin.controller.snapshot.sessions, isEmpty);
   });
 
   test('plugin keeps workspaces when the DSH pool is unavailable', () async {
@@ -132,6 +135,17 @@ final class _Authentication extends ChangeNotifier
       email: 'person@example.com',
     ),
   );
+
+  void switchSubject(String subject) {
+    snapshot = OpenMuseAuthenticationSnapshot(
+      phase: OpenMuseAuthenticationPhase.authenticated,
+      identity: OpenMuseAuthenticatedIdentity(
+        subject: subject,
+        email: '$subject@example.com',
+      ),
+    );
+    notifyListeners();
+  }
 
   @override
   Future<String?> accessToken({bool forceRefresh = false}) async => 'token';

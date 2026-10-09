@@ -115,18 +115,26 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
   final OpenMuseAuthenticationController authentication;
   final AppFlowyCloudWorkspaceService service;
   CloudWorkspacePluginSnapshot _snapshot = const CloudWorkspacePluginSnapshot();
+  String? _subject;
   bool _disposed = false;
 
   CloudWorkspacePluginSnapshot get snapshot => _snapshot;
 
   Future<void> activate() async {
     authentication.addListener(_authenticationChanged);
+    _subject = authentication.snapshot.identity?.subject;
     if (authentication.snapshot.isAuthenticated) await refresh();
   }
 
   void _authenticationChanged() {
-    if (!authentication.snapshot.isAuthenticated) {
+    final subject = authentication.snapshot.isAuthenticated
+        ? authentication.snapshot.identity?.subject
+        : null;
+    if (_subject != subject) {
+      _subject = subject;
       _publish(const CloudWorkspacePluginSnapshot());
+    }
+    if (!authentication.snapshot.isAuthenticated) {
       return;
     }
     unawaited(refresh());
@@ -134,7 +142,9 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
 
   Future<void> refresh() async {
     if (!authentication.snapshot.isAuthenticated || _snapshot.loading) return;
+    final subject = authentication.snapshot.identity?.subject;
     final token = await authentication.accessToken();
+    if (subject != _subject) return;
     if (token == null || token.isEmpty) {
       _publish(const CloudWorkspacePluginSnapshot());
       return;
@@ -155,6 +165,7 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
         // DSH session presence is optional catalog enrichment. Keep the
         // account's workspaces usable while the execution pool recovers.
       }
+      if (subject != _subject) return;
       _publish(
         CloudWorkspacePluginSnapshot(
           workspaces: workspaces,
@@ -162,6 +173,7 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
         ),
       );
     } catch (_) {
+      if (subject != _subject) return;
       _publish(
         CloudWorkspacePluginSnapshot(
           workspaces: _snapshot.workspaces,
@@ -174,6 +186,7 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
 
   Future<DshSessionDescriptor?> openWorkspace(String workspaceRef) async {
     if (_snapshot.openingWorkspaceRef != null) return null;
+    final subject = _subject;
     _publish(
       CloudWorkspacePluginSnapshot(
         workspaces: _snapshot.workspaces,
@@ -183,9 +196,11 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
     );
     try {
       final descriptor = await service.open(workspaceRef, 0);
+      if (subject != _subject) return null;
       await refresh();
       return descriptor;
     } catch (_) {
+      if (subject != _subject) return null;
       _publish(
         CloudWorkspacePluginSnapshot(
           workspaces: _snapshot.workspaces,
