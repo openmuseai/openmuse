@@ -22,6 +22,8 @@ dependencies:
     path: ../../packages/openmuse_plugin_sdk
   openmuse_host_shell:
     path: ../../packages/openmuse_host_shell
+  openmuse_cli_plugin:
+    path: ../../plugins/cli
   openmuse_workbench_layout:
     path: ../../packages/openmuse_workbench_layout
   openmuse_dsh_plugin:
