@@ -43,6 +43,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            providers.environmentVariable("OPENMUSE_ANDROID_DEBUG_APPLICATION_ID_SUFFIX")
+                .orNull?.let { applicationIdSuffix = it }
+        }
         release {
             signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
