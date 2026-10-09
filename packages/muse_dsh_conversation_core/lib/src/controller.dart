@@ -9,11 +9,13 @@ final class DshConversationController {
     required this.client,
     DshConversationStore? store,
     this.reconciliationInterval = const Duration(seconds: 2),
+    this.onConnectionFailure,
   }) : store = store ?? DshConversationStore();
 
   final DshNativeGatewayClient client;
   final DshConversationStore store;
   final Duration reconciliationInterval;
+  final void Function(Object error)? onConnectionFailure;
   bool _closed = false;
   bool _active = false;
   int _generation = 0;
@@ -117,6 +119,11 @@ final class DshConversationController {
         print('OpenMuse follow: error session=$sessionId error=$error');
         store.failed(error);
         attempt += 1;
+        if (attempt >= 2 ||
+            error is DshNativeGatewayException &&
+                (error.statusCode == 401 || error.statusCode == 403)) {
+          onConnectionFailure?.call(error);
+        }
         final seconds = 1 << (attempt.clamp(1, 5) - 1);
         await Future<void>.delayed(Duration(seconds: seconds));
       } finally {
@@ -168,6 +175,11 @@ final class DshConversationController {
       } catch (error) {
         if (!_isCurrent(generation)) return;
         failures += 1;
+        if (failures >= 2 ||
+            error is DshNativeGatewayException &&
+                (error.statusCode == 401 || error.statusCode == 403)) {
+          onConnectionFailure?.call(error);
+        }
         print(
           'OpenMuse reconcile: error session=$sessionId '
           'attempt=$failures error=$error',

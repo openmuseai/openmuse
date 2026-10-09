@@ -7,6 +7,31 @@ import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.da
 import 'package:test/test.dart';
 
 void main() {
+  test('expired Desktop grant reports transport failure for renewal', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    server.listen((request) async {
+      request.response.statusCode = HttpStatus.unauthorized;
+      await request.response.close();
+    });
+    final failures = <Object>[];
+    final controller = DshConversationController(
+      client: DshNativeGatewayClient(
+        origin: Uri.parse('http://127.0.0.1:${server.port}'),
+        bootstrapPath: '',
+        allowInsecureLoopback: true,
+      ),
+      reconciliationInterval: const Duration(milliseconds: 20),
+      onConnectionFailure: failures.add,
+    );
+
+    await controller.start('s-1');
+    await _until(() => failures.isNotEmpty);
+    expect(failures.first, isA<DshNativeGatewayException>());
+
+    await controller.dispose();
+    await server.close(force: true);
+  });
+
   test(
     'inactive conversations stop polling and resume with cached rows',
     () async {
