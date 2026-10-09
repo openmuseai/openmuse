@@ -10,7 +10,9 @@ npm ci
 npm run build
 cd ../../app/openmuse_web
 flutter pub get
-flutter build web --release --base-href /app/
+# Production host is https://app.openmuseai.com/ . The local edge still uses /app/.
+flutter build web --release --base-href /
+# flutter build web --release --base-href /app/
 ```
 
 For local integration, start a DSH Web server on loopback, then from the repository root run:
