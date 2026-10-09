@@ -254,10 +254,11 @@ final class PairedDesktopMobileController extends ChangeNotifier {
     String targetDeviceRef,
   ) async {
     if (_snapshot.connecting) return false;
+    final previousConnection = _snapshot.connection;
     _publish(
       PairedDesktopMobileSnapshot(
         connecting: true,
-        connection: _snapshot.connection,
+        connection: previousConnection,
       ),
     );
     try {
@@ -267,11 +268,17 @@ final class PairedDesktopMobileController extends ChangeNotifier {
       _publish(PairedDesktopMobileSnapshot(connection: connection));
       return true;
     } on PairedDesktopFailure catch (error) {
-      _publish(PairedDesktopMobileSnapshot(failureMessage: error.safeMessage));
+      _publish(
+        PairedDesktopMobileSnapshot(
+          connection: previousConnection,
+          failureMessage: error.safeMessage,
+        ),
+      );
       return false;
     } catch (_) {
       _publish(
-        const PairedDesktopMobileSnapshot(
+        PairedDesktopMobileSnapshot(
+          connection: previousConnection,
           failureMessage: '无法连接 Desktop，请确认设备在线且网络可达。',
         ),
       );

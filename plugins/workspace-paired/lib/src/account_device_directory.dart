@@ -326,6 +326,7 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
   bool _active = false;
   bool _operationInFlight = false;
   int _identityGeneration = 0;
+  String? _subject;
   int _consecutiveFailures = 0;
   final Random _jitter = Random();
 
@@ -336,15 +337,22 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
     _active = true;
     authentication.addListener(_authenticationChanged);
     if (authentication.snapshot.isAuthenticated) {
+      _subject = authentication.snapshot.identity?.subject;
       await _registerAndRefresh(_identityGeneration);
     }
   }
 
   void _authenticationChanged() {
     _identityGeneration++;
-    if (!authentication.snapshot.isAuthenticated) {
+    final subject = authentication.snapshot.isAuthenticated
+        ? authentication.snapshot.identity?.subject
+        : null;
+    if (_subject != subject) {
+      _subject = subject;
       _stopTransports();
       _publish(const AccountDeviceDirectorySnapshot());
+    }
+    if (!authentication.snapshot.isAuthenticated) {
       return;
     }
     unawaited(_registerAndRefresh(_identityGeneration));
@@ -387,6 +395,11 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
       );
     } finally {
       _operationInFlight = false;
+      if (_active &&
+          authentication.snapshot.isAuthenticated &&
+          generation != _identityGeneration) {
+        unawaited(_registerAndRefresh(_identityGeneration));
+      }
     }
   }
 
