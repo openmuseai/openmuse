@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_pty/flutter_pty.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:xterm/xterm.dart';
+import 'package:xterm/src/ui/input_map.dart' show keyToTerminalKey;
 
 final class OpenMuseCliPlugin implements OpenMusePlugin {
   String _workingDirectory = Directory.current.path;
@@ -90,12 +92,33 @@ List<OpenMuseShellProfile> availableOpenMuseShells() {
 }
 
 final class OpenMuseCliConsole extends StatefulWidget {
-  const OpenMuseCliConsole({super.key, required this.workingDirectory});
+  const OpenMuseCliConsole({
+    super.key,
+    required this.workingDirectory,
+    this.controller,
+    this.onMinimize,
+  });
 
   final String workingDirectory;
+  final OpenMuseCliController? controller;
+  final VoidCallback? onMinimize;
 
   @override
   State<OpenMuseCliConsole> createState() => _OpenMuseCliConsoleState();
+}
+
+final class OpenMuseCliController extends ChangeNotifier {
+  int _serial = 0;
+  String? _directory;
+
+  int get serial => _serial;
+  String? get directory => _directory;
+
+  void open(String directory) {
+    _directory = directory;
+    _serial++;
+    notifyListeners();
+  }
 }
 
 final class _ConsoleSession {
@@ -115,20 +138,42 @@ final class _ConsoleSession {
 
 final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
   final List<_ConsoleSession> _sessions = [];
-  late final List<OpenMuseShellProfile> _profiles = availableOpenMuseShells();
-  late OpenMuseShellProfile _selectedProfile = _profiles.first;
+  late final OpenMuseShellProfile _profile = availableOpenMuseShells().first;
   int _selected = 0;
+  int _lastRequest = 0;
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    widget.controller?.addListener(_handleLaunch);
+  }
+
+  @override
+  void didUpdateWidget(covariant OpenMuseCliConsole oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller == widget.controller) return;
+    oldWidget.controller?.removeListener(_handleLaunch);
+    widget.controller?.addListener(_handleLaunch);
+  }
+
+  void _handleLaunch() {
+    final controller = widget.controller;
+    if (controller == null || controller.serial == _lastRequest) return;
+    _lastRequest = controller.serial;
+    _start(controller.directory);
+  }
+
+  @override
   void dispose() {
+    widget.controller?.removeListener(_handleLaunch);
     for (final session in _sessions) {
       session.close();
     }
     super.dispose();
   }
 
-  void _start() {
+  void _start([String? directory]) {
     try {
       final environment = Map<String, String>.of(Platform.environment);
       final cliBin = environment['OPENMUSE_CLI_BIN'] ?? _bundledCliBin();
@@ -137,20 +182,20 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
             '${File(cliBin).parent.path}${Platform.isWindows ? ';' : ':'}${environment['PATH'] ?? ''}';
       }
       final pty = Pty.start(
-        _selectedProfile.executable,
-        arguments: _selectedProfile.arguments,
-        workingDirectory: widget.workingDirectory,
+        _profile.executable,
+        arguments: _profile.arguments,
+        workingDirectory: directory ?? widget.workingDirectory,
         environment: environment,
         rows: 24,
         columns: 100,
       );
-      final session = _ConsoleSession(_selectedProfile, pty);
+      final session = _ConsoleSession(_profile, pty);
       session.terminal.onOutput = (data) => pty.write(utf8.encode(data));
       session.terminal.onResize = (columns, rows, _, _) =>
           pty.resize(rows, columns);
-      session.output = utf8.decoder
-          .bind(pty.output)
-          .listen(session.terminal.write);
+      session.output = const Utf8Decoder(
+        allowMalformed: true,
+      ).bind(pty.output).listen(session.terminal.write);
       unawaited(
         pty.exitCode.then((code) {
           session.exitCode = code;
@@ -179,51 +224,60 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: const Color(0xff17191d),
+    color: const Color(0xff181818),
     child: Column(
       children: [
         SizedBox(
-          height: 35,
+          height: 36,
           child: Row(
             children: [
-              const SizedBox(width: 10),
-              const Icon(Icons.terminal, size: 16, color: Colors.white70),
-              const SizedBox(width: 7),
-              const Text('控制台', style: TextStyle(color: Colors.white70)),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
+              Container(
+                key: const ValueKey('cli-terminal-tab'),
+                height: 35,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: Color(0xff4fa9c6))),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  _cliText('终端', 'TERMINAL'),
+                  style: const TextStyle(
+                    color: Color(0xffdedede),
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               for (var index = 0; index < _sessions.length; index++)
                 TextButton(
                   key: ValueKey('cli-tab-$index'),
                   onPressed: () => setState(() => _selected = index),
                   child: Text(
-                    '${_sessions[index].profile.name}${_sessions[index].exitCode == null ? '' : ' (${_sessions[index].exitCode})'}',
+                    '${index + 1}${_sessions[index].exitCode == null ? '' : ' (${_sessions[index].exitCode})'}',
+                    style: const TextStyle(fontSize: 11, color: Colors.white70),
                   ),
                 ),
               if (_sessions.isNotEmpty)
                 IconButton(
-                  tooltip: '关闭终端',
+                  tooltip: _cliText('关闭终端', 'Close Terminal'),
                   icon: const Icon(Icons.close, size: 16),
                   onPressed: () => _close(_selected),
                 ),
               const Spacer(),
-              DropdownButton<OpenMuseShellProfile>(
-                value: _selectedProfile,
-                dropdownColor: const Color(0xff242831),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-                items: [
-                  for (final profile in _profiles)
-                    DropdownMenuItem(value: profile, child: Text(profile.name)),
-                ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _selectedProfile = value);
-                },
-              ),
               IconButton(
                 key: const ValueKey('cli-new-terminal'),
-                tooltip: '新建终端',
+                tooltip: _cliText('新建终端', 'New Terminal'),
                 icon: const Icon(Icons.add, size: 18),
-                onPressed: _start,
+                onPressed: () => _start(),
               ),
+              if (widget.onMinimize != null)
+                IconButton(
+                  key: const ValueKey('cli-bottom-collapse'),
+                  tooltip: _cliText('最小化终端', 'Minimize Terminal'),
+                  icon: const Icon(Icons.keyboard_arrow_down, size: 18),
+                  onPressed: widget.onMinimize,
+                ),
             ],
           ),
         ),
@@ -238,18 +292,18 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
               : _sessions.isEmpty
               ? Center(
                   child: TextButton.icon(
-                    onPressed: _start,
+                    onPressed: () => _start(),
                     icon: const Icon(Icons.add),
-                    label: Text('启动 ${_selectedProfile.name}'),
+                    label: Text(_cliText('新建终端', 'New Terminal')),
                   ),
                 )
               : IndexedStack(
                   index: _selected,
                   children: [
                     for (final session in _sessions)
-                      TerminalView(
-                        session.terminal,
-                        keyboardType: TextInputType.text,
+                      OpenMuseCliTerminalView(
+                        terminal: session.terminal,
+                        active: _sessions.indexOf(session) == _selected,
                       ),
                   ],
                 ),
@@ -258,6 +312,168 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
     ),
   );
 }
+
+String _cliText(String zh, String en) =>
+    WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'zh'
+    ? zh
+    : en;
+
+final class OpenMuseCliTerminalView extends StatefulWidget {
+  const OpenMuseCliTerminalView({
+    super.key,
+    required this.terminal,
+    this.active = true,
+  });
+  final Terminal terminal;
+  final bool active;
+
+  @override
+  State<OpenMuseCliTerminalView> createState() => _CliTerminalViewState();
+}
+
+final class _CliTerminalViewState extends State<OpenMuseCliTerminalView> {
+  final FocusNode _terminalFocus = FocusNode();
+  final FocusNode _windowsInputFocus = FocusNode();
+  final TextEditingController _windowsInput = TextEditingController();
+  bool _clearing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isWindows) {
+      _windowsInput.addListener(_sendWindowsText);
+      _windowsInputFocus.onKeyEvent = _sendWindowsKey;
+      _focusIfActive();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant OpenMuseCliTerminalView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (Platform.isWindows && !oldWidget.active && widget.active) {
+      _focusIfActive();
+    }
+  }
+
+  void _focusIfActive() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && widget.active) _windowsInputFocus.requestFocus();
+    });
+  }
+
+  void _sendWindowsText() {
+    if (_clearing) return;
+    final value = _windowsInput.value;
+    if (!value.composing.isCollapsed || value.text.isEmpty) return;
+    _clearing = true;
+    _windowsInput.clear();
+    _clearing = false;
+    widget.terminal.textInput(value.text);
+  }
+
+  KeyEventResult _sendWindowsKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent || !_windowsInput.value.composing.isCollapsed) {
+      return KeyEventResult.ignored;
+    }
+    final logicalKey = event.logicalKey;
+    if (logicalKey == LogicalKeyboardKey.space ||
+        (logicalKey.keyLabel.length == 1 &&
+            !HardwareKeyboard.instance.isControlPressed &&
+            !HardwareKeyboard.instance.isAltPressed)) {
+      return KeyEventResult.ignored;
+    }
+    final key = keyToTerminalKey(logicalKey);
+    if (key == null) return KeyEventResult.ignored;
+    return widget.terminal.keyInput(
+          key,
+          ctrl: HardwareKeyboard.instance.isControlPressed,
+          alt: HardwareKeyboard.instance.isAltPressed,
+          shift: HardwareKeyboard.instance.isShiftPressed,
+        )
+        ? KeyEventResult.handled
+        : KeyEventResult.ignored;
+  }
+
+  @override
+  void dispose() {
+    _windowsInput.removeListener(_sendWindowsText);
+    _windowsInput.dispose();
+    _windowsInputFocus.dispose();
+    _terminalFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    behavior: HitTestBehavior.translucent,
+    onPointerDown: (_) {
+      if (Platform.isWindows) _focusIfActive();
+    },
+    child: Stack(
+      children: [
+        Positioned.fill(
+          child: TerminalView(
+            widget.terminal,
+            focusNode: _terminalFocus,
+            autofocus: !Platform.isWindows,
+            keyboardType: TextInputType.text,
+            hardwareKeyboardOnly: Platform.isWindows,
+            readOnly: Platform.isWindows,
+            alwaysShowCursor: true,
+            theme: _cliTerminalTheme,
+            textStyle: const TerminalStyle(fontSize: 13, height: 1.2),
+          ),
+        ),
+        if (Platform.isWindows)
+          Positioned(
+            left: 12,
+            bottom: 0,
+            width: 320,
+            height: 24,
+            child: IgnorePointer(
+              child: EditableText(
+                controller: _windowsInput,
+                focusNode: _windowsInputFocus,
+                style: const TextStyle(color: Colors.transparent, fontSize: 13),
+                cursorColor: Colors.transparent,
+                backgroundCursorColor: Colors.transparent,
+                selectionColor: Colors.transparent,
+                keyboardType: TextInputType.text,
+                autocorrect: false,
+                enableSuggestions: false,
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+const _cliTerminalTheme = TerminalTheme(
+  cursor: Color(0xffe4e4e4),
+  selection: Color(0xff264f78),
+  foreground: Color(0xffd4d4d4),
+  background: Color(0xff181818),
+  black: Color(0xff181818),
+  red: Color(0xfff48771),
+  green: Color(0xff89d185),
+  yellow: Color(0xffdcdcaa),
+  blue: Color(0xff9cdcfe),
+  magenta: Color(0xffc586c0),
+  cyan: Color(0xff4ec9b0),
+  white: Color(0xffd4d4d4),
+  brightBlack: Color(0xff808080),
+  brightRed: Color(0xfff48771),
+  brightGreen: Color(0xffb5cea8),
+  brightYellow: Color(0xffdcdcaa),
+  brightBlue: Color(0xff9cdcfe),
+  brightMagenta: Color(0xffc586c0),
+  brightCyan: Color(0xff4ec9b0),
+  brightWhite: Color(0xffffffff),
+  searchHitBackground: Color(0xffffe6a1),
+  searchHitBackgroundCurrent: Color(0xffffc65e),
+  searchHitForeground: Color(0xff181818),
+);
 
 String? _bundledCliBin() {
   if (!Platform.isMacOS) return null;
