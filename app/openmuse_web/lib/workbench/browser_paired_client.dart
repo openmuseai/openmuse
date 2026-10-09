@@ -109,19 +109,14 @@ final class BrowserPairedClient {
     String path, {
     Map<String, Object?>? body,
   }) async {
-    final token = await authentication.accessToken();
+    var token = await authentication.accessToken();
     if (token == null) throw const AuthFailure.sessionExpired();
-    final request = http.Request(method, origin.resolve(path))
-      ..headers.addAll({
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-        if (body != null) 'Content-Type': 'application/json',
-      });
-    if (body != null) request.body = jsonEncode(body);
-    final response = await _client
-        .send(request)
-        .then(http.Response.fromStream)
-        .timeout(const Duration(seconds: 45));
+    var response = await _send(method, path, token, body);
+    if (response.statusCode == 401) {
+      token = await authentication.accessToken(forceRefresh: true);
+      if (token == null) throw const AuthFailure.sessionExpired();
+      response = await _send(method, path, token, body);
+    }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final error = _tryJson(response);
       if (response.statusCode == 401) {
@@ -134,6 +129,26 @@ final class BrowserPairedClient {
       );
     }
     return response;
+  }
+
+  Future<http.Response> _send(
+    String method,
+    String path,
+    String token,
+    Map<String, Object?>? body,
+  ) {
+    final request = http.Request(method, origin.resolve(path))
+      ..followRedirects = false
+      ..headers.addAll({
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+        if (body != null) 'Content-Type': 'application/json',
+      });
+    if (body != null) request.body = jsonEncode(body);
+    return _client
+        .send(request)
+        .then(http.Response.fromStream)
+        .timeout(const Duration(seconds: 45));
   }
 
   Map<String, dynamic> _json(http.Response response) =>

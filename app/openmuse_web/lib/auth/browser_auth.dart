@@ -61,7 +61,8 @@ final class BrowserGoTrueProvider implements GoTrueAuthProvider {
           'Too many requests. Please wait and try again.',
         );
       }
-      if (path == '/verify' && {400, 401, 422}.contains(response.statusCode)) {
+      if (path == '/verify' &&
+          {400, 401, 403, 422}.contains(response.statusCode)) {
         throw const AuthFailure(
           AuthFailureKind.invalidCode,
           'The code is invalid or has expired.',
