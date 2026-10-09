@@ -8,6 +8,8 @@ import 'package:crypto/crypto.dart';
 import 'package:openmuse_plugin_sdk/manifest.dart';
 import 'package:path/path.dart' as p;
 
+import 'endpoint_config.dart';
+
 const distributedPackageLimit = 32 * 1024 * 1024;
 
 final class DistributedPluginReceipt {
@@ -453,8 +455,10 @@ Future<List<int>> _get(HttpClient client, Uri uri, int maxBytes) async {
 
 bool _allowed(Uri uri) {
   if (uri.scheme == 'https' && uri.host.isNotEmpty) return true;
+  // Plain `http` stays restricted to the loopback hosts defined once in
+  // [HostEndpointConfig]; the set must never gain a non-loopback name.
   if (uri.scheme == 'http' &&
-      (uri.host == '127.0.0.1' || uri.host == 'localhost')) {
+      HostEndpointConfig.loopbackHosts.contains(uri.host)) {
     return true;
   }
   return false;

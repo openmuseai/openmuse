@@ -16,6 +16,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'src/host/design_system.dart';
+import 'src/host/account_storage.dart';
+import 'src/host/endpoint_config.dart';
 import 'src/host/layout/layout.dart';
 import 'src/host/layout/surface_mutation_guard.dart';
 import 'src/host/local_settings.dart';
@@ -34,6 +36,11 @@ Future<void> main() async {
 
 Future<Widget> bootOpenMuseHost() async {
   final support = await getApplicationSupportDirectory();
+  var accountStorage = HostAccountStorage(
+    supportPath: support.path,
+    subject: localAnonymousUserId,
+  );
+  final readyAccount = ValueNotifier<String?>(null);
   final settings = OpenMuseLocalSettings(
     file: File(p.join(support.path, 'OpenMuse', 'settings-v1.json')),
   );
@@ -43,21 +50,17 @@ Future<Widget> bootOpenMuseHost() async {
     fallback: _layoutFallback(settings),
   );
   final layoutController = WorkbenchLayoutController(await layoutStore.load());
-  final mountStore = WorkspaceMountStore(
-    File(p.join(support.path, 'OpenMuse', 'workspace-mounts-v1.json')),
-  );
+  final mountStore = WorkspaceMountStore(File(accountStorage.mountsPath));
   final savedMounts = await mountStore.load();
   // Application Support is always accessible at launch. External project
   // mounts are restored separately and scanned after the first frame, since
   // macOS Documents/iCloud/FileProvider may block directory enumeration.
-  final rootPath = p.join(support.path, 'OpenMuse', 'Workspace');
+  final rootPath = accountStorage.workspacePath;
   await Directory(rootPath).create(recursive: true);
   final controller = LocalWorkspaceController(
     rootPath: rootPath,
     initialResources: const [],
-    versionStore: LocalVersionStore(
-      Directory(p.join(support.path, 'OpenMuse', 'versions-v1')),
-    ),
+    versionStore: LocalVersionStore(Directory(accountStorage.versionsPath)),
     mountStore: mountStore,
     additionalMountPaths: savedMounts,
   );
@@ -76,12 +79,8 @@ Future<Widget> bootOpenMuseHost() async {
               'workspaceRef': 'openmuse.local.default',
               'title': 'Project Workspace',
               'activeMountPath': controller.activeMountPath,
-              'dshHome': _dshHome(support.path),
-              'pluginInteractionDir': p.join(
-                support.path,
-                'OpenMuse',
-                'plugin-interactions',
-              ),
+              'dshHome': accountStorage.dshHome,
+              'pluginInteractionDir': accountStorage.pluginInteractionsPath,
               'mounts': [
                 for (final mount in controller.mounts)
                   {'path': mount.path, 'name': mount.name},
@@ -175,49 +174,25 @@ Future<Widget> bootOpenMuseHost() async {
       },
     ),
   );
-  final gotrueOrigin = Uri.parse(
-    _configuredEndpoint(
-      key: 'OPENMUSE_GOTRUE_ORIGIN',
-      dartDefine: const String.fromEnvironment('OPENMUSE_GOTRUE_ORIGIN'),
-      debugDefault: 'http://127.0.0.1:9999',
-      releaseDefault: 'https://openmuseai.com/gotrue',
-    ),
-  );
-  final cloudOrigin = Uri.parse(
-    _configuredEndpoint(
-      key: 'OPENMUSE_CLOUD_ORIGIN',
-      dartDefine: const String.fromEnvironment('OPENMUSE_CLOUD_ORIGIN'),
-      debugDefault: 'http://127.0.0.1:8000',
-      releaseDefault: 'https://openmuseai.com',
-    ),
-  );
-  final allowInsecureLoopback = _configuredBool(
-    key: 'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
-    dartDefine: const String.fromEnvironment(
-      'OPENMUSE_ALLOW_INSECURE_LOOPBACK',
-    ),
-    fallback: !kReleaseMode,
-  );
+  // Every host, port and loopback address comes from one configuration object.
+  final endpoints = HostEndpointConfig.fromEnvironment();
   final authSessionStore = SecureAuthSessionStore(
     values: FlutterSecureValueStore.macOsCompatible(
-      accountName: String.fromEnvironment(
-        'OPENMUSE_AUTH_KEYCHAIN_ACCOUNT',
-        defaultValue: 'flutter_secure_storage_service',
-      ),
+      accountName: endpoints.authKeychainAccount,
     ),
   );
   final goTrueClient = GoTrueHttpClient(
     config: GoTrueClientConfig(
-      origin: gotrueOrigin,
-      allowInsecureLoopback: allowInsecureLoopback,
+      origin: endpoints.gotrueOrigin,
+      allowInsecureLoopback: endpoints.allowInsecureLoopback,
     ),
   );
   final authenticationController = GoTrueAuthenticationController(
     provider: goTrueClient,
     store: authSessionStore,
     bootstrapper: AppFlowyAccountBootstrapper(
-      cloudOrigin: cloudOrigin,
-      allowInsecureLoopback: allowInsecureLoopback,
+      cloudOrigin: endpoints.cloudOrigin,
+      allowInsecureLoopback: endpoints.allowInsecureLoopback,
     ),
   );
   if (kDebugMode) {
@@ -230,18 +205,19 @@ Future<Widget> bootOpenMuseHost() async {
   }
   final authenticationPlugin = OpenMuseGoTruePlugin(
     authentication: authenticationController,
-    cloudLabel: cloudOrigin.toString(),
+    cloudLabel: endpoints.cloudOrigin.toString(),
     allowAnonymous: true,
   );
   final desktopDeviceId = await _persistentDesktopDeviceId(settings);
+  settings.setAccountSubject(localAnonymousUserId);
   final desktopDisplayName = Platform.localHostname.isEmpty
       ? 'OpenMuse Desktop'
       : Platform.localHostname;
   final cloudWorkspacePlugin = OpenMuseCloudWorkspacePlugin(
     authentication: authenticationController,
-    cloudOrigin: cloudOrigin,
+    cloudOrigin: endpoints.cloudOrigin,
     deviceId: desktopDeviceId,
-    allowInsecureLoopback: allowInsecureLoopback,
+    allowInsecureLoopback: endpoints.allowInsecureLoopback,
   );
   final cliBroker = PluginCliBroker(
     installRoot: Directory(p.join(support.path, 'OpenMuse', 'plugins')),
@@ -250,26 +226,63 @@ Future<Widget> bootOpenMuseHost() async {
   final dshSupervisor = DshSidecarSupervisor(
     environment: {
       ...Platform.environment,
-      'DSH_HOME': _dshHome(support.path),
+      'DSH_HOME': accountStorage.dshHome,
       'OPENMUSE_CLI_BROKER_URL': cliBroker.origin.toString(),
       'OPENMUSE_CLI_BROKER_TOKEN': cliBroker.token,
     },
   );
-  const relayFromDefine = String.fromEnvironment(
-    'OPENMUSE_RELAY_PUBLIC_ORIGIN',
-  );
-  final relayFromEnvironment =
-      Platform.environment['OPENMUSE_RELAY_PUBLIC_ORIGIN'] ?? '';
-  final relayConfigured = relayFromDefine.isNotEmpty
-      ? relayFromDefine
-      : relayFromEnvironment.isNotEmpty
-      ? relayFromEnvironment
-      : cloudOrigin.host == 'openmuseai.com'
-      ? 'https://openmuseai.com:8443'
-      : '';
+  Future<void> scopeTransition = Future.value();
+  String? requestedSubject;
+  void syncAccountStorage() {
+    final snapshot = authenticationController.snapshot;
+    final subject = snapshot.isAuthenticated
+        ? snapshot.identity?.subject
+        : null;
+    if (subject == null) {
+      final hadAccount = requestedSubject != null;
+      requestedSubject = null;
+      readyAccount.value = null;
+      if (hadAccount) {
+        scopeTransition = scopeTransition
+            .then((_) => dshSupervisor.stop())
+            .catchError((Object error) {
+              debugPrint('Account DSH stop failed: $error');
+            });
+      }
+      return;
+    }
+    if (subject == requestedSubject) return;
+    requestedSubject = subject;
+    readyAccount.value = null;
+    scopeTransition = scopeTransition
+        .then((_) async {
+          if (requestedSubject != subject) return;
+          if (accountStorage.subject != subject) {
+            await dshSupervisor.stop();
+            settings.setAccountSubject(subject);
+            final next = HostAccountStorage(
+              supportPath: support.path,
+              subject: subject,
+            );
+            await controller.switchStorage(
+              rootPath: next.workspacePath,
+              versionStore: LocalVersionStore(Directory(next.versionsPath)),
+              mountStore: WorkspaceMountStore(File(next.mountsPath)),
+            );
+            dshSupervisor.environment['DSH_HOME'] = next.dshHome;
+            accountStorage = next;
+          }
+          if (requestedSubject == subject) readyAccount.value = subject;
+        })
+        .catchError((Object error) {
+          debugPrint('Account workspace switch failed: $error');
+        });
+  }
+
+  authenticationController.addListener(syncAccountStorage);
   final relayOrigin = desktopRelayPublicOrigin(
-    cloudOrigin: cloudOrigin,
-    configured: relayConfigured,
+    cloudOrigin: endpoints.cloudOrigin,
+    configured: endpoints.relayPublicOrigin,
   );
   final surfaceLab = _acceptanceSurface(
     workspaceRef: 'openmuse.local.default',
@@ -277,8 +290,7 @@ Future<Widget> bootOpenMuseHost() async {
   );
   final workspaceMirrorService = DesktopWorkspaceMirrorService(controller);
   final pairedGateway = PairedDesktopGateway(
-    currentAccountRef: () =>
-        authenticationController.snapshot.identity?.subject,
+    currentAccountRef: () => readyAccount.value,
     validateToken: (token) async {
       final user = await goTrueClient.currentUser(token);
       return user.id;
@@ -296,13 +308,8 @@ Future<Widget> bootOpenMuseHost() async {
     nativeApiToken: dshSupervisor.bridgeToken,
     deviceRef: desktopDeviceId,
     deviceName: desktopDisplayName,
-    port:
-        int.tryParse(
-          Platform.environment['OPENMUSE_PAIRED_DESKTOP_PORT'] ?? '',
-        ) ??
-        13180,
-    fixedPairingCode:
-        Platform.environment['OPENMUSE_PAIRED_DESKTOP_PAIRING_CODE'],
+    port: endpoints.pairedDesktopPort,
+    fixedPairingCode: endpoints.fixedPairedDesktopPairingCode,
     remoteSurface: (request) => dispatchRemoteSurface(
       host: surfaceLab.host,
       operation: request.operation,
@@ -320,9 +327,9 @@ Future<Widget> bootOpenMuseHost() async {
   final deviceDirectory = AccountDeviceDirectoryController(
     authentication: authenticationController,
     client: AccountDeviceDirectoryClient(
-      cloudOrigin: cloudOrigin,
+      cloudOrigin: endpoints.cloudOrigin,
       accessToken: authenticationController.accessToken,
-      allowInsecureLoopback: allowInsecureLoopback,
+      allowInsecureLoopback: endpoints.allowInsecureLoopback,
     ),
     registration: () => AccountDeviceRegistration(
       deviceRef: desktopDeviceId,
@@ -433,6 +440,7 @@ Future<Widget> bootOpenMuseHost() async {
     layoutStore: layoutStore,
     mutationGuards: SurfaceMutationGuards(),
     authentication: authenticationPlugin,
+    readyAccount: readyAccount,
   );
 }
 
@@ -450,40 +458,6 @@ WorkbenchLayoutSnapshot _layoutFallback(OpenMuseLocalSettings settings) {
     sidebarRatio: sidebarRatio,
     editorRatio: editorRatio,
   );
-}
-
-String _dshHome(String supportPath) {
-  final configured = Platform.environment['MUSE_DSH_HOME'];
-  if (configured != null && p.isAbsolute(configured)) {
-    return p.normalize(configured);
-  }
-  return p.join(supportPath, 'OpenMuse', 'dsh');
-}
-
-String _configuredEndpoint({
-  required String key,
-  required String dartDefine,
-  required String debugDefault,
-  required String releaseDefault,
-}) {
-  final compiled = dartDefine.trim();
-  if (compiled.isNotEmpty) return compiled;
-  final environment = Platform.environment[key]?.trim();
-  if (environment != null && environment.isNotEmpty) return environment;
-  return kReleaseMode ? releaseDefault : debugDefault;
-}
-
-bool _configuredBool({
-  required String key,
-  required String dartDefine,
-  required bool fallback,
-}) {
-  final raw = dartDefine.trim().isNotEmpty
-      ? dartDefine.trim()
-      : Platform.environment[key]?.trim().toLowerCase();
-  if (raw == 'true' || raw == '1') return true;
-  if (raw == 'false' || raw == '0') return false;
-  return fallback;
 }
 
 Future<String> _persistentDesktopDeviceId(

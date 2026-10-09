@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
@@ -19,6 +20,7 @@ final class OpenMuseHostApp extends StatelessWidget {
     this.layoutStore,
     this.mutationGuards,
     this.authentication,
+    this.readyAccount,
   });
 
   final OpenMusePluginRegistry registry;
@@ -28,6 +30,7 @@ final class OpenMuseHostApp extends StatelessWidget {
   final LayoutSnapshotWriter? layoutStore;
   final SurfaceMutationGuards? mutationGuards;
   final OpenMuseAuthenticationContributor? authentication;
+  final ValueListenable<String?>? readyAccount;
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +56,25 @@ final class OpenMuseHostApp extends StatelessWidget {
             );
             final auth = authentication;
             if (auth == null) return workbench;
+            final accountGate = readyAccount == null
+                ? workbench
+                : ValueListenableBuilder<String?>(
+                    valueListenable: readyAccount!,
+                    builder: (context, ready, _) {
+                      final subject =
+                          auth.authentication.snapshot.identity?.subject;
+                      if (ready == null || ready != subject) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      return KeyedSubtree(
+                        key: ValueKey(subject),
+                        child: workbench,
+                      );
+                    },
+                  );
             return auth.buildAuthenticationGate(
               context,
-              authenticatedChild: workbench,
+              authenticatedChild: accountGate,
             );
           },
         ),

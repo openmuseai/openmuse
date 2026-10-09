@@ -6,6 +6,25 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_host/src/host/local_settings.dart';
 
 void main() {
+  test('plugin workspace settings are isolated by account', () async {
+    final root = await Directory.systemTemp.createTemp('openmuse-settings-');
+    addTearDown(() => root.delete(recursive: true));
+    final settings = OpenMuseLocalSettings(
+      file: File('${root.path}/settings.json'),
+    );
+    settings.setAccountSubject('account-one');
+    await settings.updatePluginValues('com.openmuse.dsh-agent', {
+      'workspacePath': '/private/one',
+    });
+    settings.setAccountSubject('account-two');
+    expect(settings.pluginValues('com.openmuse.dsh-agent'), isEmpty);
+    settings.setAccountSubject('account-one');
+    expect(
+      settings.pluginValues('com.openmuse.dsh-agent')['workspacePath'],
+      '/private/one',
+    );
+  });
+
   test(
     'local appearance, pane widths and plugin namespace round-trip',
     () async {

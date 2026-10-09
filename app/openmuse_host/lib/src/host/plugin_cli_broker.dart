@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'endpoint_config.dart';
 import 'plugin_command_registry.dart';
 
 /// Narrow loopback execution seam for DSH. The agent can invoke only a CLI
@@ -17,7 +18,13 @@ final class PluginCliBroker {
   Uri get origin {
     final server = _server;
     if (server == null) throw StateError('CLI broker is not running');
-    return Uri(scheme: 'http', host: '127.0.0.1', port: server.port);
+    // The broker binds `InternetAddress.loopbackIPv4`, so the advertised host
+    // comes from the shared endpoint config rather than a second literal.
+    return Uri(
+      scheme: 'http',
+      host: HostEndpointConfig.loopbackHostIpv4,
+      port: server.port,
+    );
   }
 
   Future<void> start() async {

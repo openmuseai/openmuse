@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 
 /// Local, non-secret Host preferences. Plugin values are namespaced and never
@@ -15,6 +16,20 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
   bool assistantVisible = true;
   final Map<String, String> _defaultEditors = {};
   final Map<String, Map<String, Object?>> _pluginValues = {};
+  String? _accountSubject;
+
+  void setAccountSubject(String? subject) {
+    if (_accountSubject == subject) return;
+    _accountSubject = subject;
+    notifyListeners();
+  }
+
+  String _pluginKey(String pluginId) {
+    final subject = _accountSubject;
+    if (subject == null) return pluginId;
+    final digest = sha256.convert(utf8.encode(subject));
+    return 'account.$digest/$pluginId';
+  }
 
   Future<void> load() async {
     final source = file;
@@ -61,7 +76,7 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
       : null;
 
   Map<String, Object?> pluginValues(String pluginId) =>
-      Map.unmodifiable(_pluginValues[pluginId] ?? const {});
+      Map.unmodifiable(_pluginValues[_pluginKey(pluginId)] ?? const {});
 
   String? defaultEditorFor(String extension) =>
       _defaultEditors[extension.toLowerCase()];
@@ -79,7 +94,7 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
     if (!pluginId.startsWith('com.openmuse.')) {
       throw ArgumentError.value(pluginId, 'pluginId');
     }
-    _pluginValues[pluginId] = Map.of(values);
+    _pluginValues[_pluginKey(pluginId)] = Map.of(values);
     notifyListeners();
     await save();
   }

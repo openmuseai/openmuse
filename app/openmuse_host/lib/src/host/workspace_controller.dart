@@ -260,9 +260,9 @@ final class LocalWorkspaceController extends ChangeNotifier {
     );
   }
 
-  final LocalVersionStore _versionStore;
+  LocalVersionStore _versionStore;
   Future<void> Function(OpenMuseResource resource)? flushBeforeDiskRead;
-  final WorkspaceMountStore? _mountStore;
+  WorkspaceMountStore? _mountStore;
   final Future<OpenMuseResource> Function(OpenMuseResource) _resourceInspector;
   final List<WorkspaceMount> _mounts = [];
   final Map<String, WorkspaceEditorGroup> _editorGroups = {};
@@ -301,6 +301,42 @@ final class LocalWorkspaceController extends ChangeNotifier {
     for (final mount in _mounts) {
       _watchMount(mount);
     }
+  }
+
+  /// Replace every in-memory workspace reference before loading another account.
+  /// The caller must keep the workbench hidden until this future completes.
+  Future<void> switchStorage({
+    required String rootPath,
+    required LocalVersionStore versionStore,
+    required WorkspaceMountStore mountStore,
+  }) async {
+    _watchDebounce?.cancel();
+    final oldWatchers = _watchers.values.toList();
+    _watchers.clear();
+    _mounts.clear();
+    _editorGroups.clear();
+    _editorGroups[primaryEditorGroupId] = WorkspaceEditorGroup(
+      primaryEditorGroupId,
+    );
+    _favorites.clear();
+    _focusedEditorGroupId = primaryEditorGroupId;
+    _activeMountPath = null;
+    _versionStore = versionStore;
+    _mountStore = mountStore;
+    final root = WorkspaceMount(path: _canonicalMountPath(rootPath));
+    root.root.expanded = true;
+    _mounts.add(root);
+    notifyListeners();
+    await Future.wait([for (final watcher in oldWatchers) watcher.cancel()]);
+    await Directory(root.path).create(recursive: true);
+    for (final path in await mountStore.load()) {
+      final normalized = _canonicalMountPath(path);
+      if (normalized != root.path) {
+        _mounts.add(WorkspaceMount(path: normalized)..root.expanded = true);
+      }
+    }
+    await initialize();
+    notifyListeners();
   }
 
   bool isFavorite(OpenMuseResource resource) =>
