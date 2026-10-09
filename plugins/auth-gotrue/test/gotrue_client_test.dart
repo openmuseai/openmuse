@@ -179,6 +179,35 @@ void main() {
     },
   );
 
+  test('expired signup code is reported as invalid code', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    final serving = server.forEach((request) async {
+      await utf8.decoder.bind(request).join();
+      request.response.statusCode = 403;
+      request.response.headers.contentType = ContentType.json;
+      request.response.write(jsonEncode({'error_code': 'otp_expired'}));
+      await request.response.close();
+    });
+    final client = GoTrueHttpClient(
+      config: GoTrueClientConfig(
+        origin: Uri.parse('http://127.0.0.1:${server.port}'),
+        allowInsecureLoopback: true,
+      ),
+    );
+    await expectLater(
+      client.verifySignUpCode('muse@example.com', '000000'),
+      throwsA(
+        isA<AuthFailure>().having(
+          (error) => error.kind,
+          'kind',
+          AuthFailureKind.invalidCode,
+        ),
+      ),
+    );
+    await server.close(force: true);
+    await serving;
+  });
+
   test('account bootstrap calls the verify endpoint once', () async {
     final seen = <String>[];
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);

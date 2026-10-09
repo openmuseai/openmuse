@@ -275,6 +275,32 @@ void main() {
     },
   );
 
+  test(
+    'auto-confirming GoTrue still requires a delivered email code',
+    () async {
+      final issued = session();
+      final provider = _FakeProvider(signInResult: issued)
+        ..signUpResult = GoTrueSignUpResult(user: issued.user, session: issued);
+      final store = _RecordingStore();
+      final controller = GoTrueAuthenticationController(
+        provider: provider,
+        store: store,
+        clock: () => now,
+      );
+
+      await controller.signUp('muse@example.com', 'long-password');
+      expect(provider.requestedCodeEmail, 'muse@example.com');
+      expect(
+        controller.snapshot.phase,
+        OpenMuseAuthenticationPhase.awaitingPasscode,
+      );
+      expect(store.writes, 0);
+      await controller.verifySignUpCode('muse@example.com', '123456');
+      expect(provider.signInCode, '123456');
+      expect(store.writes, 1);
+    },
+  );
+
   test('recovery credential stays transient until password changes', () async {
     final provider = _FakeProvider(signInResult: session());
     final store = _RecordingStore();

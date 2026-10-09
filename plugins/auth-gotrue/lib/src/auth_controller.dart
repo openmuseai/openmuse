@@ -47,6 +47,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
 
   GoTrueSession? _session;
   GoTrueSession? _recoverySession;
+  bool _signUpUsesSignInCode = false;
   Future<GoTrueSession>? _refreshInFlight;
   var _anonymous = false;
   OpenMuseAuthenticationSnapshot _snapshot =
@@ -62,6 +63,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
   @override
   Future<void> signUp(String email, String password) async {
     if (_busy) return;
+    _signUpUsesSignInCode = false;
     _setSnapshot(
       const OpenMuseAuthenticationSnapshot(
         phase: OpenMuseAuthenticationPhase.submitting,
@@ -69,20 +71,17 @@ final class GoTrueAuthenticationController extends ChangeNotifier
     );
     try {
       final result = await _provider.signUp(email, password);
-      if (result.session == null) {
-        _setSnapshot(
-          const OpenMuseAuthenticationSnapshot(
-            phase: OpenMuseAuthenticationPhase.awaitingPasscode,
-          ),
-        );
-      } else {
-        _setSnapshot(
-          const OpenMuseAuthenticationSnapshot(
-            phase: OpenMuseAuthenticationPhase.bootstrapping,
-          ),
-        );
-        await _finishSignIn(result.session!);
+      if (result.session != null) {
+        // Older deployments auto-confirm signups. Require proof of mailbox
+        // ownership with a fresh OTP before publishing that session.
+        _signUpUsesSignInCode = true;
+        await _provider.requestSignInCode(email);
       }
+      _setSnapshot(
+        const OpenMuseAuthenticationSnapshot(
+          phase: OpenMuseAuthenticationPhase.awaitingPasscode,
+        ),
+      );
     } on AuthFailure catch (error) {
       _publishFailure(error);
     } catch (_) {
@@ -104,13 +103,16 @@ final class GoTrueAuthenticationController extends ChangeNotifier
       ),
     );
     try {
-      final session = await _provider.verifySignUpCode(email, code);
+      final session = _signUpUsesSignInCode
+          ? await _provider.signInWithCode(email, code)
+          : await _provider.verifySignUpCode(email, code);
       _setSnapshot(
         const OpenMuseAuthenticationSnapshot(
           phase: OpenMuseAuthenticationPhase.bootstrapping,
         ),
       );
       await _finishSignIn(session);
+      _signUpUsesSignInCode = false;
     } on AuthFailure catch (error) {
       _publishFailure(error);
     } catch (_) {
@@ -124,8 +126,11 @@ final class GoTrueAuthenticationController extends ChangeNotifier
   }
 
   @override
-  Future<void> resendSignUpCode(String email) =>
-      _requestCode(() => _provider.resendSignUpCode(email));
+  Future<void> resendSignUpCode(String email) => _requestCode(
+    () => _signUpUsesSignInCode
+        ? _provider.requestSignInCode(email)
+        : _provider.resendSignUpCode(email),
+  );
 
   @override
   Future<void> requestPasswordRecovery(String email) =>
@@ -222,6 +227,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
   void cancelPendingFlow() {
     if (_busy) return;
     _recoverySession = null;
+    _signUpUsesSignInCode = false;
     _setSnapshot(const OpenMuseAuthenticationSnapshot.signedOut());
   }
 

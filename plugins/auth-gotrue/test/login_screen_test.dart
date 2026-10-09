@@ -231,6 +231,23 @@ void main() {
     expect(controller.signupVerifications, 1);
   });
 
+  testWidgets('create account opens a distinct form before entering email', (
+    tester,
+  ) async {
+    final controller = _FakeController();
+    await tester.pumpWidget(_app(controller));
+    await tester.tap(find.byKey(const ValueKey('auth.sign-up')));
+    await tester.pump();
+
+    expect(find.text('Create your account'), findsOneWidget);
+    expect(find.byKey(const ValueKey('auth.signup-email')), findsOneWidget);
+    expect(find.byKey(const ValueKey('auth.continue-password')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('auth.submit-new-password')));
+    await tester.pump();
+    expect(find.text('Please enter a valid email address.'), findsOneWidget);
+    expect(controller.signUps, 0);
+  });
+
   testWidgets('forgot password requests recovery code and new password', (
     tester,
   ) async {

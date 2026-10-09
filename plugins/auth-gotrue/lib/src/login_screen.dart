@@ -79,10 +79,7 @@ final class _OpenMuseLoginScreenState extends State<OpenMuseLoginScreen> {
               onSignUp:
                   widget.authentication
                       is OpenMuseAccountAuthenticationController
-                  ? () {
-                      if (_validatedEmail() != null)
-                        setState(() => _page = OpenMuseLoginPage.signUp);
-                    }
+                  ? () => setState(() => _page = OpenMuseLoginPage.signUp)
                   : null,
               failure: _page == OpenMuseLoginPage.email
                   ? _failure(context)
@@ -116,7 +113,7 @@ final class _OpenMuseLoginScreenState extends State<OpenMuseLoginScreen> {
                   widget.authentication
                       as OpenMuseAccountAuthenticationController,
               listenable: widget.authentication,
-              email: _emailController.text.trim(),
+              emailController: _emailController,
               onBack: _backToEmail,
               onCodeSent: () =>
                   setState(() => _page = OpenMuseLoginPage.signUpCode),
@@ -620,25 +617,25 @@ final class _SignUpPage extends StatelessWidget {
   const _SignUpPage({
     required this.authentication,
     required this.listenable,
-    required this.email,
+    required this.emailController,
     required this.onBack,
     required this.onCodeSent,
   });
 
   final OpenMuseAccountAuthenticationController authentication;
   final OpenMuseAuthenticationController listenable;
-  final String email;
+  final TextEditingController emailController;
   final VoidCallback onBack;
   final VoidCallback onCodeSent;
 
   @override
   Widget build(BuildContext context) => _PasswordFormPage(
     title: openMuseAuthLocalizations(context).createAccountTitle,
-    email: email,
+    emailController: emailController,
     listenable: listenable,
     onBack: onBack,
     onSubmit: (password) async {
-      await authentication.signUp(email, password);
+      await authentication.signUp(emailController.text.trim(), password);
       if (listenable.snapshot.phase ==
           OpenMuseAuthenticationPhase.awaitingPasscode) {
         onCodeSent();
@@ -673,11 +670,11 @@ final class _PasswordFormPage extends StatefulWidget {
     required this.listenable,
     required this.onBack,
     required this.onSubmit,
-    this.email,
+    this.emailController,
   });
 
   final String title;
-  final String? email;
+  final TextEditingController? emailController;
   final OpenMuseAuthenticationController listenable;
   final VoidCallback onBack;
   final Future<void> Function(String) onSubmit;
@@ -690,6 +687,7 @@ final class _PasswordFormPageState extends State<_PasswordFormPage> {
   final _password = TextEditingController();
   final _confirmation = TextEditingController();
   String? _validation;
+  bool _emailInvalid = false;
   bool _obscure = true;
 
   @override
@@ -719,11 +717,22 @@ final class _PasswordFormPageState extends State<_PasswordFormPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _LogoTitle(title: widget.title),
-            if (widget.email != null) ...[
-              const SizedBox(height: OpenMuseLoginSpacing.l),
-              Text(widget.email!, textAlign: TextAlign.center),
+            if (widget.emailController != null) ...[
+              const SizedBox(height: OpenMuseLoginSpacing.xxl),
+              TextField(
+                key: const ValueKey('auth.signup-email'),
+                controller: widget.emailController,
+                enabled: !busy,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                decoration: InputDecoration(
+                  hintText: l10n.emailHint,
+                  errorText: _emailInvalid ? l10n.invalidEmail : null,
+                ),
+              ),
             ],
-            const SizedBox(height: OpenMuseLoginSpacing.xxl),
+            const SizedBox(height: OpenMuseLoginSpacing.l),
             TextField(
               key: const ValueKey('auth.new-password'),
               controller: _password,
@@ -761,7 +770,7 @@ final class _PasswordFormPageState extends State<_PasswordFormPage> {
               key: const ValueKey('auth.submit-new-password'),
               label: busy
                   ? l10n.verifying
-                  : widget.email == null
+                  : widget.emailController == null
                   ? l10n.setNewPassword
                   : l10n.createAccount,
               onPressed: busy ? null : _submit,
@@ -781,6 +790,12 @@ final class _PasswordFormPageState extends State<_PasswordFormPage> {
 
   void _submit() {
     final l10n = openMuseAuthLocalizations(context);
+    if (widget.emailController != null &&
+        !_looksLikeEmail(widget.emailController!.text.trim())) {
+      setState(() => _emailInvalid = true);
+      return;
+    }
+    _emailInvalid = false;
     if (_password.text.length < 8) {
       setState(() => _validation = l10n.passwordTooShort);
       return;

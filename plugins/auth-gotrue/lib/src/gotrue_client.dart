@@ -280,6 +280,7 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
         if (path == '/verify' &&
             (response.statusCode == 400 ||
                 response.statusCode == 401 ||
+                response.statusCode == 403 ||
                 response.statusCode == 422)) {
           throw const AuthFailure(
             AuthFailureKind.invalidCode,
