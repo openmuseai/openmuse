@@ -528,6 +528,7 @@ final class _BoundSurface extends StatelessWidget {
       return _EditorCliDock(
         editor: editor,
         visible: terminalVisible,
+        onMinimize: onCloseTerminal,
         console: OpenMuseCliConsole(
           key: const ValueKey('cli-bottom-panel'),
           workingDirectory: workspace.activeMountPath,
@@ -562,11 +563,13 @@ final class _EditorCliDock extends StatefulWidget {
     required this.editor,
     required this.console,
     required this.visible,
+    required this.onMinimize,
   });
 
   final Widget editor;
   final Widget console;
   final bool visible;
+  final VoidCallback onMinimize;
 
   @override
   State<_EditorCliDock> createState() => _EditorCliDockState();
@@ -598,9 +601,36 @@ final class _EditorCliDockState extends State<_EditorCliDock> {
                     ),
                   );
                 },
-                child: Container(
-                  height: 5,
-                  color: Theme.of(context).dividerColor,
+                child: SizedBox(
+                  height: 14,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Positioned.fill(
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                            height: 1,
+                            width: double.infinity,
+                            child: ColoredBox(
+                              color: Theme.of(context).dividerColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 2,
+                        child: InkWell(
+                          key: const ValueKey('cli-bottom-collapse'),
+                          onTap: widget.onMinimize,
+                          child: const Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
