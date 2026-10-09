@@ -6,104 +6,6 @@ import UIKit
 @_silgen_name("openmuse_docx_abi_version")
 private func openMuseDocxAbiVersion() -> UInt32
 
-@_silgen_name("openmuse_paired_abi_version")
-private func openMusePairedAbiVersion() -> UInt32
-
-@_silgen_name("openmuse_office_viewers_abi_version")
-private func openMuseOfficeViewersAbiVersion() -> UInt32
-
-private struct OpenMuseOfficeViewerBuffer {
-  var ptr: UnsafeMutablePointer<UInt8>?
-  var len: Int
-  var capacity: Int
-  var status: Int32
-}
-
-@_silgen_name("openmuse_xlsx_inspect")
-private func openMuseXlsxInspect(
-  _ bytes: UnsafePointer<UInt8>?,
-  _ length: Int
-) -> OpenMuseOfficeViewerBuffer
-
-@_silgen_name("openmuse_pptx_inspect")
-private func openMusePptxInspect(
-  _ bytes: UnsafePointer<UInt8>?,
-  _ length: Int
-) -> OpenMuseOfficeViewerBuffer
-
-@_silgen_name("openmuse_pdf_inspect")
-private func openMusePdfInspect(
-  _ bytes: UnsafePointer<UInt8>?,
-  _ length: Int
-) -> OpenMuseOfficeViewerBuffer
-
-@_silgen_name("openmuse_office_viewer_buffer_free")
-private func openMuseOfficeViewerBufferFree(_ buffer: OpenMuseOfficeViewerBuffer)
-
-@_silgen_name("openmuse_paired_device_public")
-private func openMusePairedDevicePublic(
-  _ seed: UnsafePointer<UInt8>?,
-  _ seedLength: Int,
-  _ output: UnsafeMutablePointer<UInt8>?,
-  _ outputLength: Int
-) -> Int32
-
-private struct OpenMusePairedBuffer {
-  var ptr: UnsafeMutablePointer<UInt8>?
-  var len: Int
-  var capacity: Int
-  var status: Int32
-}
-
-@_silgen_name("openmuse_paired_issue_offer")
-private func openMusePairedIssueOffer(
-  _ seed: UnsafePointer<UInt8>?,
-  _ seedLength: Int,
-  _ accountRef: UnsafePointer<UInt8>?,
-  _ accountRefLength: Int,
-  _ deviceRef: UnsafePointer<UInt8>?,
-  _ deviceRefLength: Int,
-  _ nonce: UnsafePointer<UInt8>?,
-  _ nonceLength: Int,
-  _ registrationGeneration: UInt64
-) -> OpenMusePairedBuffer
-
-@_silgen_name("openmuse_paired_buffer_free")
-private func openMusePairedBufferFree(_ buffer: OpenMusePairedBuffer)
-
-@_silgen_name("openmuse_paired_begin_handshake")
-private func openMusePairedBeginHandshake(
-  _ seed: UnsafePointer<UInt8>?, _ seedLength: Int,
-  _ localOffer: UnsafePointer<UInt8>?, _ localOfferLength: Int,
-  _ remoteOffer: UnsafePointer<UInt8>?, _ remoteOfferLength: Int,
-  _ localRegistration: UnsafePointer<UInt8>?, _ localRegistrationLength: Int,
-  _ remoteRegistration: UnsafePointer<UInt8>?, _ remoteRegistrationLength: Int
-) -> OpenMusePairedBuffer
-
-@_silgen_name("openmuse_paired_confirm_handshake")
-private func openMusePairedConfirmHandshake(
-  _ handshakeHandle: UInt64,
-  _ confirmationCode: UnsafePointer<UInt8>?,
-  _ confirmationCodeLength: Int
-) -> OpenMusePairedBuffer
-
-@_silgen_name("openmuse_paired_channel_seal")
-private func openMusePairedChannelSeal(
-  _ channelHandle: UInt64,
-  _ plaintext: UnsafePointer<UInt8>?,
-  _ plaintextLength: Int
-) -> OpenMusePairedBuffer
-
-@_silgen_name("openmuse_paired_channel_open")
-private func openMusePairedChannelOpen(
-  _ channelHandle: UInt64,
-  _ envelope: UnsafePointer<UInt8>?,
-  _ envelopeLength: Int
-) -> OpenMusePairedBuffer
-
-@_silgen_name("openmuse_paired_native_handle_close")
-private func openMusePairedNativeHandleClose(_ handle: UInt64) -> Int32
-
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
@@ -111,17 +13,17 @@ private func openMusePairedNativeHandleClose(_ handle: UInt64) -> Int32
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     precondition(openMuseDocxAbiVersion() == 1, "Unsupported OpenMuse DOCX ABI")
-    precondition(openMusePairedAbiVersion() == 1, "Unsupported OpenMuse Paired ABI")
-    precondition(openMuseOfficeViewersAbiVersion() == 1, "Unsupported Office Viewers ABI")
-    let viewerProbe = openMuseXlsxInspect(nil, 0)
+    precondition(openmuse_paired_abi_version() == 1, "Unsupported OpenMuse Paired ABI")
+    precondition(openmuse_office_viewers_abi_version() == 1, "Unsupported Office Viewers ABI")
+    let viewerProbe = openmuse_xlsx_inspect(nil, 0)
     precondition(viewerProbe.status != 0, "Office Viewers fail-closed probe failed")
-    openMuseOfficeViewerBufferFree(viewerProbe)
-    let slidesProbe = openMusePptxInspect(nil, 0)
+    openmuse_office_viewer_buffer_free(viewerProbe)
+    let slidesProbe = openmuse_pptx_inspect(nil, 0)
     precondition(slidesProbe.status != 0, "Office Slides fail-closed probe failed")
-    openMuseOfficeViewerBufferFree(slidesProbe)
-    let pdfProbe = openMusePdfInspect(nil, 0)
+    openmuse_office_viewer_buffer_free(slidesProbe)
+    let pdfProbe = openmuse_pdf_inspect(nil, 0)
     precondition(pdfProbe.status != 0, "Office PDF fail-closed probe failed")
-    openMuseOfficeViewerBufferFree(pdfProbe)
+    openmuse_office_viewer_buffer_free(pdfProbe)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
@@ -204,7 +106,7 @@ private enum DeviceKeyStoreBridge {
             )
           case "closeNativeHandle":
             let arguments = try dictionary(call.arguments)
-            guard openMusePairedNativeHandleClose(try handle(arguments["handle"])) == 0
+            guard openmuse_paired_native_handle_close(try handle(arguments["handle"])) == 0
             else { throw KeyStoreError.operation }
             result(nil)
           default:
@@ -232,7 +134,7 @@ private enum DeviceKeyStoreBridge {
       }
       let status = seed.withUnsafeBytes { seedBuffer in
         output.withUnsafeMutableBytes { outputBuffer in
-          openMusePairedDevicePublic(
+          openmuse_paired_device_public(
             seedBuffer.bindMemory(to: UInt8.self).baseAddress,
             seedBuffer.count,
             outputBuffer.bindMemory(to: UInt8.self).baseAddress,
@@ -266,7 +168,7 @@ private enum DeviceKeyStoreBridge {
         account.withUnsafeBytes { accountBuffer in
           device.withUnsafeBytes { deviceBuffer in
             nonce.withUnsafeBytes { nonceBuffer in
-              openMusePairedIssueOffer(
+              openmuse_paired_issue_offer(
                 seedBuffer.bindMemory(to: UInt8.self).baseAddress,
                 seedBuffer.count,
                 accountBuffer.bindMemory(to: UInt8.self).baseAddress,
@@ -281,7 +183,7 @@ private enum DeviceKeyStoreBridge {
           }
         }
       }
-      defer { openMusePairedBufferFree(buffer) }
+      defer { openmuse_paired_buffer_free(buffer) }
       guard buffer.status == 0, let pointer = buffer.ptr,
         let value = String(bytes: UnsafeBufferPointer(start: pointer, count: buffer.len), encoding: .utf8)
       else { throw KeyStoreError.operation }
@@ -306,7 +208,7 @@ private enum DeviceKeyStoreBridge {
           remoteOffer.withUnsafeBytes { remoteOfferBytes in
             localRegistration.withUnsafeBytes { localRegistrationBytes in
               remoteRegistration.withUnsafeBytes { remoteRegistrationBytes in
-                openMusePairedBeginHandshake(
+                openmuse_paired_begin_handshake(
                   seedBytes.bindMemory(to: UInt8.self).baseAddress, seedBytes.count,
                   localOfferBytes.bindMemory(to: UInt8.self).baseAddress, localOfferBytes.count,
                   remoteOfferBytes.bindMemory(to: UInt8.self).baseAddress, remoteOfferBytes.count,
@@ -329,7 +231,7 @@ private enum DeviceKeyStoreBridge {
   private static func confirmHandshake(handle: UInt64, code: String) throws -> String {
     let codeData = Data(code.utf8)
     let buffer = codeData.withUnsafeBytes { codeBytes in
-      openMusePairedConfirmHandshake(
+      openmuse_paired_confirm_handshake(
         handle,
         codeBytes.bindMemory(to: UInt8.self).baseAddress,
         codeBytes.count
@@ -343,7 +245,7 @@ private enum DeviceKeyStoreBridge {
   private static func channelSeal(handle: UInt64, plaintext: Data) throws -> String {
     guard !plaintext.isEmpty, plaintext.count <= 64 * 1024 else { throw KeyStoreError.invalid }
     let buffer = plaintext.withUnsafeBytes { plaintextBytes in
-      openMusePairedChannelSeal(
+      openmuse_paired_channel_seal(
         handle,
         plaintextBytes.bindMemory(to: UInt8.self).baseAddress,
         plaintextBytes.count
@@ -357,7 +259,7 @@ private enum DeviceKeyStoreBridge {
   private static func channelOpen(handle: UInt64, envelopeJson: String) throws -> Data {
     let envelope = Data(envelopeJson.utf8)
     let buffer = envelope.withUnsafeBytes { envelopeBytes in
-      openMusePairedChannelOpen(
+      openmuse_paired_channel_open(
         handle,
         envelopeBytes.bindMemory(to: UInt8.self).baseAddress,
         envelopeBytes.count
@@ -367,7 +269,7 @@ private enum DeviceKeyStoreBridge {
   }
 
   private static func consume(_ buffer: OpenMusePairedBuffer) throws -> Data {
-    defer { openMusePairedBufferFree(buffer) }
+    defer { openmuse_paired_buffer_free(buffer) }
     guard buffer.status == 0, let pointer = buffer.ptr else {
       throw KeyStoreError.operation
     }
