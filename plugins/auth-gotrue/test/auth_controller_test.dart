@@ -157,6 +157,57 @@ void main() {
     expect(provider.refreshCalls, 1);
   });
 
+  test(
+    'refresh keeps the rotated token when secure storage rejects a write',
+    () async {
+      final provider = _FakeProvider(
+        signInResult: session(),
+        refreshResult: session(access: 'access-two', refresh: 'refresh-two'),
+      );
+      final controller = GoTrueAuthenticationController(
+        provider: provider,
+        store: _ThrowingWriteStore(),
+        clock: () => now,
+      );
+
+      await controller.signInWithPassword('muse@example.com', 'secret');
+      expect(await controller.accessToken(forceRefresh: true), 'access-two');
+      expect(await controller.accessToken(), 'access-two');
+      expect(
+        controller.snapshot.phase,
+        OpenMuseAuthenticationPhase.authenticated,
+      );
+    },
+  );
+
+  test(
+    'temporary refresh failure restores authenticated state for retry',
+    () async {
+      final controller = GoTrueAuthenticationController(
+        provider: _FakeProvider(
+          signInResult: session(),
+          refreshError: const AuthFailure(
+            AuthFailureKind.network,
+            'Cannot reach the authentication service.',
+          ),
+        ),
+        store: _RecordingStore(),
+        clock: () => now,
+      );
+
+      await controller.signInWithPassword('muse@example.com', 'secret');
+      await expectLater(
+        controller.accessToken(forceRefresh: true),
+        throwsA(isA<AuthFailure>()),
+      );
+      expect(
+        controller.snapshot.phase,
+        OpenMuseAuthenticationPhase.authenticated,
+      );
+      expect(await controller.accessToken(), 'access-one');
+    },
+  );
+
   test('expired refresh clears local state', () async {
     final provider = _FakeProvider(
       refreshError: const AuthFailure.sessionExpired(),
@@ -175,6 +226,33 @@ void main() {
     expect(store.value, isNull);
     expect(controller.snapshot.failureCode, 'session_expired');
   });
+
+  test(
+    'temporary refresh outage during restore preserves the saved session',
+    () async {
+      final store = _RecordingStore(
+        initial: session(lifetime: const Duration(seconds: 30)),
+      );
+      final controller = GoTrueAuthenticationController(
+        provider: _FakeProvider(
+          refreshError: const AuthFailure(
+            AuthFailureKind.network,
+            'Cannot reach the authentication service.',
+          ),
+        ),
+        store: store,
+        clock: () => now,
+      );
+
+      await controller.restore();
+
+      expect(store.value?.refreshToken, 'refresh-one');
+      expect(
+        controller.snapshot.phase,
+        OpenMuseAuthenticationPhase.authenticated,
+      );
+    },
+  );
 
   test('restore exits restoring state when secure deletion fails', () async {
     final controller = GoTrueAuthenticationController(

@@ -255,8 +255,18 @@ final class GoTrueAuthenticationController extends ChangeNotifier
       await _bootstrap(usable);
       _publishAuthenticated(usable);
     } on AuthFailure catch (error) {
-      await _clearSession();
-      _publishFailure(error);
+      if (error.kind == AuthFailureKind.sessionExpired ||
+          error.kind == AuthFailureKind.invalidResponse) {
+        await _clearSession();
+        _publishFailure(error);
+      } else if (_session case final session?) {
+        // A temporary network or bootstrap failure must not discard the
+        // saved refresh token. Local work can continue and Cloud retries later.
+        _authLog('restore deferred code=${error.code}');
+        _publishAuthenticated(session);
+      } else {
+        _publishFailure(error);
+      }
     } catch (_) {
       await _clearSession();
       _publishFailure(
@@ -449,10 +459,25 @@ final class GoTrueAuthenticationController extends ChangeNotifier
     tracked = _provider
         .refresh(session.refreshToken)
         .then((next) async {
-          await _store.write(next);
           _session = next;
           _publishAuthenticated(next);
+          try {
+            await _store.write(next);
+          } catch (error, stackTrace) {
+            // A rotated refresh token must remain usable in memory even when
+            // Windows credential storage is temporarily unavailable.
+            _authLog(
+              'refresh persist failed type=${error.runtimeType} error=$error\n$stackTrace',
+            );
+          }
           return next;
+        })
+        .onError((Object error, StackTrace stackTrace) {
+          if (identical(_session, session) &&
+              _snapshot.phase == OpenMuseAuthenticationPhase.refreshing) {
+            _publishAuthenticated(session);
+          }
+          Error.throwWithStackTrace(error, stackTrace);
         })
         .whenComplete(() {
           if (identical(_refreshInFlight, tracked)) _refreshInFlight = null;
