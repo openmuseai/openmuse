@@ -46,9 +46,18 @@ done < <(grep -oE '"[^"]+"' "$selection" | tr -d '"')
 health_config="$root/target/helix-grammar-health-macos"
 mkdir -p "$health_config"
 for language in rust python javascript; do
-  health="$(XDG_CONFIG_HOME="$health_config" HELIX_RUNTIME="$1" "$engine/hx" --health "$language")"
-  if ! grep -q 'Tree-sitter parser: ✓' <<<"$health"; then
+  health="$(XDG_CONFIG_HOME="$health_config" HELIX_RUNTIME="$1" "$engine/hx" --health "$language" 2>&1 || true)"
+  # `hx --health` colours its marks with ANSI escapes even when the output is
+  # captured, so compare the readable text only. The Windows environment test
+  # strips the same sequences in its _plainOutput helper; a raw grep here can
+  # never match and reports a healthy parser as missing.
+  plain="$(printf '%s\n' "$health" | sed $'s/\033\\[[0-9;]*m//g')"
+  if ! grep -q 'Tree-sitter parser: ✓' <<<"$plain"; then
     echo "bundled Helix parser is unavailable for $language" >&2
+    printf '%s\n' "$plain" >&2
+    echo "staged grammar: $destination/$language.dylib" >&2
+    ls -l "$destination/$language.dylib" >&2 || true
+    /usr/bin/lipo -archs "$destination/$language.dylib" >&2 || true
     exit 1
   fi
 done
