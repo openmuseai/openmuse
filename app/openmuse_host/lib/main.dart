@@ -329,6 +329,8 @@ Future<Widget> bootOpenMuseHost() async {
     client: AccountDeviceDirectoryClient(
       cloudOrigin: endpoints.cloudOrigin,
       accessToken: authenticationController.accessToken,
+      refreshAccessToken: () =>
+          authenticationController.accessToken(forceRefresh: true),
       allowInsecureLoopback: endpoints.allowInsecureLoopback,
     ),
     registration: () => AccountDeviceRegistration(
