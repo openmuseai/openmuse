@@ -149,10 +149,26 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
       }),
       flush: true,
     );
+    // A concurrent save can hold the destination open long enough for the whole
+    // replacement to fail with a sharing violation, so retry it briefly instead
+    // of failing the save.
+    for (var attempt = 0; ; attempt++) {
+      try {
+        await _renameOver(temporary, target);
+        return;
+      } on FileSystemException {
+        if (!Platform.isWindows || attempt >= 4) rethrow;
+        await Future<void>.delayed(Duration(milliseconds: 20 * (attempt + 1)));
+      }
+    }
+  }
+
+  /// Renames [temporary] onto [target], dropping the destination first on
+  /// Windows, which does not replace an existing file atomically.
+  Future<void> _renameOver(File temporary, File target) async {
     try {
       await temporary.rename(target.path);
     } on FileSystemException {
-      // Windows does not replace an existing destination atomically.
       if (!Platform.isWindows || !await target.exists()) rethrow;
       await target.delete();
       await temporary.rename(target.path);

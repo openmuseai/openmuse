@@ -177,7 +177,15 @@ void main() {
         tester.getSize(find.byKey(const ValueKey('cli-bottom-panel'))).height,
         greaterThan(initialHeight),
       );
-      await tester.tap(find.byKey(const ValueKey('cli-bottom-collapse')));
+      // Two controls carry this key: the host's own divider control inside the
+      // resizer, and the terminal header button the CLI plugin adds inside the
+      // panel. Tap the host control, which is the one that collapses the dock.
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('cli-bottom-resizer')),
+          matching: find.byKey(const ValueKey('cli-bottom-collapse')),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('cli-bottom-panel')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('title-terminal')));

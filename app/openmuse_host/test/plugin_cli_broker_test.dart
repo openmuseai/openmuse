@@ -6,6 +6,14 @@ import 'package:openmuse_host/src/host/plugin_cli_broker.dart';
 import 'package:openmuse_host/src/host/plugin_distribution.dart';
 import '../../../plugins/easel/tool/easel_package.dart';
 
+/// The upstream Easel checkout lives in third_party/Easel, which .gitignore
+/// deliberately excludes, so this suite only runs on a machine that has it.
+/// Elsewhere it reports itself as skipped instead of failing on the missing
+/// source files.
+final Directory easelSource = Directory('../../third_party/Easel');
+final String? easelSkipReason =
+    easelSource.existsSync() ? null : 'third_party/Easel is not vendored';
+
 void main() {
   test('broker streams a verified command and rejects missing grant', () async {
     final root = await Directory.systemTemp.createTemp('openmuse-cli-broker-');
@@ -47,5 +55,5 @@ void main() {
     }));
     expect((await denied.close()).statusCode, HttpStatus.unauthorized);
     client.close(force: true);
-  });
+  }, skip: easelSkipReason);
 }
