@@ -105,6 +105,104 @@ void main() {
     },
   );
 
+  test('device 401 refreshes the token and retries the request once', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    final tokens = <String?>[];
+    server.listen((request) async {
+      tokens.add(request.headers.value(HttpHeaders.authorizationHeader));
+      await request.drain<void>();
+      request.response.headers.contentType = ContentType.json;
+      if (tokens.length == 1) {
+        request.response.statusCode = HttpStatus.unauthorized;
+        request.response.write(jsonEncode({'code': 401}));
+      } else {
+        request.response.write(
+          jsonEncode({
+            'code': 0,
+            'data': [_deviceJson(online: true)],
+          }),
+        );
+      }
+      await request.response.close();
+    });
+    var refreshes = 0;
+    final client = AccountDeviceDirectoryClient(
+      cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+      accessToken: () async => 'stale',
+      refreshAccessToken: () async {
+        refreshes++;
+        return 'fresh';
+      },
+      allowInsecureLoopback: true,
+    );
+
+    expect((await client.list()).single.deviceRef, 'desktop.1');
+    expect(tokens, ['Bearer stale', 'Bearer fresh']);
+    expect(refreshes, 1);
+    client.close();
+    await server.close(force: true);
+  });
+
+  test(
+    'repeated device 401 is reported without another refresh loop',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      var requests = 0;
+      server.listen((request) async {
+        requests++;
+        await request.drain<void>();
+        request.response.statusCode = HttpStatus.unauthorized;
+        request.response.write(jsonEncode({'code': 401}));
+        await request.response.close();
+      });
+      var refreshes = 0;
+      final client = AccountDeviceDirectoryClient(
+        cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+        accessToken: () async => 'stale',
+        refreshAccessToken: () async {
+          refreshes++;
+          return 'fresh';
+        },
+        allowInsecureLoopback: true,
+      );
+
+      await expectLater(
+        client.list(),
+        throwsA(
+          isA<AccountDeviceDirectoryFailure>().having(
+            (error) => error.code,
+            'code',
+            'AUTH_REJECTED',
+          ),
+        ),
+      );
+      expect(requests, 2);
+      expect(refreshes, 1);
+      client.close();
+      await server.close(force: true);
+    },
+  );
+
+  test('token refresh failure becomes a retryable device error', () async {
+    final client = AccountDeviceDirectoryClient(
+      cloudOrigin: Uri.parse('http://127.0.0.1:1'),
+      accessToken: () async => throw StateError('network unavailable'),
+      allowInsecureLoopback: true,
+    );
+
+    await expectLater(
+      client.list(),
+      throwsA(
+        isA<AccountDeviceDirectoryFailure>().having(
+          (error) => error.code,
+          'code',
+          'AUTH_REFRESH_FAILED',
+        ),
+      ),
+    );
+    client.close();
+  });
+
   test('offline Desktop is rejected before opening its transport', () async {
     final auth = _Authentication();
     final directory = AccountDeviceDirectoryController(
@@ -278,6 +376,58 @@ void main() {
   );
 
   test(
+    'refreshing the same account does not restart device registration',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      var registrations = 0;
+      server.listen((request) async {
+        if (request.uri.path.endsWith('/events')) {
+          request.response.statusCode = HttpStatus.notFound;
+          await request.response.close();
+          return;
+        }
+        if (request.method == 'POST') registrations++;
+        await request.drain<void>();
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          jsonEncode({
+            'code': 0,
+            'data': request.method == 'GET'
+                ? [_deviceJson(online: true)]
+                : _deviceJson(online: true),
+          }),
+        );
+        await request.response.close();
+      });
+      final auth = _Authentication(authenticated: true);
+      final controller = AccountDeviceDirectoryController(
+        authentication: auth,
+        client: AccountDeviceDirectoryClient(
+          cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+          accessToken: auth.accessToken,
+          allowInsecureLoopback: true,
+        ),
+        registration: () => const AccountDeviceRegistration(
+          deviceRef: 'mobile.1',
+          displayName: 'Phone',
+          platform: 'android',
+          kind: AccountDeviceKind.mobile,
+        ),
+        heartbeatInterval: const Duration(hours: 1),
+        maxReconnectDelay: const Duration(hours: 1),
+      );
+
+      await controller.activate();
+      auth.setPhase(OpenMuseAuthenticationPhase.refreshing);
+      auth.setPhase(OpenMuseAuthenticationPhase.authenticated);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(registrations, 1);
+      controller.dispose();
+      await server.close(force: true);
+    },
+  );
+
+  test(
     'device event websocket authenticates and delivers refresh hints',
     () async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -322,16 +472,22 @@ final class _Authentication extends ChangeNotifier
 
   final bool authenticated;
   String subject = 'account.1';
+  OpenMuseAuthenticationPhase phase = OpenMuseAuthenticationPhase.authenticated;
 
   void switchSubject(String value) {
     subject = value;
     notifyListeners();
   }
 
+  void setPhase(OpenMuseAuthenticationPhase value) {
+    phase = value;
+    notifyListeners();
+  }
+
   @override
   OpenMuseAuthenticationSnapshot get snapshot => authenticated
       ? OpenMuseAuthenticationSnapshot(
-          phase: OpenMuseAuthenticationPhase.authenticated,
+          phase: phase,
           identity: OpenMuseAuthenticatedIdentity(
             subject: subject,
             email: 'account@example.test',

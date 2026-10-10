@@ -122,6 +122,7 @@ final class AccountDeviceDirectoryClient {
   AccountDeviceDirectoryClient({
     required this.cloudOrigin,
     required this.accessToken,
+    this.refreshAccessToken,
     this.allowInsecureLoopback = false,
     this.requestTimeout = const Duration(seconds: 15),
     HttpClient? client,
@@ -132,6 +133,7 @@ final class AccountDeviceDirectoryClient {
 
   final Uri cloudOrigin;
   final AccountDeviceAccessTokenProvider accessToken;
+  final AccountDeviceAccessTokenProvider? refreshAccessToken;
   final bool allowInsecureLoopback;
   final Duration requestTimeout;
   final HttpClient _client;
@@ -168,7 +170,7 @@ final class AccountDeviceDirectoryClient {
   }
 
   Future<WebSocket> connectEvents() async {
-    final token = await accessToken();
+    final token = await _currentAccessToken();
     if (token == null || token.isEmpty) {
       throw const AccountDeviceDirectoryFailure('SIGNED_OUT', '请先登录账号。');
     }
@@ -206,10 +208,37 @@ final class AccountDeviceDirectoryClient {
     String path, {
     Map<String, Object?>? body,
   }) async {
-    final token = await accessToken();
+    final token = await _currentAccessToken();
     if (token == null || token.isEmpty) {
       throw const AccountDeviceDirectoryFailure('SIGNED_OUT', '请先登录账号。');
     }
+    return _envelopeWithToken(
+      method,
+      path,
+      token,
+      body: body,
+      retryOn401: true,
+    );
+  }
+
+  Future<String?> _currentAccessToken() async {
+    try {
+      return await accessToken();
+    } on Object {
+      throw const AccountDeviceDirectoryFailure(
+        'AUTH_REFRESH_FAILED',
+        '账号验证暂时不可用，请稍后重试。',
+      );
+    }
+  }
+
+  Future<Object?> _envelopeWithToken(
+    String method,
+    String path,
+    String token, {
+    Map<String, Object?>? body,
+    required bool retryOn401,
+  }) async {
     final request = await _client
         .openUrl(method, cloudOrigin.resolve(path))
         .timeout(requestTimeout, onTimeout: _timeout);
@@ -227,6 +256,32 @@ final class AccountDeviceDirectoryClient {
     final bytes = await response
         .fold<List<int>>(<int>[], (all, chunk) => all..addAll(chunk))
         .timeout(requestTimeout, onTimeout: _timeout);
+    if (response.statusCode == HttpStatus.unauthorized &&
+        retryOn401 &&
+        refreshAccessToken != null) {
+      debugPrint(
+        'OpenMuse device API: 401; refreshing token and retrying once',
+      );
+      String? freshToken;
+      try {
+        freshToken = await refreshAccessToken!();
+      } on Object {
+        throw const AccountDeviceDirectoryFailure(
+          'AUTH_REFRESH_FAILED',
+          '账号验证暂时不可用，请稍后重试。',
+        );
+      }
+      if (freshToken == null || freshToken.isEmpty) {
+        throw const AccountDeviceDirectoryFailure('SIGNED_OUT', '请先登录账号。');
+      }
+      return _envelopeWithToken(
+        method,
+        path,
+        freshToken,
+        body: body,
+        retryOn401: false,
+      );
+    }
     Object? decoded;
     try {
       decoded = bytes.isEmpty ? null : jsonDecode(utf8.decode(bytes));
@@ -238,8 +293,8 @@ final class AccountDeviceDirectoryClient {
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw AccountDeviceDirectoryFailure(
-        response.statusCode == 401 ? 'SIGNED_OUT' : 'UNAVAILABLE',
-        response.statusCode == 401 ? '登录已过期，请重新登录。' : '设备服务暂时不可用。',
+        response.statusCode == 401 ? 'AUTH_REJECTED' : 'UNAVAILABLE',
+        response.statusCode == 401 ? '设备服务未接受账号凭证，请稍后重试或重新登录。' : '设备服务暂时不可用。',
       );
     }
     final envelope = _object(decoded);
