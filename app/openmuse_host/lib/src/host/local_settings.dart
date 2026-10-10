@@ -10,6 +10,13 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
   OpenMuseLocalSettings({this.file});
 
   final File? file;
+
+  /// Serial that keeps two concurrent saves in this isolate from sharing a
+  /// temporary name. `DateTime.now()` only advances by about a millisecond on
+  /// Windows, so the timestamp alone is not unique enough there and the second
+  /// save would consume the first one's file.
+  static int _tempSerial = 0;
+
   ThemeMode themeMode = ThemeMode.system;
   double? sidebarWidth;
   double? assistantWidth;
@@ -132,10 +139,13 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
     if (target == null) return;
     await target.parent.create(recursive: true);
     // Distinct Host instances (for example during an app update handoff) can
-    // briefly save the same profile. A shared `.tmp` name lets one instance
-    // rename the other's file and makes the loser fail at startup.
+    // briefly save the same profile, and so can two concurrent saves inside one
+    // Host. A shared `.tmp` name lets one writer rename the other's file and
+    // makes the loser fail at startup, so the name carries the pid, the clock
+    // and a serial that is unique inside this isolate.
     final temporary = File(
-      '${target.path}.tmp.$pid.${DateTime.now().microsecondsSinceEpoch}',
+      '${target.path}.tmp.$pid.${DateTime.now().microsecondsSinceEpoch}'
+      '.${_tempSerial++}',
     );
     await temporary.writeAsString(
       jsonEncode({

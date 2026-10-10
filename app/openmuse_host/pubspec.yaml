@@ -10,6 +10,9 @@ dependencies:
   crypto: ^3.0.6
   flutter:
     sdk: flutter
+  # Direct because endpoint_config.dart annotates its resolution seam with
+  # @visibleForTesting and must not import package:flutter (see that file).
+  meta: ^1.15.0
   openmuse_auth_gotrue:
     path: ../../plugins/auth-gotrue
   openmuse_cloud_workspace_plugin:

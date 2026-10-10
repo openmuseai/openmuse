@@ -1,6 +1,10 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+// Deliberately not package:flutter: the CLI launcher in bin/openmuse.dart
+// reaches this file through plugin_cli.dart, and `dart build cli` compiles that
+// entrypoint with the plain Dart SDK, where dart:ui -- and therefore
+// package:flutter -- does not exist. Everything here stays Flutter-free.
+import 'package:meta/meta.dart';
 
 /// Compile-time endpoint overrides. `String.fromEnvironment` only reads values
 /// passed through `--dart-define`, so these stay empty unless a build sets them.
