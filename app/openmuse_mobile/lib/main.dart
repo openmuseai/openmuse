@@ -60,6 +60,7 @@ Future<void> main() async {
     client: AccountDeviceDirectoryClient(
       cloudOrigin: endpoints.cloudOrigin,
       accessToken: authentication.accessToken,
+      refreshAccessToken: () => authentication.accessToken(forceRefresh: true),
       allowInsecureLoopback: endpoints.allowInsecureLoopback,
     ),
     registration: () => AccountDeviceRegistration(
