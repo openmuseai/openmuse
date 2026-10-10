@@ -19,7 +19,20 @@ export OPENMUSE_ANDROID_KEY_ALIAS="openmuse-alpha"
 export OPENMUSE_ANDROID_KEY_PASSWORD="openmuse-alpha"
 (cd "$repo_root/app/openmuse_mobile" && flutter analyze && flutter test && flutter build apk --release --target-platform android-arm64)
 apk="$repo_root/app/openmuse_mobile/build/app/outputs/flutter-apk/app-release.apk"
-apksigner="$ANDROID_HOME/build-tools/36.0.0/apksigner"
+# The SDK ships several build-tools revisions and the newest one is not a fixed
+# number across developer machines and CI images, so resolve apksigner instead
+# of pinning a path that only exists on one box.
+: "${ANDROID_HOME:?ANDROID_HOME must point at the Android SDK}"
+apksigner=""
+for revision in $(ls "$ANDROID_HOME/build-tools" 2>/dev/null | sort -t. -k1,1n -k2,2n -k3,3n); do
+  if [[ -x "$ANDROID_HOME/build-tools/$revision/apksigner" ]]; then
+    apksigner="$ANDROID_HOME/build-tools/$revision/apksigner"
+  fi
+done
+if [[ -z "$apksigner" ]]; then
+  echo "apksigner is missing under $ANDROID_HOME/build-tools" >&2
+  exit 1
+fi
 "$apksigner" verify --verbose --print-certs "$apk" | tee "$alpha_dir/apksigner-report.txt"
 apk_listing="$(unzip -Z1 "$apk")"
 if grep -Eiq '(^|/)(node|helix|pty)(/|$)|libnode|flutter_pty|dsh-closure' <<<"$apk_listing"; then

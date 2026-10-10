@@ -22,6 +22,10 @@ on:
         description: Skip the Dart and Rust test suites
         type: boolean
         default: false
+      force_rebuild:
+        description: Ignore the restored cargo cache and rebuild it from scratch
+        type: boolean
+        default: false
       retention_days:
         description: Artifact retention in days
         type: string
@@ -76,7 +80,12 @@ jobs:
           cache: npm
           cache-dependency-path: third_party/dsh/package-lock.json
 
+      # The desktop packaging already runs flutter clean on every build
+      # (OPENMUSE_CLEAN_BUILD defaults to 1), so the cargo target cache is the
+      # only thing that can make a macOS build incremental. force_rebuild —
+      # and any release tag — deliberately does without it.
       - name: Rust cache
+        if: ${{ !(inputs.force_rebuild || github.ref_type == 'tag') }}
         uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true

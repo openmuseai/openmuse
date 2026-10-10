@@ -1,6 +1,9 @@
 name: desktop-gates
 
 on:
+  # Dispatchable so a release can start the desktop gate on demand; the
+  # releasable packages are windows-build.yml and macos-build.yml.
+  workflow_dispatch:
   push:
   pull_request:
 

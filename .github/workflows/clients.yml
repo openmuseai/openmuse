@@ -4,6 +4,10 @@ name: clients
 # desktop-gates.yml so a client failure does not cancel those builds.
 
 on:
+  # Dispatchable so a release can start the client gate on demand; the
+  # releasable web and mobile packages are web-build.yml, android-build.yml and
+  # ios-build.yml.
+  workflow_dispatch:
   push:
   pull_request:
 

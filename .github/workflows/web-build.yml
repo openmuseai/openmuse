@@ -1,0 +1,115 @@
+name: Web build
+
+# Thin caller: the build itself is scripts/ci/build-web.sh, which rebuilds the
+# DSH pane bundle from web/dsh-pane/src, runs the Flutter web gate and stages
+# dist/. This file prepares the toolchains and uploads what the script produced,
+# exactly like windows-build.yml and macos-build.yml.
+#
+# The DSH pane bundle under app/openmuse_web/web/ is committed, so a release
+# always regenerates it first: a stale committed bundle must never be published
+# as a release.
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_href:
+        description: Base href of the deployed host (production serves /)
+        type: string
+        default: "/"
+      skip_tests:
+        description: Skip the Flutter web analyze and test steps
+        type: boolean
+        default: false
+      force_rebuild:
+        description: Ignore every cache and rebuild the pane and host from scratch
+        type: boolean
+        default: false
+      retention_days:
+        description: Artifact retention in days
+        type: string
+        default: "14"
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-build-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: "3.44.2"
+  NODE_VERSION: "22.19.0"
+  PYTHONUTF8: "1"
+
+jobs:
+  web:
+    name: Web release
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable web
+        run: flutter config --enable-web
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/dsh-pane/package-lock.json
+
+      - name: Build
+        run: |
+          args=(--base-href "${{ inputs.base_href || '/' }}")
+          if [ "${{ inputs.skip_tests || false }}" = "true" ]; then args+=(--skip-tests); fi
+          # A release tag always builds from scratch, so a cached bundle can
+          # never be published by accident.
+          if [ "${{ inputs.force_rebuild || false }}" = "true" ] || [ "${{ github.ref_type }}" = "tag" ]; then
+            args+=(--force-rebuild)
+          fi
+          ./scripts/ci/build-web.sh "${args[@]}"
+
+      - name: Upload archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenMuse-web-${{ github.sha }}
+          path: |
+            dist/OpenMuse-web.zip
+            dist/SHA256SUMS.txt
+            dist/build-info.txt
+          if-no-files-found: error
+          retention-days: ${{ fromJSON(inputs.retention_days || '14') }}
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Web build"
+            echo
+            if [ -f dist/build-info.txt ]; then
+              grep -E '^(commit|baseHref|domains):' dist/build-info.txt | while IFS= read -r line; do
+                echo "\`${line}\`"
+              done
+              echo
+            fi
+            if [ -f dist/OpenMuse-web.zip ]; then
+              echo "| artifact | size |"
+              echo "| --- | --- |"
+              mb="$(python3 -c 'import os,sys; print("%.1f" % (os.path.getsize(sys.argv[1]) / 1048576))' dist/OpenMuse-web.zip)"
+              echo "| OpenMuse-web.zip | ${mb} MB |"
+            else
+              echo "No artifacts were produced under \`dist/\`."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
