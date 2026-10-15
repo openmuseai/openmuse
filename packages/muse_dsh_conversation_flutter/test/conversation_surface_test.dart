@@ -677,4 +677,311 @@ void main() {
       reason: 'DSH user prompts align to the right edge',
     );
   });
+
+  testWidgets('renders official deliverable, todo, and goal cards', (
+    tester,
+  ) async {
+    final store = DshConversationStore();
+    store.apply(
+      DshSnapshotFrame(
+        header: const {'id': 's-official'},
+        cursor: 5,
+        records: [
+          DshWireEvent.fromJson({
+            'type': 'todo/write',
+            'seq': 1,
+            'time': 1,
+            'data': {
+              'todos': [
+                {'content': '改标签', 'status': 'pending'},
+                {'content': '核对脚本', 'status': 'completed'},
+              ],
+            },
+          }),
+          DshWireEvent.fromJson({
+            'type': 'goal/change',
+            'seq': 2,
+            'time': 2,
+            'data': {
+              'operation': 'create',
+              'goal': {'objective': '对齐独立域名', 'phase': 'active'},
+            },
+          }),
+          DshWireEvent.fromJson({
+            'type': 'deliverables/presented',
+            'seq': 3,
+            'time': 3,
+            'data': {
+              'turn': 1,
+              'callId': 'present-1',
+              'files': [
+                {'path': 'scripts/smoke.sh', 'description': '修正后的产品冒烟脚本'},
+                {
+                  'path': 'docs/product-distribution.md',
+                  'description': '已对齐拓扑的联动方案',
+                },
+                {'path': 'a.txt', 'description': '三'},
+                {'path': 'b.txt', 'description': '四'},
+                {'path': 'c.txt', 'description': '五'},
+              ],
+            },
+          }),
+          DshWireEvent.fromJson({
+            'type': 'assistant/message',
+            'seq': 4,
+            'time': 4,
+            'data': {
+              'turn': 1,
+              'message': {
+                'content': [
+                  {'type': 'text', 'text': '已把两个文件作为交付物放出。'},
+                ],
+              },
+            },
+          }),
+        ],
+        hasMore: false,
+        projections: const {},
+      ),
+    );
+    String? opened;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DshConversationSurface(
+            store: store,
+            showHeader: false,
+            showComposer: false,
+            onSend: (_, {mode = 'queue'}) async {},
+            onCancel: () async {},
+            onFallbackRequested: () {},
+            onOpenPresentedFile: (seq, index, action) async {
+              opened = '$action:$seq:$index';
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mobile 暂不支持此 DSH 元素'), findsNothing);
+    expect(find.text('任务'), findsOneWidget);
+    expect(find.textContaining('1 已完成'), findsOneWidget);
+    expect(find.textContaining('1 待处理'), findsOneWidget);
+    expect(find.text('进行中的目标'), findsOneWidget);
+    expect(find.text('对齐独立域名'), findsOneWidget);
+    expect(find.text('smoke.sh'), findsOneWidget);
+    expect(find.text('product-distribution.md'), findsOneWidget);
+    expect(find.text('c.txt'), findsNothing);
+    expect(find.text('全部 5 个文件'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('dsh-native.todo.toggle')));
+    await tester.pumpAndSettle();
+    expect(find.text('改标签'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('dsh-native.presented.toggle')));
+    await tester.pumpAndSettle();
+    expect(find.text('c.txt'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('dsh-native.presented.open:scripts/smoke.sh')),
+    );
+    await tester.pumpAndSettle();
+    expect(opened, 'open:3:0');
+    expect(find.text('已在默认程序中打开'), findsOneWidget);
+  });
+
+  testWidgets('consecutive tool calls and thinking collapse until expanded', (
+    tester,
+  ) async {
+    final store = DshConversationStore();
+    store.apply(
+      DshSnapshotFrame(
+        header: const {'id': 's-process'},
+        cursor: 4,
+        records: [
+          DshWireEvent.fromJson({
+            'type': 'user/message',
+            'seq': 1,
+            'time': 1,
+            'data': {
+              'source': {'kind': 'user'},
+              'content': [
+                {'type': 'text', 'text': '分析这个ppt。润色'},
+              ],
+            },
+          }),
+          DshWireEvent.fromJson({
+            'type': 'tool/call',
+            'seq': 2,
+            'time': 2,
+            'data': {
+              'callId': 'call-a',
+              'name': 'read',
+              'arguments': '{"path":"/slides/slide-01.jpg"}',
+            },
+          }),
+          DshWireEvent.fromJson({
+            'type': 'tool/result',
+            'seq': 3,
+            'time': 3,
+            'data': {
+              'message': {
+                'toolCallId': 'call-a',
+                'isError': false,
+                'content': [
+                  {'type': 'text', 'text': 'ok'},
+                ],
+              },
+            },
+          }),
+          DshWireEvent.fromJson({
+            'type': 'tool/call',
+            'seq': 4,
+            'time': 4,
+            'data': {
+              'callId': 'call-b',
+              'name': 'read',
+              'arguments': '{"path":"/slides/slide-06.jpg"}',
+            },
+          }),
+        ],
+        hasMore: false,
+        projections: const {},
+      ),
+    );
+    store.apply(
+      DshFollowFrame.fromJson({
+        'type': 'assistant-stream',
+        'frame': {
+          'type': 'chunk',
+          'attemptId': 'attempt-1',
+          'chunk': {'type': 'reasoning-delta', 'text': '先看第六页'},
+        },
+      }),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DshConversationSurface(
+            store: store,
+            showHeader: false,
+            showComposer: false,
+            onSend: (_, {mode = 'queue'}) async {},
+            onCancel: () async {},
+            onFallbackRequested: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('分析这个ppt。润色'), findsOneWidget);
+    expect(find.text('加载了工具读取文件'), findsOneWidget);
+    expect(find.text('已读取 slide-01.jpg'), findsNothing);
+    expect(find.text('正在读取 slide-06.jpg'), findsNothing);
+    expect(find.text('先看第六页'), findsNothing);
+
+    await tester.tap(
+      find.byKey(const ValueKey('dsh-native.process.toggle:event:3')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('已读取 slide-01.jpg'), findsOneWidget);
+    expect(find.text('正在读取 slide-06.jpg'), findsOneWidget);
+    expect(find.text('先看第六页'), findsOneWidget);
+  });
+
+  testWidgets(
+    'expanded process list stays within half the screen and scrolls',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final store = DshConversationStore();
+      store.apply(
+        DshSnapshotFrame(
+          header: const {'id': 's-tall'},
+          cursor: 40,
+          records: [
+            for (var index = 0; index < 20; index++) ...[
+              DshWireEvent.fromJson({
+                'type': 'tool/call',
+                'seq': index * 2 + 1,
+                'time': index,
+                'data': {
+                  'callId': 'call-$index',
+                  'name': 'read',
+                  'arguments': '{"path":"/slides/file-$index.txt"}',
+                },
+              }),
+              DshWireEvent.fromJson({
+                'type': 'tool/result',
+                'seq': index * 2 + 2,
+                'time': index,
+                'data': {
+                  'message': {
+                    'toolCallId': 'call-$index',
+                    'isError': false,
+                    'content': [
+                      {'type': 'text', 'text': 'ok'},
+                    ],
+                  },
+                },
+              }),
+            ],
+          ],
+          hasMore: false,
+          projections: const {},
+        ),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: DshConversationSurface(
+              store: store,
+              showHeader: false,
+              showComposer: false,
+              onSend: (_, {mode = 'queue'}) async {},
+              onCancel: () async {},
+              onFallbackRequested: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('dsh-native.process.toggle:event:2')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      final panel = tester.getSize(
+        find.byKey(const ValueKey('dsh-native.process:event:2')),
+      );
+      final scroll = tester.getSize(
+        find.byKey(const ValueKey('dsh-native.process.scroll:event:2')),
+      );
+      expect(panel.height, lessThanOrEqualTo(400));
+      expect(scroll.height, lessThanOrEqualTo(400));
+      expect(scroll.height, greaterThan(160));
+      expect(find.text('已读取 file-19.txt'), findsNothing);
+
+      await tester.scrollUntilVisible(
+        find.text('已读取 file-19.txt'),
+        120,
+        scrollable: find.descendant(
+          of: find.byKey(const ValueKey('dsh-native.process.scroll:event:2')),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      expect(find.text('已读取 file-19.txt'), findsOneWidget);
+      expect(
+        tester
+            .getSize(find.byKey(const ValueKey('dsh-native.process:event:2')))
+            .height,
+        lessThanOrEqualTo(400),
+      );
+    },
+  );
 }

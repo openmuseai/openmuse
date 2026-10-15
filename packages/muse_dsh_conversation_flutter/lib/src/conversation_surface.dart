@@ -8,6 +8,10 @@ import 'package:muse_dsh_conversation_core/muse_dsh_conversation_core.dart';
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
 
 import 'native_component_registry.dart';
+import 'official/deliverables/presented_files.dart';
+import 'official/goal/goal_bar.dart';
+import 'official/todo/todo_panel.dart';
+import 'process_trail.dart';
 
 typedef DshSendPrompt = Future<void> Function(String text, {String mode});
 typedef DshQuestionAnswer = Future<void> Function(List<JsonMap> answers);
@@ -31,6 +35,7 @@ final class DshConversationSurface extends StatefulWidget {
     this.onLoadWorkspaceChanges,
     this.onLoadWorkspaceChangePreview,
     this.onOpenWorkspaceChange,
+    this.onOpenPresentedFile,
     this.showHeader = true,
     this.showComposer = true,
     this.compatibilityPlugins = const [],
@@ -47,6 +52,7 @@ final class DshConversationSurface extends StatefulWidget {
   final DshWorkspaceChangesLoader? onLoadWorkspaceChanges;
   final DshWorkspaceChangePreviewLoader? onLoadWorkspaceChangePreview;
   final DshWorkspaceChangeOpener? onOpenWorkspaceChange;
+  final DshPresentedFileOpener? onOpenPresentedFile;
   final bool showHeader;
   final bool showComposer;
   final List<JsonMap> compatibilityPlugins;
@@ -104,6 +110,17 @@ final class _DshConversationSurfaceState extends State<DshConversationSurface> {
     }
   }
 
+  bool _foldsTool(DshConversationRow row) {
+    final toolLike =
+        row.kind == DshConversationRowKind.tool ||
+        (row.kind == DshConversationRowKind.error && row.nativeKey != null);
+    if (!toolLike || row.nativeKey == 'ask_user_question') return false;
+    return !widget.nativeContributions.any(
+      (value) =>
+          value.slot == 'tool.call.toolview' && value.key == row.nativeKey,
+    );
+  }
+
   void _scrollToEnd() {
     if (!_scroll.hasClients) return;
     _scroll.animateTo(
@@ -136,29 +153,55 @@ final class _DshConversationSurfaceState extends State<DshConversationSurface> {
           Expanded(
             child: snapshot.rows.isEmpty
                 ? const _EmptyConversation()
-                : ListView.builder(
-                    key: const ValueKey('dsh-native.timeline'),
-                    controller: _scroll,
-                    padding: const EdgeInsets.fromLTRB(16, 30, 16, 18),
-                    itemCount: snapshot.rows.length,
-                    itemBuilder: (context, index) => Align(
-                      alignment: Alignment.topCenter,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 720),
-                        child: _ConversationRow(
-                          row: snapshot.rows[index],
-                          nativeContributions: widget.nativeContributions,
-                          componentRegistry: widget.componentRegistry,
-                          onNativeCommand: widget.onNativeCommand,
-                          onQuestionAnswer: widget.onQuestionAnswer,
-                          onLoadWorkspaceChanges: widget.onLoadWorkspaceChanges,
-                          onLoadWorkspaceChangePreview:
-                              widget.onLoadWorkspaceChangePreview,
-                          onOpenWorkspaceChange: widget.onOpenWorkspaceChange,
-                          onFallbackRequested: widget.onFallbackRequested,
-                        ),
-                      ),
-                    ),
+                : Builder(
+                    builder: (context) {
+                      final entries = dshTimelineEntries(
+                        snapshot.rows,
+                        foldsTool: _foldsTool,
+                      );
+                      return ListView.builder(
+                        key: const ValueKey('dsh-native.timeline'),
+                        controller: _scroll,
+                        padding: const EdgeInsets.fromLTRB(16, 30, 16, 18),
+                        itemCount: entries.length,
+                        itemBuilder: (context, index) {
+                          final entry = entries[index];
+                          return Align(
+                            alignment: Alignment.topCenter,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 720),
+                              child: switch (entry) {
+                                DshTimelineProcessEntry(:final moments) =>
+                                  DshProcessTrail(moments: moments),
+                                DshTimelineRowEntry(
+                                  :final row,
+                                  :final hideReasoning,
+                                ) =>
+                                  _ConversationRow(
+                                    row: row,
+                                    hideReasoning: hideReasoning,
+                                    nativeContributions:
+                                        widget.nativeContributions,
+                                    componentRegistry: widget.componentRegistry,
+                                    onNativeCommand: widget.onNativeCommand,
+                                    onQuestionAnswer: widget.onQuestionAnswer,
+                                    onLoadWorkspaceChanges:
+                                        widget.onLoadWorkspaceChanges,
+                                    onLoadWorkspaceChangePreview:
+                                        widget.onLoadWorkspaceChangePreview,
+                                    onOpenWorkspaceChange:
+                                        widget.onOpenWorkspaceChange,
+                                    onOpenPresentedFile:
+                                        widget.onOpenPresentedFile,
+                                    onFallbackRequested:
+                                        widget.onFallbackRequested,
+                                  ),
+                              },
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
           ),
           if (widget.showComposer)
@@ -372,14 +415,17 @@ final class _ConversationRow extends StatelessWidget {
     required this.row,
     required this.nativeContributions,
     required this.componentRegistry,
+    this.hideReasoning = false,
     this.onNativeCommand,
     this.onQuestionAnswer,
     this.onLoadWorkspaceChanges,
     this.onLoadWorkspaceChangePreview,
     this.onOpenWorkspaceChange,
+    this.onOpenPresentedFile,
     required this.onFallbackRequested,
   });
   final DshConversationRow row;
+  final bool hideReasoning;
   final List<DshNativeContribution> nativeContributions;
   final DshNativeComponentRegistry componentRegistry;
   final DshNativeCommandHandler? onNativeCommand;
@@ -387,6 +433,7 @@ final class _ConversationRow extends StatelessWidget {
   final DshWorkspaceChangesLoader? onLoadWorkspaceChanges;
   final DshWorkspaceChangePreviewLoader? onLoadWorkspaceChangePreview;
   final DshWorkspaceChangeOpener? onOpenWorkspaceChange;
+  final DshPresentedFileOpener? onOpenPresentedFile;
   final VoidCallback onFallbackRequested;
 
   bool get _user =>
@@ -403,6 +450,23 @@ final class _ConversationRow extends StatelessWidget {
     }
     if (row.kind == DshConversationRowKind.error && row.nativeKey == null) {
       return _FailureSection(row: row);
+    }
+    if (row.nativeKey == 'todo/write') {
+      final todos = row.nativeContext['todos'];
+      return DshTodoPanel(
+        todos: todos is List
+            ? [
+                for (final item in todos.whereType<Map>())
+                  item.cast<String, Object?>(),
+              ]
+            : const [],
+      );
+    }
+    if (row.nativeKey == 'goal/change') {
+      final goal = row.nativeContext['goal'];
+      if (goal is Map) {
+        return DshGoalBar(goal: goal.cast<String, Object?>());
+      }
     }
     if (row.kind == DshConversationRowKind.artifact &&
         row.nativeKey == 'workspace/changes') {
@@ -464,7 +528,7 @@ final class _ConversationRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (row.reasoning.isNotEmpty)
+                      if (!hideReasoning && row.reasoning.isNotEmpty)
                         ExpansionTile(
                           tilePadding: EdgeInsets.zero,
                           childrenPadding: const EdgeInsets.only(bottom: 8),
@@ -474,6 +538,16 @@ final class _ConversationRow extends StatelessWidget {
                         ),
                       if (row.text.isNotEmpty)
                         _MessageBody(markdown: row.text, plain: _user),
+                      if (!_user && row.nativeContext['presented'] is List)
+                        DshPresentedFiles(
+                          files: [
+                            for (final item
+                                in (row.nativeContext['presented'] as List)
+                                    .whereType<Map>())
+                              item.cast<String, Object?>(),
+                          ],
+                          onOpen: onOpenPresentedFile,
+                        ),
                       if (row.pending || row.failed) ...[
                         const SizedBox(height: 6),
                         Text(

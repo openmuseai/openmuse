@@ -291,6 +291,31 @@ final class DshNativeGatewayClient {
     }
   }
 
+  /// Asks Desktop to open a file declared by `deliverables/presented`.
+  ///
+  /// The server re-reads the event at [seq] and uses [index] in that event's
+  /// original `files` array. [action] is `open` or `reveal`.
+  Future<void> openPresentedFile({
+    required String sessionId,
+    required int seq,
+    required int index,
+    String action = 'open',
+  }) async {
+    final value = await _jsonRequest(
+      'POST',
+      '/openmuse-native/v1/session/presented/open',
+      body: {
+        'sessionId': sessionId,
+        'seq': seq,
+        'index': index,
+        'action': action,
+      },
+    );
+    if (value['opened'] != true) {
+      throw const DshNativeGatewayException('Desktop did not open the file');
+    }
+  }
+
   void close() => _client.close(force: true);
 
   Future<void> _bootstrap() async {
