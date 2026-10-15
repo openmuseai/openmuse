@@ -398,15 +398,16 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
   }
 
   void _authenticationChanged() {
-    _identityGeneration++;
     final subject = authentication.snapshot.isAuthenticated
         ? authentication.snapshot.identity?.subject
         : null;
-    if (_subject != subject) {
-      _subject = subject;
-      _stopTransports();
-      _publish(const AccountDeviceDirectorySnapshot());
-    }
+    // Token refreshes keep the same account and must not tear down presence
+    // or restart registration while Desktop reconnection is in progress.
+    if (_subject == subject) return;
+    _identityGeneration++;
+    _subject = subject;
+    _stopTransports();
+    _publish(const AccountDeviceDirectorySnapshot());
     if (!authentication.snapshot.isAuthenticated) {
       return;
     }

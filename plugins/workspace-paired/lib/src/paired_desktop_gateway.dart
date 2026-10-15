@@ -12,6 +12,39 @@ typedef RemoteMediaReader =
     Future<RemoteMediaSlice> Function(RemoteMediaQuery query);
 typedef WorkspaceMirrorReader =
     Future<Map<String, Object?>> Function(WorkspaceMirrorQuery query);
+typedef PairedPluginMarketDispatcher =
+    Future<Map<String, Object?>> Function(PairedPluginMarketRequest request);
+typedef PairedScheduledTaskDispatcher =
+    Future<Map<String, Object?>> Function(PairedScheduledTaskRequest request);
+
+final class PairedScheduledTaskRequest {
+  const PairedScheduledTaskRequest({
+    required this.operation,
+    required this.accountRef,
+    this.id,
+    this.workspaceId,
+    this.message,
+    this.dueAt,
+  });
+  final String operation;
+  final String accountRef;
+  final String? id;
+  final String? workspaceId;
+  final String? message;
+  final DateTime? dueAt;
+}
+
+final class PairedPluginMarketRequest {
+  const PairedPluginMarketRequest({
+    required this.operation,
+    required this.accountRef,
+    this.pluginId,
+  });
+  final String operation;
+  final String accountRef;
+  final String? pluginId;
+}
+
 typedef WorkspaceMirrorResourceReader =
     Future<WorkspaceMirrorResource> Function(
       WorkspaceMirrorResourceQuery query,
@@ -44,6 +77,7 @@ final class WorkspaceMirrorQuery {
     required this.workspaceRef,
     this.mountRef,
     this.parentRef,
+    this.searchText,
     this.cursor,
     this.limit = 100,
   });
@@ -54,6 +88,7 @@ final class WorkspaceMirrorQuery {
   final String workspaceRef;
   final String? mountRef;
   final String? parentRef;
+  final String? searchText;
   final String? cursor;
   final int limit;
 }
@@ -153,6 +188,8 @@ final class PairedDesktopGateway {
     this.remoteMedia,
     this.workspaceMirror,
     this.workspaceMirrorResource,
+    this.pluginMarket,
+    this.scheduledTasks,
     String? fixedPairingCode,
   }) : _fixedPairingCode = fixedPairingCode;
 
@@ -174,6 +211,8 @@ final class PairedDesktopGateway {
   final RemoteMediaReader? remoteMedia;
   final WorkspaceMirrorReader? workspaceMirror;
   final WorkspaceMirrorResourceReader? workspaceMirrorResource;
+  final PairedPluginMarketDispatcher? pluginMarket;
+  final PairedScheduledTaskDispatcher? scheduledTasks;
   final String? _fixedPairingCode;
   final Random _random = Random.secure();
   final Map<String, _DesktopGrant> _grants = {};
@@ -305,6 +344,14 @@ final class PairedDesktopGateway {
       if (request.method == 'POST' &&
           request.uri.path == '/openmuse/remote-surface/v1') {
         await _remoteSurface(request);
+        return;
+      }
+      if (request.uri.path == '/openmuse/plugin-market/v1') {
+        await _pluginMarket(request);
+        return;
+      }
+      if (request.uri.path == '/openmuse/scheduled-tasks/v1') {
+        await _scheduledTasks(request);
         return;
       }
       if (request.method == 'GET' &&
@@ -537,6 +584,161 @@ final class PairedDesktopGateway {
     _json(request.response, HttpStatus.ok, result);
   }
 
+  Future<void> _pluginMarket(HttpRequest request) async {
+    final dispatcher = pluginMarket;
+    if (dispatcher == null) {
+      throw const _GatewayFailure(
+        HttpStatus.serviceUnavailable,
+        'PLUGIN_MARKET_UNAVAILABLE',
+        'Desktop 插件市场未启用。',
+      );
+    }
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant 无效或已过期。',
+      );
+    }
+    if (request.method != 'POST') {
+      throw const _GatewayFailure(
+        HttpStatus.methodNotAllowed,
+        'METHOD_NOT_ALLOWED',
+        '仅支持 POST。',
+      );
+    }
+    final bytes = await request.fold<List<int>>(<int>[], (value, chunk) {
+      if (value.length + chunk.length > 4096) {
+        throw const _GatewayFailure(
+          HttpStatus.requestEntityTooLarge,
+          'REQUEST_TOO_LARGE',
+          '插件市场请求过大。',
+        );
+      }
+      value.addAll(chunk);
+      return value;
+    });
+    final decoded = jsonDecode(utf8.decode(bytes));
+    if (decoded is! Map ||
+        decoded['operation'] is! String ||
+        !const {
+          'list',
+          'plan',
+          'install',
+          'enable',
+          'disable',
+        }.contains(decoded['operation']) ||
+        (decoded['operation'] == 'list'
+            ? decoded['pluginId'] != null
+            : decoded['pluginId'] is! String ||
+                  (decoded['pluginId'] as String).isEmpty)) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'MARKET_REQUEST_INVALID',
+        '插件市场请求无效。',
+      );
+    }
+    final result = await dispatcher(
+      PairedPluginMarketRequest(
+        operation: decoded['operation'] as String,
+        accountRef: grant.accountRef,
+        pluginId: decoded['pluginId'] as String?,
+      ),
+    );
+    _json(request.response, HttpStatus.ok, result);
+  }
+
+  Future<void> _scheduledTasks(HttpRequest request) async {
+    final dispatcher = scheduledTasks;
+    if (dispatcher == null) {
+      throw const _GatewayFailure(
+        HttpStatus.serviceUnavailable,
+        'SCHEDULE_UNAVAILABLE',
+        'Desktop 定时任务未启用。',
+      );
+    }
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant 无效或已过期。',
+      );
+    }
+    if (request.method != 'POST') {
+      throw const _GatewayFailure(
+        HttpStatus.methodNotAllowed,
+        'METHOD_NOT_ALLOWED',
+        '仅支持 POST。',
+      );
+    }
+    final bytes = await request.fold<List<int>>(<int>[], (out, chunk) {
+      if (out.length + chunk.length > 8192) {
+        throw const _GatewayFailure(
+          HttpStatus.requestEntityTooLarge,
+          'REQUEST_TOO_LARGE',
+          '定时任务请求过大。',
+        );
+      }
+      return out..addAll(chunk);
+    });
+    final raw = jsonDecode(utf8.decode(bytes));
+    if (raw is! Map ||
+        !const {'list', 'create', 'cancel'}.contains(raw['operation'])) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'SCHEDULE_REQUEST_INVALID',
+        '定时任务请求无效。',
+      );
+    }
+    final operation = raw['operation'] as String;
+    DateTime? dueAt;
+    if (operation == 'create') {
+      final due = raw['dueAt'];
+      if (raw['workspaceId'] is! String ||
+          raw['message'] is! String ||
+          due is! String ||
+          (dueAt = DateTime.tryParse(due)) == null) {
+        throw const _GatewayFailure(
+          HttpStatus.badRequest,
+          'SCHEDULE_REQUEST_INVALID',
+          '定时任务请求无效。',
+        );
+      }
+    }
+    if (operation == 'cancel' && raw['id'] is! String) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'SCHEDULE_REQUEST_INVALID',
+        '定时任务请求无效。',
+      );
+    }
+    try {
+      final result = await dispatcher(
+        PairedScheduledTaskRequest(
+          operation: operation,
+          accountRef: grant.accountRef,
+          id: raw['id'] as String?,
+          workspaceId: raw['workspaceId'] as String?,
+          message: raw['message'] as String?,
+          dueAt: dueAt,
+        ),
+      );
+      _json(request.response, HttpStatus.ok, result);
+    } on FormatException {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'SCHEDULE_REQUEST_INVALID',
+        '定时任务请求无效。',
+      );
+    }
+  }
+
   Future<void> _workspaceMirror(HttpRequest request) async {
     final reader = workspaceMirror;
     if (reader == null) {
@@ -558,11 +760,16 @@ final class PairedDesktopGateway {
     final query = request.uri.queryParameters;
     final operation = query['operation'];
     final limit = int.tryParse(query['limit'] ?? '100');
-    if ((operation != 'mounts' && operation != 'children') ||
+    if ((operation != 'mounts' &&
+            operation != 'children' &&
+            operation != 'search') ||
         query['workspaceRef'] != grant.workspaceRef ||
         limit == null ||
         limit < 1 ||
         limit > 200 ||
+        (operation == 'search' &&
+            (query['q']?.trim().isNotEmpty != true ||
+                query['q']!.length > 120)) ||
         (operation == 'children' &&
             (query['mountRef']?.isNotEmpty != true ||
                 query['parentRef']?.isNotEmpty != true))) {
@@ -581,6 +788,7 @@ final class PairedDesktopGateway {
           workspaceRef: grant.workspaceRef,
           mountRef: query['mountRef'],
           parentRef: query['parentRef'],
+          searchText: query['q'],
           cursor: query['cursor'],
           limit: limit,
         ),

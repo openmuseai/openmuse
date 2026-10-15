@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -303,6 +304,78 @@ void main() {
     expect(await controller.connectDevice(device, force: true), isFalse);
     expect(controller.snapshot.connection?.grantRef, 'grant.1');
     expect(controller.snapshot.failureMessage, 'Temporary failure');
+
+    controller.dispose();
+    directory.dispose();
+    await server.close(force: true);
+  });
+
+  test('concurrent opens for one Desktop share the same connection', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    final requested = Completer<void>();
+    final release = Completer<void>();
+    var opens = 0;
+    server.listen((request) async {
+      opens++;
+      if (!requested.isCompleted) requested.complete();
+      await release.future;
+      request.response.headers.contentType = ContentType.json;
+      request.response.write(
+        jsonEncode({
+          'accountRef': 'account.1',
+          'deviceRef': 'desktop.1',
+          'deviceName': 'MacBook Pro',
+          'workspaceRef': 'workspace.1',
+          'workspaceTitle': 'Workspace',
+          'grantRef': 'grant.1',
+          'expiresAtMs': DateTime.now()
+              .add(const Duration(minutes: 30))
+              .millisecondsSinceEpoch,
+          'session': {
+            'sessionRef': 'paired-dsh:grant.1',
+            'origin': 'http://127.0.0.1:${server.port}',
+            'path': '/u/grant.1',
+            'generation': 1,
+            'allowInsecureLoopback': true,
+          },
+        }),
+      );
+      await request.response.close();
+    });
+    final auth = _Authentication(authenticated: true);
+    final directory = AccountDeviceDirectoryController(
+      authentication: auth,
+      client: AccountDeviceDirectoryClient(
+        cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+        accessToken: auth.accessToken,
+        allowInsecureLoopback: true,
+      ),
+      registration: () => const AccountDeviceRegistration(
+        deviceRef: 'mobile.1',
+        displayName: 'Phone',
+        platform: 'android',
+        kind: AccountDeviceKind.mobile,
+      ),
+    );
+    final controller = PairedDesktopMobileController.discovered(
+      directory: directory,
+      accessToken: auth.accessToken,
+      requesterDeviceRef: 'mobile.1',
+      allowInsecureLoopback: true,
+      allowInsecurePrivateNetworkForTesting: false,
+    );
+    final device = AccountDevice.fromJson({
+      ..._deviceJson(online: true),
+      'transportOrigin': 'http://127.0.0.1:${server.port}',
+    });
+
+    final first = controller.connectDevice(device, force: true);
+    await requested.future;
+    final second = controller.connectDevice(device, force: true);
+    release.complete();
+    expect(await first, isTrue);
+    expect(await second, isTrue);
+    expect(opens, 1);
 
     controller.dispose();
     directory.dispose();
