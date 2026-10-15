@@ -8,12 +8,13 @@ import 'src/authentication.dart';
 
 export 'src/manifest_v2.dart';
 export 'src/authentication.dart';
+export 'src/mobile_workbench.dart';
 
-enum OpenMusePluginRuntime { builtIn, nativeProcess, webView }
+enum OpenMusePluginRuntime { builtIn, nativeProcess, webView, quickJs }
 
 enum OpenMusePluginState { installed, activating, active, deactivating, failed }
 
-enum OpenMuseSurfaceRegion { editor, rightSidebar, bottomPanel }
+enum OpenMuseSurfaceRegion { editor, rightSidebar, bottomPanel, dialog }
 
 @immutable
 final class OpenMuseResource {
