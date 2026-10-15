@@ -119,6 +119,10 @@ Future<void> main() async {
   final mobileMarketPlugin = OpenMuseMobilePluginMarket(
     mobileMarketStore,
     source: marketSource,
+    mcpRegistryOrigin:
+        const String.fromEnvironment('OPENMUSE_MCP_REGISTRY_URL').isEmpty
+        ? null
+        : Uri.parse(const String.fromEnvironment('OPENMUSE_MCP_REGISTRY_URL')),
   );
   const speechTestAudio = String.fromEnvironment('OPENMUSE_SPEECH_TEST_AUDIO');
   OpenMuseUpdateController? updates;

@@ -8,16 +8,21 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'src/paired_desktop_market_client.dart';
 import 'src/market_discover_view.dart';
+import 'src/mcp_remote_market.dart';
 
 export 'src/paired_desktop_market_client.dart';
+export 'src/mcp_remote_market.dart'
+    show RemoteMcpEntry, RemoteMcpMarket, RemoteMcpMarketPage;
 
 final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
   OpenMuseMobilePluginMarket(
     this.store, {
     this.source = const BundledMobileMarketSource(),
+    this.mcpRegistryOrigin,
   });
   final MobilePluginStore store;
   final MobileMarketSource source;
+  final Uri? mcpRegistryOrigin;
 
   @override
   final descriptor = const OpenMusePluginDescriptor(
@@ -47,7 +52,11 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
   @override
   Widget? buildPanel(BuildContext context, String panelId) =>
       panelId == 'mobile.plugin.market'
-      ? MobileMarketPage(store: store, source: source)
+      ? MobileMarketPage(
+          store: store,
+          source: source,
+          mcpRegistryOrigin: mcpRegistryOrigin,
+        )
       : null;
 
   Widget buildMarketPage({
@@ -64,6 +73,7 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
     initialMine: initialMine,
     pluginRegistry: pluginRegistry,
     onOpenBuiltIn: onOpenBuiltIn,
+    mcpRegistryOrigin: mcpRegistryOrigin,
   );
 }
 
@@ -115,6 +125,7 @@ final class MobileMarketPage extends StatefulWidget {
     this.initialMine = false,
     this.pluginRegistry,
     this.onOpenBuiltIn,
+    this.mcpRegistryOrigin,
   });
   final MobilePluginStore store;
   final MobileMarketSource source;
@@ -123,6 +134,7 @@ final class MobileMarketPage extends StatefulWidget {
   final bool initialMine;
   final OpenMusePluginRegistry? pluginRegistry;
   final ValueChanged<OpenMusePlugin>? onOpenBuiltIn;
+  final Uri? mcpRegistryOrigin;
 
   @override
   State<MobileMarketPage> createState() => _MobileMarketPageState();
@@ -153,7 +165,7 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
       final loaded = await widget.source.list();
       if (mounted) setState(() => entries = loaded);
     } catch (exception) {
-      if (mounted) setState(() => error = '$exception');
+      if (mounted) setState(() { entries = []; error = '$exception'; });
     }
   }
 
@@ -267,6 +279,23 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
           builtInState: (plugin) =>
               widget.pluginRegistry?.stateOf(plugin.descriptor.id),
           onOpenBuiltIn: widget.onOpenBuiltIn,
+          mcpSection: widget.mcpRegistryOrigin == null
+              ? null
+              : Card(
+                  child: ListTile(
+                    key: const ValueKey('mobile-mcp-online-market'),
+                    leading: const Icon(Icons.cloud_outlined),
+                    title: const Text('在线 MCP 插件'),
+                    subtitle: const Text('标准 MCP Registry 与远程工具'),
+                    onTap: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => RemoteMcpMarketPage(
+                          origin: widget.mcpRegistryOrigin!,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
           desktopSection: widget.desktop == null
               ? const Padding(
                   padding: EdgeInsets.all(14),

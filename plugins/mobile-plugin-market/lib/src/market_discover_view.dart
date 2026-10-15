@@ -27,6 +27,7 @@ class MarketDiscoverView extends StatelessWidget {
     required this.onOpen,
     required this.onPreview,
     required this.desktopSection,
+    this.mcpSection,
     this.builtInPlugins = const [],
     this.builtInState,
     this.onOpenBuiltIn,
@@ -47,6 +48,7 @@ class MarketDiscoverView extends StatelessWidget {
   final ValueChanged<MobileMarketEntry> onOpen;
   final ValueChanged<MobileMarketEntry> onPreview;
   final Widget desktopSection;
+  final Widget? mcpSection;
   final List<OpenMusePlugin> builtInPlugins;
   final OpenMusePluginState? Function(OpenMusePlugin)? builtInState;
   final ValueChanged<OpenMusePlugin>? onOpenBuiltIn;
@@ -324,6 +326,8 @@ class MarketDiscoverView extends StatelessWidget {
                       ),
                     ),
                   ),
+                if (!mine && category == '精选' && mcpSection != null)
+                  mcpSection!,
                 for (final entry in filtered)
                   _MarketEntryTile(
                     entry: entry,
