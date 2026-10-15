@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 /// Consumes only MCP Registry server.json and MCP Streamable HTTP.
 final class RemoteMcpEntry {
@@ -181,6 +182,36 @@ final class RemoteMcpMarket {
         }
         throw const FormatException('No MCP tool accepts a base64 file');
       });
+
+  /// Opens any zero-argument MCP Apps tool that returns a standard HTML
+  /// resource_link. A null result means this is a file-oriented MCP server.
+  Future<Uri?> openUi(RemoteMcpEntry entry) => withClient(entry, (
+    client,
+  ) async {
+    final tools = await client.listTools();
+    for (final tool in tools.tools) {
+      final ui = tool.meta?['ui'];
+      if (ui is! Map || ui['resourceUri'] is! String) continue;
+      final schema = tool.inputSchema.toJson();
+      if (schema['required'] is List && (schema['required'] as List).isNotEmpty)
+        continue;
+      final result = await client.callTool(
+        CallToolRequest(name: tool.name, arguments: const {}),
+      );
+      if (result.isError) throw StateError('MCP App tool failed');
+      for (final content in result.content.whereType<ResourceLink>()) {
+        if (content.mimeType != 'text/html') continue;
+        final uri = Uri.tryParse(content.uri);
+        if (uri != null &&
+            (uri.scheme == 'https' ||
+                (uri.scheme == 'http' &&
+                    {'localhost', '127.0.0.1'}.contains(uri.host)))) {
+          return uri;
+        }
+      }
+    }
+    return null;
+  });
 }
 
 final class RemoteMcpMarketPage extends StatefulWidget {
@@ -251,6 +282,28 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
   }
 
   Future<void> _use(RemoteMcpEntry entry) async {
+    setState(() {
+      busy = entry.name;
+      error = null;
+    });
+    try {
+      final ui = await market!.openUi(entry);
+      if (ui != null) {
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => _RemoteMcpAppPage(title: entry.title, uri: ui),
+            ),
+          );
+        }
+        return;
+      }
+    } catch (cause) {
+      if (mounted) setState(() => error = '$cause');
+      return;
+    } finally {
+      if (mounted) setState(() => busy = null);
+    }
     final File? file;
     if (widget.pickFile case final picker?) {
       file = await picker();
@@ -338,7 +391,7 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
                               installed.contains(
                                     '${entry.name}@${entry.version}',
                                   )
-                                  ? '选择文件使用'
+                                  ? '打开 / 使用'
                                   : '安装',
                             ),
                           ),
@@ -351,5 +404,45 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
                 ),
             ],
           ),
+  );
+}
+
+final class _RemoteMcpAppPage extends StatefulWidget {
+  const _RemoteMcpAppPage({required this.title, required this.uri});
+  final String title;
+  final Uri uri;
+
+  @override
+  State<_RemoteMcpAppPage> createState() => _RemoteMcpAppPageState();
+}
+
+final class _RemoteMcpAppPageState extends State<_RemoteMcpAppPage> {
+  late final WebViewController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (request) {
+            final next = Uri.tryParse(request.url);
+            return next != null &&
+                    next.scheme == widget.uri.scheme &&
+                    next.host == widget.uri.host &&
+                    next.port == widget.uri.port
+                ? NavigationDecision.navigate
+                : NavigationDecision.prevent;
+          },
+        ),
+      )
+      ..loadRequest(widget.uri);
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(widget.title)),
+    body: WebViewWidget(controller: controller),
   );
 }
