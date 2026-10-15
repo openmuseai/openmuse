@@ -19,3 +19,5 @@ dependencies:
     path: ../../plugins/native-text-gate
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
+  openmuse_plugin_market:
+    path: ../../plugins/plugin-market
