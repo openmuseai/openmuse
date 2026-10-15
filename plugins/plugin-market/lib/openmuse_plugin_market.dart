@@ -171,7 +171,7 @@ final class _MarketPanelState extends State<_MarketPanel> {
     spacing: 8,
     runSpacing: 8,
     children: [
-      for (final category in const ['精选', '办公', 'UI', '编程', '生活'])
+      for (final category in const ['精选', '办公', '工具', 'UI', '编程', '生活'])
         ChoiceChip(
           key: ValueKey('plugin-market-category-$category'),
           label: Text(category),
@@ -338,7 +338,7 @@ final class _MarketPanelState extends State<_MarketPanel> {
                         padding: const EdgeInsets.symmetric(vertical: 28),
                         child: Center(
                           child: Text(
-                            widget.installedOnly ? '尚未安装 DSH 插件' : '没有匹配的插件',
+                            widget.installedOnly ? '尚未安装插件' : '没有匹配的插件',
                             style: const TextStyle(
                               color: MarketColors.secondary,
                             ),
@@ -450,7 +450,7 @@ final class _MarketPanelState extends State<_MarketPanel> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (installed && plugin['ecosystem'] == 'openmuse-preview')
+                  if (installed && plugin['ecosystem'] == 'mcp')
                     const Text('已安装')
                   else if (installed)
                     TextButton(
@@ -480,7 +480,10 @@ final class _MarketPanelState extends State<_MarketPanel> {
                 children: [
                   const MarketPlatformBadge('Desktop'),
                   const SizedBox(width: 7),
-                  const MarketPlatformBadge('DSH'),
+                  if (plugin['ecosystem'] == 'dsh')
+                    const MarketPlatformBadge('DSH')
+                  else
+                    const MarketPlatformBadge('MCP'),
                   const Spacer(),
                   const Icon(
                     Icons.arrow_forward_rounded,
@@ -500,9 +503,13 @@ final class _MarketPanelState extends State<_MarketPanel> {
               const SizedBox(height: 10),
               if (plan != null)
                 Text(
-                  installed
-                      ? '已安装 ${plan['installedVersion']} · ${plan['enabled'] == true ? '已启用' : '已禁用'} · 重启 DSH 后生效'
-                      : '待安装到 ${plan['profile']}',
+                  plugin['ecosystem'] == 'mcp'
+                      ? (installed
+                            ? '已安装 ${plan['installedVersion']} · 可使用 MCP 工具'
+                            : '在线安装 MCP Bundle')
+                      : (installed
+                            ? '已安装 ${plan['installedVersion']} · ${plan['enabled'] == true ? '已启用' : '已禁用'} · 重启 DSH 后生效'
+                            : '待安装到 ${plan['profile']}'),
                   style: const TextStyle(
                     fontSize: 11,
                     color: MarketColors.secondary,
@@ -560,7 +567,7 @@ final class _MarketPanelState extends State<_MarketPanel> {
             style: const TextStyle(fontSize: 12, color: MarketColors.secondary),
           ),
           const SizedBox(height: 20),
-          if (plugin['ecosystem'] != 'openmuse-preview')
+          if (plugin['ecosystem'] == 'dsh')
             ClipRRect(
               borderRadius: BorderRadius.circular(15),
               child: Image.asset(
@@ -577,18 +584,18 @@ final class _MarketPanelState extends State<_MarketPanel> {
           ),
           const SizedBox(height: 14),
           Text(
-            plugin['ecosystem'] == 'openmuse-preview'
+            plugin['ecosystem'] == 'mcp'
                 ? (installed
-                      ? '已安装 ${plan?['installedVersion']} · PPTX worker 开发预览'
-                      : '通过本地开发目录安装到 OpenMuse 工作区')
+                      ? '已安装 ${plan?['installedVersion']} · MCP 工具已就绪'
+                      : '从在线 MCP Registry 安装已审核的 MCP Bundle')
                 : (installed
                       ? '已安装 ${plan?['installedVersion']} · ${plan?['enabled'] == true ? '已启用' : '已禁用'} · 重启 DSH 后生效'
                       : '安装位置：${plan?['profile'] ?? '正在读取…'}'),
             style: const TextStyle(fontSize: 12, color: MarketColors.secondary),
           ),
           const SizedBox(height: 15),
-          if (installed && plugin['ecosystem'] == 'openmuse-preview')
-            const Text('PPTX 图形编辑器与自动激活仍在接入中。')
+          if (installed && plugin['ecosystem'] == 'mcp')
+            const Text('MCP 文件工具可从工作区中打开兼容文件。')
           else if (installed)
             OutlinedButton(
               onPressed: _busy == id

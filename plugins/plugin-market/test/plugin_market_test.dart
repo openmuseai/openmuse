@@ -78,9 +78,7 @@ void main() {
     expect(find.textContaining('已安装 1.0.0'), findsOneWidget);
   });
 
-  testWidgets('external PPTX preview uses OpenMuse market actions', (
-    tester,
-  ) async {
+  testWidgets('reviewed MCPB installs from the online market', (tester) async {
     final commands = <String>[];
     final market = OpenMusePluginMarket();
     await market.activate(
@@ -90,26 +88,26 @@ void main() {
           if (command == 'plugin.market.list') {
             return [
               {
-                'id': 'com.openmuse.pptx',
-                'name': 'PPTX · GenOffice Core',
-                'ecosystem': 'openmuse-preview',
-                'package': 'com.openmuse.pptx',
-                'version': '0.1.0',
+                'id': 'io.openmuse/genoffice-pptx',
+                'name': 'GenOffice PPTX',
+                'ecosystem': 'mcp',
+                'package': 'io.openmuse/genoffice-pptx',
+                'version': '0.2.0',
                 'categories': ['办公'],
               },
             ];
           }
           if (command == 'plugin.market.plan') {
             return {
-              'version': '0.1.0',
+              'version': '0.2.0',
               'installedVersion': null,
               'action': 'install',
             };
           }
           if (command == 'plugin.market.install') {
             return {
-              'version': '0.1.0',
-              'installedVersion': '0.1.0',
+              'version': '0.2.0',
+              'installedVersion': '0.2.0',
               'action': 'installed',
               'enabled': true,
             };

@@ -24,7 +24,8 @@ import 'src/host/layout/surface_mutation_guard.dart';
 import 'src/host/local_settings.dart';
 import 'src/host/openmuse_app.dart';
 import 'src/host/plugin_distribution.dart';
-import 'src/host/installed_pptx_plugin.dart';
+import 'src/host/mcp_file_plugin.dart';
+import 'src/host/mcp_market.dart';
 import 'src/host/plugin_cli_broker.dart';
 import 'src/host/plugin_market.dart';
 import 'src/host/workspace_controller.dart';
@@ -82,66 +83,67 @@ Future<Widget> bootOpenMuseHost() async {
     }),
   );
   late final OpenMusePluginRegistry registry;
-  void registerPptx(DistributedPluginReceipt receipt) {
-    if (registry.plugin(receipt.pluginId) != null) return;
+  final mcpRegistryUrl = Platform.environment['OPENMUSE_MCP_REGISTRY_URL'];
+  final mcpMarket = mcpRegistryUrl == null || mcpRegistryUrl.isEmpty
+      ? null
+      : McpRegistryMarket(
+          origin: Uri.parse(mcpRegistryUrl),
+          installRoot: Directory(p.join(support.path, 'OpenMuse', 'mcpb')),
+          nodeExecutable: resolveMarketDshRuntime(
+            executablePath: Platform.resolvedExecutable,
+            environment: Platform.environment,
+          ).nodeExecutable,
+        );
+  Future<void> registerMcp(McpMarketEntry entry) async {
+    if (registry.plugin(entry.name) != null || mcpMarket == null) return;
     final node = resolveMarketDshRuntime(
       executablePath: Platform.resolvedExecutable,
       environment: Platform.environment,
     ).nodeExecutable;
-    registry.install(
-      OpenMuseInstalledPptxPlugin(
-        workerPath: p.join(receipt.workspacePath, 'PPTX', 'worker.mjs'),
-        nodeExecutable: node,
-      ),
+    final runtime = McpBundleRuntime(
+      bundleDirectory: mcpMarket.directoryFor(entry),
+      nodeExecutable: node,
     );
+    for (final tool in await runtime.tools()) {
+      final schema = tool['inputSchema'];
+      final properties = schema is Map ? schema['properties'] : null;
+      final content = properties is Map ? properties['content'] : null;
+      if (content is! Map || content['contentEncoding'] != 'base64') continue;
+      final mediaType = content['contentMediaType'];
+      if (mediaType is! String) continue;
+      final extension = extensionForMediaType(mediaType);
+      if (extension == null) continue;
+      registry.install(
+        OpenMuseMcpFilePlugin(
+          entry: entry,
+          runtime: runtime,
+          toolName: tool['name'] as String,
+          mediaType: mediaType,
+          extension: extension,
+        ),
+      );
+      break;
+    }
   }
 
   Future<Map<String, Object?>> runMarketAction(
     String operation,
     String id,
   ) async {
-    if (id == 'com.openmuse.pptx') {
-      final entry = distributedMarketPlugins.single;
-      final installRoot = Directory(
-        p.join(support.path, 'OpenMuse', 'plugins'),
+    if (mcpMarket != null) {
+      final matches = (await mcpMarket.list()).where(
+        (entry) => entry.name == id,
       );
-      final receipts = readInstalledPlugins(installRoot);
-      final installed = receipts
-          .where((item) => item.pluginId == id)
-          .firstOrNull;
-      final plan = {
-        ...entry.toJson(),
-        'installedVersion': installed?.version,
-        'enabled': installed != null,
-        'action': installed?.version == entry.version
-            ? 'already-installed'
-            : 'install',
-      };
-      if (operation == 'plan') return plan;
-      if (operation != 'install') {
-        throw UnsupportedError('PPTX 预览包尚不支持市场启停');
+      if (matches.isNotEmpty) {
+        final entry = matches.first;
+        if (operation == 'plan') return mcpMarket.plan(entry);
+        if (operation == 'install') {
+          final installed = await mcpMarket.install(entry);
+          await registerMcp(entry);
+          return installed;
+        }
+        throw UnsupportedError('MCPB enable/disable is not available');
       }
-      final catalogPath =
-          Platform.environment['OPENMUSE_PPTX_DEV_CATALOG'] ?? '';
-      if (catalogPath.isEmpty) {
-        throw StateError('PPTX 开发目录未配置');
-      }
-      final receipt = await acceptDistributedPlugin(
-        catalogUri: Uri.file(p.absolute(catalogPath)),
-        pluginId: id,
-        workspacePath: p.join(accountStorage.workspacePath, 'Plugins', 'PPTX'),
-        installRoot: installRoot,
-        target: currentDesktopPluginTarget(),
-        workspace: controller,
-        settings: settings,
-      );
-      registerPptx(receipt);
-      return {
-        ...plan,
-        'action': 'installed',
-        'installedVersion': receipt.version,
-        'enabled': true,
-      };
     }
     final entries = builtInMarketPlugins.where((entry) => entry.id == id);
     if (entries.isEmpty) throw const FormatException('市场中没有该插件');
@@ -254,9 +256,9 @@ Future<Widget> bootOpenMuseHost() async {
           case 'plugin.market.list':
             return [
               for (final entry in builtInMarketPlugins) entry.toJson(),
-              if ((Platform.environment['OPENMUSE_PPTX_DEV_CATALOG'] ?? '')
-                  .isNotEmpty)
-                for (final entry in distributedMarketPlugins) entry.toJson(),
+              if (mcpMarket != null)
+                for (final entry in await mcpMarket.list())
+                  entry.toMarketCard(),
             ];
           case 'plugin.market.plan':
           case 'plugin.market.install':
@@ -571,11 +573,13 @@ Future<Widget> bootOpenMuseHost() async {
   )) {
     registry.install(plugin);
   }
-  if ((Platform.environment['OPENMUSE_PPTX_DEV_CATALOG'] ?? '').isNotEmpty) {
-    for (final receipt in readInstalledPlugins(
-      Directory(p.join(support.path, 'OpenMuse', 'plugins')),
-    )) {
-      if (receipt.pluginId == 'com.openmuse.pptx') registerPptx(receipt);
+  if (mcpMarket != null) {
+    for (final entry in await mcpMarket.installedEntries()) {
+      try {
+        await registerMcp(entry);
+      } catch (error) {
+        debugPrint('MCPB activation deferred: $error');
+      }
     }
   }
   unawaited(() async {

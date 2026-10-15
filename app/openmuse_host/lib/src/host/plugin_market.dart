@@ -62,21 +62,6 @@ const builtInMarketPlugins = <MarketPlugin>[
   ),
 ];
 
-/// External artifact preview; the catalog location is supplied by the Host.
-const distributedMarketPlugins = <MarketPlugin>[
-  MarketPlugin(
-    id: 'com.openmuse.pptx',
-    name: 'PPTX · GenOffice Core',
-    ecosystem: 'openmuse-preview',
-    packageName: 'com.openmuse.pptx',
-    version: '0.1.0',
-    integrity: '',
-    supportedDshVersions: {},
-    description: 'GenOffice PPTX 核心解析与保存。当前是开发预览包。',
-    categories: ['办公'],
-  ),
-];
-
 final class DshMarketInstaller {
   DshMarketInstaller({
     required this.dshHome,
