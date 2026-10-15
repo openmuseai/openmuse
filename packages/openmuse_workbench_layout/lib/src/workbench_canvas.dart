@@ -26,7 +26,7 @@ final class WorkbenchCanvas extends StatelessWidget {
     this.overlayMenuBuilder,
     this.onPaneFocus,
     this.hiddenPaneIds = const {},
-    this.gutter = 6,
+    this.gutter = 1,
     this.onSizeChanged,
   });
 
@@ -74,11 +74,6 @@ final class WorkbenchCanvas extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
-                    border: Border.all(
-                      color: snapshot.focusedPaneId == entry.key
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).dividerColor,
-                    ),
                   ),
                 ),
               ),
@@ -105,7 +100,7 @@ final class WorkbenchCanvas extends StatelessWidget {
             for (final divider in geometry.dividers)
               Positioned.fromRect(
                 key: ValueKey('layout-divider:${divider.path.join('.')}'),
-                rect: divider.rect,
+                rect: _dividerHitRect(divider.rect, divider.axis),
                 child: OpenMusePaneResizer(
                   axis: divider.axis,
                   onDelta: (delta) {
@@ -150,6 +145,10 @@ final class WorkbenchCanvas extends StatelessWidget {
     ),
   );
 }
+
+Rect _dividerHitRect(Rect rect, Axis axis) => axis == Axis.horizontal
+    ? Rect.fromLTRB(rect.left - 3, rect.top, rect.right + 3, rect.bottom)
+    : Rect.fromLTRB(rect.left, rect.top - 3, rect.right, rect.bottom + 3);
 
 LayoutNode? _withoutPanes(LayoutNode node, Set<String> hidden) {
   switch (node) {
@@ -231,11 +230,21 @@ final class _OpenMusePaneResizerState extends State<OpenMusePaneResizer> {
       },
       child: Container(
         key: const Key('pane-resizer'),
-        width: widget.axis == Axis.horizontal ? 6 : null,
-        height: widget.axis == Axis.vertical ? 6 : null,
-        color: _hovered || _dragging
-            ? OpenMuseTokens.cyan.withValues(alpha: 0.65)
-            : Theme.of(context).dividerColor.withValues(alpha: 0.5),
+        color: Colors.transparent,
+        alignment: Alignment.center,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: _hovered || _dragging
+                ? OpenMuseTokens.cyan.withValues(alpha: 0.7)
+                : (Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0x2EFFFFFF)
+                      : const Color(0x14000000)),
+          ),
+          child: SizedBox(
+            width: widget.axis == Axis.horizontal ? 1 : double.infinity,
+            height: widget.axis == Axis.vertical ? 1 : double.infinity,
+          ),
+        ),
       ),
     ),
   );

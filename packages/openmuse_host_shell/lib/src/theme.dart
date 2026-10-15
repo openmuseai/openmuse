@@ -7,7 +7,7 @@ abstract final class OpenMuseTokens {
       (windowWidth * 0.19).clamp(sidebarWidth, 290.0).toDouble();
   static double assistantWidthFor(double windowWidth) =>
       (windowWidth * 0.43).clamp(assistantWidth, 660.0).toDouble();
-  static const topBarHeight = 42.0;
+  static const topBarHeight = 36.0;
   static const itemHeight = 32.0;
   static const dialogRadius = 12.0;
   static const canvas = Color(0xffffffff);
