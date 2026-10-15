@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 0.0.1+1
 
 environment:
   sdk: ^3.12.2
@@ -46,8 +46,16 @@ dependencies:
     path: ../../plugins/cloud-workspace
   openmuse_host_shell:
     path: ../../packages/openmuse_host_shell
+  openmuse_app_update:
+    path: ../../packages/openmuse_app_update
   openmuse_mobile_core:
     path: ../../packages/openmuse_mobile_core
+  openmuse_mobile_plugin_runtime:
+    path: ../../packages/openmuse_mobile_plugin_runtime
+  openmuse_mobile_plugin_market:
+    path: ../../plugins/mobile-plugin-market
+  openmuse_market_ui:
+    path: ../../packages/openmuse_market_ui
   openmuse_mobile_cloud:
     path: ../../packages/openmuse_mobile_cloud
   openmuse_office_docx:
@@ -65,6 +73,8 @@ dependencies:
   openmuse_workspace_paired:
     path: ../../plugins/workspace-paired
   path_provider: ^2.1.5
+  package_info_plus: ^9.0.1
+  url_launcher: ^6.3.3
   webview_flutter: ^4.13.0
 
 dev_dependencies:
@@ -72,6 +82,7 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
+  pub_semver: ^2.2.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -92,6 +103,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/brand.png
+    - test_assets/genoffice_standard_business.pptx
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -55,4 +55,92 @@ void main() {
     expect(controller.workspacesFor(deviceId), hasLength(2));
     expect(controller.expandedWorkspaces, isEmpty);
   });
+
+  test('recent tasks are the five newest across workspaces', () {
+    final controller = WorkBuddyController();
+    addTearDown(controller.dispose);
+    const firstDevice = 'paired.one';
+    const secondDevice = 'paired.two';
+    controller.upsertDevice(
+      const WbDevice(id: firstDevice, name: 'One', kind: WbDeviceKind.local),
+    );
+    controller.upsertDevice(
+      const WbDevice(id: secondDevice, name: 'Two', kind: WbDeviceKind.local),
+    );
+    WbTask task({
+      required String id,
+      required String deviceId,
+      required String workspaceId,
+      required int updatedAt,
+    }) => WbTask(
+      id: id,
+      title: id,
+      workspaceId: workspaceId,
+      deviceId: deviceId,
+      status: WbTaskStatus.completed,
+      showInTaskList: true,
+      updatedAt: updatedAt,
+      messages: const [],
+    );
+    controller.replacePairedCatalog(
+      deviceId: firstDevice,
+      workspaces: const [
+        WbWorkspace(id: 'dsh.workspace.a', name: 'A', deviceId: firstDevice),
+      ],
+      sessions: [
+        task(
+          id: 'dsh.session.a1',
+          deviceId: firstDevice,
+          workspaceId: 'dsh.workspace.a',
+          updatedAt: 10,
+        ),
+        task(
+          id: 'dsh.session.a2',
+          deviceId: firstDevice,
+          workspaceId: 'dsh.workspace.a',
+          updatedAt: 50,
+        ),
+        task(
+          id: 'dsh.session.a3',
+          deviceId: firstDevice,
+          workspaceId: 'dsh.workspace.a',
+          updatedAt: 30,
+        ),
+      ],
+    );
+    controller.replacePairedCatalog(
+      deviceId: secondDevice,
+      workspaces: const [
+        WbWorkspace(id: 'dsh.workspace.b', name: 'B', deviceId: secondDevice),
+      ],
+      sessions: [
+        task(
+          id: 'dsh.session.b1',
+          deviceId: secondDevice,
+          workspaceId: 'dsh.workspace.b',
+          updatedAt: 40,
+        ),
+        task(
+          id: 'dsh.session.b2',
+          deviceId: secondDevice,
+          workspaceId: 'dsh.workspace.b',
+          updatedAt: 20,
+        ),
+        task(
+          id: 'dsh.session.b3',
+          deviceId: secondDevice,
+          workspaceId: 'dsh.workspace.b',
+          updatedAt: 5,
+        ),
+      ],
+    );
+
+    expect(controller.recentTasks.map((task) => task.id).toList(), [
+      'dsh.session.a2',
+      'dsh.session.b1',
+      'dsh.session.a3',
+      'dsh.session.b2',
+      'dsh.session.a1',
+    ]);
+  });
 }

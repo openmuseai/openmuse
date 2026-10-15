@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 enum WbDeviceKind { local, cloud }
 
-enum WbTab { tasks, experts, library, schedule, projects }
+enum WbTab { tasks, workbench, discover, mine }
 
 enum WbTaskStatus { running, completed }
 
@@ -53,6 +53,7 @@ final class WbTask {
     required this.status,
     required this.messages,
     this.showInTaskList = false,
+    this.updatedAt = 0,
   });
 
   final String id;
@@ -63,11 +64,15 @@ final class WbTask {
   final List<WbMessage> messages;
   final bool showInTaskList;
 
+  /// Unix milliseconds. Larger values sort first in the recent-task list.
+  final int updatedAt;
+
   WbTask copyWith({
     String? title,
     WbTaskStatus? status,
     List<WbMessage>? messages,
     bool? showInTaskList,
+    int? updatedAt,
   }) => WbTask(
     id: id,
     title: title ?? this.title,
@@ -76,6 +81,7 @@ final class WbTask {
     status: status ?? this.status,
     messages: messages ?? this.messages,
     showInTaskList: showInTaskList ?? this.showInTaskList,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
 }
 

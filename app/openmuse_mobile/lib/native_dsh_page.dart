@@ -343,6 +343,13 @@ final class _NativeDshPageState extends State<NativeDshPage> {
                   seq: seq,
                   index: index,
                 ),
+            onOpenPresentedFile: (seq, index, action) =>
+                conversation.client.openPresentedFile(
+                  sessionId: conversation.store.snapshot.sessionId!,
+                  seq: seq,
+                  index: index,
+                  action: action,
+                ),
             showHeader: !widget.embedded,
             showComposer: widget.showComposer,
           );

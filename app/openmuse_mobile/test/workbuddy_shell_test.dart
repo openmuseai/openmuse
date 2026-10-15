@@ -1,17 +1,55 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:muse_speech_contract/muse_speech_contract.dart';
+import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_mobile/workbuddy/workbuddy_controller.dart';
 import 'package:openmuse_mobile/workbuddy/workbuddy_models.dart';
 import 'package:openmuse_mobile/workbuddy/workbuddy_shell.dart';
 import 'package:openmuse_mobile/workbuddy/workbuddy_theme.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_mobile_plugin_market/openmuse_mobile_plugin_market.dart';
+import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
+import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('发现 tab opens the light plugin market inside the shell', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final directory = Directory.systemTemp.createTempSync('market-tab-test-');
+    final store = MobilePluginStore(directory);
+    final controller = WorkBuddyController();
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
+      directory.deleteSync(recursive: true);
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: workBuddyTheme(),
+        home: WorkBuddyShell(
+          controller: controller,
+          mobileMarketPlugin: OpenMuseMobilePluginMarket(store),
+        ),
+      ),
+    );
+    await tester.tap(find.text('发现'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('mobile-market-search')), findsOneWidget);
+    expect(find.text('编辑推荐'), findsOneWidget);
+    expect(find.text('定时任务'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'landing shell never manufactures Desktop workspaces or replies',
@@ -38,10 +76,9 @@ void main() {
       expect(find.text('OpenMuse'), findsOneWidget);
       expect(find.text('选择 Desktop'), findsWidgets);
       expect(find.text('任务'), findsWidgets);
-      expect(find.text('专家'), findsOneWidget);
-      expect(find.text('资料库'), findsOneWidget);
-      expect(find.text('定时任务'), findsOneWidget);
-      expect(find.text('项目'), findsOneWidget);
+      expect(find.text('工作台'), findsOneWidget);
+      expect(find.text('发现'), findsOneWidget);
+      expect(find.text('我的'), findsOneWidget);
       expect(find.text('发消息'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('wb-device-workspace')));
@@ -62,9 +99,11 @@ void main() {
       expect(find.text('撰写俄乌战争背景与最新情况'), findsNothing);
       expect(find.text('制作大模型架构PPT'), findsNothing);
       expect(find.text('再分析一下它的结构'), findsNothing);
-      expect(find.text('助理'), findsOneWidget);
-      expect(find.text('未登录'), findsOneWidget);
-      expect(find.text('点击登录'), findsOneWidget);
+      expect(find.text('助理'), findsNothing);
+      expect(find.text('远程工作台'), findsNothing);
+      expect(find.text('最近任务'), findsOneWidget);
+      expect(find.text('未登录'), findsNothing);
+      expect(find.text('点击登录'), findsNothing);
       expect(find.text('切尔西的匕首'), findsNothing);
       expect(find.text('体验版'), findsNothing);
       expect(find.text('471.57'), findsNothing);
@@ -168,7 +207,7 @@ void main() {
     expect(controller.selectedWorkspaceId, 'dsh.workspace.7');
   });
 
-  testWidgets('account sheet login opens the sign-in screen', (tester) async {
+  testWidgets('My tab login opens the sign-in screen', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -190,13 +229,10 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('wb-menu')));
+    await tester.tap(find.byKey(const ValueKey('wb-tab-我的')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('wb-account')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('wb-sign-in')), findsOneWidget);
-
-    await tester.tap(find.byKey(const ValueKey('wb-sign-in')));
+    expect(find.byKey(const ValueKey('my-account')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('my-account')));
     await tester.pumpAndSettle();
 
     expect(find.text('Welcome to OpenMuse'), findsOneWidget);
@@ -205,7 +241,7 @@ void main() {
     authentication.authenticate();
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('auth.email')), findsNothing);
-    expect(find.byKey(const ValueKey('wb-menu')), findsOneWidget);
+    expect(find.byKey(const ValueKey('wb-tab-我的')), findsOneWidget);
   });
 
   testWidgets('restored account does not reopen Desktop binding', (
@@ -267,6 +303,198 @@ void main() {
     expect(find.textContaining('任务 ('), findsNothing);
     expect(find.text('Muse-Client'), findsWidgets);
     expect(find.text('OpenMuse 应用改名与重建'), findsNothing);
+  });
+
+  testWidgets('reopen keeps the last bound desktop and skips the bind sheet', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = WorkBuddyController();
+    final authentication = _SignedInAuth();
+    final store = _MemoryValues();
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
+      authentication.dispose();
+    });
+    await store.write(
+      'openmuse.mobile.desktop.${base64Url.encode(utf8.encode('user-1'))}',
+      jsonEncode({
+        'kind': 'desktop',
+        'deviceRef': 'desktop-1',
+        'workspaceId': 'dsh.workspace.client',
+      }),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: workBuddyTheme(),
+        home: WorkBuddyShell(
+          controller: controller,
+          authentication: authentication,
+          deviceSelectionStore: store,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(controller.selectedDeviceId, 'paired.desktop-1');
+    expect(find.byKey(const ValueKey('wb-bind-desktop')), findsNothing);
+    expect(find.byKey(const ValueKey('wb-cloud-developing')), findsNothing);
+    expect(find.text('Desktop'), findsWidgets);
+    expect(find.text('云端'), findsNothing);
+  });
+
+  testWidgets(
+    'selected Desktop without a grant keeps the draft and shows disconnected',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final controller = WorkBuddyController();
+      final authentication = _SignedInAuth();
+      final store = _MemoryValues();
+      await store.write(
+        'openmuse.mobile.desktop.${base64Url.encode(utf8.encode('user-1'))}',
+        jsonEncode({'kind': 'desktop', 'deviceRef': 'desktop-1'}),
+      );
+      final directory = AccountDeviceDirectoryController(
+        authentication: authentication,
+        client: AccountDeviceDirectoryClient(
+          cloudOrigin: Uri.parse('http://127.0.0.1:1'),
+          accessToken: authentication.accessToken,
+          allowInsecureLoopback: true,
+        ),
+        registration: () => const AccountDeviceRegistration(
+          deviceRef: 'mobile-1',
+          displayName: 'Phone',
+          platform: 'android',
+          kind: AccountDeviceKind.mobile,
+        ),
+      );
+      final paired = PairedDesktopMobileController.discovered(
+        directory: directory,
+        accessToken: authentication.accessToken,
+        requesterDeviceRef: 'mobile-1',
+        allowInsecureLoopback: true,
+        allowInsecurePrivateNetworkForTesting: false,
+      );
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump(const Duration(seconds: 9));
+        paired.dispose();
+        directory.dispose();
+        controller.dispose();
+        authentication.dispose();
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: workBuddyTheme(),
+          home: WorkBuddyShell(
+            controller: controller,
+            authentication: authentication,
+            pairedDesktop: paired,
+            deviceSelectionStore: store,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(controller.selectedDeviceId, 'paired.desktop-1');
+      expect(find.text('Desktop 未连接'), findsOneWidget);
+
+      await tester.enterText(find.byKey(const ValueKey('wb-composer')), '你好');
+      await tester.testTextInput.receiveAction(TextInputAction.send);
+      await tester.pump(const Duration(seconds: 13));
+      expect(find.text('你好'), findsOneWidget);
+      expect(find.textContaining('消息已保留'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 20));
+    },
+  );
+
+  testWidgets('device list uses a presence dot and bind state', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = WorkBuddyController();
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
+    });
+    controller.upsertDevice(
+      const WbDevice(
+        id: 'paired.current',
+        name: 'DESKTOP-FBRL8RL',
+        kind: WbDeviceKind.local,
+      ),
+    );
+    controller.upsertDevice(
+      const WbDevice(
+        id: 'paired.other',
+        name: 'Office-Desktop',
+        kind: WbDeviceKind.local,
+      ),
+    );
+    controller.upsertDevice(
+      const WbDevice(
+        id: 'paired.offline',
+        name: 'AlexixideMacBook-Pro.local',
+        kind: WbDeviceKind.local,
+        online: false,
+      ),
+    );
+    controller.selectDevice('paired.current');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: workBuddyTheme(),
+        home: WorkBuddyShell(controller: controller),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('wb-device-workspace')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('wb-pick-device')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('云端'), findsNothing);
+    expect(find.text('在线'), findsNothing);
+    expect(find.text('重新连接'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('wb-device-bind-paired.current')),
+      findsOneWidget,
+    );
+    expect(find.text('绑定'), findsOneWidget);
+    expect(find.text('离线'), findsOneWidget);
+    expect(
+      (tester
+                  .widget<Container>(
+                    find.byKey(const ValueKey('wb-device-dot-paired.current')),
+                  )
+                  .decoration!
+              as BoxDecoration)
+          .color,
+      const Color(0xFF34C759),
+    );
+    expect(
+      (tester
+                  .widget<Container>(
+                    find.byKey(const ValueKey('wb-device-dot-paired.offline')),
+                  )
+                  .decoration!
+              as BoxDecoration)
+          .color,
+      const Color(0xFF8E8E93),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('wb-device-bind-paired.other')));
+    await tester.pumpAndSettle();
+    expect(controller.selectedDeviceId, 'paired.other');
   });
 
   testWidgets(
@@ -427,10 +655,55 @@ void main() {
       expect(find.byKey(const ValueKey('wb-voice-overlay')), findsNothing);
     },
   );
+
+  testWidgets('microphone purpose is shown before the system permission', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = WorkBuddyController();
+    final speech = _FakeSpeechRecognition(
+      permission: SpeechPermissionState.denied,
+    );
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await speech.dispose();
+      controller.dispose();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: workBuddyTheme(),
+        home: WorkBuddyShell(controller: controller, speechRecognition: speech),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('wb-input-mode-toggle')));
+    await tester.pump();
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey('wb-voice-hold'))),
+    );
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    expect(find.byKey(const ValueKey('wb-microphone-purpose')), findsOneWidget);
+    expect(speech.openCalls, 0);
+
+    await tester.tap(find.byKey(const ValueKey('wb-microphone-continue')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(speech.openCalls, 1);
+    await gesture.up();
+    await tester.pump();
+  });
 }
 
 final class _FakeSpeechRecognition implements SpeechRecognitionPort {
+  _FakeSpeechRecognition({this.permission = SpeechPermissionState.granted});
+
   final _session = _FakeSpeechSession();
+  final SpeechPermissionState permission;
   int _sequence = 0;
   int openCalls = 0;
   int stopCalls = 0;
@@ -473,8 +746,8 @@ final class _FakeSpeechRecognition implements SpeechRecognitionPort {
 
   @override
   Future<SpeechProbe> probe({bool requestPermission = false}) async =>
-      const SpeechProbe(
-        permission: SpeechPermissionState.granted,
+      SpeechProbe(
+        permission: permission,
         localEngine: SpeechEngineAvailability.ready,
       );
 
@@ -498,6 +771,23 @@ final class _FakeSpeechSession implements SpeechSession {
 
   @override
   Stream<SpeechEvent> get events => controller.stream;
+}
+
+final class _MemoryValues implements SecureValueStore {
+  final values = <String, String>{};
+
+  @override
+  Future<void> delete(String key) async {
+    values.remove(key);
+  }
+
+  @override
+  Future<String?> read(String key) async => values[key];
+
+  @override
+  Future<void> write(String key, String value) async {
+    values[key] = value;
+  }
 }
 
 final class _SignedInAuth extends ChangeNotifier

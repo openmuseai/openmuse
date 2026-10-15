@@ -1,15 +1,19 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:openmuse_app_update/openmuse_app_update.dart';
 import 'package:muse_speech_contract/muse_speech_contract.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_mobile_cloud/openmuse_mobile_cloud.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
+import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
+import 'package:openmuse_mobile_plugin_market/openmuse_mobile_plugin_market.dart';
 import 'package:openmuse_office_docx/openmuse_office_docx.dart';
 import 'package:openmuse_office_viewers/openmuse_office_viewers.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -17,11 +21,14 @@ import 'package:openmuse_remote_workbench/openmuse_remote_workbench.dart';
 import 'package:openmuse_speech_input/openmuse_speech_input.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'docx_editor_screen.dart';
 import 'native_dsh_page.dart';
 import 'native_desktop_shell.dart';
 import 'office_viewer_screen.dart';
+import 'mobile_plugins/scheduled_tasks_plugin.dart';
+import 'mobile_plugins/workspace_files_plugin.dart';
 import 'workbuddy/workbuddy_controller.dart';
 import 'workbuddy/workbuddy_shell.dart';
 import 'workbuddy/workbuddy_theme.dart';
@@ -33,6 +40,7 @@ Future<void> main() async {
   const secureValues = FlutterSecureValueStore();
   final deviceId = await _persistentMobileDeviceId(secureValues);
   final authentication = GoTrueAuthenticationController(
+    requirePersistedSession: true,
     provider: GoTrueHttpClient(
       config: GoTrueClientConfig(
         origin: endpoints.gotrueOrigin,
@@ -48,6 +56,8 @@ Future<void> main() async {
   final authPlugin = OpenMuseGoTruePlugin(
     authentication: authentication,
     cloudLabel: endpoints.cloudOrigin.toString(),
+    termsUri: Uri.parse('https://openmuseai.com/terms'),
+    privacyUri: Uri.parse('https://openmuseai.com/privacy'),
   );
   final cloudPlugin = OpenMuseCloudWorkspacePlugin(
     authentication: authentication,
@@ -88,13 +98,43 @@ Future<void> main() async {
   final speechPlugin = OpenMuseSpeechInputPlugin(
     localModel: SherpaZipformerConfig.zh14m(speechModelDirectory),
   );
+  final mobileMarketStore = MobilePluginStore(
+    Directory(
+      '${(await getApplicationSupportDirectory()).path}/mobile-plugins',
+    ),
+  );
+  await mobileMarketStore.restore();
+  const marketUrl = String.fromEnvironment('OPENMUSE_MOBILE_MARKET_URL');
+  const marketKey = String.fromEnvironment('OPENMUSE_MOBILE_MARKET_PUBLIC_KEY');
+  final MobileMarketSource marketSource =
+      marketUrl.isNotEmpty && marketKey.isNotEmpty
+      ? SignedHttpMobileMarketSource(
+          indexUri: Uri.parse(marketUrl),
+          publicKey: base64Decode(marketKey),
+          sequenceFile: File(
+            '${(await getApplicationSupportDirectory()).path}/mobile-market-sequence.txt',
+          ),
+        )
+      : const BundledMobileMarketSource();
+  final mobileMarketPlugin = OpenMuseMobilePluginMarket(
+    mobileMarketStore,
+    source: marketSource,
+  );
   const speechTestAudio = String.fromEnvironment('OPENMUSE_SPEECH_TEST_AUDIO');
+  OpenMuseUpdateController? updates;
+  try {
+    updates = await bootOpenMuseUpdates();
+  } catch (error) {
+    debugPrint('App update check unavailable: $error');
+  }
   runApp(
     OpenMuseMobileApplication(
+      updates: updates,
       authenticationPlugin: authPlugin,
       cloudWorkspacePlugin: cloudPlugin,
       pairedDesktopPlugin: pairedPlugin,
       speechInputPlugin: speechPlugin,
+      mobileMarketPlugin: mobileMarketPlugin,
       officeEngine: officeEngine,
       debugSpeechSource:
           !kReleaseMode &&
@@ -217,18 +257,22 @@ final class OpenMuseMobileApplication extends StatefulWidget {
     required this.cloudWorkspacePlugin,
     required this.pairedDesktopPlugin,
     this.speechInputPlugin,
+    this.mobileMarketPlugin,
     this.remoteWorkbenchPlugin,
     this.officeEngine,
     this.debugSpeechSource,
+    this.updates,
   });
 
   final OpenMuseGoTruePlugin authenticationPlugin;
   final OpenMuseCloudWorkspacePlugin cloudWorkspacePlugin;
   final OpenMusePairedDesktopMobilePlugin pairedDesktopPlugin;
   final OpenMuseSpeechInputPlugin? speechInputPlugin;
+  final OpenMuseMobilePluginMarket? mobileMarketPlugin;
   final OpenMuseRemoteWorkbenchPlugin? remoteWorkbenchPlugin;
   final OfficeEnginePort? officeEngine;
   final SpeechAudioSource? debugSpeechSource;
+  final OpenMuseUpdateController? updates;
 
   @override
   State<OpenMuseMobileApplication> createState() =>
@@ -239,6 +283,28 @@ final class OpenMuseMobileApplicationState
     extends State<OpenMuseMobileApplication> {
   late final OpenMusePluginRegistry _plugins;
   late final OpenMuseRemoteWorkbenchPlugin _workbench;
+  late final MobileScheduledTasksPlugin _scheduledTasks;
+  late final MobileWorkspaceFilesPlugin _workspaceFiles;
+  final Set<String> _registeredMobilePlugins = {};
+  Future<void> _marketSync = Future<void>.value();
+  final _locale = OpenMuseUiLocale();
+  ThemeMode _themeMode = ThemeMode.system;
+  static const _themeKey = 'openmuse.mobile.theme-mode.v1';
+
+  Future<void> _restoreThemeMode() async {
+    try {
+      final saved = await const FlutterSecureValueStore().read(_themeKey);
+      final mode = ThemeMode.values.where((item) => item.name == saved);
+      if (mounted && mode.isNotEmpty) setState(() => _themeMode = mode.first);
+    } on Object {
+      // Preferences failure should never block app launch.
+    }
+  }
+
+  void _setThemeMode(ThemeMode mode) {
+    setState(() => _themeMode = mode);
+    unawaited(const FlutterSecureValueStore().write(_themeKey, mode.name));
+  }
 
   @visibleForTesting
   List<String> get installedPluginIds =>
@@ -247,8 +313,11 @@ final class OpenMuseMobileApplicationState
   @override
   void initState() {
     super.initState();
+    unawaited(_restoreThemeMode());
     _workbench =
         widget.remoteWorkbenchPlugin ?? OpenMuseRemoteWorkbenchPlugin();
+    _scheduledTasks = MobileScheduledTasksPlugin();
+    _workspaceFiles = MobileWorkspaceFilesPlugin();
     _plugins =
         OpenMusePluginRegistry(
             context: OpenMusePluginContext(
@@ -258,13 +327,22 @@ final class OpenMuseMobileApplicationState
           ..install(widget.authenticationPlugin)
           ..install(widget.cloudWorkspacePlugin)
           ..install(widget.pairedDesktopPlugin)
-          ..install(_workbench);
+          ..install(_workbench)
+          ..install(_scheduledTasks)
+          ..install(_workspaceFiles);
     final speech = widget.speechInputPlugin;
+    final market = widget.mobileMarketPlugin;
     if (speech != null) _plugins.install(speech);
+    if (market != null) _plugins.install(market);
+    market?.store.addListener(_onMobileMarketChanged);
+    _onMobileMarketChanged();
     unawaited(() async {
-      if (speech != null) await _plugins.activate(speech.descriptor.id);
-      await _plugins.activate(_workbench.descriptor.id);
       await _plugins.activate(widget.authenticationPlugin.descriptor.id);
+      if (speech != null) await _plugins.activate(speech.descriptor.id);
+      if (market != null) await _plugins.activate(market.descriptor.id);
+      await _plugins.activate(_workbench.descriptor.id);
+      await _plugins.activate(_scheduledTasks.descriptor.id);
+      await _plugins.activate(_workspaceFiles.descriptor.id);
       await _plugins.activate(widget.cloudWorkspacePlugin.descriptor.id);
       await _plugins.activate(widget.pairedDesktopPlugin.descriptor.id);
     }());
@@ -272,40 +350,115 @@ final class OpenMuseMobileApplicationState
 
   @override
   void dispose() {
+    widget.mobileMarketPlugin?.store.removeListener(_onMobileMarketChanged);
     unawaited(
-      Future.wait([
-        _plugins.deactivate(widget.cloudWorkspacePlugin.descriptor.id),
-        _plugins.deactivate(widget.pairedDesktopPlugin.descriptor.id),
-        _plugins.deactivate(widget.authenticationPlugin.descriptor.id),
-        if (widget.speechInputPlugin case final speech?)
-          _plugins.deactivate(speech.descriptor.id),
-        _plugins.deactivate(_workbench.descriptor.id),
-      ]).whenComplete(_plugins.dispose),
+      _marketSync
+          .then(
+            (_) => Future.wait([
+              _plugins.deactivate(widget.cloudWorkspacePlugin.descriptor.id),
+              _plugins.deactivate(widget.pairedDesktopPlugin.descriptor.id),
+              _plugins.deactivate(widget.authenticationPlugin.descriptor.id),
+              if (widget.speechInputPlugin case final speech?)
+                _plugins.deactivate(speech.descriptor.id),
+              if (widget.mobileMarketPlugin case final market?)
+                _plugins.deactivate(market.descriptor.id),
+              for (final id in _registeredMobilePlugins)
+                _plugins.deactivate(id),
+              _plugins.deactivate(_scheduledTasks.descriptor.id),
+              _plugins.deactivate(_workspaceFiles.descriptor.id),
+              _plugins.deactivate(_workbench.descriptor.id),
+            ]),
+          )
+          .whenComplete(() {
+            _scheduledTasks.dispose();
+            _workspaceFiles.dispose();
+            _plugins.dispose();
+          }),
     );
+    _locale.dispose();
+    widget.updates?.dispose();
     super.dispose();
   }
 
+  void _onMobileMarketChanged() {
+    _marketSync = _marketSync
+        .then((_) async {
+          final store = widget.mobileMarketPlugin?.store;
+          if (store == null) return;
+          final current = {
+            for (final bundle in store.installedBundles) bundle.id: bundle,
+          };
+          for (final stale in _registeredMobilePlugins.difference(
+            current.keys.toSet(),
+          )) {
+            await _plugins.uninstall(stale);
+            _registeredMobilePlugins.remove(stale);
+          }
+          for (final bundle in current.values) {
+            if (!_registeredMobilePlugins.contains(bundle.id)) {
+              _plugins.install(
+                OpenMuseQuickJsInstalledPlugin(bundle, bundle.id),
+              );
+              _registeredMobilePlugins.add(bundle.id);
+            }
+            if (store.isEnabled(bundle.id)) {
+              await _plugins.activate(bundle.id);
+            } else {
+              await _plugins.deactivate(bundle.id);
+            }
+          }
+        })
+        .catchError((Object error, StackTrace stack) {
+          debugPrint('Mobile plugin registry sync failed: $error\n$stack');
+        });
+  }
+
+  Future<void> _getUpdate(OpenMuseRelease release) async {
+    await launchUrl(release.downloadUri, mode: LaunchMode.externalApplication);
+  }
+
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: 'OpenMuse',
-    theme: workBuddyTheme(),
-    localizationsDelegates: OpenMuseAuthLocalizations.localizationsDelegates,
-    supportedLocales: OpenMuseAuthLocalizations.supportedLocales,
-    home: _WorkBuddyHost(
-      authentication: widget.authenticationPlugin.authentication,
-      cloudLabel: widget.authenticationPlugin.cloudLabel,
-      cloudService: widget.cloudWorkspacePlugin.service,
-      pairedDesktop: widget.pairedDesktopPlugin.controller,
-      speechRecognition: widget.speechInputPlugin,
-      officeEngine: widget.officeEngine,
-      debugSpeechSource: widget.debugSpeechSource,
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: _locale,
+    builder: (context, _) => OpenMuseUiLocaleScope(
+      controller: _locale,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'OpenMuse',
+        locale: _locale.locale,
+        theme: workBuddyTheme(brightness: Brightness.light),
+        darkTheme: workBuddyTheme(brightness: Brightness.dark),
+        themeMode: _themeMode,
+        localizationsDelegates:
+            OpenMuseAuthLocalizations.localizationsDelegates,
+        supportedLocales: OpenMuseAuthLocalizations.supportedLocales,
+        home: OpenMuseStartupUpdatePrompt(
+          controller: widget.updates,
+          onUpdate: _getUpdate,
+          child: _WorkBuddyHost(
+            plugins: _plugins,
+            themeMode: _themeMode,
+            onThemeMode: _setThemeMode,
+            authentication: widget.authenticationPlugin.authentication,
+            cloudLabel: widget.authenticationPlugin.cloudLabel,
+            cloudService: widget.cloudWorkspacePlugin.service,
+            pairedDesktop: widget.pairedDesktopPlugin.controller,
+            speechRecognition: widget.speechInputPlugin,
+            officeEngine: widget.officeEngine,
+            debugSpeechSource: widget.debugSpeechSource,
+            mobileMarketPlugin: widget.mobileMarketPlugin,
+          ),
+        ),
+      ),
     ),
   );
 }
 
 final class _WorkBuddyHost extends StatefulWidget {
   const _WorkBuddyHost({
+    required this.plugins,
+    required this.themeMode,
+    required this.onThemeMode,
     required this.authentication,
     required this.cloudService,
     required this.pairedDesktop,
@@ -313,15 +466,20 @@ final class _WorkBuddyHost extends StatefulWidget {
     this.cloudLabel,
     this.officeEngine,
     this.debugSpeechSource,
+    this.mobileMarketPlugin,
   });
 
   final OpenMuseAuthenticationController authentication;
+  final OpenMusePluginRegistry plugins;
+  final ThemeMode themeMode;
+  final ValueChanged<ThemeMode> onThemeMode;
   final String? cloudLabel;
   final AppFlowyCloudWorkspaceService cloudService;
   final PairedDesktopMobileController pairedDesktop;
   final SpeechRecognitionPort? speechRecognition;
   final OfficeEnginePort? officeEngine;
   final SpeechAudioSource? debugSpeechSource;
+  final OpenMuseMobilePluginMarket? mobileMarketPlugin;
 
   @override
   State<_WorkBuddyHost> createState() => _WorkBuddyHostState();
@@ -340,6 +498,7 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
     _accountSubject = widget.authentication.snapshot.identity?.subject;
     WidgetsBinding.instance.addObserver(this);
     widget.authentication.addListener(_onAuth);
+    widget.mobileMarketPlugin?.store.addListener(_onMarketStoreChanged);
     _recompose();
   }
 
@@ -350,7 +509,16 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
       oldWidget.authentication.removeListener(_onAuth);
       widget.authentication.addListener(_onAuth);
     }
+    if (oldWidget.mobileMarketPlugin?.store !=
+        widget.mobileMarketPlugin?.store) {
+      oldWidget.mobileMarketPlugin?.store.removeListener(_onMarketStoreChanged);
+      widget.mobileMarketPlugin?.store.addListener(_onMarketStoreChanged);
+    }
     _recompose();
+  }
+
+  void _onMarketStoreChanged() {
+    if (mounted) setState(_recompose);
   }
 
   void _onAuth() {
@@ -378,6 +546,7 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
           widget.authentication.accessToken(forceRefresh: true),
       service: widget.cloudService,
       officeEngine: widget.officeEngine,
+      pluginStore: widget.mobileMarketPlugin?.store,
       pairedDesktop: widget.pairedDesktop,
       onSignOut: widget.authentication.signOut,
     );
@@ -387,6 +556,7 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     widget.authentication.removeListener(_onAuth);
+    widget.mobileMarketPlugin?.store.removeListener(_onMarketStoreChanged);
     _buddy.dispose();
     _acceptance?.controller.dispose();
     super.dispose();
@@ -403,6 +573,9 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
   Widget build(BuildContext context) => WorkBuddyShell(
     key: ValueKey('workbuddy.${_accountSubject ?? 'signed-out'}'),
     controller: _buddy,
+    pluginRegistry: widget.plugins,
+    themeMode: widget.themeMode,
+    onThemeMode: widget.onThemeMode,
     authentication: widget.authentication,
     pairedDesktop: widget.pairedDesktop,
     deviceSelectionStore: const FlutterSecureValueStore(),
@@ -410,6 +583,7 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
     speechRecognition: widget.speechRecognition,
     debugSpeechSource: widget.debugSpeechSource,
     remoteWorkbench: _acceptance?.controller,
+    mobileMarketPlugin: widget.mobileMarketPlugin,
     cloudLabel: widget.cloudLabel,
     onSignOut: widget.authentication.signOut,
   );
@@ -447,6 +621,7 @@ OpenMuseHostComposition connectedCloudMobileComposition({
   bool allowHttpForTesting = false,
   AppFlowyCloudWorkspaceService? service,
   OfficeEnginePort? officeEngine,
+  MobilePluginStore? pluginStore,
   PairedDesktopMobileController? pairedDesktop,
   Future<void> Function()? onSignOut,
 }) {
@@ -467,6 +642,7 @@ OpenMuseHostComposition connectedCloudMobileComposition({
     resourceCatalog: cloud,
     officeCommits: cloud,
     officeEngine: officeEngine ?? _loadPackagedOfficeEngine(),
+    pluginStore: pluginStore,
     pairedDesktop: pairedDesktop,
     onSignOut: onSignOut,
   );
@@ -480,6 +656,7 @@ OpenMuseHostComposition mobileComposition({
   CloudResourceCatalogPort? resourceCatalog,
   OfficeResourceCommitPort? officeCommits,
   OfficeEnginePort? officeEngine,
+  MobilePluginStore? pluginStore,
   PairedDesktopMobileController? pairedDesktop,
   Future<void> Function()? onSignOut,
 }) {
@@ -493,7 +670,8 @@ OpenMuseHostComposition mobileComposition({
       pairedDesktop != null,
       _supportsFormat(officeEngine, OfficeFormat.word),
       _supportsFormat(officeEngine, OfficeFormat.sheet),
-      _supportsFormat(officeEngine, OfficeFormat.slides),
+      _supportsFormat(officeEngine, OfficeFormat.slides) &&
+          (pluginStore == null || pluginStore.isEnabled('com.openmuse.pptx')),
       _supportsFormat(officeEngine, OfficeFormat.pdf),
     ),
     workspaceBuilder: (context, workspace) {
@@ -527,6 +705,7 @@ OpenMuseHostComposition mobileComposition({
         resources: resources,
         resourceCatalog: resourceCatalog,
         officeEngine: officeEngine,
+        pluginStore: pluginStore,
         officeCommits: officeCommits,
       );
     },
@@ -803,6 +982,7 @@ final class CloudWorkspaceScreen extends StatefulWidget {
     required this.resources,
     this.resourceCatalog,
     this.officeEngine,
+    this.pluginStore,
     this.officeCommits,
   });
   final CloudWorkspaceRecord record;
@@ -811,6 +991,7 @@ final class CloudWorkspaceScreen extends StatefulWidget {
   final ResourceRangePort resources;
   final CloudResourceCatalogPort? resourceCatalog;
   final OfficeEnginePort? officeEngine;
+  final MobilePluginStore? pluginStore;
   final OfficeResourceCommitPort? officeCommits;
 
   @override
@@ -824,6 +1005,7 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
   @override
   void initState() {
     super.initState();
+    widget.pluginStore?.addListener(_onPluginStoreChanged);
     coordinator = CloudWorkspaceCoordinator(
       service: widget.service,
       connector: widget.connector,
@@ -839,6 +1021,20 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
       );
     });
   }
+
+  void _onPluginStoreChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.pluginStore?.removeListener(_onPluginStoreChanged);
+    super.dispose();
+  }
+
+  bool get _pptxPluginEnabled =>
+      widget.pluginStore == null ||
+      widget.pluginStore!.isEnabled('com.openmuse.pptx');
 
   bool _isDocx(CloudResourceRecord value) =>
       value.mediaType ==
@@ -905,6 +1101,7 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
   ) async {
     final engine = widget.officeEngine;
     if (engine == null ||
+        (format == OfficeFormat.slides && !_pptxPluginEnabled) ||
         (format == OfficeFormat.sheet && !_isXlsx(resource)) ||
         (format == OfficeFormat.slides && !_isPptx(resource)) ||
         (format == OfficeFormat.pdf && !_isPdf(resource))) {
@@ -1002,13 +1199,19 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
               ListTile(
                 key: ValueKey('resource-${resource.resourceRef}'),
                 title: Text(resource.title),
-                subtitle: Text(resource.mediaType),
+                subtitle: Text(
+                  _isPptx(resource) && !_pptxPluginEnabled
+                      ? '安装 PPTX 阅读器后可打开'
+                      : resource.mediaType,
+                ),
                 enabled:
                     (_isDocx(resource) &&
                         widget.officeEngine != null &&
                         widget.officeCommits != null) ||
                     (_isXlsx(resource) && widget.officeEngine != null) ||
-                    (_isPptx(resource) && widget.officeEngine != null) ||
+                    (_isPptx(resource) &&
+                        widget.officeEngine != null &&
+                        _pptxPluginEnabled) ||
                     (_isPdf(resource) && widget.officeEngine != null),
                 onTap: () {
                   if (_isXlsx(resource)) {

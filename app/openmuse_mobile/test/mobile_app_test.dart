@@ -1,14 +1,76 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openmuse_app_update/openmuse_app_update.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_mobile/main.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
+import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
+import 'package:pub_semver/pub_semver.dart';
 
 void main() {
+  testWidgets('Mobile startup shows a newer store release before work', (
+    tester,
+  ) async {
+    final authentication = _FakeAuthenticationController();
+    final updates = OpenMuseUpdateController(
+      feed: OpenMuseUpdateFeed(
+        origin: Uri.parse('https://openmuseai.com'),
+        channel: 'canary',
+        target: 'ios-arm64',
+        fetchOverride: (_) async => jsonEncode({
+          'schema': 'openmuse.app-update/v1',
+          'channel': 'canary',
+          'target': 'ios-arm64',
+          'version': '0.0.2',
+          'build': 2,
+          'publishedAt': '2026-10-13T00:00:00Z',
+          'downloadUrl': 'https://testflight.apple.com/join/openmuse',
+          'sha256': '',
+          'sizeBytes': 0,
+          'installKind': 'ios-store',
+          'notes': {'zh': '手机端更新说明', 'en': 'Mobile release notes'},
+        }),
+      ),
+      installedVersion: Version.parse('0.0.1'),
+      installedBuild: 1,
+    );
+    await updates.check();
+    await tester.pumpWidget(
+      OpenMuseMobileApplication(
+        updates: updates,
+        authenticationPlugin: OpenMuseGoTruePlugin(
+          authentication: authentication,
+          cloudLabel: 'https://cloud.openmuse.test',
+        ),
+        cloudWorkspacePlugin: OpenMuseCloudWorkspacePlugin(
+          authentication: authentication,
+          cloudOrigin: Uri.parse('https://cloud.openmuse.test'),
+          deviceId: 'mobile-test',
+        ),
+        pairedDesktopPlugin: OpenMusePairedDesktopMobilePlugin(
+          client: PairedDesktopClient(
+            origin: Uri.parse('https://desktop.openmuse.test'),
+            accessToken: authentication.accessToken,
+            deviceRef: 'mobile-test',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('app-update-dialog')), findsOneWidget);
+    expect(find.text('手机端更新说明'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('app-update-later')));
+    await tester.pumpAndSettle();
+    expect(find.text('OpenMuse，与你一起创造'), findsOneWidget);
+  });
+
   testWidgets('mobile distribution loads the GoTrue login plugin by default', (
     tester,
   ) async {
@@ -287,6 +349,53 @@ void main() {
     expect(find.text('PPTX · 只读兼容视图'), findsOneWidget);
     expect(find.textContaining('Slide 1'), findsOneWidget);
     expect(find.byIcon(Icons.save), findsNothing);
+  });
+
+  testWidgets('PPTX route becomes available after market installation', (
+    tester,
+  ) async {
+    final directory = (await tester.runAsync(
+      () => Directory.systemTemp.createTemp('pptx-gate-test-'),
+    ))!;
+    addTearDown(() => directory.delete(recursive: true));
+    final store = MobilePluginStore(directory);
+    const source = BundledMobileMarketSource();
+    final entry = (await tester.runAsync(
+      source.list,
+    ))!.singleWhere((candidate) => candidate.id == 'com.openmuse.pptx');
+    final service = _FakeCloudService(pptx: true);
+    final engine = MultiFormatOfficeEngine({
+      OfficeFormat.slides: _FakeSlidesEngine(),
+    });
+    await tester.pumpWidget(
+      OpenMuseHostShell(
+        composition: mobileComposition(
+          session: const MobileAccountSession.authenticated('Test Account'),
+          cloudService: service,
+          dshConnector: service,
+          resources: service,
+          resourceCatalog: service,
+          officeEngine: engine,
+          pluginStore: store,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cloud Project'));
+    await tester.pumpAndSettle();
+    final resource = find.byKey(const ValueKey('resource-resource:pptx'));
+    expect(tester.widget<ListTile>(resource).enabled, isFalse);
+    await tester.runAsync(() async {
+      final bytes = await File(
+        '../../packages/openmuse_mobile_plugin_runtime/assets/pptx-mobile.json',
+      ).readAsBytes();
+      await store.install(entry, bytes);
+    });
+    await tester.pumpAndSettle();
+    expect(tester.widget<ListTile>(resource).enabled, isTrue);
+    await tester.tap(find.text('Deck.pptx'));
+    await tester.pumpAndSettle();
+    expect(find.text('PPTX · 只读兼容视图'), findsOneWidget);
   });
 
   testWidgets(

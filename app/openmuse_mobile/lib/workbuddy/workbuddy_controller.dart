@@ -65,6 +65,21 @@ final class WorkBuddyController extends ChangeNotifier {
       .where((task) => task.showInTaskList && task.deviceId == selectedDeviceId)
       .toList();
 
+  /// The five newest tasks across every workspace and device.
+  List<WbTask> get recentTasks {
+    final items =
+        [
+          for (final task in _tasks)
+            if (task.showInTaskList) task,
+        ]..sort((left, right) {
+          final byTime = right.updatedAt.compareTo(left.updatedAt);
+          if (byTime != 0) return byTime;
+          return right.id.compareTo(left.id);
+        });
+    if (items.length <= 5) return items;
+    return items.sublist(0, 5);
+  }
+
   List<WbTask> tasksIn(String workspaceId) => _tasks
       .where(
         (task) =>
@@ -189,6 +204,7 @@ final class WorkBuddyController extends ChangeNotifier {
       deviceId: selectedDeviceId,
       status: WbTaskStatus.completed,
       showInTaskList: true,
+      updatedAt: DateTime.now().millisecondsSinceEpoch,
       messages: [
         WbMessage(fromUser: true, text: text),
         reply,
@@ -209,6 +225,7 @@ final class WorkBuddyController extends ChangeNotifier {
       return;
     }
     final updated = current.copyWith(
+      updatedAt: DateTime.now().millisecondsSinceEpoch,
       messages: [
         ...current.messages,
         WbMessage(fromUser: true, text: text),

@@ -15,9 +15,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final buddy = WorkBuddyController();
     final desktop = AcceptanceDesktop();
-    addTearDown(buddy.dispose);
     addTearDown(desktop.controller.dispose);
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox.shrink());
@@ -26,20 +24,10 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: workBuddyTheme(),
-        home: WorkBuddyShell(
-          controller: buddy,
-          remoteWorkbench: desktop.controller,
-        ),
+        home: RemoteWorkbenchPage(controller: desktop.controller),
       ),
     );
     await tester.pump();
-    expect(find.text('OpenMuse，与你一起创造'), findsOneWidget);
-
-    await tester.tap(find.byKey(const ValueKey('wb-menu')));
-    await tester.pumpAndSettle();
-    expect(find.text('撰写俄乌战争背景与最新情况'), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('wb-remote-workbench')));
-    await tester.pumpAndSettle();
 
     expect(find.text(acceptanceLabNotice), findsOneWidget);
     expect(find.text('社媒发布'), findsOneWidget);
@@ -128,7 +116,7 @@ void main() {
     expect(find.text('交互网页'), findsNothing);
   });
 
-  testWidgets('RS-UI-05 an unconnected release shell waits for Desktop', (
+  testWidgets('RS-UI-05 the drawer no longer offers the remote workbench', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -148,10 +136,9 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('wb-menu')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('wb-remote-workbench')));
-    await tester.pumpAndSettle();
-    expect(find.text('等待已配对的 Desktop'), findsOneWidget);
-    expect(find.text('社媒发布'), findsNothing);
+    expect(find.text('远程工作台'), findsNothing);
+    expect(find.text('助理'), findsNothing);
+    expect(find.text('最近任务'), findsOneWidget);
     expect(buddy.tasks, isEmpty);
   });
 }

@@ -10,15 +10,53 @@ import 'package:muse_speech_core/muse_speech_core.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_mobile_plugin_market/openmuse_mobile_plugin_market.dart';
 import 'package:openmuse_remote_workbench/openmuse_remote_workbench.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 import '../native_dsh_page.dart';
+import '../mobile_plugin_detail_page.dart';
 import '../plugin_interaction_remote.dart';
+import '../mobile_plugins/mobile_workbench_page.dart';
+import '../mobile_plugins/mobile_my_page.dart';
+import '../mobile_plugins/paired_mobile_context.dart';
 import 'workbuddy_controller.dart';
 import 'workbuddy_icons.dart';
 import 'workbuddy_models.dart';
 import 'workbuddy_theme.dart';
+
+final class _SavedDesktop {
+  const _SavedDesktop({required this.kind, this.deviceRef, this.workspaceId});
+
+  final String kind;
+  final String? deviceRef;
+  final String? workspaceId;
+
+  Map<String, Object?> toJson() => {
+    'kind': kind,
+    if (deviceRef != null) 'deviceRef': deviceRef,
+    if (workspaceId != null) 'workspaceId': workspaceId,
+  };
+
+  factory _SavedDesktop.fromJson(Map<String, Object?> json) {
+    final deviceRef = json['deviceRef'];
+    final workspaceId = json['workspaceId'];
+    final workspace = workspaceId is String && workspaceId.isNotEmpty
+        ? workspaceId
+        : null;
+    if (json['kind'] == 'cloud') {
+      return _SavedDesktop(kind: 'cloud', workspaceId: workspace);
+    }
+    if (deviceRef is! String || deviceRef.isEmpty) {
+      throw const FormatException('saved desktop is missing deviceRef');
+    }
+    return _SavedDesktop(
+      kind: 'desktop',
+      deviceRef: deviceRef,
+      workspaceId: workspace,
+    );
+  }
+}
 
 final class WorkBuddyShell extends StatefulWidget {
   const WorkBuddyShell({
@@ -32,7 +70,11 @@ final class WorkBuddyShell extends StatefulWidget {
     this.speechRecognition,
     this.debugSpeechSource,
     this.remoteWorkbench,
+    this.mobileMarketPlugin,
     this.deviceSelectionStore,
+    this.pluginRegistry,
+    this.themeMode = ThemeMode.system,
+    this.onThemeMode,
   });
 
   final WorkBuddyController controller;
@@ -47,7 +89,11 @@ final class WorkBuddyShell extends StatefulWidget {
   /// from a plugin wire request or other untrusted input.
   final SpeechAudioSource? debugSpeechSource;
   final RemoteWorkbenchController? remoteWorkbench;
+  final OpenMuseMobilePluginMarket? mobileMarketPlugin;
   final SecureValueStore? deviceSelectionStore;
+  final OpenMusePluginRegistry? pluginRegistry;
+  final ThemeMode themeMode;
+  final ValueChanged<ThemeMode>? onThemeMode;
 
   @override
   State<WorkBuddyShell> createState() => _WorkBuddyShellState();
@@ -78,6 +124,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   int _desktopBindAttempts = 0;
   Timer? _desktopRenewalTimer;
   Future<void>? _desktopRestoreTask;
+  String? _desktopRestoreDeviceRef;
+  bool _submitting = false;
   bool _appForeground = true;
   DateTime? _backgroundedAt;
 
@@ -93,6 +141,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       value: controller.drawerOpen ? 1 : 0,
     );
     controller.addListener(_syncDrawer);
+    controller.addListener(_syncPluginContexts);
     widget.authentication?.addListener(_syncAccount);
     final initial = widget.authentication?.snapshot;
     _initialAuthResolved =
@@ -100,8 +149,10 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         initial.phase == OpenMuseAuthenticationPhase.signedOut ||
         initial.isAuthenticated;
     widget.pairedDesktop?.addListener(_syncDevices);
+    widget.pairedDesktop?.addListener(_syncPluginContexts);
     _syncAccount();
     _syncDevices();
+    _syncPluginContexts();
     _sessionHandle.addListener(_syncSession);
     unawaited(_loadCloud());
     if (widget.debugSpeechSource != null) {
@@ -115,6 +166,22 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     if (mounted) setState(() {});
   }
 
+  void _syncPluginContexts() {
+    final registry = widget.pluginRegistry;
+    if (registry == null) return;
+    final connection = widget.pairedDesktop?.snapshot.connection;
+    for (final descriptor in registry.descriptors) {
+      final plugin = registry.plugin(descriptor.id);
+      if (plugin is PairedMobileContextContributor) {
+        (plugin as PairedMobileContextContributor).updatePairedContext(
+          connection: connection,
+          workspaces: controller.workspaces,
+          selectedWorkspaceId: controller.selectedWorkspace.id,
+        );
+      }
+    }
+  }
+
   @override
   void didUpdateWidget(covariant WorkBuddyShell oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -125,10 +192,15 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     }
     if (oldWidget.pairedDesktop != widget.pairedDesktop) {
       oldWidget.pairedDesktop?.removeListener(_syncDevices);
+      oldWidget.pairedDesktop?.removeListener(_syncPluginContexts);
       _desktopRenewalTimer?.cancel();
       _nativeConnectionKey = null;
       widget.pairedDesktop?.addListener(_syncDevices);
+      widget.pairedDesktop?.addListener(_syncPluginContexts);
       _syncDevices();
+    }
+    if (oldWidget.pluginRegistry != widget.pluginRegistry) {
+      _syncPluginContexts();
     }
     if (oldWidget.catalog != widget.catalog) unawaited(_loadCloud());
   }
@@ -153,6 +225,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   void _syncDrawer() {
     if (!mounted) return;
     _rememberNativeSession();
+    _persistPairedSelection();
     if (controller.drawerOpen) {
       _drawer.forward();
     } else {
@@ -182,15 +255,26 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     }
   }
 
+  String? _savedWorkspaceId;
+  String? _persistedSelectionToken;
+
   String _desktopSelectionKey(String subject) =>
       'openmuse.mobile.desktop.${base64Url.encode(utf8.encode(subject))}';
 
   Future<void> _restoreSavedDesktop(String subject, bool interactive) async {
     final store = widget.deviceSelectionStore;
-    String? deviceRef;
+    String? raw;
     if (store != null) {
       try {
-        deviceRef = await store.read(_desktopSelectionKey(subject));
+        raw = await store.read(_desktopSelectionKey(subject));
+        if (raw == null) {
+          await Future<void>.delayed(const Duration(milliseconds: 250));
+          if (!mounted ||
+              widget.authentication?.snapshot.identity?.subject != subject) {
+            return;
+          }
+          raw = await store.read(_desktopSelectionKey(subject));
+        }
       } on Object catch (error) {
         debugPrint('OpenMuse Desktop selection restore: $error');
       }
@@ -199,37 +283,127 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         widget.authentication?.snapshot.identity?.subject != subject) {
       return;
     }
-    if (deviceRef == null ||
-        deviceRef.isEmpty ||
-        widget.pairedDesktop == null) {
+    final saved = raw == null ? null : _parseSavedDesktop(raw);
+    if (saved == null) {
       if (interactive) _offerDesktopBind();
       return;
     }
     _desktopBindOffered = true;
+    _savedWorkspaceId = saved.workspaceId;
+    if (saved.kind == 'cloud') {
+      controller.selectDevice(kCloudDeviceId);
+      _applySavedWorkspace();
+      return;
+    }
+    final deviceRef = saved.deviceRef;
+    if (deviceRef == null || deviceRef.isEmpty) {
+      if (interactive) _offerDesktopBind();
+      return;
+    }
     final id = 'paired.$deviceRef';
-    final matches = widget.pairedDesktop!.devices.where(
+    final matches = widget.pairedDesktop?.devices.where(
       (device) => device.deviceRef == deviceRef,
     );
+    final known = matches == null || matches.isEmpty ? null : matches.first;
     controller.upsertDevice(
       WbDevice(
         id: id,
-        name: matches.isEmpty ? 'Desktop' : matches.first.displayName,
+        name: known?.displayName ?? 'Desktop',
         kind: WbDeviceKind.local,
-        online: matches.isNotEmpty && matches.first.online,
+        online: known?.online ?? false,
       ),
     );
     controller.selectDevice(id);
+    _applySavedWorkspace();
     unawaited(_restoreDesktopConnection(deviceRef: deviceRef, force: true));
   }
 
-  Future<void> _rememberDesktop(String deviceRef) async {
+  void _persistPairedSelection() {
+    final saved = _selectionToSave();
+    if (saved == null) return;
+    final token = '${saved.kind}|${saved.deviceRef}|${saved.workspaceId}';
+    if (token == _persistedSelectionToken) return;
+    _persistedSelectionToken = token;
+    unawaited(_writeDesktopSelection(saved));
+  }
+
+  _SavedDesktop? _selectionToSave() {
+    final id = controller.selectedDeviceId;
+    if (id == kCloudDeviceId) {
+      return _SavedDesktop(
+        kind: 'cloud',
+        workspaceId: _persistableWorkspaceId(),
+      );
+    }
+    if (!id.startsWith('paired.') || id == kPendingDeviceId) return null;
+    final deviceRef = id.substring('paired.'.length);
+    if (deviceRef.isEmpty || deviceRef == 'pending') return null;
+    return _SavedDesktop(
+      kind: 'desktop',
+      deviceRef: deviceRef,
+      workspaceId: _persistableWorkspaceId(),
+    );
+  }
+
+  String? _persistableWorkspaceId() {
+    final id = controller.selectedWorkspaceId;
+    if (id.startsWith('dsh.workspace.') || id.startsWith('cloud.')) {
+      if (id != 'cloud.pending') return id;
+    }
+    return _savedWorkspaceId;
+  }
+
+  void _applySavedWorkspace() {
+    final id = _savedWorkspaceId;
+    if (id == null) return;
+    if (!controller.workspaces.any((workspace) => workspace.id == id)) return;
+    controller.selectWorkspace(id);
+  }
+
+  Future<void> _rememberDesktop(String deviceRef) {
+    final workspaceId = controller.selectedDeviceId == 'paired.$deviceRef'
+        ? _persistableWorkspaceId()
+        : _savedWorkspaceId;
+    return _writeDesktopSelection(
+      _SavedDesktop(
+        kind: 'desktop',
+        deviceRef: deviceRef,
+        workspaceId: workspaceId,
+      ),
+    );
+  }
+
+  Future<void> _writeDesktopSelection(_SavedDesktop saved) async {
     final subject = widget.authentication?.snapshot.identity?.subject;
     final store = widget.deviceSelectionStore;
     if (subject == null || store == null) return;
+    if (saved.workspaceId != null &&
+        saved.workspaceId != 'cloud.pending' &&
+        (saved.workspaceId!.startsWith('dsh.workspace.') ||
+            saved.workspaceId!.startsWith('cloud.'))) {
+      _savedWorkspaceId = saved.workspaceId;
+    }
     try {
-      await store.write(_desktopSelectionKey(subject), deviceRef);
+      await store.write(
+        _desktopSelectionKey(subject),
+        jsonEncode(saved.toJson()),
+      );
     } on Object catch (error) {
       debugPrint('OpenMuse Desktop selection save: $error');
+    }
+  }
+
+  _SavedDesktop? _parseSavedDesktop(String raw) {
+    if (!raw.startsWith('{')) {
+      if (raw.isEmpty) return null;
+      return _SavedDesktop(kind: 'desktop', deviceRef: raw);
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      return _SavedDesktop.fromJson(decoded.cast<String, Object?>());
+    } on Object {
+      return null;
     }
   }
 
@@ -267,13 +441,14 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     );
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: WbColors.sheet,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       builder: (context) => _DesktopBindSheet(
         paired: widget.pairedDesktop,
+        selectedDeviceId: controller.selectedDeviceId,
         onConnect: (device) async {
           if (!device.online || !device.supportsPairedDesktop) {
             final deviceId = 'paired.${device.deviceRef}';
@@ -376,11 +551,17 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       );
     }
     if (connection != null) {
+      final matching = paired.devices.where(
+        (device) => device.deviceRef == connection.deviceRef,
+      );
       controller.upsertDevice(
         WbDevice(
           id: 'paired.${connection.deviceRef}',
           name: connection.deviceName,
           kind: WbDeviceKind.local,
+          online:
+              paired.directory == null ||
+              (matching.isNotEmpty && matching.first.online),
         ),
       );
     }
@@ -408,28 +589,64 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     if (ref == null) return Future<void>.value();
     if (!force &&
         connection != null &&
+        connection.deviceRef == ref &&
         connection.expiresAtMs >
             DateTime.now()
                 .add(const Duration(minutes: 1))
                 .millisecondsSinceEpoch) {
       return Future<void>.value();
     }
-    return _desktopRestoreTask ??= _retryDesktopConnection(paired, ref)
+    final pending = _desktopRestoreTask;
+    if (pending != null) {
+      if (_desktopRestoreDeviceRef == ref) return pending;
+      return pending.then(
+        (_) => _restoreDesktopConnection(deviceRef: ref, force: force),
+      );
+    }
+    _desktopRestoreDeviceRef = ref;
+    return _desktopRestoreTask = _retryDesktopConnection(paired, ref)
         .whenComplete(() {
           _desktopRestoreTask = null;
+          _desktopRestoreDeviceRef = null;
         });
+  }
+
+  PairedDesktopConnection? _selectedDesktopConnection() {
+    final selectedId = controller.selectedDeviceId;
+    final connection = widget.pairedDesktop?.snapshot.connection;
+    if (connection == null ||
+        selectedId != 'paired.${connection.deviceRef}' ||
+        connection.expiresAtMs <=
+            DateTime.now()
+                .add(const Duration(minutes: 1))
+                .millisecondsSinceEpoch) {
+      return null;
+    }
+    return connection;
   }
 
   Future<void> _retryDesktopConnection(
     PairedDesktopMobileController paired,
     String deviceRef,
   ) async {
+    final originalGrantRef = paired.snapshot.connection?.grantRef;
+    var attempted = false;
     while (mounted &&
         _appForeground &&
         identical(widget.pairedDesktop, paired)) {
       if (widget.authentication?.snapshot.isAuthenticated == false ||
-          (paired.snapshot.connection?.deviceRef != deviceRef &&
-              controller.selectedDeviceId != 'paired.$deviceRef')) {
+          controller.selectedDeviceId != 'paired.$deviceRef') {
+        return;
+      }
+      final current = paired.snapshot.connection;
+      if (attempted &&
+          current?.deviceRef == deviceRef &&
+          current?.grantRef != originalGrantRef &&
+          paired.snapshot.failureMessage == null &&
+          current!.expiresAtMs >
+              DateTime.now()
+                  .add(const Duration(minutes: 1))
+                  .millisecondsSinceEpoch) {
         return;
       }
       try {
@@ -443,6 +660,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
           (device) => device.deviceRef == deviceRef,
         );
         if (devices.isNotEmpty && devices.first.online) {
+          attempted = true;
           final connected = await paired.connectDevice(
             devices.first,
             force: true,
@@ -490,6 +708,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
               deviceId: kCloudDeviceId,
             ),
       ]);
+      _applySavedWorkspace();
     } on Object {
       // Cloud catalog is optional. Local computer and its workspaces stay usable.
     }
@@ -500,8 +719,10 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     WidgetsBinding.instance.removeObserver(this);
     _desktopRenewalTimer?.cancel();
     controller.removeListener(_syncDrawer);
+    controller.removeListener(_syncPluginContexts);
     widget.authentication?.removeListener(_syncAccount);
     widget.pairedDesktop?.removeListener(_syncDevices);
+    widget.pairedDesktop?.removeListener(_syncPluginContexts);
     _drawer.dispose();
     final speechSession = _speechSession;
     if (speechSession != null) {
@@ -557,7 +778,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     }
     final picked = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: WbColors.sheet,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
@@ -565,34 +786,20 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         title: '选择设备',
         children: [
           for (final device in controller.devices)
-            if (device.id != kPendingDeviceId)
-              ListTile(
+            if (device.id != kPendingDeviceId &&
+                device.kind != WbDeviceKind.cloud)
+              _DeviceStatusRow(
                 key: ValueKey('device-${device.id}'),
-                leading: WbIcon(
-                  device.kind == WbDeviceKind.cloud
-                      ? WbGlyph.project
-                      : WbGlyph.desktop,
-                  size: 20,
-                  color: WbColors.textMuted,
-                ),
-                title: Text(
-                  device.kind == WbDeviceKind.local ? device.name : '云端',
-                  style: const TextStyle(color: WbColors.text),
-                ),
-                subtitle: Text(
-                  device.kind == WbDeviceKind.local
-                      ? (device.online ? '本机电脑 · 在线' : '本机电脑 · 离线')
-                      : '开发中',
-                  style: wbSub,
-                ),
-                trailing: device.id == controller.selectedDeviceId
-                    ? const WbIcon(
-                        WbGlyph.check,
-                        size: 18,
-                        color: WbColors.text,
-                      )
+                id: device.id,
+                name: device.name,
+                online: device.online,
+                current: device.id == controller.selectedDeviceId,
+                connected:
+                    widget.pairedDesktop?.snapshot.connection?.deviceRef ==
+                    device.id.replaceFirst('paired.', ''),
+                onBind: device.online
+                    ? () => Navigator.pop(context, device.id)
                     : null,
-                onTap: () => Navigator.pop(context, device.id),
               ),
         ],
       ),
@@ -692,10 +899,12 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                       ? WbTaskStatus.running
                       : WbTaskStatus.completed,
                   showInTaskList: true,
+                  updatedAt: session.updatedAt,
                   messages: const [],
                 ),
         ],
       );
+      _applySavedWorkspace();
     } catch (error) {
       debugPrint('OpenMuse desktop catalog: $error');
     } finally {
@@ -717,7 +926,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     final spaces = controller.workspacesFor(controller.selectedDeviceId);
     final picked = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: WbColors.sheet,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
@@ -725,10 +934,12 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         title: '选择工作空间',
         children: [
           if (spaces.isEmpty)
-            const ListTile(
+            ListTile(
               title: Text(
                 '当前设备还没有工作空间',
-                style: TextStyle(color: WbColors.textDim),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           for (final workspace in spaces)
@@ -736,13 +947,15 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
               key: ValueKey('workspace-${workspace.id}'),
               title: Text(
                 workspace.name,
-                style: const TextStyle(color: WbColors.text),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
               subtitle: workspace.deviceId == kCloudDeviceId
-                  ? const Text('开发中', style: wbSub)
+                  ? Text('开发中', style: wbSub)
                   : null,
               trailing: workspace.id == controller.selectedWorkspaceId
-                  ? const WbIcon(WbGlyph.check, size: 18)
+                  ? WbIcon(WbGlyph.check, size: 18)
                   : null,
               onTap: () => Navigator.pop(context, workspace.id),
             ),
@@ -759,7 +972,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
 
   Future<void> _openRunSettings() => showModalBottomSheet<void>(
     context: context,
-    backgroundColor: WbColors.sheet,
+    backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
     barrierColor: const Color(0x66000000),
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
@@ -781,6 +994,16 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   );
 
   Future<void> _submit() async {
+    if (_submitting) return;
+    _submitting = true;
+    try {
+      await _submitOnce();
+    } finally {
+      _submitting = false;
+    }
+  }
+
+  Future<void> _submitOnce() async {
     final text = _composer.text.trim();
     if (text.isEmpty) return;
     if (controller.selectedDeviceId == kPendingDeviceId) {
@@ -789,13 +1012,40 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       ).showSnackBar(const SnackBar(content: Text('请先连接 Desktop。')));
       return;
     }
-    if (controller.selectedDeviceId == kCloudDeviceId ||
-        controller.selectedWorkspace.deviceId == kCloudDeviceId) {
+    if (controller.selectedDeviceId == kCloudDeviceId) {
       _showCloudDeveloping();
       return;
     }
-    final connection = widget.pairedDesktop?.snapshot.connection;
+    var connection = _selectedDesktopConnection();
+    if (connection == null &&
+        controller.selectedDeviceId.startsWith('paired.')) {
+      final deviceRef = controller.selectedDeviceId.substring('paired.'.length);
+      try {
+        await _restoreDesktopConnection(
+          deviceRef: deviceRef,
+          force: true,
+        ).timeout(const Duration(seconds: 12));
+      } on TimeoutException {
+        // The retry continues in the background; the draft stays in the composer.
+      }
+      if (!mounted) return;
+      connection = _selectedDesktopConnection();
+      if (connection == null) {
+        final failure = widget.pairedDesktop?.snapshot.failureMessage;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              failure == null || failure.isEmpty
+                  ? '正在连接 Desktop，消息已保留，请稍后重试。'
+                  : 'Desktop 未连接：$failure',
+            ),
+          ),
+        );
+        return;
+      }
+    }
     if (connection != null) {
+      final targetDeviceRef = connection.deviceRef;
       final task = controller.openTask;
       if (task != null && task.id.startsWith('dsh.session.')) {
         if (!_sessionHandle.ready) {
@@ -810,12 +1060,23 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
           await _sessionHandle.send(text);
         } on Object catch (error) {
           if (mounted) {
+            _composer.text = text;
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text('发送失败：$error')));
           }
+          unawaited(
+            _restoreDesktopConnection(deviceRef: targetDeviceRef, force: true),
+          );
         }
         return;
+      }
+      if (!controller.selectedWorkspace.id.startsWith('dsh.workspace.')) {
+        await _publishDesktopCatalog(
+          connection,
+          'paired.${connection.deviceRef}',
+        );
+        if (!mounted) return;
       }
       final workspaceId = controller.selectedWorkspace.id;
       if (!workspaceId.startsWith('dsh.workspace.')) {
@@ -829,11 +1090,12 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       var sessionConnection = connection;
       final paired = widget.pairedDesktop;
       final devices = paired?.devices.where(
-        (device) => device.deviceRef == connection.deviceRef,
+        (device) => device.deviceRef == targetDeviceRef,
       );
       if (paired != null && devices != null && devices.isNotEmpty) {
         final renewed = await paired.connectDevice(devices.first, force: true);
-        if (!renewed || paired.snapshot.connection == null) {
+        if (!renewed ||
+            paired.snapshot.connection?.deviceRef != targetDeviceRef) {
           if (mounted) {
             _composer.text = text;
             ScaffoldMessenger.of(context).showSnackBar(
@@ -886,6 +1148,16 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   Future<void> _startVoice({SpeechAudioSource? source}) async {
     final speech = widget.speechRecognition;
     if (speech == null || _speechOpening || _speechSession != null) return;
+    if (source is! SpeechFileSource) {
+      final probe = await speech.probe();
+      if (!mounted || _speechOpening || _speechSession != null) return;
+      if (probe.permission != SpeechPermissionState.granted) {
+        final proceed = await _confirmMicrophoneUse();
+        if (!proceed || !mounted || _speechOpening || _speechSession != null) {
+          return;
+        }
+      }
+    }
 
     final selection = _composer.selection;
     final textLength = _composer.text.length;
@@ -933,6 +1205,29 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     } finally {
       _speechOpening = false;
     }
+  }
+
+  Future<bool> _confirmMicrophoneUse() async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const ValueKey('wb-microphone-purpose'),
+        title: Text('使用麦克风'),
+        content: Text('OpenMuse 需要使用麦克风，把你说的话转成可编辑文字。语音识别在这台设备上完成，录音不会上传。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('暂不使用'),
+          ),
+          TextButton(
+            key: const ValueKey('wb-microphone-continue'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('继续'),
+          ),
+        ],
+      ),
+    );
+    return proceed ?? false;
   }
 
   Future<void> _stopVoice() async {
@@ -1069,7 +1364,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     final current = _sessionHandle.snapshot?.permissionPreset;
     final picked = await showModalBottomSheet<DshNativePermissionOption>(
       context: context,
-      backgroundColor: WbColors.sheet,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1083,17 +1378,19 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                 option.value == 'danger-full-access'
                     ? Icons.warning_amber_rounded
                     : Icons.admin_panel_settings_outlined,
-                color: WbColors.textMuted,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               title: Text(
                 _permissionLabel(option.value),
-                style: const TextStyle(color: WbColors.text),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
               subtitle: option.description == null
                   ? null
                   : Text(option.description!, style: wbSub),
               trailing: current == option.value
-                  ? const WbIcon(WbGlyph.check, size: 18)
+                  ? WbIcon(WbGlyph.check, size: 18)
                   : null,
               onTap: () => Navigator.pop(context, option),
             ),
@@ -1106,23 +1403,25 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: WbColors.sheet,
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
           title: Text(
             picked.value == 'auto' ? '启用自动审批？' : '启用完整访问？',
-            style: const TextStyle(color: WbColors.text),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
           ),
           content: Text(
             picked.description ?? '此权限会扩大 Desktop 上工具和文件操作的范围。',
-            style: const TextStyle(color: WbColors.textMuted),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消'),
+              child: Text('取消'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('确认'),
+              child: Text('确认'),
             ),
           ],
         ),
@@ -1145,7 +1444,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     final snapshot = _sessionHandle.snapshot;
     final picked = await showModalBottomSheet<DshNativeModelOption>(
       context: context,
-      backgroundColor: WbColors.sheet,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -1156,13 +1455,15 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
           for (final option in options)
             ListTile(
               key: ValueKey('wb-model-${option.provider}-${option.id}'),
-              leading: const Icon(
+              leading: Icon(
                 Icons.auto_awesome_outlined,
-                color: WbColors.textMuted,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               title: Text(
                 option.name,
-                style: const TextStyle(color: WbColors.text),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
               subtitle: Text(
                 option.description == null
@@ -1175,7 +1476,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
               trailing:
                   snapshot?.provider == option.provider &&
                       snapshot?.model == option.id
-                  ? const WbIcon(WbGlyph.check, size: 18)
+                  ? WbIcon(WbGlyph.check, size: 18)
                   : null,
               onTap: () => Navigator.pop(context, option),
             ),
@@ -1188,7 +1489,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     if (picked.efforts.isNotEmpty) {
       effort = await showModalBottomSheet<String>(
         context: context,
-        backgroundColor: WbColors.sheet,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -1200,13 +1501,15 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                 key: ValueKey('wb-effort-${value.id}'),
                 title: Text(
                   value.name,
-                  style: const TextStyle(color: WbColors.text),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 subtitle: value.description == null
                     ? null
                     : Text(value.description!, style: wbSub),
                 trailing: snapshot?.reasoningEffort == value.id
-                    ? const WbIcon(WbGlyph.check, size: 18)
+                    ? WbIcon(WbGlyph.check, size: 18)
                     : null,
                 onTap: () => Navigator.pop(context, value.id),
               ),
@@ -1225,18 +1528,21 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   Future<void> _showAttachmentActions() async {
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: WbColors.sheet,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => const _ChoiceSheet(
+      builder: (context) => _ChoiceSheet(
         title: '添加内容',
         children: [
           ListTile(
-            leading: Icon(Icons.folder_outlined, color: WbColors.textMuted),
+            leading: Icon(
+              Icons.folder_outlined,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             title: Text(
               '从 Desktop Workspace 引用文件',
-              style: TextStyle(color: WbColors.text),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             subtitle: Text('附件协议将在下一阶段开放', style: wbSub),
             enabled: false,
@@ -1253,14 +1559,52 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _openMobileMarket({bool initialMine = false}) async {
+    final market = widget.mobileMarketPlugin;
+    if (market == null) return;
+    controller.closeDrawer();
+    final connection = widget.pairedDesktop?.snapshot.connection;
+    final desktop = connection == null
+        ? null
+        : PairedDesktopMarketClient(
+            origin: Uri.parse(connection.session.origin),
+            grantRef: connection.grantRef,
+            expiresAtMs: connection.expiresAtMs,
+          );
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (context) => market.buildMarketPage(
+          desktop: desktop,
+          initialMine: initialMine,
+          pluginRegistry: widget.pluginRegistry,
+          onOpenBuiltIn: _openBuiltInPlugin,
+        ),
+      ),
+    );
+  }
+
+  void _openBuiltInPlugin(OpenMusePlugin plugin) {
+    if (plugin is! OpenMuseMobileWorkbenchContributor) return;
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => MobilePluginDetailPage(
+          plugin: plugin,
+          contribution: plugin as OpenMuseMobileWorkbenchContributor,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final drawerWidth = width * 0.84;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: Theme.of(context).brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: WbColors.canvas,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         resizeToAvoidBottomInset: true,
         body: AnimatedBuilder(
           animation: _drawer,
@@ -1272,6 +1616,46 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                   offset: Offset(shift, 0),
                   child: _MainColumn(
                     controller: controller,
+                    pairedDesktop: widget.pairedDesktop,
+                    mobileMarket: widget.mobileMarketPlugin,
+                    pluginRegistry: widget.pluginRegistry,
+                    onOpenBuiltIn: _openBuiltInPlugin,
+                    workbenchPage: widget.pluginRegistry == null
+                        ? const Center(child: Text('工作台暂不可用'))
+                        : MobileWorkbenchPage(
+                            registry: widget.pluginRegistry!,
+                            values:
+                                widget.deviceSelectionStore ??
+                                const FlutterSecureValueStore(),
+                            subject:
+                                widget
+                                    .authentication
+                                    ?.snapshot
+                                    .identity
+                                    ?.subject ??
+                                'local',
+                            scope:
+                                '${controller.selectedDeviceId}.'
+                                '${controller.selectedWorkspaceId}',
+                            onDiscover: () =>
+                                controller.selectTab(WbTab.discover),
+                          ),
+                    minePage: MobileMyPage(
+                      themeMode: widget.themeMode,
+                      onThemeMode: widget.onThemeMode ?? (_) {},
+                      workspaces: controller.workspacesFor(
+                        controller.selectedDeviceId,
+                      ),
+                      deviceName: controller.selectedDevice.name,
+                      authentication: widget.authentication,
+                      onSignIn: () => unawaited(_openLogin()),
+                      onSignOut: widget.onSignOut == null
+                          ? null
+                          : () => unawaited(widget.onSignOut!()),
+                      onDevices: () => unawaited(_chooseDevice()),
+                      onPlugins: () =>
+                          unawaited(_openMobileMarket(initialMine: true)),
+                    ),
                     composer: _composer,
                     focus: _focus,
                     voiceMode: _voiceMode,
@@ -1293,6 +1677,16 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                       controller.toggleDrawer();
                     },
                     onRunSettings: _openRunSettings,
+                    onReconnect: () {
+                      final selectedId = controller.selectedDeviceId;
+                      if (!selectedId.startsWith('paired.')) return;
+                      unawaited(
+                        _restoreDesktopConnection(
+                          deviceRef: selectedId.substring('paired.'.length),
+                          force: true,
+                        ),
+                      );
+                    },
                     onSubmit: _submit,
                     onInputModeToggle: _toggleInputMode,
                     onVoiceDown: () => unawaited(_startVoice()),
@@ -1328,9 +1722,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                         if (mounted) _focus.requestFocus();
                       },
                       onDevice: _chooseDevice,
-                      onAccount: _openAccount,
                       onOpenSession: _openDesktopSession,
-                      onOpenWorkbench: _openRemoteWorkbench,
                     ),
                   ),
                 if (_drawer.value > 0.95)
@@ -1428,96 +1820,22 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     );
   }
 
-  void _openRemoteWorkbench() {
-    controller.closeDrawer();
-    final remote = widget.remoteWorkbench;
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => remote == null
-            ? Scaffold(
-                appBar: AppBar(title: const Text('远程工作台')),
-                body: const RemoteWorkbenchUnavailable(),
-              )
-            : RemoteWorkbenchPage(controller: remote),
-      ),
-    );
-  }
-
   void _showCloudDeveloping() {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('云端会话开发中')));
-  }
-
-  Future<void> _openAccount() async {
-    final signedIn = widget.authentication?.snapshot.isAuthenticated ?? false;
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: WbColors.sheet,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                signedIn
-                    ? (controller.accountName?.trim().isNotEmpty == true
-                          ? controller.accountName!
-                          : 'OpenMuse 用户')
-                    : '未登录',
-                style: const TextStyle(
-                  color: WbColors.text,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(signedIn ? '已登录' : '登录后可使用云端工作空间', style: wbSub),
-              const SizedBox(height: 16),
-              if (!signedIn)
-                FilledButton(
-                  key: const ValueKey('wb-sign-in'),
-                  onPressed: () {
-                    debugPrint('OpenMuse mobile: login button pressed');
-                    Navigator.pop(context);
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (!mounted) {
-                        debugPrint(
-                          'OpenMuse mobile: login route skipped, shell unmounted',
-                        );
-                        return;
-                      }
-                      unawaited(_openLogin());
-                    });
-                  },
-                  child: const Text('登录'),
-                )
-              else
-                OutlinedButton(
-                  key: const ValueKey('wb-sign-out'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    final signOut = widget.onSignOut;
-                    if (signOut != null) unawaited(signOut());
-                  },
-                  child: const Text('退出登录'),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 
 final class _MainColumn extends StatelessWidget {
   const _MainColumn({
     required this.controller,
+    required this.pairedDesktop,
+    required this.mobileMarket,
+    required this.pluginRegistry,
+    required this.onOpenBuiltIn,
+    required this.workbenchPage,
+    required this.minePage,
     required this.composer,
     required this.focus,
     required this.voiceMode,
@@ -1526,6 +1844,7 @@ final class _MainColumn extends StatelessWidget {
     required this.cancellingVoice,
     required this.onMenu,
     required this.onRunSettings,
+    required this.onReconnect,
     required this.onSubmit,
     required this.onInputModeToggle,
     required this.onVoiceDown,
@@ -1540,6 +1859,12 @@ final class _MainColumn extends StatelessWidget {
   });
 
   final WorkBuddyController controller;
+  final PairedDesktopMobileController? pairedDesktop;
+  final OpenMuseMobilePluginMarket? mobileMarket;
+  final OpenMusePluginRegistry? pluginRegistry;
+  final ValueChanged<OpenMusePlugin> onOpenBuiltIn;
+  final Widget workbenchPage;
+  final Widget minePage;
   final TextEditingController composer;
   final FocusNode focus;
   final bool voiceMode;
@@ -1548,6 +1873,7 @@ final class _MainColumn extends StatelessWidget {
   final bool cancellingVoice;
   final VoidCallback onMenu;
   final VoidCallback onRunSettings;
+  final VoidCallback onReconnect;
   final VoidCallback onSubmit;
   final VoidCallback onInputModeToggle;
   final VoidCallback onVoiceDown;
@@ -1565,91 +1891,175 @@ final class _MainColumn extends StatelessWidget {
     listenable: controller,
     builder: (context, _) {
       final showComposer = controller.tab == WbTab.tasks;
+      final light = Theme.of(context).brightness == Brightness.light;
       final snapshot = sessionHandle.snapshot;
       final conversation = conversationBuilder();
       final selectedTask = controller.openTask;
       final nativeTaskSelected =
           selectedTask != null && selectedTask.id.startsWith('dsh.session.');
-      return ColoredBox(
-        color: WbColors.canvas,
-        child: SafeArea(
-          child: Stack(
-            children: [
-              Column(
-                children: [
-                  _HomeHeader(
-                    deviceName:
-                        controller.selectedDevice.kind == WbDeviceKind.cloud
-                        ? '云端'
-                        : controller.selectedDevice.name,
-                    workspaceName: controller.selectedWorkspace.name,
-                    onMenu: onMenu,
-                    onSubtitle: onRunSettings,
-                  ),
-                  if (controller.selectedDevice.kind == WbDeviceKind.cloud)
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(20, 0, 20, 4),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          '云端会话开发中',
-                          key: ValueKey('wb-cloud-developing'),
-                          style: TextStyle(
-                            color: WbColors.textMuted,
-                            fontSize: 13,
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: light ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
+        child: ColoredBox(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    if (showComposer)
+                      _HomeHeader(
+                        deviceName:
+                            controller.selectedDevice.kind == WbDeviceKind.cloud
+                            ? '云端'
+                            : controller.selectedDevice.name,
+                        workspaceName: controller.selectedWorkspace.name,
+                        onMenu: onMenu,
+                        onSubtitle: onRunSettings,
+                      ),
+                    if (showComposer &&
+                        controller.selectedDeviceId.startsWith('paired.') &&
+                        pairedDesktop != null)
+                      ListenableBuilder(
+                        listenable: pairedDesktop!,
+                        builder: (context, _) {
+                          final connection = pairedDesktop!.snapshot.connection;
+                          final connected =
+                              connection != null &&
+                              controller.selectedDeviceId ==
+                                  'paired.${connection.deviceRef}' &&
+                              connection.expiresAtMs >
+                                  DateTime.now()
+                                      .add(const Duration(minutes: 1))
+                                      .millisecondsSinceEpoch;
+                          if (connected) return const SizedBox.shrink();
+                          final snapshot = pairedDesktop!.snapshot;
+                          final message = snapshot.connecting
+                              ? '正在连接 Desktop…'
+                              : snapshot.failureMessage ?? 'Desktop 未连接';
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    message,
+                                    key: const ValueKey(
+                                      'wb-desktop-connection-status',
+                                    ),
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  key: const ValueKey('wb-reconnect-desktop'),
+                                  onPressed: snapshot.connecting
+                                      ? null
+                                      : onReconnect,
+                                  child: Text('重连'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    if (showComposer &&
+                        controller.selectedDevice.kind == WbDeviceKind.cloud)
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(20, 0, 20, 4),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '云端会话开发中',
+                            key: ValueKey('wb-cloud-developing'),
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  Expanded(
-                    child: _TabBody(
-                      controller: controller,
-                      onNewTask: onNewTask,
-                      conversation: conversation,
-                    ),
-                  ),
-                  if (showComposer)
-                    _Composer(
-                      controller: composer,
-                      focus: focus,
-                      voiceMode: voiceMode,
-                      holding: holdingVoice,
-                      onSubmit: onSubmit,
-                      onInputModeToggle: onInputModeToggle,
-                      onVoiceDown: onVoiceDown,
-                      onVoiceUp: onVoiceUp,
-                      onVoiceMove: onVoiceMove,
-                      onPermission: onPermission,
-                      onModel: onModel,
-                      onAttachment: onAttachment,
-                      onCancel: sessionHandle.cancel,
-                      permissionLabel: _permissionLabel(
-                        snapshot?.permissionPreset,
+                    Expanded(
+                      child: _TabBody(
+                        controller: controller,
+                        onNewTask: onNewTask,
+                        conversation: conversation,
+                        workbenchPage: workbenchPage,
+                        minePage: minePage,
+                        discoverPage: mobileMarket?.buildMarketPage(
+                          embedded: true,
+                          pluginRegistry: pluginRegistry,
+                          onOpenBuiltIn: onOpenBuiltIn,
+                          desktop: pairedDesktop?.snapshot.connection == null
+                              ? null
+                              : PairedDesktopMarketClient(
+                                  origin: Uri.parse(
+                                    pairedDesktop!
+                                        .snapshot
+                                        .connection!
+                                        .session
+                                        .origin,
+                                  ),
+                                  grantRef: pairedDesktop!
+                                      .snapshot
+                                      .connection!
+                                      .grantRef,
+                                  expiresAtMs: pairedDesktop!
+                                      .snapshot
+                                      .connection!
+                                      .expiresAtMs,
+                                ),
+                        ),
                       ),
-                      modelLabel: _workBuddyModelLabel(
-                        snapshot?.model,
-                        snapshot?.reasoningEffort,
+                    ),
+                    if (showComposer)
+                      _Composer(
+                        controller: composer,
+                        focus: focus,
+                        voiceMode: voiceMode,
+                        holding: holdingVoice,
+                        onSubmit: onSubmit,
+                        onInputModeToggle: onInputModeToggle,
+                        onVoiceDown: onVoiceDown,
+                        onVoiceUp: onVoiceUp,
+                        onVoiceMove: onVoiceMove,
+                        onPermission: onPermission,
+                        onModel: onModel,
+                        onAttachment: onAttachment,
+                        onCancel: sessionHandle.cancel,
+                        permissionLabel: _permissionLabel(
+                          snapshot?.permissionPreset,
+                        ),
+                        modelLabel: _workBuddyModelLabel(
+                          snapshot?.model,
+                          snapshot?.reasoningEffort,
+                        ),
+                        running: snapshot?.running ?? false,
+                        enabled: !nativeTaskSelected || sessionHandle.ready,
                       ),
-                      running: snapshot?.running ?? false,
-                      enabled: !nativeTaskSelected || sessionHandle.ready,
-                    ),
-                  _TabBar(controller: controller),
-                ],
-              ),
-              if (holdingVoice)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: IgnorePointer(
-                    child: _VoiceHold(
-                      cancelling: cancellingVoice,
-                      released: voiceReleased,
-                      composer: composer,
-                    ),
-                  ),
+                    _TabBar(controller: controller),
+                  ],
                 ),
-            ],
+                if (holdingVoice)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: IgnorePointer(
+                      child: _VoiceHold(
+                        cancelling: cancellingVoice,
+                        released: voiceReleased,
+                        composer: composer,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       );
@@ -1678,14 +2088,14 @@ final class _HomeHeader extends StatelessWidget {
         _CircleButton(
           key: const ValueKey('wb-menu'),
           onTap: onMenu,
-          child: const WbIcon(WbGlyph.menu, size: 18),
+          child: WbIcon(WbGlyph.menu, size: 18),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('OpenMuse', key: ValueKey('wb-title'), style: wbTitle),
+              Text('OpenMuse', key: ValueKey('wb-title'), style: wbTitle),
               const SizedBox(height: 3),
               GestureDetector(
                 key: const ValueKey('wb-device-workspace'),
@@ -1693,14 +2103,14 @@ final class _HomeHeader extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 child: Row(
                   children: [
-                    const WbIcon(
+                    WbIcon(
                       WbGlyph.desktop,
                       size: 14,
-                      color: WbColors.textDim,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
                     Text(deviceName, maxLines: 1, style: wbSub),
-                    const Text('  |  ', style: wbSub),
+                    Text('  |  ', style: wbSub),
                     Flexible(
                       child: Text(
                         workspaceName,
@@ -1711,10 +2121,10 @@ final class _HomeHeader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 2),
-                    const WbIcon(
+                    WbIcon(
                       WbGlyph.chevron,
                       size: 12,
-                      color: WbColors.textDim,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ],
                 ),
@@ -1732,11 +2142,17 @@ final class _TabBody extends StatelessWidget {
     required this.controller,
     required this.onNewTask,
     required this.conversation,
+    required this.discoverPage,
+    required this.workbenchPage,
+    required this.minePage,
   });
 
   final WorkBuddyController controller;
   final VoidCallback onNewTask;
   final Widget? conversation;
+  final Widget? discoverPage;
+  final Widget workbenchPage;
+  final Widget minePage;
 
   @override
   Widget build(BuildContext context) {
@@ -1763,26 +2179,9 @@ final class _TabBody extends StatelessWidget {
 
   Widget _ordinaryTab() => switch (controller.tab) {
     WbTab.tasks => const _HomeEmpty(),
-    WbTab.experts => _SimpleList(
-      title: '专家',
-      lines: const ['通用助手', '编程', '写作', '研究'],
-    ),
-    WbTab.library => _SimpleList(
-      title: '资料库',
-      lines: const ['openmuse/README.md', 'muse-clients/README.md'],
-    ),
-    WbTab.schedule => const _SimpleList(title: '定时任务', lines: ['还没有定时任务']),
-    WbTab.projects => _SimpleList(
-      title: '项目',
-      lines: [
-        for (final workspace in controller.workspacesFor(
-          controller.selectedDeviceId,
-        ))
-          workspace.deviceId == kCloudDeviceId
-              ? '${workspace.name} · 开发中'
-              : workspace.name,
-      ],
-    ),
+    WbTab.workbench => workbenchPage,
+    WbTab.discover => discoverPage ?? const Center(child: Text('发现暂不可用')),
+    WbTab.mine => minePage,
   };
 }
 
@@ -1858,11 +2257,14 @@ final class _ConversationState extends State<_Conversation> {
         controller: _scroll,
         padding: const EdgeInsets.fromLTRB(18, 8, 18, 56),
         children: [
-          const Center(
+          Center(
             child: Text(
               '内容由 AI 生成',
               key: ValueKey('wb-ai-disclaimer'),
-              style: TextStyle(color: WbColors.textDim, fontSize: 12),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -1880,7 +2282,7 @@ final class _ConversationState extends State<_Conversation> {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: WbColors.bubble,
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Text(
@@ -1892,7 +2294,10 @@ final class _ConversationState extends State<_Conversation> {
             else ...[
               _StatusRow(status: widget.task.status),
               const SizedBox(height: 8),
-              const Divider(height: 1, color: WbColors.line),
+              Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
               const SizedBox(height: 16),
               if (message.text.isNotEmpty) Text(message.text, style: wbBody),
               for (final block in message.blocks) ...[
@@ -1907,14 +2312,17 @@ final class _ConversationState extends State<_Conversation> {
                         )
                       : block.file
                       ? wbBody.copyWith(
-                          color: const Color(0xFFD0D0D0),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 15,
                         )
                       : wbBody,
                 ),
               ],
               const SizedBox(height: 12),
-              const Divider(height: 1, color: WbColors.line),
+              Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
               const SizedBox(height: 8),
             ],
           ],
@@ -1933,7 +2341,7 @@ final class _ConversationState extends State<_Conversation> {
               curve: Curves.easeOut,
             );
           },
-          child: const WbIcon(WbGlyph.chevronDown, size: 18),
+          child: WbIcon(WbGlyph.chevronDown, size: 18),
         ),
       ),
     ],
@@ -1953,16 +2361,23 @@ final class _StatusRow extends StatelessWidget {
         WbIcon(
           status == WbTaskStatus.completed ? WbGlyph.check : WbGlyph.alarm,
           size: 16,
-          color: WbColors.textMuted,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         const SizedBox(width: 8),
         Text(
           status == WbTaskStatus.completed ? '已完成' : '进行中',
           key: const ValueKey('wb-task-status'),
-          style: const TextStyle(color: WbColors.textMuted, fontSize: 14),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 14,
+          ),
         ),
         const SizedBox(width: 4),
-        const WbIcon(WbGlyph.chevron, size: 12, color: WbColors.textMuted),
+        WbIcon(
+          WbGlyph.chevron,
+          size: 12,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ],
     ),
   );
@@ -2012,9 +2427,11 @@ final class _Composer extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
     child: DecoratedBox(
       decoration: BoxDecoration(
-        color: WbColors.canvas,
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(27),
-        border: Border.all(color: holding ? Colors.white : WbColors.border),
+        border: Border.all(
+          color: holding ? Colors.white : Theme.of(context).colorScheme.outline,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(10, 4, 8, 5),
@@ -2033,17 +2450,13 @@ final class _Composer extends StatelessWidget {
                     minWidth: 36,
                     minHeight: 36,
                   ),
-                  icon: voiceMode
-                      ? const Icon(
-                          Icons.keyboard_alt_outlined,
-                          size: 22,
-                          color: WbColors.textMuted,
-                        )
-                      : const WbIcon(
-                          WbGlyph.voice,
-                          size: 21,
-                          color: WbColors.textMuted,
-                        ),
+                  icon: Icon(
+                    voiceMode
+                        ? Icons.keyboard_alt_outlined
+                        : Icons.mic_none_outlined,
+                    size: 22,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(width: 4),
                 Expanded(
@@ -2072,7 +2485,7 @@ final class _Composer extends StatelessWidget {
                               style: TextStyle(
                                 color: holding
                                     ? const Color(0xFF8EF5E1)
-                                    : WbColors.text,
+                                    : Theme.of(context).colorScheme.onSurface,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -2086,8 +2499,8 @@ final class _Composer extends StatelessWidget {
                           enabled: enabled,
                           minLines: 1,
                           maxLines: 4,
-                          style: const TextStyle(
-                            color: WbColors.text,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 16,
                           ),
                           cursorColor: Colors.white,
@@ -2108,10 +2521,10 @@ final class _Composer extends StatelessWidget {
                   key: const ValueKey('wb-plus'),
                   tooltip: '添加文件或图片',
                   onPressed: enabled ? onAttachment : null,
-                  icon: const WbIcon(
+                  icon: WbIcon(
                     WbGlyph.plus,
                     size: 22,
-                    color: WbColors.text,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -2139,7 +2552,7 @@ final class _Composer extends StatelessWidget {
                     key: const ValueKey('wb-stop'),
                     tooltip: '停止生成',
                     onPressed: onCancel,
-                    icon: const Icon(Icons.stop_rounded, size: 20),
+                    icon: Icon(Icons.stop_rounded, size: 20),
                   )
                 else
                   ValueListenableBuilder<TextEditingValue>(
@@ -2155,7 +2568,7 @@ final class _Composer extends StatelessWidget {
                         disabledBackgroundColor: const Color(0xFF343846),
                         foregroundColor: Colors.white,
                       ),
-                      icon: const Icon(Icons.arrow_upward_rounded, size: 20),
+                      icon: Icon(Icons.arrow_upward_rounded, size: 20),
                     ),
                   ),
               ],
@@ -2188,18 +2601,29 @@ final class _ComposerChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 15, color: WbColors.textMuted),
+          Icon(
+            icon,
+            size: 15,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 4),
           Flexible(
             child: Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: WbColors.textMuted, fontSize: 12),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
             ),
           ),
           const SizedBox(width: 2),
-          const Icon(Icons.expand_more, size: 14, color: WbColors.textDim),
+          Icon(
+            Icons.expand_more,
+            size: 14,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ],
       ),
     ),
@@ -2399,10 +2823,9 @@ final class _TabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     const items = [
       (WbTab.tasks, WbGlyph.bubble, '任务'),
-      (WbTab.experts, WbGlyph.expert, '专家'),
-      (WbTab.library, WbGlyph.library, '资料库'),
-      (WbTab.schedule, WbGlyph.alarm, '定时任务'),
-      (WbTab.projects, WbGlyph.project, '项目'),
+      (WbTab.workbench, WbGlyph.expert, '工作台'),
+      (WbTab.discover, WbGlyph.diamond, '发现'),
+      (WbTab.mine, WbGlyph.project, '我的'),
     ];
     return Padding(
       padding: const EdgeInsets.only(bottom: 4, top: 2),
@@ -2438,7 +2861,9 @@ final class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? Colors.white : WbColors.textDim;
+    final color = selected
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.onSurfaceVariant;
     return GestureDetector(
       key: ValueKey('wb-tab-$label'),
       onTap: onTap,
@@ -2457,7 +2882,7 @@ final class _TabButton extends StatelessWidget {
               width: selected ? 22 : 0,
               height: 2.5,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -2476,7 +2901,7 @@ final class _CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: WbColors.chip,
+    color: Theme.of(context).colorScheme.surfaceContainer,
     shape: const CircleBorder(),
     child: InkWell(
       customBorder: const CircleBorder(),
@@ -2491,31 +2916,21 @@ final class _DrawerPanel extends StatelessWidget {
     required this.controller,
     required this.onNewTask,
     required this.onDevice,
-    required this.onAccount,
     required this.onOpenSession,
-    required this.onOpenWorkbench,
   });
 
   final WorkBuddyController controller;
   final VoidCallback onNewTask;
   final VoidCallback onDevice;
-  final VoidCallback onAccount;
   final ValueChanged<WbTask> onOpenSession;
-  final VoidCallback onOpenWorkbench;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: controller,
     builder: (context, _) {
-      final accountName = controller.accountName?.trim();
-      final signedIn = controller.signedIn;
-      final name = signedIn
-          ? (accountName?.isNotEmpty == true ? accountName! : 'OpenMuse 用户')
-          : '未登录';
-      final mark = signedIn ? name.substring(0, 1) : '未';
       final spaces = controller.workspacesFor(controller.selectedDeviceId);
       return Material(
-        color: WbColors.drawer,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(18, 8, 18, 8),
@@ -2529,7 +2944,7 @@ final class _DrawerPanel extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
                       children: [
-                        const WbIcon(
+                        WbIcon(
                           WbGlyph.desktop,
                           size: 22,
                           color: Color(0xFF7DDEA8),
@@ -2542,17 +2957,17 @@ final class _DrawerPanel extends StatelessWidget {
                                 : controller.selectedDevice.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: WbColors.text,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
-                        const WbIcon(
+                        WbIcon(
                           WbGlyph.chevronDown,
                           size: 16,
-                          color: WbColors.textDim,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ],
                     ),
@@ -2562,15 +2977,17 @@ final class _DrawerPanel extends StatelessWidget {
                 OutlinedButton(
                   key: const ValueKey('wb-new-task'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: WbColors.text,
-                    side: const BorderSide(color: WbColors.borderSoft),
+                    foregroundColor: Theme.of(context).colorScheme.onSurface,
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   onPressed: onNewTask,
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       WbIcon(WbGlyph.bubblePlus, size: 18),
@@ -2584,6 +3001,22 @@ final class _DrawerPanel extends StatelessWidget {
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [
+                      _SectionLabel(
+                        label: '最近任务',
+                        expanded: controller.tasksExpanded,
+                        onTap: controller.toggleTasks,
+                      ),
+                      if (controller.tasksExpanded)
+                        for (final task in controller.recentTasks)
+                          _DrawerRow(
+                            key: ValueKey('wb-recent-task-${task.id}'),
+                            title: task.title,
+                            indent: 0,
+                            onTap: () => task.id.startsWith('dsh.session.')
+                                ? onOpenSession(task)
+                                : controller.openTaskById(task.id),
+                          ),
+                      const SizedBox(height: 8),
                       _SectionLabel(
                         label: '空间 (${spaces.length})',
                         expanded: controller.spacesExpanded,
@@ -2616,63 +3049,7 @@ final class _DrawerPanel extends StatelessWidget {
                                     : controller.openTaskById(task.id),
                               ),
                         ],
-                      const SizedBox(height: 8),
-                      _DrawerRow(
-                        key: const ValueKey('wb-remote-workbench'),
-                        title: '远程工作台',
-                        icon: WbGlyph.desktop,
-                        indent: 0,
-                        onTap: onOpenWorkbench,
-                      ),
-                      const _DrawerRow(
-                        title: '助理',
-                        icon: WbGlyph.personPlus,
-                        indent: 0,
-                      ),
                     ],
-                  ),
-                ),
-                const Divider(color: WbColors.line, height: 1),
-                InkWell(
-                  key: const ValueKey('wb-account'),
-                  onTap: onAccount,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 12, bottom: 4),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: WbColors.avatar,
-                          child: Text(
-                            mark,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: WbColors.text,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(signedIn ? '已登录' : '点击登录', style: wbSub),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],
@@ -2704,13 +3081,16 @@ final class _SectionLabel extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(color: WbColors.textDim, fontSize: 14),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 14,
+            ),
           ),
           const SizedBox(width: 4),
           WbIcon(
             expanded ? WbGlyph.chevronDown : WbGlyph.chevron,
             size: 12,
-            color: WbColors.textDim,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ],
       ),
@@ -2723,13 +3103,11 @@ final class _DrawerRow extends StatelessWidget {
     super.key,
     required this.title,
     required this.indent,
-    this.icon,
     this.onTap,
   });
 
   final String title;
   final double indent;
-  final WbGlyph? icon;
   final VoidCallback? onTap;
 
   @override
@@ -2739,16 +3117,15 @@ final class _DrawerRow extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(indent, 11, 0, 11),
       child: Row(
         children: [
-          if (icon != null) ...[
-            WbIcon(icon!, size: 18, color: WbColors.textMuted),
-            const SizedBox(width: 8),
-          ],
           Expanded(
             child: Text(
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: WbColors.text, fontSize: 16),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 16,
+              ),
             ),
           ),
         ],
@@ -2775,22 +3152,32 @@ final class _WorkspaceRow extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(
       children: [
-        const WbIcon(WbGlyph.folder, size: 18, color: WbColors.textMuted),
+        WbIcon(
+          WbGlyph.folder,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             workspace.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: WbColors.text, fontSize: 16),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 16,
+            ),
           ),
         ),
         if (workspace.deviceId == kCloudDeviceId)
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(right: 4),
             child: Text(
               '开发中',
-              style: TextStyle(color: WbColors.textMuted, fontSize: 12),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
             ),
           ),
         IconButton(
@@ -2798,40 +3185,20 @@ final class _WorkspaceRow extends StatelessWidget {
           icon: WbIcon(
             expanded ? WbGlyph.chevronDown : WbGlyph.chevron,
             size: 14,
-            color: WbColors.textDim,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         IconButton(
           key: ValueKey('wb-space-plus-${workspace.id}'),
           onPressed: onPlus,
-          icon: const WbIcon(WbGlyph.plus, size: 16, color: WbColors.textDim),
+          icon: WbIcon(
+            WbGlyph.plus,
+            size: 16,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     ),
-  );
-}
-
-final class _SimpleList extends StatelessWidget {
-  const _SimpleList({required this.title, required this.lines});
-
-  final String title;
-  final List<String> lines;
-
-  @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-    children: [
-      Text(title, style: wbTitle),
-      const SizedBox(height: 12),
-      for (final line in lines)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text(
-            line,
-            style: const TextStyle(color: WbColors.text, fontSize: 16),
-          ),
-        ),
-    ],
   );
 }
 
@@ -2858,12 +3225,12 @@ final class _RunSettingsSheet extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   '任务运行设置',
                   key: ValueKey('wb-run-settings'),
                   style: TextStyle(
-                    color: WbColors.text,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                   ),
@@ -2872,10 +3239,10 @@ final class _RunSettingsSheet extends StatelessWidget {
               IconButton(
                 key: const ValueKey('wb-run-settings-close'),
                 onPressed: () => Navigator.pop(context),
-                icon: const WbIcon(
+                icon: WbIcon(
                   WbGlyph.close,
                   size: 18,
-                  color: WbColors.textDim,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -2929,7 +3296,10 @@ final class _SettingCard extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(color: WbColors.text, fontSize: 16),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 16,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -2937,10 +3307,10 @@ final class _SettingCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   if (showDesktop) ...[
-                    const WbIcon(
+                    WbIcon(
                       WbGlyph.desktop,
                       size: 16,
-                      color: WbColors.textMuted,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 6),
                   ],
@@ -2950,17 +3320,17 @@ final class _SettingCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.right,
-                      style: const TextStyle(
-                        color: WbColors.textMuted,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 15,
                       ),
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const WbIcon(
+                  WbIcon(
                     WbGlyph.chevron,
                     size: 14,
-                    color: WbColors.textDim,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -2991,8 +3361,8 @@ final class _ChoiceSheet extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
               child: Text(
                 title,
-                style: const TextStyle(
-                  color: WbColors.text,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -3135,9 +3505,14 @@ final class _MobileLoginRouteState extends State<_MobileLoginRoute> {
 }
 
 final class _DesktopBindSheet extends StatelessWidget {
-  const _DesktopBindSheet({required this.paired, required this.onConnect});
+  const _DesktopBindSheet({
+    required this.paired,
+    required this.selectedDeviceId,
+    required this.onConnect,
+  });
 
   final PairedDesktopMobileController? paired;
+  final String selectedDeviceId;
   final Future<void> Function(AccountDevice device) onConnect;
 
   @override
@@ -3164,70 +3539,163 @@ final class _DesktopBindSheet extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                '绑定 Desktop',
-                key: ValueKey('wb-bind-desktop'),
-                style: TextStyle(
-                  color: WbColors.text,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                children: [
+                  Text(
+                    '绑定 Desktop',
+                    key: ValueKey('wb-bind-desktop'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  IconButton(
+                    key: const ValueKey('wb-refresh-desktops'),
+                    tooltip: '刷新',
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.all(6),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    onPressed: paired?.directory?.snapshot.loading == true
+                        ? null
+                        : () => unawaited(
+                            paired?.directory?.refresh() ??
+                                Future<void>.value(),
+                          ),
+                    icon: Icon(
+                      Icons.refresh,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
-              const Text(
-                '请先在 Desktop 上登录同一账号，然后在这里绑定这台电脑。绑定之后，手机上的对话会打开那台电脑里的会话。',
-                style: wbSub,
-              ),
-              const SizedBox(height: 8),
-              const Text('云端会话开发中，入口仍会保留。', style: wbSub),
+              Text('请在电脑端登录同一个帐号', style: wbSub),
               const SizedBox(height: 12),
-              TextButton.icon(
-                key: const ValueKey('wb-refresh-desktops'),
-                onPressed: paired?.directory?.snapshot.loading == true
-                    ? null
-                    : () => unawaited(
-                        paired?.directory?.refresh() ?? Future<void>.value(),
-                      ),
-                icon: const Icon(Icons.refresh),
-                label: const Text('刷新设备'),
-              ),
-              if (paired?.directory?.snapshot.loading == true)
-                const LinearProgressIndicator(),
-              if (desktops.isEmpty)
-                const Text(
-                  '当前账号还没有可绑定的 Desktop。请先在电脑上打开 OpenMuse 并登录。',
-                  style: wbSub,
-                )
+              if (desktops.isEmpty &&
+                  paired?.directory?.snapshot.loading != true)
+                Text('当前账号还没有可绑定的 Desktop。请先在电脑上打开 OpenMuse 并登录。', style: wbSub)
               else
                 for (final device in desktops)
-                  ListTile(
+                  _DeviceStatusRow(
                     key: ValueKey('wb-desktop-${device.deviceRef}'),
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      device.displayName,
-                      style: const TextStyle(color: WbColors.text),
-                    ),
-                    subtitle: Text(
-                      !device.online
-                          ? '离线，可先选择，登录 Desktop 后连接'
-                          : device.supportsPairedDesktop
-                          ? '在线，可绑定'
-                          : '在线，但远程通道未就绪',
-                      style: wbSub,
-                    ),
-                    onTap: () => onConnect(device),
+                    id: 'paired.${device.deviceRef}',
+                    name: device.displayName,
+                    online: device.online,
+                    current: selectedDeviceId == 'paired.${device.deviceRef}',
+                    connected:
+                        paired?.snapshot.connection?.deviceRef ==
+                            device.deviceRef &&
+                        (paired?.snapshot.connection?.expiresAtMs ?? 0) >
+                            DateTime.now()
+                                .add(const Duration(minutes: 1))
+                                .millisecondsSinceEpoch,
+                    connecting:
+                        paired?.snapshot.connecting == true &&
+                        selectedDeviceId == 'paired.${device.deviceRef}',
+                    refreshing: paired?.directory?.snapshot.loading == true,
+                    onBind: device.online && device.supportsPairedDesktop
+                        ? () => onConnect(device)
+                        : null,
                   ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  key: const ValueKey('wb-bind-later'),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('稍后'),
-                ),
-              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+final class _DeviceStatusRow extends StatelessWidget {
+  const _DeviceStatusRow({
+    super.key,
+    required this.id,
+    required this.name,
+    required this.online,
+    required this.current,
+    required this.connected,
+    required this.onBind,
+    this.connecting = false,
+    this.refreshing = false,
+  });
+
+  final String id;
+  final String name;
+  final bool online;
+  final bool current;
+  final bool connected;
+  final bool connecting;
+  final bool refreshing;
+  final VoidCallback? onBind;
+
+  static const onlineDot = Color(0xFF34C759);
+  static const offlineDot = Color(0xFF8E8E93);
+
+  @override
+  Widget build(BuildContext context) {
+    final trailing = refreshing
+        ? SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          )
+        : !online
+        ? Text('离线', style: wbSub)
+        : connected
+        ? Text(
+            '已连接',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 14,
+            ),
+          )
+        : connecting
+        ? Text(
+            '连接中…',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 14,
+            ),
+          )
+        : TextButton(
+            key: ValueKey('wb-device-bind-$id'),
+            onPressed: onBind,
+            child: Text(current ? '重新连接' : '绑定'),
+          );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            key: ValueKey('wb-device-dot-$id'),
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: online ? onlineDot : offlineDot,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          trailing,
+        ],
       ),
     );
   }

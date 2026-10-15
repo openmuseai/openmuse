@@ -2,8 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:openmuse_mobile/workbuddy/workbuddy_controller.dart';
-import 'package:openmuse_mobile/workbuddy/workbuddy_shell.dart';
 import 'package:openmuse_mobile/workbuddy/workbuddy_theme.dart';
 import 'package:openmuse_remote_workbench/openmuse_remote_workbench.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
@@ -24,12 +22,12 @@ void main() {
 }
 
 Future<void> _walkPairedWorkbench(WidgetTester tester) async {
-    await tester.binding.setSurfaceSize(const Size(390, 844));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.binding.setSurfaceSize(const Size(390, 844));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
 
   final upstream = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
   final proxied = <String>[];
@@ -104,8 +102,6 @@ Future<void> _walkPairedWorkbench(WidgetTester tester) async {
     notice: acceptanceLabNotice,
     loadMedia: transport.readMedia,
   );
-  final buddy = WorkBuddyController();
-  addTearDown(buddy.dispose);
   addTearDown(controller.dispose);
   addTearDown(desktop.controller.dispose);
   addTearDown(() async {
@@ -119,12 +115,9 @@ Future<void> _walkPairedWorkbench(WidgetTester tester) async {
   await tester.pumpWidget(
     MaterialApp(
       theme: workBuddyTheme(),
-      home: WorkBuddyShell(controller: buddy, remoteWorkbench: controller),
+      home: RemoteWorkbenchPage(controller: controller),
     ),
   );
-  await tester.tap(find.byKey(const ValueKey('wb-menu')));
-  await tester.pumpAndSettle();
-  await tester.tap(find.byKey(const ValueKey('wb-remote-workbench')));
   await tester.pumpAndSettle();
 
   expect(find.text('社媒发布'), findsOneWidget);
