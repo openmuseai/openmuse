@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "d1a4380f-96a1-4d72-80f4-31e53a4a90cc",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/mac/src/openmuse-io/Muse-Client/docs/meterails/.archify/architecture-openmuse-product-20261012-115000/candidate.json",
+  "output": "/Users/mac/src/openmuse-io/Muse-Client/docs/meterails/.archify/architecture-openmuse-product-20261012-115000/openmuse-product.html",
+  "specification": {
+    "sha256": "cc2d337e1108dda39da71474ae48741ba854d96e20809aca1076817981433062",
+    "bytes": 8812
+  },
+  "artifact": {
+    "sha256": "bb6748b36b881d35d0022f412b729ebf5149f9ffc75fdac9dee15bf7444027a7",
+    "bytes": 772738
+  }
+}
