@@ -14,6 +14,32 @@ OpenMuseAuthLocalizations openMuseAuthLocalizations(BuildContext context) =>
     OpenMuseAuthLocalizations.of(context) ??
     lookupOpenMuseAuthLocalizations(const Locale('en'));
 
+/// App-wide UI language. Login pages default to Chinese and can switch to
+/// English without leaving the screen.
+final class OpenMuseUiLocale extends ChangeNotifier {
+  OpenMuseUiLocale({Locale initial = const Locale('zh')}) : locale = initial;
+
+  Locale locale;
+
+  void select(Locale value) {
+    if (locale == value) return;
+    locale = value;
+    notifyListeners();
+  }
+}
+
+final class OpenMuseUiLocaleScope extends InheritedNotifier<OpenMuseUiLocale> {
+  const OpenMuseUiLocaleScope({
+    super.key,
+    required OpenMuseUiLocale controller,
+    required super.child,
+  }) : super(notifier: controller);
+
+  static OpenMuseUiLocale? maybeOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<OpenMuseUiLocaleScope>()
+      ?.notifier;
+}
+
 /// Maps an authentication failure code to a localized message.
 ///
 /// The controller has no [BuildContext], so it reports a stable code together

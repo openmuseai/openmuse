@@ -19,7 +19,7 @@
   "createAccount": "创建账号",
   "createAccountTitle": "创建你的账号",
   "signUpCodeSent": "请输入发送至 {email} 的验证码以确认账号。",
-  "recoveryCodeSent": "请输入发送至 {email} 的密码重置验证码。",
+  "recoveryCodeSent": "如果 {email} 已注册，请在收件箱或垃圾邮件中查找密码重置验证码。",
   "resendCode": "重新发送验证码",
   "resendCodeCountdown": "{seconds} 秒后可重新发送",
   "resetPasswordTitle": "重置密码",

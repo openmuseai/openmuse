@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'auth_localizations.dart';
 import 'login_theme.dart';
@@ -26,6 +27,7 @@ final class OpenMuseLoginScreen extends StatefulWidget {
     this.onAnonymous,
     this.termsUri,
     this.privacyUri,
+    this.onOpenLegalUri,
   });
 
   final OpenMuseAuthenticationController authentication;
@@ -34,6 +36,7 @@ final class OpenMuseLoginScreen extends StatefulWidget {
   final VoidCallback? onAnonymous;
   final Uri? termsUri;
   final Uri? privacyUri;
+  final void Function(Uri uri)? onOpenLegalUri;
 
   @override
   State<OpenMuseLoginScreen> createState() => _OpenMuseLoginScreenState();
@@ -70,6 +73,7 @@ final class _OpenMuseLoginScreenState extends State<OpenMuseLoginScreen> {
               onAnonymous: widget.onAnonymous,
               termsUri: widget.termsUri,
               privacyUri: widget.privacyUri,
+              onOpenLegalUri: widget.onOpenLegalUri,
               onContinueWithEmail:
                   widget.authentication
                       is OpenMuseEmailCodeAuthenticationController
@@ -245,6 +249,7 @@ final class _EmailPage extends StatelessWidget {
     this.onAnonymous,
     this.termsUri,
     this.privacyUri,
+    this.onOpenLegalUri,
   });
 
   final TextEditingController controller;
@@ -258,12 +263,14 @@ final class _EmailPage extends StatelessWidget {
   final VoidCallback? onAnonymous;
   final Uri? termsUri;
   final Uri? privacyUri;
+  final void Function(Uri uri)? onOpenLegalUri;
 
   @override
   Widget build(BuildContext context) {
     final l10n = openMuseAuthLocalizations(context);
     return _ResponsiveLoginScaffold(
       bottom: _loginFooter(
+        context,
         l10n: l10n,
         onSettings: onSettings,
         onAnonymous: onAnonymous,
@@ -283,17 +290,20 @@ final class _EmailPage extends StatelessWidget {
               ),
             ],
             const SizedBox(height: OpenMuseLoginSpacing.xxl),
-            TextField(
-              key: const ValueKey('auth.email'),
-              controller: controller,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              autofillHints: const [AutofillHints.email],
-              decoration: InputDecoration(
-                hintText: l10n.emailHint,
-                errorText: errorText,
+            _FocusHint(
+              builder: (node, focused) => TextField(
+                key: const ValueKey('auth.email'),
+                controller: controller,
+                focusNode: node,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                decoration: InputDecoration(
+                  hintText: focused ? null : l10n.emailHint,
+                  errorText: errorText,
+                ),
+                onSubmitted: (_) => onContinueWithPassword(),
               ),
-              onSubmitted: (_) => onContinueWithPassword(),
             ),
             if (onContinueWithEmail != null) ...[
               const SizedBox(height: OpenMuseLoginSpacing.l),
@@ -322,7 +332,11 @@ final class _EmailPage extends StatelessWidget {
               Text(failure!, style: const TextStyle(color: Colors.red)),
             ],
             const SizedBox(height: OpenMuseLoginSpacing.xxl),
-            _Agreement(termsUri: termsUri, privacyUri: privacyUri),
+            _Agreement(
+              termsUri: termsUri,
+              privacyUri: privacyUri,
+              onOpen: onOpenLegalUri,
+            ),
           ],
         ),
       ),
@@ -400,21 +414,24 @@ final class _PasscodePageState extends State<_PasscodePage> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: OpenMuseLoginSpacing.xxl),
-          TextField(
-            key: const ValueKey('auth.passcode'),
-            controller: _codeController,
-            enabled: !busy,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(8),
-            ],
-            textInputAction: TextInputAction.done,
-            decoration: InputDecoration(
-              hintText: l10n.passcodeHint,
-              errorText: error,
+          _FocusHint(
+            builder: (node, focused) => TextField(
+              key: const ValueKey('auth.passcode'),
+              controller: _codeController,
+              focusNode: node,
+              enabled: !busy,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(8),
+              ],
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(
+                hintText: focused ? null : l10n.passcodeHint,
+                errorText: error,
+              ),
+              onSubmitted: busy ? null : (_) => _submit(),
             ),
-            onSubmitted: busy ? null : (_) => _submit(),
           ),
           const SizedBox(height: OpenMuseLoginSpacing.xxl),
           _PrimaryButton(
@@ -549,29 +566,32 @@ final class _PasswordPageState extends State<_PasswordPage> {
               ),
             ),
             const SizedBox(height: OpenMuseLoginSpacing.xxl),
-            TextField(
-              key: const ValueKey('auth.password'),
-              controller: _passwordController,
+            _FocusHint(
               focusNode: _passwordFocus,
-              enabled: !submitting,
-              obscureText: _obscure,
-              autofillHints: const [AutofillHints.password],
-              textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                hintText: l10n.passwordHint,
-                errorText: error,
-                suffixIcon: IconButton(
-                  key: const ValueKey('auth.password-visibility'),
-                  onPressed: () => setState(() => _obscure = !_obscure),
-                  icon: Icon(
-                    _obscure
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    size: 20,
+              builder: (node, focused) => TextField(
+                key: const ValueKey('auth.password'),
+                controller: _passwordController,
+                focusNode: node,
+                enabled: !submitting,
+                obscureText: _obscure,
+                autofillHints: const [AutofillHints.password],
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  hintText: focused ? null : l10n.passwordHint,
+                  errorText: error,
+                  suffixIcon: IconButton(
+                    key: const ValueKey('auth.password-visibility'),
+                    onPressed: () => setState(() => _obscure = !_obscure),
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      size: 20,
+                    ),
                   ),
                 ),
+                onSubmitted: submitting ? null : (_) => _submit(),
               ),
-              onSubmitted: submitting ? null : (_) => _submit(),
             ),
             const SizedBox(height: OpenMuseLoginSpacing.m),
             Align(
@@ -719,51 +739,60 @@ final class _PasswordFormPageState extends State<_PasswordFormPage> {
             _LogoTitle(title: widget.title),
             if (widget.emailController != null) ...[
               const SizedBox(height: OpenMuseLoginSpacing.xxl),
-              TextField(
-                key: const ValueKey('auth.signup-email'),
-                controller: widget.emailController,
-                enabled: !busy,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                autofillHints: const [AutofillHints.email],
-                decoration: InputDecoration(
-                  hintText: l10n.emailHint,
-                  errorText: _emailInvalid ? l10n.invalidEmail : null,
+              _FocusHint(
+                builder: (node, focused) => TextField(
+                  key: const ValueKey('auth.signup-email'),
+                  controller: widget.emailController,
+                  focusNode: node,
+                  enabled: !busy,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.email],
+                  decoration: InputDecoration(
+                    hintText: focused ? null : l10n.emailHint,
+                    errorText: _emailInvalid ? l10n.invalidEmail : null,
+                  ),
                 ),
               ),
             ],
             const SizedBox(height: OpenMuseLoginSpacing.l),
-            TextField(
-              key: const ValueKey('auth.new-password'),
-              controller: _password,
-              enabled: !busy,
-              obscureText: _obscure,
-              autofillHints: const [AutofillHints.newPassword],
-              decoration: InputDecoration(
-                hintText: l10n.newPassword,
-                suffixIcon: IconButton(
-                  onPressed: () => setState(() => _obscure = !_obscure),
-                  icon: Icon(
-                    _obscure
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
+            _FocusHint(
+              builder: (node, focused) => TextField(
+                key: const ValueKey('auth.new-password'),
+                controller: _password,
+                focusNode: node,
+                enabled: !busy,
+                obscureText: _obscure,
+                autofillHints: const [AutofillHints.newPassword],
+                decoration: InputDecoration(
+                  hintText: focused ? null : l10n.newPassword,
+                  suffixIcon: IconButton(
+                    onPressed: () => setState(() => _obscure = !_obscure),
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: OpenMuseLoginSpacing.l),
-            TextField(
-              key: const ValueKey('auth.confirm-password'),
-              controller: _confirmation,
-              enabled: !busy,
-              obscureText: _obscure,
-              autofillHints: const [AutofillHints.newPassword],
-              textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                hintText: l10n.confirmPassword,
-                errorText: _validation ?? failure,
+            _FocusHint(
+              builder: (node, focused) => TextField(
+                key: const ValueKey('auth.confirm-password'),
+                controller: _confirmation,
+                focusNode: node,
+                enabled: !busy,
+                obscureText: _obscure,
+                autofillHints: const [AutofillHints.newPassword],
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  hintText: focused ? null : l10n.confirmPassword,
+                  errorText: _validation ?? failure,
+                ),
+                onSubmitted: busy ? null : (_) => _submit(),
               ),
-              onSubmitted: busy ? null : (_) => _submit(),
             ),
             const SizedBox(height: OpenMuseLoginSpacing.xxl),
             _PrimaryButton(
@@ -860,20 +889,79 @@ final class _LogoTitle extends StatelessWidget {
   final String title;
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const _OpenMuseLoginMark(),
+        const SizedBox(height: OpenMuseLoginSpacing.xxl),
+        Text(title, style: Theme.of(context).textTheme.headlineSmall),
+      ],
+    );
+  }
+}
+
+final class _OpenMuseLoginMark extends StatelessWidget {
+  const _OpenMuseLoginMark();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: const ValueKey('auth.brand'),
+    width: 40,
+    height: 40,
+    decoration: BoxDecoration(
+      color: const Color(0xffe8ebff),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: const Icon(Icons.auto_awesome, color: Color(0xff4c63d9), size: 22),
+  );
+}
+
+final class _LanguageSwitch extends StatelessWidget {
+  const _LanguageSwitch({required this.selected, required this.onSelect});
+
+  final String selected;
+  final ValueChanged<String> onSelect;
+
+  @override
+  Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Image.asset(
-        'assets/dsh_office_logo.png',
-        package: 'openmuse_auth_gotrue',
-        width: MediaQuery.sizeOf(context).width >= 600 ? 36 : 40,
-        height: MediaQuery.sizeOf(context).width >= 600 ? 36 : 40,
-        filterQuality: FilterQuality.high,
+      _chip(label: '中文', language: 'zh'),
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 2),
+        child: Text(
+          '/',
+          style: TextStyle(color: Color(0xff9aa0a6), fontSize: 12, height: 1),
+        ),
       ),
-      const SizedBox(height: OpenMuseLoginSpacing.xxl),
-      Text(title, style: Theme.of(context).textTheme.headlineSmall),
+      _chip(label: 'English', language: 'en'),
     ],
   );
+
+  Widget _chip({required String label, required String language}) {
+    final active = selected == language;
+    return TextButton(
+      key: ValueKey('auth.locale-$language'),
+      onPressed: active ? null : () => onSelect(language),
+      style: TextButton.styleFrom(
+        foregroundColor: const Color(0xff1a73e8),
+        disabledForegroundColor: const Color(0xff1a1a1a),
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          height: 1.1,
+          fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+        ),
+      ),
+    );
+  }
 }
 
 final class _PrimaryButton extends StatelessWidget {
@@ -937,48 +1025,110 @@ final class _OutlinedButton extends StatelessWidget {
 }
 
 final class _Agreement extends StatelessWidget {
-  const _Agreement({this.termsUri, this.privacyUri});
+  const _Agreement({this.termsUri, this.privacyUri, this.onOpen});
   final Uri? termsUri;
   final Uri? privacyUri;
+  final void Function(Uri uri)? onOpen;
 
   @override
   Widget build(BuildContext context) {
     final l10n = openMuseAuthLocalizations(context);
+    final style = Theme.of(context).textTheme.bodySmall;
     return Text.rich(
       TextSpan(
         children: [
           TextSpan(text: l10n.agreementPrefix),
-          TextSpan(
-            text: l10n.termsOfService,
-            style: TextStyle(
-              color: termsUri == null
-                  ? OpenMuseLoginColors.tertiaryText
-                  : OpenMuseLoginColors.action,
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: _LegalLink(
+              label: l10n.termsOfService,
+              uri: termsUri,
+              linkKey: const ValueKey('auth.terms'),
+              style: style,
+              onOpen: onOpen,
             ),
           ),
           TextSpan(text: l10n.agreementConjunction),
-          TextSpan(
-            text: l10n.privacyPolicy,
-            style: TextStyle(
-              color: privacyUri == null
-                  ? OpenMuseLoginColors.tertiaryText
-                  : OpenMuseLoginColors.action,
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: _LegalLink(
+              label: l10n.privacyPolicy,
+              uri: privacyUri,
+              linkKey: const ValueKey('auth.privacy'),
+              style: style,
+              onOpen: onOpen,
             ),
           ),
           TextSpan(text: l10n.agreementSuffix),
         ],
-        style: Theme.of(context).textTheme.bodySmall,
+        style: style,
       ),
       textAlign: TextAlign.center,
     );
   }
 }
 
-Widget? _loginFooter({
+final class _LegalLink extends StatelessWidget {
+  const _LegalLink({
+    required this.label,
+    required this.uri,
+    required this.linkKey,
+    required this.style,
+    required this.onOpen,
+  });
+
+  final String label;
+  final Uri? uri;
+  final Key linkKey;
+  final TextStyle? style;
+  final void Function(Uri uri)? onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final linked = uri != null;
+    return Semantics(
+      button: linked,
+      link: linked,
+      child: GestureDetector(
+        key: linkKey,
+        onTap: linked ? () => _open(uri!) : null,
+        child: Text(
+          label,
+          style: style?.copyWith(
+            color: linked
+                ? OpenMuseLoginColors.action
+                : OpenMuseLoginColors.tertiaryText,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _open(Uri uri) {
+    final opener = onOpen;
+    if (opener != null) {
+      opener(uri);
+      return;
+    }
+    unawaited(launchUrl(uri, mode: LaunchMode.externalApplication));
+  }
+}
+
+Widget _loginFooter(
+  BuildContext context, {
   required OpenMuseAuthLocalizations l10n,
   required VoidCallback? onSettings,
   required VoidCallback? onAnonymous,
 }) {
+  final code = Localizations.maybeLocaleOf(context)?.languageCode ?? 'zh';
+  final language = _LanguageSwitch(
+    selected: code == 'en' ? 'en' : 'zh',
+    onSelect: (value) {
+      OpenMuseUiLocaleScope.maybeOf(context)?.select(Locale(value));
+    },
+  );
   final settings = onSettings == null
       ? null
       : TextButton.icon(
@@ -995,13 +1145,14 @@ Widget? _loginFooter({
           icon: const Icon(Icons.person_outline, size: 20),
           label: Text(l10n.anonymousMode),
         );
-  if (settings == null && anonymous == null) return null;
   return Row(
     mainAxisSize: MainAxisSize.min,
     children: [
       ?settings,
-      if (settings != null && anonymous != null) const SizedBox(width: 20),
+      if (settings != null && anonymous != null) const SizedBox(width: 12),
       ?anonymous,
+      if (settings != null || anonymous != null) const SizedBox(width: 8),
+      language,
     ],
   );
 }
@@ -1010,4 +1161,61 @@ bool _looksLikeEmail(String value) {
   final at = value.indexOf('@');
   final dot = value.lastIndexOf('.');
   return at > 0 && dot > at + 1 && dot < value.length - 1;
+}
+
+/// Hides [hint] text while the field is focused so the caret is not covered.
+final class _FocusHint extends StatefulWidget {
+  const _FocusHint({this.focusNode, required this.builder});
+
+  final FocusNode? focusNode;
+  final Widget Function(FocusNode node, bool focused) builder;
+
+  @override
+  State<_FocusHint> createState() => _FocusHintState();
+}
+
+final class _FocusHintState extends State<_FocusHint> {
+  FocusNode? _owned;
+  late bool _focused;
+
+  FocusNode get _node => widget.focusNode ?? _owned!;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.focusNode == null) _owned = FocusNode();
+    _focused = _node.hasFocus;
+    _node.addListener(_onFocus);
+  }
+
+  @override
+  void didUpdateWidget(covariant _FocusHint oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusNode == widget.focusNode) return;
+    (oldWidget.focusNode ?? _owned)?.removeListener(_onFocus);
+    if (widget.focusNode == null) {
+      _owned ??= FocusNode();
+    } else {
+      _owned?.dispose();
+      _owned = null;
+    }
+    _focused = _node.hasFocus;
+    _node.addListener(_onFocus);
+  }
+
+  void _onFocus() {
+    final focused = _node.hasFocus;
+    if (focused == _focused || !mounted) return;
+    setState(() => _focused = focused);
+  }
+
+  @override
+  void dispose() {
+    _node.removeListener(_onFocus);
+    _owned?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(_node, _focused);
 }

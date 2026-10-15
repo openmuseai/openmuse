@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import 'host_loopback.dart';
+
 /// Compile-time endpoint overrides. `String.fromEnvironment` only reads values
 /// passed through `--dart-define`, so these stay empty unless a build sets them.
 const _gotrueDefine = String.fromEnvironment('OPENMUSE_GOTRUE_ORIGIN');
@@ -45,11 +47,11 @@ final class HostEndpointConfig {
   static const defaultRelayOrigin = 'https://openmuseai.com:8443';
 
   /// IPv4 loopback host advertised by the local CLI broker.
-  static const loopbackHostIpv4 = '127.0.0.1';
+  static const loopbackHostIpv4 = hostLoopbackIpv4;
 
   /// Hosts that count as loopback. Only genuine loopback names belong here: the
   /// plugin-package allow-list uses this set as a security predicate.
-  static const loopbackHosts = <String>{loopbackHostIpv4, 'localhost'};
+  static const loopbackHosts = hostLoopbackHosts;
 
   /// Port the paired-Desktop gateway listens on.
   static const defaultPairedDesktopPort = 13180;

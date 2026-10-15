@@ -34,6 +34,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
         const NoopCloudAccountBootstrapper(),
     DateTime Function()? clock,
     this.refreshSkew = const Duration(minutes: 2),
+    this.requirePersistedSession = false,
   }) : _provider = provider,
        _store = store,
        _bootstrapper = bootstrapper,
@@ -44,6 +45,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
   final CloudAccountBootstrapper _bootstrapper;
   final DateTime Function() _clock;
   final Duration refreshSkew;
+  final bool requirePersistedSession;
 
   GoTrueSession? _session;
   GoTrueSession? _recoverySession;
@@ -267,13 +269,13 @@ final class GoTrueAuthenticationController extends ChangeNotifier
       } else {
         _publishFailure(error);
       }
-    } catch (_) {
-      await _clearSession();
+    } catch (error, stackTrace) {
+      _authLog(
+        'restore failed without deleting saved session '
+        'type=${error.runtimeType} error=$error\n$stackTrace',
+      );
       _publishFailure(
-        const AuthFailure(
-          AuthFailureKind.invalidResponse,
-          'The saved session could not be restored.',
-        ),
+        const AuthFailure(AuthFailureKind.sessionStorage, '登录状态暂时无法读取，请稍后重试。'),
       );
     }
   }
@@ -462,7 +464,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
           _session = next;
           _publishAuthenticated(next);
           try {
-            await _store.write(next);
+            await _persistWithRetry(next);
           } catch (error, stackTrace) {
             // A rotated refresh token must remain usable in memory even when
             // Windows credential storage is temporarily unavailable.
@@ -493,7 +495,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
     _authLog('bootstrap finished');
     try {
       _authLog('session persist started');
-      await _store.write(session);
+      await _persistWithRetry(session);
       _authLog('session persist finished');
     } catch (error, stackTrace) {
       // Keychain entitlement or ACL failures must not discard a session that
@@ -501,10 +503,37 @@ final class GoTrueAuthenticationController extends ChangeNotifier
       _authLog(
         'session persist failed type=${error.runtimeType} error=$error\n$stackTrace',
       );
+      if (requirePersistedSession) {
+        throw const AuthFailure(
+          AuthFailureKind.sessionStorage,
+          '无法安全保存登录状态，请检查设备存储后重试。',
+        );
+      }
     }
     _session = session;
     _publishAuthenticated(session);
     _authLog('sign-in completed phase=${_snapshot.phase.name}');
+  }
+
+  Future<void> _persistWithRetry(GoTrueSession session) async {
+    Object? failure;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        await _store.write(session);
+        if (!requirePersistedSession) return;
+        final verified = await _store.read();
+        if (verified?.refreshToken == session.refreshToken &&
+            verified?.user.id == session.user.id)
+          return;
+        failure = StateError('session read-back mismatch');
+      } on Object catch (error) {
+        failure = error;
+      }
+      if (attempt < 2) {
+        await Future<void>.delayed(Duration(milliseconds: 100 * (attempt + 1)));
+      }
+    }
+    throw StateError('session persistence failed: $failure');
   }
 
   Future<void> _bootstrap(GoTrueSession session) async {

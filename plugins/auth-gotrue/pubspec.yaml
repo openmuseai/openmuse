@@ -13,6 +13,7 @@ dependencies:
     sdk: flutter
   flutter_secure_storage: ^9.2.4
   intl: any
+  url_launcher: ^6.3.2
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
 

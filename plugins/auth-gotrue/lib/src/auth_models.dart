@@ -99,6 +99,7 @@ enum AuthFailureKind {
   accountExists,
   weakPassword,
   rateLimited,
+  sessionStorage,
 }
 
 final class AuthFailure implements Exception {
@@ -138,6 +139,7 @@ final class AuthFailure implements Exception {
     AuthFailureKind.accountExists => 'account_exists',
     AuthFailureKind.weakPassword => 'weak_password',
     AuthFailureKind.rateLimited => 'rate_limited',
+    AuthFailureKind.sessionStorage => 'session_storage',
   };
 
   @override
