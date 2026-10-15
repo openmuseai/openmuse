@@ -150,8 +150,40 @@ final class McpBundleRuntime {
           'name': tool.name,
           'description': tool.description,
           'inputSchema': tool.inputSchema.toJson(),
+          'uiResourceUri': (tool.meta?['ui'] is Map)
+              ? (tool.meta!['ui'] as Map)['resourceUri']
+              : null,
         },
     ];
+  });
+
+  /// Uses MCP Apps tool metadata and the standard resource_link result.
+  Future<Uri?> openUi() => _withClient((client) async {
+    final listed = await client.listTools();
+    for (final tool in listed.tools) {
+      final ui = tool.meta?['ui'];
+      if (ui is! Map || ui['resourceUri'] is! String) continue;
+      final schema = tool.inputSchema.toJson();
+      if (schema['required'] is List &&
+          (schema['required'] as List).isNotEmpty) {
+        continue;
+      }
+      final result = await client.callTool(
+        CallToolRequest(name: tool.name, arguments: const {}),
+      );
+      if (result.isError) throw StateError('MCP App tool failed');
+      for (final content in result.content.whereType<ResourceLink>()) {
+        final uri = Uri.tryParse(content.uri);
+        if (uri != null &&
+            (uri.scheme == 'https' ||
+                (uri.scheme == 'http' &&
+                    {'localhost', '127.0.0.1'}.contains(uri.host))) &&
+            content.mimeType == 'text/html') {
+          return uri;
+        }
+      }
+    }
+    return null;
   });
 
   Future<Map<String, Object?>> callWithFile({

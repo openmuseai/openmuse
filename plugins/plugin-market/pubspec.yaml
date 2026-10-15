@@ -13,6 +13,7 @@ dependencies:
     path: ../../packages/openmuse_plugin_sdk
   openmuse_market_ui:
     path: ../../packages/openmuse_market_ui
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:

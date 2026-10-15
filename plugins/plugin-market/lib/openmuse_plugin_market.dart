@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:openmuse_market_ui/openmuse_market_ui.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final class OpenMusePluginMarket implements OpenMusePlugin {
   OpenMusePluginContext? _context;
@@ -127,6 +128,31 @@ final class _MarketPanelState extends State<_MarketPanel> {
         }
         if (mounted)
           setState(() => _plans[id] = Map<String, Object?>.from(result));
+      }
+    } catch (error) {
+      if (mounted) setState(() => _error = '$error');
+    } finally {
+      if (mounted) setState(() => _busy = null);
+    }
+  }
+
+  Future<void> _openMcp(String id) async {
+    if (_busy != null) return;
+    setState(() {
+      _busy = id;
+      _error = null;
+    });
+    try {
+      final result = await widget.host?.executeHostCommand(
+        'plugin.market.open',
+        {'id': id},
+      );
+      if (result is! Map || result['uri'] is! String) {
+        throw StateError('MCP App 没有返回可打开的资源');
+      }
+      final uri = Uri.parse(result['uri'] as String);
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw StateError('无法打开 MCP App');
       }
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
@@ -595,7 +621,18 @@ final class _MarketPanelState extends State<_MarketPanel> {
           ),
           const SizedBox(height: 15),
           if (installed && plugin['ecosystem'] == 'mcp')
-            const Text('MCP 文件工具可从工作区中打开兼容文件。')
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _busy == id ? null : () => _openMcp(id),
+                  icon: const Icon(Icons.open_in_new_rounded, size: 17),
+                  label: const Text('打开 MCP App'),
+                ),
+                const SizedBox(height: 8),
+                const Text('文件型 MCP 工具也可从工作区打开兼容文件。'),
+              ],
+            )
           else if (installed)
             OutlinedButton(
               onPressed: _busy == id

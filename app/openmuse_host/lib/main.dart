@@ -142,6 +142,20 @@ Future<Widget> bootOpenMuseHost() async {
           await registerMcp(entry);
           return installed;
         }
+        if (operation == 'open') {
+          final installed = await mcpMarket.installedEntries();
+          if (!installed.any(
+            (item) => item.name == entry.name && item.version == entry.version,
+          )) {
+            throw StateError('请先安装此 MCP 插件');
+          }
+          final uri = await McpBundleRuntime(
+            bundleDirectory: mcpMarket.directoryFor(entry),
+            nodeExecutable: mcpMarket.nodeExecutable,
+          ).openUi();
+          if (uri == null) throw StateError('插件没有可打开的 MCP App');
+          return {'uri': uri.toString()};
+        }
         throw UnsupportedError('MCPB enable/disable is not available');
       }
     }
@@ -262,6 +276,7 @@ Future<Widget> bootOpenMuseHost() async {
             ];
           case 'plugin.market.plan':
           case 'plugin.market.install':
+          case 'plugin.market.open':
           case 'plugin.market.enable':
           case 'plugin.market.disable':
             if (arguments is! Map || arguments['id'] is! String) {
