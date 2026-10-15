@@ -66,7 +66,7 @@ Settings shows whether this desktop and the phone are online, and whether the re
 | Three-pane workbench | Workspace, editor, and DSH stay in one window. Desktop, browser, and phone share that structure. |
 | Local workspace | Project tree, search, plugins, trash. Resources move through authorized references. Permissions stay in the Host. |
 | Helix editor | Code and Markdown, preview, terminal. The editor is its own plugin and follows the Host lifecycle. |
-| DSH | Conversation, trace, models, edits inside the workspace, plugin commands. All three clients mount pinned DSH 0.1.7. Desktop runs the sidecar. The browser mounts the DSH Web client in the page. |
+| DSH | Conversation, trace, models, edits inside the workspace, plugin commands. Desktop and browser dependencies are pinned to DSH 0.2.0-rc.2. Desktop runs the sidecar. The browser mounts the DSH Web client in the page. |
 | Account and devices | One account ties the desktop and the phone together. Presence, the realtime channel, and the public channel are visible in settings. |
 | Plugins | Helix, the file viewer, DSH, and Native View ship separately. Capability calls go through the Broker, with permission, cancel, and audit. |
 | Release | The macOS package is closed inside this repository: Helix, the DSH lockfile, and checksums live here. Third-party components keep their own licenses. |
@@ -77,7 +77,7 @@ Settings shows whether this desktop and the phone are online, and whether the re
 
 **Open trust.** Dependencies have pinned versions, checksums, and a written origin. Capability calls go through the Broker. The macOS package is checked against the lockfile before it is packed, and third-party notices stay separate. Where the code comes from is written in [provenance](docs/CODE-REUSE-PROVENANCE.zh-CN.md).
 
-**Fully compatible with DSH.** OpenMuse treats DSH as part of the workbench. All three clients run the same DSH client and the same account. Workspace binding, models, conversation, and plugin commands go through DSH, and upgrades follow the pinned [DSH 0.1.7 contract](docs/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md).
+**Fully compatible with DSH.** OpenMuse treats DSH as part of the workbench. Workspace binding, models, conversation, and plugin commands go through DSH. The current packaged version is 0.2.0-rc.2 and passes its [provider contract test](contracts/dsh/0.2.0-rc.2.contract.json).
 
 ## Build and validate
 
@@ -106,6 +106,6 @@ OpenMuse source uses the repository's AGPL-3.0 [LICENSE](LICENSE). Third-party c
 - Account and devices: [docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md](docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md), [docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md](docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md)
 - Phone: [docs/MOBILE-PRODUCT-PRD.zh-CN.md](docs/MOBILE-PRODUCT-PRD.zh-CN.md)
 - Web workbench acceptance: [docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md](docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md)
-- DSH contract: [docs/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md](docs/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md)
+- DSH contract: [contracts/dsh/0.2.0-rc.2.contract.json](contracts/dsh/0.2.0-rc.2.contract.json)
 
 The rest of the design docs are in [docs/](docs/).

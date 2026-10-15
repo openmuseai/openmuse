@@ -66,7 +66,7 @@ macOS 上是完整工作台。左侧 Project Workspace 管目录、搜索、插�
 | 三区工作台 | 工作区、编辑器、DSH 固定在一个窗口里。桌面、浏览器、手机共用这套结构。 |
 | 本地工作区 | 项目树、搜索、插件、回收站。资源以授权引用进出，权限留在 Host。 |
 | Helix 编辑器 | 代码与 Markdown、预览、终端。编辑器是独立插件，随 Host 启停。 |
-| DSH | 对话、轨迹、模型、工作区内修改、插件命令。三端挂的是钉住版本的 DSH 0.1.7，桌面走 sidecar，浏览器同页挂载 DSH Web 客户端。 |
+| DSH | 对话、轨迹、模型、工作区内修改、插件命令。桌面和浏览器依赖锁定在 DSH 0.2.0-rc.2，桌面走 sidecar，浏览器同页挂载 DSH Web 客户端。 |
 | 账号与设备 | 一个账号串起桌面和手机。在线状态、实时通道、公网通道在设置里直接可见。 |
 | 插件 | Helix、文件查看器、DSH、Native View 分开交付。能力调用经过 Broker，带权限、取消和审计。 |
 | 发行 | macOS 安装包在本仓库内闭合构建：Helix、DSH 锁文件、校验和都在这里。第三方组件保留各自许可证。 |
@@ -77,7 +77,7 @@ macOS 上是完整工作台。左侧 Project Workspace 管目录、搜索、插�
 
 **开源可信。** 依赖有固定版本、校验和与来源说明。能力调用经过 Broker，权限、取消和审计留在 Host。macOS 发行包对照锁文件校验后再打包，第三方声明单独保留。代码从哪来，写在 [来源与出处](docs/CODE-REUSE-PROVENANCE.zh-CN.md)。
 
-**完全兼容 DSH。** OpenMuse 把 DSH 当作工作台的一员，三端运行同一套 DSH 客户端和同一套账号。工作区绑定、模型、对话和插件命令都走 DSH，升级跟着钉住的 [DSH 0.1.7 契约](docs/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md) 走。
+**完全兼容 DSH。** OpenMuse 把 DSH 当作工作台的一员。工作区绑定、模型、对话和插件命令都走 DSH。当前打包版本为 0.2.0-rc.2，并通过对应的 [Provider 契约测试](contracts/dsh/0.2.0-rc.2.contract.json)。
 
 ## 构建与验证
 
@@ -106,6 +106,6 @@ OpenMuse 源码使用仓库中的 AGPL-3.0 [LICENSE](LICENSE)。第三方组件�
 - 账号与多端：[docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md](docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md)、[docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md](docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md)
 - 手机：[docs/MOBILE-PRODUCT-PRD.zh-CN.md](docs/MOBILE-PRODUCT-PRD.zh-CN.md)
 - Web 工作台验收：[docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md](docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md)
-- DSH 契约：[docs/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md](docs/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md)
+- DSH 契约：[contracts/dsh/0.2.0-rc.2.contract.json](contracts/dsh/0.2.0-rc.2.contract.json)
 
 其余设计文档在 [docs/](docs/)。
