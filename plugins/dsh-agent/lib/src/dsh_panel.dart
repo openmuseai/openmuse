@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +34,9 @@ final class _DshPanelState extends State<DshPanel> {
   void initState() {
     super.initState();
     widget.desktopInteraction.addListener(_presentDesktopInteraction);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _presentDesktopInteraction());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _presentDesktopInteraction(),
+    );
     Future<void>.microtask(_start);
   }
 
@@ -45,7 +46,9 @@ final class _DshPanelState extends State<DshPanel> {
     if (oldWidget.desktopInteraction != widget.desktopInteraction) {
       oldWidget.desktopInteraction.removeListener(_presentDesktopInteraction);
       widget.desktopInteraction.addListener(_presentDesktopInteraction);
-      WidgetsBinding.instance.addPostFrameCallback((_) => _presentDesktopInteraction());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _presentDesktopInteraction(),
+      );
     }
   }
 
@@ -87,28 +90,7 @@ final class _DshPanelState extends State<DshPanel> {
                 ),
               ],
             ),
-            if (!Platform.isWindows)
-              Positioned(
-                top: 8,
-                left: 210,
-                child: IconButton(
-                  key: const Key('dsh-reload'),
-                  tooltip: '刷新 DSH 面板',
-                  onPressed: () => setState(() => _reloadToken++),
-                  icon: Icon(
-                    Icons.refresh,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    size: 16,
-                  ),
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 36,
-                    minHeight: 36,
-                  ),
-                ),
-              ),
-            if (paneMenu != null) Positioned(top: 8, right: 6, child: paneMenu),
+            if (paneMenu != null) Positioned(top: 4, right: 4, child: paneMenu),
           ],
         ),
       ),

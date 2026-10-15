@@ -147,7 +147,7 @@ constexpr wchar_t kBridgeScript[] =
 
 // Keep in sync with OpenMuseDshWebViewPlugin.swift DshCompactSidebarStyle.
 // The embedded DSH icon rail is always a top strip. Class hashes are pinned
-// to DSH 0.1.7-rc.1/rc.2.
+// against DSH 0.2.0-rc.2.
 constexpr wchar_t kCompactSidebarScript[] =
     LR"JS((function() {
     const STYLE_ID = 'openmuse-dsh-compact-sidebar';

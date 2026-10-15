@@ -2,7 +2,7 @@
 
 This is the MIT-licensed `dsh-model-capabilities` 0.5.0 source carried from
 the separately licensed vendor package. `lib/index.js` is adapted for DSH
-0.1.7-rc.1's profile-backed settings reader; the upstream plugin used the
+0.2.0-rc.2's profile-backed settings reader; the upstream plugin used the
 removed `settings.get` method. `openmuse.patch.yml` mounts the local package
 by relative source path so no other checkout or profile package installation
 is required. The original LICENSE and README remain with the code.

@@ -7,7 +7,7 @@ export const inject = [];
 
 const MAX_BODY = 64 * 1024;
 const NATIVE_API_VERSION = 1;
-const DSH_VERSION = '0.1.7-rc.1';
+const DSH_VERSION = '0.2.0-rc.2';
 const require = createRequire(import.meta.url);
 const NATIVE_SLOTS = new Set([
   'conversation.chat.node',
@@ -430,6 +430,7 @@ async function handleNative(ctx, interactions, req, res, url) {
         'session.question.answer', 'session.changes.summary',
         'session.changes.preview',
         'session.changes.open-desktop',
+        'session.presented.open',
       ],
       compatibility: await nativeCompatibility(ctx),
     });
@@ -652,6 +653,58 @@ async function handleNative(ctx, interactions, req, res, url) {
       return reply(res, 422, { error: 'file has no verified Desktop path' });
     }
     await controller.openWorkspacePath({ path: absolutePath }, abort.signal);
+    return reply(res, 200, { opened: true });
+  }
+  if (req.method === 'POST' && path === '/openmuse-native/v1/session/presented/open') {
+    const payload = await bodyOf(req);
+    const address = sessionAddress(payload.sessionId);
+    const action = payload.action ?? 'open';
+    if (action !== 'open' && action !== 'reveal') return reply(res, 400, { error: 'invalid presented file action' });
+    if (!Number.isSafeInteger(payload.seq) || payload.seq < 1 || !Number.isSafeInteger(payload.index) || payload.index < 0) {
+      return reply(res, 400, { error: 'invalid presented file coordinates' });
+    }
+    if (typeof controller.page !== 'function') return reply(res, 503, { error: 'session page unavailable' });
+    if (controller.workspaceDesktop?.().available !== true) return reply(res, 409, { error: 'Desktop file opening is unavailable' });
+    const workspaceFiles = ctx.get('workspaceFiles');
+    const fs = ctx.get('fs');
+    if (!workspaceFiles?.stat || !fs?.processPathFromHostPath || !fs?.resolve || !fs?.processPath) {
+      return reply(res, 503, { error: 'workspace file service unavailable' });
+    }
+    const abort = new AbortController();
+    res.on('close', () => abort.abort());
+    const page = await controller.page({
+      address,
+      throughSeq: payload.seq,
+      maxMessages: 80,
+      turnWindow: { minMessages: 1, minTurns: 1 },
+    }, abort.signal);
+    const record = (page?.records ?? []).find((item) => item?.seq === payload.seq && item?.type === 'deliverables/presented');
+    const declared = record?.data?.files?.[payload.index];
+    if (typeof declared?.path !== 'string' || declared.path.trim().length === 0) {
+      return reply(res, 404, { error: 'presented file unavailable', code: 'PRESENTED_FILE_UNAVAILABLE' });
+    }
+    let workspaceRoot = page?.header?.cwd ?? page?.cwd;
+    if ((typeof workspaceRoot !== 'string' || workspaceRoot.length === 0) && typeof controller.list === 'function') {
+      const listed = await controller.list({}, abort.signal);
+      const items = listed?.items ?? [];
+      const match = items.find((item) => item?.sessionId === address.sessionId || item?.id === address.sessionId);
+      workspaceRoot = match?.cwd;
+    }
+    if (typeof workspaceRoot !== 'string' || workspaceRoot.length === 0) {
+      return reply(res, 409, { error: 'session workspace is unavailable' });
+    }
+    const { absolutePath } = await workspaceFiles.stat({
+      sessionId: address.sessionId,
+      ...(workspaceRoot === undefined ? {} : { workspaceRoot }),
+    }, declared.path, abort.signal);
+    const mapped = fs.processPathFromHostPath(absolutePath);
+    if (mapped === undefined || fs.processPath(await fs.resolve(mapped, { signal: abort.signal })) !== absolutePath) {
+      return reply(res, 422, { error: 'file has no verified Desktop path' });
+    }
+    await controller.openWorkspacePath({
+      path: absolutePath,
+      ...(action === 'reveal' ? { action } : {}),
+    }, abort.signal);
     return reply(res, 200, { opened: true });
   }
   return reply(res, 404, { error: 'not found' });

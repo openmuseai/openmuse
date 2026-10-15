@@ -73,7 +73,8 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
       ))
     }
     let webView = WKWebView(frame: .zero, configuration: configuration)
-    webView.setValue(false, forKey: "drawsBackground")
+    webView.setValue(true, forKey: "drawsBackground")
+    let host = DshWebHostView(webView: webView)
     channel.setMethodCallHandler { [weak webView] call, result in
       switch call.method {
       case "reload":
@@ -93,7 +94,7 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
       }
     }
     webView.load(URLRequest(url: url))
-    return webView
+    return host
   }
 
   func createArgsCodec() -> (FlutterMessageCodec & NSObjectProtocol)? {
@@ -101,8 +102,34 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
   }
 }
 
+/// Flutter sets the platform view's frame. WKWebView does not follow that
+/// frame on its own, so a zero-size first layout stays blank.
+final class DshWebHostView: NSView {
+  let webView: WKWebView
+
+  init(webView: WKWebView) {
+    self.webView = webView
+    super.init(frame: .zero)
+    autoresizesSubviews = true
+    addSubview(webView)
+    webView.autoresizingMask = [.width, .height]
+  }
+
+  required init?(coder: NSCoder) { nil }
+
+  override func setFrameSize(_ newSize: NSSize) {
+    super.setFrameSize(newSize)
+    webView.frame = bounds
+  }
+
+  override func layout() {
+    super.layout()
+    webView.frame = bounds
+  }
+}
+
 /// Embedded Host chrome: DSH's icon rail is always a top strip, matching the
-/// macOS / latest DSH layout. Class hashes are pinned to DSH 0.1.7-rc.1/rc.2
+/// macOS / latest DSH layout. Class hashes are checked against DSH 0.2.0-rc.2
 /// and must stay in sync with plugins/dsh-agent/windows/openmuse_dsh_plugin.cpp.
 private enum DshCompactSidebarStyle {
   static let userScript = """

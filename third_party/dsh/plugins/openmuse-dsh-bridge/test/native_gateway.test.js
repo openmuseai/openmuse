@@ -68,7 +68,7 @@ test('native hello reports plugin compatibility and pinned DSH contract', async 
   await route.handler(request('/openmuse-native/v1/hello'), res);
   const body = JSON.parse(res.chunks.join(''));
   assert.equal(res.status, 200);
-  assert.equal(body.dshVersion, '0.1.7-rc.1');
+  assert.equal(body.dshVersion, '0.2.0-rc.2');
   assert.equal(body.compatibility.fallbackRequired, false);
   assert.equal(body.compatibility.reason, null);
   assert.equal(body.compatibility.requiresNegotiation, true);
@@ -319,6 +319,49 @@ test('native workspace changes route returns mobile-safe summary and opens verif
   }), openResponse);
   assert.equal(opened, '/workspace/README.md');
   assert.deepEqual(JSON.parse(openResponse.chunks.join('')), { opened: true });
+});
+
+test('native presented-file route opens only the file declared by that event', async () => {
+  process.env.OPENMUSE_DSH_BRIDGE_TOKEN = 'd'.repeat(32);
+  let opened;
+  const controller = {
+    workspaceDesktop: () => ({ available: true }),
+    openWorkspacePath: async (value) => { opened = value; },
+    page: async () => ({
+      header: { cwd: '/workspace' },
+      records: [{
+        seq: 12,
+        type: 'deliverables/presented',
+        data: {
+          turn: 1,
+          callId: 'present-1',
+          files: [{ path: 'scripts/smoke.sh', description: '冒烟脚本' }],
+        },
+      }],
+    }),
+  };
+  const ctx = context(controller, { entries: [] }, undefined, {
+    workspaceFiles: { stat: async (_scope, requested) => ({ absolutePath: `/workspace/${requested}` }) },
+    fs: {
+      processPathFromHostPath: (value) => value,
+      resolve: async (value) => value,
+      processPath: (value) => value,
+    },
+  });
+  apply(ctx);
+  const route = ctx.routes.find((value) => value.path === '/openmuse-native');
+  const response = new Response();
+  await route.handler(request('/openmuse-native/v1/session/presented/open', 'POST', {
+    sessionId: 's-1', seq: 12, index: 0, action: 'reveal',
+  }), response);
+  assert.equal(response.status, 200);
+  assert.deepEqual(opened, { path: '/workspace/scripts/smoke.sh', action: 'reveal' });
+
+  const missing = new Response();
+  await route.handler(request('/openmuse-native/v1/session/presented/open', 'POST', {
+    sessionId: 's-1', seq: 12, index: 1, action: 'open',
+  }), missing);
+  assert.equal(missing.status, 404);
 });
 
 test('declarative native UI rejects unsafe bindings and arbitrary components', () => {

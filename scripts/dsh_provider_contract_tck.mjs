@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url'
 const repoRoot = resolve(dirname(new URL(import.meta.url).pathname), '..')
 const closure = resolve(process.env.OPENMUSE_DSH_CLOSURE || join(repoRoot, 'target/dsh-closure'))
 const modules = join(closure, 'node_modules')
-const contract = JSON.parse(await readFile(join(repoRoot, 'contracts/dsh/0.1.7-rc.1.contract.json'), 'utf8'))
+const contract = JSON.parse(await readFile(join(repoRoot, 'contracts/dsh/0.2.0-rc.2.contract.json'), 'utf8'))
 
 function packageRoot(name) {
   return join(modules, ...name.split('/'))

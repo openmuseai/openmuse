@@ -19,6 +19,8 @@ from pathlib import Path
 VENDORED = Path(__file__).resolve().parent.parent / "third_party/dsh"
 REMOVED_PRODUCT_IDENTIFIER = "app" + "flow" + "y"
 CREATED_FILE_SINGLE_PANE_MARKER = "data-openmuse-created-single-pane"
+PNPM_VERSION = "10.34.1"
+DSH_VERSION = "0.2.0-rc.2"
 
 
 def run(*command: str, cwd: Path) -> None:
@@ -66,7 +68,10 @@ def verify_vendored_inputs() -> None:
                 raise RuntimeError(f"DSH tarball escapes repository: {tarball}")
             if package_name(tarball) != name:
                 raise RuntimeError(f"DSH tarball package mismatch: {tarball}")
-        elif name != "@deepseek-ai/dsh" or spec != "0.1.7-rc.1":
+        elif not (
+            (name == "@deepseek-ai/dsh" and spec == DSH_VERSION)
+            or (name == "pnpm" and spec == PNPM_VERSION)
+        ):
             raise RuntimeError(f"DSH registry dependency must be exact and reviewed: {name}@{spec}")
         locked = lock.get("packages", {}).get(f"node_modules/{name}", {})
         if locked.get("version") != spec and not spec.startswith("file:"):
@@ -145,6 +150,13 @@ def validate(output: Path) -> None:
     entry = output / "node_modules/@deepseek-ai/dsh/lib/bin.js"
     if not entry.is_file():
         raise RuntimeError(f"DSH entry missing: {entry}")
+    pnpm = output / "node_modules/.bin" / ("pnpm.cmd" if os.name == "nt" else "pnpm")
+    pnpm_package = output / "node_modules/pnpm"
+    if not pnpm.is_file() or not (pnpm_package / "LICENSE").is_file():
+        raise RuntimeError("pinned pnpm executable or license is missing")
+    pnpm_version = json.loads((pnpm_package / "package.json").read_text(encoding="utf-8"))["version"]
+    if pnpm_version != PNPM_VERSION:
+        raise RuntimeError(f"pinned pnpm version mismatch: {pnpm_version}")
     chat = output / "node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js"
     if not chat.is_file() or "ctx.sidebarRight.openResource(url)" not in chat.read_text(encoding="utf-8"):
         raise RuntimeError("DSH conversation file-open contract changed")
