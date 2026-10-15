@@ -18,6 +18,7 @@ dependencies:
   path_provider: ^2.1.5
   video_player: 2.14.1
   webview_flutter: ^4.13.1
+  url_launcher: ^6.3.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

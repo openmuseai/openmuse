@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Consumes only MCP Registry server.json and MCP Streamable HTTP.
 final class RemoteMcpEntry {
@@ -289,6 +290,12 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
     try {
       final ui = await market!.openUi(entry);
       if (ui != null) {
+        if (Platform.isAndroid) {
+          if (!await launchUrl(ui, mode: LaunchMode.externalApplication)) {
+            throw StateError('无法打开插件页面');
+          }
+          return;
+        }
         if (mounted) {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
