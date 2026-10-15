@@ -77,6 +77,17 @@ void main() {
     );
     expect(utf8.decode(resource.bytes), 'private');
     expect(resource.mediaType, startsWith('text/markdown'));
+    final search = await service.handle(
+      WorkspaceMirrorQuery(
+        operation: 'search',
+        accountRef: base.accountRef,
+        deviceRef: base.deviceRef,
+        workspaceRef: base.workspaceRef,
+        searchText: 'FILE',
+      ),
+    );
+    expect(jsonEncode(search), isNot(contains(root.path)));
+    expect((search['entries'] as List).single['name'], 'file.md');
     expect(
       () => service.handle(
         WorkspaceMirrorQuery(

@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -31,6 +32,7 @@ final class DesktopWorkspaceMirrorService {
         ],
       };
     }
+    if (query.operation == 'search') return _search(query);
     if (query.operation != 'children') throw const FormatException();
     final mount = _paths[query.mountRef];
     final parent = _paths[query.parentRef];
@@ -87,6 +89,63 @@ final class DesktopWorkspaceMirrorService {
       'nextCursor': end < entries.length
           ? base64Url.encode(utf8.encode('${query.parentRef}:$end'))
           : null,
+    };
+  }
+
+  /// Bounded filename search. Results contain opaque references only, and
+  /// symlinks are never followed or exposed as navigable nodes.
+  Future<Map<String, Object?>> _search(WorkspaceMirrorQuery query) async {
+    final needle = query.searchText?.trim().toLowerCase();
+    if (needle == null || needle.isEmpty || needle.length > 120) {
+      throw const FormatException();
+    }
+    final found = <Map<String, Object?>>[];
+    var visited = 0;
+    for (final mount in workspace.mounts) {
+      final root = mount.path;
+      final mountRef = _ref(root, root);
+      final queue = Queue<Directory>()..add(Directory(root));
+      while (queue.isNotEmpty && visited < 2500 && found.length < query.limit) {
+        final parent = queue.removeFirst();
+        await for (final entity in parent.list(followLinks: false)) {
+          if (++visited > 2500 || found.length >= query.limit) break;
+          final normalized = p.normalize(p.absolute(entity.path));
+          final type = await FileSystemEntity.type(
+            normalized,
+            followLinks: false,
+          );
+          if (!_inside(root, normalized) ||
+              type == FileSystemEntityType.link ||
+              (type != FileSystemEntityType.directory &&
+                  type != FileSystemEntityType.file)) {
+            continue;
+          }
+          final name = p.basename(normalized);
+          final directory = type == FileSystemEntityType.directory;
+          if (directory &&
+              !const {
+                '.git',
+                'node_modules',
+                '.dart_tool',
+                'build',
+              }.contains(name)) {
+            queue.add(Directory(normalized));
+          }
+          if (!name.toLowerCase().contains(needle)) continue;
+          found.add({
+            'mountRef': mountRef,
+            'nodeRef': _ref(root, normalized),
+            'name': name,
+            'isDirectory': directory,
+            if (!directory) 'resourceRef': _ref(root, normalized),
+          });
+        }
+      }
+      if (visited > 2500 || found.length >= query.limit) break;
+    }
+    return {
+      'entries': found,
+      'truncated': visited > 2500 || found.length >= query.limit,
     };
   }
 

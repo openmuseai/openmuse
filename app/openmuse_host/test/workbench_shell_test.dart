@@ -1,17 +1,21 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openmuse_app_update/openmuse_app_update.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
 import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
 import 'package:openmuse_host/src/host/openmuse_app.dart';
+import 'package:openmuse_host/src/host/desktop_update.dart';
 import 'package:openmuse_host/src/host/layout/layout.dart';
 import 'package:openmuse_host/src/host/local_settings.dart';
 import 'package:openmuse_host/src/host/workspace_controller.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:path/path.dart' as p;
+import 'package:pub_semver/pub_semver.dart';
 
 void main() {
   late Directory root;
@@ -78,6 +82,183 @@ void main() {
     expect(workspace.selected?.displayName, 'preview.png');
   });
 
+  testWidgets('running Desktop shows update at the sidebar foot and notes', (
+    tester,
+  ) async {
+    final desktopUpdate = OpenMuseDesktopUpdate();
+    addTearDown(desktopUpdate.dispose);
+    final updates = OpenMuseUpdateController(
+      feed: OpenMuseUpdateFeed(
+        origin: Uri.parse('http://127.0.0.1:3080'),
+        channel: 'canary',
+        target: 'macos-universal',
+        allowInsecureLoopback: true,
+        fetchOverride: (_) async => jsonEncode({
+          'schema': 'openmuse.app-update/v1',
+          'channel': 'canary',
+          'target': 'macos-universal',
+          'version': '1.0.1',
+          'build': 2,
+          'publishedAt': '2026-10-13T00:00:00Z',
+          'downloadUrl':
+              'http://127.0.0.1:3080/downloads/updates/v1/canary/OpenMuse-1.0.1-macos-universal.zip',
+          'sha256': 'a' * 64,
+          'sizeBytes': 123,
+          'installKind': 'macos-zip',
+          'notes': {'zh': '改进应用更新。', 'en': 'App update improvements.'},
+        }),
+      ),
+      installedVersion: Version.parse('1.0.0'),
+      installedBuild: 1,
+    );
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: workspace,
+        updates: updates,
+        desktopUpdate: desktopUpdate,
+      ),
+    );
+    expect(find.byKey(const ValueKey('app-update-footer')), findsNothing);
+    await updates.check();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('app-update-footer')), findsOneWidget);
+    expect(find.textContaining('发现新版本'), findsOneWidget);
+    expect(find.byKey(const ValueKey('app-update-button')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('notification-unread-dot')),
+      findsOneWidget,
+    );
+    await tester.tap(find.text("What's new ›"));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('app-update-dialog')), findsOneWidget);
+    expect(find.text('改进应用更新。'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('app-update-later')));
+    desktopUpdate.status.value = OpenMuseDesktopUpdateStatus.downloading;
+    desktopUpdate.progress.value = 0.42;
+    await tester.pump();
+    expect(find.byKey(const ValueKey('app-update-progress')), findsOneWidget);
+    expect(find.text('42%'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('app-update-download-dialog')),
+      findsNothing,
+    );
+    desktopUpdate.status.value = OpenMuseDesktopUpdateStatus.ready;
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('app-update-restart-button')),
+      findsOneWidget,
+    );
+    desktopUpdate.releaseSha256 = 'b' * 64;
+    desktopUpdate.progress.value = 0.43;
+    await tester.pump();
+    expect(find.byKey(const ValueKey('app-update-button')), findsOneWidget);
+    desktopUpdate.releaseSha256 = null;
+    desktopUpdate.progress.value = 0.44;
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('notifications-footer')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('notifications-dialog')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('notification-update-action')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('notification-unread-dot')), findsNothing);
+    await tester.tap(find.text('关闭'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('app-update-dismiss')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('app-update-footer')), findsNothing);
+    expect(find.byKey(const ValueKey('notifications-footer')), findsOneWidget);
+  });
+
+  testWidgets('plugin entry opens the market popup and installed tab', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1600, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    registry = OpenMusePluginRegistry(
+      context: OpenMusePluginContext(
+        executeHostCommand: (command, _) async {
+          if (command == 'plugin.market.list') {
+            return [
+              {
+                'id': 'archify',
+                'name': 'Archify',
+                'ecosystem': 'dsh',
+                'package': '@tt-a1i/archify-dsh',
+                'version': '1.0.0',
+              },
+            ];
+          }
+          if (command == 'plugin.market.plan') {
+            return {
+              'id': 'archify',
+              'version': '1.0.0',
+              'profile': 'web',
+              'installedVersion': null,
+              'action': 'install',
+            };
+          }
+          return null;
+        },
+      ),
+    );
+    final market = createOpenMuseBuiltInPlugins().firstWhere(
+      (plugin) => plugin.descriptor.id == 'com.openmuse.plugin-market',
+    );
+    registry.install(market);
+    final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+    final editorPane = layout.snapshot.bindings.entries
+        .firstWhere(
+          (entry) => entry.value.surfaceRef.startsWith('host.editorGroup:'),
+        )
+        .key;
+    final legacyPane = layout.splitPane(editorPane, axis: Axis.horizontal);
+    layout.bind(
+      legacyPane,
+      SurfaceBinding(
+        bindingId: 'legacy.market',
+        surfaceRef: 'plugin.panel:plugin.market',
+        instanceRef: 'legacy.market',
+        mobility: SurfaceMobility.snapshotRestore,
+      ),
+    );
+    await tester.pumpWidget(
+      OpenMuseHostApp(
+        registry: registry,
+        workspace: workspace,
+        layoutController: layout,
+      ),
+    );
+    await tester.tap(find.text('插件').first);
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byKey(const ValueKey('plugin-market-catalog')), findsOneWidget);
+    expect(find.textContaining('Archify 1.0.0'), findsOneWidget);
+    expect(
+      layout.snapshot.bindings.values.where(
+        (binding) => binding.surfaceRef == 'plugin.panel:plugin.market',
+      ),
+      isEmpty,
+    );
+    await tester.tap(find.text('已安装').first);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('plugin-market-installed')),
+      findsOneWidget,
+    );
+    expect(find.text('OpenMuse 插件'), findsOneWidget);
+    await tester.tap(find.byTooltip('关闭插件市场'));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsNothing);
+    await tester.tap(find.text('插件').first);
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+  });
+
   testWidgets('authentication gate hides the desktop workbench', (
     tester,
   ) async {
@@ -94,7 +275,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Welcome to OpenMuse'), findsOneWidget);
+    expect(find.text('欢迎使用 OpenMuse'), findsOneWidget);
     expect(find.byKey(const ValueKey('auth.email')), findsOneWidget);
     expect(find.text('搜索'), findsNothing);
     expect(find.text('新建文档'), findsNothing);
@@ -104,6 +285,7 @@ void main() {
     await tester.pumpWidget(
       OpenMuseHostApp(registry: registry, workspace: workspace),
     );
+    await _showIdeView(tester);
 
     await tester.tap(find.text('新建文档').first);
     await tester.pumpAndSettle();
@@ -119,9 +301,7 @@ void main() {
       OpenMuseHostApp(registry: registry, workspace: workspace),
     );
 
-    final settingsButton = Platform.isWindows
-        ? find.byKey(const ValueKey('title-settings'))
-        : find.byTooltip('本地设置');
+    final settingsButton = find.byKey(const ValueKey('title-settings'));
     expect(settingsButton, findsOneWidget);
     await tester.tap(settingsButton);
     await tester.pumpAndSettle();
@@ -199,11 +379,7 @@ void main() {
         settings: settings,
       ),
     );
-    await tester.tap(
-      Platform.isWindows
-          ? find.byKey(const ValueKey('title-settings'))
-          : find.byTooltip('本地设置'),
-    );
+    await tester.tap(find.byKey(const ValueKey('title-settings')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Dark'));
     await tester.pumpAndSettle();
@@ -352,6 +528,7 @@ void main() {
         layoutController: layout,
       ),
     );
+    await _showIdeView(tester);
 
     await tester.tap(find.byKey(const Key('pane-menu-button:editor')));
     await tester.pumpAndSettle();
@@ -396,6 +573,7 @@ void main() {
         layoutController: layout,
       ),
     );
+    await _showIdeView(tester);
 
     expect(find.byKey(const Key('pane-menu-button:workspace')), findsNothing);
     expect(find.byKey(const Key('pane-menu-button:editor')), findsOneWidget);
@@ -430,6 +608,7 @@ void main() {
     );
     workspace.toggleSidebar();
     await tester.pump();
+    await _showIdeView(tester);
 
     final editorBinding = layout.snapshot.bindingFor('editor');
     final workspaceBinding = layout.snapshot.bindingFor('workspace');
@@ -453,6 +632,12 @@ void main() {
       'editor',
       axis: Axis.horizontal,
       newPaneId: 'plugin-target',
+    );
+    workspace.openResource(
+      OpenMuseResource(
+        uri: Uri.file('${root.path}/README.md'),
+        displayName: 'README.md',
+      ),
     );
     await tester.pumpWidget(
       OpenMuseHostApp(
@@ -525,6 +710,18 @@ void main() {
     expect(action, findsOneWidget);
     expect(tester.widget<PopupMenuItem<String>>(action).enabled, isTrue);
   });
+}
+
+Future<void> _showIdeView(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('title-view')));
+  await tester.pumpAndSettle();
+  await tester.tap(
+    find.ancestor(
+      of: find.text('IDE 视图'),
+      matching: find.byType(PopupMenuItem<String>),
+    ),
+  );
+  await tester.pumpAndSettle();
 }
 
 final class _SignedOutAuthenticationController extends ChangeNotifier

@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:openmuse_app_update/openmuse_app_update.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
@@ -23,9 +24,12 @@ import 'src/host/layout/surface_mutation_guard.dart';
 import 'src/host/local_settings.dart';
 import 'src/host/openmuse_app.dart';
 import 'src/host/plugin_distribution.dart';
+import 'src/host/installed_pptx_plugin.dart';
 import 'src/host/plugin_cli_broker.dart';
+import 'src/host/plugin_market.dart';
 import 'src/host/workspace_controller.dart';
 import 'src/host/workspace_mirror_service.dart';
+import 'src/host/scheduled_task_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +39,14 @@ Future<void> main() async {
 }
 
 Future<Widget> bootOpenMuseHost() async {
+  OpenMuseUpdateController? updates;
+  try {
+    updates = await bootOpenMuseUpdates();
+    updates?.startPolling(const Duration(minutes: 5));
+  } catch (error) {
+    // A release-feed failure never blocks an offline workspace.
+    debugPrint('App update check unavailable: $error');
+  }
   final support = await getApplicationSupportDirectory();
   var accountStorage = HostAccountStorage(
     supportPath: support.path,
@@ -69,7 +81,92 @@ Future<Widget> bootOpenMuseHost() async {
       debugPrint('Workspace scan deferred/failed: $error');
     }),
   );
-  final registry = OpenMusePluginRegistry(
+  late final OpenMusePluginRegistry registry;
+  void registerPptx(DistributedPluginReceipt receipt) {
+    if (registry.plugin(receipt.pluginId) != null) return;
+    final node = resolveMarketDshRuntime(
+      executablePath: Platform.resolvedExecutable,
+      environment: Platform.environment,
+    ).nodeExecutable;
+    registry.install(
+      OpenMuseInstalledPptxPlugin(
+        workerPath: p.join(receipt.workspacePath, 'PPTX', 'worker.mjs'),
+        nodeExecutable: node,
+      ),
+    );
+  }
+
+  Future<Map<String, Object?>> runMarketAction(
+    String operation,
+    String id,
+  ) async {
+    if (id == 'com.openmuse.pptx') {
+      final entry = distributedMarketPlugins.single;
+      final installRoot = Directory(
+        p.join(support.path, 'OpenMuse', 'plugins'),
+      );
+      final receipts = readInstalledPlugins(installRoot);
+      final installed = receipts
+          .where((item) => item.pluginId == id)
+          .firstOrNull;
+      final plan = {
+        ...entry.toJson(),
+        'installedVersion': installed?.version,
+        'enabled': installed != null,
+        'action': installed?.version == entry.version
+            ? 'already-installed'
+            : 'install',
+      };
+      if (operation == 'plan') return plan;
+      if (operation != 'install') {
+        throw UnsupportedError('PPTX 预览包尚不支持市场启停');
+      }
+      final catalogPath =
+          Platform.environment['OPENMUSE_PPTX_DEV_CATALOG'] ?? '';
+      if (catalogPath.isEmpty) {
+        throw StateError('PPTX 开发目录未配置');
+      }
+      final receipt = await acceptDistributedPlugin(
+        catalogUri: Uri.file(p.absolute(catalogPath)),
+        pluginId: id,
+        workspacePath: p.join(accountStorage.workspacePath, 'Plugins', 'PPTX'),
+        installRoot: installRoot,
+        target: currentDesktopPluginTarget(),
+        workspace: controller,
+        settings: settings,
+      );
+      registerPptx(receipt);
+      return {
+        ...plan,
+        'action': 'installed',
+        'installedVersion': receipt.version,
+        'enabled': true,
+      };
+    }
+    final entries = builtInMarketPlugins.where((entry) => entry.id == id);
+    if (entries.isEmpty) throw const FormatException('市场中没有该插件');
+    final runtime = resolveMarketDshRuntime(
+      executablePath: Platform.resolvedExecutable,
+      environment: Platform.environment,
+    );
+    final cli = runtime.cliPath;
+    if (cli == null) throw StateError('未找到 DSH CLI');
+    final installer = DshMarketInstaller(
+      dshHome: Directory(accountStorage.dshHome),
+      profile: 'web',
+      cliPath: cli,
+      nodeExecutable: runtime.nodeExecutable,
+    );
+    return switch (operation) {
+      'plan' => installer.plan(entries.single),
+      'install' => installer.install(entries.single),
+      'enable' => installer.setEnabled(entries.single, true),
+      'disable' => installer.setEnabled(entries.single, false),
+      _ => throw const FormatException('无效市场操作'),
+    };
+  }
+
+  registry = OpenMusePluginRegistry(
     context: OpenMusePluginContext(
       hostChanges: controller,
       executeHostCommand: (command, arguments) async {
@@ -154,6 +251,24 @@ Future<Widget> bootOpenMuseHost() async {
               settings: settings,
             );
             return receipt.toJson();
+          case 'plugin.market.list':
+            return [
+              for (final entry in builtInMarketPlugins) entry.toJson(),
+              if ((Platform.environment['OPENMUSE_PPTX_DEV_CATALOG'] ?? '')
+                  .isNotEmpty)
+                for (final entry in distributedMarketPlugins) entry.toJson(),
+            ];
+          case 'plugin.market.plan':
+          case 'plugin.market.install':
+          case 'plugin.market.enable':
+          case 'plugin.market.disable':
+            if (arguments is! Map || arguments['id'] is! String) {
+              throw const FormatException('无效市场插件 ID');
+            }
+            return runMarketAction(
+              command.substring('plugin.market.'.length),
+              arguments['id'] as String,
+            );
           case 'settings.plugin.read':
             if (arguments is! String) throw const FormatException('无效插件 ID');
             return settings.pluginValues(arguments);
@@ -207,6 +322,8 @@ Future<Widget> bootOpenMuseHost() async {
     authentication: authenticationController,
     cloudLabel: endpoints.cloudOrigin.toString(),
     allowAnonymous: true,
+    termsUri: Uri.parse('https://openmuseai.com/terms'),
+    privacyUri: Uri.parse('https://openmuseai.com/privacy'),
   );
   final desktopDeviceId = await _persistentDesktopDeviceId(settings);
   settings.setAccountSubject(localAnonymousUserId);
@@ -231,6 +348,26 @@ Future<Widget> bootOpenMuseHost() async {
       'OPENMUSE_CLI_BROKER_TOKEN': cliBroker.token,
     },
   );
+  Future<void> executeScheduledPrompt(
+    String workspaceId,
+    String requestId,
+    String message,
+  ) async {
+    await dshSupervisor.ensureStarted();
+    await DshScheduledPromptExecutor(
+      endpoint: () async {
+        final endpoint = dshSupervisor.endpoint;
+        if (endpoint == null) throw StateError('DSH endpoint unavailable');
+        return endpoint;
+      },
+      bridgeToken: dshSupervisor.bridgeToken,
+    )(workspaceId, requestId, message);
+  }
+
+  var scheduledTasks = DesktopScheduledTaskService(
+    storeFile: File(accountStorage.scheduledTasksPath),
+    executor: executeScheduledPrompt,
+  );
   Future<void> scopeTransition = Future.value();
   String? requestedSubject;
   void syncAccountStorage() {
@@ -242,6 +379,7 @@ Future<Widget> bootOpenMuseHost() async {
       final hadAccount = requestedSubject != null;
       requestedSubject = null;
       readyAccount.value = null;
+      scheduledTasks.dispose();
       if (hadAccount) {
         scopeTransition = scopeTransition
             .then((_) => dshSupervisor.stop())
@@ -272,6 +410,12 @@ Future<Widget> bootOpenMuseHost() async {
             dshSupervisor.environment['DSH_HOME'] = next.dshHome;
             accountStorage = next;
           }
+          scheduledTasks.dispose();
+          scheduledTasks = DesktopScheduledTaskService(
+            storeFile: File(accountStorage.scheduledTasksPath),
+            executor: executeScheduledPrompt,
+          );
+          await scheduledTasks.restore();
           if (requestedSubject == subject) readyAccount.value = subject;
         })
         .catchError((Object error) {
@@ -305,6 +449,37 @@ Future<Widget> bootOpenMuseHost() async {
     workspaceTitle: 'Project Workspace',
     workspaceMirror: workspaceMirrorService.handle,
     workspaceMirrorResource: workspaceMirrorService.readResource,
+    scheduledTasks: (request) async {
+      if (request.accountRef != readyAccount.value) {
+        throw StateError('Desktop 登录状态已变化');
+      }
+      return switch (request.operation) {
+        'list' => {'tasks': scheduledTasks.list()},
+        'create' => {
+          'task': await scheduledTasks.create(
+            workspaceId: request.workspaceId!,
+            message: request.message!,
+            dueAt: request.dueAt!,
+          ),
+        },
+        'cancel' => (() async {
+          await scheduledTasks.cancel(request.id!);
+          return <String, Object?>{'cancelled': true};
+        })(),
+        _ => throw const FormatException('无效定时任务操作'),
+      };
+    },
+    pluginMarket: (request) async {
+      if (request.accountRef != readyAccount.value) {
+        throw StateError('Desktop 登录状态已变化');
+      }
+      if (request.operation == 'list') {
+        return {
+          'plugins': [for (final entry in builtInMarketPlugins) entry.toJson()],
+        };
+      }
+      return runMarketAction(request.operation, request.pluginId!);
+    },
     nativeApiToken: dshSupervisor.bridgeToken,
     deviceRef: desktopDeviceId,
     deviceName: desktopDisplayName,
@@ -396,6 +571,13 @@ Future<Widget> bootOpenMuseHost() async {
   )) {
     registry.install(plugin);
   }
+  if ((Platform.environment['OPENMUSE_PPTX_DEV_CATALOG'] ?? '').isNotEmpty) {
+    for (final receipt in readInstalledPlugins(
+      Directory(p.join(support.path, 'OpenMuse', 'plugins')),
+    )) {
+      if (receipt.pluginId == 'com.openmuse.pptx') registerPptx(receipt);
+    }
+  }
   unawaited(() async {
     try {
       await registry.activate(authenticationPlugin.descriptor.id);
@@ -424,6 +606,13 @@ Future<Widget> bootOpenMuseHost() async {
       debugPrint('DSH plugin activate deferred: $error');
     }
   }());
+  unawaited(() async {
+    try {
+      await registry.activate('com.openmuse.plugin-market');
+    } catch (error) {
+      debugPrint('Plugin market activation failed: $error');
+    }
+  }());
   controller.flushBeforeDiskRead = (resource) async {
     for (final descriptor in registry.descriptors) {
       final plugin = registry.plugin(descriptor.id);
@@ -435,6 +624,7 @@ Future<Widget> bootOpenMuseHost() async {
     }
   };
   return OpenMuseHostApp(
+    updates: updates,
     registry: registry,
     workspace: controller,
     settings: settings,
@@ -453,12 +643,10 @@ WorkbenchLayoutSnapshot _layoutFallback(OpenMuseLocalSettings settings) {
       .toDouble();
   final remaining = assumedWindowWidth * (1 - sidebarRatio);
   final assistant = settings.assistantWidth ?? 420;
-  final editorRatio = ((remaining - assistant) / remaining)
-      .clamp(0.45, 0.82)
-      .toDouble();
+  final agentRatio = (assistant / remaining).clamp(0.32, 0.7).toDouble();
   return createDefaultWorkbenchLayout(
     sidebarRatio: sidebarRatio,
-    editorRatio: editorRatio,
+    agentRatio: agentRatio,
   );
 }
 

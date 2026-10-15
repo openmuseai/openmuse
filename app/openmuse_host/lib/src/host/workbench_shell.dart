@@ -4,10 +4,14 @@ import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:openmuse_app_update/openmuse_app_update.dart';
+import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cli_plugin/openmuse_cli_plugin.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_market_ui/openmuse_market_ui.dart';
 
 import 'design_system.dart';
+import 'desktop_update.dart';
 import 'layout/layout.dart';
 import 'layout/surface_mutation_guard.dart';
 import 'local_settings.dart';
@@ -26,6 +30,9 @@ final class OpenMuseWorkbench extends StatefulWidget {
     this.layoutController,
     this.layoutStore,
     this.mutationGuards,
+    this.updates,
+    this.desktopUpdate,
+    this.onGetUpdate,
   });
 
   final OpenMusePluginRegistry registry;
@@ -34,13 +41,21 @@ final class OpenMuseWorkbench extends StatefulWidget {
   final WorkbenchLayoutController? layoutController;
   final LayoutSnapshotWriter? layoutStore;
   final SurfaceMutationGuards? mutationGuards;
+  final OpenMuseUpdateController? updates;
+  final OpenMuseDesktopUpdate? desktopUpdate;
+  final Future<void> Function(OpenMuseRelease release)? onGetUpdate;
 
   @override
   State<OpenMuseWorkbench> createState() => _OpenMuseWorkbenchState();
 }
 
 final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
-  static const _gutter = 6.0;
+  static const _menuChannel = MethodChannel('com.openmuse.host/menu');
+
+  bool get _macNativeChrome =>
+      Platform.isMacOS &&
+      !WidgetsBinding.instance.runtimeType.toString().contains('Test');
+  static const _gutter = 1.0;
   late final WorkbenchLayoutController _layout =
       widget.layoutController ??
       WorkbenchLayoutController(createDefaultWorkbenchLayout());
@@ -49,7 +64,9 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   Size _lastSize = Size.zero;
   final OpenMuseCliController _terminalController = OpenMuseCliController();
   bool _terminalVisible = false;
+  _HostView _view = _HostView.agent;
   bool _hasOpenedTerminal = false;
+  bool _marketDialogOpen = false;
 
   bool get _terminalAvailable =>
       widget.settings.pluginValues('com.openmuse.cli')['enabled'] != false &&
@@ -62,12 +79,21 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   @override
   void initState() {
     super.initState();
+    if (_layout.snapshot == createDefaultWorkbenchLayout()) {
+      _layout.restore(_layoutForView(_HostView.agent));
+    }
     _ensureEditorGroups();
     _layout.addListener(_layoutChanged);
+    _removeLegacyMarketPane();
+    if (_macNativeChrome) {
+      _menuChannel.setMethodCallHandler(_onMacMenu);
+      _publishMacView(_view);
+    }
   }
 
   @override
   void dispose() {
+    if (_macNativeChrome) _menuChannel.setMethodCallHandler(null);
     final shouldFlush = _saveDebounce?.isActive ?? false;
     _saveDebounce?.cancel();
     if (shouldFlush) _persistLayout();
@@ -86,6 +112,42 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
         _hasOpenedTerminal = true;
       }
     });
+  }
+
+  Future<void> _openPluginMarket(BuildContext context) async {
+    if (_marketDialogOpen) return;
+    _marketDialogOpen = true;
+    try {
+      const pluginId = 'com.openmuse.plugin-market';
+      if (widget.registry.plugin(pluginId) != null) {
+        await widget.registry.activate(pluginId);
+      }
+      if (!mounted || !context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        barrierColor: OpenMuseTokens.scrim,
+        builder: (_) => _PluginMarketDialog(
+          registry: widget.registry,
+          workspace: widget.workspace,
+        ),
+      );
+    } catch (error) {
+      if (mounted && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('无法打开插件市场：$error')));
+      }
+    } finally {
+      _marketDialogOpen = false;
+    }
+  }
+
+  void _removeLegacyMarketPane() {
+    for (final entry in _layout.snapshot.bindings.entries.toList()) {
+      if (entry.value.surfaceRef != 'plugin.panel:plugin.market') continue;
+      _layout.unbind(entry.key);
+      _layout.closeEmptyPane(entry.key);
+    }
   }
 
   void _toggleTerminal() {
@@ -138,15 +200,27 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
       widget.settings,
       widget.registry,
       _layout,
+      ?widget.updates,
+      ?widget.desktopUpdate?.status,
+      ?widget.desktopUpdate?.progress,
     ]),
     builder: (context, _) => Scaffold(
       body: Column(
         children: [
-          if (Platform.isWindows)
+          if (_macNativeChrome)
+            _MacTitleBar(
+              workspace: widget.workspace,
+              onDrag: OpenMuseWindowChrome.startDrag,
+              onSettings: () => _openLocalSettings(context),
+            )
+          else
             _WindowsTitleStrip(
               registry: widget.registry,
               workspace: widget.workspace,
               settings: widget.settings,
+              view: _view,
+              onView: _selectView,
+              onViewHelp: _showViewHelp,
               onTerminal: _terminalAvailable ? _toggleTerminal : null,
             ),
           Expanded(
@@ -167,6 +241,26 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
                       onCloseTerminal: () =>
                           setState(() => _terminalVisible = false),
                       onOpenTerminal: _openTerminal,
+                      onOpenMarket: () => unawaited(_openPluginMarket(context)),
+                      updates: widget.updates,
+                      desktopUpdate: widget.desktopUpdate,
+                      onStartUpdate: () {
+                        final release = widget.updates?.available;
+                        if (release != null) {
+                          unawaited(widget.onGetUpdate?.call(release));
+                        }
+                      },
+                      onShowUpdate: () {
+                        final release = widget.updates?.available;
+                        if (release == null) return;
+                        unawaited(
+                          showOpenMuseUpdateDialog(
+                            context,
+                            release,
+                            onUpdate: widget.onGetUpdate ?? (_) async {},
+                          ),
+                        );
+                      },
                       paneMenu: _embeddedPaneMenu(
                         context,
                         _layout.snapshot,
@@ -226,7 +320,12 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   ) => _PaneMenuButton(
     paneId: paneId,
     hasBinding: snapshot.bindingFor(paneId) != null,
-    panelCandidates: widget.registry.panelCandidates(),
+    panelCandidates: widget.registry
+        .panelCandidates()
+        .where(
+          (candidate) => candidate.panel.region != OpenMuseSurfaceRegion.dialog,
+        )
+        .toList(),
     onAction: (action) => _handlePaneAction(context, paneId, action),
   );
 
@@ -278,7 +377,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
       case _PaneAction.close:
         await _closePane(context, paneId);
       case _PaneAction.reset:
-        _layout.reset();
+        _layout.restore(_layoutForView(_view));
         _removeUnboundEditorGroups();
     }
   }
@@ -365,14 +464,112 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     }
   }
 
-  Set<String> _hiddenPaneIds(WorkbenchLayoutSnapshot snapshot) => {
-    for (final entry in snapshot.bindings.entries)
-      if ((!widget.workspace.sidebarVisible &&
-              entry.value.surfaceRef == 'host.workspaceExplorer') ||
-          (!widget.settings.assistantVisible &&
-              entry.value.surfaceRef == 'plugin.panel:dsh.agent'))
-        entry.key,
-  };
+  Set<String> _hiddenPaneIds(WorkbenchLayoutSnapshot snapshot) {
+    final hidden = <String>{
+      for (final entry in snapshot.bindings.entries)
+        if ((!widget.workspace.sidebarVisible &&
+                entry.value.surfaceRef == 'host.workspaceExplorer') ||
+            (!widget.settings.assistantVisible &&
+                entry.value.surfaceRef == 'plugin.panel:dsh.agent') ||
+            entry.value.surfaceRef == 'plugin.panel:cloud.workspace')
+          entry.key,
+    };
+    if (_view == _HostView.agent && !_editorHasDocument()) {
+      for (final entry in snapshot.bindings.entries) {
+        if (entry.value.surfaceRef.startsWith('host.editorGroup:')) {
+          hidden.add(entry.key);
+        }
+      }
+    }
+    return hidden;
+  }
+
+  bool _editorHasDocument() {
+    for (final group in widget.workspace.editorGroups) {
+      if (widget.workspace.tabsFor(group.id).isNotEmpty) return true;
+    }
+    return false;
+  }
+
+  void _openLocalSettings(BuildContext context) {
+    showOpenMuseSettings(
+      context,
+      widget.settings,
+      widget.registry,
+      onPluginWorkspace:
+          ({required pluginId, required path, required enabled}) =>
+              choosePluginWorkspace(
+                workspace: widget.workspace,
+                pluginId: pluginId,
+                path: path,
+                enabled: enabled,
+              ),
+    );
+  }
+
+  Future<void> _onMacMenu(MethodCall call) async {
+    if (!mounted) return;
+    switch (call.method) {
+      case 'settings':
+        _openLocalSettings(context);
+      case 'terminal':
+        _toggleTerminal();
+      case 'view':
+        switch (call.arguments) {
+          case 'agent':
+            _selectView(_HostView.agent);
+          case 'ide':
+            _selectView(_HostView.ide);
+          case 'help':
+            await _showViewHelp();
+        }
+    }
+  }
+
+  void _selectView(_HostView view) {
+    setState(() => _view = view);
+    _layout.restore(_layoutForView(view));
+    _publishMacView(view);
+  }
+
+  void _publishMacView(_HostView view) {
+    if (!_macNativeChrome) return;
+    unawaited(() async {
+      try {
+        await _menuChannel.invokeMethod<void>('setCheckedView', view.name);
+      } on MissingPluginException {
+        // The menu channel exists only in the macOS runner.
+      }
+    }());
+  }
+
+  Future<void> _showViewHelp() => showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(_hostText(context, '视图帮助', 'View help')),
+      content: SizedBox(
+        width: 420,
+        child: Text(
+          _hostText(
+            context,
+            'Agent 视图：左侧是工作区，中间是 Agent，右侧是编辑和预览。没有打开文件时，右侧窗口不会出现。\n\n'
+                'IDE 视图：中间固定为编辑和预览，Agent 在右侧。\n\n'
+                '调整窗口：拖动窗格之间的分界线可以改变宽度。点击窗格右上角的菜单可以向右切分、向下切分，或与左侧、右侧、上方、下方的窗格交换位置。也可以关闭窗格，或重置为当前视图的默认布局。',
+            'Agent view puts the workspace on the left, the Agent in the middle, and the editor on the right. The editor stays hidden until a file is open.\n\n'
+                'IDE view keeps the editor in the middle and the Agent on the right.\n\n'
+                'Drag a divider to resize. The pane menu can split right or down, swap with a neighbor, close a pane, or reset the current view.',
+          ),
+          style: const TextStyle(height: 1.45),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(_hostText(context, '知道了', 'OK')),
+        ),
+      ],
+    ),
+  );
 
   void _removeUnboundEditorGroups() {
     const prefix = 'host.editorGroup:';
@@ -475,6 +672,11 @@ final class _BoundSurface extends StatelessWidget {
     required this.terminalVisible,
     required this.onCloseTerminal,
     required this.onOpenTerminal,
+    required this.onOpenMarket,
+    this.updates,
+    this.desktopUpdate,
+    this.onStartUpdate,
+    this.onShowUpdate,
     required this.onFocus,
     this.paneMenu,
   });
@@ -487,6 +689,11 @@ final class _BoundSurface extends StatelessWidget {
   final bool terminalVisible;
   final VoidCallback onCloseTerminal;
   final ValueChanged<String> onOpenTerminal;
+  final VoidCallback onOpenMarket;
+  final OpenMuseUpdateController? updates;
+  final OpenMuseDesktopUpdate? desktopUpdate;
+  final VoidCallback? onStartUpdate;
+  final VoidCallback? onShowUpdate;
   final VoidCallback onFocus;
   final Widget? paneMenu;
 
@@ -504,6 +711,11 @@ final class _BoundSurface extends StatelessWidget {
         workspace: workspace,
         settings: settings,
         onOpenTerminal: onOpenTerminal,
+        onOpenMarket: onOpenMarket,
+        updates: updates,
+        desktopUpdate: desktopUpdate,
+        onStartUpdate: onStartUpdate,
+        onShowUpdate: onShowUpdate,
       );
     }
     const editorPrefix = 'host.editorGroup:';
@@ -698,16 +910,26 @@ final class _WorkspaceSidebar extends StatelessWidget {
     required this.workspace,
     required this.settings,
     required this.onOpenTerminal,
+    required this.onOpenMarket,
+    this.updates,
+    this.desktopUpdate,
+    this.onStartUpdate,
+    this.onShowUpdate,
   });
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
   final ValueChanged<String> onOpenTerminal;
+  final VoidCallback onOpenMarket;
+  final OpenMuseUpdateController? updates;
+  final OpenMuseDesktopUpdate? desktopUpdate;
+  final VoidCallback? onStartUpdate;
+  final VoidCallback? onShowUpdate;
 
   @override
   Widget build(BuildContext context) => OpenMuseWorkspaceSidebar(
-    showBrand: !Platform.isWindows,
+    showBrand: false,
     projectExpanded: workspace.projectSectionExpanded,
     onToggleProject: workspace.toggleProjectSection,
     onSettings: () => showOpenMuseSettings(
@@ -726,7 +948,12 @@ final class _WorkspaceSidebar extends StatelessWidget {
     onToggleSidebar: workspace.toggleSidebar,
     onSearch: () => _showSearch(context, workspace),
     onAddWorkspace: () => _addWorkspace(context, workspace),
-    onPlugins: () => _showPlugins(context, registry, workspace),
+    onPlugins: onOpenMarket,
+    onNotifications: () => unawaited(_showNotifications(context)),
+    hasUnreadNotifications: _hasUnreadUpdate,
+    footerNotice: updates?.available == null || _isNoticeHidden
+        ? null
+        : _updateNotice(context),
     tree: ListView(
       children: [
         for (final mount in workspace.mounts) ...[
@@ -750,6 +977,258 @@ final class _WorkspaceSidebar extends StatelessWidget {
       ],
     ),
   );
+
+  static const _notificationSettingsId = 'com.openmuse.notifications';
+
+  String? get _releaseKey {
+    final release = updates?.available;
+    return release == null
+        ? null
+        : '${release.version}+${release.build}:${release.sha256}';
+  }
+
+  Map<String, Object?> get _notificationPrefs =>
+      settings.pluginValues(_notificationSettingsId);
+
+  bool get _hasUnreadUpdate =>
+      _releaseKey != null && _notificationPrefs['readRelease'] != _releaseKey;
+
+  bool get _isNoticeHidden =>
+      _releaseKey != null &&
+      _notificationPrefs['dismissedRelease'] == _releaseKey;
+
+  void _dismissNotice() {
+    final key = _releaseKey;
+    if (key == null) return;
+    unawaited(
+      settings.updatePluginValues(_notificationSettingsId, {
+        ..._notificationPrefs,
+        'dismissedRelease': key,
+      }),
+    );
+  }
+
+  Future<void> _showNotifications(BuildContext context) async {
+    final key = _releaseKey;
+    if (key != null) {
+      await settings.updatePluginValues(_notificationSettingsId, {
+        ..._notificationPrefs,
+        'readRelease': key,
+      });
+    }
+    if (!context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: const ValueKey('notifications-dialog'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Text('通知'),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: updates?.available == null
+              ? const Text('暂无通知')
+              : ListenableBuilder(
+                  listenable: Listenable.merge([
+                    updates!,
+                    ?desktopUpdate?.status,
+                    ?desktopUpdate?.progress,
+                  ]),
+                  builder: (context, _) {
+                    final release = updates!.available;
+                    if (release == null) return const Text('暂无通知');
+                    final status = _statusFor(release);
+                    final downloading =
+                        status == OpenMuseDesktopUpdateStatus.downloading;
+                    final ready = status == OpenMuseDesktopUpdateStatus.ready;
+                    final failed = status == OpenMuseDesktopUpdateStatus.failed;
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'OpenMuse ${release.version} (${release.build})',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          release.notesFor(
+                            Localizations.localeOf(context).languageCode,
+                          ),
+                        ),
+                        if (downloading) ...[
+                          const SizedBox(height: 12),
+                          LinearProgressIndicator(
+                            value: desktopUpdate?.progress.value ?? 0,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${((desktopUpdate?.progress.value ?? 0) * 100).round()}%',
+                          ),
+                        ],
+                        if (failed) ...[
+                          const SizedBox(height: 8),
+                          const Text('下载中断，可以从已下载位置继续。'),
+                        ],
+                        const SizedBox(height: 14),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FilledButton(
+                            key: const ValueKey('notification-update-action'),
+                            onPressed: downloading
+                                ? null
+                                : () {
+                                    Navigator.pop(dialogContext);
+                                    onStartUpdate?.call();
+                                  },
+                            child: Text(
+                              ready
+                                  ? '重启更新'
+                                  : failed
+                                  ? '继续下载'
+                                  : 'Update',
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _updateNotice(BuildContext context) {
+    final release = updates!.available!;
+    final status = _statusFor(release);
+    final zh = Localizations.localeOf(context).languageCode == 'zh';
+    final scheme = Theme.of(context).colorScheme;
+    final downloading = status == OpenMuseDesktopUpdateStatus.downloading;
+    final ready = status == OpenMuseDesktopUpdateStatus.ready;
+    final failed = status == OpenMuseDesktopUpdateStatus.failed;
+    final progress = desktopUpdate?.progress.value ?? 0;
+    return Material(
+      key: const ValueKey('app-update-footer'),
+      color: scheme.primaryContainer,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.system_update_alt,
+                  size: 17,
+                  color: scheme.onPrimaryContainer,
+                ),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    ready
+                        ? (zh ? '更新已就绪' : 'Ready to update')
+                        : downloading
+                        ? (zh ? '正在下载新版本' : 'Downloading update')
+                        : failed
+                        ? (zh ? '更新下载失败' : 'Update failed')
+                        : (zh
+                              ? '发现新版本 ${release.version}'
+                              : 'Update available ${release.version}'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: scheme.onPrimaryContainer,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (!downloading)
+                  FilledButton.tonal(
+                    key: ValueKey(
+                      ready ? 'app-update-restart-button' : 'app-update-button',
+                    ),
+                    onPressed: onStartUpdate,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 30),
+                      padding: const EdgeInsets.symmetric(horizontal: 9),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    child: Text(
+                      ready
+                          ? (zh ? '重启' : 'Restart')
+                          : failed
+                          ? (zh ? '重试' : 'Retry')
+                          : 'Update',
+                    ),
+                  ),
+                IconButton(
+                  key: const ValueKey('app-update-dismiss'),
+                  tooltip: '隐藏更新提示',
+                  onPressed: _dismissNotice,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 24,
+                    height: 24,
+                  ),
+                  padding: EdgeInsets.zero,
+                  icon: Icon(
+                    Icons.close,
+                    size: 15,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+              ],
+            ),
+            if (downloading) ...[
+              const SizedBox(height: 7),
+              LinearProgressIndicator(
+                key: const ValueKey('app-update-progress'),
+                value: progress,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${(progress * 100).round()}%',
+                style: TextStyle(
+                  color: scheme.onPrimaryContainer,
+                  fontSize: 11,
+                ),
+              ),
+            ] else
+              InkWell(
+                onTap: onShowUpdate,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    "What's new ›",
+                    style: TextStyle(
+                      color: scheme.onPrimaryContainer,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  OpenMuseDesktopUpdateStatus _statusFor(OpenMuseRelease release) {
+    final update = desktopUpdate;
+    if (update?.releaseSha256 != null &&
+        update!.releaseSha256 != release.sha256) {
+      return OpenMuseDesktopUpdateStatus.idle;
+    }
+    return update?.status.value ?? OpenMuseDesktopUpdateStatus.idle;
+  }
 }
 
 final class _MountRow extends StatelessWidget {
@@ -1078,7 +1557,7 @@ Future<void> _showResourceMenu(
         _menuAction('refresh', 'Refresh', Icons.refresh),
         _menuAction(
           'terminal',
-          _hostText('在终端中打开', 'Open in Terminal'),
+          _hostText(context, '在终端中打开', 'Open in Terminal'),
           Icons.terminal,
           enabled:
               settings.pluginValues('com.openmuse.cli')['enabled'] != false &&
@@ -1887,29 +2366,165 @@ final class _Welcome extends StatelessWidget {
       OpenMuseWorkbenchWelcome(onSearch: onSearch, onCreate: onCreate);
 }
 
+final class _MacTitleBar extends StatelessWidget {
+  const _MacTitleBar({
+    required this.workspace,
+    required this.onDrag,
+    required this.onSettings,
+  });
+
+  final LocalWorkspaceController workspace;
+  final VoidCallback onDrag;
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    OpenMuseWindowChrome.ensureMacFullScreen();
+    return ValueListenableBuilder<bool>(
+      valueListenable: OpenMuseWindowChrome.fullScreen,
+      builder: (context, fullScreen, _) => SizedBox(
+        height: 36,
+        child: Padding(
+          padding: EdgeInsets.only(left: fullScreen ? 10 : 78),
+          child: Row(
+            children: [
+              IconButton(
+                key: const ValueKey('title-sidebar-toggle'),
+                tooltip: workspace.sidebarVisible
+                    ? _hostText(context, '收起侧边栏', 'Collapse Sidebar')
+                    : _hostText(context, '展开侧边栏', 'Expand Sidebar'),
+                onPressed: workspace.toggleSidebar,
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 28,
+                  height: 28,
+                ),
+                icon: const _SidebarToggleIcon(),
+              ),
+              const SizedBox(width: 12),
+              IconButton(
+                key: const ValueKey('title-settings'),
+                tooltip: _hostText(context, '设置', 'Settings'),
+                onPressed: onSettings,
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 28,
+                  height: 28,
+                ),
+                icon: Icon(
+                  Icons.settings_outlined,
+                  size: 16,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+              Expanded(
+                child: Listener(
+                  behavior: HitTestBehavior.opaque,
+                  onPointerDown: (event) {
+                    if ((event.buttons & kPrimaryMouseButton) != 0) onDrag();
+                  },
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 final class _WindowsTitleStrip extends StatelessWidget {
   const _WindowsTitleStrip({
     required this.registry,
     required this.workspace,
     required this.settings,
+    required this.view,
+    required this.onView,
+    required this.onViewHelp,
     this.onTerminal,
   });
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
+  final _HostView view;
+  final ValueChanged<_HostView> onView;
+  final VoidCallback onViewHelp;
   final VoidCallback? onTerminal;
+
+  Future<void> _showViewMenu(BuildContext context) async {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final origin = box.localToGlobal(Offset.zero);
+    final selected = await _showWorkbenchMenu(
+      context,
+      Offset(origin.dx, origin.dy + box.size.height),
+      items: [
+        _menuAction(
+          'agent',
+          _hostText(context, 'Agent 视图', 'Agent view'),
+          Icons.forum_outlined,
+          trailing: Icon(
+            Icons.check,
+            size: 16,
+            color: view == _HostView.agent
+                ? OpenMuseTokens.text
+                : Colors.transparent,
+          ),
+        ),
+        _menuAction(
+          'ide',
+          _hostText(context, 'IDE 视图', 'IDE view'),
+          Icons.web_asset_outlined,
+          trailing: Icon(
+            Icons.check,
+            size: 16,
+            color: view == _HostView.ide
+                ? OpenMuseTokens.text
+                : Colors.transparent,
+          ),
+        ),
+        const PopupMenuDivider(height: 8),
+        _menuAction(
+          'help',
+          _hostText(context, '视图帮助', 'View help'),
+          Icons.help_outline,
+        ),
+      ],
+    );
+    switch (selected) {
+      case 'agent':
+        onView(_HostView.agent);
+      case 'ide':
+        onView(_HostView.ide);
+      case 'help':
+        onViewHelp();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     OpenMuseWindowChrome.ensureBound();
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final buttonStyle = TextButton.styleFrom(
+      minimumSize: const Size(48, 32),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+    );
     return Container(
       height: OpenMuseTokens.topBarHeight,
       decoration: BoxDecoration(
         color: dark ? const Color(0xff202228) : OpenMuseTokens.sidebar,
         border: Border(
-          bottom: BorderSide(color: Theme.of(context).dividerColor),
+          bottom: BorderSide(
+            color: dark ? const Color(0x24FFFFFF) : const Color(0x14000000),
+          ),
         ),
       ),
       child: Row(
@@ -1925,13 +2540,17 @@ final class _WindowsTitleStrip extends StatelessWidget {
           IconButton(
             key: const ValueKey('title-sidebar-toggle'),
             tooltip: workspace.sidebarVisible
-                ? _hostText('收起侧边栏', 'Collapse Sidebar')
-                : _hostText('展开侧边栏', 'Expand Sidebar'),
+                ? _hostText(context, '收起侧边栏', 'Collapse Sidebar')
+                : _hostText(context, '展开侧边栏', 'Expand Sidebar'),
             onPressed: workspace.toggleSidebar,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 32, height: 32),
             icon: const _SidebarToggleIcon(),
           ),
           TextButton(
             key: const ValueKey('title-settings'),
+            style: buttonStyle,
             onPressed: () => showOpenMuseSettings(
               context,
               settings,
@@ -1945,12 +2564,21 @@ final class _WindowsTitleStrip extends StatelessWidget {
                         enabled: enabled,
                       ),
             ),
-            child: Text(_hostText('设置', 'Settings')),
+            child: Text(_hostText(context, '设置', 'Settings')),
+          ),
+          Builder(
+            builder: (buttonContext) => TextButton(
+              key: const ValueKey('title-view'),
+              style: buttonStyle,
+              onPressed: () => _showViewMenu(buttonContext),
+              child: Text(_hostText(context, '视图', 'View')),
+            ),
           ),
           TextButton(
             key: const ValueKey('title-terminal'),
+            style: buttonStyle,
             onPressed: onTerminal,
-            child: Text(_hostText('终端', 'Terminal')),
+            child: Text(_hostText(context, '终端', 'Terminal')),
           ),
           Expanded(
             child: Listener(
@@ -1963,17 +2591,44 @@ final class _WindowsTitleStrip extends StatelessWidget {
               child: const SizedBox.expand(),
             ),
           ),
-          const _WindowsCaptionButtons(),
+          if (Platform.isWindows) const _WindowsCaptionButtons(),
         ],
       ),
     );
   }
 }
 
-String _hostText(String zh, String en) =>
-    WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'zh'
-    ? zh
-    : en;
+String _hostText(BuildContext context, String zh, String en) {
+  final code =
+      OpenMuseUiLocaleScope.maybeOf(context)?.locale.languageCode ??
+      Localizations.maybeLocaleOf(context)?.languageCode ??
+      WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+  return code == 'zh' ? zh : en;
+}
+
+enum _HostView { agent, ide }
+
+WorkbenchLayoutSnapshot _layoutForView(_HostView view) {
+  if (view == _HostView.agent) return createDefaultWorkbenchLayout();
+  final workspace = PaneNode(paneId: 'workspace', minWidth: 232);
+  final editor = PaneNode(paneId: 'editor', minWidth: 280);
+  final agent = PaneNode(paneId: 'dsh', minWidth: 280);
+  return WorkbenchLayoutSnapshot(
+    root: SplitNode(
+      axis: Axis.horizontal,
+      ratio: 0.2,
+      first: workspace,
+      second: SplitNode(
+        axis: Axis.horizontal,
+        ratio: 0.62,
+        first: editor,
+        second: agent,
+      ),
+    ),
+    bindings: createDefaultWorkbenchLayout().bindings,
+    focusedPaneId: 'editor',
+  );
+}
 
 final class _SidebarToggleIcon extends StatelessWidget {
   const _SidebarToggleIcon();
@@ -2294,99 +2949,207 @@ final class _CreateDocumentDialogState extends State<_CreateDocumentDialog> {
   );
 }
 
-Future<void> _showPlugins(
-  BuildContext context,
-  OpenMusePluginRegistry registry,
-  LocalWorkspaceController workspace,
-) => showDialog<void>(
-  context: context,
-  builder: (context) => _PluginDialog(registry: registry, workspace: workspace),
-);
-
-final class _PluginDialog extends StatelessWidget {
-  const _PluginDialog({required this.registry, required this.workspace});
+final class _PluginMarketDialog extends StatefulWidget {
+  const _PluginMarketDialog({required this.registry, required this.workspace});
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
 
   @override
-  Widget build(BuildContext context) => Dialog(
-    child: SizedBox(
-      width: 700,
-      height: 520,
-      child: Column(
-        children: [
-          _DialogHeader(
-            title: '插件',
-            subtitle: '编辑器、Viewer 与助手由独立插件提供',
-            onClose: () => Navigator.pop(context),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListenableBuilder(
-              listenable: registry,
-              builder: (context, _) => ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: registry.descriptors.length,
-                separatorBuilder: (_, _) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final descriptor = registry.descriptors.elementAt(index);
-                  final state = registry.stateOf(descriptor.id);
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 7,
-                      horizontal: 8,
-                    ),
-                    leading: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: const Color(0xfff0f1f7),
-                        borderRadius: BorderRadius.circular(9),
+  State<_PluginMarketDialog> createState() => _PluginMarketDialogState();
+}
+
+final class _PluginMarketDialogState extends State<_PluginMarketDialog> {
+  var _selected = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = openMuseMarketTheme();
+    final size = MediaQuery.sizeOf(context);
+    final market = widget.registry.panelProvider(
+      OpenMuseSurfaceRegion.dialog,
+      panelId: 'plugin.market',
+    );
+    const accent = MarketColors.blue;
+    return Theme(
+      data: theme,
+      child: Dialog(
+        backgroundColor: MarketColors.canvas,
+        insetPadding: const EdgeInsets.all(24),
+        child: SizedBox(
+          width: (size.width - 48).clamp(0.0, 960.0),
+          height: (size.height - 48).clamp(0.0, 650.0),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(OpenMuseTokens.dialogRadius),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 18, 12, 0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.extension_outlined, size: 21, color: accent),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text('插件市场', style: theme.textTheme.titleLarge),
                       ),
-                      child: const Icon(
-                        Icons.extension_outlined,
-                        size: 20,
-                        color: OpenMuseTokens.accent,
+                      IconButton(
+                        tooltip: '关闭插件市场',
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, size: 18),
                       ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 2, 24, 12),
+                  child: Text(
+                    '发现适配 OpenMuse 的插件，或查看已安装的插件。',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    title: Text(descriptor.name),
-                    subtitle: Text(
-                      '${descriptor.id}  ·  ${descriptor.version}  ·  ${descriptor.runtime.name}',
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _StatePill(state: state),
-                        const SizedBox(width: 8),
-                        TextButton(
-                          onPressed: () => _openPluginLog(
-                            context,
-                            registry,
-                            workspace,
-                            descriptor,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      _tab(context, '发现', 0, accent),
+                      _tab(context, '已安装', 1, accent),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, color: theme.dividerColor),
+                Expanded(
+                  child: ColoredBox(
+                    color: MarketColors.canvas,
+                    child: _selected == 0
+                        ? market?.buildPanel(context, 'plugin.market') ??
+                              const Center(child: Text('插件市场暂不可用'))
+                        : Column(
+                            children: [
+                              SizedBox(
+                                height: 210,
+                                child:
+                                    market?.buildPanel(
+                                      context,
+                                      'plugin.market.installed',
+                                    ) ??
+                                    const Center(child: Text('DSH 插件列表暂不可用')),
+                              ),
+                              Divider(height: 1, color: theme.dividerColor),
+                              Expanded(
+                                child: _InstalledOpenMusePlugins(
+                                  registry: widget.registry,
+                                  workspace: widget.workspace,
+                                ),
+                              ),
+                            ],
                           ),
-                          child: const Text('日志输出'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '外部插件安装与签名校验将在插件运行时门禁完成后开放。',
-                style: TextStyle(fontSize: 12, color: OpenMuseTokens.textMuted),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _tab(BuildContext context, String label, int index, Color accent) {
+    final active = _selected == index;
+    return InkWell(
+      key: ValueKey('plugin-market-tab-$index'),
+      onTap: () => setState(() => _selected = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: active ? accent : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+            color: active
+                ? accent
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _InstalledOpenMusePlugins extends StatelessWidget {
+  const _InstalledOpenMusePlugins({
+    required this.registry,
+    required this.workspace,
+  });
+
+  final OpenMusePluginRegistry registry;
+  final LocalWorkspaceController workspace;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: registry,
+    builder: (context, _) => ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
+      itemCount: registry.descriptors.length + 1,
+      separatorBuilder: (_, _) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return const Padding(
+            padding: EdgeInsets.fromLTRB(4, 2, 4, 10),
+            child: Text(
+              'OpenMuse 插件',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          );
+        }
+        final descriptor = registry.descriptors.elementAt(index - 1);
+        final state = registry.stateOf(descriptor.id);
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 5,
+            horizontal: 4,
+          ),
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(
+              Icons.extension_outlined,
+              size: 19,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+          ),
+          title: Text(descriptor.name),
+          subtitle: Text(
+            '${descriptor.id}  ·  ${descriptor.version}  ·  ${descriptor.runtime.name}',
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _StatePill(state: state),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: () =>
+                    _openPluginLog(context, registry, workspace, descriptor),
+                child: const Text('日志输出'),
+              ),
+            ],
+          ),
+        );
+      },
     ),
   );
 }
@@ -2473,52 +3236,4 @@ final class _StatePill extends StatelessWidget {
       ),
     );
   }
-}
-
-final class _DialogHeader extends StatelessWidget {
-  const _DialogHeader({
-    required this.title,
-    required this.subtitle,
-    required this.onClose,
-  });
-
-  final String title;
-  final String subtitle;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 15, 12, 14),
-    child: Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  color: OpenMuseTokens.textMuted,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-        IconButton(
-          tooltip: '关闭',
-          onPressed: onClose,
-          icon: const Icon(Icons.close, size: 19),
-        ),
-      ],
-    ),
-  );
 }

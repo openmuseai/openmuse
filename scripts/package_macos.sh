@@ -3,12 +3,18 @@ set -euo pipefail
 
 profile="release"
 skip_tests=0
+build_name=""
+build_number=""
+update_channel="stable"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --profile) profile="$2"; shift 2 ;;
     --skip-tests) skip_tests=1; shift ;;
+    --build-name) build_name="$2"; shift 2 ;;
+    --build-number) build_number="$2"; shift 2 ;;
+    --update-channel) update_channel="$2"; shift 2 ;;
     -h|--help)
-      echo "usage: package_macos.sh [--profile release|debug] [--skip-tests]"
+      echo "usage: package_macos.sh [--profile release|debug] [--skip-tests] [--build-name x.y.z] [--build-number n] [--update-channel stable|canary]"
       exit 0
       ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
@@ -19,6 +25,15 @@ case "$profile" in
   debug) product_dir="Debug" ;;
   *) echo "profile must be release or debug" >&2; exit 2 ;;
 esac
+[[ "$update_channel" == "stable" || "$update_channel" == "canary" ]] || {
+  echo "unsupported update channel: $update_channel" >&2; exit 2;
+}
+[[ -z "$build_name" || "$build_name" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+  echo "invalid build name: $build_name" >&2; exit 2;
+}
+[[ -z "$build_number" || "$build_number" =~ ^[1-9][0-9]*$ ]] || {
+  echo "invalid build number: $build_number" >&2; exit 2;
+}
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 app_root="$repo_root/app/openmuse_host"
@@ -31,8 +46,19 @@ node_runtime="$repo_root/target/node-v22.19.0-universal"
 cd "$app_root"
 "$repo_root/scripts/stage_helix.sh"
 "$repo_root/scripts/stage_node_macos.sh"
-if [[ ! -f "$dsh_closure/node_modules/@deepseek-ai/dsh/lib/bin.js" ]]; then
-  python3 "$repo_root/scripts/build_dsh_closure.py" --out "$dsh_closure"
+if [[ ! -f "$dsh_closure/node_modules/@deepseek-ai/dsh/lib/bin.js" ]] ||
+   [[ ! -f "$dsh_closure/node_modules/.bin/pnpm" ]] ||
+   ! cmp -s "$repo_root/third_party/dsh/package.json" "$dsh_closure/package.json" ||
+   ! cmp -s "$repo_root/third_party/dsh/package-lock.json" "$dsh_closure/package-lock.json"; then
+  stale_closure="$dsh_closure.stale.$$"
+  if [[ -d "$dsh_closure" ]]; then mv "$dsh_closure" "$stale_closure"; fi
+  if python3 "$repo_root/scripts/build_dsh_closure.py" --out "$dsh_closure"; then
+    if [[ -d "$stale_closure" ]]; then rm -rf "$stale_closure"; fi
+  else
+    rm -rf "$dsh_closure"
+    if [[ -d "$stale_closure" ]]; then mv "$stale_closure" "$dsh_closure"; fi
+    exit 1
+  fi
 fi
 cmp "$repo_root/third_party/dsh/package.json" "$dsh_closure/package.json"
 cmp "$repo_root/third_party/dsh/package-lock.json" "$dsh_closure/package-lock.json"
@@ -46,7 +72,10 @@ flutter analyze
 if [[ "$skip_tests" -eq 0 ]]; then
   flutter test
 fi
-flutter build macos "--${profile}"
+flutter_build_args=("--${profile}" "--dart-define=OPENMUSE_UPDATE_CHANNEL=$update_channel")
+if [[ -n "$build_name" ]]; then flutter_build_args+=("--build-name=$build_name"); fi
+if [[ -n "$build_number" ]]; then flutter_build_args+=("--build-number=$build_number"); fi
+flutter build macos "${flutter_build_args[@]}"
 
 # The CLI plugin ships a native launcher beside the GUI. It remains callable
 # from a regular terminal and is placed on PATH for the in-app console.
@@ -109,7 +138,15 @@ install -m 755 "$node_runtime/node" "$dsh_dest/node/bin/node"
 cp "$repo_root/third_party/dsh/LICENSE" "$dsh_dest/licenses/DSH-LICENSE"
 cp "$node_runtime/LICENSE" "$dsh_dest/licenses/NODE-LICENSE"
 "$dsh_dest/node/bin/node" "$dsh_dest/node_modules/@deepseek-ai/dsh/lib/bin.js" --version
+test -f "$dsh_dest/node_modules/.bin/pnpm"
+test -f "$dsh_dest/node_modules/pnpm/LICENSE"
+test "$(PATH="$dsh_dest/node_modules/.bin:$dsh_dest/node/bin:/usr/bin:/bin" \
+  "$dsh_dest/node_modules/.bin/pnpm" --version)" = "10.34.1"
 codesign --force --sign - "$dsh_dest/node/bin/node"
+
+update_dest="$app_path/Contents/Resources/openmuse/update"
+mkdir -p "$update_dest"
+install -m 755 "$repo_root/scripts/update/install_macos.sh" "$update_dest/install_macos.sh"
 
 mkdir -p "$dist_root"
 # Flutter's incremental macOS build can update App.framework without refreshing

@@ -10,6 +10,10 @@ class MainFlutterWindow: NSWindow {
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
     self.minSize = NSSize(width: 1100, height: 650)
+    self.titleVisibility = .hidden
+    self.titlebarAppearsTransparent = true
+    self.styleMask.insert(.fullSizeContentView)
+    self.isMovableByWindowBackground = false
     if windowFrame.width < 1100 || windowFrame.height < 650 {
       let visible = self.screen?.visibleFrame ?? NSScreen.main?.visibleFrame
       let targetWidth = min(1280, visible?.width ?? 1280)
@@ -46,6 +50,38 @@ class MainFlutterWindow: NSWindow {
       default:
         result(FlutterMethodNotImplemented)
       }
+    }
+
+    let windowChannel = FlutterMethodChannel(
+      name: "com.openmuse.host/window",
+      binaryMessenger: flutterViewController.engine.binaryMessenger
+    )
+    windowChannel.setMethodCallHandler { [weak self] call, result in
+      switch call.method {
+      case "startDrag":
+        if let event = NSApp.currentEvent {
+          self?.performDrag(with: event)
+        }
+        result(nil)
+      case "queryFullscreen":
+        result(self?.styleMask.contains(.fullScreen) ?? false)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+    NotificationCenter.default.addObserver(
+      forName: NSWindow.didEnterFullScreenNotification,
+      object: self,
+      queue: .main
+    ) { _ in
+      windowChannel.invokeMethod("fullscreen", arguments: true)
+    }
+    NotificationCenter.default.addObserver(
+      forName: NSWindow.didExitFullScreenNotification,
+      object: self,
+      queue: .main
+    ) { _ in
+      windowChannel.invokeMethod("fullscreen", arguments: false)
     }
 
     super.awakeFromNib()

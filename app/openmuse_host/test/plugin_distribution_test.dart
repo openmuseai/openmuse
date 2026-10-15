@@ -101,10 +101,11 @@ void main() {
   });
 
   test('OpenMuse does not ship Easel', () {
-    expect(
-      createOpenMuseBuiltInPlugins().map((plugin) => plugin.descriptor.id),
-      isNot(contains('com.openmuse.easel')),
-    );
+    final builtIns = createOpenMuseBuiltInPlugins()
+        .map((plugin) => plugin.descriptor.id)
+        .toList();
+    expect(builtIns, isNot(contains('com.openmuse.easel')));
+    expect(builtIns, contains('com.openmuse.plugin-market'));
   });
 
   test('installed Easel contributes gated CLI commands', () {
