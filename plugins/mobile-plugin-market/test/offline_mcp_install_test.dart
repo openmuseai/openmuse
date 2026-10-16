@@ -73,6 +73,8 @@ void main() {
 
       await requests.cancel();
       await server.close(force: true);
+      final installedEntries = await market.installedEntries();
+      expect(installedEntries.single.name, 'example/offline-editor');
       final offlineEntries = await market.list();
       expect(offlineEntries.single.name, 'example/offline-editor');
       expect(

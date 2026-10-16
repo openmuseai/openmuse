@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'mcp_market.dart';
@@ -63,6 +64,21 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
           return const Center(child: CircularProgressIndicator());
         }
         final data = snapshot.data!;
+        final link = Uri.tryParse(
+          data['uri'] is String ? data['uri'] as String : '',
+        );
+        if (link != null &&
+            link.hasScheme &&
+            (link.scheme == 'https' ||
+                (link.scheme == 'http' &&
+                    {'localhost', '127.0.0.1'}.contains(link.host)))) {
+          return AppKitView(
+            key: ValueKey('mcp-file-${resource.uri}'),
+            viewType: 'com.openmuse.mcp/app-view',
+            creationParams: {'url': link.toString()},
+            creationParamsCodec: const StandardMessageCodec(),
+          );
+        }
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -87,5 +103,6 @@ String? extensionForMediaType(String mediaType) => switch (mediaType) {
     'pptx',
   'application/pdf' => 'pdf',
   'text/plain' => 'txt',
+  'text/markdown' => 'md',
   _ => null,
 };

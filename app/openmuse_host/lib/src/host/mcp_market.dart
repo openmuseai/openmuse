@@ -212,10 +212,23 @@ final class McpBundleRuntime {
       final result = await client.callTool(
         CallToolRequest(
           name: toolName,
-          arguments: {'content': base64Encode(await file.readAsBytes())},
+          arguments: {
+            'content': base64Encode(await file.readAsBytes()),
+            if (properties['name'] is Map) 'name': p.basename(filePath),
+          },
         ),
       );
       if (result.isError) throw StateError('MCP tool returned an error');
+      for (final content in result.content.whereType<ResourceLink>()) {
+        final uri = Uri.tryParse(content.uri);
+        if (content.mimeType == 'text/html' &&
+            uri != null &&
+            (uri.scheme == 'https' ||
+                (uri.scheme == 'http' &&
+                    {'localhost', '127.0.0.1'}.contains(uri.host)))) {
+          return {'uri': uri.toString()};
+        }
+      }
       final data = result.structuredContent;
       if (data == null) {
         throw const FormatException('MCP tool returned no structured content');
@@ -339,12 +352,12 @@ final class McpRegistryMarket {
   Future<Map<String, Object?>> install(McpMarketEntry entry) async {
     final planned = await plan(entry);
     if (planned['action'] == 'already-installed') return planned;
-    final bytes = await _get(entry.packageUri, 32 * 1024 * 1024);
+    final bytes = await _get(entry.packageUri, 80 * 1024 * 1024);
     if (sha256.convert(bytes).toString() != entry.sha256) {
       throw const FormatException('MCPB digest mismatch');
     }
     final archive = ZipDecoder().decodeBytes(bytes);
-    if (archive.length > 256) {
+    if (archive.length > 1024) {
       throw const FormatException('MCPB has too many files');
     }
     final files = <String, Uint8List>{};
@@ -362,7 +375,7 @@ final class McpRegistryMarket {
         throw const FormatException('Invalid MCPB file');
       }
       expandedSize += content.length;
-      if (expandedSize > 64 * 1024 * 1024) {
+      if (expandedSize > 160 * 1024 * 1024) {
         throw const FormatException('MCPB expanded size limit exceeded');
       }
       files[name] = Uint8List.fromList(content);

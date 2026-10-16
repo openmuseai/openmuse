@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:openmuse_registry_provider/openmuse_registry_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 
@@ -86,6 +88,8 @@ final class RemoteMcpMarket {
   RemoteMcpMarket(this.origin, this.receiptFile);
   final Uri origin;
   final File receiptFile;
+  bool catalogFresh = false;
+  Set<String> activeVersions = {};
   File get _catalogCache =>
       File('${receiptFile.parent.path}/mcp-registry-cache.json');
   File get _installedRecords =>
@@ -161,6 +165,8 @@ final class RemoteMcpMarket {
       final known = entries
           .map((entry) => '${entry.name}@${entry.version}')
           .toSet();
+      catalogFresh = true;
+      activeVersions = {...known};
       for (final installed in await _savedInstallations()) {
         if (known.add('${installed.name}@${installed.version}')) {
           entries.add(installed);
@@ -194,6 +200,16 @@ final class RemoteMcpMarket {
     if (!await receiptFile.exists()) return {};
     final decoded = jsonDecode(await receiptFile.readAsString());
     return (decoded as List).whereType<String>().toSet();
+  }
+
+  /// Resource dispatch uses the locally installed catalog. A registry outage
+  /// must not turn a file click into a failed marketplace lookup.
+  Future<List<RemoteMcpEntry>> installedEntries() async {
+    final receipts = await installed();
+    if (receipts.isEmpty) return [];
+    return (await _savedInstallations())
+        .where((entry) => receipts.contains('${entry.name}@${entry.version}'))
+        .toList();
   }
 
   Future<T> withClient<T>(
@@ -362,6 +378,61 @@ final class RemoteMcpMarket {
         throw const FormatException('No MCP tool accepts a base64 file');
       });
 
+  /// Discovers a file editor from standard JSON Schema contentMediaType.
+  Future<bool> acceptsContent(RemoteMcpEntry entry, String mediaType) =>
+      withClient(entry, (client) async {
+        final tools = await client.listTools();
+        return tools.tools.any((tool) {
+          final properties = tool.inputSchema.toJson()['properties'];
+          final content = properties is Map ? properties['content'] : null;
+          return content is Map &&
+              content['contentEncoding'] == 'base64' &&
+              content['contentMediaType'] == mediaType;
+        });
+      });
+
+  /// Sends content only after the Host has obtained user consent. The result
+  /// is the standard MCP resource_link URL, treated as opaque by the Host.
+  Future<Uri> openContent(
+    RemoteMcpEntry entry, {
+    required String mediaType,
+    required String content,
+    required String name,
+  }) => withClient(entry, (client) async {
+    final bytes = utf8.encode(content);
+    if (bytes.length > 32 * 1024) {
+      throw const FormatException('文件超过编辑器的 32 KiB 限额');
+    }
+    final tools = await client.listTools();
+    for (final tool in tools.tools) {
+      final schema = tool.inputSchema.toJson();
+      final properties = schema['properties'];
+      final input = properties is Map ? properties['content'] : null;
+      if (input is! Map ||
+          input['contentEncoding'] != 'base64' ||
+          input['contentMediaType'] != mediaType)
+        continue;
+      final arguments = <String, Object?>{'content': base64Encode(bytes)};
+      if (properties['name'] is Map) arguments['name'] = name;
+      final result = await client.callTool(
+        CallToolRequest(name: tool.name, arguments: arguments),
+      );
+      if (result.isError) throw StateError('MCP 编辑器打开失败');
+      for (final link in result.content.whereType<ResourceLink>()) {
+        final uri = Uri.tryParse(link.uri);
+        if (link.mimeType == 'text/html' &&
+            uri != null &&
+            (uri.scheme == 'https' ||
+                (uri.scheme == 'http' &&
+                    {'localhost', '127.0.0.1'}.contains(uri.host)))) {
+          return uri;
+        }
+      }
+      throw const FormatException('MCP 编辑器未返回 HTML resource_link');
+    }
+    throw const FormatException('没有支持该文件类型的已安装 MCP 插件');
+  });
+
   /// Opens any zero-argument MCP Apps tool that returns a standard HTML
   /// resource_link. A null result means this is a file-oriented MCP server.
   Future<Uri?> openUi(RemoteMcpEntry entry) => withClient(entry, (
@@ -396,11 +467,13 @@ final class RemoteMcpMarket {
 final class RemoteMcpMarketPage extends StatefulWidget {
   const RemoteMcpMarketPage({
     super.key,
-    required this.origin,
+    this.origin,
+    this.providers,
     this.receiptFile,
     this.pickFile,
   });
-  final Uri origin;
+  final Uri? origin;
+  final McpRegistryProviders? providers;
   final File? receiptFile;
   final Future<File?> Function()? pickFile;
   @override
@@ -414,20 +487,39 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
   String? error;
   String? busy;
   String? output;
+  Timer? _refreshTimer;
+  Uri? get _activeOrigin => widget.providers?.selected ?? widget.origin;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 20), (_) => _load());
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
     try {
+      final origin = _activeOrigin;
+      if (origin == null) {
+        if (mounted)
+          setState(() {
+            entries = [];
+            market = null;
+            error = null;
+          });
+        return;
+      }
       final directory = widget.receiptFile == null
           ? await getApplicationSupportDirectory()
           : null;
       final source = RemoteMcpMarket(
-        widget.origin,
+        origin,
         widget.receiptFile ??
             File('${directory!.path}/mcp-remote-installations.json'),
       );
@@ -438,7 +530,64 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
           market = source;
           entries = catalog;
           installed = receipts;
+          error = null;
         });
+    } catch (cause) {
+      if (mounted) setState(() => error = '$cause');
+    }
+  }
+
+  Future<void> _configureProvider() async {
+    final providers = widget.providers;
+    if (providers == null) return;
+    final input = TextEditingController(
+      text: providers.selected?.toString() ?? '',
+    );
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('MCP Registry 提供商'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final uri in providers.origins)
+              ListTile(
+                title: Text(uri.toString()),
+                trailing: uri == providers.selected
+                    ? const Icon(Icons.check)
+                    : null,
+                onTap: () => Navigator.pop(dialog, uri.toString()),
+              ),
+            TextField(
+              controller: input,
+              decoration: const InputDecoration(
+                labelText: '添加 HTTPS Registry 地址',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialog, input.text),
+            child: const Text('使用此地址'),
+          ),
+        ],
+      ),
+    );
+    input.dispose();
+    if (choice == null || choice.trim().isEmpty) return;
+    try {
+      await providers.select(choice);
+      if (mounted)
+        setState(() {
+          entries = null;
+          error = null;
+        });
+      await _load();
     } catch (cause) {
       if (mounted) setState(() => error = '$cause');
     }
@@ -484,7 +633,7 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
         if (mounted) {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => _RemoteMcpAppPage(title: entry.title, uri: ui),
+              builder: (_) => RemoteMcpAppPage(title: entry.title, uri: ui),
             ),
           );
         }
@@ -549,11 +698,31 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('在线 MCP 插件')),
+    appBar: AppBar(
+      title: const Text('在线 MCP 插件'),
+      actions: [
+        IconButton(
+          tooltip: '刷新市场',
+          onPressed: _load,
+          icon: const Icon(Icons.refresh),
+        ),
+        if (widget.providers != null)
+          IconButton(
+            tooltip: '市场提供商',
+            onPressed: _configureProvider,
+            icon: const Icon(Icons.dns_outlined),
+          ),
+      ],
+    ),
     body: entries == null && error == null
         ? const Center(child: CircularProgressIndicator())
         : ListView(
             children: [
+              if (_activeOrigin == null)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('请选择 MCP Registry 提供商。'),
+                ),
               if (error != null)
                 Padding(
                   padding: const EdgeInsets.all(16),
@@ -568,7 +737,9 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
                 Card(
                   child: ListTile(
                     title: Text(entry.title),
-                    subtitle: Text('${entry.description}\n${entry.version}'),
+                    subtitle: Text(
+                      '${entry.description}\n${entry.version}${sourceDelisted(entry) ? ' · 已下架' : ''}',
+                    ),
                     isThreeLine: true,
                     trailing: busy == entry.name
                         ? const CircularProgressIndicator()
@@ -597,6 +768,11 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
             ],
           ),
   );
+
+  bool sourceDelisted(RemoteMcpEntry entry) =>
+      market?.catalogFresh == true &&
+      !(market?.activeVersions.contains('${entry.name}@${entry.version}') ??
+          true);
 }
 
 final class _OfflineMcpAppPage extends StatelessWidget {
@@ -617,16 +793,16 @@ final class _OfflineMcpAppPage extends StatelessWidget {
   );
 }
 
-final class _RemoteMcpAppPage extends StatefulWidget {
-  const _RemoteMcpAppPage({required this.title, required this.uri});
+final class RemoteMcpAppPage extends StatefulWidget {
+  const RemoteMcpAppPage({super.key, required this.title, required this.uri});
   final String title;
   final Uri uri;
 
   @override
-  State<_RemoteMcpAppPage> createState() => _RemoteMcpAppPageState();
+  State<RemoteMcpAppPage> createState() => _RemoteMcpAppPageState();
 }
 
-final class _RemoteMcpAppPageState extends State<_RemoteMcpAppPage> {
+final class _RemoteMcpAppPageState extends State<RemoteMcpAppPage> {
   late final WebViewController controller;
 
   @override
