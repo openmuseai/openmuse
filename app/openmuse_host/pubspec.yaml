@@ -22,6 +22,8 @@ dependencies:
     path: ../../packages/openmuse_plugin_sdk
   openmuse_market_ui:
     path: ../../packages/openmuse_market_ui
+  openmuse_registry_provider:
+    path: ../../packages/openmuse_registry_provider
   openmuse_host_shell:
     path: ../../packages/openmuse_host_shell
   openmuse_app_update:

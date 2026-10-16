@@ -12,6 +12,7 @@ import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
 import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
 import 'package:muse_remote_surface_core/muse_remote_surface_core.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_registry_provider/openmuse_registry_provider.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -83,25 +84,35 @@ Future<Widget> bootOpenMuseHost() async {
     }),
   );
   late final OpenMusePluginRegistry registry;
-  final mcpRegistryUrl = Platform.environment['OPENMUSE_MCP_REGISTRY_URL'];
-  final mcpMarket = mcpRegistryUrl == null || mcpRegistryUrl.isEmpty
-      ? null
-      : McpRegistryMarket(
-          origin: Uri.parse(mcpRegistryUrl),
-          installRoot: Directory(p.join(support.path, 'OpenMuse', 'mcpb')),
-          nodeExecutable: resolveMarketDshRuntime(
-            executablePath: Platform.resolvedExecutable,
-            environment: Platform.environment,
-          ).nodeExecutable,
-        );
+  final mcpRegistryUrl =
+      Platform.environment['OPENMUSE_MCP_REGISTRY_URL'] ??
+      'https://plugins.openmuseai.com';
+  final providers = McpRegistryProviders(
+    file: File(p.join(support.path, 'OpenMuse', 'mcp-registries.json')),
+    defaultOrigin: mcpRegistryUrl.isEmpty ? null : Uri.parse(mcpRegistryUrl),
+  );
+  await providers.load();
+  final mcpInstallRoot = Directory(p.join(support.path, 'OpenMuse', 'mcpb'));
+  final marketNode = resolveMarketDshRuntime(
+    executablePath: Platform.resolvedExecutable,
+    environment: Platform.environment,
+  ).nodeExecutable;
+  McpRegistryMarket makeMarket(Uri origin) => McpRegistryMarket(
+    origin: origin,
+    installRoot: mcpInstallRoot,
+    nodeExecutable: marketNode,
+  );
+  McpRegistryMarket? selectedMarket() =>
+      providers.selected == null ? null : makeMarket(providers.selected!);
+  final receiptMarket = makeMarket(Uri());
   Future<void> registerMcp(McpMarketEntry entry) async {
-    if (registry.plugin(entry.name) != null || mcpMarket == null) return;
+    if (registry.plugin(entry.name) != null) return;
     final node = resolveMarketDshRuntime(
       executablePath: Platform.resolvedExecutable,
       environment: Platform.environment,
     ).nodeExecutable;
     final runtime = McpBundleRuntime(
-      bundleDirectory: mcpMarket.directoryFor(entry),
+      bundleDirectory: receiptMarket.directoryFor(entry),
       nodeExecutable: node,
     );
     for (final tool in await runtime.tools()) {
@@ -130,10 +141,15 @@ Future<Widget> bootOpenMuseHost() async {
     String operation,
     String id,
   ) async {
+    final mcpMarket = selectedMarket();
+    List<McpMarketEntry> listed = [];
     if (mcpMarket != null) {
-      final matches = (await mcpMarket.list()).where(
-        (entry) => entry.name == id,
-      );
+      try {
+        listed = await mcpMarket.list();
+      } on Object {
+        if (operation == 'install') rethrow;
+      }
+      final matches = listed.where((entry) => entry.name == id);
       if (matches.isNotEmpty) {
         final entry = matches.first;
         if (operation == 'plan') return mcpMarket.plan(entry);
@@ -157,6 +173,24 @@ Future<Widget> bootOpenMuseHost() async {
           return {'uri': uri.toString()};
         }
         throw UnsupportedError('MCPB enable/disable is not available');
+      }
+    }
+    if (operation == 'plan' || operation == 'open') {
+      final installed = (await receiptMarket.installedEntries()).where(
+        (entry) => entry.name == id,
+      );
+      if (installed.isNotEmpty) {
+        final entry = installed.first;
+        final localMarket = makeMarket(Uri.parse(entry.packageUri.origin));
+        if (operation == 'plan') {
+          return {...await localMarket.plan(entry), 'listed': false};
+        }
+        final uri = await McpBundleRuntime(
+          bundleDirectory: localMarket.directoryFor(entry),
+          nodeExecutable: localMarket.nodeExecutable,
+        ).openUi();
+        if (uri == null) throw StateError('插件没有可打开的 MCP App');
+        return {'uri': uri.toString()};
       }
     }
     final entries = builtInMarketPlugins.where((entry) => entry.id == id);
@@ -268,12 +302,38 @@ Future<Widget> bootOpenMuseHost() async {
             );
             return receipt.toJson();
           case 'plugin.market.list':
+            final market = selectedMarket();
+            var catalogAvailable = market != null;
+            List<McpMarketEntry> listed = [];
+            if (market != null) {
+              try {
+                listed = await market.list();
+              } on Object {
+                catalogAvailable = false;
+              }
+            }
+            final names = listed.map((entry) => entry.name).toSet();
             return [
               for (final entry in builtInMarketPlugins) entry.toJson(),
-              if (mcpMarket != null)
-                for (final entry in await mcpMarket.list())
-                  entry.toMarketCard(),
+              for (final entry in listed)
+                {...entry.toMarketCard(), 'listed': true},
+              for (final entry in await receiptMarket.installedEntries())
+                if (!names.contains(entry.name))
+                  {...entry.toMarketCard(), 'listed': catalogAvailable ? false : null},
             ];
+          case 'plugin.market.providers':
+            return {
+              'selected': providers.selected?.toString(),
+              'providers': [
+                for (final uri in providers.origins) uri.toString(),
+              ],
+            };
+          case 'plugin.market.selectProvider':
+            if (arguments is! String) {
+              throw const FormatException('无效市场地址');
+            }
+            await providers.select(arguments);
+            return providers.selected?.toString();
           case 'plugin.market.plan':
           case 'plugin.market.install':
           case 'plugin.market.open':
@@ -588,13 +648,11 @@ Future<Widget> bootOpenMuseHost() async {
   )) {
     registry.install(plugin);
   }
-  if (mcpMarket != null) {
-    for (final entry in await mcpMarket.installedEntries()) {
-      try {
-        await registerMcp(entry);
-      } catch (error) {
-        debugPrint('MCPB activation deferred: $error');
-      }
+  for (final entry in await receiptMarket.installedEntries()) {
+    try {
+      await registerMcp(entry);
+    } catch (error) {
+      debugPrint('MCPB activation deferred: $error');
     }
   }
   unawaited(() async {

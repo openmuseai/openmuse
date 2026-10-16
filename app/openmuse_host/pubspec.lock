@@ -498,6 +498,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  openmuse_registry_provider:
+    dependency: "direct main"
+    description:
+      path: "../../packages/openmuse_registry_provider"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_workbench_layout:
     dependency: "direct main"
     description:

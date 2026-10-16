@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
 import 'package:openmuse_market_ui/openmuse_market_ui.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_registry_provider/openmuse_registry_provider.dart';
 
 import 'src/paired_desktop_market_client.dart';
 import 'src/market_discover_view.dart';
@@ -12,17 +13,19 @@ import 'src/mcp_remote_market.dart';
 
 export 'src/paired_desktop_market_client.dart';
 export 'src/mcp_remote_market.dart'
-    show RemoteMcpEntry, RemoteMcpMarket, RemoteMcpMarketPage;
+    show RemoteMcpEntry, RemoteMcpMarket, RemoteMcpMarketPage, RemoteMcpAppPage;
 
 final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
   OpenMuseMobilePluginMarket(
     this.store, {
     this.source = const BundledMobileMarketSource(),
     this.mcpRegistryOrigin,
+    this.registryProviders,
   });
   final MobilePluginStore store;
   final MobileMarketSource source;
   final Uri? mcpRegistryOrigin;
+  final McpRegistryProviders? registryProviders;
 
   @override
   final descriptor = const OpenMusePluginDescriptor(
@@ -56,6 +59,7 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
           store: store,
           source: source,
           mcpRegistryOrigin: mcpRegistryOrigin,
+          registryProviders: registryProviders,
         )
       : null;
 
@@ -74,6 +78,7 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
     pluginRegistry: pluginRegistry,
     onOpenBuiltIn: onOpenBuiltIn,
     mcpRegistryOrigin: mcpRegistryOrigin,
+    registryProviders: registryProviders,
   );
 }
 
@@ -126,6 +131,7 @@ final class MobileMarketPage extends StatefulWidget {
     this.pluginRegistry,
     this.onOpenBuiltIn,
     this.mcpRegistryOrigin,
+    this.registryProviders,
   });
   final MobilePluginStore store;
   final MobileMarketSource source;
@@ -135,6 +141,7 @@ final class MobileMarketPage extends StatefulWidget {
   final OpenMusePluginRegistry? pluginRegistry;
   final ValueChanged<OpenMusePlugin>? onOpenBuiltIn;
   final Uri? mcpRegistryOrigin;
+  final McpRegistryProviders? registryProviders;
 
   @override
   State<MobileMarketPage> createState() => _MobileMarketPageState();
@@ -279,7 +286,7 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
           builtInState: (plugin) =>
               widget.pluginRegistry?.stateOf(plugin.descriptor.id),
           onOpenBuiltIn: widget.onOpenBuiltIn,
-          mcpSection: widget.mcpRegistryOrigin == null
+          mcpSection: widget.registryProviders == null && widget.mcpRegistryOrigin == null
               ? null
               : Card(
                   child: ListTile(
@@ -290,7 +297,8 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
                     onTap: () => Navigator.of(context).push<void>(
                       MaterialPageRoute(
                         builder: (_) => RemoteMcpMarketPage(
-                          origin: widget.mcpRegistryOrigin!,
+                          origin: widget.mcpRegistryOrigin,
+                          providers: widget.registryProviders,
                         ),
                       ),
                     ),

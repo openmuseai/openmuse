@@ -56,6 +56,8 @@ dependencies:
     path: ../../plugins/mobile-plugin-market
   openmuse_market_ui:
     path: ../../packages/openmuse_market_ui
+  openmuse_registry_provider:
+    path: ../../packages/openmuse_registry_provider
   openmuse_mobile_cloud:
     path: ../../packages/openmuse_mobile_cloud
   openmuse_office_docx:

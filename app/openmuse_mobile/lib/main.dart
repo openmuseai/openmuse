@@ -14,6 +14,7 @@ import 'package:openmuse_mobile_cloud/openmuse_mobile_cloud.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
 import 'package:openmuse_mobile_plugin_market/openmuse_mobile_plugin_market.dart';
+import 'package:openmuse_registry_provider/openmuse_registry_provider.dart';
 import 'package:openmuse_office_docx/openmuse_office_docx.dart';
 import 'package:openmuse_office_viewers/openmuse_office_viewers.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -119,10 +120,20 @@ Future<void> main() async {
   final mobileMarketPlugin = OpenMuseMobilePluginMarket(
     mobileMarketStore,
     source: marketSource,
-    mcpRegistryOrigin:
-        const String.fromEnvironment('OPENMUSE_MCP_REGISTRY_URL').isEmpty
-        ? null
-        : Uri.parse(const String.fromEnvironment('OPENMUSE_MCP_REGISTRY_URL')),
+    registryProviders: await () async {
+      const configured = String.fromEnvironment(
+        'OPENMUSE_MCP_REGISTRY_URL',
+        defaultValue: 'https://plugins.openmuseai.com',
+      );
+      final providers = McpRegistryProviders(
+        file: File(
+          '${(await getApplicationSupportDirectory()).path}/mcp-registries.json',
+        ),
+        defaultOrigin: Uri.parse(configured),
+      );
+      await providers.load();
+      return providers;
+    }(),
   );
   const speechTestAudio = String.fromEnvironment('OPENMUSE_SPEECH_TEST_AUDIO');
   OpenMuseUpdateController? updates;
@@ -289,6 +300,7 @@ final class OpenMuseMobileApplicationState
   late final OpenMuseRemoteWorkbenchPlugin _workbench;
   late final MobileScheduledTasksPlugin _scheduledTasks;
   late final MobileWorkspaceFilesPlugin _workspaceFiles;
+  final _navigatorKey = GlobalKey<NavigatorState>();
   final Set<String> _registeredMobilePlugins = {};
   Future<void> _marketSync = Future<void>.value();
   final _locale = OpenMuseUiLocale();
@@ -322,6 +334,7 @@ final class OpenMuseMobileApplicationState
         widget.remoteWorkbenchPlugin ?? OpenMuseRemoteWorkbenchPlugin();
     _scheduledTasks = MobileScheduledTasksPlugin();
     _workspaceFiles = MobileWorkspaceFilesPlugin();
+    _workspaceFiles.onOpenMarkdown = _openWorkspaceMarkdown;
     _plugins =
         OpenMusePluginRegistry(
             context: OpenMusePluginContext(
@@ -417,6 +430,62 @@ final class OpenMuseMobileApplicationState
         });
   }
 
+  Future<void> _openWorkspaceMarkdown(String name, String content) async {
+    final provider = widget.mobileMarketPlugin?.registryProviders?.selected;
+    if (provider == null) throw StateError('请先配置 MCP 插件市场');
+    final support = await getApplicationSupportDirectory();
+    final market = RemoteMcpMarket(
+      provider,
+      File('${support.path}/mcp-remote-installations.json'),
+    );
+    RemoteMcpEntry? editor;
+    for (final entry in await market.installedEntries()) {
+      try {
+        if (await market.acceptsContent(entry, 'text/markdown')) {
+          editor = entry;
+          break;
+        }
+      } on Object {
+        // A temporarily unavailable plugin cannot claim the resource.
+      }
+    }
+    if (editor == null) throw StateError('请先从插件市场安装 Markdown 编辑器');
+    final context = _navigatorKey.currentContext;
+    if (context == null || !context.mounted) return;
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('使用插件打开文件？'),
+        content: Text(
+          '将 $name 的内容发送至 ${editor!.endpoint?.host ?? editor.name}，并在应用内打开。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialog, true),
+            child: const Text('打开'),
+          ),
+        ],
+      ),
+    );
+    if (approved != true || !mounted) return;
+    final uri = await market.openContent(
+      editor,
+      mediaType: 'text/markdown',
+      content: content,
+      name: name,
+    );
+    if (!mounted) return;
+    await _navigatorKey.currentState?.push<void>(
+      MaterialPageRoute(
+        builder: (_) => RemoteMcpAppPage(title: name, uri: uri),
+      ),
+    );
+  }
+
   Future<void> _getUpdate(OpenMuseRelease release) async {
     await launchUrl(release.downloadUri, mode: LaunchMode.externalApplication);
   }
@@ -427,6 +496,7 @@ final class OpenMuseMobileApplicationState
     builder: (context, _) => OpenMuseUiLocaleScope(
       controller: _locale,
       child: MaterialApp(
+        navigatorKey: _navigatorKey,
         debugShowCheckedModeBanner: false,
         title: 'OpenMuse',
         locale: _locale.locale,

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:openmuse_host/src/host/mcp_file_plugin.dart';
@@ -20,7 +19,12 @@ void main() {
     );
     addTearDown(() => directory.delete(recursive: true));
     final market = McpRegistryMarket(
-      origin: Uri.parse('https://plugins.openmuseai.com'),
+      origin: Uri.parse(
+        const String.fromEnvironment(
+          'OPENMUSE_MCP_REGISTRY_URL',
+          defaultValue: 'https://plugins.openmuseai.com',
+        ),
+      ),
       installRoot: Directory('${directory.path}/installed'),
     );
     final entry = (await market.list()).singleWhere(
