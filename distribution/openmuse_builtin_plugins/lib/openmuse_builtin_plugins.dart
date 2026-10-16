@@ -7,16 +7,18 @@ import 'package:openmuse_helix_plugin/openmuse_helix_plugin.dart';
 import 'package:openmuse_native_text_gate/openmuse_native_text_gate.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_plugin_market/openmuse_plugin_market.dart';
+import 'package:flutter/widgets.dart';
 
 export 'src/demo_workspace.dart';
 
 List<OpenMusePlugin> createOpenMuseBuiltInPlugins({
   DshSidecarSupervisor? dshSupervisor,
   Future<bool> Function(PluginInteraction)? routeInteraction,
+  Widget? Function(String pluginId)? nativeMcpEditorBuilder,
 }) => [
   OpenMuseHelixPlugin(),
   OpenMuseCliPlugin(),
-  OpenMusePluginMarket(),
+  OpenMusePluginMarket(nativeEditorBuilder: nativeMcpEditorBuilder),
   OpenMuseFileViewerPlugin(),
   OpenMuseDshPlugin(
     supervisor: dshSupervisor,

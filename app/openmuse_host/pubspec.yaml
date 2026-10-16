@@ -7,6 +7,8 @@ environment:
   sdk: ^3.12.2
 
 dependencies:
+  appflowy_editor_native_plugin:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/appflowy-editor/flutter_editor
   crypto: ^3.0.6
   flutter:
     sdk: flutter

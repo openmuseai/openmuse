@@ -8,6 +8,11 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 final class OpenMusePluginMarket implements OpenMusePlugin {
+  OpenMusePluginMarket({this.nativeEditorBuilder});
+
+  /// Optional AOT renderer supplied by the Desktop distribution. Market
+  /// installation controls availability; this callback never downloads code.
+  final Widget? Function(String pluginId)? nativeEditorBuilder;
   OpenMusePluginContext? _context;
 
   @override
@@ -39,10 +44,14 @@ final class OpenMusePluginMarket implements OpenMusePlugin {
 
   @override
   Widget? buildPanel(BuildContext context, String panelId) => switch (panelId) {
-    'plugin.market' => _MarketPanel(host: _context),
+    'plugin.market' => _MarketPanel(
+      host: _context,
+      nativeEditorBuilder: nativeEditorBuilder,
+    ),
     'plugin.market.installed' => _MarketPanel(
       host: _context,
       installedOnly: true,
+      nativeEditorBuilder: nativeEditorBuilder,
     ),
     _ => null,
   };
@@ -69,9 +78,14 @@ final class McpAppPage extends StatelessWidget {
 }
 
 final class _MarketPanel extends StatefulWidget {
-  const _MarketPanel({required this.host, this.installedOnly = false});
+  const _MarketPanel({
+    required this.host,
+    this.installedOnly = false,
+    this.nativeEditorBuilder,
+  });
   final OpenMusePluginContext? host;
   final bool installedOnly;
+  final Widget? Function(String pluginId)? nativeEditorBuilder;
 
   @override
   State<_MarketPanel> createState() => _MarketPanelState();
@@ -233,6 +247,20 @@ final class _MarketPanelState extends State<_MarketPanel> {
       _error = null;
     });
     try {
+      final native = widget.nativeEditorBuilder?.call(id);
+      if (native != null) {
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => Scaffold(
+                appBar: AppBar(title: Text(id)),
+                body: native,
+              ),
+            ),
+          );
+        }
+        return;
+      }
       final result = await widget.host?.executeHostCommand(
         'plugin.market.open',
         {'id': id},
@@ -731,7 +759,11 @@ final class _MarketPanelState extends State<_MarketPanel> {
                 OutlinedButton.icon(
                   onPressed: _busy == id ? null : () => _openMcp(id),
                   icon: const Icon(Icons.open_in_new_rounded, size: 17),
-                  label: const Text('打开 MCP App'),
+                  label: Text(
+                    widget.nativeEditorBuilder?.call(id) == null
+                        ? '打开 MCP App'
+                        : '打开原生编辑器',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 const Text('文件型 MCP 工具也可从工作区打开兼容文件。'),

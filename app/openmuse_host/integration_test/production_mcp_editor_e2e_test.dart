@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:appflowy_editor_native_plugin/appflowy_editor_native_plugin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -30,10 +31,10 @@ void main() {
     final entry = (await market.list()).singleWhere(
       (entry) =>
           entry.name == 'io.openmuse/appflowy-editor' &&
-          entry.version == '0.1.4',
+          entry.version == '0.1.5',
     );
     final receipt = await market.install(entry);
-    expect(receipt['installedVersion'], '0.1.4');
+    expect(receipt['installedVersion'], '0.1.5');
     final runtime = McpBundleRuntime(
       bundleDirectory: market.directoryFor(entry),
       nodeExecutable: 'node',
@@ -46,20 +47,13 @@ void main() {
     expect(content['contentMediaType'], 'text/markdown');
     final file = File('${directory.path}/desktop-e2e.md')
       ..writeAsStringSync('# macOS production acceptance\n');
-    final result = await runtime.callWithFile(
-      toolName: 'open_markdown',
-      filePath: file.path,
-    );
-    expect(
-      result['uri'],
-      startsWith('https://plugins.openmuseai.com/editor/#open='),
-    );
     final plugin = OpenMuseMcpFilePlugin(
       entry: entry,
       runtime: runtime,
       toolName: 'open_markdown',
       mediaType: 'text/markdown',
       extension: 'md',
+      nativeFlutterEditor: true,
     );
     final resource = OpenMuseResource(
       uri: file.uri,
@@ -80,11 +74,8 @@ void main() {
       EnginePhase.sendSemanticsUpdate,
       const Duration(seconds: 45),
     );
-    final view = tester.widget<AppKitView>(find.byType(AppKitView));
-    expect(view.viewType, 'com.openmuse.mcp/app-view');
-    expect(
-      (view.creationParams as Map)['url'],
-      startsWith('https://plugins.openmuseai.com/editor/#open='),
-    );
+    expect(find.byType(AppFlowyMarkdownEditor), findsOneWidget);
+    expect(find.byType(AppKitView), findsNothing);
+    expect(find.text('macOS production acceptance'), findsWidgets);
   });
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:appflowy_editor_native_plugin/appflowy_editor_native_plugin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -15,6 +16,7 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
     required this.toolName,
     required this.mediaType,
     required this.extension,
+    this.nativeFlutterEditor = false,
   }) : descriptor = OpenMusePluginDescriptor(
          id: entry.name,
          name: entry.title,
@@ -36,6 +38,7 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
   final String toolName;
   final String mediaType;
   final String extension;
+  final bool nativeFlutterEditor;
 
   @override
   final OpenMusePluginDescriptor descriptor;
@@ -50,6 +53,12 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
   Widget buildEditor(BuildContext context, OpenMuseResource resource) {
     if (!resource.uri.isScheme('file') || resource.extension != extension) {
       return const Center(child: Text('请选择本地文件'));
+    }
+    if (nativeFlutterEditor) {
+      return AppFlowyMarkdownEditor(
+        key: ValueKey('appflowy-${resource.uri}'),
+        filePath: resource.uri.toFilePath(),
+      );
     }
     return FutureBuilder<Map<String, Object?>>(
       future: runtime.callWithFile(

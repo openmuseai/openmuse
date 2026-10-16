@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:appflowy_editor_native_plugin/appflowy_editor_native_plugin.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:openmuse_app_update/openmuse_app_update.dart';
@@ -131,6 +132,9 @@ Future<Widget> bootOpenMuseHost() async {
           toolName: tool['name'] as String,
           mediaType: mediaType,
           extension: extension,
+          nativeFlutterEditor:
+              entry.name == 'io.openmuse/appflowy-editor' &&
+              mediaType == 'text/markdown',
         ),
       );
       break;
@@ -617,6 +621,10 @@ Future<Widget> bootOpenMuseHost() async {
   registry.install(pairedDesktopPlugin);
   for (final plugin in createOpenMuseBuiltInPlugins(
     dshSupervisor: dshSupervisor,
+    nativeMcpEditorBuilder: (pluginId) =>
+        pluginId == 'io.openmuse/appflowy-editor'
+            ? const AppFlowyMarkdownEditor()
+            : null,
     routeInteraction: (interaction) async {
       try {
         final image = await File(interaction.imagePath).readAsBytes();
