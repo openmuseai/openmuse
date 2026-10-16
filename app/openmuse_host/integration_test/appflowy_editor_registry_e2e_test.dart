@@ -12,8 +12,9 @@ void main() {
     (tester) async {
       const registry = String.fromEnvironment('EDITOR_E2E_REGISTRY');
       const node = String.fromEnvironment('EDITOR_E2E_NODE');
-      if (registry.isEmpty || node.isEmpty)
+      if (registry.isEmpty || node.isEmpty) {
         fail('EDITOR_E2E_REGISTRY and EDITOR_E2E_NODE are required');
+      }
       final directory = await Directory.systemTemp.createTemp(
         'editor-mcpb-e2e-',
       );

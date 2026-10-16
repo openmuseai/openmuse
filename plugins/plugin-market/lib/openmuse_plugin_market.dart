@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:openmuse_market_ui/openmuse_market_ui.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -42,6 +45,26 @@ final class OpenMusePluginMarket implements OpenMusePlugin {
     ),
     _ => null,
   };
+}
+
+/// Host-owned macOS surface for a standard MCP App HTML resource link.
+/// The plugin receives no Flutter or native bridge capability.
+final class McpAppPage extends StatelessWidget {
+  const McpAppPage({super.key, required this.title, required this.uri});
+
+  final String title;
+  final Uri uri;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(title)),
+    body: AppKitView(
+      key: ValueKey('mcp-app-${uri.toString()}'),
+      viewType: 'com.openmuse.mcp/app-view',
+      creationParams: {'url': uri.toString()},
+      creationParamsCodec: const StandardMessageCodec(),
+    ),
+  );
 }
 
 final class _MarketPanel extends StatefulWidget {
@@ -151,7 +174,15 @@ final class _MarketPanelState extends State<_MarketPanel> {
         throw StateError('MCP App 没有返回可打开的资源');
       }
       final uri = Uri.parse(result['uri'] as String);
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (Platform.isMacOS) {
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => McpAppPage(title: id, uri: uri),
+            ),
+          );
+        }
+      } else if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
         throw StateError('无法打开 MCP App');
       }
     } catch (error) {
