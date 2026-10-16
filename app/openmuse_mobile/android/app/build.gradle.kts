@@ -4,6 +4,10 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+dependencies {
+    implementation("androidx.webkit:webkit:1.14.0")
+}
+
 android {
     namespace = "io.openmuse.openmuse_mobile"
     compileSdk = flutter.compileSdkVersion

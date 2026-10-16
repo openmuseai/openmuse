@@ -21,6 +21,10 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         DeviceKeyStoreBridge(applicationContext).register(flutterEngine)
+        flutterEngine.platformViewsController.registry.registerViewFactory(
+            "io.openmuse/offline_web_plugin",
+            OfflineWebPluginFactory(applicationContext),
+        )
     }
 }
 

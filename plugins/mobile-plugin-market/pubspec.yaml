@@ -18,7 +18,9 @@ dependencies:
   path_provider: ^2.1.5
   video_player: 2.14.1
   webview_flutter: ^4.13.1
-  url_launcher: ^6.3.3
+  webview_flutter_android: ^4.14.1
+  archive: ^4.0.7
+  crypto: ^3.0.6
 dev_dependencies:
   flutter_test:
     sdk: flutter

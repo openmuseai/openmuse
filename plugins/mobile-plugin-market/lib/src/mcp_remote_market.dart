@@ -1,12 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
+import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 /// Consumes only MCP Registry server.json and MCP Streamable HTTP.
 final class RemoteMcpEntry {
@@ -16,32 +19,53 @@ final class RemoteMcpEntry {
     this.version,
     this.description,
     this.endpoint,
+    this.packageUri,
+    this.packageSha256,
+    this.registryRecord,
   );
   final String name;
   final String title;
   final String version;
   final String description;
-  final Uri endpoint;
+  final Uri? endpoint;
+  final Uri? packageUri;
+  final String? packageSha256;
+  final Map<String, dynamic>? registryRecord;
 
   factory RemoteMcpEntry.fromRecord(Map record) {
     final server = record['server'];
     if (server is! Map ||
         server['name'] is! String ||
-        server['version'] is! String ||
-        server['remotes'] is! List) {
+        server['version'] is! String) {
       throw const FormatException('Invalid MCP Registry record');
     }
-    final remote = (server['remotes'] as List)
+    final remote = ((server['remotes'] as List?) ?? const [])
         .whereType<Map>()
         .where((item) => item['type'] == 'streamable-http')
         .firstOrNull;
-    if (remote == null || remote['url'] is! String)
-      throw const FormatException('No MCP Streamable HTTP endpoint');
-    final endpoint = Uri.parse(remote['url'] as String);
-    if (endpoint.scheme != 'https' &&
+    final endpoint = remote?['url'] is String
+        ? Uri.tryParse(remote!['url'] as String)
+        : null;
+    if (endpoint != null &&
+        endpoint.scheme != 'https' &&
         !(endpoint.scheme == 'http' &&
             {'localhost', '127.0.0.1'}.contains(endpoint.host))) {
       throw const FormatException('Remote MCP requires HTTPS');
+    }
+    final package = server['packages'] is List
+        ? (server['packages'] as List)
+              .whereType<Map>()
+              .where((item) => item['registryType'] == 'mcpb')
+              .firstOrNull
+        : null;
+    final packageUri = package?['identifier'] is String
+        ? Uri.tryParse(package!['identifier'] as String)
+        : null;
+    final packageSha256 = package?['fileSha256'] is String
+        ? package!['fileSha256'] as String
+        : null;
+    if (endpoint == null && (packageUri == null || packageSha256 == null)) {
+      throw const FormatException('No installable MCP endpoint or package');
     }
     return RemoteMcpEntry(
       server['name'] as String,
@@ -51,6 +75,9 @@ final class RemoteMcpEntry {
       server['version'] as String,
       server['description'] is String ? server['description'] as String : '',
       endpoint,
+      packageUri,
+      packageSha256,
+      Map<String, dynamic>.from(record),
     );
   }
 }
@@ -59,6 +86,32 @@ final class RemoteMcpMarket {
   RemoteMcpMarket(this.origin, this.receiptFile);
   final Uri origin;
   final File receiptFile;
+  File get _catalogCache =>
+      File('${receiptFile.parent.path}/mcp-registry-cache.json');
+  File get _installedRecords =>
+      File('${receiptFile.parent.path}/mcp-installed-records.json');
+
+  Future<List<RemoteMcpEntry>> _savedInstallations() async {
+    if (!await _installedRecords.exists()) return [];
+    final records = jsonDecode(await _installedRecords.readAsString());
+    if (records is! List)
+      throw const FormatException('Invalid installed MCP records');
+    return records.whereType<Map>().map(RemoteMcpEntry.fromRecord).toList();
+  }
+
+  Directory packageDirectory(RemoteMcpEntry entry) {
+    final digest = entry.packageSha256;
+    if (digest == null || !RegExp(r'^[a-fA-F0-9]{64}$').hasMatch(digest)) {
+      throw const FormatException('No verified MCPB digest');
+    }
+    return Directory(
+      '${receiptFile.parent.path}/mcp-web/${digest.toLowerCase()}',
+    );
+  }
+
+  bool hasOfflineUi(RemoteMcpEntry entry) =>
+      entry.packageSha256 != null &&
+      File('${packageDirectory(entry).path}/index.html').existsSync();
 
   void _checkRegistry() {
     if (origin.scheme != 'https' &&
@@ -73,6 +126,7 @@ final class RemoteMcpMarket {
     final http = HttpClient()..connectionTimeout = const Duration(seconds: 10);
     try {
       final entries = <RemoteMcpEntry>[];
+      final records = <Map>[];
       String? cursor;
       for (var page = 0; page < 20; page++) {
         final url = origin
@@ -90,7 +144,9 @@ final class RemoteMcpMarket {
           throw const FormatException('Invalid MCP Registry response');
         for (final record in json['servers'] as List) {
           try {
-            entries.add(RemoteMcpEntry.fromRecord(record as Map));
+            final document = record as Map;
+            entries.add(RemoteMcpEntry.fromRecord(document));
+            records.add(document);
           } on FormatException {
             // Desktop-only MCPB entries are not installable on Mobile.
           }
@@ -100,7 +156,35 @@ final class RemoteMcpMarket {
             : null;
         if (cursor == null) break;
       }
+      await _catalogCache.parent.create(recursive: true);
+      await _catalogCache.writeAsString(jsonEncode(records), flush: true);
+      final known = entries
+          .map((entry) => '${entry.name}@${entry.version}')
+          .toSet();
+      for (final installed in await _savedInstallations()) {
+        if (known.add('${installed.name}@${installed.version}')) {
+          entries.add(installed);
+        }
+      }
       return entries;
+    } catch (_) {
+      final receipts = await installed();
+      final saved = await _savedInstallations();
+      if (saved.isNotEmpty) {
+        return saved
+            .where(
+              (entry) => receipts.contains('${entry.name}@${entry.version}'),
+            )
+            .toList();
+      }
+      if (!await _catalogCache.exists()) rethrow;
+      final cache = jsonDecode(await _catalogCache.readAsString());
+      if (cache is! List) rethrow;
+      return cache
+          .whereType<Map>()
+          .map(RemoteMcpEntry.fromRecord)
+          .where((entry) => receipts.contains('${entry.name}@${entry.version}'))
+          .toList();
     } finally {
       http.close(force: true);
     }
@@ -116,11 +200,14 @@ final class RemoteMcpMarket {
     RemoteMcpEntry entry,
     Future<T> Function(McpClient) operation,
   ) async {
+    if (entry.endpoint == null) {
+      throw const FormatException('This plugin has no remote MCP endpoint');
+    }
     final client = McpClient(
       const Implementation(name: 'OpenMuse Mobile', version: '1.0.0'),
       options: const McpClientOptions(protocol: McpProtocol.require2026),
     );
-    final transport = StreamableHttpClientTransport(entry.endpoint);
+    final transport = StreamableHttpClientTransport(entry.endpoint!);
     try {
       await client.connect(transport).timeout(const Duration(seconds: 15));
       return await operation(client).timeout(const Duration(seconds: 60));
@@ -130,26 +217,28 @@ final class RemoteMcpMarket {
   }
 
   Future<void> install(RemoteMcpEntry entry) async {
-    await withClient(entry, (client) async {
-      final tools = await client.listTools();
-      if (tools.tools.isEmpty)
-        throw const FormatException('MCP server advertises no tools');
-      if (client.getServerCapabilities()?.resources != null) {
-        final resources = await client.listResources();
-        for (final resource in resources.resources.where(
-          (item) => item.mimeType == 'application/a2ui+json',
-        )) {
-          final content = await client.readResource(
-            ReadResourceRequest(uri: resource.uri),
-          );
-          for (final item
-              in content.contents.whereType<TextResourceContents>()) {
-            if (jsonDecode(item.text) is! List)
-              throw const FormatException('Invalid A2UI message array');
+    final offline = await _installOfflineUi(entry);
+    if (!offline)
+      await withClient(entry, (client) async {
+        final tools = await client.listTools();
+        if (tools.tools.isEmpty)
+          throw const FormatException('MCP server advertises no tools');
+        if (client.getServerCapabilities()?.resources != null) {
+          final resources = await client.listResources();
+          for (final resource in resources.resources.where(
+            (item) => item.mimeType == 'application/a2ui+json',
+          )) {
+            final content = await client.readResource(
+              ReadResourceRequest(uri: resource.uri),
+            );
+            for (final item
+                in content.contents.whereType<TextResourceContents>()) {
+              if (jsonDecode(item.text) is! List)
+                throw const FormatException('Invalid A2UI message array');
+            }
           }
         }
-      }
-    });
+      });
     final receipts = await installed();
     receipts.add('${entry.name}@${entry.version}');
     await receiptFile.parent.create(recursive: true);
@@ -157,6 +246,95 @@ final class RemoteMcpMarket {
       jsonEncode(receipts.toList()..sort()),
       flush: true,
     );
+    if (entry.registryRecord != null) {
+      final records = await _savedInstallations();
+      final next =
+          records
+              .where(
+                (old) => old.name != entry.name || old.version != entry.version,
+              )
+              .toList()
+            ..add(entry);
+      await _installedRecords.writeAsString(
+        jsonEncode(next.map((item) => item.registryRecord).toList()),
+        flush: true,
+      );
+    }
+  }
+
+  Future<bool> _installOfflineUi(RemoteMcpEntry entry) async {
+    final packageUri = entry.packageUri;
+    final expected = entry.packageSha256?.toLowerCase();
+    if (packageUri == null || expected == null) return false;
+    if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(expected)) {
+      throw const FormatException('Invalid MCPB SHA-256');
+    }
+    if (packageUri.scheme != 'https' &&
+        !(packageUri.scheme == 'http' &&
+            {'localhost', '127.0.0.1'}.contains(packageUri.host))) {
+      throw const FormatException('MCPB download requires HTTPS');
+    }
+    final http = HttpClient()..connectionTimeout = const Duration(seconds: 15);
+    try {
+      final response = await (await http.getUrl(packageUri)).close();
+      if (response.statusCode != 200) {
+        throw HttpException('MCPB download HTTP ${response.statusCode}');
+      }
+      final bytes = <int>[];
+      await for (final chunk in response) {
+        bytes.addAll(chunk);
+        if (bytes.length > 80 * 1024 * 1024) {
+          throw const FormatException('MCPB exceeds 80 MiB');
+        }
+      }
+      if (sha256.convert(bytes).toString() != expected) {
+        throw const FormatException('MCPB SHA-256 mismatch');
+      }
+      final archive = ZipDecoder().decodeBytes(bytes, verify: true);
+      final files = archive.files
+          .where((file) => file.isFile && file.name.startsWith('web/'))
+          .toList();
+      if (!files.any((file) => file.name == 'web/index.html')) return false;
+      final target = packageDirectory(entry);
+      final staging = Directory('${target.path}.installing');
+      if (await staging.exists()) await staging.delete(recursive: true);
+      await staging.create(recursive: true);
+      try {
+        var total = 0;
+        for (final file in files) {
+          final relative = file.name.substring(4);
+          final segments = relative.split('/');
+          if (segments.any(
+                (part) =>
+                    part.isEmpty ||
+                    part == '.' ||
+                    part == '..' ||
+                    part.contains('\\'),
+              ) ||
+              relative.startsWith('/')) {
+            throw const FormatException('Unsafe MCPB asset path');
+          }
+          total += file.size;
+          if (total > 160 * 1024 * 1024 || files.length > 1024) {
+            throw const FormatException('MCPB web assets exceed budget');
+          }
+          final output = File('${staging.path}/$relative');
+          await output.parent.create(recursive: true);
+          final content = file.readBytes();
+          if (content == null)
+            throw const FormatException('Invalid MCPB asset');
+          await output.writeAsBytes(content, flush: true);
+        }
+        if (await target.exists()) await target.delete(recursive: true);
+        await staging.rename(target.path);
+      } catch (_) {
+        if (await staging.exists()) await staging.delete(recursive: true);
+        rethrow;
+      }
+      return true;
+    } finally {
+      http.close(force: true);
+    }
   }
 
   Future<Map<String, dynamic>> inspectFile(RemoteMcpEntry entry, File file) =>
@@ -288,14 +466,21 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
       error = null;
     });
     try {
+      if (Platform.isAndroid && market!.hasOfflineUi(entry)) {
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => _OfflineMcpAppPage(
+                title: entry.title,
+                digest: entry.packageSha256!.toLowerCase(),
+              ),
+            ),
+          );
+        }
+        return;
+      }
       final ui = await market!.openUi(entry);
       if (ui != null) {
-        if (Platform.isAndroid) {
-          if (!await launchUrl(ui, mode: LaunchMode.externalApplication)) {
-            throw StateError('无法打开插件页面');
-          }
-          return;
-        }
         if (mounted) {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
@@ -330,7 +515,7 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('发送文件给插件？'),
         content: Text(
-          '将 ${selectedFile.uri.pathSegments.last} 发送至 ${entry.endpoint.host} 处理。',
+          '将 ${selectedFile.uri.pathSegments.last} 发送至 ${entry.endpoint?.host ?? '插件服务'} 处理。',
         ),
         actions: [
           TextButton(
@@ -414,6 +599,24 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
   );
 }
 
+final class _OfflineMcpAppPage extends StatelessWidget {
+  const _OfflineMcpAppPage({required this.title, required this.digest});
+  final String title;
+  final String digest;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(title)),
+    body: Platform.isAndroid
+        ? AndroidView(
+            viewType: 'io.openmuse/offline_web_plugin',
+            creationParams: {'digest': digest},
+            creationParamsCodec: const StandardMessageCodec(),
+          )
+        : const Center(child: Text('Offline MCP App requires an Android host')),
+  );
+}
+
 final class _RemoteMcpAppPage extends StatefulWidget {
   const _RemoteMcpAppPage({required this.title, required this.uri});
   final String title;
@@ -448,8 +651,18 @@ final class _RemoteMcpAppPageState extends State<_RemoteMcpAppPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(widget.title)),
-    body: WebViewWidget(controller: controller),
-  );
+  Widget build(BuildContext context) {
+    final webView = Platform.isAndroid
+        ? WebViewWidget.fromPlatformCreationParams(
+            params: AndroidWebViewWidgetCreationParams(
+              controller: controller.platform,
+              displayWithHybridComposition: true,
+            ),
+          )
+        : WebViewWidget(controller: controller);
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: webView,
+    );
+  }
 }
