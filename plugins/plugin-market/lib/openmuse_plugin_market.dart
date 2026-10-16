@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -83,6 +84,10 @@ final class _MarketPanelState extends State<_MarketPanel> {
   String _query = '';
   String _category = '精选';
   String? _selectedId;
+  Timer? _catalogRefresh;
+  bool _loading = false;
+  String? _provider;
+  List<String> _providers = [];
   final Map<String, Map<String, Object?>> _plans = {};
   final Map<String, String> _planErrors = {};
 
@@ -90,10 +95,26 @@ final class _MarketPanelState extends State<_MarketPanel> {
   void initState() {
     super.initState();
     _load();
+    _catalogRefresh = Timer.periodic(const Duration(seconds: 20), (_) => _load());
+  }
+
+  @override
+  void dispose() {
+    _catalogRefresh?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
+    if (_loading) return;
+    _loading = true;
     try {
+      final configured = await widget.host?.executeHostCommand('plugin.market.providers', null);
+      if (configured is Map && mounted) {
+        setState(() {
+          _provider = configured['selected'] as String?;
+          _providers = (configured['providers'] as List? ?? const []).whereType<String>().toList();
+        });
+      }
       final result = await widget.host?.executeHostCommand(
         'plugin.market.list',
         null,
@@ -123,6 +144,52 @@ final class _MarketPanelState extends State<_MarketPanel> {
           if (mounted) setState(() => _planErrors[id] = '$error');
         }
       }
+    } catch (error) {
+      if (mounted) setState(() => _error = '$error');
+    } finally {
+      _loading = false;
+    }
+  }
+
+  Future<void> _configureProvider() async {
+    final input = TextEditingController(text: _provider ?? '');
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: const Text('MCP Registry 提供商'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final uri in _providers)
+              ListTile(
+                title: Text(uri),
+                trailing: uri == _provider ? const Icon(Icons.check) : null,
+                onTap: () => Navigator.pop(dialog, uri),
+              ),
+            TextField(
+              controller: input,
+              decoration: const InputDecoration(labelText: '添加 HTTPS Registry 地址'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialog, input.text),
+            child: const Text('使用此地址'),
+          ),
+        ],
+      ),
+    );
+    input.dispose();
+    if (choice == null || choice.trim().isEmpty) return;
+    try {
+      await widget.host?.executeHostCommand('plugin.market.selectProvider', choice);
+      if (mounted) setState(() { _plugins = null; _plans.clear(); _planErrors.clear(); });
+      await _load();
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
     }
@@ -308,6 +375,12 @@ final class _MarketPanelState extends State<_MarketPanel> {
                       ),
                     ),
                     if (!widget.installedOnly) ...[
+                      const SizedBox(height: 12),
+                      TextButton.icon(
+                        onPressed: _configureProvider,
+                        icon: const Icon(Icons.dns_outlined, size: 17),
+                        label: Text(_provider ?? '设置 MCP Registry 提供商'),
+                      ),
                       const SizedBox(height: 22),
                       if (constraints.maxWidth >= 820)
                         Row(
@@ -508,7 +581,7 @@ final class _MarketPanelState extends State<_MarketPanel> {
                   ),
                   const SizedBox(width: 8),
                   if (installed && plugin['ecosystem'] == 'mcp')
-                    const Text('已安装')
+                    Text(plugin['listed'] == false ? '已下架 · 已安装' : '已安装')
                   else if (installed)
                     TextButton(
                       key: ValueKey('plugin-market-toggle-$id'),
@@ -519,8 +592,8 @@ final class _MarketPanelState extends State<_MarketPanel> {
                     )
                   else
                     FilledButton(
-                      onPressed: busy ? null : () => _install(id),
-                      child: Text(busy ? '安装中…' : '安装'),
+                      onPressed: busy || plugin['listed'] == false ? null : () => _install(id),
+                      child: Text(busy ? '安装中…' : plugin['listed'] == false ? '已下架' : '安装'),
                     ),
                 ],
               ),
@@ -673,8 +746,8 @@ final class _MarketPanelState extends State<_MarketPanel> {
             )
           else
             FilledButton(
-              onPressed: _busy == id ? null : () => _install(id),
-              child: Text(_busy == id ? '安装中…' : '安装到 Desktop'),
+              onPressed: _busy == id || plugin['listed'] == false ? null : () => _install(id),
+              child: Text(_busy == id ? '安装中…' : plugin['listed'] == false ? '已下架' : '安装到 Desktop'),
             ),
         ],
       ),
