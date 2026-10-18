@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:appflowy_editor_native_plugin/appflowy_editor_native_plugin.dart';
+import 'package:genoffice_pptx_flutter/genoffice_pptx_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -17,6 +19,7 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
     required this.mediaType,
     required this.extension,
     this.nativeFlutterEditor = false,
+    this.nativePptxViewer = false,
   }) : descriptor = OpenMusePluginDescriptor(
          id: entry.name,
          name: entry.title,
@@ -39,6 +42,7 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
   final String mediaType;
   final String extension;
   final bool nativeFlutterEditor;
+  final bool nativePptxViewer;
 
   @override
   final OpenMusePluginDescriptor descriptor;
@@ -58,6 +62,25 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
       return AppFlowyMarkdownEditor(
         key: ValueKey('appflowy-${resource.uri}'),
         filePath: resource.uri.toFilePath(),
+      );
+    }
+    if (nativePptxViewer) {
+      final file = File(resource.uri.toFilePath());
+      return FutureBuilder<Uint8List>(
+        future: file.readAsBytes(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('PPTX 读取失败：${snapshot.error}'));
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return GenOfficePptxViewer(
+            key: ValueKey('genoffice-${resource.uri}'),
+            bytes: snapshot.data!,
+            title: resource.displayName,
+          );
+        },
       );
     }
     return FutureBuilder<Map<String, Object?>>(

@@ -317,6 +317,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  genoffice_pptx_flutter:
+    dependency: "direct main"
+    description:
+      path: "../../../Muse-Plugin-Ecosystem/plugins/genoffice-pptx/flutter_renderer"
+      relative: true
+    source: path
+    version: "0.3.1"
   hooks:
     dependency: transitive
     description:

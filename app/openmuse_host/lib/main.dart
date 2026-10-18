@@ -135,6 +135,10 @@ Future<Widget> bootOpenMuseHost() async {
           nativeFlutterEditor:
               entry.name == 'io.openmuse/appflowy-editor' &&
               mediaType == 'text/markdown',
+          nativePptxViewer:
+              entry.name == 'io.openmuse/genoffice-pptx' &&
+              mediaType ==
+                  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         ),
       );
       break;
