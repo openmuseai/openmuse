@@ -57,13 +57,16 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
     required GoTrueClientConfig config,
     AuthHttpClientFactory? clientFactory,
     DateTime Function()? clock,
+    Duration requestTimeout = const Duration(seconds: 20),
   }) : _origin = config.origin,
        _clientFactory = clientFactory ?? HttpClient.new,
-       _clock = clock ?? DateTime.now;
+       _clock = clock ?? DateTime.now,
+       _requestTimeout = requestTimeout;
 
   final Uri _origin;
   final AuthHttpClientFactory _clientFactory;
   final DateTime Function() _clock;
+  final Duration _requestTimeout;
 
   @override
   Future<GoTrueSignUpResult> signUp(String email, String password) async {
@@ -234,7 +237,9 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
         path: '${_origin.path}$suffix',
         queryParameters: query,
       );
-      final request = await client.openUrl(method, uri);
+      final request = await client
+          .openUrl(method, uri)
+          .timeout(_requestTimeout);
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       if (accessToken != null) {
         request.headers.set(
@@ -246,8 +251,11 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
         request.headers.contentType = ContentType.json;
         request.write(jsonEncode(body));
       }
-      final response = await request.close();
-      final responseText = await utf8.decoder.bind(response).join();
+      final response = await request.close().timeout(_requestTimeout);
+      final responseText = await utf8.decoder
+          .bind(response)
+          .join()
+          .timeout(_requestTimeout);
       debugPrint(
         'OpenMuse auth: $method $path status=${response.statusCode} bytes=${responseText.length}',
       );

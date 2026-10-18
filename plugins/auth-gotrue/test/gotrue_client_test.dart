@@ -91,6 +91,36 @@ void main() {
   });
 
   test(
+    'a connected server that never responds fails with a network error',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final serving = server.listen((_) {
+        // Keep the connection open without sending response headers.
+      });
+      final client = GoTrueHttpClient(
+        config: GoTrueClientConfig(
+          origin: Uri.parse('http://127.0.0.1:${server.port}'),
+          allowInsecureLoopback: true,
+        ),
+        requestTimeout: const Duration(milliseconds: 100),
+      );
+
+      await expectLater(
+        client.settings(),
+        throwsA(
+          isA<AuthFailure>().having(
+            (failure) => failure.kind,
+            'kind',
+            AuthFailureKind.network,
+          ),
+        ),
+      );
+      await server.close(force: true);
+      await serving.cancel();
+    },
+  );
+
+  test(
     'unauthorized password response does not expose response body',
     () async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
