@@ -151,6 +151,10 @@ window.__ModuleLoader__.load({
         Promise.resolve(ui.openWorkspace(workspace.workspaceId)).catch((error) => console.warn('OpenMuse workspace activation failed', error));
       }
       const bridgeApi = {
+        async openSession(id) {
+          await ctx.sessions.refresh();
+          ui.openSession(id);
+        },
         activate(path) {
           if (typeof path !== 'string' || path.length > 4096) return;
           desiredPath = path;
@@ -158,6 +162,7 @@ window.__ModuleLoader__.load({
         },
       };
       window.OpenMuseDshWorkspace = bridgeApi;
+      if (typeof window.__OpenMuseDesiredSession === 'string') void bridgeApi.openSession(window.__OpenMuseDesiredSession);
       const unsubscribe = ctx.workspaces.list.subscribe(activateDesired);
       if (typeof window.__OpenMuseDesiredWorkspace === 'string') bridgeApi.activate(window.__OpenMuseDesiredWorkspace);
       ctx.effect(() => () => {

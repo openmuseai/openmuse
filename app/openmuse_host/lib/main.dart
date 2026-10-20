@@ -28,6 +28,7 @@ import 'src/host/openmuse_app.dart';
 import 'src/host/plugin_distribution.dart';
 import 'src/host/mcp_file_plugin.dart';
 import 'src/host/mcp_market.dart';
+import 'src/host/resource_agent_broker.dart';
 import 'src/host/plugin_cli_broker.dart';
 import 'src/host/plugin_market.dart';
 import 'src/host/workspace_controller.dart';
@@ -85,6 +86,26 @@ Future<Widget> bootOpenMuseHost() async {
     }),
   );
   late final OpenMusePluginRegistry registry;
+  final resourceAgents = ResourceAgentBroker();
+  await resourceAgents.start();
+  controller.addListener(() {
+    resourceAgents.activeUri = controller
+        .activeTabFor(controller.focusedEditorGroupId)
+        ?.resource
+        .uri
+        .toString();
+  });
+  resourceAgents.sendAgentMessage = (content) async {
+    for (final descriptor in registry.descriptors) {
+      final plugin = registry.plugin(descriptor.id);
+      if (plugin is OpenMuseAgentContributor) {
+        await registry.ensureActive(plugin!);
+        await (plugin as OpenMuseAgentContributor).sendAgentMessage(content);
+        return;
+      }
+    }
+    throw StateError('No Agent plugin installed');
+  };
   final mcpRegistryUrl =
       Platform.environment['OPENMUSE_MCP_REGISTRY_URL'] ??
       'https://plugins.openmuseai.com';
@@ -117,7 +138,11 @@ Future<Widget> bootOpenMuseHost() async {
       bundleDirectory: receiptMarket.directoryFor(entry),
       nodeExecutable: node,
     );
-    final plugin = await discoverMcpFilePlugin(entry: entry, runtime: runtime);
+    final plugin = await discoverMcpFilePlugin(
+      entry: entry,
+      runtime: runtime,
+      agentBroker: resourceAgents,
+    );
     if (plugin != null) {
       if (existing != null) await registry.uninstall(entry.name);
       registry.install(plugin);
@@ -411,6 +436,8 @@ Future<Widget> bootOpenMuseHost() async {
     environment: {
       ...Platform.environment,
       'DSH_HOME': accountStorage.dshHome,
+      'OPENMUSE_RESOURCE_MCP_URL': resourceAgents.endpoint.toString(),
+      'OPENMUSE_RESOURCE_MCP_TOKEN': resourceAgents.token,
       'OPENMUSE_CLI_BROKER_URL': cliBroker.origin.toString(),
       'OPENMUSE_CLI_BROKER_TOKEN': cliBroker.token,
     },
@@ -448,6 +475,7 @@ Future<Widget> bootOpenMuseHost() async {
       readyAccount.value = null;
       scheduledTasks.dispose();
       if (hadAccount) {
+        resourceAgents.clear();
         scopeTransition = scopeTransition
             .then((_) => dshSupervisor.stop())
             .catchError((Object error) {

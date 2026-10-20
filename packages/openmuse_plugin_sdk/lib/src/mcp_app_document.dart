@@ -8,6 +8,7 @@ String buildMcpAppHostDocument({
   String? argumentsUrl,
   required Map<String, Object?> arguments,
   required String platform,
+  bool agentAvailable = false,
   String nativeSend =
       'window.webkit.messageHandlers.mcpApp.postMessage(message)',
 }) {
@@ -27,6 +28,7 @@ String buildMcpAppHostDocument({
 const frame=document.getElementById('view');
 const inputPromise=$inputUrl===null?Promise.resolve($input):fetch($inputUrl).then(response=>{if(!response.ok)throw Error('Host input unavailable');return response.json()});
 let initialized=false;
+let appCapabilities={};
 const send=message=>frame.contentWindow.postMessage(message,'*');
 window.__mcpHostReceive=message=>send(message);
 window.addEventListener('message',async event=>{
@@ -34,14 +36,18 @@ window.addEventListener('message',async event=>{
  const message=event.data;
  if(!message||message.jsonrpc!=='2.0')return;
  if(message.method==='ui/initialize'){
-   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{}},hostContext:{theme:'light',locale:'zh-CN',platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
+   appCapabilities=message.params?.appCapabilities??{};
+   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{},...($agentAvailable?{message:{text:{}},updateModelContext:{text:{}}}:{})},hostContext:{theme:'light',locale:'zh-CN',platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
  }else if(message.method==='ui/notifications/initialized'){
    if(initialized)return;initialized=true;
    send({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:await inputPromise}});
    send({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:{content:[]}});
+   if($agentAvailable&&appCapabilities.tools){$nativeSend;}
  }else if(message.method==='ping'){
    send({jsonrpc:'2.0',id:message.id,result:{}});
  }else if(message.method==='ui/download-file'){
+   $nativeSend;
+ }else if($agentAvailable&&(message.method==='ui/update-model-context'||message.method==='ui/message'||message.id!==undefined&&!message.method)){
    $nativeSend;
  }else if(message.id!==undefined&&message.method){
    send({jsonrpc:'2.0',id:message.id,error:{code:-32601,message:'Host method unavailable'}});

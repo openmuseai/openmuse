@@ -17,6 +17,12 @@ enum OpenMusePluginState { installed, activating, active, deactivating, failed }
 
 enum OpenMuseSurfaceRegion { editor, rightSidebar, bottomPanel, dialog }
 
+/// Agent implementations consume standard MCP content blocks. Resource business
+/// schemas stay in the resource plugin; the Host selects an installed provider.
+abstract interface class OpenMuseAgentContributor {
+  Future<void> sendAgentMessage(List<Map<String, Object?>> content);
+}
+
 @immutable
 final class OpenMuseResource {
   const OpenMuseResource({

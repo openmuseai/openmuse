@@ -24,7 +24,7 @@ class MainFlutterWindow: NSWindow {
 
     RegisterGeneratedPlugins(registry: flutterViewController)
     flutterViewController.registrar(forPlugin: "OpenMuseMcpAppWebView")
-      .register(McpAppWebViewFactory(), withId: "com.openmuse.mcp/app-view")
+      .register(McpAppWebViewFactory(messenger: flutterViewController.engine.binaryMessenger), withId: "com.openmuse.mcp/app-view")
 
     let workspaceChannel = FlutterMethodChannel(
       name: "com.openmuse.host/workspace",

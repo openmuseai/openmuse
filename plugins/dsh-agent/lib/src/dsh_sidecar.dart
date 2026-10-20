@@ -20,10 +20,13 @@ final class DshSidecarSupervisor extends ChangeNotifier {
   DshSidecarState state = DshSidecarState.stopped;
   Process? _process;
   Future<void>? _starting;
+  int _generation = 0;
   Object? lastError;
   Uri? endpoint;
   int launchCount = 0;
   final List<String> logTail = [];
+  Directory? _resourcePatchDirectory;
+  final ValueNotifier<String?> requestedSession = ValueNotifier(null);
 
   String? get cliPath => resolveDshRuntime(
     executablePath: Platform.resolvedExecutable,
@@ -35,9 +38,8 @@ final class DshSidecarSupervisor extends ChangeNotifier {
     environment: environment,
   ).nodeExecutable;
 
-  String? get modelCapabilitiesPatch => _bundledPatch(
-    'dsh-model-capabilities/openmuse.patch.yml',
-  );
+  String? get modelCapabilitiesPatch =>
+      _bundledPatch('dsh-model-capabilities/openmuse.patch.yml');
 
   String? get marketPatch => _bundledPatch('dshmarket/openmuse.patch.yml');
 
@@ -78,11 +80,12 @@ final class DshSidecarSupervisor extends ChangeNotifier {
     try {
       await operation;
     } finally {
-      _starting = null;
+      if (identical(_starting, operation)) _starting = null;
     }
   }
 
   Future<void> _start() async {
+    final generation = _generation;
     final cli = cliPath;
     debugPrint(
       'OpenMuse dsh: start executable=${Platform.resolvedExecutable} cli=${cli ?? 'missing'} node=$nodeExecutable',
@@ -103,10 +106,52 @@ final class DshSidecarSupervisor extends ChangeNotifier {
         executablePath: Platform.resolvedExecutable,
         environment: environment,
       );
+      final resourcePatches = <String>[];
+      final resourceUrl = environment['OPENMUSE_RESOURCE_MCP_URL'];
+      final resourceToken = environment['OPENMUSE_RESOURCE_MCP_TOKEN'];
+      if (resourceUrl != null && resourceToken != null) {
+        final uri = Uri.parse(resourceUrl);
+        if (uri.scheme != 'http' || uri.host != '127.0.0.1')
+          throw StateError('Resource MCP must be loopback');
+        final directory = await Directory.systemTemp.createTemp(
+          'openmuse-resource-mcp-',
+        );
+        _resourcePatchDirectory = directory;
+        final patch = File(p.join(directory.path, 'resource.patch.yml'));
+        await patch.writeAsString(
+          jsonEncode([
+            {
+              'insert': [
+                {
+                  'id': 'openmuse-resource-mcp',
+                  'name': p.join(
+                    dshClosureRoot(cli)!,
+                    'node_modules',
+                    '@deepseek-ai',
+                    'dsh-mcp-client',
+                    'lib',
+                    'index.js',
+                  ),
+                  'config': {
+                    'serverName': 'resources',
+                    'transport': 'streamable-http',
+                    'url': resourceUrl,
+                    'headers': {'Authorization': 'Bearer $resourceToken'},
+                    'failOnStartupError': true,
+                  },
+                },
+              ],
+            },
+          ]),
+        );
+        if (!Platform.isWindows)
+          await Process.run('chmod', ['600', patch.path]);
+        resourcePatches.add(patch.path);
+      }
       final command = dshWebCommand(
         cli,
         nodeExecutable: runtime.nodeExecutable,
-        patchPaths: defaultPatchPaths,
+        patchPaths: [...defaultPatchPaths, ...resourcePatches],
       );
       final reportedEndpoint = Completer<Uri>();
       final launchEnvironment = dshLaunchEnvironment(
@@ -158,12 +203,20 @@ final class DshSidecarSupervisor extends ChangeNotifier {
           'DSH did not report its ephemeral loopback endpoint',
         ),
       );
-      await waitForHttp(candidate, const Duration(seconds: 45));
+      await waitForHttp(
+        candidate,
+        const Duration(seconds: 45),
+        cancelled: () => generation != _generation,
+      );
+      if (generation != _generation) return;
       endpoint = candidate;
       state = DshSidecarState.ready;
-      debugPrint('OpenMuse dsh: ready endpoint=$candidate');
+      debugPrint('OpenMuse dsh: ready origin=${candidate.origin}');
       notifyListeners();
     } catch (error) {
+      if (generation != _generation) return;
+      _process?.kill();
+      _process = null;
       state = DshSidecarState.failed;
       lastError = error;
       debugPrint(
@@ -175,9 +228,15 @@ final class DshSidecarSupervisor extends ChangeNotifier {
   }
 
   Future<void> stop() async {
+    _generation++;
+    _starting = null;
     _process?.kill();
     _process = null;
     endpoint = null;
+    final directory = _resourcePatchDirectory;
+    _resourcePatchDirectory = null;
+    if (directory != null && await directory.exists())
+      await directory.delete(recursive: true);
     state = DshSidecarState.stopped;
     notifyListeners();
   }
@@ -192,11 +251,8 @@ final class DshSidecarSupervisor extends ChangeNotifier {
       logTail.add(_redact(line));
       if (logTail.length > 100) logTail.removeAt(0);
       if (!reportedEndpoint.isCompleted) {
-        final match = RegExp(
-          r'https?://127\.0\.0\.1:[0-9]+(?:/\?[^\s]*)?',
-        ).firstMatch(line);
-        final value = match?.group(0);
-        if (value != null) reportedEndpoint.complete(Uri.parse(value));
+        final value = parseDshReadyEndpoint(line);
+        if (value != null) reportedEndpoint.complete(value);
       }
       notifyListeners();
     });
@@ -204,9 +260,13 @@ final class DshSidecarSupervisor extends ChangeNotifier {
 
   String _redact(String value) {
     final key = environment['DEEPSEEK_API_KEY'];
+    final redacted = value.replaceAllMapped(
+      RegExp(r'([?&]token=)[^\s&)]+'),
+      (match) => '${match[1]}<redacted>',
+    );
     return key == null || key.isEmpty
-        ? value
-        : value.replaceAll(key, '<redacted>');
+        ? redacted
+        : redacted.replaceAll(key, '<redacted>');
   }
 
   @override
@@ -214,6 +274,16 @@ final class DshSidecarSupervisor extends ChangeNotifier {
     _process?.kill();
     super.dispose();
   }
+}
+
+/// Only the authenticated readiness announcement belongs to the Web surface.
+/// Model hints and other startup diagnostics also contain clean loopback URLs.
+Uri? parseDshReadyEndpoint(String line) {
+  final match = RegExp(
+    r'dsh web: (http://127\.0\.0\.1:[0-9]+/\?[^\s)]+)',
+  ).firstMatch(line);
+  final uri = match == null ? null : Uri.tryParse(match.group(1)!);
+  return uri?.queryParameters['token']?.isNotEmpty == true ? uri : null;
 }
 
 String? _openMuseCliBin(Map<String, String> environment) {
@@ -374,16 +444,39 @@ Map<String, String> dshLaunchEnvironment(
   '--no-open',
 ], nodeExecutable: nodeExecutable);
 
-Future<void> waitForHttp(Uri uri, Duration timeout) async {
+Future<void> waitForHttp(
+  Uri uri,
+  Duration timeout, {
+  bool Function()? cancelled,
+}) async {
   final deadline = DateTime.now().add(timeout);
   Object? lastError;
   while (DateTime.now().isBefore(deadline)) {
+    if (cancelled?.call() == true) throw StateError('DSH startup superseded');
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 1);
     try {
       final request = await client.getUrl(uri);
+      request.followRedirects = false;
       final response = await request.close();
       await response.drain<void>();
-      if (response.statusCode < 500) return;
+      if (response.statusCode == HttpStatus.ok) return;
+      // The launch token is exchanged for an HttpOnly cookie before redirecting
+      // to a clean URL. HttpClient does not have an automatic cookie jar.
+      final location = response.headers.value(HttpHeaders.locationHeader);
+      if (response.statusCode >= 300 &&
+          response.statusCode < 400 &&
+          location != null &&
+          response.cookies.isNotEmpty) {
+        final target = uri.resolve(location);
+        if (target.origin != uri.origin)
+          throw StateError('DSH readiness redirected outside loopback origin');
+        final next = await client.getUrl(target);
+        next.followRedirects = false;
+        next.cookies.addAll(response.cookies);
+        final verified = await next.close();
+        await verified.drain<void>();
+        if (verified.statusCode == HttpStatus.ok) return;
+      }
     } catch (error) {
       lastError = error;
     } finally {
@@ -392,6 +485,6 @@ Future<void> waitForHttp(Uri uri, Duration timeout) async {
     await Future<void>.delayed(const Duration(milliseconds: 250));
   }
   throw TimeoutException(
-    'DSH did not become ready at $uri; last error: $lastError',
+    'DSH did not become ready at ${uri.origin}; last error: ${lastError.runtimeType}',
   );
 }

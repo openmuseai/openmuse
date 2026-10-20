@@ -68,5 +68,6 @@ void main() {
         if (installRoot == null) await temporary.delete(recursive: true);
       }
     },
+    timeout: const Timeout(Duration(minutes: 3)),
   );
 }

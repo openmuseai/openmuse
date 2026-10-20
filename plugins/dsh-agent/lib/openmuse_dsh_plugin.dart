@@ -1,6 +1,7 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -20,7 +21,8 @@ final class OpenMuseDshPlugin
     implements
         OpenMusePlugin,
         OpenMuseSettingsContributor,
-        OpenMusePluginLogContributor {
+        OpenMusePluginLogContributor,
+        OpenMuseAgentContributor {
   OpenMuseDshPlugin({
     DshSidecarSupervisor? supervisor,
     Future<bool> Function(PluginInteraction)? routeInteraction,
@@ -33,9 +35,64 @@ final class OpenMuseDshPlugin
   DshWorkspaceSynchronizer? _workspaceSync;
   OpenMusePluginContext? _context;
   final ValueNotifier<String?> _activeMount = ValueNotifier(null);
-  final ValueNotifier<PluginInteraction?> _desktopInteraction = ValueNotifier(null);
+  final ValueNotifier<PluginInteraction?> _desktopInteraction = ValueNotifier(
+    null,
+  );
   String? _pluginInteractionDir;
   PluginInteractionListener? _interactionListener;
+
+  @override
+  Future<void> sendAgentMessage(List<Map<String, Object?>> content) async {
+    final supervisor = _supervisor;
+    final mount = _activeMount.value;
+    if (supervisor == null || mount == null)
+      throw StateError('Agent workspace unavailable');
+    await supervisor.ensureStarted();
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
+    try {
+      Future<Map<String, Object?>> post(
+        String path,
+        Map<String, Object?> body,
+      ) async {
+        final request = await client.postUrl(
+          supervisor.endpoint!.resolve(path),
+        );
+        request.headers
+          ..contentType = ContentType.json
+          ..set('x-openmuse-bridge-token', supervisor.bridgeToken);
+        request.write(jsonEncode(body));
+        final response = await request.close().timeout(
+          const Duration(seconds: 30),
+        );
+        final value = jsonDecode(await utf8.decoder.bind(response).join());
+        if (response.statusCode != 200 || value is! Map)
+          throw StateError('DSH rejected Agent message');
+        return Map<String, Object?>.from(value);
+      }
+
+      final catalog = await post('/openmuse-bridge/workspaces', {
+        'mounts': [mount],
+      });
+      final workspace = (catalog['items'] as List).whereType<Map>().firstWhere(
+        (item) => item['path'] == mount,
+      );
+      final created = await post('/openmuse-native/v1/session/create', {
+        'workspaceId': workspace['workspaceId'],
+      });
+      final session = created['sessionId'];
+      if (session is! String)
+        throw const FormatException('Invalid DSH session');
+      supervisor.requestedSession.value = session;
+      await post('/openmuse-native/v1/session/prompt', {
+        'sessionId': session,
+        'requestId': 'resource-${DateTime.now().microsecondsSinceEpoch}',
+        'mode': 'queue',
+        'content': content,
+      });
+    } finally {
+      client.close(force: true);
+    }
+  }
 
   @override
   Future<String> readLog() async {
@@ -106,7 +163,9 @@ final class OpenMuseDshPlugin
       _pluginInteractionDir = snapshot['pluginInteractionDir'] as String;
     }
     if (_pluginInteractionDir case final directory?) {
-      _interactionListener = PluginInteractionListener(directory, (interaction) {
+      _interactionListener = PluginInteractionListener(directory, (
+        interaction,
+      ) {
         unawaited(() async {
           try {
             if (await _routeInteraction?.call(interaction) == true) return;

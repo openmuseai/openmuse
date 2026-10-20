@@ -4,6 +4,8 @@ import WebKit
 
 /// A generic MCP Apps surface. Document formats and editing stay in the View.
 final class McpAppWebViewFactory: NSObject, FlutterPlatformViewFactory {
+  private let messenger: FlutterBinaryMessenger
+  init(messenger: FlutterBinaryMessenger) { self.messenger = messenger }
   func create(withViewIdentifier viewId: Int64, arguments args: Any?) -> NSView {
     guard let values = args as? [String: Any] else {
       return NSTextField(labelWithString: "Invalid MCP App")
@@ -15,7 +17,8 @@ final class McpAppWebViewFactory: NSObject, FlutterPlatformViewFactory {
       guard html.utf8.count <= 128 * 1024 * 1024 else {
         return NSTextField(labelWithString: "MCP App exceeds budget")
       }
-      navigation = McpAppNavigation(origin: nil, filePath: values["filePath"] as? String)
+      let channel = FlutterMethodChannel(name: "com.openmuse.mcp/app-view/\(viewId)", binaryMessenger: messenger)
+      navigation = McpAppNavigation(origin: nil, filePath: values["filePath"] as? String, channel: channel)
       configuration.userContentController.add(navigation, name: "mcpApp")
       configuration.userContentController.add(navigation, name: "mcpDiagnostics")
       configuration.userContentController.addUserScript(WKUserScript(source: """
@@ -24,6 +27,14 @@ final class McpAppWebViewFactory: NSObject, FlutterPlatformViewFactory {
       """, injectionTime: .atDocumentStart, forMainFrameOnly: false))
       let webView = WKWebView(frame: .zero, configuration: configuration)
       navigation.webView = webView
+      channel.setMethodCallHandler { [weak webView] call, result in
+        guard call.method == "message", let payload = call.arguments as? [String: Any],
+              let data = try? JSONSerialization.data(withJSONObject: payload),
+              let json = String(data: data, encoding: .utf8) else { result(FlutterMethodNotImplemented); return }
+        webView?.evaluateJavaScript("window.__mcpHostReceive(\(json))") { _, error in
+          result(error == nil ? nil : FlutterError(code: "view_unavailable", message: "Resource view unavailable", details: nil))
+        }
+      }
       webView.navigationDelegate = navigation
       let host = McpAppHostView(webView: webView, navigation: navigation)
       // Give Web Crypto a secure context without starting a local HTTP server.
@@ -54,7 +65,8 @@ private final class McpAppNavigation: NSObject, WKNavigationDelegate, WKScriptMe
   let origin: URL?
   let filePath: String?
   weak var webView: WKWebView?
-  init(origin: URL?, filePath: String?) { self.origin = origin; self.filePath = filePath }
+  let channel: FlutterMethodChannel?
+  init(origin: URL?, filePath: String?, channel: FlutterMethodChannel? = nil) { self.origin = origin; self.filePath = filePath; self.channel = channel }
 
   func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
     if message.name == "mcpDiagnostics" {
@@ -65,8 +77,12 @@ private final class McpAppNavigation: NSObject, WKNavigationDelegate, WKScriptMe
     // uses standard MCP Apps postMessage to its parent.
     guard message.frameInfo.isMainFrame,
           let request = message.body as? [String: Any],
-          request["jsonrpc"] as? String == "2.0",
-          request["method"] as? String == "ui/download-file",
+          request["jsonrpc"] as? String == "2.0" else { return }
+    guard request["method"] as? String == "ui/download-file" else {
+      channel?.invokeMethod("message", arguments: request)
+      return
+    }
+    guard
           let id = request["id"],
           let params = request["params"] as? [String: Any],
           let contents = params["contents"] as? [[String: Any]], contents.count == 1,

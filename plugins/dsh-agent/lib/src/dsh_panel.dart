@@ -130,6 +130,7 @@ final class _PanelBody extends StatelessWidget {
         onActivateWorkspace: onActivateWorkspace,
         onOpenResource: onOpenResource,
         reloadToken: reloadToken,
+        requestedSession: supervisor.requestedSession,
       );
     }
     if (supervisor.state == DshSidecarState.starting ||

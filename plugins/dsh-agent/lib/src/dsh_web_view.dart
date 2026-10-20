@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// Counts modal Host routes. WebView2 is parented above Flutter, so modal
@@ -108,6 +109,7 @@ final class DshWebView extends StatefulWidget {
     required this.onActivateWorkspace,
     required this.onOpenResource,
     required this.reloadToken,
+    this.requestedSession,
   });
 
   final Uri url;
@@ -115,6 +117,7 @@ final class DshWebView extends StatefulWidget {
   final Future<void> Function(String path) onActivateWorkspace;
   final Future<void> Function(DshResourceOpenMessage request) onOpenResource;
   final int reloadToken;
+  final ValueListenable<String?>? requestedSession;
 
   @override
   State<DshWebView> createState() => _DshWebViewState();
@@ -122,6 +125,18 @@ final class DshWebView extends StatefulWidget {
 
 final class _DshWebViewState extends State<DshWebView> {
   MethodChannel? _channel;
+  String? _loadError;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.requestedSession?.addListener(_openRequestedSession);
+  }
+
+  void _openRequestedSession() {
+    final id = widget.requestedSession?.value;
+    if (id != null) _channel?.invokeMethod<void>('openSession', id);
+  }
 
   @override
   void didUpdateWidget(DshWebView oldWidget) {
@@ -137,6 +152,7 @@ final class _DshWebViewState extends State<DshWebView> {
 
   @override
   void dispose() {
+    widget.requestedSession?.removeListener(_openRequestedSession);
     _channel?.setMethodCallHandler(null);
     super.dispose();
   }
@@ -144,9 +160,12 @@ final class _DshWebViewState extends State<DshWebView> {
   void _created(int viewId) {
     final channel = MethodChannel('com.openmuse.dsh/webview/$viewId');
     _channel = channel;
+    _openRequestedSession();
     channel.setMethodCallHandler((call) async {
       try {
         switch (call.method) {
+          case 'failed':
+            if (mounted) setState(() => _loadError = '${call.arguments}');
           case 'resourceOpen':
             final request = DshResourceOpenMessage.parse(call.arguments);
             await widget.onOpenResource(request);
@@ -166,6 +185,22 @@ final class _DshWebViewState extends State<DshWebView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loadError != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_loadError!),
+            TextButton(
+              onPressed: () {
+                setState(() => _loadError = null);
+              },
+              child: const Text('重新加载 Agent'),
+            ),
+          ],
+        ),
+      );
+    }
     if (Platform.isWindows) {
       return _WindowsDshSlot(
         url: widget.url,

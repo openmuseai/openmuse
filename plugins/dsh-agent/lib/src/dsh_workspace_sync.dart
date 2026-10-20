@@ -38,7 +38,10 @@ final class DshWorkspaceSynchronizer {
     for (final value in raw['mounts'] as List) {
       if (value is! Map || value['path'] is! String) continue;
       final path = value['path'] as String;
-      if (p.isAbsolute(path) && !mounts.contains(path)) mounts.add(path);
+      if (p.isAbsolute(path) &&
+          !mounts.contains(path) &&
+          await Directory(path).exists())
+        mounts.add(path);
     }
     final fingerprint = jsonEncode([base.toString(), mounts]);
     if (_fingerprint == fingerprint) return;
