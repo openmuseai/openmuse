@@ -138,3 +138,36 @@ String? extensionForMediaType(String mediaType) => switch (mediaType) {
   'text/markdown' => 'md',
   _ => null,
 };
+
+/// Derives a Host editor contribution from a verified MCPB server's standard
+/// tool input schema. The bundle supplies no Host-specific manifest fields.
+Future<OpenMuseMcpFilePlugin?> discoverMcpFilePlugin({
+  required McpMarketEntry entry,
+  required McpBundleRuntime runtime,
+}) async {
+  for (final tool in await runtime.tools()) {
+    final schema = tool['inputSchema'];
+    final properties = schema is Map ? schema['properties'] : null;
+    final content = properties is Map ? properties['content'] : null;
+    if (content is! Map || content['contentEncoding'] != 'base64') continue;
+    final mediaType = content['contentMediaType'];
+    if (mediaType is! String) continue;
+    final extension = extensionForMediaType(mediaType);
+    if (extension == null || tool['name'] is! String) continue;
+    return OpenMuseMcpFilePlugin(
+      entry: entry,
+      runtime: runtime,
+      toolName: tool['name'] as String,
+      mediaType: mediaType,
+      extension: extension,
+      nativeFlutterEditor:
+          entry.name == 'io.openmuse/appflowy-editor' &&
+          mediaType == 'text/markdown',
+      nativePptxViewer:
+          entry.name == 'io.openmuse/genoffice-pptx' &&
+          mediaType ==
+              'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    );
+  }
+  return null;
+}

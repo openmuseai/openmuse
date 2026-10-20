@@ -40,8 +40,7 @@ String identifyLocalMediaType(Uint8List bytes, String name) {
           ascii.decode(bytes.sublist(4, 8), allowInvalid: true) == 'ftyp')) {
     return 'video/mp4';
   }
-  if (extension == '.webm' ||
-      begins([0x1a, 0x45, 0xdf, 0xa3])) {
+  if (extension == '.webm' || begins([0x1a, 0x45, 0xdf, 0xa3])) {
     return 'video/webm';
   }
   if (begins([0x25, 0x50, 0x44, 0x46, 0x2d])) return 'application/pdf';
@@ -57,8 +56,16 @@ String identifyLocalMediaType(Uint8List bytes, String name) {
       ascii.decode(bytes.sublist(8, 12), allowInvalid: true) == 'WEBP') {
     return 'image/webp';
   }
-  if (begins([0x50, 0x4b, 0x03, 0x04]) ||
-      begins([0x1f, 0x8b]) ||
+  if (begins([0x50, 0x4b, 0x03, 0x04])) {
+    // OOXML documents are ZIP containers. Preserve their format when the
+    // extension agrees with the container signature so editor contributions
+    // can match their standard MIME type after byte inspection.
+    if (extension == '.pptx') {
+      return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+    }
+    return 'application/octet-stream';
+  }
+  if (begins([0x1f, 0x8b]) ||
       begins([0x7f, 0x45, 0x4c, 0x46]) ||
       begins([0x4d, 0x5a])) {
     return 'application/octet-stream';

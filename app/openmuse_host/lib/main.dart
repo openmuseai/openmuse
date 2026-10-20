@@ -116,33 +116,8 @@ Future<Widget> bootOpenMuseHost() async {
       bundleDirectory: receiptMarket.directoryFor(entry),
       nodeExecutable: node,
     );
-    for (final tool in await runtime.tools()) {
-      final schema = tool['inputSchema'];
-      final properties = schema is Map ? schema['properties'] : null;
-      final content = properties is Map ? properties['content'] : null;
-      if (content is! Map || content['contentEncoding'] != 'base64') continue;
-      final mediaType = content['contentMediaType'];
-      if (mediaType is! String) continue;
-      final extension = extensionForMediaType(mediaType);
-      if (extension == null) continue;
-      registry.install(
-        OpenMuseMcpFilePlugin(
-          entry: entry,
-          runtime: runtime,
-          toolName: tool['name'] as String,
-          mediaType: mediaType,
-          extension: extension,
-          nativeFlutterEditor:
-              entry.name == 'io.openmuse/appflowy-editor' &&
-              mediaType == 'text/markdown',
-          nativePptxViewer:
-              entry.name == 'io.openmuse/genoffice-pptx' &&
-              mediaType ==
-                  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        ),
-      );
-      break;
-    }
+    final plugin = await discoverMcpFilePlugin(entry: entry, runtime: runtime);
+    if (plugin != null) registry.install(plugin);
   }
 
   Future<Map<String, Object?>> runMarketAction(
@@ -327,7 +302,10 @@ Future<Widget> bootOpenMuseHost() async {
                 {...entry.toMarketCard(), 'listed': true},
               for (final entry in await receiptMarket.installedEntries())
                 if (!names.contains(entry.name))
-                  {...entry.toMarketCard(), 'listed': catalogAvailable ? false : null},
+                  {
+                    ...entry.toMarketCard(),
+                    'listed': catalogAvailable ? false : null,
+                  },
             ];
           case 'plugin.market.providers':
             return {
@@ -627,8 +605,8 @@ Future<Widget> bootOpenMuseHost() async {
     dshSupervisor: dshSupervisor,
     nativeMcpEditorBuilder: (pluginId) =>
         pluginId == 'io.openmuse/appflowy-editor'
-            ? const AppFlowyMarkdownEditor()
-            : null,
+        ? const AppFlowyMarkdownEditor()
+        : null,
     routeInteraction: (interaction) async {
       try {
         final image = await File(interaction.imagePath).readAsBytes();

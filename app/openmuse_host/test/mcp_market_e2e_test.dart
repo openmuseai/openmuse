@@ -1,12 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openmuse_host/src/host/mcp_file_plugin.dart';
 import 'package:openmuse_host/src/host/mcp_market.dart';
+import 'package:openmuse_host/src/host/resource_inspector.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 void main() {
   final registryUrl = Platform.environment['OPENMUSE_MCP_REGISTRY_URL'];
   final installRoot = Platform.environment['OPENMUSE_MCP_INSTALL_ROOT'];
-  final samplePath = Platform.environment['OPENMUSE_PPTX_SAMPLE_PATH'] ??
+  final samplePath =
+      Platform.environment['OPENMUSE_PPTX_SAMPLE_PATH'] ??
       '../openmuse_mobile/test_assets/genoffice_standard_business.pptx';
   test(
     'approved MCPB installs from online registry and invokes PPTX tool',
@@ -34,6 +38,23 @@ void main() {
         );
         final tools = await runtime.tools();
         expect(tools.any((tool) => tool['name'] == 'inspect_pptx'), true);
+        final plugin = await discoverMcpFilePlugin(
+          entry: entry,
+          runtime: runtime,
+        );
+        expect(plugin, isNotNull);
+        expect(plugin!.nativePptxViewer, isTrue);
+        final registry = OpenMusePluginRegistry(
+          context: OpenMusePluginContext(
+            executeHostCommand: (_, _) async => null,
+          ),
+        )..install(plugin);
+        final sample = File(samplePath).absolute;
+        final resource = await inspectLocalResource(
+          OpenMuseResource(uri: sample.uri, displayName: 'sample.pptx'),
+        );
+        expect(registry.editorFor(resource), same(plugin));
+        registry.dispose();
         final result = await runtime.callWithFile(
           toolName: 'inspect_pptx',
           filePath: samplePath,
