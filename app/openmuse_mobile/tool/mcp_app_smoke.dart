@@ -16,7 +16,12 @@ Future<void> main() async {
     ),
     File('${support.path}/mcp-smoke-installations.json'),
   );
-  final entry = (await market.list()).singleWhere(
+  const offline = bool.fromEnvironment('TEST_OFFLINE');
+  if (offline) HttpOverrides.global = _OfflineOnly();
+  final entries = offline
+      ? await market.installedEntries()
+      : await market.list();
+  final entry = entries.singleWhere(
     (e) =>
         e.name ==
         const String.fromEnvironment(
@@ -24,26 +29,31 @@ Future<void> main() async {
           defaultValue: 'io.openmuse/genoffice-pptx',
         ),
   );
-  await market.install(entry);
+  if (!offline) await market.install(entry);
   final html = await market.mcpAppDocument(entry);
   if (html == null) throw StateError('No standard MCP Apps UI resource');
-  final http = HttpClient();
-  final response = await (await http.getUrl(
-    Uri.parse(
-      const String.fromEnvironment(
-        'TEST_FILE',
-        defaultValue: 'http://127.0.0.1:18799/dist/sample.pptx',
-      ),
-    ),
-  )).close();
-  final data = BytesBuilder();
-  await for (final chunk in response) {
-    data.add(chunk);
-  }
-  http.close();
-  final bytes = data.takeBytes();
   final file = File('${support.path}/Sample_ppt-smoke.pptx');
-  await file.writeAsBytes(bytes);
+  late final Uint8List bytes;
+  if (offline) {
+    bytes = await file.readAsBytes();
+  } else {
+    final http = HttpClient();
+    final response = await (await http.getUrl(
+      Uri.parse(
+        const String.fromEnvironment(
+          'TEST_FILE',
+          defaultValue: 'http://127.0.0.1:18799/dist/sample.pptx',
+        ),
+      ),
+    )).close();
+    final data = BytesBuilder();
+    await for (final chunk in response) {
+      data.add(chunk);
+    }
+    http.close();
+    bytes = data.takeBytes();
+    await file.writeAsBytes(bytes);
+  }
   runApp(
     MaterialApp(
       home: RemoteMcpOfflineAppPage(
@@ -57,4 +67,10 @@ Future<void> main() async {
       ),
     ),
   );
+}
+
+final class _OfflineOnly extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) =>
+      throw StateError('Network access is disabled during offline acceptance');
 }
