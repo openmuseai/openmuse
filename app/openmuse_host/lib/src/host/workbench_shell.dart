@@ -1971,20 +1971,44 @@ final class _EditorArea extends StatelessWidget {
                   onSearch: () => _showSearch(context, workspace),
                   onCreate: () => _createDocument(context, workspace),
                 )
-              : tab.kind == WorkspaceTabKind.diff
-              ? _DiffWorkbench(diff: tab.diff!)
-              : tab.inspecting
-              ? const Center(child: Text('正在识别文件格式…'))
-              : plugin == null
-              ? const Center(child: Text('没有已安装的插件可以打开这个资源。'))
-              : PluginEditorHost(
-                  key: ValueKey('${plugin.descriptor.id}:${tab.resource.uri}'),
-                  registry: registry,
-                  plugin: plugin,
-                  resource: tab.resource,
+              : IndexedStack(
+                  index: workspace.tabsFor(groupId).indexOf(tab),
+                  sizing: StackFit.expand,
+                  children: [
+                    for (final openTab in workspace.tabsFor(groupId))
+                      _buildOpenTab(context, openTab),
+                  ],
                 ),
         ),
       ],
+    );
+  }
+
+  Widget _buildOpenTab(BuildContext context, WorkspaceTab tab) {
+    if (tab.kind == WorkspaceTabKind.diff) {
+      return KeyedSubtree(
+        key: ValueKey(tab.id),
+        child: _DiffWorkbench(diff: tab.diff!),
+      );
+    }
+    if (tab.inspecting) return const Center(child: Text('正在识别文件格式…'));
+    final plugin = registry.editorFor(
+      tab.resource,
+      editorId:
+          tab.preferredEditorId ??
+          settings.defaultEditorFor(tab.resource.extension),
+    );
+    if (plugin == null) return const Center(child: Text('没有已安装的插件可以打开这个资源。'));
+    return TickerMode(
+      key: ValueKey(
+        '${tab.id}:${plugin.descriptor.id}:${plugin.descriptor.version}',
+      ),
+      enabled: workspace.activeTabFor(groupId) == tab,
+      child: PluginEditorHost(
+        registry: registry,
+        plugin: plugin,
+        resource: tab.resource,
+      ),
     );
   }
 }
