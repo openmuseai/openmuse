@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-20",
+  "sampleBytes": 5541885,
+  "productionRelayBefore": {
+    "headersSeconds": 5.818,
+    "totalSeconds": 20.683
+  },
+  "productionRelayAfter": {
+    "headersSeconds": 0.288,
+    "totalSeconds": 21.06
+  },
+  "androidFinalBuild": {
+    "connectMs": 126,
+    "waitForDesktopMs": 159,
+    "receiveMs": 15137,
+    "matchInstalledPluginMs": 25,
+    "prepareLocalEditorMs": 167,
+    "handoffAtMs": 15614,
+    "renderVerified": true,
+    "slides": 23,
+    "exactRenderDurationMeasured": false
+  },
+  "artifacts": {
+    "macosSha256": "e516ed13feea82da9bad5b7ad75d741c7b9c30de73d4f35cffc4ac3c86b4c603",
+    "androidSha256": "2985d795233c1777e05a0dc71ef51fd6eb7703ab45bdbd7cf1aa190314ef03be"
+  },
+  "tests": {
+    "mobileTransferAndDispatch": 4,
+    "inlineMarket": 1,
+    "offlineInstall": 1,
+    "relayResourceStream": 3,
+    "relayExisting": 3
+  }
+}
