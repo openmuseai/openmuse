@@ -62,10 +62,17 @@ void main() {
             _ => throw const FormatException('unknown mirror operation'),
           };
         },
-        workspaceMirrorResource: (_) async => WorkspaceMirrorResource(
-          bytes: Uint8List.fromList(utf8.encode('# Project')),
-          mediaType: 'text/markdown; charset=utf-8',
-        ),
+        workspaceMirrorResource: (query) async =>
+            query.resourceRef == 'resource-pptx'
+            ? WorkspaceMirrorResource(
+                bytes: Uint8List(3 * 1024 * 1024),
+                mediaType:
+                    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+              )
+            : WorkspaceMirrorResource(
+                bytes: Uint8List.fromList(utf8.encode('# Project')),
+                mediaType: 'text/markdown; charset=utf-8',
+              ),
       );
       await gateway.start();
       final pair = PairedDesktopClient(
@@ -127,6 +134,24 @@ void main() {
                 })
                 as Map;
         expect(preview['content'], '# Project');
+        var opened = false;
+        files.onOpenResource = (resource, read) async {
+          expect(resource.displayName, 'Deck.pptx');
+          final payload = await read();
+          expect((payload['bytes'] as Uint8List).length, 3 * 1024 * 1024);
+          expect(
+            payload['mediaType'],
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          );
+          expect(resource.uri.toString(), isNot(contains(connection.grantRef)));
+          opened = true;
+        };
+        await files.handleMobileDetailRequest('openResource', {
+          'resourceRef': 'resource-pptx',
+          'name': 'Deck.pptx',
+        });
+        expect(opened, isTrue);
+
         expect(
           mirrorCalls.map((call) => call.operation),
           containsAll(['mounts', 'children', 'search']),

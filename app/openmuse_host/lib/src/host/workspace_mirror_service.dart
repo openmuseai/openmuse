@@ -8,6 +8,8 @@ import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:path/path.dart' as p;
 
 import 'workspace_controller.dart';
+import 'resource_inspector.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 /// Desktop-owned, read-only directory authority for an authorized pair.
 /// References are random handles; browser responses never contain local paths.
@@ -163,23 +165,13 @@ final class DesktopWorkspaceMirrorService {
     final resolved = await File(resource.path).resolveSymbolicLinks();
     if (!_inside(resource.mountPath, resolved)) throw const FormatException();
     final file = File(resource.path);
-    if (await file.length() > 16 * 1024 * 1024) throw const FormatException();
-    final extension = p.extension(resource.path).toLowerCase();
-    final mediaType = switch (extension) {
-      '.md' || '.markdown' || '.mdown' => 'text/markdown; charset=utf-8',
-      '.txt' || '.log' => 'text/plain; charset=utf-8',
-      '.json' => 'application/json',
-      '.png' => 'image/png',
-      '.jpg' || '.jpeg' => 'image/jpeg',
-      '.gif' => 'image/gif',
-      '.webp' => 'image/webp',
-      '.svg' => 'image/svg+xml',
-      '.pdf' => 'application/pdf',
-      _ => 'application/octet-stream',
-    };
+    if (await file.length() > 64 * 1024 * 1024) throw const FormatException();
+    final inspected = await inspectLocalResource(
+      OpenMuseResource(uri: file.uri, displayName: p.basename(file.path)),
+    );
     return WorkspaceMirrorResource(
       bytes: Uint8List.fromList(await file.readAsBytes()),
-      mediaType: mediaType,
+      mediaType: inspected.mediaType ?? 'application/octet-stream',
     );
   }
 

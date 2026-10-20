@@ -1,6 +1,7 @@
 package io.openmuse.openmuse_mobile
 
 import android.content.Context
+import android.content.Intent
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
@@ -8,6 +9,8 @@ import android.util.Base64
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import androidx.core.content.FileProvider
+import java.io.File
 import java.security.KeyStore
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -21,6 +24,30 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         DeviceKeyStoreBridge(applicationContext).register(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "io.openmuse/resource_open")
+            .setMethodCallHandler { call, result ->
+                if (call.method != "open") {
+                    result.notImplemented()
+                    return@setMethodCallHandler
+                }
+                try {
+                    val name = call.argument<String>("name") ?: error("Missing name")
+                    val mediaType = call.argument<String>("mediaType") ?: error("Missing media type")
+                    val bytes = call.argument<ByteArray>("bytes") ?: error("Missing file")
+                    require(name.matches(Regex("[^/\\\\]{1,200}")) && bytes.size <= 64 * 1024 * 1024)
+                    val dir = File(cacheDir, "external-open").apply { mkdirs() }
+                    val file = File(dir, name).apply { writeBytes(bytes) }
+                    val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, mediaType)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(Intent.createChooser(intent, "打开文件"))
+                    result.success(null)
+                } catch (error: Exception) {
+                    result.error("resource_open", error.message ?: "Unable to open file", null)
+                }
+            }
         flutterEngine.platformViewsController.registry.registerViewFactory(
             "io.openmuse/offline_web_plugin",
             OfflineWebPluginFactory(applicationContext),

@@ -15,7 +15,11 @@ final class MobileWorkspaceFilesPlugin extends ChangeNotifier
         OpenMuseMobileWorkbenchContributor,
         PairedMobileContextContributor {
   PairedDesktopConnection? _connection;
-  Future<void> Function(String name, String content)? onOpenMarkdown;
+  Future<void> Function(
+    OpenMuseResource resource,
+    Future<Map<String, Object?>> Function() read,
+  )?
+  onOpenResource;
 
   void updateConnection(PairedDesktopConnection? value) {
     if (_connection?.grantRef == value?.grantRef) return;
@@ -88,7 +92,7 @@ function showError(e){status.textContent=String(e.message||e)}
 function renderCrumb(){crumb.replaceChildren();const back=document.createElement('button');back.textContent=history.length?'‹ 返回':'目录';back.onclick=()=>{if(history.length){const old=history.pop();old()}};crumb.append(back)}
 async function openMounts(){renderCrumb();preview.hidden=true;status.textContent='正在读取挂载…';list.replaceChildren();try{const data=await call('mounts',{});mounts=data.mounts||[];status.textContent=mounts.length?'选择目录':'Desktop 暂无可浏览的目录';for(const m of mounts)list.append(row('▣',m.title,'Workspace',()=>openDirectory(m.mountRef,m.rootRef,m.title)))}catch(e){showError(e)}}
 async function openDirectory(mountRef,parentRef,title){renderCrumb();preview.hidden=true;status.textContent='正在读取 '+title+'…';list.replaceChildren();try{let cursor=null;let count=0;do{const page=await call('children',{mountRef,parentRef,cursor});for(const entry of page.entries||[]){count++;list.append(row(entry.isDirectory?'▣':'▤',entry.name,entry.isDirectory?'文件夹':'文件',()=>{history.push(()=>openDirectory(mountRef,parentRef,title));entry.isDirectory?openDirectory(mountRef,entry.nodeRef,entry.name):openPreview(entry.resourceRef,entry.name)}))}cursor=page.nextCursor}while(cursor&&count<300);status.textContent=count?'共 '+count+' 项':'空文件夹';renderCrumb()}catch(e){showError(e)}}
-async function openPreview(resourceRef,name){renderCrumb();list.replaceChildren();preview.hidden=false;preview.textContent='正在预览 '+name+'…';status.textContent=name;try{if(name.toLowerCase().endsWith('.md')){preview.textContent='正在打开 Markdown 编辑器…';await call('openMarkdown',{resourceRef,name});preview.textContent='编辑器已关闭，点击文件可再次打开。';return}const data=await call('preview',{resourceRef});preview.replaceChildren();if(data.type==='image'){const img=document.createElement('img');img.src=data.dataUrl;img.alt=name;preview.append(img)}else preview.textContent=data.type==='text'?data.content:'暂不支持预览此文件类型'}catch(e){preview.textContent=String(e.message||e)}}
+async function openPreview(resourceRef,name){renderCrumb();list.replaceChildren();preview.hidden=false;preview.textContent='正在打开 '+name+'…';status.textContent=name;try{await call('openResource',{resourceRef,name});preview.textContent='编辑器已关闭，点击文件可再次打开。'}catch(e){preview.textContent=String(e.message||e)}}
 document.getElementById('searchForm').onsubmit=async e=>{e.preventDefault();const q=document.getElementById('query').value.trim();if(!q){history=[];openMounts();return}history=[openMounts];renderCrumb();list.replaceChildren();preview.hidden=true;status.textContent='正在搜索…';try{const data=await call('search',{query:q});for(const entry of data.entries||[])list.append(row(entry.isDirectory?'▣':'▤',entry.name,entry.isDirectory?'文件夹':'文件',()=>entry.isDirectory?openDirectory(entry.mountRef,entry.nodeRef,entry.name):openPreview(entry.resourceRef,entry.name)));status.textContent=(data.entries||[]).length+' 个结果'+(data.truncated?' · 结果已截断':'')}catch(e){showError(e)}};
 openMounts();
 </script></body></html>''';
@@ -115,8 +119,7 @@ openMounts();
         ),
         'search' => await client.search(_required(args, 'query')),
         'preview' => await client.preview(_required(args, 'resourceRef')),
-        'openMarkdown' => await _openMarkdown(
-          client,
+        'openResource' || 'openMarkdown' => await _openResource(
           _required(args, 'resourceRef'),
           _required(args, 'name'),
         ),
@@ -127,21 +130,27 @@ openMounts();
     }
   }
 
-  Future<Map<String, Object?>> _openMarkdown(
-    MobileWorkspaceMirrorClient client,
+  Future<Map<String, Object?>> _openResource(
     String resourceRef,
     String name,
   ) async {
-    if (!name.toLowerCase().endsWith('.md')) {
-      throw const FormatException('仅支持 Markdown 文件');
-    }
-    final open = onOpenMarkdown;
-    if (open == null) throw StateError('尚未安装 Markdown 编辑器插件');
-    final preview = await client.preview(resourceRef);
-    if (preview['type'] != 'text' || preview['content'] is! String) {
-      throw const FormatException('无法读取 Markdown 文件');
-    }
-    await open(name, preview['content'] as String);
+    final open = onOpenResource;
+    if (open == null) throw StateError('Host 尚未就绪');
+    final resource = OpenMuseResource(
+      uri: Uri(scheme: 'workspace', path: '/$name'),
+      displayName: name,
+      mediaType: name.toLowerCase().endsWith('.md') ? 'text/markdown' : null,
+    );
+    await open(resource, () async {
+      final connection = _connection;
+      if (connection == null) throw StateError('Desktop 已断开连接');
+      final reader = MobileWorkspaceMirrorClient(connection);
+      try {
+        return await reader.readResource(resourceRef);
+      } finally {
+        reader.close();
+      }
+    });
     return {'opened': true};
   }
 

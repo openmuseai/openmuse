@@ -13,7 +13,12 @@ import 'src/mcp_remote_market.dart';
 
 export 'src/paired_desktop_market_client.dart';
 export 'src/mcp_remote_market.dart'
-    show RemoteMcpEntry, RemoteMcpMarket, RemoteMcpMarketPage, RemoteMcpAppPage;
+    show
+        RemoteMcpEntry,
+        RemoteMcpMarket,
+        RemoteMcpMarketPage,
+        RemoteMcpAppPage,
+        RemoteMcpOfflineAppPage;
 
 final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
   OpenMuseMobilePluginMarket(

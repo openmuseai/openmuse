@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_registry_provider/openmuse_registry_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
@@ -85,15 +86,101 @@ final class RemoteMcpEntry {
 }
 
 final class RemoteMcpMarket {
-  RemoteMcpMarket(this.origin, this.receiptFile);
+  RemoteMcpMarket(
+    this.origin,
+    this.receiptFile, {
+    this.nativeMediaTypes = const {},
+  });
   final Uri origin;
   final File receiptFile;
+
+  /// AOT renderers supplied by this client build, keyed by public Registry name.
+  final Map<String, Set<String>> nativeMediaTypes;
   bool catalogFresh = false;
   Set<String> activeVersions = {};
   File get _catalogCache =>
       File('${receiptFile.parent.path}/mcp-registry-cache.json');
   File get _installedRecords =>
       File('${receiptFile.parent.path}/mcp-installed-records.json');
+  File get _capabilityCache =>
+      File('${receiptFile.parent.path}/mcp-resource-capabilities.json');
+
+  Future<Map<String, List<String>>> _capabilities() async {
+    if (!await _capabilityCache.exists()) return {};
+    final value = jsonDecode(await _capabilityCache.readAsString());
+    if (value is! Map) throw const FormatException('Invalid MCP capabilities');
+    return value.map(
+      (key, types) => MapEntry(
+        key.toString(),
+        (types as List).whereType<String>().toList(),
+      ),
+    );
+  }
+
+  /// A local snapshot of standard JSON Schema contentMediaType annotations.
+  Future<Set<String>> resourceMediaTypes(RemoteMcpEntry entry) async =>
+      (await _capabilities())['${entry.name}@${entry.version}']?.toSet() ??
+      nativeMediaTypes[entry.name] ??
+      {};
+
+  Future<void> refreshInstalledCapabilities() async {
+    final cached = await _capabilities();
+    for (final entry in await installedEntries()) {
+      if (cached.containsKey('${entry.name}@${entry.version}')) continue;
+      try {
+        await _cacheResourceCapabilities(entry);
+      } on Object {
+        // Installed offline apps remain available when their MCP endpoint is down.
+      }
+    }
+  }
+
+  Future<void> _cacheResourceCapabilities(RemoteMcpEntry entry) async {
+    if (entry.endpoint == null) return;
+    final mediaTypes = await withClient(entry, (client) async {
+      final tools = await client.listTools();
+      final types = <String>{};
+      for (final tool in tools.tools) {
+        final ui = tool.meta?['ui'];
+        if (ui is Map &&
+            ui['resourceUri'] is String &&
+            (ui['resourceUri'] as String).startsWith('ui://') &&
+            entry.packageSha256 != null) {
+          final resource = await client.readResource(
+            ReadResourceRequest(uri: ui['resourceUri'] as String),
+          );
+          for (final item
+              in resource.contents.whereType<TextResourceContents>()) {
+            if (item.mimeType == 'text/html;profile=mcp-app') {
+              final directory = packageDirectory(entry);
+              final reviewed = File('${directory.path}/index.html');
+              if (!await reviewed.exists() ||
+                  await reviewed.readAsString() != item.text) {
+                throw const FormatException(
+                  'MCP App UI differs from the reviewed package',
+                );
+              }
+              await File(
+                '${directory.path}/mcp-app.html',
+              ).writeAsString(restrictMcpAppDocument(item.text), flush: true);
+            }
+          }
+        }
+        final properties = tool.inputSchema.toJson()['properties'];
+        if (properties is! Map) continue;
+        for (final input in properties.values.whereType<Map>()) {
+          final type = input['contentMediaType'];
+          if (input['contentEncoding'] == 'base64' && type is String) {
+            types.add(type);
+          }
+        }
+      }
+      return types.toList()..sort();
+    });
+    final cached = await _capabilities();
+    cached['${entry.name}@${entry.version}'] = mediaTypes;
+    await _capabilityCache.writeAsString(jsonEncode(cached), flush: true);
+  }
 
   Future<List<RemoteMcpEntry>> _savedInstallations() async {
     if (!await _installedRecords.exists()) return [];
@@ -111,6 +198,12 @@ final class RemoteMcpMarket {
     return Directory(
       '${receiptFile.parent.path}/mcp-web/${digest.toLowerCase()}',
     );
+  }
+
+  Future<String?> mcpAppDocument(RemoteMcpEntry entry) async {
+    if (entry.packageSha256 == null) return null;
+    final file = File('${packageDirectory(entry).path}/mcp-app.html');
+    return await file.exists() ? file.readAsString() : null;
   }
 
   bool hasOfflineUi(RemoteMcpEntry entry) =>
@@ -234,6 +327,15 @@ final class RemoteMcpMarket {
 
   Future<void> install(RemoteMcpEntry entry) async {
     final offline = await _installOfflineUi(entry);
+    if (entry.endpoint != null) {
+      try {
+        await _cacheResourceCapabilities(entry);
+      } on FormatException {
+        rethrow;
+      } on Object {
+        if (!offline) rethrow;
+      }
+    }
     if (!offline)
       await withClient(entry, (client) async {
         final tools = await client.listTools();
@@ -256,6 +358,7 @@ final class RemoteMcpMarket {
         }
       });
     final receipts = await installed();
+    receipts.removeWhere((version) => version.startsWith('${entry.name}@'));
     receipts.add('${entry.name}@${entry.version}');
     await receiptFile.parent.create(recursive: true);
     await receiptFile.writeAsString(
@@ -264,13 +367,8 @@ final class RemoteMcpMarket {
     );
     if (entry.registryRecord != null) {
       final records = await _savedInstallations();
-      final next =
-          records
-              .where(
-                (old) => old.name != entry.name || old.version != entry.version,
-              )
-              .toList()
-            ..add(entry);
+      final next = records.where((old) => old.name != entry.name).toList()
+        ..add(entry);
       await _installedRecords.writeAsString(
         jsonEncode(next.map((item) => item.registryRecord).toList()),
         flush: true,
@@ -310,7 +408,9 @@ final class RemoteMcpMarket {
       final files = archive.files
           .where((file) => file.isFile && file.name.startsWith('web/'))
           .toList();
-      if (!files.any((file) => file.name == 'web/index.html')) return false;
+      if (!files.any((file) => file.name == 'web/index.html')) {
+        return nativeMediaTypes.containsKey(entry.name);
+      }
       final target = packageDirectory(entry);
       final staging = Directory('${target.path}.installing');
       if (await staging.exists()) await staging.delete(recursive: true);
@@ -471,11 +571,16 @@ final class RemoteMcpMarketPage extends StatefulWidget {
     this.providers,
     this.receiptFile,
     this.pickFile,
+    this.nativeMediaTypes = const {},
+    this.openNativeFile,
   });
   final Uri? origin;
   final McpRegistryProviders? providers;
   final File? receiptFile;
   final Future<File?> Function()? pickFile;
+  final Map<String, Set<String>> nativeMediaTypes;
+  final Future<void> Function(BuildContext, RemoteMcpEntry, File)?
+  openNativeFile;
   @override
   State<RemoteMcpMarketPage> createState() => _RemoteMcpMarketPageState();
 }
@@ -522,6 +627,7 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
         origin,
         widget.receiptFile ??
             File('${directory!.path}/mcp-remote-installations.json'),
+        nativeMediaTypes: widget.nativeMediaTypes,
       );
       final catalog = await source.list();
       final receipts = await source.installed();
@@ -615,13 +721,53 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
       error = null;
     });
     try {
+      if (widget.nativeMediaTypes.containsKey(entry.name) &&
+          widget.openNativeFile != null) {
+        final selected = widget.pickFile == null
+            ? await FilePicker.platform
+                  .pickFiles(
+                    type: FileType.custom,
+                    allowedExtensions: const ['pptx'],
+                  )
+                  .then(
+                    (value) => value?.files.single.path == null
+                        ? null
+                        : File(value!.files.single.path!),
+                  )
+            : await widget.pickFile!();
+        if (selected != null && mounted) {
+          await widget.openNativeFile!(context, entry, selected);
+        }
+        return;
+      }
       if (Platform.isAndroid && market!.hasOfflineUi(entry)) {
+        final html = await market!.mcpAppDocument(entry);
+        File? selected;
+        if (html != null) {
+          selected = widget.pickFile == null
+              ? await FilePicker.platform.pickFiles().then(
+                  (r) => r?.files.single.path == null
+                      ? null
+                      : File(r!.files.single.path!),
+                )
+              : await widget.pickFile!();
+          if (selected == null) return;
+        }
+        final bytes = await selected?.readAsBytes();
+        final selectedMediaType = (await market!.resourceMediaTypes(
+          entry,
+        )).firstOrNull;
         if (mounted) {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => _OfflineMcpAppPage(
+              builder: (_) => RemoteMcpOfflineAppPage(
                 title: entry.title,
                 digest: entry.packageSha256!.toLowerCase(),
+                appHtml: html,
+                fileBytes: bytes,
+                fileName: selected?.uri.pathSegments.last,
+                mediaType: selected == null ? null : selectedMediaType,
+                filePath: selected?.path,
               ),
             ),
           );
@@ -775,10 +921,24 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
           true);
 }
 
-final class _OfflineMcpAppPage extends StatelessWidget {
-  const _OfflineMcpAppPage({required this.title, required this.digest});
+final class RemoteMcpOfflineAppPage extends StatelessWidget {
+  const RemoteMcpOfflineAppPage({
+    super.key,
+    required this.title,
+    required this.digest,
+    this.fileName,
+    this.mediaType,
+    this.fileBytes,
+    this.appHtml,
+    this.filePath,
+  });
   final String title;
   final String digest;
+  final String? fileName;
+  final String? mediaType;
+  final Uint8List? fileBytes;
+  final String? appHtml;
+  final String? filePath;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -786,7 +946,24 @@ final class _OfflineMcpAppPage extends StatelessWidget {
     body: Platform.isAndroid
         ? AndroidView(
             viewType: 'io.openmuse/offline_web_plugin',
-            creationParams: {'digest': digest},
+            creationParams: {
+              'digest': digest,
+              if (appHtml != null)
+                'html': buildMcpAppHostDocument(
+                  appUrl:
+                      'https://p${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io/editor/mcp-app.html',
+                  argumentsUrl:
+                      'https://p${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io/host/arguments.json',
+                  arguments: const {},
+                  platform: 'mobile',
+                  nativeSend:
+                      'window.McpHost.postMessage(JSON.stringify(message))',
+                ),
+              if (filePath != null) 'filePath': filePath,
+              if (fileName != null) 'fileName': fileName,
+              if (mediaType != null) 'mediaType': mediaType,
+              if (fileBytes != null) 'fileBytes': fileBytes,
+            },
             creationParamsCodec: const StandardMessageCodec(),
           )
         : const Center(child: Text('Offline MCP App requires an Android host')),

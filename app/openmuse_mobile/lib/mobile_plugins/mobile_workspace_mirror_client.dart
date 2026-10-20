@@ -57,22 +57,11 @@ final class MobileWorkspaceMirrorClient {
   }
 
   Future<Map<String, Object?>> preview(String resourceRef) async {
-    if (resourceRef.isEmpty || resourceRef.length > 128) {
-      throw const FormatException('资源引用无效');
-    }
-    final uri = _origin
-        .resolve('/openmuse/workspace-mirror/resource/v1')
-        .replace(
-          queryParameters: {
-            'workspaceRef': connection.workspaceRef,
-            'resourceRef': resourceRef,
-          },
-        );
-    final response = await _request(uri);
-    final mediaType = response.$1;
-    final bytes = response.$2;
+    final payload = await readResource(resourceRef);
+    final mediaType = payload['mediaType'] as String;
+    final bytes = payload['bytes'] as Uint8List;
     if (bytes.length > 2 * 1024 * 1024) {
-      throw const FormatException('文件太大，无法在手机预览');
+      throw const FormatException('文件太大，无法在手机内联预览');
     }
     if (mediaType.startsWith('text/') ||
         mediaType.startsWith('application/json')) {
@@ -97,6 +86,27 @@ final class MobileWorkspaceMirrorClient {
     return {'type': 'unsupported', 'mediaType': mediaType};
   }
 
+  Future<Map<String, Object?>> readResource(String resourceRef) async {
+    if (resourceRef.isEmpty || resourceRef.length > 128) {
+      throw const FormatException('资源引用无效');
+    }
+    final uri = _origin
+        .resolve('/openmuse/workspace-mirror/resource/v1')
+        .replace(
+          queryParameters: {
+            'workspaceRef': connection.workspaceRef,
+            'resourceRef': resourceRef,
+          },
+        );
+    final response = await _request(uri);
+    final mediaType = response.$1;
+    final bytes = response.$2;
+    if (bytes.length > 64 * 1024 * 1024) {
+      throw const FormatException('文件超过 64 MiB 限额');
+    }
+    return {'mediaType': mediaType, 'bytes': bytes};
+  }
+
   Future<Map<String, Object?>> _get(Map<String, String> query) async {
     final uri = _origin
         .resolve('/openmuse/workspace-mirror/v1')
@@ -119,7 +129,7 @@ final class MobileWorkspaceMirrorClient {
     final bytes = <int>[];
     await for (final chunk in response.timeout(const Duration(seconds: 12))) {
       bytes.addAll(chunk);
-      if (bytes.length > 2 * 1024 * 1024 + 4096) {
+      if (bytes.length > 64 * 1024 * 1024 + 4096) {
         throw const FormatException('Desktop 响应过大');
       }
     }

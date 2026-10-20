@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:openmuse_app_update/openmuse_app_update.dart';
 import 'package:muse_speech_contract/muse_speech_contract.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
@@ -303,6 +304,7 @@ final class OpenMuseMobileApplicationState
   final _navigatorKey = GlobalKey<NavigatorState>();
   final Set<String> _registeredMobilePlugins = {};
   Future<void> _marketSync = Future<void>.value();
+  late final Future<void> _capabilityBootstrap;
   final _locale = OpenMuseUiLocale();
   ThemeMode _themeMode = ThemeMode.system;
   static const _themeKey = 'openmuse.mobile.theme-mode.v1';
@@ -334,7 +336,10 @@ final class OpenMuseMobileApplicationState
         widget.remoteWorkbenchPlugin ?? OpenMuseRemoteWorkbenchPlugin();
     _scheduledTasks = MobileScheduledTasksPlugin();
     _workspaceFiles = MobileWorkspaceFilesPlugin();
-    _workspaceFiles.onOpenMarkdown = _openWorkspaceMarkdown;
+    _workspaceFiles.onOpenResource = _openWorkspaceResource;
+    _capabilityBootstrap = _localMcpMarket().then(
+      (market) => market.refreshInstalledCapabilities(),
+    );
     _plugins =
         OpenMusePluginRegistry(
             context: OpenMusePluginContext(
@@ -430,58 +435,115 @@ final class OpenMuseMobileApplicationState
         });
   }
 
-  Future<void> _openWorkspaceMarkdown(String name, String content) async {
-    final provider = widget.mobileMarketPlugin?.registryProviders?.selected;
-    if (provider == null) throw StateError('请先配置 MCP 插件市场');
+  Future<RemoteMcpMarket> _localMcpMarket() async {
+    final provider =
+        widget.mobileMarketPlugin?.registryProviders?.selected ??
+        Uri.parse('https://plugins.openmuseai.com');
     final support = await getApplicationSupportDirectory();
-    final market = RemoteMcpMarket(
+    return RemoteMcpMarket(
       provider,
       File('${support.path}/mcp-remote-installations.json'),
     );
-    RemoteMcpEntry? editor;
+  }
+
+  Future<void> _openWorkspaceResource(
+    OpenMuseResource resource,
+    Future<Map<String, Object?>> Function() read,
+  ) async {
+    await _capabilityBootstrap;
+    final payload = await read();
+    if (payload['bytes'] is! Uint8List) {
+      throw const FormatException('无法读取文件');
+    }
+    final bytes = payload['bytes'] as Uint8List;
+    if (bytes.length > 64 * 1024 * 1024) {
+      throw const FormatException('文件超过 64 MiB 限额');
+    }
+    final mediaType =
+        ((payload['mediaType'] as String?) ??
+                resource.mediaType ??
+                'application/octet-stream')
+            .split(';')
+            .first
+            .trim()
+            .toLowerCase();
+    resource = OpenMuseResource(
+      uri: resource.uri,
+      displayName: resource.displayName,
+      mediaType: mediaType,
+    );
+    final market = await _localMcpMarket();
+    final candidates = <RemoteMcpEntry>[];
     for (final entry in await market.installedEntries()) {
-      try {
-        if (await market.acceptsContent(entry, 'text/markdown')) {
-          editor = entry;
-          break;
-        }
-      } on Object {
-        // A temporarily unavailable plugin cannot claim the resource.
+      if (!market.hasOfflineUi(entry) &&
+          !market.nativeMediaTypes.containsKey(entry.name)) {
+        continue;
+      }
+      final types = await market.resourceMediaTypes(entry);
+      if (resource.mediaType != null && types.contains(resource.mediaType)) {
+        candidates.add(entry);
       }
     }
-    if (editor == null) throw StateError('请先从插件市场安装 Markdown 编辑器');
     final context = _navigatorKey.currentContext;
     if (context == null || !context.mounted) return;
-    final approved = await showDialog<bool>(
-      context: context,
-      builder: (dialog) => AlertDialog(
-        title: const Text('使用插件打开文件？'),
-        content: Text(
-          '将 $name 的内容发送至 ${editor!.endpoint?.host ?? editor.name}，并在应用内打开。',
+    RemoteMcpEntry? editor;
+    final saved = await const FlutterSecureValueStore().read(
+      'openmuse.mobile.default-editor.${resource.extension}',
+    );
+    if (!context.mounted) return;
+    for (final candidate in candidates) {
+      if (candidate.name == saved) editor = candidate;
+    }
+    if (editor == null && candidates.length == 1) editor = candidates.single;
+    if (editor == null && candidates.length > 1) {
+      editor = await showDialog<RemoteMcpEntry>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          title: Text('使用哪个插件打开 ${resource.displayName}？'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final candidate in candidates)
+                ListTile(
+                  title: Text(candidate.title),
+                  onTap: () => Navigator.pop(dialog, candidate),
+                  trailing: IconButton(
+                    tooltip: '设为默认打开方式',
+                    icon: const Icon(Icons.push_pin_outlined),
+                    onPressed: () async {
+                      await const FlutterSecureValueStore().write(
+                        'openmuse.mobile.default-editor.${resource.extension}',
+                        candidate.name,
+                      );
+                      if (dialog.mounted) Navigator.pop(dialog, candidate);
+                    },
+                  ),
+                ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialog, false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialog, true),
-            child: const Text('打开'),
-          ),
-        ],
-      ),
-    );
-    if (approved != true || !mounted) return;
-    final uri = await market.openContent(
-      editor,
-      mediaType: 'text/markdown',
-      content: content,
-      name: name,
-    );
+      );
+      if (editor == null) return;
+    }
+    if (editor == null) {
+      await const MethodChannel('io.openmuse/resource_open').invokeMethod<void>(
+        'open',
+        {'name': resource.displayName, 'mediaType': mediaType, 'bytes': bytes},
+      );
+      return;
+    }
+    final appHtml = await market.mcpAppDocument(editor);
     if (!mounted) return;
     await _navigatorKey.currentState?.push<void>(
       MaterialPageRoute(
-        builder: (_) => RemoteMcpAppPage(title: name, uri: uri),
+        builder: (_) => RemoteMcpOfflineAppPage(
+          title: resource.displayName,
+          digest: editor!.packageSha256!.toLowerCase(),
+          fileName: resource.displayName,
+          mediaType: mediaType,
+          fileBytes: bytes,
+          appHtml: appHtml,
+        ),
       ),
     );
   }

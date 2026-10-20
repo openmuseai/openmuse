@@ -88,6 +88,33 @@ void main() {
     );
     expect(jsonEncode(search), isNot(contains(root.path)));
     expect((search['entries'] as List).single['name'], 'file.md');
+    final deck = await File(
+      '../openmuse_mobile/test_assets/genoffice_standard_business.pptx',
+    ).copy('${root.path}/Deck.pptx');
+    final deckSearch = await service.handle(
+      WorkspaceMirrorQuery(
+        operation: 'search',
+        accountRef: base.accountRef,
+        deviceRef: base.deviceRef,
+        workspaceRef: base.workspaceRef,
+        searchText: 'Deck.pptx',
+      ),
+    );
+    final deckEntry = (deckSearch['entries'] as List).single as Map;
+    final deckResource = await service.readResource(
+      WorkspaceMirrorResourceQuery(
+        accountRef: base.accountRef,
+        deviceRef: base.deviceRef,
+        workspaceRef: base.workspaceRef,
+        resourceRef: deckEntry['resourceRef'] as String,
+      ),
+    );
+    expect(
+      deckResource.mediaType,
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    );
+    expect(deckResource.bytes.length, await deck.length());
+
     expect(
       () => service.handle(
         WorkspaceMirrorQuery(
