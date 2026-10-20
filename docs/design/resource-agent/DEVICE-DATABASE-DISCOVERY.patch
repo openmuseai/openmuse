@@ -1,0 +1,62 @@
+--- a/relay_server.py
++++ b/relay_server.py
+@@ -15,6 +15,8 @@
+ import os
+ import re
+ import struct
++import subprocess
++import ipaddress
+ import time
+ import urllib.request
+ import uuid
+@@ -1052,8 +1054,10 @@
+ 
+ 
+ class PostgresDeviceStore:
+-    def __init__(self, dsn: str) -> None:
++    def __init__(self, dsn: str, container: str = "", network: str = "") -> None:
+         self.dsn = dsn
++        self.container = container
++        self.network = network
+ 
+     async def register(self, account: str, payload: dict) -> dict:
+         return await asyncio.to_thread(self._register, account, payload)
+@@ -1069,8 +1073,23 @@
+ 
+     def _connect(self):
+         import psycopg
+-
+-        return psycopg.connect(self.dsn)
++        options = {"connect_timeout": 5}
++        if self.container:
++            # A host systemd service cannot use Docker's embedded DNS. Resolve
++            # the named container for every connection, including after recreate.
++            result = subprocess.run(
++                ["docker", "inspect", "--format", "{{json .NetworkSettings.Networks}}", self.container],
++                capture_output=True, text=True, check=True, timeout=5,
++            )
++            networks = json.loads(result.stdout)
++            if self.network:
++                address = networks[self.network]["IPAddress"]
++            elif len(networks) == 1:
++                address = next(iter(networks.values()))["IPAddress"]
++            else:
++                raise RuntimeError("Database network must be specified")
++            options["host"] = str(ipaddress.ip_address(address))
++        return psycopg.connect(self.dsn, **options)
+ 
+     def _register(self, account: str, payload: dict) -> dict:
+         account = _account_uuid(account)
+@@ -1240,7 +1259,11 @@
+     host = os.environ.get("OPENMUSE_RELAY_BIND", "127.0.0.1")
+     port = int(os.environ.get("OPENMUSE_RELAY_PORT", "8096"))
+     dsn = os.environ.get("OPENMUSE_RELAY_DATABASE_URL", "")
+-    devices = PostgresDeviceStore(dsn) if dsn else None
++    devices = PostgresDeviceStore(
++        dsn,
++        os.environ.get("OPENMUSE_RELAY_DATABASE_CONTAINER", ""),
++        os.environ.get("OPENMUSE_RELAY_DATABASE_NETWORK", ""),
++    ) if dsn else None
+     relay = RelayServer(gotrue_verifier(user_url), devices)
+     await relay.start(host, port)
+     print(f"device-relay listening on {host}:{port}", flush=True)

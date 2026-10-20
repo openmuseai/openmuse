@@ -47,7 +47,10 @@ final class AccountDevice {
         lastSeenAt is! num ||
         online is! bool ||
         (transportOrigin != null && transportOrigin is! String)) {
-      throw const FormatException('invalid account device');
+      throw const AccountDeviceDirectoryFailure(
+        'INVALID_RESPONSE',
+        '设备信息响应无效。',
+      );
     }
     return AccountDevice(
       deviceRef: deviceRef,
@@ -212,18 +215,26 @@ final class AccountDeviceDirectoryClient {
     if (token == null || token.isEmpty) {
       throw const AccountDeviceDirectoryFailure('SIGNED_OUT', '请先登录账号。');
     }
-    return _envelopeWithToken(
-      method,
-      path,
-      token,
-      body: body,
-      retryOn401: true,
-    );
+    try {
+      return await _envelopeWithToken(
+        method,
+        path,
+        token,
+        body: body,
+        retryOn401: true,
+      );
+    } on AccountDeviceDirectoryFailure {
+      rethrow;
+    } on Object {
+      // Socket/TLS/HTTP failures must enter the controller's retry path too.
+      // Otherwise a dropped connection leaves the last loading snapshot stuck.
+      throw const AccountDeviceDirectoryFailure('UNAVAILABLE', '设备连接已中断，正在重试。');
+    }
   }
 
   Future<String?> _currentAccessToken() async {
     try {
-      return await accessToken();
+      return await accessToken().timeout(requestTimeout, onTimeout: _timeout);
     } on Object {
       throw const AccountDeviceDirectoryFailure(
         'AUTH_REFRESH_FAILED',
@@ -264,7 +275,10 @@ final class AccountDeviceDirectoryClient {
       );
       String? freshToken;
       try {
-        freshToken = await refreshAccessToken!();
+        freshToken = await refreshAccessToken!().timeout(
+          requestTimeout,
+          onTimeout: _timeout,
+        );
       } on Object {
         throw const AccountDeviceDirectoryFailure(
           'AUTH_REFRESH_FAILED',

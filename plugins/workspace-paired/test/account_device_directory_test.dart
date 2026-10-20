@@ -8,6 +8,14 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 void main() {
+  test('a dropped HTTP connection becomes a retryable directory failure', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    server.listen((request) async { final socket = await request.response.detachSocket(writeHeaders: false); socket.destroy(); });
+    final client = AccountDeviceDirectoryClient(cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'), accessToken: () async => 'access', allowInsecureLoopback: true);
+    try { await expectLater(client.list(), throwsA(isA<AccountDeviceDirectoryFailure>())); }
+    finally { client.close(); await server.close(force: true); }
+  });
+
   test('register and list use the authenticated account device API', () async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     final requests = <String>[];
