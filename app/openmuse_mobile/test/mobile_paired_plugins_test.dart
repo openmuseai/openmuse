@@ -135,7 +135,7 @@ void main() {
                 as Map;
         expect(preview['content'], '# Project');
         var opened = false;
-        files.onOpenResource = (resource, read) async {
+        files.onOpenResource = (resource, read, reportStep) async {
           expect(resource.displayName, 'Deck.pptx');
           final payload = await read();
           expect((payload['bytes'] as Uint8List).length, 3 * 1024 * 1024);
@@ -144,6 +144,13 @@ void main() {
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
           );
           expect(resource.uri.toString(), isNot(contains(connection.grantRef)));
+          final progress =
+              await files.handleMobileDetailRequest('openingProgress', {})
+                  as Map;
+          expect(progress['received'], 3 * 1024 * 1024);
+          expect(progress['total'], 3 * 1024 * 1024);
+          expect(progress['step'], '接收 Desktop 文件');
+          reportStep('启动本地编辑器');
           opened = true;
         };
         await files.handleMobileDetailRequest('openResource', {

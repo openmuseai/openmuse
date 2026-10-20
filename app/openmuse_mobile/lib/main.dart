@@ -304,7 +304,6 @@ final class OpenMuseMobileApplicationState
   final _navigatorKey = GlobalKey<NavigatorState>();
   final Set<String> _registeredMobilePlugins = {};
   Future<void> _marketSync = Future<void>.value();
-  late final Future<void> _capabilityBootstrap;
   final _locale = OpenMuseUiLocale();
   ThemeMode _themeMode = ThemeMode.system;
   static const _themeKey = 'openmuse.mobile.theme-mode.v1';
@@ -337,8 +336,12 @@ final class OpenMuseMobileApplicationState
     _scheduledTasks = MobileScheduledTasksPlugin();
     _workspaceFiles = MobileWorkspaceFilesPlugin();
     _workspaceFiles.onOpenResource = _openWorkspaceResource;
-    _capabilityBootstrap = _localMcpMarket().then(
-      (market) => market.refreshInstalledCapabilities(),
+    unawaited(
+      _localMcpMarket()
+          .then((market) => market.refreshInstalledCapabilities())
+          .catchError((Object error) {
+            debugPrint('Installed plugin capability refresh unavailable');
+          }),
     );
     _plugins =
         OpenMusePluginRegistry(
@@ -449,8 +452,8 @@ final class OpenMuseMobileApplicationState
   Future<void> _openWorkspaceResource(
     OpenMuseResource resource,
     Future<Map<String, Object?>> Function() read,
+    ValueChanged<String> reportStep,
   ) async {
-    await _capabilityBootstrap;
     final payload = await read();
     if (payload['bytes'] is! Uint8List) {
       throw const FormatException('无法读取文件');
@@ -472,6 +475,7 @@ final class OpenMuseMobileApplicationState
       displayName: resource.displayName,
       mediaType: mediaType,
     );
+    reportStep('匹配已安装插件');
     final market = await _localMcpMarket();
     final candidates = <RemoteMcpEntry>[];
     for (final entry in await market.installedEntries()) {
@@ -532,8 +536,10 @@ final class OpenMuseMobileApplicationState
       );
       return;
     }
+    reportStep('准备本地编辑器');
     final appHtml = await market.mcpAppDocument(editor);
     if (!mounted) return;
+    reportStep('启动本地编辑器');
     await _navigatorKey.currentState?.push<void>(
       MaterialPageRoute(
         builder: (_) => RemoteMcpOfflineAppPage(

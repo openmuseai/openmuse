@@ -100,11 +100,7 @@ final class DesktopOutboundRelay {
     final upstreams = <int, WebSocket>{};
     try {
       socket.add(
-        jsonEncode({
-          'type': 'hello',
-          'protocol': 1,
-          'deviceId': deviceId,
-        }),
+        jsonEncode({'type': 'hello', 'protocol': 1, 'deviceId': deviceId}),
       );
       await for (final message in socket) {
         if (_stopped) return;
@@ -153,7 +149,11 @@ final class DesktopOutboundRelay {
         rawPath is! String ||
         !rawPath.startsWith('/') ||
         rawPath.contains('..')) {
-      _send(socket, {'type': 'error', 'id': id, 'code': 'UPSTREAM_UNAVAILABLE'});
+      _send(socket, {
+        'type': 'error',
+        'id': id,
+        'code': 'UPSTREAM_UNAVAILABLE',
+      });
       return;
     }
     final parsed = Uri.parse('http://127.0.0.1$rawPath');
@@ -192,7 +192,9 @@ final class DesktopOutboundRelay {
       final headers = <List<String>>[];
       response.headers.forEach((name, values) {
         final lower = name.toLowerCase();
-        if (lower == 'content-length' ||
+        if ((lower == 'content-length' &&
+                response.compressionState ==
+                    HttpClientResponseCompressionState.decompressed) ||
             lower == 'transfer-encoding' ||
             lower == 'content-encoding') {
           return;
@@ -237,7 +239,9 @@ final class DesktopOutboundRelay {
           offset = end;
         }
       }
-      stderr.writeln('OpenMuse relay: $rawPath end chunks=$chunks bytes=$bytes');
+      stderr.writeln(
+        'OpenMuse relay: $rawPath end chunks=$chunks bytes=$bytes',
+      );
       _send(socket, {'type': 'http.response.end', 'id': id});
     } catch (error) {
       stderr.writeln('OpenMuse desktop relay http: $error');
@@ -260,7 +264,11 @@ final class DesktopOutboundRelay {
         gateway == null ||
         rawPath is! String ||
         !rawPath.startsWith('/')) {
-      _send(socket, {'type': 'error', 'id': id, 'code': 'UPSTREAM_UNAVAILABLE'});
+      _send(socket, {
+        'type': 'error',
+        'id': id,
+        'code': 'UPSTREAM_UNAVAILABLE',
+      });
       return;
     }
     final parsed = Uri.parse('http://127.0.0.1$rawPath');

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -9,11 +10,17 @@ import '../remote_dsh_page.dart';
 /// Mobile adapter for the Desktop-owned opaque workspace mirror protocol.
 /// The paired grant is never passed into plugin HTML or JavaScript.
 final class MobileWorkspaceMirrorClient {
-  MobileWorkspaceMirrorClient(this.connection, {HttpClient? client})
-    : _client = client ?? HttpClient();
+  MobileWorkspaceMirrorClient(
+    this.connection, {
+    HttpClient? client,
+    this.idleTimeout = const Duration(seconds: 45),
+    this.totalTimeout = const Duration(minutes: 5),
+  }) : _client = client ?? HttpClient();
 
   final PairedDesktopConnection connection;
   final HttpClient _client;
+  final Duration idleTimeout;
+  final Duration totalTimeout;
 
   Uri get _origin {
     final target = resolveRemoteDshUri(connection.session);
@@ -86,7 +93,10 @@ final class MobileWorkspaceMirrorClient {
     return {'type': 'unsupported', 'mediaType': mediaType};
   }
 
-  Future<Map<String, Object?>> readResource(String resourceRef) async {
+  Future<Map<String, Object?>> readResource(
+    String resourceRef, {
+    void Function(String step, int received, int? total)? onProgress,
+  }) async {
     if (resourceRef.isEmpty || resourceRef.length > 128) {
       throw const FormatException('资源引用无效');
     }
@@ -98,7 +108,7 @@ final class MobileWorkspaceMirrorClient {
             'resourceRef': resourceRef,
           },
         );
-    final response = await _request(uri);
+    final response = await _request(uri, onProgress: onProgress);
     final mediaType = response.$1;
     final bytes = response.$2;
     if (bytes.length > 64 * 1024 * 1024) {
@@ -117,29 +127,65 @@ final class MobileWorkspaceMirrorClient {
     return Map<String, Object?>.from(value);
   }
 
-  Future<(String, Uint8List)> _request(Uri uri) async {
-    final request = await _client
-        .getUrl(uri)
-        .timeout(const Duration(seconds: 12));
-    request.headers.set(
-      HttpHeaders.cookieHeader,
-      'OpenMuse-Paired=${connection.grantRef}',
-    );
-    final response = await request.close().timeout(const Duration(seconds: 12));
-    final bytes = <int>[];
-    await for (final chunk in response.timeout(const Duration(seconds: 12))) {
-      bytes.addAll(chunk);
-      if (bytes.length > 64 * 1024 * 1024 + 4096) {
-        throw const FormatException('Desktop 响应过大');
+  Future<(String, Uint8List)> _request(
+    Uri uri, {
+    void Function(String step, int received, int? total)? onProgress,
+  }) async {
+    var step = '连接 Desktop';
+    HttpClientRequest? activeRequest;
+    final deadline = Timer(totalTimeout, () {
+      activeRequest?.abort(TimeoutException('读取文件总时间超限'));
+      _client.close(force: true);
+    });
+    try {
+      onProgress?.call(step, 0, null);
+      final request = activeRequest = await _client
+          .getUrl(uri)
+          .timeout(idleTimeout);
+      request.headers.set(
+        HttpHeaders.cookieHeader,
+        'OpenMuse-Paired=${connection.grantRef}',
+      );
+      step = '等待 Desktop 读取文件';
+      onProgress?.call(step, 0, null);
+      final response = await request.close().timeout(idleTimeout);
+      if (response.statusCode != HttpStatus.ok) {
+        final message = switch (response.statusCode) {
+          401 || 403 => 'Desktop 授权已失效，请返回工作台重新连接',
+          400 || 404 => '文件引用已失效，请刷新目录后重试',
+          502 || 503 || 504 => 'Desktop 中继连接不可用，请重连后重试',
+          _ => 'Desktop 请求失败：HTTP ${response.statusCode}',
+        };
+        throw StateError(message);
       }
+      step = '接收 Desktop 文件';
+      final total = response.contentLength >= 0 ? response.contentLength : null;
+      if (total != null && total > 64 * 1024 * 1024) {
+        throw const FormatException('Desktop 响应超过 64 MiB 限额');
+      }
+      final bytes = BytesBuilder(copy: false);
+      onProgress?.call(step, 0, total);
+      await for (final chunk in response.timeout(idleTimeout)) {
+        if (bytes.length + chunk.length > 64 * 1024 * 1024) {
+          throw const FormatException('Desktop 响应超过 64 MiB 限额');
+        }
+        bytes.add(chunk);
+        onProgress?.call(step, bytes.length, total);
+      }
+      return (
+        response.headers.contentType?.toString() ?? 'application/octet-stream',
+        bytes.takeBytes(),
+      );
+    } on TimeoutException {
+      activeRequest?.abort();
+      throw StateError('$step 超时，请检查网络后重试');
+    } on SocketException {
+      throw StateError('$step 连接中断，请重连 Desktop 后重试');
+    } on HttpException {
+      throw StateError('$step 传输中断，请重试');
+    } finally {
+      deadline.cancel();
     }
-    if (response.statusCode != HttpStatus.ok) {
-      throw StateError('Desktop 请求失败：HTTP ${response.statusCode}');
-    }
-    return (
-      response.headers.contentType?.toString() ?? 'application/octet-stream',
-      Uint8List.fromList(bytes),
-    );
   }
 
   void close() => _client.close(force: true);
