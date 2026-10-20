@@ -254,7 +254,7 @@ class MarketDiscoverView extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${filtered.length + visibleBuiltIns.length} 个',
+                      mcpSection == null ? '${filtered.length + visibleBuiltIns.length} 个' : '',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
@@ -263,7 +263,7 @@ class MarketDiscoverView extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 11),
-                if (filtered.isEmpty && visibleBuiltIns.isEmpty)
+                if (filtered.isEmpty && visibleBuiltIns.isEmpty && mcpSection == null)
                   Container(
                     key: const ValueKey('market-empty-category'),
                     padding: const EdgeInsets.all(26),
@@ -326,7 +326,7 @@ class MarketDiscoverView extends StatelessWidget {
                       ),
                     ),
                   ),
-                if (!mine && category == '精选' && mcpSection != null)
+                if (mcpSection != null)
                   mcpSection!,
                 for (final entry in filtered)
                   _MarketEntryTile(

@@ -293,21 +293,14 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
           onOpenBuiltIn: widget.onOpenBuiltIn,
           mcpSection: widget.registryProviders == null && widget.mcpRegistryOrigin == null
               ? null
-              : Card(
-                  child: ListTile(
-                    key: const ValueKey('mobile-mcp-online-market'),
-                    leading: const Icon(Icons.cloud_outlined),
-                    title: const Text('在线 MCP 插件'),
-                    subtitle: const Text('标准 MCP Registry 与远程工具'),
-                    onTap: () => Navigator.of(context).push<void>(
-                      MaterialPageRoute(
-                        builder: (_) => RemoteMcpMarketPage(
-                          origin: widget.mcpRegistryOrigin,
-                          providers: widget.registryProviders,
-                        ),
-                      ),
-                    ),
-                  ),
+              : RemoteMcpMarketPage(
+                  key: const ValueKey('mobile-mcp-online-market'),
+                  origin: widget.mcpRegistryOrigin,
+                  providers: widget.registryProviders,
+                  embedded: true,
+                  query: query,
+                  installedOnly: mine,
+                  visibleCategory: category,
                 ),
           desktopSection: widget.desktop == null
               ? const Padding(

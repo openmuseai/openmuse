@@ -573,7 +573,15 @@ final class RemoteMcpMarketPage extends StatefulWidget {
     this.pickFile,
     this.nativeMediaTypes = const {},
     this.openNativeFile,
+    this.embedded = false,
+    this.query = '',
+    this.installedOnly = false,
+    this.visibleCategory = '精选',
   });
+  final bool embedded;
+  final String query;
+  final bool installedOnly;
+  final String visibleCategory;
   final Uri? origin;
   final McpRegistryProviders? providers;
   final File? receiptFile;
@@ -652,7 +660,7 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
     final choice = await showDialog<String>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: const Text('MCP Registry 提供商'),
+        title: const Text('插件商店提供商'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -842,78 +850,127 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('在线 MCP 插件'),
-      actions: [
+  List<RemoteMcpEntry> get visibleEntries {
+    // Registry records do not declare product categories. Do not infer a
+    // category from the transport/runtime used by a plugin.
+    if (!{'精选', '全部', '已启用'}.contains(widget.visibleCategory)) return [];
+    final query = widget.query.trim().toLowerCase();
+    // Discovery shows the current published version. An installed, delisted
+    // version remains accessible in My plugins, with its source state visible.
+    return (entries ?? <RemoteMcpEntry>[]).where((entry) {
+      final local = installed.contains('${entry.name}@${entry.version}');
+      if (widget.installedOnly && !local) return false;
+      if (!widget.installedOnly && sourceDelisted(entry)) return false;
+      return query.isEmpty ||
+          '${entry.title} ${entry.description}'.toLowerCase().contains(query);
+    }).toList();
+  }
+
+  List<Widget> _catalog(BuildContext context) => [
+    Row(
+      children: [
+        Expanded(
+          child: TextButton.icon(
+            onPressed: widget.providers == null ? null : _configureProvider,
+            icon: const Icon(Icons.storefront_outlined, size: 18),
+            label: const Text('商店提供商'),
+          ),
+        ),
         IconButton(
           tooltip: '刷新市场',
           onPressed: _load,
           icon: const Icon(Icons.refresh),
         ),
-        if (widget.providers != null)
-          IconButton(
-            tooltip: '市场提供商',
-            onPressed: _configureProvider,
-            icon: const Icon(Icons.dns_outlined),
-          ),
       ],
     ),
-    body: entries == null && error == null
-        ? const Center(child: CircularProgressIndicator())
-        : ListView(
+    if (_activeOrigin == null)
+      const Padding(padding: EdgeInsets.all(16), child: Text('请选择插件商店提供商。')),
+    if (entries == null && error == null) const LinearProgressIndicator(),
+    if (error != null)
+      Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          '商店暂时无法刷新，已安装插件仍可使用。',
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+      ),
+    for (final entry in visibleEntries)
+      Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_activeOrigin == null)
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('请选择 MCP Registry 提供商。'),
+              const Padding(
+                padding: EdgeInsets.only(right: 14),
+                child: Icon(Icons.extension_outlined, size: 36),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      entry.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${entry.version}${sourceDelisted(entry) ? ' · 已下架 · 本机已安装' : ''}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (installed.contains('${entry.name}@${entry.version}') &&
+                        market?.hasOfflineUi(entry) == true)
+                      const Text('支持本机打开文件', style: TextStyle(fontSize: 12)),
+                  ],
                 ),
-              if (error != null)
-                Padding(
-                  padding: const EdgeInsets.all(16),
+              ),
+              if (busy == entry.name)
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(),
+                )
+              else
+                TextButton(
+                  onPressed:
+                      installed.contains('${entry.name}@${entry.version}')
+                      ? () => _use(entry)
+                      : () => _install(entry),
                   child: Text(
-                    error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
+                    installed.contains('${entry.name}@${entry.version}')
+                        ? '打开'
+                        : '安装',
                   ),
-                ),
-              for (final entry in entries ?? <RemoteMcpEntry>[])
-                Card(
-                  child: ListTile(
-                    title: Text(entry.title),
-                    subtitle: Text(
-                      '${entry.description}\n${entry.version}${sourceDelisted(entry) ? ' · 已下架' : ''}',
-                    ),
-                    isThreeLine: true,
-                    trailing: busy == entry.name
-                        ? const CircularProgressIndicator()
-                        : TextButton(
-                            onPressed:
-                                installed.contains(
-                                  '${entry.name}@${entry.version}',
-                                )
-                                ? () => _use(entry)
-                                : () => _install(entry),
-                            child: Text(
-                              installed.contains(
-                                    '${entry.name}@${entry.version}',
-                                  )
-                                  ? '打开 / 使用'
-                                  : '安装',
-                            ),
-                          ),
-                  ),
-                ),
-              if (output != null)
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SelectableText(output!),
                 ),
             ],
           ),
-  );
+        ),
+      ),
+    if (output != null)
+      Padding(
+        padding: const EdgeInsets.all(16),
+        child: SelectableText(output!),
+      ),
+  ];
+
+  @override
+  Widget build(BuildContext context) => widget.embedded
+      ? Column(mainAxisSize: MainAxisSize.min, children: _catalog(context))
+      : Scaffold(
+          appBar: AppBar(title: const Text('插件商店')),
+          body: ListView(children: _catalog(context)),
+        );
 
   bool sourceDelisted(RemoteMcpEntry entry) =>
       market?.catalogFresh == true &&
