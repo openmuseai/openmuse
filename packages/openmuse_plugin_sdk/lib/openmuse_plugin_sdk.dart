@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'src/authentication.dart';
 
 export 'src/manifest_v2.dart';
+export 'src/mcp_app_document.dart';
 export 'src/authentication.dart';
 export 'src/mobile_workbench.dart';
 

@@ -132,6 +132,7 @@ final class McpBundleRuntime {
         includeParentEnvironment: false,
         environment: const {'PATH': '/usr/bin:/bin'},
         workingDirectory: bundleDirectory.path,
+        maxIncomingMessageBytes: 128 * 1024 * 1024,
       ),
     );
     try {
@@ -155,6 +156,26 @@ final class McpBundleRuntime {
               : null,
         },
     ];
+  });
+
+  /// Reads a standard MCP Apps UI resource. The View implements its own business
+  /// logic; the Host supplies the selected file as standard tool arguments.
+  Future<String?> uiDocument(String toolName) => _withClient((client) async {
+    final tools = await client.listTools();
+    final tool = tools.tools.where((item) => item.name == toolName).firstOrNull;
+    final ui = tool?.meta?['ui'];
+    if (ui is! Map ||
+        ui['resourceUri'] is! String ||
+        !(ui['resourceUri'] as String).startsWith('ui://')) {
+      return null;
+    }
+    final resource = await client.readResource(
+      ReadResourceRequest(uri: ui['resourceUri'] as String),
+    );
+    for (final content in resource.contents.whereType<TextResourceContents>()) {
+      if (content.mimeType == 'text/html;profile=mcp-app') return content.text;
+    }
+    return null;
   });
 
   /// Uses MCP Apps tool metadata and the standard resource_link result.

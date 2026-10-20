@@ -14,12 +14,12 @@ void main() {
     name: 'io.openmuse/genoffice-pptx',
     title: 'GenOffice PPTX',
     description: '',
-    version: '0.3.1',
+    version: '0.4.0',
     packageUri: Uri.parse('https://example.com/genoffice.mcpb'),
     sha256: '0' * 64,
   );
 
-  test('inspected Workspace PPTX routes to installed native viewer', () async {
+  test('inspected Workspace PPTX routes to installed standard MCP App', () async {
     final plugin = OpenMuseMcpFilePlugin(
       entry: entry,
       runtime: McpBundleRuntime(
@@ -30,7 +30,6 @@ void main() {
       mediaType:
           'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       extension: 'pptx',
-      nativePptxViewer: true,
     );
     final registry = OpenMusePluginRegistry(
       context: OpenMusePluginContext(executeHostCommand: (_, _) async => null),
@@ -48,8 +47,6 @@ void main() {
       registry.editorCandidates(resource).single.editor.id,
       'io.openmuse/genoffice-pptx.file',
     );
-
-    expect(plugin.nativePptxViewer, isTrue);
   });
 
   test('a renamed non-ZIP file cannot claim the PPTX media type', () async {

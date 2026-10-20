@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:appflowy_editor_native_plugin/appflowy_editor_native_plugin.dart';
-import 'package:genoffice_pptx_flutter/genoffice_pptx_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -19,7 +18,6 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
     required this.mediaType,
     required this.extension,
     this.nativeFlutterEditor = false,
-    this.nativePptxViewer = false,
   }) : descriptor = OpenMusePluginDescriptor(
          id: entry.name,
          name: entry.title,
@@ -42,7 +40,6 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
   final String mediaType;
   final String extension;
   final bool nativeFlutterEditor;
-  final bool nativePptxViewer;
 
   @override
   final OpenMusePluginDescriptor descriptor;
@@ -64,65 +61,12 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
         filePath: resource.uri.toFilePath(),
       );
     }
-    if (nativePptxViewer) {
-      final file = File(resource.uri.toFilePath());
-      return FutureBuilder<Uint8List>(
-        future: file.readAsBytes(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('PPTX 读取失败：${snapshot.error}'));
-          }
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return GenOfficePptxViewer(
-            key: ValueKey('genoffice-${resource.uri}'),
-            bytes: snapshot.data!,
-            title: resource.displayName,
-          );
-        },
-      );
-    }
-    return FutureBuilder<Map<String, Object?>>(
-      future: runtime.callWithFile(
-        toolName: toolName,
-        filePath: resource.uri.toFilePath(),
-      ),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(child: Text('MCP 工具执行失败：${snapshot.error}'));
-        }
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final data = snapshot.data!;
-        final link = Uri.tryParse(
-          data['uri'] is String ? data['uri'] as String : '',
-        );
-        if (link != null &&
-            link.hasScheme &&
-            (link.scheme == 'https' ||
-                (link.scheme == 'http' &&
-                    {'localhost', '127.0.0.1'}.contains(link.host)))) {
-          return AppKitView(
-            key: ValueKey('mcp-file-${resource.uri}'),
-            viewType: 'com.openmuse.mcp/app-view',
-            creationParams: {'url': link.toString()},
-            creationParamsCodec: const StandardMessageCodec(),
-          );
-        }
-        return ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Text(
-              descriptor.name,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            SelectableText(const JsonEncoder.withIndent('  ').convert(data)),
-          ],
-        );
-      },
+    return _McpFileEditor(
+      key: ValueKey('mcp-file-${resource.uri}'),
+      runtime: runtime,
+      toolName: toolName,
+      resource: resource,
+      mediaType: mediaType,
     );
   }
 
@@ -163,11 +107,78 @@ Future<OpenMuseMcpFilePlugin?> discoverMcpFilePlugin({
       nativeFlutterEditor:
           entry.name == 'io.openmuse/appflowy-editor' &&
           mediaType == 'text/markdown',
-      nativePptxViewer:
-          entry.name == 'io.openmuse/genoffice-pptx' &&
-          mediaType ==
-              'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     );
   }
   return null;
+}
+
+final class _McpFileEditor extends StatefulWidget {
+  const _McpFileEditor({
+    super.key,
+    required this.runtime,
+    required this.toolName,
+    required this.resource,
+    required this.mediaType,
+  });
+  final McpBundleRuntime runtime;
+  final String toolName;
+  final OpenMuseResource resource;
+  final String mediaType;
+  @override
+  State<_McpFileEditor> createState() => _McpFileEditorState();
+}
+
+final class _McpFileEditorState extends State<_McpFileEditor> {
+  late final Future<Map<String, Object?>> _view = _load();
+  Future<Map<String, Object?>> _load() async {
+    final html = await widget.runtime.uiDocument(widget.toolName);
+    if (html == null) {
+      return widget.runtime.callWithFile(
+        toolName: widget.toolName,
+        filePath: widget.resource.uri.toFilePath(),
+      );
+    }
+    final file = File(widget.resource.uri.toFilePath());
+    if (await file.length() > 64 * 1024 * 1024) {
+      throw const FormatException('File exceeds 64 MiB');
+    }
+    return {
+      'html': buildMcpAppHostDocument(
+        appHtml: html,
+        arguments: {
+          'content': base64Encode(await file.readAsBytes()),
+          'name': widget.resource.displayName,
+        },
+        platform: 'desktop',
+      ),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<Map<String, Object?>>(
+    future: _view,
+    builder: (context, snapshot) {
+      if (snapshot.hasError) {
+        return Center(child: SelectableText('插件打开失败：${snapshot.error}'));
+      }
+      if (!snapshot.hasData) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final data = snapshot.data!;
+      if (data['html'] is String || data['uri'] is String) {
+        return AppKitView(
+          viewType: 'com.openmuse.mcp/app-view',
+          creationParams: {
+            if (data['html'] is String)
+              'html': data['html']
+            else
+              'url': data['uri'],
+            'filePath': widget.resource.uri.toFilePath(),
+          },
+          creationParamsCodec: const StandardMessageCodec(),
+        );
+      }
+      return SelectableText(const JsonEncoder.withIndent('  ').convert(data));
+    },
+  );
 }

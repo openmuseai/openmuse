@@ -107,7 +107,8 @@ Future<Widget> bootOpenMuseHost() async {
       providers.selected == null ? null : makeMarket(providers.selected!);
   final receiptMarket = makeMarket(Uri());
   Future<void> registerMcp(McpMarketEntry entry) async {
-    if (registry.plugin(entry.name) != null) return;
+    final existing = registry.plugin(entry.name);
+    if (existing?.descriptor.version == entry.version) return;
     final node = resolveMarketDshRuntime(
       executablePath: Platform.resolvedExecutable,
       environment: Platform.environment,
@@ -117,7 +118,10 @@ Future<Widget> bootOpenMuseHost() async {
       nodeExecutable: node,
     );
     final plugin = await discoverMcpFilePlugin(entry: entry, runtime: runtime);
-    if (plugin != null) registry.install(plugin);
+    if (plugin != null) {
+      if (existing != null) await registry.uninstall(entry.name);
+      registry.install(plugin);
+    }
   }
 
   Future<Map<String, Object?>> runMarketAction(

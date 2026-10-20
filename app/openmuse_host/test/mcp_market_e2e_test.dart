@@ -43,12 +43,15 @@ void main() {
           runtime: runtime,
         );
         expect(plugin, isNotNull);
-        expect(plugin!.nativePptxViewer, isTrue);
+        expect(
+          await runtime.uiDocument('inspect_pptx'),
+          contains('GenOffice PPTX'),
+        );
         final registry = OpenMusePluginRegistry(
           context: OpenMusePluginContext(
             executeHostCommand: (_, _) async => null,
           ),
-        )..install(plugin);
+        )..install(plugin!);
         final sample = File(samplePath).absolute;
         final resource = await inspectLocalResource(
           OpenMuseResource(uri: sample.uri, displayName: 'sample.pptx'),
