@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:genoffice_pptx_flutter/genoffice_pptx_flutter.dart';
 import 'package:openmuse_app_update/openmuse_app_update.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
@@ -13,6 +14,9 @@ import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.da
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:pub_semver/pub_semver.dart';
+
+final _pptxFixture = File('test_assets/genoffice_standard_business.pptx')
+    .readAsBytesSync();
 
 void main() {
   testWidgets('Mobile startup shows a newer store release before work', (
@@ -346,8 +350,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Deck.pptx'));
     await tester.pumpAndSettle();
-    expect(find.text('PPTX · 只读兼容视图'), findsOneWidget);
-    expect(find.textContaining('Slide 1'), findsOneWidget);
+    expect(find.byType(GenOfficePptxViewer), findsOneWidget);
+    expect(find.byKey(const ValueKey('pptx-page-counter')), findsOneWidget);
+    expect(find.textContaining('Q3 Business Review'), findsOneWidget);
     expect(find.byIcon(Icons.save), findsNothing);
   });
 
@@ -395,7 +400,7 @@ void main() {
     expect(tester.widget<ListTile>(resource).enabled, isTrue);
     await tester.tap(find.text('Deck.pptx'));
     await tester.pumpAndSettle();
-    expect(find.text('PPTX · 只读兼容视图'), findsOneWidget);
+    expect(find.byType(GenOfficePptxViewer), findsOneWidget);
   });
 
   testWidgets(
@@ -601,11 +606,11 @@ final class _FakeCloudService
         writable: false,
       ),
     if (pptx)
-      const CloudResourceRecord(
+      CloudResourceRecord(
         resourceRef: 'resource:pptx',
         title: 'Deck.pptx',
         revision: 'pptx-r1',
-        size: 3,
+        size: _pptxFixture.length,
         mediaType:
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         writable: false,
@@ -648,7 +653,7 @@ final class _FakeCloudService
     audience: audience,
     generation: generation,
     expiresAtMs: DateTime.now().millisecondsSinceEpoch + 60000,
-    size: 3,
+    size: resourceRef == 'resource:pptx' ? _pptxFixture.length : 3,
     mediaType: switch (resourceRef) {
       'resource:xlsx' =>
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -676,7 +681,10 @@ final class _FakeCloudService
 
   @override
   Future<List<int>> read(ResourceHandle handle, int start, int endExclusive) =>
-      Future.value(const [1, 2, 3].sublist(start, endExclusive));
+      Future.value((handle.resourceRef == 'resource:pptx'
+              ? _pptxFixture
+              : const [1, 2, 3])
+          .sublist(start, endExclusive));
 
   @override
   Future<OfficeResourceCommitReceipt> commit({

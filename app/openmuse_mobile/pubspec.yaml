@@ -80,6 +80,8 @@ dependencies:
   webview_flutter: ^4.13.0
 
 dev_dependencies:
+  genoffice_pptx_flutter:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/genoffice-pptx/flutter_renderer
   flutter_test:
     sdk: flutter
   integration_test:
@@ -98,6 +100,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  config:
+    enable-swift-package-manager: false
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

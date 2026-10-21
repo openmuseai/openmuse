@@ -11,6 +11,7 @@ final class OfficeViewerScreen extends StatefulWidget {
     required this.ranges,
     required this.generation,
     required this.nowMs,
+    this.slidesBuilder,
   });
 
   final String title;
@@ -20,6 +21,7 @@ final class OfficeViewerScreen extends StatefulWidget {
   final ResourceRangePort ranges;
   final int generation;
   final int Function() nowMs;
+  final Widget Function(BuildContext, OfficeDocumentSession)? slidesBuilder;
 
   @override
   State<OfficeViewerScreen> createState() => _OfficeViewerScreenState();
@@ -50,6 +52,9 @@ final class _OfficeViewerScreenState extends State<OfficeViewerScreen> {
         final session = snapshot.data;
         if (session == null) {
           return const Center(child: CircularProgressIndicator());
+        }
+        if (widget.format == OfficeFormat.slides && widget.slidesBuilder != null) {
+          return widget.slidesBuilder!(context, session);
         }
         return ListView(
           padding: const EdgeInsets.all(16),
