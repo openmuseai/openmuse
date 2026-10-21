@@ -65,6 +65,7 @@ final class McpAppsEnvironment {
       'platform': Platform.operatingSystem,
       'profiles': [
         'openmuse-capabilities/1',
+        'openmuse-resource-extensions/1',
         'mcpb/0.3',
         'mcp-apps/2026-01-26',
       ],

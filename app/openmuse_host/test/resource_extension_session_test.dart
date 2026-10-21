@@ -30,6 +30,55 @@ class Contributor implements OpenMuseToolContributor {
 
 void main() {
   test(
+    'resource extension can call only tools declared by its immutable package',
+    () async {
+      final broker = ResourceAgentBroker()..activeUri = 'resource://test';
+      var calls = 0;
+      broker.register(
+        ResourceAppSession(
+          uri: 'resource://test',
+          title: 'Test',
+          request: (method, params) async {
+            if (method == 'tools/list') {
+              return {
+                'tools': [
+                  {'name': 'read_example'},
+                  {'name': 'write_example'},
+                ],
+              };
+            }
+            calls++;
+            return {'content': []};
+          },
+        ),
+      );
+      final extension = ResourceExtensionSession(
+        caller: 'test',
+        resourceUri: 'resource://test',
+        broker: broker,
+        contributors: () => [],
+        approve: (_, _) async => false,
+        isCurrent: () async => true,
+        resourceTools: {'read_example'},
+      );
+      Future<Map<String, Object?>> invoke(String name) =>
+          extension.dispatch('tools/call', {
+            'name': 'call_resource_tool',
+            'arguments': {
+              'uri': 'resource://test',
+              'name': name,
+              'arguments': {},
+            },
+          });
+      await invoke('read_example');
+      expect(calls, 1);
+      await expectLater(invoke('write_example'), throwsStateError);
+      expect(calls, 1);
+      await extension.close();
+      broker.dispose();
+    },
+  );
+  test(
     'extension grants stay within caller/resource/package lifetime',
     () async {
       final broker = ResourceAgentBroker()..activeUri = 'resource://one';

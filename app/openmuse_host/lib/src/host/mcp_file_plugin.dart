@@ -234,6 +234,7 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
           approve: widget.approve ?? (_, _) async => false,
           isCurrent: e.isCurrent,
           reveal: widget.reveal,
+          resourceTools: e.resourceTools,
           serverTools: e.tools,
           serverCall: e.invoke,
         );

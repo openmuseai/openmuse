@@ -17,7 +17,9 @@ final class McpResourceExtension {
     this.isCurrent,
     this.tools,
     this.invoke,
+    this.resourceTools,
   );
+  final Set<String> resourceTools;
   final List<Map<String, Object?>> tools;
   final Future<Map<String, Object?>> Function(String, Map<String, Object?>)
   invoke;
@@ -145,6 +147,7 @@ final class McpResourceExtensions extends ChangeNotifier {
                     .map((t) => t.toJson())
                     .toList(),
                 runtime.callTool,
+                (item['resourceTools'] as List? ?? []).cast<String>().toSet(),
               ),
               types: types,
             ));
@@ -170,10 +173,12 @@ final class ResourceExtensionSession {
     required this.approve,
     required this.isCurrent,
     this.reveal,
+    this.resourceTools = const {},
     this.serverTools = const [],
     this.serverCall,
   });
   final Future<void> Function(String)? reveal;
+  final Set<String> resourceTools;
   final List<Map<String, Object?>> serverTools;
   final Future<Map<String, Object?>> Function(String, Map<String, Object?>)?
   serverCall;
@@ -274,7 +279,7 @@ final class ResourceExtensionSession {
       if (!_grants.contains(grant)) {
         if (!await approve(
           '允许插件协作',
-          '当前文档 → ${target.plugin is OpenMusePlugin ? (target.plugin as OpenMusePlugin).descriptor.name : target.id}\n生成内容会交给该插件配置的模型。关闭或切换文档后停止本次调用。',
+          '当前文档 → ${target.plugin is OpenMusePlugin ? (target.plugin as OpenMusePlugin).descriptor.name : target.id}\n按该插件原有的权限设置处理。关闭或切换当前文档后，停止本次调用。',
         )) {
           throw StateError('PERMISSION_DENIED');
         }
@@ -298,6 +303,9 @@ final class ResourceExtensionSession {
         return serverCall!(name as String, args);
       }
       throw StateError('TOOL_UNAVAILABLE');
+    }
+    if (name == 'call_resource_tool' && !resourceTools.contains(args['name'])) {
+      throw StateError('RESOURCE_TOOL_NOT_GRANTED');
     }
     return broker.dispatch(method, params);
   }
