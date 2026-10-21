@@ -242,6 +242,7 @@ final class PairedDesktopGateway {
         grant == null ||
         promptAt == null ||
         DateTime.now().difference(promptAt) > const Duration(minutes: 10) ||
+        grant.accountRef != currentAccountRef() ||
         grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
       return false;
     }
@@ -277,6 +278,9 @@ final class PairedDesktopGateway {
     final server = _server;
     if (server == null) {
       throw StateError('Paired Desktop gateway is not running.');
+    }
+    if (currentAccountRef() != accountRef) {
+      throw StateError('Desktop account does not match operator grant.');
     }
     final grantRef = _randomHex(32);
     _grants[grantRef] = _DesktopGrant(
@@ -1161,12 +1165,16 @@ final class PairedDesktopGateway {
   _DesktopGrant? _grantFromInitialPath(String path) {
     final segments = Uri(path: path).pathSegments;
     if (segments.length != 2 || segments.first != 'u') return null;
-    return _grants[segments.last];
+    final grant = _grants[segments.last];
+    return grant?.accountRef == currentAccountRef() ? grant : null;
   }
 
   _DesktopGrant? _grantFromCookie(List<Cookie> cookies) {
     for (final cookie in cookies) {
-      if (cookie.name == 'OpenMuse-Paired') return _grants[cookie.value];
+      if (cookie.name == 'OpenMuse-Paired') {
+        final grant = _grants[cookie.value];
+        return grant?.accountRef == currentAccountRef() ? grant : null;
+      }
     }
     return null;
   }

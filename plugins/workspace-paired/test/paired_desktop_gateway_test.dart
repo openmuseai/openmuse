@@ -7,6 +7,73 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 void main() {
+  test('account change invalidates paired proxy and workspace access', () async {
+    final upstream = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    upstream.listen((request) async {
+      await request.drain<void>();
+      request.response.write('ok');
+      await request.response.close();
+    });
+    var account = 'account-1';
+    final gateway = PairedDesktopGateway(
+      currentAccountRef: () => account,
+      validateToken: (_) async => 'account-1',
+      dshEndpoint: () async => Uri.parse('http://127.0.0.1:${upstream.port}/'),
+      workspaceRef: 'openmuse.local.default',
+      workspaceTitle: 'Workspace',
+      port: 0,
+      workspaceMirror: (_) async => {'mounts': <Object>[]},
+      remoteSurface: (_) async => {'ok': true},
+    );
+    await gateway.start();
+    final pair = PairedDesktopClient(
+      origin: gateway.origin!,
+      accessToken: () async => 'token',
+      deviceRef: 'mobile-1',
+      allowInsecureLoopback: true,
+    );
+    final client = HttpClient();
+    try {
+      final connection = await pair.connectSameAccount(
+        targetDeviceRef: 'desktop.local',
+      );
+      account = 'account-2';
+      Future<int> get(String path, {bool cookie = true}) async {
+        final request = await client.getUrl(gateway.origin!.resolve(path));
+        if (cookie)
+          request.cookies.add(Cookie('OpenMuse-Paired', connection.grantRef));
+        final response = await request.close();
+        await response.drain<void>();
+        return response.statusCode;
+      }
+
+      expect(
+        await get('/u/${connection.grantRef}', cookie: false),
+        HttpStatus.unauthorized,
+      );
+      expect(await get('/api/session.history'), HttpStatus.unauthorized);
+      expect(
+        await get(
+          '/openmuse/workspace-mirror/v1?operation=mounts&workspaceRef=openmuse.local.default',
+        ),
+        HttpStatus.unauthorized,
+      );
+      final request = await client.postUrl(
+        gateway.origin!.resolve('/openmuse/remote-surface/v1'),
+      );
+      request.cookies.add(Cookie('OpenMuse-Paired', connection.grantRef));
+      request.write('{"operation":"discover","body":{}}');
+      final response = await request.close();
+      await response.drain<void>();
+      expect(response.statusCode, HttpStatus.unauthorized);
+    } finally {
+      client.close(force: true);
+      pair.close();
+      await gateway.stop();
+      await upstream.close(force: true);
+    }
+  });
+
   test(
     'same-account device opens the real Desktop DSH without a code',
     () async {
