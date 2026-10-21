@@ -58,13 +58,13 @@ void main() {
       );
       await install(
         'genoffice-pptx',
-        '0.6.0',
-        'plugins/genoffice-pptx/dist/genoffice-pptx-0.6.0.mcpb',
+        '0.6.1',
+        'plugins/genoffice-pptx/dist/genoffice-pptx-0.6.1.mcpb',
       );
       await install(
         'pdf-reader',
-        '0.1.0',
-        'plugins/pdf-reader/dist/pdf-reader-0.1.0.mcpb',
+        '0.1.1',
+        'plugins/pdf-reader/dist/pdf-reader-0.1.1.mcpb',
       );
       final environment = McpAppsEnvironment(
         market: market,
@@ -166,6 +166,34 @@ void main() {
               );
               final providers = await environment.providers();
               final results = <String, Map<String, Object?>>{};
+              final gateway = McpCapabilityGateway(
+                describeHost: () => environment.identity,
+                listProviders: environment.providers,
+                chooseResource: (title, mime) async {
+                  final slides = mime.contains('presentationml');
+                  final fixture = File(
+                    slides
+                        ? Platform.environment['OPENMUSE_TEST_PPTX'] ??
+                              p.join(
+                                ecosystem,
+                                'plugins/genoffice-pptx/dist/sample.pptx',
+                              )
+                        : p.join(
+                            ecosystem,
+                            'plugins/pdf-reader/fixtures/quarterly-brief.pdf',
+                          ),
+                  );
+                  return GrantedResource(
+                    title: p.basename(fixture.path),
+                    mediaType: mime,
+                    bytes: await fixture.readAsBytes(),
+                  );
+                },
+                approve: (_, _) async => true,
+                openDevelopment: (_) async => {},
+                readDevelopment: (_) async => {},
+                scope: () => account,
+              );
               try {
                 for (final provider in providers) {
                   final contract = provider.contracts.single,
@@ -173,18 +201,29 @@ void main() {
                           (contract['operations'] as Map)['readSnapshot']
                               as String;
                   final isSlides = provider.id.endsWith('genoffice-pptx');
-                  final fixture = File(
-                    p.join(
-                      ecosystem,
-                      isSlides
-                          ? 'plugins/genoffice-pptx/dist/sample.pptx'
-                          : 'plugins/pdf-reader/fixtures/quarterly-brief.pdf',
-                    ),
-                  );
-                  final result = await provider.invoke(tool, {
-                    'content': base64Encode(await fixture.readAsBytes()),
-                    'name': 'TCK fixture',
+                  final resource = await gateway.call('resources_choose', {
+                    'title': 'TCK fixture',
+                    'mediaType': contract['mediaType'],
                   });
+                  final binding = await gateway.call('capabilities_bind', {
+                    'provider': provider.id,
+                    'contract': contract['id'],
+                    'resourceRef': resource['resourceRef'],
+                    'tools': [tool],
+                  });
+                  final Map<String, Object?> result;
+                  try {
+                    result = await gateway.call('capabilities_call', {
+                      'binding': binding['binding'],
+                      'tool': tool,
+                      'arguments': {},
+                    });
+                  } on JsonSchemaValidationException catch (error) {
+                    // Schema diagnostics contain no resource values.
+                    // ignore: avoid_print
+                    print('${provider.id}: ${error.message} at ${error.path}');
+                    rethrow;
+                  }
                   final output = Map<String, Object?>.from(
                     result['structuredContent'] as Map,
                   );
@@ -217,6 +256,7 @@ void main() {
                 );
                 expect(recorded.isError, isFalse);
               } finally {
+                await gateway.close();
                 for (final provider in providers) {
                   await provider.close?.call();
                 }
@@ -262,7 +302,10 @@ void main() {
         var result = await run(['search', 'pptx']);
         expect(result.exitCode, 0, reason: '${result.stderr}');
         expect('${result.stdout}', contains('genoffice-pptx'));
-        expect('${result.stdout}', contains('contracts/genoffice/slides-read/v1'));
+        expect(
+          '${result.stdout}',
+          contains('contracts/genoffice/slides-read/v1'),
+        );
         result = await run([
           'init',
           '--name',
