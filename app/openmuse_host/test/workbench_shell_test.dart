@@ -869,7 +869,7 @@ void main() {
         skipOffstage: false,
       );
       final state = tester.state(console);
-      await tester.tap(find.byKey(const ValueKey('cli-bottom-collapse')));
+      await tester.tap(find.byKey(const ValueKey('cli-bottom-collapse')).first);
       await tester.pumpAndSettle();
       expect(console, findsOneWidget);
       expect(tester.state(console), same(state));
