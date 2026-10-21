@@ -669,6 +669,22 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
         debugPrint(
           'MCP Apps ${request['method']} failed: ${error.runtimeType}\n$stack',
         );
+        try {
+          final log = File(
+            p.join(
+              widget.environment.market.installRoot.parent.path,
+              'mcp-apps-diagnostic.log',
+            ),
+          );
+          final append = await log.exists() && await log.length() < 128 * 1024;
+          await log.writeAsString(
+            '${DateTime.now().toUtc().toIso8601String()} '
+            '${request['method']} ${error.runtimeType}\n$stack\n',
+            mode: append ? FileMode.append : FileMode.write,
+          );
+        } catch (_) {
+          // Diagnostic storage must never alter the protocol response.
+        }
         response.remove('result');
         response['error'] = {
           'code': -32602,
