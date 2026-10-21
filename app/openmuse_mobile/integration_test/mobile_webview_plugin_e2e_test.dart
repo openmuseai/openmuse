@@ -1,10 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_mobile_plugin_market/openmuse_mobile_plugin_market.dart';
+import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
-import 'package:openmuse_mobile/mobile_plugin_detail_page.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +41,74 @@ void main() {
     final url = await controller!.currentUrl();
     expect(url, isNot(contains('example.com')));
   });
+
+  testWidgets(
+    'market WebView bundle renders, interacts, and follows Host theme',
+    (tester) async {
+      final plugin = await tester.runAsync(() async {
+        final entry = (await loadBundledMobileMarket()).singleWhere(
+          (item) => item.bundle == 'task-board.json',
+        );
+        final bundle = MobilePluginBundle.fromJson(
+          Map<String, Object?>.from(
+            jsonDecode(utf8.decode(await loadBundledMobileArtifact(entry)))
+                as Map,
+          ),
+        );
+        return OpenMuseWebViewInstalledPlugin(bundle, entry.name);
+      });
+      expect(plugin, isNotNull);
+      WebViewController? controller;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(brightness: Brightness.dark),
+          home: MobilePluginDetailPage(
+            plugin: plugin!,
+            contribution: plugin,
+            onControllerReady: (value) => controller = value,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+      expect(controller, isNotNull);
+      await Future<void>.delayed(const Duration(seconds: 2));
+      expect(
+        (await controller!.runJavaScriptReturningResult(
+          'document.documentElement.dataset.openmuseTheme',
+        )).toString(),
+        contains('dark'),
+      );
+      await controller!.runJavaScript(
+        "document.getElementById('task').value='设备端新任务';"
+        "document.getElementById('add').click()",
+      );
+      final body = await controller!.runJavaScriptReturningResult(
+        'document.body.innerText',
+      );
+      expect(body.toString(), contains('设备端新任务'));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(brightness: Brightness.light),
+          home: MobilePluginDetailPage(
+            plugin: plugin,
+            contribution: plugin,
+            onControllerReady: (value) => controller = value,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+      expect(
+        (await controller!.runJavaScriptReturningResult(
+          'document.documentElement.dataset.openmuseTheme',
+        )).toString(),
+        contains('light'),
+      );
+      await expectLater(
+        plugin.handleMobileDetailRequest('workspace.read', {}),
+        throwsFormatException,
+      );
+    },
+  );
 }
 
 final class _ProbePlugin extends ChangeNotifier

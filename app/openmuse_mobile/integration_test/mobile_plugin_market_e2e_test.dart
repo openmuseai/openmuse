@@ -5,11 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:openmuse_mobile_plugin_market/openmuse_mobile_plugin_market.dart';
 import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Mobile market installs and runs A2UI QuickJS task board', (
+  testWidgets('Mobile market installs and opens WebView task board', (
     tester,
   ) async {
     final directory = await Directory.systemTemp.createTemp(
@@ -49,12 +50,28 @@ void main() {
       EnginePhase.sendSemanticsUpdate,
       const Duration(seconds: 90),
     );
-    expect(find.text('任务看板'), findsWidgets);
-    expect(find.textContaining('梳理 Mobile 插件协议'), findsOneWidget);
-    await tester.enterText(find.byType(TextField).first, '真机交互已通过');
-    await tester.tap(find.text('添加任务'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('真机交互已通过'), findsOneWidget);
+    final controller = tester
+        .widget<WebViewWidget>(find.byType(WebViewWidget))
+        .platform
+        .params
+        .controller;
+    await Future<void>.delayed(const Duration(seconds: 2));
+    expect(
+      (await controller.runJavaScriptReturningResult(
+        'document.body.innerText',
+      )).toString(),
+      contains('梳理 Mobile 插件协议'),
+    );
+    await controller.runJavaScript(
+      "document.getElementById('task').value='设备端新任务';"
+      "document.getElementById('add').click()",
+    );
+    expect(
+      (await controller.runJavaScriptReturningResult(
+        'document.body.innerText',
+      )).toString(),
+      contains('设备端新任务'),
+    );
     await tester.pageBack();
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('preview-$id')));
@@ -63,7 +80,7 @@ void main() {
       EnginePhase.sendSemanticsUpdate,
       const Duration(seconds: 90),
     );
-    expect(find.text('任务看板'), findsWidgets);
+    expect(find.byType(WebViewWidget), findsOneWidget);
     expect(
       find.textContaining('Should not initialize flutter_rust_bridge twice'),
       findsNothing,

@@ -397,6 +397,10 @@ final class OpenMuseMobileApplicationState
           .whenComplete(() {
             _scheduledTasks.dispose();
             _workspaceFiles.dispose();
+            for (final id in _registeredMobilePlugins) {
+              final plugin = _plugins.plugin(id);
+              if (plugin is OpenMuseWebViewInstalledPlugin) plugin.dispose();
+            }
             _plugins.dispose();
           }),
     );
@@ -416,13 +420,31 @@ final class OpenMuseMobileApplicationState
           for (final stale in _registeredMobilePlugins.difference(
             current.keys.toSet(),
           )) {
+            final removed = _plugins.plugin(stale);
             await _plugins.uninstall(stale);
+            if (removed is OpenMuseWebViewInstalledPlugin) removed.dispose();
             _registeredMobilePlugins.remove(stale);
           }
           for (final bundle in current.values) {
+            final existing = _plugins.plugin(bundle.id);
+            if (existing != null &&
+                (existing.descriptor.version != bundle.version ||
+                    (bundle.isWebView !=
+                        (existing is OpenMuseWebViewInstalledPlugin)))) {
+              await _plugins.uninstall(bundle.id);
+              if (existing is OpenMuseWebViewInstalledPlugin) {
+                existing.dispose();
+              }
+              _registeredMobilePlugins.remove(bundle.id);
+            }
             if (!_registeredMobilePlugins.contains(bundle.id)) {
               _plugins.install(
-                OpenMuseQuickJsInstalledPlugin(bundle, bundle.id),
+                bundle.isWebView
+                    ? OpenMuseWebViewInstalledPlugin(
+                        bundle,
+                        bundle.manifest.name,
+                      )
+                    : OpenMuseQuickJsInstalledPlugin(bundle, bundle.id),
               );
               _registeredMobilePlugins.add(bundle.id);
             }
