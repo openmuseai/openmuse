@@ -362,6 +362,7 @@ final class DshMarketInstaller {
     p.join(executableDir, cliTail),
   ];
   final nodeCandidates = [
+    p.normalize(p.join(executableDir, '../../dsh/node/bin/node')),
     p.join(bundleParent, 'Resources', 'openmuse', 'dsh', 'node', 'bin', 'node'),
     p.join(executableDir, 'openmuse', 'dsh', 'node', 'node.exe'),
     p.join(executableDir, 'openmuse', 'dsh', 'node', 'bin', 'node'),

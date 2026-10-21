@@ -7,6 +7,8 @@ import 'plugin_command_registry.dart';
 import 'plugin_cli_broker.dart';
 import 'plugin_package.dart';
 import 'plugin_market.dart';
+import 'mcp_market.dart';
+import 'mcp_bin_registry.dart';
 import 'workspace_mount_store.dart';
 
 const openMuseDataDirectoryName = 'com.openmuseai.office/OpenMuse';
@@ -19,12 +21,14 @@ Future<int> runOpenMuseCli(List<String> args) async {
       stdout.writeln(_openMuseUsage);
       return args.isEmpty ? 64 : 0;
     }
+    final separator = args.contains('mcp-bin') ? args.indexOf('--') : -1;
+    final hostArgs = separator < 0 ? args : args.sublist(0, separator);
     final dataDir = Directory(
-      _optional(args, '--data-dir') ?? _defaultDataDir(),
+      _optional(hostArgs, '--data-dir') ?? _defaultDataDir(),
     );
     final clean = <String>[];
     for (var index = 0; index < args.length; index++) {
-      if (args[index] == '--data-dir') {
+      if ((separator < 0 || index < separator) && args[index] == '--data-dir') {
         if (++index >= args.length) {
           throw const FormatException('缺少 --data-dir');
         }
@@ -36,6 +40,28 @@ Future<int> runOpenMuseCli(List<String> args) async {
     if (clean.first == 'list') clean.replaceRange(0, 1, ['plugin', 'list']);
     if (clean.first == 'commands') {
       clean.replaceRange(0, 1, ['plugin', 'commands']);
+    }
+    if (clean.first == 'mcp-bin') {
+      if (clean.length < 4 || clean[3] != '--') {
+        throw const FormatException('mcp-bin <plugin-id> <bin> -- [args]');
+      }
+      final runtime = resolveMarketDshRuntime(
+        executablePath: Platform.resolvedExecutable,
+        environment: Platform.environment,
+      );
+      final market = McpRegistryMarket(
+        origin: Uri(),
+        installRoot: Directory(p.join(dataDir.path, 'mcpb')),
+        nodeExecutable: runtime.nodeExecutable,
+      );
+      final script = await verifiedMcpBin(market, clean[1], clean[2]);
+      final child = await Process.start(
+        runtime.nodeExecutable,
+        [script.path, ...clean.sublist(4)],
+        mode: ProcessStartMode.inheritStdio,
+        workingDirectory: Directory.current.path,
+      );
+      return child.exitCode;
     }
     if (clean.first == 'market') {
       await _market(clean.sublist(1));

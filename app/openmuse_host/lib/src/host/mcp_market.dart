@@ -512,6 +512,10 @@ final class McpRegistryMarket {
           'version': entry.version,
           'packageUri': entry.packageUri.toString(),
           'sha256': entry.sha256,
+          'fileDigests': {
+            for (final file in files.entries)
+              file.key: sha256.convert(file.value).toString(),
+          },
         }),
         flush: true,
       );
