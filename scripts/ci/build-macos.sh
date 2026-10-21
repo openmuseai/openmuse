@@ -96,7 +96,11 @@ commit="$(git -C "$ROOT" rev-parse HEAD)"
 } >"$INFO"
 
 step "verify"
-if ! unzip -l "$ARCHIVE" | grep -q 'OpenMuse.app/Contents/MacOS/OpenMuse'; then
+# Read the listing before grepping: `unzip -l ... | grep -q` under `set -o
+# pipefail` reports failure whenever grep exits on its first match, because
+# unzip then dies of SIGPIPE and contributes 141 to the pipeline status.
+archive_listing="$(unzip -l "$ARCHIVE")"
+if ! grep -q 'OpenMuse.app/Contents/MacOS/OpenMuse' <<<"$archive_listing"; then
   echo "archive is missing OpenMuse.app/Contents/MacOS/OpenMuse" >&2
   exit 1
 fi
