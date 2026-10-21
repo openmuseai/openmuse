@@ -641,6 +641,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  openmuse_dsh_mobile_agent:
+    dependency: "direct main"
+    description:
+      path: "../../plugins/dsh-mobile-agent"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_host_shell:
     dependency: "direct main"
     description:

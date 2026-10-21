@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:openmuse_dsh_mobile_agent/openmuse_dsh_mobile_agent.dart';
+import 'host/mobile_resource_extensions.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -301,6 +303,44 @@ final class OpenMuseMobileApplicationState
   late final OpenMuseRemoteWorkbenchPlugin _workbench;
   late final MobileScheduledTasksPlugin _scheduledTasks;
   late final MobileWorkspaceFilesPlugin _workspaceFiles;
+  late final OpenMuseDshMobileAgent _agent;
+  late final MobileResourceExtensions _extensions;
+  String? _extensionIdentity, _extensionGrant;
+  void _extensionScopeChanged() {
+    final identity =
+        widget.authenticationPlugin.authentication.snapshot.identity?.subject;
+    final grant =
+        widget.pairedDesktopPlugin.controller.snapshot.connection?.grantRef;
+    if (identity != _extensionIdentity || grant != _extensionGrant) {
+      _extensionIdentity = identity;
+      _extensionGrant = grant;
+      unawaited(_extensions.clear());
+    }
+  }
+
+  Future<bool> _approveExtension(String title, String details) async {
+    final context = _navigatorKey.currentContext;
+    if (context == null || !context.mounted) return false;
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialog) => AlertDialog(
+            title: Text(title),
+            content: Text(details),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialog, false),
+                child: const Text('取消'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialog, true),
+                child: const Text('允许'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   final _navigatorKey = GlobalKey<NavigatorState>();
   final Set<String> _registeredMobilePlugins = {};
   Future<void> _marketSync = Future<void>.value();
@@ -355,6 +395,30 @@ final class OpenMuseMobileApplicationState
           ..install(_workbench)
           ..install(_scheduledTasks)
           ..install(_workspaceFiles);
+    _agent = OpenMuseDshMobileAgent(
+      context: () => _navigatorKey.currentContext,
+      connection: () =>
+          widget.pairedDesktopPlugin.controller.snapshot.connection,
+    );
+    _plugins.install(_agent);
+    _extensions = MobileResourceExtensions(
+      market: _localMcpMarket,
+      contributors: () => [
+        for (final d in _plugins.descriptors)
+          if (_plugins.plugin(d.id)
+              case final OpenMuseToolContributor contributor)
+            (id: d.id, plugin: contributor),
+      ],
+      approve: _approveExtension,
+    );
+    _extensionIdentity =
+        widget.authenticationPlugin.authentication.snapshot.identity?.subject;
+    _extensionGrant =
+        widget.pairedDesktopPlugin.controller.snapshot.connection?.grantRef;
+    widget.authenticationPlugin.authentication.addListener(
+      _extensionScopeChanged,
+    );
+    widget.pairedDesktopPlugin.controller.addListener(_extensionScopeChanged);
     final speech = widget.speechInputPlugin;
     final market = widget.mobileMarketPlugin;
     if (speech != null) _plugins.install(speech);
@@ -376,6 +440,14 @@ final class OpenMuseMobileApplicationState
   @override
   void dispose() {
     widget.mobileMarketPlugin?.store.removeListener(_onMobileMarketChanged);
+    widget.authenticationPlugin.authentication.removeListener(
+      _extensionScopeChanged,
+    );
+    widget.pairedDesktopPlugin.controller.removeListener(
+      _extensionScopeChanged,
+    );
+    _extensions.dispose();
+    unawaited(_agent.deactivate());
     unawaited(
       _marketSync
           .then(
@@ -596,6 +668,10 @@ final class OpenMuseMobileApplicationState
         localizationsDelegates:
             OpenMuseAuthLocalizations.localizationsDelegates,
         supportedLocales: OpenMuseAuthLocalizations.supportedLocales,
+        builder: (context, child) => MobileResourceExtensionLayer(
+          controller: _extensions,
+          child: child ?? const SizedBox.shrink(),
+        ),
         home: OpenMuseStartupUpdatePrompt(
           controller: widget.updates,
           onUpdate: _getUpdate,

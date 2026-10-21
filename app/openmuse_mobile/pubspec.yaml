@@ -28,6 +28,8 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  openmuse_dsh_mobile_agent:
+    path: ../../plugins/dsh-mobile-agent
   flutter:
     sdk: flutter
   muse_dsh_conversation_core:
