@@ -262,6 +262,7 @@ void main() {
         var result = await run(['search', 'pptx']);
         expect(result.exitCode, 0, reason: '${result.stderr}');
         expect('${result.stdout}', contains('genoffice-pptx'));
+        expect('${result.stdout}', contains('contracts/genoffice/slides-read/v1'));
         result = await run([
           'init',
           '--name',
