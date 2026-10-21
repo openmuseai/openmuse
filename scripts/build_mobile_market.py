@@ -2,6 +2,7 @@
 """Build checked-in, application-signed Mobile sample artifacts."""
 import hashlib
 import json
+import runpy
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1] / 'packages/openmuse_mobile_plugin_runtime'
@@ -55,3 +56,7 @@ for entry in CATALOG:
     entries.append({k: v for k, v in entry.items() if k not in ('file', 'license')} |
                    {'sha256': hashlib.sha256(data).hexdigest()})
 (ASSETS / 'market.json').write_text(json.dumps(entries, ensure_ascii=False, indent=2) + '\n')
+
+# Keep the canonical build command in sync with the WebView/A2UI catalog.
+# It generates the legacy PPTX package first, then upgrades the two demos.
+runpy.run_path(str(Path(__file__).with_name('generate_mobile_web_demo_bundles.py')))
