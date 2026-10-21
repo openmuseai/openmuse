@@ -192,6 +192,15 @@ final class McpBundleRuntime {
     ];
   });
 
+  Future<Map<String, Object?>> callTool(
+    String name,
+    Map<String, Object?> arguments,
+  ) => _withClient(
+    (client) async => (await client.callTool(
+      CallToolRequest(name: name, arguments: arguments),
+    )).toJson(),
+  );
+
   /// Reads a standard MCP Apps UI resource. The View implements its own business
   /// logic; the Host supplies the selected file as standard tool arguments.
   Future<String?> uiDocument(String toolName) => _withClient((client) async {

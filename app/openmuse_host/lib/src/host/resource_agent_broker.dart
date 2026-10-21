@@ -2,16 +2,24 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 
 /// Host-owned MCP router. Document tool schemas and results are opaque here.
 /// Only mounted resource views can register; no agent-supplied path is opened.
-final class ResourceAgentBroker {
+final class ResourceAgentBroker extends ChangeNotifier {
   final Map<String, ResourceAppSession> _sessions = {};
   final String token = base64UrlEncode(
     List.generate(32, (_) => Random.secure().nextInt(256)),
   );
   HttpServer? _server;
-  String? activeUri;
+  String? _activeUri;
+  String? get activeUri => _activeUri;
+  set activeUri(String? value) {
+    if (value == _activeUri) return;
+    _activeUri = value;
+    notifyListeners();
+  }
+
   Future<void> Function(List<Map<String, Object?>> content)? sendAgentMessage;
 
   Uri get endpoint =>
@@ -30,7 +38,11 @@ final class ResourceAgentBroker {
     }
   }
 
-  void clear() => _sessions.clear();
+  void clear() {
+    _sessions.clear();
+    activeUri = null;
+  }
+
   Future<void> close() async {
     clear();
     await _server?.close(force: true);
@@ -61,7 +73,7 @@ final class ResourceAgentBroker {
       case 'ping':
         return {};
       case 'tools/list':
-        return {'tools': _routerTools};
+        return {'tools': resourceRouterTools};
       case 'resources/list':
         return {
           'resources': [
@@ -198,7 +210,7 @@ final class ResourceAppSession {
   Map<String, Object?> context = {};
 }
 
-const _routerTools = [
+const resourceRouterTools = [
   {
     'name': 'list_open_resources',
     'description':

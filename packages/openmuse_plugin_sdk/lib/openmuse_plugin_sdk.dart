@@ -23,6 +23,18 @@ abstract interface class OpenMuseAgentContributor {
   Future<void> sendAgentMessage(List<Map<String, Object?>> content);
 }
 
+/// In-process adapters expose ordinary MCP tool definitions/results. Business
+/// operations and private transport adapters remain in the contributing plugin.
+abstract interface class OpenMuseToolContributor {
+  List<Map<String, Object?>> get contributedTools;
+  Future<Map<String, Object?>> callContributedTool(
+    String caller,
+    String name,
+    Map<String, Object?> arguments,
+  );
+  Future<void> disposeToolCaller(String caller);
+}
+
 @immutable
 final class OpenMuseResource {
   const OpenMuseResource({

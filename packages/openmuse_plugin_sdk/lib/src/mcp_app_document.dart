@@ -2,6 +2,20 @@ import 'dart:convert';
 
 /// An MCP Apps host document. The View receives only standard MCP Apps JSON-RPC
 /// over postMessage; the native callback belongs to the Host's outer frame.
+/// Host-composed, isolated UI contributed by an independent MCP server.
+final class McpAppExtensionDocument {
+  const McpAppExtensionDocument({
+    required this.id,
+    required this.html,
+    required this.arguments,
+    this.width = 360,
+    this.height = 152,
+  });
+  final String id, html;
+  final Map<String, Object?> arguments;
+  final int width, height;
+}
+
 String buildMcpAppHostDocument({
   String? appHtml,
   String? appUrl,
@@ -9,11 +23,22 @@ String buildMcpAppHostDocument({
   required Map<String, Object?> arguments,
   required String platform,
   bool agentAvailable = false,
+  List<McpAppExtensionDocument> extensions = const [],
   bool serverAvailable = false,
   String nativeSend =
       'window.webkit.messageHandlers.mcpApp.postMessage(message)',
 }) {
   assert(appHtml != null || appUrl != null);
+  final extensionData = jsonEncode([
+    for (final e in extensions)
+      {
+        'id': e.id,
+        'html': base64Encode(utf8.encode(restrictMcpAppDocument(e.html))),
+        'arguments': e.arguments,
+        'width': e.width,
+        'height': e.height,
+      },
+  ]).replaceAll('<', r'\u003c');
   final encoded = base64Encode(
     utf8.encode(appHtml == null ? '' : restrictMcpAppDocument(appHtml)),
   );
@@ -31,7 +56,50 @@ const inputPromise=$inputUrl===null?Promise.resolve($input):fetch($inputUrl).the
 let initialized=false;
 let appCapabilities={};
 const send=message=>frame.contentWindow.postMessage(message,'*');
-window.__mcpHostReceive=message=>send(message);
+const extensionFrames=new Map();
+function mountExtensions(specs){
+ for(const entry of extensionFrames.values()){window.removeEventListener('message',entry.handler);entry.frame.remove();}
+ extensionFrames.clear();
+ for(const spec of specs)mountExtension(spec);
+}
+window.__mcpHostReceive=message=>{
+ if(message._hostExtensionDocuments){mountExtensions(message._hostExtensionDocuments);return;}
+ if(message._hostResourceActive!==undefined){
+   for(const entry of extensionFrames.values()){
+     entry.args={...entry.args,active:message._hostResourceActive};
+     entry.frame.contentWindow.postMessage({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:entry.args}},'*');
+   }return;
+ }
+ if(message._hostExtension!==undefined){
+   const entry=extensionFrames.get(message._hostExtension);if(!entry)return;
+   const clean={...message};delete clean._hostExtension;
+   entry.frame.contentWindow.postMessage(clean,'*');
+ }else send(message);
+};
+function mountExtension(spec){
+ const extension=document.createElement('iframe');
+ extension.title='Resource extension';extension.sandbox='allow-scripts';
+ extension.style.cssText='position:absolute;right:12px;bottom:36px;width:min('+spec.width+'px,calc(100% - 24px));height:'+spec.height+'px;z-index:10;background:transparent';
+ const entry={frame:extension,args:spec.arguments,initialized:false};extensionFrames.set(spec.id,entry);
+ const handler=event=>{
+  if(event.source!==extension.contentWindow)return;
+  const raw=event.data;if(!raw||raw.jsonrpc!=='2.0')return;
+  const reply=value=>extension.contentWindow.postMessage(value,'*');
+  if(raw.method==='ui/initialize'){
+   reply({jsonrpc:'2.0',id:raw.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{serverTools:{}},hostContext:{theme:matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light',locale:'zh-CN',platform:$hostPlatform,displayMode:'inline'}}});
+  }else if(raw.method==='ui/notifications/initialized'){
+   if(entry.initialized)return;entry.initialized=true;
+   reply({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:entry.args}});
+  }else if(raw.method==='ping')reply({jsonrpc:'2.0',id:raw.id,result:{}});
+  else if(['tools/list','tools/call'].includes(raw.method)){
+   const message={jsonrpc:'2.0',id:raw.id,method:raw.method,params:raw.params,_hostExtension:spec.id};$nativeSend;
+  }else if(raw.id!==undefined&&raw.method)reply({jsonrpc:'2.0',id:raw.id,error:{code:-32601,message:'Extension method unavailable'}});
+ };
+ entry.handler=handler;window.addEventListener('message',handler);
+ document.body.append(extension);
+ extension.srcdoc=new TextDecoder().decode(Uint8Array.from(atob(spec.html),c=>c.charCodeAt(0)));
+}
+mountExtensions($extensionData);
 window.addEventListener('message',async event=>{
  if(event.source!==frame.contentWindow)return;
  const message=event.data;

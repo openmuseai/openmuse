@@ -22,11 +22,13 @@ import 'src/host/design_system.dart';
 import 'src/host/account_storage.dart';
 import 'src/host/endpoint_config.dart';
 import 'src/host/layout/layout.dart';
+import 'src/host/layout/plugin_panel.dart';
 import 'src/host/layout/surface_mutation_guard.dart';
 import 'src/host/local_settings.dart';
 import 'src/host/openmuse_app.dart';
 import 'src/host/plugin_distribution.dart';
 import 'src/host/mcp_file_plugin.dart';
+import 'src/host/mcp_resource_extensions.dart';
 import 'src/host/mcp_market.dart';
 import 'src/host/mcp_installed_app.dart';
 import 'src/host/mcp_terminal_service.dart';
@@ -140,6 +142,21 @@ Future<Widget> bootOpenMuseHost() async {
     workspaceDirectory: () => controller.activeMountPath,
     selectedMarket: selectedMarket,
   );
+  final resourceExtensions = McpResourceExtensions(
+    market: receiptMarket,
+    nodeExecutable: marketNode,
+  );
+  mcpApps.onDevelopmentBundle = (caller, entry, directory, valid) =>
+      resourceExtensions.addDevelopment(
+        caller,
+        entry,
+        McpBundleRuntime(
+          bundleDirectory: directory,
+          nodeExecutable: marketNode,
+        ),
+        valid,
+      );
+  mcpApps.onDevelopmentClosed = resourceExtensions.removeDevelopment;
   Future<void> registerMcp(McpMarketEntry entry) async {
     final existing = registry.plugin(entry.name);
     if (existing?.descriptor.version == entry.version) return;
@@ -155,6 +172,24 @@ Future<Widget> bootOpenMuseHost() async {
       entry: entry,
       runtime: runtime,
       agentBroker: resourceAgents,
+      extensions: resourceExtensions,
+      contributors: () => [
+        for (final descriptor in registry.descriptors)
+          if (registry.plugin(descriptor.id)
+              case final OpenMuseToolContributor plugin)
+            (id: descriptor.id, plugin: plugin),
+      ],
+      approve: mcpApps.approve,
+      reveal: (id) async {
+        final candidate = registry
+            .panelCandidates()
+            .where((c) => c.plugin.descriptor.id == id)
+            .firstOrNull;
+        if (candidate == null) return;
+        await registry.ensureActive(candidate.plugin);
+        await settings.setAssistantVisible(true);
+        revealPluginPanel(layoutController, candidate);
+      },
     );
     if (plugin != null) {
       if (existing != null) await registry.uninstall(entry.name);
@@ -176,6 +211,7 @@ Future<Widget> bootOpenMuseHost() async {
   }
 
   mcpApps.onInstalled = (entry) async {
+    resourceExtensions.invalidate();
     await registerMcp(entry);
     await refreshBins();
   };

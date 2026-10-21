@@ -32,6 +32,14 @@ final class McpAppsEnvironment {
   final String Function()? workspaceDirectory;
   final McpRegistryMarket? Function()? selectedMarket;
   Future<void> Function(McpMarketEntry)? onInstalled;
+  Future<bool> Function(
+    String caller,
+    McpMarketEntry entry,
+    Directory directory,
+    Future<bool> Function() valid,
+  )?
+  onDevelopmentBundle;
+  void Function(String caller)? onDevelopmentClosed;
   final _developmentRuns = <String, Map<String, Directory>>{};
   final _developmentAuthorizations = <String, ValueNotifier<bool>>{};
   final _configuration = <String, Map<String, Object?>>{};
@@ -210,6 +218,23 @@ final class McpAppsEnvironment {
     }
     final runRef = sha256.convert(utf8.encode(root.path)).toString();
     owned[runRef] = staging.directoryFor(entry);
+    if (await onDevelopmentBundle?.call(
+          caller,
+          entry,
+          staging.directoryFor(entry),
+          () async =>
+              scope() == ownerScope &&
+              authorization.value &&
+              owned[runRef] != null,
+        ) ==
+        true) {
+      return {
+        'opened': true,
+        'runRef': runRef,
+        'sha256': entry.sha256,
+        'channel': 'resource-extension-development',
+      };
+    }
     final navigator = navigatorKey?.currentState;
     if (navigator == null || scope() != ownerScope || !authorization.value) {
       owned.remove(runRef);
@@ -264,6 +289,7 @@ final class McpAppsEnvironment {
   }
 
   Future<void> closeCaller(String caller) async {
+    onDevelopmentClosed?.call(caller);
     final authorization = _developmentAuthorizations.remove(caller);
     authorization?.value = false;
     authorization?.dispose();

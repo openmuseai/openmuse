@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'mcp_market.dart';
+import 'mcp_resource_extensions.dart';
 import 'resource_agent_broker.dart';
 
 /// Adapts any MCP tool with a JSON Schema base64 file input to a Host editor.
@@ -21,6 +22,10 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
     required this.extension,
     this.nativeFlutterEditor = false,
     this.agentBroker,
+    this.extensions,
+    this.contributors,
+    this.approve,
+    this.reveal,
   }) : descriptor = OpenMusePluginDescriptor(
          id: entry.name,
          name: entry.title,
@@ -44,6 +49,11 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
   final String extension;
   final bool nativeFlutterEditor;
   final ResourceAgentBroker? agentBroker;
+  final McpResourceExtensions? extensions;
+  final List<({String id, OpenMuseToolContributor plugin})> Function()?
+  contributors;
+  final Future<bool> Function(String, String)? approve;
+  final Future<void> Function(String)? reveal;
 
   @override
   final OpenMusePluginDescriptor descriptor;
@@ -72,6 +82,10 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
       resource: resource,
       mediaType: mediaType,
       agentBroker: agentBroker,
+      extensions: extensions,
+      contributors: contributors,
+      approve: approve,
+      reveal: reveal,
     );
   }
 
@@ -94,6 +108,10 @@ Future<OpenMuseMcpFilePlugin?> discoverMcpFilePlugin({
   required McpMarketEntry entry,
   required McpBundleRuntime runtime,
   ResourceAgentBroker? agentBroker,
+  McpResourceExtensions? extensions,
+  List<({String id, OpenMuseToolContributor plugin})> Function()? contributors,
+  Future<bool> Function(String, String)? approve,
+  Future<void> Function(String)? reveal,
 }) async {
   for (final tool in await runtime.tools()) {
     final schema = tool['inputSchema'];
@@ -111,6 +129,10 @@ Future<OpenMuseMcpFilePlugin?> discoverMcpFilePlugin({
       mediaType: mediaType,
       extension: extension,
       agentBroker: agentBroker,
+      extensions: extensions,
+      contributors: contributors,
+      approve: approve,
+      reveal: reveal,
       nativeFlutterEditor:
           entry.name == 'io.openmuse/appflowy-editor' &&
           mediaType == 'text/markdown',
@@ -127,12 +149,21 @@ final class _McpFileEditor extends StatefulWidget {
     required this.resource,
     required this.mediaType,
     this.agentBroker,
+    this.extensions,
+    this.contributors,
+    this.approve,
+    this.reveal,
   });
   final McpBundleRuntime runtime;
   final String toolName;
   final OpenMuseResource resource;
   final String mediaType;
   final ResourceAgentBroker? agentBroker;
+  final McpResourceExtensions? extensions;
+  final List<({String id, OpenMuseToolContributor plugin})> Function()?
+  contributors;
+  final Future<bool> Function(String, String)? approve;
+  final Future<void> Function(String)? reveal;
   @override
   State<_McpFileEditor> createState() => _McpFileEditorState();
 }
@@ -141,6 +172,81 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
   MethodChannel? _channel;
   ResourceAppSession? _session;
   int _sequence = 0;
+  final _extensions = <String, McpResourceExtension>{};
+  final _extensionSessions = <String, ResourceExtensionSession>{};
+  bool? _active;
+  @override
+  void initState() {
+    super.initState();
+    widget.agentBroker?.addListener(_activityChanged);
+    widget.extensions?.addListener(_extensionsChanged);
+  }
+
+  Future<void> _extensionsChanged() async {
+    final extensions =
+        await widget.extensions?.forType(widget.mediaType) ??
+        <McpResourceExtension>[];
+    if (!mounted || _channel == null) return;
+    _extensions.clear();
+    for (final e in extensions) {
+      _extensions[e.id] = e;
+    }
+    await _channel!.invokeMethod<void>('message', {
+      '_hostExtensionDocuments': [
+        for (final e in extensions)
+          {
+            'id': e.id,
+            'html': base64Encode(utf8.encode(restrictMcpAppDocument(e.html))),
+            'arguments': {
+              'resourceUri': widget.resource.uri.toString(),
+              'name': widget.resource.displayName,
+              'mediaType': widget.mediaType,
+              'active':
+                  widget.agentBroker?.activeUri ==
+                  widget.resource.uri.toString(),
+            },
+            'width': e.width,
+            'height': e.height,
+          },
+      ],
+    });
+    _active = null;
+    _activityChanged();
+  }
+
+  void _activityChanged() {
+    final active =
+        widget.agentBroker?.activeUri == widget.resource.uri.toString();
+    if (active == _active) return;
+    _active = active;
+    for (final session in _extensionSessions.values) {
+      unawaited(session.close());
+    }
+    _extensionSessions.clear();
+    if (active) {
+      for (final e in _extensions.values) {
+        _extensionSessions[e.id] = ResourceExtensionSession(
+          caller:
+              'extension-${identityHashCode(this)}-${e.id}-${DateTime.now().microsecondsSinceEpoch}',
+          resourceUri: widget.resource.uri.toString(),
+          broker: widget.agentBroker!,
+          contributors: widget.contributors ?? () => [],
+          approve: widget.approve ?? (_, _) async => false,
+          isCurrent: e.isCurrent,
+          reveal: widget.reveal,
+          serverTools: e.tools,
+          serverCall: e.invoke,
+        );
+      }
+    }
+    unawaited(
+      _channel?.invokeMethod<void>('message', {
+            '_hostResourceActive': active,
+          }) ??
+          Future.value(),
+    );
+  }
+
   final Map<String, Completer<Map<String, Object?>>> _pending = {};
 
   Future<Map<String, Object?>> _request(
@@ -168,6 +274,8 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
   void _created(int id) {
     final channel = MethodChannel('com.openmuse.mcp/app-view/$id');
     _channel = channel;
+    _active = null;
+    _activityChanged();
     final session = ResourceAppSession(
       uri: widget.resource.uri.toString(),
       title: widget.resource.displayName,
@@ -177,6 +285,31 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
     channel.setMethodCallHandler((call) async {
       if (call.method != 'message' || call.arguments is! Map) return;
       final message = Map<String, Object?>.from(call.arguments as Map);
+      final extensionId = message['_hostExtension'];
+      if (extensionId != null) {
+        final response = <String, Object?>{
+          'jsonrpc': '2.0',
+          'id': message['id'],
+          '_hostExtension': extensionId,
+        };
+        try {
+          final extension = _extensionSessions[extensionId];
+          if (extension == null) throw StateError('RESOURCE_SESSION_CLOSED');
+          response['result'] = await extension.dispatch(
+            message['method'] as String,
+            Map<String, Object?>.from(message['params'] as Map? ?? {}),
+          );
+        } catch (error) {
+          final reason =
+              error is StateError &&
+                  RegExp(r'^[A-Z_]+$').hasMatch(error.message)
+              ? error.message
+              : 'EXTENSION_REQUEST_FAILED';
+          response['error'] = {'code': -32602, 'message': reason};
+        }
+        if (mounted) await channel.invokeMethod<void>('message', response);
+        return;
+      }
       final pending = _pending[message['id']];
       if (message['method'] == null && pending != null) {
         if (message['error'] != null) {
@@ -241,6 +374,12 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
 
   @override
   void dispose() {
+    widget.agentBroker?.removeListener(_activityChanged);
+    widget.extensions?.removeListener(_extensionsChanged);
+    for (final extension in _extensionSessions.values) {
+      unawaited(extension.close());
+    }
+    _extensionSessions.clear();
     if (_session case final session?) widget.agentBroker?.unregister(session);
     _channel?.setMethodCallHandler(null);
     for (final pending in _pending.values) {
@@ -263,6 +402,11 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
     if (await file.length() > 64 * 1024 * 1024) {
       throw const FormatException('File exceeds 64 MiB');
     }
+    for (final e
+        in await widget.extensions?.forType(widget.mediaType) ??
+            <McpResourceExtension>[]) {
+      _extensions[e.id] = e;
+    }
     return {
       'html': buildMcpAppHostDocument(
         appHtml: html,
@@ -271,6 +415,23 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
           'name': widget.resource.displayName,
         },
         platform: 'desktop',
+        extensions: [
+          for (final e in _extensions.values)
+            McpAppExtensionDocument(
+              id: e.id,
+              html: e.html,
+              width: e.width,
+              height: e.height,
+              arguments: {
+                'resourceUri': widget.resource.uri.toString(),
+                'name': widget.resource.displayName,
+                'mediaType': widget.mediaType,
+                'active':
+                    widget.agentBroker?.activeUri ==
+                    widget.resource.uri.toString(),
+              },
+            ),
+        ],
         agentAvailable: widget.agentBroker != null,
       ),
     };
