@@ -9,6 +9,7 @@ String buildMcpAppHostDocument({
   required Map<String, Object?> arguments,
   required String platform,
   bool agentAvailable = false,
+  bool serverAvailable = false,
   String nativeSend =
       'window.webkit.messageHandlers.mcpApp.postMessage(message)',
 }) {
@@ -37,7 +38,7 @@ window.addEventListener('message',async event=>{
  if(!message||message.jsonrpc!=='2.0')return;
  if(message.method==='ui/initialize'){
    appCapabilities=message.params?.appCapabilities??{};
-   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{},...($agentAvailable?{message:{text:{}},updateModelContext:{text:{}}}:{})},hostContext:{theme:'light',locale:'zh-CN',platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
+   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{},...($serverAvailable?{serverTools:{},serverResources:{}}:{}),...($agentAvailable?{message:{text:{}},updateModelContext:{text:{}}}:{})},hostContext:{theme:'light',locale:'zh-CN',platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
  }else if(message.method==='ui/notifications/initialized'){
    if(initialized)return;initialized=true;
    send({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:await inputPromise}});
@@ -46,6 +47,8 @@ window.addEventListener('message',async event=>{
  }else if(message.method==='ping'){
    send({jsonrpc:'2.0',id:message.id,result:{}});
  }else if(message.method==='ui/download-file'){
+   $nativeSend;
+ }else if($serverAvailable&&['tools/list','tools/call','resources/list','resources/read'].includes(message.method)){
    $nativeSend;
  }else if($agentAvailable&&(message.method==='ui/update-model-context'||message.method==='ui/message'||message.id!==undefined&&!message.method)){
    $nativeSend;

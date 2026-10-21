@@ -106,6 +106,21 @@ final class McpBundleRuntime {
   Future<T> _withClient<T>(
     Future<T> Function(McpClient client) operation,
   ) async {
+    final session = await connect();
+    try {
+      return await operation(
+        session.client,
+      ).timeout(const Duration(seconds: 30));
+    } finally {
+      await session.close();
+    }
+  }
+
+  /// One MCP connection per interactive View. Credentials are supplied only
+  /// through MCPB user_config, never through the View or inherited environment.
+  Future<McpBundleSession> connect({
+    Map<String, Object?> configuration = const {},
+  }) async {
     final manifest = jsonDecode(
       await File(p.join(bundleDirectory.path, 'manifest.json')).readAsString(),
     );
@@ -122,6 +137,23 @@ final class McpBundleRuntime {
     if (!await executable.exists()) {
       throw const FileSystemException('MCPB server missing');
     }
+    final config = (manifest['server'] as Map)['mcp_config'];
+    final declared = config is Map ? config['env'] : null;
+    final environment = <String, String>{'PATH': '/usr/bin:/bin'};
+    if (declared is Map) {
+      for (final item in declared.entries) {
+        if (item.key is! String || item.value is! String) {
+          throw const FormatException('Invalid MCPB environment');
+        }
+        environment[item.key as String] = (item.value as String)
+            .replaceAllMapped(
+              RegExp(r'\$\{(__dirname|user_config\.[a-zA-Z0-9_]+)\}'),
+              (match) => match[1] == '__dirname'
+                  ? bundleDirectory.path
+                  : '${configuration[match[1]!.substring(12)] ?? ''}',
+            );
+      }
+    }
     final client = McpClient(
       const Implementation(name: 'OpenMuse', version: '1.0.0'),
     );
@@ -130,16 +162,17 @@ final class McpBundleRuntime {
         command: _resolvedNode(),
         args: [executable.path],
         includeParentEnvironment: false,
-        environment: const {'PATH': '/usr/bin:/bin'},
+        environment: environment,
         workingDirectory: bundleDirectory.path,
         maxIncomingMessageBytes: 128 * 1024 * 1024,
       ),
     );
     try {
       await client.connect(transport).timeout(const Duration(seconds: 10));
-      return await operation(client).timeout(const Duration(seconds: 30));
-    } finally {
+      return McpBundleSession(client);
+    } catch (_) {
       await client.close();
+      rethrow;
     }
   }
 
@@ -148,6 +181,7 @@ final class McpBundleRuntime {
     return [
       for (final tool in result.tools)
         {
+          ...tool.toJson(),
           'name': tool.name,
           'description': tool.description,
           'inputSchema': tool.inputSchema.toJson(),
@@ -256,6 +290,17 @@ final class McpBundleRuntime {
       }
       return Map<String, Object?>.from(data);
     });
+  }
+}
+
+final class McpBundleSession {
+  McpBundleSession(this.client);
+  final McpClient client;
+  bool _closed = false;
+  Future<void> close() async {
+    if (_closed) return;
+    _closed = true;
+    await client.close();
   }
 }
 
@@ -370,10 +415,16 @@ final class McpRegistryMarket {
     };
   }
 
-  Future<Map<String, Object?>> install(McpMarketEntry entry) async {
+  Future<Map<String, Object?>> install(
+    McpMarketEntry entry, {
+    List<int>? bundleBytes,
+  }) async {
     final planned = await plan(entry);
     if (planned['action'] == 'already-installed') return planned;
-    final bytes = await _get(entry.packageUri, 80 * 1024 * 1024);
+    final bytes = bundleBytes ?? await _get(entry.packageUri, 80 * 1024 * 1024);
+    if (bytes.length > 80 * 1024 * 1024) {
+      throw const FormatException('MCPB exceeds budget');
+    }
     if (sha256.convert(bytes).toString() != entry.sha256) {
       throw const FormatException('MCPB digest mismatch');
     }
