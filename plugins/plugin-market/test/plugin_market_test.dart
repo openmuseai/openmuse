@@ -17,6 +17,7 @@ void main() {
       OpenMusePluginContext(
         executeHostCommand: (command, arguments) async {
           commands.add(command);
+          if (command == 'plugin.market.providers') return null;
           switch (command) {
             case 'plugin.market.list':
               return [
@@ -85,6 +86,7 @@ void main() {
       OpenMusePluginContext(
         executeHostCommand: (command, arguments) async {
           commands.add(command);
+          if (command == 'plugin.market.providers') return null;
           if (command == 'plugin.market.list') {
             return [
               {

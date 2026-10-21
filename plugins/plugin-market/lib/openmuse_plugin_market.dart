@@ -972,7 +972,7 @@ final class _MarketPanelState extends State<_MarketPanel> {
                   label: Text(
                     widget.nativeEditorBuilder?.call(id) == null
                         ? '打开 MCP App'
-                        : '打开原生编辑器',
+                        : '在应用内打开',
                   ),
                 ),
                 const SizedBox(height: 8),
