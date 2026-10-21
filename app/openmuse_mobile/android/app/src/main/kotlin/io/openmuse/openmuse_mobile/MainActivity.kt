@@ -50,7 +50,7 @@ class MainActivity : FlutterActivity() {
             }
         flutterEngine.platformViewsController.registry.registerViewFactory(
             "io.openmuse/offline_web_plugin",
-            OfflineWebPluginFactory(applicationContext),
+            OfflineWebPluginFactory(applicationContext, flutterEngine.dartExecutor.binaryMessenger),
         )
     }
 }

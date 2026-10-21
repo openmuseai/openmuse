@@ -18,7 +18,10 @@ export 'src/mcp_remote_market.dart'
         RemoteMcpMarket,
         RemoteMcpMarketPage,
         RemoteMcpAppPage,
-        RemoteMcpOfflineAppPage;
+        RemoteMcpOfflineAppPage,
+        RemoteMcpOfflineView,
+        RemoteMcpViewConnection,
+        RemoteMcpResourceHostScope;
 
 final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
   OpenMuseMobilePluginMarket(

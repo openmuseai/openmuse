@@ -14,6 +14,8 @@ import androidx.webkit.WebViewFeature
 import android.os.Environment
 import android.net.Uri
 import io.flutter.plugin.common.StandardMessageCodec
+import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
 import java.io.File
@@ -23,7 +25,7 @@ import android.util.Base64OutputStream
 import org.json.JSONObject
 
 /** Serves verified installed web resources from app-private storage to an in-app WebView. */
-internal class OfflineWebPluginFactory(private val appContext: Context) :
+internal class OfflineWebPluginFactory(private val appContext: Context, private val messenger: BinaryMessenger) :
     PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
         val html = (args as? Map<*, *>)?.get("html") as? String
@@ -101,11 +103,28 @@ internal class OfflineWebPluginFactory(private val appContext: Context) :
                     "Blocked".byteInputStream())
             }
         }
+        val channel = MethodChannel(messenger, "io.openmuse/mcp_view/$viewId")
+        channel.setMethodCallHandler { call, result ->
+            if (call.method != "receive") { result.notImplemented(); return@setMethodCallHandler }
+            val raw = call.arguments as? String
+            if (raw == null || raw.length > 2 * 1024 * 1024) {
+                result.error("invalid_message", "Message exceeds budget", null)
+            } else {
+                webView.evaluateJavascript("window.__mcpHostReceive($raw)", null)
+                result.success(null)
+            }
+        }
         if (html != null) {
             require(WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))
             WebViewCompat.addWebMessageListener(webView, "McpHost", setOf("https://$domain")) { view, message, _, isMainFrame, _ ->
                 if (!isMainFrame) return@addWebMessageListener
                 val raw = message.data ?: return@addWebMessageListener
+                if (raw.length > 96 * 1024 * 1024) return@addWebMessageListener
+                val incoming = try { JSONObject(raw) } catch (_: Exception) { return@addWebMessageListener }
+                if (incoming.optString("method") != "ui/download-file") {
+                    channel.invokeMethod("message", raw)
+                    return@addWebMessageListener
+                }
                 Thread {
                     val response = JSONObject().put("jsonrpc", "2.0")
                     try {
@@ -138,7 +157,7 @@ internal class OfflineWebPluginFactory(private val appContext: Context) :
         } else webView.loadUrl("https://$domain/editor/index.html")
         return object : PlatformView {
             override fun getView(): View = webView
-            override fun dispose() { webView.destroy(); hostRoot.deleteRecursively() }
+            override fun dispose() { channel.setMethodCallHandler(null); webView.destroy(); hostRoot.deleteRecursively() }
         }
     }
 

@@ -210,6 +210,75 @@ final class RemoteMcpMarket {
       entry.packageSha256 != null &&
       File('${packageDirectory(entry).path}/index.html').existsSync();
 
+  /// Public offline MCP discovery snapshot, contained in the reviewed MCPB.
+  /// These are ordinary MCP ResourceContents and Tool records, not executable
+  /// Node code or private Registry metadata.
+  Future<List<Map<String, Object?>>> resourceExtensions(
+    String mediaType,
+  ) async {
+    final result = <Map<String, Object?>>[];
+    for (final entry in await installedEntries()) {
+      final snapshot = File('${packageDirectory(entry).path}/mcp-offline.json');
+      if (!await snapshot.exists() || await snapshot.length() > 8 * 1024 * 1024)
+        continue;
+      try {
+        final data = jsonDecode(await snapshot.readAsString()) as Map;
+        final contents = (data['resources'] as List).whereType<Map>();
+        final tools = (data['tools'] as List).whereType<Map>();
+        for (final catalog in contents.where(
+          (r) =>
+              r['mimeType'] ==
+              'application/vnd.openmuse.resource-extensions+json',
+        )) {
+          final value = jsonDecode(catalog['text'] as String) as Map;
+          if (value['profile'] != 'openmuse-resource-extensions/1') continue;
+          final items = value['extensions'] as List;
+          if (items.length > 4) throw const FormatException('Extension budget');
+          for (final item in items.whereType<Map>()) {
+            if (!(item['mediaTypes'] as List).contains(mediaType)) continue;
+            final id = item['id'],
+                width = item['width'],
+                height = item['height'];
+            if (id is! String ||
+                !RegExp(r'^[a-zA-Z0-9._-]{1,80}$').hasMatch(id) ||
+                width is! int ||
+                width < 200 ||
+                width > 480 ||
+                height is! int ||
+                height < 48 ||
+                height > 180)
+              throw const FormatException('Invalid extension');
+            final tool = tools.singleWhere((t) => t['name'] == item['tool']);
+            final uri = (tool['_meta'] as Map)['ui'] as Map;
+            final ui = contents.singleWhere(
+              (r) =>
+                  r['uri'] == uri['resourceUri'] &&
+                  r['mimeType'] == 'text/html;profile=mcp-app',
+            );
+            final html = ui['text'] as String;
+            if (utf8.encode(html).length > 4 * 1024 * 1024)
+              throw const FormatException('UI budget');
+            result.add({
+              'id': '${entry.name}:$id',
+              'title': entry.title,
+              'html': html,
+              'digest': entry.packageSha256,
+              'version': entry.version,
+              'name': entry.name,
+              'height': height,
+              'width': width,
+              'resourceTools': (item['resourceTools'] as List? ?? [])
+                  .cast<String>(),
+            });
+          }
+        }
+      } on Object {
+        /* Optional incompatible contributions must not break a file. */
+      }
+    }
+    return result.take(4).toList();
+  }
+
   void _checkRegistry() {
     if (origin.scheme != 'https' &&
         !(origin.scheme == 'http' &&
@@ -376,6 +445,58 @@ final class RemoteMcpMarket {
     }
   }
 
+  Future<void> _cacheOfflineDiscovery(
+    RemoteMcpEntry entry,
+    Directory directory,
+  ) async {
+    final snapshot = File('${directory.path}/mcp-offline.json');
+    if (!await snapshot.exists()) return;
+    if (await snapshot.length() > 64 * 1024 * 1024)
+      throw const FormatException('MCP discovery budget');
+    final data = jsonDecode(await snapshot.readAsString()) as Map;
+    final tools = (data['tools'] as List).whereType<Map>();
+    final contents = (data['resources'] as List).whereType<Map>();
+    final types = <String>{};
+    String? app;
+    for (final tool in tools) {
+      final properties = (tool['inputSchema'] as Map?)?['properties'];
+      final inputTypes = properties is Map
+          ? properties.values
+                .whereType<Map>()
+                .where((p) => p['contentEncoding'] == 'base64')
+                .map((p) => p['contentMediaType'])
+                .whereType<String>()
+                .toSet()
+          : <String>{};
+      final ui = (tool['_meta'] as Map?)?['ui'];
+      if (inputTypes.isEmpty ||
+          ui is! Map ||
+          ui['resourceUri'] is! String ||
+          !(ui['resourceUri'] as String).startsWith('ui://'))
+        continue;
+      final resource = contents.singleWhere(
+        (r) =>
+            r['uri'] == ui['resourceUri'] &&
+            r['mimeType'] == 'text/html;profile=mcp-app',
+      );
+      final text = resource['text'] as String;
+      // Discovery cannot replace the reviewed primary document with arbitrary HTML.
+      if (text != await File('${directory.path}/index.html').readAsString())
+        throw const FormatException('Offline MCP App differs from reviewed UI');
+      if (app != null && app != text)
+        throw const FormatException('Ambiguous offline UI');
+      app = text;
+      types.addAll(inputTypes);
+    }
+    if (app != null)
+      await File(
+        '${directory.path}/mcp-app.html',
+      ).writeAsString(restrictMcpAppDocument(app), flush: true);
+    final cached = await _capabilities();
+    cached['${entry.name}@${entry.version}'] = types.toList()..sort();
+    await _capabilityCache.writeAsString(jsonEncode(cached), flush: true);
+  }
+
   Future<bool> _installOfflineUi(RemoteMcpEntry entry) async {
     final packageUri = entry.packageUri;
     final expected = entry.packageSha256?.toLowerCase();
@@ -441,6 +562,7 @@ final class RemoteMcpMarket {
             throw const FormatException('Invalid MCPB asset');
           await output.writeAsBytes(content, flush: true);
         }
+        await _cacheOfflineDiscovery(entry, staging);
         if (await target.exists()) await target.delete(recursive: true);
         await staging.rename(target.path);
       } catch (_) {
@@ -749,6 +871,28 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
         return;
       }
       if (Platform.isAndroid && market!.hasOfflineUi(entry)) {
+        final discovery = File(
+          '${market!.packageDirectory(entry).path}/mcp-offline.json',
+        );
+        if (await discovery.exists()) {
+          final snapshot = jsonDecode(await discovery.readAsString()) as Map;
+          if ((snapshot['resources'] as List? ?? []).whereType<Map>().any(
+            (r) =>
+                r['mimeType'] ==
+                'application/vnd.openmuse.resource-extensions+json',
+          )) {
+            if (mounted) {
+              await RemoteMcpResourceHostScope.of(context)?.refresh();
+              if (mounted)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('资源扩展已就绪。请打开兼容文档，或返回已打开的文档使用全局浮窗。'),
+                  ),
+                );
+            }
+            return;
+          }
+        }
         final html = await market!.mcpAppDocument(entry);
         File? selected;
         if (html != null) {
@@ -978,7 +1122,168 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
           true);
 }
 
-final class RemoteMcpOfflineAppPage extends StatelessWidget {
+final class RemoteMcpResourceHostScope extends InheritedWidget {
+  const RemoteMcpResourceHostScope({
+    super.key,
+    required this.open,
+    required this.close,
+    required this.refresh,
+    required super.child,
+  });
+  final Future<void> Function(RemoteMcpViewConnection, String, String, String)
+  open;
+  final void Function(RemoteMcpViewConnection) close;
+  final Future<void> Function() refresh;
+  static RemoteMcpResourceHostScope? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<RemoteMcpResourceHostScope>();
+  @override
+  bool updateShouldNotify(RemoteMcpResourceHostScope oldWidget) => false;
+}
+
+/// A private native channel transports standard MCP Apps messages. It exposes
+/// no Android bridge to the sandboxed plugin iframe.
+final class RemoteMcpViewConnection {
+  RemoteMcpViewConnection(int id)
+    : channel = MethodChannel('io.openmuse/mcp_view/$id') {
+    channel.setMethodCallHandler((call) async {
+      if (call.method != 'message' || closed) return;
+      final message = Map<String, Object?>.from(
+        jsonDecode(call.arguments as String) as Map,
+      );
+      final requestId = message['id'];
+      if (message['method'] == null && requestId != null) {
+        final pending = _pending.remove(requestId);
+        if (message['error'] != null) {
+          pending?.completeError(StateError('RESOURCE_TOOL_FAILED'));
+        } else {
+          pending?.complete(
+            Map<String, Object?>.from(message['result'] as Map? ?? {}),
+          );
+        }
+        return;
+      }
+      if (message['method'] == 'ui/notifications/initialized') {
+        if (!ready.isCompleted) ready.complete();
+      }
+      if (requestId == null) return;
+      try {
+        final result = await onRequest?.call(
+          message['method'] as String,
+          Map<String, Object?>.from(message['params'] as Map? ?? {}),
+        );
+        if (result == null) throw StateError('METHOD_UNAVAILABLE');
+        await receive({'jsonrpc': '2.0', 'id': requestId, 'result': result});
+      } catch (error) {
+        await receive({
+          'jsonrpc': '2.0',
+          'id': requestId,
+          'error': {
+            'code': -32602,
+            'message': error is StateError ? error.message : 'Request rejected',
+          },
+        });
+      }
+    });
+  }
+  final MethodChannel channel;
+  final ready = Completer<void>();
+  final _pending = <Object, Completer<Map<String, Object?>>>{};
+  int _next = 0;
+  bool closed = false;
+  Future<Map<String, Object?>> Function(String, Map<String, Object?>)?
+  onRequest;
+  Future<void> receive(Map<String, Object?> message) async {
+    if (!closed)
+      await channel.invokeMethod<void>('receive', jsonEncode(message));
+  }
+
+  Future<Map<String, Object?>> request(
+    String method,
+    Map<String, Object?> params,
+  ) async {
+    if (closed) throw StateError('RESOURCE_SESSION_CLOSED');
+    await ready.future.timeout(const Duration(seconds: 60));
+    if (closed) throw StateError('RESOURCE_SESSION_CLOSED');
+    final id = 'mobile-${++_next}';
+    final pending = Completer<Map<String, Object?>>();
+    _pending[id] = pending;
+    try {
+      await receive({
+        'jsonrpc': '2.0',
+        'id': id,
+        'method': method,
+        'params': params,
+      });
+      return await pending.future.timeout(const Duration(seconds: 30));
+    } finally {
+      _pending.remove(id);
+    }
+  }
+
+  void dispose() {
+    closed = true;
+    channel.setMethodCallHandler(null);
+    for (final pending in _pending.values) {
+      pending.completeError(StateError('RESOURCE_SESSION_CLOSED'));
+    }
+    _pending.clear();
+  }
+}
+
+final class RemoteMcpOfflineView extends StatefulWidget {
+  const RemoteMcpOfflineView({
+    super.key,
+    required this.digest,
+    this.hostDocument,
+    this.fileName,
+    this.mediaType,
+    this.fileBytes,
+    this.filePath,
+    this.onCreated,
+    this.onClosed,
+  });
+  final String digest;
+  final String? hostDocument, fileName, mediaType, filePath;
+  final Uint8List? fileBytes;
+  final ValueChanged<RemoteMcpViewConnection>? onCreated, onClosed;
+  @override
+  State<RemoteMcpOfflineView> createState() => _RemoteMcpOfflineViewState();
+}
+
+final class _RemoteMcpOfflineViewState extends State<RemoteMcpOfflineView> {
+  RemoteMcpViewConnection? _connection;
+  @override
+  void dispose() {
+    if (_connection case final connection?) {
+      widget.onClosed?.call(connection);
+      connection.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Platform.isAndroid
+      ? AndroidView(
+          viewType: 'io.openmuse/offline_web_plugin',
+          onPlatformViewCreated: (id) {
+            final connection = RemoteMcpViewConnection(id);
+            _connection = connection;
+            widget.onCreated?.call(connection);
+          },
+          creationParams: {
+            'digest': widget.digest,
+            if (widget.hostDocument != null) 'html': widget.hostDocument,
+            if (widget.filePath != null) 'filePath': widget.filePath,
+            if (widget.fileName != null) 'fileName': widget.fileName,
+            if (widget.mediaType != null) 'mediaType': widget.mediaType,
+            if (widget.fileBytes != null) 'fileBytes': widget.fileBytes,
+          },
+          creationParamsCodec: const StandardMessageCodec(),
+        )
+      : const Center(child: Text('Offline MCP App requires an Android host'));
+}
+
+final class RemoteMcpOfflineAppPage extends StatefulWidget {
   const RemoteMcpOfflineAppPage({
     super.key,
     required this.title,
@@ -989,42 +1294,77 @@ final class RemoteMcpOfflineAppPage extends StatelessWidget {
     this.appHtml,
     this.filePath,
   });
-  final String title;
-  final String digest;
-  final String? fileName;
-  final String? mediaType;
+  final String title, digest;
+  final String? fileName, mediaType, appHtml, filePath;
   final Uint8List? fileBytes;
-  final String? appHtml;
-  final String? filePath;
+  @override
+  State<RemoteMcpOfflineAppPage> createState() =>
+      _RemoteMcpOfflineAppPageState();
+}
+
+final class _RemoteMcpOfflineAppPageState
+    extends State<RemoteMcpOfflineAppPage> {
+  RemoteMcpResourceHostScope? _host;
+  RemoteMcpViewConnection? _connection;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _host = RemoteMcpResourceHostScope.of(context);
+  }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title)),
-    body: Platform.isAndroid
-        ? AndroidView(
-            viewType: 'io.openmuse/offline_web_plugin',
-            creationParams: {
-              'digest': digest,
-              if (appHtml != null)
-                'html': buildMcpAppHostDocument(
-                  appUrl:
-                      'https://p${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io/editor/mcp-app.html',
-                  argumentsUrl:
-                      'https://p${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io/host/arguments.json',
-                  arguments: const {},
-                  platform: 'mobile',
-                  nativeSend:
-                      'window.McpHost.postMessage(JSON.stringify(message))',
-                ),
-              if (filePath != null) 'filePath': filePath,
-              if (fileName != null) 'fileName': fileName,
-              if (mediaType != null) 'mediaType': mediaType,
-              if (fileBytes != null) 'fileBytes': fileBytes,
-            },
-            creationParamsCodec: const StandardMessageCodec(),
-          )
-        : const Center(child: Text('Offline MCP App requires an Android host')),
-  );
+  Widget build(BuildContext context) {
+    final digest = widget.digest;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          if (_host != null)
+            IconButton(
+              tooltip: '显示插件扩展',
+              icon: const Icon(Icons.extension_outlined),
+              onPressed: () => unawaited(_host?.refresh()),
+            ),
+        ],
+      ),
+      body: RemoteMcpOfflineView(
+        digest: digest,
+        hostDocument: widget.appHtml == null
+            ? null
+            : buildMcpAppHostDocument(
+                appUrl:
+                    'https://p${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io/editor/mcp-app.html',
+                argumentsUrl:
+                    'https://p${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io/host/arguments.json',
+                arguments: const {},
+                platform: 'mobile',
+                theme: Theme.of(context).brightness.name,
+                resourceToolsAvailable: _host != null,
+                nativeSend:
+                    'window.McpHost.postMessage(JSON.stringify(message))',
+              ),
+        fileName: widget.fileName,
+        mediaType: widget.mediaType,
+        fileBytes: widget.fileBytes,
+        filePath: widget.filePath,
+        onCreated: (connection) {
+          _connection = connection;
+          unawaited(
+            _host?.open(
+              connection,
+              widget.title,
+              widget.mediaType ?? 'application/octet-stream',
+              digest,
+            ),
+          );
+        },
+        onClosed: (connection) {
+          if (identical(_connection, connection)) _connection = null;
+          _host?.close(connection);
+        },
+      ),
+    );
+  }
 }
 
 final class RemoteMcpAppPage extends StatefulWidget {
