@@ -21,8 +21,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 case "$profile" in
-  release) product_dir="Release" ;;
-  debug) product_dir="Debug" ;;
+  release) product_dir="Release"; entitlement_file="Release.entitlements" ;;
+  debug) product_dir="Debug"; entitlement_file="DebugProfile.entitlements" ;;
   *) echo "profile must be release or debug" >&2; exit 2 ;;
 esac
 [[ "$update_channel" == "stable" || "$update_channel" == "canary" ]] || {
@@ -162,9 +162,14 @@ fi
 if ! codesign --verify --deep --strict "$app_path" >/dev/null 2>&1; then
   signature_details="$(codesign -dv "$app_path" 2>&1)"
   if [[ "$signature_details" == *'Signature=adhoc'* ]]; then
-    codesign --force --sign - "$app_path"
+    # Re-signing without --entitlements drops the original file-selection and
+    # networking permissions, even though the resulting seal verifies.
+    codesign --force --sign - \
+      --entitlements "$app_root/macos/Runner/$entitlement_file" "$app_path"
   fi
 fi
 codesign --verify --deep --strict "$app_path"
+python3 "$repo_root/scripts/verify_macos_entitlements.py" \
+  "$app_path" "$app_root/macos/Runner/$entitlement_file"
 ditto -c -k --sequesterRsrc --keepParent "$app_path" "$archive_path"
 echo "$archive_path"
