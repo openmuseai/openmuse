@@ -37,11 +37,13 @@ final class MobileMyPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
         children: [
-          Text(
-            '我的',
-            style: theme.textTheme.headlineLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.2,
+          Center(
+            child: Text(
+              '我的',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
             ),
           ),
           const SizedBox(height: 20),

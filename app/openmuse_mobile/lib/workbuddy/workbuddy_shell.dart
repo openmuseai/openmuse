@@ -1560,7 +1560,14 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   Future<void> _openMobileMarket({bool initialMine = false}) async {
-    final market = widget.mobileMarketPlugin;
+    final registered = widget.pluginRegistry?.plugin(
+      'com.openmuse.mobile-plugin-market',
+    );
+    final market = widget.pluginRegistry == null
+        ? widget.mobileMarketPlugin
+        : registered is OpenMuseMobilePluginMarket
+        ? registered
+        : null;
     if (market == null) return;
     controller.closeDrawer();
     final connection = widget.pairedDesktop?.snapshot.connection;
@@ -1639,6 +1646,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                                 '${controller.selectedWorkspaceId}',
                             onDiscover: () =>
                                 controller.selectTab(WbTab.discover),
+                            onManagePlugins: () =>
+                                unawaited(_openMobileMarket(initialMine: true)),
                           ),
                     minePage: MobileMyPage(
                       themeMode: widget.themeMode,
@@ -1890,6 +1899,14 @@ final class _MainColumn extends StatelessWidget {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: controller,
     builder: (context, _) {
+      final installedMarket = pluginRegistry?.plugin(
+        'com.openmuse.mobile-plugin-market',
+      );
+      final activeMarket = pluginRegistry == null
+          ? mobileMarket
+          : installedMarket is OpenMuseMobilePluginMarket
+          ? installedMarket
+          : null;
       final showComposer = controller.tab == WbTab.tasks;
       final light = Theme.of(context).brightness == Brightness.light;
       final snapshot = sessionHandle.snapshot;
@@ -1991,10 +2008,12 @@ final class _MainColumn extends StatelessWidget {
                         conversation: conversation,
                         workbenchPage: workbenchPage,
                         minePage: minePage,
-                        discoverPage: mobileMarket?.buildMarketPage(
+                        discoverPage: activeMarket?.buildMarketPage(
                           embedded: true,
                           pluginRegistry: pluginRegistry,
                           onOpenBuiltIn: onOpenBuiltIn,
+                          onManageWorkbench: () =>
+                              controller.selectTab(WbTab.workbench),
                           desktop: pairedDesktop?.snapshot.connection == null
                               ? null
                               : PairedDesktopMarketClient(

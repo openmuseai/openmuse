@@ -6,8 +6,6 @@ import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
-import '../mobile_plugin_detail_page.dart';
-
 final class MobileWorkbenchPage extends StatefulWidget {
   const MobileWorkbenchPage({
     super.key,
@@ -16,6 +14,7 @@ final class MobileWorkbenchPage extends StatefulWidget {
     required this.subject,
     this.scope = 'default',
     this.onDiscover,
+    this.onManagePlugins,
   });
 
   final OpenMusePluginRegistry registry;
@@ -23,6 +22,7 @@ final class MobileWorkbenchPage extends StatefulWidget {
   final String subject;
   final String scope;
   final VoidCallback? onDiscover;
+  final VoidCallback? onManagePlugins;
 
   @override
   State<MobileWorkbenchPage> createState() => _MobileWorkbenchPageState();
@@ -32,8 +32,12 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
   bool _editing = false;
   List<String> _order = [];
   Set<String> _pinned = {};
+  Map<String, OpenMuseWidgetHeight> _heights = {};
+  Map<String, int> _columns = {};
   List<String> _beforeOrder = [];
   Set<String> _beforePinned = {};
+  Map<String, OpenMuseWidgetHeight> _beforeHeights = {};
+  Map<String, int> _beforeColumns = {};
 
   String get _key =>
       'openmuse.mobile.workbench.v1.${widget.subject}.${widget.scope}';
@@ -56,6 +60,8 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
         oldWidget.scope != widget.scope) {
       _order = [];
       _pinned = {};
+      _heights = {};
+      _columns = {};
       unawaited(_restore());
     }
   }
@@ -70,10 +76,23 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
       final encoded = await widget.values.read(key);
       if (!mounted || key != _key || encoded == null) return;
       final data = jsonDecode(encoded);
-      if (data is! Map || data['version'] != 1) return;
+      if (data is! Map || (data['version'] != 1 && data['version'] != 2)) {
+        return;
+      }
       setState(() {
         _order = (data['order'] as List? ?? []).whereType<String>().toList();
         _pinned = (data['pinned'] as List? ?? []).whereType<String>().toSet();
+        _heights = {
+          for (final entry in (data['heights'] as Map? ?? {}).entries)
+            if (entry.key is String && entry.value is String)
+              for (final height in OpenMuseWidgetHeight.values)
+                if (height.name == entry.value) entry.key as String: height,
+        };
+        _columns = {
+          for (final entry in (data['columns'] as Map? ?? {}).entries)
+            if (entry.key is String && (entry.value == 1 || entry.value == 2))
+              entry.key as String: entry.value as int,
+        };
       });
     } on Object {
       // Corrupt layout preferences fall back to plugin declaration order.
@@ -85,9 +104,11 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
       await widget.values.write(
         _key,
         jsonEncode({
-          'version': 1,
+          'version': 2,
           'order': _order,
           'pinned': _pinned.toList()..sort(),
+          'heights': _heights.map((id, height) => MapEntry(id, height.name)),
+          'columns': _columns,
         }),
       );
     } on Object {
@@ -103,6 +124,8 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
     setState(() {
       _beforeOrder = [..._order];
       _beforePinned = {..._pinned};
+      _beforeHeights = {..._heights};
+      _beforeColumns = {..._columns};
       _editing = true;
     });
   }
@@ -112,6 +135,8 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
       if (!save) {
         _order = _beforeOrder;
         _pinned = _beforePinned;
+        _heights = _beforeHeights;
+        _columns = _beforeColumns;
       }
       _editing = false;
     });
@@ -131,11 +156,9 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
   List<OpenMusePlugin> _visible() {
     final plugins = <OpenMusePlugin>[
       for (final descriptor in widget.registry.descriptors)
-        if (widget.registry.stateOf(descriptor.id) ==
-            OpenMusePluginState.active)
-          if (widget.registry.plugin(descriptor.id)
-              case final OpenMuseMobileWorkbenchContributor contributor)
-            contributor as OpenMusePlugin,
+        if (widget.registry.plugin(descriptor.id)
+            case final OpenMuseMobileWorkbenchContributor contributor)
+          contributor as OpenMusePlugin,
     ];
     final position = {for (var i = 0; i < _order.length; i++) _order[i]: i};
     plugins.sort((a, b) {
@@ -157,6 +180,27 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
             MobilePluginDetailPage(plugin: plugin, contribution: contribution),
       ),
     );
+  }
+
+  OpenMuseWidgetHeight _heightFor(String id, OpenMuseWorkbenchCard card) =>
+      _heights[id] ?? card.height;
+
+  int _columnsFor(String id, OpenMuseWorkbenchCard card) =>
+      _columns[id] ?? card.columns;
+
+  void _resize(String id, String option) {
+    setState(() {
+      if (option == 'reset') {
+        _heights.remove(id);
+        _columns.remove(id);
+      } else if (option.startsWith('height.')) {
+        _heights[id] = OpenMuseWidgetHeight.values.byName(
+          option.substring('height.'.length),
+        );
+      } else if (option == 'columns.1' || option == 'columns.2') {
+        _columns[id] = option == 'columns.2' ? 2 : 1;
+      }
+    });
   }
 
   @override
@@ -295,19 +339,22 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
         padding: const EdgeInsets.only(bottom: 12),
         child: _card(plugin, contribution),
       );
-      if (card.columns == 2) {
+      if (_columnsFor(plugin.descriptor.id, card) == 2) {
         flush();
         rows.add(item);
       } else if (leftHeight <= rightHeight) {
         left.add(item);
-        leftHeight += _height(card.height).round();
+        leftHeight += _height(_heightFor(plugin.descriptor.id, card)).round();
       } else {
         right.add(item);
-        rightHeight += _height(card.height).round();
+        rightHeight += _height(_heightFor(plugin.descriptor.id, card)).round();
       }
     }
     flush();
-    return Column(children: rows);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: rows,
+    );
   }
 
   double _height(OpenMuseWidgetHeight value) => switch (value) {
@@ -322,6 +369,7 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
   ) {
     final id = plugin.descriptor.id;
     final card = contribution.workbenchCard;
+    final active = widget.registry.stateOf(id) == OpenMusePluginState.active;
     final colors = Theme.of(context).colorScheme;
     final content = Material(
       color: colors.surface,
@@ -329,9 +377,9 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         key: ValueKey('workbench-card-$id'),
-        onTap: _editing ? null : () => _open(plugin),
+        onTap: _editing || !active ? null : () => _open(plugin),
         child: SizedBox(
-          height: _height(card.height),
+          height: _height(_heightFor(id, card)),
           child: Padding(
             padding: const EdgeInsets.all(15),
             child: Column(
@@ -350,7 +398,74 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
                         ),
                       ),
                     ),
-                    if (_editing)
+                    if (!_editing && _pinned.contains(id))
+                      Icon(Icons.push_pin, size: 18, color: colors.primary),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: active
+                      ? IgnorePointer(
+                          ignoring: _editing,
+                          child: ClipRect(
+                            child: MobileWidgetPreview(
+                              key: ValueKey('workbench-preview-$id'),
+                              messages: contribution.buildWorkbenchPreview(),
+                              changes: contribution.workbenchChanges,
+                              reload: contribution.buildWorkbenchPreview,
+                            ),
+                          ),
+                        )
+                      : Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text('插件未启用'),
+                              if (widget.onManagePlugins != null)
+                                TextButton(
+                                  onPressed: _editing
+                                      ? null
+                                      : widget.onManagePlugins,
+                                  child: const Text('管理插件'),
+                                ),
+                            ],
+                          ),
+                        ),
+                ),
+                if (_editing)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      PopupMenuButton<String>(
+                        key: ValueKey('workbench-size-$id'),
+                        tooltip: '调整尺寸',
+                        icon: const Icon(Icons.aspect_ratio, size: 20),
+                        onSelected: (value) => _resize(id, value),
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: 'height.small',
+                            child: Text('紧凑高度'),
+                          ),
+                          PopupMenuItem(
+                            value: 'height.medium',
+                            child: Text('标准高度'),
+                          ),
+                          PopupMenuItem(
+                            value: 'height.large',
+                            child: Text('扩展高度'),
+                          ),
+                          PopupMenuDivider(),
+                          PopupMenuItem(
+                            value: 'columns.1',
+                            child: Text('单列宽度'),
+                          ),
+                          PopupMenuItem(value: 'columns.2', child: Text('跨两列')),
+                          PopupMenuItem(
+                            value: 'reset',
+                            child: Text('恢复插件默认尺寸'),
+                          ),
+                        ],
+                      ),
                       IconButton(
                         key: ValueKey('workbench-pin-$id'),
                         tooltip: _pinned.contains(id) ? '取消置顶' : '置顶',
@@ -363,29 +478,12 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
                               : Icons.push_pin_outlined,
                           size: 20,
                         ),
-                      )
-                    else if (_pinned.contains(id))
-                      Icon(Icons.push_pin, size: 18, color: colors.primary),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ClipRect(
-                    child: MobileWidgetPreview(
-                      key: ValueKey('workbench-preview-$id'),
-                      messages: contribution.buildWorkbenchPreview(),
-                      changes: contribution.workbenchChanges,
-                      reload: contribution.buildWorkbenchPreview,
-                    ),
-                  ),
-                ),
-                if (_editing)
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Icon(
-                      Icons.drag_indicator,
-                      color: colors.onSurfaceVariant,
-                    ),
+                      ),
+                      Icon(
+                        Icons.drag_indicator,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ],
                   ),
               ],
             ),
