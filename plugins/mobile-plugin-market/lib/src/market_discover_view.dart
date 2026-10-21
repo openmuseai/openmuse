@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:openmuse_market_ui/openmuse_market_ui.dart';
 import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
@@ -10,6 +11,13 @@ const marketCategories = ['精选', '办公', 'UI', '编程', '生活'];
 
 String marketDisplayName(MobileMarketEntry entry) =>
     entry.name.replaceFirst(' Mobile 适配演示', '');
+
+bool marketSupportsCurrentMobile(MobileMarketEntry entry) =>
+    switch (defaultTargetPlatform) {
+      TargetPlatform.android => entry.platforms.contains('android'),
+      TargetPlatform.iOS => entry.platforms.contains('ios'),
+      _ => true,
+    };
 
 class MarketDiscoverView extends StatelessWidget {
   const MarketDiscoverView({
@@ -31,6 +39,7 @@ class MarketDiscoverView extends StatelessWidget {
     this.builtInPlugins = const [],
     this.builtInState,
     this.onOpenBuiltIn,
+    this.onManageWorkbench,
     this.error,
     this.busy,
   });
@@ -52,6 +61,7 @@ class MarketDiscoverView extends StatelessWidget {
   final List<OpenMusePlugin> builtInPlugins;
   final OpenMusePluginState? Function(OpenMusePlugin)? builtInState;
   final ValueChanged<OpenMusePlugin>? onOpenBuiltIn;
+  final VoidCallback? onManageWorkbench;
   final String? error;
   final String? busy;
 
@@ -61,7 +71,9 @@ class MarketDiscoverView extends StatelessWidget {
       final categoryMatch = mine
           ? category == '全部' ||
                 (category == '已启用' && store.isEnabled(entry.id)) ||
-                (category == '已停用' && !store.isEnabled(entry.id))
+                (category == '已停用' && !store.isEnabled(entry.id)) ||
+                (category == '更新' &&
+                    store.installed(entry.id)?.version != entry.version)
           : category == '精选' || entry.categories.contains(category);
       final text = '$query'.trim().toLowerCase();
       return (!mine || store.isInstalled(entry.id)) &&
@@ -75,6 +87,7 @@ class MarketDiscoverView extends StatelessWidget {
       final active = builtInState?.call(plugin) == OpenMusePluginState.active;
       if (mine && category == '已启用' && !active) return false;
       if (mine && category == '已停用' && active) return false;
+      if (mine && category == '更新') return false;
       if (!mine && category != '精选') return false;
       final text = query.trim().toLowerCase();
       return text.isEmpty ||
@@ -82,7 +95,21 @@ class MarketDiscoverView extends StatelessWidget {
               .toLowerCase()
               .contains(text);
     }).toList();
-    final featured = filtered.isEmpty ? null : filtered.first;
+    final featured = filtered
+        .where(
+          (entry) =>
+              marketSupportsCurrentMobile(entry) &&
+              entry.media.any(
+                (medium) =>
+                    medium.type != 'video' && medium.uri.startsWith('asset:'),
+              ),
+        )
+        .firstOrNull;
+    final featuredArt = featured?.media
+        .where(
+          (medium) => medium.type != 'video' && medium.uri.startsWith('asset:'),
+        )
+        .firstOrNull;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(
@@ -95,22 +122,36 @@ class MarketDiscoverView extends StatelessWidget {
                   for (final section in [(false, '发现'), (true, '我的')])
                     Padding(
                       padding: const EdgeInsets.only(right: 18),
-                      child: InkWell(
-                        key: ValueKey('mobile-market-section-${section.$2}'),
-                        onTap: () => onSection(section.$1),
-                        child: AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 200),
-                          style: TextStyle(
-                            fontSize: mine == section.$1 ? 32 : 24,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.9,
-                            color: mine == section.$1
-                                ? Theme.of(context).colorScheme.onSurface
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
+                      child: Semantics(
+                        label: section.$1 ? '我的插件' : '发现插件',
+                        selected: mine == section.$1,
+                        button: true,
+                        child: InkWell(
+                          key: ValueKey('mobile-market-section-${section.$2}'),
+                          onTap: () => onSection(section.$1),
+                          child: SizedBox(
+                            height: 48,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: AnimatedDefaultTextStyle(
+                                duration:
+                                    MediaQuery.disableAnimationsOf(context)
+                                    ? Duration.zero
+                                    : const Duration(milliseconds: 200),
+                                style: TextStyle(
+                                  fontSize: mine == section.$1 ? 32 : 24,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.9,
+                                  color: mine == section.$1
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                ),
+                                child: Text(section.$2),
+                              ),
+                            ),
                           ),
-                          child: Text(section.$2),
                         ),
                       ),
                     ),
@@ -128,6 +169,16 @@ class MarketDiscoverView extends StatelessWidget {
                   prefixIcon: Icon(Icons.search_rounded),
                   hintText: mine ? '搜索已安装插件' : '搜索插件与功能',
                   isDense: true,
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 15,
+                  ),
                 ),
               ),
             ),
@@ -140,40 +191,50 @@ class MarketDiscoverView extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 children: [
                   for (final item
-                      in mine ? const ['全部', '已启用', '已停用'] : marketCategories)
+                      in mine
+                          ? const ['全部', '已启用', '已停用', '更新']
+                          : marketCategories)
                     Padding(
                       padding: const EdgeInsets.only(right: 23),
-                      child: InkWell(
-                        key: ValueKey('market-category-$item'),
-                        onTap: () => onCategory(item),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              item,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: category == item
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: category == item
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
+                      child: Semantics(
+                        label: '$item类别',
+                        selected: category == item,
+                        button: true,
+                        child: InkWell(
+                          key: ValueKey('market-category-$item'),
+                          onTap: () => onCategory(item),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                item,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: category == item
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: category == item
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 5),
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                              height: 3,
-                              width: category == item ? 23 : 0,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary,
-                                borderRadius: BorderRadius.circular(2),
+                              const SizedBox(height: 5),
+                              AnimatedContainer(
+                                duration:
+                                    MediaQuery.disableAnimationsOf(context)
+                                    ? Duration.zero
+                                    : const Duration(milliseconds: 180),
+                                height: 3,
+                                width: category == item ? 23 : 0,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -195,28 +256,29 @@ class MarketDiscoverView extends StatelessWidget {
                   ),
                 if (!mine &&
                     featured != null &&
+                    featuredArt != null &&
                     category == '精选' &&
                     query.isEmpty) ...[
                   MarketHeroArt(
-                    asset: MarketArt.taskBoard,
-                    height: 220,
+                    asset: featuredArt.uri.substring('asset:'.length),
+                    height: 300,
                     onTap: () => onDetail(featured),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '本周精选 · 办公',
+                          '本周精选 · ${featured.categories.firstOrNull ?? '插件'}',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: const Color(0xFF1765E9),
                           ),
                         ),
                         const SizedBox(height: 14),
                         Text(
-                          '把一天，\n安排得刚刚好',
+                          '把好用的工具\n放进工作台',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
+                            color: const Color(0xFF25303E),
                             fontSize: 25,
                             height: 1.17,
                             fontWeight: FontWeight.w800,
@@ -224,13 +286,13 @@ class MarketDiscoverView extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        Text(
-                          '${marketDisplayName(featured)} · 图文介绍',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                        FilledButton.icon(
+                          onPressed: () => onDetail(featured),
+                          icon: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 17,
                           ),
+                          label: Text('查看${marketDisplayName(featured)}'),
                         ),
                       ],
                     ),
@@ -254,7 +316,9 @@ class MarketDiscoverView extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      mcpSection == null ? '${filtered.length + visibleBuiltIns.length} 个' : '',
+                      mcpSection == null
+                          ? '${filtered.length + visibleBuiltIns.length} 个'
+                          : '',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
@@ -263,7 +327,9 @@ class MarketDiscoverView extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 11),
-                if (filtered.isEmpty && visibleBuiltIns.isEmpty && mcpSection == null)
+                if (filtered.isEmpty &&
+                    visibleBuiltIns.isEmpty &&
+                    mcpSection == null)
                   Container(
                     key: const ValueKey('market-empty-category'),
                     padding: const EdgeInsets.all(26),
@@ -299,35 +365,7 @@ class MarketDiscoverView extends StatelessWidget {
                       ],
                     ),
                   ),
-                for (final plugin in visibleBuiltIns)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Material(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(18),
-                      child: ListTile(
-                        key: ValueKey(
-                          'market-built-in-${plugin.descriptor.id}',
-                        ),
-                        leading: const Icon(Icons.widgets_outlined),
-                        title: Text(plugin.descriptor.name),
-                        subtitle: Text(
-                          builtInState?.call(plugin) ==
-                                  OpenMusePluginState.active
-                              ? '已预置 · 可在工作台打开'
-                              : '已预置 · 当前未启用',
-                        ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap:
-                            builtInState?.call(plugin) ==
-                                OpenMusePluginState.active
-                            ? () => onOpenBuiltIn?.call(plugin)
-                            : null,
-                      ),
-                    ),
-                  ),
-                if (mcpSection != null)
-                  mcpSection!,
+                if (mcpSection != null) mcpSection!,
                 for (final entry in filtered)
                   _MarketEntryTile(
                     entry: entry,
@@ -338,7 +376,61 @@ class MarketDiscoverView extends StatelessWidget {
                     onOpen: () => onOpen(entry),
                     onPreview: () => onPreview(entry),
                   ),
-                if (category == '精选' && query.isEmpty) ...[
+                if (visibleBuiltIns.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    '预置工具',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  for (final plugin in visibleBuiltIns)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Material(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(18),
+                        child: ListTile(
+                          key: ValueKey(
+                            'market-built-in-${plugin.descriptor.id}',
+                          ),
+                          leading: const Icon(Icons.widgets_outlined),
+                          title: Text(plugin.descriptor.name),
+                          subtitle: Text(
+                            builtInState?.call(plugin) ==
+                                    OpenMusePluginState.active
+                                ? '已预置 · 可在工作台打开'
+                                : '已预置 · 当前未启用',
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap:
+                              builtInState?.call(plugin) ==
+                                  OpenMusePluginState.active
+                              ? () => onOpenBuiltIn?.call(plugin)
+                              : null,
+                        ),
+                      ),
+                    ),
+                ],
+                if (mine && onManageWorkbench != null) ...[
+                  const SizedBox(height: 20),
+                  Material(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(18),
+                    child: ListTile(
+                      key: const ValueKey('market-manage-workbench'),
+                      leading: const Icon(Icons.dashboard_customize_outlined),
+                      title: const Text('工作台展示'),
+                      subtitle: const Text('管理已安装插件的卡片和位置'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: onManageWorkbench,
+                    ),
+                  ),
+                ],
+                if (!mine && category == '精选' && query.isEmpty) ...[
                   const SizedBox(height: 18),
                   MarketHeroArt(
                     asset: MarketArt.archify,
@@ -418,6 +510,9 @@ class _MarketEntryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final installed = store.isInstalled(entry.id);
     final enabled = store.isEnabled(entry.id);
+    final supported = marketSupportsCurrentMobile(entry);
+    final updateAvailable =
+        installed && store.installed(entry.id)!.version != entry.version;
     return Padding(
       padding: const EdgeInsets.only(bottom: 9),
       child: Material(
@@ -458,28 +553,54 @@ class _MarketEntryTile extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      const MarketPlatformBadge('Mobile'),
+                      Wrap(
+                        spacing: 5,
+                        children: [
+                          for (final platform in entry.platforms)
+                            MarketPlatformBadge(
+                              platform == 'ios'
+                                  ? 'iOS'
+                                  : platform == 'android'
+                                  ? 'Android'
+                                  : platform,
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
                 Column(
                   children: [
-                    if (!installed)
+                    if (!installed || updateAvailable)
                       FilledButton(
                         key: ValueKey('install-${entry.id}'),
-                        onPressed: busy ? null : onInstall,
-                        child: Text(busy ? '安装中' : '安装'),
+                        onPressed: busy || !supported ? null : onInstall,
+                        child: Text(
+                          !supported
+                              ? '不支持'
+                              : busy
+                              ? '处理中'
+                              : updateAvailable
+                              ? '更新'
+                              : '安装',
+                        ),
                       )
                     else
                       FilledButton(
                         key: ValueKey('open-${entry.id}'),
-                        onPressed: enabled ? onOpen : null,
-                        child: Text(enabled ? '打开' : '已禁用'),
+                        onPressed: enabled && supported ? onOpen : null,
+                        child: Text(
+                          !supported
+                              ? '不支持'
+                              : enabled
+                              ? '打开'
+                              : '已禁用',
+                        ),
                       ),
                     TextButton(
                       key: ValueKey('preview-${entry.id}'),
-                      onPressed: onPreview,
+                      onPressed: supported ? onPreview : null,
                       child: Text('预览'),
                     ),
                   ],
@@ -528,6 +649,7 @@ class MarketPluginDetailPage extends StatelessWidget {
     required this.onOpen,
     required this.onPreview,
     required this.onToggle,
+    required this.onRemove,
   });
   final MobileMarketEntry entry;
   final MobilePluginStore store;
@@ -535,6 +657,7 @@ class MarketPluginDetailPage extends StatelessWidget {
   final VoidCallback onOpen;
   final VoidCallback onPreview;
   final VoidCallback onToggle;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -542,7 +665,13 @@ class MarketPluginDetailPage extends StatelessWidget {
     builder: (context, _) {
       final installed = store.isInstalled(entry.id);
       final enabled = store.isEnabled(entry.id);
+      final supported = marketSupportsCurrentMobile(entry);
+      final updateAvailable =
+          installed && store.installed(entry.id)!.version != entry.version;
       final name = marketDisplayName(entry);
+      final permissions =
+          store.installed(entry.id)?.manifest.requestedPermissions.toList() ??
+          entry.permissions;
       return Scaffold(
         appBar: AppBar(title: Text(name)),
         bottomNavigationBar: SafeArea(
@@ -569,13 +698,19 @@ class MarketPluginDetailPage extends StatelessWidget {
                 ),
                 FilledButton(
                   key: ValueKey('detail-action-${entry.id}'),
-                  onPressed: !installed
+                  onPressed: !supported
+                      ? null
+                      : (!installed || updateAvailable)
                       ? onInstall
                       : enabled
                       ? onOpen
                       : onToggle,
                   child: Text(
-                    !installed
+                    !supported
+                        ? '此设备不支持'
+                        : updateAvailable
+                        ? '更新'
+                        : !installed
                         ? '安装'
                         : enabled
                         ? '打开'
@@ -633,10 +768,27 @@ class MarketPluginDetailPage extends StatelessWidget {
             SizedBox(
               height: 216,
               child: entry.media.isEmpty
-                  ? MarketHeroArt(
-                      asset: MarketArt.taskBoard,
-                      height: 216,
-                      child: const SizedBox.shrink(),
+                  ? DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            MarketPluginIcon(entry.id, size: 64),
+                            const SizedBox(height: 12),
+                            Text(
+                              marketDisplayName(entry),
+                              style: const TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     )
                   : PageView(
                       children: [
@@ -647,7 +799,7 @@ class MarketPluginDetailPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              entry.id.contains('task-board') ? '让每个想法都有下一步' : '看清用量，安排预算',
+              entry.name,
               style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
@@ -667,13 +819,15 @@ class MarketPluginDetailPage extends StatelessWidget {
             const SizedBox(height: 9),
             _DetailInfoRow(
               icon: Icons.bolt_outlined,
-              title: entry.id.contains('task-board') ? '快速收集' : '预算设置',
-              detail: '在本机完成轻量交互与即时反馈',
+              title: '工作台预览',
+              detail: '使用共享 A2UI 组件显示关键状态',
             ),
-            const _DetailInfoRow(
+            _DetailInfoRow(
               icon: Icons.layers_outlined,
-              title: '原生界面',
-              detail: 'A2UI 由 Flutter 组件渲染',
+              title: '完整页面',
+              detail: entry.runtime == 'webview'
+                  ? '平台 WebView 中的独立插件页面'
+                  : 'Flutter A2UI 兼容页面',
             ),
             const SizedBox(height: 22),
             Text(
@@ -686,10 +840,14 @@ class MarketPluginDetailPage extends StatelessWidget {
               title: '支持平台',
               detail: entry.platforms.join(' / '),
             ),
-            const _DetailInfoRow(
+            _DetailInfoRow(
               icon: Icons.verified_user_outlined,
               title: '插件权限',
-              detail: '当前演示不请求 Host 业务能力',
+              detail: permissions == null
+                  ? '以安装包清单为准'
+                  : permissions.isEmpty
+                  ? '不请求 Host 业务能力'
+                  : permissions.join('、'),
             ),
             const SizedBox(height: 8),
             Text(
@@ -710,11 +868,41 @@ class MarketPluginDetailPage extends StatelessWidget {
             Wrap(
               spacing: 8,
               children: [
-                OutlinedButton(onPressed: onPreview, child: Text('预览')),
+                OutlinedButton(
+                  onPressed: supported ? onPreview : null,
+                  child: Text('预览'),
+                ),
                 if (installed)
                   TextButton(
                     onPressed: onToggle,
                     child: Text(enabled ? '禁用' : '启用'),
+                  ),
+                if (installed)
+                  TextButton(
+                    key: ValueKey('remove-${entry.id}'),
+                    onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          title: const Text('移除插件？'),
+                          content: Text('将从本机移除 ${entry.name}。'),
+                          actions: [
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.pop(dialogContext, false),
+                              child: const Text('取消'),
+                            ),
+                            FilledButton(
+                              onPressed: () =>
+                                  Navigator.pop(dialogContext, true),
+                              child: const Text('移除'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) onRemove();
+                    },
+                    child: const Text('移除'),
                   ),
               ],
             ),

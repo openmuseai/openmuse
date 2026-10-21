@@ -26,11 +26,16 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
     this.source = const BundledMobileMarketSource(),
     this.mcpRegistryOrigin,
     this.registryProviders,
+    this.nativeMediaTypes = const {},
+    this.openNativeFile,
   });
   final MobilePluginStore store;
   final MobileMarketSource source;
   final Uri? mcpRegistryOrigin;
   final McpRegistryProviders? registryProviders;
+  final Map<String, Set<String>> nativeMediaTypes;
+  final Future<void> Function(BuildContext, RemoteMcpEntry, File)?
+  openNativeFile;
 
   @override
   final descriptor = const OpenMusePluginDescriptor(
@@ -65,6 +70,8 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
           source: source,
           mcpRegistryOrigin: mcpRegistryOrigin,
           registryProviders: registryProviders,
+          nativeMediaTypes: nativeMediaTypes,
+          openNativeFile: openNativeFile,
         )
       : null;
 
@@ -74,6 +81,7 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
     bool initialMine = false,
     OpenMusePluginRegistry? pluginRegistry,
     ValueChanged<OpenMusePlugin>? onOpenBuiltIn,
+    VoidCallback? onManageWorkbench,
   }) => MobileMarketPage(
     store: store,
     source: source,
@@ -82,8 +90,11 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
     initialMine: initialMine,
     pluginRegistry: pluginRegistry,
     onOpenBuiltIn: onOpenBuiltIn,
+    onManageWorkbench: onManageWorkbench,
     mcpRegistryOrigin: mcpRegistryOrigin,
     registryProviders: registryProviders,
+    nativeMediaTypes: nativeMediaTypes,
+    openNativeFile: openNativeFile,
   );
 }
 
@@ -125,6 +136,57 @@ final class OpenMuseQuickJsInstalledPlugin implements OpenMusePlugin {
       : null;
 }
 
+/// A verified downloadable presentation. Its bridge is closed until a
+/// separately reviewed capability dispatcher grants a specific permission.
+final class OpenMuseWebViewInstalledPlugin extends ChangeNotifier
+    implements OpenMusePlugin, OpenMuseMobileWorkbenchContributor {
+  OpenMuseWebViewInstalledPlugin(this.bundle, this.title)
+    : assert(bundle.isWebView);
+
+  final MobilePluginBundle bundle;
+  final String title;
+
+  @override
+  late final descriptor = OpenMusePluginDescriptor(
+    id: bundle.id,
+    name: title,
+    version: bundle.version,
+    runtime: OpenMusePluginRuntime.webView,
+    activationEvents: const ['onStartup'],
+  );
+
+  @override
+  OpenMuseWorkbenchCard get workbenchCard => bundle.card!;
+
+  @override
+  Listenable get workbenchChanges => this;
+
+  @override
+  List<Map<String, Object?>> buildWorkbenchPreview() => bundle.preview;
+
+  @override
+  String buildMobileDetailDocument(Brightness brightness) => bundle.html!;
+
+  @override
+  Future<Object?> handleMobileDetailRequest(
+    String method,
+    Object? arguments,
+  ) async => throw const FormatException('此插件未获 Host 能力授权');
+
+  @override
+  Future<void> activate(OpenMusePluginContext context) async {}
+
+  @override
+  Future<void> deactivate() async {}
+
+  @override
+  Widget buildEditor(BuildContext context, OpenMuseResource resource) =>
+      const SizedBox.shrink();
+
+  @override
+  Widget? buildPanel(BuildContext context, String panelId) => null;
+}
+
 final class MobileMarketPage extends StatefulWidget {
   const MobileMarketPage({
     super.key,
@@ -135,8 +197,11 @@ final class MobileMarketPage extends StatefulWidget {
     this.initialMine = false,
     this.pluginRegistry,
     this.onOpenBuiltIn,
+    this.onManageWorkbench,
     this.mcpRegistryOrigin,
     this.registryProviders,
+    this.nativeMediaTypes = const {},
+    this.openNativeFile,
   });
   final MobilePluginStore store;
   final MobileMarketSource source;
@@ -145,8 +210,12 @@ final class MobileMarketPage extends StatefulWidget {
   final bool initialMine;
   final OpenMusePluginRegistry? pluginRegistry;
   final ValueChanged<OpenMusePlugin>? onOpenBuiltIn;
+  final VoidCallback? onManageWorkbench;
   final Uri? mcpRegistryOrigin;
   final McpRegistryProviders? registryProviders;
+  final Map<String, Set<String>> nativeMediaTypes;
+  final Future<void> Function(BuildContext, RemoteMcpEntry, File)?
+  openNativeFile;
 
   @override
   State<MobileMarketPage> createState() => _MobileMarketPageState();
@@ -177,7 +246,11 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
       final loaded = await widget.source.list();
       if (mounted) setState(() => entries = loaded);
     } catch (exception) {
-      if (mounted) setState(() { entries = []; error = '$exception'; });
+      if (mounted)
+        setState(() {
+          entries = [];
+          error = '$exception';
+        });
     }
   }
 
@@ -196,29 +269,51 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
   }
 
   Future<void> _open(MobileMarketEntry entry, {required bool preview}) async {
-    MobilePluginBundle bundle;
-    if (preview) {
-      final bytes = await widget.source.artifact(entry);
-      final previewDirectory = await Directory.systemTemp.createTemp(
-        'openmuse-plugin-preview-',
-      );
-      try {
-        final temporary = MobilePluginStore(previewDirectory);
-        await temporary.install(entry, bytes);
-        bundle = temporary.installed(entry.id)!;
-      } finally {
-        await previewDirectory.delete(recursive: true);
+    try {
+      MobilePluginBundle bundle;
+      if (preview) {
+        final bytes = await widget.source.artifact(entry);
+        final previewDirectory = await Directory.systemTemp.createTemp(
+          'openmuse-plugin-preview-',
+        );
+        try {
+          final temporary = MobilePluginStore(previewDirectory);
+          await temporary.install(entry, bytes);
+          bundle = temporary.installed(entry.id)!;
+        } finally {
+          await previewDirectory.delete(recursive: true);
+        }
+      } else {
+        bundle =
+            widget.store.installed(entry.id) ?? (throw StateError('插件尚未安装'));
       }
-    } else {
-      bundle = widget.store.installed(entry.id)!;
+      if (!mounted) return;
+      if (bundle.isWebView) {
+        final plugin = OpenMuseWebViewInstalledPlugin(bundle, entry.name);
+        try {
+          await Navigator.of(context).push<void>(
+            MaterialPageRoute(
+              builder: (_) =>
+                  MobilePluginDetailPage(plugin: plugin, contribution: plugin),
+            ),
+          );
+        } finally {
+          plugin.dispose();
+        }
+        return;
+      }
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => _PluginRunPage(
+            bundle: bundle,
+            title: entry.name,
+            preview: preview,
+          ),
+        ),
+      );
+    } on Object catch (failure) {
+      if (mounted) setState(() => error = '无法打开插件：$failure');
     }
-    if (!mounted) return;
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) =>
-            _PluginRunPage(bundle: bundle, title: entry.name, preview: preview),
-      ),
-    );
   }
 
   Future<void> _detail(MobileMarketEntry entry) async {
@@ -236,6 +331,7 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
               !widget.store.isEnabled(entry.id),
             ),
           ),
+          onRemove: () => unawaited(widget.store.uninstall(entry.id)),
         ),
       ),
     );
@@ -291,12 +387,17 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
           builtInState: (plugin) =>
               widget.pluginRegistry?.stateOf(plugin.descriptor.id),
           onOpenBuiltIn: widget.onOpenBuiltIn,
-          mcpSection: widget.registryProviders == null && widget.mcpRegistryOrigin == null
+          onManageWorkbench: widget.onManageWorkbench,
+          mcpSection:
+              widget.registryProviders == null &&
+                  widget.mcpRegistryOrigin == null
               ? null
               : RemoteMcpMarketPage(
                   key: const ValueKey('mobile-mcp-online-market'),
                   origin: widget.mcpRegistryOrigin,
                   providers: widget.registryProviders,
+                  nativeMediaTypes: widget.nativeMediaTypes,
+                  openNativeFile: widget.openNativeFile,
                   embedded: true,
                   query: query,
                   installedOnly: mine,
