@@ -663,7 +663,12 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
             throw StateError('METHOD_UNAVAILABLE');
         }
         if (!mounted || !_valid) throw StateError('CALLER_SCOPE_REVOKED');
-      } catch (_) {
+      } catch (error, stack) {
+        // Do not log resource bytes, arguments, or third-party error messages.
+        // Keep a call-site trace so native bridge failures are diagnosable.
+        debugPrint(
+          'MCP Apps ${request['method']} failed: ${error.runtimeType}\n$stack',
+        );
         response.remove('result');
         response['error'] = {
           'code': -32602,
