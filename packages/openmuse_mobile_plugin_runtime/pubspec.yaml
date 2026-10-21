@@ -12,6 +12,7 @@ dependencies:
   fjs: 3.3.2
   crypto: ^3.0.6
   cryptography: ^2.7.0
+  webview_flutter: ^4.13.1
   path: ^1.9.1
   openmuse_plugin_sdk:
     path: ../openmuse_plugin_sdk
