@@ -1,6 +1,6 @@
 # OpenMuse 插件平台 V2：Mobile 与 Desktop 设计方案
 
-状态：**设计基线，首阶段实施中**。日期：2026-10-14。实施后的架构决定与验收状态以 [实施方案](IMPLEMENTATION-PLAN.zh-CN.md) 和 [验收矩阵](ACCEPTANCE-MATRIX.zh-CN.md) 为准。本稿第 3 节的 QuickJS 完整页面构想已改为平台 WebView；A2UI 用于工作台卡片。
+状态：**已批准的设计基线，第二阶段代码已实施**。日期：2026-10-15。架构决定与尚待真实设备验收的项目以 [实施方案](IMPLEMENTATION-PLAN.zh-CN.md)、[验收矩阵](ACCEPTANCE-MATRIX.zh-CN.md) 和 [本次 UI 对照](UI-AUDIT.zh-CN.md) 为准。平台 WebView 用于完整页面；A2UI 用于工作台卡片。
 
 本稿以用户提供的两张截图为视觉参考：Desktop 借鉴 App Store 的侧栏、编辑精选和宽幅媒体；Mobile 借鉴简洁的「我的」设置分组。参考图只用于识别布局与视觉意图，不作为功能、文案或数据来源。本目录设计图均为概念图，不是现有 App 截图。
 
@@ -96,7 +96,9 @@
 
 ### 与 Everything is Plugin 架构的关系
 
-卡片是插件的**第二种 presentation surface**，不是新的运行内核。现有 `ui_runtime: a2ui` 和 `execution_connector: quickjs` 负责 Mobile 插件完整界面与逻辑；新增的 `widget_preview` 能力建议作为 manifest 的显式可选声明，并由 Host 注册、授权和限流。运行时路径：`插件 QuickJS → 私有 Host/plugin 消息协议 → 受限 A2UI 预览模型 → Flutter 预置组件 renderer`。卡片内不下载 Dart 代码，也不让插件直接创建任意 Flutter Widget。内置 Flutter 插件可经相同预览接口适配。
+卡片是插件的**第二种 presentation surface**，不是新的运行内核。新下载包使用 `openmuse-mobile-web/v1`：manifest V2 声明 `ui_runtime: web-view`、`execution_connector: none`、目标平台与 Web 页面摘要；包中附带受限 A2UI 卡片声明。Host 校验签名目录、包摘要、manifest、HTML 摘要、平台与卡片组件后，才把插件注册到统一 registry。运行时路径：`已验证的卡片声明 → 共享 A2UI/GenUI 组件目录 → Flutter 工作台 renderer`；点卡片打开平台 WebView 详情。卡片内不下载 Dart 代码，也不让插件直接创建任意 Flutter Widget。预置插件也经相同贡献接口展示。QuickJS 仅保留旧版 PPTX 等包的迁移兼容。
+
+市场下载包的 Host 桥默认拒绝业务方法和权限请求。定时任务、Workspace 文件这类有 Desktop 权限的首批插件由预置适配器显式声明并经配对 grant 调用领域服务。第三方插件若需该类能力，必须先实现可审计的权限声明、用户授权与按插件作用域分发；不能因 HTML 可安装就自动获得 Host RPC。
 
 预览模型建议只覆盖文本、图标、数值、轻量图表、最多两项操作和必要的状态；复杂交互进入完整插件页面。Host 控制刷新节奏：可见卡片优先、离屏暂停或快照；高频数据合并到下一帧；插件消息不得阻塞 Flutter 主线程。具体刷新预算、内存限额、后台频率及泄漏监测在实施前通过真机基准确定，不把图中的动画效果当作性能承诺。预览权限继承插件授予的权限，并遵守隐私遮罩与锁屏规则。
 
@@ -127,7 +129,7 @@
 
 ## 6. 实施边界与设计验收
 
-此轮只交付设计，**未修改运行代码，未声称真机或 Desktop 功能验收**。实施阶段可按以下顺序推进：全局导航和主题状态 → Mobile 发现及我的插件 → Mobile 工作台预览协议和布局 → Desktop 市场 → 跨端目录/安装状态核对。先完成真实数据模型，再接设计媒体。
+设计稿是视觉基线，不代表自动验收。实现阶段按以下顺序推进：全局导航和主题状态 → Mobile 发现及我的插件 → Mobile 工作台预览协议和布局 → Desktop 市场 → 跨端目录/安装状态核对。已完成的功能与设备证据、仍未通过的发布门槛见 [验收矩阵](ACCEPTANCE-MATRIX.zh-CN.md)。
 
 | 编号 | 验收类型 | 可验证结果 |
 | --- | --- | --- |

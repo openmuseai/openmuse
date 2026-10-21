@@ -1,6 +1,14 @@
 # Mobile 插件工作台实施方案
 
-状态：首阶段已实施；验收结果见 [验收矩阵](ACCEPTANCE-MATRIX.zh-CN.md)。以 [设计稿](DESIGN-SPEC.zh-CN.md) 为 UI 基准。
+状态：第二阶段代码实施和隔离环境验证完成（2026-10-15）；真实帐号与设备发布门槛见 [验收矩阵](ACCEPTANCE-MATRIX.zh-CN.md)。以 [设计稿](DESIGN-SPEC.zh-CN.md) 为 UI 基准。
+
+## 本阶段交付顺序
+
+1. 定义 `openmuse-mobile-web/v1` 包：沿用签名目录和 SHA-256 校验，manifest V2 声明 WebView 详情、A2UI 工作台预览与权限清单；拒绝越权、跨平台及畸形包。
+2. 市场安装、预览、启停、恢复统一接入插件 registry；下载的 Web 包以独立 WebView 显示详情，Host 桥默认拒绝所有能力，只有显式声明和授权的能力才可开放。
+3. 将现有任务看板、用量与预算演示包迁移到 WebView 格式，保留 PPTX 的 QuickJS 兼容迁移通道；检查发现/我的、工作台和 Desktop 市场设计一致性。
+4. 以真实 Desktop 领域服务 + 配对 HTTP 网关 + Mobile 客户端验证计划创建、到期执行、重启恢复与文件树/搜索/预览；对登录持久化、主题、窄屏和 WebView 在 Android/iOS 设备上复验。
+5. 构建 Android APK 与 Desktop App；仅在安全的隔离环境自动运行设备集成测试。用户真机上已发生一次测试工具卸载与登录数据清除，最新版保留为待人工安装验收。将所有边界写入验收矩阵。
 
 ## 领域边界
 
@@ -15,7 +23,7 @@
 
 ## 运行模型
 
-`Plugin descriptor → Host registry → workbench contribution → 共享 A2UI profile → Flutter Widget 卡片`。点卡片时打开同一插件的 `WebView` 详情。网页通过 `OpenMusePlugin` JS channel 发带 requestId 的能力请求；Host 将请求分发到当前插件的受限实现，Desktop 操作还须有当前配对 grant。两个首批插件为随 App 发布的预置插件，在市场「发现 / 我的」显示。QuickJS 下载包仅保留迁移期兼容；任意第三方 WebView 插件的签名包安装及通用能力授权尚未实现，不能据此宣称 QuickJS 已完全废弃。
+`Plugin descriptor → Host registry → workbench contribution → 共享 A2UI profile → Flutter Widget 卡片`。点卡片时打开同一插件的 `WebView` 详情。网页通过 `OpenMusePlugin` JS channel 发带 requestId 的能力请求；Host 将请求分发到当前插件的受限实现，Desktop 操作还须有当前配对 grant。两个首批跨端插件为随 App 发布的预置插件，在市场「发现 / 我的」显示。市场可安装 `openmuse-mobile-web/v1` 下载包，演示插件没有 Host 权限；QuickJS 下载包仅保留迁移期兼容。对第三方下载包开放 Host 能力之前，仍需按能力逐项设计声明、授权、撤销和审计。
 
 ```mermaid
 flowchart LR
@@ -30,7 +38,7 @@ flowchart LR
   Paired --> Mirror[Desktop Workspace 镜像领域服务]
 ```
 
-Mobile 页面只持有视图状态；定时执行记录与文件系统权限由 Desktop 领域服务持有。工作台排序、置顶按账户、设备、Workspace 分域保存。当前两款插件的详情网页是随应用构建的静态文档；未来的下载包应在签名、能力清单和版本回滚边界完成后接入同一 WebView Host。
+Mobile 页面只持有视图状态；定时执行记录与文件系统权限由 Desktop 领域服务持有。工作台排序、置顶按账户、设备、Workspace 分域保存。预置跨端插件的详情网页随应用构建；市场下载包按签名目录、包摘要、manifest 的 Web 文档摘要、平台与卡片白名单验证，并接入同一 WebView Host。下载包的 Host 能力桥默认拒绝业务方法。
 
 Android WebView / iOS WKWebView 作为详情页平台视图，有独立渲染成本，因此不应在瀑布流里逐卡嵌入。Flutter 官方文档也提醒平台视图的合成有性能代价；这正是卡片采用 A2UI/Flutter 的原因。[Flutter Platform Views](https://docs.flutter.dev/platform-integration/android/platform-views)、[webview_flutter](https://pub.dev/packages/webview_flutter)。iOS 发布前另需按 Apple 当前的插件/mini app 条款核对市场下发策略；技术迁移本身不构成上架保证。[Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)。
 
