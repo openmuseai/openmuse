@@ -10,6 +10,7 @@ dependencies:
   appflowy_editor_native_plugin:
     path: ../../../Muse-Plugin-Ecosystem/plugins/appflowy-editor/flutter_editor
   crypto: ^3.0.6
+  file_picker: ^10.3.10
   flutter:
     sdk: flutter
   openmuse_auth_gotrue:

@@ -192,7 +192,7 @@ packages:
     source: hosted
     version: "7.0.1"
   file_picker:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: file_picker
       sha256: "57d9a1dd5063f85fa3107fb42d1faffda52fdc948cefd5fe5ea85267a5fc7343"

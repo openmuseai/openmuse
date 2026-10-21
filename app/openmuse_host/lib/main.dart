@@ -28,6 +28,7 @@ import 'src/host/openmuse_app.dart';
 import 'src/host/plugin_distribution.dart';
 import 'src/host/mcp_file_plugin.dart';
 import 'src/host/mcp_market.dart';
+import 'src/host/mcp_installed_app.dart';
 import 'src/host/resource_agent_broker.dart';
 import 'src/host/plugin_cli_broker.dart';
 import 'src/host/plugin_market.dart';
@@ -127,6 +128,11 @@ Future<Widget> bootOpenMuseHost() async {
   McpRegistryMarket? selectedMarket() =>
       providers.selected == null ? null : makeMarket(providers.selected!);
   final receiptMarket = makeMarket(Uri());
+  final mcpApps = McpAppsEnvironment(
+    market: receiptMarket,
+    nodeExecutable: marketNode,
+    scope: () => accountStorage.subject,
+  );
   Future<void> registerMcp(McpMarketEntry entry) async {
     final existing = registry.plugin(entry.name);
     if (existing?.descriptor.version == entry.version) return;
@@ -638,7 +644,7 @@ Future<Widget> bootOpenMuseHost() async {
     nativeMcpEditorBuilder: (pluginId) =>
         pluginId == 'io.openmuse/appflowy-editor'
         ? const AppFlowyMarkdownEditor()
-        : null,
+        : McpInstalledApp(pluginId: pluginId, environment: mcpApps),
     routeInteraction: (interaction) async {
       try {
         final image = await File(interaction.imagePath).readAsBytes();
