@@ -12,6 +12,7 @@ import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
 import 'package:openmuse_host/src/host/openmuse_app.dart';
 import 'package:openmuse_host/src/host/desktop_update.dart';
 import 'package:openmuse_host/src/host/layout/layout.dart';
+import 'package:openmuse_host/src/host/layout/plugin_panel.dart';
 import 'package:openmuse_host/src/host/local_settings.dart';
 import 'package:openmuse_host/src/host/workspace_controller.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -52,6 +53,33 @@ void main() {
   tearDown(() async {
     if (await root.exists()) await root.delete(recursive: true);
   });
+
+  test(
+    'restore a closed plugin panel without replacing files or duplicating panes',
+    () {
+      final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+      layout.unbind('dsh');
+      layout.closeEmptyPane('dsh');
+      final editor = layout.snapshot.bindingFor('editor');
+      final plugin = _StatefulPanelPlugin();
+      final candidate = OpenMusePanelCandidate(
+        plugin: plugin,
+        panel: plugin.descriptor.panels.single,
+      );
+      revealPluginPanel(layout, candidate);
+      expect(layout.snapshot.bindingFor('editor'), editor);
+      final count = layout.snapshot.paneIds.length;
+      revealPluginPanel(layout, candidate);
+      expect(layout.snapshot.paneIds.length, count);
+      expect(
+        layout.snapshot.bindings.values.where(
+          (b) => b.surfaceRef == 'plugin.panel:test.panel',
+        ),
+        hasLength(1),
+      );
+      layout.dispose();
+    },
+  );
 
   testWidgets('search dialog filters and opens a local resource', (
     tester,

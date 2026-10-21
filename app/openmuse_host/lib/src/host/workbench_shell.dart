@@ -13,6 +13,7 @@ import 'package:openmuse_market_ui/openmuse_market_ui.dart';
 import 'design_system.dart';
 import 'desktop_update.dart';
 import 'layout/layout.dart';
+import 'layout/plugin_panel.dart';
 import 'layout/surface_mutation_guard.dart';
 import 'local_settings.dart';
 import 'plugin_surface_host.dart';
@@ -232,6 +233,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
               workspace: widget.workspace,
               onDrag: OpenMuseWindowChrome.startDrag,
               onSettings: () => _openLocalSettings(context),
+              onShowAgent: _showAgentPanel,
             )
           else
             _WindowsTitleStrip(
@@ -548,8 +550,27 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     }
   }
 
+  Future<void> _showAgentPanel() async {
+    final candidate = widget.registry
+        .panelCandidates()
+        .where((item) => item.plugin is OpenMuseAgentContributor)
+        .firstOrNull;
+    if (candidate == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请在插件中启用 Agent 面板。')));
+      return;
+    }
+    await widget.registry.ensureActive(candidate.plugin);
+    if (!mounted) return;
+    await widget.settings.setAssistantVisible(true);
+    if (!mounted) return;
+    revealPluginPanel(_layout, candidate);
+  }
+
   void _selectView(_HostView view) {
     setState(() => _view = view);
+    unawaited(widget.settings.setAssistantVisible(true));
     _layout.restore(_layoutForView(view));
     _publishMacView(view);
   }
@@ -2423,11 +2444,13 @@ final class _MacTitleBar extends StatelessWidget {
     required this.workspace,
     required this.onDrag,
     required this.onSettings,
+    required this.onShowAgent,
   });
 
   final LocalWorkspaceController workspace;
   final VoidCallback onDrag;
   final VoidCallback onSettings;
+  final VoidCallback onShowAgent;
 
   @override
   Widget build(BuildContext context) {
@@ -2472,6 +2495,18 @@ final class _MacTitleBar extends StatelessWidget {
                     context,
                   ).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
+              ),
+              IconButton(
+                key: const ValueKey('title-show-agent'),
+                tooltip: _hostText(context, '显示 Agent 面板', 'Show Agent panel'),
+                onPressed: onShowAgent,
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints.tightFor(
+                  width: 28,
+                  height: 28,
+                ),
+                padding: EdgeInsets.zero,
+                icon: const Icon(Icons.forum_outlined, size: 16),
               ),
               Expanded(
                 child: Listener(
