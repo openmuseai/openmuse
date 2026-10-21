@@ -9,7 +9,6 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'mcp_market.dart';
 import 'mcp_resource_extensions.dart';
-import 'resource_agent_broker.dart';
 
 /// Adapts any MCP tool with a JSON Schema base64 file input to a Host editor.
 /// The MIME type is standard JSON Schema contentMediaType, supplied by MCP.
@@ -25,7 +24,6 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
     this.extensions,
     this.contributors,
     this.approve,
-    this.reveal,
   }) : descriptor = OpenMusePluginDescriptor(
          id: entry.name,
          name: entry.title,
@@ -53,7 +51,6 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
   final List<({String id, OpenMuseToolContributor plugin})> Function()?
   contributors;
   final Future<bool> Function(String, String)? approve;
-  final Future<void> Function(String)? reveal;
 
   @override
   final OpenMusePluginDescriptor descriptor;
@@ -85,7 +82,6 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
       extensions: extensions,
       contributors: contributors,
       approve: approve,
-      reveal: reveal,
     );
   }
 
@@ -111,7 +107,6 @@ Future<OpenMuseMcpFilePlugin?> discoverMcpFilePlugin({
   McpResourceExtensions? extensions,
   List<({String id, OpenMuseToolContributor plugin})> Function()? contributors,
   Future<bool> Function(String, String)? approve,
-  Future<void> Function(String)? reveal,
 }) async {
   for (final tool in await runtime.tools()) {
     final schema = tool['inputSchema'];
@@ -132,7 +127,6 @@ Future<OpenMuseMcpFilePlugin?> discoverMcpFilePlugin({
       extensions: extensions,
       contributors: contributors,
       approve: approve,
-      reveal: reveal,
       nativeFlutterEditor:
           entry.name == 'io.openmuse/appflowy-editor' &&
           mediaType == 'text/markdown',
@@ -152,7 +146,6 @@ final class _McpFileEditor extends StatefulWidget {
     this.extensions,
     this.contributors,
     this.approve,
-    this.reveal,
   });
   final McpBundleRuntime runtime;
   final String toolName;
@@ -163,7 +156,6 @@ final class _McpFileEditor extends StatefulWidget {
   final List<({String id, OpenMuseToolContributor plugin})> Function()?
   contributors;
   final Future<bool> Function(String, String)? approve;
-  final Future<void> Function(String)? reveal;
   @override
   State<_McpFileEditor> createState() => _McpFileEditorState();
 }
@@ -233,7 +225,6 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
           contributors: widget.contributors ?? () => [],
           approve: widget.approve ?? (_, _) async => false,
           isCurrent: e.isCurrent,
-          reveal: widget.reveal,
           resourceTools: e.resourceTools,
           serverTools: e.tools,
           serverCall: e.invoke,

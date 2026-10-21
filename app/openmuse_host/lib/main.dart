@@ -22,7 +22,6 @@ import 'src/host/design_system.dart';
 import 'src/host/account_storage.dart';
 import 'src/host/endpoint_config.dart';
 import 'src/host/layout/layout.dart';
-import 'src/host/layout/plugin_panel.dart';
 import 'src/host/layout/surface_mutation_guard.dart';
 import 'src/host/local_settings.dart';
 import 'src/host/openmuse_app.dart';
@@ -34,7 +33,6 @@ import 'src/host/mcp_installed_app.dart';
 import 'src/host/mcp_terminal_service.dart';
 import 'src/host/mcp_capability_gateway.dart';
 import 'src/host/mcp_bin_registry.dart';
-import 'src/host/resource_agent_broker.dart';
 import 'src/host/plugin_cli_broker.dart';
 import 'src/host/plugin_market.dart';
 import 'src/host/workspace_controller.dart';
@@ -180,16 +178,6 @@ Future<Widget> bootOpenMuseHost() async {
             (id: descriptor.id, plugin: plugin),
       ],
       approve: mcpApps.approve,
-      reveal: (id) async {
-        final candidate = registry
-            .panelCandidates()
-            .where((c) => c.plugin.descriptor.id == id)
-            .firstOrNull;
-        if (candidate == null) return;
-        await registry.ensureActive(candidate.plugin);
-        await settings.setAssistantVisible(true);
-        revealPluginPanel(layoutController, candidate);
-      },
     );
     if (plugin != null) {
       if (existing != null) await registry.uninstall(entry.name);

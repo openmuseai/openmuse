@@ -1,6 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:openmuse_host/src/host/mcp_resource_extensions.dart';
-import 'package:openmuse_host/src/host/resource_agent_broker.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 class Contributor implements OpenMuseToolContributor {

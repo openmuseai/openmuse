@@ -22,7 +22,9 @@ String buildMcpAppHostDocument({
   String? argumentsUrl,
   required Map<String, Object?> arguments,
   required String platform,
+  String theme = 'light',
   bool agentAvailable = false,
+  bool resourceToolsAvailable = false,
   List<McpAppExtensionDocument> extensions = const [],
   bool serverAvailable = false,
   String nativeSend =
@@ -46,6 +48,7 @@ String buildMcpAppHostDocument({
   final inputUrl = jsonEncode(argumentsUrl);
   final input = jsonEncode(arguments).replaceAll('<', r'\u003c');
   final hostPlatform = jsonEncode(platform);
+  final hostTheme = jsonEncode(theme);
   return '''<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>html,body,iframe{width:100%;height:100%;margin:0;border:0;overflow:hidden}iframe{display:block}</style>
@@ -86,7 +89,7 @@ function mountExtension(spec){
   const raw=event.data;if(!raw||raw.jsonrpc!=='2.0')return;
   const reply=value=>extension.contentWindow.postMessage(value,'*');
   if(raw.method==='ui/initialize'){
-   reply({jsonrpc:'2.0',id:raw.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{serverTools:{}},hostContext:{theme:matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light',locale:'zh-CN',platform:$hostPlatform,displayMode:'inline'}}});
+   reply({jsonrpc:'2.0',id:raw.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{serverTools:{}},hostContext:{theme:$hostTheme,locale:'zh-CN',platform:$hostPlatform,displayMode:'inline'}}});
   }else if(raw.method==='ui/notifications/initialized'){
    if(entry.initialized)return;entry.initialized=true;
    reply({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:entry.args}});
@@ -106,19 +109,19 @@ window.addEventListener('message',async event=>{
  if(!message||message.jsonrpc!=='2.0')return;
  if(message.method==='ui/initialize'){
    appCapabilities=message.params?.appCapabilities??{};
-   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{},...($serverAvailable?{serverTools:{},serverResources:{}}:{}),...($agentAvailable?{message:{text:{}},updateModelContext:{text:{}}}:{})},hostContext:{theme:'light',locale:'zh-CN',platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
+   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{},...($serverAvailable?{serverTools:{},serverResources:{}}:{}),...($agentAvailable?{message:{text:{}},updateModelContext:{text:{}}}:{})},hostContext:{theme:$hostTheme,locale:'zh-CN',platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
  }else if(message.method==='ui/notifications/initialized'){
    if(initialized)return;initialized=true;
    send({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:await inputPromise}});
    send({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:{content:[]}});
-   if($agentAvailable&&appCapabilities.tools){$nativeSend;}
+   if($agentAvailable||$resourceToolsAvailable){$nativeSend;}
  }else if(message.method==='ping'){
    send({jsonrpc:'2.0',id:message.id,result:{}});
  }else if(message.method==='ui/download-file'){
    $nativeSend;
  }else if($serverAvailable&&['tools/list','tools/call','resources/list','resources/read'].includes(message.method)){
    $nativeSend;
- }else if($agentAvailable&&(message.method==='ui/update-model-context'||message.method==='ui/message'||message.id!==undefined&&!message.method)){
+ }else if(($agentAvailable&&(message.method==='ui/update-model-context'||message.method==='ui/message'||message.id!==undefined&&!message.method))||($resourceToolsAvailable&&message.id!==undefined&&!message.method)){
    $nativeSend;
  }else if(message.id!==undefined&&message.method){
    send({jsonrpc:'2.0',id:message.id,error:{code:-32601,message:'Host method unavailable'}});
