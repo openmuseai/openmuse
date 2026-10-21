@@ -666,8 +666,25 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
       } catch (error, stack) {
         // Do not log resource bytes, arguments, or third-party error messages.
         // Keep a call-site trace so native bridge failures are diagnosable.
+        final method =
+            const {
+              'tools/list',
+              'tools/call',
+              'resources/list',
+              'resources/read',
+            }.contains(request['method'])
+            ? request['method']
+            : 'unsupported';
+        final rawReason = error is PlatformException
+            ? error.code
+            : error is StateError
+            ? '${error.message}'
+            : '';
+        final reason = RegExp(r'^[A-Z][A-Z0-9_]{1,63}$').hasMatch(rawReason)
+            ? rawReason
+            : 'REQUEST_FAILED';
         debugPrint(
-          'MCP Apps ${request['method']} failed: ${error.runtimeType}\n$stack',
+          'MCP Apps $method failed: ${error.runtimeType} $reason\n$stack',
         );
         try {
           final log = File(
@@ -679,7 +696,7 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
           final append = await log.exists() && await log.length() < 128 * 1024;
           await log.writeAsString(
             '${DateTime.now().toUtc().toIso8601String()} '
-            '${request['method']} ${error.runtimeType}\n$stack\n',
+            '$method ${error.runtimeType} $reason\n$stack\n',
             mode: append ? FileMode.append : FileMode.write,
           );
         } catch (_) {
@@ -689,7 +706,7 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
         response['error'] = {
           'code': -32602,
           'message':
-              'Request denied or failed; check permissions, inputs and provider availability.',
+              'Request denied or failed ($reason); check permissions, inputs and provider availability.',
         };
       }
       if (mounted) await channel.invokeMethod<void>('message', response);
