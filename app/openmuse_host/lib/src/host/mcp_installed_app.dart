@@ -41,6 +41,7 @@ final class McpAppsEnvironment {
   onDevelopmentBundle;
   void Function(String caller)? onDevelopmentClosed;
   final _developmentRuns = <String, Map<String, Directory>>{};
+  final _developmentReceipts = <String, Map<String, Map<String, Object?>>>{};
   final _developmentAuthorizations = <String, ValueNotifier<bool>>{};
   final _configuration = <String, Map<String, Object?>>{};
   late final Future<Map<String, Object?>> identity = _identity();
@@ -178,7 +179,20 @@ final class McpAppsEnvironment {
       caller,
       () => ValueNotifier(true),
     );
-    if (owned.length >= 4) throw StateError('DEVELOPMENT_RUN_BUDGET_EXCEEDED');
+    final receipts = _developmentReceipts.putIfAbsent(caller, () => {});
+    final existing = receipts.values
+        .where(
+          (r) =>
+              r['sha256'] == args['sha256'] && owned.containsKey(r['runRef']),
+        )
+        .firstOrNull;
+    if (existing != null) return Map<String, Object?>.from(existing);
+    if (owned.length >= 4 &&
+        !receipts.values.any(
+          (r) => r['channel'] == 'resource-extension-development',
+        )) {
+      throw StateError('DEVELOPMENT_RUN_BUDGET_EXCEEDED');
+    }
     final archive = ZipDecoder().decodeBytes(bytes);
     final manifest =
         jsonDecode(
@@ -228,12 +242,29 @@ final class McpAppsEnvironment {
               owned[runRef] != null,
         ) ==
         true) {
-      return {
+      for (final old
+          in receipts.entries
+              .where(
+                (e) => e.value['channel'] == 'resource-extension-development',
+              )
+              .toList()) {
+        final directory = owned.remove(old.key);
+        receipts.remove(old.key);
+        if (directory != null) await directory.parent.delete(recursive: true);
+      }
+      final receipt = <String, Object?>{
         'opened': true,
         'runRef': runRef,
         'sha256': entry.sha256,
         'channel': 'resource-extension-development',
       };
+      receipts[runRef] = receipt;
+      return receipt;
+    }
+    if (owned.length > 4) {
+      owned.remove(runRef);
+      await root.delete(recursive: true);
+      throw StateError('DEVELOPMENT_RUN_BUDGET_EXCEEDED');
     }
     final navigator = navigatorKey?.currentState;
     if (navigator == null || scope() != ownerScope || !authorization.value) {
@@ -289,6 +320,7 @@ final class McpAppsEnvironment {
   }
 
   Future<void> closeCaller(String caller) async {
+    _developmentReceipts.remove(caller);
     onDevelopmentClosed?.call(caller);
     final authorization = _developmentAuthorizations.remove(caller);
     authorization?.value = false;

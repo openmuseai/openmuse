@@ -274,7 +274,7 @@ final class ResourceExtensionSession {
       if (!_grants.contains(grant)) {
         if (!await approve(
           '允许插件协作',
-          '$caller\n${target.id}\n仅当前打开文档；生成内容可能交给该插件配置的模型。关闭或切换文档后撤销。',
+          '当前文档 → ${target.plugin is OpenMusePlugin ? (target.plugin as OpenMusePlugin).descriptor.name : target.id}\n生成内容会交给该插件配置的模型。关闭或切换文档后停止本次调用。',
         )) {
           throw StateError('PERMISSION_DENIED');
         }

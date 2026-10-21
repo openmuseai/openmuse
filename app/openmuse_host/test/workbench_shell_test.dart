@@ -466,7 +466,7 @@ void main() {
         tester.getSize(find.byKey(const ValueKey('cli-bottom-panel'))).height,
         greaterThan(initialHeight),
       );
-      await tester.tap(find.byKey(const ValueKey('cli-bottom-collapse')));
+      await tester.tap(find.byKey(const ValueKey('cli-bottom-collapse')).first);
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('cli-bottom-panel')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('title-terminal')));
@@ -864,6 +864,15 @@ void main() {
         find.textContaining('PTY intentionally unavailable'),
         findsOneWidget,
       );
+      final console = find.byKey(
+        const ValueKey('cli-bottom-panel'),
+        skipOffstage: false,
+      );
+      final state = tester.state(console);
+      await tester.tap(find.byKey(const ValueKey('cli-bottom-collapse')));
+      await tester.pumpAndSettle();
+      expect(console, findsOneWidget);
+      expect(tester.state(console), same(state));
     },
   );
 }

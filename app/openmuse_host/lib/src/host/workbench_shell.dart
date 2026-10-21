@@ -498,7 +498,8 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     };
     if (_view == _HostView.agent &&
         !_editorHasDocument() &&
-        !_terminalVisible) {
+        !_terminalVisible &&
+        !_hasOpenedTerminal) {
       for (final entry in snapshot.bindings.entries) {
         if (entry.value.surfaceRef.startsWith('host.editorGroup:')) {
           hidden.add(entry.key);
