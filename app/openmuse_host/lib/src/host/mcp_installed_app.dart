@@ -678,7 +678,7 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
         final rawReason = error is PlatformException
             ? error.code
             : error is StateError
-            ? '${error.message}'
+            ? error.message
             : '';
         final reason = RegExp(r'^[A-Z][A-Z0-9_]{1,63}$').hasMatch(rawReason)
             ? rawReason
