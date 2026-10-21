@@ -98,23 +98,28 @@ final class _MarketPanelState extends State<_MarketPanel> {
   String _query = '';
   String _category = '精选';
   String? _selectedId;
+  final _searchController = TextEditingController();
+  final Map<String, Map<String, Object?>> _plans = {};
+  final Map<String, String> _planErrors = {};
   Timer? _catalogRefresh;
   bool _loading = false;
   String? _provider;
   List<String> _providers = [];
-  final Map<String, Map<String, Object?>> _plans = {};
-  final Map<String, String> _planErrors = {};
 
   @override
   void initState() {
     super.initState();
     _load();
-    _catalogRefresh = Timer.periodic(const Duration(seconds: 20), (_) => _load());
+    _catalogRefresh = Timer.periodic(
+      const Duration(seconds: 20),
+      (_) => _load(),
+    );
   }
 
   @override
   void dispose() {
     _catalogRefresh?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -122,11 +127,16 @@ final class _MarketPanelState extends State<_MarketPanel> {
     if (_loading) return;
     _loading = true;
     try {
-      final configured = await widget.host?.executeHostCommand('plugin.market.providers', null);
+      final configured = await widget.host?.executeHostCommand(
+        'plugin.market.providers',
+        null,
+      );
       if (configured is Map && mounted) {
         setState(() {
           _provider = configured['selected'] as String?;
-          _providers = (configured['providers'] as List? ?? const []).whereType<String>().toList();
+          _providers = (configured['providers'] as List? ?? const [])
+              .whereType<String>()
+              .toList();
         });
       }
       final result = await widget.host?.executeHostCommand(
@@ -182,7 +192,9 @@ final class _MarketPanelState extends State<_MarketPanel> {
               ),
             TextField(
               controller: input,
-              decoration: const InputDecoration(labelText: '添加 HTTPS Registry 地址'),
+              decoration: const InputDecoration(
+                labelText: '添加 HTTPS Registry 地址',
+              ),
             ),
           ],
         ),
@@ -201,8 +213,16 @@ final class _MarketPanelState extends State<_MarketPanel> {
     input.dispose();
     if (choice == null || choice.trim().isEmpty) return;
     try {
-      await widget.host?.executeHostCommand('plugin.market.selectProvider', choice);
-      if (mounted) setState(() { _plugins = null; _plans.clear(); _planErrors.clear(); });
+      await widget.host?.executeHostCommand(
+        'plugin.market.selectProvider',
+        choice,
+      );
+      if (mounted)
+        setState(() {
+          _plugins = null;
+          _plans.clear();
+          _planErrors.clear();
+        });
       await _load();
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
@@ -310,43 +330,85 @@ final class _MarketPanelState extends State<_MarketPanel> {
     }
   }
 
-  Widget _searchField() => TextField(
+  Widget _searchField(BuildContext context) => TextField(
     key: const ValueKey('plugin-market-search'),
+    controller: _searchController,
+    focusNode: MarketCategoryScope.searchOf(context),
     onChanged: (value) => setState(() => _query = value),
-    decoration: const InputDecoration(
-      prefixIcon: Icon(Icons.search_rounded, size: 20),
-      hintText: '搜索插件、功能或作者',
+    decoration: InputDecoration(
+      prefixIcon: const Icon(Icons.search_rounded, size: 20),
+      hintText: '搜索插件与功能',
+      suffixIcon: _query.isEmpty
+          ? null
+          : IconButton(
+              tooltip: '清除搜索',
+              onPressed: () {
+                _searchController.clear();
+                setState(() => _query = '');
+              },
+              icon: const Icon(Icons.close_rounded, size: 17),
+            ),
     ),
   );
 
-  Widget _categoryChips() => Wrap(
-    spacing: 8,
-    runSpacing: 8,
+  Widget _categoryChips(
+    String activeCategory,
+    ValueNotifier<String>? sharedCategory,
+  ) => Wrap(
+    spacing: 26,
+    runSpacing: 6,
     children: [
-      for (final category in const ['精选', '办公', '工具', 'UI', '编程', '生活'])
-        ChoiceChip(
-          key: ValueKey('plugin-market-category-$category'),
-          label: Text(category),
-          selected: _category == category,
-          showCheckmark: false,
-          selectedColor: MarketColors.paleBlue,
-          backgroundColor: MarketColors.surface,
-          side: const BorderSide(color: MarketColors.line),
-          labelStyle: TextStyle(
-            color: _category == category
-                ? MarketColors.blue
-                : MarketColors.secondary,
-            fontWeight: _category == category
-                ? FontWeight.w700
-                : FontWeight.w500,
+      for (final category in const ['精选', '办公', 'UI', '编程', '生活'])
+        Semantics(
+          button: true,
+          selected: activeCategory == category,
+          child: InkWell(
+            key: ValueKey('plugin-market-category-$category'),
+            onTap: () {
+              if (sharedCategory case final selection?) {
+                selection.value = category;
+              } else {
+                setState(() => _category = category);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    category,
+                    style: TextStyle(
+                      color: activeCategory == category
+                          ? MarketColors.blue
+                          : MarketColors.ink,
+                      fontSize: 16,
+                      fontWeight: activeCategory == category
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Container(
+                    width: activeCategory == category ? 25 : 0,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: MarketColors.blue,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          onSelected: (_) => setState(() => _category = category),
         ),
     ],
   );
 
   @override
   Widget build(BuildContext context) {
+    final sharedCategory = MarketCategoryScope.maybeOf(context);
+    final activeCategory = sharedCategory?.value ?? _category;
     final plugins = _plugins;
     final visible = plugins?.where((plugin) {
       final id = plugin['id'] as String;
@@ -354,21 +416,29 @@ final class _MarketPanelState extends State<_MarketPanel> {
       final query = _query.trim().toLowerCase();
       final categories = plugin['categories'];
       final categoryMatch =
-          _category == '精选' ||
-          (categories is List && categories.contains(_category));
+          activeCategory == '精选' ||
+          (categories is List && categories.contains(activeCategory));
       return categoryMatch &&
           (query.isEmpty ||
               '${plugin['name']} ${plugin['package']} ${plugin['description'] ?? ''}'
                   .toLowerCase()
                   .contains(query));
     }).toList();
-    final selected = plugins
+    final selected = visible
         ?.where((item) => item['id'] == _selectedId)
         .firstOrNull;
+    final featured =
+        !widget.installedOnly &&
+        _query.isEmpty &&
+        activeCategory == '精选' &&
+        selected == null &&
+        plugins?.any((item) => item['id'] == 'archify') == true;
     return Theme(
       data: openMuseMarketTheme(),
       child: ColoredBox(
-        color: MarketColors.canvas,
+        color: widget.installedOnly
+            ? MarketColors.canvas
+            : const Color(0xFFFBFCFE),
         child: LayoutBuilder(
           builder: (context, constraints) => ListView(
             key: ValueKey(
@@ -376,164 +446,279 @@ final class _MarketPanelState extends State<_MarketPanel> {
                   ? 'plugin-market-installed'
                   : 'plugin-market-catalog',
             ),
-            padding: const EdgeInsets.fromLTRB(28, 26, 28, 32),
+            shrinkWrap: widget.installedOnly,
+            physics: widget.installedOnly
+                ? const NeverScrollableScrollPhysics()
+                : null,
+            padding: const EdgeInsets.fromLTRB(32, 40, 32, 40),
             children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1040),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.installedOnly ? '已安装插件' : '发现更好的工作方式',
-                      style: const TextStyle(
-                        fontSize: 29,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.8,
-                        color: MarketColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      widget.installedOnly
-                          ? '管理已安装到本机的插件。'
-                          : '发现经过兼容性验证的插件并安装到当前设备。',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: MarketColors.secondary,
-                      ),
-                    ),
-                    if (!widget.installedOnly) ...[
-                      const SizedBox(height: 12),
-                      TextButton.icon(
-                        onPressed: _configureProvider,
-                        icon: const Icon(Icons.dns_outlined, size: 17),
-                        label: Text(_provider ?? '设置 MCP Registry 提供商'),
-                      ),
-                      const SizedBox(height: 22),
-                      if (constraints.maxWidth >= 820)
-                        Row(
-                          children: [
-                            Expanded(child: _categoryChips()),
-                            const SizedBox(width: 20),
-                            SizedBox(width: 280, child: _searchField()),
-                          ],
-                        )
-                      else
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _categoryChips(),
-                            const SizedBox(height: 12),
-                            _searchField(),
-                          ],
-                        ),
-                      const SizedBox(height: 22),
-                      if (_query.isEmpty &&
-                          _category == '精选' &&
-                          selected == null &&
-                          plugins?.any((item) => item['id'] == 'archify') ==
-                              true) ...[
-                        MarketHeroArt(
-                          asset: MarketArt.archify,
-                          height: constraints.maxHeight < 700 ? 190 : 250,
-                          onTap: () => setState(() => _selectedId = 'archify'),
-                          child: const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '编辑精选  ·  编程',
-                                style: TextStyle(
-                                  color: MarketColors.blue,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                '让复杂结构，\n一眼看清',
-                                style: TextStyle(
-                                  color: MarketColors.ink,
-                                  fontSize: 27,
-                                  fontWeight: FontWeight.w800,
-                                  height: 1.18,
-                                ),
-                              ),
-                              Spacer(),
-                              Text(
-                                'Archify · 架构图生成技能',
-                                style: TextStyle(
-                                  color: MarketColors.ink,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 25),
-                      ],
-                    ] else
-                      const SizedBox(height: 20),
-                    if (_error != null) ...[
-                      _notice(context, _error!),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton(
-                          onPressed: _load,
-                          child: const Text('重试'),
-                        ),
-                      ),
-                    ],
-                    if (plugins == null ||
-                        (widget.installedOnly &&
-                            _plans.length + _planErrors.length <
-                                plugins.length))
-                      const Center(child: CircularProgressIndicator())
-                    else if (widget.installedOnly && _planErrors.isNotEmpty)
-                      _notice(context, _planErrors.values.first)
-                    else if (visible!.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 28),
-                        child: Center(
-                          child: Text(
-                            widget.installedOnly ? '尚未安装插件' : '没有匹配的插件',
-                            style: const TextStyle(
-                              color: MarketColors.secondary,
-                            ),
-                          ),
-                        ),
-                      )
-                    else ...[
-                      if (selected != null) ...[
-                        _detail(context, selected),
-                        const SizedBox(height: 24),
-                      ],
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1450),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        widget.installedOnly ? '我的插件' : '为你推荐',
+                        widget.installedOnly ? '我的插件' : '探索插件',
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 38,
                           fontWeight: FontWeight.w800,
+                          letterSpacing: -0.8,
                           color: MarketColors.ink,
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          for (final plugin in visible)
-                            SizedBox(
-                              width:
-                                  widget.installedOnly ||
-                                      constraints.maxWidth < 650
-                                  ? constraints.maxWidth - 56
-                                  : (constraints.maxWidth - 68) / 2,
-                              child: _card(context, plugin),
-                            ),
-                        ],
+                      const SizedBox(height: 6),
+                      Text(
+                        widget.installedOnly
+                            ? '管理已安装到本机的插件。'
+                            : '发现提升创造力的工具，让灵感更进一步。',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: MarketColors.secondary,
+                        ),
                       ),
+                      if (!widget.installedOnly) ...[
+                        const SizedBox(height: 12),
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          children: [
+                            OutlinedButton.icon(
+                              key: const ValueKey('mcp-registry-provider'),
+                              onPressed: _configureProvider,
+                              icon: const Icon(Icons.dns_outlined, size: 17),
+                              label: Text(_provider ?? '设置 MCP Registry 提供商'),
+                            ),
+                            IconButton(
+                              tooltip: '刷新市场',
+                              onPressed: _load,
+                              icon: const Icon(Icons.refresh),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (!widget.installedOnly) ...[
+                        const SizedBox(height: 22),
+                        if (constraints.maxWidth >= 820)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _categoryChips(
+                                  activeCategory,
+                                  sharedCategory,
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              SizedBox(
+                                width: 300,
+                                child: _searchField(context),
+                              ),
+                            ],
+                          )
+                        else
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _categoryChips(activeCategory, sharedCategory),
+                              const SizedBox(height: 12),
+                              _searchField(context),
+                            ],
+                          ),
+                        const SizedBox(height: 22),
+                        if (featured) ...[
+                          MarketHeroArt(
+                            asset: MarketArt.archify,
+                            height: (constraints.maxHeight * 0.43).clamp(
+                              270.0,
+                              410.0,
+                            ),
+                            darkOverlay: true,
+                            onTap: () =>
+                                setState(() => _selectedId = 'archify'),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '编辑精选  ·  编程',
+                                  style: TextStyle(
+                                    color: Color(0xFFCCDDFB),
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                const Row(
+                                  children: [
+                                    Icon(
+                                      Icons.view_in_ar_rounded,
+                                      size: 38,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'Archify',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 35,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                const Text(
+                                  '让复杂结构，\n一眼看清',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.18,
+                                  ),
+                                ),
+                                const Spacer(),
+                                const Text(
+                                  '从草图到可视化，Archify 帮你梳理复杂的系统结构。',
+                                  style: TextStyle(
+                                    color: Color(0xFFF2F5FA),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    FilledButton(
+                                      onPressed: _busy == 'archify'
+                                          ? null
+                                          : _plans['archify']?['installedVersion'] !=
+                                                null
+                                          ? () => setState(
+                                              () => _selectedId = 'archify',
+                                            )
+                                          : () => _install('archify'),
+                                      child: Text(
+                                        _busy == 'archify'
+                                            ? '安装中…'
+                                            : _plans['archify']?['installedVersion'] !=
+                                                  null
+                                            ? '查看插件'
+                                            : '安装插件',
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 9,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0x665B6B80),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: const Text(
+                                        'Desktop',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 25),
+                        ],
+                      ] else
+                        const SizedBox(height: 20),
+                      if (_error != null) ...[
+                        _notice(context, _error!),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton(
+                            onPressed: _load,
+                            child: const Text('重试'),
+                          ),
+                        ),
+                      ],
+                      if (plugins == null ||
+                          (widget.installedOnly &&
+                              _plans.length + _planErrors.length <
+                                  plugins.length))
+                        const Center(child: CircularProgressIndicator())
+                      else if (widget.installedOnly && _planErrors.isNotEmpty)
+                        _notice(context, _planErrors.values.first)
+                      else if (visible!.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 36),
+                            child: Column(
+                              children: [
+                                const Icon(
+                                  Icons.search_off_rounded,
+                                  size: 36,
+                                  color: MarketColors.secondary,
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  widget.installedOnly ? '尚未安装插件' : '没有匹配的插件',
+                                  style: const TextStyle(
+                                    color: MarketColors.secondary,
+                                  ),
+                                ),
+                                if (!widget.installedOnly) ...[
+                                  const SizedBox(height: 12),
+                                  TextButton(
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      if (sharedCategory case final category?) {
+                                        category.value = '精选';
+                                      }
+                                      setState(() {
+                                        _query = '';
+                                        _category = '精选';
+                                        _selectedId = null;
+                                      });
+                                    },
+                                    child: const Text('清除筛选'),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        )
+                      else ...[
+                        if (selected != null) ...[
+                          _detail(context, selected),
+                          const SizedBox(height: 24),
+                        ],
+                        if (!featured) ...[
+                          Text(
+                            widget.installedOnly ? '从市场安装' : '插件目录',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: MarketColors.ink,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                        ],
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            for (final plugin in visible)
+                              SizedBox(
+                                width:
+                                    widget.installedOnly ||
+                                        constraints.maxWidth < 650
+                                    ? constraints.maxWidth - 56
+                                    : (constraints.maxWidth - 68) / 2,
+                                child: _card(context, plugin),
+                              ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -580,6 +765,18 @@ final class _MarketPanelState extends State<_MarketPanel> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (!widget.installedOnly && id == 'archify') ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    MarketArt.archify,
+                    width: double.infinity,
+                    height: 112,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               Row(
                 children: [
                   Container(
@@ -620,8 +817,16 @@ final class _MarketPanelState extends State<_MarketPanel> {
                     )
                   else
                     FilledButton(
-                      onPressed: busy || plugin['listed'] == false ? null : () => _install(id),
-                      child: Text(busy ? '安装中…' : plugin['listed'] == false ? '已下架' : '安装'),
+                      onPressed: busy || plugin['listed'] == false
+                          ? null
+                          : () => _install(id),
+                      child: Text(
+                        busy
+                            ? '安装中…'
+                            : plugin['listed'] == false
+                            ? '已下架'
+                            : '安装',
+                      ),
                     ),
                 ],
               ),
@@ -724,6 +929,11 @@ final class _MarketPanelState extends State<_MarketPanel> {
             'v${plugin['version']} · ${plugin['package']}',
             style: const TextStyle(fontSize: 12, color: MarketColors.secondary),
           ),
+          if (plugin['listed'] == false)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text('此版本已从市场下架；本机已安装副本仍可使用。'),
+            ),
           const SizedBox(height: 20),
           if (plugin['ecosystem'] == 'dsh')
             ClipRRect(
@@ -778,8 +988,16 @@ final class _MarketPanelState extends State<_MarketPanel> {
             )
           else
             FilledButton(
-              onPressed: _busy == id || plugin['listed'] == false ? null : () => _install(id),
-              child: Text(_busy == id ? '安装中…' : plugin['listed'] == false ? '已下架' : '安装到 Desktop'),
+              onPressed: _busy == id || plugin['listed'] == false
+                  ? null
+                  : () => _install(id),
+              child: Text(
+                _busy == id
+                    ? '安装中…'
+                    : plugin['listed'] == false
+                    ? '已下架'
+                    : '安装到 Desktop',
+              ),
             ),
         ],
       ),

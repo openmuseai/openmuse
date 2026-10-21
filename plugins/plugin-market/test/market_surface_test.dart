@@ -57,7 +57,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('发现更好的工作方式'), findsOneWidget);
+      expect(find.text('探索插件'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('plugin-market-card-archify')),
         findsOneWidget,

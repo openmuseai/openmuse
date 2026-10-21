@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_app_update/openmuse_app_update.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
@@ -172,7 +173,7 @@ void main() {
     expect(find.byKey(const ValueKey('notifications-footer')), findsOneWidget);
   });
 
-  testWidgets('plugin entry opens the market popup and installed tab', (
+  testWidgets('plugin entry opens the full market page and sidebar', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1600, 900);
@@ -190,6 +191,7 @@ void main() {
                 'ecosystem': 'dsh',
                 'package': '@tt-a1i/archify-dsh',
                 'version': '1.0.0',
+                'categories': ['编程'],
               },
             ];
           }
@@ -198,8 +200,9 @@ void main() {
               'id': 'archify',
               'version': '1.0.0',
               'profile': 'web',
-              'installedVersion': null,
-              'action': 'install',
+              'installedVersion': '1.0.0',
+              'enabled': true,
+              'action': 'already-installed',
             };
           }
           return null;
@@ -235,28 +238,106 @@ void main() {
     );
     await tester.tap(find.text('插件').first);
     await tester.pumpAndSettle();
-    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(Dialog), findsNothing);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('desktop-market-page'))).width,
+      1600,
+    );
     expect(find.byKey(const ValueKey('plugin-market-catalog')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('plugin-market-sidebar-search')),
+      findsOneWidget,
+    );
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pump();
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const ValueKey('plugin-market-search')))
+          .focusNode
+          ?.hasFocus,
+      isTrue,
+    );
     expect(find.textContaining('Archify 1.0.0'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('plugin-market-nav-办公')));
+    await tester.pumpAndSettle();
+    expect(find.text('没有匹配的插件'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('plugin-market-nav-编程')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('plugin-market-card-archify')),
+      findsOneWidget,
+    );
     expect(
       layout.snapshot.bindings.values.where(
         (binding) => binding.surfaceRef == 'plugin.panel:plugin.market',
       ),
       isEmpty,
     );
-    await tester.tap(find.text('已安装').first);
+    await tester.tap(find.byKey(const ValueKey('plugin-market-tab-1')));
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('plugin-market-installed')),
       findsOneWidget,
     );
     expect(find.text('OpenMuse 插件'), findsOneWidget);
+    expect(
+      tester
+          .getBottomLeft(
+            find.byKey(const ValueKey('plugin-market-card-archify')),
+          )
+          .dy,
+      lessThan(tester.getTopLeft(find.text('OpenMuse 插件')).dy),
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('plugin-market-sidebar-search')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('plugin-market-catalog')), findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const ValueKey('plugin-market-search')))
+          .focusNode
+          ?.hasFocus,
+      isTrue,
+    );
     await tester.tap(find.byTooltip('关闭插件市场'));
     await tester.pumpAndSettle();
-    expect(find.byType(Dialog), findsNothing);
+    expect(find.byKey(const ValueKey('plugin-market-catalog')), findsNothing);
     await tester.tap(find.text('插件').first);
     await tester.pumpAndSettle();
-    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byKey(const ValueKey('plugin-market-catalog')), findsOneWidget);
+  });
+
+  testWidgets('market page collapses its sidebar in a narrow window', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(700, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    registry = OpenMusePluginRegistry(
+      context: OpenMusePluginContext(
+        executeHostCommand: (command, _) async {
+          if (command == 'plugin.market.list') return <Map<String, Object?>>[];
+          return null;
+        },
+      ),
+    );
+    registry.install(
+      createOpenMuseBuiltInPlugins().firstWhere(
+        (plugin) => plugin.descriptor.id == 'com.openmuse.plugin-market',
+      ),
+    );
+    await tester.pumpWidget(
+      OpenMuseHostApp(registry: registry, workspace: workspace),
+    );
+    await tester.tap(find.text('插件').first);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('desktop-market-page')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plugin-market-search')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('authentication gate hides the desktop workbench', (

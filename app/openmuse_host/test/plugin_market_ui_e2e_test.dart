@@ -103,7 +103,7 @@ void main() {
         ),
         isEmpty,
       );
-      expect(find.byType(Dialog), findsOneWidget);
+      expect(find.byType(Dialog), findsNothing);
       expect(find.textContaining('Archify 1.0.0'), findsOneWidget);
 
       await tester.ensureVisible(find.text('安装'));

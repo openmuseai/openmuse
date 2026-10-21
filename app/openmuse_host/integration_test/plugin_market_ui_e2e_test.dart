@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
@@ -17,7 +19,7 @@ import 'package:path/path.dart' as p;
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('market popup installs Archify and DSH loads its skill', (
+  testWidgets('market page installs Archify and DSH loads its skill', (
     tester,
   ) async {
     const cli = String.fromEnvironment('OPENMUSE_MARKET_E2E_DSH_CLI');
@@ -38,6 +40,7 @@ void main() {
       nodeExecutable: node,
       baseEnvironment: {...Platform.environment, 'PATH': '/usr/bin:/bin'},
     );
+    await Zone.root.run(() => installer.plan(builtInMarketPlugins.single));
     final registry = OpenMusePluginRegistry(
       context: OpenMusePluginContext(
         executeHostCommand: (command, args) async {
@@ -52,6 +55,15 @@ void main() {
           if (command == 'plugin.market.install') {
             return Zone.root.run(
               () => installer.install(builtInMarketPlugins.single),
+            );
+          }
+          if (command == 'plugin.market.enable' ||
+              command == 'plugin.market.disable') {
+            return Zone.root.run(
+              () => installer.setEnabled(
+                builtInMarketPlugins.single,
+                command == 'plugin.market.enable',
+              ),
             );
           }
           throw UnsupportedError(command);
@@ -74,13 +86,17 @@ void main() {
     );
     await settings.load();
     final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+    const captureKey = ValueKey('desktop-market-capture');
     await tester.pumpWidget(
-      MaterialApp(
-        home: OpenMuseWorkbench(
-          registry: registry,
-          workspace: workspace,
-          settings: settings,
-          layoutController: layout,
+      RepaintBoundary(
+        key: captureKey,
+        child: MaterialApp(
+          home: OpenMuseWorkbench(
+            registry: registry,
+            workspace: workspace,
+            settings: settings,
+            layoutController: layout,
+          ),
         ),
       ),
     );
@@ -95,12 +111,55 @@ void main() {
       ),
       isEmpty,
     );
-    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(Dialog), findsNothing);
+    expect(find.byKey(const ValueKey('desktop-market-page')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plugin-market-tab-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plugin-market-search')), findsOneWidget);
     expect(find.textContaining('Archify 1.0.0'), findsOneWidget);
+    const capturePath = String.fromEnvironment(
+      'OPENMUSE_MARKET_E2E_CAPTURE_PATH',
+    );
+    if (capturePath.isNotEmpty) {
+      await tester.pumpAndSettle();
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(captureKey),
+      );
+      final image = await boundary.toImage(pixelRatio: 1);
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      expect(data, isNotNull);
+      await File(
+        capturePath,
+      ).writeAsBytes(data!.buffer.asUint8List(), flush: true);
+    }
 
-    await tester.ensureVisible(find.text('安装'));
+    await tester.tap(
+      find.byKey(const ValueKey('plugin-market-sidebar-search')),
+    );
+    await tester.pump();
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const ValueKey('plugin-market-search')))
+          .focusNode
+          ?.hasFocus,
+      isTrue,
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('plugin-market-search')),
+      '未收录的插件',
+    );
+    await tester.pump();
+    expect(find.text('没有匹配的插件'), findsOneWidget);
+    await tester.tap(find.text('清除筛选'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('plugin-market-nav-办公')));
+    await tester.pump();
+    expect(find.text('没有匹配的插件'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('plugin-market-tab-0')));
+    await tester.pump();
+    expect(find.text('安装插件'), findsOneWidget);
+
     await tester.pumpAndSettle();
-    await tester.tap(find.text('安装'));
+    await tester.tap(find.text('安装插件'));
     for (var i = 0; i < 120; i++) {
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(seconds: 1)),
@@ -130,6 +189,31 @@ void main() {
       find.byKey(const ValueKey('plugin-market-card-archify')),
       findsOneWidget,
     );
+    if (capturePath.isNotEmpty) {
+      await tester.pumpAndSettle();
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(captureKey),
+      );
+      final image = await boundary.toImage(pixelRatio: 1);
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      expect(data, isNotNull);
+      await File(
+        capturePath.replaceFirst('.png', '-installed.png'),
+      ).writeAsBytes(data!.buffer.asUint8List(), flush: true);
+    }
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('plugin-market-toggle-archify')),
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('plugin-market-toggle-archify')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('已禁用'), findsOneWidget);
+    await tester.tap(
+      find.byKey(const ValueKey('plugin-market-toggle-archify')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('已启用'), findsOneWidget);
 
     final profile = Directory(
       p.join(dshHome.path, 'profiles', 'market-ui-e2e'),

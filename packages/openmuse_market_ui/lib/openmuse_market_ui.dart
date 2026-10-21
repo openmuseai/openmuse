@@ -18,6 +18,27 @@ abstract final class MarketArt {
       'packages/openmuse_market_ui/assets/archify-editorial.png';
 }
 
+/// Shares desktop marketplace category navigation with a contributed panel.
+/// The Host owns the route, while the plugin owns filtering and content.
+class MarketCategoryScope extends InheritedNotifier<ValueNotifier<String>> {
+  const MarketCategoryScope({
+    super.key,
+    required ValueNotifier<String> category,
+    this.searchFocusNode,
+    required super.child,
+  }) : super(notifier: category);
+
+  final FocusNode? searchFocusNode;
+
+  static ValueNotifier<String>? maybeOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<MarketCategoryScope>()
+      ?.notifier;
+
+  static FocusNode? searchOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<MarketCategoryScope>()
+      ?.searchFocusNode;
+}
+
 ThemeData openMuseMarketTheme() {
   final base = ThemeData.light(useMaterial3: true);
   return base.copyWith(
@@ -76,11 +97,13 @@ class MarketHeroArt extends StatelessWidget {
     required this.height,
     required this.child,
     this.onTap,
+    this.darkOverlay = false,
   });
   final String asset;
   final double height;
   final Widget child;
   final VoidCallback? onTap;
+  final bool darkOverlay;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -97,10 +120,18 @@ class MarketHeroArt extends StatelessWidget {
           children: [
             Image.asset(asset, fit: BoxFit.cover),
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xDDF7F3EB), Color(0x00F7F3EB)],
-                  stops: [0.0, 0.73],
+                  colors: darkOverlay
+                      ? const [
+                          Color(0xEF172232),
+                          Color(0xBF172232),
+                          Color(0x00172232),
+                        ]
+                      : const [Color(0xDDF7F3EB), Color(0x00F7F3EB)],
+                  stops: darkOverlay
+                      ? const [0.0, 0.33, 0.78]
+                      : const [0.0, 0.73],
                 ),
               ),
             ),

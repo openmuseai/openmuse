@@ -66,7 +66,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   bool _terminalVisible = false;
   _HostView _view = _HostView.agent;
   bool _hasOpenedTerminal = false;
-  bool _marketDialogOpen = false;
+  bool _marketPageOpen = false;
 
   bool get _terminalAvailable =>
       widget.settings.pluginValues('com.openmuse.cli')['enabled'] != false &&
@@ -115,20 +115,21 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   }
 
   Future<void> _openPluginMarket(BuildContext context) async {
-    if (_marketDialogOpen) return;
-    _marketDialogOpen = true;
+    if (_marketPageOpen) return;
+    _marketPageOpen = true;
     try {
       const pluginId = 'com.openmuse.plugin-market';
-      if (widget.registry.plugin(pluginId) != null) {
-        await widget.registry.activate(pluginId);
+      if (widget.registry.plugin(pluginId) == null) {
+        throw StateError('插件市场插件未安装或已禁用');
       }
+      await widget.registry.activate(pluginId);
       if (!mounted || !context.mounted) return;
-      await showDialog<void>(
-        context: context,
-        barrierColor: OpenMuseTokens.scrim,
-        builder: (_) => _PluginMarketDialog(
-          registry: widget.registry,
-          workspace: widget.workspace,
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => _PluginMarketPage(
+            registry: widget.registry,
+            workspace: widget.workspace,
+          ),
         ),
       );
     } catch (error) {
@@ -138,7 +139,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
         ).showSnackBar(SnackBar(content: Text('无法打开插件市场：$error')));
       }
     } finally {
-      _marketDialogOpen = false;
+      _marketPageOpen = false;
     }
   }
 
@@ -2973,106 +2974,221 @@ final class _CreateDocumentDialogState extends State<_CreateDocumentDialog> {
   );
 }
 
-final class _PluginMarketDialog extends StatefulWidget {
-  const _PluginMarketDialog({required this.registry, required this.workspace});
+final class _PluginMarketPage extends StatefulWidget {
+  const _PluginMarketPage({required this.registry, required this.workspace});
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
 
   @override
-  State<_PluginMarketDialog> createState() => _PluginMarketDialogState();
+  State<_PluginMarketPage> createState() => _PluginMarketPageState();
 }
 
-final class _PluginMarketDialogState extends State<_PluginMarketDialog> {
+final class _PluginMarketPageState extends State<_PluginMarketPage> {
   var _selected = 0;
+  final _category = ValueNotifier<String>('精选');
+  final _searchFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _category.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _showCategory(String category) {
+    setState(() => _selected = 0);
+    _category.value = category;
+  }
+
+  void _focusSearch() {
+    if (_selected != 0) setState(() => _selected = 0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _searchFocusNode.requestFocus();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = openMuseMarketTheme();
     final size = MediaQuery.sizeOf(context);
+    final wide = size.width >= 850;
     final market = widget.registry.panelProvider(
       OpenMuseSurfaceRegion.dialog,
       panelId: 'plugin.market',
     );
-    const accent = MarketColors.blue;
     return Theme(
       data: theme,
-      child: Dialog(
-        backgroundColor: MarketColors.canvas,
-        insetPadding: const EdgeInsets.all(24),
-        child: SizedBox(
-          width: (size.width - 48).clamp(0.0, 960.0),
-          height: (size.height - 48).clamp(0.0, 650.0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(OpenMuseTokens.dialogRadius),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 18, 12, 0),
-                  child: Row(
-                    children: [
-                      Icon(Icons.extension_outlined, size: 21, color: accent),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text('插件市场', style: theme.textTheme.titleLarge),
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.keyK, meta: true):
+              _focusSearch,
+          const SingleActivator(LogicalKeyboardKey.keyK, control: true):
+              _focusSearch,
+        },
+        child: Focus(
+          autofocus: true,
+          child: Scaffold(
+            key: const ValueKey('desktop-market-page'),
+            backgroundColor: const Color(0xFFFBFCFE),
+            body: SafeArea(
+              child: Row(
+                children: [
+                  Container(
+                    width: wide ? 224 : 72,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFE9F4FF), Color(0xFFF4FAFA)],
                       ),
-                      IconButton(
-                        tooltip: '关闭插件市场',
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close, size: 18),
+                      border: Border(
+                        right: BorderSide(color: MarketColors.line),
                       ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 2, 24, 12),
-                  child: Text(
-                    '发现适配 OpenMuse 的插件，或查看已安装的插件。',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      _tab(context, '发现', 0, accent),
-                      _tab(context, '已安装', 1, accent),
-                    ],
-                  ),
-                ),
-                Divider(height: 1, color: theme.dividerColor),
-                Expanded(
-                  child: ColoredBox(
-                    color: MarketColors.canvas,
-                    child: _selected == 0
-                        ? market?.buildPanel(context, 'plugin.market') ??
-                              const Center(child: Text('插件市场暂不可用'))
-                        : Column(
-                            children: [
-                              SizedBox(
-                                height: 210,
-                                child:
-                                    market?.buildPanel(
-                                      context,
-                                      'plugin.market.installed',
-                                    ) ??
-                                    const Center(child: Text('DSH 插件列表暂不可用')),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 34),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                          child: Material(
+                            color: const Color(0xFFE3EBF7),
+                            borderRadius: BorderRadius.circular(11),
+                            child: InkWell(
+                              key: const ValueKey(
+                                'plugin-market-sidebar-search',
                               ),
-                              Divider(height: 1, color: theme.dividerColor),
-                              Expanded(
-                                child: _InstalledOpenMusePlugins(
-                                  registry: widget.registry,
-                                  workspace: widget.workspace,
+                              borderRadius: BorderRadius.circular(11),
+                              onTap: _focusSearch,
+                              child: SizedBox(
+                                height: 44,
+                                child: Row(
+                                  children: [
+                                    const SizedBox(width: 12),
+                                    const Icon(
+                                      Icons.search_rounded,
+                                      size: 21,
+                                      color: MarketColors.secondary,
+                                    ),
+                                    if (wide) ...[
+                                      const SizedBox(width: 9),
+                                      Expanded(
+                                        child: Text(
+                                          Platform.isMacOS
+                                              ? '⌘ K  快速搜索'
+                                              : 'Ctrl K  快速搜索',
+                                          style: TextStyle(
+                                            color: MarketColors.secondary,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ),
+                            ),
+                          ),
+                        ),
+                        ValueListenableBuilder<String>(
+                          valueListenable: _category,
+                          builder: (context, category, _) => Column(
+                            children: [
+                              _navigationItem(
+                                label: '探索',
+                                icon: Icons.explore_outlined,
+                                selected: _selected == 0 && category == '精选',
+                                wide: wide,
+                                key: const ValueKey('plugin-market-tab-0'),
+                                onTap: () => _showCategory('精选'),
+                              ),
+                              for (final item in const [
+                                ('办公', Icons.work_outline),
+                                ('UI', Icons.palette_outlined),
+                                ('编程', Icons.code_rounded),
+                                ('生活', Icons.local_cafe_outlined),
+                              ])
+                                _navigationItem(
+                                  label: item.$1,
+                                  icon: item.$2,
+                                  selected:
+                                      _selected == 0 && category == item.$1,
+                                  wide: wide,
+                                  key: ValueKey('plugin-market-nav-${item.$1}'),
+                                  onTap: () => _showCategory(item.$1),
+                                ),
                             ],
                           ),
+                        ),
+                        const Spacer(),
+                        _navigationItem(
+                          label: '我的插件',
+                          icon: Icons.apps_outlined,
+                          selected: _selected == 1,
+                          wide: wide,
+                          key: const ValueKey('plugin-market-tab-1'),
+                          onTap: () => setState(() => _selected = 1),
+                        ),
+                        const SizedBox(height: 12),
+                        const Divider(height: 1, color: MarketColors.line),
+                        const SizedBox(height: 8),
+                        _navigationItem(
+                          label: 'OpenMuse',
+                          icon: Icons.account_circle_outlined,
+                          selected: false,
+                          wide: wide,
+                          key: const ValueKey('plugin-market-return-workbench'),
+                          onTap: () => Navigator.pop(context),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        MarketCategoryScope(
+                          category: _category,
+                          searchFocusNode: _searchFocusNode,
+                          child: _selected == 0
+                              ? market?.buildPanel(context, 'plugin.market') ??
+                                    const Center(child: Text('插件市场暂不可用'))
+                              : SingleChildScrollView(
+                                  child: Column(
+                                    children: [
+                                      market?.buildPanel(
+                                            context,
+                                            'plugin.market.installed',
+                                          ) ??
+                                          const Center(
+                                            child: Text('DSH 插件列表暂不可用'),
+                                          ),
+                                      Divider(
+                                        height: 1,
+                                        color: theme.dividerColor,
+                                      ),
+                                      _InstalledOpenMusePlugins(
+                                        registry: widget.registry,
+                                        workspace: widget.workspace,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                        ),
+                        Positioned(
+                          right: 18,
+                          top: 14,
+                          child: IconButton(
+                            tooltip: '关闭插件市场',
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -3080,34 +3196,51 @@ final class _PluginMarketDialogState extends State<_PluginMarketDialog> {
     );
   }
 
-  Widget _tab(BuildContext context, String label, int index, Color accent) {
-    final active = _selected == index;
-    return InkWell(
-      key: ValueKey('plugin-market-tab-$index'),
-      onTap: () => setState(() => _selected = index),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: active ? accent : Colors.transparent,
-              width: 2,
+  Widget _navigationItem({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required bool wide,
+    required Key key,
+    required VoidCallback onTap,
+  }) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+    child: Tooltip(
+      message: label,
+      child: Material(
+        color: selected ? const Color(0xFFD7E7FF) : Colors.transparent,
+        borderRadius: BorderRadius.circular(11),
+        child: InkWell(
+          key: key,
+          borderRadius: BorderRadius.circular(11),
+          onTap: onTap,
+          child: SizedBox(
+            height: 46,
+            child: Row(
+              children: [
+                const SizedBox(width: 12),
+                Icon(
+                  icon,
+                  size: 21,
+                  color: selected ? MarketColors.blue : MarketColors.ink,
+                ),
+                if (wide) ...[
+                  const SizedBox(width: 12),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: selected ? MarketColors.blue : MarketColors.ink,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-            color: active
-                ? accent
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 final class _InstalledOpenMusePlugins extends StatelessWidget {
@@ -3123,6 +3256,8 @@ final class _InstalledOpenMusePlugins extends StatelessWidget {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: registry,
     builder: (context, _) => ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
       itemCount: registry.descriptors.length + 1,
       separatorBuilder: (_, _) => const Divider(height: 1),
