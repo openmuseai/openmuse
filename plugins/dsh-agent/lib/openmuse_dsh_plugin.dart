@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'src/dsh_panel.dart';
+import 'src/dsh_generation.dart';
 import 'src/dsh_sidecar.dart';
 import 'src/dsh_workspace_binding.dart';
 import 'src/dsh_workspace_sync.dart';
@@ -22,7 +23,8 @@ final class OpenMuseDshPlugin
         OpenMusePlugin,
         OpenMuseSettingsContributor,
         OpenMusePluginLogContributor,
-        OpenMuseAgentContributor {
+        OpenMuseAgentContributor,
+        OpenMuseToolContributor {
   OpenMuseDshPlugin({
     DshSidecarSupervisor? supervisor,
     Future<bool> Function(PluginInteraction)? routeInteraction,
@@ -38,6 +40,32 @@ final class OpenMuseDshPlugin
   final ValueNotifier<PluginInteraction?> _desktopInteraction = ValueNotifier(
     null,
   );
+  DshGeneration? _generation;
+  @override
+  List<Map<String, Object?>> get contributedTools => DshGeneration.tools;
+  @override
+  Future<Map<String, Object?>> callContributedTool(
+    String caller,
+    String name,
+    Map<String, Object?> arguments,
+  ) {
+    final supervisor = _supervisor;
+    if (supervisor == null) throw StateError('AGENT_NOT_ACTIVE');
+    _generation ??= DshGeneration(
+      endpoint: () => supervisor.endpoint,
+      token: supervisor.bridgeToken,
+      mount: () => _activeMount.value,
+      ready: supervisor.ensureStarted,
+      openSession: (id) => supervisor.requestedSession.value = id,
+    );
+    return _generation!.call(caller, name, arguments);
+  }
+
+  @override
+  Future<void> disposeToolCaller(String caller) async {
+    await _generation?.disposeCaller(caller);
+  }
+
   String? _pluginInteractionDir;
   PluginInteractionListener? _interactionListener;
 
@@ -208,6 +236,8 @@ final class OpenMuseDshPlugin
 
   @override
   Future<void> deactivate() async {
+    await _generation?.close();
+    _generation = null;
     _interactionListener?.stop();
     _interactionListener = null;
     _desktopInteraction.value = null;
