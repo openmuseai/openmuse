@@ -4,6 +4,27 @@ import 'package:openmuse_host/src/host/mcp_capability_gateway.dart';
 
 void main() {
   test(
+    'account is captured at construction, before the first request',
+    () async {
+      var account = 'one';
+      final gateway = McpCapabilityGateway(
+        describeHost: () async => {},
+        listProviders: () async => [],
+        chooseResource: (_, _) async => null,
+        approve: (_, _) async => false,
+        openDevelopment: (_) async => {},
+        readDevelopment: (_) async => {},
+        scope: () => account,
+      );
+      account = 'two';
+      await expectLater(
+        gateway.call('capabilities_list', {}),
+        throwsStateError,
+      );
+      await gateway.close();
+    },
+  );
+  test(
     'two bindings stay independent; overrides and other callers are rejected',
     () async {
       var scope = 'account-one';

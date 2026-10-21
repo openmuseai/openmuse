@@ -60,7 +60,7 @@ final class McpCapabilityGateway {
     required this.openDevelopment,
     required this.readDevelopment,
     required this.scope,
-  });
+  }) : _scope = scope();
   final Future<Map<String, Object?>> Function() describeHost;
   final Future<List<CapabilityProvider>> Function() listProviders;
   final Future<GrantedResource?> Function(String title, String mediaType)
@@ -71,7 +71,7 @@ final class McpCapabilityGateway {
   final Future<Map<String, Object?>> Function(Map<String, Object?>)
   readDevelopment;
   final String Function() scope;
-  late final String _scope = scope();
+  final String _scope;
   final _resources = <String, GrantedResource>{};
   final _bindings = <String, _Binding>{};
   bool _closed = false;
