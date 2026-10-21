@@ -791,6 +791,53 @@ void main() {
     expect(action, findsOneWidget);
     expect(tester.widget<PopupMenuItem<String>>(action).enabled, isTrue);
   });
+  testWidgets(
+    'opening a terminal activates its plugin and reveals an empty Agent editor area',
+    (tester) async {
+      var activated = false;
+      registry = OpenMusePluginRegistry(
+        context: OpenMusePluginContext(
+          executeHostCommand: (name, _) async {
+            if (name == 'workspace.snapshot') {
+              activated = true;
+              return {'activeMountPath': root.path};
+            }
+            if (name == 'terminal.session.create') {
+              throw StateError('PTY intentionally unavailable in widget test');
+            }
+            return null;
+          },
+        ),
+      );
+      registry.install(
+        createOpenMuseBuiltInPlugins().singleWhere(
+          (plugin) => plugin.descriptor.id == 'com.openmuse.cli',
+        ),
+      );
+      await tester.pumpWidget(
+        OpenMuseHostApp(registry: registry, workspace: workspace),
+      );
+      expect(find.byKey(const ValueKey('cli-terminal-tab')), findsNothing);
+      await tester.tap(
+        find.text(workspace.mounts.first.name).first,
+        buttons: kSecondaryButton,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is PopupMenuItem<String> && widget.value == 'terminal',
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(activated, isTrue);
+      expect(find.byKey(const ValueKey('cli-terminal-tab')), findsOneWidget);
+      expect(
+        find.textContaining('PTY intentionally unavailable'),
+        findsOneWidget,
+      );
+    },
+  );
 }
 
 Future<void> _showIdeView(WidgetTester tester) async {

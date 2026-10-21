@@ -105,13 +105,32 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
 
   void _openTerminal([String? directory]) {
     if (!_terminalAvailable) return;
-    setState(() => _terminalVisible = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _terminalController.open(directory ?? widget.workspace.activeMountPath);
-        _hasOpenedTerminal = true;
+    unawaited(() async {
+      try {
+        final plugin = widget.registry.panelProvider(
+          OpenMuseSurfaceRegion.bottomPanel,
+          panelId: 'cli.console',
+        );
+        if (plugin == null) return;
+        await widget.registry.activate(plugin.descriptor.id);
+        if (!mounted) return;
+        setState(() => _terminalVisible = true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _terminalController.open(
+              directory ?? widget.workspace.activeMountPath,
+            );
+            _hasOpenedTerminal = true;
+          }
+        });
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('无法启动终端：$error')));
+        }
       }
-    });
+    }());
   }
 
   Future<void> _openPluginMarket(BuildContext context) async {
@@ -475,7 +494,9 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
             entry.value.surfaceRef == 'plugin.panel:cloud.workspace')
           entry.key,
     };
-    if (_view == _HostView.agent && !_editorHasDocument()) {
+    if (_view == _HostView.agent &&
+        !_editorHasDocument() &&
+        !_terminalVisible) {
       for (final entry in snapshot.bindings.entries) {
         if (entry.value.surfaceRef.startsWith('host.editorGroup:')) {
           hidden.add(entry.key);

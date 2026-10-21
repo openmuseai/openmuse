@@ -7,6 +7,42 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:xterm/xterm.dart';
 
 void main() {
+  test(
+    'Workspace terminal requires activation and requests a scoped Host session',
+    () async {
+      final plugin = OpenMuseCliPlugin();
+      await expectLater(
+        plugin.sessionEnvironment('/project'),
+        throwsStateError,
+      );
+      final calls = <String>[];
+      await plugin.activate(
+        OpenMusePluginContext(
+          executeHostCommand: (command, arguments) async {
+            calls.add(command);
+            if (command == 'workspace.snapshot')
+              return {'activeMountPath': Directory.current.path};
+            if (command == 'terminal.session.create') {
+              expect((arguments as Map)['directory'], '/project');
+              return {
+                'MCP_HOST_URL': 'http://127.0.0.1:1234/mcp',
+                'MCP_HOST_TOKEN': 'test-only-token',
+              };
+            }
+            return null;
+          },
+        ),
+      );
+      final env = await plugin.sessionEnvironment('/project');
+      expect(env['MCP_HOST_TOKEN'], 'test-only-token');
+      await plugin.releaseEnvironment(env);
+      expect(calls, [
+        'workspace.snapshot',
+        'terminal.session.create',
+        'terminal.session.release',
+      ]);
+    },
+  );
   test('terminal launch request keeps the selected workspace directory', () {
     final controller = OpenMuseCliController();
     addTearDown(controller.dispose);

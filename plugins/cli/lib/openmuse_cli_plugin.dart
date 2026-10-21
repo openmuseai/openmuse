@@ -21,11 +21,13 @@ final class OpenMuseCliPlugin implements OpenMusePlugin {
   }
 
   Future<Map<String, String>> sessionEnvironment(String directory) async {
-    final result = await _context?.executeHostCommand(
-      'terminal.session.create',
-      {'directory': directory},
-    );
-    return result is Map ? Map<String, String>.from(result) : {};
+    final context = _context;
+    if (context == null) throw StateError('终端插件尚未激活');
+    final result = await context.executeHostCommand('terminal.session.create', {
+      'directory': directory,
+    });
+    if (result is! Map) throw StateError('Host 未提供 Workspace 终端会话');
+    return Map<String, String>.from(result);
   }
 
   @override
