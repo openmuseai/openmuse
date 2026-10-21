@@ -30,6 +30,7 @@ final class OpenMuseHostApp extends StatefulWidget {
     this.readyAccount,
     this.updates,
     this.desktopUpdate,
+    this.navigatorKey,
   });
 
   final OpenMusePluginRegistry registry;
@@ -42,6 +43,7 @@ final class OpenMuseHostApp extends StatefulWidget {
   final ValueListenable<String?>? readyAccount;
   final OpenMuseUpdateController? updates;
   final OpenMuseDesktopUpdate? desktopUpdate;
+  final GlobalKey<NavigatorState>? navigatorKey;
 
   @override
   State<OpenMuseHostApp> createState() => _OpenMuseHostAppState();
@@ -51,7 +53,9 @@ final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
     with WidgetsBindingObserver {
   final _locale = OpenMuseUiLocale();
   OpenMuseLocalSettings? _ownedSettings;
-  final _navigatorKey = GlobalKey<NavigatorState>();
+  final _ownedNavigatorKey = GlobalKey<NavigatorState>();
+  GlobalKey<NavigatorState> get _navigatorKey =>
+      widget.navigatorKey ?? _ownedNavigatorKey;
   late final _desktopUpdate = widget.desktopUpdate ?? OpenMuseDesktopUpdate();
   bool _updateBusy = false;
   File? _readyArchive;

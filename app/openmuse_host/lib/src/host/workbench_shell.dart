@@ -745,6 +745,12 @@ final class _BoundSurface extends StatelessWidget {
         console: OpenMuseCliConsole(
           key: const ValueKey('cli-bottom-panel'),
           workingDirectory: workspace.activeMountPath,
+          environmentProvider: plugin is OpenMuseCliPlugin
+              ? plugin.sessionEnvironment
+              : null,
+          environmentDisposer: plugin is OpenMuseCliPlugin
+              ? plugin.releaseEnvironment
+              : null,
           controller: terminalController,
           onMinimize: onCloseTerminal,
         ),

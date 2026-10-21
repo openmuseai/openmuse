@@ -13,6 +13,7 @@ import 'package:path/path.dart' as p;
 
 import 'mcp_market.dart';
 import 'mcp_capability_gateway.dart';
+import 'mcp_workspace_tools.dart';
 
 /// Distribution services shared by ordinary MCP Apps, with no business IDs.
 final class McpAppsEnvironment {
@@ -20,10 +21,19 @@ final class McpAppsEnvironment {
     required this.market,
     required this.nodeExecutable,
     required this.scope,
+    this.navigatorKey,
+    this.workspaceDirectory,
+    this.selectedMarket,
   });
   final McpRegistryMarket market;
   final String nodeExecutable;
   final String Function() scope;
+  final GlobalKey<NavigatorState>? navigatorKey;
+  final String Function()? workspaceDirectory;
+  final McpRegistryMarket? Function()? selectedMarket;
+  Future<void> Function(McpMarketEntry)? onInstalled;
+  final _developmentRuns = <String, Map<String, Directory>>{};
+  final _developmentAuthorizations = <String, ValueNotifier<bool>>{};
   final _configuration = <String, Map<String, Object?>>{};
   late final Future<Map<String, Object?>> identity = _identity();
   Future<Map<String, Object?>> _identity() async {
@@ -54,6 +64,215 @@ final class McpAppsEnvironment {
         'candidateIsolation': 'separate-view-and-process',
       },
     };
+  }
+
+  static final workspaceTools = mcpWorkspaceTools;
+  Future<bool> approve(String title, String details) async {
+    final context = navigatorKey?.currentContext;
+    if (context == null || !context.mounted) return false;
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialog) => AlertDialog(
+            title: Text(title),
+            content: SelectableText(details),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialog, false),
+                child: const Text('取消'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialog, true),
+                child: const Text('允许'),
+              ),
+            ],
+          ),
+        ) ==
+        true;
+  }
+
+  Future<Map<String, Object?>> workspaceCall(
+    String name,
+    Map<String, Object?> args,
+    String root,
+  ) async {
+    if (name == 'workspace_describe') {
+      return {
+        'roots': [
+          {'uri': Directory(root).uri.toString(), 'name': p.basename(root)},
+        ],
+      };
+    }
+    final local = await market.installedEntries();
+    final provider = selectedMarket?.call();
+    var onlineAvailable = provider != null;
+    List<McpMarketEntry> online = [];
+    try {
+      online = await provider?.list() ?? [];
+    } on Object {
+      if (name == 'registry_install') rethrow;
+      onlineAvailable = false;
+    }
+    if (name == 'registry_install') {
+      final entry = online.singleWhere((e) => e.name == args['name']);
+      if (!await approve(
+        '安装插件',
+        '${entry.title} ${entry.version}\n${entry.packageUri.host}\nSHA-256: ${entry.sha256}',
+      )) {
+        throw StateError('PERMISSION_DENIED');
+      }
+      final result = await provider!.install(entry);
+      await onInstalled?.call(entry);
+      return result;
+    }
+    if (name != 'registry_search') throw StateError('METHOD_UNAVAILABLE');
+    final query = (args['query'] as String).toLowerCase(),
+        merged = {
+          for (final e in local) e.name: e,
+          for (final e in online) e.name: e,
+        };
+    return {
+      'onlineAvailable': onlineAvailable,
+      'plugins': [
+        for (final entry in merged.values)
+          if ('${entry.name} ${entry.title} ${entry.description}'
+              .toLowerCase()
+              .contains(query))
+            {
+              'name': entry.name,
+              'title': entry.title,
+              'description': entry.description,
+              'version': entry.version,
+              'sha256': entry.sha256,
+              'installed': local.any(
+                (e) => e.name == entry.name && e.sha256 == entry.sha256,
+              ),
+              'listed': onlineAvailable
+                  ? online.any(
+                      (e) => e.name == entry.name && e.sha256 == entry.sha256,
+                    )
+                  : null,
+            },
+      ],
+    };
+  }
+
+  Future<Map<String, Object?>> openDevelopment(
+    String caller,
+    Map<String, Object?> args,
+  ) async {
+    final ownerScope = scope(), bytes = base64Decode(args['content'] as String);
+    if (bytes.length > 32 * 1024 * 1024 ||
+        sha256.convert(bytes).toString() != args['sha256']) {
+      throw StateError('CANDIDATE_DIGEST_MISMATCH');
+    }
+    final owned = _developmentRuns.putIfAbsent(caller, () => {});
+    final authorization = _developmentAuthorizations.putIfAbsent(
+      caller,
+      () => ValueNotifier(true),
+    );
+    if (owned.length >= 4) throw StateError('DEVELOPMENT_RUN_BUDGET_EXCEEDED');
+    final archive = ZipDecoder().decodeBytes(bytes);
+    final manifest =
+        jsonDecode(
+              utf8.decode(
+                archive.findFile('manifest.json')!.content as List<int>,
+              ),
+            )
+            as Map;
+    if (!await approve(
+      '运行开发候选包',
+      '${manifest['display_name'] ?? manifest['name']} ${manifest['version']}\nSHA-256: ${args['sha256']}\n未审核的本地代码。独立 View 和进程，不替换正式安装。',
+    )) {
+      throw StateError('PERMISSION_DENIED');
+    }
+    if (scope() != ownerScope || !authorization.value) {
+      throw StateError('CALLER_SCOPE_REVOKED');
+    }
+    final root = await Directory.systemTemp.createTemp('openmuse-development-');
+    final staging = McpRegistryMarket(
+      origin: Uri.parse('http://127.0.0.1'),
+      installRoot: root,
+      nodeExecutable: nodeExecutable,
+    );
+    final entry = McpMarketEntry(
+      name: 'development/${manifest['name']}',
+      title: '${manifest['display_name'] ?? manifest['name']}',
+      description: 'Development candidate',
+      version: manifest['version'] as String,
+      packageUri: Uri.parse('http://127.0.0.1/candidate.mcpb'),
+      sha256: args['sha256'] as String,
+    );
+    try {
+      await staging.install(entry, bundleBytes: bytes);
+    } catch (_) {
+      await root.delete(recursive: true);
+      rethrow;
+    }
+    final runRef = sha256.convert(utf8.encode(root.path)).toString();
+    owned[runRef] = staging.directoryFor(entry);
+    final navigator = navigatorKey?.currentState;
+    if (navigator == null || scope() != ownerScope || !authorization.value) {
+      owned.remove(runRef);
+      await root.delete(recursive: true);
+      throw StateError('HOST_WINDOW_UNAVAILABLE');
+    }
+    unawaited(
+      navigator.push<void>(
+        MaterialPageRoute(
+          builder: (_) => Scaffold(
+            appBar: AppBar(title: Text('开发预览 · ${entry.title}')),
+            body: McpInstalledApp(
+              pluginId: entry.name,
+              environment: this,
+              developmentEntry: entry,
+              developmentDirectory: staging.directoryFor(entry),
+              authorization: authorization,
+            ),
+          ),
+        ),
+      ),
+    );
+    return {
+      'opened': true,
+      'runRef': runRef,
+      'sha256': entry.sha256,
+      'channel': 'development',
+    };
+  }
+
+  Future<Map<String, Object?>> readDevelopment(
+    String caller,
+    Map<String, Object?> args,
+  ) async {
+    final directory = _developmentRuns[caller]?[args['runRef']];
+    if (directory == null) throw StateError('DEVELOPMENT_RUN_NOT_GRANTED');
+    final session = await McpBundleRuntime(
+      bundleDirectory: directory,
+      nodeExecutable: nodeExecutable,
+    ).connect();
+    try {
+      final result = (await session.client.readResource(
+        ReadResourceRequest(uri: args['uri'] as String),
+      )).toJson();
+      if (jsonEncode(result).length > 1024 * 1024) {
+        throw StateError('OUTPUT_BUDGET_EXCEEDED');
+      }
+      return result;
+    } finally {
+      await session.close();
+    }
+  }
+
+  Future<void> closeCaller(String caller) async {
+    final authorization = _developmentAuthorizations.remove(caller);
+    authorization?.value = false;
+    authorization?.dispose();
+    final runs = _developmentRuns.remove(caller);
+    if (runs != null) {
+      for (final dir in runs.values) {
+        await dir.parent.delete(recursive: true).catchError((_) => dir.parent);
+      }
+    }
   }
 
   Future<List<CapabilityProvider>> providers() async {
@@ -125,11 +344,13 @@ final class McpInstalledApp extends StatefulWidget {
     required this.environment,
     this.developmentEntry,
     this.developmentDirectory,
+    this.authorization,
   });
   final String pluginId;
   final McpAppsEnvironment environment;
   final McpMarketEntry? developmentEntry;
   final Directory? developmentDirectory;
+  final ValueNotifier<bool>? authorization;
   @override
   State<McpInstalledApp> createState() => _McpInstalledAppState();
 }
@@ -139,16 +360,29 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
   MethodChannel? _channel;
   McpCapabilityGateway? _gateway;
   List<Tool> _tools = [];
-  late final String _scope = widget.environment.scope();
-  bool get _valid => mounted && widget.environment.scope() == _scope;
+  late final String _scope;
+  bool get _valid =>
+      mounted &&
+      widget.environment.scope() == _scope &&
+      widget.authorization?.value != false;
   String? _html, _failure;
-  final _temporary = <Directory>[];
-  final _runs = <String, Directory>{};
+  late final String _caller =
+      'view-${identityHashCode(this)}-${DateTime.now().microsecondsSinceEpoch}';
 
   @override
   void initState() {
     super.initState();
+    _scope = widget.environment.scope();
+    widget.authorization?.addListener(_authorizationChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_load()));
+  }
+
+  void _authorizationChanged() {
+    if (widget.authorization?.value == false) {
+      unawaited(_gateway?.close() ?? Future.value());
+      unawaited(_session?.close() ?? Future.value());
+      if (mounted) setState(() => _failure = '开发会话已结束。请从 Workspace 新终端重新运行。');
+    }
   }
 
   Future<bool> _approve(String title, String details) async {
@@ -279,6 +513,7 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
 
   Future<void> _load() async {
     try {
+      if (!_valid) throw StateError('CALLER_SCOPE_REVOKED');
       final market = widget.environment.market;
       final entry =
           widget.developmentEntry ??
@@ -329,7 +564,7 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
         listProviders: widget.environment.providers,
         chooseResource: _choose,
         approve: _approve,
-        scope: widget.environment.scope,
+        scope: () => _valid ? _scope : 'revoked-view',
         openDevelopment: _openDevelopment,
         readDevelopment: _readDevelopment,
       );
@@ -349,93 +584,10 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
     }
   }
 
-  Future<Map<String, Object?>> _openDevelopment(
-    Map<String, Object?> args,
-  ) async {
-    final bytes = base64Decode(args['content'] as String);
-    if (bytes.length > 32 * 1024 * 1024 ||
-        sha256.convert(bytes).toString() != args['sha256']) {
-      throw StateError('CANDIDATE_DIGEST_MISMATCH');
-    }
-    final archive = ZipDecoder().decodeBytes(bytes);
-    final manifest =
-        jsonDecode(
-              utf8.decode(
-                archive.findFile('manifest.json')!.content as List<int>,
-              ),
-            )
-            as Map;
-    if (!await _approve(
-      '运行开发候选包',
-      '${manifest['display_name'] ?? manifest['name']} ${manifest['version']}\nSHA-256: ${args['sha256']}\n未审核的本地代码。新进程和独立资源授权；不会替换正式安装。',
-    )) {
-      throw StateError('PERMISSION_DENIED');
-    }
-    final root = await Directory.systemTemp.createTemp('openmuse-development-');
-    _temporary.add(root);
-    final market = McpRegistryMarket(
-      origin: Uri.parse('http://127.0.0.1'),
-      installRoot: root,
-      nodeExecutable: widget.environment.nodeExecutable,
-    );
-    final entry = McpMarketEntry(
-      name: 'development/${manifest['name']}',
-      title: '${manifest['display_name'] ?? manifest['name']}',
-      description: 'Development candidate',
-      version: manifest['version'] as String,
-      packageUri: Uri.parse('http://127.0.0.1/candidate.mcpb'),
-      sha256: args['sha256'] as String,
-    );
-    await market.install(entry, bundleBytes: bytes);
-    final runRef = sha256.convert(utf8.encode(root.path)).toString();
-    _runs[runRef] = market.directoryFor(entry);
-    if (!mounted || !_valid) throw StateError('CALLER_SCOPE_REVOKED');
-    unawaited(
-      Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => Scaffold(
-            appBar: AppBar(title: Text('开发预览 · ${entry.title}')),
-            body: McpInstalledApp(
-              pluginId: entry.name,
-              environment: widget.environment,
-              developmentEntry: entry,
-              developmentDirectory: market.directoryFor(entry),
-            ),
-          ),
-        ),
-      ),
-    );
-    return {
-      'opened': true,
-      'sha256': entry.sha256,
-      'channel': 'development',
-      'runRef': runRef,
-    };
-  }
-
-  Future<Map<String, Object?>> _readDevelopment(
-    Map<String, Object?> args,
-  ) async {
-    final directory = _runs[args['runRef']];
-    if (directory == null || !_valid) {
-      throw StateError('DEVELOPMENT_RUN_NOT_GRANTED');
-    }
-    final session = await McpBundleRuntime(
-      bundleDirectory: directory,
-      nodeExecutable: widget.environment.nodeExecutable,
-    ).connect();
-    try {
-      final response = (await session.client.readResource(
-        ReadResourceRequest(uri: args['uri'] as String),
-      )).toJson();
-      if (!_valid || jsonEncode(response).length > 1024 * 1024) {
-        throw StateError('RUN_RESOURCE_REJECTED');
-      }
-      return response;
-    } finally {
-      await session.close();
-    }
-  }
+  Future<Map<String, Object?>> _openDevelopment(Map<String, Object?> args) =>
+      widget.environment.openDevelopment(_caller, args);
+  Future<Map<String, Object?>> _readDevelopment(Map<String, Object?> args) =>
+      widget.environment.readDevelopment(_caller, args);
 
   void _created(int id) {
     final channel = MethodChannel('com.openmuse.mcp/app-view/$id');
@@ -459,6 +611,7 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
               'tools': [
                 ..._tools.map((t) => t.toJson()),
                 ...McpCapabilityGateway.tools,
+                ...McpAppsEnvironment.workspaceTools,
               ],
             };
           case 'tools/call':
@@ -466,7 +619,22 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
             final args = Map<String, Object?>.from(
               params['arguments'] as Map? ?? {},
             );
-            if (_gateway!.handles(name)) {
+            if (McpAppsEnvironment.workspaceTools.any(
+              (t) => t['name'] == name,
+            )) {
+              final output = await widget.environment.workspaceCall(
+                name,
+                args,
+                widget.environment.workspaceDirectory?.call() ??
+                    Directory.current.path,
+              );
+              response['result'] = {
+                'content': [
+                  {'type': 'text', 'text': jsonEncode(output)},
+                ],
+                'structuredContent': output,
+              };
+            } else if (_gateway!.handles(name)) {
               final output = await _gateway!.call(name, args);
               response['result'] = {
                 'content': [
@@ -509,12 +677,11 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
 
   @override
   void dispose() {
+    widget.authorization?.removeListener(_authorizationChanged);
     _channel?.setMethodCallHandler(null);
     unawaited(_gateway?.close() ?? Future.value());
     unawaited(_session?.close() ?? Future.value());
-    for (final root in _temporary) {
-      unawaited(root.delete(recursive: true).catchError((_) => root));
-    }
+    unawaited(widget.environment.closeCaller(_caller));
     super.dispose();
   }
 

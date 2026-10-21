@@ -29,6 +29,9 @@ import 'src/host/plugin_distribution.dart';
 import 'src/host/mcp_file_plugin.dart';
 import 'src/host/mcp_market.dart';
 import 'src/host/mcp_installed_app.dart';
+import 'src/host/mcp_terminal_service.dart';
+import 'src/host/mcp_capability_gateway.dart';
+import 'src/host/mcp_bin_registry.dart';
 import 'src/host/resource_agent_broker.dart';
 import 'src/host/plugin_cli_broker.dart';
 import 'src/host/plugin_market.dart';
@@ -128,10 +131,14 @@ Future<Widget> bootOpenMuseHost() async {
   McpRegistryMarket? selectedMarket() =>
       providers.selected == null ? null : makeMarket(providers.selected!);
   final receiptMarket = makeMarket(Uri());
+  final mcpNavigatorKey = GlobalKey<NavigatorState>();
   final mcpApps = McpAppsEnvironment(
     market: receiptMarket,
     nodeExecutable: marketNode,
     scope: () => accountStorage.subject,
+    navigatorKey: mcpNavigatorKey,
+    workspaceDirectory: () => controller.activeMountPath,
+    selectedMarket: selectedMarket,
   );
   Future<void> registerMcp(McpMarketEntry entry) async {
     final existing = registry.plugin(entry.name);
@@ -155,6 +162,62 @@ Future<Widget> bootOpenMuseHost() async {
     }
   }
 
+  final mcpBinDirectory = Directory(
+    p.join(support.path, 'OpenMuse', 'mcp-bin'),
+  );
+  final cliLauncher = p.normalize(
+    p.join(
+      p.dirname(Platform.resolvedExecutable),
+      '../Resources/openmuse/cli/bin/openmuse',
+    ),
+  );
+  Future<void> refreshBins() async {
+    await refreshMcpBinShims(receiptMarket, mcpBinDirectory, cliLauncher);
+  }
+
+  mcpApps.onInstalled = (entry) async {
+    await registerMcp(entry);
+    await refreshBins();
+  };
+  final terminalMcp = McpTerminalService(
+    onRevoke: mcpApps.closeCaller,
+    scope: () => accountStorage.subject,
+    tools: [
+      ...McpAppsEnvironment.workspaceTools,
+      ...McpCapabilityGateway.tools.where(
+        (t) => {
+          'host_describe',
+          'capabilities_list',
+          'development_open_bundle',
+          'development_read_resource',
+        }.contains(t['name']),
+      ),
+    ],
+    call: (caller, root, name, args) async {
+      switch (name) {
+        case 'host_describe':
+          return mcpApps.identity;
+        case 'capabilities_list':
+          final installed = await mcpApps.providers();
+          try {
+            return {'providers': installed.map((p) => p.toJson()).toList()};
+          } finally {
+            for (final p in installed) {
+              await p.close?.call();
+            }
+          }
+        case 'development_open_bundle':
+          return mcpApps.openDevelopment(caller, args);
+        case 'development_read_resource':
+          return mcpApps.readDevelopment(caller, args);
+        default:
+          return mcpApps.workspaceCall(name, args, root);
+      }
+    },
+  );
+  await terminalMcp.start();
+  await refreshBins();
+
   Future<Map<String, Object?>> runMarketAction(
     String operation,
     String id,
@@ -174,6 +237,7 @@ Future<Widget> bootOpenMuseHost() async {
         if (operation == 'install') {
           final installed = await mcpMarket.install(entry);
           await registerMcp(entry);
+          await refreshBins();
           return installed;
         }
         if (operation == 'open') {
@@ -239,6 +303,37 @@ Future<Widget> bootOpenMuseHost() async {
       hostChanges: controller,
       executeHostCommand: (command, arguments) async {
         switch (command) {
+          case 'terminal.session.release':
+            await terminalMcp.revoke((arguments as Map)['token'] as String);
+            return null;
+          case 'terminal.session.create':
+            final directory = (arguments as Map)['directory'] as String;
+            final root = await Directory(directory).resolveSymbolicLinks();
+            final roots = [
+              controller.rootPath,
+              ...controller.mounts.map((m) => m.path),
+            ];
+            final authorized = await Future.wait(
+              roots.map((r) async {
+                try {
+                  final real = await Directory(r).resolveSymbolicLinks();
+                  return root == real || p.isWithin(real, root);
+                } on FileSystemException {
+                  return false;
+                }
+              }),
+            );
+            if (!authorized.any((v) => v)) {
+              throw StateError('Terminal workspace not authorized');
+            }
+            await refreshBins();
+            return {
+              ...terminalMcp.issue(root),
+              'MCP_BIN_PATH': mcpBinDirectory.path,
+              'MCP_REGISTRY_URL':
+                  providers.selected?.toString() ??
+                  'https://plugins.openmuseai.com',
+            };
           case 'workspace.snapshot':
             return {
               'workspaceRef': 'openmuse.local.default',
@@ -729,6 +824,7 @@ Future<Widget> bootOpenMuseHost() async {
     }
   };
   return OpenMuseHostApp(
+    navigatorKey: mcpNavigatorKey,
     updates: updates,
     registry: registry,
     workspace: controller,
