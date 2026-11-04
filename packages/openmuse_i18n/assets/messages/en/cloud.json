@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "namespace": "cloud",
+  "sourceRevision": 2,
+  "messages": {
+    "cloud.title": "Cloud workspaces",
+    "cloud.refresh": "Refresh",
+    "cloud.empty": "No cloud workspaces available",
+    "cloud.workspace": "Cloud workspace",
+    "cloud.running": "Remote DSH running · {devices} devices",
+    "cloud.connect": "Connect",
+    "cloud.reuse": "Reconnect",
+    "cloud.unavailable": "Cloud workspace is unavailable. Try again later.",
+    "cloud.dshUnavailable": "Unable to connect to Remote DSH. Check the workspace and service."
+  }
+}

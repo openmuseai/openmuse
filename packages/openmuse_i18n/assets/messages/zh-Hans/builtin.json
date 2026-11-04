@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "locale": "zh-Hans",
+  "namespace": "builtin",
+  "sourceRevision": 2,
+  "messages": {
+    "builtin.auth": "账户",
+    "builtin.cloud": "云工作区",
+    "builtin.paired": "桌面连接",
+    "builtin.remote": "远程工作台",
+    "builtin.scheduled": "定时任务",
+    "builtin.files": "工作区文件",
+    "builtin.agent": "助手",
+    "builtin.speech": "语音输入",
+    "builtin.market": "插件商店"
+  }
+}

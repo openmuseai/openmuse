@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "locale": "zh-Hans",
+  "namespace": "office",
+  "sourceRevision": 2,
+  "messages": {
+    "office.unable_to_safely_open_this_docx_file.d2dd2cd6": "DOCX 无法安全打开",
+    "office.paragraph.e6bbad92": "段落 {value1}",
+    "office.saving.b528e788": "保存中…",
+    "office.save.70f4816a": "保存",
+    "office.this_document_contains_unsupported_structu.ee583283": "此文档包含未认证结构，仅支持查看",
+    "office.saved.7c66f039": "已保存 · {value1}",
+    "office.save_conflict_or_service_unavailable.8869ea79": "保存冲突或服务不可用",
+    "office.unable_to_safely_open_this_document.c0a1ba9d": "Office 文件无法安全打开",
+    "office.pptx_read_only_compatibility_view.fc7ca3d5": "PPTX · 只读兼容视图",
+    "office.pdf_read_only_text_view.213a26ed": "PDF · 文本兼容只读视图",
+    "office.xlsx_read_only_compatibility_view.9db253b8": "XLSX · 只读兼容视图"
+  }
+}

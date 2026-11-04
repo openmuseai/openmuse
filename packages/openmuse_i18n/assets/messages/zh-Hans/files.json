@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "locale": "zh-Hans",
+  "namespace": "files",
+  "sourceRevision": 2,
+  "messages": {
+    "files.count": "{count, plural, =0 {暂无文件} other {# 个文件}}"
+  }
+}
