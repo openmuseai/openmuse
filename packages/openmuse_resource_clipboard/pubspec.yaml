@@ -1,0 +1,21 @@
+name: openmuse_resource_clipboard
+description: Typed resource references with a canonical plain-text clipboard fallback.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  muse_resource_center:
+    path: ../muse_resource_center
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: io.openmuse.resource_clipboard
+        pluginClass: ResourceClipboardPlugin
+      ios:
+        pluginClass: ResourceClipboardPlugin
+      macos:
+        pluginClass: ResourceClipboardPlugin
