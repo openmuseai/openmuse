@@ -1,4 +1,4 @@
-package io.openmuse.openmuse_mobile
+package com.openmuseai.mobile
 
 import android.content.Context
 import android.graphics.Color

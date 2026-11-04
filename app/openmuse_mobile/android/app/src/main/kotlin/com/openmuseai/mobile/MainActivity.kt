@@ -1,4 +1,4 @@
-package io.openmuse.openmuse_mobile
+package com.openmuseai.mobile
 
 import android.content.Context
 import android.content.Intent
@@ -21,6 +21,7 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 
 class MainActivity : FlutterActivity() {
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         DeviceKeyStoreBridge(applicationContext).register(flutterEngine)
@@ -42,7 +43,7 @@ class MainActivity : FlutterActivity() {
                         setDataAndType(uri, mediaType)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    startActivity(Intent.createChooser(intent, "打开文件"))
+                    startActivity(Intent.createChooser(intent, call.argument<String>("chooserTitle") ?: getString(R.string.open_file)))
                     result.success(null)
                 } catch (error: Exception) {
                     result.error("resource_open", error.message ?: "Unable to open file", null)
@@ -53,6 +54,8 @@ class MainActivity : FlutterActivity() {
             OfflineWebPluginFactory(applicationContext, flutterEngine.dartExecutor.binaryMessenger),
         )
     }
+
+
 }
 
 private class DeviceKeyStoreBridge(context: Context) {
