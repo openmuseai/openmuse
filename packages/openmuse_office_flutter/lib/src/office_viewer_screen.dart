@@ -1,3 +1,5 @@
+import 'office_build_locale.dart';
+
 import 'package:flutter/material.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 
@@ -47,13 +49,20 @@ final class _OfficeViewerScreenState extends State<OfficeViewerScreen> {
       future: opening,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Center(child: Text('Office 文件无法安全打开'));
+          return Center(
+            child: Text(
+              (stringsOf(
+                context,
+              ).officeUnableToSafelyOpenThisDocumentC0a1ba9d()),
+            ),
+          );
         }
         final session = snapshot.data;
         if (session == null) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (widget.format == OfficeFormat.slides && widget.slidesBuilder != null) {
+        if (widget.format == OfficeFormat.slides &&
+            widget.slidesBuilder != null) {
           return widget.slidesBuilder!(context, session);
         }
         return ListView(
@@ -62,9 +71,15 @@ final class _OfficeViewerScreenState extends State<OfficeViewerScreen> {
             Chip(
               key: ValueKey('office-view-only'),
               label: Text(switch (widget.format) {
-                OfficeFormat.slides => 'PPTX · 只读兼容视图',
-                OfficeFormat.pdf => 'PDF · 文本兼容只读视图',
-                _ => 'XLSX · 只读兼容视图',
+                OfficeFormat.slides => (stringsOf(
+                  context,
+                ).officePptxReadOnlyCompatibilityViewFc7ca3d5()),
+                OfficeFormat.pdf => (stringsOf(
+                  context,
+                ).officePdfReadOnlyTextView213a26ed()),
+                _ => (stringsOf(
+                  context,
+                ).officeXlsxReadOnlyCompatibilityView9db253b8()),
               }),
             ),
             const SizedBox(height: 8),

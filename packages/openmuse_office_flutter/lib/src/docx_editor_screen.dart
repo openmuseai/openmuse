@@ -1,3 +1,5 @@
+import 'office_build_locale.dart';
+
 import 'package:flutter/material.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 
@@ -101,7 +103,13 @@ final class _DocxEditorScreenState extends State<DocxEditorScreen> {
       future: opening,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Center(child: Text('DOCX 无法安全打开'));
+          return Center(
+            child: Text(
+              (stringsOf(
+                context,
+              ).officeUnableToSafelyOpenThisDocxFileD2dd2cd6()),
+            ),
+          );
         }
         final value = snapshot.data;
         if (value == null) {
@@ -124,18 +132,41 @@ final class _DocxEditorScreenState extends State<DocxEditorScreen> {
                   controller: controllers![index],
                   readOnly: !editable,
                   maxLines: null,
-                  decoration: InputDecoration(labelText: '段落 ${index + 1}'),
+                  decoration: InputDecoration(
+                    labelText: (stringsOf(
+                      context,
+                    ).officeParagraphE6bbad92(value1: index + 1)),
+                  ),
                 ),
               ),
             if (editable)
               FilledButton(
                 key: const ValueKey('docx-save'),
                 onPressed: saving ? null : _save,
-                child: Text(saving ? '保存中…' : '保存'),
+                child: Text(
+                  saving
+                      ? (stringsOf(context).officeSavingB528e788())
+                      : (stringsOf(context).officeSave70f4816a()),
+                ),
               ),
-            if (!editable) const Text('此文档包含未认证结构，仅支持查看'),
-            if (receipt != null) Text('已保存 · ${receipt!.newRevision}'),
-            if (saveError != null) const Text('保存冲突或服务不可用'),
+            if (!editable)
+              Text(
+                (stringsOf(
+                  context,
+                ).officeThisDocumentContainsUnsupportedStructuEe583283()),
+              ),
+            if (receipt != null)
+              Text(
+                (stringsOf(
+                  context,
+                ).officeSaved7c66f039(value1: receipt!.newRevision)),
+              ),
+            if (saveError != null)
+              Text(
+                (stringsOf(
+                  context,
+                ).officeSaveConflictOrServiceUnavailable8869ea79()),
+              ),
           ],
         );
       },
