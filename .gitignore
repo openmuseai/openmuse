@@ -128,6 +128,7 @@ migrate_working_dir/
 *.pyc
 
 # --- Local credentials (never commit) ----------------------------------------
+/.env.apple-review.local
 /chelsea-muse
 /chelsea-muse.pub
 id_rsa

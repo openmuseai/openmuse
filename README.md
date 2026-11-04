@@ -42,7 +42,9 @@ macOS 上是完整工作台。左侧 Project Workspace 管目录、搜索、插�
 **开源可信。** 依赖有固定版本、校验和与来源说明。能力调用经过 Broker，权限、取消和审计留在 Host。macOS 发行包对照锁文件校验后再打包，第三方声明单独保留。代码从哪来，写在 [来源与出处](docs/CODE-REUSE-PROVENANCE.zh-CN.md)。
 **完全兼容 DSH。** OpenMuse 把 DSH 当作工作台的一员。工作区绑定、模型、对话和插件命令都走 DSH。当前打包版本为 0.2.0-rc.2，并通过对应的 [Provider 契约测试](contracts/dsh/0.2.0-rc.2.contract.json)。
 ## 构建与验证
-macOS 发行包只使用本仓库里的检出。Helix 资源、DSH 注册表锁文件、本地模型插件包和官方 Node 归档都在这里。在 macOS 上运行 `./scripts/package_macos.sh`，它会在 `target/` 组装 DSH 的 npm 闭包、校验校验和、构建 Flutter 应用，并写出 `dist/OpenMuse-macos.zip`。`third_party/dsh/package-lock.json` 钉住的第三方注册表依赖，本机没有缓存时仍会由 npm 下载。
+macOS 发行构建只使用本仓库里的检出。Helix 资源、DSH 注册表锁文件、本地模型插件包和官方 Node 归档都在这里。在 macOS 上运行 `./scripts/package_macos.sh`，它会在 `target/` 组装 DSH 的 npm 闭包、校验校验和、构建 Flutter 应用，并写出 `dist/OpenMuse.app`。默认不包含可选 Office 组件，也不生成 ZIP；用 `--components word,pdf,ppt,spreadsheet`（或 `--components all`）选择组件，用 `--package` 额外生成 `dist/OpenMuse-macos.zip`。组件包、公钥与原生库默认从相邻的 `Muse-Plugin-Ecosystem`、`ioffice` 仓库及移动端已验证资源获取，也可用 `OPENMUSE_*` 环境变量覆盖。`third_party/dsh/package-lock.json` 钉住的第三方注册表依赖，本机没有缓存时仍会由 npm 下载。
+
+Word 原生预览的联合验收从并列的 `Muse-Plugin-Ecosystem` 运行 `npm run word:e2e -- --platform desktop --scope render --suite quick`。通过后可执行 `./scripts/launch_word_preview_macos.sh`，用隔离的测试安装和公钥启动 Debug 应用，自动打开样本 DOCX，同时人工检查右侧 DSH 面板。Release 打包时可用 `OPENMUSE_WORD_CORE_FFI` 和 `OPENMUSE_WORD_CORE_FFI_X86_64` 指定两架构 Rust 动态库；两个切片会合成并签入 `OpenMuse.app`。测试包、公钥与启动入口仅供本地预览，正式发行还需市场信任根和完整编辑验收。
 Web 构建见 [app/openmuse_web/README.md](app/openmuse_web/README.md)。线上地址是 [https://app.openmuseai.com/zh](https://app.openmuseai.com/zh)。
 ## 许可证
 OpenMuse 源码使用仓库中的 AGPL-3.0 [LICENSE](LICENSE)。第三方组件保留各自许可证，见 [third_party/README.md](third_party/README.md)。可分发的发行版仍需要完整的第三方声明，以及各平台自己的校验。
@@ -55,3 +57,5 @@ OpenMuse 源码使用仓库中的 AGPL-3.0 [LICENSE](LICENSE)。第三方组件�
 * Web 工作台验收：[docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md](docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md)
 * DSH 契约：[contracts/dsh/0.2.0-rc.2.contract.json](contracts/dsh/0.2.0-rc.2.contract.json)
 其余设计文档在 [docs/](docs/)。
+
+多端地区、首次启动和不发版参数/开关下发的代码入口与配置清单见 [整改说明](docs/REGIONAL-APPS-RUNTIME-REMEDIATION.zh-CN.md)。

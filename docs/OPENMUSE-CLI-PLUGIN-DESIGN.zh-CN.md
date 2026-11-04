@@ -1,5 +1,7 @@
 # OpenMuse CLI 插件、底部控制台与可扩展命令协议
 
+> 迁移说明（2026-10-22）：Easel 实现与直接依赖已迁至 `Muse-Plugin-Ecosystem/plugins/easel`，新交付为 MCPB `io.openmuse/easel`。本文记录旧 `.omplugin` 方案；当前安装引导、命令、验证和发布流程以新插件内 `README.zh-CN.md` 为准。
+
 状态：P0 CLI 与 Easel 可插拔流水线已在 macOS 通过 DSH 会话验证（2026-10-06）。具体进度与下一阶段见[实施计划](OPENMUSE-CLI-PLUGIN-IMPLEMENTATION-PLAN.zh-CN.md)。Host Gateway、统一 Job、Mobile 同一 receipt 与正式发布仍是后续关卡。
 
 关联：[远程 Surface 实施计划](REMOTE-SURFACE-IMPLEMENTATION-PLAN.zh-CN.md)、[Mobile 通用预览与控制协议](MOBILE-REMOTE-PLUGIN-SURFACE-PROTOCOL.zh-CN.md)、[DSH Workspace 执行面](DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md)、[X4 CLI Registry](PLUGIN-CLI-REGISTRY-ARTIFACT-RESOLVER.zh-CN.md)。

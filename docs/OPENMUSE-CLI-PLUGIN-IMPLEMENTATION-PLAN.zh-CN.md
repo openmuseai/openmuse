@@ -1,5 +1,7 @@
 # OpenMuse CLI 插件实施计划与 Easel 验收
 
+> 迁移说明（2026-10-22）：旧 `Muse-Client/plugins/easel` 打包器和专项 CLI 测试已迁至 `Muse-Plugin-Ecosystem/plugins/easel`。本文保留早期实施记录；当前 MCPB 构建、依赖引导与市场发布方案见新插件内 `README.zh-CN.md`。
+
 更新：2026-10-06。设计边界见[CLI 设计](OPENMUSE-CLI-PLUGIN-DESIGN.zh-CN.md)；Mobile 仍按[远程 Surface 计划](REMOTE-SURFACE-IMPLEMENTATION-PLAN.zh-CN.md)推进。
 
 ## 已完成：macOS 本机试验切片

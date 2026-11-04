@@ -14,7 +14,7 @@ M8 在没有 Apple Team、distribution certificate 和 provisioning profile 的�
 
 脚本依次执行 Flutter analyze/test、`flutter build ios --release --no-codesign`，然后 fail closed 检查：
 
-- `CFBundleIdentifier == io.openmuse.mobile`；
+- `CFBundleIdentifier == com.openmuseai.mobile`；
 - Runner、App.framework、Flutter.framework 是 device `arm64`；
 - App 与 Flutter Privacy Manifest 可被 `plutil` 解析；
 - bundle 不包含 Node、Helix、DSH closure、sandbox worker 或 `libnode`；
@@ -28,7 +28,7 @@ M8 在没有 Apple Team、distribution certificate 和 provisioning profile 的�
 |---|---|
 | Flutter analyze/test | PASS |
 | iPhoneOS release build | PASS，15.0 MB Runner.app（含静态链接 DOCX engine） |
-| Bundle ID | `io.openmuse.mobile` |
+| Bundle ID | `com.openmuseai.mobile` |
 | Version/build | `1.0.0 (1)` |
 | Device architecture | `arm64` |
 | Privacy plist | PASS |

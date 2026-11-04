@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-01",
+  "scope": "Offline HTML prototype only; not native-app acceptance",
+  "checks": [
+    {
+      "name": "five tabs and a single-row source switcher",
+      "passed": true
+    },
+    {
+      "name": "copy reference → paste into draft → send with a clickable card",
+      "passed": true
+    },
+    {
+      "name": "copying a path clears the previous typed resource reference",
+      "passed": true
+    },
+    {
+      "name": "remote hierarchy and offline recovery",
+      "passed": true
+    },
+    {
+      "name": "read-only PC resources cannot be renamed",
+      "passed": true
+    },
+    {
+      "name": "workspace and mount navigation keep different sources separate",
+      "passed": true
+    },
+    {
+      "name": "plugin install state dynamically changes creator entries",
+      "passed": true
+    },
+    {
+      "name": "create validates the name, creates once and opens the resource",
+      "passed": true
+    },
+    {
+      "name": "canceling an in-progress prototype create does not leave a resource",
+      "passed": true
+    },
+    {
+      "name": "rename local resource and remove recent with undo",
+      "passed": true
+    },
+    {
+      "name": "no handler is reported rather than pretending to play a video",
+      "passed": true
+    },
+    {
+      "name": "empty and error states have working recovery actions",
+      "passed": true
+    },
+    {
+      "name": "long press opens the same resource menu",
+      "passed": true
+    },
+    {
+      "name": "sheet uses modal semantics, traps focus and restores the triggering control",
+      "passed": true
+    },
+    {
+      "name": "320 / 390 / 430px: themes and languages do not overflow the viewport",
+      "passed": true
+    }
+  ],
+  "runtimeErrors": [],
+  "externalRequests": [],
+  "screenshots": 11,
+  "externalDependencies": 0,
+  "realDataOrClipboardOperations": false
+}
