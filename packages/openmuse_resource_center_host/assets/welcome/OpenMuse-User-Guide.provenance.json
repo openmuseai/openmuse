@@ -1,0 +1,17 @@
+{
+  "source": "OpenMuse-User-Guide.md",
+  "sha256": "346d58fb16f4e734438da60eb087b70ab00367d13db01aaa3a7e7c45ac346922",
+  "embeddedImages": {
+    "openmuse-guide-449e07897211abe3.png": "449e07897211abe39b5eaf4bf3b8b147bdc002beea9a426302e0204876f6a9b7",
+    "openmuse-guide-dfd76197cfea84aa.png": "dfd76197cfea84aa7ed6b61356edf303366ffccf938a3492f2610a954b25e5b7",
+    "openmuse-guide-bcda3114583c39f0.png": "bcda3114583c39f05cbe1f5a8353a6104b9693b1b3e2bdbebc5c1c18a0729e02"
+  },
+  "imageNodes": 3,
+  "linkNodes": 18,
+  "engine": "shipped native Notes Markdown importer and SY exporter",
+  "screenshotSources": {
+    "home.png": "docs/release/overseas-2026-11-02/store-assets/android-build12/01-home.png",
+    "notes.png": "docs/release/overseas-2026-11-02/store-assets/android-build12/02-notes-guide.png",
+    "slides.png": "target/mobile-acceptance/2026-11-03/overseas-documents82-android-locale/slides-editor.png"
+  }
+}
