@@ -1,0 +1,7 @@
+{
+  "adminOrigin": "http://127.0.0.1:8790",
+  "publicOrigin": "https://config.local.invalid",
+  "scopeId": "local-demo",
+  "signingKeyId": "local-demo-v1",
+  "deploymentBundle": "../../packages/openmuse_runtime_config/assets/deployments/default.json"
+}
