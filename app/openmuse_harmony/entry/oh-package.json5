@@ -1,0 +1,6 @@
+{
+  "name": "entry",
+  "version": "0.0.1",
+  "description": "OpenMuse HarmonyOS entry module",
+  "dependencies": {}
+}

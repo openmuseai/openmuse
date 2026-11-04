@@ -1,0 +1,96 @@
+{
+  "string": [
+    {
+      "name": "app_name",
+      "value": "OpenMuse"
+    },
+    {
+      "name": "module_desc",
+      "value": "OpenMuse 鸿蒙客户端"
+    },
+    {
+      "name": "welcome",
+      "value": "创作与协作，从这里开始"
+    },
+    {
+      "name": "bootstrap_notice",
+      "value": "鸿蒙原生客户端正在移植中（仅供内部测试）"
+    },
+    {
+      "name": "filing_placeholder",
+      "value": "APP 备案号：待补充（仅供内部测试）"
+    },
+    {
+      "name": "support_email",
+      "value": "支持邮箱：developer@openmuseai.com"
+    },
+    {
+      "name": "legal_title",
+      "value": "欢迎使用 OpenMuse"
+    },
+    {
+      "name": "legal_intro",
+      "value": "开始之前"
+    },
+    {
+      "name": "legal_description",
+      "value": "请先阅读用户协议和隐私政策，了解账号、文档和关联设备的信息处理方式。"
+    },
+    {
+      "name": "legal_terms",
+      "value": "用户协议"
+    },
+    {
+      "name": "legal_terms_detail",
+      "value": "了解你的权利与责任"
+    },
+    {
+      "name": "legal_privacy",
+      "value": "隐私政策"
+    },
+    {
+      "name": "legal_privacy_detail",
+      "value": "了解信息处理方式与个人选择"
+    },
+    {
+      "name": "legal_agree",
+      "value": "我同意用户协议并已阅读隐私政策。"
+    },
+    {
+      "name": "legal_accept",
+      "value": "同意并继续"
+    },
+    {
+      "name": "legal_decline",
+      "value": "暂不同意"
+    },
+    {
+      "name": "legal_decision",
+      "value": "同意协议后，OpenMuse 才会开始运行。"
+    },
+    {
+      "name": "legal_busy",
+      "value": "正在进入…"
+    },
+    {
+      "name": "legal_error",
+      "value": "暂时无法继续，请检查协议或存储权限并重试。"
+    },
+    {
+      "name": "legal_region",
+      "value": "服务地区"
+    },
+    {
+      "name": "legal_region_name",
+      "value": "中国大陆"
+    },
+    {
+      "name": "legal_workspace",
+      "value": "文档、演示与跨设备工作。"
+    },
+    {
+      "name": "legal_open",
+      "value": "打开协议"
+    }
+  ]
+}

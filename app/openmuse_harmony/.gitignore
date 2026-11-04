@@ -1,0 +1,15 @@
+.hvigor/
+.idea/
+node_modules/
+oh_modules/
+build/
+entry/build/
+*.hap
+*.app
+*.p12
+*.p7b
+*.csr
+*.cer
+*.jks
+local.properties
+signingConfigs/
