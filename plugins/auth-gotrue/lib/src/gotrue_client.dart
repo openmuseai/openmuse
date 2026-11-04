@@ -19,8 +19,9 @@ final class GoTrueClientConfig {
   static Uri _validateOrigin(Uri value, bool allowInsecureLoopback) {
     final segments = value.pathSegments.where((item) => item.isNotEmpty);
     final safePrefix =
-        segments.every((item) => RegExp(r'^[A-Za-z0-9._-]+$').hasMatch(item)) &&
-        segments.length <= 4 &&
+        segments.every(
+          (item) => RegExp(r'^[A-Za-z0-9._~-]+$').hasMatch(item),
+        ) &&
         !value.path.contains('..');
     if (!value.hasScheme ||
         value.host.isEmpty ||
@@ -55,6 +56,7 @@ final class GoTrueClientConfig {
 final class GoTrueHttpClient implements GoTrueAuthProvider {
   GoTrueHttpClient({
     required GoTrueClientConfig config,
+    this.networkGuard,
     AuthHttpClientFactory? clientFactory,
     DateTime Function()? clock,
     Duration requestTimeout = const Duration(seconds: 20),
@@ -64,6 +66,7 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
        _requestTimeout = requestTimeout;
 
   final Uri _origin;
+  final void Function()? networkGuard;
   final AuthHttpClientFactory _clientFactory;
   final DateTime Function() _clock;
   final Duration _requestTimeout;
@@ -199,6 +202,9 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
     await _jsonRequest(
       'POST',
       '/logout',
+      // GoTrue defaults to global revocation. Signing out of this client must
+      // keep the user's paired desktops and other devices signed in.
+      query: {'scope': 'local'},
       accessToken: accessToken,
       acceptEmpty: true,
     );
@@ -229,6 +235,7 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
     bool acceptEmpty = false,
     bool invalidCredentialsOnUnauthorized = false,
   }) async {
+    checkAuthNetwork(networkGuard);
     final client = _clientFactory();
     client.connectionTimeout = const Duration(seconds: 15);
     try {
@@ -240,6 +247,8 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
       final request = await client
           .openUrl(method, uri)
           .timeout(_requestTimeout);
+      checkAuthNetwork(networkGuard);
+      request.followRedirects = false;
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       if (accessToken != null) {
         request.headers.set(

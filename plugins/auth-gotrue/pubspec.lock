@@ -65,6 +65,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.0.7"
+  cryptography:
+    dependency: transitive
+    description:
+      name: cryptography
+      sha256: "3eda3029d34ec9095a27a198ac9785630fe525c0eb6a49f3d575272f8e792ef0"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.9.0"
   fake_async:
     dependency: transitive
     description:
@@ -165,6 +173,22 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.2"
+  http:
+    dependency: transitive
+    description:
+      name: http
+      sha256: "87721a4a50b19c7f1d49001e51409bddc46303966ce89a65af4f4e6004896412"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.6.0"
+  http_parser:
+    dependency: transitive
+    description:
+      name: http_parser
+      sha256: "178d74305e7866013777bab2c3d8726205dc5a4dd935297175b19a23a2e66571"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "4.1.2"
   intl:
     dependency: "direct main"
     description:
@@ -277,10 +301,24 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "9.5.0"
+  openmuse_i18n:
+    dependency: "direct main"
+    description:
+      path: "../../packages/openmuse_i18n"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_plugin_sdk:
     dependency: "direct main"
     description:
       path: "../../packages/openmuse_plugin_sdk"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_runtime_config:
+    dependency: "direct main"
+    description:
+      path: "../../packages/openmuse_runtime_config"
       relative: true
     source: path
     version: "0.1.0"

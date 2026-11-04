@@ -13,12 +13,14 @@ import 'gotrue_client.dart';
 final class AppFlowyAccountBootstrapper implements CloudAccountBootstrapper {
   AppFlowyAccountBootstrapper({
     required Uri cloudOrigin,
+    this.networkGuard,
     bool allowInsecureLoopback = false,
     AuthHttpClientFactory? clientFactory,
   }) : _origin = _validateOrigin(cloudOrigin, allowInsecureLoopback),
        _clientFactory = clientFactory ?? HttpClient.new;
 
   final Uri _origin;
+  final void Function()? networkGuard;
   final AuthHttpClientFactory _clientFactory;
 
   static Uri _validateOrigin(Uri value, bool allowInsecureLoopback) {
@@ -35,9 +37,7 @@ final class AppFlowyAccountBootstrapper implements CloudAccountBootstrapper {
         value.hasFragment ||
         !path ||
         (value.scheme != 'https' &&
-            !(allowInsecureLoopback &&
-                value.scheme == 'http' &&
-                loopback))) {
+            !(allowInsecureLoopback && value.scheme == 'http' && loopback))) {
       throw const AuthFailure(
         AuthFailureKind.invalidConfiguration,
         'The account workspace endpoint is invalid.',
@@ -48,6 +48,7 @@ final class AppFlowyAccountBootstrapper implements CloudAccountBootstrapper {
 
   @override
   Future<void> bootstrap(GoTrueSession session) async {
+    checkAuthNetwork(networkGuard);
     final client = _clientFactory();
     client.connectionTimeout = const Duration(seconds: 15);
     try {
@@ -55,6 +56,7 @@ final class AppFlowyAccountBootstrapper implements CloudAccountBootstrapper {
         path: '/api/user/verify/${Uri.encodeComponent(session.accessToken)}',
       );
       final request = await client.getUrl(uri);
+      checkAuthNetwork(networkGuard);
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       final response = await request.close().timeout(
         const Duration(seconds: 20),
@@ -72,9 +74,7 @@ final class AppFlowyAccountBootstrapper implements CloudAccountBootstrapper {
       final decoded = jsonDecode(responseText);
       final code = decoded is Map ? decoded['code'] : null;
       final message = decoded is Map ? decoded['message'] : null;
-      debugPrint(
-        'OpenMuse auth: verify business code=$code message=$message',
-      );
+      debugPrint('OpenMuse auth: verify business code=$code message=$message');
       if (code is! num || code.toInt() != 0) {
         throw const AuthFailure(
           AuthFailureKind.bootstrap,

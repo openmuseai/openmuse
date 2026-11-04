@@ -153,3 +153,15 @@ final class GoTrueSettings {
   final bool emailEnabled;
   final Set<String> providers;
 }
+
+/// Map runtime policy failures to a stable auth code without dropping a session.
+void checkAuthNetwork(void Function()? guard) {
+  try {
+    guard?.call();
+  } catch (_) {
+    throw const AuthFailure(
+      AuthFailureKind.invalidConfiguration,
+      'The network configuration is unavailable. Refresh configuration to reconnect.',
+    );
+  }
+}

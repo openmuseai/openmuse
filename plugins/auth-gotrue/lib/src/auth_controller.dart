@@ -35,6 +35,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
     DateTime Function()? clock,
     this.refreshSkew = const Duration(minutes: 2),
     this.requirePersistedSession = false,
+    this.networkGuard,
   }) : _provider = provider,
        _store = store,
        _bootstrapper = bootstrapper,
@@ -46,6 +47,7 @@ final class GoTrueAuthenticationController extends ChangeNotifier
   final DateTime Function() _clock;
   final Duration refreshSkew;
   final bool requirePersistedSession;
+  final void Function()? networkGuard;
 
   GoTrueSession? _session;
   GoTrueSession? _recoverySession;
@@ -403,10 +405,12 @@ final class GoTrueAuthenticationController extends ChangeNotifier
   @override
   Future<String?> accessToken({bool forceRefresh = false}) async {
     if (_anonymous || _session == null) return null;
+    checkAuthNetwork(networkGuard);
     try {
       final session = forceRefresh
           ? await _refreshSession()
           : await _usableSession();
+      checkAuthNetwork(networkGuard);
       return session.accessToken;
     } on AuthFailure catch (error) {
       if (error.kind == AuthFailureKind.sessionExpired) {

@@ -918,7 +918,13 @@ final class _OpenMuseLoginMark extends StatelessWidget {
 }
 
 final class _LanguageSwitch extends StatelessWidget {
-  const _LanguageSwitch({required this.selected, required this.onSelect});
+  const _LanguageSwitch({
+    required this.selected,
+    required this.onSelect,
+    required this.options,
+  });
+
+  final List<LocaleOption> options;
 
   final String selected;
   final ValueChanged<String> onSelect;
@@ -927,22 +933,21 @@ final class _LanguageSwitch extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      _chip(label: '中文', language: 'zh'),
-      const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 2),
-        child: Text(
-          '/',
-          style: TextStyle(color: Color(0xff9aa0a6), fontSize: 12, height: 1),
-        ),
-      ),
-      _chip(label: 'English', language: 'en'),
+      for (final option in options) ...[
+        if (option != options.first) const Text(' / '),
+        _chip(label: option.label, language: option.tag, uiKey: option.uiKey),
+      ],
     ],
   );
 
-  Widget _chip({required String label, required String language}) {
+  Widget _chip({
+    required String label,
+    required String language,
+    required String uiKey,
+  }) {
     final active = selected == language;
     return TextButton(
-      key: ValueKey('auth.locale-$language'),
+      key: ValueKey('auth.locale-$uiKey'),
       onPressed: active ? null : () => onSelect(language),
       style: TextButton.styleFrom(
         foregroundColor: const Color(0xff1a73e8),
@@ -1122,12 +1127,15 @@ Widget _loginFooter(
   required VoidCallback? onSettings,
   required VoidCallback? onAnonymous,
 }) {
-  final code = Localizations.maybeLocaleOf(context)?.languageCode ?? 'zh';
+  final controller = OpenMuseUiLocaleScope.maybeOf(context);
   final language = _LanguageSwitch(
-    selected: code == 'en' ? 'en' : 'zh',
-    onSelect: (value) {
-      OpenMuseUiLocaleScope.maybeOf(context)?.select(Locale(value));
-    },
+    options: controller?.options ?? OpenMuseCatalog.builtIn.locales,
+    selected:
+        controller?.tag ??
+        OpenMuseCatalog.builtIn.resolve([
+          Localizations.localeOf(context).toLanguageTag(),
+        ]),
+    onSelect: (value) => controller?.selectTag(value),
   );
   final settings = onSettings == null
       ? null

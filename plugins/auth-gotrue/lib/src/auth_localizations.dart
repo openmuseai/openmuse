@@ -1,6 +1,9 @@
 import 'package:flutter/widgets.dart';
+import 'package:openmuse_i18n/openmuse_i18n.dart';
+export 'package:openmuse_i18n/openmuse_i18n.dart';
 
 import '../l10n/openmuse_auth_localizations.dart';
+import 'runtime_auth_localizations.dart';
 
 export '../l10n/openmuse_auth_localizations.dart';
 
@@ -11,34 +14,35 @@ export '../l10n/openmuse_auth_localizations.dart';
 /// their own. Fall back to the template locale instead of failing when the
 /// delegate is absent.
 OpenMuseAuthLocalizations openMuseAuthLocalizations(BuildContext context) =>
-    OpenMuseAuthLocalizations.of(context) ??
-    lookupOpenMuseAuthLocalizations(const Locale('en'));
+    OpenMuseLocaleScope.maybeOf(context) != null
+    ? RuntimeAuthLocalizations(stringsOf(context))
+    : OpenMuseAuthLocalizations.of(context) ??
+          lookupOpenMuseAuthLocalizations(
+            localeFromTag(OpenMuseCatalog.builtIn.templateLocale),
+          );
 
 /// App-wide UI language. Login pages default to Chinese and can switch to
 /// English without leaving the screen.
-final class OpenMuseUiLocale extends ChangeNotifier {
-  OpenMuseUiLocale({Locale initial = const Locale('zh')}) : locale = initial;
-
-  Locale locale;
-
-  void select(Locale value) {
-    if (locale == value) return;
-    locale = value;
-    notifyListeners();
-  }
+final class OpenMuseUiLocale extends OpenMuseLocaleController {
+  OpenMuseUiLocale({
+    Locale? initial,
+    String? initialTag,
+    String? defaultTag,
+    Iterable<String>? enabledLocales,
+    Iterable<String> systemLocales = const [],
+    Map<String, String> aliases = const {},
+    LocalePreferences? preferences,
+  }) : super(
+         initialTag: initialTag ?? initial?.toLanguageTag(),
+         defaultTag: defaultTag,
+         enabledLocales: enabledLocales,
+         systemLocales: systemLocales,
+         aliases: aliases,
+         preferences: preferences,
+       );
 }
 
-final class OpenMuseUiLocaleScope extends InheritedNotifier<OpenMuseUiLocale> {
-  const OpenMuseUiLocaleScope({
-    super.key,
-    required OpenMuseUiLocale controller,
-    required super.child,
-  }) : super(notifier: controller);
-
-  static OpenMuseUiLocale? maybeOf(BuildContext context) => context
-      .dependOnInheritedWidgetOfExactType<OpenMuseUiLocaleScope>()
-      ?.notifier;
-}
+typedef OpenMuseUiLocaleScope = OpenMuseLocaleScope;
 
 /// Maps an authentication failure code to a localized message.
 ///

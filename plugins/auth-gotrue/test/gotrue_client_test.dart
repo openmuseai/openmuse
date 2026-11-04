@@ -5,6 +5,97 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 
 void main() {
+  test('signing out of mobile preserves the paired desktop session', () async {
+    final sessions = {'mobile-access', 'desktop-access'};
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    final serving = server.forEach((request) async {
+      final token = request.headers
+          .value(HttpHeaders.authorizationHeader)!
+          .substring('Bearer '.length);
+      if (request.uri.path == '/logout') {
+        // Match GoTrue's documented default: absent scope revokes all sessions.
+        if (request.uri.queryParameters['scope'] == 'local') {
+          sessions.remove(token);
+        } else {
+          sessions.clear();
+        }
+        request.response.statusCode = HttpStatus.noContent;
+      } else if (sessions.contains(token)) {
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          jsonEncode({'id': 'same-user', 'email': 'muse@example.test'}),
+        );
+      } else {
+        request.response.statusCode = HttpStatus.unauthorized;
+      }
+      await request.response.close();
+    });
+    final client = GoTrueHttpClient(
+      config: GoTrueClientConfig(
+        origin: Uri.parse('http://127.0.0.1:${server.port}'),
+        allowInsecureLoopback: true,
+      ),
+    );
+    try {
+      await client.logout('mobile-access');
+      expect((await client.currentUser('desktop-access')).id, 'same-user');
+      expect(sessions, isNot(contains('mobile-access')));
+    } finally {
+      await server.close(force: true);
+      await serving;
+    }
+  });
+
+  test(
+    'unavailable runtime policy stops auth I/O and token access without deleting a session',
+    () async {
+      var clients = 0;
+      void unavailable() => throw StateError('configuration unavailable');
+      final provider = GoTrueHttpClient(
+        config: GoTrueClientConfig(
+          origin: Uri.parse('https://auth.example.test/gotrue'),
+        ),
+        networkGuard: unavailable,
+        clientFactory: () {
+          clients++;
+          throw StateError('network must not start');
+        },
+      );
+      await expectLater(
+        provider.settings(),
+        throwsA(
+          isA<AuthFailure>().having(
+            (e) => e.kind,
+            'kind',
+            AuthFailureKind.invalidConfiguration,
+          ),
+        ),
+      );
+      expect(clients, 0);
+      final store = MemoryAuthSessionStore();
+      await store.write(
+        GoTrueSession(
+          accessToken: 'retained-access',
+          refreshToken: 'retained-refresh',
+          expiresAt: DateTime.now().add(const Duration(hours: 1)),
+          user: const GoTrueUser(
+            id: 'retained-user',
+            email: 'test@example.test',
+          ),
+        ),
+      );
+      final controller = GoTrueAuthenticationController(
+        provider: provider,
+        store: store,
+        networkGuard: unavailable,
+      );
+      await controller.restore();
+      await expectLater(controller.accessToken(), throwsA(isA<AuthFailure>()));
+      expect((await store.read())?.refreshToken, 'retained-refresh');
+      expect(clients, 0);
+      controller.dispose();
+    },
+  );
   test('production config rejects insecure and unsafe origins', () {
     expect(
       () => GoTrueClientConfig(origin: Uri.parse('http://example.com')),
