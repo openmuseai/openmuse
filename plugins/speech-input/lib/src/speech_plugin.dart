@@ -27,6 +27,15 @@ final class OpenMuseSpeechInputPlugin
   SpeechSessionRef? _lastTerminal;
   bool _activated = false;
 
+  /// Release model files only while no recognition session owns the worker.
+  Future<void> releaseLocalEngine() async {
+    if (_active != null) throw StateError('Speech recognition is active');
+    await _workerEvents?.cancel();
+    _workerEvents = null;
+    await _worker?.dispose();
+    _worker = null;
+  }
+
   @override
   OpenMusePluginDescriptor get descriptor => const OpenMusePluginDescriptor(
     id: 'com.openmuse.speech.input',
