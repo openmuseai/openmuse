@@ -7,6 +7,39 @@ import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue_web.dart';
 import 'package:openmuse_web/auth/browser_auth.dart';
 
 void main() {
+  test('browser sign-out only revokes the current session', () async {
+    final provider = BrowserGoTrueProvider(
+      origin: Uri.parse('https://auth.example.test/gotrue'),
+      client: MockClient((request) async {
+        expect(request.method, 'POST');
+        expect(request.url.path, '/gotrue/logout');
+        expect(request.url.queryParameters, {'scope': 'local'});
+        expect(request.headers['Authorization'], 'Bearer browser-access');
+        return http.Response('', 204);
+      }),
+    );
+    await provider.logout('browser-access');
+  });
+
+  test('deployment-specific browser session stores remain isolated', () async {
+    const first = BrowserAuthSessionStore(key: 'openmuse.config-test.first');
+    const second = BrowserAuthSessionStore(key: 'openmuse.config-test.second');
+    addTearDown(() async {
+      await first.delete();
+      await second.delete();
+    });
+    await second.delete();
+    final session = GoTrueSession.fromJson({
+      'access_token': 'first-access',
+      'refresh_token': 'first-refresh',
+      'expires_in': 3600,
+      'user': {'id': 'first-user', 'email': 'first@example.test'},
+    });
+    await first.write(session);
+    expect((await first.read())?.user.id, 'first-user');
+    expect(await second.read(), isNull);
+  });
+
   test('browser adapter uses the shared GoTrue password contract', () async {
     final provider = BrowserGoTrueProvider(
       origin: Uri.parse('https://auth.example.test/gotrue'),

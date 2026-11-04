@@ -10,9 +10,9 @@ npm ci
 npm run build
 cd ../../app/openmuse_web
 flutter pub get
-# Production host is https://app.openmuseai.com/ . The local edge still uses /app/.
-flutter build web --release --base-href /
-# flutter build web --release --base-href /app/
+# From Muse-Client root, use the fixed-region release pipeline:
+# scripts/ci/build-web.sh --region us    # https://us.openmuseai.com/app/
+# scripts/ci/build-web.sh --region cn    # https://app.openmuseai.com/
 ```
 
 For local integration, start a DSH Web server on loopback, then from the repository root run:
@@ -28,3 +28,9 @@ The browser discovers same-account online Desktop devices after login and reques
 Run browser-only adapter tests with `flutter test --platform chrome test/browser_adapters_test.dart`; ordinary `flutter test` runs the VM-safe workbench tests.
 
 The shared Flutter File Viewer displays authorized Markdown, text and images through the paired resource endpoint. PDF/video, Range and the production Web pairing Edge remain pending. The Office route factory in `lib/office_routes.dart` accepts an authorized resource handle and Engine ports; the browser Office Engine adapter remains pending. See the [UI and interaction acceptance matrix](../../docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md) for passed and remaining gates.
+
+## Regional releases
+
+Production builds require validated `OPENMUSE_WEB_DATA_REGION`, `OPENMUSE_WEB_ORIGIN`, `OPENMUSE_WEB_BASE_PATH` and `OPENMUSE_RELEASE_JSON` inputs. `scripts/release/prepare-web-config.py` compiles these from the installed release and `config/web-deployments.json`. The build script and Web CI prepare them automatically; direct release builds without them fail closed before creating auth adapters. `OPENMUSE_WEB_RELEASE_FILE` selects a provisioned trusted release. The release pipeline stores each region under `dist/web/cn/` or `dist/web/us/` and packages Flutter Web engine resources locally.
+
+`?lang=` selects an enabled UI language only. `?region=` cannot override the installed service boundary. Browser origin, mount, fixed region and separate storage identities are checked before authentication. Login displays the installed region label. Language changes update Flutter text and HTML language/direction together. The portal uses its own region selection to navigate to the matching regional host; it never transfers a login session across regions.

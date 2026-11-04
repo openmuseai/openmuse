@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue_web.dart';
 
 import 'browser_paired_client.dart';
@@ -13,10 +14,12 @@ final class WebSessionPage extends StatefulWidget {
     super.key,
     required this.authentication,
     this.pairedClient,
+    this.config,
   });
 
   final GoTrueAuthenticationController authentication;
   final BrowserPairedClient? pairedClient;
+  final RuntimeConfig? config;
 
   @override
   State<WebSessionPage> createState() => _WebSessionPageState();
@@ -25,7 +28,11 @@ final class WebSessionPage extends StatefulWidget {
 final class _WebSessionPageState extends State<WebSessionPage> {
   late final BrowserPairedClient _paired =
       widget.pairedClient ??
-      BrowserPairedClient(authentication: widget.authentication);
+      BrowserPairedClient(
+        authentication: widget.authentication,
+        origin: widget.config?.webServiceUri(ServiceId.relay, Uri.base),
+        cloudOrigin: widget.config?.webServiceUri(ServiceId.cloud, Uri.base),
+      );
   List<BrowserDesktopDevice>? _desktops;
   BrowserPairedConnection? _connection;
   BrowserDesktopDevice? _activeDesktop;
@@ -144,7 +151,7 @@ final class _WebSessionPageState extends State<WebSessionPage> {
               ),
             )
           : OpenMuseDshPane(
-              key: ValueKey(connection.bootstrapPath),
+              key: ObjectKey(connection),
               bootstrapPath: connection.bootstrapPath,
             ),
     );

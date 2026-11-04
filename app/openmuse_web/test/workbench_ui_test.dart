@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_workbench_layout/openmuse_workbench_layout.dart';
@@ -39,6 +40,63 @@ void main() {
     expect(find.byKey(const Key('pane-menu-button:pane-1')), findsOneWidget);
   });
 
+  testWidgets('remote workspace and tab context menus invoke real actions', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final port = _FakeMirrorPort();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildOpenMuseTheme(),
+        home: WebWorkbenchPage(
+          desktopRef: 'menu-desktop',
+          workspaceRef: 'workspace',
+          mirrorPort: port,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('添加工作区'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Remote Workspace');
+    await tester.tap(find.text('确定'));
+    await tester.pumpAndSettle();
+    expect(port.actions.last, ('add-workspace', null, 'Remote Workspace'));
+    await tester.tap(find.text('Repo'), buttons: kSecondaryMouseButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('新建文件夹…'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'new-folder');
+    await tester.tap(find.text('确定'));
+    await tester.pumpAndSettle();
+    expect(port.actions.last, ('new-folder', 'root', 'new-folder'));
+    await tester.tap(find.text('readme.md'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('notes.md'));
+    await tester.pumpAndSettle();
+    final strip = find.byType(OpenMuseEditorTabStrip);
+    await tester.tap(
+      find.descendant(of: strip, matching: find.text('readme.md')),
+      buttons: kSecondaryMouseButton,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('关闭其他标签'));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(of: strip, matching: find.text('notes.md')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: strip, matching: find.text('readme.md')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('paired Workspace loads children on expand and opens Viewer', (
     tester,
   ) async {
@@ -74,7 +132,18 @@ void main() {
 }
 
 final class _FakeMirrorPort
-    implements WorkspaceMirrorPort, WorkspaceResourcePort {
+    implements WorkspaceMirrorPort, WorkspaceResourcePort, WorkspaceActionPort {
+  final actions = <(String, String?, String?)>[];
+  @override
+  Future<void> performWorkspaceAction({
+    required String workspaceRef,
+    required String operation,
+    String? nodeRef,
+    String? name,
+  }) async {
+    actions.add((operation, nodeRef, name));
+  }
+
   int mountCalls = 0;
   int childCalls = 0;
   int resourceCalls = 0;
@@ -102,6 +171,12 @@ final class _FakeMirrorPort
     childCalls++;
     return const WorkspaceMirrorPage(
       entries: [
+        WorkspaceMirrorEntry(
+          nodeRef: 'notes',
+          name: 'notes.md',
+          isDirectory: false,
+          resourceRef: 'notes-resource',
+        ),
         WorkspaceMirrorEntry(
           nodeRef: 'file',
           name: 'readme.md',

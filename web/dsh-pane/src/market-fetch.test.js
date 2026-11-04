@@ -34,3 +34,28 @@ test('other DSH calls are not rewritten', () => {
     '/dsh/api/session',
   )
 })
+
+test('model capability reads retain provider and use the paired mount', () => {
+  assert.equal(
+    rewriteEmbeddedMarketRequest('/model-capabilities?provider=custom', assetBase, documentBase),
+    'http://127.0.0.1:4174/dsh/model-capabilities?provider=custom',
+  )
+})
+
+test('capability saves preserve their method, body and headers', async () => {
+  const request = new Request(new URL('/model-capabilities', documentBase), {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider: 'custom', revision: 1 }),
+  })
+  const rewritten = rewriteEmbeddedMarketRequest(request, assetBase, documentBase)
+  assert.equal(rewritten.url, 'http://127.0.0.1:4174/dsh/model-capabilities')
+  assert.equal(rewritten.method, 'POST')
+  assert.equal(rewritten.headers.get('Content-Type'), 'application/json')
+  assert.deepEqual(await rewritten.json(), { provider: 'custom', revision: 1 })
+})
+
+test('foreign origins and similarly named public paths are not rewritten', () => {
+  for (const input of ['https://other.example/model-capabilities', '/model-capabilities-public']) {
+    assert.equal(rewriteEmbeddedMarketRequest(input, assetBase, documentBase), input)
+  }
+})

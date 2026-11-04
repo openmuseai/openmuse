@@ -1,8 +1,7 @@
-// The market client resolves `/dsh-market/…` against document.baseURI. Inside
-// the Flutter shell that base is `/app/`, so the catalog request never reaches
-// the DSH mount and the static host answers 404.
+// Embedded extension bridges must resolve against the authenticated DSH mount,
+// rather than the Flutter page's /app/ base or the public origin root.
 
-const marketMarker = '/dsh-market'
+const bridgeMarkers = ['/dsh-market', '/model-capabilities']
 
 export function rewriteEmbeddedMarketRequest(input, assetBase, documentBase) {
   const raw = typeof input === 'string'
@@ -17,7 +16,12 @@ export function rewriteEmbeddedMarketRequest(input, assetBase, documentBase) {
     return input
   }
   const documentUrl = new URL(documentBase)
-  const index = url.pathname.indexOf(marketMarker)
+  const index = bridgeMarkers.reduce((found, marker) => {
+    if (found >= 0) return found
+    const at = url.pathname.indexOf(marker)
+    const rest = at < 0 ? '' : url.pathname.slice(at + marker.length)
+    return at >= 0 && (rest === '' || rest.startsWith('/')) ? at : -1
+  }, -1)
   if (url.origin !== documentUrl.origin || index < 0) return input
   const target = new URL(url.pathname.slice(index).replace(/^\//, ''), assetBase)
   target.search = url.search

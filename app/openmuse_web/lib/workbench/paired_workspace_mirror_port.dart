@@ -7,7 +7,7 @@ import 'package:openmuse_workbench_layout/openmuse_workbench_layout.dart';
 /// Same-origin browser adapter. The paired Edge must transport this request
 /// through the authenticated Desktop grant, including on reconnect.
 final class PairedWorkspaceMirrorPort
-    implements WorkspaceMirrorPort, WorkspaceResourcePort {
+    implements WorkspaceMirrorPort, WorkspaceResourcePort, WorkspaceActionPort {
   PairedWorkspaceMirrorPort({Uri? endpoint})
     : endpoint = endpoint ?? Uri.base.resolve('/openmuse/workspace-mirror/v1'),
       _client = BrowserClient()..withCredentials = true;
@@ -78,12 +78,43 @@ final class PairedWorkspaceMirrorPort
               isDirectory: item['isDirectory'] as bool,
               resourceRef: item['resourceRef'] as String?,
               mediaType: item['mediaType'] as String?,
+              canRestore: item['canRestore'] == true,
             )
           else
             throw const FormatException('Workspace 目录项无效'),
       ],
       nextCursor: body['nextCursor'] as String?,
     );
+  }
+
+  @override
+  Future<void> performWorkspaceAction({
+    required String workspaceRef,
+    required String operation,
+    String? nodeRef,
+    String? name,
+  }) async {
+    final response = await _client
+        .post(
+          endpoint.replace(path: '/openmuse/workspace-mirror/action/v1'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'workspaceRef': workspaceRef,
+            'operation': operation,
+            'nodeRef': ?nodeRef,
+            'name': ?name,
+          }),
+        )
+        .timeout(const Duration(seconds: 45));
+    if (response.statusCode != 200) {
+      throw StateError(
+        response.statusCode == 401
+            ? '连接授权已失效，请重连 Desktop。'
+            : response.statusCode == 503
+            ? '请更新 Desktop 客户端后重试。'
+            : 'Workspace 操作失败，请检查名称、目录或权限（${response.statusCode}）。',
+      );
+    }
   }
 
   void close() => _client.close();
