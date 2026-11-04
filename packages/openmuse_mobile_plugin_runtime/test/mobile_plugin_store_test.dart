@@ -6,6 +6,39 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
 
 void main() {
+  test(
+    'bundled release preserves but never restores downloaded software',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'mobile-bundled-only-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final entry = MobileMarketEntry.fromJson(
+        Map<String, Object?>.from(
+          (jsonDecode(await File('assets/market.json').readAsString()) as List)
+                  .first
+              as Map,
+        ),
+      );
+      final bytes = await File('assets/${entry.bundle}').readAsBytes();
+      final development = MobilePluginStore(directory);
+      await development.install(entry, bytes);
+      final state = File('${directory.path}/state.json');
+      final previous = await state.readAsString();
+      final release = MobilePluginStore(
+        directory,
+        allowDownloadedPlugins: false,
+      );
+      await release.restore();
+      expect(release.installedBundles, isEmpty);
+      await expectLater(release.install(entry, bytes), throwsStateError);
+      expect(await state.readAsString(), previous);
+      final restored = MobilePluginStore(directory);
+      await restored.restore();
+      expect(restored.isInstalled(entry.id), isTrue);
+    },
+  );
+
   test('install, disable and restore only verified Mobile bundle', () async {
     final directory = await Directory.systemTemp.createTemp(
       'openmuse-mobile-store-',
@@ -21,7 +54,11 @@ void main() {
             .toList();
     final entry = entries.first;
     final bytes = await File('assets/${entry.bundle}').readAsBytes();
-    final store = MobilePluginStore(directory);
+    var allowed = false;
+    final store = MobilePluginStore(directory, allowInstall: () => allowed);
+    await expectLater(store.install(entry, bytes), throwsStateError);
+    expect(store.isInstalled(entry.id), isFalse);
+    allowed = true;
     await expectLater(
       store.install(entry, [...bytes, 0]),
       throwsFormatException,

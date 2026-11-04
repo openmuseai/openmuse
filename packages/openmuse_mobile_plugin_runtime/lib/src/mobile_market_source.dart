@@ -11,10 +11,16 @@ abstract interface class MobileMarketSource {
 }
 
 final class BundledMobileMarketSource implements MobileMarketSource {
-  const BundledMobileMarketSource();
+  const BundledMobileMarketSource({this.officialRelease = false});
+  final bool officialRelease;
 
   @override
-  Future<List<MobileMarketEntry>> list() => loadBundledMobileMarket();
+  Future<List<MobileMarketEntry>> list() => officialRelease
+      ? loadBundledMobileMarket(
+          catalogAsset:
+              'packages/openmuse_mobile_plugin_runtime/assets/official-market.json',
+        )
+      : loadBundledMobileMarket();
 
   @override
   Future<List<int>> artifact(MobileMarketEntry entry) =>
@@ -96,9 +102,13 @@ final class SignedHttpMobileMarketSource implements MobileMarketSource {
         );
       }
       for (final media in entry.media) {
-        for (final location in [media.uri, if (media.poster != null) media.poster!]) {
+        for (final location in [
+          media.uri,
+          if (media.poster != null) media.poster!,
+        ]) {
           final mediaUri = Uri.tryParse(location);
-          if (mediaUri == null || !_allowed(mediaUri) ||
+          if (mediaUri == null ||
+              !_allowed(mediaUri) ||
               mediaUri.origin != indexUri.origin) {
             throw const FormatException('Mobile market media origin invalid');
           }

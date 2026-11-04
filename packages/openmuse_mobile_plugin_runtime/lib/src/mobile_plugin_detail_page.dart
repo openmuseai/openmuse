@@ -32,6 +32,7 @@ final class _MobilePluginDetailPageState extends State<MobilePluginDetailPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.contribution is OpenMuseMobileNativeDetailContributor) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) unawaited(_load());
     });
@@ -164,14 +165,17 @@ final class _MobilePluginDetailPageState extends State<MobilePluginDetailPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(widget.plugin.descriptor.name)),
-    body: Stack(
-      children: [
-        if (_controller case final controller?)
-          WebViewWidget(controller: controller),
-        if (_loading) const Center(child: CircularProgressIndicator()),
-        if (_failure case final failure?)
-          Center(child: Text(failure, textAlign: TextAlign.center)),
-      ],
-    ),
+    body: widget.contribution is OpenMuseMobileNativeDetailContributor
+        ? (widget.contribution as OpenMuseMobileNativeDetailContributor)
+              .buildMobileDetail(context)
+        : Stack(
+            children: [
+              if (_controller case final controller?)
+                WebViewWidget(controller: controller),
+              if (_loading) const Center(child: CircularProgressIndicator()),
+              if (_failure case final failure?)
+                Center(child: Text(failure, textAlign: TextAlign.center)),
+            ],
+          ),
   );
 }

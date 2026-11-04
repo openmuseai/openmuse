@@ -239,7 +239,16 @@ final class MobilePluginBundle {
 
 /// Installation is a Host operation. Artifact bytes are checked before use.
 final class MobilePluginStore extends ChangeNotifier {
-  MobilePluginStore(this.directory);
+  MobilePluginStore(
+    this.directory, {
+    this.allowInstall,
+    this.allowDownloadedPlugins = true,
+  });
+  final bool Function()? allowInstall;
+
+  /// A release can supply all executable plugins in its application binary.
+  /// Old downloaded artifacts remain on disk but are not restored or executed.
+  final bool allowDownloadedPlugins;
   final Directory directory;
   final Map<String, MobilePluginBundle> _installed = {};
   final Map<String, String> _digests = {};
@@ -252,6 +261,7 @@ final class MobilePluginStore extends ChangeNotifier {
 
   Future<void> restore() async {
     await directory.create(recursive: true);
+    if (!allowDownloadedPlugins) return;
     final state = File(path.join(directory.path, 'state.json'));
     if (!await state.exists()) return;
     final decoded = jsonDecode(await state.readAsString()) as Map;
@@ -289,6 +299,11 @@ final class MobilePluginStore extends ChangeNotifier {
   }
 
   Future<void> install(MobileMarketEntry entry, List<int> bytes) async {
+    if (!allowDownloadedPlugins) {
+      throw StateError('This release uses bundled plugins');
+    }
+    if (allowInstall?.call() == false)
+      throw StateError('Plugin installation is currently disabled');
     if (!_safeId(entry.id) ||
         !RegExp(r'^\d+\.\d+\.\d+$').hasMatch(entry.version)) {
       throw const FormatException('invalid plugin identity');
@@ -408,10 +423,11 @@ final class MobilePluginStore extends ChangeNotifier {
 
 /// Bundled launch catalog. A remote catalog must first pass signature checks;
 /// it must never be passed directly to [MobilePluginStore.install].
-Future<List<MobileMarketEntry>> loadBundledMobileMarket() async {
-  final raw = await rootBundle.loadString(
-    'packages/openmuse_mobile_plugin_runtime/assets/market.json',
-  );
+Future<List<MobileMarketEntry>> loadBundledMobileMarket({
+  String catalogAsset =
+      'packages/openmuse_mobile_plugin_runtime/assets/market.json',
+}) async {
+  final raw = await rootBundle.loadString(catalogAsset);
   final entries = jsonDecode(raw) as List;
   return entries
       .map(
