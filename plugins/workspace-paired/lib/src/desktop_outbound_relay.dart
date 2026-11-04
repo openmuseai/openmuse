@@ -52,7 +52,20 @@ final class DesktopOutboundRelay {
   Future<void> _loop() async {
     var failures = 0;
     while (!_stopped) {
-      final token = await accessToken();
+      String? token;
+      try {
+        token = await accessToken();
+      } catch (error, stack) {
+        // A refresh failure must not terminate this unawaited loop. The user
+        // may sign in again without restarting the desktop application.
+        if (_stopped) return;
+        stderr.writeln('OpenMuse desktop relay authentication: $error');
+        stderr.writeln(stack);
+        failures = min(failures + 1, 6);
+        _setPhase(DesktopRelayPhase.reconnecting);
+        await Future<void>.delayed(_delay(failures - 1));
+        continue;
+      }
       if (_stopped) return;
       if (token == null || token.isEmpty) {
         _setPhase(DesktopRelayPhase.idle);

@@ -7,6 +7,77 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 void main() {
+  test(
+    'closing a mobile SSE consumer cancels upstream without an unhandled socket error',
+    () async {
+      final upstream = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final upstreamClosed = Completer<void>();
+      upstream.listen((request) async {
+        request.response.headers.contentType = ContentType(
+          'text',
+          'event-stream',
+        );
+        request.response.bufferOutput = false;
+        unawaited(
+          request.response.done.then<void>((_) {}, onError: (Object _) {}),
+        );
+        try {
+          for (var i = 0; i < 200; i++) {
+            request.response.write('data: {"type":"heartbeat"}\n\n');
+            await request.response.flush();
+            await Future<void>.delayed(const Duration(milliseconds: 20));
+          }
+          await request.response.close();
+        } on HttpException {
+          // Expected cancellation of this test's upstream SSE fixture.
+        } on SocketException {
+          // Expected cancellation of this test's upstream SSE fixture.
+        } finally {
+          if (!upstreamClosed.isCompleted) upstreamClosed.complete();
+        }
+      });
+      final gateway = PairedDesktopGateway(
+        currentAccountRef: () => 'account-1',
+        validateToken: (_) async => 'account-1',
+        dshEndpoint: () async =>
+            Uri.parse('http://127.0.0.1:${upstream.port}/'),
+        workspaceRef: 'openmuse.local.default',
+        workspaceTitle: 'Workspace',
+        port: 0,
+      );
+      await gateway.start();
+      final pair = PairedDesktopClient(
+        origin: gateway.origin!,
+        accessToken: () async => 'token',
+        deviceRef: 'mobile-1',
+        allowInsecureLoopback: true,
+      );
+      final client = HttpClient();
+      try {
+        final connection = await pair.connectSameAccount(
+          targetDeviceRef: 'desktop.local',
+        );
+        final request = await client.getUrl(gateway.origin!.resolve('/stream'));
+        request.cookies.add(Cookie('OpenMuse-Paired', connection.grantRef));
+        final response = await request.close();
+        final first = Completer<void>();
+        final subscription = response.listen((_) {
+          if (!first.isCompleted) first.complete();
+        }, onError: (Object _) {});
+        await first.future.timeout(const Duration(seconds: 3));
+        await subscription.cancel();
+        client.close(force: true);
+        await upstreamClosed.future.timeout(const Duration(seconds: 5));
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      } finally {
+        client.close(force: true);
+        pair.close();
+        await gateway.stop();
+        await upstream.close(force: true);
+      }
+    },
+  );
+
   test('account change invalidates paired proxy and workspace access', () async {
     final upstream = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     upstream.listen((request) async {
@@ -364,6 +435,69 @@ void main() {
     client.close(force: true);
     await gateway.stop();
   });
+
+  test(
+    'workspace actions require a current scoped grant and JSON same-site request',
+    () async {
+      var account = 'account-1';
+      final calls = <WorkspaceMirrorAction>[];
+      final gateway = PairedDesktopGateway(
+        currentAccountRef: () => account,
+        validateToken: (_) async => account,
+        dshEndpoint: () async => Uri.parse('http://127.0.0.1:1/'),
+        workspaceRef: 'workspace-1',
+        workspaceTitle: 'Workspace',
+        port: 0,
+        workspaceMirrorAction: (action) async {
+          calls.add(action);
+          return {'ok': true};
+        },
+      );
+      await gateway.start();
+      addTearDown(gateway.stop);
+      final grant = gateway.issueLoopbackOperatorGrant(
+        accountRef: account,
+        deviceRef: 'browser',
+      );
+      final client = HttpClient();
+      addTearDown(() => client.close(force: true));
+      Future<int> send({
+        bool cookie = true,
+        String workspace = 'workspace-1',
+        bool json = true,
+        bool crossSite = false,
+      }) async {
+        final req = await client.postUrl(
+          gateway.origin!.resolve('/openmuse/workspace-mirror/action/v1'),
+        );
+        if (cookie) req.cookies.add(Cookie('OpenMuse-Paired', grant));
+        if (json) req.headers.contentType = ContentType.json;
+        if (crossSite) req.headers.set('sec-fetch-site', 'cross-site');
+        req.write(
+          jsonEncode({
+            'workspaceRef': workspace,
+            'operation': 'new-file',
+            'nodeRef': 'opaque',
+            'name': 'hello.md',
+          }),
+        );
+        final response = await req.close();
+        await response.drain<void>();
+        return response.statusCode;
+      }
+
+      expect(await send(cookie: false), 401);
+      expect(await send(json: false), 415);
+      expect(await send(crossSite: true), 403);
+      expect(await send(workspace: 'other'), 400);
+      expect(calls, isEmpty);
+      expect(await send(), 200);
+      expect(calls.single.accountRef, 'account-1');
+      account = 'account-2';
+      expect(await send(), 401);
+      expect(calls.length, 1);
+    },
+  );
 
   test('workspace mirror requires grant and matching workspace', () async {
     final calls = <WorkspaceMirrorQuery>[];

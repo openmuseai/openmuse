@@ -1,3 +1,5 @@
+import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart'
+    show isPrivateNativeTransportHost;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -53,21 +55,21 @@ final class PairedDesktopClient {
         );
       } on PairedDesktopFailure catch (error) {
         if (!_retryableRelayFailure(error.code) ||
-            DateTime.now().add(Duration(seconds: delaySeconds)).isAfter(
-              deadline,
-            )) {
+            DateTime.now()
+                .add(Duration(seconds: delaySeconds))
+                .isAfter(deadline)) {
           rethrow;
         }
       } on SocketException {
-        if (DateTime.now().add(Duration(seconds: delaySeconds)).isAfter(
-          deadline,
-        )) {
+        if (DateTime.now()
+            .add(Duration(seconds: delaySeconds))
+            .isAfter(deadline)) {
           rethrow;
         }
       } on HttpException {
-        if (DateTime.now().add(Duration(seconds: delaySeconds)).isAfter(
-          deadline,
-        )) {
+        if (DateTime.now()
+            .add(Duration(seconds: delaySeconds))
+            .isAfter(deadline)) {
           rethrow;
         }
       }
@@ -151,7 +153,7 @@ final class PairedDesktopClient {
         origin.host == 'localhost' ||
         origin.host == '::1' ||
         origin.host == '10.0.2.2';
-    final privateNetwork = _isPrivateIpv4(origin.host);
+    final privateNetwork = isPrivateNativeTransportHost(origin.host);
     if (origin.scheme != 'https' &&
         !(allowInsecureLoopback && origin.scheme == 'http' && loopback) &&
         !(allowInsecurePrivateNetworkForTesting &&
@@ -162,15 +164,5 @@ final class PairedDesktopClient {
         'Paired Desktop 仅允许 HTTPS 或调试 loopback。',
       );
     }
-  }
-
-  bool _isPrivateIpv4(String host) {
-    final parts = host.split('.').map(int.tryParse).toList(growable: false);
-    if (parts.length != 4 || parts.any((value) => value == null)) return false;
-    final first = parts[0]!;
-    final second = parts[1]!;
-    return first == 10 ||
-        (first == 192 && second == 168) ||
-        (first == 172 && second >= 16 && second <= 31);
   }
 }

@@ -11,11 +11,7 @@ import 'paired_desktop_models.dart';
 
 final class OpenMusePairedDesktopHostPlugin
     implements OpenMusePlugin, OpenMuseSettingsContributor {
-  OpenMusePairedDesktopHostPlugin(
-    this.gateway, {
-    this.directory,
-    this.relay,
-  }) {
+  OpenMusePairedDesktopHostPlugin(this.gateway, {this.directory, this.relay}) {
     gateway.onChanged = _changes.changed;
     directory?.addListener(_changes.changed);
     final outbound = relay;

@@ -1,3 +1,5 @@
+import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart'
+    show isPrivateNativeTransportHost;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -12,6 +14,40 @@ typedef RemoteMediaReader =
     Future<RemoteMediaSlice> Function(RemoteMediaQuery query);
 typedef WorkspaceMirrorReader =
     Future<Map<String, Object?>> Function(WorkspaceMirrorQuery query);
+typedef WorkspaceMirrorWriter =
+    Future<Map<String, Object?>> Function(WorkspaceMirrorAction action);
+
+typedef PairedResourceDispatcher =
+    Future<Map<String, Object?>> Function(PairedResourceRequest request);
+
+final class PairedResourceRequest {
+  const PairedResourceRequest({
+    required this.body,
+    required this.accountRef,
+    required this.deviceRef,
+    required this.workspaceRef,
+    required this.expiresAtMs,
+  });
+  final Map<String, Object?> body;
+  final String accountRef, deviceRef, workspaceRef;
+  final int expiresAtMs;
+}
+
+final class WorkspaceMirrorAction {
+  const WorkspaceMirrorAction({
+    required this.operation,
+    required this.accountRef,
+    required this.workspaceRef,
+    this.nodeRef,
+    this.name,
+  });
+  final String operation;
+  final String accountRef;
+  final String workspaceRef;
+  final String? nodeRef;
+  final String? name;
+}
+
 typedef PairedPluginMarketDispatcher =
     Future<Map<String, Object?>> Function(PairedPluginMarketRequest request);
 typedef PairedScheduledTaskDispatcher =
@@ -188,8 +224,10 @@ final class PairedDesktopGateway {
     this.remoteMedia,
     this.workspaceMirror,
     this.workspaceMirrorResource,
+    this.workspaceMirrorAction,
     this.pluginMarket,
     this.scheduledTasks,
+    this.resources,
     String? fixedPairingCode,
   }) : _fixedPairingCode = fixedPairingCode;
 
@@ -209,10 +247,12 @@ final class PairedDesktopGateway {
   final String? nativeApiToken;
   final RemoteSurfaceDispatcher? remoteSurface;
   final RemoteMediaReader? remoteMedia;
+  final WorkspaceMirrorWriter? workspaceMirrorAction;
   final WorkspaceMirrorReader? workspaceMirror;
   final WorkspaceMirrorResourceReader? workspaceMirrorResource;
   final PairedPluginMarketDispatcher? pluginMarket;
   final PairedScheduledTaskDispatcher? scheduledTasks;
+  final PairedResourceDispatcher? resources;
   final String? _fixedPairingCode;
   final Random _random = Random.secure();
   final Map<String, _DesktopGrant> _grants = {};
@@ -329,7 +369,23 @@ final class PairedDesktopGateway {
   }
 
   Future<void> _handle(HttpRequest request) async {
+    // A mobile user may background/close a live follow stream at any time.
+    // Observe the response's independent completion future as well as writes.
+    unawaited(
+      request.response.done.then<void>(
+        (_) {},
+        onError: (Object error, StackTrace stack) {
+          if (error is! HttpException && error is! SocketException) {
+            Error.throwWithStackTrace(error, stack);
+          }
+        },
+      ),
+    );
     try {
+      if (request.uri.path == '/openmuse/resource-center/v1') {
+        await _resources(request);
+        return;
+      }
       if (request.method == 'POST' && request.uri.path == '/v1/pair/open') {
         await _open(request, requirePairingCode: true);
         return;
@@ -356,6 +412,10 @@ final class PairedDesktopGateway {
       }
       if (request.uri.path == '/openmuse/scheduled-tasks/v1') {
         await _scheduledTasks(request);
+        return;
+      }
+      if (request.uri.path == '/openmuse/workspace-mirror/action/v1') {
+        await _workspaceMirrorAction(request);
         return;
       }
       if (request.method == 'GET' &&
@@ -528,6 +588,58 @@ final class PairedDesktopGateway {
     _changed();
   }
 
+  Future<void> _resources(HttpRequest request) async {
+    if (request.method != 'POST') {
+      _json(request.response, HttpStatus.methodNotAllowed, {
+        'error': 'METHOD_NOT_ALLOWED',
+      });
+      return;
+    }
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      _json(request.response, HttpStatus.unauthorized, {'error': 'DENIED'});
+      return;
+    }
+    final dispatcher = resources;
+    if (dispatcher == null) {
+      _json(request.response, HttpStatus.serviceUnavailable, {
+        'error': 'RESOURCE_CENTER_UNAVAILABLE',
+      });
+      return;
+    }
+    final bytes = <int>[];
+    await for (final chunk in request.timeout(const Duration(seconds: 30))) {
+      if (bytes.length + chunk.length > 24 * 1024 * 1024) {
+        _json(request.response, HttpStatus.requestEntityTooLarge, {
+          'error': 'TRANSFER_TOO_LARGE',
+        });
+        return;
+      }
+      bytes.addAll(chunk);
+    }
+    Map<String, Object?> body;
+    try {
+      body = Map<String, Object?>.from(jsonDecode(utf8.decode(bytes)) as Map);
+    } on Object {
+      _json(request.response, HttpStatus.badRequest, {
+        'error': 'INVALID_REQUEST',
+      });
+      return;
+    }
+    final result = await dispatcher(
+      PairedResourceRequest(
+        body: body,
+        accountRef: grant.accountRef,
+        deviceRef: grant.deviceRef,
+        workspaceRef: grant.workspaceRef,
+        expiresAtMs: grant.expiresAtMs,
+      ),
+    );
+    _json(request.response, HttpStatus.ok, result);
+  }
+
   Future<void> _remoteSurface(HttpRequest request) async {
     final dispatcher = remoteSurface;
     if (dispatcher == null) {
@@ -539,7 +651,8 @@ final class PairedDesktopGateway {
     }
     final grant = _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
@@ -743,6 +856,77 @@ final class PairedDesktopGateway {
     }
   }
 
+  Future<void> _workspaceMirrorAction(HttpRequest request) async {
+    final writer = workspaceMirrorAction;
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      throw const _GatewayFailure(401, 'GRANT_REQUIRED', '连接授权已失效，请重连。');
+    }
+    // JSON-only mutations cannot be submitted by a cross-site HTML form.
+    if (request.method != 'POST' ||
+        request.headers.contentType?.mimeType != 'application/json') {
+      throw const _GatewayFailure(415, 'JSON_REQUIRED', '仅支持 JSON POST。');
+    }
+    if (request.headers.value('sec-fetch-site') == 'cross-site') {
+      throw const _GatewayFailure(403, 'ORIGIN_INVALID', '请求来源无效。');
+    }
+    if (writer == null) {
+      throw const _GatewayFailure(
+        503,
+        'WORKSPACE_ACTION_UNAVAILABLE',
+        '请更新 Desktop 客户端。',
+      );
+    }
+    try {
+      final bytes = await request.fold<List<int>>([], (out, chunk) {
+        if (out.length + chunk.length > 8192) throw const FormatException();
+        return out..addAll(chunk);
+      });
+      final body = jsonDecode(utf8.decode(bytes));
+      if (body is! Map<String, dynamic> ||
+          body['workspaceRef'] != grant.workspaceRef ||
+          !const {
+            'add-workspace',
+            'mount',
+            'unmount',
+            'new-file',
+            'new-folder',
+            'rename',
+            'trash',
+            'restore',
+          }.contains(body['operation']) ||
+          (body['name'] != null &&
+              (body['name'] is! String ||
+                  (body['name'] as String).length > 4096)) ||
+          (body['nodeRef'] != null && body['nodeRef'] is! String))
+        throw const FormatException();
+      final result = await writer(
+        WorkspaceMirrorAction(
+          operation: body['operation'] as String,
+          accountRef: grant.accountRef,
+          workspaceRef: grant.workspaceRef,
+          nodeRef: body['nodeRef'] as String?,
+          name: body['name'] as String?,
+        ),
+      );
+      _json(request.response, 200, result);
+    } on FormatException {
+      throw const _GatewayFailure(
+        400,
+        'WORKSPACE_ACTION_INVALID',
+        '名称或目录引用无效。',
+      );
+    } on FileSystemException {
+      throw const _GatewayFailure(
+        409,
+        'WORKSPACE_ACTION_FAILED',
+        '操作失败：目标已存在、目录不存在或没有权限。',
+      );
+    }
+  }
+
   Future<void> _workspaceMirror(HttpRequest request) async {
     final reader = workspaceMirror;
     if (reader == null) {
@@ -754,7 +938,8 @@ final class PairedDesktopGateway {
     }
     final grant = _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
@@ -818,7 +1003,8 @@ final class PairedDesktopGateway {
     }
     final grant = _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
@@ -863,7 +1049,8 @@ final class PairedDesktopGateway {
   _DesktopGrant _requireInteractionGrant(HttpRequest request) {
     final grant = _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
@@ -962,7 +1149,8 @@ final class PairedDesktopGateway {
     }
     final grant = _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
@@ -1035,7 +1223,8 @@ final class PairedDesktopGateway {
     final initial = _grantFromInitialPath(request.uri.path);
     final grant = initial ?? _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
@@ -1116,13 +1305,17 @@ final class PairedDesktopGateway {
         'type=${upstreamResponse.headers.value(HttpHeaders.contentTypeHeader)} '
         'stream=$eventStream',
       );
-      await request.response.addStream(
-        _tapProxyBody(
-          label: label,
-          eventStream: eventStream,
-          source: upstreamResponse,
-        ),
-      );
+      // Await cancellation of the upstream iterator before force-closing its
+      // client. IOSink.addStream can finish while an async* cancellation is
+      // still unwinding, leaving the upstream SSE socket error unobserved.
+      await for (final chunk in _tapProxyBody(
+        label: label,
+        eventStream: eventStream,
+        source: upstreamResponse,
+      )) {
+        request.response.add(chunk);
+        await request.response.flush();
+      }
       await request.response.close();
     } finally {
       client.close(force: true);
@@ -1231,7 +1424,10 @@ final class PairedDesktopGateway {
   String _proxyLabel(HttpRequest request) {
     final sessionId = request.uri.queryParameters['sessionId'];
     final query = sessionId == null ? '' : '?sessionId=$sessionId';
-    return '${request.method} ${request.uri.path}$query';
+    final path = request.uri.path.startsWith('/u/')
+        ? '/u/<redacted>'
+        : request.uri.path;
+    return '${request.method} $path$query';
   }
 
   Stream<List<int>> _tapProxyBody({
@@ -1427,21 +1623,11 @@ final class PairedDesktopGateway {
     if (bound == null || bound.isLoopback) return '127.0.0.1';
     try {
       final candidate = Uri.parse('http://$hostHeader').host;
-      if (_isPrivateIpv4(candidate)) return candidate;
+      if (isPrivateNativeTransportHost(candidate)) return candidate;
     } on FormatException {
       // An untrusted Host header never widens the paired transport origin.
     }
     return '127.0.0.1';
-  }
-
-  bool _isPrivateIpv4(String host) {
-    final parts = host.split('.').map(int.tryParse).toList(growable: false);
-    if (parts.length != 4 || parts.any((value) => value == null)) return false;
-    final first = parts[0]!;
-    final second = parts[1]!;
-    return first == 10 ||
-        (first == 192 && second == 168) ||
-        (first == 172 && second >= 16 && second <= 31);
   }
 
   void _changed() => onChanged?.call();
