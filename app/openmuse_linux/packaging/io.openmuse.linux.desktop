@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OpenMuse
+Name[zh_CN]=OpenMuse 工作台
+Comment=Local projects, Helix and AI in one workbench
+Exec=/opt/openmuse/openmuse_linux
+Icon=openmuse
+Terminal=false
+Categories=Development;IDE;
+StartupWMClass=io.openmuse.linux
