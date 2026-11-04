@@ -1,3 +1,4 @@
+import 'support/localized_test_app.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -35,7 +36,7 @@ void main() {
       directory.deleteSync(recursive: true);
     });
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         theme: workBuddyTheme(),
         home: WorkBuddyShell(
           controller: controller,
@@ -43,7 +44,9 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('发现'));
+    await tester.tap(find.byKey(const ValueKey('wb-tab-应用')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('apps-section-discover')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('mobile-market-search')), findsOneWidget);
     expect(find.text('编辑推荐'), findsOneWidget);
@@ -64,7 +67,7 @@ void main() {
         controller.dispose();
       });
       await tester.pumpWidget(
-        MaterialApp(
+        localizedTestApp(
           theme: workBuddyTheme(),
           home: WorkBuddyShell(controller: controller),
         ),
@@ -76,8 +79,8 @@ void main() {
       expect(find.text('OpenMuse'), findsOneWidget);
       expect(find.text('选择 Desktop'), findsWidgets);
       expect(find.text('任务'), findsWidgets);
-      expect(find.text('工作台'), findsOneWidget);
-      expect(find.text('发现'), findsOneWidget);
+      expect(find.byKey(const ValueKey('wb-tab-应用')), findsOneWidget);
+      expect(find.byKey(const ValueKey('wb-tab-发现')), findsNothing);
       expect(find.text('我的'), findsOneWidget);
       expect(find.text('发消息'), findsOneWidget);
 
@@ -118,6 +121,26 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('请先连接 Desktop'), findsWidgets);
       expect(controller.tasks, isEmpty);
+      expect(find.widgetWithText(SnackBarAction, '如何连接电脑'), findsOneWidget);
+      await tester.tap(find.widgetWithText(SnackBarAction, '如何连接电脑'));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('How to connect a Desktop'), findsOneWidget);
+      expect(
+        find.textContaining('Keep Desktop online', findRichText: true),
+        findsOneWidget,
+      );
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('wb-composer')))
+            .controller!
+            .text,
+        '看一下 README',
+      );
     },
   );
 
@@ -137,7 +160,7 @@ void main() {
     });
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         theme: workBuddyTheme(),
         home: WorkBuddyShell(controller: controller),
       ),
@@ -185,7 +208,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         theme: workBuddyTheme(),
         home: WorkBuddyShell(controller: controller),
       ),
@@ -220,7 +243,7 @@ void main() {
       authentication.dispose();
     });
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         theme: workBuddyTheme(),
         home: WorkBuddyShell(
           controller: controller,
@@ -235,7 +258,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('my-account')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Welcome to OpenMuse'), findsOneWidget);
+    expect(find.text('欢迎使用 OpenMuse'), findsOneWidget);
     expect(find.byKey(const ValueKey('auth.email')), findsOneWidget);
 
     authentication.authenticate();
@@ -285,7 +308,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         theme: workBuddyTheme(),
         home: WorkBuddyShell(
           controller: controller,
@@ -330,7 +353,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         theme: workBuddyTheme(),
         home: WorkBuddyShell(
           controller: controller,
@@ -393,7 +416,7 @@ void main() {
       });
 
       await tester.pumpWidget(
-        MaterialApp(
+        localizedTestApp(
           theme: workBuddyTheme(),
           home: WorkBuddyShell(
             controller: controller,
@@ -452,7 +475,7 @@ void main() {
     controller.selectDevice('paired.current');
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         theme: workBuddyTheme(),
         home: WorkBuddyShell(controller: controller),
       ),
@@ -513,7 +536,7 @@ void main() {
       });
 
       await tester.pumpWidget(
-        MaterialApp(
+        localizedTestApp(
           theme: workBuddyTheme(),
           home: WorkBuddyShell(
             controller: controller,
@@ -563,7 +586,7 @@ void main() {
       });
 
       await tester.pumpWidget(
-        MaterialApp(
+        localizedTestApp(
           theme: workBuddyTheme(),
           home: WorkBuddyShell(
             controller: controller,
@@ -620,7 +643,7 @@ void main() {
       });
 
       await tester.pumpWidget(
-        MaterialApp(
+        localizedTestApp(
           theme: workBuddyTheme(),
           home: WorkBuddyShell(
             controller: controller,
@@ -674,7 +697,7 @@ void main() {
     });
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         theme: workBuddyTheme(),
         home: WorkBuddyShell(controller: controller, speechRecognition: speech),
       ),

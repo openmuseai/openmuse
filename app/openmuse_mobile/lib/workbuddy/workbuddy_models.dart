@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 
 enum WbDeviceKind { local, cloud }
 
-enum WbTab { tasks, workbench, discover, mine }
+enum WbTab { home, tasks, apps, mine }
+
+enum AppsSection { overview, discover }
 
 enum WbTaskStatus { running, completed }
 

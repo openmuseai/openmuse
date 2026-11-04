@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 enum WbGlyph {
+  home,
+  apps,
   menu,
   desktop,
   chevron,
@@ -21,24 +23,24 @@ enum WbGlyph {
   close,
   check,
   diamond,
+  compass,
+  person,
 }
 
 final class WbIcon extends StatelessWidget {
-  const WbIcon(
-    this.glyph, {
-    super.key,
-    this.size = 22,
-    this.color = Colors.white,
-  });
+  const WbIcon(this.glyph, {super.key, this.size = 22, this.color});
 
   final WbGlyph glyph;
   final double size;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) => CustomPaint(
     size: Size.square(size),
-    painter: _GlyphPainter(glyph, color),
+    painter: _GlyphPainter(
+      glyph,
+      color ?? Theme.of(context).colorScheme.onSurface,
+    ),
   );
 }
 
@@ -62,6 +64,51 @@ final class _GlyphPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
     switch (glyph) {
+      case WbGlyph.apps:
+        for (final dx in [.13, .58]) {
+          for (final dy in [.13, .58]) {
+            canvas.drawRRect(
+              RRect.fromRectAndRadius(
+                Rect.fromLTWH(w * dx, h * dy, w * .29, h * .29),
+                Radius.circular(w * .03),
+              ),
+              paint,
+            );
+          }
+        }
+      case WbGlyph.home:
+        canvas.drawPath(
+          Path()
+            ..moveTo(w * .12, h * .44)
+            ..lineTo(w * .5, h * .12)
+            ..lineTo(w * .88, h * .44)
+            ..lineTo(w * .88, h * .88)
+            ..lineTo(w * .61, h * .88)
+            ..lineTo(w * .61, h * .61)
+            ..lineTo(w * .39, h * .61)
+            ..lineTo(w * .39, h * .88)
+            ..lineTo(w * .12, h * .88)
+            ..close(),
+          paint,
+        );
+
+      case WbGlyph.compass:
+        canvas.drawCircle(Offset(w * .5, h * .5), w * .4, paint);
+        final needle = Path()
+          ..moveTo(w * .67, h * .31)
+          ..lineTo(w * .56, h * .57)
+          ..lineTo(w * .31, h * .69)
+          ..lineTo(w * .43, h * .43)
+          ..close();
+        canvas.drawPath(needle, paint);
+      case WbGlyph.person:
+        canvas.drawCircle(Offset(w * .5, h * .29), w * .17, paint);
+        final shoulders = Path()
+          ..moveTo(w * .16, h * .87)
+          ..quadraticBezierTo(w * .16, h * .57, w * .5, h * .57)
+          ..quadraticBezierTo(w * .84, h * .57, w * .84, h * .87)
+          ..close();
+        canvas.drawPath(shoulders, paint);
       case WbGlyph.menu:
         for (final dy in [0.28, 0.5, 0.72]) {
           canvas.drawLine(
@@ -125,7 +172,7 @@ final class _GlyphPainter extends CustomPainter {
           );
         }
       case WbGlyph.bubble:
-        _bubble(canvas, size, fill, tail: true);
+        _bubble(canvas, size, paint, tail: true);
       case WbGlyph.bubblePlus:
         final bubble = RRect.fromRectAndRadius(
           Rect.fromLTWH(w * 0.08, h * 0.16, w * 0.7, h * 0.52),
@@ -308,6 +355,20 @@ final class _GlyphPainter extends CustomPainter {
           ..close();
         canvas.drawPath(path, paint);
       }
+    } else if (tail) {
+      final outline = Path()
+        ..moveTo(w * .3, h * .12)
+        ..cubicTo(w * .17, h * .12, w * .12, h * .19, w * .12, h * .3)
+        ..lineTo(w * .12, h * .55)
+        ..cubicTo(w * .12, h * .65, w * .17, h * .7, w * .29, h * .7)
+        ..lineTo(w * .23, h * .86)
+        ..lineTo(w * .45, h * .7)
+        ..lineTo(w * .72, h * .7)
+        ..cubicTo(w * .83, h * .7, w * .88, h * .65, w * .88, h * .55)
+        ..lineTo(w * .88, h * .3)
+        ..cubicTo(w * .88, h * .19, w * .83, h * .12, w * .72, h * .12)
+        ..close();
+      canvas.drawPath(outline, paint);
     } else {
       canvas.drawRRect(rect, paint);
     }

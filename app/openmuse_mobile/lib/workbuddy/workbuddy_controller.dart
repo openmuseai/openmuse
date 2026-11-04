@@ -1,32 +1,72 @@
+import '../mobile_build_locale.dart';
+
 import 'package:flutter/foundation.dart';
 
 import 'workbuddy_models.dart';
 
 final class WorkBuddyController extends ChangeNotifier {
-  WorkBuddyController({List<WbWorkspace>? extraWorkspaces}) {
-    _devices = const [
+  WorkBuddyController({
+    List<WbWorkspace>? extraWorkspaces,
+    OpenMuseStrings? strings,
+  }) : _strings = strings ?? OpenMuseStrings.fallback {
+    _devices = [
       WbDevice(
         id: kPendingDeviceId,
-        name: '选择 Desktop',
+        name: (_strings.mobileChooseDesktop5600a658()),
         kind: WbDeviceKind.local,
         online: false,
       ),
-      WbDevice(id: kCloudDeviceId, name: '云端', kind: WbDeviceKind.cloud),
+      WbDevice(
+        id: kCloudDeviceId,
+        name: (_strings.mobileCloud118c7f15()),
+        kind: WbDeviceKind.cloud,
+      ),
     ];
     _workspaces = [
-      const WbWorkspace(
+      WbWorkspace(
         id: 'paired.pending.workspace',
-        name: '连接 Desktop 后选择工作空间',
+        name: (_strings.mobileConnectDesktopToChooseAWorkspaceA66b600f()),
         deviceId: kPendingDeviceId,
       ),
-      const WbWorkspace(
+      WbWorkspace(
         id: 'cloud.pending',
-        name: '登录后加载 Workspace',
+        name: (_strings.mobileSignInToLoadWorkspaces7d3d9897()),
         deviceId: kCloudDeviceId,
       ),
       ...?extraWorkspaces,
     ];
     _tasks = [];
+  }
+
+  OpenMuseStrings _strings;
+  OpenMuseStrings get strings => _strings;
+  void attachStrings(OpenMuseStrings value) {
+    _strings = value;
+    _devices = [
+      for (final d in _devices)
+        WbDevice(
+          id: d.id,
+          kind: d.kind,
+          online: d.online,
+          name: d.id == kPendingDeviceId
+              ? value.mobileChooseDesktop5600a658()
+              : d.id == kCloudDeviceId
+              ? value.mobileCloud118c7f15()
+              : d.name,
+        ),
+    ];
+    _workspaces = [
+      for (final w in _workspaces)
+        WbWorkspace(
+          id: w.id,
+          deviceId: w.deviceId,
+          name: w.id == 'paired.pending.workspace'
+              ? value.mobileConnectDesktopToChooseAWorkspaceA66b600f()
+              : w.id == 'cloud.pending'
+              ? value.mobileSignInToLoadWorkspaces7d3d9897()
+              : w.name,
+        ),
+    ];
   }
 
   late List<WbDevice> _devices;
@@ -36,6 +76,9 @@ final class WorkBuddyController extends ChangeNotifier {
   String selectedDeviceId = kPendingDeviceId;
   String selectedWorkspaceId = 'paired.pending.workspace';
   WbTab tab = WbTab.tasks;
+  AppsSection appsSection = AppsSection.overview;
+  int appsReselection = 0;
+  Future<bool> Function()? beforeLeavingApps;
   bool drawerOpen = false;
   String? openTaskId;
   bool tasksExpanded = true;
@@ -108,12 +151,42 @@ final class WorkBuddyController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void selectTab(WbTab value) {
+  Future<void> selectTab(WbTab value) async {
+    if (tab == WbTab.apps &&
+        (value != WbTab.apps || appsSection != AppsSection.overview)) {
+      final guard = beforeLeavingApps;
+      if (guard != null && !await guard()) return;
+    }
+    if (tab == WbTab.apps && value == WbTab.apps) {
+      appsSection = AppsSection.overview;
+      appsReselection++;
+    }
     tab = value;
     drawerOpen = false;
-    if (value != WbTab.tasks) openTaskId = null;
+    // Switching destinations must not discard an existing Tasks conversation.
     notifyListeners();
   }
+
+  Future<void> selectAppsSection(AppsSection value) async {
+    if (appsSection != value) {
+      final guard = beforeLeavingApps;
+      if (guard != null && !await guard()) return;
+    }
+    appsSection = value;
+    tab = WbTab.apps;
+    drawerOpen = false;
+    notifyListeners();
+  }
+
+  /// Named legacy routes are migrated without relying on enum indices.
+  Future<void> restoreTabName(String value) => switch (value) {
+    'workbench' => selectAppsSection(AppsSection.overview),
+    'discover' => selectAppsSection(AppsSection.discover),
+    'apps' => selectAppsSection(AppsSection.overview),
+    'home' => selectTab(WbTab.home),
+    'mine' || 'account' => selectTab(WbTab.mine),
+    _ => selectTab(WbTab.tasks),
+  };
 
   void selectDevice(String id) {
     if (!_devices.any((device) => device.id == id)) return;
@@ -125,8 +198,8 @@ final class WorkBuddyController extends ChangeNotifier {
         name: id == kCloudDeviceId
             ? 'Cloud Workspace'
             : id.startsWith('paired.')
-            ? '连接后加载 Workspace'
-            : '任务',
+            ? (_strings.mobileConnectToLoadWorkspaces732b4807())
+            : (_strings.mobileTasks49bc7474()),
         deviceId: id,
       );
       _workspaces = [..._workspaces, created];
@@ -246,7 +319,9 @@ final class WorkBuddyController extends ChangeNotifier {
     final where = '${selectedDevice.name} / ${selectedWorkspace.name}';
     return WbMessage(
       fromUser: false,
-      text: '已在 $where 接收这条任务。文件、模型和执行都留在所选设备上，手机只负责发起和查看结果。',
+      text: (_strings.mobileTheTaskWasReceivedOnFilesModelsAndA82dcdb7(
+        value1: where,
+      )),
     );
   }
 
@@ -293,10 +368,10 @@ final class WorkBuddyController extends ChangeNotifier {
 
   void replaceCloudWorkspaces(List<WbWorkspace> values) {
     final cloudValues = values.isEmpty
-        ? const [
+        ? [
             WbWorkspace(
               id: 'cloud.pending',
-              name: '暂无 Cloud Workspace',
+              name: (_strings.mobileNoCloudWorkspaces0eaeeb2f()),
               deviceId: kCloudDeviceId,
             ),
           ]

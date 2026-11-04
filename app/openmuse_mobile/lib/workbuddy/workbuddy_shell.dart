@@ -1,9 +1,16 @@
+import '../mobile_plugins/mobile_apps_page.dart';
+import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart';
+import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
 import 'package:muse_speech_contract/muse_speech_contract.dart';
 import 'package:muse_speech_core/muse_speech_core.dart';
@@ -14,6 +21,8 @@ import 'package:openmuse_mobile_plugin_market/openmuse_mobile_plugin_market.dart
 import 'package:openmuse_remote_workbench/openmuse_remote_workbench.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
+import 'package:openmuse_speech_input/openmuse_speech_input.dart';
+import '../speech_model_manager.dart';
 import '../native_dsh_page.dart';
 import '../mobile_plugin_detail_page.dart';
 import '../plugin_interaction_remote.dart';
@@ -67,14 +76,21 @@ final class WorkBuddyShell extends StatefulWidget {
     this.catalog,
     this.cloudLabel,
     this.onSignOut,
+    this.onDeleteAccount,
     this.speechRecognition,
     this.debugSpeechSource,
     this.remoteWorkbench,
     this.mobileMarketPlugin,
     this.deviceSelectionStore,
     this.pluginRegistry,
+    this.resources,
+    this.resourceFailure,
+    this.onRetryResources,
     this.themeMode = ThemeMode.system,
     this.onThemeMode,
+    this.onOpenWord,
+    this.onOpenPdf,
+    this.onOpenSpreadsheet,
   });
 
   final WorkBuddyController controller;
@@ -83,6 +99,7 @@ final class WorkBuddyShell extends StatefulWidget {
   final WorkspaceCatalogPort? catalog;
   final String? cloudLabel;
   final Future<void> Function()? onSignOut;
+  final Future<void> Function()? onDeleteAccount;
   final SpeechRecognitionPort? speechRecognition;
 
   /// Debug-only E2E seam supplied by the Mobile Host. It is never populated
@@ -92,8 +109,14 @@ final class WorkBuddyShell extends StatefulWidget {
   final OpenMuseMobilePluginMarket? mobileMarketPlugin;
   final SecureValueStore? deviceSelectionStore;
   final OpenMusePluginRegistry? pluginRegistry;
+  final NativeResourceCenter? resources;
+  final Object? resourceFailure;
+  final VoidCallback? onRetryResources;
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeMode;
+  final VoidCallback? onOpenWord;
+  final VoidCallback? onOpenPdf;
+  final VoidCallback? onOpenSpreadsheet;
 
   @override
   State<WorkBuddyShell> createState() => _WorkBuddyShellState();
@@ -104,6 +127,9 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   late final AnimationController _drawer;
   final _composer = TextEditingController();
   final _focus = FocusNode();
+  final _workbenchKey = GlobalKey<MobileWorkbenchPageState>();
+  final _appsEditing = ValueNotifier<bool>(false);
+  final _managementReturn = AppsReturnController();
   bool _voiceMode = false;
   bool _holdingVoice = false;
   bool _voiceReleased = false;
@@ -119,6 +145,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   String? _nativeConnectionKey;
   String? _pendingSessionId;
   String? _pendingPrompt;
+  String? _pendingOriginalText;
   bool _desktopBindOffered = false;
   bool _initialAuthResolved = false;
   int _desktopBindAttempts = 0;
@@ -129,11 +156,14 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   bool _appForeground = true;
   DateTime? _backgroundedAt;
 
+  SpeechModelManager? _speechModels;
   WorkBuddyController get controller => widget.controller;
 
   @override
   void initState() {
     super.initState();
+    controller.beforeLeavingApps = () async =>
+        await _workbenchKey.currentState?.requestLeave() ?? true;
     WidgetsBinding.instance.addObserver(this);
     _drawer = AnimationController(
       vsync: this,
@@ -162,8 +192,22 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     }
   }
 
+  bool _sessionUpdateScheduled = false;
   void _syncSession() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    // Attach/detach may run while a child is built or unmounted. Defer the
+    // parent's repaint until Flutter has finished that frame.
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      if (_sessionUpdateScheduled) return;
+      _sessionUpdateScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _sessionUpdateScheduled = false;
+        if (mounted) setState(() {});
+      });
+    } else {
+      setState(() {});
+    }
   }
 
   void _syncPluginContexts() {
@@ -179,6 +223,21 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
           selectedWorkspaceId: controller.selectedWorkspace.id,
         );
       }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final speech = widget.speechRecognition;
+    if (_speechModels == null && speech is OpenMuseSpeechInputPlugin) {
+      _speechModels = SpeechModelManager(
+        speech.localModel,
+        beforeRemove: speech.releaseLocalEngine,
+        downloadOrigin: RuntimeConfigScope.maybeOf(
+          context,
+        )?.serviceUri(ServiceId.cloud),
+      );
     }
   }
 
@@ -233,9 +292,15 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     }
   }
 
+  String? _appsAccountSubject;
   void _syncAccount() {
     final snapshot = widget.authentication?.snapshot;
     final identity = snapshot?.identity;
+    if (_appsAccountSubject != identity?.subject) {
+      _appsAccountSubject = identity?.subject;
+      controller.appsSection = AppsSection.overview;
+      _appsEditing.value = false;
+    }
     final firstResolvedState =
         !_initialAuthResolved &&
         (snapshot?.phase == OpenMuseAuthenticationPhase.signedOut ||
@@ -435,6 +500,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   Future<void> _promptBindDesktop() async {
+    final localeStrings = stringsOf(context);
+
     if (!mounted || widget.pairedDesktop?.snapshot.connection != null) return;
     unawaited(
       widget.pairedDesktop?.directory?.refresh() ?? Future<void>.value(),
@@ -464,8 +531,11 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
             unawaited(_rememberDesktop(device.deviceRef));
             if (mounted) {
               ScaffoldMessenger.of(this.context).showSnackBar(
-                const SnackBar(
-                  content: Text('已选择 Desktop，连接就绪后会自动加载 Workspace。'),
+                SnackBar(
+                  content: Text(
+                    (localeStrings
+                        .mobileDesktopSelectedWorkspacesWillLoadWhen38e1c99f()),
+                  ),
                 ),
               );
             }
@@ -718,6 +788,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _desktopRenewalTimer?.cancel();
+    _speechModels?.dispose();
     controller.removeListener(_syncDrawer);
     controller.removeListener(_syncPluginContexts);
     widget.authentication?.removeListener(_syncAccount);
@@ -729,6 +800,9 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       unawaited(_cancelSpeechOnDispose(speechSession));
     }
     unawaited(_speechEvents?.cancel());
+    controller.beforeLeavingApps = null;
+    _appsEditing.dispose();
+    _managementReturn.dispose();
     _composer.dispose();
     _focus.dispose();
     _sessionHandle
@@ -772,6 +846,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   Future<void> _chooseDevice() async {
+    final localeStrings = stringsOf(context);
+
     if (widget.pairedDesktop?.directory != null) {
       await _promptBindDesktop();
       return;
@@ -783,7 +859,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       builder: (context) => _ChoiceSheet(
-        title: '选择设备',
+        title: (localeStrings.mobileChooseADevice6d041181()),
         children: [
           for (final device in controller.devices)
             if (device.id != kPendingDeviceId &&
@@ -859,6 +935,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     PairedDesktopConnection connection,
     String deviceId,
   ) async {
+    final localeStrings = stringsOf(context);
+
     final client = DshNativeGatewayClient(
       origin: Uri.parse(connection.session.origin),
       bootstrapPath: connection.session.path,
@@ -892,7 +970,12 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
               if (byId[sessionId] case final session?)
                 WbTask(
                   id: 'dsh.session.$sessionId',
-                  title: session.title ?? (session.blank ? '新对话' : '历史对话'),
+                  title:
+                      session.title ??
+                      (session.blank
+                          ? (localeStrings.mobileNewConversationBcec2f30())
+                          : (localeStrings
+                                .mobilePreviousConversation196d79ba())),
                   workspaceId: 'dsh.workspace.${workspace.workspaceId}',
                   deviceId: deviceId,
                   status: session.running
@@ -923,6 +1006,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   Future<void> _chooseWorkspace() async {
+    final localeStrings = stringsOf(context);
+
     final spaces = controller.workspacesFor(controller.selectedDeviceId);
     final picked = await showModalBottomSheet<String>(
       context: context,
@@ -931,12 +1016,13 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       builder: (context) => _ChoiceSheet(
-        title: '选择工作空间',
+        title: (localeStrings.mobileChooseAWorkspace017a91b6()),
         children: [
           if (spaces.isEmpty)
             ListTile(
               title: Text(
-                '当前设备还没有工作空间',
+                (localeStrings
+                    .mobileNoWorkspacesAreAvailableOnThisDevice08eae7ea()),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -952,7 +1038,10 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                 ),
               ),
               subtitle: workspace.deviceId == kCloudDeviceId
-                  ? Text('开发中', style: wbSub)
+                  ? Text(
+                      (localeStrings.mobileComingSoonDdd8280c()),
+                      style: wbSub,
+                    )
                   : null,
               trailing: workspace.id == controller.selectedWorkspaceId
                   ? WbIcon(WbGlyph.check, size: 18)
@@ -982,7 +1071,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       listenable: controller,
       builder: (context, _) => _RunSettingsSheet(
         deviceName: controller.selectedDevice.kind == WbDeviceKind.cloud
-            ? '云端'
+            ? (stringsOf(context).mobileCloud118c7f15())
             : controller.selectedDevice.name,
         workspaceName: controller.selectedWorkspace.name,
         onDevice: () async {
@@ -1004,12 +1093,20 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   Future<void> _submitOnce() async {
+    final localeStrings = stringsOf(context);
+
     final text = _composer.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty && (widget.resources?.draft.isEmpty ?? true)) return;
     if (controller.selectedDeviceId == kPendingDeviceId) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('请先连接 Desktop。')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text((localeStrings.mobileConnectToDesktopFirstF10d2933())),
+          action: SnackBarAction(
+            label: localeStrings.commonDesktopSetupGuide(),
+            onPressed: () => unawaited(openDesktopSetupGuide(context)),
+          ),
+        ),
+      );
       return;
     }
     if (controller.selectedDeviceId == kCloudDeviceId) {
@@ -1036,8 +1133,11 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
           SnackBar(
             content: Text(
               failure == null || failure.isEmpty
-                  ? '正在连接 Desktop，消息已保留，请稍后重试。'
-                  : 'Desktop 未连接：$failure',
+                  ? (localeStrings
+                        .mobileConnectingToDesktopYourMessageHasBee706b5e0c())
+                  : (localeStrings.mobileDesktopIsDisconnected2ddace9d(
+                      value1: failure,
+                    )),
             ),
           ),
         );
@@ -1046,24 +1146,56 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     }
     if (connection != null) {
       final targetDeviceRef = connection.deviceRef;
+      final intendedWorkspace = controller.selectedWorkspaceId,
+          intendedTask = controller.openTaskId;
+      String prompt = text;
+      if (widget.resources?.draft.isEmpty == false) {
+        try {
+          prompt = await widget.resources!.preparePrompt(
+            text,
+            key: resourceOperationKey('prompt'),
+            expectedPeer: targetDeviceRef,
+          );
+        } on Object catch (error) {
+          if (mounted) showResourceError(context, error);
+          return;
+        }
+        if (!mounted) return;
+        if (controller.selectedDeviceId != 'paired.$targetDeviceRef' ||
+            controller.selectedWorkspaceId != intendedWorkspace ||
+            controller.openTaskId != intendedTask) {
+          showResourceError(context, const ResourceFailure('STALE_GENERATION'));
+          return;
+        }
+      }
       final task = controller.openTask;
       if (task != null && task.id.startsWith('dsh.session.')) {
         if (!_sessionHandle.ready) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('正在连接 Desktop 会话，请稍候再发送。')),
+            SnackBar(
+              content: Text(
+                (localeStrings
+                    .mobileConnectingToTheDesktopSessionWaitBef8b792e99()),
+              ),
+            ),
           );
           return;
         }
         _composer.clear();
         _focus.unfocus();
         try {
-          await _sessionHandle.send(text);
+          await _sessionHandle.send(prompt);
+          widget.resources?.draft.clear();
         } on Object catch (error) {
           if (mounted) {
             _composer.text = text;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('发送失败：$error')));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  (localeStrings.mobileUnableToSendF0d76162(value1: error)),
+                ),
+              ),
+            );
           }
           unawaited(
             _restoreDesktopConnection(deviceRef: targetDeviceRef, force: true),
@@ -1081,7 +1213,11 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       final workspaceId = controller.selectedWorkspace.id;
       if (!workspaceId.startsWith('dsh.workspace.')) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('请先选择 Desktop 上的 Workspace。')),
+          SnackBar(
+            content: Text(
+              (localeStrings.mobileChooseADesktopWorkspaceFirst11a8134f()),
+            ),
+          ),
         );
         return;
       }
@@ -1099,7 +1235,12 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
           if (mounted) {
             _composer.text = text;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Desktop 配对授权已失效，请重新连接后发送。')),
+              SnackBar(
+                content: Text(
+                  (localeStrings
+                      .mobileDesktopAuthorizationHasExpiredReconnec2671ccbf()),
+                ),
+              ),
             );
           }
           return;
@@ -1125,15 +1266,22 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         if (!mounted) return;
         setState(() {
           _pendingSessionId = created.sessionId;
-          _pendingPrompt = text;
+          _pendingPrompt = prompt;
+          _pendingOriginalText = text;
         });
         controller.openTaskById('dsh.session.${created.sessionId}');
       } on Object catch (error) {
         if (mounted) {
           _composer.text = text;
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('创建 Desktop 会话失败：$error')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                (localeStrings.mobileUnableToCreateADesktopSession370dc1c1(
+                  value1: error,
+                )),
+              ),
+            ),
+          );
         }
       } finally {
         client.close();
@@ -1141,15 +1289,29 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('请先从设备列表连接一台在线 Desktop，再发送消息。')),
+      SnackBar(
+        content: Text(
+          (localeStrings.mobileConnectToAnOnlineDesktopFromTheDeviB83a25f3()),
+        ),
+      ),
     );
   }
 
   Future<void> _startVoice({SpeechAudioSource? source}) async {
+    final localeStrings = stringsOf(context);
+
     final speech = widget.speechRecognition;
     if (speech == null || _speechOpening || _speechSession != null) return;
+    if (_speechModels?.busy == true) {
+      await _openSpeechModels();
+      return;
+    }
     if (source is! SpeechFileSource) {
       final probe = await speech.probe();
+      if (probe.localEngine == SpeechEngineAvailability.needsModel && mounted) {
+        await _offerSpeechModel();
+        return;
+      }
       if (!mounted || _speechOpening || _speechSession != null) return;
       if (probe.permission != SpeechPermissionState.granted) {
         final proceed = await _confirmMicrophoneUse();
@@ -1198,31 +1360,102 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       }
     } on SpeechException catch (error) {
       _restoreSpeechDraft();
-      _showSpeechFailure(error.safeMessage);
+      if (error.code == 'model_missing') {
+        await _offerSpeechModel();
+      } else {
+        _showSpeechFailure(error.safeMessage);
+      }
     } on Object {
       _restoreSpeechDraft();
-      _showSpeechFailure('无法启动语音输入，请稍后重试。');
+      _showSpeechFailure(
+        (localeStrings.mobileUnableToStartDictationTryAgainLater01330b7f()),
+      );
     } finally {
       _speechOpening = false;
     }
   }
 
+  Future<void> _openSpeechModels() => Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) => MobileSpeechModelsPage(manager: _speechModels),
+    ),
+  );
+
+  Future<void> _offerSpeechModel() async {
+    final s = stringsOf(context);
+    final install = await showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                s.mobileModels(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                s.mobileModelInstallPrompt(),
+                style: const TextStyle(height: 1.5),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                s.mobileModelDescription(),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  key: const ValueKey('wb-install-speech-model'),
+                  onPressed: _speechModels == null
+                      ? null
+                      : () => Navigator.pop(context, true),
+                  icon: const Icon(Icons.download_rounded, size: 18),
+                  label: Text(s.mobileInstallModel()),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (install == true && mounted) {
+      unawaited(_speechModels!.install());
+      await _openSpeechModels();
+    }
+  }
+
   Future<bool> _confirmMicrophoneUse() async {
+    final localeStrings = stringsOf(context);
+
     final proceed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         key: const ValueKey('wb-microphone-purpose'),
-        title: Text('使用麦克风'),
-        content: Text('OpenMuse 需要使用麦克风，把你说的话转成可编辑文字。语音识别在这台设备上完成，录音不会上传。'),
+        title: Text((localeStrings.mobileMicrophoneAccess86ee6902())),
+        content: Text(
+          (localeStrings.mobileOpenmuseUsesTheMicrophoneToTurnSpeec80d628f6()),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('暂不使用'),
+            child: Text((localeStrings.mobileNotNow5c258359())),
           ),
           TextButton(
             key: const ValueKey('wb-microphone-continue'),
             onPressed: () => Navigator.pop(context, true),
-            child: Text('继续'),
+            child: Text((localeStrings.mobileContinueDcd5e1f3())),
           ),
         ],
       ),
@@ -1231,6 +1464,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   Future<void> _stopVoice() async {
+    final localeStrings = stringsOf(context);
+
     if (_cancelVoiceOnRelease) {
       await _cancelVoice();
       return;
@@ -1247,11 +1482,15 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       _showSpeechFailure(error.safeMessage);
     } on Object {
       _restoreSpeechDraft();
-      _showSpeechFailure('无法结束语音输入，请稍后重试。');
+      _showSpeechFailure(
+        (localeStrings.mobileUnableToFinishDictationTryAgainLaterF198d1db()),
+      );
     }
   }
 
   Future<void> _cancelVoice() async {
+    final localeStrings = stringsOf(context);
+
     _cancelSpeechWhenOpened = true;
     final speech = widget.speechRecognition;
     final session = _speechSession;
@@ -1261,7 +1500,9 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       if (_speechSession == session) _restoreSpeechDraft();
     } on Object {
       _restoreSpeechDraft();
-      _showSpeechFailure('无法取消语音输入，请稍后重试。');
+      _showSpeechFailure(
+        (localeStrings.mobileUnableToCancelDictationTryAgainLater0bdbf4b0()),
+      );
     }
   }
 
@@ -1296,7 +1537,9 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         final result = event.text?.trim() ?? '';
         if (result.isEmpty) {
           _restoreSpeechDraft();
-          _showSpeechFailure('未识别到语音，请重试。');
+          _showSpeechFailure(
+            (stringsOf(context).mobileNoSpeechWasRecognizedTryAgain8a4b2ce5()),
+          );
           break;
         }
         _applySpeechSnapshot(_speechDraft?.applyFinal(result));
@@ -1306,7 +1549,12 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         _finishSpeech(revealText: true);
       case SpeechEventKind.error:
         _restoreSpeechDraft();
-        _showSpeechFailure(event.safeMessage ?? '语音识别失败，请重试。');
+        _showSpeechFailure(
+          event.safeMessage ??
+              (stringsOf(
+                context,
+              ).mobileSpeechRecognitionFailedTryAgain965b77bb()),
+        );
       case SpeechEventKind.state:
         if (event.phase == SpeechSessionPhase.cancelled) {
           _restoreSpeechDraft();
@@ -1356,9 +1604,13 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   Future<void> _choosePermission() async {
+    final localeStrings = stringsOf(context);
+
     final options = _sessionHandle.options?.permissions ?? const [];
     if (options.isEmpty) {
-      _showSessionControlUnavailable('请先打开一个 Desktop 会话，再修改 Workspace 权限。');
+      _showSessionControlUnavailable(
+        (localeStrings.mobileOpenADesktopSessionBeforeChangingWorC6752606()),
+      );
       return;
     }
     final current = _sessionHandle.snapshot?.permissionPreset;
@@ -1369,7 +1621,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => _ChoiceSheet(
-        title: 'Workspace 权限',
+        title: (localeStrings.mobileWorkspacePermissionsEb2b5fb3()),
         children: [
           for (final option in options)
             ListTile(
@@ -1381,7 +1633,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               title: Text(
-                _permissionLabel(option.value),
+                _permissionLabel(context, option.value),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
@@ -1405,11 +1657,15 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         builder: (context) => AlertDialog(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
           title: Text(
-            picked.value == 'auto' ? '启用自动审批？' : '启用完整访问？',
+            picked.value == 'auto'
+                ? (localeStrings.mobileEnableAutomaticApproval424e38bb())
+                : (localeStrings.mobileEnableFullAccess91562a40()),
             style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
           ),
           content: Text(
-            picked.description ?? '此权限会扩大 Desktop 上工具和文件操作的范围。',
+            picked.description ??
+                (localeStrings
+                    .mobileThisExpandsTheToolsAndFileOperations6adfe213()),
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -1417,11 +1673,11 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text('取消'),
+              child: Text((localeStrings.mobileCancelCda6010b())),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text('确认'),
+              child: Text((localeStrings.mobileConfirm7f18937e())),
             ),
           ],
         ),
@@ -1431,14 +1687,20 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     try {
       await _sessionHandle.selectPermission(picked.value);
     } on Object catch (error) {
-      _showSessionControlUnavailable('权限修改失败：$error');
+      _showSessionControlUnavailable(
+        (localeStrings.mobileUnableToChangePermissionsD8c46f1a(value1: error)),
+      );
     }
   }
 
   Future<void> _chooseModel() async {
+    final localeStrings = stringsOf(context);
+
     final options = _sessionHandle.options?.models ?? const [];
     if (options.isEmpty) {
-      _showSessionControlUnavailable('当前 Desktop 没有返回可用模型目录。');
+      _showSessionControlUnavailable(
+        (localeStrings.mobileDesktopDidNotReturnAnAvailableModel5472c170()),
+      );
       return;
     }
     final snapshot = _sessionHandle.snapshot;
@@ -1450,7 +1712,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => _ChoiceSheet(
-        title: '选择模型',
+        title: (localeStrings.mobileChooseAModelD992696e()),
         children: [
           for (final option in options)
             ListTile(
@@ -1494,7 +1756,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         builder: (context) => _ChoiceSheet(
-          title: '思考强度',
+          title: (localeStrings.mobileReasoningEffort73c10416()),
           children: [
             for (final value in picked.efforts)
               ListTile(
@@ -1521,11 +1783,15 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     try {
       await _sessionHandle.selectModel(picked, effort: effort);
     } on Object catch (error) {
-      _showSessionControlUnavailable('模型切换失败：$error');
+      _showSessionControlUnavailable(
+        (localeStrings.mobileUnableToSwitchModels602eabea(value1: error)),
+      );
     }
   }
 
   Future<void> _showAttachmentActions() async {
+    final localeStrings = stringsOf(context);
+
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
@@ -1533,18 +1799,68 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => _ChoiceSheet(
-        title: '添加内容',
+        title: (localeStrings.mobileAddContent2b54df48()),
         children: [
+          if (widget.resources != null) ...[
+            ListTile(
+              leading: const Icon(Icons.folder_outlined),
+              title: Text(localeStrings.resourcecenterBrowseLocal()),
+              onTap: () {
+                Navigator.pop(context);
+                controller.selectTab(WbTab.home);
+              },
+            ),
+          ],
+          if (widget.onOpenWord != null)
+            ListTile(
+              leading: const Icon(Icons.description_outlined),
+              title: Text((localeStrings.mobileWordDocument793e039c())),
+              subtitle: Text(
+                (localeStrings.mobileOpenDocxFilesOfflineF0b63475()),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                widget.onOpenWord!();
+              },
+            ),
+          if (widget.onOpenPdf != null)
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf_outlined),
+              title: Text((localeStrings.mobilePdfDocument54149cdd())),
+              subtitle: Text(
+                (localeStrings.mobileOpenPdfFilesOffline8ea93832()),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                widget.onOpenPdf!();
+              },
+            ),
+          if (widget.onOpenSpreadsheet != null)
+            ListTile(
+              leading: const Icon(Icons.table_chart_outlined),
+              title: Text((localeStrings.mobileSpreadsheet2a8d5279())),
+              subtitle: Text(
+                (localeStrings.mobileOpenXlsxAndCsvFilesOfflineBd039729()),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                widget.onOpenSpreadsheet!();
+              },
+            ),
           ListTile(
             leading: Icon(
               Icons.folder_outlined,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             title: Text(
-              '从 Desktop Workspace 引用文件',
+              (localeStrings.mobileAddAFileFromDesktop90bc2c94()),
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
-            subtitle: Text('附件协议将在下一阶段开放', style: wbSub),
+            subtitle: Text(
+              (localeStrings
+                  .mobileAttachmentsAreComingInAFutureUpdate7e6cb9d3()),
+              style: wbSub,
+            ),
             enabled: false,
           ),
         ],
@@ -1560,6 +1876,12 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   Future<void> _openMobileMarket({bool initialMine = false}) async {
+    if (RuntimeConfigScope.maybeOf(
+          context,
+        )?.isEnabled(AppFeature.pluginMarket) ==
+        false) {
+      return;
+    }
     final registered = widget.pluginRegistry?.plugin(
       'com.openmuse.mobile-plugin-market',
     );
@@ -1578,16 +1900,26 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
             grantRef: connection.grantRef,
             expiresAtMs: connection.expiresAtMs,
           );
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (context) => market.buildMarketPage(
-          desktop: desktop,
-          initialMine: initialMine,
-          pluginRegistry: widget.pluginRegistry,
-          onOpenBuiltIn: _openBuiltInPlugin,
-        ),
-      ),
+    Widget inventory(VoidCallback? onDiscover) => market.buildMarketPage(
+      desktop: initialMine ? null : desktop,
+      mode: initialMine
+          ? MobileMarketMode.installed
+          : MobileMarketMode.discover,
+      onDiscover: onDiscover,
+      pluginRegistry: widget.pluginRegistry,
+      onOpenBuiltIn: _openBuiltInPlugin,
     );
+    if (initialMine) {
+      await Navigator.of(context).push<void>(
+        InstalledPluginsRoute(
+          buddy: controller,
+          returnToInventory: _managementReturn,
+          inventory: (onDiscover) => inventory(onDiscover),
+        ),
+      );
+    } else {
+      await controller.selectAppsSection(AppsSection.discover);
+    }
   }
 
   void _openBuiltInPlugin(OpenMusePlugin plugin) {
@@ -1627,9 +1959,39 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                     mobileMarket: widget.mobileMarketPlugin,
                     pluginRegistry: widget.pluginRegistry,
                     onOpenBuiltIn: _openBuiltInPlugin,
+                    homePage: widget.resources == null
+                        ? ResourceCenterPlaceholder(
+                            error: widget.resourceFailure,
+                            onRetry: widget.onRetryResources,
+                          )
+                        : ResourceCenterView(
+                            controller: widget.resources!.controller,
+                            onAddToConversation: (record) async {
+                              try {
+                                widget.resources!.draft.attach(record);
+                                controller.selectTab(WbTab.tasks);
+                              } on Object catch (error) {
+                                if (mounted) showResourceError(context, error);
+                              }
+                            },
+                          ),
+                    resourceDraft: widget.resources?.draft,
+                    workbenchKey: _workbenchKey,
+                    appsEditing: _appsEditing,
+                    managementReturn: _managementReturn,
                     workbenchPage: widget.pluginRegistry == null
-                        ? const Center(child: Text('工作台暂不可用'))
+                        ? Center(
+                            child: Text(
+                              (stringsOf(
+                                context,
+                              ).mobileTheWorkbenchIsUnavailable9160d296()),
+                            ),
+                          )
                         : MobileWorkbenchPage(
+                            key: _workbenchKey,
+                            embedded: true,
+                            onEditingChanged: (value) =>
+                                _appsEditing.value = value,
                             registry: widget.pluginRegistry!,
                             values:
                                 widget.deviceSelectionStore ??
@@ -1644,8 +2006,9 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                             scope:
                                 '${controller.selectedDeviceId}.'
                                 '${controller.selectedWorkspaceId}',
-                            onDiscover: () =>
-                                controller.selectTab(WbTab.discover),
+                            onDiscover: () => controller.selectAppsSection(
+                              AppsSection.discover,
+                            ),
                             onManagePlugins: () =>
                                 unawaited(_openMobileMarket(initialMine: true)),
                           ),
@@ -1661,6 +2024,10 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                       onSignOut: widget.onSignOut == null
                           ? null
                           : () => unawaited(widget.onSignOut!()),
+                      onDeleteAccount: widget.onDeleteAccount,
+                      registryProviders:
+                          widget.mobileMarketPlugin?.registryProviders,
+                      speechModels: _speechModels,
                       onDevices: () => unawaited(_chooseDevice()),
                       onPlugins: () =>
                           unawaited(_openMobileMarket(initialMine: true)),
@@ -1805,11 +2172,24 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
             initialPrompt: _pendingSessionId == sessionId
                 ? _pendingPrompt
                 : null,
+            onInitialPromptDeclined: (_) {
+              if (!mounted || _pendingSessionId != sessionId) return;
+              setState(() {
+                if (_composer.text.isEmpty) {
+                  _composer.text = _pendingOriginalText ?? '';
+                }
+                _pendingPrompt = null;
+                _pendingOriginalText = null;
+                _pendingSessionId = null;
+              });
+            },
             onInitialPromptConsumed: () {
               if (!mounted || _pendingSessionId != sessionId) return;
+              widget.resources?.draft.clear();
               setState(() {
                 _pendingSessionId = null;
                 _pendingPrompt = null;
+                _pendingOriginalText = null;
               });
             },
             onConnectionFailure: () {
@@ -1830,9 +2210,13 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   void _showCloudDeveloping() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('云端会话开发中')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          (stringsOf(context).mobileCloudConversationsAreComingSoonEcd03ff2()),
+        ),
+      ),
+    );
   }
 }
 
@@ -1843,7 +2227,12 @@ final class _MainColumn extends StatelessWidget {
     required this.mobileMarket,
     required this.pluginRegistry,
     required this.onOpenBuiltIn,
+    required this.homePage,
     required this.workbenchPage,
+    required this.workbenchKey,
+    required this.appsEditing,
+    required this.managementReturn,
+    this.resourceDraft,
     required this.minePage,
     required this.composer,
     required this.focus,
@@ -1872,7 +2261,12 @@ final class _MainColumn extends StatelessWidget {
   final OpenMuseMobilePluginMarket? mobileMarket;
   final OpenMusePluginRegistry? pluginRegistry;
   final ValueChanged<OpenMusePlugin> onOpenBuiltIn;
+  final ResourceConversationDraft? resourceDraft;
+  final Widget homePage;
   final Widget workbenchPage;
+  final GlobalKey<MobileWorkbenchPageState> workbenchKey;
+  final ValueListenable<bool> appsEditing;
+  final ValueListenable<VoidCallback?> managementReturn;
   final Widget minePage;
   final TextEditingController composer;
   final FocusNode focus;
@@ -1897,7 +2291,7 @@ final class _MainColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: controller,
+    listenable: Listenable.merge([controller, ?resourceDraft]),
     builder: (context, _) {
       final installedMarket = pluginRegistry?.plugin(
         'com.openmuse.mobile-plugin-market',
@@ -1927,7 +2321,7 @@ final class _MainColumn extends StatelessWidget {
                       _HomeHeader(
                         deviceName:
                             controller.selectedDevice.kind == WbDeviceKind.cloud
-                            ? '云端'
+                            ? (stringsOf(context).mobileCloud118c7f15())
                             : controller.selectedDevice.name,
                         workspaceName: controller.selectedWorkspace.name,
                         onMenu: onMenu,
@@ -1951,8 +2345,13 @@ final class _MainColumn extends StatelessWidget {
                           if (connected) return const SizedBox.shrink();
                           final snapshot = pairedDesktop!.snapshot;
                           final message = snapshot.connecting
-                              ? '正在连接 Desktop…'
-                              : snapshot.failureMessage ?? 'Desktop 未连接';
+                              ? (stringsOf(
+                                  context,
+                                ).mobileConnectingToDesktop19a52f17())
+                              : snapshot.failureMessage ??
+                                    (stringsOf(
+                                      context,
+                                    ).mobileDesktopIsDisconnected5be7fb00());
                           return Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
                             child: Row(
@@ -1976,7 +2375,11 @@ final class _MainColumn extends StatelessWidget {
                                   onPressed: snapshot.connecting
                                       ? null
                                       : onReconnect,
-                                  child: Text('重连'),
+                                  child: Text(
+                                    (stringsOf(
+                                      context,
+                                    ).mobileReconnect87c50d4d()),
+                                  ),
                                 ),
                               ],
                             ),
@@ -1990,7 +2393,9 @@ final class _MainColumn extends StatelessWidget {
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            '云端会话开发中',
+                            (stringsOf(
+                              context,
+                            ).mobileCloudConversationsAreComingSoonEcd03ff2()),
                             key: ValueKey('wb-cloud-developing'),
                             style: TextStyle(
                               color: Theme.of(
@@ -2002,42 +2407,82 @@ final class _MainColumn extends StatelessWidget {
                         ),
                       ),
                     Expanded(
+                      key: const ValueKey('wb-body-pages'),
                       child: _TabBody(
                         controller: controller,
                         onNewTask: onNewTask,
                         conversation: conversation,
+                        homePage: homePage,
                         workbenchPage: workbenchPage,
+                        workbenchKey: workbenchKey,
+                        appsEditing: appsEditing,
+                        managementReturn: managementReturn,
                         minePage: minePage,
-                        discoverPage: activeMarket?.buildMarketPage(
-                          embedded: true,
-                          pluginRegistry: pluginRegistry,
-                          onOpenBuiltIn: onOpenBuiltIn,
-                          onManageWorkbench: () =>
-                              controller.selectTab(WbTab.workbench),
-                          desktop: pairedDesktop?.snapshot.connection == null
-                              ? null
-                              : PairedDesktopMarketClient(
-                                  origin: Uri.parse(
-                                    pairedDesktop!
-                                        .snapshot
-                                        .connection!
-                                        .session
-                                        .origin,
-                                  ),
-                                  grantRef: pairedDesktop!
-                                      .snapshot
-                                      .connection!
-                                      .grantRef,
-                                  expiresAtMs: pairedDesktop!
-                                      .snapshot
-                                      .connection!
-                                      .expiresAtMs,
+                        discoverPage:
+                            RuntimeConfigScope.maybeOf(
+                                  context,
+                                )?.isEnabled(AppFeature.pluginMarket) ==
+                                false
+                            ? Center(
+                                child: Text(
+                                  stringsOf(context).commonFeatureUnavailable(),
                                 ),
-                        ),
+                              )
+                            : activeMarket?.buildMarketPage(
+                                embedded: true,
+                                mode: MobileMarketMode.discover,
+                                pluginRegistry: pluginRegistry,
+                                onOpenBuiltIn: onOpenBuiltIn,
+                                onManageWorkbench: () => controller
+                                    .selectAppsSection(AppsSection.overview),
+                                desktop:
+                                    pairedDesktop?.snapshot.connection == null
+                                    ? null
+                                    : PairedDesktopMarketClient(
+                                        origin: Uri.parse(
+                                          pairedDesktop!
+                                              .snapshot
+                                              .connection!
+                                              .session
+                                              .origin,
+                                        ),
+                                        grantRef: pairedDesktop!
+                                            .snapshot
+                                            .connection!
+                                            .grantRef,
+                                        expiresAtMs: pairedDesktop!
+                                            .snapshot
+                                            .connection!
+                                            .expiresAtMs,
+                                      ),
+                              ),
                       ),
                     ),
+                    if (showComposer && resourceDraft != null)
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.viewInsetsOf(context).bottom > 0
+                              ? 110
+                              : 230,
+                        ),
+                        child: SingleChildScrollView(
+                          child: ResourceDraftStrip(draft: resourceDraft!),
+                        ),
+                      ),
                     if (showComposer)
                       _Composer(
+                        hasAttachments: resourceDraft?.isEmpty == false,
+                        onPasteResource: resourceDraft == null
+                            ? null
+                            : () async {
+                                try {
+                                  await resourceDraft!.paste();
+                                } on Object catch (error) {
+                                  if (context.mounted) {
+                                    showResourceError(context, error);
+                                  }
+                                }
+                              },
                         controller: composer,
                         focus: focus,
                         voiceMode: voiceMode,
@@ -2052,9 +2497,11 @@ final class _MainColumn extends StatelessWidget {
                         onAttachment: onAttachment,
                         onCancel: sessionHandle.cancel,
                         permissionLabel: _permissionLabel(
+                          context,
                           snapshot?.permissionPreset,
                         ),
                         modelLabel: _workBuddyModelLabel(
+                          context,
                           snapshot?.model,
                           snapshot?.reasoningEffort,
                         ),
@@ -2128,7 +2575,14 @@ final class _HomeHeader extends StatelessWidget {
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
-                    Text(deviceName, maxLines: 1, style: wbSub),
+                    Flexible(
+                      child: Text(
+                        deviceName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: wbSub,
+                      ),
+                    ),
                     Text('  |  ', style: wbSub),
                     Flexible(
                       child: Text(
@@ -2162,7 +2616,11 @@ final class _TabBody extends StatelessWidget {
     required this.onNewTask,
     required this.conversation,
     required this.discoverPage,
+    required this.homePage,
     required this.workbenchPage,
+    required this.workbenchKey,
+    required this.appsEditing,
+    required this.managementReturn,
     required this.minePage,
   });
 
@@ -2170,7 +2628,11 @@ final class _TabBody extends StatelessWidget {
   final VoidCallback onNewTask;
   final Widget? conversation;
   final Widget? discoverPage;
+  final Widget homePage;
   final Widget workbenchPage;
+  final GlobalKey<MobileWorkbenchPageState> workbenchKey;
+  final ValueListenable<bool> appsEditing;
+  final ValueListenable<VoidCallback?> managementReturn;
   final Widget minePage;
 
   @override
@@ -2180,28 +2642,50 @@ final class _TabBody extends StatelessWidget {
         controller.tab == WbTab.tasks &&
         task != null &&
         task.id.startsWith('dsh.session.');
-    final ordinary = controller.tab == WbTab.tasks && task != null
-        ? nativeSelected
-              ? const SizedBox.shrink()
-              : _Conversation(task: task)
-        : _ordinaryTab();
+    final ordinary = _ordinaryTab(context);
     final cachedConversation = conversation;
-    if (cachedConversation == null) return ordinary;
     return Stack(
       fit: StackFit.expand,
       children: [
         Offstage(offstage: nativeSelected, child: ordinary),
-        Offstage(offstage: !nativeSelected, child: cachedConversation),
+        if (cachedConversation != null)
+          Offstage(offstage: !nativeSelected, child: cachedConversation),
       ],
     );
   }
 
-  Widget _ordinaryTab() => switch (controller.tab) {
-    WbTab.tasks => const _HomeEmpty(),
-    WbTab.workbench => workbenchPage,
-    WbTab.discover => discoverPage ?? const Center(child: Text('发现暂不可用')),
-    WbTab.mine => minePage,
-  };
+  Widget _ordinaryTab(BuildContext context) {
+    final pages = <Widget>[
+      homePage,
+      controller.openTask != null &&
+              !controller.openTask!.id.startsWith('dsh.session.')
+          ? _Conversation(task: controller.openTask!)
+          : const _HomeEmpty(),
+      MobileAppsPage(
+        key: ValueKey('apps-center-${controller.accountName ?? 'local'}'),
+        controller: controller,
+        overview: workbenchPage,
+        discovery:
+            discoverPage ??
+            Center(
+              child: Text(
+                stringsOf(context).mobileDiscoveryIsUnavailable52d7df72(),
+              ),
+            ),
+        workbenchKey: workbenchKey,
+        editing: appsEditing,
+        managementReturn: managementReturn,
+      ),
+      minePage,
+    ];
+    return IndexedStack(
+      index: controller.tab.index,
+      children: [
+        for (var i = 0; i < pages.length; i++)
+          TickerMode(enabled: controller.tab.index == i, child: pages[i]),
+      ],
+    );
+  }
 }
 
 final class _HomeEmpty extends StatelessWidget {
@@ -2234,10 +2718,10 @@ final class _HomeEmpty extends StatelessWidget {
             ),
             if (showSlogan) ...[
               SizedBox(height: gap),
-              const FittedBox(
+              FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  'OpenMuse，与你一起创造',
+                  (stringsOf(context).mobileCreateWithOpenmuseC794b360()),
                   key: ValueKey('wb-slogan'),
                   maxLines: 1,
                   style: wbSlogan,
@@ -2278,7 +2762,7 @@ final class _ConversationState extends State<_Conversation> {
         children: [
           Center(
             child: Text(
-              '内容由 AI 生成',
+              (stringsOf(context).mobileAiGeneratedContentB3eeebbf()),
               key: ValueKey('wb-ai-disclaimer'),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -2384,7 +2868,9 @@ final class _StatusRow extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          status == WbTaskStatus.completed ? '已完成' : '进行中',
+          status == WbTaskStatus.completed
+              ? (stringsOf(context).mobileCompleted267fbd00())
+              : (stringsOf(context).mobileInProgress9591c222()),
           key: const ValueKey('wb-task-status'),
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -2404,6 +2890,8 @@ final class _StatusRow extends StatelessWidget {
 
 final class _Composer extends StatelessWidget {
   const _Composer({
+    this.hasAttachments = false,
+    this.onPasteResource,
     required this.controller,
     required this.focus,
     required this.voiceMode,
@@ -2423,6 +2911,8 @@ final class _Composer extends StatelessWidget {
     required this.enabled,
   });
 
+  final bool hasAttachments;
+  final VoidCallback? onPasteResource;
   final TextEditingController controller;
   final FocusNode focus;
   final bool voiceMode;
@@ -2461,7 +2951,9 @@ final class _Composer extends StatelessWidget {
               children: [
                 IconButton(
                   key: const ValueKey('wb-input-mode-toggle'),
-                  tooltip: voiceMode ? '切换到键盘输入' : '切换到语音输入',
+                  tooltip: voiceMode
+                      ? (stringsOf(context).mobileSwitchToKeyboard2f4cc281())
+                      : (stringsOf(context).mobileSwitchToDictation740f6546()),
                   onPressed: enabled && !holding ? onInputModeToggle : null,
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.all(6),
@@ -2495,15 +2987,27 @@ final class _Composer extends StatelessWidget {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: holding
-                                  ? const Color(0x263DD8BC)
-                                  : const Color(0xFF25272D),
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHigh,
                               borderRadius: BorderRadius.circular(21),
                             ),
                             child: Text(
-                              holding ? '松开完成 · 上滑取消' : '按住说话',
+                              holding
+                                  ? (stringsOf(
+                                      context,
+                                    ).mobileReleaseToFinishSlideUpToCancel5755f1f0())
+                                  : (stringsOf(
+                                      context,
+                                    ).mobileHoldToSpeakF4dcaf7f()),
                               style: TextStyle(
                                 color: holding
-                                    ? const Color(0xFF8EF5E1)
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimaryContainer
                                     : Theme.of(context).colorScheme.onSurface,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
@@ -2516,18 +3020,37 @@ final class _Composer extends StatelessWidget {
                           controller: controller,
                           focusNode: focus,
                           enabled: enabled,
+                          contextMenuBuilder: (context, editable) =>
+                              AdaptiveTextSelectionToolbar.buttonItems(
+                                anchors: editable.contextMenuAnchors,
+                                buttonItems: [
+                                  ...editable.contextMenuButtonItems,
+                                  if (onPasteResource != null)
+                                    ContextMenuButtonItem(
+                                      label: stringsOf(
+                                        context,
+                                      ).resourcecenterPaste(),
+                                      onPressed: () {
+                                        editable.hideToolbar();
+                                        onPasteResource!();
+                                      },
+                                    ),
+                                ],
+                              ),
                           minLines: 1,
                           maxLines: 4,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 16,
                           ),
-                          cursorColor: Colors.white,
+                          cursorColor: Theme.of(context).colorScheme.primary,
                           textInputAction: TextInputAction.send,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             isDense: true,
                             border: InputBorder.none,
-                            hintText: '发消息',
+                            hintText: (stringsOf(
+                              context,
+                            ).mobileMessage97302219()),
                             hintStyle: TextStyle(
                               color: Color(0xFF8A8A8A),
                               fontSize: 16,
@@ -2538,7 +3061,7 @@ final class _Composer extends StatelessWidget {
                 ),
                 IconButton(
                   key: const ValueKey('wb-plus'),
-                  tooltip: '添加文件或图片',
+                  tooltip: (stringsOf(context).mobileAddAFileOrImageBbfddc0f()),
                   onPressed: enabled ? onAttachment : null,
                   icon: WbIcon(
                     WbGlyph.plus,
@@ -2550,11 +3073,13 @@ final class _Composer extends StatelessWidget {
             ),
             Row(
               children: [
-                _ComposerChip(
-                  key: const ValueKey('wb-permission'),
-                  icon: Icons.admin_panel_settings_outlined,
-                  label: permissionLabel,
-                  onTap: enabled ? onPermission : null,
+                Flexible(
+                  child: _ComposerChip(
+                    key: const ValueKey('wb-permission'),
+                    icon: Icons.admin_panel_settings_outlined,
+                    label: permissionLabel,
+                    onTap: enabled ? onPermission : null,
+                  ),
                 ),
                 const SizedBox(width: 4),
                 Expanded(
@@ -2569,7 +3094,9 @@ final class _Composer extends StatelessWidget {
                 if (running)
                   IconButton.filledTonal(
                     key: const ValueKey('wb-stop'),
-                    tooltip: '停止生成',
+                    tooltip: (stringsOf(
+                      context,
+                    ).mobileStopGenerating21733a02()),
                     onPressed: onCancel,
                     icon: Icon(Icons.stop_rounded, size: 20),
                   )
@@ -2578,14 +3105,23 @@ final class _Composer extends StatelessWidget {
                     valueListenable: controller,
                     builder: (context, value, _) => IconButton.filled(
                       key: const ValueKey('wb-send'),
-                      tooltip: '发送',
-                      onPressed: enabled && value.text.trim().isNotEmpty
+                      tooltip: (stringsOf(context).mobileSend8457aed9()),
+                      onPressed:
+                          enabled &&
+                              (value.text.trim().isNotEmpty || hasAttachments)
                           ? onSubmit
                           : null,
                       style: IconButton.styleFrom(
-                        backgroundColor: const Color(0xFF94A9FF),
-                        disabledBackgroundColor: const Color(0xFF343846),
-                        foregroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        disabledBackgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHigh,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onPrimary,
+                        disabledForegroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant,
                       ),
                       icon: Icon(Icons.arrow_upward_rounded, size: 20),
                     ),
@@ -2649,18 +3185,26 @@ final class _ComposerChip extends StatelessWidget {
   );
 }
 
-String _permissionLabel(String? value) => switch (value) {
-  'read-only' => '只读',
-  'workspace-write' => '工作区内修改',
-  'danger-full-access' => '完整访问',
-  'auto' => '自动审批',
+String _permissionLabel(BuildContext context, String? value) => switch (value) {
+  'read-only' => (stringsOf(context).mobileReadOnlyCb269872()),
+  'workspace-write' => (stringsOf(
+    context,
+  ).mobileWorkspaceWriteAccessFae86ef7()),
+  'danger-full-access' => (stringsOf(context).mobileFullAccess6d8c6618()),
+  'auto' => (stringsOf(context).mobileAutomaticApproval02a34125()),
   final value? when value.isNotEmpty => value,
-  _ => '工作区权限',
+  _ => (stringsOf(context).mobileWorkspacePermissionsB43b081a()),
 };
 
-String _workBuddyModelLabel(String? model, String? effort) {
+String _workBuddyModelLabel(
+  BuildContext context,
+  String? model,
+  String? effort,
+) {
   final value = model?.trim();
-  if (value == null || value.isEmpty) return '选择模型';
+  if (value == null || value.isEmpty) {
+    return (stringsOf(context).mobileChooseAModelD992696e());
+  }
   return effort == null || effort.isEmpty ? value : '$value · $effort';
 }
 
@@ -2727,10 +3271,12 @@ final class _VoiceHoldState extends State<_VoiceHold>
       child: Semantics(
         liveRegion: true,
         label: widget.cancelling
-            ? '松手取消语音输入'
+            ? (stringsOf(context).mobileReleaseToCancelDictation75875019())
             : widget.released
-            ? '正在完成语音识别'
-            : '正在聆听，松手完成，上滑取消',
+            ? (stringsOf(context).mobileFinishingSpeechRecognition8a8c1c0b())
+            : (stringsOf(
+                context,
+              ).mobileListeningReleaseToFinishOrSlideUpTo8cca1710()),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(28, 62, 28, 34),
           child: Column(
@@ -2739,10 +3285,14 @@ final class _VoiceHoldState extends State<_VoiceHold>
                 duration: const Duration(milliseconds: 140),
                 child: Text(
                   widget.cancelling
-                      ? '松手取消'
+                      ? (stringsOf(context).mobileReleaseToCancelC48c1de4())
                       : widget.released
-                      ? '正在完成识别…'
-                      : '松手完成，上滑取消',
+                      ? (stringsOf(
+                          context,
+                        ).mobileFinishingRecognition0072ccbb())
+                      : (stringsOf(
+                          context,
+                        ).mobileReleaseToFinishSlideUpToCancel354d09d6()),
                   key: ValueKey((widget.cancelling, widget.released)),
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -2840,11 +3390,15 @@ final class _TabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const items = [
-      (WbTab.tasks, WbGlyph.bubble, '任务'),
-      (WbTab.workbench, WbGlyph.expert, '工作台'),
-      (WbTab.discover, WbGlyph.diamond, '发现'),
-      (WbTab.mine, WbGlyph.project, '我的'),
+    final items = [
+      (WbTab.home, WbGlyph.home, stringsOf(context).resourcecenterHome()),
+      (WbTab.tasks, WbGlyph.bubble, (stringsOf(context).mobileTasks49bc7474())),
+      (WbTab.apps, WbGlyph.apps, stringsOf(context).mobileApps()),
+      (
+        WbTab.mine,
+        WbGlyph.person,
+        (stringsOf(context).mobileAccountA10e8da3()),
+      ),
     ];
     return Padding(
       padding: const EdgeInsets.only(bottom: 4, top: 2),
@@ -2894,7 +3448,17 @@ final class _TabButton extends StatelessWidget {
           children: [
             WbIcon(glyph, size: 22, color: color),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: color, fontSize: 11)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 3),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: TextStyle(color: color, fontSize: 11),
+                ),
+              ),
+            ),
             const SizedBox(height: 4),
             AnimatedContainer(
               duration: const Duration(milliseconds: 160),
@@ -2972,7 +3536,7 @@ final class _DrawerPanel extends StatelessWidget {
                         Expanded(
                           child: Text(
                             controller.selectedDevice.kind == WbDeviceKind.cloud
-                                ? '云端'
+                                ? (stringsOf(context).mobileCloud118c7f15())
                                 : controller.selectedDevice.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -3011,7 +3575,10 @@ final class _DrawerPanel extends StatelessWidget {
                     children: [
                       WbIcon(WbGlyph.bubblePlus, size: 18),
                       SizedBox(width: 8),
-                      Text('新建任务', style: TextStyle(fontSize: 16)),
+                      Text(
+                        (stringsOf(context).mobileNewTaskE8e54ef0()),
+                        style: TextStyle(fontSize: 16),
+                      ),
                     ],
                   ),
                 ),
@@ -3021,7 +3588,7 @@ final class _DrawerPanel extends StatelessWidget {
                     padding: EdgeInsets.zero,
                     children: [
                       _SectionLabel(
-                        label: '最近任务',
+                        label: (stringsOf(context).mobileRecentTasksCdbbd048()),
                         expanded: controller.tasksExpanded,
                         onTap: controller.toggleTasks,
                       ),
@@ -3037,7 +3604,9 @@ final class _DrawerPanel extends StatelessWidget {
                           ),
                       const SizedBox(height: 8),
                       _SectionLabel(
-                        label: '空间 (${spaces.length})',
+                        label: (stringsOf(
+                          context,
+                        ).mobileWorkspaces3d22293a(value1: spaces.length)),
                         expanded: controller.spacesExpanded,
                         onTap: controller.toggleSpaces,
                       ),
@@ -3192,7 +3761,7 @@ final class _WorkspaceRow extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(right: 4),
             child: Text(
-              '开发中',
+              (stringsOf(context).mobileComingSoonDdd8280c()),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 12,
@@ -3246,7 +3815,7 @@ final class _RunSettingsSheet extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '任务运行设置',
+                  (stringsOf(context).mobileTaskSettings2fc94999()),
                   key: ValueKey('wb-run-settings'),
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
@@ -3269,7 +3838,7 @@ final class _RunSettingsSheet extends StatelessWidget {
           const SizedBox(height: 8),
           _SettingCard(
             key: const ValueKey('wb-pick-device'),
-            label: '设备',
+            label: (stringsOf(context).mobileDevice37d06f01()),
             value: deviceName,
             showDesktop: true,
             onTap: onDevice,
@@ -3277,7 +3846,7 @@ final class _RunSettingsSheet extends StatelessWidget {
           const SizedBox(height: 10),
           _SettingCard(
             key: const ValueKey('wb-pick-workspace'),
-            label: '工作空间',
+            label: (stringsOf(context).mobileWorkspaceCbc7c9de()),
             value: workspaceName,
             onTap: onWorkspace,
           ),
@@ -3523,6 +4092,44 @@ final class _MobileLoginRouteState extends State<_MobileLoginRoute> {
   );
 }
 
+Future<void> openDesktopSetupGuide(BuildContext context) async {
+  final guide = await rootBundle.loadString(
+    'packages/openmuse_resource_center_host/assets/welcome/OpenMuse-User-Guide.md',
+  );
+  final start = guide.indexOf('## 8. How to connect a Desktop');
+  final end = guide.indexOf('\n## 9.', start < 0 ? 0 : start);
+  final section = start >= 0 && end > start
+      ? guide.substring(start, end)
+      : guide;
+  if (!context.mounted) return;
+  await Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => Scaffold(
+        appBar: AppBar(
+          title: Text(stringsOf(context).commonDesktopSetupGuide()),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: MarkdownBody(
+            data: section,
+            selectable: true,
+            styleSheet: MarkdownStyleSheet(
+              p: const TextStyle(fontSize: 16, height: 1.6),
+            ),
+            onTapLink: (_, href, _) async {
+              final uri = Uri.tryParse(href ?? '');
+              if (uri == null || !{'https', 'mailto'}.contains(uri.scheme)) {
+                return;
+              }
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            },
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 final class _DesktopBindSheet extends StatelessWidget {
   const _DesktopBindSheet({
     required this.paired,
@@ -3561,7 +4168,7 @@ final class _DesktopBindSheet extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    '绑定 Desktop',
+                    (stringsOf(context).mobileConnectDesktopA9885c8c()),
                     key: ValueKey('wb-bind-desktop'),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
@@ -3571,7 +4178,7 @@ final class _DesktopBindSheet extends StatelessWidget {
                   ),
                   IconButton(
                     key: const ValueKey('wb-refresh-desktops'),
-                    tooltip: '刷新',
+                    tooltip: (stringsOf(context).mobileRefresh20ada9a3()),
                     visualDensity: VisualDensity.compact,
                     padding: const EdgeInsets.all(6),
                     constraints: const BoxConstraints(
@@ -3593,11 +4200,27 @@ final class _DesktopBindSheet extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              Text('请在电脑端登录同一个帐号', style: wbSub),
+              Text(
+                (stringsOf(
+                  context,
+                ).mobileSignInToTheSameAccountOnYourComput3e0a75c4()),
+                style: wbSub,
+              ),
+              TextButton.icon(
+                key: const ValueKey('desktop-setup-guide'),
+                icon: const Icon(Icons.help_outline),
+                label: Text(stringsOf(context).commonDesktopSetupGuide()),
+                onPressed: () => openDesktopSetupGuide(context),
+              ),
               const SizedBox(height: 12),
               if (desktops.isEmpty &&
                   paired?.directory?.snapshot.loading != true)
-                Text('当前账号还没有可绑定的 Desktop。请先在电脑上打开 OpenMuse 并登录。', style: wbSub)
+                Text(
+                  (stringsOf(
+                    context,
+                  ).mobileNoDesktopIsAvailableOnThisAccountOp8ae08e25()),
+                  style: wbSub,
+                )
               else
                 for (final device in desktops)
                   _DeviceStatusRow(
@@ -3666,10 +4289,10 @@ final class _DeviceStatusRow extends StatelessWidget {
             ),
           )
         : !online
-        ? Text('离线', style: wbSub)
+        ? Text((stringsOf(context).mobileOffline054e29cd()), style: wbSub)
         : connected
         ? Text(
-            '已连接',
+            (stringsOf(context).mobileConnectedAfe95341()),
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 14,
@@ -3677,7 +4300,7 @@ final class _DeviceStatusRow extends StatelessWidget {
           )
         : connecting
         ? Text(
-            '连接中…',
+            (stringsOf(context).mobileConnecting3ac1dd38()),
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 14,
@@ -3686,7 +4309,11 @@ final class _DeviceStatusRow extends StatelessWidget {
         : TextButton(
             key: ValueKey('wb-device-bind-$id'),
             onPressed: onBind,
-            child: Text(current ? '重新连接' : '绑定'),
+            child: Text(
+              current
+                  ? (stringsOf(context).mobileReconnectF80f36fd())
+                  : (stringsOf(context).mobileConnect99f44b5c()),
+            ),
           );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),

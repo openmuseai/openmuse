@@ -44,6 +44,11 @@ void main() {
     );
 
     controller.openTaskById(firstTask.id);
+    controller.selectTab(WbTab.home);
+    expect(controller.openTask?.id,firstTask.id);
+    expect(controller.selectedDeviceId,deviceId);
+    controller.selectTab(WbTab.tasks);
+    expect(controller.openTask?.id,firstTask.id);
     controller.selectWorkspace(second.id);
     expect(controller.selectedWorkspaceId, second.id);
     expect(controller.openTask, isNull);
