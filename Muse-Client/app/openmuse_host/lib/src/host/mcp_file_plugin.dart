@@ -10,10 +10,12 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'mcp_market.dart';
 import 'mcp_resource_extensions.dart';
+import 'distribution_channel.dart';
 
 /// Adapts any MCP tool with a JSON Schema base64 file input to a Host editor.
 /// The MIME type is standard JSON Schema contentMediaType, supplied by MCP.
-final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
+final class OpenMuseMcpFilePlugin
+    implements OpenMusePlugin, OpenMuseResourceHandlerContributor {
   OpenMuseMcpFilePlugin({
     required McpMarketEntry entry,
     required this.runtime,
@@ -31,7 +33,10 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
          version: entry.version,
          runtime: OpenMusePluginRuntime.nativeProcess,
          activationEvents: ['onFileType:$extension'],
-         permissions: {'filesystem.workspace.read'},
+         permissions: {
+           'filesystem.workspace.read',
+           'filesystem.workspace.write',
+         },
          editors: [
            OpenMuseEditorContribution(
              id: '${entry.name}.file',
@@ -55,6 +60,47 @@ final class OpenMuseMcpFilePlugin implements OpenMusePlugin {
 
   @override
   final OpenMusePluginDescriptor descriptor;
+
+  @override
+  List<ResourceHandlerSpec> get resourceHandlers => [
+    ResourceHandlerSpec(
+      id: '${descriptor.id}.resource',
+      title: descriptor.name,
+      mediaTypes: {mediaType},
+      extensions: {extension},
+      editable: true,
+      priority: 50,
+    ),
+  ];
+
+  @override
+  Future<bool> probeResource(
+    ResourceRecord record,
+    ResourceOpenIntent intent,
+  ) async => resourceHandlers.any((handler) => handler.accepts(record));
+
+  @override
+  Widget buildResourceEditor(
+    BuildContext context,
+    String handlerId,
+    ResourceEditorSession session,
+  ) => _McpFileEditor(
+    key: ValueKey('mcp-resource-${session.record.identity.key}'),
+    runtime: runtime,
+    toolName: toolName,
+    resource: OpenMuseResource(
+      uri: Uri(scheme: 'muse-resource', path: session.record.identity.key),
+      displayName: session.record.name,
+      mediaType: mediaType,
+      reference: session.opened.reference,
+    ),
+    mediaType: mediaType,
+    resourceSession: session,
+    agentBroker: agentBroker,
+    extensions: extensions,
+    contributors: contributors,
+    approve: approve,
+  );
 
   @override
   Future<void> activate(OpenMusePluginContext context) async {}
@@ -98,6 +144,45 @@ String? extensionForMediaType(String mediaType) => switch (mediaType) {
   'text/markdown' => 'md',
   _ => null,
 };
+
+/// Save only to the selected, versioned resource. A View cannot choose a path
+/// or overwrite its source with an export of another document type.
+Future<void> commitMcpResourceDownload(
+  ResourceEditorSession session,
+  Map<String, Object?> params,
+  String mediaType,
+) async {
+  if (!session.allowEditing || session.opened.fromSnapshot) {
+    throw const ResourceFailure('READ_ONLY');
+  }
+  final contents = params['contents'];
+  if (contents is! List || contents.length != 1 || contents.single is! Map) {
+    throw const FormatException('One resource download is required');
+  }
+  final content = contents.single as Map;
+  final resource = content['resource'];
+  if (content['type'] != 'resource' ||
+      resource is! Map ||
+      resource['mimeType'] != mediaType) {
+    throw const FormatException('Resource media type mismatch');
+  }
+  final blob = resource['blob'];
+  final text = resource['text'];
+  final List<int> bytes;
+  if (blob is String && blob.length <= 90 * 1024 * 1024) {
+    bytes = base64Decode(blob);
+  } else if (text is String && text.length <= 64 * 1024 * 1024) {
+    bytes = utf8.encode(text);
+  } else {
+    throw const FormatException('Resource download exceeds budget');
+  }
+  if (bytes.length > 64 * 1024 * 1024) {
+    throw const FormatException('Resource download exceeds budget');
+  }
+  if (!session.editing) session.enterEditing();
+  session.markDirty(true);
+  await session.commit(bytes);
+}
 
 /// Derives a Host editor contribution from a verified MCPB server's standard
 /// tool input schema. The bundle supplies no Host-specific manifest fields.
@@ -147,12 +232,14 @@ final class _McpFileEditor extends StatefulWidget {
     this.extensions,
     this.contributors,
     this.approve,
+    this.resourceSession,
   });
   final McpBundleRuntime runtime;
   final String toolName;
   final OpenMuseResource resource;
   final String mediaType;
   final ResourceAgentBroker? agentBroker;
+  final ResourceEditorSession? resourceSession;
   final McpResourceExtensions? extensions;
   final List<({String id, OpenMuseToolContributor plugin})> Function()?
   contributors;
@@ -174,6 +261,23 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final next = mcpAppPresentation(context);
+    if (macAppStoreDistribution && next['openmuse'] is Map) {
+      final extension = Map<String, Object?>.from(next['openmuse'] as Map);
+      final settings = Map<String, Object?>.from(
+        extension['settings'] as Map? ?? {},
+      );
+      final features = Map<String, Object?>.from(
+        settings['features'] as Map? ?? {},
+      );
+      features['io.openmuse.genoffice-pptx.agent.enabled'] = false;
+      if (widget.resourceSession?.allowEditing == false) {
+        features['io.openmuse.genoffice-pptx.editing.enabled'] = false;
+        features['io.openmuse.genoffice-pptx.export.enabled'] = false;
+      }
+      settings['features'] = features;
+      extension['settings'] = settings;
+      next['openmuse'] = extension;
+    }
     if (jsonEncode(next) != jsonEncode(_presentation)) {
       _presentation = next;
       unawaited(_sendPresentation());
@@ -343,6 +447,7 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
         switch (message['method']) {
           case 'ui/notifications/initialized':
             _viewReady = true;
+            widget.resourceSession?.reportOpened();
             await _sendPresentation();
             widget.agentBroker?.register(session);
             return;
@@ -351,6 +456,20 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
               throw const FormatException('Context exceeds budget');
             }
             session.context = params;
+            final content = params['structuredContent'];
+            if (content is Map && content['dirty'] is bool) {
+              widget.resourceSession?.markDirty(content['dirty'] as bool);
+            }
+          case 'ui/download-file':
+            final resourceSession = widget.resourceSession;
+            if (resourceSession == null) {
+              throw UnsupportedError('No versioned resource session');
+            }
+            await commitMcpResourceDownload(
+              resourceSession,
+              params,
+              widget.mediaType,
+            );
           case 'ui/message':
             if (widget.agentBroker?.activeUri != session.uri) {
               throw StateError('Inactive resource');
@@ -383,7 +502,12 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
         await channel.invokeMethod<void>('message', {
           'jsonrpc': '2.0',
           'id': message['id'],
-          'error': {'code': -32602, 'message': 'Agent request rejected'},
+          'error': {
+            'code': -32602,
+            'message': message['method'] == 'ui/download-file'
+                ? 'Unable to save this document. Your changes are kept.'
+                : 'Request rejected',
+          },
         });
       }
     });
@@ -409,14 +533,23 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
   late final Future<Map<String, Object?>> _view = _load();
   Future<Map<String, Object?>> _load() async {
     final html = await widget.runtime.uiDocument(widget.toolName);
+    final resourceSession = widget.resourceSession;
     if (html == null) {
+      if (resourceSession != null) {
+        return widget.runtime.callTool(widget.toolName, {
+          'content': base64Encode(resourceSession.bytes),
+          'name': resourceSession.record.name,
+        });
+      }
       return widget.runtime.callWithFile(
         toolName: widget.toolName,
         filePath: widget.resource.uri.toFilePath(),
       );
     }
-    final file = File(widget.resource.uri.toFilePath());
-    if (await file.length() > 64 * 1024 * 1024) {
+    final bytes =
+        resourceSession?.bytes ??
+        await File(widget.resource.uri.toFilePath()).readAsBytes();
+    if (bytes.length > 64 * 1024 * 1024) {
       throw const FormatException('File exceeds 64 MiB');
     }
     for (final e
@@ -428,7 +561,7 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
       'html': buildMcpAppHostDocument(
         appHtml: html,
         arguments: {
-          'content': base64Encode(await file.readAsBytes()),
+          'content': base64Encode(bytes),
           'name': widget.resource.displayName,
         },
         platform: 'desktop',
@@ -451,6 +584,7 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
             ),
         ],
         agentAvailable: widget.agentBroker != null,
+        modelContextAvailable: widget.resourceSession != null,
       ),
     };
   }
@@ -474,7 +608,10 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
               'html': data['html']
             else
               'url': data['uri'],
-            'filePath': widget.resource.uri.toFilePath(),
+            if (widget.resourceSession == null)
+              'filePath': widget.resource.uri.toFilePath()
+            else
+              'versionedResource': true,
           },
           creationParamsCodec: const StandardMessageCodec(),
           onPlatformViewCreated: _created,

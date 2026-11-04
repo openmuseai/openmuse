@@ -294,6 +294,17 @@ Future<Widget> bootOpenMuseHost({
       );
   mcpApps.onDevelopmentClosed = resourceExtensions.removeDevelopment;
   Future<void> registerMcp(McpMarketEntry entry) async {
+    if (macAppStoreDistribution) {
+      final bundled =
+          jsonDecode(await bundledPptxIdentity.readAsString()) as Map;
+      if (entry.name != 'io.openmuse/genoffice-pptx' ||
+          entry.sha256 != bundled['sha256'] ||
+          entry.version != bundled['version']) {
+        throw UnsupportedError(
+          'Only the fixed bundled app is available in this distribution',
+        );
+      }
+    }
     final existing = registry.plugin(entry.name);
     if (existing?.descriptor.version == entry.version) return;
     if (entry.name == wordProductId) {
@@ -381,14 +392,16 @@ Future<Widget> bootOpenMuseHost({
       environment: Platform.environment,
     ).nodeExecutable;
     final runtime = McpBundleRuntime(
-      bundleDirectory: receiptMarket.directoryFor(entry),
+      bundleDirectory: macAppStoreDistribution
+          ? Directory(p.join(bundledPptxRoot.path, 'runtime'))
+          : receiptMarket.directoryFor(entry),
       nodeExecutable: node,
     );
     final plugin = await discoverMcpFilePlugin(
       entry: entry,
       runtime: runtime,
-      agentBroker: resourceAgents,
-      extensions: resourceExtensions,
+      agentBroker: macAppStoreDistribution ? null : resourceAgents,
+      extensions: macAppStoreDistribution ? null : resourceExtensions,
       contributors: () => [
         for (final descriptor in registry.descriptors)
           if (registry.plugin(descriptor.id)
@@ -400,6 +413,7 @@ Future<Widget> bootOpenMuseHost({
     if (plugin != null) {
       if (existing != null) await registry.uninstall(entry.name);
       registry.install(plugin);
+      await registry.activate(plugin.descriptor.id);
     }
   }
 
@@ -1176,6 +1190,7 @@ Future<Widget> bootOpenMuseHost({
     }
   }
   bootPhase('reading installed plugins');
+  McpMarketEntry? fixedBundledPptx;
   if (await bundledPptxBundle.exists() && await bundledPptxIdentity.exists()) {
     try {
       final identity =
@@ -1192,15 +1207,20 @@ Future<Widget> bootOpenMuseHost({
         ]),
         sha256: digest,
       );
-      await receiptMarket.install(
-        entry,
-        bundleBytes: await bundledPptxBundle.readAsBytes(),
-      );
+      fixedBundledPptx = entry;
+      if (!macAppStoreDistribution) {
+        await receiptMarket.install(
+          entry,
+          bundleBytes: await bundledPptxBundle.readAsBytes(),
+        );
+      }
     } catch (error) {
       debugPrint('Bundled PPTX registration failed: $error');
     }
   }
-  final installedMcpEntries = await receiptMarket.installedEntries();
+  final installedMcpEntries = macAppStoreDistribution
+      ? [?fixedBundledPptx]
+      : await receiptMarket.installedEntries();
   // The native Word editor must be available for a restored DOCX tab. Other
   // MCP servers are probed after the Host has painted its first frame: an
   // unresponsive installed plugin must never hold the entire window on the

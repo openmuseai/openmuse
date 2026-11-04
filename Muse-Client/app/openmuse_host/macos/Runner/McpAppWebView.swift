@@ -18,7 +18,8 @@ final class McpAppWebViewFactory: NSObject, FlutterPlatformViewFactory {
         return NSTextField(labelWithString: "MCP App exceeds budget")
       }
       let channel = FlutterMethodChannel(name: "com.openmuse.mcp/app-view/\(viewId)", binaryMessenger: messenger)
-      navigation = McpAppNavigation(origin: nil, filePath: values["filePath"] as? String, channel: channel)
+      navigation = McpAppNavigation(origin: nil, filePath: values["filePath"] as? String,
+                                   channel: channel, versionedResource: values["versionedResource"] as? Bool ?? false)
       configuration.userContentController.add(navigation, name: "mcpApp")
       configuration.userContentController.add(navigation, name: "mcpDiagnostics")
       configuration.userContentController.addUserScript(WKUserScript(source: """
@@ -66,7 +67,12 @@ private final class McpAppNavigation: NSObject, WKNavigationDelegate, WKScriptMe
   let filePath: String?
   weak var webView: WKWebView?
   let channel: FlutterMethodChannel?
-  init(origin: URL?, filePath: String?, channel: FlutterMethodChannel? = nil) { self.origin = origin; self.filePath = filePath; self.channel = channel }
+  let versionedResource: Bool
+  init(origin: URL?, filePath: String?, channel: FlutterMethodChannel? = nil,
+       versionedResource: Bool = false) {
+    self.origin = origin; self.filePath = filePath; self.channel = channel
+    self.versionedResource = versionedResource
+  }
 
   func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
     if message.name == "mcpDiagnostics" {
@@ -78,7 +84,7 @@ private final class McpAppNavigation: NSObject, WKNavigationDelegate, WKScriptMe
     guard message.frameInfo.isMainFrame,
           let request = message.body as? [String: Any],
           request["jsonrpc"] as? String == "2.0" else { return }
-    guard request["method"] as? String == "ui/download-file" else {
+    guard request["method"] as? String == "ui/download-file", !versionedResource else {
       channel?.invokeMethod("message", arguments: request)
       return
     }

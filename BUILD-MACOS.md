@@ -95,7 +95,7 @@ After preparing the native assets and Slides bundle:
 ```sh
 cd Muse-Client
 bash scripts/package_macos.sh --distribution app-store --profile release \
-  --components ppt --skip-tests --build-name 1.0.0 --build-number 11
+  --components ppt --skip-tests --build-name 1.0.0 --build-number 13
 ```
 
 The Store compile flag selects the fixed document workspace, sandbox bookmarks,

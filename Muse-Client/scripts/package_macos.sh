@@ -318,6 +318,9 @@ output.write_text(json.dumps({
     'sha256': hashlib.sha256(bundle.read_bytes()).hexdigest(),
 }, indent=2) + '\n')
 PY
+  if [[ "$distribution" == app-store ]]; then
+    python3 "$repo_root/scripts/release/stage-macos-fixed-mcp.py" --root "$pptx_dest"
+  fi
 fi
 
 # The CLI plugin ships a native launcher beside the GUI. It remains callable

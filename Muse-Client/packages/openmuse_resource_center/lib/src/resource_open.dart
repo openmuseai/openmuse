@@ -400,7 +400,9 @@ final class _ResourceEditorPageState extends State<_ResourceEditorPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  record.sourceLabel,
+                  session.allowEditing
+                      ? record.sourceLabel
+                      : '${record.sourceLabel} · ${s.readOnly}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

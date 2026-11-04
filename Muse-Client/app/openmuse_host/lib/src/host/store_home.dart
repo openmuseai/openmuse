@@ -103,7 +103,7 @@ class _OpenMuseStoreHomeState extends State<OpenMuseStoreHome> {
         TextButton.icon(
           onPressed: _mounting ? null : _addFolder,
           icon: const Icon(Icons.create_new_folder_outlined),
-          label: const Text('Open folder'),
+          label: const Text('Browse folder (read-only)'),
         ),
         IconButton(
           tooltip: 'Account',

@@ -26,6 +26,7 @@ String buildMcpAppHostDocument({
   String? locale,
   Map<String, Object?> presentation = const {},
   bool agentAvailable = false,
+  bool modelContextAvailable = false,
   bool resourceToolsAvailable = false,
   List<McpAppExtensionDocument> extensions = const [],
   bool serverAvailable = false,
@@ -33,6 +34,7 @@ String buildMcpAppHostDocument({
       'window.webkit.messageHandlers.mcpApp.postMessage(message)',
 }) {
   assert(appHtml != null || appUrl != null);
+  final contextAvailable = agentAvailable || modelContextAvailable;
   final extensionData = jsonEncode([
     for (final e in extensions)
       {
@@ -124,7 +126,7 @@ window.addEventListener('message',async event=>{
  if(!message||message.jsonrpc!=='2.0')return;
  if(message.method==='ui/initialize'){
    appCapabilities=message.params?.appCapabilities??{};
-   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{},...($serverAvailable?{serverTools:{},serverResources:{}}:{}),...($agentAvailable?{message:{text:{}},updateModelContext:{text:{}}}:{})},hostContext:{...currentContext,platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
+   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{},...($serverAvailable?{serverTools:{},serverResources:{}}:{}),...($agentAvailable?{message:{text:{}}}:{}),...($contextAvailable?{updateModelContext:{text:{}}}:{})},hostContext:{...currentContext,platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
  }else if(message.method==='ui/notifications/initialized'){
    if(initialized)return;initialized=true;
    send({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:await inputPromise}});
@@ -136,7 +138,7 @@ window.addEventListener('message',async event=>{
    $nativeSend;
  }else if($serverAvailable&&['tools/list','tools/call','resources/list','resources/read'].includes(message.method)){
    $nativeSend;
- }else if(($agentAvailable&&(message.method==='ui/update-model-context'||message.method==='ui/message'||message.id!==undefined&&!message.method))||($resourceToolsAvailable&&message.id!==undefined&&!message.method)){
+ }else if(($contextAvailable&&message.method==='ui/update-model-context')||($agentAvailable&&(message.method==='ui/message'||message.id!==undefined&&!message.method))||($resourceToolsAvailable&&message.id!==undefined&&!message.method)){
    $nativeSend;
  }else if(message.id!==undefined&&message.method){
    send({jsonrpc:'2.0',id:message.id,error:{code:-32601,message:'Host method unavailable'}});

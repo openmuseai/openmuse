@@ -416,8 +416,8 @@
     "bytes": 2746
   },
   "Muse-Client/app/openmuse_host/lib/main.dart": {
-    "sha256": "a255e3e74684d9abbd0e537dae657151ea9c2b16386a44da9cfaf41f065a5d46",
-    "bytes": 56484
+    "sha256": "37a0b6cf57f16387230ad6433461b7486b0d6d402d506cc2a57cf944797418f2",
+    "bytes": 57295
   },
   "Muse-Client/app/openmuse_host/lib/src/host/account_deletion.dart": {
     "sha256": "3cfef91081ed7d652191f3e69548e41fc72e360645eba19d954dd044c004747f",
@@ -492,8 +492,8 @@
     "bytes": 11431
   },
   "Muse-Client/app/openmuse_host/lib/src/host/mcp_file_plugin.dart": {
-    "sha256": "08c19da3b0af423b2d68b036be38e7d9949961e945bd3eaabd8a03df68f29f62",
-    "bytes": 16122
+    "sha256": "ca3210112cb75713666ed3cb6cd2ff5ec31c61bb8b3223edc06b0e8d0cdd6b06",
+    "bytes": 20890
   },
   "Muse-Client/app/openmuse_host/lib/src/host/mcp_installed_app.dart": {
     "sha256": "504644fc30d7713c088bcbc5ceb1116dd3aa0f337128fdec35a347886a5c5eb1",
@@ -576,8 +576,8 @@
     "bytes": 5380
   },
   "Muse-Client/app/openmuse_host/lib/src/host/store_home.dart": {
-    "sha256": "730a2923f7b72dc1b337dfda99ade2c589efd4369116b8bd29c40f51647a418a",
-    "bytes": 3761
+    "sha256": "c7091640f603c38de23e49981b13beb723984753ebe9bcfa1c4c7703171eb71f",
+    "bytes": 3775
   },
   "Muse-Client/app/openmuse_host/lib/src/host/window_chrome.dart": {
     "sha256": "209769271385a396a396d51ddea00e7ee730897a4e4350e68954da79e0b0a62a",
@@ -724,8 +724,8 @@
     "bytes": 5406
   },
   "Muse-Client/app/openmuse_host/macos/Runner/McpAppWebView.swift": {
-    "sha256": "0c01ca2aac3959561a9d436c0c2566f05abcbee5191f55d83ccdfda9b9c0816a",
-    "bytes": 7407
+    "sha256": "4e9ae318059b3bdbab6d5511f9702ceacc273b712c2634e70f9612996f288e62",
+    "bytes": 7651
   },
   "Muse-Client/app/openmuse_host/macos/Runner/PrivacyInfo.xcprivacy": {
     "sha256": "f1243aaad87c81cf265d3869cf330daacef8630a764ef59d2055a47119a1e112",
@@ -814,6 +814,10 @@
   "Muse-Client/app/openmuse_host/test/mcp_market_e2e_test.dart": {
     "sha256": "1f931adf99bf998e04599eab6108e9c91875fdc59952ac7d421bef91f449a761",
     "bytes": 2931
+  },
+  "Muse-Client/app/openmuse_host/test/mcp_resource_editor_test.dart": {
+    "sha256": "88d0fbb8f2e012423446874b223cc0028b3371f5c47147379048092f4b038b1b",
+    "bytes": 5716
   },
   "Muse-Client/app/openmuse_host/test/mcp_terminal_service_test.dart": {
     "sha256": "049dd0494715e83ad775512de3de1c6e69c7f940083841f5f7a41d63f1b46b4b",
@@ -4232,8 +4236,8 @@
     "bytes": 35208
   },
   "Muse-Client/packages/openmuse_plugin_sdk/lib/src/mcp_app_document.dart": {
-    "sha256": "b869aec7ec982ed077e994171928b7f8d1c0798d4833a5493a4c445b02bf550c",
-    "bytes": 7946
+    "sha256": "08070c1c11b8a13426510cbddc9ab207c4943dc82014f4368b007855dbdb86b2",
+    "bytes": 8101
   },
   "Muse-Client/packages/openmuse_plugin_sdk/lib/src/mobile_workbench.dart": {
     "sha256": "065c8ad2ad47370293f209e8c3f26c90c5111ffebee49e99093f5b2fe1800b1b",
@@ -4264,8 +4268,8 @@
     "bytes": 5673
   },
   "Muse-Client/packages/openmuse_plugin_sdk/test/mcp_app_document_test.dart": {
-    "sha256": "25440a2cdf0605171f0413e30296eefcd470a0e61b00b7ed041ddc2165a6d8ca",
-    "bytes": 2678
+    "sha256": "89e466f48e287731bdeff0e43d896e0e20a0bc2e386945a1488eb5cec7b99032",
+    "bytes": 4483
   },
   "Muse-Client/packages/openmuse_plugin_sdk/test/plugin_registry_test.dart": {
     "sha256": "3cb9aaf5dbb0a438503a34dabef0048eaa3ab34d959f7ef36b833368d80c06e1",
@@ -4304,8 +4308,8 @@
     "bytes": 7122
   },
   "Muse-Client/packages/openmuse_resource_center/lib/src/resource_open.dart": {
-    "sha256": "1edc4154440a750d9cd25d153a0097c28aed500c0d8dcadba7091a36780bc571",
-    "bytes": 15706
+    "sha256": "bfcc4ea4b0521b104804d3b2160009f73aea317c869b88db43669f4384bed13e",
+    "bytes": 15816
   },
   "Muse-Client/packages/openmuse_resource_center/lib/src/resource_view.dart": {
     "sha256": "7a8908f440d48a8e0b9d8be7e9a5f068a3a7db268cc87d47d6af0913b3ac612a",
@@ -10332,8 +10336,8 @@
     "bytes": 24662
   },
   "Muse-Client/scripts/package_macos.sh": {
-    "sha256": "5315f601dc91ca4fe65bf3386cb35182faa9a484954259044acbe1e47933666f",
-    "bytes": 20330
+    "sha256": "2fcc97e2034c9577fd0eac73478cf573b63f0ba3cc824ea28314216e06da6b2e",
+    "bytes": 20467
   },
   "Muse-Client/scripts/package_windows.ps1": {
     "sha256": "222acce213bf88705d1705a82fdcad0abd0e4377bca6303d341acce12e440c13",
@@ -10410,6 +10414,10 @@
   "Muse-Client/scripts/release/sign-public-config.mjs": {
     "sha256": "1019b5f3be1646ad737041ef2ef42b89d2ee6dbfd7740c1338cf2a8bc4e23eca",
     "bytes": 1786
+  },
+  "Muse-Client/scripts/release/stage-macos-fixed-mcp.py": {
+    "sha256": "4cab7fe127d93cc1255870ad770a0e6b2c7685c1d8618fa1896d68e21be377a3",
+    "bytes": 1835
   },
   "Muse-Client/scripts/release/stage-macos-store-menu.py": {
     "sha256": "3daa1c9bb7e75db01f106c06df510c59600768678dbc07bb29485a78a74a70bb",
