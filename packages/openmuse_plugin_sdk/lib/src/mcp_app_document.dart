@@ -23,6 +23,8 @@ String buildMcpAppHostDocument({
   required Map<String, Object?> arguments,
   required String platform,
   String theme = 'light',
+  String? locale,
+  Map<String, Object?> presentation = const {},
   bool agentAvailable = false,
   bool resourceToolsAvailable = false,
   List<McpAppExtensionDocument> extensions = const [],
@@ -48,7 +50,11 @@ String buildMcpAppHostDocument({
   final inputUrl = jsonEncode(argumentsUrl);
   final input = jsonEncode(arguments).replaceAll('<', r'\u003c');
   final hostPlatform = jsonEncode(platform);
-  final hostTheme = jsonEncode(theme);
+  final hostContext = jsonEncode({
+    'theme': theme,
+    ...presentation,
+    if (locale != null) 'locale': locale,
+  }).replaceAll('<', r'\u003c');
   return '''<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>html,body,iframe{width:100%;height:100%;margin:0;border:0;overflow:hidden}iframe{display:block}</style>
@@ -57,6 +63,7 @@ String buildMcpAppHostDocument({
 const frame=document.getElementById('view');
 const inputPromise=$inputUrl===null?Promise.resolve($input):fetch($inputUrl).then(response=>{if(!response.ok)throw Error('Host input unavailable');return response.json()});
 let initialized=false;
+let currentContext=$hostContext;
 let appCapabilities={};
 const send=message=>frame.contentWindow.postMessage(message,'*');
 const extensionFrames=new Map();
@@ -66,6 +73,14 @@ function mountExtensions(specs){
  for(const spec of specs)mountExtension(spec);
 }
 window.__mcpHostReceive=message=>{
+ if(message._hostContext){
+  currentContext={...currentContext,...message._hostContext};
+  const notification={jsonrpc:'2.0',method:'ui/notifications/host-context-changed',params:currentContext};
+  if(initialized)send(notification);
+  for(const entry of extensionFrames.values())if(entry.initialized)entry.frame.contentWindow.postMessage(notification,'*');
+  return;
+ }
+
  if(message._hostExtensionDocuments){mountExtensions(message._hostExtensionDocuments);return;}
  if(message._hostResourceActive!==undefined){
    for(const entry of extensionFrames.values()){
@@ -89,7 +104,7 @@ function mountExtension(spec){
   const raw=event.data;if(!raw||raw.jsonrpc!=='2.0')return;
   const reply=value=>extension.contentWindow.postMessage(value,'*');
   if(raw.method==='ui/initialize'){
-   reply({jsonrpc:'2.0',id:raw.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{serverTools:{}},hostContext:{theme:$hostTheme,locale:'zh-CN',platform:$hostPlatform,displayMode:'inline'}}});
+   reply({jsonrpc:'2.0',id:raw.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{serverTools:{}},hostContext:{...currentContext,platform:$hostPlatform,displayMode:'inline'}}});
   }else if(raw.method==='ui/notifications/initialized'){
    if(entry.initialized)return;entry.initialized=true;
    reply({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:entry.args}});
@@ -109,12 +124,12 @@ window.addEventListener('message',async event=>{
  if(!message||message.jsonrpc!=='2.0')return;
  if(message.method==='ui/initialize'){
    appCapabilities=message.params?.appCapabilities??{};
-   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{},...($serverAvailable?{serverTools:{},serverResources:{}}:{}),...($agentAvailable?{message:{text:{}},updateModelContext:{text:{}}}:{})},hostContext:{theme:$hostTheme,locale:'zh-CN',platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
+   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{},...($serverAvailable?{serverTools:{},serverResources:{}}:{}),...($agentAvailable?{message:{text:{}},updateModelContext:{text:{}}}:{})},hostContext:{...currentContext,platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
  }else if(message.method==='ui/notifications/initialized'){
    if(initialized)return;initialized=true;
    send({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:await inputPromise}});
    send({jsonrpc:'2.0',method:'ui/notifications/tool-result',params:{content:[]}});
-   if($agentAvailable||$resourceToolsAvailable){$nativeSend;}
+   $nativeSend;
  }else if(message.method==='ping'){
    send({jsonrpc:'2.0',id:message.id,result:{}});
  }else if(message.method==='ui/download-file'){

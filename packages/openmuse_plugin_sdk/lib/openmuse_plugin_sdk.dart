@@ -5,6 +5,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'src/authentication.dart';
+import 'src/localization.dart';
+import 'src/resource_capabilities.dart';
+export 'src/localization.dart';
 
 export 'src/manifest_v2.dart';
 export 'src/mcp_app_document.dart';
@@ -12,6 +15,7 @@ export 'src/resource_agent_broker.dart';
 export 'src/resource_extension_session.dart';
 export 'src/authentication.dart';
 export 'src/mobile_workbench.dart';
+export 'src/resource_capabilities.dart';
 
 enum OpenMusePluginRuntime { builtIn, nativeProcess, webView, quickJs }
 
@@ -43,11 +47,13 @@ final class OpenMuseResource {
     required this.uri,
     required this.displayName,
     this.mediaType,
+    this.reference,
   });
 
   final Uri uri;
   final String displayName;
   final String? mediaType;
+  final ResourceReference? reference;
 
   String get extension {
     final segment = uri.pathSegments.isEmpty ? '' : uri.pathSegments.last;
@@ -158,6 +164,8 @@ final class OpenMusePluginContext {
   const OpenMusePluginContext({
     required this.executeHostCommand,
     this.hostChanges,
+    this.localizations,
+    this.configuration,
   });
 
   final Future<Object?> Function(String command, Object? arguments)
@@ -165,6 +173,8 @@ final class OpenMusePluginContext {
 
   /// Invalidates read-only Host snapshots; plugins re-query through commands.
   final Listenable? hostChanges;
+  final OpenMusePluginLocalizations? localizations;
+  final OpenMusePluginConfiguration? configuration;
 }
 
 /// Host chrome that a panel can place on its own toolbar instead of a

@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' show Brightness;
+import 'package:flutter/widgets.dart';
 
 /// Size is a preference. The Mobile Host owns the final grid constraints.
 enum OpenMuseWidgetHeight { small, medium, large }
@@ -37,4 +37,11 @@ abstract interface class OpenMuseMobileWorkbenchContributor {
 
   /// Explicit plugin-owned domain actions invoked by its WebView document.
   Future<Object?> handleMobileDetailRequest(String method, Object? arguments);
+}
+
+/// Optional detail surface supplied by a plugin compiled into the distribution.
+/// Native engine lifecycle, data formats and any private bridges stay inside
+/// the plugin. Downloaded HTML contributions retain their existing sandbox.
+abstract interface class OpenMuseMobileNativeDetailContributor {
+  Widget buildMobileDetail(BuildContext context);
 }
