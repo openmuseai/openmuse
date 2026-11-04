@@ -1,0 +1,15 @@
+// Rust stub for ParaEnv (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/ParaEnv.java
+use crate::*;
+
+pub struct ParaEnv {
+    // TODO: fields
+}
+
+impl ParaEnv {
+    pub fn new() -> Self { todo!() }
+    pub fn saveBrcAndShdAjustInfo(&self, pools: Pools) { todo!() }
+    pub fn clearBrcAndShdAdjustInfo(&self, pools: Pools) { todo!() }
+    pub fn init(&self, pools: Pools) { todo!() }
+    pub fn dispose(&self) { todo!() }
+}

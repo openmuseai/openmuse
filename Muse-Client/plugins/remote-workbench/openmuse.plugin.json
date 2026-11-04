@@ -1,0 +1,25 @@
+{
+  "id": "com.openmuse.remote-workbench",
+  "name": "OpenMuse Remote Workbench",
+  "version": "0.1.0",
+  "protocol": { "major": 1, "minor": 0 },
+  "runtime": "built-in",
+  "activation_events": ["onStartup"],
+  "permissions": [
+    "remote-surface.discover",
+    "remote-surface.render"
+  ],
+  "contributes": {
+    "commands": [],
+    "services": [
+      {
+        "id": "openmuse.remote-workbench",
+        "version": 1,
+        "priority": 100,
+        "required_permissions": []
+      }
+    ],
+    "editors": [],
+    "panels": []
+  }
+}

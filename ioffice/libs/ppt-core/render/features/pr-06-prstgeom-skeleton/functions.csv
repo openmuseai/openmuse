@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_prst_bind,prstGeom 落盘,prstGeom XML,geom_obj.prst,pp-10,02,libs/ppt-core,pass
+2,02_function_prst_path,prst+框→Path,prst+abs rect,DrawPath/DrawRect,01;pl-08;pr-02,03;pr-07,libs/ppt-core,pass
+3,03_function_skip_text_wireframe,文本框不发射空AABB,无fill文本,0条DrawRect,pr-03;02,pr-07,libs/ppt-core,pass

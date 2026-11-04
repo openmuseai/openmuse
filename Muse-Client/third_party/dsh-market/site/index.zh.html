@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dsh-market — 装在 DeepSeek Harness 里的插件市场</title>
+<meta name="description" content="__COUNT__ 个社区插件，逛一逛，点一下，装好。多数插件免重启即刻生效。更新、卸载、实时进度，零遥测。">
+<link rel="sitemap" type="application/xml" href="https://dshmarket.com/sitemap.xml">
+    <link rel="canonical" href="https://dshmarket.com/zh/">
+<link rel="alternate" hreflang="en" href="https://dshmarket.com/">
+<link rel="alternate" hreflang="zh" href="https://dshmarket.com/zh/">
+<link rel="alternate" hreflang="x-default" href="https://dshmarket.com/">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<meta property="og:title" content="dsh-market — 装在 DeepSeek Harness 里的插件市场">
+<meta property="og:description" content="逛一逛，点一下，装好。多数插件免重启即刻生效。">
+<meta property="og:image" content="https://dshmarket.com/assets/demo-zh.png">
+<meta property="og:url" content="https://dshmarket.com/zh/">
+<style>
+:root{--accent:#c0392b;--accent-soft:#f7e5e2;--ink:#101722;--ink2:#5b6472;--ink3:#9aa3b2;--line:#e7eaf0;--bg:#fafbfd;--card:#fff}
+*{margin:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","SF Pro Text","Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
+.wrap{max-width:64rem;margin:0 auto;padding:0 1.5rem}
+header{display:flex;align-items:center;gap:.8rem;padding:1.4rem 0}
+header img{height:34px}
+header .grow{flex:1}
+header a{color:var(--ink2);text-decoration:none;font-size:.9rem;margin-left:1.2rem}
+header a:hover{color:var(--accent)}
+.hero{text-align:center;padding:2.2rem 0 1.4rem}
+.hero h1{font-size:clamp(1.9rem,5vw,3rem);font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{font-size:1.1rem;color:var(--ink2);margin:1rem auto 0;max-width:34rem}
+/* 插件数量先输出构建时的值，再由本文件末尾的 fetch 替换成线上值。等宽数字让两者
+   宽度一致，这次替换就不会挪动它所在的句子。 */
+#count{font-variant-numeric:tabular-nums}
+.install{display:inline-flex;align-items:center;gap:.8rem;margin-top:2rem;background:var(--ink);color:#e8ecf4;border-radius:12px;padding:.9rem 1.2rem;font-family:ui-monospace,Menlo,monospace;font-size:.95rem}
+/* 为按钮可能显示的最长文案预留宽度。点击后文案变成「已复制!」，1.5 秒后变回——
+   这个变回发生在点击 500ms 之后，超出了 CLS 对交互的豁免窗口，按钮不预留宽度
+   就会撑动整个 install 盒子，被计为意外布局偏移。它是本页最大的 CLS 来源。 */
+.install button{border:none;background:var(--accent);color:#fff;border-radius:8px;padding:.4rem .9rem;font-size:.8rem;cursor:pointer;font-weight:600;min-width:5.5rem}
+.install button:hover{filter:brightness(1.1)}
+.sub{margin-top:.8rem;font-size:.85rem;color:var(--ink3)}
+.about{margin-top:3.5rem;border-top:1px solid var(--line);padding-top:2.5rem}
+.about h2{font-size:1.15rem;text-align:center}
+.demo{margin:1.4rem auto 0;max-width:52rem;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(16,23,34,.12)}
+.demo img{display:block;width:100%}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:2rem 0 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.3rem 1.4rem}
+.card .ic{font-size:1.4rem}
+.card h3{font-size:1rem;margin:.6rem 0 .3rem}
+.card p{font-size:.88rem;color:var(--ink2)}
+footer{border-top:1px solid var(--line);margin-top:2rem;padding:2rem 0 3rem;font-size:.85rem;color:var(--ink3);display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between}
+footer a{color:var(--ink2);text-decoration:none}
+footer a:hover{color:var(--accent)}
+@media(max-width:640px){.install{flex-direction:column;font-size:.8rem}}
+</style>
+__HOME_CSS__
+__AD_HEAD__
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "6fdc1fdb390e417599a363e3109357b2"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+<div class="wrap">
+<header>
+  <img src="../assets/wordmark.svg" alt="dsh-market">
+  <span class="grow"></span>
+  <a href="__BROWSE__">浏览 __COUNT__ 个插件</a>
+  <a href="https://github.com/dsh-market/dsh-market">GitHub</a>
+  <a href="https://www.npmjs.com/package/dshmarket">npm</a>
+  <a href="../">English</a>
+</header>
+
+<section class="hero">
+  <h1>装在 DeepSeek Harness <em>里面</em>的插件市场</h1>
+  <p><b><span id="count">__COUNT__</span> 个社区插件</b>，逛一逛，点一下，装好——多数插件连重启都不用。更新、卸载、实时安装进度，零遥测。</p>
+  <div class="install"><code>dsh plugin --profile web add dshmarket</code><button onclick="navigator.clipboard.writeText('dsh plugin --profile web add dshmarket');this.textContent='已复制!';setTimeout(()=>this.textContent='复制',1500)">复制</button></div>
+  <div class="sub">然后重启 <code>dsh web</code> → 设置 → <b>插件市场</b>，就这么多。</div>
+</section>
+
+__HOME_CATALOG__
+
+<section class="about">
+  <h2>dsh-market 是什么</h2>
+  <div class="demo"><img src="../assets/demo-zh.png" alt="dsh-market 截图" loading="lazy"></div>
+  <div class="grid">
+  <div class="card"><div class="ic">🛒</div><h3>一站逛全</h3><p>awesome-dsh-plugin 精选目录全量收录——分类、star 数、最热/最新排序、中英双语描述。</p></div>
+  <div class="card"><div class="ic">⚡</div><h3>装得快</h3><p>发过 npm 的插件优先走 npm 包而非整仓 GitHub 下载,通常秒级装好。</p></div>
+  <div class="card"><div class="ic">✨</div><h3>基本免重启</h3><p>多数插件刷新页面即刻生效;更新、卸载同样一键,市场连自己都能这样升级。</p></div>
+  <div class="card"><div class="ic">🧩</div><h3>零术语</h3><p>缺组件?市场自己发现、一键装好。你全程见不到终端。</p></div>
+  <div class="card"><div class="ic">🔒</div><h3>有护栏</h3><p>只允许安装精选列表内的来源,构建脚本默认禁止执行,终端类插件装错位置前会被提醒。</p></div>
+  <div class="card"><div class="ic">🕊️</div><h3>默认隐私</h3><p>市场不向任何地方上报数据;连反馈用的日志导出都已脱敏,且只存在你机器上。</p></div>
+  </div>
+</section>
+
+<footer>
+  <span>MIT · <a href="https://github.com/dsh-market/dsh-market">dsh-market/dsh-market</a></span>
+  <span>数据来源:<a href="https://awesome-dsh-plugin.com">awesome-dsh-plugin</a> · CI 每日刷新</span>
+  <span><a href="/zh/privacy/">隐私说明</a></span>
+</footer>
+</div>
+<script>
+fetch('https://awesome-dsh-plugin.com/plugins.json').then(r=>r.json()).then(d=>{if(d.count)document.getElementById('count').textContent=d.count}).catch(()=>{})
+</script>
+</body>
+</html>

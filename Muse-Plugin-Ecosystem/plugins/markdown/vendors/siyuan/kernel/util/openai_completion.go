@@ -1,0 +1,842 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package util
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
+
+	"github.com/sashabaranov/go-openai"
+)
+
+const (
+	OpenAIProtocolChatCompletions = "openai"
+	OpenAIProtocolResponses       = "openai-responses"
+)
+
+type openAIResponsesContextKey struct{}
+
+type openAIResponsesRequestOptions struct {
+	storeFalse                bool
+	includeEncryptedReasoning bool
+	reasoningSummary          string
+	nativeCompaction          bool
+}
+
+// ContextWithOpenAIResponsesBaseURL 根据端点附加 Responses 请求兼容选项。
+func ContextWithOpenAIResponsesBaseURL(ctx context.Context, baseURL string) context.Context {
+	return context.WithValue(ctx, openAIResponsesContextKey{}, openAIResponsesRequestOptionsForBaseURL(baseURL))
+}
+
+// SupportsOpenAIResponsesCompaction 判断当前端点是否支持原生 Responses 上下文压缩。
+func SupportsOpenAIResponsesCompaction(ctx context.Context) bool {
+	return openAIResponsesRequestOptionsFromContext(ctx).nativeCompaction
+}
+
+func openAIResponsesRequestOptionsFromContext(ctx context.Context) openAIResponsesRequestOptions {
+	options, _ := ctx.Value(openAIResponsesContextKey{}).(openAIResponsesRequestOptions)
+	return options
+}
+
+func openAIResponsesRequestOptionsForBaseURL(baseURL string) openAIResponsesRequestOptions {
+	parsed, err := url.Parse(strings.TrimSpace(baseURL))
+	if err != nil {
+		return openAIResponsesRequestOptions{}
+	}
+	host := strings.ToLower(parsed.Hostname())
+	switch host {
+	case "api.openai.com":
+		return openAIResponsesRequestOptions{
+			storeFalse:                true,
+			includeEncryptedReasoning: true,
+			reasoningSummary:          "auto",
+			nativeCompaction:          true,
+		}
+	case "openrouter.ai":
+		return openAIResponsesRequestOptions{
+			storeFalse:                true,
+			includeEncryptedReasoning: true,
+			reasoningSummary:          "auto",
+		}
+	case "dashscope.aliyuncs.com", "dashscope-intl.aliyuncs.com", "ark.cn-beijing.volces.com":
+		return openAIResponsesRequestOptions{storeFalse: true}
+	default:
+		return openAIResponsesRequestOptions{}
+	}
+}
+
+func IsOpenAIResponsesProtocol(protocol string) bool {
+	return strings.EqualFold(strings.TrimSpace(protocol), OpenAIProtocolResponses)
+}
+
+// OpenAICompletionStream 将各生成协议的流式输出统一为 Chat 增量，
+// 让现有上层渲染、重试和工具执行逻辑保持一致。
+type OpenAICompletionStream struct {
+	gemini            *geminiInteractionsStream
+	anthropic         *anthropicStream
+	chat              *openai.ChatCompletionStream
+	responses         *openai.ResponseStream
+	pending           []openai.ChatCompletionStreamResponse
+	responseOutput    []json.RawMessage
+	completedOutput   map[int]json.RawMessage
+	responseContent   strings.Builder
+	responseToolCalls map[int]openai.ToolCall
+	responsesDone     bool
+	chatGPT           bool
+}
+
+func CreateOpenAICompletionStream(ctx context.Context, client *AIClient, protocol string,
+	request openai.ChatCompletionRequest, responseInput []any) (*OpenAICompletionStream, error) {
+	if IsGeminiInteractionsProtocol(protocol) {
+		return createGeminiInteractionsStream(ctx, client, request)
+	}
+	if IsAnthropicMessagesProtocol(protocol) {
+		return createAnthropicStream(ctx, client, request)
+	}
+	if !IsOpenAIResponsesProtocol(protocol) {
+		stream, err := client.CreateChatCompletionStream(ctx, request)
+		if err != nil {
+			return nil, err
+		}
+		return &OpenAICompletionStream{chat: stream}, nil
+	}
+
+	responseRequest := responseRequestFromChat(ctx, request, responseInput)
+	var stream *openai.ResponseStream
+	for {
+		var err error
+		stream, err = client.CreateResponseStream(ctx, responseRequest)
+		if omitUnsupportedResponseSamplingParameter(&responseRequest, err) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		break
+	}
+	return &OpenAICompletionStream{
+		chatGPT:           client.ChatGPT,
+		responses:         stream,
+		responseToolCalls: map[int]openai.ToolCall{},
+		completedOutput:   map[int]json.RawMessage{},
+	}, nil
+}
+
+func CreateOpenAICompletion(ctx context.Context, client *AIClient, protocol string,
+	request openai.ChatCompletionRequest, responseInput []any) (openai.ChatCompletionResponse, error) {
+	if IsGeminiInteractionsProtocol(protocol) {
+		return createGeminiInteractionCompletion(ctx, client, request)
+	}
+	if client.ChatGPT {
+		stream, err := CreateOpenAICompletionStream(ctx, client, protocol, request, responseInput)
+		if err != nil {
+			return openai.ChatCompletionResponse{}, err
+		}
+		defer stream.Close()
+		var completed openai.ChatCompletionResponse
+		var text strings.Builder
+		for {
+			chunk, recvErr := stream.Recv()
+			if errors.Is(recvErr, io.EOF) {
+				break
+			}
+			if recvErr != nil {
+				return completed, recvErr
+			}
+			completed.ID, completed.Model = chunk.ID, chunk.Model
+			if chunk.Usage != nil {
+				completed.Usage = *chunk.Usage
+			}
+			for _, choice := range chunk.Choices {
+				text.WriteString(choice.Delta.Content)
+			}
+		}
+		completed.Choices = []openai.ChatCompletionChoice{{Message: openai.ChatCompletionMessage{Role: "assistant", Content: text.String()}, FinishReason: openai.FinishReasonStop}}
+		return completed, nil
+	}
+	if IsAnthropicMessagesProtocol(protocol) {
+		return createAnthropicCompletion(ctx, client, request)
+	}
+	if !IsOpenAIResponsesProtocol(protocol) {
+		return client.CreateChatCompletion(ctx, request)
+	}
+	responseRequest := responseRequestFromChat(ctx, request, responseInput)
+	var response openai.CreateResponseResponse
+	for {
+		var err error
+		response, err = client.CreateResponse(ctx, responseRequest)
+		if omitUnsupportedResponseSamplingParameter(&responseRequest, err) {
+			continue
+		}
+		if err != nil {
+			return openai.ChatCompletionResponse{}, err
+		}
+		break
+	}
+	if err := responseResultError(response); err != nil {
+		return openai.ChatCompletionResponse{}, err
+	}
+	return responseToChatCompletion(response), nil
+}
+
+// 仅对请求建立前明确拒绝的可选采样参数降级，保留推理强度及其他请求语义。
+// 每个字段最多移除一次；其他错误和已建立的响应流不重试。
+func omitUnsupportedResponseSamplingParameter(request *openai.CreateResponseRequest, err error) bool {
+	var apiErr *openai.APIError
+	if !errors.As(err, &apiErr) || apiErr.HTTPStatusCode != http.StatusBadRequest ||
+		apiErr.Code != "unsupported_parameter" || apiErr.Param == nil {
+		return false
+	}
+	switch *apiErr.Param {
+	case "temperature":
+		if request.Temperature != nil {
+			request.Temperature = nil
+			return true
+		}
+	case "top_p":
+		if request.TopP != nil {
+			request.TopP = nil
+			return true
+		}
+	}
+	return false
+}
+
+func CompactOpenAIResponse(ctx context.Context, client *AIClient, request openai.ChatCompletionRequest,
+	responseInput []any) ([]json.RawMessage, *openai.ResponseUsage, error) {
+	responseRequest := openai.CompactResponseRequest{
+		Model:        request.Model,
+		Input:        responseInput,
+		Instructions: firstSystemMessage(request.Messages),
+	}
+	compaction, err := client.CompactResponse(ctx, responseRequest)
+	if err != nil {
+		return nil, nil, err
+	}
+	output, err := MarshalOpenAIResponseOutput(compaction.Output)
+	if err != nil {
+		return nil, compaction.Usage, err
+	}
+	if len(output) == 0 {
+		return nil, compaction.Usage, errors.New("response compaction returned no output")
+	}
+	return output, compaction.Usage, nil
+}
+
+func MarshalOpenAIResponseOutput(output []any) ([]json.RawMessage, error) {
+	if len(output) == 0 {
+		return nil, nil
+	}
+	ret := make([]json.RawMessage, 0, len(output))
+	for _, item := range output {
+		data, err := json.Marshal(item)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, json.RawMessage(data))
+	}
+	return ret, nil
+}
+
+func CloneOpenAIResponseOutput(output []json.RawMessage) []json.RawMessage {
+	if len(output) == 0 {
+		return nil
+	}
+	ret := make([]json.RawMessage, len(output))
+	for i, item := range output {
+		ret[i] = append(json.RawMessage(nil), item...)
+	}
+	return ret
+}
+
+func ChatMessagesToOpenAIResponseInput(messages []openai.ChatCompletionMessage) []any {
+	input := make([]any, 0, len(messages))
+	systemSkipped := false
+	for _, message := range messages {
+		if message.Role == openai.ChatMessageRoleSystem && !systemSkipped {
+			systemSkipped = true
+			continue
+		}
+		input = appendChatMessageToResponseInput(input, message)
+	}
+	return input
+}
+
+func appendChatMessageToResponseInput(input []any, message openai.ChatCompletionMessage) []any {
+	switch message.Role {
+	case openai.ChatMessageRoleTool:
+		return append(input, openai.ResponseFunctionCallOutput{
+			Type:   "function_call_output",
+			CallID: message.ToolCallID,
+			Output: message.Content,
+		})
+	case openai.ChatMessageRoleAssistant:
+		if message.Content != "" {
+			input = append(input, openai.ResponseInputMessage{
+				Type:    "message",
+				Role:    openai.ChatMessageRoleAssistant,
+				Content: message.Content,
+			})
+		}
+		for _, toolCall := range message.ToolCalls {
+			input = append(input, map[string]any{
+				"type":      "function_call",
+				"call_id":   toolCall.ID,
+				"name":      toolCall.Function.Name,
+				"arguments": toolCall.Function.Arguments,
+			})
+		}
+		return input
+	}
+
+	content := any(message.Content)
+	if len(message.MultiContent) > 0 {
+		parts := make([]any, 0, len(message.MultiContent))
+		for _, part := range message.MultiContent {
+			switch part.Type {
+			case openai.ChatMessagePartTypeText:
+				parts = append(parts, openai.ResponseInputText{Type: "input_text", Text: part.Text})
+			case openai.ChatMessagePartTypeImageURL:
+				if part.ImageURL != nil {
+					parts = append(parts, openai.ResponseInputImage{
+						Type:     "input_image",
+						ImageURL: part.ImageURL.URL,
+						Detail:   string(part.ImageURL.Detail),
+					})
+				}
+			}
+		}
+		content = parts
+	}
+	return append(input, openai.ResponseInputMessage{
+		Type:    "message",
+		Role:    message.Role,
+		Content: content,
+	})
+}
+
+func responseRequestFromChat(ctx context.Context, request openai.ChatCompletionRequest,
+	responseInput []any) openai.CreateResponseRequest {
+	if responseInput == nil {
+		responseInput = ChatMessagesToOpenAIResponseInput(request.Messages)
+	}
+	options := openAIResponsesRequestOptionsFromContext(ctx)
+	responseRequest := openai.CreateResponseRequest{
+		Model:             request.Model,
+		Input:             responseInput,
+		Instructions:      firstSystemMessage(request.Messages),
+		MaxOutputTokens:   max(request.MaxCompletionTokens, request.MaxTokens),
+		Tools:             responseTools(request.Tools),
+		ToolChoice:        responseToolChoice(request.ToolChoice),
+		ParallelToolCalls: boolPointer(request.ParallelToolCalls),
+		User:              request.User,
+	}
+	if options.storeFalse {
+		store := false
+		responseRequest.Store = &store
+	}
+	if options.includeEncryptedReasoning {
+		responseRequest.Include = []openai.ResponseInclude{openai.ResponseIncludeReasoningEncryptedContent}
+	}
+	temperature := request.Temperature
+	responseRequest.Temperature = &temperature
+	if request.TopP != 0 {
+		topP := request.TopP
+		responseRequest.TopP = &topP
+	}
+	if request.ReasoningEffort != "" {
+		responseRequest.Reasoning = &openai.ResponseReasoning{
+			Effort:  request.ReasoningEffort,
+			Summary: options.reasoningSummary,
+		}
+	}
+	if request.ResponseFormat != nil {
+		responseRequest.Text = responseTextConfig(request.ResponseFormat)
+	}
+	return responseRequest
+}
+
+func firstSystemMessage(messages []openai.ChatCompletionMessage) string {
+	for _, message := range messages {
+		if message.Role == openai.ChatMessageRoleSystem {
+			return message.Content
+		}
+	}
+	return ""
+}
+
+func responseTools(tools []openai.Tool) []openai.ResponseTool {
+	if len(tools) == 0 {
+		return nil
+	}
+	ret := make([]openai.ResponseTool, 0, len(tools))
+	for _, tool := range tools {
+		if tool.Type == openai.ToolTypeFunction && tool.Function != nil {
+			ret = append(ret, openai.NewResponseFunctionTool(*tool.Function))
+			continue
+		}
+		ret = append(ret, openai.ResponseTool{Type: tool.Type, Parameters: tool.Parameters})
+	}
+	return ret
+}
+
+func responseToolChoice(choice any) any {
+	toolChoice, ok := choice.(openai.ToolChoice)
+	if !ok || toolChoice.Type != openai.ToolTypeFunction {
+		return choice
+	}
+	return map[string]any{"type": "function", "name": toolChoice.Function.Name}
+}
+
+func boolPointer(value any) *bool {
+	switch typed := value.(type) {
+	case bool:
+		return &typed
+	case *bool:
+		return typed
+	default:
+		return nil
+	}
+}
+
+func responseTextConfig(format *openai.ChatCompletionResponseFormat) *openai.ResponseTextConfig {
+	if format == nil {
+		return nil
+	}
+	responseFormat := &openai.ResponseTextFormat{Type: string(format.Type)}
+	if format.JSONSchema != nil {
+		responseFormat.Name = format.JSONSchema.Name
+		responseFormat.Description = format.JSONSchema.Description
+		responseFormat.Schema = format.JSONSchema.Schema
+		responseFormat.Strict = format.JSONSchema.Strict
+	}
+	return &openai.ResponseTextConfig{Format: responseFormat}
+}
+
+func responseToChatCompletion(response openai.CreateResponseResponse) openai.ChatCompletionResponse {
+	refusal := responseRefusalText(response)
+	message := openai.ChatCompletionMessage{
+		Role:    openai.ChatMessageRoleAssistant,
+		Content: responseDisplayText(response),
+		Refusal: refusal,
+	}
+	for index, raw := range response.Output {
+		item, ok := responseOutputItem(raw)
+		if !ok {
+			continue
+		}
+		switch item.Type {
+		case "function_call":
+			idx := index
+			message.ToolCalls = append(message.ToolCalls, openai.ToolCall{
+				Index: &idx,
+				ID:    item.CallID,
+				Type:  openai.ToolTypeFunction,
+				Function: openai.FunctionCall{
+					Name:      item.Name,
+					Arguments: item.Arguments,
+				},
+			})
+		case "reasoning":
+			for _, summary := range item.Summary {
+				message.ReasoningContent += summary.Text
+			}
+		}
+	}
+	finishReason := responseFinishReason(response)
+	if len(message.ToolCalls) > 0 && finishReason == openai.FinishReasonStop {
+		finishReason = openai.FinishReasonToolCalls
+	}
+	return openai.ChatCompletionResponse{
+		ID:      response.ID,
+		Object:  "chat.completion",
+		Created: response.Created,
+		Model:   response.Model,
+		Choices: []openai.ChatCompletionChoice{{
+			Index:        0,
+			Message:      message,
+			FinishReason: finishReason,
+		}},
+		Usage: responseUsageToChat(response.Usage),
+	}
+}
+
+func responseOutputItem(raw any) (openai.ResponseOutputItem, bool) {
+	data, err := json.Marshal(raw)
+	if err != nil {
+		return openai.ResponseOutputItem{}, false
+	}
+	var item openai.ResponseOutputItem
+	if err = json.Unmarshal(data, &item); err != nil {
+		return openai.ResponseOutputItem{}, false
+	}
+	return item, true
+}
+
+func responseFinishReason(response openai.CreateResponseResponse) openai.FinishReason {
+	if response.Status == openai.ResponseStatusIncomplete && response.IncompleteDetails != nil {
+		switch response.IncompleteDetails.Reason {
+		case "max_output_tokens":
+			return openai.FinishReasonLength
+		case "content_filter":
+			return openai.FinishReasonContentFilter
+		}
+	}
+	return openai.FinishReasonStop
+}
+
+func responseUsageToChat(usage *openai.ResponseUsage) openai.Usage {
+	if usage == nil {
+		return openai.Usage{}
+	}
+	ret := openai.Usage{
+		PromptTokens:     usage.InputTokens,
+		CompletionTokens: usage.OutputTokens,
+		TotalTokens:      usage.TotalTokens,
+	}
+	if usage.InputTokensDetails != nil {
+		ret.PromptTokensDetails = &openai.PromptTokensDetails{CachedTokens: usage.InputTokensDetails.CachedTokens}
+	}
+	if usage.OutputTokensDetails != nil {
+		ret.CompletionTokensDetails = &openai.CompletionTokensDetails{
+			ReasoningTokens: usage.OutputTokensDetails.ReasoningTokens,
+		}
+	}
+	return ret
+}
+
+func (stream *OpenAICompletionStream) Recv() (openai.ChatCompletionStreamResponse, error) {
+	if stream.gemini != nil {
+		return stream.gemini.recv()
+	}
+	if stream.anthropic != nil {
+		return stream.anthropic.recv()
+	}
+	if stream.chat != nil {
+		return stream.chat.Recv()
+	}
+	if stream.responses == nil {
+		return openai.ChatCompletionStreamResponse{}, io.EOF
+	}
+	if len(stream.pending) > 0 {
+		response := stream.pending[0]
+		stream.pending = stream.pending[1:]
+		return response, nil
+	}
+	if stream.responsesDone {
+		return openai.ChatCompletionStreamResponse{}, io.EOF
+	}
+
+	event, err := stream.responses.Recv()
+	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return openai.ChatCompletionStreamResponse{}, errors.New("response stream ended before a terminal event")
+		}
+		return openai.ChatCompletionStreamResponse{}, err
+	}
+	response := openai.ChatCompletionStreamResponse{Object: "chat.completion.chunk"}
+	switch event.Type {
+	case openai.ResponseStreamEventOutputTextDelta:
+		stream.responseContent.WriteString(event.Delta)
+		response.Choices = []openai.ChatCompletionStreamChoice{{
+			Index: 0,
+			Delta: openai.ChatCompletionStreamChoiceDelta{Content: event.Delta},
+		}}
+		return response, nil
+	case openai.ResponseStreamEventRefusalDelta:
+		stream.responseContent.WriteString(event.Delta)
+		response.Choices = []openai.ChatCompletionStreamChoice{{
+			Index: 0,
+			Delta: openai.ChatCompletionStreamChoiceDelta{Content: event.Delta, Refusal: event.Delta},
+		}}
+		return response, nil
+	case openai.ResponseStreamEventReasoningSummaryTextDelta, openai.ResponseStreamEventReasoningTextDelta:
+		response.Choices = []openai.ChatCompletionStreamChoice{{
+			Index: 0,
+			Delta: openai.ChatCompletionStreamChoiceDelta{ReasoningContent: event.Delta},
+		}}
+		return response, nil
+	case openai.ResponseStreamEventOutputItemAdded:
+		if event.Item == nil || event.Item.Type != "function_call" {
+			return response, nil
+		}
+		index := event.OutputIndex
+		call := openai.ToolCall{
+			Index: &index,
+			ID:    event.Item.CallID,
+			Type:  openai.ToolTypeFunction,
+			Function: openai.FunctionCall{
+				Name:      event.Item.Name,
+				Arguments: event.Item.Arguments,
+			},
+		}
+		stream.responseToolCalls[index] = call
+		response.Choices = []openai.ChatCompletionStreamChoice{{
+			Index: 0,
+			Delta: openai.ChatCompletionStreamChoiceDelta{ToolCalls: []openai.ToolCall{call}},
+		}}
+		return response, nil
+	case openai.ResponseStreamEventFunctionArgumentsDelta:
+		index := event.OutputIndex
+		call := stream.responseToolCalls[index]
+		call.Index = &index
+		call.Type = openai.ToolTypeFunction
+		call.Function.Arguments += event.Delta
+		stream.responseToolCalls[index] = call
+		response.Choices = []openai.ChatCompletionStreamChoice{{
+			Index: 0,
+			Delta: openai.ChatCompletionStreamChoiceDelta{ToolCalls: []openai.ToolCall{{
+				Index: &index,
+				Type:  openai.ToolTypeFunction,
+				Function: openai.FunctionCall{
+					Arguments: event.Delta,
+				},
+			}}},
+		}}
+		return response, nil
+	case openai.ResponseStreamEventOutputItemDone:
+		if !stream.chatGPT {
+			break
+		}
+		var completed struct {
+			Item json.RawMessage `json:"item"`
+		}
+		if err = json.Unmarshal(event.Raw, &completed); err != nil || len(completed.Item) == 0 || string(completed.Item) == "null" {
+			return openai.ChatCompletionStreamResponse{}, errors.New("completed response output item is missing")
+		}
+		stream.completedOutput[event.OutputIndex] = completed.Item
+	case openai.ResponseStreamEventCompleted, openai.ResponseStreamEventIncomplete:
+		if event.Response == nil {
+			return openai.ChatCompletionStreamResponse{}, errors.New("response stream terminal event is missing response")
+		}
+		if stream.chatGPT && (event.Type != openai.ResponseStreamEventCompleted || event.Response.Status != openai.ResponseStatusCompleted) {
+			return openai.ChatCompletionStreamResponse{}, errors.New("ChatGPT response did not complete")
+		}
+		terminal := *event.Response
+		// 套餐流的结束事件可能省略输出，按输出索引恢复已完成项，保留工具命名空间及加密推理字段。
+		if stream.chatGPT && len(terminal.Output) == 0 && len(stream.completedOutput) > 0 {
+			terminal.Output = make([]any, len(stream.completedOutput))
+			for index := range terminal.Output {
+				item, ok := stream.completedOutput[index]
+				if !ok {
+					return openai.ChatCompletionStreamResponse{}, errors.New("completed response output items are missing")
+				}
+				terminal.Output[index] = item
+			}
+		}
+		if err = stream.queueResponseTerminal(terminal); err != nil {
+			return openai.ChatCompletionStreamResponse{}, err
+		}
+		stream.responsesDone = true
+		response = stream.pending[0]
+		stream.pending = stream.pending[1:]
+		return response, nil
+	case openai.ResponseStreamEventFailed:
+		return openai.ChatCompletionStreamResponse{}, responseEventError(event, "response failed")
+	case openai.ResponseStreamEventError:
+		return openai.ChatCompletionStreamResponse{}, responseEventError(event, "response stream failed")
+	}
+	return response, nil
+}
+
+func (stream *OpenAICompletionStream) queueResponseTerminal(response openai.CreateResponseResponse) error {
+	if err := responseResultError(response); err != nil {
+		return err
+	}
+	terminalToolCalls := map[int]struct{}{}
+	for index, raw := range response.Output {
+		item, ok := responseOutputItem(raw)
+		if !ok || item.Type != "function_call" {
+			continue
+		}
+		if item.Status == "incomplete" || item.Status == "in_progress" ||
+			(response.Status == openai.ResponseStatusIncomplete && item.Status != "completed") {
+			return errors.New("response ended with an incomplete function call")
+		}
+		terminalToolCalls[index] = struct{}{}
+	}
+	for index := range stream.responseToolCalls {
+		if _, ok := terminalToolCalls[index]; !ok {
+			return errors.New("streamed function call is missing from the terminal response")
+		}
+	}
+	output, err := MarshalOpenAIResponseOutput(response.Output)
+	if err != nil {
+		return err
+	}
+	stream.responseOutput = output
+
+	for index, raw := range response.Output {
+		item, ok := responseOutputItem(raw)
+		if !ok || item.Type != "function_call" {
+			continue
+		}
+		current := stream.responseToolCalls[index]
+		if current.ID != "" && item.CallID != "" && current.ID != item.CallID {
+			return errors.New("streamed function call ID does not match the terminal response")
+		}
+		if current.Function.Name != "" && item.Name != "" && current.Function.Name != item.Name {
+			return errors.New("streamed function name does not match the terminal response")
+		}
+		if current.Function.Arguments != item.Arguments &&
+			!strings.HasPrefix(item.Arguments, current.Function.Arguments) {
+			return errors.New("streamed function arguments do not match the terminal response")
+		}
+		delta := openai.ToolCall{Type: openai.ToolTypeFunction}
+		deltaIndex := index
+		delta.Index = &deltaIndex
+		changed := false
+		if current.ID == "" && item.CallID != "" {
+			delta.ID = item.CallID
+			changed = true
+		}
+		if current.Function.Name == "" && item.Name != "" {
+			delta.Function.Name = item.Name
+			changed = true
+		}
+		if current.Function.Arguments != item.Arguments && strings.HasPrefix(item.Arguments, current.Function.Arguments) {
+			delta.Function.Arguments = strings.TrimPrefix(item.Arguments, current.Function.Arguments)
+			changed = delta.Function.Arguments != "" || changed
+		}
+		if changed {
+			stream.pending = append(stream.pending, openai.ChatCompletionStreamResponse{
+				Object: "chat.completion.chunk",
+				Choices: []openai.ChatCompletionStreamChoice{{
+					Index: 0,
+					Delta: openai.ChatCompletionStreamChoiceDelta{ToolCalls: []openai.ToolCall{delta}},
+				}},
+			})
+		}
+	}
+
+	fullContent := responseDisplayText(response)
+	if currentContent := stream.responseContent.String(); fullContent != currentContent &&
+		!strings.HasPrefix(fullContent, currentContent) {
+		return errors.New("streamed response text does not match the terminal response")
+	}
+	if currentContent := stream.responseContent.String(); fullContent != currentContent && strings.HasPrefix(fullContent, currentContent) {
+		missing := strings.TrimPrefix(fullContent, currentContent)
+		if missing != "" {
+			stream.pending = append(stream.pending, openai.ChatCompletionStreamResponse{
+				Object: "chat.completion.chunk",
+				Choices: []openai.ChatCompletionStreamChoice{{
+					Index: 0,
+					Delta: openai.ChatCompletionStreamChoiceDelta{Content: missing},
+				}},
+			})
+		}
+	}
+
+	finishReason := responseFinishReason(response)
+	if hasResponseFunctionCall(response.Output) && finishReason == openai.FinishReasonStop {
+		finishReason = openai.FinishReasonToolCalls
+	}
+	usage := responseUsageToChat(response.Usage)
+	stream.pending = append(stream.pending, openai.ChatCompletionStreamResponse{
+		ID:      response.ID,
+		Object:  "chat.completion.chunk",
+		Created: response.Created,
+		Model:   response.Model,
+		Choices: []openai.ChatCompletionStreamChoice{{Index: 0, FinishReason: finishReason}},
+		Usage:   &usage,
+	})
+	return nil
+}
+
+func responseDisplayText(response openai.CreateResponseResponse) string {
+	if text := response.GetOutputText(); text != "" {
+		return text
+	}
+	return responseRefusalText(response)
+}
+
+func responseRefusalText(response openai.CreateResponseResponse) string {
+	var refusal strings.Builder
+	for _, raw := range response.Output {
+		item, ok := responseOutputItem(raw)
+		if !ok {
+			continue
+		}
+		for _, content := range item.Content {
+			if content.Type == "refusal" {
+				refusal.WriteString(content.Refusal)
+			}
+		}
+	}
+	return refusal.String()
+}
+
+func responseResultError(response openai.CreateResponseResponse) error {
+	if response.Error != nil && response.Error.Message != "" {
+		return &openai.APIError{Code: response.Error.Code, Message: response.Error.Message}
+	}
+	if response.Status == openai.ResponseStatusIncomplete && hasResponseFunctionCall(response.Output) {
+		return errors.New("response ended with an incomplete function call")
+	}
+	switch response.Status {
+	case "", openai.ResponseStatusCompleted, openai.ResponseStatusIncomplete:
+		return nil
+	default:
+		return fmt.Errorf("response returned status %s", response.Status)
+	}
+}
+
+func hasResponseFunctionCall(output []any) bool {
+	for _, raw := range output {
+		item, ok := responseOutputItem(raw)
+		if ok && item.Type == "function_call" {
+			return true
+		}
+	}
+	return false
+}
+
+func responseEventError(event openai.ResponseStreamEvent, fallback string) error {
+	if event.Error != nil && event.Error.Message != "" {
+		return &openai.APIError{Code: event.Error.Code, Message: event.Error.Message}
+	}
+	if event.Response != nil && event.Response.Error != nil && event.Response.Error.Message != "" {
+		return &openai.APIError{Code: event.Response.Error.Code, Message: event.Response.Error.Message}
+	}
+	if event.Message != "" {
+		return &openai.APIError{Code: event.Code, Message: event.Message}
+	}
+	return errors.New(fallback)
+}
+
+func (stream *OpenAICompletionStream) ResponseOutput() []json.RawMessage {
+	return CloneOpenAIResponseOutput(stream.responseOutput)
+}
+
+func (stream *OpenAICompletionStream) Close() {
+	if stream.gemini != nil {
+		stream.gemini.body.Close()
+	}
+	if stream.anthropic != nil {
+		stream.anthropic.body.Close()
+	}
+	if stream.chat != nil {
+		stream.chat.Close()
+	}
+	if stream.responses != nil {
+		stream.responses.Close()
+	}
+}
+
+func (stream *OpenAICompletionStream) NativeContent() *AIMessageContent {
+	if stream.gemini != nil {
+		return CloneAIMessageContent(stream.gemini.content)
+	}
+	if stream.anthropic == nil {
+		return nil
+	}
+	return CloneAIMessageContent(stream.anthropic.content)
+}

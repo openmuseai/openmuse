@@ -1,0 +1,547 @@
+<p align="center">
+<img alt="SiYuan" src="https://b3log.org/images/brand/siyuan-128.png">
+<br>
+<em>思考から洞察へ、エージェントとともに</em>
+<br><br>
+<a title="Build Status" target="_blank" href="https://github.com/siyuan-note/siyuan/actions/workflows/cd.yml"><img src="https://img.shields.io/github/actions/workflow/status/siyuan-note/siyuan/cd.yml?style=flat-square"></a>
+<a title="Releases" target="_blank" href="https://github.com/siyuan-note/siyuan/releases"><img src="https://img.shields.io/github/release/siyuan-note/siyuan.svg?style=flat-square&color=9CF"></a>
+<a title="Downloads" target="_blank" href="https://github.com/siyuan-note/siyuan/releases"><img src="https://img.shields.io/github/downloads/siyuan-note/siyuan/total.svg?style=flat-square&color=blueviolet"></a>
+<br>
+<a title="Docker Pulls" target="_blank" href="https://hub.docker.com/r/b3log/siyuan"><img src="https://img.shields.io/docker/pulls/b3log/siyuan.svg?style=flat-square&color=green"></a>
+<a title="Docker Image Size" target="_blank" href="https://hub.docker.com/r/b3log/siyuan"><img src="https://img.shields.io/docker/image-size/b3log/siyuan.svg?style=flat-square&color=ff96b4"></a>
+<a title="Hits" target="_blank" href="https://github.com/siyuan-note/siyuan"><img src="https://hits.b3log.org/siyuan-note/siyuan.svg"></a>
+<br>
+<a title="AGPLv3" target="_blank" href="https://www.gnu.org/licenses/agpl-3.0.txt"><img src="https://img.shields.io/badge/license-AGPLv3-orange.svg?style=flat-square"></a>
+<a title="Code Size" target="_blank" href="https://github.com/siyuan-note/siyuan"><img src="https://img.shields.io/github/languages/code-size/siyuan-note/siyuan.svg?style=flat-square&color=yellow"></a>
+<a title="GitHub Pull Requests" target="_blank" href="https://github.com/siyuan-note/siyuan/pulls"><img src="https://img.shields.io/github/issues-pr-closed/siyuan-note/siyuan.svg?style=flat-square&color=FF9966"></a>
+<br>
+<a title="GitHub Commits" target="_blank" href="https://github.com/siyuan-note/siyuan/commits/master"><img src="https://img.shields.io/github/commit-activity/m/siyuan-note/siyuan.svg?style=flat-square"></a>
+<a title="Last Commit" target="_blank" href="https://github.com/siyuan-note/siyuan/commits/master"><img src="https://img.shields.io/github/last-commit/siyuan-note/siyuan.svg?style=flat-square&color=FF9900"></a>
+<br><br>
+<a title="X" target="_blank" href="https://x.com/b3logos"><img alt="X Follow" src="https://img.shields.io/twitter/follow/b3logos?label=Follow&style=social"></a>
+<br><br>
+<a href="https://trendshift.io/repositories/3949" target="_blank"><img src="https://trendshift.io/api/badge/repositories/3949" alt="siyuan-note%2Fsiyuan | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+</p>
+
+<p align="center">
+<a href="README.md">English</a>
+| <a href="README.zh-CN.md">中文</a>
+| <b>日本語</b>
+| <a href="README.tr.md">Türkçe</a>
+| <a href="README.pt-BR.md">Português</a>
+</p>
+
+---
+
+## 目次
+
+- [💡 紹介](#-紹介)
+- [🔮 特徴](#-特徴)
+- [🏗️ アーキテクチャとエコシステム](#️-アーキテクチャとエコシステム)
+- [🗺️ ロードマップ](#️-ロードマップ)
+- [🚀 ダウンロードとセットアップ](#-ダウンロードとセットアップ)
+  - [アプリマーケット](#アプリマーケット)
+  - [インストールパッケージ](#インストールパッケージ)
+  - [パッケージマネージャー](#パッケージマネージャー)
+  - [Docker ホスティング](#docker-ホスティング)
+  - [Kubernetes ホスティング](#kubernetes-ホスティング)
+  - [Unraid ホスティング](#unraid-ホスティング)
+  - [TrueNAS ホスティング](#truenas-ホスティング)
+  - [テストチャンネル](#テストチャンネル)
+- [⌨️ コマンドラインインターフェース](#-コマンドラインインターフェース)
+- [🏘️ コミュニティ](#️-コミュニティ)
+- [🛠️ 開発ガイド](#️-開発ガイド)
+- [❓ FAQ](#-faq)
+  - [SiYuanはどのようにデータを保存しますか？](#siyuanはどのようにデータを保存しますか)
+  - [サードパーティの同期ディスクを介したデータ同期をサポートしていますか？](#サードパーティの同期ディスクを介したデータ同期をサポートしていますか)
+  - [SiYuanはオープンソースですか？](#siyuanはオープンソースですか)
+  - [新しいバージョンにアップグレードするにはどうすればよいですか？](#新しいバージョンにアップグレードするにはどうすればよいですか)
+  - [一部のブロック（リスト項目内の段落ブロックなど）がブロックアイコンを見つけられない場合はどうすればよいですか？](#一部のブロックリスト項目内の段落ブロックなどがブロックアイコンを見つけられない場合はどうすればよいですか)
+  - [データリポジトリキーを紛失した場合はどうすればよいですか？](#データリポジトリキーを紛失した場合はどうすればよいですか)
+  - [支払いが必要ですか？](#支払いが必要ですか)
+- [🙏 謝辞](#-謝辞)
+  - [貢献者](#貢献者)
+
+---
+
+## 💡 紹介
+
+SiYuanは、プライバシーを最優先とする個人の知識管理システムであり、細かいブロックレベルの参照とMarkdown WYSIWYGをサポートしています。
+
+![feature0.png](screenshots/feature0.png)
+
+![feature5-1.png](screenshots/feature5-1.png)
+
+詳細については、[オンラインユーザーガイド](https://siyuan-en.b3log.org/)をご覧いただくか、[SiYuan英語ディスカッションフォーラム](https://liuyun.io)をご利用ください。
+
+## 🔮 特徴
+
+ほとんどの機能は無料で、商業利用も可能です。
+
+- コンテンツブロック
+  - ブロックレベルの参照と双方向リンク
+  - カスタム属性
+  - SQLクエリ埋め込み
+  - プロトコル `siyuan://`
+- エディタ
+  - ブロックスタイル
+  - Markdown WYSIWYG
+  - リストアウトライン
+  - ブロックズームイン
+  - 百万字の大規模ドキュメント編集
+  - 数学公式、チャート、フローチャート、ガントチャート、タイミングチャート、五線譜など
+  - ウェブクリッピング
+  - PDF注釈リンク
+- エクスポート
+  - ブロック参照と埋め込み
+  - アセット付きの標準Markdown
+  - PDF、Word、HTML
+  - WeChat MP、Zhihu、Yuqueへのコピー
+- データベース
+  - テーブルビュー
+- フラッシュカード間隔反復
+- OpenAI APIを介したAIライティングとQ/Aチャット
+- Tesseract OCR
+- マルチタブ、ドラッグアンドドロップで分割画面
+- テンプレートスニペット
+- JavaScript/CSSスニペット
+- Android/iOS/HarmonyOSアプリ
+- Dockerデプロイメント
+- [API](https://github.com/siyuan-note/siyuan/blob/master/docs/API.md)
+- コミュニティマーケットプレイス
+
+一部の機能は有料会員のみ利用可能です。詳細については[価格](https://b3log.org/siyuan/en/pricing.html)をご覧ください。
+
+## 🏗️ アーキテクチャとエコシステム
+
+![SiYuan Arch](screenshots/SiYuan_Arch.svg "SiYuan Arch")
+
+| プロジェクト                                                   | 説明              | フォーク                                                                           | スター                                                                                | 
+|----------------------------------------------------------|-----------------|---------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [lute](https://github.com/88250/lute)                    | エディタエンジン        | ![GitHub forks](https://img.shields.io/github/forks/88250/lute)                 | ![GitHub Repo stars](https://img.shields.io/github/stars/88250/lute)                 |
+| [chrome](https://github.com/siyuan-note/siyuan-chrome)   | Chrome/Edge拡張   | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/siyuan-chrome)  | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/siyuan-chrome)  |
+| [bazaar](https://github.com/siyuan-note/bazaar)          | コミュニティマーケットプレイス | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/bazaar)         | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/bazaar)         |
+| [dejavu](https://github.com/siyuan-note/dejavu)          | データリポジトリ        | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/dejavu)         | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/dejavu)         |
+| [petal](https://github.com/siyuan-note/petal)            | プラグインAPI        | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/petal)          | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/petal)          |
+| [android](https://github.com/siyuan-note/siyuan-android) | Androidアプリ      | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/siyuan-android) | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/siyuan-android) |
+| [ios](https://github.com/siyuan-note/siyuan-ios)         | iOSアプリ          | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/siyuan-ios)     | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/siyuan-ios)     |
+| [harmony](https://github.com/siyuan-note/siyuan-harmony)     | HarmonyOSアプリ    | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/siyuan-harmony)     | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/siyuan-harmony)     |
+| [riff](https://github.com/siyuan-note/riff)              | 間隔反復            | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/riff)           | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/riff)           |
+
+## 🗺️ ロードマップ
+
+- [SiYuanの開発計画と進捗](https://github.com/orgs/siyuan-note/projects/1)
+- [SiYuanの変更履歴](CHANGELOG.md)
+
+## 🚀 ダウンロードとセットアップ
+
+デスクトップとモバイルでは、アプリマーケットからのインストールを優先的にお勧めします。これにより、将来的にワンクリックでバージョンをアップグレードできます。
+
+### アプリマーケット
+
+モバイル：
+
+- [App Store](https://apps.apple.com/us/app/siyuan/id1583226508)
+- [Google Play](https://play.google.com/store/apps/details?id=org.b3log.siyuan)
+- [F-Droid](https://f-droid.org/packages/org.b3log.siyuan)
+
+デスクトップ：
+
+- [Microsoft Store](https://apps.microsoft.com/detail/9p7hpmxp73k4)
+
+### インストールパッケージ
+
+- [B3log](https://b3log.org/siyuan/en/download.html)
+- [GitHub](https://github.com/siyuan-note/siyuan/releases)
+
+### パッケージマネージャー
+
+#### `siyuan`
+
+[![梱包状態](https://repology.org/badge/vertical-allrepos/siyuan.svg)](https://repology.org/project/siyuan/versions)
+
+#### `siyuan-note`
+
+[![梱包状態](https://repology.org/badge/vertical-allrepos/siyuan-note.svg)](https://repology.org/project/siyuan-note/versions)
+
+### Docker ホスティング
+
+<details>
+<summary>Dockerデプロイメント</summary>
+
+#### 概要
+
+サーバーでSiYuanを提供する最も簡単な方法は、Dockerを使用してデプロイすることです。
+
+- イメージ名 `b3log/siyuan`
+- [イメージURL](https://hub.docker.com/r/b3log/siyuan)
+
+#### ファイル構造
+
+全体のプログラムは `/opt/siyuan/` にあり、基本的にはElectronインストールパッケージのresourcesフォルダーの構造です：
+
+- appearance: アイコン、テーマ、言語
+- guide: ユーザーガイドドキュメント
+- stage: インターフェースと静的リソース
+- kernel: カーネルプログラム
+
+#### エントリポイント
+
+エントリポイントはDockerイメージのビルド時に設定されます：`ENTRYPOINT ["/opt/siyuan/entrypoint.sh"]`。このスクリプトを使用すると、コンテナ内で実行されるユーザーの `PUID` と `PGID` を変更できます。これは、ホストからディレクトリをマウントする際の権限の問題を解決するために特に重要です。`PUID`（ユーザーID）と `PGID`（グループID）は環境変数として渡すことができ、ホストマウントディレクトリにアクセスする際に正しい権限を確保するのが容易になります。
+
+`docker run b3log/siyuan` を使用してコンテナを実行する場合、次のパラメータを使用します：
+
+- `--workspace`: ワークスペースフォルダーのパスを指定し、ホスト上で `-v` を使用してコンテナにマウントします
+- `--accessAuthCode`: ロック画面パスワードを指定します
+
+> **注意:** v3.7.0 以降、`serve` サブコマンドを明示的に渡す必要があります（例: `docker run b3log/siyuan serve --workspace=...`）。すべてのサーブ用オプションは `docker run --rm b3log/siyuan serve --help` で確認できます。
+
+詳細なパラメータは `--help` を参照してください。以下は新しい環境変数を使用した起動コマンドの例です：
+
+先に `AuthCode` に自分の強力なパスワードを設定してください（Bash では `export AuthCode='自分の強力なパスワード'` を使用し、Compose では同じディレクトリの `.env` ファイルからも読み込めます）。未設定または空の場合、例はエラーで停止します。
+
+```bash
+docker run -d \
+  -v workspace_dir_host:workspace_dir_container \
+  -p 6806:6806 \
+  -e PUID=1001 -e PGID=1002 \
+  -e SIYUAN_LANG=ja \
+  b3log/siyuan \
+  serve \
+  --workspace=workspace_dir_container \
+  --accessAuthCode="${AuthCode:?Set AuthCode}"
+```
+
+- `PUID`: カスタムユーザーID（オプション、指定しない場合はデフォルトで `1000`）
+- `PGID`: カスタムグループID（オプション、指定しない場合はデフォルトで `1000`）
+- `workspace_dir_host`: ホスト上のワークスペースフォルダーのパス
+- `workspace_dir_container`: コンテナ内のワークスペースフォルダーのパス、`--workspace` で指定されたものと同じ
+  - あるいは、`SIYUAN_WORKSPACE_PATH` 環境変数を使用してパスを設定することもできます。両方が設定されている場合は、コマンドラインの値が優先されます
+- `accessAuthCode`: ロック画面パスワード（**必ず変更してください**、そうしないと誰でもデータにアクセスできます）
+  - また、`SIYUAN_ACCESS_AUTH_CODE` 環境変数を設定することでロック画面パスワードを指定することもできます。両方が設定されている場合、コマンドラインの値が優先されます
+  - 環境変数 `SIYUAN_ACCESS_AUTH_CODE_BYPASS=true` を設定することで、ロック画面パスワードを無効にすることができます
+- OIDC はロック画面パスワードの代わりに Docker アクセス認証として利用できます。`SIYUAN_OIDC_ENABLED=true`、`SIYUAN_OIDC_PROVIDER`（`custom`、`google`、`microsoft`、`github` のいずれか）、`SIYUAN_OIDC_CLIENT_ID`、および以下のプロバイダー固有の値を設定してください。GitHub は OAuth 2.0 ユーザー API アダプターを使用し、その他のプロバイダーは OpenID Connect ディスカバリーと ID Token 検証を使用します。ロック画面パスワードが利用できない状態で無効な構成を有効にすると、Docker の起動が中断されます
+  - `SIYUAN_OIDC_ISSUER_URL`：`custom` および `microsoft` プロバイダーに必要な Issuer URL。Microsoft は `https://login.microsoftonline.com/<tenant-id>/v2.0` のようなテナント固有の issuer を使用する必要があります
+  - `SIYUAN_OIDC_CLIENT_SECRET`：OpenID Connect プロバイダー向けの任意のクライアントシークレット。GitHub OAuth アダプターでは必須です。すべての認可コードフローで PKCE を使用します
+  - `SIYUAN_OIDC_SCOPES`：カンマまたはスペース区切りのスコープ。`openid` は常に含まれます
+  - `SIYUAN_OIDC_REDIRECT_URL`：`/api/system/oidc/callback` で終わる公開 HTTPS コールバック URL。リモートブラウザーアクセスに必須です
+  - `SIYUAN_OIDC_ALLOW_ALL`：プロバイダーで認証されたすべての ID に SiYuan 管理者アクセスを明示的に付与します
+  - `SIYUAN_OIDC_CLAIM_RULES`：allow-all が無効な場合に使用するクレームルールの JSON 配列。例：`[{"claim":"email","operator":"equals","values":["user@example.com"]},{"claim":"email_verified","operator":"equals","values":["true"]}]`。ルール内の値は OR、ルール間は AND で評価されます
+  - ネイティブモバイルアプリは固定のコールバック URI `siyuan:/oidc-callback` を使用します。記載どおりに登録してください。モバイル構成の検証は保存前にこのコールバックを使用します。カスタムプロバイダー、Microsoft、GitHub は、アプリ登録がこのコールバック URI を受け入れる場合にのみ使用できます。Google は Android クライアントタイプでこのプライベート URI を受け付けないため、Google ログインはブラウザーおよびデスクトップフローに限定されます
+- `SIYUAN_LANG`：インターフェース言語（オプション、Docker で未設定の場合はデフォルト `en`）。BCP 47 タグ（`zh-CN`/`zh-TW`/`en`/`ja`/`pt-BR` など）を受け付けます。従来のアンダースコア形式（`zh_CN`/`en_US` など）も互換性のため受け付けます。**設定**で選択した言語を再起動後も維持したい場合は、デプロイ時にこの変数を省略してください。設定した場合は起動のたびに適用され、保存済みの言語設定を上書きします
+  - あるいは `--lang` コマンドライン引数でも設定できます。両方が設定されている場合、コマンドラインの値が優先されます
+
+簡略化するために、ホストとコンテナでワークスペースフォルダーのパスを一致させることをお勧めします。たとえば、`workspace_dir_host` と `workspace_dir_container` の両方を `/siyuan/workspace` に設定します。対応する起動コマンドは次のようになります：
+
+先に `AuthCode` に自分の強力なパスワードを設定してください（Bash では `export AuthCode='自分の強力なパスワード'` を使用し、Compose では同じディレクトリの `.env` ファイルからも読み込めます）。未設定または空の場合、例はエラーで停止します。
+
+```bash
+docker run -d \
+  -v /siyuan/workspace:/siyuan/workspace \
+  -p 6806:6806 \
+  -e PUID=1001 -e PGID=1002 \
+  -e SIYUAN_LANG=ja \
+  b3log/siyuan \
+  serve \
+  --workspace=/siyuan/workspace/ \
+  --accessAuthCode="${AuthCode:?Set AuthCode}"
+```
+
+#### Docker Compose
+
+Docker Composeを使用してSiYuanを実行するユーザー向けに、環境変数 `PUID` と `PGID` を使用してユーザーとグループのIDをカスタマイズできます。以下はDocker Composeの設定例です：
+
+先に `AuthCode` に自分の強力なパスワードを設定してください（Bash では `export AuthCode='自分の強力なパスワード'` を使用し、Compose では同じディレクトリの `.env` ファイルからも読み込めます）。未設定または空の場合、例はエラーで停止します。
+
+```yaml
+version: "3.9"
+services:
+  main:
+    image: b3log/siyuan
+    command: ['serve', '--workspace=/siyuan/workspace/', '--accessAuthCode=${AuthCode:?Set AuthCode}']
+    ports:
+      - 6806:6806
+    volumes:
+      - /siyuan/workspace:/siyuan/workspace
+    restart: unless-stopped
+    environment:
+      - TZ=${YOUR_TIME_ZONE}    # タイムゾーン識別子のリストは https://en.wikipedia.org/wiki/List_of_tz_database_time_zones を参照してください
+      - PUID=${YOUR_USER_PUID}  # カスタムユーザーID
+      - PGID=${YOUR_USER_PGID}  # カスタムグループID
+      - SIYUAN_LANG=ja       # インターフェース言語（このドキュメントに合わせる）
+```
+
+この設定では：
+
+- `PUID` と `PGID` は動的に設定され、コンテナに渡されます
+- これらの変数が提供されていない場合、デフォルトの `1000` が使用されます
+
+環境で `PUID` と `PGID` を指定することで、composeファイルで `user` ディレクティブ（`user: '1000:1000'`）を明示的に設定する必要がなくなります。コンテナは起動時にこれらの環境変数に基づいてユーザーとグループを動的に調整します。
+
+#### ユーザー権限
+
+イメージ内で、`entrypoint.sh` スクリプトは指定された `PUID` と `PGID` で `siyuan` ユーザーとグループを作成することを保証します。したがって、ホストがワークスペースフォルダーを作成する際には、フォルダーのユーザーとグループの所有権を設定し、使用する予定の `PUID` と `PGID` に一致させることに注意してください。たとえば：
+
+```bash
+chown -R 1001:1002 /siyuan/workspace
+```
+
+カスタムの `PUID` と `PGID` 値を使用する場合、エントリポイントスクリプトはコンテナ内で正しいユーザーとグループを作成し、マウントされたボリュームの所有権を適切に調整します。`docker run` または `docker-compose` で `-u` を手動で渡す必要はありません。環境変数がカスタマイズを処理します。
+
+#### 隠しポート
+
+NGINXリバースプロキシを使用してポート6806を隠します。注意点：
+
+- WebSocketリバースプロキシ `/ws` を設定します
+- 通常のリクエストと `/ws` の両方で、ポートを含む元の `Host` ヘッダーを保持してください。NGINX の両方のプロキシ設定に `proxy_set_header Host $http_host;` を指定します。`$host` を使用すると標準以外のポート（例：`8443`）が失われ、Origin の検証に失敗する場合があります。その結果、ログイン後にロゴ画面で再読み込みを繰り返す、API が `401` を返す、WebSocket 接続に失敗するなどの問題が発生します
+
+#### 注意
+
+- マウントボリュームの正確性を確認してください。そうしないと、コンテナが削除された後にデータが失われます
+- URLリライトを使用してリダイレクトしないでください。認証に問題が発生する可能性があるため、リバースプロキシの設定をお勧めします
+- 権限の問題が発生した場合、`PUID` と `PGID` 環境変数がホストシステム上のマウントされたディレクトリの所有権と一致していることを確認してください
+
+#### 制限
+
+- デスクトップおよびモバイルアプリケーションの接続はサポートされておらず、ブラウザでの使用のみサポートされています
+- PDF、HTML、Word形式へのエクスポートはサポートされていません
+- Markdownファイルのインポートはサポートされていません
+
+</details>
+
+### Kubernetes ホスティング
+
+<details>
+<summary>Kubernetes デプロイメント</summary>
+
+[HelmForge SiYuan チャート](https://github.com/helmforgedev/charts/tree/main/charts/siyuan) は HelmForge コミュニティが保守しており、公式の `b3log/siyuan` イメージを使用します。SiYuan 公式のチャートではありません。チャートに関する問題は [HelmForge](https://github.com/helmforgedev/charts/issues) に報告してください。
+
+Helm、kubectl、およびデフォルトの StorageClass で 10Gi の ReadWriteOnce ボリュームを動的に確保できる Kubernetes クラスターを用意して、次を実行します：
+
+```bash
+helm repo add helmforge https://repo.helmforge.dev
+helm repo update
+helm install siyuan helmforge/siyuan --namespace siyuan --create-namespace --wait
+kubectl -n siyuan get secret siyuan-siyuan-auth -o go-template='{{index .data "access-code" | base64decode}}{{"\n"}}'
+kubectl -n siyuan port-forward service/siyuan-siyuan 6806:6806
+```
+
+<http://localhost:6806> を開き、生成されたロック画面パスワードを入力します。このパスワードは安全に保管してください。API トークンとは異なる認証情報です。上記のリソース名は、チャートのデフォルト設定とリリース名 `siyuan` を前提としています。
+
+リモートアクセスには、専用の HTTPS ホスト名と、`/ws` の WebSocket 接続を中継できる Ingress コントローラーを使用し、URL の書き換えは行わないでください。`ingress` を設定し、`networkPolicy.ingressFrom` でコントローラーの名前空間からの通信を許可します。デフォルトのポリシーでは、同じ名前空間からの受信と DNS への送信のみが許可されます。クラウド同期などの外部サービスには、明示的な送信ルールが必要です。TLS、既存の Secret、ストレージの設定は、[チャートガイドと本番環境の設定例](https://helmforge.dev/docs/charts/siyuan)を参照してください。
+
+- **ワークスペースに書き込むインスタンスは 1 つだけ：** レプリカ数を増やしたり、同じワークスペースを別の実行中インスタンスにマウントしたりしないでください。ReadWriteMany ストレージでも同様です。チャートは `Recreate` を使用し、古いインスタンスの停止後に新しいインスタンスを起動するため、アップグレード中はサービスが停止します。
+- **永続化：** ワークスペース全体を `/siyuan/workspace` にマウントします。チャートが作成した PVC はアンインストール時にデフォルトで保持されますが、名前空間や PVC を削除するとデータが失われる可能性があります。保持または復元した PVC は `persistence.existingClaim` で再利用します。
+- **バックアップとアップグレード：** 書き込みインスタンスを正常に停止してからワークスペース全体をバックアップするか、アプリケーションの整合性を保証するバックアップ手順を使用してください。使用中の SQLite インデックスをコピーするだけでは不十分です。認証用 Secret、暗号鍵、暗号化ノートブックの復旧パスワードを安全に保管し、別の PVC への復元をテストしてください。アップグレード前にバックアップを取得し、ストレージ形式の変更を確認してください。Helm のロールバックではデータの移行は元に戻りません。
+
+Docker ホスティングの制限も適用されます。ブラウザーでのみ利用でき、デスクトップおよびモバイルアプリからの接続、PDF・HTML・Word へのエクスポート、Markdown ファイルのインポートはサポートされません。
+
+</details>
+
+### Unraid ホスティング
+
+<details>
+<summary>Unraidデプロイメント</summary>
+
+注意：最初にターミナルで `chown -R 1000:1000 /mnt/user/appdata/siyuan` を実行します
+
+テンプレートの参考：
+
+```
+Web UI: 6806
+Container Port: 6806
+Container Path: /siyuan/workspace
+Host path: /mnt/user/appdata/siyuan
+PUID: 1000
+PGID: 1000
+SIYUAN_LANG: ja
+Publish parameters: serve --accessAuthCode=******（ロック画面パスワード）
+```
+
+</details>
+
+### TrueNAS ホスティング
+
+<details>
+<summary>TrueNasデプロイメント</summary>
+
+注意：まず TrueNAS Shell で以下のコマンドを実行してください。`Pool_1/Apps_Data/siyuan` をアプリ用のデータセットパスに合わせて更新してください。
+
+```shell
+zfs create Pool_1/Apps_Data/siyuan
+chown -R 1001:1002 /mnt/Pool_1/Apps_Data/siyuan
+chmod 755 /mnt/Pool_1/Apps_Data/siyuan
+```
+
+Apps - DiscoverApps - More Options（右上、Custom App を除く）- YAML でインストール に移動してください
+
+テンプレート例：
+
+デプロイ前に、以下の `SIYUAN_ACCESS_AUTH_CODE=` の後に自分の強力なパスワードを入力してください。空のままにしないでください。
+
+```yaml
+services:
+  siyuan:
+    image: b3log/siyuan
+    container_name: siyuan
+    command: ['serve', '--workspace=/siyuan/workspace/']
+    ports:
+      - 6806:6806
+    volumes:
+      - /mnt/Pool_1/Apps_Data/siyuan:/siyuan/workspace  # Adjust to your dataset path 
+    restart: unless-stopped
+    environment:
+      - SIYUAN_ACCESS_AUTH_CODE=
+      - TZ=Asia/Tokyo  # 必要に応じてタイムゾーンに置き換えてください
+      - PUID=1001
+      - PGID=1002
+      - SIYUAN_LANG=ja  # インターフェース言語（このドキュメントに合わせる）
+```
+
+</details>
+
+### テストチャンネル
+
+プレリリースを受信するには、`設定 - 情報 - 更新チャンネル`で Beta または Alpha を選択します。Beta チャンネルでは正式版、RC、Beta 版を受信し、Alpha チャンネルではすべての版を受信します。テストチャンネルの利用には GitHub へのアクセスが必要です。
+
+## ⌨️ コマンドラインインターフェース
+
+組み込み CLI で、サーバー起動なしにワークスペースデータへ直接アクセスできます。
+
+CLI は暗号化ノートブックの操作をサポートしていません。アプリ内の専用手順でロックを解除して操作してください。
+
+### クイックスタート
+
+```bash
+siyuan notebook list -w ~/SiYuan
+siyuan search "keyword" -w ~/SiYuan -f json
+# アセットファイル内を検索（PDF/Word/Excel/txt など）
+siyuan search "フレーズ" --asset -w ~/SiYuan
+siyuan search "フレーズ" --asset --ext pdf --ext docx -w ~/SiYuan
+siyuan export md --id <block-id> -w ~/SiYuan
+```
+
+### 利用可能なコマンド
+
+| カテゴリ | コマンド |
+|----------|----------|
+| ノートと文書 | `notebook`, `document`, `dailynote` — CRUD とデイリーノート |
+| コンテンツ | `block`, `attr`, `outline` — ブロックの読み書き、属性、アウトライン |
+| メタデータ | `tag`, `bookmark`, `template` — タグ、ブックマーク、テンプレートスニペット |
+| クエリ | `search`, `sql` — 全文・セマンティック・アセット内・SQL 検索 |
+| 参照 | `ref` — バックリンクと言及 |
+| インポート/エクスポート | `export`, `import`, `inbox` — Markdown, HTML, preview, Word, .sy.zip, Data, クラウド受信トレイ |
+| データ管理 | `repo`, `history`, `sync` — スナップショット、履歴、クラウド同期 |
+| ユーティリティ | `asset`, `file` — リソースとファイルシステム |
+| データベース | `database` — 属性ビュー管理 |
+| サーバー | `serve` — カーネルの HTTP サーバーを起動 |
+| ワークスペースとシステム | `workspace`, `system` — 一覧、確認、システム情報 |
+
+詳細は `siyuan --help` を実行してください。スクリプト向け出力には（デフォルトの `-f table` ではなく）`-f json` を使用します。変更を伴うほとんどのコマンドは `--dry-run` にも対応しており、適用せずに変更内容をプレビューできます。
+
+### セットアップ
+
+CLI バイナリは `<インストール先>/resources/kernel/SiYuan-Kernel` です。
+Windows インストーラーが自動で PATH に追加します。
+macOS/Linux では手動でシンボリックリンクを作成してください。
+
+```bash
+# macOS
+ln -s /Applications/SiYuan.app/Contents/Resources/kernel/SiYuan-Kernel /usr/local/bin/siyuan
+
+# Linux
+ln -s /インストール先/SiYuan/resources/kernel/SiYuan-Kernel /usr/local/bin/siyuan
+```
+
+## 🏘️ コミュニティ
+
+- [英語ディスカッションフォーラム](https://liuyun.io)
+- [ユーザーコミュニティのまとめ](https://liuyun.io/article/1687779743723)
+- [Awesome SiYuan](https://github.com/siyuan-note/awesome)
+
+## 🛠️ 開発ガイド
+
+[開発ガイド](https://github.com/siyuan-note/siyuan/blob/master/.github/CONTRIBUTING.md)をご覧ください。
+
+## ❓ FAQ
+
+### SiYuanはどのようにデータを保存しますか？
+
+データはワークスペースフォルダーに保存され、ワークスペースデータフォルダーに保存されます：
+
+- `assets` はすべての挿入されたアセットを保存するために使用されます
+- `emojis` は絵文字画像を保存するために使用されます
+- `snippets` はコードスニペットを保存するために使用されます
+- `storage` はクエリ条件、レイアウト、フラッシュカードなどを保存するために使用されます
+- `templates` はテンプレートスニペットを保存するために使用されます
+- `widgets` はウィジェットを保存するために使用されます
+- `plugins` はプラグインを保存するために使用されます
+- `public` は公開データを保存するために使用されます
+- ノートブックフォルダーには文書データが保存されます。通常のノートブックの `.sy` 文書は JSON で保存され、暗号化ノートブックの `.sy` 文書は暗号文で保存されます。
+
+### サードパーティの同期ディスクを介したデータ同期をサポートしていますか？
+
+サードパーティの同期ディスクを介したデータ同期はサポートされていません。そうしないとデータが破損する可能性があります。
+
+サードパーティの同期ディスクをサポートしていない場合でも、サードパーティのクラウドストレージと接続することはサポートされています（会員特典）。
+
+### SiYuanはオープンソースですか？
+
+SiYuanは完全にオープンソースであり、貢献を歓迎します：
+
+- [ユーザーインターフェースとカーネル](https://github.com/siyuan-note/siyuan)
+- [Android](https://github.com/siyuan-note/siyuan-android)
+- [iOS](https://github.com/siyuan-note/siyuan-ios)
+- [HarmonyOS](https://github.com/siyuan-note/siyuan-harmony)
+- [Chromeクリッピング拡張](https://github.com/siyuan-note/siyuan-chrome)
+
+詳細については[開発ガイド](https://github.com/siyuan-note/siyuan/blob/master/.github/CONTRIBUTING.md)をご覧ください。
+
+### 新しいバージョンにアップグレードするにはどうすればよいですか？
+
+- アプリストアからインストールした場合は、アプリストアから更新してください
+- Windows または macOS のデスクトップ版をインストールパッケージでインストールした場合は、<kbd>設定</kbd> - <kbd>情報</kbd> - <kbd>自動的に更新インストールパッケージをダウンロード</kbd> オプションを開くことができます。これにより、SiYuanは最新バージョンのインストールパッケージを自動的にダウンロードし、インストールを促します
+- 手動でインストールパッケージを使用してインストールした場合は、再度インストールパッケージをダウンロードしてインストールしてください
+
+<kbd>設定</kbd> - <kbd>情報</kbd> - <kbd>現在のバージョン</kbd> で <kbd>更新を確認</kbd> できます。また、[公式ダウンロード](https://b3log.org/siyuan/en/download.html) または [GitHub Releases](https://github.com/siyuan-note/siyuan/releases) をフォローして新しいバージョンを入手することもできます。
+
+**注意：** ワークスペースをインストール先に置かないでください。更新時にインストール先のファイルが削除されます。
+
+### 一部のブロック（リスト項目内の段落ブロックなど）がブロックアイコンを見つけられない場合はどうすればよいですか？
+
+リスト項目の最初のサブブロックはブロックアイコンが省略されています。このブロックにカーソルを移動し、<kbd>Ctrl+/</kbd> を使用してそのブロックメニューをトリガーできます。
+
+### データリポジトリキーを紛失した場合はどうすればよいですか？
+
+データリポジトリキーはスナップショットと同期データを保護するもので、暗号化ノートブックのマスターパスワードやキーバックアップとは別のものです。データリポジトリをリセットしても、紛失したマスターパスワードを復元したり、対応する暗号化キーのバックアップを代替したりすることはできません。
+
+リセット前に思源を正常に終了し、ワークスペース全体をバックアップしてください。暗号化ノートブックがある場合は、対応する暗号化キーのバックアップを別途保存し、マスターパスワードが使えることを確認してください。古い同期ディレクトリとクラウドスナップショットは、新しい同期の完了、データの完全性、復元に必要な情報の保管を確認してから、必要に応じて削除してください。
+
+- データリポジトリキーが以前に複数のデバイスで正しく初期化されている場合、キーはすべてのデバイスで同じであり、<kbd>設定</kbd> - <kbd>アカウントと同期</kbd> - <kbd>データリポジトリ</kbd> - <kbd>データリポジトリキー</kbd> - <kbd>キー文字列をコピー</kbd> で見つけることができます
+- 以前に正しく構成されていない場合（たとえば、複数のデバイスでキーが一致しない場合）またはすべてのデバイスが使用できず、キー文字列を取得できない場合は、以下の手順でキーをリセットできます：
+
+  1. 思源を正常に終了してワークスペース全体をバックアップし、暗号化ノートブックがある場合は対応する暗号化キーのバックアップとマスターパスワードも保管する
+  2. <kbd>設定</kbd> - <kbd>アカウントと同期</kbd> - <kbd>データリポジトリ</kbd> - <kbd>データリポジトリキー</kbd> - <kbd>データリポジトリのリセット</kbd>
+  3. データリポジトリキーを再初期化します。1台のデバイスでキーを初期化した後、他のデバイスでキーをインポートします
+  4. クラウドで新しい同期ディレクトリを使用し、新しい同期の完了、データの完全性、復元に必要な情報の保管を確認してから、必要に応じて古いディレクトリを削除する
+  5. 新しい同期の完了、データの完全性、復元に必要な情報の保管を確認してから、必要に応じて古いクラウドスナップショットを削除する
+
+### 支払いが必要ですか？
+
+ほとんどの機能は無料で、商業利用も可能です。
+
+会員特典は支払い後にのみ利用可能です。詳細については[価格](https://b3log.org/siyuan/en/pricing.html)をご覧ください。
+
+## 🙏 謝辞
+
+SiYuanの誕生は、多くのオープンソースプロジェクトと貢献者なしでは実現できませんでした。プロジェクトのソースコード kernel/go.mod、app/package.json、およびプロジェクトのホームページをご覧ください。
+
+SiYuanの成長は、ユーザーのフィードバックとプロモーションなしでは実現できませんでした。SiYuanへのすべての支援に感謝します ❤️
+
+### 貢献者
+
+私たちに参加し、一緒にSiYuanにコードを貢献することを歓迎します。
+
+<a href="https://github.com/siyuan-note/siyuan/graphs/contributors">
+   <img src="https://contrib.rocks/image?repo=siyuan-note/siyuan" />
+</a>

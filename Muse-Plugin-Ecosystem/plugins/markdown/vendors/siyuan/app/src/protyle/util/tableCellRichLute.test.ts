@@ -1,0 +1,902 @@
+import * as assert from "node:assert/strict";
+import {execFile} from "node:child_process";
+import {mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
+import * as path from "node:path";
+import {test} from "node:test";
+import {promisify} from "node:util";
+import {createSourceFile, isClassDeclaration, isMethodDeclaration, isVariableStatement, ScriptTarget, transpileModule} from "typescript";
+
+const browserCases = async (source: string, enterSource: string, hintSource: string, keydownSource: string,
+                            copySource: string, selectionSource: string, highlightSource: string, blockSource: string) => {
+    const check: typeof assert = require("node:assert/strict");
+    const codeTabAttribute = "custom-sy-code-tab-spaces";
+    const api = new Function("Constants", source + "\nreturn {getAgentLute, configureAVRichTextLute, getTableCellEditorLute, " +
+        "canEnterCodeBlock, hasCodeBlockFence, getTableCellInlineHTML, serializeTableCellRich, " +
+        "updateTableCellEditingValue, getTableCellRichBlockDOM, sanitizeAVRichTextBlockDOM, getAVRichTextPreviewHTML, restoreTableVirtualizationDOM, " +
+        "copyTableCellContent, renderTableCellRich, getTableCellPlainText, encodeTableCellRich, getTextWithoutSemanticMarkers, prepareInlineElementBoundaryMutation};")({
+        CUSTOM_SY_CODE_TAB_SPACES: codeTabAttribute,
+    }) as
+        typeof import("../render/setLute") & typeof import("../render/av/richTextValue") &
+        typeof import("./tableCellRichLute") & typeof import("../wysiwyg/codeBlockEnter") &
+        typeof import("./tableCellRich") & typeof import("../render/av/richText") & typeof import("./tableVirtualizationDOM") &
+        typeof import("./inlineElementBoundary") & typeof import("./tableCellRichValue") & typeof import("./inlineElementMarker");
+    const base = api.configureAVRichTextLute(api.getAgentLute({emojiSite: "/emojis", emojis: {},
+        headingAnchor: false, listStyle: false, paragraphBeginningSpace: true, sanitize: true}));
+    const lute = api.getTableCellEditorLute(base);
+    for (const style of ["background-color: var(--b3-font-background5);", "color: var(--b3-font-color5);", "font-size: 2em;"]) {
+        const holder = document.createElement("div");
+        holder.innerHTML = base.Md2BlockDOM("note");
+        holder.querySelector('[contenteditable="true"]').innerHTML =
+            '<span data-type="text">（1）before</span>' +
+            `<span data-type="text" style="${style}">marked</span>` +
+            '<span data-type="text">after;（2）</span>';
+        const cell = document.createElement("td");
+        for (let round = 0; round < 3; round++) {
+            const value = api.serializeTableCellRich(holder.innerHTML);
+            api.updateTableCellEditingValue(cell, value);
+            holder.innerHTML = api.getTableCellRichBlockDOM(cell);
+            api.renderTableCellRich(cell);
+            for (const root of [holder, cell]) {
+                check.deepEqual(Array.from(root.querySelectorAll("span[style]")).map(span => span.textContent),
+                    ["marked"], `saving and reopening a cell must preserve inline style boundaries: ${style}, round ${round}`);
+            }
+            check.equal(api.getTableCellPlainText(cell), "（1）beforemarkedafter;（2）");
+        }
+    }
+    for (const content of ["&lt;a", "vector&lt;T&gt;", "&amp;lt;a", "&lt;img src=x onerror=alert(1)&gt;"]) {
+        const holder = document.createElement("div");
+        holder.innerHTML = base.Md2BlockDOM("note");
+        const span = document.createElement("span");
+        span.dataset.type = "inline-memo";
+        span.dataset.inlineMemoContent = content;
+        span.textContent = "note";
+        holder.querySelector('[contenteditable="true"]').replaceChildren(span);
+        for (let round = 0; round < 3; round++) {
+            const cell = document.createElement("td");
+            const value = api.serializeTableCellRich(holder.innerHTML);
+            api.updateTableCellEditingValue(cell, value);
+            holder.innerHTML = api.getTableCellRichBlockDOM(cell);
+            check.equal(holder.querySelector('[data-type="inline-memo"]').getAttribute("data-inline-memo-content"), content);
+            const preview = document.createElement("div");
+            preview.innerHTML = base.BlockDOM2HTML(holder.innerHTML);
+            check.equal(preview.querySelector("sup").textContent, `(${Lute.UnEscapeHTMLStr(content)})`);
+            check.equal(preview.querySelector("img, script, [onerror]"), null);
+            preview.innerHTML = api.getAVRichTextPreviewHTML(value.markdown);
+            check.equal(preview.querySelector("sup").textContent, `(${Lute.UnEscapeHTMLStr(content)})`);
+            check.equal(preview.querySelector("img, script, [onerror]"), null);
+        }
+    }
+    for (const [markdown, expected, blockCount] of [
+        ["first\n\nsecond", "first\n\nsecond", 2],
+        ["first<br />second\n\nlast", "first\nsecond\n\nlast", 2],
+        ["**first**\n\n[second](https://example.com)", "first\n\nsecond", 2],
+        ["first\n\n- one\n- two\n\nlast", "first\n\n- one\n- two\n\nlast", 3],
+        ["first\n\n```go\na\nb\n```\n\nlast", "first\n\na\nb\n\nlast", 3],
+        ["> first\n>\n> second", "first\n\nsecond", 2],
+        ["- first\n\n  second\n- third", "- first\n\nsecond\n- third", 3],
+    ] as const) {
+        const cell = document.createElement("td");
+        cell.setAttribute("data-sy-table-cell-rich", api.encodeTableCellRich(markdown));
+        const plainText = api.getTableCellPlainText(cell);
+        check.equal(plainText, expected);
+        const pasted = document.createElement("div");
+        pasted.innerHTML = base.Md2BlockDOM(plainText);
+        check.equal(pasted.children.length, blockCount);
+        check.equal(cell.getAttribute("data-sy-table-cell-rich"),
+            api.encodeTableCellRich(markdown), "copying never changes the source");
+    }
+    for (const target of [
+        "D:\\基线测试\\测试文档1.docx", "D:/基线测试/测试文档1.docx", "D:\\目录\\",
+        "file:///D:\\基线测试\\测试文档1.docx", "file:///D:/基线测试/测试文档1.docx",
+        "file:///tmp/test%20document.txt", "file://server/share/document.txt", "\\\\server\\share\\document.txt",
+        "https://example.com/document.txt", "assets/document.txt",
+    ]) {
+        const html = '<div data-type="NodeParagraph"><div contenteditable="true">' +
+            `<span data-type="a strong" data-href="${target}" data-title="title">anchor</span></div></div>`;
+        for (const multiBlock of [false, true]) {
+            let blockDOM = html + (multiBlock ? base.Md2BlockDOM("second paragraph") : "");
+            for (let pass = 0; pass < 3; pass++) {
+                const sanitized = api.sanitizeAVRichTextBlockDOM(Lute.Sanitize(blockDOM), true, true);
+                const value = api.serializeTableCellRich(sanitized);
+                const cell = document.createElement("td");
+                api.updateTableCellEditingValue(cell, value);
+                api.renderTableCellRich(cell);
+                const copied = document.createElement("td");
+                api.copyTableCellContent(copied, cell);
+                blockDOM = api.getTableCellRichBlockDOM(copied);
+                const holder = document.createElement("template");
+                holder.innerHTML = blockDOM;
+                const link = holder.content.querySelector('[data-type~="a"]');
+                check.equal(link?.getAttribute("data-href"), target, target);
+                check.equal(link?.textContent, "anchor", target);
+                check.ok(link?.getAttribute("data-type").split(" ").includes("strong"), target);
+                check.equal(link?.getAttribute("data-title"), "title", target);
+            }
+        }
+    }
+    for (const target of ["javascript:alert(1)", "data:text/html,payload", "file:///tmp/file%00.txt"]) {
+        const html = '<div data-type="NodeParagraph"><div contenteditable="true">' +
+            `<span data-type="a" data-href="${target}">anchor</span></div></div>`;
+        const holder = document.createElement("template");
+        holder.innerHTML = api.sanitizeAVRichTextBlockDOM(html, true, true);
+        check.equal(holder.content.querySelector('[data-type~="a"]')?.getAttribute("data-href"), null, target);
+    }
+    const localImage = '<div data-type="NodeParagraph"><div contenteditable="true">' +
+        '<span class="img"><img src="file:///tmp/image.png"></span></div></div>';
+    check.doesNotMatch(api.sanitizeAVRichTextBlockDOM(localImage, true, true), /<img/);
+    const customHTML = '<span data-type="custom_symble_strong_CJK_rectangle_yin" ' +
+        'style="--custom-symble-strong: rgb(0 166 240 / 1);">test</span>';
+    const customBlockDOM = base.Md2BlockDOM(customHTML + "\n\nsecond");
+    const customCell = document.createElement("td");
+    const customValue = api.serializeTableCellRich(customBlockDOM);
+    api.updateTableCellEditingValue(customCell, customValue);
+    check.ok(customCell.hasAttribute("data-sy-table-cell-rich"));
+    const reopenedCustom = api.getTableCellRichBlockDOM(customCell);
+    check.match(reopenedCustom, /data-type="custom_symble_strong_CJK_rectangle_yin"/);
+    check.match(reopenedCustom, /--custom-symble-strong: rgb\(0 166 240 \/ 1\)/);
+    check.match(reopenedCustom, /second/);
+    check.doesNotMatch(api.sanitizeAVRichTextBlockDOM(customBlockDOM, true), /custom_symble/);
+    const variableHTML = '<span data-type="custom_symble_strong_CJK_rectangle_yin" ' +
+        'style="--custom-symble-strong: var(--b3-font-color12);">colored</span>';
+    const variableValue = api.serializeTableCellRich(base.Md2BlockDOM("before " + variableHTML));
+    const variableCell = document.createElement("td");
+    api.updateTableCellEditingValue(variableCell, variableValue);
+    check.match(variableValue.markdown, /--custom-symble-strong: var\(--b3-font-color12\)/);
+    check.match(api.getTableCellRichBlockDOM(variableCell), /--custom-symble-strong: var\(--b3-font-color12\)/);
+    check.match(api.getTableCellRichBlockDOM(variableCell), /before/);
+    const unsafeCustom = api.sanitizeAVRichTextBlockDOM(
+        '<div data-type="NodeParagraph"><div contenteditable="true">' +
+        '<span data-type="custom_bad" style="--custom-bad: url(javascript:alert(1)); ' +
+        '--custom-unknown: var(--theme-color); --custom-safe: #abc;" onclick="alert(1)">safe</span></div></div>', true, true);
+    check.match(unsafeCustom, /--custom-safe: #abc;/);
+    check.doesNotMatch(unsafeCustom, /url\(|onclick|javascript:|--custom-unknown/);
+    const externalCustom = api.serializeTableCellRich(base.Md2BlockDOM(customHTML));
+    check.match(externalCustom.blockDOM, /data-type="custom_symble_strong_CJK_rectangle_yin"/);
+    check.match(externalCustom.blockDOM, /--custom-symble-strong: rgb\(0 166 240 \/ 1\)/);
+    const inlineCustomCell = document.createElement("td");
+    api.updateTableCellEditingValue(inlineCustomCell, externalCustom);
+    check.equal(inlineCustomCell.hasAttribute("data-sy-table-cell-rich"), false);
+    check.match(api.getTableCellRichBlockDOM(inlineCustomCell), /custom_symble_strong_CJK_rectangle_yin/);
+    const externalBold = api.serializeTableCellRich(base.HTML2BlockDOM("<strong>bold</strong>"));
+    check.match(externalBold.blockDOM, /data-type="strong"/);
+    const editable = document.createElement("div");
+    for (const text of ["```", "```go", "~~~~shell", "  ```js", "before\n\n```ts"]) {
+        editable.textContent = text;
+        check.equal(api.canEnterCodeBlock(editable, text.length, false), true, text);
+    }
+    editable.textContent = "···go";
+    check.equal(api.canEnterCodeBlock(editable, 5, true), true);
+    check.equal(api.canEnterCodeBlock(editable, 5, false), false);
+    for (const text of ["plain", "``", "```bad`", "text ```go", "first\n```bad`"]) {
+        editable.textContent = text;
+        check.equal(api.canEnterCodeBlock(editable, text.length, true), false, text);
+    }
+    editable.textContent = "````go";
+    check.equal(api.canEnterCodeBlock(editable, 3, true), false);
+    for (const type of ["text", "code"]) {
+        for (const prefix of ["", "first\n"]) {
+            editable.innerHTML = `<span data-type="${type}">${prefix}\`\`\`go</span>`;
+            check.equal(api.canEnterCodeBlock(editable, editable.textContent.length, true), false);
+        }
+    }
+    editable.innerHTML = '<span data-type="text">first\n```literal</span>\n```go';
+    check.equal(api.canEnterCodeBlock(editable, editable.textContent.length, true), true);
+    const paragraph = (content: string, text = false) => {
+        const holder = document.createElement("div");
+        holder.innerHTML = base.Md2BlockDOM("placeholder");
+        holder.querySelector('[contenteditable="true"]')[text ? "textContent" : "innerHTML"] = content;
+        return holder.innerHTML;
+    };
+    const parse = (html: string) => {
+        const holder = document.createElement("div");
+        holder.innerHTML = lute.SpinBlockDOM(html);
+        return holder;
+    };
+    const verifyCode = (holder: Element, language: string) => {
+        const code = holder.querySelector('[data-type="NodeCodeBlock"]');
+        check.ok(code, holder.innerHTML);
+        check.equal(code.querySelector(".protyle-action__language").textContent, language);
+        check.ok(code.querySelector(".hljs wbr"), "the caret belongs to the code body");
+        check.equal(holder.querySelector('[data-type="code"]'), null);
+        check.doesNotMatch(holder.innerHTML, /SYTABLECELLSOFTBREAK/);
+        return code;
+    };
+    for (const language of ["", "js"]) {
+        verifyCode(parse(paragraph("```" + language + Lute.Caret + "\n```", true)), language);
+        verifyCode(parse("```" + language + Lute.Caret + "\n```"), language);
+        verifyCode(parse(paragraph("```" + language + "<wbr>\n```")), language);
+    }
+    const prefixed = parse(paragraph('first\n\n<span data-type="strong">second</span>\n```go<wbr>\n```'));
+    verifyCode(prefixed, "go");
+    check.equal(prefixed.firstElementChild.querySelector('[contenteditable="true"]').textContent, "first\n\nsecond");
+    check.ok(prefixed.querySelector('[data-type="strong"]'));
+    const plain = parse(paragraph("first\n\nsecond<wbr>"));
+    check.equal(plain.childElementCount, 2);
+    check.deepEqual(Array.from(plain.children).map(block =>
+        block.querySelector('[contenteditable="true"]').textContent), ["first", "second"]);
+    for (const separator of ["\n\n", "\n\n\n", "\n \t\n"]) {
+        const divided = parse(paragraph("first" + separator + "second<wbr>"));
+        check.equal(divided.childElementCount, 2, separator);
+        check.deepEqual(Array.from(divided.children).map(block =>
+            block.querySelector('[contenteditable="true"]').textContent), ["first", "second"]);
+        check.ok(divided.lastElementChild.querySelector("wbr"), "the caret follows the paragraph split");
+        const stored = document.createElement("td");
+        api.updateTableCellEditingValue(stored, api.serializeTableCellRich(divided.innerHTML));
+        const reopened = document.createElement("div");
+        reopened.innerHTML = api.getTableCellRichBlockDOM(stored);
+        check.equal(reopened.childElementCount, 2, "the paragraph boundary survives save and reopen");
+    }
+    const singleBreak = parse(paragraph("first\nsecond<wbr>"));
+    check.equal(singleBreak.childElementCount, 1);
+    check.equal(singleBreak.querySelector('[contenteditable="true"]').textContent, "first\nsecond");
+    const storedSoftBreaks = document.createElement("td");
+    const storedSource = api.encodeTableCellRich("first<br /><br />second");
+    storedSoftBreaks.setAttribute("data-sy-table-cell-rich", storedSource);
+    const restoredSoftBreaks = parse(api.getTableCellRichBlockDOM(storedSoftBreaks));
+    check.equal(restoredSoftBreaks.childElementCount, 1, "reading existing soft breaks does not split paragraphs");
+    check.equal(restoredSoftBreaks.querySelector('[contenteditable="true"]').textContent, "first\n\nsecond");
+    api.updateTableCellEditingValue(storedSoftBreaks, api.serializeTableCellRich(restoredSoftBreaks.innerHTML));
+    check.equal(storedSoftBreaks.getAttribute("data-sy-table-cell-rich"), storedSource);
+    for (const source of ["```go\nfirst\n\nsecond\n```", "$$\nfirst\n\nsecond\n$$"]) {
+        const holder = document.createElement("div");
+        holder.innerHTML = base.Md2BlockDOM(source);
+        const editable = holder.querySelector('[contenteditable="true"]');
+        const mathSource = holder.firstElementChild.getAttribute("data-content");
+        (editable || holder.firstElementChild).insertAdjacentHTML("beforeend", "<wbr>");
+        const preserved = parse(holder.innerHTML);
+        check.equal(preserved.childElementCount, 1, "code and math retain their internal blank lines");
+        if (editable) {
+            check.match(preserved.querySelector('[contenteditable="true"]').textContent, /first\n\nsecond/);
+        } else {
+            check.equal(preserved.firstElementChild.getAttribute("data-content"), mathSource);
+        }
+    }
+    const formatted = parse(paragraph('<span data-type="strong">first</span>\n\n<span data-type="em">second<wbr></span>'));
+    check.equal(formatted.childElementCount, 2);
+    check.equal(formatted.firstElementChild.querySelector('[data-type="strong"]').textContent, "first");
+    check.equal(formatted.lastElementChild.querySelector('[data-type="em"]').textContent, "second");
+    const listParagraphs = parse(base.Md2BlockDOM("- first").replace("first", "first\n\nsecond<wbr>"));
+    check.equal(listParagraphs.querySelectorAll('[data-type="NodeListItem"]').length, 1);
+    check.equal(listParagraphs.querySelectorAll('[data-type="NodeParagraph"]').length, 2);
+    for (const [line, type] of [["# Heading", "NodeHeading"], ["- item", "NodeList"], ["[] task", "NodeList"]]) {
+        const converted = parse(paragraph("first\n\n" + line + "<wbr>"));
+        check.ok(converted.querySelector(`[data-type="${type}"] wbr`), line);
+        check.equal(converted.firstElementChild.querySelector('[contenteditable="true"]').textContent, "first");
+    }
+    const literal = parse(paragraph('<span data-type="text">```js\n```</span><wbr>'));
+    check.equal(literal.querySelector('[data-type="NodeCodeBlock"]'), null);
+    check.equal(literal.querySelector('[contenteditable="true"]').textContent, "```js\n```");
+    const existing = parse(base.Md2BlockDOM("```js\na | b\n\nc\n```"));
+    check.equal(existing.querySelector('.hljs [contenteditable="true"]').textContent, "a | b\n\nc\n");
+    check.doesNotMatch(api.sanitizeAVRichTextBlockDOM(base.Md2BlockDOM("```mermaid\ngraph TD\n```"), true), /NodeCodeBlock/);
+
+    const fixture = document.createElement("div");
+    fixture.innerHTML = '<table><tbody><tr><td><div class="table__cell-editor">' +
+        '<div class="protyle-wysiwyg"></div></div></td></tr></tbody></table>';
+    document.body.appendChild(fixture);
+    const cell = fixture.querySelector("td");
+    const host = cell.firstElementChild as HTMLElement;
+    const wysiwyg = host.firstElementChild as HTMLElement;
+    const hintElement = document.createElement("div");
+    hintElement.className = "fn__none";
+    const subElement = hintElement.cloneNode() as HTMLElement;
+    const calls: {rendered?: Element, transaction?: {element: Element, oldHTML: string,
+        additional?: {doOperations: IOperation[], undoOperations: IOperation[]}}, navigated: number} = {navigated: 0};
+    const editTransactions: {doOperations: IOperation[], undoOperations: IOperation[]}[] = [];
+    const protyle = {lute, lite: true, wysiwyg: {element: wysiwyg}, toolbar: {range: document.createRange(), subElement},
+        options: {hint: {extend: [{key: "/", hint: (): IHintData[] => []}]}}};
+    const getSelectionOffset = (editable: Node, _editor: Element, range: Range) => {
+        const prefix = document.createRange();
+        prefix.selectNodeContents(editable);
+        prefix.setEnd(range.startContainer, range.startOffset);
+        const start = prefix.toString().length;
+        prefix.setEnd(range.endContainer, range.endOffset);
+        return {start, end: prefix.toString().length};
+    };
+    const getContenteditableElement = (element: Element) => element.querySelector('[contenteditable="true"]');
+    const focusByWbr = (element: Element, range: Range) => {
+        const marker = element.querySelector("wbr");
+        if (marker) {
+            range.setStartBefore(marker);
+            range.collapse(true);
+            getSelection().removeAllRanges();
+            getSelection().addRange(range);
+        }
+    };
+    const updateTransaction = (_protyle: unknown, element: Element, oldHTML: string, _context: unknown,
+                               additional: {doOperations: IOperation[], undoOperations: IOperation[]}) => {
+        calls.transaction = {element, oldHTML, additional};
+    };
+    const constants = {LOCAL_CODELANG: "codeLanguage", SIYUAN_RENDER_CODE_LANGUAGES: ["mermaid"],
+        BLOCK_HINT_KEYS: ["((", "[["], INLINE_TYPE: ["code"], ZWSP: "\u200b", ATTRIBUTE_EDITING: "updated"};
+    Object.assign(window, {siyuan: {storage: {codeLanguage: ""}, config: {
+        editor: {markdown: {codeBlockMiddleDot: true}}, keymap: {editor: {table: {}, general: {}}},
+    }}});
+    const blockAPI = new Function("Constants", blockSource + "\nreturn {genEmptyElement, genEmptyBlock, genListItemElement};")(constants);
+    const dependencies = {
+        ...api, ...blockAPI, Constants: constants, BLOCK_SELECTION_CLASS: "protyle-wysiwyg--select",
+        getBlockSelectionModeElement: (): undefined => undefined, getEmbedChildOperationContext: (): undefined => undefined,
+        hasClosestByClassName: (element: Element, className: string) => element.closest("." + className),
+        isNotEditBlock: () => false, getContenteditableElement, getSelectionOffset,
+        getUndoFocusContext: () => ({}), getParentBlock: (element: Element) => element.parentElement,
+        getPreviousBlockSibling: (element: Element) => element.previousElementSibling,
+        isEmptyListItemBlock: () => false, shouldCreateListItemChildOnEnter: () => false,
+        updateListOrder: () => {}, blockRender: () => {}, mathRender: () => {}, scrollCenter: () => {},
+        activateTrackedRangeInsertion: () => {}, setStorageVal: () => {},
+        highlightRender: (element: Element) => {
+            calls.rendered = element;
+            focusByWbr(element, protyle.toolbar.range);
+        },
+        processRender: (element: Element) => {
+            check.equal(element.classList.contains("render-node"), false, "ordinary content must not use the render editor");
+        },
+        updateTransaction, focusByWbr, focusByRange: () => {}, hideElements: () => {},
+        hasClosestBlock: (node: Node) => (node instanceof Element ? node : node.parentElement).closest("[data-node-id]"),
+        shouldCaptureHintUndoFocus: () => false, isBuiltinSlashHint: () => true,
+        transaction: (_protyle: IProtyle, doOperations: IOperation[], undoOperations: IOperation[]) => {
+            editTransactions.push({doOperations, undoOperations});
+        },
+    };
+    const enter = new Function(...Object.keys(dependencies), enterSource + "\nreturn enter;")(
+        ...Object.values(dependencies)) as typeof import("../wysiwyg/enter").enter;
+    const Hint = new Function(...Object.keys(dependencies), hintSource + "\nreturn Hint;")(...Object.values(dependencies));
+    const fill = Hint.prototype.fill;
+    const fragment = {wysiwyg, protyle, hintElement, getBlockHTML: () => wysiwyg.innerHTML};
+    const keyDependencies = {...dependencies, host, cell, table: cell.closest("table"), fragment, owner: protyle, signal: new AbortController().signal,
+        captureBeforeChange: () => {}, composing: false, matchHotKey: () => false, finish: () => {},
+        fixTable: () => { calls.navigated++; }};
+    new Function(...Object.keys(keyDependencies), keydownSource)(...Object.values(keyDependencies));
+    const prepare = (text: string, offset = text.length) => {
+        wysiwyg.innerHTML = paragraph(text, true);
+        const range = document.createRange();
+        range.setStart(getContenteditableElement(wysiwyg).firstChild, offset);
+        range.collapse(true);
+        getSelection().removeAllRanges();
+        getSelection().addRange(range);
+        protyle.toolbar.range = range;
+        calls.rendered = undefined;
+        calls.transaction = undefined;
+        editTransactions.length = 0;
+        return range;
+    };
+    let entered: Promise<unknown>;
+    wysiwyg.addEventListener("keydown", event => {
+        if (event.key === "Enter" && !event.shiftKey) {
+            const range = getSelection().getRangeAt(0);
+            const block = (range.startContainer instanceof Element ? range.startContainer : range.startContainer.parentElement)
+                .closest<HTMLElement>('[data-type="NodeParagraph"], [data-type="NodeCodeBlock"]');
+            entered = enter(block, range, protyle as unknown as IProtyle);
+        }
+    });
+    const replay = (operations: IOperation[]) => operations.forEach(operation => {
+        if (operation.action === "update") {
+            wysiwyg.querySelector(`[data-node-id="${operation.id}"]`).outerHTML = operation.data;
+        } else if (operation.action === "insert") {
+            wysiwyg.querySelector(`[data-node-id="${operation.previousID}"]`).insertAdjacentHTML("afterend", operation.data);
+        } else if (operation.action === "delete") {
+            wysiwyg.querySelector(`[data-node-id="${operation.id}"]`).remove();
+        }
+    });
+    for (const text of ["```", "```go", "~~~~js", "···ts", "first\n\nsecond\n```go", "first\n```literal\n```go"]) {
+        const range = prepare(text);
+        if (text.includes("literal")) {
+            const content = getContenteditableElement(wysiwyg);
+            content.innerHTML = '<span data-type="text">first\n```literal</span>\n```go';
+            range.setStart(content.lastChild, content.lastChild.textContent.length);
+            range.collapse(true);
+        }
+        const oldID = wysiwyg.firstElementChild.getAttribute("data-node-id");
+        const previousNavigation = calls.navigated;
+        getContenteditableElement(wysiwyg).dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", bubbles: true, cancelable: true}));
+        await entered;
+        check.equal(calls.navigated, previousNavigation, text);
+        const language = text.slice(text.lastIndexOf("\n") + 1).replace(/^[`~·]+/, "") || window.siyuan.storage.codeLanguage;
+        const code = verifyCode(wysiwyg, language);
+        check.equal(calls.rendered, code);
+        check.equal(calls.transaction.element.getAttribute("data-node-id"), oldID);
+        if (text.startsWith("first")) {
+            check.equal(wysiwyg.firstElementChild.querySelector('[contenteditable="true"]').textContent,
+                text.substring(0, text.lastIndexOf("\n")));
+            check.equal(calls.transaction.additional.doOperations.length, 1);
+            check.equal(calls.transaction.additional.undoOperations.length, 1);
+        }
+        const saved = wysiwyg.innerHTML;
+        const transaction = calls.transaction;
+        const updatedHTML = transaction.element.outerHTML;
+        replay([{action: "update", id: oldID, data: transaction.oldHTML}, ...(transaction.additional?.undoOperations || [])]);
+        check.equal(getContenteditableElement(wysiwyg).textContent, text);
+        replay([...(transaction.additional?.doOperations || []), {action: "update", id: oldID, data: updatedHTML}]);
+        check.equal(wysiwyg.innerHTML, saved, "redo restores the complete conversion");
+        wysiwyg.querySelectorAll("wbr").forEach(marker => marker.remove());
+        const body = "a | b\n\n<标签> & c\n";
+        wysiwyg.querySelector('.hljs [contenteditable="true"]').textContent = body;
+        const stored = document.createElement("td");
+        api.updateTableCellEditingValue(stored, api.serializeTableCellRich(wysiwyg.innerHTML));
+        const reopened = document.createElement("div");
+        reopened.innerHTML = api.getTableCellRichBlockDOM(stored);
+        check.equal(reopened.querySelectorAll('[data-type="NodeCodeBlock"]').length, 1);
+        check.equal(reopened.querySelector('.hljs [contenteditable="true"]').textContent, body);
+        if (text.startsWith("first")) {
+            check.equal(reopened.firstElementChild.querySelector('[contenteditable="true"]').textContent,
+                text.substring(0, text.lastIndexOf("\n")));
+        }
+    }
+    for (const [text, offset] of [["ordinary", 8], ["``", 2], ["```bad`", 7], ["```go", 2]] as const) {
+        prepare(text, offset);
+        const previous = calls.navigated;
+        entered = undefined;
+        getContenteditableElement(wysiwyg).dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", bubbles: true, cancelable: true}));
+        await entered;
+        check.equal(calls.navigated, previous, text);
+        check.equal(wysiwyg.children.length, 2, text);
+        check.equal(wysiwyg.firstElementChild.querySelector('[contenteditable="true"]').textContent.replace(/\u200b/g, ""),
+            text.substring(0, offset));
+        const stored = document.createElement("td");
+        api.updateTableCellEditingValue(stored, api.serializeTableCellRich(wysiwyg.innerHTML));
+        check.ok(stored.hasAttribute("data-sy-table-cell-rich"));
+        const reopened = document.createElement("div");
+        reopened.innerHTML = api.getTableCellRichBlockDOM(stored);
+        check.equal(reopened.children.length, 2, "saving and reopening retains the paragraph split");
+    }
+    for (const shiftKey of [false, true]) {
+        prepare("ordinary");
+        const previous = calls.navigated;
+        getContenteditableElement(wysiwyg).dispatchEvent(new KeyboardEvent("keydown", {key: "Tab", shiftKey, bubbles: true, cancelable: true}));
+        check.equal(calls.navigated, previous + 1);
+    }
+    prepare("```go");
+    const previous = calls.navigated;
+    getContenteditableElement(wysiwyg).dispatchEvent(new KeyboardEvent("keydown", {key: "Tab", bubbles: true, cancelable: true}));
+    check.equal(calls.navigated, previous + 1);
+    prepare("```go");
+    entered = undefined;
+    const beforeSoftEnter = calls.navigated;
+    getContenteditableElement(wysiwyg).dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", shiftKey: true, bubbles: true, cancelable: true}));
+    check.equal(calls.navigated, beforeSoftEnter);
+    check.equal(entered, undefined);
+    window.siyuan.config.editor.markdown.codeBlockMiddleDot = false;
+    prepare("···go");
+    getContenteditableElement(wysiwyg).dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", bubbles: true, cancelable: true}));
+    await entered;
+    check.equal(calls.navigated, beforeSoftEnter);
+    check.equal(wysiwyg.querySelector('[data-type="NodeCodeBlock"]'), null);
+    prepare("firstsecond", 5);
+    getContenteditableElement(wysiwyg).dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", bubbles: true, cancelable: true}));
+    await entered;
+    check.deepEqual(Array.from(wysiwyg.children).map(block =>
+        block.querySelector('[contenteditable="true"]').textContent.replace(/\u200b/g, "")), ["first", "second"]);
+    check.equal(editTransactions.length, 1);
+    const splitTransaction = editTransactions[0];
+    replay(splitTransaction.undoOperations);
+    check.equal(wysiwyg.children.length, 1);
+    check.equal(getContenteditableElement(wysiwyg).textContent.replace(/\u200b/g, ""), "firstsecond");
+    replay(splitTransaction.doOperations);
+    check.deepEqual(Array.from(wysiwyg.children).map(block =>
+        block.querySelector('[contenteditable="true"]').textContent.replace(/\u200b/g, "")), ["first", "second"]);
+    prepare("firstsecond", 0);
+    getContenteditableElement(wysiwyg).dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", bubbles: true, cancelable: true}));
+    await entered;
+    check.equal(wysiwyg.children.length, 2);
+    check.equal(wysiwyg.lastElementChild.querySelector('[contenteditable="true"]').textContent.replace(/\u200b/g, ""), "firstsecond");
+    {
+        const range = prepare("firstsecond", 5);
+        const block = wysiwyg.firstElementChild as HTMLElement;
+        const mobileDependencies = {...dependencies, isMobile: () => true, isIPad: () => false,
+            hasNextSibling: (node: Node) => node.nextSibling, setTrackedRangeInsertionResult: () => {}};
+        const mobileSoftEnter = new Function(...Object.keys(mobileDependencies), enterSource + "\nreturn softEnter;")(
+            ...Object.values(mobileDependencies)) as typeof import("../wysiwyg/enter").softEnter;
+        check.equal(mobileSoftEnter(range, block, {...protyle, toolbar: {...protyle.toolbar, getCurrentType: (): string[] => []}} as unknown as IProtyle), true);
+        check.equal(wysiwyg.children.length, 1);
+        check.match(api.serializeTableCellRich(wysiwyg.innerHTML).markdown, /first<br \/>second/);
+    }
+    for (const markdown of ["- first", "1. first"]) {
+        wysiwyg.innerHTML = base.Md2BlockDOM(markdown);
+        const editable = getContenteditableElement(wysiwyg);
+        const range = document.createRange();
+        range.selectNodeContents(editable);
+        range.collapse(false);
+        getSelection().removeAllRanges();
+        getSelection().addRange(range);
+        const previous = calls.navigated;
+        editable.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", bubbles: true, cancelable: true}));
+        await entered;
+        check.equal(calls.navigated, previous);
+        check.equal(wysiwyg.querySelectorAll('[data-type="NodeListItem"]').length, 2, markdown);
+        editable.dispatchEvent(new KeyboardEvent("keydown", {key: "Tab", bubbles: true, cancelable: true}));
+        check.equal(calls.navigated, previous, "list Tab retains its indentation behavior");
+    }
+    wysiwyg.innerHTML = base.Md2BlockDOM("```go\nab\n```");
+    {
+        const editable = getContenteditableElement(wysiwyg);
+        const range = document.createRange();
+        range.setStart(editable.firstChild, 1);
+        range.collapse(true);
+        getSelection().removeAllRanges();
+        getSelection().addRange(range);
+        const previous = calls.navigated;
+        editable.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", bubbles: true, cancelable: true}));
+        await entered;
+        check.equal(calls.navigated, previous);
+        check.equal(wysiwyg.children.length, 1);
+        check.equal(getContenteditableElement(wysiwyg).textContent, "a\nb\n");
+        getContenteditableElement(wysiwyg).dispatchEvent(new KeyboardEvent("keydown", {key: "Tab", bubbles: true, cancelable: true}));
+        check.equal(calls.navigated, previous, "code Tab retains its indentation behavior");
+    }
+    for (const prefix of ["", "existing "]) {
+        const range = prepare(prefix + "/");
+        range.setStart(range.startContainer, prefix.length);
+        const context = {source: "hint", splitChar: "/", lastIndex: -1, fixImageCursor: () => {},
+            consumeRefBracketClose: Hint.prototype.consumeRefBracketClose,
+            // 选区不在表格单元格内时接管不生效，这里只验证代码块插入
+            openNewTableCell: () => {}};
+        fill.call(context, "```", protyle, false);
+        const code = verifyCode(wysiwyg, window.siyuan.storage.codeLanguage);
+        check.equal(calls.rendered, code);
+        check.ok(code.contains(getSelection().anchorNode));
+    }
+    const copied: string[] = [];
+    let messages = 0;
+    let bubbled = 0;
+    Object.assign(window.siyuan, {languages: {copied: "Copied", default: "Default",
+        codeTabSpacesCount: "${x} spaces", codeTabSpacesKeepTab: "Keep tab"}});
+    const copyController = new AbortController();
+    let canEditCode = true;
+    let menuItems: IMenu[] = [];
+    let menuShown = 0;
+    let mobileMenuShown = 0;
+    let mobileCodeMenu = false;
+    let updates = 0;
+    let oldCode: ReturnType<typeof api.serializeTableCellRich>;
+    const settingCell = document.createElement("td");
+    Object.assign(window.siyuan, {menus: {menu: {
+        element: document.createElement("div"),
+        remove() { menuItems = []; this.data = undefined; }, append: () => {}, popup: () => { menuShown++; },
+        fullscreen: () => { mobileMenuShown++; },
+    }}});
+    const copyDependencies = {
+        host, fragment, signal: copyController.signal,
+        Constants: {...constants, CUSTOM_SY_CODE_TAB_SPACES: codeTabAttribute},
+        getContenteditableElement, getUndoFocusContext: () => ({}), updateTransaction,
+        canEdit: () => canEditCode,
+        beforeChange: () => { oldCode = api.serializeTableCellRich(wysiwyg.innerHTML); },
+        commit: () => {
+            updates++;
+            api.updateTableCellEditingValue(settingCell, api.serializeTableCellRich(wysiwyg.innerHTML));
+        },
+        isMobile: () => mobileCodeMenu,
+        highlightRender: () => {},
+        MenuItem: class {
+            element = document.createElement("button");
+            constructor(item: IMenu) { menuItems.push(item); }
+        },
+        writeText: (text: string) => copied.push(text),
+        showMessage: (text: string) => {
+            check.equal(text, "Copied");
+            messages++;
+        },
+    };
+    const codeActions = new Function(...Object.keys(copyDependencies), copySource +
+        "\nreturn {getCodeBlockTabSpace, tabCodeBlock};")(...Object.values(copyDependencies)) as
+        typeof import("../wysiwyg/codeBlock");
+    fixture.addEventListener("click", () => bubbled++);
+    for (const text of ["", "a\u00a0b\n  <tag> & value\n\n", "\u200D```\n"]) {
+        wysiwyg.innerHTML = base.Md2BlockDOM("```js\nplaceholder\n```");
+        wysiwyg.querySelector('.hljs [contenteditable="true"]').textContent = text + "\n";
+        const button = wysiwyg.querySelector(".protyle-action__copy");
+        for (const target of [button, button.querySelector("use")]) {
+            const event = new MouseEvent("click", {bubbles: true, cancelable: true});
+            target.dispatchEvent(event);
+            check.equal(event.defaultPrevented, true);
+            check.equal(copied[copied.length - 1], text.replace(/\u00a0/g, " ").replace(/\u200D```/g, "```"));
+        }
+    }
+    check.equal(copied.length, 6);
+    check.equal(messages, 6);
+    check.equal(bubbled, 0, "copy stays inside the cell editor");
+    Object.assign(window.siyuan.config.editor,
+        {codeLineWrap: true, codeLigatures: false, codeSyntaxHighlightLineNum: true, codeTabSpaces: 4});
+    const settingsBody = "a | b\n\n<test> & c\n";
+    wysiwyg.innerHTML = base.Md2BlockDOM("```js\n" + settingsBody + "```");
+    const defaults = [true, false, true];
+    for (const [index, attribute] of ["linewrap", "ligatures", "linenumber"].entries()) {
+        wysiwyg.querySelector(".protyle-action__menu use").dispatchEvent(new MouseEvent("click", {bubbles: true}));
+        check.equal(menuItems.length, 4);
+        check.equal(menuItems[index + 1].checked, defaults[index]);
+        menuItems[index + 1].click(document.createElement("button"), new MouseEvent("click"));
+        wysiwyg.innerHTML = api.getTableCellRichBlockDOM(settingCell);
+        check.equal(wysiwyg.firstElementChild.getAttribute(attribute), String(!defaults[index]));
+        check.equal(wysiwyg.querySelector('.hljs [contenteditable="true"]').textContent, settingsBody);
+        check.equal(api.serializeTableCellRich(wysiwyg.innerHTML).markdown,
+            api.serializeTableCellRich(api.getTableCellRichBlockDOM(settingCell)).markdown);
+        const redo = settingCell.getAttribute("data-sy-table-cell-rich");
+        api.updateTableCellEditingValue(settingCell, oldCode);
+        const undoHolder = document.createElement("div");
+        undoHolder.innerHTML = api.getTableCellRichBlockDOM(settingCell);
+        check.equal(undoHolder.firstElementChild.hasAttribute(attribute), false);
+        settingCell.setAttribute("data-sy-table-cell-rich", redo);
+        check.equal(api.getTableCellRichBlockDOM(settingCell), wysiwyg.innerHTML);
+    }
+    check.equal(updates, 3, "each setting explicitly commits through the host");
+    wysiwyg.innerHTML = base.Md2BlockDOM("```js\n" + settingsBody + "```");
+    for (const value of [0, 2, 4, 6, 8, null]) {
+        const previousValue = wysiwyg.firstElementChild.getAttribute(codeTabAttribute);
+        wysiwyg.querySelector(".protyle-action__menu").dispatchEvent(new MouseEvent("click", {bubbles: true}));
+        const tabItems = menuItems.find(item => item.id === "md29").submenu;
+        check.deepEqual(tabItems.map(item => item.label),
+            ["Default (4 spaces)", "Keep tab", "2 spaces", "4 spaces", "6 spaces", "8 spaces"]);
+        check.equal(tabItems.filter(item => item.checked).length, 1);
+        const option = tabItems.find(item => item.id === (value === null ? "default" : `tabSpaces${value}`));
+        option.click(document.createElement("button"), new MouseEvent("click"));
+        wysiwyg.innerHTML = api.getTableCellRichBlockDOM(settingCell);
+        const code = wysiwyg.firstElementChild as HTMLElement;
+        check.equal(code.getAttribute(codeTabAttribute), value === null ? null : value.toString());
+        check.equal(code.querySelector('.hljs [contenteditable="true"]').textContent, settingsBody);
+        const expectedIndent = value === 0 ? "\t" : " ".repeat(value ?? 4);
+        check.equal(codeActions.getCodeBlockTabSpace(code), expectedIndent);
+        const redo = settingCell.getAttribute("data-sy-table-cell-rich");
+        api.updateTableCellEditingValue(settingCell, oldCode);
+        const undoHolder = document.createElement("div");
+        undoHolder.innerHTML = api.getTableCellRichBlockDOM(settingCell);
+        check.equal(undoHolder.firstElementChild.getAttribute(codeTabAttribute), previousValue);
+        settingCell.setAttribute("data-sy-table-cell-rich", redo);
+        const range = document.createRange();
+        range.setStart(code.querySelector('.hljs [contenteditable="true"]').firstChild, 0);
+        range.collapse(true);
+        codeActions.tabCodeBlock(protyle as unknown as IProtyle, code, range);
+        check.equal(code.querySelector('.hljs [contenteditable="true"]').textContent, expectedIndent + settingsBody);
+        wysiwyg.innerHTML = api.getTableCellRichBlockDOM(settingCell);
+    }
+    const editableUpdates = updates;
+    const editableMenus = menuShown;
+    canEditCode = false;
+    wysiwyg.querySelector(".protyle-action__menu").dispatchEvent(new MouseEvent("click", {bubbles: true}));
+    check.equal(menuShown, editableMenus, "read-only editors cannot open the settings menu");
+    menuItems[1].click(document.createElement("button"), new MouseEvent("click"));
+    menuItems[0].submenu[1].click(document.createElement("button"), new MouseEvent("click"));
+    check.equal(updates, editableUpdates, "stale menu callbacks cannot change a read-only editor");
+    canEditCode = true;
+    mobileCodeMenu = true;
+    wysiwyg.querySelector(".protyle-action__menu").dispatchEvent(new MouseEvent("click", {bubbles: true}));
+    check.equal(mobileMenuShown, 1, "mobile opens the fullscreen menu");
+    check.equal(menuShown, editableMenus);
+    wysiwyg.firstElementChild.setAttribute("linewrap", "invalid");
+    const cleanCode = document.createElement("div");
+    cleanCode.innerHTML = api.sanitizeAVRichTextBlockDOM(wysiwyg.innerHTML, true);
+    check.equal(cleanCode.firstElementChild.hasAttribute("linewrap"), false);
+    cleanCode.innerHTML = api.sanitizeAVRichTextBlockDOM(wysiwyg.innerHTML);
+    check.equal(cleanCode.firstElementChild.hasAttribute("ligatures"), false);
+    for (const value of ["", "3", "-2", "10", "02", "2.0", "true"]) {
+        wysiwyg.firstElementChild.setAttribute(codeTabAttribute, value);
+        cleanCode.innerHTML = api.sanitizeAVRichTextBlockDOM(wysiwyg.innerHTML, true);
+        check.equal(cleanCode.firstElementChild.hasAttribute(codeTabAttribute), false);
+    }
+    wysiwyg.firstElementChild.setAttribute(codeTabAttribute, "2");
+    cleanCode.innerHTML = api.sanitizeAVRichTextBlockDOM(wysiwyg.innerHTML);
+    check.equal(cleanCode.firstElementChild.hasAttribute(codeTabAttribute), false);
+    copyController.abort();
+    wysiwyg.querySelector(".protyle-action__copy").dispatchEvent(new MouseEvent("click", {bubbles: true}));
+    check.equal(copied.length, 6, "closing the editor removes the copy handler");
+    menuItems[1].click(document.createElement("button"), new MouseEvent("click"));
+    menuItems[0].submenu[1].click(document.createElement("button"), new MouseEvent("click"));
+    check.equal(updates, editableUpdates, "closing the editor invalidates menu callbacks");
+    const selectionDependencies = {getContenteditableElement, isNotEditBlock: () => false, revealTabsForTarget: () => {}};
+    const selectionAPI = new Function(...Object.keys(selectionDependencies), selectionSource +
+        "\nreturn {captureRichCellSelection, captureRichCellSelectionAtPoint, restoreRichCellSelection, focusByOffset, getSelectionOffset, setLastNodeRange, createRangeByOffsets, focusByRange};")(
+        ...Object.values(selectionDependencies)) as typeof import("./tableCellRichSelection") & typeof import("./selection");
+    const renderDependencies = {
+        isFoldedRenderContent: () => false,
+        getContenteditableElement,
+        ...selectionAPI, Constants: {PROTYLE_CDN: ""}, setCodeTheme: () => {}, addScript: () => Promise.resolve(),
+    };
+    const render = new Function(...Object.keys(renderDependencies), highlightSource + "\nreturn highlightRender;")(
+        ...Object.values(renderDependencies)) as typeof import("../render/highlightRender").highlightRender;
+    Object.assign(window, {hljs: {
+        getLanguage: () => true,
+        highlight: (text: string) => {
+            const span = document.createElement("span");
+            span.textContent = text;
+            return {value: span.outerHTML};
+        },
+    }});
+    const indentDependencies = {...copyDependencies, ...selectionAPI};
+    const indentActions = new Function(...Object.keys(indentDependencies), copySource + "\nreturn {tabCodeBlock};")(
+        ...Object.values(indentDependencies)) as typeof import("../wysiwyg/codeBlock");
+    const indentationCases: Array<{text: string, global: number, override?: string, detected?: string, unit: string}> = [
+        {text: "if ready:\n  work()\n    nested()\n", global: 0, detected: "2", unit: "  "},
+        {text: "if ready:\n    work()\n", global: 2, detected: "4", unit: "    "},
+        {text: "if ready:\n\twork()\n", global: 4, detected: "0", unit: "\t"},
+        {text: "if ready:\n  work()\n", global: 4, override: "0", unit: "\t"},
+        {text: "if ready:\n  work()\n", global: 0, override: "4", unit: "    "},
+        {text: "if ready:\n  work()\n\tnested()\n", global: 4, unit: "    "},
+        {text: "  work()\n", global: 0, unit: "\t"},
+    ];
+    for (const item of indentationCases) {
+        window.siyuan.config.editor.codeTabSpaces = item.global;
+        wysiwyg.innerHTML = base.Md2BlockDOM("```text\n" + item.text + "```");
+        const code = wysiwyg.firstElementChild as HTMLElement;
+        const editable = getContenteditableElement(code);
+        if (item.override !== undefined) {
+            code.setAttribute(codeTabAttribute, item.override);
+        }
+        const originalHTML = code.outerHTML;
+        check.equal(editable.textContent, item.text, "loading pasted code preserves its whitespace");
+        const range = selectionAPI.focusByOffset(editable, 0, item.text.length - 1, false);
+        check.ok(range);
+        indentActions.tabCodeBlock(protyle as unknown as IProtyle, code, range);
+        const indented = item.text.slice(0, -1).split("\n").map(line => item.unit + line).join("\n") + "\n";
+        check.equal(editable.textContent, indented);
+        check.equal(code.getAttribute(codeTabAttribute), item.override ?? item.detected ?? null);
+        check.equal(calls.transaction.oldHTML, originalHTML, "undo restores both the text and the inherited setting");
+        api.updateTableCellEditingValue(settingCell, api.serializeTableCellRich(code.outerHTML));
+        const reopened = document.createElement("div");
+        reopened.innerHTML = api.getTableCellRichBlockDOM(settingCell);
+        check.equal(reopened.firstElementChild.getAttribute(codeTabAttribute), item.override ?? item.detected ?? null);
+        check.equal(getContenteditableElement(reopened).textContent, indented);
+        indentActions.tabCodeBlock(protyle as unknown as IProtyle, code, range, true);
+        check.equal(editable.textContent, item.text, "outdent uses the saved width and reverses the preceding indent");
+    }
+    window.siyuan.config.editor.codeTabSpaces = 0;
+    wysiwyg.innerHTML = base.Md2BlockDOM("```text\nif ready:\n  work()\n```");
+    const outdentCode = wysiwyg.firstElementChild as HTMLElement;
+    const outdentEditable = getContenteditableElement(outdentCode);
+    const unchangedHTML = outdentCode.outerHTML;
+    const unchangedRange = selectionAPI.focusByOffset(outdentEditable, 0, 0, false);
+    check.ok(unchangedRange);
+    indentActions.tabCodeBlock(protyle as unknown as IProtyle, outdentCode, unchangedRange, true);
+    check.equal(outdentCode.outerHTML, unchangedHTML, "a no-op does not persist an inferred setting");
+    const outdentRange = selectionAPI.focusByOffset(outdentEditable, 12, 12, false);
+    check.ok(outdentRange);
+    indentActions.tabCodeBlock(protyle as unknown as IProtyle, outdentCode, outdentRange, true);
+    check.equal(outdentEditable.textContent, "if ready:\nwork()\n");
+    check.equal(outdentCode.getAttribute(codeTabAttribute), "2");
+    check.equal(calls.transaction.oldHTML, unchangedHTML);
+    indentActions.tabCodeBlock(protyle as unknown as IProtyle, outdentCode, outdentRange);
+    check.equal(outdentEditable.textContent, "if ready:\n  work()\n", "indent retains the detected width after the last indent was removed");
+    window.siyuan.config.editor.codeTabSpaces = 4;
+    const body = "4441231234444\n\n\n123555555\n22\n\n123\n";
+    wysiwyg.innerHTML = base.Md2BlockDOM("sdf\n\n```java\n" + body + "```");
+    const codeEdit = wysiwyg.querySelector<HTMLElement>('.hljs [contenteditable="true"]');
+    selectionAPI.focusByOffset(codeEdit, 23, 23);
+    const beforeEdit = selectionAPI.captureRichCellSelection(wysiwyg, getSelection());
+    check.equal(beforeEdit.startIndex, 1, "the line number gutter is not an editable block");
+    const marker = document.createElement("wbr");
+    const markerRange = selectionAPI.focusByOffset(codeEdit, 24, 24, false);
+    check.ok(markerRange);
+    markerRange.insertNode(marker);
+    selectionAPI.focusByOffset(codeEdit, 0, 0);
+    const pending = selectionAPI.captureRichCellSelection(wysiwyg, getSelection(), true);
+    check.equal(pending.start, 24, "pending highlight uses the caret marker instead of the stale DOM selection");
+    const serialized = api.serializeTableCellRich(wysiwyg.innerHTML);
+    check.ok(!serialized.markdown.includes(Lute.Caret), "temporary caret must not enter stored cell content");
+    check.ok(wysiwyg.contains(marker), "serialization leaves the live caret intact");
+    const savedCell = document.createElement("td");
+    api.updateTableCellEditingValue(savedCell, serialized);
+    for (const lineNumbers of [false, true]) {
+        window.siyuan.config.editor.codeSyntaxHighlightLineNum = lineNumbers;
+        window.siyuan.config.editor.fontSize = 16;
+        for (const saved of [beforeEdit, pending, {...beforeEdit, end: 28, backward: true}]) {
+            wysiwyg.innerHTML = api.getTableCellRichBlockDOM(savedCell);
+            render(wysiwyg);
+            check.equal(selectionAPI.restoreRichCellSelection(wysiwyg, saved), true);
+            await new Promise(resolve => setTimeout(resolve, 0));
+            check.deepEqual(selectionAPI.captureRichCellSelection(wysiwyg, getSelection()), saved,
+                "asynchronous highlighting preserves the restored undo or redo selection");
+            check.equal(wysiwyg.querySelector('.hljs [contenteditable="true"]').textContent, body);
+        }
+        wysiwyg.innerHTML = api.getTableCellRichBlockDOM(savedCell);
+        render(wysiwyg);
+        const clickedCode = wysiwyg.querySelector<HTMLElement>('.hljs [contenteditable="true"]');
+        const clickRange = document.createRange();
+        clickRange.setStart(clickedCode.firstChild, 7);
+        clickRange.collapse(true);
+        getSelection().removeAllRanges();
+        getSelection().addRange(clickRange);
+        await new Promise(resolve => setTimeout(resolve, 0));
+        check.equal(selectionAPI.captureRichCellSelection(wysiwyg, getSelection()).start, 7,
+            "first-click caret survives the initial asynchronous code highlight");
+    }
+    for (const offset of [2, 6, body.indexOf("123555555") + 4]) {
+        wysiwyg.innerHTML = api.getTableCellRichBlockDOM(savedCell);
+        render(wysiwyg);
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const previewCode = wysiwyg.querySelector<HTMLElement>('.hljs > [contenteditable="true"]');
+        previewCode.style.cssText = "white-space: pre; font: 16px monospace; padding-left: 40px;";
+        wysiwyg.querySelectorAll<HTMLElement>("[contenteditable]").forEach(element => element.contentEditable = "false");
+        const previewRange = selectionAPI.focusByOffset(previewCode, offset, offset, false);
+        check.ok(previewRange);
+        const rect = previewRange.getBoundingClientRect();
+        const point = {x: rect.left + 0.1, y: rect.top + rect.height / 2};
+        const clicked = selectionAPI.captureRichCellSelectionAtPoint(wysiwyg, point);
+        check.equal(clicked?.start, offset, "hit-test uses the visible preview text");
+        check.equal(clicked.startIndex, 1);
+        wysiwyg.innerHTML = api.getTableCellRichBlockDOM(savedCell);
+        const editingCode = wysiwyg.querySelector<HTMLElement>('.hljs > [contenteditable="true"]');
+        editingCode.style.cssText = "white-space: pre; font: 16px monospace; padding-left: 0;";
+        check.notEqual(selectionAPI.captureRichCellSelectionAtPoint(wysiwyg, point)?.start, offset,
+            "the same screen coordinate points elsewhere before the line number gutter is rendered");
+        render(wysiwyg);
+        check.equal(selectionAPI.restoreRichCellSelection(wysiwyg, clicked), true);
+        await new Promise(resolve => setTimeout(resolve, 0));
+        check.deepEqual(selectionAPI.captureRichCellSelection(wysiwyg, getSelection()), clicked);
+    }
+    fixture.remove();
+    return "Table cell code insertion cases passed";
+};
+
+test("table cells insert code through slash and Enter without losing soft breaks", {
+    skip: process.platform === "linux" && !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY,
+    timeout: 45000,
+}, async () => {
+    const compile = (source: string) => transpileModule(source.replace(/^import [\s\S]*?;\r?\n/gm, "")
+        .replace(/^export (?:type )?\{[\s\S]*?\}(?: from "[^"]+")?;\r?\n/gm, "")
+        .replace(/^export /gm, ""), {compilerOptions: {target: ScriptTarget.ES2021}}).outputText;
+    const read = (file: string) => readFileSync(path.join(__dirname, file), "utf8");
+    const source = ["longTextWrap.ts", "inlineElementBoundary.ts", "../toolbar/fontFamilyCore.ts", "../../util/escape.ts",
+        "tableVirtualizationDOM.ts", "../render/setLute.ts", "../wysiwyg/codeBlockUtil.ts", "../render/av/richTextValue.ts", "../render/av/richText.ts",
+        "../wysiwyg/taskListMarker.ts", "../wysiwyg/codeBlockEnter.ts", "tableCellRichLute.ts", "tableCellRichValue.ts",
+        "tableCellRich.ts"].map(file => compile(read(file))).join("\n") +
+        "\nconst getTextWithoutSemanticMarkers = (() => {" + compile(read("inlineElementMarker.ts")) +
+        "\nreturn getTextWithoutSemanticMarkers;})();";
+    const hint = createSourceFile("hint.ts", read("../hint/index.ts"), ScriptTarget.Latest, true);
+    const hintClass = hint.statements.find(isClassDeclaration);
+    const fill = hintClass.members.filter(member => isMethodDeclaration(member) &&
+        ["fill", "consumeRefBracketClose"].includes(member.name.getText(hint))).map(member => member.getText(hint)).join("\n");
+    const hintSource = compile(read("../../block/superBlock.ts") +
+        "\nconst isProtyleListItemFragment = () => false; class Hint {" + fill + "}");
+    const editor = read("../render/tableCellRichEditor.ts");
+    const start = editor.indexOf('host.addEventListener("keydown", event => {');
+    const end = editor.indexOf("}, {capture: true, signal});", start) + "}, {capture: true, signal});".length;
+    const keydownSource = compile(editor.substring(start, end));
+    const copySource = ["../../menus/menuToggle.ts", "normalizeText.ts", "../wysiwyg/codeBlockUtil.ts", "../wysiwyg/codeBlock.ts", "../lite/codeActions.ts"]
+        .map(file => compile(read(file))).join("\n") +
+        "\nbindLiteCodeActions(host, fragment.protyle, {signal, canEdit, beforeChange, onChange: commit});";
+    const selectionSource = compile(read("selectionOffsets.ts")) + "\n" + compile(read("selection.ts")) + "\n" + compile(read("tableCellRichSelection.ts"));
+    const highlightSource = compile(read("../render/highlightRender.ts"));
+    const extract = (file: string, names: string[]) => {
+        const parsed = createSourceFile(file, read(file), ScriptTarget.Latest, true);
+        return parsed.statements.filter(isVariableStatement).filter(statement =>
+            statement.declarationList.declarations.some(declaration => names.includes(declaration.name.getText(parsed))))
+            .map(statement => statement.getText(parsed)).join("\n");
+    };
+    const blockSource = compile(extract("../../block/util.ts", ["genEmptyElement", "genEmptyBlock"]) + "\n" +
+        extract("../wysiwyg/list.ts", ["genListItemElement"]));
+    const temporary = mkdtempSync(path.join(tmpdir(), "siyuan-table-cell-code-test-"));
+    const script = path.join(temporary, "run.cjs");
+    const lutePath = path.resolve(__dirname, "../../../stage/protyle/js/lute/lute.min.js");
+    const htmlPath = path.resolve(__dirname, "../../../stage/protyle/js/protyle-html.js");
+    writeFileSync(script, `const {app, BrowserWindow} = require("electron");
+app.setPath("userData", ${JSON.stringify(path.join(temporary, "profile"))});
+app.commandLine.appendSwitch("disable-gpu");
+app.whenReady().then(async () => {
+    const win = new BrowserWindow({show: false, webPreferences: {nodeIntegration: true, contextIsolation: false, offscreen: true}});
+    try {
+        await win.loadURL("data:text/html,<html><body></body></html>");
+        await win.webContents.executeJavaScript(require("node:fs").readFileSync(${JSON.stringify(lutePath)}, "utf8"));
+        await win.webContents.executeJavaScript("{const module=undefined,exports=undefined;" + require("node:fs").readFileSync(${JSON.stringify(htmlPath)}, "utf8") + "}");
+        const result = await win.webContents.executeJavaScript(${JSON.stringify("const __name = value => value; (" +
+        browserCases.toString() + ")(" + [source, compile(read("../wysiwyg/enter.ts")), hintSource, keydownSource, copySource,
+            selectionSource, highlightSource, blockSource]
+            .map(value => JSON.stringify(value)).join(",") + ")")});
+        console.log(result);
+        win.destroy();
+        app.exit(0);
+    } catch (error) {
+        console.error(error);
+        win.destroy();
+        app.exit(1);
+    }
+});`, "utf8");
+    const env = {...process.env};
+    delete env.ELECTRON_RUN_AS_NODE;
+    try {
+        const result = await promisify(execFile)(require("electron") as unknown as string, [script],
+            {env, timeout: 40000, windowsHide: true});
+        assert.match(result.stdout, /Table cell code insertion cases passed/);
+    } finally {
+        if (path.dirname(path.resolve(temporary)) === path.resolve(tmpdir()) &&
+            path.basename(temporary).startsWith("siyuan-table-cell-code-test-")) {
+            rmSync(temporary, {recursive: true, force: true});
+        }
+    }
+});

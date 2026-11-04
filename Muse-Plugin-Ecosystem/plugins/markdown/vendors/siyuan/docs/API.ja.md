@@ -1,0 +1,2939 @@
+[English](API.md)
+| [中文](API.zh-CN.md)
+| **日本語**
+
+* [仕様](#仕様)
+    * [パラメータと戻り値](#パラメータと戻り値)
+    * [動作セマンティクス](#動作セマンティクス)
+    * [認証](#認証)
+* [ノートブック](#ノートブック)
+    * [ノートブック一覧を取得](#ノートブック一覧を取得)
+    * [ノートブックを開く](#ノートブックを開く)
+    * [ノートブックを閉じる](#ノートブックを閉じる)
+    * [ノートブックの名前を変更](#ノートブックの名前を変更)
+    * [ノートブックを作成](#ノートブックを作成)
+    * [ノートブックを削除](#ノートブックを削除)
+    * [ノートブック設定を取得](#ノートブック設定を取得)
+    * [ノートブック設定を保存](#ノートブック設定を保存)
+* [ドキュメント](#ドキュメント)
+    * [Markdownでドキュメントを作成](#Markdownでドキュメントを作成)
+    * [ドキュメントの名前を変更](#ドキュメントの名前を変更)
+    * [ドキュメントを削除](#ドキュメントを削除)
+    * [ドキュメントを移動](#ドキュメントを移動)
+    * [ノートブックとドキュメントのソート値を設定](#ノートブックとドキュメントのソート値を設定)
+    * [ドキュメントの子ドキュメント用ソート方式を設定](#ドキュメントの子ドキュメント用ソート方式を設定)
+    * [パスから人間が読めるパスを取得](#パスから人間が読めるパスを取得)
+    * [IDから人間が読めるパスを取得](#IDから人間が読めるパスを取得)
+    * [IDからストレージパスを取得](#IDからストレージパスを取得)
+    * [人間が読めるパスからIDを取得](#人間が読めるパスからIDを取得)
+* [アセット](#アセット)
+    * [アセットをアップロード](#アセットをアップロード)
+* [ブロック](#ブロック)
+    * [ブロックを挿入](#ブロックを挿入)
+    * [ブロックを先頭に挿入](#ブロックを先頭に挿入)
+    * [ブロックを末尾に追加](#ブロックを末尾に追加)
+    * [ブロックを更新](#ブロックを更新)
+    * [ブロックを削除](#ブロックを削除)
+    * [ブロックを移動](#ブロックを移動)
+    * [ブロックを折りたたむ](#ブロックを折りたたむ)
+    * [ブロックを展開](#ブロックを展開)
+    * [ブロックのkramdownを取得](#ブロックのkramdownを取得)
+    * [子ブロックを取得](#子ブロックを取得)
+    * [ブロック参照を移行](#ブロック参照を移行)
+* [属性](#属性)
+    * [ブロック属性を設定](#ブロック属性を設定)
+    * [ブロック属性を取得](#ブロック属性を取得)
+* [データベース](#データベース)
+    * [レンダリング](#レンダリング)
+    * [取得](#取得)
+    * [主キー値を取得](#主キー値を取得)
+    * [検索](#検索)
+    * [セル値を設定](#セル値を設定)
+    * [アイテムを追加](#アイテムを追加)
+    * [アイテムを削除](#アイテムを削除)
+    * [レイアウトを切り替え](#レイアウトを切り替え)
+    * [グループ化を設定](#グループ化を設定)
+    * [フィルターとソートを取得](#フィルターとソートを取得)
+    * [フィルターを設定](#フィルターを設定)
+    * [ソートを設定](#ソートを設定)
+    * [フィールドを追加](#フィールドを追加)
+    * [フィールドを削除](#フィールドを削除)
+    * [グローバルのフィールドソートを設定](#グローバルのフィールドソートを設定)
+    * [ビュー内のフィールドソートを設定](#ビュー内のフィールドソートを設定)
+* [検索](#検索)
+    * [保存済みの検索条件グループを取得](#保存済みの検索条件グループを取得)
+    * [検索条件グループを保存](#検索条件グループを保存)
+    * [検索条件グループを削除](#検索条件グループを削除)
+* [SQL](#SQL)
+    * [SQLクエリを実行](#SQLクエリを実行)
+    * [トランザクションをフラッシュ](#トランザクションをフラッシュ)
+* [テンプレート](#テンプレート)
+    * [テンプレートをレンダリング](#テンプレートをレンダリング)
+    * [Sprigをレンダリング](#Sprigをレンダリング)
+* [ファイル](#ファイル)
+    * [ファイルを取得](#ファイルを取得)
+    * [ファイルを配置](#ファイルを配置)
+    * [ファイルを削除](#ファイルを削除)
+    * [ファイルの名前を変更](#ファイルの名前を変更)
+    * [ファイル一覧を取得](#ファイル一覧を取得)
+* [エクスポート](#エクスポート)
+    * [Markdownをエクスポート](#Markdownをエクスポート)
+    * [ファイルとフォルダをエクスポート](#ファイルとフォルダをエクスポート)
+* [変換](#変換)
+    * [Pandoc](#Pandoc)
+* [通知](#通知)
+    * [メッセージをプッシュ](#メッセージをプッシュ)
+    * [エラーメッセージをプッシュ](#エラーメッセージをプッシュ)
+* [ネットワーク](#ネットワーク)
+    * [フォワードプロキシ](#フォワードプロキシ)
+        * [JSONフォワードプロキシ](#JSONフォワードプロキシ)
+        * [HTTPフォワードプロキシ](#HTTPフォワードプロキシ)
+        * [WebSocketフォワードプロキシ](#WebSocketフォワードプロキシ)
+        * [EventSourceフォワードプロキシ](#EventSourceフォワードプロキシ)
+* [システム](#システム)
+    * [起動進捗を取得](#起動進捗を取得)
+    * [システムバージョンを取得](#システムバージョンを取得)
+    * [システムの現在時刻を取得](#システムの現在時刻を取得)
+
+---
+
+## 仕様
+
+### パラメータと戻り値
+
+* エンドポイント: `http://127.0.0.1:6806`
+* 個別に明記されていない限り、APIインターフェースはPOSTメソッドを使用します
+* JSONパラメータを受け取るインターフェースでは、パラメータはJSON文字列としてbodyに配置し、ヘッダーのContent-Typeは`application/json`とします
+* 戻り値
+
+   ````json
+   {
+     "code": 0,
+     "msg": "",
+     "data": {}
+   }
+   ````
+
+    * `code`: 0以外は例外を示す
+    * `msg`: 通常は空文字列、異常時にはエラーテキストが返される
+    * `data`: インターフェースによって`{}`、`[]`、または`NULL`となる
+
+### TypeScript 型契約
+
+プラグインの `fetchPost`、`fetchSyncPost`、`fetchGet` の型宣言は、移行済み API パスのリクエスト型とレスポンス型を、生成されたカーネル契約から推論します。対象範囲は拡大中で、システムユーティリティ、ブロック属性の一括操作、タグとブックマークの操作、一部のブロッククエリ、ノートブック一覧、履歴検索、スナップショット操作を含みます。既存の型付けされていないエンドポイントと動的 URL も引き続きサポートされます。非同期呼び出しの成功データを読み取る前にレスポンスコードを確認し、null を許容するフィールドを明示的に処理してください。
+
+```typescript
+import {fetchSyncPost} from "siyuan";
+
+const response = await fetchSyncPost("/api/attr/getBlockAttrs", {id: blockID});
+if (response.code === 0 && response.data) {
+    const value = response.data["custom-value"];
+}
+```
+
+正確な対象範囲は[生成されたルート宣言](../app/src/types/api/index.d.ts)、生成と互換性のルールは[契約の保守ガイド](API-CONTRACTS.md)を参照してください。型宣言自体は実行時の JSON 検証を行いません。
+
+### 動作セマンティクス
+
+* 本文書に個別のインターフェース説明があるものだけが公開 API です。その他のカーネルルートと `/api/transactions` の操作は内部実装であり、別途明記されていない限り、互換性や動作の安定性は保証されません
+* `code: 0` は、リクエストの処理中にインターフェースからエラーが報告されなかったことを示します。保証されるのは各インターフェースに明記された結果のみであり、関連するインデックス、キャッシュ、WebSocket ブロードキャスト、同期状態の更新完了を意味するものではありません
+* 省略されたフィールド、`null`、空のオブジェクト、空の配列の意味はインターフェースごとに定義されます。オブジェクトや配列が既存の状態を置換、マージ、または部分的に更新するか、および順序に意味があるかについても、各インターフェースの説明に従います
+* インターフェースは入力を切り詰め、無視、補完、または変換する場合があります。正規化された結果を返すことが説明されている場合、呼び出し側は返された `data` を実際に受け入れられた結果として使用してください
+* 操作名だけから読み取り専用であると判断しないでください。永続化を伴う副作用がある場合、各インターフェースでその影響範囲を説明します
+* 同じリクエストの反復が冪等または安全に再試行できるのは、明記されている場合に限ります。レスポンスが中断されるなど結果を確定できない場合は、可能な限り再試行前に現在の状態を読み取ってください
+
+### 認証
+
+<kbd>設定 - 認証 - API トークン</kbd> で API トークンを確認し、リクエストヘッダーに `Authorization: Token xxx` を設定
+
+## ノートブック
+
+### ノートブック一覧を取得
+
+* `/api/notebook/lsNotebooks`
+* パラメータなし
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "notebooks": [
+        {
+          "id": "20210817205410-2kvfpfn",
+          "name": "テスト用ノートブック",
+          "icon": "1f41b",
+          "sort": 0,
+          "closed": false
+        },
+        {
+          "id": "20210808180117-czj9bvb",
+          "name": "SiYuanユーザーガイド",
+          "icon": "1f4d4",
+          "sort": 1,
+          "closed": false
+        }
+      ]
+    }
+  }
+  ```
+
+### ノートブックを開く
+
+* `/api/notebook/openNotebook`
+* パラメータ
+
+  ```json
+  {
+    "notebook": "20210831090520-7dvbdv0"
+  }
+  ```
+
+    * `notebook`: ノートブックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ノートブックを閉じる
+
+* `/api/notebook/closeNotebook`
+* パラメータ
+
+  ```json
+  {
+    "notebook": "20210831090520-7dvbdv0"
+  }
+  ```
+
+    * `notebook`: ノートブックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ノートブックの名前を変更
+
+* `/api/notebook/renameNotebook`
+* パラメータ
+
+  ```json
+  {
+    "notebook": "20210831090520-7dvbdv0",
+    "name": "ノートブックの新しい名前"
+  }
+  ```
+
+    * `notebook`: ノートブックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ノートブックを作成
+
+* `/api/notebook/createNotebook`
+* パラメータ
+
+  ```json
+  {
+    "name": "ノートブック名"
+  }
+  ```
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "notebook": {
+        "id": "20220126215949-r1wvoch",
+        "name": "ノートブック名",
+        "icon": "",
+        "sort": 0,
+        "closed": false
+      }
+    }
+  }
+  ```
+
+### ノートブックを削除
+
+* `/api/notebook/removeNotebook`
+* パラメータ
+
+  ```json
+  {
+    "notebook": "20210831090520-7dvbdv0"
+  }
+  ```
+
+    * `notebook`: ノートブックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ノートブック設定を取得
+
+管理者向けレスポンスには、読み取り専用の `documentCapabilities` オブジェクトが含まれる場合があります。構造化 API、タイトル形式、インデックス状態、機能宣言のリビジョンを示します。すべてのノートブックで構造化タイトルの規則を使用し、モード設定や移行は不要です。`literalSlash` はインデックスが準備済みの場合にのみ `true` です。使用前に、すべての同期端末をこの機能に対応するバージョンへ更新してください。既存の権限によるフィルタリングは維持されます。
+
+* `/api/notebook/getNotebookConf`
+* パラメータ
+
+  ```json
+  {
+    "notebook": "20210817205410-2kvfpfn"
+  }
+  ```
+
+    * `notebook`: ノートブックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "box": "20210817205410-2kvfpfn",
+      "conf": {
+        "name": "テスト用ノートブック",
+        "closed": false,
+        "refCreateSavePath": "",
+        "createDocNameTemplate": "",
+        "dailyNoteSavePath": "/daily note/{{now | date \"2006/01\"}}/{{now | date \"2006-01-02\"}}",
+        "dailyNoteTemplatePath": ""
+      },
+      "name": "テスト用ノートブック"
+    }
+  }
+  ```
+
+管理者への応答には、読み取り専用の省略可能な `documentCapabilities` オブジェクトも含まれます。`structuredPaths` は ID とパス要素の API への対応を示し、閉じたノートブックやロック中のノートブックへのアクセス権限は付与しません。`titleFormats` は対応するタイトル形式、`indexState` はインデックス状態、`revision` は機能宣言のリビジョンを示します。`literalSlash` はインデックスが準備済みの場合にのみ `true` です。使用前に、すべての同期端末をこの機能に対応するバージョンへ更新してください。旧サーバーにこのオブジェクトがない場合とリクエストの失敗は区別し、失敗後に従来のパス API で書き込みを再試行しないでください。
+
+### ノートブック設定を保存
+
+* `/api/notebook/setNotebookConf`
+* パラメータ
+
+  ```json
+  {
+    "notebook": "20210817205410-2kvfpfn",
+    "conf": {
+        "name": "テスト用ノートブック",
+        "closed": false,
+        "refCreateSavePath": "",
+        "createDocNameTemplate": "",
+        "dailyNoteSavePath": "/daily note/{{now | date \"2006/01\"}}/{{now | date \"2006-01-02\"}}",
+        "dailyNoteTemplatePath": ""
+      }
+  }
+  ```
+
+    * `notebook`: ノートブックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "name": "テスト用ノートブック",
+      "closed": false,
+      "refCreateSavePath": "",
+      "createDocNameTemplate": "",
+      "dailyNoteSavePath": "/daily note/{{now | date \"2006/01\"}}/{{now | date \"2006-01-02\"}}",
+      "dailyNoteTemplatePath": ""
+    }
+  }
+  ```
+
+## ドキュメント
+
+### Markdownでドキュメントを作成
+
+この旧文字列作成 API は書き込み前にすべての親パスを検証します。祖先のタイトルにスラッシュや空のタイトルがある場合、`code: -1` と `data.reason: "pathAmbiguous"` を返します。同名の有効な親が複数ある場合は、一致する有効な `parentID` が必要です。メタデータが未準備の場合は `indexUnavailable` を返します。親 ID とタイトルを分けて渡す `/api/filetree/createDocByParent` を推奨します。
+
+* `/api/filetree/createDocWithMd`
+* パラメータ
+
+  ```json
+  {
+    "notebook": "20210817205410-2kvfpfn",
+    "path": "/foo/bar",
+    "markdown": ""
+  }
+  ```
+
+    * `notebook`: ノートブックID
+    * `path`: ドキュメントパス、`/` で始まり `/` で階層を区切る（データベースの `hpath` フィールドに対応）
+        * `/` は階層の区切り文字であり、ドキュメントタイトル内のスラッシュを表すことはできない。存在しない親ドキュメントは自動的に作成される
+        * 例えば、`/Notes/Programming in C/C++` は、`Notes` の下にある `Programming in C` の下に、タイトルが `C++` のドキュメントを作成する
+        * インポート処理では、各タイトルを処理してからパスを組み立てること。例えば、ASCII の `/` を全角の `／`（U+FF0F）に置き換えると、`/Notes/Programming in C／C++` は `Notes` の下にタイトルが `Programming in C／C++` のドキュメントを作成する。この置換はタイトルの文字列を変更する
+    * `markdown`: GFM Markdownコンテンツ
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": "20210914223645-oj2vnx2"
+  }
+  ```
+
+    * `data`: 作成されたドキュメントID
+    * 同じ`path`でこのインターフェースを繰り返し呼び出しても、既存のドキュメントは上書きされない
+
+### ドキュメントの名前を変更
+
+* `/api/filetree/renameDoc`
+* パラメータ
+
+  ```json
+  {
+    "notebook": "20210831090520-7dvbdv0",
+    "path": "/20210902210113-0avi12f.sy",
+    "title": "新しいドキュメントタイトル"
+  }
+  ```
+
+    * `notebook`: ノートブックID
+    * `path`: ドキュメントパス
+    * `title`: 新しいドキュメントタイトル
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+`id`でドキュメントの名前を変更:
+
+* `/api/filetree/renameDocByID`
+* パラメータ
+
+  ```json
+  {
+    "id": "20210902210113-0avi12f",
+    "title": "新しいドキュメントタイトル"
+  }
+  ```
+
+    * `id`: ドキュメントID
+    * `title`: 新しいドキュメントタイトル
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ドキュメントを削除
+
+* `/api/filetree/removeDoc`
+* パラメータ
+
+  ```json
+  {
+    "notebook": "20210831090520-7dvbdv0",
+    "path": "/20210902210113-0avi12f.sy"
+  }
+  ```
+
+    * `notebook`: ノートブックID
+    * `path`: ドキュメントパス
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+`id`でドキュメントを削除:
+
+* `/api/filetree/removeDocByID`
+* パラメータ
+
+  ```json
+  {
+    "id": "20210902210113-0avi12f"
+  }
+  ```
+
+    * `id`: ドキュメントID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ドキュメントを移動
+
+両方の移動 API は、監視範囲に入ったドキュメントと子ドキュメントのブロック収集ルールを評価し、既存のデータベース行とフィールド値を保持します。移動後に収集が失敗した場合はエラーを返し、移動済みのドキュメントは新しい場所に残ります。
+
+* `/api/filetree/moveDocs`
+* パラメータ
+
+  ```json
+  {
+    "fromPaths": ["/20210917220056-yxtyl7i.sy"],
+    "toNotebook": "20210817205410-2kvfpfn",
+    "toPath": "/"
+  }
+  ```
+
+    * `fromPaths`: 移動元パス
+    * `toNotebook`: 移動先ノートブックID
+    * `toPath`: 移動先パス
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+`id`でドキュメントを移動:
+
+* `/api/filetree/moveDocsByID`
+* パラメータ
+
+  ```json
+  {
+    "fromIDs": ["20210917220056-yxtyl7i"],
+    "toID": "20210817205410-2kvfpfn"
+  }
+  ```
+
+    * `fromIDs`: 移動元ドキュメントのID
+    * `toID`: 移動先の親ドキュメントIDまたはノートブックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### 兄弟ドキュメントを基準にドキュメントの順序を変更
+
+* `/api/filetree/reorderDocs`
+* パラメータ
+
+  ```json
+  {
+    "sourceIDs": ["20210917220056-yxtyl7i"],
+    "targetID": "20210917220057-abcdefg",
+    "position": "before"
+  }
+  ```
+
+    * `sourceIDs`: 配列順に挿入する移動元ドキュメント ID
+    * `targetID`: 基準となる兄弟ドキュメント ID
+    * `position`: `before` または `after`
+    * 移動後、すべての移動元ドキュメントは対象と同じノートブックおよび親ドキュメントに属する必要があります。非表示および未一覧表示のドキュメントを含む完全な兄弟リストを使用して並べ替えます
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "changed": true,
+      "notebook": "20210817205410-2kvfpfn",
+      "parentPath": "/"
+    }
+  }
+  ```
+
+### 別のノートブックを基準にノートブックの順序を変更
+
+* `/api/notebook/reorder`
+* パラメータ
+
+  ```json
+  {
+    "sourceIDs": ["20210817205410-2kvfpfn"],
+    "targetID": "20210817205411-abcdefg",
+    "position": "after"
+  }
+  ```
+
+    * `sourceIDs`: 配列順に挿入する移動元ノートブック ID
+    * `targetID`: 基準となるノートブック ID
+    * `position`: `before` または `after`
+    * 閉じたノートブックを含む完全なノートブックリストを使用して並べ替えます
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "changed": true
+    }
+  }
+  ```
+
+### ノートブックとドキュメントのソート値を設定
+
+* `/api/filetree/setSort`
+* パラメータ
+
+  ```json
+  {
+    "notebookSorts": [
+      {
+        "id": "20210817205410-2kvfpfn",
+        "sort": -10
+      }
+    ],
+    "docSorts": [
+      {
+        "id": "20210917220056-yxtyl7i",
+        "sort": -8
+      }
+    ]
+  }
+  ```
+
+    * `notebookSorts`: ノートブックIDとソート値、省略可能
+    * `docSorts`: ドキュメントIDとソート値、省略可能
+    * `docSorts`のドキュメントは、開かれていてロック解除済みのノートブックに属している必要があります。ノートブックのルートドキュメントIDは指定できません
+    * `notebookSorts`と`docSorts`の少なくとも一方を空でない配列にする必要があります。配列の順序はソートに影響せず、各`sort`値が直接保存されます
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "notebookIDs": ["20210817205410-2kvfpfn"],
+      "docIDs": ["20210917220056-yxtyl7i"]
+    }
+  }
+  ```
+
+### ドキュメントの子ドキュメント用ソート方式を設定
+
+* `/api/filetree/setDocSortMode`
+* パラメータ
+
+  ```json
+  {
+    "id": "20210917220056-yxtyl7i",
+    "sortMode": 4
+  }
+  ```
+
+    * `id`: 子ドキュメントのソート方式を宣言する通常のドキュメントID。ノートブックのルートドキュメントIDは指定できません
+    * `sortMode`: `0`から`14`までの整数。`null`を指定するとドキュメントの明示的な設定が解除され、最も近い親ドキュメント、ノートブック、グローバルドキュメントツリーの順にソートルールを継承します
+    * 値：`0`/`1` ファイル名の昇順/降順、`2`/`3` 更新日時の昇順/降順、`4`/`5` ファイル名の自然順昇順/降順、`6` カスタム、`7`/`8` 参照数の昇順/降順、`9`/`10` 作成日時の昇順/降順、`11`/`12` サイズの昇順/降順、`13`/`14` 子ドキュメント数の昇順/降順
+    * 宣言したソート方式は、別のドキュメントが独自のソート方式を宣言するまで、より深い階層の子孫に継承されます
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "box": "20210817205410-2kvfpfn",
+      "id": "20210917220056-yxtyl7i",
+      "path": "/20210917220056-yxtyl7i.sy",
+      "sortMode": 4,
+      "effectiveSortMode": 4
+    }
+  }
+  ```
+
+    * `sortMode`は明示的な設定値（継承時は`null`）、`effectiveSortMode`は継承を解決した後に実際に適用される値です
+
+### パスから人間が読めるパスを取得
+
+* `/api/filetree/getHPathByPath`
+* パラメータ
+
+  ```json
+  {
+    "notebook": "20210831090520-7dvbdv0",
+    "path": "/20210917220500-sz588nq/20210917220056-yxtyl7i.sy"
+  }
+  ```
+
+    * `notebook`: ノートブックID
+    * `path`: ドキュメントパス
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": "/foo/bar"
+  }
+  ```
+
+### IDから人間が読めるパスを取得
+
+* `/api/filetree/getHPathByID`
+* パラメータ
+
+  ```json
+  {
+    "id": "20210917220056-yxtyl7i"
+  }
+  ```
+
+    * `id`: ブロックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": "/foo/bar"
+  }
+  ```
+
+### IDからストレージパスを取得
+
+* `/api/filetree/getPathByID`
+* パラメータ
+
+  ```json
+  {
+    "id": "20210808180320-fqgskfj"
+  }
+  ```
+
+    * `id`: ブロックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+    "notebook": "20210808180117-czj9bvb",
+    "path": "/20200812220555-lj3enxa/20210808180320-fqgskfj.sy"
+    }
+  }
+  ```
+
+### 人間が読めるパスからIDを取得
+
+この旧検索 API は各候補の実際の祖先を検証します。有効な候補だけならすべての ID を返し、有効な候補とスラッシュや空タイトルを含む候補が混在すると `pathAmbiguous`、後者だけなら `legacyPathUnsupported`、候補がなければ空配列を返します。メタデータが未準備または不整合の場合は `indexUnavailable` です。エラーの候補フィールド `cleanIDs` と `unsupportedIDs` にもアクセス制限を適用します。タイトルを独立した配列で指定する `/api/filetree/resolveDocPath` を推奨します。
+
+* `/api/filetree/getIDsByHPath`
+* パラメータ
+
+  ```json
+  {
+    "path": "/foo/bar",
+    "notebook": "20210808180117-czj9bvb"
+  }
+  ```
+
+    * `path`: 人間が読めるパス
+    * `notebook`: ノートブックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": [
+        "20200813004931-q4cu8na"
+    ]
+  }
+  ```
+
+## アセット
+
+### アセットをアップロード
+
+* `/api/asset/upload`
+* パラメータはHTTP Multipartフォーム
+
+    * `assetsDirPath`: アセットが保存されるフォルダパス、dataフォルダをルートパスとする、例:
+        * `"/assets/"`: workspace/data/assets/ フォルダ
+        * `"/assets/sub/"`: workspace/data/assets/sub/ フォルダ
+
+      通常は最初の方法を推奨、ワークスペースのassetsフォルダに保存される。サブディレクトリに配置すると副作用があるため、ユーザーガイドのアセットの章を参照。
+    * `file[]`: アップロードするファイルリスト
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "disk full",
+    "data": {
+      "errFiles": ["bar.png"],
+      "failedFiles": [
+        {
+          "index": 1,
+          "name": "bar.png",
+          "error": "disk full"
+        }
+      ],
+      "succFiles": [
+        {
+          "index": 0,
+          "name": "foo.png",
+          "path": "assets/foo-20210719092549-9j5y79r.png"
+        }
+      ],
+      "succMap": {
+        "foo.png": "assets/foo-20210719092549-9j5y79r.png"
+      }
+    }
+  }
+  ```
+
+    * `errFiles`: アップロード処理でエラーが発生したファイル名のリスト
+    * `failedFiles`: 明示的に失敗として報告されたファイルを記録します。`index` は `file[]` 内のインデックス、`name` はアップロード時のファイル名、`error` はエラーメッセージです。未実行または項目ごとに報告されなかったファイルは含まれない場合があります。各入力項目を曖昧さなく確認する必要がある場合は `succFiles` を使用してください
+    * `succFiles`: 正常に処理されたファイルを入力順に記録します。`index` は `file[]` 内のインデックス、`name` はアップロード時のファイル名、`path` はアップロード後のアセットパスです。同じバッチに同名ファイルが含まれる場合は、このフィールドを使用してください
+    * `succMap`: 既存の呼び出し元との互換性を保つための成功ファイルマッピングです。キーはアップロード時のファイル名、値は assets/foo-id.png です。同じバッチに同名ファイルが含まれる場合、同じキーでは最後の項目のみが保持されます
+
+## ブロック
+
+### ブロックを挿入
+
+* `/api/block/insertBlock`
+* パラメータ
+
+  ```json
+  {
+    "dataType": "markdown",
+    "data": "foo**bar**{: style=\"color: var(--b3-font-color8);\"}baz",
+    "nextID": "",
+    "previousID": "20211229114650-vrek5x6",
+    "parentID": ""
+  }
+  ```
+
+    * `dataType`: 挿入するデータ型、`markdown`または`dom`
+    * `data`: 挿入するデータ
+    * `nextID`: 次のブロックのID、挿入位置を固定するために使用
+    * `previousID`: 前のブロックのID、挿入位置を固定するために使用
+    * `parentID`: 親ブロックのID、挿入位置を固定するために使用
+
+  `nextID`、`previousID`、`parentID`のうち少なくとも1つは値が必要、優先順位: `nextID` > `previousID` > `parentID`
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": [
+      {
+        "doOperations": [
+          {
+            "action": "insert",
+            "data": "<div data-node-id=\"20211230115020-g02dfx0\" data-node-index=\"1\" data-type=\"NodeParagraph\" class=\"p\"><div contenteditable=\"true\" spellcheck=\"false\">foo<strong style=\"color: var(--b3-font-color8);\">bar</strong>baz</div><div class=\"protyle-attr\" contenteditable=\"false\"></div></div>",
+            "id": "20211230115020-g02dfx0",
+            "parentID": "",
+            "previousID": "20211229114650-vrek5x6",
+            "retData": null
+          }
+        ],
+        "undoOperations": null
+      }
+    ]
+  }
+  ```
+
+    * `action.data`: 新しく挿入されたブロックによって生成されたDOM
+    * `action.id`: 最初に挿入された最上位ブロックのID。複数の最上位ブロックを挿入し、それぞれのIDが必要な場合は、1回のリクエストで1ブロックずつ挿入してください
+
+### ブロックを先頭に挿入
+
+* `/api/block/prependBlock`
+* パラメータ
+
+  ```json
+  {
+    "data": "foo**bar**{: style=\"color: var(--b3-font-color8);\"}baz",
+    "dataType": "markdown",
+    "parentID": "20220107173950-7f9m1nb"
+  }
+  ```
+
+    * `dataType`: 挿入するデータ型、`markdown`または`dom`
+    * `data`: 挿入するデータ
+    * `parentID`: 親ブロックのID、挿入位置を固定するために使用
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": [
+      {
+        "doOperations": [
+          {
+            "action": "insert",
+            "data": "<div data-node-id=\"20220108003710-hm0x9sc\" data-node-index=\"1\" data-type=\"NodeParagraph\" class=\"p\"><div contenteditable=\"true\" spellcheck=\"false\">foo<strong style=\"color: var(--b3-font-color8);\">bar</strong>baz</div><div class=\"protyle-attr\" contenteditable=\"false\"></div></div>",
+            "id": "20220108003710-hm0x9sc",
+            "parentID": "20220107173950-7f9m1nb",
+            "previousID": "",
+            "retData": null
+          }
+        ],
+        "undoOperations": null
+      }
+    ]
+  }
+  ```
+
+    * `action.data`: 新しく挿入されたブロックによって生成されたDOM
+    * `action.id`: 新しく挿入されたブロックのID
+
+### ブロックを末尾に追加
+
+* `/api/block/appendBlock`
+* パラメータ
+
+  ```json
+  {
+    "data": "foo**bar**{: style=\"color: var(--b3-font-color8);\"}baz",
+    "dataType": "markdown",
+    "parentID": "20220107173950-7f9m1nb"
+  }
+  ```
+
+    * `dataType`: 挿入するデータ型、`markdown`または`dom`
+    * `data`: 挿入するデータ
+    * `parentID`: 親ブロックのID、挿入位置を固定するために使用
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": [
+      {
+        "doOperations": [
+          {
+            "action": "insert",
+            "data": "<div data-node-id=\"20220108003642-y2wmpcv\" data-node-index=\"1\" data-type=\"NodeParagraph\" class=\"p\"><div contenteditable=\"true\" spellcheck=\"false\">foo<strong style=\"color: var(--b3-font-color8);\">bar</strong>baz</div><div class=\"protyle-attr\" contenteditable=\"false\"></div></div>",
+            "id": "20220108003642-y2wmpcv",
+            "parentID": "20220107173950-7f9m1nb",
+            "previousID": "20220108003615-7rk41t1",
+            "retData": null
+          }
+        ],
+        "undoOperations": null
+      }
+    ]
+  }
+  ```
+
+    * `action.data`: 新しく挿入されたブロックによって生成されたDOM
+    * `action.id`: 最初に追加された最上位ブロックのID。複数の最上位ブロックを追加し、それぞれのIDが必要な場合は、1回のリクエストで1ブロックずつ追加してください
+
+### ブロックを更新
+
+* `/api/block/updateBlock`
+* パラメータ
+
+  ```json
+  {
+    "dataType": "markdown",
+    "data": "foobarbaz",
+    "id": "20211230161520-querkps",
+    "lockType": false
+  }
+  ```
+
+    * `dataType`: 更新するデータ型、`markdown`または`dom`
+    * `data`: 更新するデータ
+    * `id`: 更新するブロックのID
+    * `lockType`: 解析後のブロック型が既存のブロック型と異なる場合に更新を拒否するかどうか。不正な親子構造は常に拒否されますが、空の段落ブロックは任意の有効なブロック型に変換できます。デフォルトは`false`
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": [
+      {
+        "doOperations": [
+          {
+            "action": "update",
+            "data": "<div data-node-id=\"20211230161520-querkps\" data-node-index=\"1\" data-type=\"NodeParagraph\" class=\"p\"><div contenteditable=\"true\" spellcheck=\"false\">foo<strong>bar</strong>baz</div><div class=\"protyle-attr\" contenteditable=\"false\"></div></div>",
+            "id": "20211230161520-querkps",
+            "parentID": "",
+            "previousID": "",
+            "retData": null
+            }
+          ],
+        "undoOperations": null
+      }
+    ]
+  }
+  ```
+
+    * `action.data`: 更新されたブロックによって生成されたDOM
+
+### ブロックを削除
+
+* `/api/block/deleteBlock`
+* パラメータ
+
+  ```json
+  {
+    "id": "20211230161520-querkps"
+  }
+  ```
+
+    * `id`: 削除するブロックのID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": [
+      {
+        "doOperations": [
+          {
+            "action": "delete",
+            "data": null,
+            "id": "20211230162439-vtm09qo",
+            "parentID": "",
+            "previousID": "",
+            "retData": null
+          }
+        ],
+       "undoOperations": null
+      }
+    ]
+  }
+  ```
+
+### ブロックを移動
+
+* `/api/block/moveBlock`
+* パラメータ
+
+  ```json
+  {
+    "id": "20230406180530-3o1rqkc",
+    "previousID": "20230406152734-if5kyx6",
+    "parentID": "20230404183855-woe52ko"
+  }
+  ```
+
+    * `id`: 移動するブロックID
+    * `previousID`: 前のブロックのID、挿入位置を固定するために使用
+    * `parentID`: 親ブロックのID、挿入位置を固定するために使用、`previousID`と`parentID`は同時に空にできない、両方存在する場合は`previousID`が優先
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": [
+        {
+            "doOperations": [
+                {
+                    "action": "move",
+                    "data": null,
+                    "id": "20230406180530-3o1rqkc",
+                    "parentID": "20230404183855-woe52ko",
+                    "previousID": "20230406152734-if5kyx6",
+                    "nextID": "",
+                    "retData": null,
+                    "srcIDs": null,
+                    "name": "",
+                    "type": ""
+                }
+            ],
+            "undoOperations": null
+        }
+    ]
+  }
+  ```
+
+### ブロックを折りたたむ
+
+* `/api/block/foldBlock`
+* パラメータ
+
+  ```json
+  {
+    "id": "20231224160424-2f5680o"
+  }
+  ```
+
+    * `id`: 折りたたむブロックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ブロックを展開
+
+* `/api/block/unfoldBlock`
+* パラメータ
+
+  ```json
+  {
+    "id": "20231224160424-2f5680o"
+  }
+  ```
+
+    * `id`: 展開するブロックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ブロックのkramdownを取得
+
+* `/api/block/getBlockKramdown`
+* パラメータ
+
+  ```json
+  {
+    "id": "20201225220954-dlgzk1o"
+  }
+  ```
+
+    * `id`: 取得するブロックのID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "id": "20201225220954-dlgzk1o",
+      "kramdown": "* {: id=\"20201225220954-e913snx\"}Create a new notebook, create a new document under the notebook\n  {: id=\"20210131161940-kfs31q6\"}\n* {: id=\"20201225220954-ygz217h\"}Enter <kbd>/</kbd> in the editor to trigger the function menu\n  {: id=\"20210131161940-eo0riwq\"}\n* {: id=\"20201225220954-875yybt\"}((20200924101200-gss5vee \"Navigate in the content block\")) and ((20200924100906-0u4zfq3 \"Window and tab\"))\n  {: id=\"20210131161940-b5uow2h\"}"
+    }
+  }
+  ```
+
+* 決定性：返される Kramdown ではブロックレベル IAL 属性の順序が正規化され、ブロックの内容と属性が変更されない限り、その順序は安定します
+
+### 子ブロックを取得
+
+* `/api/block/getChildBlocks`
+* パラメータ
+
+  ```json
+  {
+    "id": "20230506212712-vt9ajwj"
+  }
+  ```
+
+    * `id`: 親ブロックID
+    * 見出しの下のブロックも子ブロックとしてカウントされる
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": [
+      {
+        "id": "20230512083858-mjdwkbn",
+        "type": "h",
+        "subType": "h1"
+      },
+      {
+        "id": "20230513213727-thswvfd",
+        "type": "s"
+      },
+      {
+        "id": "20230513213633-9lsj4ew",
+        "type": "l",
+        "subType": "u"
+      }
+    ]
+  }
+  ```
+
+### ブロック参照を移行
+
+* `/api/block/transferBlockRef`
+* パラメータ
+
+  ```json
+  {
+    "fromID": "20230612160235-mv6rrh1",
+    "toID": "20230613093045-uwcomng",
+    "refIDs": ["20230613092230-cpyimmd"]
+  }
+  ```
+
+    * `fromID`: 定義ブロックID
+    * `toID`: ターゲットブロックID
+    * `refIDs`: 定義ブロックIDを指す参照ブロックID、オプション、指定しない場合はすべての参照ブロックIDが移行される
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+## 属性
+
+### ブロック属性を設定
+
+* `/api/attr/setBlockAttrs`
+* パラメータ
+
+  ```json
+  {
+    "id": "20210912214605-uhi5gco",
+    "attrs": {
+      "custom-attr1": "line1\nline2"
+    }
+  }
+  ```
+
+    * `id`: ブロックID
+    * `attrs`: ブロック属性、カスタム属性は`custom-`プレフィックスが必要
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ブロック属性を取得
+
+* `/api/attr/getBlockAttrs`
+* パラメータ
+
+  ```json
+  {
+    "id": "20210912214605-uhi5gco"
+  }
+  ```
+
+    * `id`: ブロックID
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "custom-attr1": "line1\nline2",
+      "id": "20210912214605-uhi5gco",
+      "title": "PDF Annotation Demo",
+      "type": "doc",
+      "updated": "20210916120715"
+    }
+  }
+  ```
+
+## SQL
+
+### SQLクエリを実行
+
+* `/api/query/sql`
+* パラメータ
+
+  ```json
+  {
+    "stmt": "SELECT * FROM blocks WHERE content LIKE'%content%' LIMIT 7"
+  }
+  ```
+
+    * `stmt`: SQL文
+    * `mode`: 省略可能。省略、`null`、`""` は読み書き可能な単一の文、`"readonly"` は読み取り専用の単一の `SELECT` または `WITH` クエリを許可します。`"multiple"` は複数の文を順番に実行し、最後の文の結果を返します
+
+結果列のない文（`INSERT`、`UPDATE`、`DELETE`、DDL など）も実行され、成功時は `data: []` を返します。`RETURNING` の結果行は保持されます。検証エラーは `code: -1`、実行エラーは `code: 1` を返します。複数の文は最初のエラーで停止し、完了済みの書き込みは自動的にはロールバックされません。SQL による直接の書き込みは派生インデックスデータベースに作用し、元の文書、全文検索インデックス、ブロックキャッシュは更新しません。文書の内容を編集する場合はブロック API を使用してください。
+
+外側の `LIMIT` を明示しない場合、返される結果は既定で `search.limit` 行（設定の検索結果件数）までです。ページ分割には `LIMIT` と `OFFSET` を明示し、`ORDER BY hpath, id` のように順序が安定して一意に決まる並べ替えを使用してください。外側の `LIMIT` を明示すると既定の制限を上書きでき、`search.limit` より大きい値も指定できます。
+
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": [
+      { "col": "val" }
+    ],
+    "limit": 0,
+    "truncated": false
+  }
+  ```
+
+成功時の `data` は配列のままです。`limit` は今回のクエリに適用されたサーバーの既定の上限を表し、SQL に外側の `LIMIT` が明示されている場合は `0` になります。明示された句の値を表すものではありません。`truncated` は、サーバーの既定の制限によって少なくとも1行が返されなかった場合にのみ `true` になります。結果が上限と同じ件数でも、省略された行がなければ `false` です。上記の例では `LIMIT 7` が明示されているため、`limit` は `0`、`truncated` は `false` です。エラー応答にはこの2つのフィールドは含まれません。
+
+注：データセキュリティを確保するため、パブリッシュモードでの本インターフェースへのアクセスは禁止されています。
+
+### トランザクションをフラッシュ
+
+* `/api/sqlite/flushTransaction`
+* パラメータなし
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+ブロックを書き込む API は、ブロックツリーのトランザクションが確定していても、非同期の SQL 索引付けが終わる前に応答する場合があります。その書き込みを直後の `/api/query/sql` で読み取る必要がある場合は、書き込み後に `POST /api/sqlite/flushTransaction` を呼び出し、`code: 0` の応答を待ってから SQL を照会してください。例えば、`getBlockKramdown` はブロックツリーを読み取るため、SQL の索引より先に新しい内容を返す場合があります。Kramdown、DOM、SQL の列は異なる表現であり、正規化されたプレーンテキストではありません。
+
+## テンプレート
+
+### テンプレートをレンダリング
+
+* `/api/template/render`
+* パラメータ
+
+  ```json
+  {
+    "id": "20220724223548-j6g0o87",
+    "path": "F:\\SiYuan\\data\\templates\\foo.md",
+    "mode": "editorInsert"
+  }
+  ```
+
+    * `id`: レンダリングが呼び出されるドキュメントの ID
+    * `path`: テンプレートファイルの絶対パス
+    * `mode`: 任意のレンダリングモード。現在は `"preview"` と `"editorInsert"` のみをサポートします。プレビューモードではファイルを書き込まずにドキュメントツリーの計画を生成します。エディター挿入モードでは、確認後に対応するエディタートランザクションで適用できる計画を生成します
+    * `mode` を省略した場合、従来のブール値パラメータ `preview` も引き続きサポートされます。`preview: true` は `mode: "preview"` と同等です。それ以外の場合、テンプレートは通常のコンテンツとしてレンダリングされ、`createDocTree` は無効になります
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "content": "<div data-node-id=\"20220729234848-dlgsah7\" data-node-index=\"1\" data-type=\"NodeParagraph\" class=\"p\" updated=\"20220729234840\"><div contenteditable=\"true\" spellcheck=\"false\">foo</div><div class=\"protyle-attr\" contenteditable=\"false\">​</div></div>",
+      "path": "F:\\SiYuan\\data\\templates\\foo.md",
+      "docTreePlan": {
+        "id": "template-plan-token",
+        "count": 2,
+        "nodes": [
+          {
+            "id": "20260830150000-abc1234",
+            "title": "Materials",
+            "parentID": "20220724223548-j6g0o87",
+            "hPath": "/Parent/Materials",
+            "depth": 1
+          },
+          {
+            "id": "20260830150001-def5678",
+            "title": "Review",
+            "parentID": "20260830150000-abc1234",
+            "hPath": "/Parent/Materials/Review",
+            "depth": 2
+          }
+        ]
+      }
+    }
+  }
+  ```
+
+    * `docTreePlan`: テンプレートが `createDocTree` で子ドキュメントツリーを宣言した場合に返されます
+        * `id`: プレビューモードでは空で、ファイルは書き込まれません。エディター挿入モードでは、有効期間が短い一度限りの計画トークンです。確認後、対応するトランザクションオブジェクトの最上位フィールド `templateDocTreePlanID` として送信します
+        * `count`: 計画に含まれる子ドキュメントの総数
+        * `nodes`: 計画されたドキュメントの静的な説明
+            * `id`: 計画されたドキュメントの ID
+            * `title`: 計画されたドキュメントのタイトル
+            * `parentID`: 計画された親ドキュメントの ID
+            * `hPath`: 計画されたドキュメントの可読パス
+            * `depth`: テンプレートを挿入するドキュメントからの相対的な深さ
+        * 単一の計画に含められるドキュメントは最大 128 件で、宣言する子ドキュメントツリーの深さは最大 16 階層です。最終的なファイルツリーの絶対的な深さは、7 階層を超える子ドキュメントの作成を許可する設定にも制限されます
+
+### ドキュメントをテンプレートとして保存
+
+* `/api/template/docSaveAsTemplate`
+* パラメータ
+
+  ```json
+  {
+    "id": "20220724223548-j6g0o87",
+    "name": "プロジェクト",
+    "overwrite": false,
+    "databaseMode": "copy"
+  }
+  ```
+
+    * `id`: 保存元ドキュメントの ID
+    * `name`: テンプレート名。カーネルが名前を整形し、`.md` 拡張子を追加します
+    * `overwrite`: 同名のテンプレートを上書きするかどうか。`false` でテンプレートがすでに存在する場合、レスポンスの `code` は `1` です
+    * `databaseMode`: ドキュメント内のすべてのデータベースブロックに対する任意の処理方法。`copy`（デフォルト）はテンプレートを使用するたびに独立したデータベースを作成し、ブロック単位のコンテキストフィルターを削除します。`reference` は既存のデータベース ID とコンテキストフィルターを保持するため、レンダリングされたブロックは元のデータベースとデータおよびビュー設定を共有するミラーになります。対象ドキュメントの暗号化境界内で元のデータベースを利用できない場合、参照モードのテンプレートレンダリングは失敗します
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### Sprigをレンダリング
+
+* `/api/template/renderSprig`
+* パラメータ
+
+  ```json
+  {
+    "template": "/daily note/{{now | date \"2006/01\"}}/{{now | date \"2006-01-02\"}}"
+  }
+  ```
+    * `template`: テンプレートコンテンツ
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": "/daily note/2023/03/2023-03-24"
+  }
+  ```
+
+## ファイル
+
+### ファイルを取得
+
+* `/api/file/getFile`
+* パラメータ
+
+  ``json {
+  "path": "/data/20210808180117-6v0mkxr/20200923234011-ieuun1p.sy"
+  }
+  ``
+    * `path`: ワークスペースパス配下のファイルパス
+* 戻り値
+
+    * レスポンスステータスコード `200`: ファイルコンテンツ
+    * レスポンスステータスコード `202`: 例外情報
+
+      ```json
+      {
+        "code": 404,
+        "msg": "",
+        "data": null
+      }
+      ```
+
+        * `code`: 0以外は例外
+
+            * `-1`: パラメータ解析エラー
+            * `403`: アクセス拒否（ファイルがワークスペース内にない）
+            * `404`: 見つからない（ファイルが存在しない）
+            * `405`: メソッド不許可（ディレクトリである）
+            * `500`: サーバーエラー（ファイルのstat失敗 / ファイルの読み取り失敗）
+        * `msg`: エラーを説明するテキスト
+
+### ファイルを配置
+
+* `/api/file/putFile`
+
+ノートブック ID とドキュメント ID で構成される `.sy` ドキュメントパスへの書き込みでは、入力内容と既存のドキュメントを検証します。未知の形式、不正なドキュメントデータ、`/` を含むのに必要な Spec 6 が宣言されていないタイトルは `code: -1` を返し、元のファイルと更新日時を保持します。成功時はタイトルを正規化せず、要求されたバイト列をそのまま保存します。アセットやプラグインのディレクトリ内にある `.sy` ファイルはドキュメントとして解析しません。
+
+新しく書き込むタイトルに ASCII `/` が含まれる場合、`Spec` は `6` 以上である必要があります。満たさない場合は `code: -1`、`msg: "document title requires spec 6"` を返し、入力内容を自動変更しません。既存の低い Spec のデータは引き続き読み取り可能で、正しいバージョンを指定した内容で置き換えられます。
+
+* パラメータはHTTP Multipartフォーム
+
+    * `path`: ワークスペースパス配下のファイルパス
+    * `isDir`: フォルダを作成するかどうか、`true`の場合はフォルダのみ作成し、`file`を無視
+    * `modTime`: 最終アクセス・更新時刻、Unix時間
+    * `file`: アップロードするファイル
+* 戻り値
+
+   ```json
+   {
+     "code": 0,
+     "msg": "",
+     "data": null
+   }
+   ```
+
+### ファイルを削除
+
+* `/api/file/removeFile`
+
+削除では、正規パス、機密ファイル、暗号化ノートブックに関する既存の制限を維持します。検証に失敗すると `code: -1` を返します。廃止されたアドレス指定モードの記録は削除の判定に使用しません。
+* パラメータ
+
+  ```json
+  {
+    "path": "/data/20210808180117-6v0mkxr/20200923234011-ieuun1p.sy"
+  }
+  ```
+    * `path`: ワークスペースパス配下のファイルパス
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ファイルの名前を変更
+
+* `/api/file/renameFile`
+
+移動先ディレクトリの作成やファイルの移動前に、操作全体の正規パスと移動先のドキュメント形式の互換性を検証します。検証に失敗すると `code: -1` を返し、機密パスと暗号化ノートブックに関する既存の制限も維持します。
+
+移動先にノートブック ID とドキュメント ID で構成される `.sy` ドキュメントパスが含まれる場合、対象となるすべての入力ドキュメントも検証します。未知の形式、不正なドキュメントデータ、タイトルの競合は `code: -1` を返し、移動先ディレクトリを作成せず、移動元も変更しません。
+
+移動するタイトルに ASCII `/` が含まれる場合、`Spec` は `6` 以上である必要があります。満たさない場合は `code: -1`、`msg: "document title requires spec 6"` を返し、移動元と移動先を保持します。
+
+* パラメータ
+
+  ```json
+  {
+    "path": "/data/assets/image-20230523085812-k3o9t32.png",
+    "newPath": "/data/assets/test-20230523085812-k3o9t32.png"
+  }
+  ```
+    * `path`: ワークスペースパス配下のファイルパス
+    * `newPath`: ワークスペースパス配下の新しいファイルパス
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ファイル一覧を取得
+
+* `/api/file/readDir`
+* パラメータ
+
+  ```json
+  {
+    "path": "/data/20210808180117-6v0mkxr/20200923234011-ieuun1p"
+  }
+  ```
+    * `path`: ワークスペースパス配下のディレクトリパス
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": [
+      {
+        "isDir": true,
+        "isSymlink": false,
+        "name": "20210808180303-6yi0dv5",
+        "updated": 1691467624
+      },
+      {
+        "isDir": false,
+        "isSymlink": false,
+        "name": "20210808180303-6yi0dv5.sy",
+        "updated": 1663298365
+      }
+    ]
+  }
+  ```
+
+## エクスポート
+
+### Markdownをエクスポート
+
+* `/api/export/exportMdContent`
+* パラメータ
+
+  ```json
+  {
+    "id": ""
+  }
+  ```
+
+    * `id`: エクスポートするドキュメントブロックのID
+    * `preserveTaskMarkers`：Markdown のコピー用の任意の真偽値です。`true` では `[/]` や `[-]` などのタスク記号を保持します。省略、`null`、`false` では標準 Markdown との互換性を保ち、非標準の記号を `[X]` に統一します
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "hPath": "/Please Start Here",
+      "content": "## 🍫 Content Block\n\nIn SiYuan, the only important core concept is..."
+    }
+  }
+  ```
+
+    * `hPath`: 人間が読めるパス
+    * `content`: Markdownコンテンツ。見出しの自動番号が有効な文書では番号を含みます（文書設定はエディターの既定設定より優先）。エディターの番号形式を使用し、部分エクスポートでは元の文書の番号を維持します
+
+### ファイルとフォルダをエクスポート
+
+* `/api/export/exportResources`
+* パラメータ
+
+  ```json
+  {
+    "paths": [
+      "/conf/appearance/boot",
+      "/conf/appearance/langs",
+      "/conf/appearance/emojis/conf.json",
+      "/conf/appearance/icons/index.html"
+    ],
+    "name": "zip-file-name"
+  }
+  ```
+
+    * `paths`: エクスポートするファイルまたはフォルダパスのリスト、同じファイル名/フォルダ名は上書きされる
+    * `name`: （オプション）エクスポートするファイル名、設定しない場合はデフォルトで`export-YYYY-MM-DD_hh-mm-ss.zip`
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "path": "temp/export/zip-file-name.zip"
+    }
+  }
+  ```
+
+    * `path`: 作成された`*.zip`ファイルのパス
+        * `zip-file-name.zip`内のディレクトリ構造は以下の通り:
+            * `zip-file-name`
+                * `boot`
+                * `langs`
+                * `conf.json`
+                * `index.html`
+
+## 変換
+
+### Pandoc
+
+* `/api/convert/pandoc`
+* 作業ディレクトリ
+    * pandocコマンドの実行時、作業ディレクトリは`workspace/temp/convert/pandoc/${dir}`に設定される
+    * API [`ファイルを配置`](#ファイルを配置)を使用して、変換するファイルをこのディレクトリに先に書き込むことができる
+    * その後、APIを呼び出して変換し、変換されたファイルもこのディレクトリに書き込まれる
+    * 最後に、API [`ファイルを取得`](#ファイルを取得)を呼び出して変換されたファイルを取得
+        * または、API [Markdownでドキュメントを作成](#Markdownでドキュメントを作成)を呼び出す
+        * または、内部API `importStdMd`を呼び出して変換されたフォルダを直接インポート
+* パラメータ
+
+  ```json
+  {
+    "dir": "test",
+    "args": [
+      "--to", "markdown_strict-raw_html",
+      "foo.epub",
+      "-o", "foo.md"
+   ]
+  }
+  ```
+
+    * `args`: Pandocコマンドラインパラメータ
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+       "path": "/temp/convert/pandoc/test"
+    }
+  }
+  ```
+    * `path`: ワークスペース配下のパス
+
+## 通知
+
+### メッセージをプッシュ
+
+* `/api/notification/pushMsg`
+* パラメータ
+
+  ```json
+  {
+    "msg": "test",
+    "timeout": 7000
+  }
+  ```
+    * `timeout`: メッセージ表示時間（ミリ秒）。このフィールドは省略可能、デフォルトは7000ミリ秒
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+        "id": "62jtmqi"
+    }
+  }
+  ```
+    * `id`: メッセージID
+
+### エラーメッセージをプッシュ
+
+* `/api/notification/pushErrMsg`
+* パラメータ
+
+  ```json
+  {
+    "msg": "test",
+    "timeout": 7000
+  }
+  ```
+    * `timeout`: メッセージ表示時間（ミリ秒）。このフィールドは省略可能、デフォルトは7000ミリ秒
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+        "id": "qc9znut"
+    }
+  }
+  ```
+    * `id`: メッセージID
+
+## ネットワーク
+
+### フォワードプロキシ
+
+#### JSONフォワードプロキシ
+
+* `/api/network/forwardProxy`
+* パラメータ
+
+  ```json
+  {
+    "url": "https://b3log.org/siyuan/",
+    "method": "GET",
+    "timeout": 7000,
+    "contentType": "text/html",
+    "headers": [
+        {
+            "Cookie": ""
+        }
+    ],
+    "redirect": true,
+    "payload": {},
+    "payloadEncoding": "json",
+    "responseEncoding": "text"
+  }
+  ```
+
+    * `url`: 転送するURL
+    * `method`: HTTPメソッド、デフォルトは`POST`
+    * `timeout`: タイムアウト（ミリ秒）、デフォルトは`7000`
+    * `contentType`: Content-Type、デフォルトは`application/json`
+    * `headers`: HTTPリクエストヘッダー配列。各オブジェクトのキーと値がリクエストヘッダーとして設定されます
+    * `redirect`: リダイレクトを追跡するかどうか。デフォルトは`true`で、最大2回まで追跡します。`false`に設定するとリダイレクトを追跡しません
+    * `payload`: HTTPペイロード、オブジェクトまたは文字列
+    * `payloadEncoding`: `payload`で使用されるエンコーディングスキーム。デフォルトは`json`です。`json`は`payload`をそのまま送信し、バイナリペイロードには次のエンコード済み文字列を使用できます
+
+        * `json`
+        * `base64` | `base64-std`
+        * `base64-url`
+        * `base32` | `base32-std`
+        * `base32-hex`
+        * `hex`
+    * `responseEncoding`: レスポンスデータの`body`で使用されるエンコーディングスキーム、デフォルトは`text`、選択可能な値は以下の通り
+
+        * `text`
+        * `base64` | `base64-std`
+        * `base64-url`
+        * `base32` | `base32-std`
+        * `base32-hex`
+        * `hex`
+
+      `text`は既存の動作を維持し、該当する場合は文字コードをUTF-8に変換します。バイナリエンコーディングは文字コード変換前のレスポンス本文データに適用され、gzip展開など既存のHTTPコンテンツデコード動作は変わりません。
+
+      HTTPコンテンツデコード後のレスポンス本文は32 MiBに制限されます。上限を超えた場合、部分的な本文を返さずにエラーコード`10`を返します。大きなファイルやストリーミングレスポンスには`/api/network/proxy`を使用してください。
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "body": "",
+      "bodyEncoding": "text",
+      "contentType": "text/html",
+      "elapsed": 1976,
+      "headers": {
+      },
+      "status": 200,
+      "url": "https://b3log.org/siyuan/"
+    }
+  }
+  ```
+
+    * `body`: レスポンス本文
+    * `bodyEncoding`: `body`で使用されるエンコーディングスキーム。リクエストの`responseEncoding`フィールドと一致します。デフォルトは`text`で、選択可能な値は以下の通り
+
+        * `text`
+        * `base64` | `base64-std`
+        * `base64-url`
+        * `base32` | `base32-std`
+        * `base32-hex`
+        * `hex`
+    * `contentType`: レスポンスヘッダー`Content-Type`
+    * `elapsed`: リクエスト所要時間（ミリ秒）
+    * `headers`: ターゲットサービスが返したレスポンスヘッダー
+    * `status`: ターゲットサービスが返したHTTPステータスコード
+    * `url`: 転送したURL
+
+#### HTTPフォワードプロキシ
+
+* `/api/network/proxy`
+* リクエストメソッド: 任意のHTTPメソッド
+* クエリパラメータ
+
+    * `u`: 必須。ターゲットの`http`または`https` URLをGoの`base64.RawURLEncoding`でエンコードした文字列です。URLセーフで、`=`パディングを含まないBase64です
+    * `h`: 任意。同じ方式でエンコードしたリクエストヘッダーJSONです。JSONの型は`map[string][]string`で、例は`{"Authorization":["Bearer token"]}`です
+    * `t`: 任意。接続タイムアウトです。Goの`time.ParseDuration`形式を使用します。例は`30s`、`1500ms`です
+* リクエスト本文: 現在のリクエスト本文をそのまま転送し、現在のリクエストの完全な`Content-Type`ヘッダーをターゲットリクエストへ転送します
+* 戻り値: ターゲットサービスのHTTPステータスコードとレスポンス本文を直接返し、`code`、`msg`、`data`ではラップしません。ターゲットのレスポンスヘッダーは`Siyuan-Proxy-`プレフィックス付きで返されます。例えば`Content-Type`は`Siyuan-Proxy-Content-Type`として返されます
+
+#### WebSocketフォワードプロキシ
+
+* `/ws/network/proxy`
+* リクエストメソッド: `GET`
+* クエリパラメータ
+
+    * `u`: 必須。ターゲットの`ws`または`wss` URLをGoの`base64.RawURLEncoding`でエンコードした文字列です
+    * `h`: 任意。同じ方式でエンコードしたハンドシェイクリクエストヘッダーJSONです。JSONの型は`map[string][]string`です
+    * `t`: 任意。ハンドシェイクタイムアウトです。Goの`time.ParseDuration`形式を使用します。例は`30s`、`1500ms`です
+* 戻り値: WebSocketへアップグレードした後、メッセージを双方向に転送します。ターゲットのハンドシェイクレスポンスヘッダーは`Siyuan-Proxy-`プレフィックス付きで返されます
+
+#### EventSourceフォワードプロキシ
+
+* `/es/network/proxy`
+* リクエストメソッド: `GET`
+* クエリパラメータ
+
+    * `u`: 必須。ターゲットの`http`または`https` URLをGoの`base64.RawURLEncoding`でエンコードした文字列です
+    * `h`: 任意。同じ方式でエンコードしたリクエストヘッダーJSONです。JSONの型は`map[string][]string`です
+    * `t`: 任意。接続タイムアウトです。Goの`time.ParseDuration`形式を使用します。例は`30s`、`1500ms`です
+* 戻り値: ターゲットサービスのHTTPステータスコードとレスポンス本文を直接ストリーミングし、`code`、`msg`、`data`ではラップしません。リクエストヘッダーに`Accept`がない場合は、`text/event-stream`を自動的に使用します。ターゲットのレスポンスヘッダーは`Siyuan-Proxy-`プレフィックス付きで返されます
+
+## システム
+
+### 起動進捗を取得
+
+* `/api/system/bootProgress`
+* パラメータなし
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "details": "Finishing boot...",
+      "progress": 100
+    }
+  }
+  ```
+
+### システムバージョンを取得
+
+* `/api/system/version`
+* パラメータなし
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": "1.3.5"
+  }
+  ```
+
+### システムの現在時刻を取得
+
+* `/api/system/currentTime`
+* パラメータなし
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": 1631850968131
+  }
+  ```
+
+    * `data`: ミリ秒精度
+
+## データベース
+
+データベース（内部では「属性ビュー」）は、フィールド（列）とアイテム（行）として構造化データを格納します。各データベースは `avID` で識別され、1 つ以上のデータベースブロック（`blockID`）を通じてドキュメントに埋め込めます。1 つのデータベースは複数の異なるレイアウトタイプのビュー（`viewID`）を持てます：`table`（テーブル）、`gallery`（ギャラリー）、`kanban`（カンバン）。
+
+フィールドタイプ（`keyType`）は以下の通りです：
+
+| 値          | 説明                   |
+|-------------|------------------------|
+| `block`     | 主キー（紐づくブロック）|
+| `text`      | テキスト               |
+| `number`    | 数値                   |
+| `date`      | 日付                   |
+| `select`    | 単一選択               |
+| `mSelect`   | 複数選択               |
+| `url`       | URL                    |
+| `email`     | メール                 |
+| `phone`     | 電話                   |
+| `location` | 位置 |
+| `mAsset`    | アセット               |
+| `template`  | テンプレート           |
+| `created`   | 作成日時               |
+| `updated`   | 更新日時               |
+| `checkbox`  | チェックボックス       |
+| `relation`  | 関連                   |
+| `rollup`    | ロールアップ           |
+| `lineNumber`| 行番号                 |
+
+### レンダリング
+
+* `/api/av/renderAttributeView`
+* パラメータ
+
+  ```json
+  {
+    "id": "20240118120204-kwyzf77",
+    "blockID": "20240118120201-kldj15t",
+    "viewID": "",
+    "page": 1,
+    "pageSize": 50,
+    "query": "",
+    "groupPaging": {},
+    "targetItemID": "",
+    "targetGroupID": "",
+    "createIfNotExist": true,
+    "persistView": true
+  }
+  ```
+
+    * `id`: データベース ID
+    * `blockID`: このデータベースを埋め込むデータベースブロック。アクティブなビュー、公開権限、ブロック単位のコンテキストフィルターの解決に使用します。`custom-sy-av-view` が存在しないか無効な場合は、最初に利用可能なビューを使用します。独立したデータベースをレンダリングする場合は省略できますが、コンテキストフィルターが設定されている場合は有効なデータベースブロックのインスタンスが必要です
+    * `viewID`: レンダリングするビューを明示的に指定します。無効な値はエラーになります。省略時は `blockID` から解決し、解決できなければ最初に利用可能なビューを使用します
+    * `page`: ページ番号（1 始まり）。デフォルトは `1`
+    * `pageSize`: 1 ページあたりのアイテム数。`-1` または省略時はビューのデフォルト（`50`）を使用
+    * `query`: 主キー値に対する任意の全文フィルターキーワード
+    * `groupPaging`: グループ化（カンバン）ビューの任意のページング設定
+    * `targetItemID`: 位置を特定するデータベースアイテムの任意の ID。指定すると、レスポンスに対象の位置情報が含まれます
+    * `targetGroupID`: `targetItemID` とともに使用する任意のグループヒント
+    * `temporarySort`: 任意の単一フィールドによる並べ替え。例：`{"column":"field-id","order":"DESC"}`。省略または `null` の場合は保存済みのルールを使用します。指定時は今回のリクエストのみ、ページング前の並べ替えを上書きし、データベースの作成・保存やブロックの既定ビューの変更は行いません。`order` は `ASC` または `DESC` とし、フィールドが存在しないか並べ替え非対応の場合は保存済みのルールに戻ります。既存の `valueSource` と `dateEndpoint` も使用できます
+    * `createIfNotExist`: `true`（デフォルト）の場合、データベースが存在しなければデフォルトビューを含むデータベースを作成
+    * `persistView`: 非推奨の互換性パラメータです。データベース定義がトップレベルの現在のビューを保存しなくなったため、受け付けますが無視します
+* 戻り値（実際のレスポンス、テーブルレイアウト、1 行を表示）：
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "name": "API テスト",
+      "id": "20240118120204-kwyzf77",
+      "viewType": "table",
+      "viewID": "20240118120204-7rnmyc1",
+      "isMirror": false,
+      "contextFilter": null,
+      "contextFilterFields": [],
+      "views": [
+        {
+          "id": "20240118120204-7rnmyc1",
+          "icon": "",
+          "name": "テーブル",
+          "desc": "",
+          "hideAttrViewName": false,
+          "type": "table",
+          "pageSize": 50
+        }
+      ],
+      "view": {
+        "id": "20240118120204-7rnmyc1",
+        "icon": "",
+        "name": "テーブル",
+        "desc": "",
+        "hideAttrViewName": false,
+        "filters": [],
+        "sorts": [],
+        "group": null,
+        "pageSize": 50,
+        "showIcon": true,
+        "wrapField": false,
+        "groupFolded": false,
+        "groupHidden": 0,
+        "columns": [
+          {
+            "id": "20240118120204-w6cggab",
+            "name": "主キー",
+            "type": "block",
+            "icon": "",
+            "wrap": false,
+            "hidden": false,
+            "desc": "",
+            "calc": null,
+            "numberFormat": "",
+            "template": "",
+            "pin": false,
+            "width": ""
+          }
+        ],
+        "rows": [
+          {
+            "id": "20240118203831-fkfvvtx",
+            "cells": [
+              {
+                "id": "20240118203911-xrg9obl",
+                "value": {
+                  "id": "20240118203911-xrg9obl",
+                  "keyID": "20240118120204-w6cggab",
+                  "blockID": "20240118203831-fkfvvtx",
+                  "type": "block",
+                  "createdAt": 1706843791000,
+                  "updatedAt": 1706843791000,
+                  "block": {
+                    "id": "20240118203831-fkfvvtx",
+                    "content": "3",
+                    "created": 1706843791000,
+                    "updated": 1706843791000
+                  }
+                },
+                "valueType": "block",
+                "color": "",
+                "bgColor": ""
+              }
+            ]
+          }
+        ],
+        "rowCount": 5
+      }
+    }
+  }
+  ```
+
+    * `data.view`: レンダリングされたビューインスタンス。構造は `viewType` により異なります。`table` は `columns`/`rows`/`rowCount` を、`gallery` と `kanban` は `fields`/`cards`/`cardCount` を返します。グループ化が有効な場合、`groups` には `groupKey`/`groupValue` を持つグループごとのビューインスタンスが含まれます。`view` は `filters`/`sorts`/`group`/`showIcon`/`wrapField`/`groupFolded`/`groupHidden` も含みます。注意：有効なフィルターまたはグループ化により、アイテムの総数が 0 より大きくてもアイテムリストが空になることがあります
+    * `data.view.columns[]`: 各列は `id`/`name`/`type`/`icon`/`wrap`/`hidden`/`desc`/`calc`/`numberFormat`/`template`/`renderTemplate`/`pin`/`width` を持ちます。`select`/`mSelect` 列はさらに `options` を含みます。ギャラリーとカンバンのフィールドでは、同じフィールドメタデータが `data.view.fields[]` に返されます
+    * `data.view.columns[].renderTemplate`: 通常フィールドの任意の表示テンプレートです。表示内容のみを変更し、元の型付き保存値は変更しません
+    * `data.view.rows[].id`: 表形式の行の**アイテム ID**（`itemID`）です。その行の主キーセルにある `value.blockID` とも同じです。紐づく行の場合、紐づくブロック ID は主キーセルの `value.block.id` にあります。両者は異なる概念であり、同一であると仮定してはいけません
+    * `data.view.cards[].id`: ギャラリーまたはカンバンのカードの**アイテム ID**（`itemID`）です。グループ化が有効な場合、表形式の行またはカードは `groups[]` 内の対応するビューインスタンスにあります
+    * `data.view.rows[].cells[].value`: `Value` オブジェクト——すべての value 形状は [セル値を設定](#セル値を設定) を参照。`createdAt`/`updatedAt` は int64 ミリ秒タイムスタンプ。通常フィールドに空でない `renderTemplate` が設定されている場合、任意の `renderedContent` プロパティに実行時の表示テンプレート結果が入ります。このプロパティは永続化されず、元の型のプロパティには引き続き保存値が入ります。`data.view.cards[]` 内の値も同じ規則に従います
+    * `data.views`: 全ビューのメタデータ（行データなし）
+    * `data.isMirror`: データベースブロックがデータベースのミラー（読み取り専用コピー）の場合 `true`
+    * `data.contextFilter`: このデータベースブロックに設定されたコンテキストフィルター。無効の場合は `null` です。現在の仕様は `{ "spec": 1, "keyID": "<関連フィールド ID>" }` で、すべてのビューに対し、選択した関連フィールドが `blockID` を含むルート文書に紐付いたデータベース項目を含む行だけに絞り込み、選択中のビューのフィルターとは AND で組み合わせます。選択したフィールドが削除された場合、リレーション以外の型に変更された場合、または関連先が無効になった場合もブロック単位の設定は保持されますが、フィールドの修復・変更またはコンテキストフィルターの無効化を行うまで行は表示されません
+    * `data.contextFilterFields`: 選択中のビューに依存しない、データベース内の設定済み関連フィールドすべての軽量メタデータです。各項目は `id`、`name`、`icon`、`targetAvID` を含み、`contextFilter` の設定に使用します。公開読み取り専用レスポンスでは `contextFilter` は `null`、この一覧は `[]` に隠されますが、保存済みのコンテキストフィルターはレンダリング結果に引き続き適用されます
+
+### データベースブロックのコンテキストフィルターを設定
+
+* `/api/av/setAttrViewContextFilter`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "blockID": "20240118120201-kldj15t",
+    "keyID": "20240118120300-relation"
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `blockID`: コンテキストフィルターを変更する具体的なデータベースブロックの ID。`avID` のインスタンスである必要があります
+    * `keyID`: データベースで設定済みの関連フィールドの ID。フィルターの意味は `いずれかを含む - 現在の文書` に固定されます。空文字列を渡すとコンテキストフィルターを無効にします
+* 戻り値：正規化された設定を `data.contextFilter` に返します。無効化後は `null` です
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "contextFilter": {
+        "spec": 1,
+        "keyID": "20240118120300-relation"
+      }
+    }
+  }
+  ```
+
+### 現在のデータベースビューの画像を取得
+
+* `/api/av/getCurrentAttrViewImages`
+* パラメータ
+
+  ```json
+  {
+    "id": "20240118120204-kwyzf77",
+    "blockID": "20240118120201-kldj15t",
+    "viewID": "20240118120204-7rnmyc1",
+    "query": ""
+  }
+  ```
+
+    * `id`: データベース ID
+    * `blockID`: データベースを埋め込むデータベースブロック。現在のビュー、公開アクセス権、およびブロック単位のコンテキストフィルターの解決に使用します。独立したデータベースでブロックコンテキストが不要な場合のみ省略します
+    * `viewID`: 明示的なビュー ID（任意）。省略時は `blockID` から解決し、解決できなければ最初に利用可能なビューを使用します
+    * `query`: 主キー値に対する任意の全文フィルターキーワード
+    * `groupID`: 任意のグループ ID。省略、null、空文字列の場合はビュー全体が対象です。指定すると、そのグループ内の項目順にビューのソート条件を適用した画像のみを、ページ分割せずに返します。存在しないグループを指定するとエラーになります
+* 戻り値：データベースブロックのコンテキストフィルター、ビューのフィルター、ソートを適用した後、表示されているアセットフィールドに含まれる画像アセットパスの配列
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": ["assets/example-20240118120201-abc1234.png"]
+  }
+  ```
+
+### 取得
+
+* `/api/av/getAttributeView`
+* パラメータ
+
+  ```json
+  {
+    "id": "20240118120204-kwyzf77"
+  }
+  ```
+
+    * `id`: データベース ID
+* 戻り値（実際のレスポンス、トリム済み——`keyValues`/`views` 配列は省略）：
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "av": {
+        "spec": 4,
+        "id": "20240118120204-kwyzf77",
+        "name": "API テスト",
+        "keyValues": [
+          {
+            "key": {
+              "id": "20240118120204-w6cggab",
+              "name": "主キー",
+              "type": "block",
+              "icon": "",
+              "desc": "",
+              "numberFormat": "",
+              "template": ""
+            },
+            "values": [
+              {
+                "id": "20240118203911-xrg9obl",
+                "keyID": "20240118120204-w6cggab",
+                "blockID": "20240118203831-fkfvvtx",
+                "type": "block",
+                "createdAt": 1706843791000,
+                "updatedAt": 1706843791000,
+                "block": {
+                  "id": "20240118203831-fkfvvtx",
+                  "content": "3",
+                  "created": 1706843791000,
+                  "updated": 1706843791000
+                }
+              }
+            ]
+          }
+        ],
+        "keyIDs": null,
+        "viewID": "20240118120204-7rnmyc1",
+        "views": [
+          {
+            "id": "20240118120204-7rnmyc1",
+            "icon": "",
+            "name": "テーブル",
+            "hideAttrViewName": false,
+            "desc": "",
+            "pageSize": 50,
+            "type": "table",
+            "table": {
+              "spec": 0,
+              "id": "20240118120204-grokgmm",
+              "showIcon": true,
+              "wrapField": false,
+              "columns": [
+                {
+                  "id": "20240118120204-w6cggab",
+                  "wrap": false,
+                  "hidden": false,
+                  "pin": false,
+                  "width": ""
+                }
+              ]
+            },
+            "itemIds": ["20240118203818-ct041hj", "20240118203855-sqzbja0", "20240118203831-fkfvvtx", "20240118203842-kc31ovy", "20240531235026-uiap07y"],
+            "groupCreated": 0,
+            "groupItemIds": null,
+            "groupFolded": false,
+            "groupHidden": 0,
+            "groupSort": 0
+          }
+        ]
+      }
+    }
+  }
+  ```
+
+    * `data.av`: 完全な `AttributeView` 定義——フィールド（`keyValues`）、フィールド順序（`keyIDs`、`null` の場合あり）、および全ビューの生のレイアウト設定（`table`/`gallery`/`kanban`）とアイテム順序（`itemIds`）。互換性フィールド `viewID` は最初に利用可能なビューから算出され、永続化されません。レンダリング後の行やページングは含まれないため、計算後の行データが必要な場合は [レンダリング](#レンダリング) を使用してください
+
+    * `data.av.automations` は省略可能で、データベース全体のルール（`spec: 1`～`8`）を保持します。`block` トリガーの `blockSource` はノートブック/文書の範囲、ブロックの種類、タグ、カスタム属性を指定し、`collect` アクションは一致する元のブロックを現在のデータベースにバインドします。主種類はすべてのサブタイプを含みます。形式 3 は `h:h1`～`h:h6`、`l:u/o/t`、`i:u/o/t`、`callout:TYPE`（大文字小文字を区別し、独自種類も指定可能）をサポートします。種類の未選択は制限なし、複数選択は OR です。自動作成された主キー値には、カーネルが管理する `block.collectionRuleID` が含まれる場合があります。自動収集は追加だけを行います。原文やルールの条件・範囲・対象・有効状態が変わっても既存の項目とフィールドを保持し、再び一致しても同じ項目を使います。明示的な整理ではすべての有効な収集ルールを使い、手動・自動でバインドした項目を同じ基準で確認します。一致する項目や判定できない項目は保持し、実行前の再確認で不一致が確定した項目だけを除去します。元に戻す操作で元の項目と全フィールドを復元します。 `blockSource.tagMatch` と `attributeMatch` は既定で `and`、形式 3 では各組を個別に `or` にできます。組の間は AND のままで、空の組は制限しません。 各ルールの省略可能な `notifyOnSuccess` は既定（`null` を含む）で `true` です。実際の変更をトランザクション確定後に一つの通知にまとめます。無効にしてもエラーは通知します。変更なし・明示的な収集・元に戻す・やり直し・ロールバックでは成功通知を送信しません。 形式 4 では省略可能な `blockSource.tagTarget` を追加しています。省略・空文字列は既定の選択で、最初の内容ブロックより条件に合うリスト項目を優先、`block` はタグを含むブロック、`container` は種類と属性の条件に一致する最も近いコンテナを収集し、ブロック ID で重複を除きます。文書には明示的な `d` の選択が必要です。AND のタグは同じ元ブロックに必要で、タグ条件がなければこの設定は影響しません。プレビューと実際の収集対象は一致し、切り替えても既存項目とフィールドは維持されます。 形式 5 では省略可能な `blockSource.documentDepth` を追加しています。省略または `null` は無制限、`0` は選択した各文書自体のみ、`1` は直接の子文書も含み、他の非負整数は相対的な最大階層数を指定します。文書の範囲すべてに共通し、ノートブックの範囲は制限せず、範囲は和集合のままです。深さを変更しても既存の項目とフィールドを保持し、既存の内容を自動で追加収集しません。 形式 6 は各属性条件に省略可能な `nameOperator` を追加します。省略・空文字列・`equals` は完全な名前との一致を維持し、`contains` は `custom-` 接頭辞の入力を必要としない文字列の部分一致、`regex` は接頭辞を含む完全な名前に対する Go の正規表現です。カスタム属性だけを照合し、名前と値は大文字小文字を区別して同じ属性で満たす必要があります。`exists` は名前の一致が一つ以上、`notExists` は一致がないことを要求し、値は無視します。名前パターンは最大 256 バイトで、不正な式は保存を拒否します。既存の形式 1–5 の動作は維持し、古いリーダーはデータベースを書き換えずに形式 6 を拒否します。 形式 7 は省略可能な `blockSource.includeSelectedDocuments` を追加します。省略・`null`・`true` は選択した各文書自体を含み、`false` はその文書と内部のすべてのブロックを除外し、子孫文書には引き続き `documentDepth` を適用します。この設定は文書範囲に共通で、ノートブックの範囲や重なる別の文書範囲には影響せず、範囲は和集合のままです。`false` と深さ `0` の組み合わせでは、対応する文書範囲は空です。変更しても既存の項目とフィールドを保持し、自動で追加収集や除去を行いません。形式 1–6 は引き続き読み取れ、古いリーダーはデータベースを書き換えずに形式 7 を拒否します。 形式 8 は省略可能な `blockSource.referenceID` を追加します。本文中でこのブロックを参照するブロック参照を照合し、文書を指定した場合は内部のコンテンツブロックも含みますが、子文書は含みません。埋め込み、通常のリンク、データベースのリッチテキストフィールド内の参照は対象外です。タグは同じ参照元を判定し、バックリンクの親ブロック規則でまとめた後に種類と属性を判定します。`tagTarget` は使用しません。参照先は同じ暗号化境界内に限られます。参照の削除や参照先の変更でも既存の項目とフィールドを保持し、以前の内容はプレビューして明示的に収集します。形式 1–7 は引き続き読み取れ、古いクライアントはデータベースを書き換えずに形式 8 を拒否します。 `setAttrViewAutomations` で新しい範囲を保存する場合、重複を除いたノートブックと文書の合計は32件までです。既存の上限を超える範囲は引き続き読み取りと使用ができ、維持または削減できますが、上限を超えた状態で範囲を追加することはできません。元に戻す・やり直しでは元の範囲が保持されます。
+
+### 主キー値を取得
+
+* `/api/av/getAttributeViewPrimaryKeyValues`
+* パラメータ
+
+  ```json
+  {
+    "id": "20240118120204-kwyzf77",
+    "keyword": "",
+    "page": 1,
+    "pageSize": 16
+  }
+  ```
+
+    * `id`: データベース ID
+    * `keyword`: 主キーテキストに対する任意の部分一致フィルター（大文字小文字を区別しない）
+    * `page`: ページ番号（1 始まり）。デフォルトは `1`
+    * `pageSize`: 1 ページあたりのアイテム数。`-1` または省略時は `16`。結果は `block.updated` の降順
+* 戻り値（実際のレスポンス、1 値を表示）：
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "name": "API テスト",
+      "blockIDs": ["20240118120201-kldj15t"],
+      "total": 1,
+      "rows": {
+        "key": {
+          "id": "20240118120204-w6cggab",
+          "name": "主キー",
+          "type": "block",
+          "icon": "",
+          "desc": "",
+          "numberFormat": "",
+          "template": ""
+        },
+        "values": [
+          {
+            "id": "20240118203911-xrg9obl",
+            "keyID": "20240118120204-w6cggab",
+            "blockID": "20240118203831-fkfvvtx",
+            "type": "block",
+            "createdAt": 1706843791000,
+            "updatedAt": 1706843791000,
+            "block": {
+              "id": "20240118203831-fkfvvtx",
+              "content": "3",
+              "created": 1706843791000,
+              "updated": 1706843791000
+            }
+          }
+        ]
+      }
+    }
+  }
+  ```
+
+    * `data.rows`: 主キー（`block`）フィールドとそのページングされた値を保持する `KeyValues` オブジェクト
+    * `data.blockIDs`: このデータベースを参照する全データベースブロック（ミラー）の ID
+    * `data.total`: フィルタリング後、ページング前の主キー値の数
+
+### 検索
+
+* `/api/av/searchAttributeView`
+* パラメータ
+
+  ```json
+  {
+    "keyword": "API",
+    "excludes": [],
+    "includeViewMatches": true
+  }
+  ```
+
+    * `keyword`: 検索キーワード（データベース名に一致）
+    * `excludes`: 任意。結果から除外するデータベース ID のリスト
+    * `includeViewMatches`: 任意。`true` の場合はビュー名も検索対象になり、一致した子ビューに `"matched": true` が含まれます
+* 戻り値（実際のレスポンス）：
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "results": [
+        {
+          "avID": "20240118120204-kwyzf77",
+          "avName": "API テスト",
+          "viewName": "",
+          "viewID": "",
+          "viewLayout": "",
+          "blockID": "20240118120201-kldj15t",
+          "hPath": "正在跟进的问题/数据库/API",
+          "children": [
+            {
+              "avID": "20240118120204-kwyzf77",
+              "avName": "API テスト",
+              "viewName": "テーブル",
+              "viewID": "20240118120204-7rnmyc1",
+              "viewLayout": "table",
+              "matched": true,
+              "blockID": "20240118120201-kldj15t",
+              "hPath": "正在跟进的问题/数据库/API"
+            }
+          ]
+        }
+      ]
+    }
+  }
+  ```
+
+    * `data.results[]`: 各トップレベル結果は `avID` ごとにデータベースを集約します。その `children[]` が各ビュー（`viewName`/`viewID`/`viewLayout`）を列挙し、`includeViewMatches` が有効な場合は `matched` で名前が一致したビューを示します
+
+### セル値を設定
+
+1 つのセル（1 行の 1 フィールド）を更新します。セル値の主要な書き込みエンドポイントです。リクエストの `value` はフィールドの `keyType` に応じた部分 `Value` オブジェクトです。主な value の形状は以下の通りです：
+
+| `keyType`  | `value` の形状                                                                                                       |
+|------------|----------------------------------------------------------------------------------------------------------------------|
+| `block`    | `{"block": {"content": "1行目", "id": "<紐づくブロックID>"}, "isDetached": false}`                                  |
+| `text`     | `{"text": {"content": "テキスト"}}`                                                                                  |
+| `text`（リッチテキスト） | `{"text": {"content": "テキスト", "rich": {"spec": 1, "format": "kramdown", "content": "**テキスト**"}}}` |
+| `number`   | `{"number": {"content": 42, "isNotEmpty": true}}`（クリアは `{"isNotEmpty": false}`）                                |
+| `date`     | `{"date": {"content": 1676042451000, "isNotEmpty": true}}`（ミリ秒タイムスタンプ）                                   |
+| `select`   | `{"mSelect": [{"content": "完了", "color": "1"}]}`（最大1つ）                                                         |
+| `mSelect`  | `{"mSelect": [{"content": "A", "color": "1"}, {"content": "B", "color": "2"}]}`                                      |
+| `url`      | `{"url": {"content": "https://siyuan.com"}}`                                                                         |
+| `email`    | `{"email": {"content": "a@b.com"}}`                                                                                  |
+| `phone`    | `{"phone": {"content": "1234567890"}}`                                                                               |
+| `location` | `{"location":{"name":"Home","latitude":0,"longitude":0,"originalInput":"0, 0"}}` |
+| `mAsset`   | `{"mAsset": [{"type": "image", "name": "画像", "content": "https://example.com/image"}]}` |
+| `checkbox` | `{"checkbox": {"checked": true}}`                                                                                    |
+
+`mAsset` の各要素は、`type: "image"` で画像を、`type: "file"` でファイルリンクを表示します。値の更新は `mAsset` 配列全体を置き換えるため、要素を追加する場合は既存の要素も含める必要があります。
+
+> ⚠️ `itemID` は**アイテム ID**、つまり[レンダリング](#レンダリング)が返すアイテムの `id` です。表形式では `rows[].id`、ギャラリーとカンバンでは `cards[].id` であり、グループ化が有効な場合は `groups[]` 内の対応するビューインスタンスにあります。また、主キー値の `value.blockID` とも同じです。紐づくアイテムの場合、紐づくブロック ID は主キー値の `value.block.id` にあります。両者は異なる概念であり、同一であると仮定してはいけません。誤った ID を渡すと、値はレンダリングされたセルに現れない孤立データとして保存されます。
+
+リッチテキストでは、`text.rich.content` が正規の Kramdown ソースです。カーネルはサポート対象の構造を検証して `text.content` のプレーンテキスト表現を生成するため、呼び出し側が指定したプレーンテキスト表現は無視されます。既存の API クライアントとの互換性を保つため、`text.rich` を省略した場合、`text.content` が変わっていなければ保存済みのリッチテキストを維持し、変わっていればプレーンテキストで置き換えます。プレーンテキスト表現が同じ場合でも、`"rich": null` を送信すると書式を明示的に削除できます。リッチテキストを含むデータベースはストレージ仕様 9 を使用するため、それより前のデータベース仕様だけをサポートするカーネルでは開けません。
+
+`location` の `name` は省略できます。`latitude` と `longitude` は両方とも省略または null にするか、それぞれ [-90, 90] と [-180, 180] の範囲内の有限数値を指定します。ゼロは有効な座標です。すべての座標は暗黙的に WGS84 として扱い、変換せずに保存します。位置の値に座標系プロパティを明示的に指定すると拒否されます。フィールドの既定座標系設定はありません。`originalInput` は入力元のテキストを保持し、フィルターと並べ替えには使用しません。更新時に省略したメンバーは既存の値を保持します。位置を消去するには `{"location":null}` を送信するか、名前を空にして両方の座標を null にします。座標が変わると、省略された `originalInput` は自動的に消去されます。明示的に指定した入力元のテキストは保持されます。テキストフィルターは `{"type":"location","text":{"content":"検索語"}}` を使用し、名前と座標を照合します。位置フィールドはデータベースのストレージ仕様 13 を使用するため、古いカーネルでは開けません。位置フィールドを使用しないデータベースの仕様は変わりません。
+
+* `/api/av/setAttributeViewBlockAttr`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "keyID": "20240531232156-ahsyx8l",
+    "itemID": "20240118203831-fkfvvtx",
+    "value": {
+      "type": "number",
+      "number": {
+        "content": 42,
+        "isNotEmpty": true
+      }
+    }
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `keyID`: フィールド ID（更新対象の列）
+    * `itemID`: **行 ID**（[レンダリング](#レンダリング) が返す `rows[].id`）。従来の `rowID` パラメータは非推奨で 2026-12-01 以降に削除されるため、`itemID` を使用してください
+    * `value`: 部分 `Value` オブジェクト（上記表を参照）。未知または未サポートのキーは無視されます
+* 戻り値（実際のレスポンス、数値）：
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "value": {
+        "id": "20240531235048-4zisj1p",
+        "keyID": "20240531232156-ahsyx8l",
+        "blockID": "20240118203831-fkfvvtx",
+        "type": "number",
+        "createdAt": 1717170648596,
+        "updatedAt": 1781610266432,
+        "number": {
+          "content": 42,
+          "isNotEmpty": true,
+          "format": "",
+          "formattedContent": "42"
+        }
+      }
+    }
+  }
+  ```
+
+    * `data.value`: 更新後に正規化された値（`number.formattedContent` などの計算フィールドを含む）。リクエストペイロードを再送せず、この戻り値で UI を更新してください
+
+### アイテムを追加
+
+1つ以上のアイテム（行）を追加します。各ソースは既存ブロックを紐づける（`isDetached: false`）か、ビュー内にのみ存在する独立行を作成（`isDetached: true`）できます。
+
+* `/api/av/addAttributeViewBlocks`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "blockID": "20240118120201-kldj15t",
+    "viewID": "",
+    "groupID": "",
+    "previousID": "",
+    "srcs": [
+      {
+        "id": "20240118120201-kldj15t",
+        "isDetached": false,
+        "content": "新しい行"
+      }
+    ],
+    "ignoreDefaultFill": false
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `blockID`: このデータベースを所有するデータベースブロック（ターゲットビュー/グループの解決に使用）
+    * `viewID`: ターゲットビューを明示的に指定します。省略時は `blockID` が選択するビューを使用し、解決できなければ最初に利用可能なビューを使用します
+    * `groupID`: カンバンビューのターゲットグループ ID。テーブル/ギャラリーでは省略可
+    * `previousID`: このアイテム ID の後に挿入。空の場合は末尾に追加
+    * `srcs[].id`: ブロックを紐づける場合（`isDetached: false`）、紐づけるブロック ID。ノード ID 形式である必要があります
+    * `srcs[].isDetached`: `true` で独立行を作成、`false` で既存ブロックを紐づけ
+    * `srcs[].content`: 主キーの表示テキスト（`isDetached: true` の場合、または紐づくブロックの内容を上書きする場合に使用）
+    * `srcs[].itemID`: 任意。アイテム ID を明示指定。省略時は自動生成
+    * `ignoreDefaultFill`: `true` の場合、フィルター/グループフィールドへのデフォルト値の自動入力をスキップ
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+    * このエンドポイントは `null` を返します。成功後、[レンダリング](#レンダリング) を呼び出して更新された行（セル更新に必要な新しい行 ID を含む）を取得してください
+
+### アイテムを削除
+
+1つ以上のアイテム（行）を削除します。独立行は削除され、紐づくブロックは紐付け解除されます（元のドキュメントブロックは削除されません）。
+
+* `/api/av/removeAttributeViewBlocks`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "srcIDs": ["20240118203831-fkfvvtx"]
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `srcIDs`: 削除する行 ID（[レンダリング](#レンダリング) が返す `rows[].id`）のリスト
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### レイアウトを切り替え
+
+データベースブロックが選択しているビューのレイアウトタイプを `table`（テーブル）、`gallery`（ギャラリー）、`kanban`（カンバン）の間で切り替えます。成功時、サーバーはビューを再レンダリングして返します（[レンダリング](#レンダリング) と同じ形状）。
+
+* `/api/av/changeAttrViewLayout`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "blockID": "20240118120201-kldj15t",
+    "layoutType": "kanban"
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `blockID`: このビューを所有するデータベースブロック
+    * `layoutType`: ターゲットレイアウト——`table`、`gallery`、`kanban` のいずれか
+* 戻り値：[レンダリング](#レンダリング) の戻り値と同じ形状。`kanban` に切り替えてグループが設定されている場合、`data.view` は `groups[]` 配列を持ちます；各グループはビューインスタンスで、`groupKey`、`groupValue`、およびカンバン固有フィールド（`coverFrom`、`cardAspectRatio`、`cardSize`、`fitImage`、`displayFieldName`、`fillColBackgroundColor`、`fields`）を含みます
+
+### グループ化を設定
+
+カンバンビューのグループ化ルールを設定またはクリアします。`group.field` が空の場合、グループ化を削除します。成功時、サーバーはビューを再レンダリングして返します。
+
+* `/api/av/setAttrViewGroup`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "blockID": "20240118120201-kldj15t",
+    "group": {
+      "field": "20240118203822-io6ofxb",
+      "method": 0,
+      "order": 0,
+      "hideEmpty": false
+    }
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `blockID`: このビューを所有するデータベースブロック
+    * `group`: グループ化ルール
+    * `group.field`: グループ化の基準フィールド（列）ID。空文字列でグループ化を削除
+    * `group.valueSource`: 任意の値ソース——`stored` はフィールドの保存値を使用し、省略時のデフォルトです。`rendered` はフィールドの表示テンプレート結果を使用し、テキスト値としてグループ化します
+    * `group.method`: グループ化方式——`0` 値ごと、`1` 数値範囲、`2` 相対日付、`3` 日ごと、`4` 週ごと、`5` 月ごと、`6` 年ごと
+    * `group.range`: 任意。`method` が `1`（数値範囲）の場合は必須：`{ "numStart": 0, "numEnd": 100, "numStep": 10 }`
+    * `group.order`: グループの並び順——`0` 昇順、`1` 降順、`2` 手動、`3` 選択肢の順序に従う
+    * `group.hideEmpty`: 空のグループを非表示にするか
+* 戻り値：[レンダリング](#レンダリング) の戻り値と同じ形状
+
+### フィルターとソートを取得
+
+データベースブロックに紐づくビューの現在のフィルターおよびソートルールを返します。
+
+* `/api/av/getAttributeViewFilterSort`
+* パラメータ
+
+  ```json
+  {
+    "id": "20240118120204-kwyzf77",
+    "blockID": "20240118120201-kldj15t"
+  }
+  ```
+
+    * `id`: データベース ID
+    * `blockID`: このビューを所有するデータベースブロック
+* 戻り値（実際のレスポンス、フィルター/ソート未設定）：
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "filters": [],
+      "sorts": []
+    }
+  }
+  ```
+
+  設定後（実際に取得したレスポンス）、フィルターとソートは以下の形になります：
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": {
+      "filters": [
+        {
+          "column": "20240118203822-io6ofxb",
+          "operator": "=",
+          "value": {
+            "type": "select",
+            "mSelect": [
+              { "content": "完了", "color": "1" }
+            ]
+          }
+        }
+      ],
+      "sorts": [
+        {
+          "column": "20240118120204-w6cggab",
+          "order": "DESC"
+        }
+      ]
+    }
+  }
+  ```
+
+    * `data.filters`: `ViewFilter` の配列。最上位は単一のルートグループノード `{ "combination": "and"|"or", "filters": [...] }` で、配列要素はリーフフィルターまたはネストされたグループノードのいずれかで、再帰的な AND/OR 組み合わせをサポートします
+    * `data.filters[].column`: フィルターが適用されるフィールド（列）ID（リーフノードのみ）
+    * `data.filters[].valueSource`: リーフノードの任意の値ソース——省略時は `stored` がデフォルトで、`rendered` はフィールドの表示テンプレート結果をフィルターします
+    * `data.filters[].operator`: フィルター演算子（下記の演算子表を参照；リーフノードのみ）
+    * `data.filters[].value`: フィルターのオペランドとなる `Value` オブジェクト（形状は [セル値を設定](#セル値を設定) を参照；リーフノードのみ）。`valueSource` が `rendered` の場合、`{ "type": "template", "template": { "content": "..." } }` 形式のテンプレート値を使用します
+    * `data.filters[].relativeDate`: 任意。日付フィルターが使用する相対日時記述子（`{ "count": 7, "unit": 0, "direction": -1 }`、`unit`：`0` 日、`1` 週、`2` 月、`3` 年、`direction`：`-1` 前、`0` 今期、`1` 後；リーフノードのみ）
+    * `data.filters[].combination`: グループの組み合わせ方法、`"and"` または `"or"`（グループノードのみ）
+    * `data.filters[].filters`: 子フィルターノード、再帰的な `ViewFilter`（グループノードのみ）
+    * `data.sorts`: `ViewSort` の配列
+    * `data.sorts[].column`: ソートが適用されるフィールド（列）ID
+    * `data.sorts[].valueSource`: 任意の値ソース——省略時は `stored` がデフォルトで、`rendered` はフィールドの表示テンプレート結果でソートします
+    * `data.sorts[].order`: `ASC` または `DESC`
+
+  フィルター演算子：
+
+  | 値                   | 説明                   |
+  |----------------------|------------------------|
+  | `=`                  | 等しい                 |
+  | `!=`                 | 等しくない             |
+  | `>`                  | より大きい             |
+  | `>=`                 | 以上                   |
+  | `<`                  | より小さい             |
+  | `<=`                 | 以下                   |
+  | `Contains`           | 含む                   |
+  | `Does not contains`  | 含まない               |
+  | `Is empty`           | 空である               |
+  | `Is not empty`       | 空でない               |
+  | `Starts with`        | 〜で始まる             |
+  | `Ends with`          | 〜で終わる             |
+  | `Is between`         | の間である             |
+  | `Is true`            | 真（チェックボックス） |
+  | `Is false`           | 偽（チェックボックス） |
+
+### フィルターを設定
+
+* `/api/av/setAttrViewFilters`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "blockID": "20240118120201-kldj15t",
+    "data": [
+      {
+        "column": "20240118203822-io6ofxb",
+        "operator": "=",
+        "value": {
+          "type": "select",
+          "mSelect": [
+            { "content": "完了", "color": "1" }
+          ]
+        }
+      }
+    ]
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `blockID`: このビューを所有するデータベースブロック
+    * `data`: 完全な新しい `ViewFilter` の配列。ビューの既存フィルターを**完全に置換**します（形状は [フィルターとソートを取得](#フィルターとソートを取得) を参照）。`[]` を渡して全フィルターをクリア。最上位は単一のルートグループノード `{ "combination": "and"|"or", "filters": [...] }` で、配列要素はリーフフィルターまたはネストされたグループノードのいずれかで、再帰的な AND/OR 組み合わせをサポートします
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ソートを設定
+
+* `/api/av/setAttrViewSorts`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "blockID": "20240118120201-kldj15t",
+    "data": [
+      {
+        "column": "20240118120204-w6cggab",
+        "order": "DESC"
+      }
+    ]
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `blockID`: このビューを所有するデータベースブロック
+    * `data`: 完全な新しい `ViewSort` の配列。ビューの既存ソートを**完全に置換**します（形状は [フィルターとソートを取得](#フィルターとソートを取得) を参照）。`[]` を渡して全ソートをクリア
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### フィールドを追加
+
+新しいフィールド（列）を追加します。フィールドは全ビュー（テーブル/ギャラリー/カンバン）の `previousKeyID` の後の位置に追加されます（空の場合はデフォルト位置）。
+
+* `/api/av/addAttributeViewKey`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "keyID": "20240118120204-7k9wzbp",
+    "keyName": "ステータス",
+    "keyType": "select",
+    "keyIcon": "",
+    "previousKeyID": "20240118120204-w6cggab"
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `keyID`: 新しいフィールドの ID。`Lute.NewNodeID()` で生成された有効なノード ID（14 桁のタイムスタンプ + `-` + 7 文字のランダム英数字、例：`20240118120204-abc1234`）である必要があります
+    * `keyName`: フィールドの表示名
+    * `keyType`: フィールドタイプ——`text`、`number`、`date`、`select`、`mSelect`、`url`、`email`、`phone`、`location`、`mAsset`、`template`、`created`、`updated`、`checkbox`、`relation`、`rollup`、`lineNumber` のいずれか。`block`（主キー）はこのエンドポイントから追加できません
+    * `keyIcon`: 任意のフィールドアイコン（emoji または空文字列）
+    * `previousKeyID`: このフィールド ID の後に新しい列を挿入。空文字列の場合はレイアウトのデフォルト位置（テーブルは先頭、ギャラリー/カンバンは末尾）を使用
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### フィールドを削除
+
+フィールド（列）とその全ての値を削除します。`keyID` が存在しない場合、`code: -1`、`msg: "key not found"` を返します。
+
+* `/api/av/removeAttributeViewKey`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "keyID": "20240118120204-7k9wzbp",
+    "removeRelationDest": false
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `keyID`: 削除するフィールド ID
+    * `removeRelationDest`: `true` かつフィールドが関連型の場合、宛先データベースの対応する逆関連フィールドも削除します。デフォルトは `false`
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### グローバルのフィールドソートを設定
+
+フィールド（列）を全体として並べ替えます——`keyID` をフィールド順序の `previousKeyID` の後の位置に移動し、全ビューに影響します。
+
+* `/api/av/sortAttributeViewKey`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "keyID": "20240118203822-io6ofxb",
+    "previousKeyID": "20240118120204-w6cggab"
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `keyID`: 移動するフィールド ID
+    * `previousKeyID`: `keyID` をその後に配置するフィールド ID。空文字列で先頭に移動
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### ビュー内のフィールドソートを設定
+
+全体のフィールド順序を変えずに、単一ビューのレイアウト内で列を並べ替えます（例：テーブルの列順序）。
+
+* `/api/av/sortAttributeViewViewKey`
+* パラメータ
+
+  ```json
+  {
+    "avID": "20240118120204-kwyzf77",
+    "viewID": "20240118120204-7rnmyc1",
+    "keyID": "20240118203822-io6ofxb",
+    "previousKeyID": "20240118120204-w6cggab"
+  }
+  ```
+
+    * `avID`: データベース ID
+    * `viewID`: ターゲットビュー。空の場合は最初に利用可能なビューを使用
+    * `keyID`: 移動するフィールド ID
+    * `previousKeyID`: `keyID` をその後に配置するフィールド ID。空文字列で先頭に移動
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+## 検索
+
+保存済みの検索条件グループは、次のフィールドを使用します。
+
+* `name`：条件グループ名。条件グループの一意なキーとしても使用されます
+* `sort`：結果の並べ替え方法。`0` はブロックタイプ、`1` は作成日時の昇順、`2` は作成日時の降順、`3` は更新日時の昇順、`4` は更新日時の降順、`5` は内容順、`6` は関連度の昇順、`7` は関連度の降順です
+* `group`：グループ化方法。`0` はグループ化なし、`1` はドキュメント単位です
+* `hasReplace`：置換を有効にするかどうか
+* `method`：検索方法。`0` はキーワード、`1` はクエリ構文、`2` は SQL、`3` は正規表現、`4` はセマンティック検索です
+* `hPath`：人間が読める検索範囲のパス
+* `idPath`：検索範囲のパス配列
+* `k`：検索キーワード
+* `r`：置換キーワード
+* `types`：ブロックタイプのフラグ。`mathBlock`、`table`、`blockquote`、`superBlock`、`paragraph`、`document`、`heading`、`list`、`listItem`、`codeBlock`、`htmlBlock`、`embedBlock`、`databaseBlock`、`audioBlock`、`videoBlock`、`iframeBlock`、`widgetBlock`、`callout`、`tabs`、`tabItem` を使用できます
+* `subTypes`：独立したサブタイプグループです。`heading` は `h1` から `h6`、`list` と `listItem` はそれぞれ `o`（順序付き）、`u`（順序なし）、`t`（タスク）を指定します。グループが省略、空、または全フラグが `false` の場合、その親タイプのサブタイプは制限されません。親タイプは `types` で有効にする必要があります。旧形式の `h1` から `h6` および `o`、`u`、`t` を含む未知のトップレベルキーはエラーなく無視されるため、旧形式で保存したサブタイプは選択して保存し直してください
+* `replaceTypes`：置換タイプのフラグ。`text`、`imgText`、`imgTitle`、`imgSrc`、`aText`、`aTitle`、`aHref`、`code`、`em`、`strong`、`inlineMath`、`inlineMemo`、`blockRef`、`fileAnnotationRef`、`kbd`、`mark`、`s`、`sub`、`sup`、`tag`、`u`、`docTitle`、`codeBlock`、`mathBlock`、`htmlBlock` を使用できます
+
+`types`、`subTypes`、`replaceTypes` で省略された真偽値フラグは `false` として扱われます。
+
+### 保存済みの検索条件グループを取得
+
+* `/api/storage/getCriteria`
+* パラメータなし
+* 戻り値：`data` は保存順に並んだ検索条件グループの配列です。保存済みの条件グループがない場合は空の配列になります
+* 読み取り専用ロールでは、条件グループが公開アクセス権限に基づいてフィルタリングされ、戻り値の `k` と `r` は空になります
+
+### 検索条件グループを保存
+
+条件グループを作成するか、同じ `name` の既存条件グループを完全に置き換えます。置き換えた条件グループの位置は維持され、新しい条件グループは末尾に追加されます。
+
+* `/api/storage/setCriterion`
+* 管理者ロールが必要です。読み取り専用モードでは使用できません
+* パラメータ
+
+  ```json
+  {
+    "criterion": {
+      "name": "公開ノート",
+      "sort": 0,
+      "group": 1,
+      "hasReplace": false,
+      "method": 0,
+      "hPath": "公開ノート",
+      "idPath": ["20210808180117-czj9bvb"],
+      "k": "",
+      "r": "",
+      "types": {
+        "document": true,
+        "paragraph": true,
+        "heading": true,
+        "list": true,
+        "listItem": true
+      },
+      "subTypes": {
+        "heading": {"h1": true},
+        "list": {"o": true},
+        "listItem": {"t": true}
+      },
+      "replaceTypes": {
+        "text": true
+      }
+    }
+  }
+  ```
+
+    * `criterion`：保存する完全な検索条件グループ
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```
+
+### 検索条件グループを削除
+
+指定した名前の条件グループを削除します。存在しない名前を指定した場合も成功として扱われます。
+
+* `/api/storage/removeCriterion`
+* 管理者ロールが必要です。読み取り専用モードでは使用できません
+* パラメータ
+
+  ```json
+  {
+    "name": "公開ノート"
+  }
+  ```
+
+    * `name`：条件グループ名
+* 戻り値
+
+  ```json
+  {
+    "code": 0,
+    "msg": "",
+    "data": null
+  }
+  ```

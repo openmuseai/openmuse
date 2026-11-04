@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_hidden_skipped,hidden 形状不进指令,isHidden typo + render_slide(flags),无该层 DrawRect/Path/Text,pr-01;pr-08,02,libs/ppt-core,spec
+2,02_function_ph_hint_flag,placeholder 提示字受 flags,ph 形状 + NOT_DRAW_PLACEHOLDER_TEXT(16),未置 drawPHolderText 时不发射提示字 DrawText,01,03,libs/ppt-core,spec
+3,03_function_not_draw_background,NOT_DRAW_BACKGROUND_SHAPE,flags & 8,无 Background 层指令,01;pp-17,—,libs/ppt-core,spec

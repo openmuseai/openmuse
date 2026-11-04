@@ -1,0 +1,15 @@
+# Inserts its own entry AND tweaks a DIFFERENT plugin's entry — something
+# bundle patches are allowed to do, and the shape that makes #147 testable:
+# `dshm-fixture-b` below is REFERENCED, not owned, so disabling this package
+# must leave it alone. The regression that shipped treated every id in the
+# file as its own and took the neighbour down with it.
+#
+# Config rows also mean the market cannot hot-mount this one (it says so:
+# "hot-mount only supports plain inserts"), so the spec restarts to observe
+# it — which is exactly the path no other test covers.
+- insert:
+    - id: dshm-fixture-cross
+      name: 'dshm-e2e-fixture-cross'
+- id: dshm-fixture-b
+  config:
+    tweakedByCross: true

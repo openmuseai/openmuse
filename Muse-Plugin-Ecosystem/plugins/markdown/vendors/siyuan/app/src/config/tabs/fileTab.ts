@@ -1,0 +1,357 @@
+import {confirmDialog} from "../../dialog/confirmDialog";
+import {genNotebookOption} from "../../menus/onGetnotebookconf";
+import {fetchPost} from "../../util/fetch";
+import {editorConfigApi} from "./editorRuntime";
+import {fileConfigApi} from "./fileRuntime";
+import type {SettingTabBuilder} from "../setting/builder";
+import {controlNumber, controlSelect, controlString} from "../setting/control";
+import {genConfigItemName} from "../render/fragments";
+import {genButtonHtml, genNumberInputHtml} from "../render/render";
+import {refreshDefaultFileTreeIcons} from "../../emoji/fileTreeIcon";
+/// #if !MOBILE
+import {getAllModels} from "../../layout/getAll";
+/// #endif
+
+const isMobileKernelContainer = () =>
+    ["android", "ios", "harmony"].includes(window.siyuan.config.system.container);
+
+const genNotebookSavePathHtml = (
+    title: string,
+    desc: string,
+    selectId: string,
+    pathId: string,
+    optionsHtml: string,
+    template?: {
+        id: string;
+        desc: string;
+    },
+) => `<div class="b3-label config-item config-item--save-path">
+    ${genConfigItemName(title)}
+    <div class="b3-label__text">${desc}</div>
+    <div class="fn__hr--small"></div>
+    <div class="fn__flex">
+        <select class="b3-select fn__size200" id="${selectId}">${optionsHtml}</select>
+        <div class="fn__space"></div>
+        <input spellcheck="false" class="b3-text-field fn__flex-1" id="${pathId}" value="">
+    </div>
+    ${template ? `<div class="fn__hr"></div>
+    <div class="b3-label__text">${template.desc}</div>
+    <div class="fn__hr--small"></div>
+    <input spellcheck="false" class="b3-text-field fn__flex-center fn__block" id="${template.id}" value="">` : ""}
+</div>`;
+
+const registerFileTreeBehaviorGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("behavior", window.siyuan.languages.configGroupBehavior);
+    // 两个下拉共用展开项文案，搜索任一文案都同时命中两项
+    const clickActionKeywords = [window.siyuan.languages.docTreeClickExpandChildren,
+        window.siyuan.languages.docTreeClickExpandChildrenDblclick];
+
+    /// #if !MOBILE
+    group.select("fileTree.docIconClickMode", {
+        title: window.siyuan.languages.docIconClickAction,
+        desc: window.siyuan.languages.docIconClickActionTip,
+        keywords: [...clickActionKeywords, window.siyuan.languages.changeIcon,
+            window.siyuan.languages.docIconClickActionTip],
+        options: [
+            {value: 0, label: window.siyuan.languages.changeIcon},
+            {value: 1, label: window.siyuan.languages.docTreeClickExpandChildren},
+        ],
+        save: (value) => fileConfigApi.patch("docIconClickMode", value, () => {
+            getAllModels().files.forEach((files) => files.updateDocActions());
+        }),
+    });
+    /// #endif
+    group.select("fileTree.parentDocTitleClickMode", {
+        title: window.siyuan.languages.parentDocTitleClickAction,
+        desc: window.siyuan.languages.parentDocTitleClickActionTip,
+        keywords: [...clickActionKeywords, window.siyuan.languages.openDocument,
+            window.siyuan.languages.parentDocTitleClickActionTip],
+        options: [
+            {value: 0, label: window.siyuan.languages.openDocument},
+            {value: 1, label: window.siyuan.languages.docTreeClickExpandChildren},
+            {value: 2, label: window.siyuan.languages.docTreeClickExpandChildrenDblclick},
+        ],
+        save: (value) => fileConfigApi.patch("parentDocTitleClickMode", value, () => {
+            /// #if !MOBILE
+            getAllModels().files.forEach((files) => files.updateDocActions());
+            /// #endif
+        }),
+    });
+    group.switch("fileTree.alwaysSelectOpenedFile", {
+        title: window.siyuan.languages.selectOpen,
+        desc: window.siyuan.languages.fileTree2,
+    });
+};
+
+const registerTabStartupGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("tabStartup", window.siyuan.languages.tabStartup);
+    group.switch("fileTree.closeTabOnDoubleClick", {
+        title: window.siyuan.languages.closeTabOnDoubleClick,
+        desc: window.siyuan.languages.closeTabOnDoubleClickTip,
+    });
+    group.number("fileTree.maxOpenTabCount", {
+        title: window.siyuan.languages.tabLimit,
+        desc: window.siyuan.languages.tabLimit1,
+        min: 1,
+        max: 32,
+    });
+    /// #if !MOBILE
+    group.switch("fileTree.openFilesUseCurrentTab", {
+        title: window.siyuan.languages.fileTree7,
+        desc: window.siyuan.languages.fileTree8,
+    });
+    group.switch("fileTree.noSplitScreenWhenOpenTab", {
+        title: window.siyuan.languages.noSplitScreenWhenOpenTab,
+        desc: window.siyuan.languages.noSplitScreenWhenOpenTabTip,
+    });
+    /// #endif
+    group.select("fileTree.tabStartupMode", {
+        title: window.siyuan.languages.tabStartupMode,
+        desc: window.siyuan.languages.tabStartupModeTip,
+        options: [
+            {value: 0, label: window.siyuan.languages.tabStartupRestore},
+            {value: 1, label: window.siyuan.languages.tabStartupNew},
+            {value: 2, label: window.siyuan.languages.tabStartupClose},
+        ],
+    });
+    /// #if !MOBILE && !BROWSER
+    group.switch("fileTree.closeWindowOnLastTabClosed", {
+        title: window.siyuan.languages.closeWindowOnLastTabClosed,
+        desc: window.siyuan.languages.closeWindowOnLastTabClosedTip,
+    });
+    /// #endif
+};
+
+const registerFileNewDocumentGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("newDocument", window.siyuan.languages.configGroupNewDocument);
+
+    group.switch("fileTree.createDocAtTop", {
+        title: window.siyuan.languages.fileTree24,
+        desc: window.siyuan.languages.fileTree25,
+    });
+
+    const docCreateTitle = window.siyuan.languages.fileTree12;
+    const docCreateDesc = window.siyuan.languages.fileTree13;
+    group.composite({
+        key: "docCreateSavePath",
+        keywords: [
+            docCreateTitle,
+            docCreateDesc,
+            window.siyuan.languages.template,
+            window.siyuan.languages.docCreateTemplatePathTip,
+        ],
+        html: () => genNotebookSavePathHtml(
+            docCreateTitle,
+            docCreateDesc,
+            "fileTree.docCreateSaveBox",
+            "fileTree.docCreateSavePath",
+            genNotebookOption(window.siyuan.config.fileTree.docCreateSaveBox),
+            {
+                id: "fileTree.docCreateTemplatePath",
+                desc: window.siyuan.languages.docCreateTemplatePathTip,
+            },
+        ),
+        afterMount: (root) => {
+            const savePathElement = root.querySelector<HTMLInputElement>(
+                `#${CSS.escape("fileTree.docCreateSavePath")}`,
+            );
+            if (savePathElement) {
+                savePathElement.value = window.siyuan.config.fileTree.docCreateSavePath;
+            }
+            const templatePathElement = root.querySelector<HTMLInputElement>(
+                `#${CSS.escape("fileTree.docCreateTemplatePath")}`,
+            );
+            if (templatePathElement) {
+                templatePathElement.value = window.siyuan.config.fileTree.docCreateTemplatePath;
+            }
+        },
+        controls: [
+            {
+                control: controlSelect("fileTree.docCreateSaveBox", {options: []}),
+            },
+            {
+                control: controlString("fileTree.docCreateSavePath"),
+            },
+            {
+                control: controlString("fileTree.docCreateTemplatePath"),
+            },
+        ],
+    });
+
+    const refCreateTitle = window.siyuan.languages.fileTree5;
+    const refCreateDesc = window.siyuan.languages.fileTree6;
+    group.composite({
+        key: "refCreateSavePath",
+        keywords: [refCreateTitle, refCreateDesc],
+        html: () => genNotebookSavePathHtml(
+            refCreateTitle,
+            refCreateDesc,
+            "fileTree.refCreateSaveBox",
+            "fileTree.refCreateSavePath",
+            genNotebookOption(window.siyuan.config.fileTree.refCreateSaveBox),
+        ),
+        afterMount: (root) => {
+            const el = root.querySelector<HTMLInputElement>(`#${CSS.escape("fileTree.refCreateSavePath")}`);
+            if (el) {
+                el.value = window.siyuan.config.fileTree.refCreateSavePath;
+            }
+        },
+        controls: [
+            {
+                control: controlSelect("fileTree.refCreateSaveBox", {options: []}),
+            },
+            {
+                control: controlString("fileTree.refCreateSavePath"),
+            },
+        ],
+    });
+
+    if (isMobileKernelContainer()) {
+        // 仅移动端内核支持使用闪念速记 https://github.com/siyuan-note/siyuan/issues/14414
+        const shorthandTitle = window.siyuan.languages.fileTree26;
+        const shorthandDesc = window.siyuan.languages.fileTree27;
+        group.composite({
+            key: "shorthandSavePath",
+            keywords: [shorthandTitle, shorthandDesc],
+            html: () => genNotebookSavePathHtml(
+                shorthandTitle,
+                shorthandDesc,
+                "fileTree.shorthandSaveBox",
+                "fileTree.shorthandSavePath",
+                genNotebookOption(window.siyuan.config.fileTree.shorthandSaveBox, undefined, true,
+                    (item) => !item.closed && !item.encrypted),
+            ),
+            afterMount: (root) => {
+                const el = root.querySelector<HTMLInputElement>(`#${CSS.escape("fileTree.shorthandSavePath")}`);
+                if (el) {
+                    el.value = window.siyuan.config.fileTree.shorthandSavePath;
+                }
+            },
+            controls: [
+                {
+                    control: controlSelect("fileTree.shorthandSaveBox", {options: []}),
+                },
+                {
+                    control: controlString("fileTree.shorthandSavePath"),
+                },
+            ],
+        });
+    }
+};
+
+const registerFileManagementGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("fileManagement", window.siyuan.languages.configGroupFileManagement);
+
+    group.number("editor.generateHistoryInterval", {
+        title: window.siyuan.languages.generateHistory,
+        desc: window.siyuan.languages.generateHistoryInterval,
+        min: 0,
+        max: 120,
+        save: (value) => editorConfigApi.patch("generateHistoryInterval", value),
+    });
+
+    const historyKeywords = [
+        window.siyuan.languages.historyRetentionDaysTip,
+        window.siyuan.languages.clearHistory,
+        window.siyuan.languages.confirmClearHistory,
+        window.siyuan.languages.purge,
+        window.siyuan.languages.historyRetentionDays,
+    ];
+    const historyRetentionDaysControl = controlNumber("editor.historyRetentionDays", {min: 1, max: 3650});
+    group.composite({
+        key: "historyRetention",
+        keywords: historyKeywords,
+        html: () => `<div class="b3-label config-item">
+    <div class="fn__block">
+        ${genConfigItemName(window.siyuan.languages.historyRetentionDaysTip)}
+    </div>
+    <div class="fn__hr--small"></div>
+    <div class="fn__flex">
+        <div class="fn__block">
+            <div class="b3-label__text">${window.siyuan.languages.clearHistory}</div>
+        </div>
+        <span class="fn__space"></span>
+        ${genButtonHtml("clearHistory", window.siyuan.languages.purge, "iconTrashcan")}
+    </div>
+    <div class="fn__hr--small"></div>
+    <div class="fn__flex">
+        <div class="fn__block">
+            <div class="b3-label__text">${window.siyuan.languages.historyRetentionDays}</div>
+        </div>
+        <span class="fn__space"></span>
+        ${genNumberInputHtml(historyRetentionDaysControl.id, historyRetentionDaysControl.readConfig() as number, historyRetentionDaysControl.min, historyRetentionDaysControl.max)}
+    </div>
+</div>`,
+        afterMount: (root) => {
+            root.querySelector("#clearHistory")?.addEventListener("click", () => {
+                confirmDialog(
+                    window.siyuan.languages.clearHistory,
+                    window.siyuan.languages.confirmClearHistory,
+                    () => {
+                        fetchPost("/api/history/clearWorkspaceHistory", {});
+                    },
+                );
+            });
+        },
+        controls: [{
+            control: historyRetentionDaysControl,
+            save: (v) => editorConfigApi.patch("historyRetentionDays", v),
+        }],
+    });
+
+    group.number("fileTree.maxListCount", {
+        title: window.siyuan.languages.fileTree16,
+        desc: window.siyuan.languages.fileTree17,
+        min: 1,
+        max: 10240,
+    });
+    group.number("fileTree.largeFileWarningSize", {
+        title: window.siyuan.languages.fileTree22,
+        desc: window.siyuan.languages.fileTree23,
+        min: 2,
+        max: 10240,
+        unit: "MB",
+    });
+    group.switch("fileTree.allowCreateDeeper", {
+        title: window.siyuan.languages.fileTree18,
+        desc: window.siyuan.languages.fileTree19,
+    });
+    group.switch("fileTree.useSingleLineSave", {
+        title: window.siyuan.languages.fileTree20,
+        desc: window.siyuan.languages.fileTree21,
+    });
+    group.switch("fileTree.removeDocWithoutConfirm", {
+        title: window.siyuan.languages.fileTree3,
+        desc: window.siyuan.languages.fileTree4,
+    });
+};
+
+const registerFileOthersGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("others", window.siyuan.languages.configGroupOthers);
+
+    group.switch("fileTree.useSVGDefaultIcon", {
+        title: window.siyuan.languages.useSVGDefaultIcon,
+        desc: window.siyuan.languages.useSVGDefaultIconTip,
+        save: (value) => fileConfigApi.patch("useSVGDefaultIcon", value, () => {
+            refreshDefaultFileTreeIcons();
+        }),
+    });
+    group.switch("fileTree.boxDocEnabled", {
+        title: window.siyuan.languages.boxDocEnabled,
+        desc: window.siyuan.languages.boxDocEnabledTip,
+    });
+    group.number("fileTree.recentDocsMaxListCount", {
+        title: window.siyuan.languages.recentDocsMaxListCount,
+        desc: window.siyuan.languages.recentDocsMaxListCountTip,
+        min: 32,
+        max: 256,
+    });
+};
+
+export const registerFileTab = (tab: SettingTabBuilder) => {
+    registerFileTreeBehaviorGroup(tab);
+    registerTabStartupGroup(tab);
+    registerFileNewDocumentGroup(tab);
+    registerFileManagementGroup(tab);
+    registerFileOthersGroup(tab);
+};

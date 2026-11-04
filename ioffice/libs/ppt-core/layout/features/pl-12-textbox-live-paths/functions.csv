@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_para_direction,getParaDirection,paraProp rtl 有/无 + parent 链,bool RTL；无属性沿 parent 直到 hasRightToLeft,pl-04,03,libs/ppt-core,spec
+2,02_function_text_spacing,getTextSpacing,spcPts / spcPct / 皆无,pts→layout units；pct→ fontsize*spcPct*1.2；皆无 0,pl-04,—,libs/ppt-core,spec
+3,03_function_convert_bullet,convertBullet 不 panic,buNone / buChar / buAutoNum,buNone type=-1 跳过；其余 BulletsInfo.visible 且不 panic,01,pr-10,libs/ppt-core,spec

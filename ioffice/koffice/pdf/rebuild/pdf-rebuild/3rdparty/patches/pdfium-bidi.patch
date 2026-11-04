@@ -1,0 +1,73 @@
+diff --git a/fpdfsdk/fpdf_edittext.cpp b/fpdfsdk/fpdf_edittext.cpp
+index 5c1e431..c24f248 100644
+--- a/fpdfsdk/fpdf_edittext.cpp
++++ b/fpdfsdk/fpdf_edittext.cpp
+@@ -31,0 +32 @@
++#include "core/fxcrt/cfx_bidi_resolver.h"
+@@ -845,0 +847,41 @@ KSPFont_CanEncodeUnicode(FPDF_FONT font, uint32_t unicode) {
++FPDF_EXPORT int FPDF_CALLCONV
++KSPBidi_GetVisualRuns(FPDF_WIDESTRING text,
++                      int length,
++                      int paragraph_direction,
++                      KSP_BIDI_RUN* runs,
++                      int capacity) {
++  if (!text || length < 0 || capacity < 0 || paragraph_direction < -1 ||
++      paragraph_direction > 1) {
++    return -1;
++  }
++  if (length == 0) {
++    return 0;
++  }
++  CFX_BidiResolver::ParagraphDirection direction =
++      CFX_BidiResolver::ParagraphDirection::kAuto;
++  if (paragraph_direction == 0) {
++    direction = CFX_BidiResolver::ParagraphDirection::kLeftToRight;
++  } else if (paragraph_direction == 1) {
++    direction = CFX_BidiResolver::ParagraphDirection::kRightToLeft;
++  }
++  std::u16string value(reinterpret_cast<const char16_t*>(text),
++                       static_cast<size_t>(length));
++  std::unique_ptr<CFX_BidiResolver> resolver =
++      CFX_BidiResolver::Create(std::move(value), direction);
++  if (!resolver) {
++    return -1;
++  }
++  std::vector<CFX_BidiResolver::ResolvedRun> resolved =
++      resolver->GetVisualRunsForLine(0, length);
++  const int count = pdfium::checked_cast<int>(resolved.size());
++  if (!runs || capacity < count) {
++    return count;
++  }
++  for (int index = 0; index < count; ++index) {
++    runs[index].start = resolved[index].start;
++    runs[index].length = resolved[index].length;
++    runs[index].is_rtl = resolved[index].is_rtl;
++  }
++  return count;
++}
++
+diff --git a/public/fpdf_edit.h b/public/fpdf_edit.h
+index 946b1b1..f90d433 100644
+--- a/public/fpdf_edit.h
++++ b/public/fpdf_edit.h
+@@ -1798,0 +1799,20 @@ KSPFont_CanEncodeUnicode(FPDF_FONT font, uint32_t unicode);
++// KSP extension: one Unicode Bidi Algorithm run. |start| and |length| are
++// logical UTF-16 offsets; runs are returned in visual order.
++typedef struct KSP_BIDI_RUN_ {
++  int start;
++  int length;
++  FPDF_BOOL is_rtl;
++} KSP_BIDI_RUN;
++
++// Resolves |text| with PDFium's ICU-backed bidi engine. |paragraph_direction|
++// is -1 for auto, 0 for LTR, and 1 for RTL. Query the required run count with
++// |runs|=NULL and |capacity|=0. Returns -1 for invalid input or resolver
++// failure; otherwise returns the required count and writes only when capacity
++// is sufficient.
++FPDF_EXPORT int FPDF_CALLCONV
++KSPBidi_GetVisualRuns(FPDF_WIDESTRING text,
++                      int length,
++                      int paragraph_direction,
++                      KSP_BIDI_RUN* runs,
++                      int capacity);
++

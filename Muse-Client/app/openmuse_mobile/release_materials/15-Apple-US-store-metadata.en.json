@@ -1,0 +1,27 @@
+{
+  "appId": "6827192902",
+  "bundleId": "com.openmuseai.mobile",
+  "sku": "openmuse-mobile-ios",
+  "name": "OpenMuse AI",
+  "subtitle": "Think, Create & Act",
+  "primaryLocale": "en-US",
+  "territories": [
+    "US"
+  ],
+  "version": "1.0.0",
+  "promotionalText": "Bring your knowledge, ideas, and AI agent together. Connect your workspaces and continue creating across mobile, Desktop, and the Web.",
+  "description": "OpenMuse AI connects your ideas, personal knowledge, and workspaces with an AI agent on your Desktop. Continue your work from your iPhone or iPad while staying connected to your documents and ongoing tasks.\n\nYOUR IDEAS, CONNECTED\nSign in to access your cloud workspaces and supported documents. Keep the context for your work available across OpenMuse on mobile, Desktop, and the Web.\n\nWORK WITH YOUR DESKTOP AGENT\nChoose an online Desktop signed in to the same account, select a workspace, send a message, and follow conversations and task activity from your phone. AI model availability and agent capabilities depend on your Desktop configuration.\n\nDOCUMENT TOOLS WITHIN REACH\nOpen and work with supported Word, PDF, and spreadsheet files. Browse authorized Desktop folders, find files, and use the available document tools. Available editing and saving options depend on the file format and connected service.\n\nA WORKSPACE THAT GROWS WITH YOU\nOrganize available tools in your mobile workbench and manage supported plugins.\n\nSome features require an OpenMuse account, a network connection, and an online Desktop running OpenMuse. A compatible AI service must be configured on the connected Desktop for agent tasks. Feature availability depends on the current app version, device, and service configuration.\n\nSupport: developer@openmuseai.com",
+  "keywords": "ai,agent,knowledge,ideas,workspace,creativity,productivity,notes,assistant",
+  "supportUrl": "https://openmuseai.com/en/support",
+  "marketingUrl": "https://openmuseai.com/en",
+  "privacyUrl": "https://openmuseai.com/en/privacy",
+  "copyright": "2026 OpenMuse",
+  "reviewNotesDraft": "The mobile app connects to the user's OpenMuse account and an online OpenMuse Desktop signed in to the same account.\n\nReview flow:\n1. Open Account and sign in using the dedicated review credentials supplied in App Review Information.\n2. Open the device/workspace selector and choose the online review Desktop and its prepared demo workspace.\n3. Send a prompt to the configured Desktop agent and view the conversation and task activity.\n4. Use Add content to open supported sample documents, or browse files from the selected workspace.\n5. Account > Delete account opens an explicit confirmation before deleting the account and owned workspaces. Please use only the disposable review account.\n\nThe reviewer account, non-personal sample data, and the online Desktop must be prepared and checked before submission. Agent functionality requires the Desktop and its configured model service to remain available throughout review. No review credentials are included in this note.",
+  "releaseMode": "manual",
+  "latestLocalBuild": 4,
+  "uploadedAppStoreConnectBuild": 4,
+  "appStoreConnectProcessing": "Upload completed with warnings; processed build not yet visible in TestFlight",
+  "uploadedInternalOnlyBuild": 3,
+  "privacyPublication": "Published in App Store Connect on 2026-10-29 after explicit owner confirmation",
+  "reviewCredentialsAndContact": "Owner will enter directly in App Store Connect"
+}

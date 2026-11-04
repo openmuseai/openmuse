@@ -1,0 +1,67 @@
+[
+  {
+    "id": "com.openmuse.mobile.task-board",
+    "name": "任务看板 Mobile 适配演示",
+    "version": "0.2.0",
+    "description": "本地演示 · 打开后新增任务；详情采用平台 WebView，工作台卡片采用 A2UI。",
+    "author": "OpenMuse",
+    "platforms": [
+      "android",
+      "ios"
+    ],
+    "source": "https://www.npmjs.com/package/@linxin666/dsh-client-ui-task-board",
+    "categories": [
+      "办公",
+      "编程"
+    ],
+    "media": [
+      {
+        "type": "image",
+        "uri": "asset:packages/openmuse_market_ui/assets/task-board-editorial.png"
+      }
+    ],
+    "bundle": "task-board.json",
+    "sha256": "41fa9bcfef63d4434e390456c7acb65ca01c5baa704031d98a82c2301f3230e3",
+    "runtime": "webview",
+    "permissions": []
+  },
+  {
+    "id": "com.openmuse.mobile.usage-budget",
+    "name": "用量与预算 Mobile 适配演示",
+    "version": "0.2.0",
+    "description": "本地示例 · 非真实 DSH 用量；详情采用平台 WebView，工作台卡片采用 A2UI。",
+    "author": "OpenMuse",
+    "platforms": [
+      "android",
+      "ios"
+    ],
+    "source": "https://dsh.directory/plugins/laoyuehanni/dsh-token-usage",
+    "categories": [
+      "办公"
+    ],
+    "media": [],
+    "bundle": "usage-budget.json",
+    "sha256": "9059c81ac6ba7c6a81113b6d65df8d14fec6f410261c554f7d075dfbd37caba7",
+    "runtime": "webview",
+    "permissions": []
+  },
+  {
+    "id": "com.openmuse.pptx",
+    "name": "PPTX 阅读器",
+    "version": "0.1.0",
+    "description": "通过 OpenMuse Host 的受限 PPTX 引擎，在 Android Cloud Workspace 查看幻灯片文字。",
+    "author": "OpenMuse · GenOffice Core",
+    "platforms": [
+      "android"
+    ],
+    "source": "https://github.com/genspark-ai/genoffice",
+    "categories": [
+      "办公"
+    ],
+    "media": [],
+    "bundle": "pptx-mobile.json",
+    "sha256": "cc59211759b66f81999870eaa69e3f4a82fb0ceda56390b900dd7429b21653b6",
+    "runtime": "quickjs",
+    "permissions": []
+  }
+]

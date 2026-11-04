@@ -1,0 +1,260 @@
+{
+	"ID": "20240530101000-0zd9si2",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-7k5qmeb",
+		"id": "20240530101000-0zd9si2",
+		"title": "仮想参照",
+		"type": "doc",
+		"updated": "20261024163013"
+	},
+	"Children": [
+		{
+			"ID": "20240530101000-qnokvng",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-l5g8i11",
+				"id": "20240530101000-qnokvng",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-hnau0xo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-44u6lgk",
+				"id": "20240530101000-hnau0xo",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "仮想参照は、既存の参照のアンカーテキストやブロック名などに基づき、関連する可能性があるテキストをエディタ内で示します。フローティングプレビューに対応しますが、実際のブロック参照を自動作成するわけではありません。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-vm3i8g2",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-ex5n5l4",
+				"id": "20240530101000-vm3i8g2",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使い方"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-esnoq90",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-urio87q",
+				"id": "20240530101000-esnoq90",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": ""
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エディタ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "双方向リンク"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "仮想参照"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を有効にします。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-flxygac",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-ruqlipv",
+				"id": "20240530101000-flxygac",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "検出ルール"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-tuajqs4",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-vq0ej51",
+				"id": "20240530101000-tuajqs4",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "既存のブロック参照のアンカーテキスト、定義ブロックのテキスト、ブロックの名前とエイリアスをキーワードとして検索を行い、これらのキーワードがコンテンツブロックのテキストで検索されると仮想参照として扱われます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-eb0j7c2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-r1ni4dp",
+				"id": "20240530101000-eb0j7c2",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "キーワードの検索範囲は、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "検索"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "仮想参照"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " から調整します。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-4czwauu",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-xkmuot7",
+				"id": "20240530101000-4czwauu",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-h0210cb",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-w3dnssl",
+				"id": "20240530101000-h0210cb",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-ao1j0q0",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-qpj62h3",
+						"id": "20240530101000-ao1j0q0",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-az8zg9p",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-uuoeotm",
+								"id": "20240530101000-az8zg9p",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "仮想参照はすぐには更新されません。検索インデックスの更新が完了するまで待ってから、ドキュメントを更新するか開き直してください。キーワードが更新されない場合に限り、インデックスを再構築します"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-wbmc9lh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-1kd2v2t",
+				"id": "20240530101000-wbmc9lh"
+			}
+		}
+	]
+}

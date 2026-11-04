@@ -1,0 +1,104 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package tools
+
+import (
+	"fmt"
+	"html"
+	"strings"
+
+	"github.com/siyuan-note/siyuan/kernel/model"
+)
+
+var TagTool = &Tool{
+	Name:        "tag",
+	Description: "Tag management. Actions: list(keyword?), rename(old, new), remove(label).",
+	InputSchema: ToolSchema{
+		Type: "object",
+		Properties: map[string]Property{
+			"action":  {Type: "string", Description: "Operation", Enum: []string{"list", "rename", "remove"}},
+			"keyword": {Type: "string", Description: "Search keyword (for list)"},
+			"old":     {Type: "string", Description: "Old tag label (for rename)"},
+			"new":     {Type: "string", Description: "New tag label (for rename)"},
+			"label":   {Type: "string", Description: "Tag label (for remove)"},
+		},
+		Required: []string{"action"},
+	},
+	Handler: tagHandler,
+}
+
+func init() {
+	register(TagTool)
+}
+
+func tagHandler(args map[string]any) (CallToolResult, error) {
+	action, _ := args["action"].(string)
+	switch action {
+	case "list":
+		return tagList(args)
+	case "rename":
+		return tagRename(args)
+	case "remove":
+		return tagRemove(args)
+	}
+	return CallToolResult{
+		Content: []ContentItem{{Type: "text", Text: "unknown action '" + action + "', expected one of: [list, rename, remove]"}},
+		IsError: true,
+	}, nil
+}
+
+func tagList(args map[string]any) (CallToolResult, error) {
+	keyword, _ := args["keyword"].(string)
+	tags := model.SearchTags(keyword)
+
+	if len(tags) == 0 {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "no tags found"}}}, nil
+	}
+
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "Tags (%d):\n\n", len(tags))
+	for _, t := range tags {
+		sb.WriteString("- ")
+		sb.WriteString(formatTagTextMark(t))
+		sb.WriteByte('\n')
+	}
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: sb.String()}}}, nil
+}
+
+func formatTagTextMark(label string) string {
+	return `<span data-type="tag">` + html.EscapeString(label) + `</span>`
+}
+
+func tagRename(args map[string]any) (CallToolResult, error) {
+	oldLabel, _ := args["old"].(string)
+	newLabel, _ := args["new"].(string)
+	if oldLabel == "" || newLabel == "" {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "old and new are required"}}, IsError: true}, nil
+	}
+
+	if err := model.RenameTag(oldLabel, newLabel); err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "rename tag failed: " + err.Error()}}, IsError: true}, nil
+	}
+	model.ReloadTag()
+
+	return CallToolResult{Content: []ContentItem{{
+		Type: "text",
+		Text: "tag renamed: " + formatTagTextMark(oldLabel) + " -> " + formatTagTextMark(newLabel),
+	}}}, nil
+}
+
+func tagRemove(args map[string]any) (CallToolResult, error) {
+	label, _ := args["label"].(string)
+	if label == "" {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "label is required"}}, IsError: true}, nil
+	}
+
+	if err := model.RemoveTag(label); err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "remove tag failed: " + err.Error()}}, IsError: true}, nil
+	}
+	model.ReloadTag()
+
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: "tag removed: " + formatTagTextMark(label)}}}, nil
+}

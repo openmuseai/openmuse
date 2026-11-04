@@ -1,0 +1,6 @@
+# Mounts the market into the profile OpenMuse boots. Relative names are
+# resolved beside this file, so the packaged plugin does not depend on the
+# process working directory.
+- insert:
+    - id: dsh-market
+      name: ./lib/index.js

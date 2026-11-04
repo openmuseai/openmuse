@@ -1,0 +1,15 @@
+// Rust stub for FootNoteCacheItem (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/FootNoteCacheItem.java
+use crate::*;
+
+pub struct FootNoteCacheItem {
+    // TODO: fields
+}
+
+impl FootNoteCacheItem {
+    pub fn new() -> Self { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn toString_function toString() { [native code] }(&self) -> String { todo!() }
+    pub fn alloc(&self) -> FootNoteCacheItem { todo!() }
+    pub fn init(&self, node: FootNoteCacheItem) { todo!() }
+}

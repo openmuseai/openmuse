@@ -1,0 +1,18 @@
+{
+  "repository": "https://github.com/siyuan-note/siyuan",
+  "commit": "d3af9d5782082b379d45a69eedf4ebcfe8ba6889",
+  "version": "3.8.9",
+  "license": "AGPL-3.0-or-later",
+  "go": "1.26.10",
+  "buildTags": [
+    "fts5",
+    "sqlcipher"
+  ],
+  "embeddingSources": {
+    "native/main.go": "a383f511ba8824a647277e95a46a36515a9da462d16dc4b028f583d94aef991c",
+    "native/policy/policy.go": "04b8fb17c5067b5981a8180b21faad0164e0ee823b99c6d4b020b40cc518ab6e",
+    "native/policy/policy_test.go": "a8ea313d71110a3dc792834365e123c9ae2695be15b271792c042ad763019295",
+    "scripts/build.py": "0c89c2d37aa71d1ecd69cc026de3b9da1ba2115ebcfa39a01a0fe2d14fc5512f"
+  },
+  "artifactSha256": "5e3c133e644a484f97ccaa0c6613d53eae9b9689a6a75c5a90e88bf4f4a62bfa"
+}

@@ -1,0 +1,441 @@
+import {Constants} from "./constants";
+import {refreshSettingConfig} from "./config/setting/sync";
+import {closeNotebookHistoryDialogs} from "./history/notebookDialogs";
+import {clearDocumentCreationPlans} from "./util/configuredDocument";
+import {closeNotebookLivePhotos} from "./protyle/preview/livePhoto";
+import {systemConfig} from "./config/systemConfig";
+import {openStandaloneDatabaseItemByURI} from "./protyle/render/av/openStandaloneDatabaseItem";
+/// #if BROWSER
+import "./util/iosWindowControls";
+import {registerDesktopBackNavigation} from "./boot/globalEvent/nativeBack";
+/// #endif
+import {Menus} from "./menus";
+import {Model} from "./layout/Model";
+import {loadDesktopHostConnection, onGetConfig} from "./boot/onGetConfig";
+import {exitAfterSettingsReset} from "./config/setting/reset";
+import {initBlockPopover} from "./block/popover";
+import {applyCloudUserState, onSetaccount} from "./config/tabs/accountUi";
+import {addScript, addScriptSync} from "./protyle/util/addScript";
+import {genUUID} from "./util/genID";
+import {fetchPost} from "./util/fetch";
+import {
+    addBaseURL,
+    getDocDisplayName,
+    parseSiYuanUriInfo,
+    redirectToCheckAuth,
+    setNoteBook
+} from "./util/pathName";
+import {registerServiceWorker} from "./util/serviceWorker";
+import {activateQueuedAVLocate, queueAVLocateRequest} from "./protyle/render/av/locate";
+import {openFileById} from "./editor/util";
+import {activateOnboarding, ensureOnboarding} from "./onboarding";
+import {
+    bootSync,
+    downloadProgress,
+    processSync,
+    progressBackgroundTask,
+    progressStatus,
+    processBacklinkIndexCommit,
+    setDefRefCount,
+    setRefDynamicText,
+    transactionError
+} from "./dialog/processSystem";
+import {progressLoading} from "./dialog/progress";
+import {syncCheckoutProgress} from "./sync/checkoutProgress";
+import {initMessage, showMessage} from "./dialog/message";
+import {getAllModels, getAllTabs} from "./layout/getAll";
+import {getLocalStorage, isChromeBrowser, isInMobileApp, isIOSDevice} from "./protyle/util/compatibility";
+import {isBrowser} from "./util/functions";
+import {checkPublishServiceClosed} from "./util/processMessage";
+import {hideAllElements} from "./protyle/ui/hideElements";
+import {loadPlugins} from "./plugin/loader";
+import {applyPluginReload, syncGlobalPluginConfig} from "./plugin/globalState";
+import "./assets/scss/base.scss";
+import {reloadEmoji} from "./emoji";
+import {processIOSPurchaseResponse} from "./util/iOSPurchase";
+import {updateServerAddresses} from "./config/tabs/accessRuntime";
+import {emitToPlugins} from "./plugin/EventBusCore";
+/// #if !BROWSER
+import {ipcRenderer} from "electron";
+/// #endif
+import {getDockByType, setTabPosition} from "./layout/tabUtil";
+import {Files} from "./layout/dock/Files";
+import {Tag} from "./layout/dock/Tag";
+import {appearanceConfigApi, refreshAppearance} from "./config/tabs/appearanceRuntime";
+import {renderSnippet} from "./config/util/snippets";
+import {refreshThemeStyle, reloadInlineStyles, setBodyHighlight} from "./util/assets";
+import {reloadSync} from "./util/reloadSync";
+import {setTitle} from "./util/processTitle";
+import {ensureUILayout} from "./util/ensureUILayout";
+import {applyEntryVisibility} from "./config/entryVisibility/runtime";
+import {removeBlockPanelEditors} from "./block/panelRemoval";
+import {initializeEnglishCommandTranslations} from "./command/english";
+import {loadLanguages} from "./boot/loadLanguages";
+import {installPluginStorageFetchAppId} from "./util/fetchAppId";
+import {initWindowWithLoading} from "./boot/loading";
+
+export class App {
+    public plugins: import("./plugin").Plugin[] = [];
+    public appId: string;
+
+    constructor() {
+        if (checkPublishServiceClosed()) {
+            return;
+        }
+        registerServiceWorker(`${Constants.SERVICE_WORKER_PATH}?v=${Constants.SIYUAN_VERSION}`);
+        addBaseURL();
+
+        this.appId = Constants.SIYUAN_APPID;
+
+        const mainWs = new Model({app: this});
+        mainWs.connect({
+            id: genUUID(),
+            type: "main",
+            callback: () => {
+                if (window.siyuan.isReady) {
+                    void refreshSettingConfig().catch(error => console.error("Could not refresh settings", error));
+                }
+            },
+            msgCallback: (data) => {
+                emitToPlugins("ws-main", data);
+                if (data) {
+                    switch (data.cmd) {
+                        case "logoutAuth":
+                            redirectToCheckAuth();
+                            break;
+                        case "setAppearance":
+                            appearanceConfigApi.apply(data.data);
+                            break;
+                        case "settingChanged":
+                            void refreshSettingConfig(data.data.namespace, data.data.revision);
+                            break;
+                        case "refreshAppearance":
+                            void refreshAppearance(data.data);
+                            break;
+                        case "reloadInlineStyles":
+                            void reloadInlineStyles();
+                            break;
+                        case "setEntryVisibility":
+                            applyEntryVisibility(data.data);
+                            break;
+                        case "setSnippet":
+                            window.siyuan.config.snippet = data.data;
+                            renderSnippet();
+                            break;
+                        case "setDefRefCount":
+                            setDefRefCount(data.data);
+                            break;
+                        case "databaseIndexCommit":
+                            processBacklinkIndexCommit(data.data);
+                            if (getDockByType("tag")?.data.tag instanceof Tag) {
+                                (getDockByType("tag").data.tag as Tag).update();
+                            }
+                            break;
+                        case "reloadTag":
+                            if (getDockByType("tag")?.data.tag instanceof Tag) {
+                                (getDockByType("tag").data.tag as Tag).update();
+                            }
+                            break;
+                        case "setRefDynamicText":
+                            setRefDynamicText(data.data);
+                            break;
+                        case "reloadPlugin":
+                            void applyPluginReload(this, data.data).catch((error) => console.error(error));
+                            break;
+                        case "reloadEmojiConf":
+                            reloadEmoji();
+                            break;
+                        case "syncMergeResult":
+                            reloadSync(this, data.data);
+                            break;
+                        case "reloaddoc":
+                            reloadSync(this, {upsertRootIDs: [data.data], removeRootIDs: []}, false, false, true);
+                            break;
+                        case "readonly":
+                            window.siyuan.config.editor.readOnly = data.data;
+                            hideAllElements(["util"]);
+                            break;
+                        case "setConf":
+                            window.siyuan.config = data.data;
+                            syncGlobalPluginConfig(this, data.data.bazaar.petalDisabled);
+                            break;
+                        case "setCloudUser":
+                            applyCloudUserState(data.data.user, data.data.userName);
+                            break;
+                        case "setServerAddrs":
+                            updateServerAddresses(data.data);
+                            break;
+                        case "setPublish":
+                            window.siyuan.config.publish = data.data;
+                            if (!window.siyuan.config.publish.enable) {
+                                getAllModels().files.forEach(item => {
+                                    item.element.classList.remove("file-tree__publish-access--active");
+                                    item.element.querySelectorAll(".b3-list-item__icon").forEach(iconItem => {
+                                        iconItem.classList.remove("fn__none");
+                                        iconItem.nextElementSibling.classList.add("fn__none");
+                                    });
+                                });
+                            }
+                            break;
+                        case "syncProgress":
+                            syncCheckoutProgress(data);
+                            break;
+                        case "progress":
+                            progressLoading(data);
+                            break;
+                        case "setLocalStorageVal":
+                            if (window.siyuan.storage) {
+                                window.siyuan.storage[data.data.key] = data.data.val;
+                            }
+                            break;
+                        case "setLocalStorageVals":
+                            Object.keys(data.data.keyVals).forEach((k) => {
+                                window.siyuan.storage[k] = data.data.keyVals[k];
+                            });
+                            break;
+                        case "removeLocalStorageVal":
+                            delete window.siyuan.storage[data.data.key];
+                            break;
+                        case "removeLocalStorageVals":
+                            data.data.keys.forEach((k: string) => {
+                                delete window.siyuan.storage[k];
+                            });
+                            break;
+                        case "rename":
+                            getAllTabs().forEach((tab) => {
+                                if (tab.headElement) {
+                                    const initTab = tab.headElement.getAttribute("data-initdata");
+                                    if (initTab) {
+                                        const initTabData = JSON.parse(initTab);
+                                        if (initTabData.instance === "Editor" && initTabData.rootId === data.data.id) {
+                                            tab.updateTitle(getDocDisplayName(data.data.title, data.data.empty));
+                                        }
+                                    }
+                                }
+                            });
+                            break;
+                        case "closeBox":
+                        case "removeBox":
+                            closeNotebookHistoryDialogs(data.data.box);
+                            clearDocumentCreationPlans(data.data.box);
+                            closeNotebookLivePhotos(data.data.box);
+                            removeBlockPanelEditors({notebookId: data.data.box});
+                            getAllTabs().forEach((tab) => {
+                                if (tab.headElement) {
+                                    const initTab = tab.headElement.getAttribute("data-initdata");
+                                    if (initTab) {
+                                        const initTabData = JSON.parse(initTab);
+                                        if (initTabData.instance === "Editor" && data.data.box === initTabData.notebookId) {
+                                            tab.parent.removeTab(tab.id);
+                                        }
+                                    }
+                                }
+                            });
+                            break;
+                        case "removeDoc":
+                            removeBlockPanelEditors({rootIDs: data.data.ids});
+                            getAllTabs().forEach((tab) => {
+                                if (tab.headElement) {
+                                    const initTab = tab.headElement.getAttribute("data-initdata");
+                                    if (initTab) {
+                                        const initTabData = JSON.parse(initTab);
+                                        if (initTabData.instance === "Editor" && data.data.ids.includes(initTabData.rootId)) {
+                                            tab.parent.removeTab(tab.id);
+                                        }
+                                    }
+                                }
+                            });
+                            if (window.siyuan.config.onboarding?.newUser && !window.siyuan.config.onboarding.dismissed &&
+                                data.data.ids.includes(window.siyuan.config.onboarding.documentID)) {
+                                void activateOnboarding(this, window.siyuan.config.onboarding);
+                            }
+                            break;
+                        case "onboarding":
+                            void activateOnboarding(this, data.data);
+                            break;
+                        case "statusbar":
+                            progressStatus(data);
+                            break;
+                        case "downloadProgress":
+                            downloadProgress(data.data);
+                            break;
+                        case "txerr":
+                            transactionError(data.msg);
+                            break;
+                        case "syncing":
+                            processSync(data);
+                            break;
+                        case "backgroundtask":
+                            progressBackgroundTask(data.data.tasks);
+                            break;
+                        case "refreshtheme":
+                            refreshThemeStyle(data.data.theme);
+                            break;
+                        case "openFileById":
+                            openFileById({app: this, id: data.data.id, action: [Constants.CB_GET_FOCUS]});
+                            break;
+                        case "filetreeSortChanged": {
+                            const fileDock = getDockByType("file");
+                            if (fileDock) {
+                                (fileDock.data.file as Files).onFiletreeSortChanged(data.data);
+                            }
+                            break;
+                        }
+                        case "docsImported": {
+                            const fileDock = getDockByType("file");
+                            if (fileDock) {
+                                (fileDock.data.file as Files).onDocsImported(data.data);
+                            }
+                            break;
+                        }
+                        case "docSortModeChanged": {
+                            const fileDock = getDockByType("file");
+                            if (fileDock) {
+                                (fileDock.data.file as Files).onDocSortModeChanged(data.data);
+                            }
+                            break;
+                        }
+                        case "notebookSortChanged": {
+                            const fileDock = getDockByType("file");
+                            if (fileDock) {
+                                (fileDock.data.file as Files).onNotebookSortChanged();
+                            }
+                            break;
+                        }
+                        case "exit":
+                            if (isBrowser() && !isInMobileApp()) {
+                                window.location.href = "about:blank";
+                            }
+                            break;
+                        case "updateKernelPluginState": {
+                            const {name, state} = data.data as { name: string, state: TKernelPluginState };
+                            const plugin = this.plugins.find(p => p.name === name);
+                            if (plugin) {
+                                plugin.kernel.state.code = state;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+
+        window.siyuan = {
+            zIndex: 10,
+            isReady: false,
+            notebooks: [],
+            reqIds: {},
+            backStack: [],
+            layout: {},
+            dialogs: [],
+            blockPanels: [],
+            closedTabs: [],
+            ctrlIsPressed: false,
+            altIsPressed: false,
+            ws: mainWs,
+        };
+        const notebookPromise = setNoteBook();
+        fetchPost("/api/system/getConf", {}, async (response) => {
+            await addScriptSync(`${Constants.PROTYLE_CDN}/js/lute/lute.min.js?v=${Constants.SIYUAN_VERSION}`, "protyleLuteScript");
+            addScript(`${Constants.PROTYLE_CDN}/js/protyle-html.js?v=${Constants.SIYUAN_VERSION}`, "protyleWcHtmlScript");
+            window.siyuan.config = systemConfig(response.data.conf, () => structuredClone(Constants.SIYUAN_EMPTY_LAYOUT));
+            await loadDesktopHostConnection();
+            ensureUILayout();
+            window.siyuan.isPublish = response.data.isPublish;
+            setBodyHighlight();
+            await notebookPromise;
+            await loadPlugins(this);
+            getLocalStorage(() => {
+                void loadLanguages(window.siyuan.config.appearance.lang, Constants.SIYUAN_VERSION, (languages: IObject) => {
+                    window.siyuan.languages = languages;
+                    void initializeEnglishCommandTranslations(
+                        window.siyuan.config.appearance.lang,
+                        languages as Record<string, string>,
+                        Constants.SIYUAN_VERSION,
+                    );
+                    window.siyuan.menus = new Menus(this);
+                    fetchPost("/api/setting/getCloudUser", {cached: true}, async userResponse => {
+                        window.siyuan.user = userResponse.data && "userId" in userResponse.data ? userResponse.data : null;
+                        await ensureOnboarding();
+                        await setNoteBook();
+                        await initWindowWithLoading(() => onGetConfig(response.data.start, this), setTabPosition);
+                        /// #if !BROWSER
+                        // 加载遮罩移除后再显示主窗口，避免原生窗口按钮出现在启动界面上。
+                        ipcRenderer.send(Constants.SIYUAN_READY_TO_SHOW);
+                        /// #endif
+                        onSetaccount();
+                        setTitle("", true);
+                        initMessage();
+                        /// #if BROWSER && !MOBILE
+                        if (!isInMobileApp() && !isIOSDevice() && !window.siyuan.config.readonly &&
+                            !window.siyuan.isPublish && !isChromeBrowser()
+                            && window.siyuan.config.appearance.notifications?.browserCompatibility !== false) {
+                            showMessage(window.siyuan.languages.useChrome, 0, "error");
+                        }
+                        /// #endif
+                        window.siyuan.isReady = true;
+                        mainWs.flushMainMessages();
+                        bootSync();
+                        exitAfterSettingsReset();
+                        fetchPost("/api/setting/getCloudUser", {});
+                    });
+                });
+            });
+        });
+        initBlockPopover(this);
+    }
+}
+
+installPluginStorageFetchAppId(window, Constants.SIYUAN_APPID, document.baseURI, location.origin);
+const siyuanApp = new App();
+
+window.openFileByURL = (openURL) => {
+    const blockInfo = parseSiYuanUriInfo(openURL);
+    if (blockInfo != null) {
+        if (openStandaloneDatabaseItemByURI(siyuanApp, blockInfo)) {
+            return true;
+        }
+        if (blockInfo.avItemID) {
+            queueAVLocateRequest(blockInfo.id, {
+                itemID: blockInfo.avItemID,
+                viewID: blockInfo.avViewID,
+                groupID: blockInfo.avGroupID,
+            });
+        }
+        openFileById({
+            app: siyuanApp,
+            id: blockInfo.id,
+            action: blockInfo.avItemID ? [Constants.CB_GET_CONTEXT, Constants.CB_GET_ROOTSCROLL] :
+                (blockInfo.focus ? [Constants.CB_GET_ALL, Constants.CB_GET_FOCUS] : [Constants.CB_GET_FOCUS, Constants.CB_GET_CONTEXT, Constants.CB_GET_ROOTSCROLL]),
+            zoomIn: blockInfo.avItemID ? false : blockInfo.focus,
+            afterOpen: (model) => {
+                const protyle = (model as { editor?: { protyle?: IProtyle } })?.editor?.protyle;
+                if (protyle) {
+                    activateQueuedAVLocate(protyle, blockInfo.id);
+                }
+            },
+        });
+        return true;
+    }
+    return false;
+};
+
+/// #if BROWSER
+registerDesktopBackNavigation(siyuanApp);
+window.showKeyboardToolbar = () => {
+    // 防止 Pad 端报错
+};
+window.hideKeyboardToolbar = () => {
+    // 桌面界面没有手机键盘工具栏，兼容原生容器的键盘隐藏回调。
+};
+window.processIOSPurchaseResponse = processIOSPurchaseResponse;
+// 移动端容器（Android/鸿蒙）启用桌面模式时，原生壳默认禁用 WebView 自身键盘行为、等待 JS 调用
+// showKeyboard 弹键盘，而桌面 bundle 不会调用它，导致键盘无法弹出。这里把键盘控制权交还给
+// WebView 自身管理（与平板走桌面 bundle 时的行为一致）
+// On-screen keyboard pops up when using desktop mode on HarmonyOS and Android https://github.com/siyuan-note/siyuan/issues/18028
+if (window.JSAndroid?.setWebViewFocusable) {
+    window.JSAndroid.setWebViewFocusable(true);
+} else if (window.JSHarmony?.setWebViewFocusable) {
+    window.JSHarmony.setWebViewFocusable(true);
+}
+/// #endif

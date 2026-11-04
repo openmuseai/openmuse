@@ -1,0 +1,28 @@
+name: word_render
+description: Portable word-core render pipeline (FFI, commands, CustomPainter).
+# 供其他工程开箱引入：git 依赖不受 publish_to 影响；
+# 要发布到 pub 仓库（pub.dev 或私有 server）时，删除本行（默认即 pub.dev）。
+version: 0.1.2
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_rust_bridge: 2.13.0
+  freezed_annotation: '>=2.4.4 <4.0.0'
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.4.13
+  freezed: ^2.5.7
+
+flutter:
+  assets:
+    - assets/MvpLatin.ttf
+    # 预编译 native 产物随包分发（asset 提取→临时目录→dlopen）。
+    # 新增平台产物后在此追加对应条目（缺失文件会导致 flutter build 失败）。
+    - path: native/macos/arm64/libword_core_ffi.dylib
+      platforms: [macos]

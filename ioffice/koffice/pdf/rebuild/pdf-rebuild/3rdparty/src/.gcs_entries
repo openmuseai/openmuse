@@ -1,0 +1,83 @@
+{
+  "pdfium": {
+    "pdfium/third_party/llvm-build/Release+Asserts": [
+      "Linux_x64/clang-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Linux_x64/clang-tidy-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Linux_x64/clangd-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Linux_x64/llvm-code-coverage-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Linux_x64/llvmobjdump-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Mac/clang-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Mac/clang-mac-runtime-library-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Mac/clang-tidy-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Mac/clangd-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Mac/llvm-code-coverage-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Mac/llvmobjdump-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Mac_arm64/clang-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Mac_arm64/clang-tidy-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Mac_arm64/clangd-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Mac_arm64/llvm-code-coverage-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Mac_arm64/llvmobjdump-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Win/clang-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Win/clang-tidy-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Win/clang-win-runtime-library-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Win/clangd-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Win/llvm-code-coverage-llvmorg-23-init-19482-g53d18800-2.tar.xz",
+      "Win/llvmobjdump-llvmorg-23-init-19482-g53d18800-2.tar.xz"
+    ],
+    "pdfium/third_party/rust-toolchain": [
+      "Linux_x64/rust-toolchain-b998449636a48e2c4a362809085b600a0174e1f2-6-llvmorg-23-init-19482-g53d18800.tar.xz",
+      "Mac/rust-toolchain-b998449636a48e2c4a362809085b600a0174e1f2-6-llvmorg-23-init-19482-g53d18800.tar.xz",
+      "Mac_arm64/rust-toolchain-b998449636a48e2c4a362809085b600a0174e1f2-6-llvmorg-23-init-19482-g53d18800.tar.xz",
+      "Win/rust-toolchain-b998449636a48e2c4a362809085b600a0174e1f2-6-llvmorg-23-init-19482-g53d18800.tar.xz"
+    ]
+  },
+  "pdfium/third_party/instrumented_libs": {
+    "pdfium/third_party/instrumented_libs/binaries": [
+      "9329714322846c2b47dd518ac08e437b8c7d8075c514dc7ec3eb3e3a1e0faeb6",
+      "a749c9e47cb4584bc944c887440b1d1c51501f7d9bb99eea276ebcba0aa6c1ec"
+    ]
+  },
+  "pdfium/buildtools": {
+    "pdfium/buildtools/win-format": [
+      "fb0bcaf406ad6f0bd6b4a6347d2abe78a94fb13e"
+    ],
+    "pdfium/buildtools/mac-format": [
+      "35ddc571ab654a4f58d7b35f394b04835d0b98f9"
+    ],
+    "pdfium/buildtools/mac_arm64-format": [
+      "945e45cbcb5443c3e569d5e0783fd012154fc4a7"
+    ],
+    "pdfium/buildtools/linux64-format": [
+      "f5485c39451137ee943021a0fb63738b306c5026"
+    ]
+  },
+  "pdfium/build": {
+    "pdfium/build/linux/debian_bullseye_amd64-sysroot": [
+      "52d61d4446ffebfaa3dda2cd02da4ab4876ff237853f46d273e7f9b666652e1d"
+    ],
+    "pdfium/build/linux/debian_bullseye_arm64-sysroot": [
+      "c7176a4c7aacbf46bda58a029f39f79a68008d3dee6518f154dcf5161a5486d8"
+    ],
+    "pdfium/build/linux/debian_bullseye_armhf-sysroot": [
+      "b45a7f586a107380ca6141b00d74321922b41d6d327dc33e74a2f82fd454304c"
+    ],
+    "pdfium/build/linux/debian_bullseye_i386-sysroot": [
+      "3de724b0d63478e1ae35f07b95d02261581a66e05c19aebe4e443d76179a565e"
+    ],
+    "pdfium/build/linux/debian_bullseye_mips64el-sysroot": [
+      "c847a32ae492aa14688be47fa696026e8dae8d9f4f589ec42fad29862bf311b3"
+    ],
+    "pdfium/build/linux/debian_bullseye_mipsel-sysroot": [
+      "82e930d6fa5d5ab1172cabc63b911ec800b182b4f8c14a273a89596541fe8658"
+    ],
+    "pdfium/build/linux/debian_bullseye_ppc64el-sysroot": [
+      "8b37b8eefac38284c327146c05fa315b392c90a559888790a12b05a28fbcee40"
+    ],
+    "pdfium/build/linux/debian_bullseye_s390x-sysroot": [
+      "46d561a32665a7ef4db334d66ba10b0db7750eea3fed1fee4896c2f5c4f87167"
+    ],
+    "pdfium/build/linux/debian_trixie_riscv64-sysroot": [
+      "2df6a2698a25258871b45a50d8b5079947b1ad1c63920c944690dfc2a71aab51"
+    ]
+  }
+}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SiYuan</title>
+    <meta charset="UTF-8">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="window.css">
+</head>
+<body>
+<div id="layout" class="fn__flex-column">
+    <div class="fn__flex-1"></div>
+    <img class="icon">
+    <h2 data-i18n="title"></h2>
+    <div class="slogan" data-i18n="slogan"></div>
+    <div class="fn__flex-1"></div>
+    <label class="b3-label">
+        <div>
+            <span data-i18n="lang"></span>
+            <div class="b3-label__text" data-i18n-html="langDesc"></div>
+        </div>
+        <div class="fn__flex-1"></div>
+        <select class="b3-select lang">
+            <option value="ar">العربية</option>
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="he">עברית</option>
+            <option value="hi">हिन्दी</option>
+            <option value="id">Bahasa Indonesia</option>
+            <option value="it">Italiano</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="nl">Nederlands</option>
+            <option value="pl">Polski</option>
+            <option value="pt-BR">Português (Brasil)</option>
+            <option value="ru">Русский</option>
+            <option value="sk">Slovenčina</option>
+            <option value="sr">Srpski</option>
+            <option value="th">ไทย</option>
+            <option value="tr">Türkçe</option>
+            <option value="uk">Українська</option>
+            <option value="zh-TW">繁體中文</option>
+            <option value="zh-CN">简体中文</option>
+        </select>
+    </label>
+    <label class="b3-label">
+        <div>
+            <span data-i18n="workspace"></span>
+            <div class="b3-label__text" data-i18n="workspaceDesc"></div>
+        </div>
+        <div class="fn__flex-1"></div>
+        <button class="b3-button fn__flex-center choosePath" data-i18n="selectBtn"></button>
+    </label>
+    <div class="fn__flex-1"></div>
+    <div class="fn__flex-1 notice">
+        <span data-i18n="notice"></span>
+    </div>
+    <div class="feedback">
+        <span>❤️ <a data-i18n-href="feedbackUrl" target="_blank" data-i18n="feedback"></a></span>
+        <span>🏘️ <a data-i18n-href="communityUrl" target="_blank" data-i18n="community"></a></span>
+        <span>🔖 <a data-i18n-href="downloadUrl" target="_blank" class="version"></a></span>
+    </div>
+    <div class="fn__flex-1"></div>
+</div>
+<svg class="svg" id="min" viewBox="0 0 32 32">
+    <path d="M1.333 14.667h29.333q1.333 0 1.333 1.333v0q0 1.333-1.333 1.333h-29.333q-1.333 0-1.333-1.333v0q0-1.333 1.333-1.333z"></path>
+</svg>
+<svg class="svg" id="close" viewBox="0 0 32 32">
+    <path d="M32 3.221l-12.779 12.779 12.779 12.779-3.221 3.221-12.779-12.779-12.779 12.779-3.221-3.221 12.779-12.779-12.779-12.779 3.221-3.221 12.779 12.779 12.779-12.779z"></path>
+</svg>
+<div class="drag"></div>
+<script src="window.js"></script>
+<script>
+    // 初始化启动
+    const langSelect = document.querySelector(".lang")
+    langSelect.value = currentLang
+    let langData = applyLang(currentLang)
+
+    document.querySelector(".version").textContent = `v${getSearch("v")}`
+    document.querySelector(".icon").src = decodeURIComponent(`${getSearch("icon")}`)
+
+    langSelect.addEventListener("change", (event) => {
+        langData = applyLang(event.target.value)
+    })
+
+    initWindowChrome()
+
+    document.querySelector(".choosePath").addEventListener("click", async () => {
+        const {ipcRenderer} = require("electron")
+        const initPath = await chooseWorkspacePath(langData)
+        if (null === initPath) {
+            return
+        }
+        ipcRenderer.send("siyuan-first-init", {
+            workspace: initPath,
+            lang: langSelect.value,
+        })
+    })
+</script>
+<script src="connectionEntry.js"></script>
+</body>
+</html>

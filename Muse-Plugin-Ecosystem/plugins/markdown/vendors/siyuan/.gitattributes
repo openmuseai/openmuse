@@ -1,0 +1,10 @@
+app/stage/protyle/** linguist-vendored
+
+* text=auto
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.json text eol=lf
+*.scss text eol=lf
+*.ts   text eol=lf
+*.go   text eol=lf
+/scripts/docker-onnx-build.sh text eol=lf

@@ -1,0 +1,21 @@
+// Rust stub for MainState (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/MainState.java
+use crate::*;
+
+pub struct MainState {
+    // TODO: fields
+}
+
+impl MainState {
+    pub fn new() -> Self { todo!() }
+    pub fn reset(&self) { todo!() }
+    pub fn reuseClean(&self) -> bool { todo!() }
+    pub fn reuseClean_1(&self, pools: Pools) -> bool { todo!() }
+    pub fn disposeGridSizeLayouter(&self) { todo!() }
+    pub fn reuseInit(&self) { todo!() }
+    pub fn getWrapDrawingCount(&self, document: Box<dyn Document>) -> i32 { todo!() }
+    pub fn hasWrapDrawing(&self, doc: Box<dyn Document>) -> bool { todo!() }
+    pub fn hasFloats(&self) -> bool { todo!() }
+    pub fn getDrawingLayers(&self, doc: Box<dyn Document>) -> TypoDrawingLayers { todo!() }
+    pub fn getDrawingLayers_1(&self, doc: Box<dyn Document>, fource: bool) -> TypoDrawingLayers { todo!() }
+}

@@ -1,0 +1,2 @@
+{"version":"v0.9","createSurface":{"surfaceId":"pptx-preview","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}
+{"version":"v0.9","updateComponents":{"surfaceId":"pptx-preview","components":[{"id":"root","component":"Column","children":["title","note"]},{"id":"title","component":"Text","text":"PPTX 结构预览","variant":"h2"},{"id":"note","component":"Text","text":"选择演示文稿后，受授权的 MCP 工具将返回页面结构。"}]}}

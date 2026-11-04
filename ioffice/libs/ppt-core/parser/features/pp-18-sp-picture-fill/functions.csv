@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_sp_blip_embed,p:sp blipFill→media,sp XML+rels+zip,media_bytes,pp-15:02;pp-15:03,02,libs/ppt-core,pass
+2,02_function_sp_blip_drawimage,有 bytes 即 DrawImage,shape+rect,DrawImage,01;pr-05:01,pr-07,libs/ppt-core,pass

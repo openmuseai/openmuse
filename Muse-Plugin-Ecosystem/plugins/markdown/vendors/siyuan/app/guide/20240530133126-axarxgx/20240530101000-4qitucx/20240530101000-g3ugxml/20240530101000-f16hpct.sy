@@ -1,0 +1,1200 @@
+{
+	"ID": "20240530101000-f16hpct",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-74jt3rs",
+		"id": "20240530101000-f16hpct",
+		"title": "Docker サーバー",
+		"type": "doc",
+		"updated": "20261016202856"
+	},
+	"Children": [
+		{
+			"ID": "20240530101000-dgbnyxq",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-1jekhdk",
+				"id": "20240530101000-dgbnyxq",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-8uif808",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-mxui09n",
+				"id": "20240530101000-8uif808",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "サーバー上で SiYuan を稼働させる最も簡単な方法は Docker を使うことです:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-on8v2fw",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-7ha8vu9",
+				"id": "20240530101000-on8v2fw",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-zci3cmi",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-i3mh6et",
+						"id": "20240530101000-zci3cmi",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-css5wvn",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-0c7jnjg",
+								"id": "20240530101000-css5wvn",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "イメージ名: "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "b3log/siyuan"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-020fgnn",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-7u6qk1h",
+						"id": "20240530101000-020fgnn",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-opiry7u",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-n23ulue",
+								"id": "20240530101000-opiry7u",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://hub.docker.com/r/b3log/siyuan",
+									"TextMarkTextContent": "イメージ URL"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-k4fph6q",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-o0nb3k5",
+				"id": "20240530101000-k4fph6q",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ファイル構造"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ilotcny",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-rwz1zbi",
+				"id": "20240530101000-ilotcny",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "プログラム全体は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/opt/siyuan/"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ にあります。これは以下のような Electron インストーラの resources フォルダ内の構造と基本的に同じです:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-o6gxq24",
+			"Type": "NodeList",
+			"ListData": {
+				"Tight": true,
+				"BulletChar": 42,
+				"Padding": 2,
+				"Marker": "Kg==",
+				"Num": -1
+			},
+			"Properties": {
+				"ID": "20240530101000-kut6x52",
+				"id": "20240530101000-o6gxq24",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-5nud24y",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"ID": "20240530101000-na8h9vq",
+						"id": "20240530101000-5nud24y",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-qxzuudb",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-bdp625y",
+								"id": "20240530101000-qxzuudb",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "appearance"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: アイコン、テーマ、言語"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-6pagfcx",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"ID": "20240530101000-dgqs7pt",
+						"id": "20240530101000-6pagfcx",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-tcw7hjd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-lmix8q0",
+								"id": "20240530101000-tcw7hjd",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "guide"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: ユーザーガイド"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-8iwhx1k",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"ID": "20240530101000-e0w300u",
+						"id": "20240530101000-8iwhx1k",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-afdg28u",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-gozyknj",
+								"id": "20240530101000-afdg28u",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "stage"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: インターフェースと静的リソース"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-y4nds70",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"ID": "20240530101000-5ustaxb",
+						"id": "20240530101000-y4nds70",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-fycrjaz",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-lytludw",
+								"id": "20240530101000-fycrjaz",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "kernel"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: カーネルプログラム"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-e245wms",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-hmjllir",
+				"id": "20240530101000-e245wms",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エントリポイント"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-5xcd2gc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-tv9g19f",
+				"id": "20240530101000-5xcd2gc",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "イメージの入口は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "ENTRYPOINT [\"/opt/siyuan/entrypoint.sh\"]"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、デフォルトコマンドは "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "CMD [\"serve\"]"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " です。イメージ名の後の引数はデフォルトコマンド全体を置き換えるため、カーネル引数を指定するときは "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "serve"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を明示してください。"
+				}
+			]
+		},
+		{
+			"ID": "20261016112115-xr14c1k",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016112115-xr14c1k",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "起動前にホスト側のワークスペースディレクトリを作成し、認証を設定してください。以下の例は、ホストでエクスポートした "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "SIYUAN_ACCESS_AUTH_CODE"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 環境変数から強力な画面ロックパスワードを受け取ります。新しい Docker ワークスペースは、パスワードまたは有効な"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260804190003-oidcja1",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "OIDC ログイン"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "がなければ起動を拒否します。たとえば、Bash では次の手順で自分で選んだパスワードを非表示で入力できます。実際のパスワードを共有ファイルやコマンド履歴に残さないでください。コンテナ環境を検査できる人は、この値を読み取れます。"
+				}
+			]
+		},
+		{
+			"ID": "20261016112115-xqmnr5v",
+			"Type": "NodeCodeBlock",
+			"Properties": {
+				"id": "20261016112115-xqmnr5v",
+				"updated": "20261016112115"
+			},
+			"IsFencedCodeBlock": true,
+			"CodeBlockFenceChar": 96,
+			"CodeBlockFenceLen": 3,
+			"CodeBlockOpenFence": "YGBg",
+			"CodeBlockInfo": "YmFzaA==",
+			"CodeBlockCloseFence": "YGBg",
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "YmFzaA=="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "read -r -s -p \"画面ロックパスワード：\" SIYUAN_ACCESS_AUTH_CODE\nprintf '\\n'\nexport SIYUAN_ACCESS_AUTH_CODE\n: \"${SIYUAN_ACCESS_AUTH_CODE:?空でない画面ロックパスワードを設定してください}\"\n"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-2hkopvx",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-78ygqh7",
+				"id": "20240530101000-2hkopvx",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-gj0apkj",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-8by8qen",
+						"id": "20240530101000-gj0apkj",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-3hej98c",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-z9fmnae",
+								"id": "20240530101000-3hej98c",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--workspace"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ でワークスペースディレクトリのパスを指定し、ホストマシンから "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "-v"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ でコンテナにマウントします"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-tusg4ak",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-cld3snp",
+				"id": "20240530101000-tusg4ak",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "その他のパラメータは"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240530101000-xq26o73",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "こちら"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "を参照してください。次に起動コマンドの例を示します: "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "docker run -d -v workspace_dir_host:workspace_dir_container -p 6806:6806 -e SIYUAN_ACCESS_AUTH_CODE b3log/siyuan serve --workspace=workspace_dir_container"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。Docker で公開サービスを有効にする場合は、通常のサーバーポートのマッピングに加えて、コンテナ作成コマンドに "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "-p 6808:6808"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を追加してください。Docker のポートマッピングはホスト側ポート:コンテナ側ポートの形式です。公開サービスのポートを変更した場合はコンテナ側ポートも変更し、アクセス時にはホスト側ポートを使用してください。公開サービスには固定ポートを指定し、0 に設定しないでください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-7s32tna",
+			"Type": "NodeList",
+			"ListData": {
+				"Tight": true,
+				"BulletChar": 42,
+				"Padding": 2,
+				"Marker": "Kg==",
+				"Num": -1
+			},
+			"Properties": {
+				"ID": "20240530101000-admib22",
+				"id": "20240530101000-7s32tna",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-jk0l9et",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"ID": "20240530101000-2cb3ghi",
+						"id": "20240530101000-jk0l9et",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-ylijl9m",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-t128l0b",
+								"id": "20240530101000-ylijl9m",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace_dir_host"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: ホストマシン上のワークスペースディレクトリのパス"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-06ru7rr",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"ID": "20240530101000-l3habl6",
+						"id": "20240530101000-06ru7rr",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-7cjkkb8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-njhazzb",
+								"id": "20240530101000-7cjkkb8",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace_dir_container"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: コンテナ内のワークスペースディレクトリのパス。後述の "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--workspace"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ で指定するものと同じです"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-b8tylhp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-k8rte7r",
+				"id": "20240530101000-b8tylhp",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "たとえば、ホストに "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/siyuan/workspace"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を作成してから "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "docker run -d -v /siyuan/workspace:/siyuan/workspace -p 6806:6806 -e SIYUAN_ACCESS_AUTH_CODE -e PUID=1000 -e PGID=1000 b3log/siyuan serve --workspace=/siyuan/workspace"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を実行します。ホストとコンテナのパスは異なっていても構いません。起動後に "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "http://server-ip:6806"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を開き、入力したパスワードでログインします。起動に失敗した場合はコンテナログを確認してください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-cifxjjw",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-elwalz1",
+				"id": "20240530101000-cifxjjw",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ユーザーパーミッション"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-os9yh35",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-hsf648s",
+				"id": "20240530101000-os9yh35",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "入口スクリプトは、ユーザーとグループの作成または再利用、および "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/opt/siyuan"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/home/siyuan"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、ワークスペースの所有権の再帰的な設定に必要な権限で起動します。その後 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "su-exec"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "PUID:PGID"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " としてカーネルを実行します。両方のデフォルトは "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "1000"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " です。ホストの所有者に合わせるには "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "-e PUID=1000 -e PGID=1000"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " の数値を適切な ID に置き換えて指定します。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "-u 1000:1000"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を付けると入口スクリプトが権限を準備できなくなるため、付けないでください。所有権の変更はマウントしたホストディレクトリにも反映されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-8viay1g",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-8reh0fr",
+				"id": "20240530101000-8viay1g",
+				"updated": "20260921003419"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ポートの隠蔽"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ofdv8r6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-67tr7gd",
+				"id": "20240530101000-ofdv8r6",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "NGINX リバースプロキシを使用してポート 6806 を隠すことができます。以下の点に注意してください:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-tzkk9tn",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-vxly6p7",
+				"id": "20240530101000-tzkk9tn",
+				"updated": "20260921003419"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-3a3xn18",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-uhp0hs4",
+						"id": "20240530101000-3a3xn18",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-u3t87a8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-mrlk8ns",
+								"id": "20240530101000-u3t87a8",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "WebSocket のリバースプロキシを "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/ws"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ に設定する"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260921003419-g3s2ee9",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Children": [
+						{
+							"ID": "20260921003419-rwf16da",
+							"Type": "NodeParagraph",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "通常のリクエストと "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/ws"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " の両方で、ポートを含む元の "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "Host"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " ヘッダーを保持してください。NGINX の両方のプロキシ設定に "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "proxy_set_header Host $http_host;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を指定します。"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "$host"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を使用すると標準以外のポート（例："
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "8443"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "）が失われ、Origin の検証に失敗する場合があります。その結果、ログイン後にロゴ画面で再読み込みを繰り返す、API が "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "401"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を返す、WebSocket 接続に失敗するなどの問題が発生します"
+								}
+							],
+							"Properties": {
+								"id": "20260921003419-rwf16da",
+								"updated": "20260921003419"
+							}
+						}
+					],
+					"Properties": {
+						"id": "20260921003419-g3s2ee9",
+						"updated": "20260921003419"
+					}
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-om4wois",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-sf44jpo",
+				"id": "20240530101000-om4wois",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-n1mwi3q",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-9hja6gh",
+				"id": "20240530101000-n1mwi3q",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-d0u5fih",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-99t3pcl",
+						"id": "20240530101000-d0u5fih",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-trhccty",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-n96m7rr",
+								"id": "20240530101000-trhccty",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "マウントボリュームが正しいことを確認してください。そうしないと、コンテナが削除されたときにデータが失われます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-51bvrvp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-7ifc0lu",
+						"id": "20240530101000-51bvrvp",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-1k967vf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-ghb8fta",
+								"id": "20240530101000-1k967vf",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "認証に問題が発生する可能性があるため URL の書き換えによるリダイレクトは使用せず、リバースプロキシを設定することをお勧めします"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-av0hc90",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-8bjgcwz",
+				"id": "20240530101000-av0hc90",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "制限事項"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-95f1jst",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-c39mqvp",
+				"id": "20240530101000-95f1jst",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-49rpkzp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-9bey4kd",
+						"id": "20240530101000-49rpkzp",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-790mb98",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-ymg86bk",
+								"id": "20240530101000-790mb98",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "モバイル版アプリからの接続には対応していません。デスクトップ版はリモートモードで接続できます。詳しくは、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20260903150000-hpfmx4t",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "リモートカーネルへの接続"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "を参照してください"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-ibq4c4y",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-r9haojg",
+						"id": "20240530101000-ibq4c4y",
+						"updated": "20250926110655"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-k2rz2gr",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-k2rz2gr",
+								"updated": "20250926110655"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "PDF や Word などの形式へのエクスポートはサポートされていません"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

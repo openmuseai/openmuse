@@ -1,0 +1,1287 @@
+// Java: import cn.wps.base.assertion.Assert
+// use util::cn::wps::core::runtime::Assert; // dep not yet available
+// Java: import cn.wps.base.log.Log
+// use kfs_kfs_app::cn::wps::moffice::kfs::log::Log; // dep not yet available
+// Java: import cn.wps.core.runtime.internal.InternalPlatform
+use crate::cn::wps::core::runtime::internal::InternalPlatform::InternalPlatform;
+// Java: import cn.wps.core.runtime.internal.LogFilter
+use crate::cn::wps::core::runtime::internal::LogFilter::LogFilter;
+// Java: import cn.wps.graphics.KDisplayMetrics
+// use util::cn::wps::graphics::KDisplayMetrics; // dep not yet available
+// Java: import cn.wps.graphics.bitmap.IPicturePool
+// use util::cn::wps::graphics::bitmap::IPicturePool; // dep not yet available
+// Java: import cn.wps.math.IMathDrawer
+// use util::cn::wps::math::IMathDrawer; // dep not yet available
+// Java: import cn.wps.moffice.clipboard.IClipboardManager
+// use crate::cn::wps::moffice::clipboard::IClipboardManager; // used as trait object
+// Java: import cn.wps.moffice.define.UILanguage
+use crate::cn::wps::moffice::define::UILanguage::UILanguage;
+// Java: import cn.wps.moffice.kfs.File
+// use kfs_kfs_app::cn::wps::moffice::kfs::mfs::File; // dep not yet available
+// Java: import cn.wps.moffice.kfs.FileInputStream
+// use kfs_kfs_app::cn::wps::moffice::kfs::mfs::FileInputStream; // dep not yet available
+// Java: import cn.wps.moffice.util.FileUtil
+// use util::cn::wps::moffice::util::FileUtil; // dep not yet available
+// Java: import cn.wps.moffice.util.KSFileLog
+use crate::cn::wps::moffice::util::KSFileLog::KSFileLog;
+// Java: import cn.wps.moffice.util.PlatformAdapter
+// use kfs_kfs_app::cn::wps::moffice::util::PlatformAdapter; // dep not yet available
+// Java: import cn.wps.moffice.util.XmlDocument
+// use util::cn::wps::moffice::util::XmlDocument; // dep not yet available
+// Java: import cn.wps.util.CreatefileInfolder
+// use util::cn::wps::util::CreatefileInfolder; // dep not yet available
+// Java: import cn.wps.util.Pair
+// use util::cn::wps::util::Pair; // dep not yet available
+// Java: import java.io.IOException
+// Java: import java.io.InputStream
+// Java: import java.util.ArrayList
+// Java: import java.util.List
+use std::path::Path;
+use std::fs;
+use std::sync::{Mutex, OnceLock};
+// Java: import javax.xml.parsers.DocumentBuilder
+// use crate::javax::xml::parsers::DocumentBuilder; // not yet available
+// Java: import javax.xml.parsers.ParserConfigurationException
+// use crate::javax::xml::parsers::ParserConfigurationException; // not yet available
+// Java: import org.w3c.dom.Document
+// use io_wps_io::cn::wps::io::dom::Document; // dep not yet available
+// Java: import org.w3c.dom.Element
+// use io_wps_io::io::dom::Element; // dep not yet available
+// Java: import org.w3c.dom.NodeList
+// use crate::org::w3c::dom::NodeList; // not yet available
+// Java: import org.xml.sax.SAXException
+// use crate::org::xml::sax::SAXException; // not yet available
+
+// Java field: String TAG
+pub(crate) const TAG: &str = "Platform";
+// Java field: Integer sPid
+static S_PID: OnceLock<Mutex<Option<i32>>> = OnceLock::new();
+// Java field: boolean mKillProcess
+static M_KILL_PROCESS: OnceLock<Mutex<bool>> = OnceLock::new();
+// Java field: KDisplayMetrics mDisplayMetrics
+static M_DISPLAY_METRICS: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: IAssetManager mAssetManager
+static M_ASSET_MANAGER: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: IResourceManager mResourceManager
+static M_RESOURCE_MANAGER: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: IHistoryManager mHistoryManager
+static M_HISTORY_MANAGER: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: IClipboardManager mClipboardManager
+static M_CLIPBOARD_MANAGER: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: IConfigManager mConfigManager
+static M_CONFIG_MANAGER: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: IAnalysisExecutor sAnalysisExecutor
+static S_ANALYSIS_EXECUTOR: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: Object mApplicationContext
+static M_APPLICATION_CONTEXT: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: Object mComponentContext
+static M_COMPONENT_CONTEXT: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: ILogFilter mLogFilter
+static M_LOG_FILTER: OnceLock<Mutex<Option<LogFilter>>> = OnceLock::new();
+// Java field: String mUserName
+static M_USER_NAME: OnceLock<Mutex<String>> = OnceLock::new();
+// Java field: String mLanguageCode
+static M_LANGUAGE_CODE: OnceLock<Mutex<String>> = OnceLock::new();
+// Java field: String mLanguageDefault
+static M_LANGUAGE_DEFAULT: OnceLock<Mutex<String>> = OnceLock::new();
+// Java field: UILanguage mLanguage
+static M_LANGUAGE: OnceLock<Mutex<Option<UILanguage>>> = OnceLock::new();
+// Java field: boolean mMultiDexConfig
+static M_MULTI_DEX_CONFIG: OnceLock<Mutex<bool>> = OnceLock::new();
+// Java field: int SDK_VERSION
+static SDK_VERSION_VAL: OnceLock<Mutex<i32>> = OnceLock::new();
+// Java field: boolean sIsMZ606
+static S_IS_MZ606: OnceLock<Mutex<bool>> = OnceLock::new();
+// Java field: boolean sIsHTC_Flyer_P510e
+static S_IS_HTC_FLYER_P510E: OnceLock<Mutex<bool>> = OnceLock::new();
+// Java field: IMathDrawer mMathDrawer
+static M_MATH_DRAWER: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: ISharedInfo mSharedInfo
+static M_SHARED_INFO: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: boolean mIsTvMeetingVersion
+static M_IS_TV_MEETING_VERSION: OnceLock<Mutex<bool>> = OnceLock::new();
+// Java field: boolean WATER_MARK_ON
+static WATER_MARK_ON_VAL: OnceLock<Mutex<bool>> = OnceLock::new();
+// Java field: GetPlatformDataCallback sGetPlatformDataCallback
+static S_GET_PLATFORM_DATA_CALLBACK: OnceLock<Mutex<Option<Box<dyn GetPlatformDataCallback + Send>>>> = OnceLock::new();
+// Java field: String mDictPath
+static M_DICT_PATH: OnceLock<Mutex<String>> = OnceLock::new();
+// Java field: IGetUserInfo mGetUserInfo
+static M_GET_USER_INFO: OnceLock<Mutex<Option<Box<dyn IGetUserInfo + Send>>>> = OnceLock::new();
+// Java field: String mUserId
+static M_USER_ID: OnceLock<Mutex<String>> = OnceLock::new();
+// Java field: IGetUserName mGetUserNameCB
+static M_GET_USER_NAME_CB: OnceLock<Mutex<Option<Box<dyn IGetUserName + Send>>>> = OnceLock::new();
+// Java field: IPicturePool mPicturePool
+static M_PICTURE_POOL: OnceLock<Mutex<Option<Box<dyn std::any::Any + Send>>>> = OnceLock::new();
+// Java field: File TEMP_PRESENTATION
+static TEMP_PRESENTATION_DIR: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+// Java field: File BACKUP_PRESENTATION
+static BACKUP_PRESENTATION_DIR: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+// Java field: File TEMP_SPREADSHEET
+static TEMP_SPREADSHEET_DIR: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+// Java field: File TEMP_PDF
+static TEMP_PDF_DIR: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+// Java field: File BACKUP_SPREADSHEET
+static BACKUP_SPREADSHEET_DIR: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+// Java field: String mShapePath
+static M_SHAPE_PATH: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+// Java field: String mClipAuthority
+static M_CLIP_AUTHORITY: OnceLock<Mutex<String>> = OnceLock::new();
+
+fn get_str_lock(lock: &'static OnceLock<Mutex<String>>) -> &'static Mutex<String> {
+    lock.get_or_init(|| Mutex::new(String::new()))
+}
+
+fn get_bool_lock(lock: &'static OnceLock<Mutex<bool>>) -> &'static Mutex<bool> {
+    lock.get_or_init(|| Mutex::new(false))
+}
+
+fn get_i32_lock(lock: &'static OnceLock<Mutex<i32>>) -> &'static Mutex<i32> {
+    lock.get_or_init(|| Mutex::new(0))
+}
+
+fn get_opt_str_lock(lock: &'static OnceLock<Mutex<Option<String>>>) -> &'static Mutex<Option<String>> {
+    lock.get_or_init(|| Mutex::new(None))
+}
+
+fn get_callback_lock() -> &'static Mutex<Option<Box<dyn GetPlatformDataCallback + Send>>> {
+    S_GET_PLATFORM_DATA_CALLBACK.get_or_init(|| Mutex::new(None))
+}
+
+// Java: public class Platform
+pub struct Platform {
+}
+
+// Java: public class Platform
+impl Platform {
+    // Java: Platform()
+    pub fn new() -> Self {
+        // Java: super();
+        Platform {}
+    }
+
+    // Java: static String getCurrentPidTmpDir()
+    pub fn getCurrentPidTmpDir() -> String {
+        // Java: return getCurrentPidTmpDir(getTempDirectory());
+        Self::getCurrentPidTmpDir_with_root(&Self::getTempDirectory())
+    }
+
+    // Java: static String getCurrentPidTmpDir(String rootPath)
+    pub fn getCurrentPidTmpDir_with_root(rootPath: &str) -> String {
+        // Java: Assert.assertNotNull("rootPath should not be null", rootPath);
+        assert!(!rootPath.is_empty(), "rootPath should not be null");
+        // Java: return rootPath.endsWith(File.separator) ? rootPath + getPid() : rootPath + File.separator + getPid();
+        let sep = std::path::MAIN_SEPARATOR;
+        if rootPath.ends_with(sep) {
+            format!("{}{}", rootPath, Self::getPid())
+        } else {
+            format!("{}{}{}", rootPath, sep, Self::getPid())
+        }
+    }
+
+    // Java: static String getCurrentPptTmpDir(String docUUID)
+    pub fn getCurrentPptTmpDir(docUUID: &str) -> String {
+        // Java: String rootPidDir = getCurrentPidTmpDir();
+        let rootPidDir = Self::getCurrentPidTmpDir();
+        // Java: String docTypeDir = rootPidDir + File.separator + "presentation" + File.separator + docUUID + File.separator;
+        let sep = std::path::MAIN_SEPARATOR;
+        let docTypeDir = format!("{}{}presentation{}{}{}", rootPidDir, sep, sep, docUUID, sep);
+        // Java: return docTypeDir;
+        docTypeDir
+    }
+
+    // Java: static String getCurrentSsTmpDir(String docUUID)
+    pub fn getCurrentSsTmpDir(docUUID: &str) -> String {
+        // Java: String rootPidDir = getCurrentPidTmpDir();
+        let rootPidDir = Self::getCurrentPidTmpDir();
+        // Java: String docTypeDir = rootPidDir + File.separator + "spreadsheet" + File.separator + docUUID + File.separator;
+        let sep = std::path::MAIN_SEPARATOR;
+        let docTypeDir = format!("{}{}spreadsheet{}{}{}", rootPidDir, sep, sep, docUUID, sep);
+        // Java: return docTypeDir;
+        docTypeDir
+    }
+
+    // Java: static String getCurrentWriterTmpDir(String docUUID)
+    pub fn getCurrentWriterTmpDir(docUUID: &str) -> String {
+        // Java: String rootPidDir = getCurrentPidTmpDir();
+        let rootPidDir = Self::getCurrentPidTmpDir();
+        // Java: String docTypeDir = rootPidDir + File.separator + "writer" + File.separator + docUUID + File.separator;
+        let sep = std::path::MAIN_SEPARATOR;
+        let docTypeDir = format!("{}{}writer{}{}{}", rootPidDir, sep, sep, docUUID, sep);
+        // Java: return docTypeDir;
+        docTypeDir
+    }
+
+    // Java: static boolean removeCurrentPidTmpDir(String rootPath)
+    pub fn removeCurrentPidTmpDir_with_root(rootPath: &str) -> bool {
+        // Java: return doRemoveCurrentPidTmpDir(getCurrentPidTmpDir(rootPath));
+        Self::doRemoveCurrentPidTmpDir(&Self::getCurrentPidTmpDir_with_root(rootPath))
+    }
+
+    // Java: static boolean removeCurrentPidTmpDir()
+    pub fn removeCurrentPidTmpDir() -> bool {
+        // Java: return doRemoveCurrentPidTmpDir(getCurrentPidTmpDir());
+        Self::doRemoveCurrentPidTmpDir(&Self::getCurrentPidTmpDir())
+    }
+
+    // Java: static boolean removeCurrentPptTmpDir(String UUID)
+    pub fn removeCurrentPptTmpDir(uuid: &str) -> bool {
+        // Java: return doRemoveCurrentPidTmpDir(getCurrentPptTmpDir(UUID));
+        Self::doRemoveCurrentPidTmpDir(&Self::getCurrentPptTmpDir(uuid))
+    }
+
+    // Java: static boolean removeCurrentSsTmpDir(String UUID)
+    pub fn removeCurrentSsTmpDir(uuid: &str) -> bool {
+        // Java: return doRemoveCurrentPidTmpDir(getCurrentSsTmpDir(UUID));
+        Self::doRemoveCurrentPidTmpDir(&Self::getCurrentSsTmpDir(uuid))
+    }
+
+    // Java: static boolean removeCurrentWriterTmpDir(String UUID)
+    pub fn removeCurrentWriterTmpDir(uuid: &str) -> bool {
+        // Java: return doRemoveCurrentPidTmpDir(getCurrentWriterTmpDir(UUID));
+        Self::doRemoveCurrentPidTmpDir(&Self::getCurrentWriterTmpDir(uuid))
+    }
+
+    // Java: static boolean removeCurrentPidPptTmpDir()
+    pub fn removeCurrentPidPptTmpDir() -> bool {
+        // Java: String rootPidDir = getCurrentPidTmpDir();
+        let rootPidDir = Self::getCurrentPidTmpDir();
+        // Java: String docTypeDir = rootPidDir + File.separator + "presentation";
+        let docTypeDir = format!("{}{}presentation", rootPidDir, std::path::MAIN_SEPARATOR);
+        // Java: return doRemoveCurrentPidTmpDir(docTypeDir);
+        Self::doRemoveCurrentPidTmpDir(&docTypeDir)
+    }
+
+    // Java: static boolean removeCurrentPidSsTmpDir()
+    pub fn removeCurrentPidSsTmpDir() -> bool {
+        // Java: String rootPidDir = getCurrentPidTmpDir();
+        let rootPidDir = Self::getCurrentPidTmpDir();
+        // Java: String docTypeDir = rootPidDir + File.separator + "spreadsheet";
+        let docTypeDir = format!("{}{}spreadsheet", rootPidDir, std::path::MAIN_SEPARATOR);
+        // Java: return doRemoveCurrentPidTmpDir(docTypeDir);
+        Self::doRemoveCurrentPidTmpDir(&docTypeDir)
+    }
+
+    // Java: static boolean removeCurrentPidWriterTmpDir()
+    pub fn removeCurrentPidWriterTmpDir() -> bool {
+        // Java: String rootPidDir = getCurrentPidTmpDir();
+        let rootPidDir = Self::getCurrentPidTmpDir();
+        // Java: String docTypeDir = rootPidDir + File.separator + "writer";
+        let docTypeDir = format!("{}{}writer", rootPidDir, std::path::MAIN_SEPARATOR);
+        // Java: return doRemoveCurrentPidTmpDir(docTypeDir);
+        Self::doRemoveCurrentPidTmpDir(&docTypeDir)
+    }
+
+    // Java: static boolean doRemoveCurrentPidTmpDir(String rootPath)
+    fn doRemoveCurrentPidTmpDir(rootPath: &str) -> bool {
+        // Java: Assert.assertNotNull("rootPath should not be null.", rootPath);
+        assert!(!rootPath.is_empty(), "rootPath should not be null.");
+        // Java: boolean delSucces = false;
+        let mut delSucces = false;
+        // Java: if ((new File(rootPath)).exists())
+        if Path::new(rootPath).exists()
+        {
+            // Java: delSucces = FileUtil.delFolder(rootPath);
+            delSucces = fs::remove_dir_all(rootPath).is_ok();
+        }
+        // Java: return delSucces;
+        delSucces
+    }
+
+    // Java: static String getFileExistPath(String fileName)
+    pub fn getFileExistPath(fileName: &str) -> Option<String> {
+        // Java: return doGetFileExistPath(getCurrentPidTmpDir(), fileName);
+        Self::doGetFileExistPath(&Self::getCurrentPidTmpDir(), fileName)
+    }
+
+    // Java: static String getFileExistPath(String rootPath, String fileName)
+    pub fn getFileExistPath_with_root(rootPath: &str, fileName: &str) -> Option<String> {
+        // Java: return doGetFileExistPath(getCurrentPidTmpDir(rootPath), fileName);
+        Self::doGetFileExistPath(&Self::getCurrentPidTmpDir_with_root(rootPath), fileName)
+    }
+
+    // Java: static String doGetFileExistPath(String rootPath, String fileName)
+    fn doGetFileExistPath(rootPath: &str, fileName: &str) -> Option<String> {
+        // Java: Assert.assertNotNull("rootPath should not be null.", rootPath);
+        assert!(!rootPath.is_empty(), "rootPath should not be null.");
+        // Java: Assert.assertNotNull("fileName should not be null.", fileName);
+        assert!(!fileName.is_empty(), "fileName should not be null.");
+        // Java: boolean isPathValid = makesureDirExist(new File(rootPath));
+        let isPathValid = Self::makesureDirExist(rootPath);
+        // Java: Assert.assertTrue("isPathValid should be true.", isPathValid);
+        assert!(isPathValid, "isPathValid should be true.");
+        // Java: return isPathValid ? rootPath + File.separator + fileName : null;
+        if isPathValid {
+            Some(format!("{}{}{}", rootPath, std::path::MAIN_SEPARATOR, fileName))
+        } else {
+            None
+        }
+    }
+
+    // Java: static boolean makesureDirExist(File rootPath)
+    pub fn makesureDirExist(rootPath: &str) -> bool {
+        // Java: Assert.assertNotNull("rootPath should not be null.", rootPath);
+        assert!(!rootPath.is_empty(), "rootPath should not be null.");
+        // Java: boolean ret = rootPath.exists() ? true : rootPath.mkdirs();
+        let p = Path::new(rootPath);
+        let ret = if p.exists() { true } else { fs::create_dir_all(p).is_ok() };
+        // Java: return ret;
+        ret
+    }
+
+    // Java: static public static Pair<File, Boolean> createFile(String fileName)
+    pub fn createFile(fileName: &str) -> Option<(String, bool)> {
+        // Java: return doCreateFile(getCurrentPidTmpDir(), fileName);
+        Self::doCreateFile(&Self::getCurrentPidTmpDir(), fileName)
+    }
+
+    // Java: static public static Pair<File, Boolean> createFile(String rootPath, String fileName)
+    pub fn createFile_with_root(rootPath: &str, fileName: &str) -> Option<(String, bool)> {
+        // Java: return doCreateFile(getCurrentPidTmpDir(rootPath), fileName);
+        Self::doCreateFile(&Self::getCurrentPidTmpDir_with_root(rootPath), fileName)
+    }
+
+    // Java: static private static Pair<File, Boolean> doCreateFile(String rootPath, String fileName)
+    fn doCreateFile(rootPath: &str, fileName: &str) -> Option<(String, bool)> {
+        // Java: Assert.assertNotNull("rootPath should not be null.", rootPath);
+        assert!(!rootPath.is_empty(), "rootPath should not be null.");
+        // Java: Assert.assertNotNull("fileName should not be null.", fileName);
+        assert!(!fileName.is_empty(), "fileName should not be null.");
+        // Java: boolean isPathValid = makesureDirExist(new File(rootPath));
+        let isPathValid = Self::makesureDirExist(rootPath);
+        // Java: Assert.assertTrue("isPathValid should be true.", isPathValid);
+        assert!(isPathValid, "isPathValid should be true.");
+        // Java: return isPathValid ? CreatefileInfolder.createFile(rootPath, fileName) : null;
+        if isPathValid {
+            let file_path = format!("{}{}{}", rootPath, std::path::MAIN_SEPARATOR, fileName);
+            let p = Path::new(&file_path);
+            let existed = p.exists();
+            if !existed {
+                let _ = std::fs::File::create(&file_path);
+            }
+            Some((file_path, !existed))
+        } else {
+            None
+        }
+    }
+
+    // Java: static File createDir(String dirName)
+    pub fn createDir(dirName: &str) -> Option<String> {
+        // Java: return doCreateDir(getCurrentPidTmpDir(), dirName);
+        Self::doCreateDir(&Self::getCurrentPidTmpDir(), dirName)
+    }
+
+    // Java: static File doCreateDir(String rootPath, String dirName)
+    fn doCreateDir(rootPath: &str, dirName: &str) -> Option<String> {
+        // Java: Assert.assertNotNull("rootPath should not be null.", rootPath);
+        assert!(!rootPath.is_empty(), "rootPath should not be null.");
+        // Java: Assert.assertNotNull("dirName should not be null.", dirName);
+        assert!(!dirName.is_empty(), "dirName should not be null.");
+        // Java: File dir = new File(rootPath, dirName);
+        let dir = format!("{}{}{}", rootPath, std::path::MAIN_SEPARATOR, dirName);
+        // Java: dir.mkdirs();
+        let _ = fs::create_dir_all(&dir);
+        // Java: return dir;
+        Some(dir)
+    }
+
+    // Java: static File createTempFile(String prefix, String suffix)
+    pub fn createTempFile(prefix: &str, suffix: &str) -> Option<String> {
+        // Java: return doCreateTempFile(getCurrentPidTmpDir(), prefix, suffix);
+        Self::doCreateTempFile(&Self::getCurrentPidTmpDir(), prefix, suffix)
+    }
+
+    // Java: static File createTempFileEx(String prefix, String suffix)
+    pub fn createTempFileEx(prefix: &str, suffix: &str) -> Result<String, std::io::Error> {
+        // Java: return doCreateTempFileEx(getCurrentPidTmpDir(), prefix, suffix);
+        Self::doCreateTempFileEx(&Self::getCurrentPidTmpDir(), prefix, suffix)
+    }
+
+    // Java: static File createTempFile(String rootPath, String prefix, String suffix)
+    pub fn createTempFile_with_root(rootPath: &str, prefix: &str, suffix: &str) -> Option<String> {
+        // Java: return doCreateTempFile(getCurrentPidTmpDir(rootPath), prefix, suffix);
+        Self::doCreateTempFile(&Self::getCurrentPidTmpDir_with_root(rootPath), prefix, suffix)
+    }
+
+    // Java: static File doCreateTempFile(String rootPath, String prefix, String suffix)
+    fn doCreateTempFile(rootPath: &str, prefix: &str, suffix: &str) -> Option<String> {
+        // Java: try
+        match Self::doCreateTempFileEx(rootPath, prefix, suffix) {
+            Ok(path) => {
+                // Java: return doCreateTempFileEx(rootPath, prefix, suffix);
+                Some(path)
+            }
+            // Java: catch (IOException e)
+            Err(_e) => {
+                // Java: Log.e(TAG, "IOException", e);
+                // Java: return null;
+                None
+            }
+        }
+    }
+
+    // Java: static File doCreateTempFileEx(String rootPath, String prefix, String suffix)
+    fn doCreateTempFileEx(rootPath: &str, prefix: &str, suffix: &str) -> Result<String, std::io::Error> {
+        // Java: Assert.assertNotNull("rootPath should not be null.", rootPath);
+        assert!(!rootPath.is_empty(), "rootPath should not be null.");
+        // Java: File rootPathFile = new File(rootPath);
+        let rootPathFile = Path::new(rootPath);
+        // Java: boolean isPathValid = makesureDirExist(rootPathFile);
+        let isPathValid = Self::makesureDirExist(rootPath);
+        // Java: Assert.assertTrue("isPathValid should be true.", isPathValid);
+        assert!(isPathValid, "isPathValid should be true.");
+        // Java: return isPathValid ? File.createTempFile(prefix, suffix, rootPathFile) : File.createTempFile(prefix, suffix);
+        let dir = if isPathValid { rootPath } else { std::env::temp_dir().to_str().unwrap_or("/tmp") };
+        let file_name = format!("{}{}{}", prefix, std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos(), suffix);
+        let file_path = format!("{}{}{}", dir, std::path::MAIN_SEPARATOR, file_name);
+        std::fs::File::create(&file_path)?;
+        Ok(file_path)
+    }
+
+    // Java: static void hookTestPlatform()
+    pub fn hookTestPlatform() {
+    }
+
+    // Java: static ILog getLog()
+    pub fn getLog() -> Option<Box<dyn std::any::Any + Send>> {
+        // Java: return InternalPlatform.getInstance().getLog();
+        None // ILog not yet typed
+    }
+
+    // Java: static void setLog(ILog log)
+    pub fn setLog(log: Option<Box<dyn std::any::Any + Send>>) {
+        // Java: InternalPlatform.getInstance().setLog(log);
+        InternalPlatform::getInstance().lock().unwrap().setLog(log);
+    }
+
+    // Java: static ILogFilter getLogFilter()
+    pub fn getLogFilter() -> Option<LogFilter> {
+        // Java: return mLogFilter;
+        let guard = M_LOG_FILTER.get_or_init(|| Mutex::new(Some(LogFilter::new()))).lock().unwrap();
+        guard.clone()
+    }
+
+    // Java: static void setLogFilter(ILogFilter pLogFilter)
+    pub fn setLogFilter(pLogFilter: LogFilter) {
+        // Java: mLogFilter = pLogFilter;
+        *M_LOG_FILTER.get_or_init(|| Mutex::new(Some(LogFilter::new()))).lock().unwrap() = Some(pLogFilter);
+    }
+
+    // Java: static void readLogFilter(String path)
+    pub fn readLogFilter(path: &str) {
+        // Java: try
+        // Java: readLogFilter((InputStream)(new FileInputStream(path)));
+        let content = fs::read_to_string(path);
+        if let Ok(content) = content {
+            Self::readLogFilter_from_stream(content.as_bytes());
+        }
+        // Java: catch (IOException var2)
+    }
+
+    // Java: static void readLogFilter(InputStream input)
+    pub fn readLogFilter_from_stream(_input: &[u8]) {
+        // Java: ILogFilter filter = getLogFilter();
+        // Java: if (filter != null)
+        // Java: try
+        // Java: DocumentBuilder docBuilder = XmlDocument.getDocumentBuilderFactory();
+        // Java: Document doc = docBuilder.parse(input);
+        // Java: parseFilterFile(doc, filter);
+        // Java: catch (IOException var4)
+        // Java: catch (SAXException var5)
+        // Java: catch (ParserConfigurationException var6)
+        // TODO: XML parsing not yet available in Rust without external dep
+    }
+
+    // Java: static void parseFilterFile(Document doc, ILogFilter filter)
+    fn parseFilterFile() {
+        // Java: if (doc != null && filter != null)
+        // Java: Element root = doc.getDocumentElement();
+        // Java: Element print_caller = XmlDocument.xmlGetFirstChild(root, "print-caller");
+        // Java: if (print_caller != null)
+        // Java: String txt = XmlDocument.xmlGetTextContent(print_caller);
+        // Java: if (txt != null)
+        // Java: if (txt.equals("true"))
+        // Java: filter.setPrintCaller(true);
+        // Java: else if (txt.equals("false"))
+        // Java: filter.setPrintCaller(false);
+        // Java: Element enable = XmlDocument.xmlGetFirstChild(root, "enable");
+        // Java: if (enable != null)
+        // Java: Element class_filter = XmlDocument.xmlGetFirstChild(enable, "class-filter");
+        // Java: if (class_filter != null)
+        // Java: NodeList class_list = class_filter.getElementsByTagName("class");
+        // Java: for(int i = 0; class_list != null && i < class_list.getLength(); ++i)
+        // Java: filter.enableClass(XmlDocument.xmlGetTextContent(class_list.item(i)));
+        // Java: Element tag_filter = XmlDocument.xmlGetFirstChild(enable, "tag-filter");
+        // Java: if (tag_filter != null)
+        // Java: NodeList tag_list = tag_filter.getElementsByTagName("tag");
+        // Java: for(int i = 0; tag_list != null && i < tag_list.getLength(); ++i)
+        // Java: filter.enableTag(XmlDocument.xmlGetTextContent(tag_list.item(i)));
+        // Java: Element disable = XmlDocument.xmlGetFirstChild(root, "disable");
+        // Java: if (disable != null)
+        // Java: Element class_filter = XmlDocument.xmlGetFirstChild(disable, "class-filter");
+        // Java: if (class_filter != null)
+        // Java: NodeList class_list = class_filter.getElementsByTagName("class");
+        // Java: for(int i = 0; class_list != null && i < class_list.getLength(); ++i)
+        // Java: filter.disableClass(XmlDocument.xmlGetTextContent(class_list.item(i)));
+        // Java: Element tag_filter = XmlDocument.xmlGetFirstChild(disable, "tag-filter");
+        // Java: if (tag_filter != null)
+        // Java: NodeList tag_list = tag_filter.getElementsByTagName("tag");
+        // Java: for(int i = 0; tag_list != null && i < tag_list.getLength(); ++i)
+        // Java: filter.disableTag(XmlDocument.xmlGetTextContent(tag_list.item(i)));
+        // TODO: XML DOM parsing not yet available
+    }
+
+    // Java: static String getTempDirectory()
+    pub fn getTempDirectory() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getInternalTmpDirectory() : InternalPlatform.getInstance().getTempDirectory();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getInternalTmpDirectory()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getTempDirectory().to_string()
+        }
+    }
+
+    // Java: static String getSharePlayDir()
+    pub fn getSharePlayDir() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getSharePlayDir() : InternalPlatform.getInstance().getTempDirectory() + "shareplay/";
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getSharePlayDir()
+        } else {
+            format!("{}shareplay/", InternalPlatform::getInstance().lock().unwrap().getTempDirectory())
+        }
+    }
+
+    // Java: static void initSharePlayDirIfNeed()
+    pub fn initSharePlayDirIfNeed() {
+        // Java: if (sGetPlatformDataCallback != null)
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb
+        {
+            // Java: sGetPlatformDataCallback.initSharePlayDirIfNeed();
+            callback.initSharePlayDirIfNeed();
+        }
+    }
+
+    // Java: static void updateTmpPath()
+    pub fn updateTmpPath() {
+        // Java: if (sGetPlatformDataCallback != null)
+        let mut cb = get_callback_lock().lock().unwrap();
+        if let Some(ref mut callback) = *cb
+        {
+            // Java: sGetPlatformDataCallback.updateTmpPath();
+            callback.updateTmpPath();
+        }
+    }
+
+    // Java: static String getNormalTmpDirectory()
+    pub fn getNormalTmpDirectory() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getNormalTmpDirectory() : InternalPlatform.getInstance().getTempDirectory();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getNormalTmpDirectory()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getTempDirectory().to_string()
+        }
+    }
+
+    // Java: static String getTempDirectory(String pTempPath)
+    pub fn getTempDirectory_with_path(pTempPath: &str) -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getTempDir(pTempPath) : InternalPlatform.getInstance().getTempDirectory();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getTempDir_with_path(pTempPath)
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getTempDirectory().to_string()
+        }
+    }
+
+    // Java: static void setTempDirectory(String tempDirectory)
+    pub fn setTempDirectory(tempDirectory: &str) {
+        // Java: InternalPlatform.getInstance().setTempDirectory(tempDirectory);
+        InternalPlatform::getInstance().lock().unwrap().setTempDirectory(tempDirectory);
+    }
+
+    // Java: static String getClipboardDirectory()
+    pub fn getClipboardDirectory() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getClipboardDir() : InternalPlatform.getInstance().getClipboardDirectory();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getClipboardDir()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getClipboardDirectory().to_string()
+        }
+    }
+
+    // Java: static void setClipboardDirectory(String clipboardDirectory)
+    pub fn setClipboardDirectory(clipboardDirectory: &str) {
+        // Java: InternalPlatform.getInstance().setClipboardDirectory(clipboardDirectory);
+        InternalPlatform::getInstance().lock().unwrap().setClipboardDirectory(clipboardDirectory);
+    }
+
+    // Java: static String getDragDirectory()
+    pub fn getDragDirectory() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getDragDir() : InternalPlatform.getInstance().getDragDirectory();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getDragDir()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getDragDirectory().to_string()
+        }
+    }
+
+    // Java: static void setDragDirectory(String dragDirectory)
+    pub fn setDragDirectory(dragDirectory: &str) {
+        // Java: InternalPlatform.getInstance().setDragDirectory(dragDirectory);
+        InternalPlatform::getInstance().lock().unwrap().setDragDirectory(dragDirectory);
+    }
+
+    // Java: static String getBackupDirectory()
+    pub fn getBackupDirectory() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getBackupDir() : InternalPlatform.getInstance().getBackupDirectory();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getBackupDir()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getBackupDirectory().to_string()
+        }
+    }
+
+    // Java: static String getBackupDirectory(String pSavePath)
+    pub fn getBackupDirectory_with_path(pSavePath: &str) -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getBackupDir(pSavePath) : InternalPlatform.getInstance().getBackupDirectory();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getBackupDir_with_path(pSavePath)
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getBackupDirectory().to_string()
+        }
+    }
+
+    // Java: static String getSaveDirectory()
+    pub fn getSaveDirectory() -> String {
+        // Java: return InternalPlatform.getInstance().getSaveDirectory();
+        InternalPlatform::getInstance().lock().unwrap().getSaveDirectory().to_string()
+    }
+
+    // Java: static void setBackupDirectory(String backupDirectory)
+    pub fn setBackupDirectory(backupDirectory: &str) {
+        // Java: InternalPlatform.getInstance().setBackupDirectory(backupDirectory);
+        InternalPlatform::getInstance().lock().unwrap().setBackupDirectory(backupDirectory);
+    }
+
+    // Java: static void setSaveDirectory(String saveDirectory)
+    pub fn setSaveDirectory(saveDirectory: &str) {
+        // Java: InternalPlatform.getInstance().setSaveDirectory(saveDirectory);
+        InternalPlatform::getInstance().lock().unwrap().setSaveDirectory(saveDirectory);
+    }
+
+    // Java: static String getLogFilePath()
+    pub fn getLogFilePath() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getLogFilePath() : InternalPlatform.getInstance().getLogFilePath();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getLogFilePath()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getLogFilePath().to_string()
+        }
+    }
+
+    // Java: static String getCrashLogFilePath()
+    pub fn getCrashLogFilePath() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getCrashLogFilePath() : InternalPlatform.getInstance().getCrashLogFilePath();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getCrashLogFilePath()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getCrashLogFilePath().to_string()
+        }
+    }
+
+    // Java: static String getExitReasonLogFilePath()
+    pub fn getExitReasonLogFilePath() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getExitReasonLogFilePath() : InternalPlatform.getInstance().getExitReasonLogFilePath();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getExitReasonLogFilePath()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getExitReasonLogFilePath().to_string()
+        }
+    }
+
+    // Java: static String getSaveLogFilePath()
+    pub fn getSaveLogFilePath() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getSaveLogFilePath() : InternalPlatform.getInstance().getSaveLogFilePath();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getSaveLogFilePath()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getSaveLogFilePath().to_string()
+        }
+    }
+
+    // Java: static String getCloudStorageLogFilePath()
+    pub fn getCloudStorageLogFilePath() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getCloudStorageLogFilePath() : InternalPlatform.getInstance().getCloudStorageLogFilePath();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getCloudStorageLogFilePath()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getCloudStorageLogFilePath().to_string()
+        }
+    }
+
+    // Java: static String getFileRoamingLogFilePath()
+    pub fn getFileRoamingLogFilePath() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getFileRoamingLogFilePath() : InternalPlatform.getInstance().getRoamingFileLogFilePath();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getFileRoamingLogFilePath()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getRoamingFileLogFilePath().to_string()
+        }
+    }
+
+    // Java: static String getSharePlayLogFilePath()
+    pub fn getSharePlayLogFilePath() -> String {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getSharePlayLogFilePath() : InternalPlatform.getInstance().getSharePlayLogFilePath();
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            callback.getSharePlayLogFilePath()
+        } else {
+            InternalPlatform::getInstance().lock().unwrap().getSharePlayLogFilePath().to_string()
+        }
+    }
+
+    // Java: static String getExternalBackupFile(String filePath)
+    pub fn getExternalBackupFile(filePath: &str) -> Option<String> {
+        // Java: return sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getExternalBackupFile(filePath) : null;
+        let cb = get_callback_lock().lock().unwrap();
+        if let Some(ref callback) = *cb {
+            Some(callback.getExternalBackupFile(filePath))
+        } else {
+            None
+        }
+    }
+
+    // Java: static int getPid()
+    pub fn getPid() -> i32 {
+        let pid_lock = S_PID.get_or_init(|| Mutex::new(None));
+        let mut pid = pid_lock.lock().unwrap();
+        // Java: if (null == sPid)
+        if pid.is_none()
+        {
+            // Java: sPid = sGetPlatformDataCallback != null ? sGetPlatformDataCallback.getPid() : InternalPlatform.getInstance().getPid();
+            let cb = get_callback_lock().lock().unwrap();
+            let val = if let Some(ref callback) = *cb {
+                callback.getPid()
+            } else {
+                InternalPlatform::getInstance().lock().unwrap().getPid()
+            };
+            *pid = Some(val);
+        }
+        // Java: return sPid;
+        pid.unwrap_or(0)
+    }
+
+    // Java: static String getDictPath()
+    pub fn getDictPath() -> String {
+        // Java: return mDictPath;
+        get_str_lock(&M_DICT_PATH).lock().unwrap().clone()
+    }
+
+    // Java: static void setDictPath(String path)
+    pub fn setDictPath(path: &str) {
+        // Java: mDictPath = path;
+        *get_str_lock(&M_DICT_PATH).lock().unwrap() = path.to_string();
+    }
+
+    // Java: static void setKillProcess(boolean bKill)
+    pub fn setKillProcess(bKill: bool) {
+        // Java: mKillProcess = bKill;
+        *get_bool_lock(&M_KILL_PROCESS).lock().unwrap() = bKill;
+    }
+
+    // Java: static boolean getKillProcess()
+    pub fn getKillProcess() -> bool {
+        // Java: return mKillProcess;
+        *get_bool_lock(&M_KILL_PROCESS).lock().unwrap()
+    }
+
+    // Java: static void onOutOfMemory()
+    pub fn onOutOfMemory() {
+        // Java: if (null != mPicturePool)
+        // TODO: call mPicturePool.onOutOfMemory() when IPicturePool is available
+        // Java: setKillProcess(true);
+        Self::setKillProcess(true);
+    }
+
+    // Java: static String getCustomFontsDirectory()
+    pub fn getCustomFontsDirectory() -> String {
+        // Java: return InternalPlatform.getInstance().getCustomFontsDirectory();
+        InternalPlatform::getInstance().lock().unwrap().getCustomFontsDirectory().to_string()
+    }
+
+    // Java: static void setCustomFontsDirectory(String customFontsDirectory)
+    pub fn setCustomFontsDirectory(customFontsDirectory: &str) {
+        // Java: InternalPlatform.getInstance().setCustomFontsDirectory(customFontsDirectory);
+        InternalPlatform::getInstance().lock().unwrap().setCustomFontsDirectory(customFontsDirectory);
+    }
+
+    // Java: static String getHandWrittenDirectory()
+    pub fn getHandWrittenDirectory() -> String {
+        // Java: return InternalPlatform.getInstance().getHandWrittenDirectory();
+        InternalPlatform::getInstance().lock().unwrap().getHandWrittenDirectory().to_string()
+    }
+
+    // Java: static void setHandWrittenDirectory(String handWrittenDirectory)
+    pub fn setHandWrittenDirectory(handWrittenDirectory: &str) {
+        // Java: InternalPlatform.getInstance().setHandWrittenDirectory(handWrittenDirectory);
+        InternalPlatform::getInstance().lock().unwrap().setHandWrittenDirectory(handWrittenDirectory);
+    }
+
+    // Java: static String getOldCustomFontsDirectory()
+    pub fn getOldCustomFontsDirectory() -> String {
+        // Java: return InternalPlatform.getInstance().getOldCustomFontsDirectory();
+        InternalPlatform::getInstance().lock().unwrap().getOldCustomFontsDirectory().to_string()
+    }
+
+    // Java: static void setOldCustomFontsDirectory(String oldCustomFontsDirectory)
+    pub fn setOldCustomFontsDirectory(oldCustomFontsDirectory: &str) {
+        // Java: InternalPlatform.getInstance().setOldCustomFontsDirectory(oldCustomFontsDirectory);
+        InternalPlatform::getInstance().lock().unwrap().setOldCustomFontsDirectory(oldCustomFontsDirectory);
+    }
+
+    // Java: static String getSystemFontsDirectory()
+    pub fn getSystemFontsDirectory() -> String {
+        // Java: return InternalPlatform.getInstance().getSystemFontsDirectory();
+        InternalPlatform::getInstance().lock().unwrap().getSystemFontsDirectory().to_string()
+    }
+
+    // Java: static void setSystemFontsDirectory(String systemFontsDirectory)
+    pub fn setSystemFontsDirectory(systemFontsDirectory: &str) {
+        // Java: InternalPlatform.getInstance().setSystemFontsDirectory(systemFontsDirectory);
+        InternalPlatform::getInstance().lock().unwrap().setSystemFontsDirectory(systemFontsDirectory);
+    }
+
+    // Java: static void setSDCustomFontsDirectory(String sdCustomFontsDirectory)
+    pub fn setSDCustomFontsDirectory(sdCustomFontsDirectory: &str) {
+        // Java: InternalPlatform.getInstance().setSDCustomFontsDirectory(sdCustomFontsDirectory);
+        InternalPlatform::getInstance().lock().unwrap().setSDCustomFontsDirectory(sdCustomFontsDirectory);
+    }
+
+    // Java: static String getSDCustomFontDirectory()
+    pub fn getSDCustomFontDirectory() -> String {
+        // Java: return InternalPlatform.getInstance().getSDCustomFontsDirectory();
+        InternalPlatform::getInstance().lock().unwrap().getSDCustomFontsDirectory().to_string()
+    }
+
+    // Java: static List<String> getSDCustomFontRootAndSubDirectory()
+    pub fn getSDCustomFontRootAndSubDirectory() -> Vec<String> {
+        // Java: List<String> fontDirs = new ArrayList();
+        let mut fontDirs = Vec::new();
+        // Java: String sdCustomFontDirectory = getSDCustomFontDirectory();
+        let sdCustomFontDirectory = Self::getSDCustomFontDirectory();
+        // Java: if (sdCustomFontDirectory != "" && sdCustomFontDirectory != null)
+        if !sdCustomFontDirectory.is_empty()
+        {
+            // Java: File sdCustomFontDirFile = new File(sdCustomFontDirectory);
+            let sdCustomFontDirFile = Path::new(&sdCustomFontDirectory);
+            // Java: if (sdCustomFontDirFile.exists())
+            if sdCustomFontDirFile.exists()
+            {
+                // Java: recursiveScanFolders(sdCustomFontDirectory, 3, fontDirs);
+                Self::recursiveScanFolders(&sdCustomFontDirectory, 3, &mut fontDirs);
+            }
+        }
+        // Java: return fontDirs;
+        fontDirs
+    }
+
+    // Java: static String[] getAllFontsDirectory()
+    pub fn getAllFontsDirectory() -> Vec<String> {
+        // Java: List<String> fontDirs = new ArrayList();
+        let mut fontDirs = Vec::new();
+        // Java: fontDirs.add(getSystemFontsDirectory());
+        fontDirs.push(Self::getSystemFontsDirectory());
+        // Java: fontDirs.add(getHandWrittenDirectory());
+        fontDirs.push(Self::getHandWrittenDirectory());
+        // Java: fontDirs.add(getCustomFontsDirectory());
+        fontDirs.push(Self::getCustomFontsDirectory());
+        // Java: String sdCustomFontDirectory = getSDCustomFontDirectory();
+        let sdCustomFontDirectory = Self::getSDCustomFontDirectory();
+        // Java: if (sdCustomFontDirectory != "" && sdCustomFontDirectory != null)
+        if !sdCustomFontDirectory.is_empty()
+        {
+            // Java: File sdCustomFontDirFile = new File(sdCustomFontDirectory);
+            let sdCustomFontDirFile = Path::new(&sdCustomFontDirectory);
+            // Java: if (sdCustomFontDirFile.exists())
+            if sdCustomFontDirFile.exists()
+            {
+                // Java: recursiveScanFolders(sdCustomFontDirectory, 3, fontDirs);
+                Self::recursiveScanFolders(&sdCustomFontDirectory, 3, &mut fontDirs);
+            }
+        }
+        // Java: File customFontsDir = new File(getCustomFontsDirectory());
+        let customFontsPath = Self::getCustomFontsDirectory();
+        let customFontsDir = Path::new(&customFontsPath);
+        // Java: if (customFontsDir.exists() && customFontsDir.isDirectory())
+        if customFontsDir.exists() && customFontsDir.is_dir()
+        {
+            // Java: File[] firstLevelFiles = customFontsDir.listFiles();
+            // Java: if (firstLevelFiles != null)
+            if let Ok(firstLevelFiles) = fs::read_dir(customFontsDir)
+            {
+                // Java: for(File f1 : firstLevelFiles)
+                for f1_entry in firstLevelFiles.flatten()
+                {
+                    // Java: if (f1.isDirectory())
+                    if f1_entry.path().is_dir()
+                    {
+                        // Java: File[] secondLevelFiles = f1.listFiles();
+                        // Java: if (secondLevelFiles != null)
+                        if let Ok(secondLevelFiles) = fs::read_dir(f1_entry.path())
+                        {
+                            // Java: for(File f2 : secondLevelFiles)
+                            for f2_entry in secondLevelFiles.flatten()
+                            {
+                                // Java: if (f2.isDirectory())
+                                if f2_entry.path().is_dir()
+                                {
+                                    // Java: fontDirs.add(f2.getPath());
+                                    fontDirs.push(f2_entry.path().to_string_lossy().to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Java: return (String[])fontDirs.toArray(new String[fontDirs.size()]);
+        fontDirs
+    }
+
+    // Java: static void recursiveScanFolders(String path, int maxLevel, List<String> dirs)
+    pub fn recursiveScanFolders(path: &str, maxLevel: i32, dirs: &mut Vec<String>) {
+        // Java: if (maxLevel >= 1)
+        if maxLevel >= 1
+        {
+            // Java: File file = new File(path);
+            let file = Path::new(path);
+            // Java: if (file.isDirectory())
+            if file.is_dir()
+            {
+                // Java: dirs.add(path);
+                dirs.push(path.to_string());
+                // Java: --maxLevel;
+                let maxLevel = maxLevel - 1;
+                // Java: if (maxLevel >= 1)
+                if maxLevel >= 1
+                {
+                    // Java: File[] subFiles = file.listFiles();
+                    // Java: if (subFiles != null && subFiles.length != 0)
+                    if let Ok(subFiles) = fs::read_dir(file)
+                    {
+                        // Java: for(File subFile : subFiles)
+                        for subFile in subFiles.flatten()
+                        {
+                            // Java: if (subFile.isDirectory())
+                            if subFile.path().is_dir()
+                            {
+                                // Java: recursiveScanFolders(subFile.getPath(), maxLevel, dirs);
+                                Self::recursiveScanFolders(&subFile.path().to_string_lossy(), maxLevel, dirs);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Java: static String getFontsCacheFilePath()
+    pub fn getFontsCacheFilePath() -> String {
+        // Java: return InternalPlatform.getInstance().getFontsCacheFilePath();
+        InternalPlatform::getInstance().lock().unwrap().getFontsCacheFilePath().to_string()
+    }
+
+    // Java: static void setFontsCacheFilePath(String path)
+    pub fn setFontsCacheFilePath(path: &str) {
+        // Java: InternalPlatform.getInstance().setFontsCacheFilePath(path);
+        InternalPlatform::getInstance().lock().unwrap().setFontsCacheFilePath(path);
+    }
+
+    // Java: static void setSDKVersion(int sdkVersion)
+    pub fn setSDKVersion(sdkVersion: i32) {
+        // Java: SDK_VERSION = sdkVersion;
+        *get_i32_lock(&SDK_VERSION_VAL).lock().unwrap() = sdkVersion;
+    }
+
+    // Java: static int getSDKVersion()
+    pub fn getSDKVersion() -> i32 {
+        // Java: return SDK_VERSION;
+        *get_i32_lock(&SDK_VERSION_VAL).lock().unwrap()
+    }
+
+    // Java: static void setIsMZ606(boolean isMZ606)
+    pub fn setIsMZ606(isMZ606: bool) {
+        // Java: sIsMZ606 = isMZ606;
+        *get_bool_lock(&S_IS_MZ606).lock().unwrap() = isMZ606;
+    }
+
+    // Java: static boolean isMZ606()
+    pub fn isMZ606() -> bool {
+        // Java: return sIsMZ606;
+        *get_bool_lock(&S_IS_MZ606).lock().unwrap()
+    }
+
+    // Java: static void setIsHTC_Flyer_P510e(boolean value)
+    pub fn setIsHTC_Flyer_P510e(value: bool) {
+        // Java: sIsHTC_Flyer_P510e = value;
+        *get_bool_lock(&S_IS_HTC_FLYER_P510E).lock().unwrap() = value;
+    }
+
+    // Java: static boolean isHTC_Flyer_P510e()
+    pub fn isHTC_Flyer_P510e() -> bool {
+        // Java: return sIsHTC_Flyer_P510e;
+        *get_bool_lock(&S_IS_HTC_FLYER_P510E).lock().unwrap()
+    }
+
+    // Java: static void setIsTVMeetingVersion(boolean tvMeetingVersion)
+    pub fn setIsTVMeetingVersion(tvMeetingVersion: bool) {
+        // Java: mIsTvMeetingVersion = tvMeetingVersion;
+        *get_bool_lock(&M_IS_TV_MEETING_VERSION).lock().unwrap() = tvMeetingVersion;
+    }
+
+    // Java: static boolean isTVMeetingVersion()
+    pub fn isTVMeetingVersion() -> bool {
+        // Java: return mIsTvMeetingVersion;
+        *get_bool_lock(&M_IS_TV_MEETING_VERSION).lock().unwrap()
+    }
+
+    // Java: static void resetTmpFileDir()
+    pub fn resetTmpFileDir() {
+        // Java: TEMP_PRESENTATION = null;
+        *get_opt_str_lock(&TEMP_PRESENTATION_DIR).lock().unwrap() = None;
+        // Java: BACKUP_PRESENTATION = null;
+        *get_opt_str_lock(&BACKUP_PRESENTATION_DIR).lock().unwrap() = None;
+        // Java: TEMP_SPREADSHEET = null;
+        *get_opt_str_lock(&TEMP_SPREADSHEET_DIR).lock().unwrap() = None;
+        // Java: BACKUP_SPREADSHEET = null;
+        *get_opt_str_lock(&BACKUP_SPREADSHEET_DIR).lock().unwrap() = None;
+    }
+
+    // Java: static String getShapePath()
+    pub fn getShapePath() -> Option<String> {
+        // Java: return mShapePath;
+        get_opt_str_lock(&M_SHAPE_PATH).lock().unwrap().clone()
+    }
+
+    // Java: static void setShapePath(String path)
+    pub fn setShapePath(path: &str) {
+        // Java: mShapePath = path;
+        *get_opt_str_lock(&M_SHAPE_PATH).lock().unwrap() = Some(path.to_string());
+    }
+
+    // Java: static boolean isRtl()
+    pub fn isRtl() -> bool {
+        // Java: return mConfigManager != null && mConfigManager.isRtl();
+        false // TODO: implement when IConfigManager is available
+    }
+
+    // Java: static boolean isOverseaVersion()
+    pub fn isOverseaVersion() -> bool {
+        // Java: return mConfigManager != null && mConfigManager.isOverseaVersion();
+        false // TODO: implement when IConfigManager is available
+    }
+
+    // Java: static boolean isDebugLogVersion()
+    pub fn isDebugLogVersion() -> bool {
+        // Java: return mConfigManager != null && mConfigManager.isDebugLogVersion();
+        false // TODO: implement when IConfigManager is available
+    }
+
+    // Java: static String getClipAuthority()
+    pub fn getClipAuthority() -> String {
+        // Java: return mClipAuthority;
+        get_str_lock(&M_CLIP_AUTHORITY).lock().unwrap().clone()
+    }
+
+    // Java: static void setClipAuthority(String clipAuthority)
+    pub fn setClipAuthority(clipAuthority: &str) {
+        // Java: mClipAuthority = clipAuthority;
+        *get_str_lock(&M_CLIP_AUTHORITY).lock().unwrap() = clipAuthority.to_string();
+    }
+
+    // Java: static String getUserId()
+    pub fn getUserId() -> String {
+        // Java: if ((mUserId == null || "".equals(mUserId)) && mGetUserInfo != null)
+        let mut user_id = get_str_lock(&M_USER_ID).lock().unwrap();
+        if user_id.is_empty() {
+            let info = M_GET_USER_INFO.get_or_init(|| Mutex::new(None)).lock().unwrap();
+            if let Some(ref callback) = *info
+            {
+                // Java: mUserId = mGetUserInfo.getUserId();
+                *user_id = callback.getUserId();
+            }
+        }
+        // Java: return mUserId;
+        user_id.clone()
+    }
+
+    // Java: static void setUserId(String mUserId)
+    pub fn setUserId(userId: &str) {
+        // Java: Platform.mUserId = mUserId;
+        *get_str_lock(&M_USER_ID).lock().unwrap() = userId.to_string();
+    }
+
+    // Java: static String getUserName()
+    pub fn getUserName() -> String {
+        // Java: if ((mUserName == null || "".equals(mUserName)) && mGetUserNameCB != null)
+        let mut user_name = get_str_lock(&M_USER_NAME).lock().unwrap();
+        if user_name.is_empty() {
+            let cb = M_GET_USER_NAME_CB.get_or_init(|| Mutex::new(None)).lock().unwrap();
+            if let Some(ref callback) = *cb
+            {
+                // Java: mUserName = mGetUserNameCB.getUserName();
+                *user_name = callback.getUserName();
+            }
+        }
+        // Java: return mUserName;
+        user_name.clone()
+    }
+
+    // Java: static void setUserName(String userName)
+    pub fn setUserName(userName: &str) {
+        // Java: mUserName = userName;
+        *get_str_lock(&M_USER_NAME).lock().unwrap() = userName.to_string();
+    }
+
+    // Java: static void setLanguageCode(String languageCode)
+    pub fn setLanguageCode(languageCode: &str) {
+        // Java: mLanguageCode = languageCode;
+        *get_str_lock(&M_LANGUAGE_CODE).lock().unwrap() = languageCode.to_string();
+    }
+
+    // Java: static String getLanguageCode()
+    pub fn getLanguageCode() -> String {
+        // Java: return mLanguageCode;
+        get_str_lock(&M_LANGUAGE_CODE).lock().unwrap().clone()
+    }
+
+    // Java: static void setLanguageDefault(String languageDefault)
+    pub fn setLanguageDefault(languageDefault: &str) {
+        // Java: mLanguageDefault = languageDefault;
+        *get_str_lock(&M_LANGUAGE_DEFAULT).lock().unwrap() = languageDefault.to_string();
+    }
+
+    // Java: static String getLanguageDefault()
+    pub fn getLanguageDefault() -> String {
+        // Java: return mLanguageDefault;
+        get_str_lock(&M_LANGUAGE_DEFAULT).lock().unwrap().clone()
+    }
+
+    // Java: static boolean getMultiDexConfig()
+    pub fn getMultiDexConfig() -> bool {
+        // Java: return mMultiDexConfig;
+        *get_bool_lock(&M_MULTI_DEX_CONFIG).lock().unwrap()
+    }
+
+    // Java: static void setMultiDexConfig(boolean multiDexConfig)
+    pub fn setMultiDexConfig(multiDexConfig: bool) {
+        // Java: mMultiDexConfig = multiDexConfig;
+        *get_bool_lock(&M_MULTI_DEX_CONFIG).lock().unwrap() = multiDexConfig;
+        // Java: PlatformAdapter.setMultiDexConfig(multiDexConfig);
+        // TODO: call PlatformAdapter when available
+    }
+
+    // Java: static void setWaterFontsDirectory(String sdCustomFontsDirectory)
+    pub fn setWaterFontsDirectory(sdCustomFontsDirectory: &str) {
+        // Java: InternalPlatform.getInstance().setWaterMarkFontsDirectory(sdCustomFontsDirectory);
+        InternalPlatform::getInstance().lock().unwrap().setWaterMarkFontsDirectory(sdCustomFontsDirectory);
+    }
+
+    // Java: static String getWaterFontDirectory()
+    pub fn getWaterFontDirectory() -> String {
+        // Java: return InternalPlatform.getInstance().getWaterMarkFontsDirectory();
+        InternalPlatform::getInstance().lock().unwrap().getWaterMarkFontsDirectory().to_string()
+    }
+
+    // Java: static void initAdapter()
+    pub fn initAdapter() {
+        // Java: KSFileLog.initKFSFileLogAapater();
+        KSFileLog::initKFSFileLogAapater();
+        // Java: setPlatformAdapter();
+        // TODO: call setPlatformAdapter when PlatformAdapter is available
+    }
+
+    // Java: static void setPlatformAdapter()
+    pub fn setPlatformAdapter() {
+        // Java: PlatformAdapter.setPlatformFile(new PlatformAdapter.IPlatformFile()
+        // TODO: implement when PlatformAdapter is available
+        // Java: public File createTempFile(String prefix, String suffix)
+        // Java: return Platform.createTempFile(prefix, suffix);
+        // Java: public String getCurrentPidTmpDir()
+        // Java: return Platform.getCurrentPidTmpDir();
+    }
+
+}
+
+// Java: public interface GetPlatformDataCallback
+pub trait GetPlatformDataCallback {
+    // Java: abstract void initSharePlayDirIfNeed()
+    fn initSharePlayDirIfNeed(&self);
+    // Java: abstract String getNormalTmpDirectory()
+    fn getNormalTmpDirectory(&self) -> String;
+    // Java: abstract String getInternalTmpDirectory()
+    fn getInternalTmpDirectory(&self) -> String;
+    // Java: abstract void updateTmpPath()
+    fn updateTmpPath(&mut self);
+    // Java: abstract String getSharePlayDir()
+    fn getSharePlayDir(&self) -> String;
+    // Java: abstract String getTempDir()
+    fn getTempDir(&self) -> String;
+    // Java: abstract String getTempDir(String var1)
+    fn getTempDir_with_path(&self, var1: &str) -> String;
+    // Java: abstract String getBackupDir()
+    fn getBackupDir(&self) -> String;
+    // Java: abstract String getBackupDir(String var1)
+    fn getBackupDir_with_path(&self, var1: &str) -> String;
+    // Java: abstract String getSaveDir()
+    fn getSaveDir(&self) -> String;
+    // Java: abstract String getClipboardDir()
+    fn getClipboardDir(&self) -> String;
+    // Java: abstract String getDragDir()
+    fn getDragDir(&self) -> String;
+    // Java: abstract String getLogFilePath()
+    fn getLogFilePath(&self) -> String;
+    // Java: abstract String getCrashLogFilePath()
+    fn getCrashLogFilePath(&self) -> String;
+    // Java: abstract String getExitReasonLogFilePath()
+    fn getExitReasonLogFilePath(&self) -> String;
+    // Java: abstract String getSaveLogFilePath()
+    fn getSaveLogFilePath(&self) -> String;
+    // Java: abstract String getCloudStorageLogFilePath()
+    fn getCloudStorageLogFilePath(&self) -> String;
+    // Java: abstract String getFileRoamingLogFilePath()
+    fn getFileRoamingLogFilePath(&self) -> String;
+    // Java: abstract String getSharePlayLogFilePath()
+    fn getSharePlayLogFilePath(&self) -> String;
+    // Java: abstract int getPid()
+    fn getPid(&self) -> i32;
+    // Java: abstract String getExternalBackupFile(String var1)
+    fn getExternalBackupFile(&self, var1: &str) -> String;
+}
+
+// Java: public interface IGetUserInfo
+pub trait IGetUserInfo {
+    // Java: abstract String getUserId()
+    fn getUserId(&self) -> String;
+}
+
+// Java: public interface IGetUserName
+pub trait IGetUserName {
+    // Java: abstract String getUserName()
+    fn getUserName(&self) -> String;
+}

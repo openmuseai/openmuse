@@ -1,0 +1,6 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/io/wps-security-file/src/cn/wps/pro/security/read/Tool.java,cn/wps/pro/security/read,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-security-file/src/cn/wps/pro/security/read/WpsSecurityFile.java,cn/wps/pro/security/read,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-security-file/src/cn/wps/pro/security/write/TransformInfo.java,cn/wps/pro/security/write,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-security-file/src/cn/wps/pro/security/write/WpsEncryptionInfo.java,cn/wps/pro/security/write,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-security-file/src/cn/wps/pro/security/write/WpsSecurityFileWrite.java,cn/wps/pro/security/write,too many dependencies,2026-05-22

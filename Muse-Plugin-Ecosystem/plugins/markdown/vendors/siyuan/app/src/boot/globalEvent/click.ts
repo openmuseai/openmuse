@@ -1,0 +1,103 @@
+/// #if !MOBILE
+import {getAllModels} from "../../layout/getAll";
+/// #endif
+import {hasClosestByAttribute, hasClosestByClassName, hasTopClosestByClassName} from "../../protyle/util/hasClosest";
+import {hideAllElements} from "../../protyle/ui/hideElements";
+import {isWindow} from "../../util/functions";
+import {writeText} from "../../protyle/util/compatibility";
+import {showMessage} from "../../dialog/message";
+import {cancelDrag} from "./dragover";
+import {nbsp2space, removeZWJ} from "../../protyle/util/normalizeText";
+import {getDockByType} from "../../layout/tabUtil";
+import {SELECTION_TOOLBAR_SUB_ELEMENT_SOURCE} from "../../protyle/toolbar/subElementLifecycle";
+import {globalClickHideMenu} from "../../menus/menuClick";
+
+export const globalClick = (event: MouseEvent & { target: HTMLElement }) => {
+    cancelDrag();
+
+    globalClickHideMenu(event.target);
+
+    const protyleElement = hasClosestByClassName(event.target, "protyle", true);
+    if (protyleElement) {
+        const wysiwygElement = protyleElement.querySelector(".protyle-wysiwyg");
+        if (wysiwygElement &&
+            (wysiwygElement.getAttribute("data-readonly") === "true" || !wysiwygElement.contains(event.target))) {
+            wysiwygElement.dispatchEvent(new Event("focusin"));
+        }
+    }
+
+    const toolbarElement = hasTopClosestByClassName(event.target, "protyle-toolbar");
+    const appearanceTrigger = toolbarElement && hasClosestByAttribute(event.target, "data-type", "text");
+    if (!hasTopClosestByClassName(event.target, "protyle-util") && !appearanceTrigger) {
+        document.querySelectorAll(".protyle-font").forEach((item: HTMLElement) => {
+            item.parentElement.classList.add("fn__none");
+            if (item.parentElement.dataset.subElementSource === SELECTION_TOOLBAR_SUB_ELEMENT_SOURCE) {
+                delete item.parentElement.dataset.subElementSource;
+            }
+        });
+    }
+
+    const copyElement = hasTopClosestByClassName(event.target, "protyle-action__copy");
+    if (copyElement) {
+        writeText(removeZWJ(nbsp2space(copyElement.parentElement.nextElementSibling.textContent.replace(/\n$/, ""))));
+        showMessage(window.siyuan.languages.copied, 2000);
+        event.preventDefault();
+        return;
+    }
+
+    /// #if !MOBILE
+    // dock float 时，点击空白处，隐藏 dock。场景：文档树上重命名后
+    if (!isWindow() && window.siyuan.layout.leftDock &&
+        !hasClosestByClassName(event.target, "b3-dialog--open", true) &&
+        !hasClosestByClassName(event.target, "b3-menu") &&
+        !hasClosestByClassName(event.target, "block__popover") &&
+        !hasClosestByClassName(event.target, "protyle-hint--lite-overlay") &&
+        !hasClosestByClassName(event.target, "protyle-hint--agent-overlay") &&
+        !hasClosestByClassName(event.target, "dock") &&
+        !hasClosestByClassName(event.target, "layout--float", true)
+    ) {
+        window.siyuan.layout.bottomDock.hideDock();
+        window.siyuan.layout.leftDock.hideDock();
+        window.siyuan.layout.rightDock.hideDock();
+    }
+    // Dock item click
+    const dockItemElement = hasClosestByClassName(event.target as HTMLElement, "dock__item");
+    if (dockItemElement) {
+        const type = dockItemElement.getAttribute("data-type") as TDock;
+        if (type) {
+            getDockByType(type).toggleModel(type, false, true);
+        }
+    }
+
+    if (!hasClosestByClassName(event.target, "pdf__outer")) {
+        hideAllElements(["pdfutil"]);
+    }
+
+    // 点击空白，pdf 搜索、更多消失
+    if (hasClosestByAttribute(event.target, "id", "secondaryToolbarToggleButton") ||
+        hasClosestByAttribute(event.target, "id", "viewFindButton") ||
+        hasClosestByAttribute(event.target, "id", "findbar")) {
+        return;
+    }
+    let currentPDFViewerObject: any;
+    getAllModels().asset.find(item => {
+        if (item.pdfObject &&
+            !item.pdfObject.appConfig.appContainer.classList.contains("fn__none")) {
+            currentPDFViewerObject = item.pdfObject;
+            return true;
+        }
+    });
+    if (!currentPDFViewerObject) {
+        return;
+    }
+    if (currentPDFViewerObject.secondaryToolbar.isOpen) {
+        currentPDFViewerObject.secondaryToolbar.close();
+    }
+    if (
+        !currentPDFViewerObject.supportsIntegratedFind &&
+        currentPDFViewerObject.findBar.opened
+    ) {
+        currentPDFViewerObject.findBar.close();
+    }
+    /// #endif
+};

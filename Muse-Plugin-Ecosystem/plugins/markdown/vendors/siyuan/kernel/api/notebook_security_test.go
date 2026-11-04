@@ -1,0 +1,529 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package api
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func TestNotebookPublishVisibility(t *testing.T) {
+	const boxID = "20260726000000-abcdefg"
+	tests := []struct {
+		name          string
+		notebook      *model.Box
+		publishAccess model.PublishAccess
+		expected      bool
+	}{
+		{name: "missing notebook", expected: false},
+		{name: "closed notebook", notebook: &model.Box{ID: boxID, Closed: true}, expected: false},
+		{
+			name:          "encrypted notebook",
+			notebook:      &model.Box{ID: boxID, Encrypted: true},
+			publishAccess: model.PublishAccess{{ID: boxID, Visible: true}},
+			expected:      false,
+		},
+		{name: "default visible", notebook: &model.Box{ID: boxID}, expected: true},
+		{
+			name:          "explicitly visible",
+			notebook:      &model.Box{ID: boxID},
+			publishAccess: model.PublishAccess{{ID: boxID, Visible: true}},
+			expected:      true,
+		},
+		{
+			name:          "invisible",
+			notebook:      &model.Box{ID: boxID},
+			publishAccess: model.PublishAccess{{ID: boxID, Visible: false}},
+			expected:      false,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if actual := isNotebookVisibleByPublishAccess(test.notebook, test.publishAccess); actual != test.expected {
+				t.Fatalf("unexpected notebook visibility: %v", actual)
+			}
+		})
+	}
+}
+
+func TestGetNotebookInfoHidesInvisibleNotebookFromReader(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	oldConf, oldDataDir := model.Conf, util.DataDir
+	util.DataDir = t.TempDir()
+	model.Conf = model.NewAppConf()
+	model.Conf.Sync.Store(conf.NewSync())
+	model.Conf.FileTree.Store(conf.NewFileTree())
+	const testLang = "notebook-security-test"
+	oldTimeLang, hadTimeLang := util.TimeLangs[testLang]
+	util.TimeLangs[testLang] = map[string]any{
+		"albl": "ago",
+		"blbl": "from now",
+		"now":  "now",
+		"1s":   "1 second %s",
+		"xs":   "%d seconds %s",
+		"1m":   "1 minute %s",
+		"xm":   "%d minutes %s",
+		"xh":   "%d hours %s",
+		"1h":   "1 hour %s",
+		"1d":   "1 day %s",
+		"xd":   "%d days %s",
+		"1w":   "1 week %s",
+		"xw":   "%d weeks %s",
+		"1M":   "1 month %s",
+		"xM":   "%d months %s",
+		"1y":   "1 year %s",
+		"2y":   "2 years %s",
+		"xy":   "%d years %s",
+		"max":  "a long while %s",
+	}
+	model.Conf.Lang = testLang
+	t.Cleanup(func() {
+		if err := model.SetPublishAccess(model.PublishAccess{}); err != nil {
+			t.Errorf("reset publish access failed: %v", err)
+		}
+		if hadTimeLang {
+			util.TimeLangs[testLang] = oldTimeLang
+		} else {
+			delete(util.TimeLangs, testLang)
+		}
+		model.Conf, util.DataDir = oldConf, oldDataDir
+	})
+
+	const boxID = "20260726000000-abcdefg"
+	boxConf := conf.NewBoxConf()
+	boxConf.Name = "Invisible notebook"
+	boxConf.Closed = false
+	boxConfPath := filepath.Join(util.DataDir, boxID, ".siyuan", "conf.json")
+	if err := os.MkdirAll(filepath.Dir(boxConfPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	data, err := json.Marshal(boxConf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(boxConfPath, data, 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err = model.SetPublishAccess(model.PublishAccess{{ID: boxID, Visible: false}}); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name         string
+		role         model.Role
+		expectedCode int
+		expectInfo   bool
+	}{
+		{name: "reader", role: model.RoleReader, expectedCode: -1},
+		{name: "visitor", role: model.RoleVisitor, expectedCode: -1},
+		{name: "administrator", role: model.RoleAdministrator, expectedCode: 0, expectInfo: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			engine := gin.New()
+			engine.Use(func(c *gin.Context) {
+				c.Set(model.RoleContextKey, test.role)
+				c.Next()
+			})
+			engine.POST("/api/notebook/getNotebookInfo", getNotebookInfo)
+
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(
+				http.MethodPost,
+				"/api/notebook/getNotebookInfo",
+				strings.NewReader(`{"notebook":"`+boxID+`"}`),
+			)
+			request.Header.Set("Content-Type", "application/json")
+			engine.ServeHTTP(recorder, request)
+			requireAPIContract(t, http.MethodPost, "/api/notebook/getNotebookInfo", recorder)
+
+			response := &struct {
+				Code int    `json:"code"`
+				Msg  string `json:"msg"`
+				Data struct {
+					BoxInfo *model.BoxInfo `json:"boxInfo"`
+				} `json:"data"`
+			}{}
+			if err := json.Unmarshal(recorder.Body.Bytes(), response); err != nil {
+				t.Fatalf("unmarshal response failed: %v", err)
+			}
+			if response.Code != test.expectedCode {
+				t.Fatalf("unexpected response: %s", recorder.Body.String())
+			}
+			if test.expectInfo {
+				if nil == response.Data.BoxInfo || boxConf.Name != response.Data.BoxInfo.Name {
+					t.Fatalf("administrator did not receive notebook info: %s", recorder.Body.String())
+				}
+			} else {
+				expectedMsg := "notebook [" + boxID + "] not found"
+				if response.Msg != expectedMsg || nil != response.Data.BoxInfo {
+					t.Fatalf("reader received invisible notebook info: %s", recorder.Body.String())
+				}
+			}
+		})
+	}
+}
+
+// installAPITestTimeLangs 为指定语言安装时间本地化标签，避免聚合信息渲染相对时间失败。
+func installAPITestTimeLangs(t *testing.T, lang string) {
+	t.Helper()
+
+	oldLang, hadLang := util.TimeLangs[lang]
+	util.TimeLangs[lang] = map[string]any{}
+	for _, key := range []string{"albl", "blbl", "now", "1s", "xs", "1m", "xm", "1h", "xh", "1d", "xd", "1w", "xw", "1M", "xM", "1y", "2y", "xy", "max"} {
+		util.TimeLangs[lang][key] = ""
+	}
+	t.Cleanup(func() {
+		if hadLang {
+			util.TimeLangs[lang] = oldLang
+		} else {
+			delete(util.TimeLangs, lang)
+		}
+	})
+}
+
+// TestGetNotebookInfoExcludesPublishExcludedDocumentsForReader 验证发布读者的笔记本聚合信息
+// 只统计发布可见的文档，隐藏和禁止发布的文档不计入文档数、体积和最后修改时间。
+func TestGetNotebookInfoExcludesPublishExcludedDocumentsForReader(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	oldConf, oldDataDir := model.Conf, util.DataDir
+	oldPublishAccess := model.GetPublishAccess()
+	util.DataDir = t.TempDir()
+	model.Conf = model.NewAppConf()
+	model.Conf.Sync.Store(conf.NewSync())
+	model.Conf.FileTree.Store(conf.NewFileTree())
+	const testLang = "notebook-info-publish-test"
+	installAPITestTimeLangs(t, testLang)
+	model.Conf.Lang = testLang
+	t.Cleanup(func() {
+		if err := model.SetPublishAccess(oldPublishAccess); err != nil {
+			t.Errorf("restore publish access failed: %v", err)
+		}
+		model.Conf, util.DataDir = oldConf, oldDataDir
+	})
+
+	const (
+		boxID       = "20260726000000-abcdefg"
+		publicID    = "20260726000001-publica"
+		hiddenID    = "20260726000002-hiddend"
+		forbiddenID = "20260726000003-forbidd"
+	)
+	boxConf := conf.NewBoxConf()
+	boxConf.Name = "Mixed notebook"
+	boxConf.Closed = false
+	boxConfPath := filepath.Join(util.DataDir, boxID, ".siyuan", "conf.json")
+	if err := os.MkdirAll(filepath.Dir(boxConfPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	boxConfData, err := json.Marshal(boxConf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(boxConfPath, boxConfData, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 隐藏和禁止发布的文档使用更晚的修改时间，用于验证读者看到的时间不包含它们
+	excludedModTime := time.Now().Add(time.Hour).Truncate(time.Second)
+	writeDoc := func(docID string, modTime time.Time) int64 {
+		t.Helper()
+		docPath := filepath.Join(util.DataDir, boxID, docID+".sy")
+		if writeErr := os.WriteFile(docPath, []byte(`{"Properties":{}}`), 0644); nil != writeErr {
+			t.Fatal(writeErr)
+		}
+		if writeErr := os.Chtimes(docPath, modTime, modTime); nil != writeErr {
+			t.Fatal(writeErr)
+		}
+		info, statErr := os.Stat(docPath)
+		if nil != statErr {
+			t.Fatal(statErr)
+		}
+		return info.Size()
+	}
+
+	rootSize := writeDoc(boxID, time.Now())
+	publicSize := writeDoc(publicID, time.Now())
+	hiddenSize := writeDoc(hiddenID, excludedModTime)
+	forbiddenSize := writeDoc(forbiddenID, excludedModTime)
+	wholeSize := uint64(rootSize + publicSize + hiddenSize + forbiddenSize)
+
+	if err = model.SetPublishAccess(model.PublishAccess{
+		{ID: hiddenID, Visible: false},
+		{ID: forbiddenID, Visible: false, Disable: true},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	request := func(role model.Role) *model.BoxInfo {
+		t.Helper()
+
+		engine := gin.New()
+		engine.Use(func(c *gin.Context) {
+			c.Set(model.RoleContextKey, role)
+			c.Next()
+		})
+		engine.POST("/api/notebook/getNotebookInfo", getNotebookInfo)
+
+		recorder := httptest.NewRecorder()
+		httpRequest := httptest.NewRequest(
+			http.MethodPost,
+			"/api/notebook/getNotebookInfo",
+			strings.NewReader(`{"notebook":"`+boxID+`"}`),
+		)
+		httpRequest.Header.Set("Content-Type", "application/json")
+		engine.ServeHTTP(recorder, httpRequest)
+		requireAPIContract(t, http.MethodPost, "/api/notebook/getNotebookInfo", recorder)
+
+		response := &struct {
+			Code int    `json:"code"`
+			Msg  string `json:"msg"`
+			Data struct {
+				BoxInfo *model.BoxInfo `json:"boxInfo"`
+			} `json:"data"`
+		}{}
+		if unmarshalErr := json.Unmarshal(recorder.Body.Bytes(), response); nil != unmarshalErr {
+			t.Fatalf("unmarshal response failed: %v", unmarshalErr)
+		}
+		if 0 != response.Code || nil == response.Data.BoxInfo {
+			t.Fatalf("unexpected response: %s", recorder.Body.String())
+		}
+		return response.Data.BoxInfo
+	}
+
+	reader := request(model.RoleReader)
+	if 1 != reader.DocCount {
+		t.Fatalf("reader saw %d documents, want only the published one", reader.DocCount)
+	}
+	// Size 按既有语义包含笔记本根文档，DocCount 不包含
+	if uint64(rootSize+publicSize) != reader.Size {
+		t.Fatalf("reader size = %d, want %d", reader.Size, rootSize+publicSize)
+	}
+	if reader.Mtime >= excludedModTime.Unix() {
+		t.Fatalf("reader modification time %d covers publish-excluded documents", reader.Mtime)
+	}
+
+	administrator := request(model.RoleAdministrator)
+	if 3 != administrator.DocCount {
+		t.Fatalf("administrator saw %d documents, want the whole notebook", administrator.DocCount)
+	}
+	if wholeSize != administrator.Size {
+		t.Fatalf("administrator size = %d, want %d", administrator.Size, wholeSize)
+	}
+	if administrator.Mtime != excludedModTime.Unix() {
+		t.Fatalf("administrator modification time = %d, want %d", administrator.Mtime, excludedModTime.Unix())
+	}
+}
+
+func TestSetNotebookIconRejectsPathTraversal(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	oldConf, oldDataDir := model.Conf, util.DataDir
+	util.DataDir = t.TempDir()
+	model.Conf = model.NewAppConf()
+	model.Conf.FileTree.Store(conf.NewFileTree())
+	t.Cleanup(func() {
+		model.Conf, util.DataDir = oldConf, oldDataDir
+	})
+
+	escapedDir := filepath.Join(filepath.Dir(util.DataDir), "escaped")
+	body, err := json.Marshal(map[string]string{
+		"notebook": "../" + filepath.Base(escapedDir),
+		"icon":     "1f600",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	engine := gin.New()
+	engine.POST("/api/notebook/setNotebookIcon", setNotebookIcon)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/notebook/setNotebookIcon", bytes.NewReader(body))
+	request.Header.Set("Content-Type", "application/json")
+	engine.ServeHTTP(recorder, request)
+
+	response := &struct {
+		Code int    `json:"code"`
+		Msg  string `json:"msg"`
+	}{}
+	if err := json.Unmarshal(recorder.Body.Bytes(), response); err != nil {
+		t.Fatalf("unmarshal response failed: %v", err)
+	}
+	if response.Code != -1 {
+		t.Fatalf("path traversal notebook ID was accepted: %s", recorder.Body.String())
+	}
+	if _, err := os.Stat(filepath.Join(escapedDir, ".siyuan", "conf.json")); !os.IsNotExist(err) {
+		t.Fatalf("conf.json was written outside the workspace: %v", err)
+	}
+}
+
+func TestGetNotebookConfHidesEncryptedNotebookFromReader(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	oldConf, oldDataDir := model.Conf, util.DataDir
+	util.DataDir = t.TempDir()
+	model.Conf = model.NewAppConf()
+	model.Conf.FileTree.Store(conf.NewFileTree())
+	t.Cleanup(func() {
+		model.Conf, util.DataDir = oldConf, oldDataDir
+	})
+
+	const boxID = "20260724000000-abcdefg"
+	boxConf := conf.NewBoxConf()
+	boxConf.Name = "Encrypted notebook"
+	boxConf.Encrypted = true
+	boxConf.BoxCrypt = &conf.BoxEncryption{
+		Spec:       1,
+		WrappedDEK: []byte("wrapped-dek"),
+		WrapNonce:  []byte("wrap-nonce"),
+		CreatedAt:  123,
+	}
+	boxConfPath := filepath.Join(util.DataDir, boxID, ".siyuan", "conf.json")
+	if err := os.MkdirAll(filepath.Dir(boxConfPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	data, err := json.Marshal(boxConf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(boxConfPath, data, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name       string
+		role       model.Role
+		expectCode int
+	}{
+		{name: "reader", role: model.RoleReader, expectCode: -1},
+		{name: "administrator", role: model.RoleAdministrator, expectCode: 0},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			engine := gin.New()
+			engine.Use(func(c *gin.Context) {
+				c.Set(model.RoleContextKey, test.role)
+				c.Next()
+			})
+			engine.POST("/api/notebook/getNotebookConf", getNotebookConf)
+
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(
+				http.MethodPost,
+				"/api/notebook/getNotebookConf",
+				strings.NewReader(`{"notebook":"`+boxID+`"}`),
+			)
+			request.Header.Set("Content-Type", "application/json")
+			engine.ServeHTTP(recorder, request)
+
+			response := &struct {
+				Code int `json:"code"`
+				Data struct {
+					Conf *conf.BoxConf `json:"conf"`
+				} `json:"data"`
+			}{}
+			requireAPIContract(t, http.MethodPost, "/api/notebook/getNotebookConf", recorder)
+			if err := json.Unmarshal(recorder.Body.Bytes(), response); err != nil {
+				t.Fatalf("unmarshal response failed: %v", err)
+			}
+			if test.expectCode != response.Code {
+				t.Fatalf("unexpected response code: %s", recorder.Body.String())
+			}
+			if model.RoleReader == test.role {
+				if nil != response.Data.Conf {
+					t.Fatalf("reader received encrypted notebook configuration: %s", recorder.Body.String())
+				}
+				return
+			}
+			if nil == response.Data.Conf {
+				t.Fatalf("administrator did not receive notebook configuration: %s", recorder.Body.String())
+			}
+			if response.Data.Conf.Encrypted != boxConf.Encrypted ||
+				response.Data.Conf.Name != boxConf.Name ||
+				response.Data.Conf.SortMode != boxConf.SortMode {
+				t.Fatalf("functional notebook settings were changed: %#v", response.Data.Conf)
+			}
+			if nil == response.Data.Conf.BoxCrypt {
+				t.Fatal("administrator did not receive encrypted notebook key metadata")
+			}
+		})
+	}
+}
+
+func TestGetEncryptedNotebookStatusAuthorization(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	oldConf, oldDataDir, oldHistoryDir := model.Conf, util.DataDir, util.HistoryDir
+	tempDir := t.TempDir()
+	util.DataDir = filepath.Join(tempDir, "data")
+	util.HistoryDir = filepath.Join(tempDir, "history")
+	if err := os.MkdirAll(util.DataDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(util.HistoryDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	model.Conf = model.NewAppConf()
+	model.Conf.FileTree.Store(conf.NewFileTree())
+	model.Conf.NotebookCrypto = conf.NewNotebookCrypto()
+	t.Cleanup(func() {
+		model.Conf, util.DataDir, util.HistoryDir = oldConf, oldDataDir, oldHistoryDir
+	})
+
+	tests := []struct {
+		name       string
+		role       model.Role
+		statusCode int
+	}{
+		{name: "reader", role: model.RoleReader, statusCode: http.StatusForbidden},
+		{name: "editor", role: model.RoleEditor, statusCode: http.StatusForbidden},
+		{name: "administrator", role: model.RoleAdministrator, statusCode: http.StatusOK},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			engine := gin.New()
+			engine.Use(func(c *gin.Context) {
+				c.Set(model.RoleContextKey, test.role)
+				c.Next()
+			})
+			ServeAPI(engine)
+
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(http.MethodPost, "/api/notebook/getEncryptedNotebookStatus", strings.NewReader(`{}`))
+			request.Header.Set("Content-Type", "application/json")
+			engine.ServeHTTP(recorder, request)
+
+			if recorder.Code != test.statusCode {
+				t.Fatalf("%s request returned status %d: %s", test.name, recorder.Code, recorder.Body.String())
+			}
+			if test.role == model.RoleAdministrator {
+				requireAPIContract(t, http.MethodPost, "/api/notebook/getEncryptedNotebookStatus", recorder)
+				response := &struct {
+					Code int `json:"code"`
+				}{}
+				if err := json.Unmarshal(recorder.Body.Bytes(), response); err != nil {
+					t.Fatalf("unmarshal response failed: %v", err)
+				}
+				if response.Code != 0 {
+					t.Fatalf("administrator request returned code %d: %s", response.Code, recorder.Body.String())
+				}
+			}
+		})
+	}
+}

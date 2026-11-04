@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_para_spacing,段前段后塌缩,217/214+邻段,before/after,wc-07,04,libs/word-core,pass
+2,02_function_line_spacing,行距220,PropertySet,LineSpacing,wc-07,04;wr-12,libs/word-core,pass
+3,03_function_para_indent,缩进208-213,PropertySet,indents,wc-07,04;ContentWidth,libs/word-core,pass
+4,04_function_para_start,onStart编排,envoy,ParaEnv,01;02;03,wr-22,libs/word-core,pass

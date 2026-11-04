@@ -1,0 +1,21 @@
+// Offline signer: private PEM stays outside the repository and the server.
+import fs from 'node:fs';
+import path from 'node:path';
+import {sign,createPublicKey,verify} from 'node:crypto';
+import {parseArgs} from 'node:util';
+import {validateBundle} from '../../services/config-control/src/contracts.mjs';
+const {values:v}=parseArgs({options:Object.fromEntries(['bundle','private-key','kid','sequence','output'].map(k=>[k,{type:'string'}]))});
+if(Object.values(v).length!==5||!/^\d+$/.test(v.sequence??'')||Number(v.sequence)<1)throw Error('Require --bundle --private-key --kid --sequence --output');
+const bundle=JSON.parse(fs.readFileSync(v.bundle,'utf8'));validateBundle(bundle);
+const key=fs.readFileSync(v['private-key']);
+const publicX=createPublicKey(key).export({format:'jwk'}).x;
+if(bundle.bootstrap.publicKeys[v.kid]!==publicX)throw Error('Private signer does not match installation trust root');
+const snapshot=structuredClone(bundle.snapshot), now=new Date();
+snapshot.sequence=Number(v.sequence);snapshot.releaseId=`us-official-${snapshot.sequence}`;
+snapshot.issuedAt=now.toISOString();snapshot.expiresAt=new Date(now.getTime()+90*86400000).toISOString();
+const encode=v=>Buffer.from(JSON.stringify(v)).toString('base64url');
+const body=encode({alg:'EdDSA',typ:'openmuse.runtime-config+json',kid:v.kid})+'.'+encode(snapshot);
+const signature=sign(null,Buffer.from(body),key);
+if(!verify(null,Buffer.from(body),createPublicKey(key),signature))throw Error('Self verification failed');
+fs.mkdirSync(path.dirname(v.output),{recursive:true});fs.writeFileSync(v.output,body+'.'+signature.toString('base64url'),{flag:'wx',mode:0o644});
+console.log(`Signed public config sequence ${snapshot.sequence}, expires ${snapshot.expiresAt}. Renew before expiry with a higher sequence.`);

@@ -1,0 +1,407 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package apicontract
+
+type RemoveUnusedAttributeViewRequest struct {
+	ID string `json:"id"`
+}
+
+type GetAttributeViewItemIDsByBoundIDsRequest struct {
+	AvID     string   `json:"avID"`
+	BlockIDs []string `json:"blockIDs"`
+}
+
+type GetAttributeViewBoundBlockIDsByItemIDsRequest struct {
+	AvID    string   `json:"avID"`
+	ItemIDs []string `json:"itemIDs"`
+}
+
+type GetAttributeViewItemStatusesRequest struct {
+	ID      string   `json:"id"`
+	BlockID string   `json:"blockID" api:"optional,nullable,ignoretype"`
+	ViewID  string   `json:"viewID" api:"optional,nullable,ignoretype"`
+	Query   string   `json:"query" api:"optional,nullable,ignoretype"`
+	ItemIDs []string `json:"itemIDs"`
+}
+
+type GetAttributeViewAddingBlockDefaultValuesRequest struct {
+	AvID          string `json:"avID"`
+	BlockID       string `json:"blockID" api:"optional,nullable,ignoretype"`
+	ViewID        string `json:"viewID" api:"optional,nullable"`
+	GroupID       string `json:"groupID" api:"optional,nullable"`
+	PreviousID    string `json:"previousID" api:"optional,nullable"`
+	AddingBlockID string `json:"addingBlockID" api:"optional,nullable"`
+}
+
+// 无图标的普通块继承原条目图标，已有文档或已设置图标的普通块使用自身图标。
+type BatchReplaceAttributeViewBlocksRequest struct {
+	AvID       string              `json:"avID"`
+	IsDetached bool                `json:"isDetached"`
+	OldNew     []map[string]string `json:"oldNew"`
+}
+
+type SetAttrViewGroupRequest struct {
+	AvID       string      `json:"avID"`
+	BlockID    string      `json:"blockID"`
+	Group      AVViewGroup `json:"group"`
+	IgnoreRows bool        `json:"ignoreRows" api:"optional,nullable"`
+}
+
+type SetAttrViewFiltersRequest struct {
+	AvID    string          `json:"avID"`
+	BlockID string          `json:"blockID"`
+	Data    []*AVViewFilter `json:"data"`
+}
+
+type SetAttrViewContextFilterRequest struct {
+	AvID    string `json:"avID"`
+	BlockID string `json:"blockID"`
+	// KeyID 允许直接关联或目标为关联且显示原值/唯一值的汇总字段；省略或为空时关闭筛选。
+	// 汇总按最终目标条目 ID 匹配，不为新增条目回填计算值或修改中间关联。
+	KeyID string `json:"keyID" api:"optional,nullable,ignoretype"`
+}
+
+type SetAttrViewSortsRequest struct {
+	AvID    string        `json:"avID"`
+	BlockID string        `json:"blockID"`
+	Data    []*AVViewSort `json:"data"`
+}
+
+type ChangeAttrViewLayoutRequest struct {
+	BlockID    string `json:"blockID"`
+	AvID       string `json:"avID"`
+	LayoutType string `json:"layoutType"`
+}
+
+type DuplicateAttributeViewBlockRequest struct {
+	AvID string `json:"avID"`
+}
+
+type GetAttributeViewKeysByAvIDRequest struct {
+	AvID string `json:"avID"`
+}
+
+type GetAttributeViewKeysByIDRequest struct {
+	AvID        string   `json:"avID"`
+	KeyIDs      []string `json:"keyIDs"`
+	KeyIDsError error    `json:"-"`
+}
+
+type GetMirrorDatabaseBlocksRequest struct {
+	AvID string `json:"avID"`
+}
+
+type SetDatabaseBlockViewRequest struct {
+	ID     string `json:"id"`
+	ViewID string `json:"viewID"`
+	AvID   string `json:"avID"`
+}
+
+type GetAttributeViewPrimaryKeyValuesRequest struct {
+	ID       string   `json:"id"`
+	Page     *float64 `json:"page" api:"optional,nullable"`
+	PageSize *float64 `json:"pageSize" api:"optional,nullable"`
+	Keyword  string   `json:"keyword" api:"optional,nullable"`
+	BlockIDs []string `json:"blockIDs" api:"optional,nullable,filterstrings"`
+}
+
+type GetAttributeViewRelationCandidatesRequest struct {
+	// 按需返回目标数据库默认条目的名称预览；省略时保持候选查询响应。
+	// BlockID 指定来源载体并限定候选读取的加密边界；省略时保留原有全局查询行为。
+	IncludeNewItemPreview bool     `json:"includeNewItemPreview" api:"optional,nullable"`
+	BlockID               string   `json:"blockID" api:"optional,nullable"`
+	AvID                  string   `json:"avID" api:"optional,nullable,ignoretype"`
+	KeyID                 string   `json:"keyID" api:"optional,nullable,ignoretype"`
+	ID                    string   `json:"id" api:"optional,nullable,ignoretype"`
+	Keyword               string   `json:"keyword" api:"optional,nullable"`
+	Page                  *float64 `json:"page" api:"optional,nullable"`
+	PageSize              *float64 `json:"pageSize" api:"optional,nullable"`
+	SelectedBlockIDs      []string `json:"selectedBlockIDs" api:"optional,nullable,filterstrings"`
+	// Sort 仅对本次候选查询排序，在搜索过滤后、分页前应用；不修改数据库视图或已选条目的顺序。
+	// 省略时按创建时间倒序；指定时 column 必须属于关联数据库，order 为 ASC 或 DESC。
+	Sort *AVRelationCandidateSort `json:"sort" api:"optional,nullable"`
+}
+
+type AVRelationCandidateSort struct {
+	Column string `json:"column"`
+	Order  string `json:"order"`
+}
+
+type AppendAttributeViewDetachedBlocksWithValuesRequest struct {
+	AvID         string       `json:"avID"`
+	BlocksValues [][]*AVValue `json:"blocksValues"`
+}
+
+// AddAttributeViewBlocksRequest 新增的条目会在同一事务中触发数据库自动化；失败时恢复本次写入。
+type AddAttributeViewBlocksRequest struct {
+	AvID              string          `json:"avID"`
+	BlockID           string          `json:"blockID" api:"optional,nullable"`
+	ViewID            string          `json:"viewID" api:"optional,nullable"`
+	GroupID           string          `json:"groupID" api:"optional,nullable"`
+	PreviousID        string          `json:"previousID" api:"optional,nullable"`
+	Srcs              []AVBlockSource `json:"srcs"`
+	IgnoreDefaultFill bool            `json:"ignoreDefaultFill" api:"optional,nullable"`
+}
+
+type RemoveAttributeViewBlocksRequest struct {
+	AvID   string   `json:"avID"`
+	SrcIDs []string `json:"srcIDs"`
+}
+
+type AddAttributeViewKeyRequest struct {
+	AvID          string `json:"avID"`
+	BlockID       string `json:"blockID" api:"optional,nullable,ignoretype"`
+	KeyID         string `json:"keyID"`
+	KeyName       string `json:"keyName"`
+	KeyType       string `json:"keyType"`
+	KeyIcon       string `json:"keyIcon"`
+	PreviousKeyID string `json:"previousKeyID"`
+}
+
+type RemoveAttributeViewKeyRequest struct {
+	AvID               string `json:"avID"`
+	KeyID              string `json:"keyID"`
+	RemoveRelationDest bool   `json:"removeRelationDest" api:"optional,nullable"`
+}
+
+type SortAttributeViewViewKeyRequest struct {
+	AvID          string `json:"avID"`
+	ViewID        string `json:"viewID" api:"optional,nullable"`
+	KeyID         string `json:"keyID"`
+	PreviousKeyID string `json:"previousKeyID"`
+}
+
+type SortAttributeViewKeyRequest struct {
+	AvID          string `json:"avID"`
+	KeyID         string `json:"keyID"`
+	PreviousKeyID string `json:"previousKeyID"`
+}
+
+type GetAttributeViewFilterSortRequest struct {
+	ID      string `json:"id"`
+	BlockID string `json:"blockID"`
+}
+
+type SearchAttributeViewRollupDestKeysRequest struct {
+	AvID    string `json:"avID"`
+	Keyword string `json:"keyword"`
+}
+
+type SearchAttributeViewRelationKeyRequest struct {
+	AvID    string `json:"avID"`
+	Keyword string `json:"keyword"`
+}
+
+type GetAttributeViewRequest struct {
+	ID string `json:"id"`
+}
+
+type GetAttributeViewPasteRowsRequest struct {
+	AvID        string  `json:"avID" api:"trim"`
+	BlockID     string  `json:"blockID" api:"trim"`
+	ViewID      string  `json:"viewID" api:"optional,nullable"`
+	GroupID     string  `json:"groupID" api:"optional,nullable"`
+	Query       string  `json:"query" api:"optional,nullable"`
+	StartItemID string  `json:"startItemID" api:"trim"`
+	Count       float64 `json:"count"`
+}
+
+type GetAttributeViewFieldViewsRequest struct {
+	AvID  string `json:"avID" api:"trim"`
+	KeyID string `json:"keyID" api:"trim"`
+}
+
+type CreateAttributeViewItemRequest struct {
+	// 日历新条目的全天日期，单位为毫秒；仅支持绑定普通 date 字段的日历视图。
+	// 覆盖模板中该字段的值，与模板其他字段及条目创建共用一个可撤销事务。
+	// 绑定 created、updated 或带显示模板的 date 字段时拒绝指定日期；省略或传 null 时沿用常规创建流程。
+	CalendarDate *int64 `json:"calendarDate" api:"optional,nullable"`
+	AvID         string `json:"avID"`
+	BlockID      string `json:"blockID"`
+	ViewID       string `json:"viewID" api:"optional,nullable"`
+	TemplateID   string `json:"templateID" api:"optional,nullable"`
+	PreviousID   string `json:"previousID" api:"optional,nullable"`
+	GroupID      string `json:"groupID" api:"optional,nullable"`
+	App          string `json:"app" api:"optional,nullable"`
+	Session      string `json:"session" api:"optional,nullable"`
+}
+
+// 关联新建使用目标数据库的默认模板；未配置主键模板时以 keyword 作为名称。
+// cells 保留已有条目的顺序及批量编辑结果，新条目追加到每个来源单元格；创建和关联共用一次撤销。
+// preview 来自 includeNewItemPreview 候选查询，解析时间最多保留五分钟；默认模板 ID 或名称变化时拒绝写入。
+// 不可用保存笔记本返回 code 1 和 unavailableNotebook；其他失败返回 code -1，保留原数据。
+type CreateAttributeViewRelationItemRequest struct {
+	// useInputName 为 true 时只用非空 keyword 覆盖主键，其他默认模板配置仍然生效；省略时使用模板名称。
+	UseInputName bool                   `json:"useInputName" api:"optional,nullable"`
+	AvID         string                 `json:"avID" api:"trim"`
+	BlockID      string                 `json:"blockID" api:"trim"`
+	KeyID        string                 `json:"keyID" api:"trim"`
+	Keyword      string                 `json:"keyword" api:"optional,nullable"`
+	Cells        []*AVRelationItemCell  `json:"cells"`
+	Preview      *AVRelationItemPreview `json:"preview"`
+	App          string                 `json:"app" api:"optional,nullable"`
+	Session      string                 `json:"session" api:"optional,nullable"`
+}
+
+type AVRelationItemCell struct {
+	ItemID         string   `json:"itemID"`
+	RelatedItemIDs []string `json:"relatedItemIDs"`
+}
+
+// 默认模板 ID、解析后的主键和解析时间；error 非空时只能选择已有条目，不能确认新建。
+type AVRelationItemPreview struct {
+	// 输入名称经过目标条目的标题规则解析后的主键，供新建入口展示实际名称。
+	InputPrimaryKey string `json:"inputPrimaryKey" api:"optional,nullable"`
+	// 是否配置主键模板，用于在模板名称与输入不同时展示两个新建入口。
+	HasPrimaryKeyTemplate bool   `json:"hasPrimaryKeyTemplate,omitempty" api:"optional,nullable"`
+	TemplateID            string `json:"templateID"`
+	PrimaryKey            string `json:"primaryKey"`
+	CreatedAt             int64  `json:"createdAt"`
+	Error                 string `json:"error,omitempty" api:"optional,nullable"`
+}
+
+type CreateAttributeViewItemWithMarkdownRequest struct {
+	AvID         string `json:"avID" api:"trim"`
+	BlockID      string `json:"blockID" api:"trim"`
+	ViewID       string `json:"viewID" api:"optional,nullable"`
+	TemplateID   string `json:"templateID" api:"trim"`
+	PreviousID   string `json:"previousID" api:"optional,nullable"`
+	GroupID      string `json:"groupID" api:"optional,nullable"`
+	Title        string `json:"title" api:"trim"`
+	Markdown     string `json:"markdown"`
+	Tags         string `json:"tags" api:"optional,nullable"`
+	WithMath     bool   `json:"withMath" api:"optional,nullable"`
+	ClippingHref string `json:"clippingHref" api:"optional,nullable"`
+	ListDocTree  bool   `json:"listDocTree" api:"optional,nullable"`
+	App          string `json:"app" api:"optional,nullable"`
+	Session      string `json:"session" api:"optional,nullable"`
+}
+
+// 新建文档继承游离条目已设置的图标；条目未设置图标时沿用文档模板图标。
+type CreateAttributeViewItemDocsRequest struct {
+	AvID     string   `json:"avID"`
+	BlockID  string   `json:"blockID"`
+	SaveMode string   `json:"saveMode"`
+	ItemIDs  []string `json:"itemIDs" api:"filterstrings"`
+	App      string   `json:"app" api:"optional,nullable"`
+	Session  string   `json:"session" api:"optional,nullable"`
+}
+
+type SearchAttributeViewRequest struct {
+	Keyword            string   `json:"keyword"`
+	AvID               string   `json:"avID" api:"optional,nullable"`
+	BlockID            string   `json:"blockID" api:"optional,nullable"`
+	Excludes           []string `json:"excludes" api:"optional,nullable"`
+	IncludeViewMatches bool     `json:"includeViewMatches" api:"optional,nullable"`
+}
+
+type RenderSnapshotAttributeViewRequest struct {
+	// 仅限制本次快照中的日历渲染范围，语义见 AVCalendarRange；不修改快照及共享视图。
+	CalendarRange *AVCalendarRange `json:"calendarRange" api:"optional,nullable"`
+	Snapshot      string           `json:"snapshot"`
+	ID            string           `json:"id"`
+	BlockID       string           `json:"blockID" api:"optional,nullable,ignoretype"`
+	ViewID        string           `json:"viewID" api:"optional,nullable,ignoretype"`
+	CarrierViewID string           `json:"carrierViewID" api:"optional,nullable,ignoretype"`
+}
+
+type RenderHistoryAttributeViewRequest struct {
+	// 仅限制本次历史版本中的日历渲染范围，语义见 AVCalendarRange；不修改历史及共享视图。
+	CalendarRange *AVCalendarRange          `json:"calendarRange" api:"optional,nullable"`
+	ID            string                    `json:"id"`
+	Created       string                    `json:"created"`
+	BlockID       string                    `json:"blockID" api:"optional,nullable"`
+	ViewID        string                    `json:"viewID" api:"optional,nullable"`
+	CarrierViewID string                    `json:"carrierViewID" api:"optional,nullable,ignoretype"`
+	Page          *float64                  `json:"page" api:"optional,nullable"`
+	PageSize      *float64                  `json:"pageSize" api:"optional,nullable"`
+	Query         string                    `json:"query" api:"optional,nullable"`
+	GroupPaging   map[string]*AVGroupPaging `json:"groupPaging" api:"optional,nullable"`
+}
+
+type RenderAttributeViewRequest struct {
+	TemporarySort *AVViewSort `json:"temporarySort" api:"optional,nullable"`
+	// 仅限制本次日历渲染范围，语义见 AVCalendarRange；无效区间返回错误，不修改已存数据。
+	// 发布读取保留权限过滤；日期范围和定位参数不扩大条目访问权限。
+	CalendarRange    *AVCalendarRange          `json:"calendarRange" api:"optional,nullable"`
+	ID               string                    `json:"id"`
+	BlockID          string                    `json:"blockID" api:"optional,nullable"`
+	ViewID           string                    `json:"viewID" api:"optional,nullable"`
+	Page             *float64                  `json:"page" api:"optional,nullable"`
+	PageSize         *float64                  `json:"pageSize" api:"optional,nullable"`
+	Query            string                    `json:"query" api:"optional,nullable"`
+	GroupPaging      map[string]*AVGroupPaging `json:"groupPaging" api:"optional,nullable"`
+	InitialLayout    string                    `json:"initialLayout" api:"optional,nullable,ignoretype"`
+	CreateIfNotExist *bool                     `json:"createIfNotExist" api:"optional,nullable"`
+	IgnoreRows       bool                      `json:"ignoreRows" api:"optional,nullable"`
+	TargetItemID     string                    `json:"targetItemID" api:"optional,nullable"`
+	TargetGroupID    string                    `json:"targetGroupID" api:"optional,nullable"`
+}
+
+// AVCalendarUndatedRequest 只读取普通日期字段为空的条目，不修改视图或数据库。
+// 绑定带显示模板的日期字段时返回空列表，计算日期需要通过模板或来源字段调整。
+// query 沿用当前视图搜索，search 仅匹配待安排条目的标题；页码从 1 开始，页大小默认 50，最大 100。
+// 端点仅供可编辑用户使用，并按 blockID 保持加密笔记本读取租约。
+type AVCalendarUndatedRequest struct {
+	ID       string   `json:"id"`
+	BlockID  string   `json:"blockID" api:"optional,nullable"`
+	ViewID   string   `json:"viewID"`
+	Query    string   `json:"query" api:"optional,nullable"`
+	Search   string   `json:"search" api:"optional,nullable"`
+	Page     *float64 `json:"page" api:"optional,nullable"`
+	PageSize *float64 `json:"pageSize" api:"optional,nullable"`
+}
+
+type GetCurrentAttrViewImagesRequest struct {
+	ID      string `json:"id"`
+	BlockID string `json:"blockID" api:"optional,nullable,ignoretype"`
+	ViewID  string `json:"viewID" api:"optional,nullable"`
+	Query   string `json:"query" api:"optional,nullable"`
+	GroupID string `json:"groupID" api:"optional,nullable"`
+}
+
+type GetAttributeViewKeysRequest struct {
+	ID      string `json:"id" api:"optional,nullable,ignoretype"`
+	AvID    string `json:"avID" api:"optional,nullable,ignoretype"`
+	ItemID  string `json:"itemID" api:"optional,nullable,ignoretype"`
+	ValueID string `json:"valueID" api:"optional,nullable,ignoretype"`
+}
+
+type GetAttributeViewSearchTargetRequest struct {
+	ID       string   `json:"id" api:"optional,nullable,ignoretype"`
+	Keywords []string `json:"keywords" api:"optional,nullable,filterstrings"`
+}
+
+type GetAttributeViewBacklinksRequest struct {
+	ID      string `json:"id" api:"optional,nullable,ignoretype"`
+	AvID    string `json:"avID" api:"optional,nullable,ignoretype"`
+	ItemID  string `json:"itemID" api:"optional,nullable,ignoretype"`
+	ValueID string `json:"valueID" api:"optional,nullable,ignoretype"`
+}
+
+// SetAttributeViewBlockAttrRequest 字段实际改变时触发数据库自动化，返回联动完成后的字段值。
+type SetAttributeViewBlockAttrRequest struct {
+	AvID   string       `json:"avID"`
+	KeyID  string       `json:"keyID"`
+	ItemID *string      `json:"itemID" api:"optional,nullable"`
+	RowID  *string      `json:"rowID" api:"optional,nullable"`
+	Value  AVValuePatch `json:"value"`
+}
+
+// BatchSetAttributeViewBlockAttrsRequest 整批更新完成后求值自动化，同一条目每条规则最多触发一次。
+type BatchSetAttributeViewBlockAttrsRequest struct {
+	AvID   string         `json:"avID"`
+	Values []AVCellUpdate `json:"values"`
+}
+
+type GetAttributeViewRowSortRequest struct {
+	AvID       string   `json:"avID" api:"optional,nullable"`
+	BlockID    string   `json:"blockID" api:"optional,nullable"`
+	ViewID     string   `json:"viewID" api:"optional,nullable"`
+	GroupID    string   `json:"groupID" api:"optional,nullable"`
+	ItemIDs    []string `json:"itemIDs" api:"optional,nullable"`
+	PreviousID string   `json:"previousID" api:"optional,nullable"`
+	NextID     string   `json:"nextID" api:"optional,nullable"`
+}

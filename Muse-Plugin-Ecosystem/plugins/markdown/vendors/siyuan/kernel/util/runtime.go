@@ -1,0 +1,622 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package util
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"net/url"
+	"os"
+	"path/filepath"
+	"runtime"
+	"runtime/debug"
+	"slices"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/88250/gulu"
+	"github.com/denisbrodbeck/machineid"
+	"github.com/go-ole/go-ole"
+	"github.com/go-ole/go-ole/oleutil"
+	"github.com/jaypipes/ghw"
+	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
+)
+
+var DisabledFeatures []string
+
+// CLILogLevel 在 CLI 子命令通过 --log-level 显式指定日志级别时被设置，model.InitConf 末尾据此跳过对
+// logging.SetLogLevel 的覆盖，使命令行参数优先于 conf.json 的 system.logLevel。
+var CLILogLevel string
+
+func DisableFeature(feature string) {
+	DisabledFeatures = append(DisabledFeatures, feature)
+	DisabledFeatures = gulu.Str.RemoveDuplicatedElem(DisabledFeatures)
+}
+
+// IsDisabledFeature 查询原生端启动时禁用的功能，不修改用户配置。
+func IsDisabledFeature(feature string) bool {
+	return slices.Contains(DisabledFeatures, feature)
+}
+
+const DefaultUseSingleLineSave = true
+const DefaultLargeFileWarningSize = 8
+
+var (
+	UseSingleLineSave    = NewAtomicValue(DefaultUseSingleLineSave)    // UseSingleLineSave 是否使用单行保存 .sy 和数据库 .json 文件。
+	LargeFileWarningSize = NewAtomicValue(DefaultLargeFileWarningSize) // LargeFileWarningSize 大文件警告大小，单位：MB
+)
+
+func ExceedLargeFileWarningSize(fileSize int) bool {
+	return fileSize > LargeFileWarningSize.Load()*1024*1024
+}
+
+// IsUILoaded 是否已经加载了 UI。
+var IsUILoaded atomic.Bool
+
+func WaitForUILoaded() {
+	start := time.Now()
+	for !IsUILoaded.Load() {
+		time.Sleep(200 * time.Millisecond)
+		if time.Since(start) > 30*time.Second {
+			logging.LogErrorf("wait for ui loaded timeout: %s", logging.ShortStack())
+			break
+		}
+	}
+}
+
+func HookUILoaded() {
+	for !IsUILoaded.Load() {
+		if 0 < len(SessionsByType("main")) {
+			IsUILoaded.Store(true)
+			return
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
+// IsExiting 是否正在退出程序。
+var IsExiting = atomic.Bool{}
+
+// MobileOSVer 移动端操作系统版本。
+var MobileOSVer string
+
+// DatabaseVer 数据库版本。
+// 格式：yyyyMMddHHmm。修改表结构时需要更新此值，启动时会检测版本变化，
+// 若不一致则自动移除旧数据库文件并重建表结构，同时触发全量重建索引。
+const DatabaseVer = "202607031200"
+
+func logBootInfo() {
+	plat := GetOSPlatform()
+	logging.LogInfof("kernel is booting:\n"+
+		"    * ver [%s]\n"+
+		"    * arch [%s]\n"+
+		"    * os [%s]\n"+
+		"    * pid [%d]\n"+
+		"    * runtime mode [%s]\n"+
+		"    * working directory [%s]\n"+
+		"    * read only [%v]\n"+
+		"    * container [%s]\n"+
+		"    * database [ver=%s]\n"+
+		"    * workspace directory [%s]",
+		Ver, runtime.GOARCH, plat, os.Getpid(), Mode, WorkingDir, ReadOnly, Container, DatabaseVer, WorkspaceDir)
+	if 0 < len(DisabledFeatures) {
+		logging.LogInfof("disabled features [%s]", strings.Join(DisabledFeatures, ", "))
+	}
+
+	go func() {
+		driveType := getWorkspaceDriveType()
+		if "" == driveType {
+			return
+		}
+
+		if ghw.DriveTypeSSD.String() != driveType {
+			logging.LogWarnf("workspace dir [%s] is not in SSD drive, performance may be affected", WorkspaceDir)
+			if AttachUI {
+				WaitForUILoaded()
+				time.Sleep(3 * time.Second)
+			}
+			if nil == NotificationsCfg.Load() || NotificationsCfg.Load().WorkspaceNotSSD {
+				PushErrMsg(Langs[Lang][278], 15000)
+			}
+		}
+	}()
+}
+
+func getWorkspaceDriveType() string {
+	if gulu.OS.IsDarwin() {
+		return ghw.DriveTypeSSD.String()
+	}
+
+	if IsMobileContainer() {
+		return ghw.DriveTypeSSD.String()
+	}
+	return workspaceDrive.get(context.Background(), detectWorkspaceDriveType)
+}
+
+// detectWorkspaceDriveType 仅返回实际检测到的磁盘类型，不根据平台推断。
+func detectWorkspaceDriveType() string {
+	block, err := ghw.Block()
+	if err != nil {
+		logging.LogWarnf("get block storage info failed: %s", err)
+		return ""
+	}
+
+	var maxMountPathLen int
+	var matchedDriveType string
+	parentRelPrefix := ".." + string(filepath.Separator)
+	workspacePath := ResolveLongestExistingParent(WorkspaceDir)
+
+	if gulu.OS.IsWindows() {
+		vol := strings.ToLower(filepath.VolumeName(workspacePath))
+		for _, disk := range block.Disks {
+			for _, partition := range disk.Partitions {
+				if strings.EqualFold(strings.TrimSuffix(partition.MountPoint, "\\"), vol) {
+					return partition.Disk.DriveType.String()
+				}
+			}
+		}
+	} else {
+		for _, disk := range block.Disks {
+			for _, partition := range disk.Partitions {
+				if partition.MountPoint == "" {
+					continue
+				}
+				mountPath := filepath.Clean(partition.MountPoint)
+				rel, err := filepath.Rel(mountPath, workspacePath)
+				if err != nil {
+					continue
+				}
+				if rel == ".." || strings.HasPrefix(rel, parentRelPrefix) {
+					continue
+				}
+
+				// 选路径最长的挂载点（如 /home/data 优于 /）
+				if len(mountPath) >= maxMountPathLen {
+					maxMountPathLen = len(mountPath)
+					matchedDriveType = partition.Disk.DriveType.String()
+				}
+			}
+		}
+	}
+	return matchedDriveType
+}
+
+func RandomSleep(minMills, maxMills int) {
+	r := gulu.Rand.Int(minMills, maxMills)
+	time.Sleep(time.Duration(r) * time.Millisecond)
+}
+
+func GetDeviceID() string {
+	if ContainerStd == Container {
+		machineID, err := machineid.ID()
+		if err != nil {
+			return gulu.Rand.String(12)
+		}
+		return machineID
+	}
+	return gulu.Rand.String(12)
+}
+
+func GetDeviceName() string {
+	ret, err := os.Hostname()
+	if err != nil {
+		return "unknown"
+	}
+	return ret
+}
+
+func SetNetworkProxy(proxyURL string, useSystem bool) {
+	if useSystem {
+		restoreSystemNetworkProxyEnvironment()
+		systemProxy, err := loadSystemNetworkProxy()
+		if err != nil {
+			logging.LogWarnf("load system network proxy failed: %s", err)
+		} else if nil != systemProxy {
+			setNetworkProxyEnvironment(networkProxyHTTPEnvironmentNames, systemProxy.HTTPProxy)
+			setNetworkProxyEnvironment(networkProxyHTTPSEnvironmentNames, systemProxy.HTTPSProxy)
+			setNetworkProxyEnvironment(networkProxyBypassEnvironmentNames, systemProxy.NoProxy)
+		}
+	} else {
+		setNetworkProxyEnvironment(networkProxyHTTPEnvironmentNames, proxyURL)
+		setNetworkProxyEnvironment(networkProxyHTTPSEnvironmentNames, proxyURL)
+		restoreNetworkProxyEnvironment(networkProxyBypassEnvironmentNames)
+	}
+
+	if useSystem {
+		logging.LogInfof("use network proxy [system]")
+	} else if "" != proxyURL {
+		logging.LogInfof("use network proxy [%s]", networkProxyLogValue(proxyURL))
+	} else {
+		logging.LogInfof("use network proxy [direct]")
+	}
+
+	httpclient.CloseIdleConnections()
+	closeOpenAIIdleConnections()
+}
+
+var (
+	networkProxyHTTPEnvironmentNames   = []string{"HTTP_PROXY", "http_proxy"}
+	networkProxyHTTPSEnvironmentNames  = []string{"HTTPS_PROXY", "https_proxy"}
+	networkProxyBypassEnvironmentNames = []string{"NO_PROXY", "no_proxy"}
+	networkProxyEnvironmentNames       = []string{"HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy"}
+)
+
+type networkProxyEnvironmentValue struct {
+	value string
+	set   bool
+}
+
+var systemNetworkProxyEnvironment = func() map[string]networkProxyEnvironmentValue {
+	ret := make(map[string]networkProxyEnvironmentValue, len(networkProxyEnvironmentNames))
+	for _, name := range networkProxyEnvironmentNames {
+		value, set := os.LookupEnv(name)
+		ret[name] = networkProxyEnvironmentValue{value: value, set: set}
+	}
+	return ret
+}()
+
+func restoreSystemNetworkProxyEnvironment() {
+	restoreNetworkProxyEnvironment(networkProxyEnvironmentNames)
+}
+
+func restoreNetworkProxyEnvironment(names []string) {
+	for _, name := range names {
+		value := systemNetworkProxyEnvironment[name]
+		if value.set {
+			setNetworkProxyEnvironment([]string{name}, value.value)
+		} else if err := os.Unsetenv(name); err != nil {
+			logging.LogErrorf("unset env [%s] failed: %s", name, err)
+		}
+	}
+}
+
+func setNetworkProxyEnvironment(names []string, value string) {
+	for _, name := range names {
+		if err := os.Setenv(name, value); err != nil {
+			logging.LogErrorf("set env [%s] failed: %s", name, err)
+		}
+	}
+}
+
+func networkProxyLogValue(rawURL string) string {
+	proxyURL, err := url.Parse(rawURL)
+	if err != nil {
+		return "configured"
+	}
+	proxyURL.User = nil
+	return proxyURL.String()
+}
+
+const (
+	// SQLFlushInterval 为数据库事务队列写入间隔。
+	SQLFlushInterval = 3000 * time.Millisecond
+)
+
+var (
+	Langs           = map[string]map[int]string{}
+	TimeLangs       = map[string]map[string]any{}
+	TaskActionLangs = map[string]map[string]any{}
+	TrayMenuLangs   = map[string]map[string]any{}
+	AttrViewLangs   = map[string]map[string]any{}
+)
+
+var (
+	thirdPartySyncCheckTicker = time.NewTicker(time.Minute * 10)
+)
+
+func ReportFileSysFatalError(err error) {
+	stack := debug.Stack()
+	output := string(stack)
+	if 5 < strings.Count(output, "\n") {
+		lines := strings.Split(output, "\n")
+		output = strings.Join(lines[5:], "\n")
+	}
+	logging.LogErrorf("check file system status failed: %s, %s", err, output)
+	os.Exit(logging.ExitCodeFileSysErr)
+}
+
+var checkFileSysStatusLock = sync.Mutex{}
+
+func CheckFileSysStatus() {
+	if ContainerStd != Container {
+		return
+	}
+
+	for {
+		<-thirdPartySyncCheckTicker.C
+		checkFileSysStatus()
+	}
+}
+
+func checkFileSysStatus() {
+	defer logging.Recover()
+
+	if !checkFileSysStatusLock.TryLock() {
+		logging.LogWarnf("check file system status is locked, skip")
+		return
+	}
+	defer checkFileSysStatusLock.Unlock()
+
+	const fileSysStatusCheckFile = ".siyuan/filesys_status_check"
+	if IsCloudDrivePath(WorkspaceDir) {
+		ReportFileSysFatalError(fmt.Errorf("workspace dir [%s] is in third party sync dir", WorkspaceDir))
+		return
+	}
+
+	dir := filepath.Join(DataDir, fileSysStatusCheckFile)
+	if err := os.RemoveAll(dir); err != nil {
+		ReportFileSysFatalError(err)
+		return
+	}
+
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		ReportFileSysFatalError(err)
+		return
+	}
+
+	for range 7 {
+		tmp := filepath.Join(dir, "check_consistency")
+		data, err := newFileSysStatusCheckData()
+		if err != nil {
+			ReportFileSysFatalError(err)
+			return
+		}
+
+		if err = os.WriteFile(tmp, data, 0644); err != nil {
+			ReportFileSysFatalError(err)
+			return
+		}
+
+		time.Sleep(5 * time.Second)
+
+		for range 32 {
+			renamed := tmp + "_renamed"
+			if err = os.Rename(tmp, renamed); err != nil {
+				ReportFileSysFatalError(fileSysStatusCheckError(err))
+				break
+			}
+
+			RandomSleep(500, 1000)
+
+			f, err := os.Open(renamed)
+			if err != nil {
+				ReportFileSysFatalError(fileSysStatusCheckError(err))
+				return
+			}
+
+			if err = f.Close(); err != nil {
+				ReportFileSysFatalError(err)
+				return
+			}
+
+			if err = os.Rename(renamed, tmp); err != nil {
+				ReportFileSysFatalError(fileSysStatusCheckError(err))
+				return
+			}
+
+			entries, err := os.ReadDir(dir)
+			if err != nil {
+				ReportFileSysFatalError(err)
+				return
+			}
+
+			checkFilenames := bytes.Buffer{}
+			for _, entry := range entries {
+				if !entry.IsDir() && strings.Contains(entry.Name(), "check_") {
+					checkFilenames.WriteString(entry.Name())
+					checkFilenames.WriteString("\n")
+				}
+			}
+			lines := strings.Split(strings.TrimSpace(checkFilenames.String()), "\n")
+			if 1 < len(lines) {
+				buf := bytes.Buffer{}
+				for _, line := range lines {
+					buf.WriteString("  ")
+					buf.WriteString(line)
+					buf.WriteString("\n")
+				}
+				output := buf.String()
+				ReportFileSysFatalError(fmt.Errorf("dir [%s] has more than 1 file:\n%s", dir, output))
+				return
+			}
+		}
+
+		if err = os.RemoveAll(tmp); err != nil {
+			ReportFileSysFatalError(err)
+			return
+		}
+	}
+}
+
+func IsCloudDrivePath(workspaceAbsPath string) bool {
+	if isICloudPath(workspaceAbsPath) {
+		return true
+	}
+
+	if isKnownCloudDrivePath(workspaceAbsPath) {
+		return true
+	}
+
+	if existAvailabilityStatus(workspaceAbsPath) {
+		return true
+	}
+
+	return false
+}
+
+func isKnownCloudDrivePath(workspaceAbsPath string) bool {
+	workspaceAbsPathLower := strings.ToLower(workspaceAbsPath)
+	return strings.Contains(workspaceAbsPathLower, "onedrive") || strings.Contains(workspaceAbsPathLower, "dropbox") ||
+		strings.Contains(workspaceAbsPathLower, "google drive") || strings.Contains(workspaceAbsPathLower, "pcloud") ||
+		strings.Contains(workspaceAbsPathLower, "坚果云") ||
+		strings.Contains(workspaceAbsPathLower, "天翼云")
+}
+
+func isICloudPath(workspaceAbsPath string) bool {
+	if !gulu.OS.IsDarwin() || !filepath.IsAbs(workspaceAbsPath) {
+		return false
+	}
+
+	workspacePath := ResolveLongestExistingParent(workspaceAbsPath)
+	if existingPath := longestExistingPath(workspacePath); "" != existingPath {
+		isUbiquitous, err := isUbiquitousItem(existingPath)
+		if nil != err {
+			logging.LogDebugf("check iCloud status for path [%s] failed: %s", existingPath, err)
+		} else if isUbiquitous {
+			logging.LogWarnf("workspace [%s] is in iCloud path [%s], detected by system metadata", workspaceAbsPath, existingPath)
+			return true
+		}
+	}
+
+	// macOS 端对工作空间放置在 iCloud 路径下做检查 https://github.com/siyuan-note/siyuan/issues/7747
+	if resolvedRoot, matched := matchSystemICloudRoot(workspacePath); matched {
+		logging.LogWarnf("workspace [%s] is in iCloud path [%s]", workspaceAbsPath, resolvedRoot)
+		return true
+	}
+	return false
+}
+
+// matchSystemICloudRoot 使用系统用户主目录，避免配置目录覆盖改变真实 iCloud 的检测位置。
+func matchSystemICloudRoot(workspacePath string) (resolvedRoot string, matched bool) {
+	iCloudRoot := filepath.Join(systemHomeDir, "Library", "Mobile Documents")
+	return matchICloudRoot(systemHomeDir, iCloudRoot, workspacePath)
+}
+
+func longestExistingPath(path string) string {
+	path = filepath.Clean(path)
+	for {
+		if _, err := os.Stat(path); nil == err {
+			return path
+		}
+
+		parent := filepath.Dir(path)
+		if parent == path {
+			return ""
+		}
+		path = parent
+	}
+}
+
+func matchICloudRoot(homeDir, iCloudRoot, workspacePath string) (resolvedRoot string, matched bool) {
+	resolvedHome, err := filepath.EvalSymlinks(filepath.Clean(homeDir))
+	if nil != err || !filepath.IsAbs(resolvedHome) {
+		return
+	}
+
+	resolvedRoot, err = filepath.EvalSymlinks(filepath.Clean(iCloudRoot))
+	if nil != err || !filepath.IsAbs(resolvedRoot) || IsPartitionRootPath(resolvedRoot) || resolvedHome == resolvedRoot ||
+		!gulu.File.IsSubPath(resolvedHome, resolvedRoot) {
+		return "", false
+	}
+
+	resolvedWorkspace := ResolveLongestExistingParent(workspacePath)
+	if !filepath.IsAbs(resolvedWorkspace) {
+		return "", false
+	}
+	return resolvedRoot, isSameOrSubPath(resolvedRoot, resolvedWorkspace)
+}
+
+func isSameOrSubPath(root, target string) bool {
+	root = filepath.Clean(root)
+	target = filepath.Clean(target)
+	return root == target || gulu.File.IsSubPath(root, target)
+}
+
+func existAvailabilityStatus(workspaceAbsPath string) bool {
+	if !gulu.OS.IsWindows() {
+		return false
+	}
+
+	if !gulu.File.IsExist(workspaceAbsPath) {
+		return false
+	}
+
+	// 改进 Windows 端第三方同步盘检测 https://github.com/siyuan-note/siyuan/issues/7777
+
+	defer logging.Recover()
+
+	checkAbsPath := filepath.Join(workspaceAbsPath, "data")
+	if !gulu.File.IsExist(checkAbsPath) {
+		checkAbsPath = workspaceAbsPath
+	}
+	if !gulu.File.IsExist(checkAbsPath) {
+		logging.LogWarnf("check path [%s] not exist", checkAbsPath)
+		return false
+	}
+
+	runtime.LockOSThread()
+	defer runtime.LockOSThread()
+	if err := ole.CoInitializeEx(0, ole.COINIT_MULTITHREADED); err != nil {
+		logging.LogWarnf("initialize ole failed: %s", err)
+		return false
+	}
+	defer ole.CoUninitialize()
+	dir, file := filepath.Split(checkAbsPath)
+	unknown, err := oleutil.CreateObject("Shell.Application")
+	if err != nil {
+		logging.LogWarnf("create shell application failed: %s", err)
+		return false
+	}
+	shell, err := unknown.QueryInterface(ole.IID_IDispatch)
+	if err != nil {
+		logging.LogWarnf("query shell interface failed: %s", err)
+		return false
+	}
+	defer shell.Release()
+
+	result, err := oleutil.CallMethod(shell, "NameSpace", dir)
+	if err != nil {
+		logging.LogWarnf("call shell [NameSpace] failed: %s", err)
+		return false
+	}
+	folderObj := result.ToIDispatch()
+
+	result, err = oleutil.CallMethod(folderObj, "ParseName", file)
+	if err != nil {
+		logging.LogWarnf("call shell [ParseName] failed: %s", err)
+		return false
+	}
+	fileObj := result.ToIDispatch()
+	if nil == fileObj {
+		logging.LogWarnf("call shell [ParseName] file is nil [%s]", checkAbsPath)
+		return false
+	}
+
+	result, err = oleutil.CallMethod(folderObj, "GetDetailsOf", fileObj, 303)
+	if err != nil {
+		logging.LogWarnf("call shell [GetDetailsOf] failed: %s", err)
+		return false
+	}
+	value := result
+	if nil == value {
+		return false
+	}
+	status := strings.ToLower(value.ToString())
+	if "" == status || "availability status" == status || "可用性状态" == status {
+		return false
+	}
+
+	if strings.Contains(status, "sync") || strings.Contains(status, "同步") ||
+		strings.Contains(status, "available on this device") || strings.Contains(status, "在此设备上可用") ||
+		strings.Contains(status, "available when online") || strings.Contains(status, "联机时可用") {
+		logging.LogErrorf("[%s] third party sync status [%s]", checkAbsPath, status)
+		return true
+	}
+	return false
+}
+
+const (
+	EvtSQLHistoryRebuild      = "sql.history.rebuild"
+	EvtSQLAssetContentRebuild = "sql.assetContent.rebuild"
+)
+
+var SearchCaseSensitive = NewAtomicValue(false)
+
+// SearchHanSensitive 是否区分繁简，由 sql.SetHanSensitive 维护；默认 true 与既往行为一致
+var SearchHanSensitive = NewAtomicValue(true)

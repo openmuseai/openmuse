@@ -1,0 +1,15 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/thirdparty/kInk/src/com/isf/DefaultTaggedStructureFactory.java,com/isf,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/com/isf/TagCustomTag.java,com/isf,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/com/isf/TagStroke.java,com/isf,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/com/parser/EventParserImpl.java,com/parser,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/com/parser/PretendEventParser.java,com/parser,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/com/isf/reader/IsfReader.java,com/isf/reader,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/com/isf/utils/Huffman.java,com/isf/utils,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/com/parser/writingbrush/FixSpeedProcess.java,com/parser/writingbrush,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/cn/wps/libs/inkml/InkMLManagerListener.java,cn/wps/libs/inkml,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/cn/wps/libs/inkml/KInkML.java,cn/wps/libs/inkml,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/com/hp/hpl/inkml/InkMLDOMParser.java,com/hp/hpl/inkml,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/com/hp/hpl/inkml/InkModel.java,com/hp/hpl/inkml,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/cn/wps/libs/inkml/event/MotionEventParser.java,cn/wps/libs/inkml/event,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/kInk/src/com/hp/hpl/inkml/impl/Dimension.java,com/hp/hpl/inkml/impl,too many dependencies,2026-05-22

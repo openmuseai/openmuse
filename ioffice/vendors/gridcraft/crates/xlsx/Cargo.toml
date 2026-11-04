@@ -1,0 +1,25 @@
+[package]
+name = "gridcraft-xlsx"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "GridCraft file formats: XLSX (SpreadsheetML) and CSV import/export"
+
+[lints]
+workspace = true
+
+[features]
+# Builds password-encrypted workbooks in code for other crates' tests (a dev-dependency feature;
+# never enabled in a shipped build).
+test-support = []
+
+[dependencies]
+gridcraft-core = { workspace = true }
+gridcraft-formula = { workspace = true }
+gridcraft-model = { workspace = true }
+thiserror = { workspace = true }
+quick-xml = { workspace = true }
+zip = { workspace = true }
+aes = { workspace = true }
+sha1 = { workspace = true }
+sha2 = { workspace = true }

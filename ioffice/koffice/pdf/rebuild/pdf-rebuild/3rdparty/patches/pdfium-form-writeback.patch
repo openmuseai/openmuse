@@ -1,0 +1,270 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index 6c2ca42..c761a12 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -234 +234 @@ group("pdfium_public_headers") {
+-component("pdfium") {
++shared_library("pdfium") {
+@@ -237,0 +238,3 @@ component("pdfium") {
++  if (is_android) {
++    configs -= [ "//build/config/android:hide_all_but_jni_onload" ]
++  }
+diff --git a/core/fpdfapi/edit/cpdf_pagecontentgenerator.cpp b/core/fpdfapi/edit/cpdf_pagecontentgenerator.cpp
+index 6fda89b..2012851 100644
+--- a/core/fpdfapi/edit/cpdf_pagecontentgenerator.cpp
++++ b/core/fpdfapi/edit/cpdf_pagecontentgenerator.cpp
+@@ -343,0 +344,13 @@ void CPDF_PageContentGenerator::GenerateContent() {
++void CPDF_PageContentGenerator::GenerateFormContent(CPDF_Form* form) {
++  CHECK(form);
++  fxcrt::ostringstream buf;
++  buf << "q\n";
++  ProcessDefaultGraphics(&buf);
++  ProcessPageObjects(&buf);
++  buf << "Q\n";
++  ByteString content(buf);
++  form->GetMutableStream()->SetDataAndRemoveFilter(content.unsigned_span());
++  form->TakeDirtyStreams();
++  UpdateResourcesDict();
++}
++
+@@ -710 +723 @@ void CPDF_PageContentGenerator::ProcessForm(fxcrt::ostringstream* buf,
+-    form_content_generator.GenerateContent();
++    form_content_generator.GenerateFormContent(form_xobject);
+diff --git a/core/fpdfapi/edit/cpdf_pagecontentgenerator.h b/core/fpdfapi/edit/cpdf_pagecontentgenerator.h
+index b37d06b..40707f5 100644
+--- a/core/fpdfapi/edit/cpdf_pagecontentgenerator.h
++++ b/core/fpdfapi/edit/cpdf_pagecontentgenerator.h
+@@ -21,0 +22 @@ class CPDF_FormObject;
++class CPDF_Form;
+@@ -35,0 +37 @@ class CPDF_PageContentGenerator {
++  void GenerateFormContent(CPDF_Form* form);
+diff --git a/core/fpdfapi/page/cpdf_form.h b/core/fpdfapi/page/cpdf_form.h
+index ae864b0..4d56c90 100644
+--- a/core/fpdfapi/page/cpdf_form.h
++++ b/core/fpdfapi/page/cpdf_form.h
+@@ -61,0 +62 @@ class CPDF_Form final : public CPDF_PageObjectHolder,
++  CPDF_Stream* GetMutableStream() { return form_stream_.Get(); }
+diff --git a/core/fpdfapi/page/cpdf_formobject.cpp b/core/fpdfapi/page/cpdf_formobject.cpp
+index bc80875..3be1077 100644
+--- a/core/fpdfapi/page/cpdf_formobject.cpp
++++ b/core/fpdfapi/page/cpdf_formobject.cpp
+@@ -31,0 +32,6 @@ CPDF_FormObject* CPDF_FormObject::AsForm() {
++void CPDF_FormObject::ReplaceFormForEditing(std::unique_ptr<CPDF_Form> form) {
++  form_ = std::move(form);
++  CalcBoundingBox();
++  SetDirty(true);
++}
++
+diff --git a/core/fpdfapi/page/cpdf_formobject.h b/core/fpdfapi/page/cpdf_formobject.h
+index 25c8d1f..ed2be93 100644
+--- a/core/fpdfapi/page/cpdf_formobject.h
++++ b/core/fpdfapi/page/cpdf_formobject.h
+@@ -31,0 +32 @@ class CPDF_FormObject final : public CPDF_PageObject {
++  void ReplaceFormForEditing(std::unique_ptr<CPDF_Form> form);
+@@ -36 +37 @@ class CPDF_FormObject final : public CPDF_PageObject {
+-  std::unique_ptr<CPDF_Form> const form_;
++  std::unique_ptr<CPDF_Form> form_;
+diff --git a/fpdfsdk/fpdf_editpage.cpp b/fpdfsdk/fpdf_editpage.cpp
+index 758aae8..cfbb1fb 100644
+--- a/fpdfsdk/fpdf_editpage.cpp
++++ b/fpdfsdk/fpdf_editpage.cpp
+@@ -1246,0 +1247,134 @@ FPDFFormObj_RemoveObject(FPDF_PAGEOBJECT form_object,
++
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPFormObj_InsertObjectAtIndex(FPDF_PAGEOBJECT form_object,
++                               FPDF_PAGEOBJECT page_object,
++                               unsigned long index) {
++  CPDF_PageObject* cform_page_object =
++      CPDFPageObjectFromFPDFPageObject(form_object);
++  CPDF_FormObject* form_obj =
++      cform_page_object ? cform_page_object->AsForm() : nullptr;
++  CPDF_PageObject* child = CPDFPageObjectFromFPDFPageObject(page_object);
++  if (!form_obj || !child || index > form_obj->form()->GetPageObjectCount()) {
++    return false;
++  }
++  // Match FPDFPage_InsertObjectAtIndex ownership: on success the Form owns
++  // the raw page object supplied by the caller.
++  if (!form_obj->form()->InsertPageObjectAtIndex(
++          index, std::unique_ptr<CPDF_PageObject>(child))) {
++    return false;
++  }
++  CPDF_PageContentGenerator(form_obj->form())
++      .GenerateFormContent(form_obj->form());
++  cform_page_object->SetDirty(true);
++  return true;
++}
++
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPFormObj_FlushContents(FPDF_PAGEOBJECT form_object) {
++  CPDF_PageObject* cform_page_object =
++      CPDFPageObjectFromFPDFPageObject(form_object);
++  CPDF_FormObject* form_obj =
++      cform_page_object ? cform_page_object->AsForm() : nullptr;
++  if (!form_obj) {
++    return false;
++  }
++  CPDF_PageContentGenerator(form_obj->form())
++      .GenerateFormContent(form_obj->form());
++  cform_page_object->SetDirty(true);
++  return true;
++}
++
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPFormObj_MarkChildDirty(FPDF_PAGEOBJECT form_object,
++                          FPDF_PAGEOBJECT page_object) {
++  CPDF_PageObject* cform_page_object =
++      CPDFPageObjectFromFPDFPageObject(form_object);
++  CPDF_FormObject* form_obj =
++      cform_page_object ? cform_page_object->AsForm() : nullptr;
++  CPDF_PageObject* child = CPDFPageObjectFromFPDFPageObject(page_object);
++  if (!form_obj || !child) {
++    return false;
++  }
++
++  CPDF_Form* form = form_obj->form();
++  size_t index = 0;
++  while (index < form->GetPageObjectCount() &&
++         form->GetPageObjectByIndex(index) != child) {
++    ++index;
++  }
++  if (index == form->GetPageObjectCount()) {
++    return false;
++  }
++
++  std::unique_ptr<CPDF_PageObject> owned = form->RemovePageObject(child);
++  if (!owned || !form->InsertPageObjectAtIndex(index, std::move(owned))) {
++    return false;
++  }
++  // Flush the child mutation into this private Form stream immediately. The
++  // page generator only visits a Form holder while rewriting its parent; doing
++  // this here also makes nested Forms deterministic from inner to outer.
++  CPDF_PageContentGenerator(form).GenerateFormContent(form);
++  cform_page_object->SetDirty(true);
++  return true;
++}
++
++namespace {
++
++bool KSPDetachForms(CPDF_PageObjectHolder* holder) {
++  for (size_t index = 0; index < holder->GetPageObjectCount(); ++index) {
++    CPDF_PageObject* object = holder->GetPageObjectByIndex(index);
++    CPDF_FormObject* form_object = object ? object->AsForm() : nullptr;
++    if (!form_object) {
++      continue;
++    }
++    CPDF_Form* source = form_object->form();
++    RetainPtr<CPDF_Stream> stream = ToStream(source->GetStream()->Clone());
++    if (!stream) {
++      return false;
++    }
++    source->GetDocument()->AddIndirectObject(stream);
++    auto detached = std::make_unique<CPDF_Form>(
++        source->GetDocument(), source->GetMutablePageResources(), stream,
++        source->GetMutableResources().Get());
++    detached->ParseContent();
++    if (!KSPDetachForms(detached.get())) {
++      return false;
++    }
++    form_object->ReplaceFormForEditing(std::move(detached));
++    // SetDirty() alone is not sufficient for all parsed holders. Reinsert the
++    // same object at the same index so the owning content stream is explicitly
++    // scheduled for regeneration without changing z-order or ownership.
++    std::unique_ptr<CPDF_PageObject> owned = holder->RemovePageObject(object);
++    if (!owned || !holder->InsertPageObjectAtIndex(index, std::move(owned))) {
++      return false;
++    }
++  }
++  return true;
++}
++
++}  // namespace
++
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPPage_SeparateSharedForms(FPDF_PAGE page) {
++  CPDF_Page* pdf_page = CPDFPageFromFPDFPage(page);
++  return pdf_page && KSPDetachForms(pdf_page);
++}
++
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPTextObj_SetFont(FPDF_PAGEOBJECT text_object, FPDF_FONT font) {
++  CPDF_PageObject* page_object =
++      CPDFPageObjectFromFPDFPageObject(text_object);
++  CPDF_TextObject* text = page_object ? page_object->AsText() : nullptr;
++  CPDF_Font* pdf_font = CPDFFontFromFPDFFont(font);
++  if (!text || !pdf_font) {
++    return false;
++  }
++  text->mutable_text_state().SetFont(pdfium::WrapRetain(pdf_font));
++  // Recompute advances and bounds with the replacement font. Keeping the old
++  // font's cached geometry makes subsequent caret and paragraph alignment use
++  // stale widths even though the generated content already references the new
++  // font.
++  text->SetTextMatrix(text->GetTextMatrix());
++  text->SetDirty(true);
++  return true;
++}
+diff --git a/fpdfsdk/fpdf_edittext.cpp b/fpdfsdk/fpdf_edittext.cpp
+index 727d302..5c1e431 100644
+--- a/fpdfsdk/fpdf_edittext.cpp
++++ b/fpdfsdk/fpdf_edittext.cpp
+@@ -834,0 +835,11 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDFFont_GetGlyphWidth(FPDF_FONT font,
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPFont_CanEncodeUnicode(FPDF_FONT font, uint32_t unicode) {
++  CPDF_Font* pdf_font = CPDFFontFromFPDFFont(font);
++  if (!pdf_font || unicode == 0 || unicode > 0x10ffff) {
++    return false;
++  }
++  const uint32_t charcode =
++      pdf_font->CharCodeFromUnicode(static_cast<wchar_t>(unicode));
++  return charcode != 0 && charcode != static_cast<uint32_t>(-1);
++}
++
+diff --git a/public/fpdf_edit.h b/public/fpdf_edit.h
+index 2dbd60d..946b1b1 100644
+--- a/public/fpdf_edit.h
++++ b/public/fpdf_edit.h
+@@ -1764,0 +1765,34 @@ FPDFFormObj_RemoveObject(FPDF_PAGEOBJECT form_object,
++// KSO extension: insert a newly-created or detached page object into a Form
++// while retaining its container ownership and serialization order.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPFormObj_InsertObjectAtIndex(FPDF_PAGEOBJECT form_object,
++                               FPDF_PAGEOBJECT page_object,
++                               unsigned long index);
++
++// KSO extension: regenerate a Form stream after a child was removed.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPFormObj_FlushContents(FPDF_PAGEOBJECT form_object);
++
++// KSO extension: detach every Form XObject instance on |page| from shared
++// backing streams before content editing. This mirrors the legacy editor's
++// separateSharedDataInEditPage contract.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPPage_SeparateSharedForms(FPDF_PAGE page);
++
++// KSP extension: mark an existing child object's Form content stream dirty
++// without changing its position or ownership. This is required after editing
++// a child through APIs such as FPDFText_SetText(), because upstream PDFium
++// otherwise does not regenerate the Form XObject stream on save.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPFormObj_MarkChildDirty(FPDF_PAGEOBJECT form_object,
++                          FPDF_PAGEOBJECT page_object);
++
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPTextObj_SetFont(FPDF_PAGEOBJECT text_object, FPDF_FONT font);
++
++// KSP extension: reports whether a PDF font can encode a Unicode scalar.
++// FPDFFont_GetGlyphWidth() intentionally returns a default width for missing
++// simple-font glyphs, so it cannot be used as a fallback predicate.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++KSPFont_CanEncodeUnicode(FPDF_FONT font, uint32_t unicode);
++
+diff --git a/public/fpdfview.h b/public/fpdfview.h
+index 9dab9e8..4c41b63 100644
+--- a/public/fpdfview.h
++++ b/public/fpdfview.h
+@@ -222,0 +223 @@ typedef int FPDF_OBJECT_TYPE;
++#if defined(WIN32)
+@@ -223,0 +225,3 @@ typedef int FPDF_OBJECT_TYPE;
++#else
++#define FPDF_EXPORT __attribute__((visibility("default")))
++#endif

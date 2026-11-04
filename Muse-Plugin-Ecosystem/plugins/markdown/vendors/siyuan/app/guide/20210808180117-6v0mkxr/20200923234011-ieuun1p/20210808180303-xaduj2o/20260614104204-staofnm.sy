@@ -1,0 +1,452 @@
+{
+	"ID": "20260614104204-staofnm",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20260614104204-staofnm",
+		"title": "Network Proxy",
+		"type": "doc",
+		"updated": "20261022120655"
+	},
+	"Children": [
+		{
+			"ID": "20260614104245-d4fxxer",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614104245-d4fxxer",
+				"updated": "20260614104245"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Overview"
+				}
+			]
+		},
+		{
+			"ID": "20260614104245-zj06jiw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104245-zj06jiw",
+				"updated": "20260614104245"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan supports forwarding network requests through a proxy, suitable for scenarios with network restrictions or when accessing network services via a proxy is required."
+				}
+			]
+		},
+		{
+			"ID": "20260614104245-1vghukz",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614104245-1vghukz",
+				"updated": "20261022120655"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Configuration"
+				}
+			]
+		},
+		{
+			"ID": "20260614104245-ubfypqu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104245-ubfypqu",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Configure in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "App"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "General"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Network Proxy"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ":"
+				}
+			]
+		},
+		{
+			"ID": "20260614104245-nkm2226",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614104245-nkm2226",
+				"updated": "20261022120655"
+			},
+			"Children": [
+				{
+					"ID": "20260614104245-y89w1o2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104245-y89w1o2",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20260614104245-zro5c2g",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104245-zro5c2g",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Scheme: Choose Direct Connection (no proxy), Use system proxy, HTTP, HTTPS, or SOCKS5. Direct Connection and Use system proxy do not require host or port fields"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261016112115-7c46gfq",
+					"Type": "NodeListItem",
+					"Properties": {
+						"id": "20261016112115-7c46gfq",
+						"updated": "20261022120655"
+					},
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Children": [
+						{
+							"ID": "20261016112115-mlgnje1",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261016112115-mlgnje1",
+								"updated": "20261022120655"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "System mode uses supported system settings or the proxy environment inherited when the kernel started. The kernel reads manual proxy settings on Windows, Linux GNOME, and macOS; on Linux and macOS, explicit proxy environment variables take priority. These readers do not support automatic PAC configuration; Windows and macOS automatic detection is also unsupported. On other platforms the kernel retains its initial proxy environment instead of reading OS settings"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261022120655-quj9zir",
+					"Type": "NodeListItem",
+					"Properties": {
+						"id": "20261022120655-quj9zir",
+						"updated": "20261022120655"
+					},
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Children": [
+						{
+							"ID": "20261022120655-un99ra6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261022120655-un99ra6",
+								"updated": "20261022120655"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "macOS supports manual HTTP, HTTPS, and SOCKS5 proxies. The bypass list is converted to NO_PROXY rules, supporting IP addresses, CIDR ranges (including 169.254/16), domains, leading *. domain patterns, and trailing IPv4 wildcards such as 10.*. Exclude simple hostnames and other wildcard patterns are unsupported; use explicit bypass entries instead. If reading or conversion fails, the kernel logs a warning and retains its startup proxy environment. To apply changed macOS proxy settings, restart the kernel or switch to another proxy mode and back to system mode"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104245-4i5g8ab",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104245-4i5g8ab",
+						"updated": "20260614104245"
+					},
+					"Children": [
+						{
+							"ID": "20260614104245-8iwvngf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104245-8iwvngf",
+								"updated": "20260614104245"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Host"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Enter the proxy server address in the format "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "IP"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ or "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "username:password@IP"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ (when authentication is required)"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104245-uq7tlui",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104245-uq7tlui",
+						"updated": "20260614104245"
+					},
+					"Children": [
+						{
+							"ID": "20260614104245-5aju42u",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104245-5aju42u",
+								"updated": "20260614104245"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Port"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Enter the proxy server port"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614104245-lcj37hv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104245-lcj37hv",
+				"updated": "20260614104245"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Click confirm after configuration to apply immediately, no restart needed."
+				}
+			]
+		},
+		{
+			"ID": "20260614104245-o4ly291",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614104245-o4ly291",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Scope"
+				}
+			]
+		},
+		{
+			"ID": "20260614104245-5cyxuxu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104245-5cyxuxu",
+				"updated": "20260614104245"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The network proxy setting applies to the following features:"
+				}
+			]
+		},
+		{
+			"ID": "20260614104245-7nupnza",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614104245-7nupnza",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"ID": "20260614104245-nvij2dy",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104245-nvij2dy",
+						"updated": "20260614104245"
+					},
+					"Children": [
+						{
+							"ID": "20260614104245-s0i3kn4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104245-s0i3kn4",
+								"updated": "20260614104245"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Cloud sync and data backup"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104245-qenh5ju",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104245-qenh5ju",
+						"updated": "20260614104245"
+					},
+					"Children": [
+						{
+							"ID": "20260614104245-x938rzb",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104245-x938rzb",
+								"updated": "20260614104245"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Version update checks"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104245-t70o8gh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104245-t70o8gh",
+						"updated": "20260614104245"
+					},
+					"Children": [
+						{
+							"ID": "20260614104245-84c6wd0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104245-84c6wd0",
+								"updated": "20260614104245"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "AI function requests"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104245-doewm7l",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104245-doewm7l",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20260614104245-mqw5uhd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104245-mqw5uhd",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Other network requests made through SiYuan’s managed proxy clients; external browsers, plugins, and stdio child programs may have their own proxy settings"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

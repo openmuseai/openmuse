@@ -1,0 +1,30 @@
+feature_id,title,description,seeds_count,depends_on_feature,status,docs_path
+wr-01-typo-cache,布局结果模型(Typo对象/快照/CPRef),TextDocument→cache/Typo* 的数据结构：TypoSnapshot/TypoDocument/TypoLayoutPage/TypoPage/TypoTextLine/TypoRun，含 cp 区间编辑平移与行迭代,5,wc-02-document-model,split,features/wr-01-typo-cache
+wr-02-viewenv,视图参数(页尺寸/缩放/模式),ViewEnv + PageSetup 默认值：页宽高/边距/缩放/模式，是换行与分页的视图输入,2,,split,features/wr-02-viewenv
+wr-03-measure-shape,文本度量(字体栈+行宽/字形+FontHost),wpslayout 审计重建：RichTextLayout/BaseTextLayout 行宽与字形坐标，接入 thirdparty/font；FontHost 注入表+SchemaItem（Java 管线，非探盘）,4,wr-02-viewenv,split,features/wr-03-measure-shape
+wr-04-line-break,断行/行高/对齐,TextLayouter 最小集：逐 run 度量缓存、行内换行、对齐、行高换算,4,wr-03-measure-shape,split,features/wr-04-line-break
+wr-05-page-flow,分页/节/网格,MainLayouter/FlowLayout 最小集：页高耗尽分页、分页符、单节页网格（IPageGrid 最小集）,3,wr-04-line-break,split,features/wr-05-page-flow
+wr-06-typo-build,布局→快照组装与失效,TypoDocument 页流事件 + newSnapshot/commitSnapshot + ISnapshotListener 失效重建,2,wr-01-typo-cache;wr-05-page-flow,split,features/wr-06-typo-build
+wr-07-render-command,RenderCommand 指令生成与序列化,Typo 页/行/run → DrawText/DrawRect/DrawLine 指令（文本/装饰/背景）JSON 序列化,3,wr-06-typo-build,split,features/wr-07-render-command
+wr-08-ffi-flutter,UniFFI/JSON 桥+Flutter 消费,render_docx(docx)→RenderCommand JSON 导出 + Flutter Canvas/TextPainter 消费,3,wr-07-render-command,split,features/wr-08-ffi-flutter
+wr-09-run-stream,主故事run流(TextDocument),TextDocument 主故事 → 带 cp 的纯文本 run（CHPX/PAPX 引用）；不再 zip 抽 w:t,0,wc-05-orchestration,pass,features/wr-09-run-stream
+wr-10-font-style,标题加粗→TypoFontStyle,CHPX+PAPX pStyle+KStyles → 度量用族名/size/bold/italic（FontStyleFactory 最小集）,0,wr-09-run-stream,pass,features/wr-10-font-style
+wr-11-run-metrics-parity,同TTF逐cp度量对齐,样式+FontHost 字节 → advance/ascent/descent twip；与 Java 同文件 ≤0.5twip,0,wr-10-font-style,pass,features/wr-11-run-metrics-parity
+wr-12-line-layouter,Java断行(行cp区间),已度量 run + 内容宽 + PAPX 段框 → TypoTextLine[]；分行与 Java 精确一致,0,wr-11-run-metrics-parity,pass,features/wr-12-line-layouter
+wr-13-page-layouter,Java分页(寡妇孤儿最小集),行流 + 内容高 + \\f + widowControl → 页序列；分页与 Java 精确一致,0,wr-12-line-layouter,pass,features/wr-13-page-layouter
+wr-14-typo-stage2,Snapshot+Stage2行表,页流 → owned TypoSnapshot + 行表 JSON（page/line/cp/x/y/w/h）,0,wr-01-typo-cache;wr-13-page-layouter,pass,features/wr-14-typo-stage2
+wr-15-style-commands,带样式的DrawText,Snapshot → RenderCommand（标题字号/bold/font_id）；xpos 非本波门闩,0,wr-14-typo-stage2;wr-07-render-command,pass,features/wr-15-style-commands
+wr-16-line-golden,行级双跑CI(预导出JSON比较器),纯文本 corpus + 同TTF → Java 行表 vs Rust 行表 L2-line,0,wr-14-typo-stage2,pass,features/wr-16-line-golden
+wr-17-hit-test,命中cp,Snapshot + 点 twip → page/line/cp；不实施选区/编辑,0,wr-16-line-golden,pass,features/wr-17-hit-test
+wr-18-session-caret,编辑会话与光标,堆上 DocumentSession：open/append/relayout；LayoutFrame 点 → caret cp；选区 FillRect 为 wr-19,0,wr-17-hit-test,pass,features/wr-18-session-caret
+wr-19-selection,选区FillRect,LayoutFrame + cp区间 → kind=selection 的 DrawRect；不编辑,0,wr-18-session-caret,pass,features/wr-19-selection
+wr-20-edit-relayout,编辑后全量重排,DocumentEvent INSERT/REMOVE 改 TextDocument 后全量 LayoutFrame；非 CoreThread,0,wr-18-session-caret,pass,features/wr-20-edit-relayout
+wr-21-para-layouter,ParaLayouter段框,PAPX→alignment/indent/spacing/before-after collapse,0,wc-07-papx-geometry;wr-12-line-layouter,pass,features/wr-21-para-layouter
+wr-22-text-flow,TextLayouter.flow正文热路径,preFlow/doFlowLine/flow/postFlow；table/frame deferred,0,wr-21-para-layouter;wr-09-run-stream,pass,features/wr-22-text-flow
+wr-23-pageview-main,PageView MODE_PAGE产品入口,createDocLayouter=0 + flowToPage；切换 layout_document,0,wr-22-text-flow;wr-13-page-layouter,pass,features/wr-23-pageview-main
+wr-24-live-stage2,产品实排Stage2 vs Java,layout_document 当次行表 vs Java dump（本波出口；忽略 xpos）,0,wr-23-pageview-main;wr-16-line-golden,pass,features/wr-24-live-stage2
+wr-25-line-compress,整行压缩后再断行,LineCompressTool semantics,0,wr-22-text-flow,pass,features/wr-25-line-compress
+wr-26-kinsoku,东亚标点禁则,PAPX 201 + rollback,0,wr-22-text-flow,pass,features/wr-26-kinsoku
+wr-27-table-layout,表格排版,flowTable/TableLayouter,0,wr-22-text-flow;wc-04-paragraph-import,pass,features/wr-27-table-layout
+wr-28-drawing-wrap,图形绕排,DrawingLayouter/TextFrameLayouter,0,wr-22-text-flow,pass,features/wr-28-drawing-wrap
+wr-29-java-pipeline-cutover,Java排版栈切线P1-P4,graph节点→flowTextLine→产品切线→真实docx UI,0,wr-22-text-flow;wr-23-pageview-main,split,features/wr-29-java-pipeline-cutover

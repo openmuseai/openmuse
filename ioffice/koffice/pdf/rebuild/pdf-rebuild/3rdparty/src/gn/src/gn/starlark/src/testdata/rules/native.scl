@@ -1,0 +1,24 @@
+load("//builtins:rules.scl", "static_library", "shared_library")
+
+def _static_library_impl(ctx):
+  return []
+
+static_library = rule(
+  implementation = _static_library_impl,
+  parent = static_library,
+  attrs = {
+    "optional": attr.string(),
+  }
+)
+
+def _shared_library_impl(ctx):
+  return []
+
+custom_shared_library = rule(
+  implementation = _shared_library_impl,
+  parent = shared_library,
+  attrs = {
+    "optional": attr.string(),
+    "mandatory": attr.string(mandatory = True)
+  }
+)

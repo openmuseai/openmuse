@@ -1,0 +1,640 @@
+import {genEmptyElement} from "../../../block/util";
+import {showMessage} from "../../../dialog/message";
+import {setCustomBlockRootReady} from "../../../plugin/customBlockRender";
+import {escapeHtml} from "../../../util/escape";
+import {isMobile} from "../../../util/functions";
+import {getDefaultKeymapBindings, getKeymapBindings, visitKeymapItems} from "../../../util/keymapBindings";
+import {hintRef, hintSlash, hintTag} from "../../hint/extend";
+import {registerBuiltinSlashHint} from "../../hint/builtinSlash";
+import {mountProtyleLiteFragment} from "../../lite/fragmentEditor";
+import {bindLiteCodeActions} from "../../lite/codeActions";
+import {setMobileToolbarUndo} from "../../lite/mobileToolbar";
+import {getDefaultToolbar} from "../../toolbar/defaults";
+import {hideElements} from "../../ui/hideElements";
+import {paste} from "../../util/paste";
+import {matchHotKey} from "../../util/hotKey";
+import {processRender} from "../../util/processCode";
+import {initEditorTabs} from "../../wysiwyg/tabs";
+import {avRender} from "../av/render";
+import {blockRender} from "../blockRender";
+import {highlightRender} from "../highlightRender";
+import {cleanListMindmapHTML} from "./model";
+import type {ListMindmapNode} from "./model";
+import type {ListMindmapListInput} from "./listInput";
+import {finishListMindmaps} from "./index";
+import {getUndoFocusContext, restoreFocusContext} from "../../util/selection";
+import {canEnterCodeBlock} from "../../wysiwyg/codeBlockEnter";
+
+interface ListMindmapEditorOptions {
+    owner: IProtyle;
+    rootID?: string;
+    node: ListMindmapNode;
+    host: HTMLElement;
+    canEdit: () => boolean;
+    onSave: (html: string, undoSelection?: Record<string, string>, redoSelection?: Record<string, string>) => Promise<boolean>;
+    onResize: () => void;
+    onAdd: (kind: "child" | "sibling") => Promise<void>;
+    onListInput: (input: ListMindmapListInput, selection?: Record<string, string>) => Promise<void>;
+    onFinish: () => void;
+    onUndo: (redo: boolean, selection?: Record<string, string>) => void;
+    isPanTarget?: (event: PointerEvent) => boolean;
+    replaceFirstParagraph?: string;
+    selection?: Record<string, string>;
+}
+
+const nestedBranchType = (node: ListMindmapNode) =>
+    node.element?.parentElement?.getAttribute("data-type") === "NodeMindmap" ? "NodeMindmap" : "NodeList";
+
+const nodeContent = (node: ListMindmapNode) => Array.from(node.element?.children || []).filter(child =>
+    child.hasAttribute("data-node-id") && child.getAttribute("data-type") !== nestedBranchType(node))
+    .map(child => cleanListMindmapHTML(child.outerHTML)).join("");
+
+const independentBlockSelector = '[data-type="NodeAttributeView"], [data-type="NodeBlockQueryEmbed"]';
+
+const comparableContent = (html: string) => {
+    const template = document.createElement("template");
+    template.innerHTML = cleanListMindmapHTML(html);
+    template.content.querySelectorAll<HTMLElement>(independentBlockSelector).forEach(block => {
+        if (block.dataset.type === "NodeAttributeView") {
+            const identity = document.createElement("div");
+            identity.dataset.type = block.dataset.type;
+            identity.dataset.nodeId = block.dataset.nodeId;
+            identity.dataset.avId = block.dataset.avId;
+            block.replaceWith(identity);
+        } else {
+            block.removeAttribute("updated");
+            block.removeAttribute("data-render");
+            block.replaceChildren();
+        }
+    });
+    return template.innerHTML;
+};
+
+const retainIndependentBlocks = (html: string, node: ListMindmapNode) => {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    const current = new Map<string, Element>();
+    Array.from(node.element.children).filter(child => child.hasAttribute("data-node-id") &&
+        child.getAttribute("data-type") !== nestedBranchType(node)).forEach(child => {
+        const blocks = [child, ...Array.from(child.querySelectorAll(independentBlockSelector))];
+        blocks.forEach(block => {
+            if (block.matches(independentBlockSelector) &&
+                block.closest(".protyle-wysiwyg__embed") === node.element.closest(".protyle-wysiwyg__embed")) {
+                current.set(block.getAttribute("data-node-id"), block);
+            }
+        });
+    });
+    template.content.querySelectorAll<HTMLElement>(independentBlockSelector).forEach(block => {
+        const latest = current.get(block.dataset.nodeId);
+        if (latest && comparableContent(block.outerHTML) === comparableContent(latest.outerHTML)) {
+            block.replaceWith(latest.cloneNode(true));
+        }
+    });
+    return template.innerHTML;
+};
+
+const matchesCustomizedEditorShortcut = (event: KeyboardEvent) => {
+    let matched = false;
+    visitKeymapItems({editor: window.siyuan.config.keymap.editor}, (item, path) => {
+        if (matched || path[1] === "list" &&
+            (path[2] === "mindmapAddSibling" || path[2] === "mindmapAddChild")) {
+            return;
+        }
+        const defaults = getDefaultKeymapBindings(item);
+        matched = getKeymapBindings(item).some(key => !defaults.includes(key) && matchHotKey(key, event));
+    });
+    return matched;
+};
+
+const getListMindmapListInput = (wysiwyg: HTMLElement, range: Range, key: string, shift = false): ListMindmapListInput => {
+    const anchor = range?.startContainer;
+    const element = anchor instanceof Element ? anchor : anchor?.parentElement;
+    const editable = element?.closest<HTMLElement>('[contenteditable="true"]');
+    const block = editable?.parentElement;
+    if (!block || block.parentElement !== wysiwyg || !editable.contains(range.endContainer) ||
+        !["NodeParagraph", "NodeHeading"].includes(block.dataset.type)) {
+        return;
+    }
+    const html = cleanListMindmapHTML(wysiwyg.innerHTML);
+    if (key === "Tab") {
+        return {kind: shift ? "outdent" : "indent", html};
+    }
+    const before = range.cloneRange();
+    before.selectNodeContents(editable);
+    before.setEnd(range.startContainer, range.startOffset);
+    const after = range.cloneRange();
+    after.selectNodeContents(editable);
+    after.setStart(range.endContainer, range.endOffset);
+    const empty = (range: Range) => {
+        const fragment = range.cloneContents();
+        return !fragment.textContent.replace(/\u200b/g, "") && !fragment.querySelector("img, br, [data-type='inline-math']");
+    };
+    if (key === "Backspace" && range.collapsed && block === wysiwyg.firstElementChild && empty(before)) {
+        return {kind: "mergePrevious", html};
+    }
+    if (key === "Delete" && range.collapsed && block === wysiwyg.lastElementChild && empty(after)) {
+        return {kind: "mergeNext", html};
+    }
+    if (key !== "Enter" || shift || block !== wysiwyg.firstElementChild || block.dataset.type !== "NodeParagraph") {
+        return;
+    }
+    if (canEnterCodeBlock(editable, before.toString().length, window.siyuan.config.editor.markdown.codeBlockMiddleDot !== false)) {
+        return;
+    }
+    if (range.collapsed && empty(before) && !empty(after)) {
+        return {kind: "before", html};
+    }
+    const prefix = block.cloneNode(true) as HTMLElement;
+    prefix.querySelector('[contenteditable="true"]').replaceChildren(before.cloneContents());
+    const suffix = genEmptyElement(false, false);
+    suffix.querySelector('[contenteditable="true"]').replaceChildren(after.cloneContents());
+    const following = Array.from(wysiwyg.children).slice(1).map(block => block.outerHTML).join("");
+    return {kind: "split", html, before: cleanListMindmapHTML(prefix.outerHTML),
+        after: cleanListMindmapHTML(suffix.outerHTML + following)};
+};
+
+// 编辑器挂载到节点内容区，预览与编辑沿用同一尺寸和排版。
+export const openListMindmapEditor = (options: ListMindmapEditorOptions) => {
+    const {owner, node, host} = options;
+    const rootID = options.rootID || owner.block.rootID;
+    const initialBlockHTML = nodeContent(node);
+    if (!options.canEdit() || !node.element?.isConnected) {
+        return;
+    }
+    hideElements(["gutter", "toolbar", "hint"], owner);
+    let finished = false;
+    let closing = false;
+    let composing = false;
+    let finishAfterComposition = false;
+    let addingNode = false;
+    let changed = false;
+    let saving = false;
+    let pendingSave: Promise<boolean> | undefined;
+    let pendingFinish: Promise<boolean> | undefined;
+    let saveTimer: number;
+    let source = comparableContent(initialBlockHTML);
+    let recoveryShown = false;
+    const events = new AbortController();
+    const toolbar = getDefaultToolbar(isMobile()).filter(item =>
+        typeof item === "string" ? item !== "ai" : item.name !== "ai");
+    const slash = registerBuiltinSlashHint((key: string, protyle: IProtyle, hintSource: THintSource) =>
+        hintSlash(key, protyle, hintSource).filter(item => !["list", "orderedList", "check"].includes(item.id)));
+    const hint: IProtyleOptions["hint"] = {
+        extend: [{key: "((", hint: hintRef}, {key: "【【", hint: hintRef}, {key: "（（", hint: hintRef},
+            {key: "[[", hint: hintRef}, {key: "#", hint: hintTag}, {key: "/", hint: slash}, {key: "、", hint: slash}],
+    };
+    const originalMinWidth = host.style.minWidth;
+    const embedSourceIDs = new Set<string>();
+    const rememberEmbedSourceIDs = () => {
+        host.querySelectorAll<HTMLElement>(".protyle-wysiwyg__embed").forEach(result => {
+            if (result.dataset.id) {
+                embedSourceIDs.add(result.dataset.id);
+            }
+            result.querySelectorAll<HTMLElement>("[data-node-id]").forEach(block => {
+                embedSourceIDs.add(block.dataset.nodeId);
+            });
+        });
+    };
+    const embedSourceObserver = new MutationObserver(rememberEmbedSourceIDs);
+    embedSourceObserver.observe(host, {childList: true, subtree: true});
+    // 保留未缩放的亚像素宽度，避免取整后响应式容器挤压文字，导致换行和整棵树重排。
+    host.style.minWidth = getComputedStyle(host).width;
+    host.replaceChildren();
+    host.classList.add("mindmap-view__editor");
+    host.contentEditable = "false";
+    const fragment = mountProtyleLiteFragment(host, {
+        app: owner.app,
+        initialBlockHTML,
+        protyleOptions: {notebookId: owner.notebookId, toolbar, hint},
+        runtimeCapabilities: {
+            upload: true, websocket: false, pluginExtensions: false,
+            listItemFragment: true,
+            getTransactionOwner: operations => {
+                const avIDs = new Set(Array.from(host.querySelectorAll<HTMLElement>(
+                    '[data-type="NodeAttributeView"][data-av-id]')).map(element => element.dataset.avId));
+                if (operations.some(operation => operation.action.includes("AttrView") &&
+                    avIDs.has("avID" in operation && typeof operation.avID === "string" ? operation.avID : operation.id))) {
+                    return owner;
+                }
+                rememberEmbedSourceIDs();
+                return operations.length > 0 && operations.every(operation =>
+                    embedSourceIDs.has(operation.id) || operation.action === "insert" &&
+                    [operation.parentID, operation.previousID, operation.nextID].some(id => embedSourceIDs.has(id))) ?
+                    owner : undefined;
+            },
+            lute: owner.lute, lockedOptions: {toolbar, hint},
+        },
+        afterSetContent: (protyle, element) => {
+            protyle.block.rootID = rootID;
+            protyle.block.parentID = node.id;
+            protyle.path = owner.path;
+            setCustomBlockRootReady(element, true);
+            // 聚焦前同步页签可见性，避免光标进入尚未隐藏的非活动页签。
+            initEditorTabs(protyle);
+            processRender(element);
+            highlightRender(element);
+            blockRender(protyle, element, undefined, options.onResize);
+            void avRender(element, owner);
+            protyle.undo.clear();
+        },
+        onChange: () => {
+            if (finished || closing) {
+                return;
+            }
+            changed = true;
+            host.style.minWidth = originalMinWidth;
+            options.onResize();
+            if (saving) {
+                return;
+            }
+            clearTimeout(saveTimer);
+            saveTimer = window.setTimeout((): void => { void commit(); }, 350);
+        },
+    });
+    fragment.protyle.block.rootID = rootID;
+    const overlays = [fragment.hintElement, fragment.protyle.toolbar.element, fragment.protyle.toolbar.subElement];
+    const overlayRoot = host.closest(".mindmap-view") || document.body;
+    // 菜单使用未缩放的容器定位，同时保持在原生全屏元素内可见。
+    overlays.forEach(element => overlayRoot.appendChild(element));
+    let lastHTML = comparableContent(fragment.getBlockHTML());
+    let undoSelection: Record<string, string>;
+    let lastSelection: Record<string, string>;
+    const captureSelection = () => {
+        const selection = getSelection();
+        if (!selection?.rangeCount) {
+            return;
+        }
+        const range = selection.getRangeAt(0);
+        const anchor = range.startContainer instanceof Element ? range.startContainer : range.startContainer.parentElement;
+        const end = range.endContainer instanceof Element ? range.endContainer : range.endContainer.parentElement;
+        if (anchor?.closest(".protyle-wysiwyg") !== fragment.wysiwyg ||
+            end?.closest(".protyle-wysiwyg") !== fragment.wysiwyg ||
+            anchor.closest(".protyle-wysiwyg__embed, .av") || end.closest(".protyle-wysiwyg__embed, .av")) {
+            return;
+        }
+        const context = getUndoFocusContext(fragment.wysiwyg, range, true);
+        if (context) {
+            lastSelection = {...context, backward: String(!range.collapsed && selection.anchorNode === range.endContainer &&
+                selection.anchorOffset === range.endOffset)};
+            return lastSelection;
+        }
+    };
+    const captureBeforeChange = () => {
+        if (comparableContent(fragment.getBlockHTML()) === lastHTML) {
+            undoSelection = captureSelection() || undoSelection;
+        }
+    };
+    const recover = () => {
+        if (recoveryShown) {
+            return;
+        }
+        recoveryShown = true;
+        // 原节点被外部事务替换时保留尚未提交的正文，避免覆盖新内容或静默丢弃输入。
+        showMessage(`${escapeHtml(window.siyuan.languages.listMindmapStale)}<pre>${escapeHtml(fragment.getMarkdown())}</pre>`,
+            0, "error");
+    };
+    const commit = (finishSession = false): Promise<boolean> => {
+        if (pendingSave) {
+            return pendingSave;
+        }
+        pendingSave = save(finishSession).catch(error => {
+            console.error(error);
+            showMessage(window.siyuan.languages.listMindmapInvalid);
+            return false;
+        }).finally(() => {
+            pendingSave = undefined;
+        });
+        return pendingSave;
+    };
+    const save = async (finishSession: boolean) => {
+        clearTimeout(saveTimer);
+        if (finished || closing || composing || saving) {
+            return false;
+        }
+        await fragment.protyle.wysiwyg.flushPendingInput();
+        if (finished || composing) {
+            return false;
+        }
+        // 编辑器中创建的列表和脑图会成为子分支，结束编辑后再移动，避免改动正在输入的节点。
+        if (!finishSession &&
+            Array.from(fragment.wysiwyg.children).some(element =>
+                ["NodeList", nestedBranchType(node)].includes(element.getAttribute("data-type")))) {
+            return false;
+        }
+        const html = cleanListMindmapHTML(fragment.getBlockHTML());
+        const version = comparableContent(html);
+        if (version === lastHTML) {
+            changed = false;
+            return true;
+        }
+        if (!options.canEdit() || !node.element.isConnected || comparableContent(nodeContent(node)) !== source) {
+            recover();
+            return false;
+        }
+        saving = true;
+        try {
+            // 前后选区和同一批正文快照一起保存，不能在异步提交后读取下一批输入的选区。
+            const redoSelection = captureSelection() || lastSelection || undoSelection;
+            if (!await options.onSave(retainIndependentBlocks(html, node), undoSelection, redoSelection)) {
+                return false;
+            }
+            source = comparableContent(nodeContent(node));
+            lastHTML = version;
+            undoSelection = redoSelection;
+            changed = comparableContent(fragment.getBlockHTML()) !== version;
+            if (changed && !finishSession) {
+                saveTimer = window.setTimeout((): void => { void commit(); }, 350);
+            }
+            return true;
+        } finally {
+            saving = false;
+        }
+    };
+    const cleanup = () => {
+        if (finished) {
+            return;
+        }
+        const html = comparableContent(fragment.getBlockHTML());
+        if (html !== lastHTML) {
+            recover();
+        }
+        finished = true;
+        clearTimeout(saveTimer);
+        events.abort();
+        embedSourceObserver.disconnect();
+        observer.disconnect();
+        fragment.destroy();
+        overlays.forEach(element => element.remove());
+        host.classList.remove("mindmap-view__editor");
+        host.style.minWidth = originalMinWidth;
+        options.onFinish();
+    };
+    const destroy = () => {
+        if (finished || closing) {
+            return;
+        }
+        closing = true;
+        events.abort();
+        clearTimeout(saveTimer);
+        // 卸载前排空输入任务，延迟转换不会再访问已销毁的编辑器。
+        void fragment.protyle.wysiwyg.flushPendingInput().catch(error => console.error(error)).finally(cleanup);
+    };
+    const finish = (): Promise<boolean> => {
+        if (!pendingFinish) {
+            pendingFinish = endSession().finally(() => {
+                pendingFinish = undefined;
+            });
+        }
+        return pendingFinish;
+    };
+    const endSession = async () => {
+        if (finished) {
+            return true;
+        }
+        if (fragment.protyle.upload?.isUploading) {
+            showMessage(window.siyuan.languages.uploading);
+            return false;
+        }
+        if (composing) {
+            finishAfterComposition = true;
+            return false;
+        }
+        // 退出外层节点前先保存内层脑图，避免清理预览时遗漏尚未提交的正文。
+        if (!await finishListMindmaps(fragment.protyle)) {
+            return false;
+        }
+        if (pendingSave) {
+            await pendingSave;
+        }
+        do {
+            if (!await commit(true)) {
+                return false;
+            }
+        } while (comparableContent(fragment.getBlockHTML()) !== lastHTML);
+        if (fragment.protyle.upload?.isUploading) {
+            showMessage(window.siyuan.languages.uploading);
+            return false;
+        }
+        cleanup();
+        return true;
+    };
+    const undo = async (redo: boolean) => {
+        const selection = getSelection();
+        const anchor = selection.anchorNode instanceof Element ? selection.anchorNode : selection.anchorNode?.parentElement;
+        if (anchor && host.contains(anchor) && anchor.closest(".protyle-wysiwyg__embed, .av")) {
+            if (redo) {
+                owner.undo.redo(owner);
+            } else {
+                owner.undo.undo(owner);
+            }
+            return;
+        }
+        options.onUndo(redo, captureSelection() || lastSelection);
+    };
+    setMobileToolbarUndo(fragment.protyle, owner, undo);
+    const signal = events.signal;
+    const listInput = (event: KeyboardEvent | InputEvent, key: string, shift = false) => {
+        if (event.defaultPrevented || event.isComposing || composing || finished || closing || !options.canEdit() ||
+            !fragment.hintElement.classList.contains("fn__none") ||
+            !fragment.protyle.toolbar.element.classList.contains("fn__none") ||
+            !fragment.protyle.toolbar.subElement.classList.contains("fn__none") ||
+            !(event.target instanceof Element) || event.target.closest(
+                "input, textarea, select, button, .protyle-wysiwyg__embed, .av, .code-block, .table") ||
+            event.target.closest(".protyle-wysiwyg") !== fragment.wysiwyg) {
+            return;
+        }
+        const selection = getSelection();
+        const input = selection?.rangeCount && getListMindmapListInput(fragment.wysiwyg, selection.getRangeAt(0), key, shift);
+        if (!input) {
+            return;
+        }
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (addingNode || event instanceof KeyboardEvent && event.repeat) {
+            return;
+        }
+        addingNode = true;
+        input.html = retainIndependentBlocks(input.html, node);
+        if (input.after) {
+            input.after = retainIndependentBlocks(input.after, node);
+        }
+        void options.onListInput(input, captureSelection()).catch(error => console.error(error)).finally(() => {
+            addingNode = false;
+        });
+    };
+    host.addEventListener("beforeinput", event => {
+        if (event.inputType === "insertParagraph") {
+            listInput(event, "Enter");
+        } else if (event.inputType === "deleteContentBackward") {
+            listInput(event, "Backspace");
+        } else if (event.inputType === "deleteContentForward") {
+            listInput(event, "Delete");
+        }
+    }, {capture: true, signal});
+    host.addEventListener("beforeinput", captureBeforeChange, {capture: true, signal});
+    host.addEventListener("compositionstart", captureBeforeChange, {capture: true, signal});
+    host.addEventListener("pointerdown", captureBeforeChange, {capture: true, signal});
+    host.addEventListener("keydown", captureBeforeChange, {capture: true, signal});
+    document.addEventListener("selectionchange", captureSelection, {signal});
+    host.addEventListener("beforeinput", event => {
+        const anchor = getSelection()?.anchorNode;
+        const element = anchor instanceof Element ? anchor : anchor?.parentElement;
+        const block = element?.closest<HTMLElement>(".protyle-wysiwyg__embed [data-node-id]");
+        if (block?.dataset.nodeId && (event.inputType.startsWith("insert") || event.inputType.startsWith("delete"))) {
+            fragment.protyle.wysiwyg.lastHTMLs[block.dataset.nodeId] = block.outerHTML;
+        }
+    }, {capture: true, signal});
+    bindLiteCodeActions(host, fragment.protyle, {
+        signal,
+        canEdit: () => !finished && !closing && options.canEdit(),
+        beforeChange: captureBeforeChange,
+        onChange: () => {
+            changed = true;
+            void commit();
+        },
+    });
+    ["beforeinput", "input", "compositionstart", "compositionupdate", "compositionend", "copy", "cut", "paste",
+        "pointerdown", "pointerup", "pointermove", "mousedown", "mouseup", "mousemove", "click", "dblclick",
+        "contextmenu", "dragstart", "dragover", "drop", "focusin", "focusout", "keyup"]
+        .forEach(type => host.addEventListener(type, event => event.stopPropagation(), {signal}));
+    host.addEventListener("keydown", event => {
+        if (event.defaultPrevented || event.isComposing || composing || !(event.ctrlKey || event.metaKey || event.altKey)) {
+            event.stopPropagation();
+        }
+    }, {signal});
+    host.addEventListener("keydown", event => {
+        if (event.target instanceof Element &&
+            fragment.wysiwyg.contains(event.target.closest(".mindmap-view"))) {
+            return;
+        }
+        if (event.isComposing || composing) {
+            return;
+        }
+        const keymap = window.siyuan.config.keymap.editor.general;
+        const listKeymap = window.siyuan.config.keymap.editor.list;
+        const kind = listKeymap?.mindmapAddSibling && matchHotKey(listKeymap.mindmapAddSibling, event) ? "sibling" :
+            listKeymap?.mindmapAddChild && matchHotKey(listKeymap.mindmapAddChild, event) ? "child" : undefined;
+        if (!event.ctrlKey && !event.metaKey && !event.altKey && (!event.shiftKey || event.key === "Tab") &&
+            !kind && ["Enter", "Tab", "Backspace", "Delete"].includes(event.key) && !matchesCustomizedEditorShortcut(event)) {
+            listInput(event, event.key, event.shiftKey);
+            if (event.defaultPrevented) {
+                return;
+            }
+        }
+        if (matchHotKey(keymap.undo, event) || matchHotKey(keymap.redo, event)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            undo(matchHotKey(keymap.redo, event));
+        } else if (kind && !matchesCustomizedEditorShortcut(event) && !finished && !closing && options.canEdit() &&
+            fragment.hintElement.classList.contains("fn__none") &&
+            fragment.protyle.toolbar.element.classList.contains("fn__none") &&
+            fragment.protyle.toolbar.subElement.classList.contains("fn__none") &&
+            !(event.target instanceof Element && event.target.closest(
+                "input, textarea, select, button, .protyle-wysiwyg__embed, .av, .code-block, .table"))) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (event.repeat || addingNode) {
+                return;
+            }
+            addingNode = true;
+            void finish().then(async saved => {
+                if (saved && options.canEdit()) {
+                    await options.onAdd(kind);
+                }
+            }).catch(error => console.error(error)).finally(() => {
+                addingNode = false;
+            });
+        } else if (event.key === "Escape" && fragment.hintElement.classList.contains("fn__none") &&
+            fragment.protyle.toolbar.element.classList.contains("fn__none") &&
+            fragment.protyle.toolbar.subElement.classList.contains("fn__none")) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const mindmap = host.closest<HTMLElement>(".mindmap-view");
+            void finish().then(finished => {
+                // 退出节点编辑后将键盘焦点交回脑图，保留已选节点的快捷键操作。
+                if (finished && mindmap?.isConnected &&
+                    (document.activeElement === document.body || mindmap.contains(document.activeElement))) {
+                    mindmap.focus({preventScroll: true});
+                }
+            });
+        }
+    }, {capture: true, signal});
+    host.addEventListener("compositionstart", () => {
+        composing = true;
+        clearTimeout(saveTimer);
+    }, {capture: true, signal});
+    host.addEventListener("compositionend", () => queueMicrotask(() => {
+        composing = false;
+        void commit();
+        if (finishAfterComposition) {
+            finish();
+        }
+    }), {capture: true, signal});
+    const belongs = (target: Node) => {
+        if (host.contains(target) || fragment.hintElement.contains(target) ||
+            fragment.protyle.toolbar.element.contains(target) || fragment.protyle.toolbar.subElement.contains(target)) {
+            return true;
+        }
+        if (!(target instanceof Element)) {
+            return false;
+        }
+        const avOverlay = target.closest<HTMLElement>(".av__panel, .av__mask");
+        if (avOverlay?.dataset.avBlockId && host.querySelector(
+            `[data-type="NodeAttributeView"][data-node-id="${avOverlay.dataset.avBlockId}"]`)) {
+            return true;
+        }
+        return !!target.closest("#keyboardToolbar, #commonMenu, .b3-dialog, .protyle-breadcrumb__history");
+    };
+    document.addEventListener("pointerdown", event => {
+        if (options.isPanTarget?.(event)) {
+            captureBeforeChange();
+        } else if (!belongs(event.target as Node)) {
+            finish();
+        } else {
+            // 工具栏浮层位于节点 host 外，格式命令执行前仍需保存原文字选区。
+            captureBeforeChange();
+        }
+    }, {capture: true, signal});
+    window.addEventListener("blur", () => void commit(), {signal});
+    window.addEventListener("pagehide", () => void finish(), {signal});
+    const observer = new ResizeObserver(() => options.onResize());
+    observer.observe(host);
+    if (options.replaceFirstParagraph === undefined) {
+        fragment.focus(true);
+    } else {
+        let paragraph = fragment.wysiwyg.querySelector<HTMLElement>(":scope > [data-type='NodeParagraph']");
+        if (!paragraph) {
+            paragraph = genEmptyElement(false, false);
+            fragment.wysiwyg.prepend(paragraph);
+        }
+        const editable = paragraph.querySelector<HTMLElement>(":scope > [contenteditable='true']");
+        editable.focus({preventScroll: true});
+        const selection = getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(editable);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        captureBeforeChange();
+        if (options.replaceFirstParagraph && !document.execCommand("insertText", false, options.replaceFirstParagraph)) {
+            editable.textContent = options.replaceFirstParagraph;
+            range.selectNodeContents(editable);
+            range.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    }
+    if (options.selection && restoreFocusContext(fragment.protyle, options.selection) &&
+        options.selection.backward === "true" && getSelection().rangeCount) {
+        const range = getSelection().getRangeAt(0);
+        getSelection().setBaseAndExtent(range.endContainer, range.endOffset, range.startContainer, range.startOffset);
+    }
+    undoSelection ||= captureSelection();
+    return {finish, destroy, pasteClipboard: (data: IClipboardData) => {
+        if (finished || closing || !options.canEdit()) {
+            return;
+        }
+        fragment.focus(true);
+        fragment.protyle.toolbar.range = undefined;
+        return paste(fragment.protyle, {...data, target: fragment.wysiwyg});
+    }};
+};

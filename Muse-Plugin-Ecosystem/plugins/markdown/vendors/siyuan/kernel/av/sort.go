@@ -1,0 +1,496 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package av
+
+import (
+	"bytes"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+// ViewSort 描述了视图排序规则的结构。
+type ViewSort struct {
+	Column       string       `json:"column"`                 // 字段（列）ID
+	ValueSource  ValueSource  `json:"valueSource,omitempty"`  // 值来源
+	Order        SortOrder    `json:"order"`                  // 排序顺序
+	DateEndpoint DateEndpoint `json:"dateEndpoint,omitempty"` // 日期端点
+}
+
+type SortOrder string
+
+const (
+	SortOrderAsc  SortOrder = "ASC"
+	SortOrderDesc SortOrder = "DESC"
+)
+
+func Sort(viewable Viewable, attrView *AttributeView) {
+	collection := viewable.(Collection)
+	sorts := collection.GetSorts()
+	if 1 > len(sorts) {
+		return
+	}
+
+	type FieldIndexSort struct {
+		Index        int
+		ValueSource  ValueSource
+		Order        SortOrder
+		DateEndpoint DateEndpoint
+	}
+
+	var fieldIndexSorts []*FieldIndexSort
+	fields := collection.GetFields()
+	for _, s := range sorts {
+		for i, c := range fields {
+			if c.GetID() == s.Column {
+				fieldIndexSorts = append(fieldIndexSorts, &FieldIndexSort{
+					Index:        i,
+					ValueSource:  s.ValueSource,
+					Order:        s.Order,
+					DateEndpoint: s.DateEndpoint,
+				})
+				break
+			}
+		}
+	}
+
+	// 预算每个排序字段的选项顺序映射，避免在比较器内每次比较都重建（O(N log N) 次比较 × 每次 O(选项数)）
+	optionSortByIndex := map[int]map[string]int{}
+	for _, fis := range fieldIndexSorts {
+		field := fields[fis.Index]
+		fieldType := field.GetType()
+		if KeyTypeSelect != fieldType && KeyTypeMSelect != fieldType {
+			continue
+		}
+		key, _ := attrView.GetKey(field.GetID())
+		if nil == key {
+			continue
+		}
+		optionSort := map[string]int{}
+		for i, op := range key.Options {
+			optionSort[op.Name] = i
+		}
+		optionSortByIndex[fis.Index] = optionSort
+	}
+
+	items := collection.GetItems()
+	editedValItems := map[string]bool{}
+	for i, item := range items {
+		for _, fieldIndexSort := range fieldIndexSorts {
+			val := ResolveValueSource(items[i].GetValues()[fieldIndexSort.Index], fieldIndexSort.ValueSource)
+			if KeyTypeCheckbox == val.Type {
+				if block := item.GetBlockValue(); nil != block && block.IsEdited() {
+					// 如果主键编辑过，则复选框也算作编辑过，参与排序 https://github.com/siyuan-note/siyuan/issues/11016
+					editedValItems[item.GetID()] = true
+					break
+				}
+			}
+
+			if val.IsEdited() {
+				// 如果该项目某字段的值已经编辑过，则该项目可参与排序
+				editedValItems[item.GetID()] = true
+				break
+			}
+		}
+	}
+
+	// 将未编辑的项目和已编辑的项目分开排序
+	var uneditedItems, editedItems []Item
+	for _, item := range items {
+		if _, ok := editedValItems[item.GetID()]; ok {
+			editedItems = append(editedItems, item)
+		} else {
+			uneditedItems = append(uneditedItems, item)
+		}
+	}
+
+	// 同值项目保留视图中的手动顺序，未编辑项目也保留各自的手动顺序。
+	sort.SliceStable(editedItems, func(i, j int) bool {
+		for _, fieldIndexSort := range fieldIndexSorts {
+			val1 := ResolveValueSource(editedItems[i].GetValues()[fieldIndexSort.Index], fieldIndexSort.ValueSource)
+			val2 := ResolveValueSource(editedItems[j].GetValues()[fieldIndexSort.Index], fieldIndexSort.ValueSource)
+			if isSortValueEmpty(val1, fieldIndexSort.DateEndpoint) {
+				if !isSortValueEmpty(val2, fieldIndexSort.DateEndpoint) {
+					return false
+				}
+				continue
+			} else {
+				if isSortValueEmpty(val2, fieldIndexSort.DateEndpoint) {
+					return true
+				}
+			}
+
+			result := val1.compare(val2, optionSortByIndex[fieldIndexSort.Index], fieldIndexSort.DateEndpoint)
+			if 0 == result {
+				continue
+			}
+
+			switch fieldIndexSort.Order {
+			case SortOrderAsc:
+				return 0 > result
+			case SortOrderDesc:
+				return 0 < result
+			default:
+				return 0 < result
+			}
+		}
+
+		return false
+	})
+
+	// 将包含未编辑的项目放在最后
+	collection.SetItems(append(editedItems, uneditedItems...))
+	if 1 > len(collection.GetItems()) {
+		collection.SetItems([]Item{})
+	}
+}
+
+func isSortValueEmpty(value *Value, dateEndpoint DateEndpoint) bool {
+	if nil == value {
+		return true
+	}
+	if KeyTypeDate == value.Type {
+		_, isNotEmpty := value.Date.GetByEndpoint(dateEndpoint)
+		return !isNotEmpty
+	}
+	return value.IsEmpty()
+}
+
+func (value *Value) Compare(other *Value, optionSort map[string]int) int {
+	return value.compare(other, optionSort, DateEndpointStart)
+}
+
+func (value *Value) compare(other *Value, optionSort map[string]int, dateEndpoint DateEndpoint) int {
+	switch value.Type {
+	case KeyTypeBlock:
+		if nil != value.Block && nil != other.Block {
+			if 0 == strings.Compare(value.Block.Content, other.Block.Content) {
+				return 0
+			}
+
+			if util.PinYinCompare(value.Block.Content, other.Block.Content) {
+				return -1
+			}
+			return 1
+		}
+	case KeyTypeText:
+		if nil != value.Text && nil != other.Text {
+			switch "" {
+			case value.Text.Content:
+				if "" == other.Text.Content {
+					return 0
+				}
+				return 1
+			case other.Text.Content:
+				return -1
+			}
+
+			if 0 == strings.Compare(value.Text.Content, other.Text.Content) {
+				return 0
+			}
+
+			if util.EmojiPinYinCompare(value.Text.Content, other.Text.Content) {
+				return -1
+			}
+			return 1
+		}
+	case KeyTypeNumber:
+		if nil != value.Number && nil != other.Number {
+			if value.Number.IsNotEmpty {
+				if !other.Number.IsNotEmpty {
+					return -1
+				}
+
+				if value.Number.Content > other.Number.Content {
+					return 1
+				}
+				if value.Number.Content < other.Number.Content {
+					return -1
+				}
+				return 0
+			}
+
+			if !other.Number.IsNotEmpty {
+				return 1
+			}
+			return 0
+		}
+	case KeyTypeDate:
+		if nil != value.Date && nil != other.Date {
+			valueContent, valueIsNotEmpty := value.Date.GetByEndpoint(dateEndpoint)
+			otherContent, otherIsNotEmpty := other.Date.GetByEndpoint(dateEndpoint)
+			if valueIsNotEmpty {
+				if !otherIsNotEmpty {
+					return -1
+				}
+
+				if value.Date.IsNotTime {
+					v := time.UnixMilli(valueContent)
+					valueContent = time.Date(v.Year(), v.Month(), v.Day(), 0, 0, 0, 0, time.Local).UnixMilli()
+				}
+				if other.Date.IsNotTime {
+					o := time.UnixMilli(otherContent)
+					otherContent = time.Date(o.Year(), o.Month(), o.Day(), 0, 0, 0, 0, time.Local).UnixMilli()
+				}
+
+				if valueContent > otherContent {
+					return 1
+				}
+				if valueContent < otherContent {
+					return -1
+				}
+				return 0
+			}
+
+			if !otherIsNotEmpty {
+				return 1
+			}
+			return 0
+		}
+	case KeyTypeCreated:
+		if nil != value.Created && nil != other.Created {
+			if value.Created.Content > other.Created.Content {
+				return 1
+			}
+			if value.Created.Content < other.Created.Content {
+				return -1
+			}
+			return 0
+		}
+	case KeyTypeUpdated:
+		if nil != value.Updated && nil != other.Updated {
+			if value.Updated.Content > other.Updated.Content {
+				return 1
+			}
+			if value.Updated.Content < other.Updated.Content {
+				return -1
+			}
+			return 0
+		}
+	case KeyTypeSelect, KeyTypeMSelect:
+		if nil != value.MSelect && nil != other.MSelect {
+			// 按设置的选项顺序排序，optionSort 由外层 Sort 按字段预算好后传入
+			if nil == optionSort {
+				optionSort = map[string]int{}
+			}
+
+			vLen := len(value.MSelect)
+			oLen := len(other.MSelect)
+			if vLen <= oLen {
+				for i := range vLen {
+					v := value.MSelect[i].Content
+					o := other.MSelect[i].Content
+					vSort := optionSort[v]
+					oSort := optionSort[o]
+					if vSort != oSort {
+						return vSort - oSort
+					}
+					s := strings.Compare(v, o)
+					if 0 != s {
+						return s
+					}
+				}
+			} else {
+				for i := range oLen {
+					v := value.MSelect[i].Content
+					o := other.MSelect[i].Content
+					vSort := optionSort[v]
+					oSort := optionSort[o]
+					if vSort != oSort {
+						return vSort - oSort
+					}
+					s := strings.Compare(v, o)
+					if 0 != s {
+						return s
+					}
+				}
+			}
+			return 0
+		}
+	case KeyTypeURL:
+		if nil != value.URL && nil != other.URL {
+			switch "" {
+			case value.URL.Content:
+				if "" == other.URL.Content {
+					return 0
+				}
+				return 1
+			case other.URL.Content:
+				return -1
+			}
+			return strings.Compare(value.URL.Content, other.URL.Content)
+		}
+	case KeyTypeEmail:
+		if nil != value.Email && nil != other.Email {
+			switch "" {
+			case value.Email.Content:
+				if "" == other.Email.Content {
+					return 0
+				}
+				return 1
+			case other.Email.Content:
+				return -1
+			}
+			return strings.Compare(value.Email.Content, other.Email.Content)
+		}
+	case KeyTypeLocation:
+		left, right := value.String(false), other.String(false)
+		if left == right {
+			return 0
+		}
+		if "" == left {
+			return 1
+		}
+		if "" == right {
+			return -1
+		}
+		return strings.Compare(left, right)
+	case KeyTypePhone:
+		if nil != value.Phone && nil != other.Phone {
+			switch "" {
+			case value.Phone.Content:
+				if "" == other.Phone.Content {
+					return 0
+				}
+				return 1
+			case other.Phone.Content:
+				return -1
+			}
+			return strings.Compare(value.Phone.Content, other.Phone.Content)
+		}
+	case KeyTypeMAsset:
+		if nil != value.MAsset && nil != other.MAsset {
+			var v1 strings.Builder
+			for _, v := range value.MAsset {
+				v1.WriteString(v.Content)
+			}
+			var v2 strings.Builder
+			for _, v := range other.MAsset {
+				v2.WriteString(v.Content)
+			}
+
+			if 0 == strings.Compare(v1.String(), v2.String()) {
+				return 0
+			}
+
+			if util.EmojiPinYinCompare(v1.String(), v2.String()) {
+				return -1
+			}
+			return 1
+		}
+	case KeyTypeTemplate:
+		if nil != value.Template && nil != other.Template {
+			v1, ok1 := util.Convert2Float(value.Template.Content)
+			v2, ok2 := util.Convert2Float(other.Template.Content)
+			if ok1 && ok2 {
+				if v1 > v2 {
+					return 1
+				}
+				if v1 < v2 {
+					return -1
+				}
+				return 0
+			}
+
+			if 0 == strings.Compare(value.Template.Content, other.Template.Content) {
+				return 0
+			}
+
+			if util.EmojiPinYinCompare(value.Template.Content, other.Template.Content) {
+				return -1
+			}
+			return 1
+		}
+	case KeyTypeCheckbox:
+		if nil != value.Checkbox && nil != other.Checkbox {
+			if value.Checkbox.Checked && !other.Checkbox.Checked {
+				return 1
+			}
+			if !value.Checkbox.Checked && other.Checkbox.Checked {
+				return -1
+			}
+			return 0
+		}
+	case KeyTypeRelation:
+		if nil != value.Relation && nil != other.Relation {
+			if 0 < len(value.Relation.Contents) && 0 < len(other.Relation.Contents) && KeyTypeNumber == value.Relation.Contents[0].Type && KeyTypeNumber == other.Relation.Contents[0].Type {
+				v1, ok1 := util.Convert2Float(value.Relation.Contents[0].String(false))
+				v2, ok2 := util.Convert2Float(other.Relation.Contents[0].String(false))
+				if ok1 && ok2 {
+					if v1 > v2 {
+						return 1
+					}
+					if v1 < v2 {
+						return -1
+					}
+					return 0
+				}
+			}
+
+			vContentBuf := bytes.Buffer{}
+			for _, c := range value.Relation.Contents {
+				vContentBuf.WriteString(c.String(true))
+				vContentBuf.WriteByte(' ')
+			}
+			vContent := strings.TrimSpace(vContentBuf.String())
+			oContentBuf := bytes.Buffer{}
+			for _, c := range other.Relation.Contents {
+				oContentBuf.WriteString(c.String(true))
+				oContentBuf.WriteByte(' ')
+			}
+			oContent := strings.TrimSpace(oContentBuf.String())
+
+			if 0 == strings.Compare(vContent, oContent) {
+				return 0
+			}
+
+			if util.EmojiPinYinCompare(vContent, oContent) {
+				return -1
+			}
+			return 1
+		}
+	case KeyTypeRollup:
+		if nil != value.Rollup && nil != other.Rollup {
+			if 0 < len(value.Rollup.Contents) && 0 < len(other.Rollup.Contents) && KeyTypeNumber == value.Rollup.Contents[0].Type && KeyTypeNumber == other.Rollup.Contents[0].Type {
+				v1, ok1 := util.Convert2Float(value.Rollup.Contents[0].String(false))
+				v2, ok2 := util.Convert2Float(other.Rollup.Contents[0].String(false))
+				if ok1 && ok2 {
+					if v1 > v2 {
+						return 1
+					}
+					if v1 < v2 {
+						return -1
+					}
+					return 0
+				}
+			}
+
+			vContentBuf := bytes.Buffer{}
+			for _, c := range value.Rollup.Contents {
+				vContentBuf.WriteString(c.String(true))
+				vContentBuf.WriteByte(' ')
+			}
+			vContent := strings.TrimSpace(vContentBuf.String())
+			oContentBuf := bytes.Buffer{}
+			for _, c := range other.Rollup.Contents {
+				oContentBuf.WriteString(c.String(true))
+				oContentBuf.WriteByte(' ')
+			}
+			oContent := strings.TrimSpace(oContentBuf.String())
+
+			if 0 == strings.Compare(vContent, oContent) {
+				return 0
+			}
+
+			if util.EmojiPinYinCompare(vContent, oContent) {
+				return -1
+			}
+			return 1
+		}
+	}
+	return 0
+}

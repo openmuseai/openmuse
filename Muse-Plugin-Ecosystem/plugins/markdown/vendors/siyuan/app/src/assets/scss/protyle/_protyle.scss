@@ -1,0 +1,1621 @@
+@use "content" as *;
+@use "toolbar" as *;
+@use "wysiwyg" as *;
+@use "attr" as *;
+@use "mindmap-view" as *;
+@use "block-resize" as *;
+
+.protyle-lite-fragment .protyle-action__menu {
+  display: none;
+}
+
+.protyle-lite-fragment .protyle-action__copy {
+  border-radius: var(--b3-border-radius);
+}
+
+.table__cell-editor,
+.mindmap-view__editor {
+  .code-block .protyle-action__menu {
+    display: block;
+  }
+
+  .code-block .protyle-action__copy {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+.protyle-scroll {
+  --b3-dynamicscroll-width: 200px;
+  position: absolute;
+  right: 12px;
+  top: 30px;
+  width: 16px;
+  bottom: 9px; // 下图标 hover 时，需要留出一定的空间
+  // 空白区域透传点击，避免遮挡编辑器右侧的反链计数。
+  pointer-events: none;
+
+  &__down,
+  &__up,
+  &__bar,
+  &__page {
+    pointer-events: auto;
+  }
+
+  &__page {
+    position: absolute;
+    left: 50%;
+    bottom: 12%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__page-up {
+    transform: rotate(180deg);
+  }
+
+  svg {
+    height: 16px;
+    width: 16px;
+    display: block;
+  }
+
+  &__down,
+  &__up {
+    transition: var(--b3-transition);
+    position: absolute;
+    cursor: pointer;
+    color: var(--b3-border-color);
+
+    &:hover {
+      color: var(--b3-theme-on-surface);
+    }
+  }
+
+  &__up {
+    top: calc(50% - var(--b3-dynamicscroll-width) / 2 - 20px);
+  }
+
+  &__down {
+    bottom: calc(50% - var(--b3-dynamicscroll-width) / 2 - 20px);
+  }
+
+  &__bar {
+    position: absolute;
+    right: calc(4px - var(--b3-dynamicscroll-width) / 2);
+    top: calc(50% - 8px);
+    transform: rotate(90deg);
+    z-index: 1;
+
+    .b3-slider {
+      width: var(--b3-dynamicscroll-width);
+      display: block;
+
+      &::-webkit-slider-runnable-track,
+      &::-webkit-slider-thumb {
+        background-color: var(--b3-border-color);
+        box-shadow: none;
+      }
+
+      &::-moz-range-track,
+      &::-moz-range-thumb {
+        background-color: var(--b3-border-color);
+        box-shadow: none;
+      }
+    }
+  }
+
+  @media (hover: none) {
+    &__bar {
+      top: calc(50% - 22px);
+
+      .b3-slider {
+        height: 44px;
+        touch-action: none;
+      }
+    }
+  }
+}
+
+.protyle--page-scroll {
+  --b3-protyle-page-scroll-gutter: 64px;
+
+  @media (pointer: coarse) {
+    --b3-protyle-page-scroll-gutter: 84px;
+  }
+}
+
+.protyle-gutters {
+  cursor: pointer;
+  user-select: none;
+  position: fixed;
+  box-sizing: border-box;
+  z-index: 1;
+  text-align: center;
+  // 块标会随指针重新定位，使用自身悬停反馈，避免系统触摸高亮留在原位置。
+  -webkit-tap-highlight-color: transparent;
+
+  // 横向超级块的块标需高于分栏宽度调节杆，避免重叠区域被调节杆截获点击
+  &--sb-column {
+    z-index: 6;
+  }
+
+  &--dragging {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &--full {
+    display: flex;
+    width: max-content;
+    scrollbar-width: none;
+    overscroll-behavior: contain;
+
+    > button {
+      flex-shrink: 0;
+    }
+  }
+
+  &[data-scrollable="true"] span {
+    touch-action: pan-y;
+  }
+
+  button {
+    border: 0;
+    background-color: transparent;
+    padding: 4px 3px;
+    cursor: pointer;
+    position: relative;
+
+    // 块标自身区域优先接收点击，插入框线和加号的扩展命中区仅在外侧生效。
+    &:not(.protyle-gutters__line):not(.protyle-gutters__plus) {
+      z-index: 5;
+    }
+
+    &:hover svg {
+      color: var(--b3-theme-on-surface);
+    }
+
+    // 悬浮时显示正方形圆角背景（排除框线与+号，它们有自己的样式），居中于块标 button
+    &:not(.protyle-gutters__line):not(.protyle-gutters__plus)::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      transform: translate(-50%, -50%);
+      border-radius: var(--b3-border-radius);
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity var(--b3-color-transition);
+    }
+
+    &:not(.protyle-gutters__line):not(.protyle-gutters__plus):hover::before {
+      opacity: 1;
+      background-color: var(--b3-list-icon-hover);
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    span {
+      z-index: 2;
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      touch-action: none;
+    }
+  }
+
+  svg {
+    color: var(--b3-theme-on-surface-light);
+    height: calc(var(--b3-font-size-editor) * 1.625);
+    width: 16px;
+    float: left;
+    pointer-events: none;
+    transition: var(--b3-color-transition);
+  }
+}
+
+// 块标边缘框线（悬浮块标显示），与 .protyle-gutters 同为 fixed 坐标系，由 JS 贴块标边缘定位
+// 选择器带 button 标签提升特异性，覆盖 .protyle-gutters button 的 position:relative；块标自身位于框线上方
+.protyle-gutters button.protyle-gutters__line {
+  position: fixed;
+  z-index: 3;
+  padding: 0;
+  cursor: pointer;
+  background-color: var(--b3-list-icon-hover);
+  // 透明 ::before 扩大命中区，覆盖框线到+号的间隙，避免鼠标移动中途命中块内容触发重置而闪烁
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+  }
+}
+
+// 块标边缘+号（悬浮框线显示），独立元素定位在外偏位置；tooltip 基于该元素对齐
+.protyle-gutters button.protyle-gutters__plus {
+  position: fixed;
+  z-index: 4;
+  padding: 0;
+  cursor: pointer;
+  background-color: transparent;
+  // 从小放大播放动画（不受 display 切换影响，可靠触发）
+  animation: plusPopIn .28s cubic-bezier(.34, 1.56, .64, 1) both;
+  // 透明 ::before 扩大命中区，避免鼠标在+号边缘抖动脱离导致+号消失
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
+
+  svg {
+    color: var(--b3-theme-on-surface-light);
+    width: 100%;
+    height: 100%;
+    float: none;
+    transition: color var(--b3-color-transition);
+  }
+
+  &:hover svg {
+    color: var(--b3-theme-on-surface);
+  }
+}
+
+@keyframes plusPopIn {
+  0% {
+    transform: scale(.2);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.protyle-select__container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  // 需高于数据库表头和表尾
+  z-index: 4;
+  pointer-events: none; // 划选矩形不拦截鼠标事件，避免 elementFromPoint 命中自身
+}
+
+.protyle-select {
+  position: absolute;
+  background-color: var(--b3-theme-primary-lightest);
+}
+
+.protyle-breadcrumb {
+  display: flex;
+  padding: 0 8px;
+  background-color: var(--b3-theme-background);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  min-height: var(--b3-ui-panel-height, 42px);
+  // 需高于选区容器，并低于 .protyle-toolbar
+  z-index: 5;
+  font-size: 14px;
+  border-radius: var(--b3-border-radius-b) var(--b3-border-radius-b) 0 0;
+
+  .block__icon {
+    opacity: 1;
+    margin-left: 8px;
+
+    &:disabled {
+      opacity: .38;
+    }
+  }
+
+  &__navigation .block__icon:first-child {
+    margin-left: 0;
+  }
+
+  &__space {
+    min-width: 8px;
+    transition: var(--b3-transition);
+    color: var(--b3-theme-on-surface);
+    text-align: center;
+    padding: 6px 0;
+    line-height: 18px;
+    flex: 1;
+  }
+
+  &__plugin {
+    display: flex;
+    align-items: center;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &:not(:empty) + .protyle-breadcrumb__icon {
+      margin-left: 8px;
+    }
+  }
+
+  &__bar {
+    align-items: center;
+    flex-wrap: wrap;
+    display: flex;
+    transition: var(--b3-transition);
+    overflow: auto;
+    min-height: 30px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &--hide {
+      opacity: 0;
+      transition: 1s;
+    }
+
+    &--nowrap {
+      flex-wrap: nowrap;
+    }
+
+    .b3-tooltips {
+      height: 22px;
+      flex-shrink: 0;
+    }
+  }
+
+  &__icon {
+    opacity: 1;
+    border: 0;
+    line-height: 24px;
+    border-radius: var(--b3-border-radius);
+    align-self: center;
+    padding: 0 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    color: var(--b3-theme-on-background);
+    background-color: var(--b3-list-hover);
+  }
+
+  &__arrow {
+    height: 14px;
+    width: 14px;
+    color: var(--b3-theme-on-surface-light);
+    margin: 0 2px;
+    flex-shrink: 0;
+
+    &--interactive {
+      align-items: center;
+      background-color: transparent;
+      border: 0;
+      border-radius: var(--b3-border-radius);
+      box-sizing: border-box;
+      color: var(--b3-theme-on-surface);
+      cursor: pointer;
+      display: flex;
+      height: 24px;
+      justify-content: center;
+      padding: 5px;
+      width: 24px;
+
+      &:hover {
+        background-color: var(--b3-list-hover);
+        color: var(--b3-theme-on-background);
+      }
+
+      svg {
+        height: 14px;
+        width: 14px;
+      }
+    }
+  }
+
+  &__text--ellipsis {
+    max-width: 112px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  &__text {
+    margin-left: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__item {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    line-height: 24px;
+    height: 24px;
+    border-radius: var(--b3-border-radius);
+    margin: 3px 0;
+    color: var(--b3-theme-on-surface);
+    border: 0;
+    background-color: transparent;
+    box-sizing: inherit;
+
+    &.b3-tooltips svg {
+      margin-right: 0;
+    }
+
+    svg {
+      height: 16px;
+      width: 16px;
+      flex-shrink: 0;
+      color: var(--b3-theme-on-surface);
+
+      &:hover {
+        color: var(--b3-theme-on-background);
+      }
+    }
+
+    &:hover,
+    &--active {
+      color: var(--b3-theme-on-background);
+      background-color: var(--b3-list-hover);
+    }
+  }
+}
+
+.b3-menu[data-name^="breadcrumb-children-"] .b3-menu__label {
+  max-width: 248px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.protyle-content {
+  overflow: auto;
+  flex: 1;
+  scrollbar-gutter: stable;
+
+  &:focus {
+    outline: none;
+  }
+
+  &--backlink-reveal {
+    > .protyle-wysiwyg,
+    > .sy__backlink--bottom {
+      transition: none;
+    }
+  }
+}
+
+.protyle-content[data-padding-mode="responsive"],
+.protyle-preview[data-padding-mode="responsive"] {
+  container-name: protyle-padding;
+  container-type: inline-size;
+}
+
+// 水平边距的断点与 getEditorHorizontalPadding 保持一致，容器尺寸变化时由浏览器实时更新。
+.protyle-content[data-padding-mode="responsive"] {
+  > .protyle-top,
+  > .protyle-wysiwyg,
+  > .sy__backlink--bottom {
+    --b3-protyle-padding-left: 24px;
+    --b3-protyle-padding-right: 16px;
+  }
+
+  > .protyle-wysiwyg,
+  > .sy__backlink--bottom {
+    padding-left: var(--b3-protyle-padding-left);
+    padding-right: max(var(--b3-protyle-padding-right), var(--b3-protyle-page-scroll-gutter, 0px));
+  }
+
+  > .protyle-top {
+    .protyle-title,
+    .protyle-background__ia,
+    .protyle-db-attr {
+      margin-left: var(--b3-protyle-padding-left);
+      margin-right: max(var(--b3-protyle-padding-right), var(--b3-protyle-page-scroll-gutter, 0px));
+    }
+  }
+}
+
+.protyle-preview[data-padding-mode="responsive"][data-device="desktop"] > .b3-typography {
+  --b3-protyle-padding-left: 24px;
+  --b3-protyle-padding-right: 16px;
+  padding-left: var(--b3-protyle-padding-left);
+  padding-right: var(--b3-protyle-padding-right);
+}
+
+@container protyle-padding (width > 760px) {
+  .protyle-content[data-padding-mode="responsive"] {
+    > .protyle-top,
+    > .protyle-wysiwyg,
+    > .sy__backlink--bottom {
+      --b3-protyle-padding-left: 96px;
+      --b3-protyle-padding-right: 96px;
+    }
+  }
+
+  .protyle-preview[data-padding-mode="responsive"][data-device="desktop"] > .b3-typography {
+    --b3-protyle-padding-left: 96px;
+    --b3-protyle-padding-right: 96px;
+  }
+}
+
+@container protyle-padding (width > 952px) {
+  .protyle-content[data-padding-mode="responsive"]:not([data-fullwidth]) {
+    > .protyle-top,
+    > .protyle-wysiwyg,
+    > .sy__backlink--bottom {
+      --b3-protyle-padding-left: calc((100cqi - 760px) / 2);
+      --b3-protyle-padding-right: calc((100cqi - 760px) / 2);
+    }
+  }
+
+  .protyle-preview[data-padding-mode="responsive"][data-device="desktop"]:not([data-fullwidth]) > .b3-typography {
+    --b3-protyle-padding-left: calc((100cqi - 760px) / 2);
+    --b3-protyle-padding-right: calc((100cqi - 760px) / 2);
+  }
+}
+
+@container protyle-padding (width > 2280px) {
+  .protyle-content[data-padding-mode="responsive"]:not([data-fullwidth]) {
+    > .protyle-top,
+    > .protyle-wysiwyg,
+    > .sy__backlink--bottom {
+      --b3-protyle-padding-left: calc(100cqi * .382 / 1.382);
+      --b3-protyle-padding-right: calc(100cqi * .382 / 1.382);
+    }
+  }
+
+  .protyle-preview[data-padding-mode="responsive"][data-device="desktop"]:not([data-fullwidth]) > .b3-typography {
+    --b3-protyle-padding-left: calc(100cqi * .382 / 1.382);
+    --b3-protyle-padding-right: calc(100cqi * .382 / 1.382);
+  }
+}
+
+.sy__backlink {
+  .backlinkList__source {
+    appearance: none;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 4px 28px;
+    border: 0;
+    border-radius: var(--b3-border-radius);
+    background-color: transparent;
+    color: var(--b3-theme-on-surface-light);
+    font: inherit;
+    font-size: 12px;
+    line-height: 20px;
+    text-align: start;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--b3-list-hover);
+      color: var(--b3-theme-on-background);
+    }
+
+    &:focus-visible {
+      outline: 1px solid var(--b3-theme-primary);
+      outline-offset: -1px;
+    }
+  }
+
+  // 仅为上下文首块已有的属性栏留出空间，普通块保持紧凑。
+  .protyle-wysiwyg > .protyle-breadcrumb__bar + [data-node-id]:is(
+    [name]:not([name=""]),
+    [alias]:not([alias=""]),
+    [memo]:not([memo=""]),
+    [bookmark]:not([bookmark=""]),
+    [custom-avs]:not([custom-avs=""])
+  ) {
+    margin-top: 12px;
+  }
+
+  .backlinkList__loading {
+    align-items: center;
+    box-sizing: border-box;
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    min-height: 40px;
+    width: 100%;
+  }
+
+  [data-backlink-type-folded] {
+    display: none !important;
+  }
+
+  .backlinkTypeFold {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    margin: 4px 0;
+    padding: 0 4px;
+    padding-inline-end: 8px;
+    border: 0;
+    border-radius: var(--b3-border-radius);
+    background-color: transparent;
+    color: var(--b3-theme-on-surface);
+    font: inherit;
+    font-size: 14px;
+    line-height: 24px;
+    flex-shrink: 0;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--b3-list-hover);
+      color: var(--b3-theme-on-background);
+    }
+
+    svg {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+    }
+  }
+
+  > .backlinkList,
+  > .backlinkMList {
+    > .b3-list > .backlinkList__item {
+      display: flow-root;
+      position: relative;
+
+      > .protyle > .protyle-gutters {
+        z-index: 7; // 块标需高于吸顶标题以保持完整显示和可操作
+      }
+
+      > .b3-list-item {
+        background-color: var(--b3-theme-background);
+        position: sticky;
+        top: 0;
+        z-index: 6; // 需高于编辑器内固定表头及高亮层，低于工具栏
+
+        &:hover:not(.b3-list-item--focus):not(.dragover):not(.dragover__current):not(.dragover__top):not(.dragover__bottom),
+        &.b3-list-item--focus {
+          background-color: var(--b3-theme-background);
+          background-image: linear-gradient(var(--b3-list-hover), var(--b3-list-hover));
+        }
+
+        > .counter {
+          background-color: var(--b3-theme-background-light);
+          color: var(--b3-theme-on-surface-light);
+          height: 18px;
+          line-height: 18px;
+          padding: 0 4px;
+
+          &:hover {
+            background-color: var(--b3-theme-background-light);
+            color: var(--b3-theme-on-surface-light);
+          }
+        }
+      }
+    }
+  }
+}
+
+.sy__backlink--bottom {
+  // 避免浏览器锚定下方提及内容，导致折叠时标题随滚动补偿移动。
+  overflow-anchor: none;
+
+  .backlinkList__loading {
+    height: 40px;
+  }
+
+  box-sizing: border-box;
+  min-height: 32px;
+  outline: none;
+
+  &.sy__backlink--backlinks-empty {
+    > .backlinkList__header,
+    > .backlinkList {
+      display: none;
+    }
+  }
+
+  &.sy__backlink--mentions-empty {
+    > .backlinkMList__header,
+    > .backlinkMList {
+      display: none;
+    }
+  }
+
+  &.sy__backlink--pending {
+    height: 1px;
+    min-height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    padding-bottom: 0 !important;
+    pointer-events: none;
+  }
+
+  > .block__icons {
+    border-top: 1px solid var(--b3-border-color);
+    flex-shrink: 0;
+    position: relative;
+
+    > .block__icon.backlinkList__toggle {
+      box-sizing: border-box;
+      display: flex;
+      height: 22px;
+      margin-left: -4px;
+      opacity: 1;
+      width: 22px;
+
+      > svg {
+        height: 14px;
+        width: 14px;
+      }
+
+      + .block__logo {
+        margin-left: 2px;
+      }
+    }
+
+    > .search__label {
+      top: 7px;
+      max-width: calc(100% - 16px);
+      box-sizing: border-box;
+    }
+  }
+
+  > .backlinkList,
+  > .backlinkMList {
+    flex: none;
+    min-height: auto;
+    overflow: visible;
+
+    > .b3-list > .backlinkList__item > .b3-list-item {
+      margin-left: 0;
+
+      > .b3-list-item__toggle {
+        box-sizing: border-box;
+        margin-left: 0;
+        margin-right: 0 !important;
+        padding-left: 4px !important;
+        padding-right: 4px;
+        width: 22px;
+      }
+
+      > .counter {
+        margin-right: -4px;
+      }
+    }
+  }
+
+  > .backlinkList--divider-spacing:not(.fn__none) + .block__icons {
+    margin-top: 8px;
+  }
+}
+
+.protyle-top:hover .protyle-background--enable {
+  .protyle-background__action,
+  .protyle-background__img .protyle-icons {
+    opacity: .86;
+  }
+}
+
+.protyle-background {
+  position: relative;
+
+  &:not(.protyle-background--enable) {
+    .protyle-background__img .protyle-icons,
+    .b3-chips__doctag .b3-chip__close,
+    .protyle-background__action {
+      display: none;
+    }
+
+    .protyle-background__icon {
+      cursor: default;
+    }
+  }
+
+  &--enable {
+    .protyle-background__img:hover .protyle-icons,
+    .protyle-background__icon:hover {
+      opacity: .86;
+    }
+  }
+
+  &--mobileshow {
+    .protyle-background__action,
+    .protyle-background__img .protyle-icons {
+      opacity: .86;
+    }
+  }
+
+  &__action {
+    transition: opacity 150ms linear;
+    opacity: 0;
+  }
+
+  &--hide-actions &__action {
+    display: none;
+  }
+
+  &__icon {
+    height: 80px;
+    width: 80px;
+    transition: opacity 150ms linear;
+    cursor: pointer;
+    font-size: 68px; // 🔪显示不完整
+    line-height: 80px;
+    text-align: center;
+    font-family: var(--b3-font-family-emoji);
+    font-variant-emoji: emoji;
+    z-index: 1;
+    position: relative;
+    margin-top: -48px;
+    margin-bottom: 8px;
+
+    img, svg {
+      height: 80px;
+      width: 80px;
+      float: left;
+      border-radius: var(--b3-border-radius);
+    }
+
+    &:not(.fn__none) + .protyle-icons {
+      margin-top: 56px;
+    }
+  }
+
+  &__img {
+    width: 100%;
+    margin-bottom: 8px;
+
+    img {
+      object-fit: cover;
+      width: 100%;
+      height: 30vh;
+      opacity: 1;
+      object-position: center;
+    }
+
+    .protyle-icons {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+
+      &:nth-child(3) {
+        left: 50%;
+        opacity: 0.86;
+        top: 15vh;
+        margin-top: -12px;
+        margin-left: -70px;
+      }
+    }
+  }
+}
+
+.protyle-title {
+  margin: 34px 16px 0 24px;
+  position: relative;
+  font-size: var(--b3-font-size-editor);
+  font-family: var(--b3-font-family-protyle);
+  padding-left: 2px;
+  border-radius: var(--b3-border-radius);
+
+  &:hover .protyle-title__icon {
+    opacity: 1;
+  }
+
+  &[custom-riff-decks] {
+    box-shadow: 2px 0 0 0 var(--b3-protyle-inline-mark-background) inset;
+  }
+
+  &__icon {
+    position: absolute;
+    left: -22px;
+    top: 50%;
+    opacity: 0;
+    margin: -17px 0 0 0;
+    padding: 9px 3px 9px 3px;
+    transition: var(--b3-transition);
+    color: var(--b3-theme-on-surface-light);
+    cursor: pointer;
+    line-height: 20px;
+
+    &:hover {
+      color: var(--b3-theme-on-surface);
+    }
+
+    svg {
+      height: 16px;
+      width: 16px;
+      float: left;
+    }
+  }
+
+  &__input {
+    width: 100%;
+    color: var(--b3-theme-on-background);
+    box-sizing: border-box;
+    border: 0;
+    font-size: 2em;
+    font-weight: bold;
+    line-height: 1.625;
+    padding: 0 4px 0 2px;
+    white-space: break-spaces;
+
+    &:empty::after {
+      content: attr(data-tip);
+      color: var(--b3-empty-color);
+      cursor: text;
+    }
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+.protyle-password {
+  text-align: center !important;
+
+  &__content {
+    display: flex;
+    width: 260px;
+    margin: 0 auto;
+  }
+
+  &__logo {
+    font-size: 80px;
+  }
+
+  &__tip {
+    font-size: 2rem;
+  }
+}
+
+.table__cell-rich,
+.table__cell-editor {
+  // 跟随单元格的可用宽度，保证预览与编辑使用相同的折行边界。
+  width: auto;
+  max-width: 100%;
+}
+
+.table__cell-rich .code-block,
+.table__cell-editor .code-block,
+.mindmap-view__content .code-block {
+  // 预览与编辑共用最小宽度，为代码内容和顶部操作区保留空间。
+  min-width: 200px;
+
+  .protyle-action__language {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.table__cell-rich {
+  min-width: 0;
+  min-height: 1.6em;
+  white-space: normal;
+  cursor: text;
+  padding: 0 !important;
+
+  .protyle-action {
+    pointer-events: none;
+  }
+
+  .protyle-icons,
+  .protyle-icon,
+  .protyle-action__language {
+    display: none !important;
+  }
+}
+
+.table__cell-editor {
+  min-width: 0;
+  min-height: 0;
+  white-space: normal;
+
+  [contenteditable="true"]:focus {
+    outline: none;
+  }
+
+  &.protyle {
+    background-color: transparent;
+  }
+
+  .protyle-content {
+    overflow: visible;
+
+    &[data-padding-mode="responsive"] {
+      // 单元格由内容参与列宽计算，不能隔离内部列表等块的固有宽度。
+      container-type: normal;
+    }
+  }
+
+  .protyle-wysiwyg {
+    padding: 0 !important;
+    min-height: 1.6em;
+    // 继承单元格字号，保持预览与编辑时的文字大小一致。
+    font-size: inherit;
+  }
+}
+
+.table__cell-rich.table__cell--inline,
+.table__cell-editor.table__cell--inline {
+  min-width: 0;
+  min-height: 0;
+  padding: 0 !important;
+
+  &,
+  .protyle-wysiwyg {
+    padding: 0 !important;
+    min-height: 0;
+
+    > .p {
+      margin: 0;
+      padding: 0;
+      line-height: inherit;
+
+      > [contenteditable] {
+        min-height: 1lh;
+      }
+    }
+  }
+}
+
+.table__cell-rich.table__cell--empty,
+.table__cell-editor.table__cell--empty {
+  // 空内容填满单元格，避免零宽编辑容器裁掉光标。
+  width: 100%;
+}
+
+.table__cell-rich [data-table-cell-content],
+.table__cell-editor .protyle-wysiwyg [contenteditable="true"] {
+  // 为空列表项等块的文字区域保留光标宽度，预览和编辑时保持一致。
+  min-width: 1px;
+}
+
+.table__cell-rich > .list[data-type="NodeList"],
+.table__cell-editor .protyle-wysiwyg > .list[data-type="NodeList"] {
+  // 首层列表按内容宽度整体对齐，内部保留左对齐，窄列中仍限制宽度以便换行。
+  margin-inline: var(--b3-table-cell-list-start, -8px) var(--b3-table-cell-list-end, 0);
+  width: fit-content;
+  max-width: calc(100% + var(--b3-table-cell-list-inset, 8px));
+  text-align: left;
+}
+
+.protyle-wysiwyg :is(td, th) {
+  // 普通左对齐抵消列表起始侧留白，居中和居右则使用单元格内容边界。
+  &[style*="text-align: center"] {
+    --b3-table-cell-list-start: auto;
+    --b3-table-cell-list-end: auto;
+    --b3-table-cell-list-inset: 0px;
+  }
+
+  &[style*="text-align: right"] {
+    --b3-table-cell-list-start: auto;
+    --b3-table-cell-list-end: 0;
+    --b3-table-cell-list-inset: 0px;
+  }
+}
+
+.table__cell-rich .li [data-table-cell-content],
+.table__cell-editor .protyle-wysiwyg .li [contenteditable="true"] {
+  // 列宽收缩时，列表缩进之外至少保留一个字符的空间。
+  min-width: 1em;
+}
+
+.table__cell-editor .protyle-wysiwyg [data-node-id] {
+  // 单元格的对齐方式优先于正文的两端对齐设置。
+  text-align: inherit;
+}
+
+.table__cell-rich > .p[data-table-cell-node],
+.table__cell-rich > .h1[data-table-cell-node],
+.table__cell-rich > .h2[data-table-cell-node],
+.table__cell-rich > .h3[data-table-cell-node],
+.table__cell-rich > .h4[data-table-cell-node],
+.table__cell-rich > .h5[data-table-cell-node],
+.table__cell-rich > .h6[data-table-cell-node],
+.table__cell-editor .protyle-wysiwyg > .p,
+.table__cell-editor .protyle-wysiwyg > .h1,
+.table__cell-editor .protyle-wysiwyg > .h2,
+.table__cell-editor .protyle-wysiwyg > .h3,
+.table__cell-editor .protyle-wysiwyg > .h4,
+.table__cell-editor .protyle-wysiwyg > .h5,
+.table__cell-editor .protyle-wysiwyg > .h6 {
+  // 单元格已提供侧边留白，多段落和标题与普通文本使用相同的对齐边界。
+  padding-inline: 0;
+}
+
+.protyle-wysiwyg [data-type="NodeTable"] {
+  td.dragover__top,
+  td.dragover__bottom,
+  th.dragover__top,
+  th.dragover__bottom {
+    position: relative;
+
+    // 与空单元格的占位行分离，避免占位行高度覆盖插入线高度。
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background-color: var(--b3-theme-primary-lighter);
+      pointer-events: none;
+    }
+  }
+
+  td.dragover__top::before,
+  th.dragover__top::before {
+    top: -4px;
+  }
+
+  td.dragover__bottom::before,
+  th.dragover__bottom::before {
+    bottom: -4px;
+  }
+
+  td[tabindex="-1"]:focus,
+  th[tabindex="-1"]:focus {
+    outline: none;
+  }
+
+  td:empty::after,
+  th:empty::after {
+    // 空单元格与输入文字共用行盒高度，避免输入第一个字符时改变整行高度。
+    content: "\200b";
+    display: block;
+    height: auto;
+  }
+}
+
+.table__cell-editor .protyle-wysiwyg > .p > [contenteditable]:empty {
+  &::before,
+  &::after {
+    content: none !important;
+  }
+}
+
+table[contenteditable="false"] + .protyle-action__table > .table__resize {
+  display: none !important;
+}
+
+// 按下 Shift 时隐藏表格列宽调整手柄，以便 Shift+滚轮可以横向滚动表格 https://github.com/siyuan-note/siyuan/issues/13828
+body.body--shift-pressed .table__resize {
+  display: none !important;
+}
+
+table + .protyle-action__table {
+  position: absolute;
+  top: 4px;
+  height: 0;
+  width: 0;
+  -webkit-user-modify: read-only;
+
+  .table__resize {
+    position: absolute;
+    top: 0;
+    width: 6px;
+    cursor: col-resize;
+    z-index: 2;
+    touch-action: none;
+
+    &:hover::after {
+      background-color: var(--b3-theme-primary-light);
+    }
+
+    &::after {
+      top: 0;
+      width: 2px;
+      left: 2px;
+      height: 100%;
+      content: "";
+      display: block;
+      position: absolute;
+      transition: var(--b3-transition);
+    }
+  }
+
+  .table__select {
+    background: var(--b3-theme-primary-lightest);
+    position: relative;
+    transition: var(--b3-transition);
+    z-index: 3;
+  }
+
+  .table[custom-pinthead="true"] &::before {
+    --b3-table-frame-radius: var(--b3-border-radius-s);
+    position: absolute;
+    left: var(--b3-table-frame-left);
+    top: var(--b3-table-frame-top);
+    z-index: 2;
+    width: var(--b3-table-frame-width);
+    height: var(--b3-table-frame-height);
+    background-image: radial-gradient(circle var(--b3-table-frame-radius) at bottom right, transparent calc(100% - 1px), var(--b3-theme-surface-lighter) calc(100% - .5px), var(--b3-parent-background) 100%),
+      radial-gradient(circle var(--b3-table-frame-radius) at bottom left, transparent calc(100% - 1px), var(--b3-theme-surface-lighter) calc(100% - .5px), var(--b3-parent-background) 100%),
+      radial-gradient(circle var(--b3-table-frame-radius) at top right, transparent calc(100% - 1px), var(--b3-theme-surface-lighter) calc(100% - .5px), var(--b3-parent-background) 100%),
+      radial-gradient(circle var(--b3-table-frame-radius) at top left, transparent calc(100% - 1px), var(--b3-theme-surface-lighter) calc(100% - .5px), var(--b3-parent-background) 100%);
+    background-repeat: no-repeat;
+    background-position: top left, top right, bottom left, bottom right;
+    background-size: var(--b3-table-frame-radius) var(--b3-table-frame-radius);
+    content: "";
+    pointer-events: none;
+  }
+}
+
+.protyle-wysiwyg--select,
+.protyle-wysiwyg--select-mode,
+.protyle-wysiwyg--hl {
+  .protyle-action__table::before {
+    display: none;
+  }
+}
+
+.table__cell--touch-selecting {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.protyle-table-control {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+
+  &__handle,
+  &__add {
+    position: fixed;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 0;
+    cursor: pointer;
+    pointer-events: auto;
+    transform: translate(-50%, -50%);
+  }
+
+  &__handle {
+    width: 24px;
+    height: 24px;
+    color: var(--b3-theme-on-primary);
+    background-color: transparent;
+    border: 0;
+    box-shadow: none;
+
+    &::before {
+      position: absolute;
+      content: "";
+      background-color: var(--b3-theme-on-surface-light);
+      border-radius: var(--b3-border-radius-b);
+      pointer-events: none;
+    }
+
+    svg {
+      box-sizing: border-box;
+      width: 16px;
+      height: 20px;
+      padding: 2px;
+      opacity: 0;
+      background-color: var(--b3-theme-primary);
+      border-radius: var(--b3-border-radius-s);
+      box-shadow: var(--b3-point-shadow);
+      transition: opacity 150ms linear;
+    }
+
+    &:hover,
+    &--active {
+      &::before {
+        opacity: 0;
+      }
+
+      svg {
+        opacity: 1;
+      }
+    }
+
+    &--row,
+    &--column {
+      cursor: grab;
+
+      &::before {
+        opacity: 0;
+      }
+    }
+
+    &--row {
+      &::before {
+        width: 3px;
+        height: 16px;
+        max-height: calc(100% - 4px);
+      }
+    }
+
+    &--column {
+      &::before {
+        width: 16px;
+        max-width: calc(100% - 4px);
+        height: 3px;
+      }
+
+      svg {
+        transform: rotate(90deg);
+      }
+    }
+
+    &--drag-disabled {
+      cursor: pointer;
+    }
+
+    &--cell {
+      width: 16px;
+      height: 24px;
+
+      &::before {
+        width: 3px;
+        height: 16px;
+      }
+    }
+  }
+
+  &__add {
+    width: 24px;
+    height: 24px;
+    color: var(--b3-theme-on-surface);
+    background-color: var(--b3-theme-background);
+    border: 1px solid var(--b3-border-color);
+    border-radius: var(--b3-border-radius-s);
+    box-shadow: var(--b3-point-shadow);
+
+    &--row,
+    &--column {
+      background-color: var(--b3-parent-background);
+      border-color: var(--b3-theme-surface-lighter);
+      box-shadow: none;
+    }
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    &:hover {
+      color: var(--b3-theme-primary);
+      background-image: linear-gradient(var(--b3-list-hover), var(--b3-list-hover));
+    }
+
+    &--row:hover,
+    &--column:hover {
+      color: var(--b3-theme-on-surface);
+      background-color: var(--b3-table-even-background);
+      background-image: none;
+    }
+
+    &--active,
+    &--active:hover {
+      color: var(--b3-theme-on-primary);
+      background-color: var(--b3-theme-primary);
+      background-image: none;
+
+      &::after {
+        display: none;
+      }
+    }
+
+    &--row {
+      cursor: row-resize;
+    }
+
+    &--column {
+      cursor: col-resize;
+    }
+
+    &--both {
+      cursor: nwse-resize;
+    }
+  }
+
+  &__size {
+    position: fixed;
+    z-index: 4;
+    padding: 2px 6px;
+    color: var(--b3-tooltips-color);
+    font-size: 12px;
+    line-height: 20px;
+    white-space: nowrap;
+    background-color: var(--b3-tooltips-background);
+    border-radius: var(--b3-border-radius-s);
+    pointer-events: none;
+  }
+
+  &__selection {
+    position: fixed;
+    z-index: 1;
+    box-sizing: border-box;
+    background-color: var(--b3-theme-primary-lightest);
+    border: 1px solid var(--b3-theme-primary);
+    pointer-events: none;
+  }
+
+  &__drop,
+  &__width-guide,
+  &__height-guide {
+    position: fixed;
+    z-index: 3;
+    background-color: var(--b3-theme-primary);
+    pointer-events: none;
+  }
+
+  &__width-guide {
+    width: 2px;
+    transform: translateX(-50%);
+  }
+
+  &__height-guide {
+    height: 2px;
+    transform: translateY(-50%);
+  }
+
+  &__height {
+    height: 8px;
+    cursor: row-resize;
+    touch-action: none;
+
+    &::before {
+      width: 100%;
+      height: 2px;
+      background-color: var(--b3-theme-primary);
+    }
+  }
+
+  &__width {
+    width: 28px;
+    cursor: col-resize;
+    touch-action: pan-y;
+
+    &::before {
+      width: 2px;
+      height: 100%;
+      background-color: var(--b3-theme-primary);
+    }
+
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+
+  &--touch {
+    .protyle-table-control__height {
+      height: 28px;
+    }
+
+    > .protyle-table-control__handle,
+    > .protyle-table-control__add {
+      display: none;
+    }
+  }
+
+  &__touch-button,
+  &__endpoint {
+    position: fixed;
+    z-index: 3;
+    width: 28px;
+    height: 28px;
+    justify-content: center;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+    touch-action: none;
+  }
+
+  &__endpoint {
+    z-index: 4;
+
+    &::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      background-color: var(--b3-theme-primary);
+      border: 2px solid var(--b3-theme-background);
+      border-radius: 50%;
+    }
+  }
+
+  &__toolbar {
+    left: 8px;
+    right: 8px;
+    top: 8px;
+    width: auto;
+    pointer-events: auto;
+  }
+
+  &__touch-add {
+    touch-action: none;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: -6px;
+    }
+  }
+
+  &__touch-handle {
+    width: 16px;
+    height: 16px;
+    touch-action: none;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+    }
+
+    &.protyle-table-control__handle--row::after {
+      left: -12px;
+    }
+
+    &.protyle-table-control__handle--column::after {
+      top: -12px;
+    }
+  }
+}
+.image-ocr {
+  display: flex;
+  gap: 16px;
+  min-height: 0;
+
+  &__preview {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+
+    img {
+      max-width: 100%;
+    }
+  }
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+    resize: none;
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+
+    &__text {
+      min-height: 160px;
+    }
+  }
+}
+
+.img__name,
+.img__alt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  overflow-wrap: anywhere;
+  white-space: break-spaces;
+
+  > span {
+    flex: 1;
+    width: 0;
+  }
+}

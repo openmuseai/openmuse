@@ -1,0 +1,16 @@
+// This is a generated file; do not edit or check into version control.
+FLUTTER_ROOT=/Users/mac/src/flutter
+FLUTTER_APPLICATION_PATH=/Users/mac/src/openmuse-io/Muse-Plugin-Ecosystem/plugins/markdown/flutter_runtime/example
+FLUTTER_FRAMEWORK_SWIFT_PACKAGE_PATH=/Users/mac/src/openmuse-io/Muse-Plugin-Ecosystem/plugins/markdown/flutter_runtime/example/ios/Flutter/ephemeral/Packages/.packages/FlutterFramework
+COCOAPODS_PARALLEL_CODE_SIGN=true
+FLUTTER_TARGET=/var/folders/gg/dzp5f_5n7rqbyyn9s0sd58z80000gn/T/flutter_tools.Z87BgA/flutter_test_listener.dgGhaI/listener.dart
+FLUTTER_BUILD_DIR=build
+FLUTTER_BUILD_NAME=1.0.0
+FLUTTER_BUILD_NUMBER=1
+EXCLUDED_ARCHS[sdk=iphonesimulator*]=i386
+EXCLUDED_ARCHS[sdk=iphoneos*]=armv7
+DART_DEFINES=RkxVVFRFUl9WRVJTSU9OPTMuNDQuMg==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049YzlhNmM0ODQyMw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049NzdlMmU5NDc3Mg==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMi4y,SU5URUdSQVRJT05fVEVTVF9TSE9VTERfUkVQT1JUX1JFU1VMVFNfVE9fTkFUSVZFPWZhbHNl
+DART_OBFUSCATION=false
+TRACK_WIDGET_CREATION=true
+TREE_SHAKE_ICONS=false
+PACKAGE_CONFIG=/Users/mac/src/openmuse-io/Muse-Plugin-Ecosystem/plugins/markdown/flutter_runtime/example/.dart_tool/package_config.json

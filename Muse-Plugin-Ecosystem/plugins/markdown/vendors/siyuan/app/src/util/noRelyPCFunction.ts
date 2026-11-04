@@ -1,0 +1,117 @@
+import {openInputDialog} from "../dialog/inputDialog";
+import {fetchPost} from "./fetch";
+import {Constants} from "../constants";
+/// #if !MOBILE
+import {getDockByType} from "../layout/tabUtil";
+import {Tag} from "../layout/dock/Tag";
+/// #endif
+import {upDownHint} from "./upDownHint";
+import {escapeHtml} from "./escape";
+import {hasClosestByClassName} from "../protyle/util/hasClosest";
+import {isNotCtrl, isPhablet} from "../protyle/util/compatibility";
+import {electronUndo} from "../protyle/undo";
+
+export const genTagList = (listElement: Element, k: string) => {
+    listElement.classList.remove("fn__none");
+    fetchPost("/api/search/searchTag", {
+        k,
+    }, (response) => {
+        let searchHTML = "";
+        let hasKey = false;
+        response.data.tags.forEach((item: string, index: number) => {
+            searchHTML += `<div class="b3-list-item${index === 0 ? " b3-list-item--focus" : ""}">
+    <div class="fn__flex-1">${item}</div>
+</div>`;
+            if (item === `<mark>${response.data.k}</mark>`) {
+                hasKey = true;
+            }
+        });
+        if (!hasKey && response.data.k) {
+            searchHTML = `<div data-type="new" class="b3-list-item${searchHTML ? "" : " b3-list-item--focus"}"><div class="fn__flex-1">${window.siyuan.languages.new} <mark>${escapeHtml(response.data.k)}</mark></div></div>` + searchHTML;
+        }
+        listElement.innerHTML = searchHTML;
+    });
+};
+
+// 需独立出来，否则移动端引用的时候会引入 pc 端大量无用代码
+export const renameTag = (labelName: string) => {
+    const dialog = openInputDialog({
+        title: window.siyuan.languages.rename,
+        value: labelName,
+        bindInput: false,
+        extraContent: `<div class="b3-list fn__flex-1 b3-list--background fn__none protyle-hint" style="position: absolute;width: calc(100% - 48px);">
+        <div class="fn__flex" style="height:64px;align-items:center;justify-content:center"><span class="b3-loading" aria-hidden="true"></span></div>
+    </div>`,
+        onConfirm: (value, dialog) => {
+            fetchPost("/api/tag/renameTag", {oldLabel: labelName, newLabel: value}, () => {
+                dialog.destroy();
+                /// #if MOBILE
+                window.siyuan.mobile.docks.tag.update();
+                /// #else
+                const dockTag = getDockByType("tag");
+                (dockTag.data.tag as Tag).update();
+                /// #endif
+            });
+        },
+    });
+    dialog.element.setAttribute("data-key", Constants.DIALOG_RENAMETAG);
+    const inputElement = dialog.element.querySelector<HTMLInputElement>("[data-dialog-input]");
+    const confirmElement = dialog.element.querySelector<HTMLButtonElement>("[data-input-confirm]");
+    const listElement = dialog.element.querySelector(".b3-list--background");
+    inputElement.addEventListener("keydown", (event: KeyboardEvent) => {
+        event.stopPropagation();
+        if (event.isComposing) {
+            return;
+        }
+        upDownHint(listElement, event);
+        if (event.key === "Escape") {
+            if (listElement.classList.contains("fn__none")) {
+                dialog.destroy();
+            } else {
+                listElement.classList.add("fn__none");
+            }
+            event.preventDefault();
+        } else if (!event.shiftKey && isNotCtrl(event) && event.key === "Enter") {
+            if (listElement.classList.contains("fn__none")) {
+                confirmElement.click();
+            } else {
+                const currentElement = listElement.querySelector(".b3-list-item--focus") as HTMLElement;
+                inputElement.value = currentElement.dataset.type === "new" ? currentElement.querySelector("mark").textContent.trim() : currentElement.textContent.trim();
+                listElement.classList.add("fn__none");
+            }
+            event.preventDefault();
+        } else {
+            electronUndo(event);
+        }
+    });
+    inputElement.addEventListener("input", (event: KeyboardEvent) => {
+        event.stopPropagation();
+        if (!event.isComposing) {
+            genTagList(listElement, inputElement.value.trim());
+        }
+    });
+    inputElement.addEventListener("compositionend", () => {
+        genTagList(listElement, inputElement.value.trim());
+    });
+    listElement.addEventListener("click", (event) => {
+        const target = event.target as HTMLElement;
+        const listItemElement = hasClosestByClassName(target, "b3-list-item");
+        if (!listItemElement) {
+            return;
+        }
+        inputElement.value = listItemElement.dataset.type === "new" ? listItemElement.querySelector("mark").textContent.trim() : listItemElement.textContent.trim();
+        listElement.classList.add("fn__none");
+    });
+};
+
+export const checkFold = (id: string, cb: (zoomIn: boolean, action: TProtyleAction[], isRoot: boolean) => void) => {
+    if (!id) {
+        return;
+    }
+    fetchPost("/api/block/checkBlockFold", {id}, (foldResponse) => {
+        const action = isPhablet() ? Constants.CB_GET_HL : Constants.CB_GET_FOCUS;
+        cb(foldResponse.data.isFolded,
+            foldResponse.data.isFolded ? [action, Constants.CB_GET_ALL] : [action, Constants.CB_GET_CONTEXT, Constants.CB_GET_ROOTSCROLL],
+            foldResponse.data.isRoot);
+    });
+};

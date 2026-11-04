@@ -1,0 +1,8 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_spid_identity,spid 位域与 type()/id(),shapeType+仓下标,spid 且 queryType 还原 type,pp-02,02;03,libs/ppt-core,pass
+2,02_function_showshape_tree,Kmo 树 addChild/initRoot/shapeCount,parent type0 + children,shapeCount==childCount 且 dg group 含 child id,01,04,libs/ppt-core,pass
+3,03_function_dgstore_update,DgStore.add/update/query,shapeType + KoBin,六仓行 + 坏 spid 空操作,01,04;05,libs/ppt-core,pass
+4,04_function_sw_end_commit,Sw* endElement 双 bin 提交,kmoShape+dgShape+swShape,store.update+updateProtocol；Sw* 进默认 mod,02;03,05;06,libs/ppt-core,pass
+5,05_function_sppr_data_shapepr,spPr 写入 data ShapePr,spPr 事件+ShapePr,xfrm/geom/fill/ln 在 data 模型且 ln 不丢,pp-10;04,07,libs/ppt-core,pass
+6,06_function_txbody_data_textbody,txBody forceWrite 段列表,txBody 事件+TextBody,paraLst 有段,pp-11;04,07,libs/ppt-core,pass
+7,07_function_convert_read_kmo,ConvertTool 改读真实 Kmo/ShapePr,真实 KmoShowShape,公开 Shape 热路径不经 layout_shape 别名,pl-09;05;06,pr-02,libs/ppt-core,pass

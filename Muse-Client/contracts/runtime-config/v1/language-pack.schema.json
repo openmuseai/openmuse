@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenMuse language namespace pack v1",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "sourceRevision",
+    "locale",
+    "namespace",
+    "messages"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "sourceRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "locale": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-[0-9]{3})?$"
+    },
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.]*$"
+    },
+    "messages": {
+      "type": "object",
+      "maxProperties": 4000,
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 16000
+      }
+    },
+    "contractHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,68 @@
+{
+	"ID": "20201227194925-7ipoiv6",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20201227194925-7ipoiv6",
+		"title": "内核 API",
+		"type": "doc",
+		"updated": "20261024163429"
+	},
+	"Children": [
+		{
+			"ID": "20261024161816-bx2hbeo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-bx2hbeo",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "内核 API 通过 HTTP 提供文档、内容块、资源文件等数据操作，适合脚本和外部工具集成。调用前需启动思源内核，并按接口要求使用 API Token。具体参数和示例见下方 API 文档。"
+				}
+			]
+		},
+		{
+			"ID": "20210822163618-m0zvvbe",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210822163618-m0zvvbe",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkTextContent": "API 文档",
+					"TextMarkAHref": "https://github.com/siyuan-note/siyuan/blob/dev/docs/API.zh-CN.md"
+				}
+			]
+		},
+		{
+			"ID": "20260804225001-apicn01",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260804225001-apicn01",
+				"updated": "20260804230000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源还通过 MCP 向外部客户端提供工具，连接方式和权限说明请参阅 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260804223000-mcpsv01",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "MCP 服务"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,13 @@
+feature_id,title,description,depends_on_feature,status
+pl-01-units-view,EMU与slide视口,slideSize EMU与缩放换成 layout/render 单位,,pass
+pl-02-xfrm-geometry,形状绝对几何,Transform2D与group子级→RectF,pl-01-units-view,pass
+pl-03-ph-merge,placeholder 继承合并,从 layout/master 补 xfrm/fill/style,pp-02-shape-tree-parse;pl-02-xfrm-geometry,pass
+pl-04-text-box,shape→TextBoxData,KmoShowShape 抽出可排文本框,pp-11-dml-txbody;pl-03-ph-merge,pass
+pl-05-text-typo,框内贪心断行,TextBoxData+框尺寸→行几何（≠Java RTL）,pl-04-text-box;pl-01-units-view,pass
+pl-06-typo-shape,ShowTypoShape 快照,shape+geometry+hidden/ph→排版结果对象,pl-02-xfrm-geometry;pl-05-text-typo,pass
+pl-07-ph-content-apply,继承结果写回产品 shape,mergeShapePr 写回+空 ph 文本继承,pl-03-ph-merge;pp-14-layout-master-bind,pass
+pl-08-group-abs-geom,组 chOff/chExt 与子级绝对框,grpSp 子级 slide 绝对几何,pl-02-xfrm-geometry;pl-07-ph-content-apply,pass
+pl-09-public-shape-convert,Kmo→公开 Shape（S5 convert）,惰性 ConvertTool+SlideCache 产出 drawing.Shape,pp-10;pp-11;pp-16;pl-01;pl-02;pl-03;pl-06,pass
+pl-10-g6-semantic-parity,G6 语义四条,anchor/ph缺省/负舍入/canRotate 与 Java 同公式,pl-05-text-typo;pl-03-ph-merge;pl-01-units-view,spec
+pl-11-shapepr-follow,ShapePr.follow 惰性链,未写槽读 parent 禁止深拷贝冒充,pp-20-open-write-kmo;pl-03-ph-merge,spec
+pl-12-textbox-live-paths,S7 活路径,解开 getParaDirection/getTextSpacing/convertBullet,pl-04-text-box,spec

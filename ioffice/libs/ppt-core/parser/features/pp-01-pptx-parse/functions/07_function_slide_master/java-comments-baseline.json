@@ -1,0 +1,17 @@
+{
+  "total": 115,
+  "files": [
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/pptxr/handler/slidemasters/SlideMasterHandler.rs",
+      "count": 66
+    },
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/pptxr/handler/slidemasters/HeaderFooterHandler.rs",
+      "count": 30
+    },
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/pptxr/handler/slidemasters/TextStylesHandler.rs",
+      "count": 19
+    }
+  ]
+}

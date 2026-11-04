@@ -1,0 +1,15 @@
+pub mod SecondMoment;
+pub mod Variance;
+pub mod GeometricMean;
+pub mod Mean;
+pub mod Kurtosis;
+pub mod Skewness;
+pub mod VectorialCovariance;
+pub mod FirstMoment;
+pub mod FourthMoment;
+#[path = "package-info.rs"]
+pub mod package_info;
+pub mod SemiVariance;
+pub mod StandardDeviation;
+pub mod ThirdMoment;
+pub mod VectorialMean;

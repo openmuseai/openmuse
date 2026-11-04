@@ -1,0 +1,273 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package cmd
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/siyuan/kernel/model"
+
+	"github.com/spf13/cobra"
+)
+
+var exportCmd = &cobra.Command{
+	Use:   "export",
+	Short: "Export documents",
+}
+
+var exportMdCmd = &cobra.Command{
+	Use:   "md --id <id>",
+	Short: "Export as Markdown",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id, _ := cmd.Flags().GetString("id")
+		if id == "" {
+			return fmt.Errorf("--id is required")
+		}
+
+		output, _ := cmd.Flags().GetString("output")
+		if dryRun {
+			if output == "" {
+				output = "stdout"
+			}
+			fmt.Printf("[dry-run] Would export markdown for document %s to %s\n", id, output)
+			return nil
+		}
+
+		_, content := model.ExportMarkdownContent(id, &model.ExportOptions{
+			BlockRefMode:   new(4),
+			BlockEmbedMode: new(0),
+			MarkdownYFM:    new(true),
+			AddTitle:       new(false),
+		})
+		return writeExportContent(content, output)
+	},
+}
+
+var exportHTMLCmd = &cobra.Command{
+	Use:   "html --id <id>",
+	Short: "Export as HTML",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id, _ := cmd.Flags().GetString("id")
+		if id == "" {
+			return fmt.Errorf("--id is required")
+		}
+
+		output, _ := cmd.Flags().GetString("output")
+		if dryRun {
+			if output == "" {
+				output = "stdout"
+			}
+			fmt.Printf("[dry-run] Would export HTML for document %s to %s\n", id, output)
+			return nil
+		}
+
+		_, dom, _ := model.ExportHTML(id, "", false, false, false)
+		return writeExportContent(dom, output)
+	},
+}
+
+var exportPreviewCmd = &cobra.Command{
+	Use:   "preview --id <id>",
+	Short: "Export as preview HTML",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id, _ := cmd.Flags().GetString("id")
+		if id == "" {
+			return fmt.Errorf("--id is required")
+		}
+
+		output, _ := cmd.Flags().GetString("output")
+		if dryRun {
+			if output == "" {
+				output = "stdout"
+			}
+			fmt.Printf("[dry-run] Would export preview HTML for document %s to %s\n", id, output)
+			return nil
+		}
+
+		html := model.ExportPreview(id, false, nil)
+		return writeExportContent(html, output)
+	},
+}
+
+var exportDocxCmd = &cobra.Command{
+	Use:   "docx --id <id> --output <file>",
+	Short: "Export as Word (.docx)",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id, _ := cmd.Flags().GetString("id")
+		output, _ := cmd.Flags().GetString("output")
+		if id == "" {
+			return fmt.Errorf("--id is required")
+		}
+		if output == "" {
+			return fmt.Errorf("--output is required for docx")
+		}
+
+		if dryRun {
+			fmt.Printf("[dry-run] Would export docx for document %s to %s\n", id, output)
+			return nil
+		}
+
+		fullPath, err := model.ExportDocx(id, output, false, false)
+		if err != nil {
+			return err
+		}
+		fmt.Println(fullPath)
+		return nil
+	},
+}
+
+var exportSYCmd = &cobra.Command{
+	Use:   "sy --id <id> [--output <file>]",
+	Short: "Export as .sy.zip",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id, _ := cmd.Flags().GetString("id")
+		if id == "" {
+			return fmt.Errorf("--id is required")
+		}
+
+		output, _ := cmd.Flags().GetString("output")
+		if dryRun {
+			if output != "" {
+				fmt.Printf("[dry-run] Would export .sy.zip for document %s to %s\n", id, output)
+			} else {
+				fmt.Printf("[dry-run] Would export .sy.zip for document %s to temp path\n", id)
+			}
+			return nil
+		}
+
+		_, zipPath := model.ExportPandocConvertZip([]string{id}, "", ".sy")
+		resultPath, err := materializeExportArtifact(zipPath, output)
+		if err != nil {
+			return err
+		}
+		if output == "" {
+			fmt.Println(resultPath)
+		}
+		return nil
+	},
+}
+
+var exportMdZipCmd = &cobra.Command{
+	Use:   "md-zip --id <id> [--output <file>]",
+	Short: "Export as Markdown zip",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id, _ := cmd.Flags().GetString("id")
+		if id == "" {
+			return fmt.Errorf("--id is required")
+		}
+
+		output, _ := cmd.Flags().GetString("output")
+		if dryRun {
+			if output != "" {
+				fmt.Printf("[dry-run] Would export markdown zip for document %s to %s\n", id, output)
+			} else {
+				fmt.Printf("[dry-run] Would export markdown zip for document %s to temp path\n", id)
+			}
+			return nil
+		}
+
+		_, zipPath := model.ExportPandocConvertZip([]string{id}, "", ".md")
+		resultPath, err := materializeExportArtifact(zipPath, output)
+		if err != nil {
+			return err
+		}
+		if output == "" {
+			fmt.Println(resultPath)
+		}
+		return nil
+	},
+}
+
+var exportDataCmd = &cobra.Command{
+	Use:   "data [--output <file>]",
+	Short: "Export full workspace data backup",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		output, _ := cmd.Flags().GetString("output")
+		if dryRun {
+			if output != "" {
+				fmt.Printf("[dry-run] Would export full data backup to %s\n", output)
+			} else {
+				fmt.Println("[dry-run] Would export full data backup to temp path")
+			}
+			return nil
+		}
+
+		zipPath, err := model.ExportData()
+		if err != nil {
+			return err
+		}
+		resultPath, err := materializeExportArtifact(zipPath, output)
+		if err != nil {
+			return err
+		}
+		if output == "" {
+			fmt.Println(resultPath)
+		}
+		return nil
+	},
+}
+
+func materializeExportArtifact(exportPath, output string) (resultPath string, err error) {
+	if exportPath == "" {
+		return "", fmt.Errorf("export failed: empty artifact path")
+	}
+	lease, err := model.AcquireExportArtifactLease(exportPath)
+	if err != nil {
+		return "", err
+	}
+	defer model.ReleaseExportArtifactLease(lease.ID)
+
+	if output == "" {
+		return lease.Path, nil
+	}
+	if err = filelock.Copy(lease.Path, output); err != nil {
+		return "", err
+	}
+	return output, nil
+}
+
+func init() {
+	exportMdCmd.Flags().String("id", "", "block ID")
+	exportMdCmd.Flags().String("output", "", "output file path (default: stdout)")
+
+	exportHTMLCmd.Flags().String("id", "", "block ID")
+	exportHTMLCmd.Flags().String("output", "", "output file path (default: stdout)")
+
+	exportPreviewCmd.Flags().String("id", "", "block ID")
+	exportPreviewCmd.Flags().String("output", "", "output file path (default: stdout)")
+
+	exportDocxCmd.Flags().String("id", "", "block ID")
+	exportDocxCmd.Flags().String("output", "", "output file path (required)")
+
+	exportSYCmd.Flags().String("id", "", "block ID")
+	exportSYCmd.Flags().String("output", "", "output file path (default: print temp path)")
+
+	exportMdZipCmd.Flags().String("id", "", "block ID")
+	exportMdZipCmd.Flags().String("output", "", "output file path (default: print temp path)")
+
+	exportDataCmd.Flags().String("output", "", "output file path (default: print temp path)")
+
+	rootCmd.AddCommand(exportCmd)
+	exportCmd.AddCommand(exportMdCmd)
+	exportCmd.AddCommand(exportHTMLCmd)
+	exportCmd.AddCommand(exportPreviewCmd)
+	exportCmd.AddCommand(exportDocxCmd)
+	exportCmd.AddCommand(exportSYCmd)
+	exportCmd.AddCommand(exportMdZipCmd)
+	exportCmd.AddCommand(exportDataCmd)
+}
+
+func writeExportContent(content, output string) error {
+	if content == "" {
+		return fmt.Errorf("export failed: empty content")
+	}
+	if output != "" {
+		return os.WriteFile(output, []byte(content), 0644)
+	}
+	fmt.Print(content)
+	return nil
+}

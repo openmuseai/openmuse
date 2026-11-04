@@ -1,0 +1,7 @@
+{
+  "name": "@genoffice/agent-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {"./redact-range": "./src/redact-range.ts"}
+}

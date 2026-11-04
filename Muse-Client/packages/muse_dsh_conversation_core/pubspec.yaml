@@ -1,0 +1,11 @@
+name: muse_dsh_conversation_core
+description: Deterministic DSH journal reducer and native conversation controller.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  muse_dsh_conversation_protocol:
+    path: ../muse_dsh_conversation_protocol
+dev_dependencies:
+  test: ^1.26.0

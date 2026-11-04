@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_raster_size,栅格尺寸对齐 Java 单位,slideSize EMU + 视口,页 w×h 与 pl-01 / Java render 单位一致,pl-01;Batch A+B,02,libs/ppt-core,spec
+2,02_function_slide_solid_rmse,白底+实色矩形 RMSE,自制金页：白底+一个实色矩形 + Java 参考 PNG,RMSE < 约定阈值（如 2.0）,01;pr-08;pr-11,03,libs/ppt-core,spec
+3,03_function_sample_slide_n,选定 Sample 页门闩,选定页（建议 slide2 组色块或自制金页）,RMSE/边缘 IoU；失败打印 diff；富文本/图表页 ignore 到后波,02;pr-12;pp-21;pl-10,—,libs/ppt-core,spec

@@ -1,0 +1,706 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package api
+
+import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"github.com/88250/gulu"
+	"github.com/gabriel-vasile/mimetype"
+	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/dejavu"
+	"github.com/siyuan-note/dejavu/entity"
+	"github.com/siyuan-note/siyuan/kernel/apicontract"
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/util"
+	"io"
+	"mime"
+	"net/http"
+	"net/http/httptest"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+func TestRepoContractInputs(t *testing.T) {
+	t.Run("setRepoIndexRetentionDays", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var days float64
+			if !legacyParseArgs(arg, ret, legacyBind("days", &days, true, false)) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/setRepoIndexRetentionDays", `{"days":1.75}`, legacy, func(body []byte) error {
+			_, err := apicontract.SetRepoIndexRetentionDays.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("setRetentionIndexesDaily", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var indexes float64
+			if !legacyParseArgs(arg, ret, legacyBind("indexes", &indexes, true, false)) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/setRetentionIndexesDaily", `{"indexes":1.75}`, legacy, func(body []byte) error {
+			_, err := apicontract.SetRetentionIndexesDaily.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("getRepoFile", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var id string
+			if !legacyParseArgs(arg, ret, legacyBind("id", &id, true, true)) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/getRepoFile", `{"id":" value "}`, legacy, func(body []byte) error { _, err := apicontract.GetRepoFile.Decode(bytes.NewReader(body)); return err })
+	})
+	t.Run("rollbackRepoSnapshotFile", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var id string
+			if !legacyParseArgs(arg, ret, legacyBind("id", &id, true, true)) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/rollbackRepoSnapshotFile", `{"id":" value "}`, legacy, func(body []byte) error {
+			_, err := apicontract.RollbackRepoSnapshotFile.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("openRepoSnapshotFile", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var id string
+			if !legacyParseArgs(arg, ret, legacyBind("id", &id, true, true)) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/openRepoSnapshotFile", `{"id":" value "}`, legacy, func(body []byte) error {
+			_, err := apicontract.OpenRepoSnapshotFile.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("diffRepoSnapshots", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var left, right string
+			if !legacyParseArgs(arg, ret,
+				legacyBind("left", &left, true, true),
+				legacyBind("right", &right, true, true),
+			) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/diffRepoSnapshots", `{"left":" value ","right":" value "}`, legacy, func(body []byte) error {
+			_, err := apicontract.DiffRepoSnapshots.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("checkoutRepo", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var id, sessionID string
+			if !legacyParseArgs(arg, ret,
+				legacyBind("id", &id, true, true),
+				legacyBind("sessionID", &sessionID, false, false),
+			) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/checkoutRepo", `{"id":" value ","sessionID":" value "}`, legacy, func(body []byte) error { _, err := apicontract.CheckoutRepo.Decode(bytes.NewReader(body)); return err })
+	})
+	t.Run("downloadCloudSnapshot", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var id, tag string
+			if !legacyParseArgs(arg, ret,
+				legacyBind("id", &id, true, true),
+				legacyBind("tag", &tag, true, false),
+			) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/downloadCloudSnapshot", `{"id":" value ","tag":" value "}`, legacy, func(body []byte) error {
+			_, err := apicontract.DownloadCloudSnapshot.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("uploadCloudSnapshot", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var id, tag string
+			if !legacyParseArgs(arg, ret,
+				legacyBind("id", &id, true, true),
+				legacyBind("tag", &tag, true, false),
+			) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/uploadCloudSnapshot", `{"id":" value ","tag":" value "}`, legacy, func(body []byte) error {
+			_, err := apicontract.UploadCloudSnapshot.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("getRepoSnapshots", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var page float64
+			if !legacyParseArgs(arg, ret, legacyBind("page", &page, true, false)) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/getRepoSnapshots", `{"page":1.75}`, legacy, func(body []byte) error {
+			_, err := apicontract.GetRepoSnapshots.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("searchRepoFile", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var keyword string
+			var page float64
+			if !legacyParseArgs(arg, ret,
+				legacyBind("keyword", &keyword, true, true),
+				legacyBind("page", &page, true, false),
+			) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/searchRepoFile", `{"keyword":" value ","page":1.75}`, legacy, func(body []byte) error {
+			_, err := apicontract.SearchRepoFile.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("getRepoDocHistory", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var id string
+			var page float64
+			if !legacyParseArgs(arg, ret,
+				legacyBind("id", &id, true, true),
+				legacyBind("page", &page, true, false),
+			) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/getRepoDocHistory", `{"id":" value ","page":1.75}`, legacy, func(body []byte) error {
+			_, err := apicontract.GetRepoDocHistory.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("exportRepoFile", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var id string
+			if !legacyParseArgs(arg, ret,
+				legacyBind("id", &id, true, true),
+			) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/exportRepoFile", `{"id":" value "}`, legacy, func(body []byte) error {
+			_, err := apicontract.ExportRepoFile.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("getCloudRepoSnapshots", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var page float64
+			if !legacyParseArgs(arg, ret, legacyBind("page", &page, true, false)) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/getCloudRepoSnapshots", `{"page":1.75}`, legacy, func(body []byte) error {
+			_, err := apicontract.GetCloudRepoSnapshots.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("getCloudRepoTagSnapshots", func(t *testing.T) {
+		if _, err := apicontract.GetCloudRepoTagSnapshots.Decode(strings.NewReader("invalid JSON")); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("removeCloudRepoTagSnapshot", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var tag string
+			if !legacyParseArgs(arg, ret, legacyBind("tag", &tag, true, true)) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/removeCloudRepoTagSnapshot", `{"tag":" value "}`, legacy, func(body []byte) error {
+			_, err := apicontract.RemoveCloudRepoTagSnapshot.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("getRepoTagSnapshots", func(t *testing.T) {
+		if _, err := apicontract.GetRepoTagSnapshots.Decode(strings.NewReader("invalid JSON")); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("removeRepoTagSnapshot", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var tag string
+			if !legacyParseArgs(arg, ret, legacyBind("tag", &tag, true, true)) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/removeRepoTagSnapshot", `{"tag":" value "}`, legacy, func(body []byte) error {
+			_, err := apicontract.RemoveRepoTagSnapshot.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("tagSnapshot", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var id, name string
+			if !legacyParseArgs(arg, ret,
+				legacyBind("id", &id, true, true),
+				legacyBind("name", &name, true, false),
+			) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/tagSnapshot", `{"id":" value ","name":" value "}`, legacy, func(body []byte) error { _, err := apicontract.TagSnapshot.Decode(bytes.NewReader(body)); return err })
+	})
+	t.Run("importRepoKey", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var base64Key string
+			if !legacyParseArgs(arg, ret, legacyBind("key", &base64Key, true, false)) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/importRepoKey", `{"key":" value "}`, legacy, func(body []byte) error { _, err := apicontract.ImportRepoKey.Decode(bytes.NewReader(body)); return err })
+	})
+	t.Run("initRepoKeyFromPassphrase", func(t *testing.T) {
+		legacy := func(c *gin.Context) (result *gulu.Result) {
+			ret := gulu.Ret.NewResult()
+			defer func() { result = ret }()
+
+			arg, ok := legacyJSONArg(c, ret)
+			if !ok {
+				return
+			}
+
+			var pass string
+			if !legacyParseArgs(arg, ret, legacyBind("pass", &pass, true, false)) {
+				return
+			}
+			return
+		}
+		checkLegacyInputCompatibility(t, "/api/repo/initRepoKeyFromPassphrase", `{"pass":" value "}`, legacy, func(body []byte) error {
+			_, err := apicontract.InitRepoKeyFromPassphrase.Decode(bytes.NewReader(body))
+			return err
+		})
+	})
+	t.Run("initRepoKey", func(t *testing.T) {
+		if _, err := apicontract.InitRepoKey.Decode(strings.NewReader("invalid JSON")); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("resetRepo", func(t *testing.T) {
+		if _, err := apicontract.ResetRepo.Decode(strings.NewReader("invalid JSON")); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("purgeRepo", func(t *testing.T) {
+		if _, err := apicontract.PurgeRepo.Decode(strings.NewReader("invalid JSON")); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("purgeCloudRepo", func(t *testing.T) {
+		if _, err := apicontract.PurgeCloudRepo.Decode(strings.NewReader("invalid JSON")); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
+func TestRepoFileWireCompatibility(t *testing.T) {
+	for _, test := range []struct {
+		path string
+		data []byte
+	}{{"file.txt", []byte("hello")}, {"file.json", []byte(`{"value":1}`)}, {"file", []byte{0, 255, 1}}, {"empty", nil}} {
+		t.Run(test.path, func(t *testing.T) {
+			legacy := func(c *gin.Context) {
+				ret := gulu.Ret.NewResult()
+				defer c.JSON(http.StatusOK, ret)
+				contentType := mime.TypeByExtension(filepath.Ext(test.path))
+				if contentType == "" {
+					if m := mimetype.Detect(test.data); m != nil {
+						contentType = m.String()
+					}
+				}
+				if contentType == "" {
+					contentType = "application/octet-stream"
+				}
+				c.Data(http.StatusOK, contentType, test.data)
+			}
+			typed := contractHandler(apicontract.GetRepoFile, func(c *gin.Context, request apicontract.GetRepoFileRequest) apicontract.Response[apicontract.BinaryContent] {
+				return repoFileResponse(test.data, test.path)
+			})
+			engine := gin.New()
+			engine.POST("/legacy", legacy)
+			engine.POST("/typed", typed)
+			server := httptest.NewServer(engine)
+			defer server.Close()
+			// 各请求独立建连，避免超出 Content-Length 的参考写入影响下一次连接复用。
+			transport := &http.Transport{DisableKeepAlives: true}
+			defer transport.CloseIdleConnections()
+			client := &http.Client{Transport: transport}
+			var payloads [][]byte
+			var media []string
+			for _, path := range []string{"/legacy", "/typed"} {
+				response, err := client.Post(server.URL+path, "application/json", strings.NewReader(`{"id":"file"}`))
+				if err != nil {
+					t.Fatal(err)
+				}
+				body, err := io.ReadAll(response.Body)
+				response.Body.Close()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if response.StatusCode != 200 {
+					t.Fatal(response.StatusCode)
+				}
+				payloads = append(payloads, body)
+				media = append(media, response.Header.Get("Content-Type"))
+			}
+			if !bytes.Equal(payloads[0], payloads[1]) || media[0] != media[1] {
+				t.Fatalf("wire mismatch: %q / %q, media %v", payloads[0], payloads[1], media)
+			}
+			expected := test.data
+			if len(expected) == 0 {
+				expected = []byte(`{"code":0,"msg":"","data":null}`)
+			}
+			if !bytes.Equal(payloads[1], expected) {
+				t.Fatalf("unexpected file bytes: %q", payloads[1])
+			}
+		})
+	}
+}
+
+func TestRepoContractTransport(t *testing.T) {
+	log := &dejavu.Log{ID: "index", Memo: "memo", Created: 9223372036854775807, HCreated: "created", Files: []*entity.File{nil, {ID: "file", Path: "box/doc.sy", Size: 42, Updated: 2, Chunks: []string{"chunk"}}}, Count: 1, Size: 42, HSize: "42B", SystemID: "system", SystemName: "name", SystemOS: "os", Tag: "tag", HTagUpdated: "updated"}
+	snapshot := &model.Snapshot{Log: log, TypesCount: []*model.TypeCount{nil, {Type: "sy", Count: 1}}, RequiresDownload: true}
+	for _, pair := range [][2]any{{log, repoLog(log)}, {snapshot, repoSnapshots([]*model.Snapshot{snapshot})[0]}, {[]*dejavu.Log{nil, log}, repoLogs([]*dejavu.Log{nil, log})}, {([]*dejavu.Log)(nil), repoLogs(nil)}, {[]*dejavu.Log{}, repoLogs([]*dejavu.Log{})}, {[]*model.DiffFile{nil, {FileID: "f", IndexID: "i", Title: "t", Path: "p", HPath: "h", HSize: "s", Updated: 5}}, repoDiffFiles([]*model.DiffFile{nil, {FileID: "f", IndexID: "i", Title: "t", Path: "p", HPath: "h", HSize: "s", Updated: 5}})}} {
+		left, _ := json.Marshal(pair[0])
+		right, _ := json.Marshal(pair[1])
+		if !bytes.Equal(left, right) {
+			t.Fatalf("transport mismatch: %s / %s", left, right)
+		}
+	}
+	key := []byte{0, 1, 2, 3, 255}
+	left, _ := json.Marshal(map[string][]byte{"key": key})
+	right, _ := json.Marshal(apicontract.RepoKeyData{Key: base64.StdEncoding.EncodeToString(key)})
+	if !bytes.Equal(left, right) {
+		t.Fatalf("key encoding differs")
+	}
+}
+
+func TestRepoContractHTTPFailures(t *testing.T) {
+	bundle, err := apicontract.BuildBundle()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		name, body string
+		handler    gin.HandlerFunc
+	}{{"getRepoFile", `{}`, getRepoFile}, {"checkoutRepo", `{"id":"snapshot","sessionID":"invalid"}`, checkoutRepo}, {"getRepoDocHistory", `{"id":"invalid","page":1}`, getRepoDocHistory}} {
+		engine := gin.New()
+		path := "/api/repo/" + test.name
+		engine.POST(path, test.handler)
+		recorder := httptest.NewRecorder()
+		engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, path, strings.NewReader(test.body)))
+		if recorder.Code != http.StatusOK || !strings.HasPrefix(recorder.Header().Get("Content-Type"), "application/json") {
+			t.Fatalf("unexpected repository error status or media: %d %s", recorder.Code, recorder.Header().Get("Content-Type"))
+		}
+		if err := bundle.ValidateErrorResponse(http.MethodPost, path, recorder.Body.Bytes()); err != nil {
+			t.Fatal(err)
+		}
+		var response struct {
+			Code int
+			Data json.RawMessage
+		}
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+		if response.Code != -1 || string(response.Data) != "null" {
+			t.Fatal(recorder.Body.String())
+		}
+	}
+}
+
+func TestRepoSnapshotIDContractHTTP(t *testing.T) {
+	root, _ := setupArchiveWorkspace(t)
+	previousConf, previousRepo, previousTemp := model.Conf, util.RepoDir, util.TempDir
+	model.Conf = model.NewAppConf()
+	model.Conf.Repo.Store(conf.NewRepo())
+	model.Conf.Sync.Store(conf.NewSync())
+	model.Conf.System.Store(&conf.System{ID: "contract-device", Name: "contract-device", OS: "test"})
+	model.Conf.Repo.Load().Key = bytes.Repeat([]byte{1}, 32)
+	util.RepoDir, util.TempDir = filepath.Join(root, "repo"), filepath.Join(root, "temp")
+	t.Cleanup(func() { model.Conf, util.RepoDir, util.TempDir = previousConf, previousRepo, previousTemp })
+	store, err := dejavu.NewStore(util.RepoDir, model.Conf.Repo.Load().Key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := fmt.Sprintf("%040x", 19905)
+	if err = store.PutIndex(&entity.Index{ID: id, Memo: "snapshot lookup", Created: 1790000000000}); err != nil {
+		t.Fatal(err)
+	}
+	bundle, err := apicontract.BuildBundle()
+	if err != nil {
+		t.Fatal(err)
+	}
+	engine := gin.New()
+	const endpoint = "/api/repo/getRepoSnapshots"
+	engine.POST(endpoint, getRepoSnapshots)
+	for _, test := range []struct {
+		id    string
+		code  int
+		count int
+	}{{" " + strings.ToUpper(id) + " ", 0, 1}, {id[:7], 0, 1}, {strings.Repeat("0", 40), 0, 0}, {"abcdef0", 0, 0}, {"../invalid", -1, 0}} {
+		recorder := httptest.NewRecorder()
+		engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, endpoint,
+			strings.NewReader(fmt.Sprintf(`{"page":99,"id":%q}`, test.id))))
+		if err = bundle.ValidateResponse(http.MethodPost, endpoint, recorder.Body.Bytes()); err != nil {
+			t.Fatal(err)
+		}
+		var response struct {
+			Code int                           `json:"code"`
+			Data apicontract.RepoSnapshotsData `json:"data"`
+		}
+		if err = json.Unmarshal(recorder.Body.Bytes(), &response); err != nil || response.Code != test.code ||
+			len(response.Data.Snapshots) != test.count || response.Data.TotalCount != test.count || response.Data.PageCount != test.count {
+			t.Fatalf("snapshot lookup: %s, %v", recorder.Body.String(), err)
+		}
+		if test.count == 1 && response.Data.Snapshots[0].ID != id {
+			t.Fatalf("unexpected snapshot: %s", recorder.Body.String())
+		}
+	}
+	for _, tc := range []struct {
+		body        string
+		code, count int
+	}{
+		{`{"page":1,"startTime":1790000000000,"endTime":1790000000001}`, 0, 1},
+		{`{"page":1,"endTime":1790000000000}`, 0, 0},
+		{`{"page":1,"startTime":1790000000001}`, 0, 0},
+		{fmt.Sprintf(`{"page":99,"id":%q,"endTime":1790000000000}`, id), 0, 0},
+		{`{"page":1,"startTime":2,"endTime":1}`, -1, 0},
+	} {
+		recorder := httptest.NewRecorder()
+		engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, endpoint, strings.NewReader(tc.body)))
+		if err = bundle.ValidateResponse(http.MethodPost, endpoint, recorder.Body.Bytes()); err != nil {
+			t.Fatal(err)
+		}
+		var response struct {
+			Code int                           `json:"code"`
+			Data apicontract.RepoSnapshotsData `json:"data"`
+		}
+		if err = json.Unmarshal(recorder.Body.Bytes(), &response); err != nil || response.Code != tc.code ||
+			len(response.Data.Snapshots) != tc.count || response.Data.TotalCount != tc.count {
+			t.Fatalf("snapshot range HTTP: %s %v", recorder.Body.String(), err)
+		}
+	}
+}
+
+func TestRepoContractLockedFileAdmission(t *testing.T) {
+	root, boxID := setupArchiveWorkspace(t)
+	previousConf, previousRepo, previousTemp := model.Conf, util.RepoDir, util.TempDir
+	model.Conf = model.NewAppConf()
+	model.Conf.Repo.Store(conf.NewRepo())
+	model.Conf.Sync.Store(conf.NewSync())
+	model.Conf.System.Store(&conf.System{ID: "contract-device", Name: "contract-device", OS: "test"})
+	model.Conf.Repo.Load().Key = bytes.Repeat([]byte{1}, 32)
+	util.RepoDir, util.TempDir = filepath.Join(root, "repo"), filepath.Join(root, "temp")
+	t.Cleanup(func() { model.Conf, util.RepoDir, util.TempDir = previousConf, previousRepo, previousTemp })
+	store, err := dejavu.NewStore(util.RepoDir, model.Conf.Repo.Load().Key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file := entity.NewFile("/"+boxID+"/20260101000000-abcdefg.sy", 10, 1000)
+	if err := store.PutFile(file); err != nil {
+		t.Fatal(err)
+	}
+	bundle, err := apicontract.BuildBundle()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		name    string
+		handler gin.HandlerFunc
+	}{{"getRepoFile", getRepoFile}, {"rollbackRepoSnapshotFile", rollbackRepoSnapshotFile}, {"openRepoSnapshotFile", openRepoSnapshotFile}, {"exportRepoFile", exportRepoFile}} {
+		path := "/api/repo/" + test.name
+		engine := gin.New()
+		engine.POST(path, test.handler)
+		recorder := httptest.NewRecorder()
+		engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, path, strings.NewReader(fmt.Sprintf(`{"id":%q}`, file.ID))))
+		var response struct {
+			Code int
+			Msg  string
+		}
+		json.Unmarshal(recorder.Body.Bytes(), &response)
+		if response.Code != -1 || response.Msg != model.Conf.Language(314) {
+			t.Fatalf("%s locked admission: %s", test.name, recorder.Body.String())
+		}
+		if err := bundle.ValidateErrorResponse(http.MethodPost, path, recorder.Body.Bytes()); err != nil {
+			t.Fatal(err)
+		}
+	}
+}

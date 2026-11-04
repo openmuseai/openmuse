@@ -1,0 +1,233 @@
+.resize {
+
+  &__rd,
+  &__ld,
+  &__lt,
+  &__rt,
+  &__r,
+  &__l,
+  &__t,
+  &__d {
+    position: absolute;
+    touch-action: none;
+  }
+
+  &__rd {
+    height: 8px;
+    width: 8px;
+    cursor: nwse-resize;
+    right: -4px;
+    bottom: -4px;
+  }
+
+  &__lt {
+    height: 8px;
+    width: 8px;
+    cursor: nwse-resize;
+    left: -4px;
+    top: -4px;
+  }
+
+  &__ld {
+    height: 8px;
+    width: 8px;
+    cursor: nesw-resize;
+    left: -4px;
+    bottom: -4px;
+  }
+
+  &__rt {
+    height: 8px;
+    width: 8px;
+    cursor: nesw-resize;
+    top: -4px;
+    right: -4px;
+  }
+
+  &__d {
+    height: 4px;
+    cursor: ns-resize;
+    left: 4px;
+    right: 4px;
+    bottom: -2px;
+  }
+
+  &__t {
+    height: 4px;
+    cursor: ns-resize;
+    left: 4px;
+    right: 4px;
+    top: -2px;
+  }
+
+  &__r {
+    width: 4px;
+    cursor: ew-resize;
+    top: 4px;
+    right: -2px;
+    bottom: 4px;
+  }
+
+  &__l {
+    width: 4px;
+    cursor: ew-resize;
+    top: 4px;
+    left: -2px;
+    bottom: 4px;
+  }
+
+  &__move {
+    app-region: no-drag;
+    cursor: move;
+  }
+}
+
+// 高亮只附着在当前命中的把手上，不覆盖窗口内容或改变定位参照。
+.touch-resize-active {
+  background-color: var(--b3-theme-primary-lighter);
+}
+
+// 边缘使用居中的圆角线段，角落使用相邻的局部线段，装饰不参与命中测试。
+.resize__r, .resize__l, .resize__t, .resize__d,
+.resize__rd, .resize__ld, .resize__rt, .resize__lt {
+  &.touch-resize-active {
+    background-color: transparent;
+  }
+}
+
+.resize__r, .resize__l, .resize__t, .resize__d {
+  &.touch-resize-active::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    background-color: var(--b3-theme-primary-lighter);
+    border-radius: 2px;
+  }
+}
+
+.resize__r.touch-resize-active::after,
+.resize__l.touch-resize-active::after {
+  width: 3px;
+  height: min(96px, 100%);
+  top: max(0px, calc(50% - 48px));
+}
+
+.resize__r.touch-resize-active::after { left: 4px; }
+.resize__l.touch-resize-active::after { right: 4px; }
+
+.resize__t.touch-resize-active::after,
+.resize__d.touch-resize-active::after {
+  height: 3px;
+  width: min(96px, 100%);
+  left: max(0px, calc(50% - 48px));
+}
+
+.resize__t.touch-resize-active::after { bottom: 4px; }
+.resize__d.touch-resize-active::after { top: 4px; }
+
+[data-touch-resize-corner].touch-resize-active::after {
+  display: none;
+}
+
+// 角把手向窗口内部延伸两段线，在点击位置连接圆角，外侧留出 4px 间距。
+.resize__rd, .resize__ld, .resize__rt, .resize__lt {
+  &.touch-resize-active::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    box-sizing: border-box;
+    width: 104px;
+    height: 104px;
+    border: 0 solid var(--b3-theme-primary-lighter);
+  }
+}
+
+.resize__rd.touch-resize-active::after {
+  right: calc(100% - 15px);
+  bottom: calc(100% - 15px);
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+  border-bottom-right-radius: calc(var(--b3-border-radius-b) + 6px);
+}
+
+.resize__ld.touch-resize-active::after {
+  left: calc(100% - 15px);
+  bottom: calc(100% - 15px);
+  border-left-width: 3px;
+  border-bottom-width: 3px;
+  border-bottom-left-radius: calc(var(--b3-border-radius-b) + 6px);
+}
+
+.resize__rt.touch-resize-active::after {
+  right: calc(100% - 15px);
+  top: calc(100% - 15px);
+  border-right-width: 3px;
+  border-top-width: 3px;
+  border-top-right-radius: calc(var(--b3-border-radius-b) + 6px);
+}
+
+.resize__lt.touch-resize-active::after {
+  left: calc(100% - 15px);
+  top: calc(100% - 15px);
+  border-left-width: 3px;
+  border-top-width: 3px;
+  border-top-left-radius: calc(var(--b3-border-radius-b) + 6px);
+}
+
+.body--touch-resize {
+  // 扩大弹窗和块浮窗外侧的触摸把手，避免侵占内部按钮和滚动条。
+  .b3-dialog .resize__r,
+  .block__popover > .resize__r {
+    width: 14px;
+    right: -14px;
+  }
+
+  .b3-dialog .resize__l,
+  .block__popover > .resize__l {
+    width: 14px;
+    left: -14px;
+  }
+
+  .b3-dialog .resize__t,
+  .block__popover > .resize__t {
+    height: 14px;
+    top: -14px;
+  }
+
+  .b3-dialog .resize__d,
+  .block__popover > .resize__d {
+    height: 14px;
+    bottom: -14px;
+  }
+
+  .b3-dialog .resize__rd, .b3-dialog .resize__ld, .b3-dialog .resize__rt, .b3-dialog .resize__lt,
+  .block__popover > .resize__rd, .block__popover > .resize__ld,
+  .block__popover > .resize__rt, .block__popover > .resize__lt {
+    width: 24px;
+    height: 24px;
+  }
+
+  .b3-dialog .resize__rd,
+  .block__popover > .resize__rd {
+    right: -16px;
+    bottom: -16px;
+  }
+
+  .b3-dialog .resize__ld,
+  .block__popover > .resize__ld {
+    left: -16px;
+    bottom: -16px;
+  }
+
+  .b3-dialog .resize__rt,
+  .block__popover > .resize__rt {
+    right: -16px;
+    top: -16px;
+  }
+
+  .b3-dialog .resize__lt,
+  .block__popover > .resize__lt {
+    left: -16px;
+    top: -16px;
+  }
+}

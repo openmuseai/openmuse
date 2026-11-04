@@ -1,0 +1,103 @@
+import * as assert from "node:assert/strict";
+import {test} from "node:test";
+import {ScriptTarget} from "typescript";
+import {loadModule} from "../../testSupport/loadModule";
+
+const fixture = (handled = false, canTapTarget?: (target: unknown) => boolean) => {
+    let time = 0;
+    const targets: unknown[] = [];
+    const points: unknown[] = [];
+    let prevented = 0;
+    const listeners = new Map<string, (event: any) => void>();
+    const element = {addEventListener: (type: string, listener: (event: any) => void) => listeners.set(type, listener)};
+    const exports = loadModule<any>("src/protyle/wysiwyg/touchNavigation.ts", {
+        require: () => ({Constants: {SIZE_DRAG_THRESHOLD: 5, TIMEOUT_LONGPRESS: 460}}),
+        Date: {now: () => time},
+    }, ScriptTarget.ES2021);
+    exports.bindTouchNavigation(element, (target: unknown, point: unknown) => {
+        targets.push(target);
+        points.push(point);
+        return handled;
+    }, canTapTarget);
+    const target = {closest: () => element};
+    const send = (type: string, options: any = {}) => {
+        const touch = {identifier: 1, clientX: 100, clientY: 100, ...options.point};
+        listeners.get(type)({
+            target,
+            defaultPrevented: false,
+            preventDefault: () => prevented++,
+            touches: type === "touchend" ? [] : [touch],
+            changedTouches: [touch],
+            ...options,
+        });
+    };
+    return {send, targets, points, target, advance: () => time += 500, prevented: () => prevented};
+};
+
+test("native touch taps record each paragraph without requiring a click", () => {
+    const f = fixture();
+    f.send("touchstart");
+    f.send("touchend");
+    f.send("touchstart");
+    f.send("touchend");
+    assert.deepEqual(f.targets, [f.target, f.target]);
+    assert.equal(f.prevented(), 0);
+    assert.equal(JSON.stringify(f.points), JSON.stringify([{x: 100, y: 100}, {x: 100, y: 100}]));
+});
+
+test("handled reference taps suppress the compatibility click", () => {
+    const f = fixture(true);
+    f.send("touchstart");
+    f.send("touchend");
+    assert.equal(f.targets.length, 1);
+    assert.equal(f.prevented(), 1);
+});
+
+test("scrolling away and back, cancellation and long presses do not record navigation", () => {
+    const f = fixture();
+    f.send("touchstart");
+    f.send("touchmove", {point: {clientY: 110}});
+    f.send("touchend");
+    f.send("touchstart");
+    f.send("touchcancel");
+    f.send("touchend");
+    f.send("touchstart");
+    f.advance();
+    f.send("touchend");
+    assert.deepEqual(f.targets, []);
+});
+
+test("multi-touch and gestures handled by other controls do not record navigation", () => {
+    const f = fixture();
+    f.send("touchstart");
+    f.send("touchstart", {touches: [{identifier: 1}, {identifier: 2}]});
+    f.send("touchend");
+    f.send("touchstart", {defaultPrevented: true});
+    f.send("touchend");
+    f.send("touchstart");
+    f.send("touchend", {defaultPrevented: true});
+    assert.deepEqual(f.targets, []);
+});
+
+test("delayed event delivery uses touch timestamps while actual long presses stay native", () => {
+    const f = fixture();
+    f.send("touchstart", {timeStamp: 100});
+    f.advance();
+    f.send("touchend", {timeStamp: 150});
+    assert.equal(f.targets.length, 1);
+    f.send("touchstart", {timeStamp: 200});
+    f.send("touchend", {timeStamp: 700});
+    assert.equal(f.targets.length, 1);
+});
+
+test("noneditable targets are tracked only when the caller explicitly accepts them", () => {
+    const accepted = fixture(false, () => true);
+    accepted.target.closest = () => null;
+    accepted.send("touchstart");
+    accepted.send("touchend");
+    assert.equal(accepted.targets.length, 1);
+    const rejected = fixture(false, () => false);
+    rejected.send("touchstart");
+    rejected.send("touchend");
+    assert.deepEqual(rejected.targets, []);
+});

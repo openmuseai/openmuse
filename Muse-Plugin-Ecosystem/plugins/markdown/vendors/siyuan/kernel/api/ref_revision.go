@@ -1,0 +1,146 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package api
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"sort"
+
+	"github.com/siyuan-note/siyuan/kernel/model"
+)
+
+type backlinkPathResponse struct {
+	*model.Path
+	Revision string `json:"revision"`
+}
+
+type backlinkContextResponse struct {
+	Type                 string                               `json:"type,omitempty"`
+	ReferenceBlockID     string                               `json:"referenceBlockID,omitempty"`
+	AttributeViewTargets []*model.BacklinkAttributeViewTarget `json:"attributeViewTargets,omitempty"`
+	ID                   string                               `json:"id"`
+	DOM                  string                               `json:"dom"`
+	BlockPaths           []*model.BlockPath                   `json:"blockPaths"`
+	Expand               bool                                 `json:"expand"`
+	Revision             string                               `json:"revision"`
+}
+
+type backlinkListResponse struct {
+	Unchanged     bool                    `json:"unchanged"`
+	Revision      string                  `json:"revision"`
+	Backlinks     []*backlinkPathResponse `json:"backlinks"`
+	LinkRefsCount int                     `json:"linkRefsCount"`
+	Backmentions  []*backlinkPathResponse `json:"backmentions"`
+	MentionsCount int                     `json:"mentionsCount"`
+	K             string                  `json:"k"`
+	MK            string                  `json:"mk"`
+	Box           string                  `json:"box"`
+}
+
+type backlinkContextResult struct {
+	Unchanged    bool                       `json:"unchanged"`
+	Revision     string                     `json:"revision"`
+	Backlinks    []*backlinkContextResponse `json:"backlinks"`
+	Backmentions []*backlinkContextResponse `json:"backmentions"`
+	Keywords     []string                   `json:"keywords"`
+}
+
+func newBacklinkPathResponses(paths []*model.Path) (ret []*backlinkPathResponse) {
+	ret = make([]*backlinkPathResponse, 0, len(paths))
+	for _, item := range paths {
+		ret = append(ret, &backlinkPathResponse{
+			Path: item,
+			Revision: hashBacklinkRevision("bi1:", struct {
+				ID       string
+				Box      string
+				Name     string
+				Number   string
+				HPath    string
+				Type     string
+				NodeType string
+				SubType  string
+				Depth    int
+				Count    int
+				Folded   bool
+			}{
+				item.ID,
+				item.Box,
+				item.Name,
+				item.Number,
+				item.HPath,
+				item.Type,
+				item.NodeType,
+				item.SubType,
+				item.Depth,
+				item.Count,
+				item.Folded,
+			}),
+		})
+	}
+	return
+}
+
+func backlinkPathRevisions(items []*backlinkPathResponse) (ret []string) {
+	ret = make([]string, 0, len(items))
+	for _, item := range items {
+		ret = append(ret, item.Revision)
+	}
+	return
+}
+
+func canonicalBacklinkKeywords(keywords []string) []string {
+	ret := append([]string{}, keywords...)
+	sort.Slice(ret, func(i, j int) bool {
+		if len(ret[i]) == len(ret[j]) {
+			return ret[i] < ret[j]
+		}
+		return len(ret[i]) > len(ret[j])
+	})
+	return ret
+}
+
+func newBacklinkContextResponses(backlinks []*model.Backlink) (ret []*backlinkContextResponse) {
+	ret = make([]*backlinkContextResponse, 0, len(backlinks))
+	for _, item := range backlinks {
+		response := &backlinkContextResponse{
+			Type:                 item.Type,
+			ReferenceBlockID:     item.ReferenceBlockID,
+			AttributeViewTargets: item.AttributeViewTargets,
+			ID:                   item.ID,
+			DOM:                  item.DOM,
+			BlockPaths:           item.BlockPaths,
+			Expand:               item.Expand,
+		}
+		response.Revision = hashBacklinkRevision("bci1:", struct {
+			Type                 string
+			ReferenceBlockID     string
+			AttributeViewTargets []*model.BacklinkAttributeViewTarget
+			ID                   string
+			DOM                  string
+			BlockPaths           []*model.BlockPath
+			Expand               bool
+		}{response.Type, response.ReferenceBlockID, response.AttributeViewTargets, response.ID, response.DOM, response.BlockPaths, response.Expand})
+		ret = append(ret, response)
+	}
+	return
+}
+
+func hashBacklinkRevision(prefix string, value any) string {
+	data, err := json.Marshal(value)
+	if err != nil {
+		return prefix
+	}
+	sum := sha256.Sum256(data)
+	return prefix + hex.EncodeToString(sum[:])
+}
+
+func countBacklinkPaths(paths []*model.Path) (ret int) {
+	for _, item := range paths {
+		ret += item.Count
+	}
+	return
+}

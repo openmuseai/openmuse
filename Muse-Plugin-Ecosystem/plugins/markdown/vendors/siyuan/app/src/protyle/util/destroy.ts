@@ -1,0 +1,75 @@
+import {destroyTabsRender} from "../render/tabsRender";
+import {destroyListMindmaps} from "../render/listMindmap";
+import {destroyFoldedRender} from "./foldedRender";
+import {cancelLegacyMindmapMigration} from "../render/listMindmap/migrate";
+import {hideElements} from "../ui/hideElements";
+import {isSupportCSSHL} from "../render/searchMarkRender";
+import {destroyAIEditor} from "../../ai/editor";
+import {cancelAssetUploads} from "../upload/pluginEvent";
+import {unmountBreadcrumbButtons} from "../../plugin/breadcrumbButton";
+import {forEachPluginSubscriber} from "../../plugin/EventBusCore";
+import {unregisterCustomBlockRoot} from "../../plugin/customBlockRender";
+import {destroyTrackedRanges} from "./trackedRange";
+import {areProtylePluginExtensionsEnabled} from "../runtimeCapabilities";
+import {invalidateFocusFoldRequests} from "./focusFold";
+import {unregisterViewFoldContext} from "./viewFold";
+import {destroyAutoDirection} from "../render/autoDirection";
+import {disposeSyncEditorSave} from "./editorSave";
+
+export const destroy = (protyle: IProtyle) => {
+    if (!protyle) {
+        return;
+    }
+    protyle.title?.cancelPendingInput();
+    disposeSyncEditorSave(protyle);
+    destroyFoldedRender(protyle);
+    destroyListMindmaps(protyle);
+    protyle.breadcrumb?.destroy();
+    cancelLegacyMindmapMigration(protyle);
+    invalidateFocusFoldRequests(protyle);
+    unregisterViewFoldContext(protyle);
+    destroyTrackedRanges(protyle);
+    cancelAssetUploads(protyle);
+    unmountBreadcrumbButtons(protyle);
+    hideElements(["util"], protyle, true);
+    destroyAIEditor(protyle);
+    protyle.hint?.destroy();
+    protyle.preview?.destroy();
+    if (isSupportCSSHL()) {
+        protyle.highlight.markHL.clear();
+        protyle.highlight.mark.clear();
+        protyle.highlight.ranges = [];
+        protyle.highlight.rangeIndex = 0;
+    }
+    protyle.observer?.disconnect();
+    protyle.observerLoad?.disconnect();
+    protyle.element.classList.remove("protyle");
+    protyle.element.removeAttribute("style");
+    if (protyle.wysiwyg) {
+        destroyAutoDirection(protyle.wysiwyg.element);
+        unregisterCustomBlockRoot(protyle.wysiwyg.element);
+        destroyTabsRender(protyle.wysiwyg.element);
+        protyle.wysiwyg.destroy();
+        protyle.wysiwyg.tableControl?.destroy();
+        protyle.wysiwyg.lastHTMLs = {};
+    }
+    if (protyle.undo) {
+        protyle.undo.clear();
+    }
+    if (protyle.ws) {
+        try {
+            protyle.ws.send("closews", {});
+        } catch (e) {
+            setTimeout(() => {
+                protyle.ws?.send("closews", {});
+            }, 10240);
+        }
+    }
+    if (areProtylePluginExtensionsEnabled(protyle)) {
+        forEachPluginSubscriber("destroy-protyle", eventBus => {
+            eventBus.emit("destroy-protyle", {
+                protyle,
+            });
+        });
+    }
+};

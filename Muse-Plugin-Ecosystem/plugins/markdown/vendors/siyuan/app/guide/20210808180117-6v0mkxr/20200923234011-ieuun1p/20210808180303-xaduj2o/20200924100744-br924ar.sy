@@ -1,0 +1,2101 @@
+{
+	"ID": "20200924100744-br924ar",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20200924100744-br924ar",
+		"title": "Assets",
+		"type": "doc",
+		"updated": "20261024164212"
+	},
+	"Children": [
+		{
+			"ID": "20210503095708-2g6bgl4",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210503095708-2g6bgl4",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "## "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "Overview"
+				}
+			]
+		},
+		{
+			"ID": "20210503095710-1vp1uxw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210503095710-1vp1uxw",
+				"updated": "20220711121739"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Attachments inserted through the editor will be regarded as asset files and will be placed in the "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "workspace/data/assets/"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " folder by default."
+				}
+			]
+		},
+		{
+			"ID": "20260820101320-r6m4aop",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260820101320-r6m4aop",
+				"updated": "20260820133158"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "On the desktop, you can configure click, Ctrl+click / ⌘click, Alt+click, and Shift+click resource opening behavior in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Behavior"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Resource opening"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20261016111305-wsz5ty2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016111305-wsz5ty2",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "For full-text searches within files and OCR text, see "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20230805232134-3d6mx2k",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "Search asset content"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20201210194734-v2rmiaq",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20201210194734-v2rmiaq",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Insert picture or file"
+				}
+			]
+		},
+		{
+			"ID": "20220824172815-s8znsau",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20220824172815-s8znsau",
+				"updated": "20220905215835"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In the editor, you can directly paste the copied picture or file in the system clipboard (not supported on Linux), or insert it by dragging and dropping the picture or file into the editor. There are two options when inserting:"
+				}
+			]
+		},
+		{
+			"ID": "20220824172815-ckivl7c",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20220824172815-ckivl7c",
+				"updated": "20250115152723"
+			},
+			"Children": [
+				{
+					"ID": "20220824172815-q1oeusj",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220824172815-q1oeusj",
+						"updated": "20250115152714"
+					},
+					"Children": [
+						{
+							"ID": "20220824172815-fqyy0l6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220824172815-fqyy0l6",
+								"updated": "20250115152714"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Copy as an asset and insert: Copy a picture or file as a resource file and insert, shortcut key "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "V"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20220824172815-0lsclx1",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220824172815-0lsclx1",
+						"updated": "20250115152723"
+					},
+					"Children": [
+						{
+							"ID": "20220824172815-dqfasin",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220824172815-dqfasin",
+								"updated": "20250115152723"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "file://"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ absolute path and link: Insert a picture or file into a hyperlink as a local absolute path, shortcut key "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Shift"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "V"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​, or hold down "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Alt"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ and drag in"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20220824172815-6f3pj5z",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20220824172815-6f3pj5z",
+				"updated": "20220824172910"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "For pictures, if a picture title is specified during layout, the title will be rendered below the picture as a legend."
+				}
+			]
+		},
+		{
+			"ID": "20210104091430-yd3zyeu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104091430-yd3zyeu",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeImage",
+					"Data": "span",
+					"Children": [
+						{
+							"Type": "NodeBang"
+						},
+						{
+							"Type": "NodeOpenBracket"
+						},
+						{
+							"Type": "NodeLinkText",
+							"Data": "siyuan-128.png"
+						},
+						{
+							"Type": "NodeCloseBracket"
+						},
+						{
+							"Type": "NodeOpenParen"
+						},
+						{
+							"Type": "NodeLinkDest",
+							"Data": "assets/siyuan-128-20210604092437-7iqzf90.png"
+						},
+						{
+							"Type": "NodeLinkSpace"
+						},
+						{
+							"Type": "NodeLinkTitle",
+							"Data": "When one drinks water, one must not forget where it comes from"
+						},
+						{
+							"Type": "NodeCloseParen"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230505084028-ztfxqzm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230505084028-ztfxqzm",
+				"updated": "20230505084035"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​: Inserting pictures will not be compressed, and all pictures and files will be saved as original data.\n"
+				}
+			]
+		},
+		{
+			"ID": "20260930085927-fd25q1l",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930085927-fd25q1l",
+				"updated": "20260930085927"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "When inserting an existing asset, keywords also match image titles, tooltip text, and existing OCR text. The same image may have different titles or tooltip text in different documents; any matching reference can locate the asset. Encrypted notebook assets are excluded from this global search."
+				}
+			]
+		},
+		{
+			"ID": "20260930092043-7z9onxu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930092043-7z9onxu",
+				"updated": "20261016013311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Enable "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Images"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Show image file names"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to show file names above local images, without the asset path or generated ID and with the extension preserved. Click a name to open the rename dialog. Confirming the new name updates all links that reference the asset; canceling leaves the name unchanged. Read-only views and encrypted notebooks do not support renaming from the image name."
+				}
+			]
+		},
+		{
+			"ID": "20260930092955-wsw0tvh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930092955-wsw0tvh",
+				"updated": "20261016013311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Enable "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Images"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Show image tooltip text"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to display the image description below its title. Hovering over an image shows both its title and tooltip text even when this option is off. The description remains the image's existing alternative text and can be searched when inserting assets."
+				}
+			]
+		},
+		{
+			"ID": "20260930093600-gqubib2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930093600-gqubib2",
+				"updated": "20260930093600"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Hover over an image to see its file name, format, loaded original dimensions, title, and tooltip text, even if it has no title. Local workspace images also show file size when available. File size is omitted for remote and encrypted notebook images."
+				}
+			]
+		},
+		{
+			"ID": "20261021003402-19jkwn2",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261021003402-19jkwn2",
+				"updated": "20261021003402"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "TIFF images"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261021003402-g6tlloh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021003402-g6tlloh",
+				"updated": "20261021003402"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "TIFF images (.tif/.tiff) inserted as assets display the first frame. The original file is preserved for download; switching frames is not currently supported. Preview brightness for 16-bit grayscale images follows a valid ImageJ display range, or the actual grayscale range of the first frame when no display range is available."
+				}
+			]
+		},
+		{
+			"ID": "20261021003402-up66rhq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021003402-up66rhq",
+				"updated": "20261021003402"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Previews accept files up to 64 MiB and frames up to 50 million pixels on desktop or 12.5 million pixels on mobile. BigTIFF, floating-point, CMYK, and JPEG-compressed TIFF images are not supported. Unsupported files remain available for download and can be opened in an external application."
+				}
+			]
+		},
+		{
+			"ID": "20261018221152-70wtkp3",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261018221152-70wtkp3",
+				"updated": "20261018221152"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Live Photos"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261018221152-5v49fj9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261018221152-5v49fj9",
+				"updated": "20261018221152"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "On iOS, use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Insert image"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " in the editor to select Live Photos from Photos. SiYuan retains the original photo and its paired video, including their original metadata."
+				}
+			]
+		},
+		{
+			"ID": "20261018221152-wun4xf3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261018221152-wun4xf3",
+				"updated": "20261018221152"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Open the image preview on any client, then select Live Photo to play it. If the original video cannot play, SiYuan generates a compatible preview on demand. The first playback may take longer; the local cache is reused afterward and is not synchronized. The compatible preview is lossy, while the original files stay unchanged."
+				}
+			]
+		},
+		{
+			"ID": "20261018221152-qkagk4i",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261018221152-qkagk4i",
+				"updated": "20261018221152"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "HDR and some uncommon encodings currently cannot be converted for compatible playback. The still image and original files remain available. Android Motion Photo import and restoring a system Live Photo from exported files are not supported yet."
+				}
+			]
+		},
+		{
+			"ID": "20261010134815-v9k29uo",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261010134815-v9k29uo",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Image title"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261010134815-bb1k769",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261010134815-bb1k769",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Click or tap the title below an image to edit it in a floating input. A full-screen mask appears while editing, and the document layout stays unchanged. When the title is focused, press "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Enter"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " or "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Space"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to start editing."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-ikstowk",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-ikstowk",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "While editing, press "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Enter"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " or "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Tab"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to save or "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Esc"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to cancel. Clicking outside the input or leaving the field also saves. On mobile, Back saves and closes the input first. The change applies to this image reference and does not rename the asset file. Read-only documents do not allow title editing."
+				}
+			]
+		},
+		{
+			"ID": "20210115224203-q8bj2gd",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210115224203-q8bj2gd",
+				"updated": "20260803171606"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "## "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "Cleanup unreferenced assets"
+				}
+			]
+		},
+		{
+			"ID": "20220920003905-soehefi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20220920003905-soehefi",
+				"updated": "20220920003954"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "A \"Reference\" refers to a link to a asset file via a hyperlink, an inserted image, or the "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "src"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " attribute of an HTML tag (such as "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&lt;img&gt;"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&lt;iframe&gt;"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "). There are two cases here:"
+				}
+			]
+		},
+		{
+			"ID": "20210115224203-r3mwskz",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1,
+				"Tight": true,
+				"Start": 1,
+				"Delimiter": 46,
+				"Padding": 3,
+				"Marker": "MQ==",
+				"Num": 1
+			},
+			"Properties": {
+				"id": "20210115224203-r3mwskz",
+				"updated": "20241027164345"
+			},
+			"Children": [
+				{
+					"ID": "20210115224203-1g8zvdg",
+					"Type": "NodeListItem",
+					"Data": "1",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "MQ==",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20210115224203-1g8zvdg",
+						"updated": "20241027164342"
+					},
+					"Children": [
+						{
+							"ID": "20210204172630-7rtyepg",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210204172630-7rtyepg",
+								"updated": "20241027164342"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Reference to a specific asset file, such as a picture or a file"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210115224203-xb0ycqg",
+					"Type": "NodeListItem",
+					"Data": "2",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 2,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "Mg==",
+						"Num": 2
+					},
+					"Properties": {
+						"id": "20210115224203-xb0ycqg",
+						"updated": "20241027164345"
+					},
+					"Children": [
+						{
+							"ID": "20210204172630-kq680iv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210204172630-kq680iv",
+								"updated": "20241027164345"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Reference to a asset folder (a subfolder under the assets folder) must end with "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​, such as "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "[foo](assets/bar/)"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​. If a asset folder is referenced, all the following asset files will be counted as already referenced regardless of whether they are individually referenced"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20210115224203-e03wglt",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210115224203-e03wglt",
+				"updated": "20260803171606"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Assets"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", you can clean up unreferenced assets by one-click. If you need to retrieve files that have been deleted by mistake, please via "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20210104091559-kgrtuyh",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "Rollback"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20210130103832-93r5ddp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210130103832-93r5ddp",
+				"updated": "20210130103832"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​: Using absolute paths (local or network paths) will not be included Clean up calculations."
+				}
+			]
+		},
+		{
+			"ID": "20230604120616-qjigoyt",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230604120616-qjigoyt",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "List missing assets"
+				}
+			]
+		},
+		{
+			"ID": "20230604120616-95dv931",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230604120616-95dv931",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "You can view the missing resources in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Assets"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", and you can find the references in the global search after copying the path."
+				}
+			]
+		},
+		{
+			"ID": "20230604120616-tjs4mx0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230604120616-tjs4mx0",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​: To search asset paths, you need to enable "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Search"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Index"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Asset Path"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20220503122349-eacedlu",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20220503122349-eacedlu",
+				"updated": "20241024163243"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Notebook-level assets"
+				}
+			]
+		},
+		{
+			"ID": "20220503122349-0xq3b7m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20220503122349-0xq3b7m",
+				"updated": "20220503122433"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "If you need to place the inserted assets in the assets folder at the same level as the document by default, you need to manually create a folder named assets first, so that SiYuan will preferentially select the assets folder to store the assets."
+				}
+			]
+		},
+		{
+			"ID": "20220503122349-b6tsifa",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20220503122349-b6tsifa",
+				"updated": "20220503122459"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "It is recommended not to use notebook-level assets as much as possible, as this has some side effects:"
+				}
+			]
+		},
+		{
+			"ID": "20220503122349-o26mvnq",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20220503122349-o26mvnq",
+				"updated": "20241024163243"
+			},
+			"Children": [
+				{
+					"ID": "20220503122349-192fehc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220503122349-192fehc",
+						"updated": "20241024163243"
+					},
+					"Children": [
+						{
+							"ID": "20220503122349-ye6haas",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220503122349-ye6haas",
+								"updated": "20241024163243"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "When deleting the doc, the assets referenced by the doc will be copied to the global assets in batches to ensure the normal operation of cross-notebook asset references"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20220503122349-9g5a9ha",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220503122349-9g5a9ha",
+						"updated": "20220503122525"
+					},
+					"Children": [
+						{
+							"ID": "20220503122349-v2v1554",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220503122349-v2v1554",
+								"updated": "20220503122525"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Does not support viewing notebook-level assets history in data history"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20220715092756-f5azf15",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220715092756-f5azf15",
+						"updated": "20220715105117"
+					},
+					"Children": [
+						{
+							"ID": "20220715092756-4bzibji",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220715092756-4bzibji",
+								"updated": "20220715105117"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Dose not support search by "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/Assets"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20220715105056-8d652vx",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220715105056-8d652vx",
+						"updated": "20220715105100"
+					},
+					"Children": [
+						{
+							"ID": "20220715105056-a6p3fg7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220715105056-a6p3fg7",
+								"updated": "20220715105100"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Dose not support rename"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230117003636-epvk98g",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230117003636-epvk98g",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Image OCR to extract text"
+				}
+			]
+		},
+		{
+			"ID": "20230117003636-0buf00n",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230117003636-0buf00n",
+				"updated": "20261005192208"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " select Tesseract, PaddleOCR, or AI and configure automatic recognition. Local providers run offline in the kernel without an open interface. Tesseract requires a separate desktop installation."
+				}
+			]
+		},
+		{
+			"ID": "20261001000112-e9wid3h",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261001000112-e9wid3h",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PaddleOCR bundles only PP-OCRv6 Tiny, available offline without downloading and selected by default on desktop and mobile. Other compatible PP-OCRv6 models, such as Small and Medium, can be imported by selecting their detection and recognition ONNX files and corresponding inference.yml files. Imported models sync with the workspace; the provider and selected model are saved per device."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-4qc5uyi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-4qc5uyi",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "New users default to PaddleOCR with automatic OCR disabled. Existing provider, automatic OCR, and threshold settings are preserved. The former built-in Small selection migrates to Tiny; imported models are unaffected. Upgrading from a version without OCR provider settings keeps Tesseract."
+				}
+			]
+		},
+		{
+			"ID": "20261003073646-xagh51u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261003073646-xagh51u",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "With PaddleOCR selected, edit the detection, text box confidence, and recognition confidence thresholds directly in the Recognition thresholds group. Changes are saved automatically when you finish editing a field. Detection and box thresholds must be greater than 0 and less than 1; recognition accepts 0 through 1."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-djp2v4q",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-djp2v4q",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Leave a field blank to use the current model’s detection parameters or the default recognition threshold of 0.5. Invalid input stays editable and is not saved. Higher thresholds can reduce icons mistaken for text, but may miss blurry or faint text. Thresholds are saved per device and apply to manual and automatic recognition. Existing results remain unchanged; rerun recognition from the image menu when needed."
+				}
+			]
+		},
+		{
+			"ID": "20261001000112-ogz08vw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261001000112-ogz08vw",
+				"updated": "20261001000112"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The selected provider handles both automatic and manual recognition. Switching preserves existing results; use the image menu to rerun OCR explicitly. Failures preserve the previous result and do not switch providers. Text remains available for image text search and editing. Encrypted notebooks do not participate in OCR."
+				}
+			]
+		},
+		{
+			"ID": "20230202231728-0z5bs0m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230202231728-0z5bs0m",
+				"updated": "20230801231949"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​:"
+				}
+			]
+		},
+		{
+			"ID": "20230202231731-bdh7lab",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230202231731-bdh7lab",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"ID": "20230202231732-n7z8jth",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230202231732-n7z8jth",
+						"updated": "20261001013550"
+					},
+					"Children": [
+						{
+							"ID": "20230202231732-f3jkj7p",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230202231732-f3jkj7p",
+								"updated": "20261001013550"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "When installing Tesseract OCR, you need to check the language pack you need, and add the installed Tesseract-OCR directory path to the environment variable "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "PATH"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​, so that SiYuan can directly call the "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "tesseract"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ command to extract text from image OCR. If the installation is normal, you can search for "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "tesseract-ocr enabled"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ in the kernel boot log; If you want to disable Tesseract, set the environment variable "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "SIYUAN_TESSERACT_ENABLED=false"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230202231800-z8hswmk",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230202231800-z8hswmk",
+						"updated": "20261001013550"
+					},
+					"Children": [
+						{
+							"ID": "20230202231800-c3x45ky",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230202231800-c3x45ky",
+								"updated": "20261001013550"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "SiYuan"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " does not enable all installed language packs, because too many language packs will cause OCR to be slow or time out, and take up too many system resources, so by default only "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "eng"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​​, "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "chi*"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​​, "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "fra"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​​, "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "spa"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​​, "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "deu"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​​, "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "rus"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​​ and "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "osd"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​​ will be enabled at most, if you need more accurate language support, you can specify the language pack by configuring the environment variable "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "SIYUAN_TESSERACT_LANGS"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​​, such as "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "SIYUAN_TESSERACT_LANGS=chi_sim+eng"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​​"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230211102830-9azqf9m",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230211102830-9azqf9m",
+						"updated": "20261012014859"
+					},
+					"Children": [
+						{
+							"ID": "20230211102830-sbchex4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230211102830-sbchex4",
+								"updated": "20261012014859"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Tesseract and PaddleOCR support PNG, JPEG, TIFF, BMP, GIF, and WebP images; Tesseract also supports PBM, PGM, PPM, and PNM"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230211102834-fx3o5su",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230211102834-fx3o5su",
+						"updated": "20261001013550"
+					},
+					"Children": [
+						{
+							"ID": "20230211102834-3jzjdrv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230211102834-3jzjdrv",
+								"updated": "20261001013550"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "For Tesseract, By default, only images below 2MB are processed. If you need to adjust, you can set the environment variable "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "SIYUAN_TESSERACT_MAX_SIZE"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​​, the unit of value is bytes, for example: "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "SIYUAN_TESSERACT_MAX_SIZE=4000000"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​​ adjust the upper limit to 4MB; PaddleOCR supports images up to 32 MiB and 24 million pixels"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230117003636-ouxlaen",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230117003636-ouxlaen",
+				"updated": "20261001000112"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "When automatic OCR is enabled, the kernel processes images that have no existing OCR result. Extracted text is used by search to locate images by their text."
+				}
+			]
+		},
+		{
+			"ID": "20261012014537-r2lk28b",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261012014537-r2lk28b",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "AI OCR"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261003224949-gtf3qng",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261003224949-gtf3qng",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In the image menu, choose "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Run OCR with AI"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", which sends the local image to the independently selected OCR AI model for text recognition. Choose AI and a model in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "; AI appears only when the AI feature, a provider, and at least one model are enabled. The model must support image input; this is not verified automatically. Manual and automatic OCR use this model. "
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-rvuxtck",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-rvuxtck",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Switching from a local provider to AI disables automatic recognition; enable it explicitly to send unprocessed, unencrypted notebook images to the provider in the background, which may incur charges. Disabling or deleting the selected model does not choose another model or provider."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-hq3vjo9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-hq3vjo9",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "When a local provider is selected and no independent AI model is configured, the separate manual AI action retains the agent model for compatibility. Results share the existing OCR text, editing, copying, and search index; failures preserve the previous result. Encrypted notebook images are not supported. "
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-4angbwj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-4angbwj",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PNG, JPEG, GIF, and WebP are supported directly; BMP and TIFF are converted to PNG, and HEIC/HEIF to JPEG without reducing resolution. The original and converted images must each be within 20 MiB, and the converted image within 40 million pixels."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-wu0iopj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-wu0iopj",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Recognition actions are hidden for network images, and the OCR menu is hidden for encrypted notebook images. Unsupported formats such as AVIF, SVG, and ICO do not show the AI OCR action."
+				},
+				{
+					"Type": "NodeText",
+					"Data": " "
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-mgio4g1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-mgio4g1",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Set "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Reasoning effort"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " independently for manual and automatic AI OCR. Default follows model behavior; None disables or minimizes thinking, depending on provider and model support. Unsupported settings return an error and preserve the previous OCR result."
+				}
+			]
+		},
+		{
+			"ID": "20230414202934-1h96or8",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230414202934-1h96or8",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Manually adjust OCR results"
+				}
+			]
+		},
+		{
+			"ID": "20230414203027-6py4l9z",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230414203027-6py4l9z",
+				"updated": "20230414203027"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The OCR results are saved in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "workspace/data/assets/ocr-texts.json"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, and the OCR results can be adjusted in the following ways:"
+				}
+			]
+		},
+		{
+			"ID": "20230414203027-ga8zni5",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230414203027-ga8zni5",
+				"updated": "20230414203046"
+			},
+			"Children": [
+				{
+					"ID": "20230414203027-n8cc4ra",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230414203027-n8cc4ra",
+						"updated": "20230414203036"
+					},
+					"Children": [
+						{
+							"ID": "20230414203027-epcrauz",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230414203027-epcrauz",
+								"updated": "20230414203036"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "After exiting SiYuan, modify the file on the file system (please pay attention to the correctness of the JSON format)"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230414203027-zdq3yuf",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230414203027-zdq3yuf",
+						"updated": "20230414203046"
+					},
+					"Children": [
+						{
+							"ID": "20230414203027-ouvsa2g",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230414203027-ouvsa2g",
+								"updated": "20230414203046"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Or select "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "OCR"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ from the image element menu in the editor"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230414203027-chylp3d",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230414203027-chylp3d",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Changes saved in the image result editor automatically update search indexes. After editing the JSON file outside SiYuan, rebuild the asset content index."
+				}
+			]
+		},
+		{
+			"ID": "20261014150710-z1vm4en",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261014150710-z1vm4en",
+				"updated": "20261014150710"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Image menu"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Clear OCR text"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to clear the asset’s OCR text in one click. This affects all images referencing the same asset and updates the search index. The empty result is retained, so automatic OCR skips the asset; rerun OCR manually from the image menu to restore text."
+				}
+			]
+		},
+		{
+			"ID": "20260930090802-3zn8sf9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930090802-3zn8sf9",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The image OCR icon copies recognized text with one click; double-click it to open a draggable editor with the original image beside the text. You can also copy OCR text or open the result editor from the image menu. Click Save to keep edits or Cancel to discard them; clicking outside the editor does not close it."
+				},
+				{
+					"Type": "NodeText",
+					"Data": " The button appears only when OCR text is available and the appearance profile allows it."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-nvr7nbe",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-nvr7nbe",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "It is hidden in the Simple profile; in a custom appearance profile, use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Image"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR text"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to show or hide it. The image menu remains available for copying and editing OCR text."
+				},
+				{
+					"Type": "NodeText",
+					"Data": " Hover over a local image to view OCR text and recognition hints according to your settings. The text recognition icon identifies the OCR action, while the image icon copies the image as PNG, even when no OCR text is available."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-c3jdhod",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-c3jdhod",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In a custom appearance profile, use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Image"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Copy as PNG"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to show or hide the image copy button; it is hidden in the Simple profile."
+				},
+				{
+					"Type": "NodeText",
+					"Data": " Long OCR text is shortened to at most 200 characters and six lines, followed by three dots. Double-click the OCR icon to view the full text."
+				}
+			]
+		},
+		{
+			"ID": "20261014140201-g0z2wp6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261014140201-g0z2wp6",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Image tooltips"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " independently choose whether image tooltips show saved OCR text, a hint when no OCR text is available, and a recognition failure hint. Text previews are enabled by default; the other two hints are disabled. These choices are saved per device and work independently of automatic OCR."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-s7pamdn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-s7pamdn",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Hiding hints does not delete text or change search results. No OCR text does not necessarily mean recognition has failed. Failure hints reflect recognition failures during the current session; successful recognition or saving text clears them, and they are not retained after restarting the kernel. Mobile devices do not show these hover tooltips."
+				}
+			]
+		}
+	]
+}

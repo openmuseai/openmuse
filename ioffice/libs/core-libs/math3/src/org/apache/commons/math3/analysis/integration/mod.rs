@@ -1,0 +1,10 @@
+pub mod UnivariateIntegrator;
+pub mod BaseAbstractUnivariateIntegrator;
+pub mod gauss;
+pub mod IterativeLegendreGaussIntegrator;
+pub mod LegendreGaussIntegrator;
+pub mod MidPointIntegrator;
+#[path = "package-info.rs"] pub mod package_info;
+pub mod RombergIntegrator;
+pub mod SimpsonIntegrator;
+pub mod TrapezoidIntegrator;

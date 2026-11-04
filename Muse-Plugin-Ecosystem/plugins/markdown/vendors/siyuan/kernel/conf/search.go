@@ -1,0 +1,299 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package conf
+
+import (
+	"bytes"
+	"strings"
+
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+)
+
+type Search struct {
+	Mindmap     *bool `json:"mindmap"`
+	MindmapItem *bool `json:"mindmapItem"`
+	CustomBlock *bool `json:"customBlock"`
+
+	Document      bool `json:"document"`
+	Heading       bool `json:"heading"`
+	List          bool `json:"list"`
+	ListItem      bool `json:"listItem"`
+	CodeBlock     bool `json:"codeBlock"`
+	MathBlock     bool `json:"mathBlock"`
+	Table         bool `json:"table"`
+	Blockquote    bool `json:"blockquote"`
+	SuperBlock    bool `json:"superBlock"`
+	Paragraph     bool `json:"paragraph"`
+	HTMLBlock     bool `json:"htmlBlock"`
+	EmbedBlock    bool `json:"embedBlock"`
+	DatabaseBlock bool `json:"databaseBlock"`
+	AudioBlock    bool `json:"audioBlock"`
+	VideoBlock    bool `json:"videoBlock"`
+	IFrameBlock   bool `json:"iframeBlock"`
+	WidgetBlock   bool `json:"widgetBlock"`
+	Callout       bool `json:"callout"`
+	Tabs          bool `json:"tabs"`
+	TabItem       bool `json:"tabItem"`
+
+	Limit         int   `json:"limit"`
+	CaseSensitive bool  `json:"caseSensitive"`
+	HanSensitive  *bool `json:"hanSensitive"` // 区分繁简：默认开启（与既往行为一致）；关闭后全文搜索不区分简体/繁体中文字形
+
+	Name  bool `json:"name"`
+	Alias bool `json:"alias"`
+	Memo  bool `json:"memo"`
+	IAL   bool `json:"ial"`
+
+	IndexAssetPath bool `json:"indexAssetPath"`
+
+	BacklinkMentionName          bool `json:"backlinkMentionName"`
+	BacklinkMentionAlias         bool `json:"backlinkMentionAlias"`
+	BacklinkMentionAnchor        bool `json:"backlinkMentionAnchor"`
+	BacklinkMentionDoc           bool `json:"backlinkMentionDoc"`
+	BacklinkMentionKeywordsLimit int  `json:"backlinkMentionKeywordsLimit"`
+
+	VirtualRefName   bool `json:"virtualRefName"`
+	VirtualRefAlias  bool `json:"virtualRefAlias"`
+	VirtualRefAnchor bool `json:"virtualRefAnchor"`
+	VirtualRefDoc    bool `json:"virtualRefDoc"`
+}
+
+func NewSearch() *Search {
+	return &Search{
+		Mindmap:       new(true),
+		MindmapItem:   new(false),
+		CustomBlock:   new(true),
+		Document:      true,
+		Heading:       true,
+		List:          false,
+		ListItem:      false,
+		CodeBlock:     true,
+		MathBlock:     true,
+		Table:         true,
+		Blockquote:    false,
+		SuperBlock:    false,
+		Paragraph:     true,
+		HTMLBlock:     true,
+		EmbedBlock:    false,
+		DatabaseBlock: true,
+		AudioBlock:    false,
+		VideoBlock:    false,
+		IFrameBlock:   false,
+		WidgetBlock:   false,
+		Callout:       false,
+		Tabs:          false,
+		TabItem:       false,
+
+		Limit:         64,
+		CaseSensitive: false,
+		HanSensitive:  new(true),
+
+		Name:  true,
+		Alias: true,
+		Memo:  true,
+		IAL:   false,
+
+		IndexAssetPath: true,
+
+		BacklinkMentionName:          true,
+		BacklinkMentionAlias:         false,
+		BacklinkMentionAnchor:        true,
+		BacklinkMentionDoc:           true,
+		BacklinkMentionKeywordsLimit: 512,
+
+		VirtualRefName:   true,
+		VirtualRefAlias:  false,
+		VirtualRefAnchor: true,
+		VirtualRefDoc:    true,
+	}
+}
+
+// HanSensitiveVal 返回 HanSensitive 的 bool 值；nil 视为 true（与既往行为一致）。
+func (s *Search) HanSensitiveVal() bool {
+	if s.HanSensitive == nil {
+		return true
+	}
+	return *s.HanSensitive
+}
+
+// SetHanSensitive 设置 HanSensitive 字段。
+func (s *Search) SetHanSensitive(v bool) {
+	s.HanSensitive = new(v)
+}
+
+func SearchLikePattern(keyword string) string {
+	return "'%" + EscapeSearchLikePattern(keyword) + "%' ESCAPE '\\'"
+}
+
+func EscapeSearchLikePattern(keyword string) string {
+	return strings.NewReplacer("\\", "\\\\", "%", "\\%", "_", "\\_", "'", "''").Replace(keyword)
+}
+
+func (s *Search) NAMFilter(keyword string) string {
+	pattern := SearchLikePattern(strings.TrimSpace(keyword))
+	buf := bytes.Buffer{}
+	if s.Name {
+		buf.WriteString(" OR name LIKE ")
+		buf.WriteString(pattern)
+	}
+	if s.Alias {
+		buf.WriteString(" OR alias LIKE ")
+		buf.WriteString(pattern)
+	}
+	if s.Memo {
+		buf.WriteString(" OR memo LIKE ")
+		buf.WriteString(pattern)
+	}
+	return buf.String()
+}
+
+// CustomBlockEnabled 为缺少新字段的配置启用自定义块搜索。
+func (s *Search) CustomBlockEnabled() bool {
+	return s.CustomBlock == nil || *s.CustomBlock
+}
+
+// MindmapEnabled 为缺少新字段的配置启用思维导图搜索。
+func (s *Search) MindmapEnabled() bool {
+	return s.Mindmap == nil || *s.Mindmap
+}
+
+// MindmapItemEnabled 仅在显式开启时搜索思维导图项。
+func (s *Search) MindmapItemEnabled() bool {
+	return s.MindmapItem != nil && *s.MindmapItem
+}
+
+func (s *Search) TypeFilter() string {
+	buf := bytes.Buffer{}
+	if s.MindmapEnabled() {
+		buf.WriteString("'mindmap',")
+	}
+	if s.MindmapItemEnabled() {
+		buf.WriteString("'mindmap_item',")
+	}
+	if s.Document {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeDocument.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.Heading {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeHeading.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.List {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeList.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.ListItem {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeListItem.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.CodeBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeCodeBlock.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.MathBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeMathBlock.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.Table {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeTable.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.Blockquote {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeBlockquote.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.SuperBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeSuperBlock.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.Paragraph {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeParagraph.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.HTMLBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeHTMLBlock.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.EmbedBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeBlockQueryEmbed.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.DatabaseBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeAttributeView.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.AudioBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeAudio.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.VideoBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeVideo.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.IFrameBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeIFrame.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.WidgetBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeWidget.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.Callout {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeCallout.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+
+	if s.Tabs {
+		buf.WriteString("'tabs',")
+	}
+	if s.TabItem {
+		buf.WriteString("'tab',")
+	}
+	if s.CustomBlockEnabled() {
+		buf.WriteString("'custom',")
+	}
+	ret := buf.String()
+	if "" == ret {
+		return ret
+	}
+	return "(" + ret[:len(ret)-1] + ")"
+}

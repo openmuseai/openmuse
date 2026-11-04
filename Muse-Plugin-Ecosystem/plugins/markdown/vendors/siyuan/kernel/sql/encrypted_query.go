@@ -1,0 +1,963 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package sql
+
+import (
+	"bytes"
+	"context"
+	"database/sql"
+	"errors"
+	"math"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/siyuan-note/logging"
+)
+
+// 本文件提供加密笔记本的 box-scoped 读查询。每个函数接收 boxID，路由到加密 db（已打开）或全局 db。
+// 调用方（model 层）在加密笔记本上下文里改用这些 InBox 版；全局功能继续用原函数。
+
+// QueryDailyNoteRootIDsInBox 按日记属性查询文档，限定笔记本并保留数据库错误。
+func QueryDailyNoteRootIDsInBox(boxID, name, date string) (ids []string, err error) {
+	rows, err := queryForBox(boxID, "SELECT DISTINCT block_id FROM attributes WHERE box = ? AND name = ? AND value = ? AND block_id = root_id ORDER BY block_id", boxID, name, date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		if err = rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
+
+// QueryExactDocTitleIDInBox 按完整文档标题查询，先精确匹配，再匹配 Unicode 大小写，保留数据库错误。
+func QueryExactDocTitleIDInBox(title, id, rootID, boxID string) (ret string, err error) {
+	rows, err := queryForBox(boxID, "SELECT id, content FROM blocks WHERE type = 'd' AND id != ? AND id != ? ORDER BY id", id, rootID)
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+	var folded string
+	for rows.Next() {
+		var candidateID, candidateTitle string
+		if err = rows.Scan(&candidateID, &candidateTitle); err != nil {
+			return "", err
+		}
+		if candidateTitle == title {
+			return candidateID, nil
+		}
+		if folded == "" && strings.EqualFold(candidateTitle, title) {
+			folded = candidateID
+		}
+	}
+	return folded, rows.Err()
+}
+
+// GetBlockInBox 按 id 在指定 box 的 db 里查 block。boxID 为空则查全局 db。
+func GetBlockInBox(id, boxID string) (ret *Block) {
+	ret = getBlockCacheInBox(id, boxID)
+	if nil != ret {
+		return
+	}
+	row := queryRowForBox(boxID, "SELECT * FROM blocks WHERE id = ?", id)
+	if row == nil {
+		return
+	}
+	ret = scanBlockRow(row)
+	if nil != ret {
+		putBlockCache(ret)
+	}
+	return
+}
+
+// GetBlocksInBox 按 ids 在指定 box 的 db 里批量查 block。
+func GetBlocksInBox(ids []string, boxID string) (ret []*Block) {
+	return GetBlocksInBoxContext(context.Background(), ids, boxID)
+}
+
+// GetBlocksInBoxContext 保留缓存、分批查询和输入顺序，并在请求取消后停止读取。
+func GetBlocksInBoxContext(ctx context.Context, ids []string, boxID string) (ret []*Block) {
+	if 1 > len(ids) || ctx.Err() != nil {
+		return
+	}
+
+	var notHitIDs []string
+	cached := map[string]*Block{}
+	for _, id := range ids {
+		if ctx.Err() != nil {
+			return nil
+		}
+		if block := getBlockCacheInBox(id, boxID); nil != block {
+			cached[id] = block
+		} else {
+			notHitIDs = append(notHitIDs, id)
+		}
+	}
+
+	if 1 > len(notHitIDs) {
+		for _, id := range ids {
+			ret = append(ret, cached[id])
+		}
+		return
+	}
+
+	if err := queryBlocksInBatchesContext(ctx, notHitIDs, boxID, cached, false); err != nil {
+		if ctx.Err() == nil {
+			logging.LogErrorf("query blocks in box [%s] failed: %s", boxID, err)
+		}
+		return
+	}
+	for _, id := range ids {
+		ret = append(ret, cached[id])
+	}
+	return
+}
+
+// QueryRefsByDefIDInBox 按 defBlockID 在指定 box 的 db 里查引用列表。
+// containChildren 为 true 时递归查询定义块及其所有子块，与 QueryRefsByDefID 保持一致。
+func QueryRefsByDefIDInBox(defBlockID string, containChildren bool, boxID string) (ret []*Ref) {
+	var sqlStmt string
+	var args []any
+	if containChildren {
+		sqlStmt = queryRefsByDefIDWithChildren
+		args = []any{defBlockID}
+	} else {
+		sqlStmt = "SELECT * FROM refs WHERE def_block_id = ?"
+		args = []any{defBlockID}
+	}
+	rows, err := queryForBox(boxID, sqlStmt, args...)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var ref Ref
+		if err = rows.Scan(&ref.ID, &ref.DefBlockID, &ref.DefBlockParentID, &ref.DefBlockRootID, &ref.DefBlockPath, &ref.BlockID, &ref.RootID, &ref.Box, &ref.Path, &ref.Content, &ref.Markdown, &ref.Type); err != nil {
+			logging.LogErrorf("query scan field failed: %s", err)
+			return
+		}
+		ret = append(ret, &ref)
+	}
+	return
+}
+
+const queryRefsByDefIDsBatchSize = 512
+
+// QueryRefsByDefIDsInBox 按一组定义块 ID 查询引用，按 boxID 路由。
+func QueryRefsByDefIDsInBox(defBlockIDs []string, boxID string) (ret []*Ref) {
+	uniqueDefIDs := make([]string, 0, len(defBlockIDs))
+	seenDefIDs := map[string]struct{}{}
+	for _, defID := range defBlockIDs {
+		if "" == defID {
+			continue
+		}
+		if _, ok := seenDefIDs[defID]; ok {
+			continue
+		}
+		seenDefIDs[defID] = struct{}{}
+		uniqueDefIDs = append(uniqueDefIDs, defID)
+	}
+
+	for start := 0; start < len(uniqueDefIDs); start += queryRefsByDefIDsBatchSize {
+		end := min(start+queryRefsByDefIDsBatchSize, len(uniqueDefIDs))
+		batch := uniqueDefIDs[start:end]
+		placeholders := strings.TrimSuffix(strings.Repeat("?,", len(batch)), ",")
+		args := make([]any, 0, len(batch))
+		for _, defID := range batch {
+			args = append(args, defID)
+		}
+
+		rows, err := queryForBox(boxID, "SELECT * FROM refs WHERE def_block_id IN ("+placeholders+")", args...)
+		if err != nil {
+			logging.LogErrorf("sql query failed: %s", err)
+			return
+		}
+		for rows.Next() {
+			if ref := scanRefRows(rows); nil != ref {
+				ret = append(ret, ref)
+			}
+		}
+		if err = rows.Err(); nil != err {
+			logging.LogErrorf("query rows failed: %s", err)
+			rows.Close()
+			return
+		}
+		rows.Close()
+	}
+	return
+}
+
+// QueryAttributeViewRefDefIDsByBlockIDsInBox 按数据库载体块查询属性视图引用的定义块 ID。
+func QueryAttributeViewRefDefIDsByBlockIDsInBox(blockIDs []string, boxID string) (ret []string) {
+	uniqueBlockIDs := make([]string, 0, len(blockIDs))
+	seenBlockIDs := map[string]struct{}{}
+	for _, blockID := range blockIDs {
+		if "" == blockID {
+			continue
+		}
+		if _, ok := seenBlockIDs[blockID]; ok {
+			continue
+		}
+		seenBlockIDs[blockID] = struct{}{}
+		uniqueBlockIDs = append(uniqueBlockIDs, blockID)
+	}
+
+	seenDefIDs := map[string]struct{}{}
+	for start := 0; start < len(uniqueBlockIDs); start += queryRefsByDefIDsBatchSize {
+		end := min(start+queryRefsByDefIDsBatchSize, len(uniqueBlockIDs))
+		batch := uniqueBlockIDs[start:end]
+		placeholders := strings.TrimSuffix(strings.Repeat("?,", len(batch)), ",")
+		args := make([]any, 0, len(batch)+1)
+		args = append(args, AttributeViewRefType)
+		for _, blockID := range batch {
+			args = append(args, blockID)
+		}
+
+		rows, err := queryForBox(boxID,
+			"SELECT DISTINCT def_block_id FROM refs WHERE type = ? AND block_id IN ("+placeholders+")", args...)
+		if nil != err {
+			logging.LogErrorf("sql query failed: %s", err)
+			return
+		}
+		for rows.Next() {
+			var defID string
+			if err = rows.Scan(&defID); nil != err {
+				logging.LogErrorf("query scan field failed: %s", err)
+				rows.Close()
+				return
+			}
+			if "" == defID {
+				continue
+			}
+			if _, ok := seenDefIDs[defID]; ok {
+				continue
+			}
+			seenDefIDs[defID] = struct{}{}
+			ret = append(ret, defID)
+		}
+		if err = rows.Err(); nil != err {
+			logging.LogErrorf("query rows failed: %s", err)
+			rows.Close()
+			return
+		}
+		rows.Close()
+	}
+	return
+}
+
+// QueryRootChildrenRefCountInBox 按 defRootID 在指定 box 的 db 里查询根文档下各块的引用计数。
+func QueryRootChildrenRefCountInBox(defRootID, boxID string) (ret map[string]int) {
+	ret = map[string]int{}
+	sqlStmt := "SELECT def_block_id, COUNT(*) AS ref_cnt FROM refs WHERE def_block_root_id = ? GROUP BY def_block_id"
+	rows, err := queryForBox(boxID, sqlStmt, defRootID)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		var count int
+		if err = rows.Scan(&id, &count); err != nil {
+			logging.LogErrorf("query scan field failed: %s", err)
+			return
+		}
+		ret[id] = count
+	}
+	return
+}
+
+// SelectBlocksRawStmtInBox 在指定 box 的 db 里执行原始 SQL 查询 blocks。
+func SelectBlocksRawStmtInBox(stmt string, page, limit int, boxID string) (ret []*Block) {
+	queryFn := func(stmt string, args ...any) (*sql.Rows, error) {
+		return queryForBox(boxID, stmt, args...)
+	}
+	return selectBlocksRawStmtWithQuery(stmt, page, limit, boxID, queryFn)
+}
+
+func SelectBlocksRawStmtInBoxContext(ctx context.Context, stmt string, page, limit int, boxID string) (ret []*Block, err error) {
+	queryFn := func(stmt string, args ...any) (*sql.Rows, error) {
+		return queryForBoxContext(ctx, boxID, stmt, args...)
+	}
+	ret = selectBlocksRawStmtWithQuery(stmt, page, limit, boxID, queryFn)
+	err = ctx.Err()
+	return
+}
+
+// SelectBlocksRawStmtBoundedInBoxContext 执行原始块查询，并无条件限制返回行数。
+func SelectBlocksRawStmtBoundedInBoxContext(ctx context.Context, stmt string, limit int, boxID string) (ret []*Block, truncated bool, err error) {
+	if !checkRawBlockQueryStmt(stmt, boxID) {
+		return
+	}
+
+	rows, err := queryForBoxContext(ctx, boxID, stmt)
+	if nil != err {
+		return nil, false, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if limit <= len(ret) {
+			truncated = true
+			break
+		}
+		block := scanBlockRows(rows)
+		if nil == block {
+			return nil, false, errors.New("query result columns do not match blocks")
+		}
+		ret = append(ret, block)
+	}
+	if err = rows.Err(); nil != err {
+		return nil, false, err
+	}
+	return
+}
+
+// QueryRefCountInBox 按 defBlockIDs 在指定 box 的 db 里查引用计数。
+func QueryRefCountInBox(defIDs []string, boxID string) (ret map[string]int) {
+	return QueryRefCountInBoxContext(context.Background(), defIDs, boxID)
+}
+
+// QueryRefCountInBoxContext 在搜索取消后停止引用计数，沿用原有的笔记本隔离。
+func QueryRefCountInBoxContext(ctx context.Context, defIDs []string, boxID string) (ret map[string]int) {
+	ret = map[string]int{}
+	if 1 > len(defIDs) || ctx.Err() != nil {
+		return
+	}
+	ids := "('" + strings.Join(defIDs, "','") + "')"
+	rows, err := queryForBoxContext(ctx, boxID, "SELECT def_block_id, COUNT(*) AS ref_cnt FROM refs WHERE def_block_id IN "+ids+" GROUP BY def_block_id")
+	if err != nil {
+		if ctx.Err() == nil {
+			logging.LogErrorf("sql query failed: %s", err)
+		}
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if ctx.Err() != nil {
+			return map[string]int{}
+		}
+		var id string
+		var cnt int
+		if err = rows.Scan(&id, &cnt); err != nil {
+			logging.LogErrorf("query scan field failed: %s", err)
+			return
+		}
+		ret[id] = cnt
+	}
+	if rows.Err() != nil || ctx.Err() != nil {
+		return map[string]int{}
+	}
+	return
+}
+
+// QueryNoLimitInBox 在指定 box 的 db 里执行无 limit 的原始查询（返回 map 行）。
+func QueryNoLimitInBox(stmt, boxID string) (ret []map[string]any, err error) {
+	return queryRawStmtForBox(boxID, stmt, math.MaxInt)
+}
+
+func QueryNoLimitInBoxContext(ctx context.Context, stmt, boxID string) (ret []map[string]any, err error) {
+	return queryRawStmtForBoxContext(ctx, boxID, stmt, math.MaxInt)
+}
+
+// QueryNoLimitArgsInBox 与 QueryNoLimitInBox 一致，但支持参数化查询。
+func QueryNoLimitArgsInBox(stmt, boxID string, args ...any) (ret []map[string]any, err error) {
+	return queryRawStmtArgsForBox(boxID, stmt, args, math.MaxInt)
+}
+
+// QueryNoLimitArgsInBoxContext 在请求取消时中断参数化查询，并保留笔记本数据库路由。
+func QueryNoLimitArgsInBoxContext(ctx context.Context, stmt, boxID string, args ...any) (ret []map[string]any, err error) {
+	return queryRawStmtArgsForBoxContext(ctx, boxID, stmt, args, math.MaxInt)
+}
+
+// SelectBlocksRawStmtArgsInBox 在指定 box 的 db 里执行参数化原始 SQL 查询 blocks。
+// 与 SelectBlocksRawStmtArgs 对应，绕开 sqlparser 对 "?" 占位的改写。
+func SelectBlocksRawStmtArgsInBox(stmt string, args []any, limit int, boxID string) (ret []*Block) {
+	ret, _ = SelectBlocksRawStmtArgsInBoxContext(context.Background(), stmt, args, limit, boxID)
+	return
+}
+
+// SelectBlocksRawStmtArgsInBoxContext 取消参数化块查询，不将取消后的部分行作为完整结果返回。
+func SelectBlocksRawStmtArgsInBoxContext(ctx context.Context, stmt string, args []any, limit int, boxID string) (ret []*Block, err error) {
+	if err = ctx.Err(); err != nil {
+		return
+	}
+	if !checkRawBlockQueryStmt(stmt, boxID) {
+		return
+	}
+
+	rows, err := queryForBoxContext(ctx, boxID, stmt, args...)
+	if err != nil {
+		if ctx.Err() != nil || strings.Contains(err.Error(), "syntax error") {
+			return
+		}
+		logging.LogWarnf("sql query [%s] failed: %s", stmt, err)
+		return
+	}
+	defer rows.Close()
+
+	noLimit := !containsLimitClause(stmt)
+	var count, errCount int
+	for rows.Next() {
+		if err = ctx.Err(); err != nil {
+			return nil, err
+		}
+		count++
+		if block := scanBlockRows(rows); nil != block {
+			ret = append(ret, block)
+		} else {
+			logging.LogWarnf("raw sql query [%s] failed", stmt)
+			errCount++
+		}
+
+		if (noLimit && count >= limit) || 0 < errCount {
+			break
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return
+}
+
+// SelectBlocksRegexInBox 在指定 box 的 db 里执行正则匹配查询 blocks（无占位参数版）。
+func SelectBlocksRegexInBox(stmt string, exp *regexp.Regexp, name, alias, memo, ial bool, page, pageSize int, boxID string) (ret []*Block) {
+	rows, err := queryForBox(boxID, stmt)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", stmt, err)
+		return
+	}
+	defer rows.Close()
+	count := 0
+	for rows.Next() {
+		count++
+		if count <= (page-1)*pageSize {
+			continue
+		}
+
+		var block Block
+		if err := rows.Scan(&block.ID, &block.ParentID, &block.RootID, &block.Hash, &block.Box, &block.Path, &block.HPath, &block.Name, &block.Alias, &block.Memo, &block.Tag, &block.Content, &block.FContent, &block.Markdown, &block.Length, &block.Type, &block.SubType, &block.IAL, &block.Sort, &block.Created, &block.Updated); err != nil {
+			logging.LogErrorf("query scan field failed: %s\n%s", err, logging.ShortStack())
+			return
+		}
+
+		if matchRegexBlock(&block, exp, name, alias, memo, ial) {
+			ret = append(ret, &block)
+			if len(ret) >= pageSize {
+				break
+			}
+		}
+	}
+	return
+}
+
+// SelectBlocksRegexArgsInBoxContext 同时中断数据库扫描和逐块正则高亮。
+func SelectBlocksRegexArgsInBoxContext(ctx context.Context, stmt string, exp *regexp.Regexp, name, alias, memo, ial bool, page, pageSize int, boxID string, args ...any) (ret []*Block, err error) {
+	rows, err := queryForBoxContext(ctx, boxID, stmt, args...)
+	if err != nil {
+		if ctx.Err() == nil {
+			logging.LogErrorf("sql query [%s] failed: %s", stmt, err)
+		}
+		return
+	}
+	defer rows.Close()
+	count := 0
+	for rows.Next() {
+		if err = ctx.Err(); err != nil {
+			return nil, err
+		}
+		count++
+		if count <= (page-1)*pageSize {
+			continue
+		}
+
+		var block Block
+		if err = rows.Scan(&block.ID, &block.ParentID, &block.RootID, &block.Hash, &block.Box, &block.Path, &block.HPath, &block.Name, &block.Alias, &block.Memo, &block.Tag, &block.Content, &block.FContent, &block.Markdown, &block.Length, &block.Type, &block.SubType, &block.IAL, &block.Sort, &block.Created, &block.Updated); err != nil {
+			logging.LogErrorf("query scan field failed: %s\n%s", err, logging.ShortStack())
+			return
+		}
+
+		if matchRegexBlock(&block, exp, name, alias, memo, ial) {
+			ret = append(ret, &block)
+			if len(ret) >= pageSize {
+				break
+			}
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return
+}
+
+// matchRegexBlock 对 block 各字段做正则命中并就地高亮，命中返回 true。
+func matchRegexBlock(block *Block, exp *regexp.Regexp, name, alias, memo, ial bool) bool {
+	hitContent := exp.MatchString(block.Content)
+	hitName := name && exp.MatchString(block.Name)
+	hitAlias := alias && exp.MatchString(block.Alias)
+	hitMemo := memo && exp.MatchString(block.Memo)
+	hitIAL := ial && exp.MatchString(block.IAL)
+	if hitContent || hitName || hitAlias || hitMemo || hitIAL {
+		if hitContent {
+			block.Content = exp.ReplaceAllString(block.Content, "__@mark__${0}__mark@__")
+		}
+		if hitName {
+			block.Name = exp.ReplaceAllString(block.Name, "__@mark__${0}__mark@__")
+		}
+		if hitAlias {
+			block.Alias = exp.ReplaceAllString(block.Alias, "__@mark__${0}__mark@__")
+		}
+		if hitMemo {
+			block.Memo = exp.ReplaceAllString(block.Memo, "__@mark__${0}__mark@__")
+		}
+		if hitIAL {
+			block.IAL = exp.ReplaceAllString(block.IAL, "__@mark__${0}__mark@__")
+		}
+		return true
+	}
+	return false
+}
+
+// QueryBlockNamesByRootIDInBox 按 rootID 在指定 box 的 db 里查块命名。
+func QueryBlockNamesByRootIDInBox(rootID, boxID string) (ret []string) {
+	sqlStmt := "SELECT DISTINCT name FROM blocks WHERE root_id = ? AND name != ''"
+	rows, err := queryForBox(boxID, sqlStmt, rootID)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var name string
+		rows.Scan(&name)
+		ret = append(ret, name)
+	}
+	return
+}
+
+// QueryBlockAliasesInBox 按 rootID 在指定 box 的 db 里查块别名（按逗号拆分去重）。
+func QueryBlockAliasesInBox(rootID, boxID string) (ret []string) {
+	sqlStmt := "SELECT alias FROM blocks WHERE root_id = ? AND alias != ''"
+	rows, err := queryForBox(boxID, sqlStmt, rootID)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	var aliasesRows []string
+	for rows.Next() {
+		var name string
+		rows.Scan(&name)
+		aliasesRows = append(aliasesRows, name)
+	}
+
+	for _, aliasStr := range aliasesRows {
+		aliases := strings.SplitSeq(aliasStr, ",")
+		for alias := range aliases {
+			var exist bool
+			for _, retAlias := range ret {
+				if retAlias == alias {
+					exist = true
+				}
+			}
+			if !exist {
+				ret = append(ret, alias)
+			}
+		}
+	}
+	return
+}
+
+// QueryRefsByDefIDRefIDInBox 按 defBlockID+refBlockID 在指定 box 的 db 里查引用。
+func QueryRefsByDefIDRefIDInBox(defBlockID, refBlockID, boxID string) (ret []*Ref) {
+	stmt := "SELECT * FROM refs WHERE def_block_id = ? AND block_id = ?"
+	rows, err := queryForBox(boxID, stmt, defBlockID, refBlockID)
+	if err != nil {
+		logging.LogErrorf("sql query failed: %s", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		ref := scanRefRows(rows)
+		ret = append(ret, ref)
+	}
+	return
+}
+
+// QueryRefsRecentInBox 按 boxID 路由查最近引用，用于加密笔记本内的块引搜索。
+func QueryRefsRecentInBox(onlyDoc bool, typeFilter string, ignoreLines, recentDefBlockIDs []string, boxID string) (ret []*Ref) {
+	stmt := "SELECT r.* FROM refs AS r, blocks AS b WHERE b.id = r.def_block_id AND b.type IN " + typeFilter
+	if onlyDoc {
+		stmt = "SELECT r.* FROM refs AS r, blocks AS b WHERE b.id = r.def_block_id AND b.type = 'd'"
+	}
+	if 0 < len(ignoreLines) {
+		buf := bytes.Buffer{}
+		for _, line := range ignoreLines {
+			buf.WriteString(" AND ")
+			buf.WriteString(line)
+		}
+		stmt += buf.String()
+	}
+	orderBy, args := buildRefsRecentOrderBy(recentDefBlockIDs)
+	stmt += " GROUP BY r.def_block_id ORDER BY " + orderBy + " LIMIT 32"
+	rows, err := queryForBox(boxID, stmt, args...)
+	if err != nil {
+		logging.LogErrorf("sql query failed: %s", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		ref := scanRefRows(rows)
+		ret = append(ret, ref)
+	}
+	return
+}
+
+func buildRefsRecentOrderBy(recentDefBlockIDs []string) (ret string, args []any) {
+	if 1 > len(recentDefBlockIDs) {
+		return "r.id DESC", nil
+	}
+
+	buf := bytes.Buffer{}
+	buf.WriteString("CASE r.def_block_id ")
+	for i, id := range recentDefBlockIDs {
+		buf.WriteString("WHEN ? THEN ")
+		buf.WriteString(strconv.Itoa(i))
+		buf.WriteByte(' ')
+		args = append(args, id)
+	}
+	buf.WriteString("ELSE ")
+	buf.WriteString(strconv.Itoa(len(recentDefBlockIDs)))
+	buf.WriteString(" END ASC, r.id DESC")
+	return buf.String(), args
+}
+
+// QueryChildRefDefIDsByRootDefIDInBox 按 rootDefID 查子引用定义，按 boxID 路由。
+func QueryChildRefDefIDsByRootDefIDInBox(rootDefID, boxID string) (ret map[string][]string) {
+	ret = map[string][]string{}
+	rows, err := queryForBox(boxID, "SELECT block_id, def_block_id FROM refs WHERE def_block_root_id = ?", rootDefID)
+	if err != nil {
+		logging.LogErrorf("sql query failed: %s", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var defID, refID string
+		if err = rows.Scan(&defID, &refID); err != nil {
+			logging.LogErrorf("query scan field failed: %s", err)
+			return
+		}
+		if nil == ret[defID] {
+			ret[defID] = []string{refID}
+		} else {
+			ret[defID] = append(ret[defID], refID)
+		}
+	}
+	return
+}
+
+// QueryChildDefIDsByRootDefIDInBox 按定义文档根 ID 查询存在引用的子定义块，按 boxID 路由。
+func QueryChildDefIDsByRootDefIDInBox(rootDefID, boxID string) (ret []string) {
+	rows, err := queryForBox(boxID, "SELECT DISTINCT(def_block_id) FROM refs WHERE def_block_root_id = ?", rootDefID)
+	if err != nil {
+		logging.LogErrorf("sql query failed: %s", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		if err = rows.Scan(&id); err != nil {
+			logging.LogErrorf("query scan field failed: %s", err)
+			return
+		}
+		ret = append(ret, id)
+	}
+	return
+}
+
+// QueryRefIDsByDefIDInBox 按 defID 查引用 ID 列表，按 boxID 路由。
+func QueryRefIDsByDefIDInBox(defID string, containChildren bool, boxID string) (refIDs []string) {
+	refIDs = []string{}
+	var rows *sql.Rows
+	var err error
+	if containChildren {
+		rows, err = queryForBox(boxID, "SELECT DISTINCT block_id FROM refs WHERE def_block_root_id = ?", defID)
+	} else {
+		rows, err = queryForBox(boxID, "SELECT DISTINCT block_id FROM refs WHERE def_block_id = ?", defID)
+	}
+	if err != nil {
+		logging.LogErrorf("sql query failed: %s", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		if err = rows.Scan(&id); err != nil {
+			logging.LogErrorf("query scan field failed: %s", err)
+			return
+		}
+		refIDs = append(refIDs, id)
+	}
+	return
+}
+
+// SelectBlocksRawStmtNoParseInBox 与 SelectBlocksRawStmtNoParse 一致，但按 boxID 路由。
+func SelectBlocksRawStmtNoParseInBox(stmt string, limit int, boxID string) (ret []*Block) {
+	if !checkRawBlockQueryStmt(stmt, boxID) {
+		return
+	}
+
+	rows, err := queryForBox(boxID, stmt)
+	if err != nil {
+		if strings.Contains(err.Error(), "syntax error") {
+			return
+		}
+		return
+	}
+	defer rows.Close()
+
+	noLimit := !containsLimitClause(stmt)
+	var count, errCount int
+	for rows.Next() {
+		count++
+		if block := scanBlockRows(rows); nil != block {
+			ret = append(ret, block)
+		} else {
+			logging.LogWarnf("raw sql query [%s] failed", stmt)
+			errCount++
+		}
+
+		if (noLimit && count >= limit) || 0 < errCount {
+			break
+		}
+	}
+	return
+}
+
+// GetChildBlocksInBox 按 parentID 在指定 box 的 db 里查所有子块。
+func GetChildBlocksInBox(parentID, condition string, limit int, boxID string) (ret []*Block) {
+	blockIDs := queryBlockChildrenIDsForBox(parentID, boxID)
+	var params []string
+	for _, id := range blockIDs {
+		params = append(params, "\""+id+"\"")
+	}
+
+	ret = []*Block{}
+	sqlStmt := "SELECT * FROM blocks AS ref WHERE ref.id IN (" + strings.Join(params, ",") + ")"
+	if "" != condition {
+		sqlStmt += " AND " + condition
+	}
+	sqlStmt += " LIMIT " + itoa(limit)
+	rows, err := queryForBox(boxID, sqlStmt)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if block := scanBlockRows(rows); nil != block {
+			ret = append(ret, block)
+		}
+	}
+	return
+}
+
+// queryBlockChildrenIDsForBox 递归收集 parentID 及其全部子块 id，按 boxID 路由。
+func queryBlockChildrenIDsForBox(id, boxID string) (ret []string) {
+	ret = append(ret, id)
+	childIDs := queryBlockIDByParentIDForBox(id, boxID)
+	for _, childID := range childIDs {
+		ret = append(ret, queryBlockChildrenIDsForBox(childID, boxID)...)
+	}
+	return
+}
+
+// queryBlockIDByParentIDForBox 按 parentID 查直接子块 id，按 boxID 路由。
+func queryBlockIDByParentIDForBox(parentID, boxID string) (ret []string) {
+	sqlStmt := "SELECT id FROM blocks WHERE parent_id = ?"
+	rows, err := queryForBox(boxID, sqlStmt, parentID)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		rows.Scan(&id)
+		ret = append(ret, id)
+	}
+	return
+}
+
+// itoa 是 strconv.Itoa 的简写别名，避免重复 import。
+func itoa(i int) string {
+	return intToStr(i)
+}
+
+// intToStr 把 int 转字符串（避免 import strconv 的循环）。
+func intToStr(i int) string {
+	if i == 0 {
+		return "0"
+	}
+	neg := false
+	if i < 0 {
+		neg = true
+		i = -i
+	}
+	var buf [20]byte
+	pos := len(buf)
+	for i > 0 {
+		pos--
+		buf[pos] = byte('0' + i%10)
+		i /= 10
+	}
+	if neg {
+		pos--
+		buf[pos] = '-'
+	}
+	return string(buf[pos:])
+}
+
+// queryRawStmtForBox 与 queryRawStmt 一致，但按 boxID 路由到加密 db 或全局 db。
+func queryRawStmtForBox(boxID, stmt string, limit int) (ret []map[string]any, err error) {
+	rows, err := queryForBox(boxID, stmt)
+	if err != nil {
+		if strings.Contains(err.Error(), "syntax error") {
+			return
+		}
+		return
+	}
+	defer rows.Close()
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return
+	}
+
+	noLimit := !containsLimitClause(stmt)
+	var count int
+	for rows.Next() {
+		columns := make([]any, len(cols))
+		columnPointers := make([]any, len(cols))
+		for i := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		if err = rows.Scan(columnPointers...); err != nil {
+			return
+		}
+
+		m := make(map[string]any)
+		for i, colName := range cols {
+			val := columnPointers[i].(*any)
+			m[colName] = *val
+		}
+
+		ret = append(ret, m)
+		count++
+		if noLimit && count >= limit {
+			break
+		}
+	}
+	err = rows.Err()
+	return
+}
+
+func queryRawStmtForBoxContext(ctx context.Context, boxID, stmt string, limit int) (ret []map[string]any, err error) {
+	return queryRawStmtArgsForBoxContext(ctx, boxID, stmt, nil, limit)
+}
+
+func queryRawStmtArgsForBoxContext(ctx context.Context, boxID, stmt string, args []any, limit int) (ret []map[string]any, err error) {
+	rows, err := queryForBoxContext(ctx, boxID, stmt, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	noLimit := !containsLimitClause(stmt)
+	var count int
+	for rows.Next() {
+		if err = ctx.Err(); err != nil {
+			return nil, err
+		}
+		columns := make([]any, len(cols))
+		columnPointers := make([]any, len(cols))
+		for i := range columns {
+			columnPointers[i] = &columns[i]
+		}
+		if err = rows.Scan(columnPointers...); err != nil {
+			return nil, err
+		}
+
+		m := make(map[string]any)
+		for i, colName := range cols {
+			val := columnPointers[i].(*any)
+			m[colName] = *val
+		}
+		ret = append(ret, m)
+		count++
+		if noLimit && count >= limit {
+			break
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return
+}
+
+// queryRawStmtArgsForBox 与 queryRawStmtArgs 一致，但按 boxID 路由到加密 db 或全局 db。
+func queryRawStmtArgsForBox(boxID, stmt string, args []any, limit int) (ret []map[string]any, err error) {
+	rows, err := queryForBox(boxID, stmt, args...)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return
+	}
+
+	noLimit := !containsLimitClause(stmt)
+	var count int
+	for rows.Next() {
+		columns := make([]any, len(cols))
+		columnPointers := make([]any, len(cols))
+		for i := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		if err = rows.Scan(columnPointers...); err != nil {
+			return
+		}
+
+		m := make(map[string]any)
+		for i, colName := range cols {
+			val := columnPointers[i].(*any)
+			m[colName] = *val
+		}
+
+		ret = append(ret, m)
+		count++
+		if noLimit && count >= limit {
+			break
+		}
+	}
+	err = rows.Err()
+	return
+}

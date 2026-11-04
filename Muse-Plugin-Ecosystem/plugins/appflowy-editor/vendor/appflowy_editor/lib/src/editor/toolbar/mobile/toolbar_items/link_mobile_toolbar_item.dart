@@ -1,0 +1,183 @@
+import 'package:appflowy_editor/appflowy_editor.dart';
+import 'package:flutter/material.dart';
+
+final linkMobileToolbarItem = MobileToolbarItem.withMenu(
+  itemIconBuilder: (context, __, ___) => AFMobileIcon(
+    afMobileIcons: AFMobileIcons.link,
+    color: MobileToolbarTheme.of(context).iconColor,
+  ),
+  itemMenuBuilder: (_, editorState, itemMenuService) {
+    final selection = editorState.selection;
+    if (selection == null) {
+      return const SizedBox.shrink();
+    }
+    final String? linkText = editorState.getDeltaAttributeValueInSelection(
+      AppFlowyRichTextKeys.href,
+      selection,
+    );
+
+    return MobileLinkMenu(
+      editorState: editorState,
+      linkText: linkText,
+      onSubmitted: (value) async {
+        if (value.isNotEmpty) {
+          await editorState.formatDelta(selection, {
+            AppFlowyRichTextKeys.href: value,
+          });
+        }
+        itemMenuService.closeItemMenu();
+        editorState.service.keyboardService?.closeKeyboard();
+      },
+      onCancel: () => itemMenuService.closeItemMenu(),
+    );
+  },
+);
+
+class MobileLinkMenu extends StatefulWidget {
+  const MobileLinkMenu({
+    super.key,
+    this.linkText,
+    required this.editorState,
+    required this.onSubmitted,
+    required this.onCancel,
+  });
+
+  final String? linkText;
+  final EditorState editorState;
+  final void Function(String) onSubmitted;
+  final void Function() onCancel;
+
+  @override
+  State<MobileLinkMenu> createState() => _MobileLinkMenuState();
+}
+
+class _MobileLinkMenuState extends State<MobileLinkMenu> {
+  late TextEditingController _textEditingController;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.editorState.service.keyboardService?.disable();
+    _textEditingController = TextEditingController(text: widget.linkText ?? '');
+  }
+
+  @override
+  void dispose() {
+    _textEditingController.dispose();
+    widget.editorState.service.keyboardService?.enable();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final style = MobileToolbarTheme.of(context);
+    const double spacing = 8;
+    return Material(
+      // TextField widget needs to be wrapped in a Material widget to provide a visual appearance
+      color: style.backgroundColor,
+      child: SizedBox(
+        height: style.toolbarHeight * 2 + spacing,
+        child: Column(
+          children: [
+            TextField(
+              autofocus: true,
+              controller: _textEditingController,
+              keyboardType: TextInputType.url,
+              onSubmitted: widget.onSubmitted,
+              cursorColor: style.foregroundColor,
+              decoration: InputDecoration(
+                hintText: 'URL',
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 0,
+                  horizontal: 8,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: style.itemOutlineColor,
+                  ),
+                  borderRadius: BorderRadius.circular(style.borderRadius),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: style.itemOutlineColor,
+                  ),
+                  borderRadius: BorderRadius.circular(style.borderRadius),
+                ),
+                suffixIcon: IconButton(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  icon: Icon(
+                    Icons.clear_rounded,
+                    color: style.foregroundColor,
+                  ),
+                  onPressed: _textEditingController.clear,
+                  splashRadius: 5,
+                ),
+              ),
+            ),
+            const SizedBox(height: spacing),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      widget.onCancel.call();
+                    },
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty.all(
+                        style.backgroundColor,
+                      ),
+                      foregroundColor: WidgetStateProperty.all(
+                        style.primaryColor,
+                      ),
+                      elevation: WidgetStateProperty.all(0),
+                      shape: WidgetStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(style.borderRadius),
+                        ),
+                      ),
+                      side: WidgetStateBorderSide.resolveWith(
+                        (states) => BorderSide(color: style.outlineColor),
+                      ),
+                    ),
+                    child: Text(
+                      AppFlowyEditorL10n.current.cancel,
+                    ),
+                  ),
+                ),
+                SizedBox(width: style.buttonSpacing),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      widget.onSubmitted.call(_textEditingController.text);
+                      widget.editorState.service.keyboardService
+                          ?.closeKeyboard();
+                    },
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty.all(
+                        style.primaryColor,
+                      ),
+                      foregroundColor: WidgetStateProperty.all(
+                        style.onPrimaryColor,
+                      ),
+                      elevation: WidgetStateProperty.all(0),
+                      shape: WidgetStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(style.borderRadius),
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      AppFlowyEditorL10n.current.done,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

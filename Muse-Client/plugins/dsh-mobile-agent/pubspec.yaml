@@ -1,0 +1,21 @@
+name: openmuse_dsh_mobile_agent
+version: 0.1.0
+publish_to: none
+description: Mobile DSH generation adapter; session transport stays inside the Agent plugin.
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  openmuse_mobile_core:
+    path: ../../packages/openmuse_mobile_core
+  muse_dsh_conversation_protocol:
+    path: ../../packages/muse_dsh_conversation_protocol
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+  openmuse_workspace_paired:
+    path: ../workspace-paired
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

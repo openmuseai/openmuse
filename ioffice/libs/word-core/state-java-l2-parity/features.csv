@@ -1,0 +1,13 @@
+order,feature_id,title,layer,depends_on,status,docs_path
+1,wc-06-stage1-live,实文档 Stage1 dump vs Java,parser,wc-05-orchestration,pass,parser/features/wc-06-stage1-live
+2,wc-07-papx-geometry,几何 PAPX sprm 进桶（缩进/段距/行距）,parser,wc-03-property-convert;wc-06-stage1-live,pass,parser/features/wc-07-papx-geometry
+3,wr-21-para-layouter,ParaLayouter：PAPX→段框/段距/行距,layout,wc-07-papx-geometry;wr-12-line-layouter,pass,layout/features/wr-21-para-layouter
+4,wr-22-text-flow,TextLayouter.flow 正文热路径,layout,wr-21-para-layouter;wr-09-run-stream,pass,layout/features/wr-22-text-flow
+5,wr-23-pageview-main,PageViewLayouter MODE_PAGE 产品入口,layout,wr-22-text-flow;wr-13-page-layouter,pass,layout/features/wr-23-pageview-main
+6,wr-24-live-stage2,产品实排 Stage2 vs Java（本波出口）,layout,wr-23-pageview-main;wr-16-line-golden,pass,layout/features/wr-24-live-stage2
+7,wr-25-line-compress,整行压缩后再断行,layout,wr-22-text-flow,pass,layout/features/wr-25-line-compress
+8,wr-26-kinsoku,东亚标点禁则,layout,wr-22-text-flow,pass,layout/features/wr-26-kinsoku
+9,wr-27-table-layout,表格排版,layout,wr-22-text-flow;wc-04-paragraph-import,pass,layout/features/wr-27-table-layout
+10,wr-28-drawing-wrap,图形绕排,layout,wr-22-text-flow,pass,layout/features/wr-28-drawing-wrap
+11,wc-08-numbering-apply,编号串+悬挂缩进,parser,wc-02-document-model,pass,parser/features/wc-08-numbering-apply
+12,wc-09-hdrftr-story,页眉页脚故事,parser,wc-05-orchestration,pass,parser/features/wc-09-hdrftr-story

@@ -1,0 +1,577 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package util
+
+import (
+	"bytes"
+	"io"
+	"io/fs"
+	"mime"
+	"net/url"
+	"os"
+	"path"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+	"unicode"
+	"unicode/utf8"
+
+	"github.com/88250/gulu"
+	"github.com/88250/lute/ast"
+	"github.com/gabriel-vasile/mimetype"
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/logging"
+)
+
+// IsOfficeTempFile 判断是否为 Office（Word/Excel/PowerPoint/WPS）打开文档时生成的临时文件。
+// 这些文件名以 `~$` 开头，且被宿主程序独占，尝试读取会触发 filelock 的致命错误，需跳过。
+func IsOfficeTempFile(assetAbsPath string) bool {
+	return strings.HasPrefix(filepath.Base(assetAbsPath), "~$")
+}
+
+func GetFilePathsByExts(dirPath string, exts []string) (ret []string) {
+	filelock.Walk(dirPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			logging.LogErrorf("get file paths by ext failed: %s", err)
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		for _, ext := range exts {
+			if strings.HasSuffix(path, ext) {
+				ret = append(ret, path)
+				break
+			}
+		}
+		return nil
+	})
+	return
+}
+
+func GetUniqueFilename(filePath string) string {
+	if !gulu.File.IsExist(filePath) {
+		return filePath
+	}
+
+	ext := filepath.Ext(filePath)
+	base := strings.TrimSuffix(filepath.Base(filePath), ext)
+	dir := filepath.Dir(filePath)
+	i := 1
+	for {
+		newPath := filepath.Join(dir, base+" ("+strconv.Itoa(i)+")"+ext)
+		if !gulu.File.IsExist(newPath) {
+			return newPath
+		}
+		i++
+	}
+}
+
+func GetMimeTypeByExt(filePath string) (ret string) {
+	ret = mime.TypeByExtension(filepath.Ext(filePath))
+	if "" == ret {
+		if m, ok := GetMimeTypeByPath(filePath); ok {
+			ret = m.String()
+		}
+	}
+	return
+}
+
+func GetMimeTypeByPath(filePath string) (m *mimetype.MIME, ok bool) {
+	f, err := filelock.OpenFile(filePath, os.O_RDONLY, 0644)
+	if err != nil {
+		logging.LogErrorf("open file [%s] failed: %s", filePath, err)
+		return
+	}
+	defer filelock.CloseFile(f)
+
+	m, err = mimetype.DetectReader(f)
+	if nil != err {
+		logging.LogWarnf("detect file [%s] mimetype failed: %v", filePath, err)
+		return
+	}
+	ok = true
+	return
+}
+
+// IsSymlinkPath 判断现有路径是否为符号链接或目录联接。
+func IsSymlinkPath(absPath string) bool {
+	fi, err := os.Lstat(absPath)
+	if err != nil {
+		return false
+	}
+	return isLinkFileInfo(fi)
+}
+
+// IsSystemMetadataFile 判断是否为操作系统自动生成的元数据文件（如 macOS 的 .DS_Store），
+// 这类文件不属于业务数据，判空与清理时应忽略
+func IsSystemMetadataFile(name string) bool {
+	return name == ".DS_Store"
+}
+
+// IsEmptyDir 判断目录是否为空，忽略系统元数据文件（如 .DS_Store）
+func IsEmptyDir(p string) bool {
+	info, err := os.Lstat(p)
+	if err != nil || !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+		return false
+	}
+
+	files, err := os.ReadDir(p)
+	if err != nil {
+		return false
+	}
+	for _, file := range files {
+		if !file.Type().IsRegular() || !IsSystemMetadataFile(file.Name()) {
+			return false
+		}
+	}
+	return true
+}
+
+// RemoveEmptyDir 删除仅含系统元数据文件（如 .DS_Store）的目录；若目录仍含业务文件则保留不动
+func RemoveEmptyDir(p string) (err error) {
+	info, err := os.Lstat(p)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+		return nil
+	}
+	entries, err := os.ReadDir(p)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return
+	}
+	for _, entry := range entries {
+		if !entry.Type().IsRegular() || !IsSystemMetadataFile(entry.Name()) {
+			return nil
+		}
+	}
+	for _, entry := range entries {
+		if err = os.Remove(filepath.Join(p, entry.Name())); err != nil && !os.IsNotExist(err) {
+			return
+		}
+	}
+	if err = os.Remove(p); os.IsNotExist(err) {
+		return nil
+	}
+	return
+}
+
+// IsSymlink 判断目录条目是否为符号链接或目录联接。
+func IsSymlink(dir fs.DirEntry) bool {
+	if dir.Type()&fs.ModeSymlink != 0 {
+		return true
+	}
+	if dir.Type()&fs.ModeIrregular == 0 {
+		return false
+	}
+	info, err := dir.Info()
+	return err == nil && isLinkFileInfo(info)
+}
+
+func IsDirRegularOrSymlink(dir fs.DirEntry) bool {
+	return dir.IsDir() || IsSymlink(dir)
+}
+
+func IsPathRegularDirOrSymlinkDir(path string) bool {
+	fio, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	if err != nil {
+		return false
+	}
+
+	return fio.IsDir()
+}
+
+func RemoveID(name string) string {
+	ext := Ext(name)
+	name = strings.TrimSuffix(name, ext)
+	if 23 < len(name) {
+		if id := name[len(name)-22:]; ast.IsNodeIDPattern(id) {
+			name = name[:len(name)-23]
+		}
+	}
+	return name + ext
+}
+
+var commonSuffixes = []string{
+	".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp", ".tif", ".tiff", ".heic", ".heif",
+	".txt", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".md", ".rtf",
+	".zip", ".rar", ".7z", ".tar", ".gz", ".bz2",
+	".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a",
+	".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv",
+	".exe", ".bat", ".sh", ".app",
+	".js", ".ts", ".html", ".css", ".go", ".py", ".java", ".c", ".cpp", ".json", ".xml", ".yaml", ".toml",
+	".sql", ".db", ".sqlite", ".csv",
+	".iso", ".dmg", ".apk", ".bin",
+}
+
+func IsCommonExt(ext string) bool {
+	return strings.HasPrefix(ext, ".") && gulu.Str.Contains(strings.ToLower(ext), commonSuffixes)
+}
+
+func Ext(name string) (ret string) {
+	ret = path.Ext(name)
+	if "." == ret {
+		ret = ""
+	}
+	return
+}
+
+func AssetName(name, newID string) string {
+	_, id := LastID(name)
+	ext := Ext(name)
+	name = name[0 : len(name)-len(ext)]
+	if !ast.IsNodeIDPattern(id) {
+		id = newID
+		name = name + "-" + id + ext
+	} else {
+		if !ast.IsNodeIDPattern(name) {
+			name = name[:len(name)-len(id)-1] + "-" + id + ext
+		} else {
+			name = name + ext
+		}
+	}
+	return name
+}
+
+func LastID(p string) (name, id string) {
+	name = path.Base(p)
+	ext := Ext(name)
+	id = strings.TrimSuffix(name, ext)
+	if 22 < len(id) {
+		id = id[len(id)-22:]
+	}
+	return
+}
+
+func IsValidUploadFileName(name string) bool {
+	return name == FilterUploadFileName(name)
+}
+
+// IsValidExistingEmojiFileName 保留已有表情名中的合法替换字符，新上传文件仍按命名规则清洗。
+func IsValidExistingEmojiFileName(name string) bool {
+	return utf8.ValidString(name) && strings.ReplaceAll(name, "\ufffd", "_") == FilterUploadFileName(name)
+}
+
+// RenameEmojiFile 在源和目标文件锁内迁移表情，目标已存在时保留两者，不覆盖文件或合并目录。
+func RenameEmojiFile(oldPath, newPath string) error {
+	oldPath, newPath = filepath.Clean(oldPath), filepath.Clean(newPath)
+	if oldPath == newPath {
+		return nil
+	}
+	first, second := oldPath, newPath
+	if first > second {
+		first, second = second, first
+	}
+	filelock.Lock(first)
+	defer filelock.Unlock(first)
+	filelock.Lock(second)
+	defer filelock.Unlock(second)
+	if _, err := os.Lstat(newPath); err == nil {
+		return &os.LinkError{Op: "rename", Old: oldPath, New: newPath, Err: os.ErrExist}
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	return os.Rename(oldPath, newPath)
+}
+
+func IsNetworkIconURL(icon string) bool {
+	u, err := url.Parse(icon)
+	return nil == err && "" != u.Host && ("http" == strings.ToLower(u.Scheme) || "https" == strings.ToLower(u.Scheme))
+}
+
+func FilterIconValue(icon string) (ret string, valid bool) {
+	ret = strings.TrimSpace(icon)
+	if strings.HasPrefix(ret, "api/icon/") || IsNetworkIconURL(ret) {
+		return ret, true
+	}
+
+	u, err := url.Parse(ret)
+	if strings.HasPrefix(ret, "//") || (nil == err && "" != u.Scheme) {
+		return "", false
+	}
+	if strings.Contains(ret, ".") {
+		ret = FilterUploadEmojiFileName(ret)
+	}
+	if !strings.ContainsAny(ret, "./") && !IsValidIconUnicode(ret) {
+		return "", false
+	}
+	return ret, true
+}
+
+// IsValidIconUnicode 校验图标值是否为合法的十六进制码点序列（连字符分隔）：
+// 解码后不允许包含 HTML 元字符，防止图标值被渲染为可执行标记
+// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-vx5w-qrvp-mmcq
+func IsValidIconUnicode(icon string) bool {
+	parts := strings.Split(icon, "-")
+	if 32 < len(parts) {
+		return false
+	}
+	isHexSequence := true
+	for _, part := range parts {
+		if "" == part || 6 < len(part) {
+			return false
+		}
+		if _, parseErr := strconv.ParseUint(part, 16, 32); nil != parseErr {
+			isHexSequence = false
+			break
+		}
+	}
+	if !isHexSequence {
+		// 不是十六进制码点序列，比如直接存储的 emoji 字符，保持原有行为
+		return true
+	}
+	for _, part := range parts {
+		n, _ := strconv.ParseUint(part, 16, 32)
+		if 0x10FFFF < n || (0xD800 <= n && 0xDFFF >= n) {
+			return false
+		}
+		r := rune(n)
+		if '<' == r || '>' == r || '"' == r || '\'' == r || '&' == r {
+			return false
+		}
+	}
+	return true
+}
+
+func FilterRecentIconValue(icon string) (ret string, valid bool) {
+	ret, valid = FilterIconValue(icon)
+	if !valid || !strings.HasPrefix(ret, "api/icon/getDynamicIcon") {
+		return
+	}
+
+	u, err := url.Parse(ret)
+	if nil != err {
+		return "", false
+	}
+	query := u.Query()
+	query.Del("id")
+	u.RawQuery = query.Encode()
+	return u.String(), true
+}
+
+func FilterRecentIconValues(icons []string) (ret []string) {
+	ret = make([]string, 0, len(icons))
+	seen := map[string]bool{}
+	for _, icon := range icons {
+		if icon, valid := FilterRecentIconValue(icon); valid && !seen[icon] {
+			ret = append(ret, icon)
+			seen[icon] = true
+		}
+	}
+	return
+}
+
+func FilterUploadEmojiFileName(name string) string {
+	if strings.HasPrefix(name, "api/icon/") {
+		// 忽略动态图标 https://github.com/siyuan-note/siyuan/issues/15139
+		return name
+	}
+
+	name = strings.ReplaceAll(name, "/", "_@slash@_")
+	name = FilterUploadFileName(name)
+	name = strings.ReplaceAll(name, "_@slash@_", "/")
+	return name
+}
+
+func FilterUploadFileName(name string) string {
+	ret := FilterFileName(name)
+
+	// 插入资源文件时去除 `[`、`(` 等符号 https://github.com/siyuan-note/siyuan/issues/6708
+	ret = strings.ReplaceAll(ret, "~", "")
+	//ret = strings.ReplaceAll(ret, "_", "") // 插入资源文件时允许下划线 https://github.com/siyuan-note/siyuan/issues/3534
+	ret = strings.ReplaceAll(ret, "[", "")
+	ret = strings.ReplaceAll(ret, "]", "")
+	ret = strings.ReplaceAll(ret, "(", "")
+	ret = strings.ReplaceAll(ret, ")", "")
+	ret = strings.ReplaceAll(ret, "!", "")
+	ret = strings.ReplaceAll(ret, "`", "")
+	ret = strings.ReplaceAll(ret, "&", "")
+	ret = strings.ReplaceAll(ret, "{", "")
+	ret = strings.ReplaceAll(ret, "}", "")
+	ret = strings.ReplaceAll(ret, "=", "")
+	ret = strings.ReplaceAll(ret, "#", "")
+	ret = strings.ReplaceAll(ret, "%", "")
+	ret = strings.ReplaceAll(ret, "$", "")
+	ret = strings.ReplaceAll(ret, ";", "")
+	ret = TruncateLenFileName(ret)
+	return ret
+}
+
+var pdfAnnoPngPattern = regexp.MustCompile(`-{0,1}P{0,1}[0-9]{0,4}-{0,1}[0-9]{1,3}-[0-9]{14}-[0-9a-zA-Z]{7}\.png$`)
+
+func TruncateLenFileName(name string) (ret string) {
+	// 插入资源文件时文件名长度最大限制 189 字节 https://github.com/siyuan-note/siyuan/issues/7099
+	ext := filepath.Ext(name)
+	extLen := len(ext)
+	var byteCount int
+	truncated := false
+	buf := bytes.Buffer{}
+	maxLen := 189 - extLen
+	var pdfAnnoPngPart string
+	if ".png" == ext {
+		// PNG 图片可能是 PDF 标注的截图，包含页面和旋转角度（name--P1--270-id.png），所以允许的长度更短一些
+		// https://github.com/siyuan-note/siyuan/pull/16714#issuecomment-3737987302
+
+		pdfAnnoPngPart = pdfAnnoPngPattern.FindString(name)
+		if "" != pdfAnnoPngPart {
+			maxLen -= len(pdfAnnoPngPart) + len(".png")
+			name = strings.TrimSuffix(name, pdfAnnoPngPart)
+		}
+	}
+
+	// 深入理解计算机系统原书第3版彩色扫描 -- 美兰德尔 E_布莱恩特Randal,E_·Bryant,等 龚奕利,贺莲 -- 计算机科学丛书, 3rd, 2016 -- 机械工业出版社123-P57-90-20260113113402-prc0u4k.png
+
+	for _, r := range name {
+		byteCount += utf8.RuneLen(r)
+		if maxLen < byteCount {
+			truncated = true
+			break
+		}
+		buf.WriteRune(r)
+	}
+	if truncated {
+		if "" != pdfAnnoPngPart {
+			buf.WriteString(pdfAnnoPngPart)
+		} else {
+			buf.WriteString(ext)
+		}
+	} else {
+		if "" != pdfAnnoPngPart {
+			buf.WriteString(pdfAnnoPngPart)
+		}
+	}
+	ret = buf.String()
+	return
+}
+
+func FilterFilePath(p string) (ret string) {
+	parts := strings.Split(p, "/")
+	var filteredParts []string
+	for _, part := range parts {
+		filteredParts = append(filteredParts, FilterFileName(part))
+	}
+	ret = strings.Join(filteredParts, "/")
+	return
+}
+
+func FilterFileName(name string) string {
+	name = strings.ReplaceAll(name, "\\", "_")
+	name = strings.ReplaceAll(name, "/", "_")
+	name = strings.ReplaceAll(name, ":", "_")
+	name = strings.ReplaceAll(name, "*", "_")
+	name = strings.ReplaceAll(name, "?", "_")
+	name = strings.ReplaceAll(name, "\"", "_")
+	name = strings.ReplaceAll(name, "'", "_")
+	name = strings.ReplaceAll(name, "<", "_")
+	name = strings.ReplaceAll(name, ">", "_")
+	name = strings.ReplaceAll(name, "|", "_")
+	// 文件名保留私用区字符，移除不可打印字符，并替换损坏编码。
+	name = gulu.Str.RemoveZeroWidthCharacters(strings.ReplaceAll(name, "\u00a0", " "))
+	name = strings.Map(func(r rune) rune {
+		if r == utf8.RuneError {
+			return '_'
+		}
+		if unicode.IsPrint(r) || unicode.Is(unicode.Co, r) {
+			return r
+		}
+		return -1
+	}, name)
+	name = strings.TrimSpace(name)
+	name = strings.TrimSuffix(name, ".")
+	return name
+}
+
+func IsCompressibleAssetImage(p string) bool {
+	lowerName := strings.ToLower(p)
+	return strings.HasPrefix(lowerName, "assets/") &&
+		(strings.HasSuffix(lowerName, ".png") || strings.HasSuffix(lowerName, ".jpg") || strings.HasSuffix(lowerName, ".jpeg"))
+}
+
+func SizeOfDirectory(path string) (size int64, err error) {
+	err = filelock.Walk(path, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		info, err := d.Info()
+		if err != nil {
+			logging.LogErrorf("size of dir [%s] failed: %s", path, err)
+			return err
+		}
+
+		if !info.IsDir() {
+			size += info.Size()
+		} else {
+			size += 4096
+		}
+		return nil
+	})
+	if err != nil {
+		logging.LogErrorf("size of dir [%s] failed: %s", path, err)
+	}
+	return
+}
+
+func DataSize() (dataSize, assetsSize int64) {
+	filelock.Walk(DataDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			if os.IsNotExist(err) {
+				return nil
+			}
+			logging.LogErrorf("size of data failed: %s", err)
+			return io.EOF
+		}
+
+		info, err := d.Info()
+		if err != nil {
+			logging.LogErrorf("size of data failed: %s", err)
+			return nil
+		}
+
+		if !info.IsDir() {
+			s := info.Size()
+			dataSize += s
+
+			if strings.Contains(strings.TrimPrefix(path, DataDir), "assets") {
+				assetsSize += s
+			}
+		} else {
+			dataSize += 4096
+		}
+		return nil
+	})
+	return
+}
+
+func CeilSize(size int64) int64 {
+	if 100*1024*1024 > size {
+		return 100 * 1024 * 1024
+	}
+
+	for i := int64(1); i < 40; i++ {
+		if 1024*1024*200*i > size {
+			return 1024 * 1024 * 200 * i
+		}
+	}
+	return 1024*1024*200*40 + 1
+}
+
+func IsReservedFilename(baseName string) bool {
+	return "assets" == baseName || "templates" == baseName || "widgets" == baseName || "emojis" == baseName || ".siyuan" == baseName || strings.HasPrefix(baseName, ".")
+}

@@ -1,0 +1,210 @@
+import * as assert from "node:assert/strict";
+import {test} from "node:test";
+import {ScriptTarget} from "typescript";
+import {compileModule, evaluateModule} from "../../testSupport/loadModule";
+
+const compiled = compileModule("src/protyle/wysiwyg/list.ts", ScriptTarget.ES2021);
+
+class TestElement {
+    parentElement: TestElement;
+    children: TestElement[] = [];
+    private attrs = new Map<string, string>();
+    classList = {contains: (name: string) => this.attrs.get("class")?.split(" ").includes(name) || false};
+
+    constructor(name: string, id?: string) {
+        this.attrs.set("class", name);
+        if (id) {
+            this.attrs.set("data-node-id", id);
+        }
+    }
+
+    append(...children: TestElement[]) {
+        children.forEach(child => {
+            child.remove();
+            child.parentElement = this;
+            this.children.push(child);
+        });
+        return this;
+    }
+
+    remove() {
+        if (this.parentElement) {
+            this.parentElement.children.splice(this.parentElement.children.indexOf(this), 1);
+            this.parentElement = undefined;
+        }
+    }
+
+    after(element: TestElement) {
+        element.remove();
+        element.parentElement = this.parentElement;
+        this.parentElement.children.splice(this.parentElement.children.indexOf(this) + 1, 0, element);
+    }
+
+    before(element: TestElement) {
+        element.remove();
+        element.parentElement = this.parentElement;
+        this.parentElement.children.splice(this.parentElement.children.indexOf(this), 0, element);
+    }
+
+    get previousElementSibling(): TestElement {
+        return this.parentElement?.children[this.parentElement.children.indexOf(this) - 1];
+    }
+
+    get nextElementSibling(): TestElement {
+        return this.parentElement?.children[this.parentElement.children.indexOf(this) + 1];
+    }
+
+    get lastElementChild() {
+        return this.children[this.children.length - 1];
+    }
+
+    get childElementCount() {
+        return this.children.length;
+    }
+
+    get isConnected(): boolean {
+        return this.classList.contains("protyle-wysiwyg") || !!this.parentElement?.isConnected;
+    }
+
+    get outerHTML(): string {
+        const attrs = Array.from(this.attrs).map(([name, value]) => ` ${name}="${value}"`).join("");
+        return `<div${attrs}>${this.children.map(child => child.outerHTML).join("")}</div>`;
+    }
+
+    getAttribute(name: string) {
+        return this.attrs.get(name) || null;
+    }
+
+    hasAttribute(name: string) {
+        return this.attrs.has(name);
+    }
+
+    setAttribute(name: string, value: string) {
+        this.attrs.set(name, value);
+    }
+
+    removeAttribute(name: string) {
+        this.attrs.delete(name);
+    }
+
+    contains(element: TestElement): boolean {
+        return element === this || this.children.some(child => child.contains(element));
+    }
+}
+
+const fixture = (single: boolean, containerClass = "tab-item", confirmed = true, logical = true) => {
+    const attr = () => new TestElement("protyle-attr");
+    const paragraph = new TestElement("p", "empty-paragraph").append(new TestElement("editable"), attr());
+    const item = new TestElement("li", "empty-item").append(new TestElement("protyle-action"), paragraph, attr());
+    const previousItem = new TestElement("li", "previous-item");
+    const list = new TestElement("list", "list").append(...(single ? [] : [previousItem]), item, attr());
+    const before = new TestElement("p", "before");
+    const content = new TestElement("tab-item-content").append(before, list);
+    const title = new TestElement("tab-item-info");
+    const container = new TestElement(containerClass, "container").append(title, content, attr());
+    const otherTab = new TestElement("tab-item", "other-tab");
+    const tabs = new TestElement("tabs", "tabs").append(container, otherTab, attr());
+    new TestElement("protyle-wysiwyg").append(tabs);
+    const operations: {doOperations: IOperation[], undoOperations: IOperation[]}[] = [];
+    const checks: Array<{ids: string[], exactIDs: string[], deletedIDs: string[]}> = [];
+    let focused: TestElement;
+    const dependencies = {
+        getParentBlock: (element: TestElement) => element.parentElement === content ? container : element.parentElement,
+        getPreviousBlockSibling: (element: TestElement) => element.previousElementSibling,
+        getEmbedChildOperationContext: (): void => undefined,
+        activateTrackedRangeInsertion: (): void => undefined,
+        confirmBlockRef: async (options: {ids: string[], exactIDs: string[], deletedIDs: string[]}) => {
+            checks.push(options);
+            return confirmed;
+        },
+        moveToPrevious: (): void => undefined,
+        isBlockElement: (element: TestElement) => !!element.getAttribute("data-node-id"),
+        transaction: (_protyle: IProtyle, doOperations: IOperation[], undoOperations: IOperation[]) =>
+            operations.push({doOperations, undoOperations}),
+        focusByWbr: (element: TestElement) => focused = element,
+    };
+    const exports = evaluateModule<any>(compiled, {
+        require: () => dependencies,
+        window: {siyuan: {config: {editor: {listLogicalOutdent: logical}}}},
+        document: {createElement: (name: string) => new TestElement(name)},
+    });
+    const range = {
+        startContainer: paragraph.children[0],
+        collapse: (): void => undefined,
+        insertNode: (element: TestElement) => paragraph.children[0].append(element),
+    };
+    const protyle = {block: {id: "doc", parentID: "doc"}};
+    return {
+        paragraph, item, list, before, content, title, container, tabs, otherTab, operations, checks,
+        run: () => exports.listOutdent(protyle, [item], range),
+        focused: () => focused,
+    };
+};
+
+for (const single of [false, true]) {
+    test(`页签内${single ? "唯一" : "末尾"}空列表项退出为同一页签的段落，并保留撤销父级`, async () => {
+        const f = fixture(single);
+        await f.run();
+        assert.equal(f.paragraph.parentElement, f.content);
+        assert.equal(f.content.lastElementChild, f.paragraph);
+        assert.equal(f.item.parentElement, undefined);
+        assert.equal(f.title.parentElement, f.container);
+        assert.equal(f.otherTab.parentElement, f.tabs);
+        assert.equal(f.tabs.childElementCount, 3);
+        assert.equal(f.focused(), f.container);
+        assert.equal(f.operations.length, 1);
+        assert.deepEqual(Array.from(f.checks[0].ids), single ? ["empty-item", "list"] : ["empty-item"]);
+        assert.deepEqual(Array.from(f.checks[0].exactIDs), Array.from(f.checks[0].ids));
+        assert.deepEqual(Array.from(f.checks[0].deletedIDs), Array.from(f.checks[0].ids));
+        const {doOperations, undoOperations} = f.operations[0];
+        assert.equal(doOperations[0].action, "move");
+        assert.equal(doOperations[0].id, "empty-paragraph");
+        assert.equal(doOperations[0].parentID, "container");
+        assert.equal(doOperations[0].previousID, "list");
+        assert.equal(undoOperations.find(op => op.action === "move").parentID, "empty-item");
+        if (single) {
+            assert.equal(f.list.parentElement, undefined);
+            const restore = undoOperations.find(op => op.action === "insert");
+            assert.equal(restore.id, "list");
+            assert.equal(restore.parentID, "container");
+            assert.equal(restore.previousID, "before");
+        } else {
+            assert.equal(f.list.parentElement, f.content);
+            assert.equal(doOperations[1].action, "update");
+            assert.equal(doOperations[1].id, "list");
+        }
+    });
+}
+
+for (const single of [false, true]) {
+    test(`cancelling ${single ? "single" : "partial"} list outdent preserves the editor and sends no transaction`, async () => {
+        const f = fixture(single, "tab-item", false);
+        const before = f.tabs.outerHTML;
+        await f.run();
+        assert.equal(f.tabs.outerHTML, before);
+        assert.equal(f.operations.length, 0);
+        assert.equal(f.focused(), undefined);
+    });
+}
+
+for (const confirmed of [false, true]) {
+    test(`traditional outdent checks the disappearing list and ${confirmed ? "deletes it after confirmation" : "preserves it on cancellation"}`, async () => {
+        const f = fixture(false, "tab-item", confirmed, false);
+        const trailing = f.list.children[0];
+        f.item.after(trailing);
+        trailing.setAttribute("data-subtype", "u");
+        const nested = new TestElement("list", "nested-list").append(new TestElement("protyle-attr"));
+        nested.setAttribute("data-subtype", "u");
+        f.item.lastElementChild.before(nested);
+        const before = f.tabs.outerHTML;
+        await f.run();
+        assert.deepEqual(Array.from(f.checks[0].ids), ["empty-item", "list"]);
+        if (confirmed) {
+            assert.equal(f.list.isConnected, false);
+            assert.ok(f.operations[0].doOperations.some(op => op.action === "delete" && op.id === "list"));
+        } else {
+            assert.equal(f.tabs.outerHTML, before);
+            assert.equal(f.operations.length, 0);
+        }
+    });
+}

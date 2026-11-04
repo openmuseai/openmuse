@@ -1,0 +1,40 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
+import {createPublicKey} from 'node:crypto';
+import {mkdtempSync, readFileSync, writeFileSync, statSync, existsSync, rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
+
+const source = fileURLToPath(new URL('../src/', import.meta.url));
+const deployment = fileURLToPath(new URL('../../../packages/openmuse_runtime_config/assets/deployments/global-us.json', import.meta.url));
+const run = (name, ...args) => spawnSync(process.execPath, [join(source, name+'.mjs'), ...args], {encoding:'utf8'});
+
+test('provisioning generates a private signer and a validated public bundle without overwriting inputs', t => {
+  const directory=mkdtempSync(join(tmpdir(),'openmuse-provisioning-'));
+  t.after(()=>rmSync(directory,{recursive:true,force:true}));
+  const key=join(directory,'fixture.private.pem'),pub=join(directory,'fixture.public.json'),output=join(directory,'installed.json');
+  const generated=run('keygen','--directory',directory,'--kid','fixture');
+  assert.equal(generated.status,0,generated.stderr);
+  assert.equal(statSync(key).mode & 0o777,0o600);
+  const privateBytes=readFileSync(key),publicKeys=JSON.parse(readFileSync(pub));
+  assert.equal(publicKeys.fixture,createPublicKey(privateBytes).export({format:'jwk'}).x);
+  const args=['--input',deployment,'--output',output,'--scope','fixture','--origin','https://config.example.test','--public-keys',pub];
+  const prepared=run('prepare-bundle',...args);
+  assert.equal(prepared.status,0,prepared.stderr);
+  const publicBytes=readFileSync(output),bundle=JSON.parse(publicBytes);
+  assert.deepEqual(bundle.bootstrap.publicKeys,publicKeys);
+  assert.deepEqual(bundle.bootstrap.discoveryUrls,['https://config.example.test/v1/runtime/scopes/fixture/active.jws']);
+  assert(bundle.bootstrap.allowedResourceOrigins.includes('https://config.example.test'));
+  assert.equal(bundle.bootstrap.cohortRouting,true);
+  assert(!publicBytes.includes('PRIVATE KEY'));
+  assert.notEqual(run('keygen','--directory',directory,'--kid','fixture').status,0);
+  assert.deepEqual(readFileSync(key),privateBytes);
+  assert.notEqual(run('prepare-bundle',...args).status,0);
+  assert.deepEqual(readFileSync(output),publicBytes);
+  writeFileSync(join(directory,'existing.public.json'),'preserve this file');
+  assert.notEqual(run('keygen','--directory',directory,'--kid','existing').status,0);
+  assert(!existsSync(join(directory,'existing.private.pem')));
+  assert.equal(readFileSync(join(directory,'existing.public.json'),'utf8'),'preserve this file');
+});

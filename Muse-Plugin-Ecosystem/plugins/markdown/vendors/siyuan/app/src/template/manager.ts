@@ -1,0 +1,698 @@
+import {toggleMenu} from "../menus/menuToggle";
+import {Dialog} from "../dialog";
+import {openInputDialog} from "../dialog/inputDialog";
+import {confirmDialog} from "../dialog/confirmDialog";
+import {fetchSyncPost} from "../util/fetch";
+import {escapeHtml} from "../util/escape";
+import {showMessage} from "../dialog/message";
+import {clearTemplatePreview, previewTemplate} from "../protyle/toolbar/util";
+import type {TemplateEntry} from "./fileTree";
+import {getFileRenameTarget, getFileTree} from "../util/fileTree";
+import {getTemplateActionEntry, getTemplateActionState} from "./actionState";
+/// #if !MOBILE
+import {openBy, openFileById} from "../editor/util";
+/// #endif
+import {replaceFileName} from "../editor/rename";
+import {getHostCapabilities} from "../util/hostCapabilities";
+import {isBrowser, isMobile} from "../util/functions";
+import type {TemplateFileRequestInput} from "../types/api";
+import {openModel} from "../mobile/menu/model";
+import {closeModel} from "../mobile/util/closePanel";
+import {loadMobileFileById} from "../mobile/editor";
+import {MenuItem} from "../menus/Menu";
+import {closeMobileEditorSheets} from "../mobile/util/MobileEditorDialog";
+import {Constants} from "../constants";
+import {setStorageVal} from "../protyle/util/compatibility";
+import {isEncryptedBox} from "../util/pathName";
+
+type TemplateActionTarget = {entry: TemplateEntry, revision: string, sourceDocID?: string};
+
+export const loadTemplateDirectories = async (select: HTMLSelectElement, initialDirectory?: string) => {
+    const response = await fetchSyncPost("/api/template/manage", {action: "list"});
+    if (response.code !== 0 || !Array.isArray(response.data) || !select.isConnected) {
+        return false;
+    }
+    const value = initialDirectory ?? select.value;
+    select.replaceChildren(new Option("/", ""));
+    response.data.filter(entry => entry.isDir).forEach(entry => {
+        select.add(new Option(entry.path, entry.path));
+    });
+    select.value = Array.from(select.options).some(option => option.value === value) ? value : "";
+    return true;
+};
+
+export const openTemplateManager = (contextID = "", onClose?: () => void, initialPath = "") => {
+    const lang = window.siyuan.languages;
+    const mobile = isMobile();
+    let selected: TemplateEntry;
+    let editing: TemplateEntry;
+    let editingRevision = "";
+    let entries: TemplateEntry[] = [];
+    let saved = "";
+    let useCRLF = false;
+    let revision = "";
+    let previewPath = "";
+    let sourceDocID = "";
+    let busy = false;
+    let closed = false;
+    let layoutObserver: ResizeObserver;
+    const canOpenFolder = !isBrowser() && !mobile && getHostCapabilities().localFileSystem;
+    const expandedPaths = new Set<string>();
+    const button = (action: string, label: string) => `<button type="button" class="b3-button b3-button--outline" data-action="${action}">${label}</button>`;
+    const content = `<div class="template-manager${mobile ? " template-manager--mobile" : ""}">
+<div class="template-manager__actions template-manager__global-actions">
+${button("new", lang.newTemplate)}${button("mkdir", lang.templateNewFolder)}
+${button("refresh", lang.refresh)}
+${canOpenFolder ? button("open", lang.showInFolder) : ""}
+</div>
+<div class="template-manager__panels">
+<div class="template-manager__sidebar">
+<input spellcheck="false" class="b3-text-field template-manager__search" type="search" placeholder="${lang.templateSearch}" aria-label="${lang.templateSearch}">
+<ul class="template-manager__files b3-list b3-list--background" aria-label="${lang.template}"></ul>
+</div>
+<div class="template-manager__editor">
+<div class="template-manager__source-panel">
+<div class="template-manager__heading"><div class="template-manager__path ft__breakword"></div>
+<button type="button" class="block__icon block__icon--show template-manager__more" data-action="more" aria-label="${lang.more}" aria-haspopup="menu"><svg><use xlink:href="#iconMore"></use></svg></button></div>
+<textarea class="b3-text-field template-manager__source" spellcheck="false" aria-label="${lang.templateSource}" disabled></textarea>
+<div class="template-manager__actions">${button("save", lang.save)}${button("preview", lang.templatePreview)}${button("source", lang.templateOpenSourceDoc)}</div>
+</div>
+<div class="template-manager__preview-panel">
+<div class="template-manager__context">
+<div>${lang.templateContext}<span class="template-manager__context-name"></span></div>
+<div class="ft__on-surface">${lang.templateContextTip}</div>
+<div class="template-manager__context-fields">
+<input spellcheck="false" class="b3-text-field" type="search" placeholder="${lang.templateContextSearch}" aria-label="${lang.templateContextSearch}">
+<select class="b3-select" aria-label="${lang.templateContext}"></select></div></div>
+<div class="template-manager__preview"></div>
+</div></div></div>
+</div>`;
+    const onDestroy = () => {
+        closed = true;
+        layoutObserver?.disconnect();
+        clearTemplatePreview(preview);
+        window.removeEventListener("beforeunload", beforeUnload);
+        onClose?.();
+    };
+    let element: HTMLElement;
+    const dialog = mobile ? undefined : new Dialog({
+        title: lang.templateManager,
+        width: "min(1440px, 96vw)",
+        height: "min(800px, 90vh)",
+        content,
+        destroyCallback: onDestroy,
+    });
+    if (mobile) {
+        openModel({
+            title: lang.templateManager,
+            icon: "iconLeft",
+            hideCloseIcon: true,
+            html: content,
+            bindEvent: root => { element = root; },
+            destroyCallback: onDestroy,
+            backCallback: () => {
+                back();
+                return false;
+            },
+            transition: "forward",
+        });
+    } else {
+        element = dialog.element;
+    }
+    const root = element.querySelector<HTMLElement>(".template-manager");
+    const source = element.querySelector<HTMLTextAreaElement>("textarea");
+    const list = element.querySelector<HTMLElement>(".template-manager__files");
+    const pathLabel = element.querySelector<HTMLElement>(".template-manager__path");
+    const preview = element.querySelector<HTMLElement>(".template-manager__preview");
+    const fileSearch = element.querySelector<HTMLInputElement>(".template-manager__search");
+    const search = element.querySelector<HTMLInputElement>(".template-manager__context input");
+    const context = element.querySelector<HTMLSelectElement>("select");
+    const contextName = element.querySelector<HTMLElement>(".template-manager__context-name");
+    const editorMore = element.querySelector<HTMLButtonElement>(".template-manager__heading [data-action=more]");
+    const sourceButton = element.querySelector<HTMLButtonElement>("[data-action=source]");
+    if (!mobile) {
+        layoutObserver = new ResizeObserver(entries => {
+            root.classList.toggle("template-manager--wide", entries[0].contentRect.width >= 1180);
+        });
+        layoutObserver.observe(root);
+    }
+    if (contextID) {
+        context.add(new Option(contextID, contextID));
+    }
+    const updateContextName = () => {
+        const selectedOption = context.selectedOptions[0];
+        contextName.textContent = selectedOption?.text || "";
+        contextName.title = selectedOption?.text || "";
+    };
+    updateContextName();
+    const dirty = () => source.value !== saved;
+    const beforeUnload = (event: BeforeUnloadEvent) => {
+        if (dirty() || busy) {
+            event.preventDefault();
+            event.returnValue = "";
+        }
+    };
+    window.addEventListener("beforeunload", beforeUnload);
+    const guard = (action: () => void) => {
+        if (busy || closed) {
+            return;
+        }
+        const proceed = () => {
+            if (!busy && !closed) {
+                action();
+            }
+        };
+        if (dirty()) {
+            confirmDialog(lang.confirm, lang.discardUnsavedChanges, proceed);
+        } else {
+            proceed();
+        }
+    };
+    const destroy = mobile ? closeModel : dialog.destroy.bind(dialog);
+    const back = () => {
+        const menu = window.siyuan.menus.menu;
+        if (!menu.element.classList.contains("fn__none")) {
+            menu.remove();
+            return;
+        }
+        guard(() => {
+            if (mobile && root.classList.contains("template-manager--editing")) {
+                const path = editing?.path;
+                void run(async () => {
+                    await select();
+                    renderList();
+                    Array.from(list.querySelectorAll<HTMLElement>("li[data-path]"))
+                        .find(row => row.dataset.path === path)?.querySelector<HTMLButtonElement>(".template-manager__file")
+                        .focus({preventScroll: true});
+                });
+            } else {
+                destroy();
+            }
+        });
+    };
+    if (dialog) {
+        dialog.destroy = back;
+    }
+    const update = () => {
+        pathLabel.textContent = (editing?.path || "") + (dirty() ? " *" : "");
+        pathLabel.classList.toggle("fn__none", !editing);
+        source.disabled = !editing;
+        source.readOnly = busy;
+        list.setAttribute("aria-busy", String(busy));
+        editorMore.disabled = !editing || busy;
+        sourceButton.classList.toggle("fn__none", !sourceDocID || !editing);
+        list.querySelectorAll<HTMLButtonElement>(".template-manager__more").forEach(button => {
+            button.disabled = busy;
+        });
+        element.querySelectorAll<HTMLButtonElement>(".template-manager__actions > [data-action]").forEach(element => {
+            const action = element.dataset.action;
+            const state = getTemplateActionState(action, getTemplateActionEntry(action, selected, editing),
+                dirty(), busy, Boolean(context.value));
+            element.title = state.packageMove ? lang.templatePackageMoveTip : "";
+            element.disabled = state.disabled;
+            if (action === "source") {
+                element.disabled = !editing || !sourceDocID;
+            }
+            // 请求期间保留按钮外观，由事件入口拦截重复操作。
+            element.setAttribute("aria-disabled", String(state.ariaDisabled || element.disabled));
+        });
+    };
+    const run = async (action: () => Promise<void>) => {
+        if (busy || closed) {
+            return;
+        }
+        busy = true;
+        update();
+        try {
+            await action();
+        } catch (error) {
+            showMessage(escapeHtml(String(error)), 5000, "error");
+        } finally {
+            busy = false;
+            update();
+        }
+    };
+    const api = async (data: TemplateFileRequestInput) => {
+        const response = await fetchSyncPost("/api/template/manage", data);
+        return response.code === 0 ? response : undefined;
+    };
+    const renderList = () => {
+        const scrollTop = list.scrollTop;
+        list.replaceChildren();
+        const rows = getFileTree(entries, fileSearch.value, expandedPaths);
+        if (rows.length === 0) {
+            const empty = document.createElement("li");
+            empty.className = "ft__on-surface template-manager__empty";
+            empty.textContent = lang.emptyContent;
+            list.append(empty);
+        }
+        rows.forEach(entry => {
+            const row = document.createElement("li");
+            row.className = "b3-list-item" + (entry.path === selected?.path ? " b3-list-item--focus" : "");
+            row.style.paddingInlineStart = `${Math.min(entry.depth, 16) * 16 + 4}px`;
+            row.dataset.path = entry.path;
+            if (entry.isDir) {
+                const toggle = document.createElement("button");
+                toggle.type = "button";
+                toggle.className = "template-manager__toggle";
+                toggle.setAttribute("aria-expanded", String(entry.expanded));
+                toggle.setAttribute("aria-label", (entry.expanded ? lang.collapse : lang.expand) + " " + entry.name);
+                toggle.innerHTML = `<svg><use xlink:href="#${entry.expanded ? "iconDown" : "iconRight"}"></use></svg>`;
+                toggle.disabled = !!fileSearch.value.trim();
+                toggle.addEventListener("click", () => {
+                    if (expandedPaths.has(entry.path)) {
+                        expandedPaths.delete(entry.path);
+                    } else {
+                        expandedPaths.add(entry.path);
+                    }
+                    renderList();
+                    Array.from(list.querySelectorAll<HTMLElement>("li[data-path]"))
+                        .find(item => item.dataset.path === entry.path)?.querySelector<HTMLButtonElement>("button").focus({preventScroll: true});
+                });
+                row.append(toggle);
+            } else {
+                const spacer = document.createElement("span");
+                spacer.className = "template-manager__toggle";
+                row.append(spacer);
+            }
+            const element = document.createElement("button");
+            element.type = "button";
+            element.className = "template-manager__file";
+            element.setAttribute("aria-current", String(entry.path === selected?.path));
+            element.innerHTML = `<svg class="b3-list-item__graphic"><use xlink:href="#${entry.isDir ? "iconFolder" : "iconFile"}"></use></svg>`;
+            const name = document.createElement("span");
+            name.className = "b3-list-item__text";
+            name.textContent = entry.name;
+            element.append(name);
+            element.title = entry.path;
+            element.addEventListener("click", () => {
+                if (busy || closed) {
+                    return;
+                }
+                if (entry.isDir) {
+                    void run(async () => {
+                        await select(entry, true);
+                        if (!fileSearch.value.trim()) {
+                            if (expandedPaths.has(entry.path)) {
+                                expandedPaths.delete(entry.path);
+                            } else {
+                                expandedPaths.add(entry.path);
+                            }
+                        }
+                        renderList();
+                    });
+                } else if (entry.path === editing?.path) {
+                    selected = entry;
+                    revision = editingRevision;
+                    renderList();
+                    update();
+                } else if (entry.path !== selected?.path) {
+                    guard(() => run(() => select(entry)));
+                }
+            });
+            row.append(element);
+            const more = document.createElement("button");
+            more.type = "button";
+            more.className = "b3-list-item__action template-manager__more";
+            more.setAttribute("aria-label", lang.more + " " + entry.name);
+            more.setAttribute("aria-haspopup", "menu");
+            more.innerHTML = '<svg><use xlink:href="#iconMore"></use></svg>';
+            more.addEventListener("click", event => {
+                event.stopPropagation();
+                openEntryMenu(entry, more);
+            });
+            row.addEventListener("contextmenu", event => {
+                event.preventDefault();
+                event.stopPropagation();
+                openEntryMenu(entry, more, event);
+            });
+            row.append(more);
+            list.append(row);
+        });
+        list.scrollTop = scrollTop;
+    };
+    const select = async (entry?: TemplateEntry, preserveEditor = false) => {
+        let content = "";
+        let absolutePath = "";
+        let documentID = "";
+        if (entry) {
+            const response = await api({action: "read", path: entry.path});
+            if (!response?.data || Array.isArray(response.data) || !("content" in response.data)) {
+                return;
+            }
+            revision = response.data.revision;
+            content = response.data.content;
+            absolutePath = response.data.path || "";
+            documentID = response.data.sourceDocID || "";
+        } else {
+            revision = "";
+        }
+        selected = entry;
+        if (!preserveEditor) {
+            editing = entry && !entry.isDir ? entry : undefined;
+            root.classList.toggle("template-manager--editing", !!editing);
+            editingRevision = editing ? revision : "";
+            useCRLF = content.includes("\r\n") && !content.replace(/\r\n/g, "").includes("\n");
+            previewPath = absolutePath;
+            sourceDocID = documentID;
+            source.value = content;
+            saved = source.value;
+            clearTemplatePreview(preview);
+        }
+        list.querySelectorAll<HTMLElement>("li[data-path]").forEach(row => {
+            const active = row.dataset.path === selected?.path;
+            row.classList.toggle("b3-list-item--focus", active);
+            row.querySelector(".template-manager__file").setAttribute("aria-current", String(active));
+        });
+        update();
+    };
+    const reload = async (path = selected?.path, reveal = false) => {
+        const response = await api({action: "list"});
+        if (!response || !Array.isArray(response.data)) {
+            return;
+        }
+        entries = response.data;
+        if (reveal) {
+            fileSearch.value = "";
+        }
+        let parent = path?.substring(0, path.lastIndexOf("/"));
+        while (parent) {
+            expandedPaths.add(parent);
+            parent = parent.substring(0, parent.lastIndexOf("/"));
+        }
+        await select(entries.find(entry => entry.path === path));
+        renderList();
+        if (reveal) {
+            list.querySelector(".b3-list-item--focus")?.scrollIntoView({block: "nearest", inline: "nearest"});
+        }
+    };
+    const inputPath = (title: string, value: string, callback: (value: string) => Promise<void>, renamePath?: string) => {
+        const nameOnly = renamePath !== undefined;
+        const prompt = openInputDialog({
+            title,
+            value,
+            label: nameOnly ? lang.name : lang.savePath,
+            onConfirm: (value, prompt) => {
+                const input = prompt.element.querySelector<HTMLInputElement>("input");
+                if (nameOnly) {
+                    input.value = replaceFileName(value);
+                }
+                if (!input.value.trim()) {
+                    input.focus();
+                    return;
+                }
+                if (nameOnly && getFileRenameTarget(renamePath, input.value.trim()) === undefined) {
+                    input.setCustomValidity(lang.templateNameTip);
+                    input.reportValidity();
+                    return;
+                }
+                prompt.destroy();
+                void run(() => callback(input.value.trim()));
+            },
+        });
+        const input = prompt.element.querySelector<HTMLInputElement>("input");
+        input.addEventListener("input", () => input.setCustomValidity(""));
+    };
+    const move = ({entry, revision}: TemplateActionTarget) => {
+        const prompt = new Dialog({
+            title: lang.move,
+            width: "min(520px, 92vw)",
+            content: `<div class="b3-dialog__content"><label>${lang.savePath}<div class="fn__hr"></div><select class="b3-select fn__block"></select></label></div>
+<div class="b3-dialog__action">
+<button type="button" class="b3-button b3-button--cancel" data-action="cancel">${lang.cancel}</button><div class="fn__space"></div>
+<button type="button" class="b3-button b3-button--text" data-action="confirm">${lang.confirm}</button></div>`
+        });
+        const destination = prompt.element.querySelector<HTMLSelectElement>("select");
+        destination.add(new Option("/", ""));
+        entries.filter(item => item.isDir && (!entry.isDir || (item.path !== entry.path && !item.path.startsWith(entry.path + "/"))))
+            .forEach(item => destination.add(new Option(item.path, item.path)));
+        destination.value = entry.path.substring(0, entry.path.lastIndexOf("/"));
+        prompt.element.querySelector("[data-action=cancel]").addEventListener("click", () => prompt.destroy());
+        prompt.element.querySelector("[data-action=confirm]").addEventListener("click", () => {
+            const target = (destination.value ? destination.value + "/" : "") + entry.path.split("/").pop();
+            prompt.destroy();
+            if (target === entry.path) {
+                return;
+            }
+            void run(async () => {
+                if (await api({action: "move", path: entry.path, target, revision})) {
+                    await reload(target, true);
+                }
+            });
+        });
+    };
+    const openSourceDocument = (id: string) => guard(() => {
+        void run(async () => {
+            const response = await fetchSyncPost("/api/block/getBlockInfo", {id});
+            if (closed || response.code !== 0) {
+                return;
+            }
+            if (response.data.rootID !== id) {
+                showMessage(lang.templateSourceDocUnavailable, 5000, "error");
+                return;
+            }
+            if (mobile) {
+                await closeMobileEditorSheets();
+                if (closed) {
+                    return;
+                }
+                const tabs = window.siyuan.mobile.tabs;
+                // 来源打开失败时保留管理页，不能通过恢复原页签的导航关闭当前面板。
+                const opened = tabs ? await tabs.open(id, {notebookId: response.data.box}) === "success" :
+                    await new Promise<boolean>(resolve => {
+                        loadMobileFileById(window.siyuan.ws.app, id, undefined, undefined, response.data.box,
+                            protyle => {
+                                const value = isEncryptedBox(protyle.notebookId) ? {id: ""} : {id};
+                                window.siyuan.storage[Constants.LOCAL_DOCINFO] = value;
+                                setStorageVal(Constants.LOCAL_DOCINFO, value);
+                                resolve(true);
+                            }, false, () => !closed, undefined, undefined, true, () => resolve(false));
+                    });
+                if (opened && !closed) {
+                    destroy();
+                } else if (!opened && !closed) {
+                    showMessage(lang.templateSourceDocUnavailable, 5000, "error");
+                }
+            } else {
+                /// #if !MOBILE
+                const tab = await openFileById({app: window.siyuan.ws.app, id, notebookId: response.data.box});
+                if (tab && !closed) {
+                    destroy();
+                }
+                /// #endif
+            }
+        });
+    });
+    const actOnEntry = (action: string, target: TemplateActionTarget) => {
+        const {entry, revision} = target;
+        if (getTemplateActionState(action, entry, dirty(), busy).ariaDisabled || closed) {
+            return;
+        }
+        if (action === "source") {
+            if (target.sourceDocID) {
+                openSourceDocument(target.sourceDocID);
+            }
+            return;
+        }
+        if (action === "open") {
+            /// #if !MOBILE
+            const root = window.siyuan.config.system.dataDir.replace(/\\/g, "/").replace(/\/$/, "") + "/templates";
+            openBy(root + "/" + entry.path, "folder");
+            /// #endif
+            return;
+        }
+        guard(() => {
+            if (action === "move") {
+                move(target);
+            } else if (action === "remove") {
+                confirmDialog(lang.remove, escapeHtml(entry.path) + "<br>" + lang.templateDeleteTip, () => {
+                    void run(async () => {
+                        if (await api({action: "remove", path: entry.path, revision})) {
+                            await reload("");
+                        }
+                    });
+                }, undefined, true);
+            } else if (action === "rename") {
+                inputPath(lang.rename, entry.path.split("/").pop(), async value => {
+                    const target = getFileRenameTarget(entry.path, value);
+                    if (target !== entry.path && await api({action: "move", path: entry.path, target, revision})) {
+                        await reload(target, true);
+                    }
+                }, entry.path);
+            }
+        });
+    };
+    const openEntryMenu = (entry: TemplateEntry, anchor: HTMLElement, event?: MouseEvent) => {
+        toggleMenu({
+            target: anchor,
+            toggle: !event,
+            build: (_menu, session) => {
+                void run(async () => {
+                    if (!session.isCurrent()) {
+                        return;
+                    }
+
+                    // 菜单固定操作对象和读取版本，打开菜单不切换编辑器或丢弃未保存的源码。
+                    let target: TemplateActionTarget;
+                    if (entry.path === editing?.path) {
+                        target = {entry, revision: editingRevision, sourceDocID};
+                    } else {
+                        const response = await api({action: "read", path: entry.path});
+                        if (!session.isCurrent()) {
+                            return;
+                        }
+                        if (!response?.data || Array.isArray(response.data) || !("content" in response.data) || closed) {
+                            return;
+                        }
+                        target = {entry, revision: response.data.revision, sourceDocID: response.data.sourceDocID};
+                    }
+                    const menu = window.siyuan.menus.menu;
+                    menu.remove();
+                    menu.element.setAttribute("data-name", "template-manager");
+                    const add = (action: string, label: string, icon: string) => {
+                        const state = getTemplateActionState(action, entry, dirty(), false);
+                        const item = new MenuItem({
+                            id: action,
+                            label,
+                            icon,
+                            disabled: state.disabled,
+                            click: () => actOnEntry(action, target),
+                        }).element;
+                        if (state.packageMove) {
+                            item.title = lang.templatePackageMoveTip;
+                        }
+                        menu.append(item);
+                    };
+                    if (target.sourceDocID && !entry.isDir) {
+                        add("source", lang.templateOpenSourceDoc, "iconFile");
+                    }
+                    add("rename", lang.rename, "iconEdit");
+                    add("move", lang.move, "iconMove");
+                    if (canOpenFolder) {
+                        add("open", lang.showInFolder, "iconFolder");
+                    }
+                    add("remove", lang.remove, "iconTrashcan");
+                    const rect = anchor.getBoundingClientRect();
+                    session.show(() => menu.popup(event ? {x: event.clientX, y: event.clientY} : {x: rect.left, y: rect.bottom, h: rect.height}));
+                });
+
+            },
+        });
+    };
+    editorMore.addEventListener("click", () => {
+        if (editing) {
+            openEntryMenu(editing, editorMore);
+        }
+    });
+    source.addEventListener("input", () => {
+        clearTemplatePreview(preview);
+        update();
+    });
+    element.addEventListener("keydown", event => {
+        event.stopPropagation();
+        if (event.key === "Escape" && !event.isComposing) {
+            event.preventDefault();
+            back();
+        }
+    });
+    fileSearch.addEventListener("input", renderList);
+    context.addEventListener("change", () => {
+        updateContextName();
+        clearTemplatePreview(preview);
+        update();
+    });
+    let searchRequest = 0;
+    search.addEventListener("input", async () => {
+        const request = ++searchRequest;
+        try {
+            const response = await fetchSyncPost("/api/filetree/searchDocs", {k: search.value});
+            if (closed || request !== searchRequest || response.code !== 0) {
+                return;
+            }
+            const selectedOption = context.selectedOptions[0];
+            context.replaceChildren();
+            if (selectedOption?.value) {
+                context.add(new Option(selectedOption.text, selectedOption.value));
+            }
+            response.data.forEach((doc: {path: string, hPath: string}) => {
+                const id = doc.path.split("/").pop().replace(/\.sy$/, "");
+                if (id !== context.value) {
+                    context.add(new Option(doc.hPath, id));
+                }
+            });
+            updateContextName();
+            clearTemplatePreview(preview);
+            update();
+        } catch (error) {
+            showMessage(escapeHtml(String(error)), 5000, "error");
+        }
+    });
+    if (contextID) {
+        void fetchSyncPost("/api/block/getRefText", {id: contextID}).then(response => {
+            if (!closed && response.code === 0 && context.options[0]?.value === contextID) {
+                context.options[0].text = response.data || contextID;
+                updateContextName();
+            }
+        }).catch(() => {});
+    }
+    element.addEventListener("click", event => {
+        const target = (event.target as Element).closest<HTMLElement>(".template-manager__actions > [data-action]");
+        const action = preview.contains(target) ? undefined : target?.dataset.action;
+        if (!action || busy || closed || (target as HTMLButtonElement).disabled) {
+            return;
+        }
+        if (action === "save") {
+            void run(async () => {
+                const content = useCRLF ? source.value.replace(/\n/g, "\r\n") : source.value;
+                const response = await api({action: "write", path: editing.path, content, revision: editingRevision});
+                if (response?.data && !Array.isArray(response.data)) {
+                    saved = source.value;
+                    editingRevision = response.data.revision;
+                    const current = await api({action: "read", path: editing.path});
+                    sourceDocID = current?.data && !Array.isArray(current.data) && "content" in current.data &&
+                        current.data.revision === editingRevision ? current.data.sourceDocID || "" : "";
+                    if (selected?.path === editing.path) {
+                        revision = editingRevision;
+                    } else if (selected?.isDir && editing.path.startsWith(selected.path + "/")) {
+                        const directory = await api({action: "read", path: selected.path});
+                        if (directory?.data && !Array.isArray(directory.data)) {
+                            revision = directory.data.revision;
+                        }
+                    }
+                }
+            });
+        } else if (action === "open") {
+            /// #if !MOBILE
+            const root = window.siyuan.config.system.dataDir.replace(/\\/g, "/").replace(/\/$/, "") + "/templates";
+            openBy(root, "app");
+            /// #endif
+        } else if (action === "preview") {
+            previewTemplate(previewPath, preview, context.value, source.value);
+        } else if (action === "source") {
+            openSourceDocument(sourceDocID);
+        } else {
+            guard(() => {
+                if (action === "refresh") {
+                    void run(() => reload());
+                } else {
+                    const directory = selected?.isDir ? selected.path + "/" : (selected?.path.substring(0, selected.path.lastIndexOf("/") + 1) || "");
+                    const initial = directory + (action === "new" ? lang.untitled + ".md" : lang.untitled);
+                    inputPath(action === "mkdir" ? lang.templateNewFolder : lang.newTemplate, initial, async value => {
+                        let response;
+                        if (action === "new") {
+                            value = /\.md$/i.test(value) ? value : value + ".md";
+                            response = await api({action: "write", path: value, content: "", revision: ""});
+                        } else if (action === "mkdir") {
+                            response = await api({action: "mkdir", path: value});
+                        }
+                        if (response) {
+                            await reload(value, true);
+                        }
+                    });
+                }
+            });
+        }
+    });
+    update();
+    void run(() => reload(initialPath, Boolean(initialPath)));
+};

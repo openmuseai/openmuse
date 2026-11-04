@@ -1,0 +1,666 @@
+import {isMobile} from "../../util/functions";
+import {showMessage} from "../../dialog/message";
+import {hintRef, hintSlash, hintTag} from "../hint/extend";
+import {registerBuiltinSlashHint} from "../hint/builtinSlash";
+import {mountProtyleLiteFragment} from "../lite/fragmentEditor";
+import {setMobileToolbarUndo} from "../lite/mobileToolbar";
+import {getDefaultToolbar} from "../toolbar/defaults";
+import {hideElements} from "../ui/hideElements";
+import {updateTransaction} from "../wysiwyg/transaction";
+import {configureAVRichTextLute, getAVRichTextLute, getAVRichTextUnsupportedPasteBlocks, sanitizeAVRichTextBlockDOM} from "./av/richText";
+import {highlightRender} from "./highlightRender";
+import {mathRender} from "./mathRender";
+import {imgMenu} from "../../menus/protyle";
+import {renderTableCellRichElements} from "./tableCellRich";
+import {getTableBlockHTML, getTableCellInlineHTML, getTableCellRichBlockDOM, renderTableCellRich, serializeTableCellRich, setTableCellRich, TABLE_CELL_INLINE_ATTRIBUTE, updateTableCellEditingValue} from "../util/tableCellRich";
+import {TABLE_CELL_RICH_ATTRIBUTE} from "../util/tableCellRichValue";
+import {focusByOffset, getUndoFocusContext} from "../util/selection";
+import {focusByRange, getSelectionOffset} from "../util/selectionOffsets";
+import {getAdjacentRichTableCell, isTableCellCaretAtBoundary, leaveRichTableCell} from "../util/tableCellRichNavigation";
+import {focusEditableAtGoalX, getCaretGoalX} from "../wysiwyg/verticalCaret";
+import {fixTable} from "../util/table";
+import {updateTableCellContentLayout} from "../util/tableCellRich";
+import {TABLE_CELL_SLASH_IDS} from "../util/tableCellRichMenu";
+import {captureRichCellSelection, captureRichCellSelectionAtPoint, restoreRichCellSelection} from "../util/tableCellRichSelection";
+import {matchHotKey} from "../util/hotKey";
+import {bindTableCellRichDrag} from "../util/tableCellRichDrag";
+import {getTableCellEditorLute} from "../util/tableCellRichLute";
+import {setTableCellRichContext, setTableCellRichEventTarget} from "../util/tableCellRichContext";
+import {updateOutlineCurrentBlock} from "../util/outlineBlock";
+import {bindLiteCodeActions} from "../lite/codeActions";
+import {setTaskListItemMarker} from "../wysiwyg/list";
+import {nextTaskListMarker} from "../wysiwyg/taskListMarker";
+import {getTableVirtualCellIndex, getTableVirtualRowIndex, restoreTableVirtualizationDOM} from "../util/tableVirtualizationDOM";
+import {isIOSDevice} from "../util/compatibility";
+import {isNativeTextSelectionHandleTouch} from "../wysiwyg/nativeTextMenu";
+
+let activeEditor: {cell: Element, finish: () => void, prepareSwitch: () => boolean} | undefined;
+let openingEditor: object | undefined;
+
+export const enterTableCellRichEditor = async (owner: IProtyle, cell: HTMLTableCellElement) => {
+    const currentCell = await openTableCellRichEditor(owner, cell);
+    const editor = currentCell?.querySelector(".table__cell-editor .protyle-wysiwyg");
+    const selection = getSelection();
+    if (!currentCell || owner.disabled || activeEditor?.cell !== currentCell || !editor?.contains(selection?.anchorNode) ||
+        !editor.contains(selection.focusNode)) {
+        return;
+    }
+    // 单元格挂载完成后，由内部编辑器处理回车和对应的内容结构。
+    editor.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", code: "Enter", bubbles: true, cancelable: true}));
+};
+
+export const applyTableCellRichInlineMark = (owner: IProtyle, cells: HTMLTableCellElement[], type: string,
+                                           textObj?: ITextOption) => {
+    if (owner.disabled) {
+        return;
+    }
+    activeEditor?.finish();
+    if (activeEditor) {
+        return;
+    }
+    const host = document.createElement("div");
+    host.className = "fn__none";
+    document.body.appendChild(host);
+    const fragment = mountProtyleLiteFragment(host, {
+        app: owner.app,
+        runtimeCapabilities: {
+            upload: false, websocket: false, pluginExtensions: false, customBlockRender: false,
+            lute: getTableCellEditorLute(getAVRichTextLute(),
+                window.siyuan.config.editor.markdown.blockFullWidthTaskList !== false),
+            sanitizeBlockDOM: html => sanitizeAVRichTextBlockDOM(html, true, true),
+            getUnsupportedPasteBlocks: html => getAVRichTextUnsupportedPasteBlocks(html, true),
+            richHTMLPaste: true,
+            restoreLuteMarkdownSyntax: configureAVRichTextLute,
+        },
+    });
+    try {
+        const updates = cells.filter(cell => cell.isConnected).map(cell => {
+            fragment.setBlockHTML(getTableCellRichBlockDOM(cell));
+            fragment.protyle.toolbar.setBlockElementsInlineMark(fragment.protyle,
+                Array.from(fragment.wysiwyg.children), type, textObj);
+            return {cell, source: serializeTableCellRich(fragment.getBlockHTML()).markdown};
+        });
+        const tables = new Map<Element, string>();
+        updates.forEach(({cell}) => {
+            const table = cell.closest('[data-type="NodeTable"]');
+            if (!tables.has(table)) {
+                tables.set(table, table.outerHTML);
+            }
+        });
+        updates.forEach(({cell, source}) => setTableCellRich(cell, source));
+        tables.forEach((oldHTML, table) => {
+            updateTransaction(owner, table, oldHTML);
+            renderTableCellRichElements(table);
+        });
+    } catch (error) {
+        console.error(error);
+        showMessage(window.siyuan.languages.tableCellRichInvalid);
+    } finally {
+        fragment.destroy();
+        host.remove();
+    }
+};
+
+export const openTableCellRichEditor = async (owner: IProtyle, cell: HTMLTableCellElement,
+                                             navigation?: {key: string, goalX: number}, point?: {x: number, y: number, target?: Element},
+                                             restoredSelection?: ReturnType<typeof captureRichCellSelection>) => {
+    if (owner.disabled || !cell.isConnected) {
+        return;
+    }
+    if (activeEditor?.cell === cell) {
+        openingEditor = undefined;
+        return cell;
+    }
+    const previousEditor = activeEditor;
+    const preserveFocus = isMobile() && previousEditor?.cell.contains(document.activeElement) &&
+        previousEditor.cell.closest(".protyle-wysiwyg") === owner.wysiwyg.element;
+    let retainedEditor: typeof activeEditor;
+    if (preserveFocus && previousEditor.prepareSwitch()) {
+        retainedEditor = previousEditor;
+    } else {
+        activeEditor?.finish();
+        if (activeEditor) {
+            openingEditor = undefined;
+            return;
+        }
+    }
+    const request = {};
+    openingEditor = request;
+    try {
+        await mountTableCellRichEditor(request, retainedEditor, owner, cell, navigation, point, restoredSelection);
+        return openingEditor === request ? activeEditor?.cell : undefined;
+    } finally {
+        if (retainedEditor && openingEditor === request) {
+            retainedEditor.finish();
+        }
+    }
+};
+
+const mountTableCellRichEditor = async (request: object, previousEditor: typeof activeEditor,
+                                      owner: IProtyle, cell: HTMLTableCellElement,
+                                      navigation?: {key: string, goalX: number}, point?: {x: number, y: number, target?: Element},
+                                      restoredSelection?: ReturnType<typeof captureRichCellSelection>) => {
+    let table = cell.closest<HTMLElement>('[data-type="NodeTable"]');
+    if (!table || cell.closest(".protyle-wysiwyg") !== owner.wysiwyg.element) {
+        return;
+    }
+    const tableID = table.dataset.nodeId;
+    const tableParent = table.parentElement;
+    const rowIndex = getTableVirtualRowIndex(cell.parentElement as HTMLTableRowElement);
+    const cellIndex = cell.cellIndex;
+    // 记录预览中被点击的公式位置，在重建单元格后打开对应公式的编辑面板。
+    const clickedMath = point?.target?.closest('[data-subtype="math"]');
+    const clickedMathIndex = clickedMath && cell.contains(clickedMath) ?
+        Array.from(cell.querySelectorAll('[data-subtype="math"]')).indexOf(clickedMath) : -1;
+    const clickedImage = point?.target?.closest(".protyle-action")?.closest('.img[data-type="img"]');
+    const clickedImageIndex = clickedImage && cell.contains(clickedImage) ?
+        Array.from(cell.querySelectorAll('.img[data-type="img"]')).indexOf(clickedImage) : -1;
+    const clickedTask = point?.target?.closest(".protyle-action--task");
+    const clickedTaskIndex = clickedTask && cell.contains(clickedTask) ?
+        Array.from(cell.querySelectorAll(".protyle-action--task")).indexOf(clickedTask) : -1;
+    // 外层输入先完成解析和事务，避免把即将挂载的单元格编辑界面当作正文。
+    await owner.wysiwyg.flushPendingInput();
+    if (openingEditor !== request || owner.disabled || !owner.element.isConnected) {
+        return;
+    }
+    if (!table.isConnected) {
+        table = Array.from(tableParent.children).find(element => element.getAttribute("data-node-id") === tableID) as HTMLElement;
+        cell = table?.querySelector("table")?.rows[rowIndex]?.cells[cellIndex];
+    }
+    if (!cell?.isConnected || cell.closest(".protyle-wysiwyg") !== owner.wysiwyg.element ||
+        (activeEditor && activeEditor !== previousEditor)) {
+        return;
+    }
+    let initialBlockHTML: string;
+    let source: string;
+    try {
+        initialBlockHTML = getTableCellRichBlockDOM(cell);
+    } catch (error) {
+        console.error(error);
+        showMessage(window.siyuan.languages.tableCellRichInvalid);
+        return;
+    }
+    hideElements(["toolbar"], owner);
+    const selection = getSelection();
+    const initialRange = selection.rangeCount ? selection.getRangeAt(0) : undefined;
+    const richSelection = cell.hasAttribute(TABLE_CELL_RICH_ATTRIBUTE) ? captureRichCellSelection(cell, selection) : undefined;
+    const preserveSelection = initialRange && !initialRange.collapsed &&
+        cell.contains(initialRange.startContainer) && cell.contains(initialRange.endContainer);
+    // 在预览布局中记录点击位置，避免编辑器重建及行号留白变化影响坐标定位。
+    const clickedSelection = point && !preserveSelection ? captureRichCellSelectionAtPoint(cell, point) : undefined;
+    const initialOffset = !cell.hasAttribute(TABLE_CELL_RICH_ATTRIBUTE) && initialRange &&
+        cell.contains(initialRange.startContainer) && cell.contains(initialRange.endContainer) ?
+        getSelectionOffset(cell, owner.wysiwyg.element, initialRange) : undefined;
+    owner.wysiwyg.tableControl?.clear();
+    if (!cell.hasAttribute(TABLE_CELL_RICH_ATTRIBUTE)) {
+        cell.setAttribute(TABLE_CELL_INLINE_ATTRIBUTE, cell.innerHTML);
+    }
+    const host = document.createElement("div");
+    host.className = "table__cell-editor";
+    host.dataset.protyleLiteRender = "safe";
+    host.contentEditable = "false";
+    cell.replaceChildren(host);
+    const events = ["beforeinput", "input", "compositionstart", "compositionupdate", "compositionend",
+        "copy", "cut", "paste", "pointerdown", "pointerup", "pointermove", "mousedown", "mouseup", "mousemove",
+        "click", "dblclick", "contextmenu", "dragstart", "dragover", "drop", "focusin", "focusout"];
+    events.forEach(type => host.addEventListener(type, event => event.stopPropagation()));
+    ["keydown", "keyup"].forEach(type => host.addEventListener(type, (event: KeyboardEvent) => {
+        event.stopPropagation();
+        if (event.defaultPrevented || event.isComposing || composing) {
+            return;
+        }
+        // 跳过外层正文的编辑处理，让未消费的快捷键继续到达全局监听器。
+        const forwarded = new KeyboardEvent(event.type, {
+            key: event.key, code: event.code, location: event.location, repeat: event.repeat,
+            keyCode: event.keyCode, charCode: event.charCode,
+            ctrlKey: event.ctrlKey, metaKey: event.metaKey, altKey: event.altKey, shiftKey: event.shiftKey,
+            bubbles: true, cancelable: true,
+        });
+        setTableCellRichEventTarget(forwarded, host);
+        if (!owner.element.dispatchEvent(forwarded)) {
+            event.preventDefault();
+        }
+    }));
+    ["mouseover", "pointerover"].forEach(type => host.addEventListener(type, event => {
+        event.stopPropagation();
+        owner.gutter?.render(owner, table, host);
+    }));
+    owner.gutter?.render(owner, table, host);
+    const toolbar = getDefaultToolbar(isMobile()).filter(item => typeof item === "string" ? item !== "ai" : item.name !== "ai");
+    const safeSlash = registerBuiltinSlashHint((key: string, protyle: IProtyle, hintSource: THintSource) =>
+        hintSlash(key, protyle, hintSource).filter(item => TABLE_CELL_SLASH_IDS.has(item.id)));
+    const hint: IProtyleOptions["hint"] = {
+        extend: [{key: "((", hint: hintRef}, {key: "【【", hint: hintRef}, {key: "（（", hint: hintRef},
+            {key: "[[", hint: hintRef}, {key: "#", hint: hintTag}, {key: "/", hint: safeSlash}, {key: "、", hint: safeSlash},
+            {key: ":"}],
+    };
+    let finished = false;
+    let composing = false;
+    let finishAfterComposition = false;
+    let undoSelection: ReturnType<typeof captureRichCellSelection>;
+    let contentChanged = false;
+    const fragment = mountProtyleLiteFragment(host, {
+        app: owner.app,
+        initialBlockHTML,
+        protyleOptions: {notebookId: owner.notebookId, toolbar, hint},
+        runtimeCapabilities: {
+            upload: true,
+            websocket: false,
+            pluginExtensions: false,
+            customBlockRender: false,
+            lute: getTableCellEditorLute(getAVRichTextLute(),
+                window.siyuan.config.editor.markdown.blockFullWidthTaskList !== false),
+            lockedOptions: {toolbar, hint},
+            sanitizeBlockDOM: html => sanitizeAVRichTextBlockDOM(html, true, true),
+            getUnsupportedPasteBlocks: html => getAVRichTextUnsupportedPasteBlocks(html, true),
+            richHTMLPaste: true,
+            restoreLuteMarkdownSyntax: configureAVRichTextLute,
+        },
+        afterSetContent: (protyle, element) => {
+            updateTableCellContentLayout(host, element.innerHTML);
+            highlightRender(element);
+            mathRender(element);
+            protyle.undo.clear();
+        },
+        onChange: () => {
+            contentChanged = true;
+            updateTableCellContentLayout(host, fragment.getBlockHTML());
+            // 单元格内容变化可能改变其所属块，需同步大纲高亮
+            updateOutlineCurrentBlock(owner, cell);
+            if (!finished && !composing) {
+                commit();
+            }
+        },
+    });
+    const mobileRenderOverlay = isMobile() ? fragment.protyle.toolbar.subElement : undefined;
+    if (mobileRenderOverlay) {
+        // 移动端正文有独立层叠上下文，源码编辑框需要挂在页面层以覆盖顶栏。
+        document.body.appendChild(mobileRenderOverlay);
+    }
+    fragment.protyle.block.rootID = owner.block.rootID;
+    fragment.protyle.block.parentID = table.dataset.nodeId;
+    fragment.protyle.path = owner.path;
+    // 进入和离开未修改的单元格无需经过 Markdown 往返转换。
+    let savedBlockHTML = fragment.getBlockHTML();
+    const getSource = () => source ??= serializeTableCellRich(initialBlockHTML).markdown;
+    const commit = () => {
+        if (!cell.isConnected || !table.isConnected || !host.isConnected || owner.disabled || composing) {
+            return;
+        }
+        try {
+            const blockHTML = fragment.getBlockHTML();
+            if (blockHTML === savedBlockHTML) {
+                contentChanged = false;
+                return;
+            }
+            const previousSource = getSource();
+            const serialized = serializeTableCellRich(blockHTML);
+            if (serialized.markdown === previousSource) {
+                savedBlockHTML = blockHTML;
+                contentChanged = false;
+                return;
+            }
+            if (getTableCellInlineHTML(serialized.blockDOM) === null) {
+                restoreTableVirtualizationDOM(table);
+            }
+            const oldHTML = getTableBlockHTML(table);
+            const redoSelection = captureRichCellSelection(fragment.wysiwyg, getSelection(), true) || undoSelection;
+            const tableRange = document.createRange();
+            tableRange.selectNodeContents(cell);
+            tableRange.collapse(true);
+            const context = getUndoFocusContext(owner.wysiwyg.element, tableRange, true);
+            // 索引以完整表格为参照，读取屏外行计数即可记录撤销位置。
+            context.undoFocusTableCell = getTableVirtualCellIndex(cell).toString();
+            const focusContext = (saved: typeof undoSelection) => saved ? {
+                ...context,
+                undoFocusTableSelection: JSON.stringify(saved),
+            } : context;
+            source = serialized.markdown;
+            updateTableCellEditingValue(cell, serialized);
+            updateTransaction(owner, table, oldHTML, focusContext(undoSelection), {
+                doOperations: [], undoOperations: [], context: focusContext(redoSelection),
+            });
+            savedBlockHTML = blockHTML;
+            undoSelection = redoSelection;
+            contentChanged = false;
+        } catch (error) {
+            console.error(error);
+            showMessage(window.siyuan.languages.tableCellRichInvalid);
+        }
+    };
+    const controller = new AbortController();
+    const observer = new MutationObserver(() => {
+        if (!host.isConnected || !owner.element.isConnected) {
+            finish();
+        }
+    });
+    const finish = () => {
+        if (finished) {
+            return;
+        }
+        if (composing && host.isConnected) {
+            finishAfterComposition = true;
+            return;
+        }
+        commit();
+        finished = true;
+        controller.abort();
+        observer.disconnect();
+        fragment.destroy();
+        mobileRenderOverlay?.remove();
+        if (cell.isConnected && host.isConnected) {
+            renderTableCellRich(cell);
+            if (cell.hasAttribute(TABLE_CELL_RICH_ATTRIBUTE)) {
+                renderTableCellRichElements(cell);
+            } else {
+                mathRender(cell);
+            }
+        }
+        if (activeEditor?.cell === cell) {
+            activeEditor = undefined;
+            openingEditor = undefined;
+        }
+    };
+    activeEditor = {cell, finish, prepareSwitch: () => {
+        if (composing) {
+            return false;
+        }
+        commit();
+        return true;
+    }};
+    const undoCell = (redo: boolean) => {
+        if (composing) {
+            return;
+        }
+        // 先提交当前单元格，再由所属文档撤销，保证切换单元格后仍可连续回退。
+        finish();
+        restoreTableVirtualizationDOM(table);
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        range.collapse(true);
+        owner.wysiwyg.element.focus({preventScroll: true});
+        focusByRange(range);
+        if (redo) {
+            owner.undo.redo(owner);
+        } else {
+            owner.undo.undo(owner);
+        }
+    };
+    setMobileToolbarUndo(fragment.protyle, owner, undoCell);
+    setTableCellRichContext(fragment.protyle, {owner, cell, finish});
+    const signal = controller.signal;
+    bindTableCellRichDrag(owner, cell, fragment.wysiwyg, finish, signal,
+        target => openTableCellRichEditor(owner, target));
+    const captureBeforeChange = () => {
+        if (!contentChanged || serializeTableCellRich(fragment.getBlockHTML()).markdown === getSource()) {
+            undoSelection = captureRichCellSelection(fragment.wysiwyg, getSelection());
+        }
+    };
+    host.addEventListener("beforeinput", captureBeforeChange, {capture: true, signal});
+    bindLiteCodeActions(host, fragment.protyle, {
+        signal,
+        canEdit: () => !finished && !owner.disabled,
+        beforeChange: captureBeforeChange,
+        onChange: commit,
+    });
+    host.addEventListener("pointerdown", event => {
+        captureBeforeChange();
+        if (fragment.wysiwyg.contains(event.target as Node)) {
+            hideElements(["toolbar"], fragment.protyle);
+        }
+        // 单元格编辑器自行接管焦点，编辑区收不到块级点击，需在此同步大纲高亮
+        updateOutlineCurrentBlock(owner, cell);
+    }, {capture: true, signal});
+    host.addEventListener("mousedown", event => {
+        if (event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey ||
+            !(event.target instanceof Element) || event.target.closest(".protyle-action, .protyle-toolbar, .protyle-table-control")) {
+            return;
+        }
+        const drag = new AbortController();
+        let selectingCells = false;
+        document.addEventListener("mousemove", move => {
+            const target = document.elementFromPoint(move.clientX, move.clientY)?.closest<HTMLTableCellElement>("td, th");
+            if (!target || target.closest('[data-type="NodeTable"]') !== table || (!selectingCells && target === cell)) {
+                return;
+            }
+            if (!selectingCells) {
+                selectingCells = true;
+                finish();
+                hideElements(["toolbar"], owner);
+            }
+            move.preventDefault();
+            move.stopImmediatePropagation();
+            owner.wysiwyg.tableControl?.selectCellRange(cell, target);
+        }, {capture: true, signal: drag.signal});
+        document.addEventListener("mouseup", up => {
+            drag.abort();
+            if (selectingCells) {
+                up.preventDefault();
+            }
+        }, {capture: true, once: true, signal: drag.signal});
+        document.addEventListener("dragstart", () => drag.abort(), {capture: true, once: true, signal: drag.signal});
+        window.addEventListener("blur", () => drag.abort(), {once: true, signal: drag.signal});
+    }, {capture: true, signal});
+    const belongsToEditor = (target: Node) => host.contains(target) || fragment.hintElement.contains(target) ||
+        fragment.protyle.toolbar.element.contains(target) || fragment.protyle.toolbar.subElement.contains(target) ||
+        !!(target instanceof Element && target.closest("#keyboardToolbar, #commonMenu, .b3-dialog"));
+    document.addEventListener("pointerdown", event => {
+        if (belongsToEditor(event.target as Node) ||
+            (isIOSDevice() && isNativeTextSelectionHandleTouch(event, fragment.wysiwyg))) {
+            return;
+        }
+        const target = event.target instanceof Element ? event.target : undefined;
+        const nextCell = target?.closest("td, th");
+        if (isMobile() && nextCell && nextCell !== cell && cell.contains(document.activeElement) &&
+            nextCell.closest(".protyle-wysiwyg") === owner.wysiwyg.element &&
+            !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey &&
+            !target.closest("a, [data-type~='block-ref'], [data-type~='a'], img, input, textarea, button, select")) {
+            // 点击其他单元格时保留输入焦点，由新编辑器接管后再清理当前编辑器。
+            event.preventDefault();
+            return;
+        }
+        // 表格右侧空白由外层编辑器忽略，保持单元格编辑状态，避免销毁编辑器后留下失效光标。
+        if (target && owner.wysiwyg.element.contains(target) &&
+            (!target.closest("[data-node-id]") || target.closest("[data-node-id]") === table)) {
+            const tableRect = table.querySelector("table")?.getBoundingClientRect();
+            const nodeRect = table.getBoundingClientRect();
+            if (tableRect && event.clientX > tableRect.right &&
+                event.clientY >= nodeRect.top && event.clientY <= nodeRect.bottom) {
+                hideElements(["hint", "toolbar", "util"], fragment.protyle);
+                return;
+            }
+        }
+        finish();
+    }, {capture: true, signal});
+    window.addEventListener("pagehide", finish, {signal});
+    window.addEventListener("blur", commit, {signal});
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            commit();
+        }
+    }, {signal});
+    host.addEventListener("compositionstart", () => {
+        captureBeforeChange();
+        composing = true;
+    }, {capture: true, signal});
+    host.addEventListener("compositionend", () => {
+        // 等待内部编辑器处理组合输入，再提交最终文字。
+        queueMicrotask(() => {
+            composing = false;
+            commit();
+            if (finishAfterComposition) {
+                finish();
+            }
+        });
+    }, {capture: true, signal});
+    host.addEventListener("keydown", event => {
+        captureBeforeChange();
+        const keymap = window.siyuan.config.keymap.editor.general;
+        const alignment = [keymap.alignLeft, keymap.alignCenter, keymap.alignRight]
+            .some(hotkey => matchHotKey(hotkey, event));
+        if (!event.isComposing && !composing &&
+            (alignment || Object.values(window.siyuan.config.keymap.editor.table).some(hotkey => matchHotKey(hotkey, event)))) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const selection = alignment ? captureRichCellSelection(fragment.wysiwyg, getSelection(), true) : undefined;
+            // 先提交内嵌编辑内容，再以所属单元格执行表格快捷键。
+            finish();
+            restoreTableVirtualizationDOM(table);
+            const range = document.createRange();
+            range.selectNodeContents(cell);
+            range.collapse(true);
+            owner.wysiwyg.element.focus({preventScroll: true});
+            focusByRange(range);
+            fixTable(owner, event, range);
+            const next = getSelection().focusNode;
+            const nextElement = next instanceof Element ? next : next?.parentElement;
+            const nextCell = nextElement?.closest<HTMLTableCellElement>("td, th");
+            if (nextCell && nextCell.closest(".protyle-wysiwyg") === owner.wysiwyg.element) {
+                openTableCellRichEditor(owner, nextCell, undefined, undefined, selection);
+            }
+            return;
+        }
+        const undo = matchHotKey(keymap.undo, event);
+        const redo = matchHotKey(keymap.redo, event);
+        if (!event.isComposing && !composing && (undo || redo)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            undoCell(redo);
+            return;
+        }
+        if (!event.isComposing && !composing && !event.ctrlKey && !event.metaKey && !event.altKey &&
+            fragment.hintElement.classList.contains("fn__none") &&
+            fragment.protyle.toolbar.subElement.classList.contains("fn__none")) {
+            const range = getSelection().rangeCount ? getSelection().getRangeAt(0) : undefined;
+            if (range && !event.shiftKey && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key) &&
+                isTableCellCaretAtBoundary(fragment.wysiwyg, range, event.key)) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                restoreTableVirtualizationDOM(table);
+                const nextCell = getAdjacentRichTableCell(cell, event.key);
+                const goalX = getCaretGoalX(range);
+                if (nextCell) {
+                    finish();
+                    openTableCellRichEditor(owner, nextCell, {key: event.key, goalX});
+                } else {
+                    commit();
+                    if (leaveRichTableCell(owner, table, event.key, goalX)) {
+                        finish();
+                        owner.toolbar.range = getSelection().getRangeAt(0).cloneRange();
+                    }
+                }
+                return;
+            }
+            const target = range?.startContainer instanceof Element ? range.startContainer : range?.startContainer.parentElement;
+            const inListOrCode = target?.closest('[data-type="NodeList"], [data-type="NodeCodeBlock"]');
+            if (!inListOrCode && event.key === "Tab") {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                finish();
+                restoreTableVirtualizationDOM(table);
+                const tableRange = document.createRange();
+                tableRange.selectNodeContents(cell);
+                tableRange.collapse(true);
+                getSelection().removeAllRanges();
+                getSelection().addRange(tableRange);
+                fixTable(owner, event, tableRange);
+                const next = getSelection().focusNode;
+                const nextElement = next instanceof Element ? next : next?.parentElement;
+                const nextCell = nextElement?.closest<HTMLTableCellElement>("td, th");
+                if (nextCell && nextCell !== cell && nextCell.closest(".protyle-wysiwyg") === owner.wysiwyg.element) {
+                    openTableCellRichEditor(owner, nextCell);
+                }
+                return;
+            }
+        }
+        if (event.key === "Escape" && !event.isComposing &&
+            fragment.hintElement.classList.contains("fn__none") &&
+            fragment.protyle.toolbar.subElement.classList.contains("fn__none")) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            finish();
+            cell.tabIndex = -1;
+            cell.focus();
+            const range = document.createRange();
+            range.selectNodeContents(cell);
+            range.collapse(true);
+            getSelection().removeAllRanges();
+            getSelection().addRange(range);
+        }
+    }, {capture: true, signal});
+    observer.observe(owner.element, {childList: true, subtree: true});
+    fragment.focus(true);
+    // 进入单元格编辑即按所属表格块同步大纲高亮
+    updateOutlineCurrentBlock(owner, cell);
+    // 复选框点击交给重建后的任务项，通过内部编辑器保存状态并记录撤销。
+    if (clickedTaskIndex >= 0) {
+        const task = fragment.wysiwyg.querySelectorAll(".protyle-action--task")[clickedTaskIndex]?.parentElement;
+        if (task) {
+            captureBeforeChange();
+            const marker = task.getAttribute("data-task") ?? (task.classList.contains("protyle-task--done") ? "X" : " ");
+            setTaskListItemMarker(fragment.protyle, task, nextTaskListMarker(marker));
+            commit();
+            return;
+        }
+    }
+    // 图片操作使用重建后的节点和内部编辑器，菜单修改随单元格事务保存。
+    if (clickedImageIndex >= 0) {
+        const image = fragment.wysiwyg.querySelectorAll<HTMLElement>('.img[data-type="img"]')[clickedImageIndex];
+        if (image) {
+            imgMenu(fragment.protyle, getSelection().getRangeAt(0), image, {clientX: point.x + 4, clientY: point.y});
+            return;
+        }
+    }
+    if (clickedMathIndex >= 0) {
+        const mathElement = fragment.wysiwyg.querySelectorAll('[data-subtype="math"]')[clickedMathIndex];
+        if (mathElement) {
+            fragment.protyle.toolbar.showRender(fragment.protyle, mathElement);
+            return;
+        }
+    }
+    if (restoredSelection && restoreRichCellSelection(fragment.wysiwyg, restoredSelection)) {
+        undoSelection = restoredSelection;
+        return;
+    }
+    if (navigation) {
+        const editables = fragment.wysiwyg.querySelectorAll<HTMLElement>('[contenteditable="true"]');
+        const backward = navigation.key === "ArrowLeft" || navigation.key === "ArrowUp";
+        const edit = backward ? editables[editables.length - 1] : editables[0];
+        if (edit) {
+            if ((navigation.key === "ArrowUp" || navigation.key === "ArrowDown") &&
+                focusEditableAtGoalX(edit, backward ? "up" : "down", navigation.goalX, owner.contentElement)) {
+                return;
+            }
+            const range = document.createRange();
+            range.selectNodeContents(edit);
+            range.collapse(!backward);
+            focusByRange(range);
+        }
+        return;
+    }
+    if (clickedSelection && restoreRichCellSelection(fragment.wysiwyg, clickedSelection)) {
+        return;
+    }
+    if (richSelection && (preserveSelection || !point) && restoreRichCellSelection(fragment.wysiwyg, richSelection)) {
+        if (preserveSelection) {
+            fragment.protyle.toolbar.render(fragment.protyle, getSelection().getRangeAt(0));
+        }
+        return;
+    }
+    if (point && !preserveSelection) {
+        const range = document.caretRangeFromPoint(point.x, point.y);
+        if (range && fragment.wysiwyg.contains(range.startContainer)) {
+            focusByRange(range);
+            return;
+        }
+    }
+    if (initialOffset) {
+        const edit = fragment.wysiwyg.querySelector('[contenteditable="true"]');
+        if (edit) {
+            focusByOffset(edit, initialOffset.start, initialOffset.end);
+            if (preserveSelection) {
+                fragment.protyle.toolbar.render(fragment.protyle, getSelection().getRangeAt(0));
+            }
+        }
+    }
+};

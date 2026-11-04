@@ -1,0 +1,16 @@
+[package]
+name = "openmuse-storage-tck"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+openmuse-contract = { path = "../openmuse-contract" }
+openmuse-storage-contract = { path = "../openmuse-storage-contract" }
+serde.workspace = true
+sha2.workspace = true
+
+[dev-dependencies]
+futures.workspace = true
+serde_json.workspace = true

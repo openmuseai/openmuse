@@ -1,0 +1,65 @@
+name: openmuse_linux
+description: OpenMuse Linux desktop workbench.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  openmuse_resource_center_host:
+    path: ../../packages/openmuse_resource_center_host
+  openmuse_i18n:
+    path: ../../packages/openmuse_i18n
+  openmuse_runtime_config:
+    path: ../../packages/openmuse_runtime_config
+  crypto: ^3.0.6
+  file_picker: ^10.3.10
+  flutter:
+    sdk: flutter
+  openmuse_auth_gotrue:
+    path: ../../plugins/auth-gotrue
+  openmuse_cloud_workspace_plugin:
+    path: ../../plugins/cloud-workspace
+  openmuse_builtin_plugins:
+    path: ../../distribution/openmuse_builtin_plugins
+  muse_remote_surface_core:
+    path: ../../packages/muse_remote_surface_core
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+  openmuse_market_ui:
+    path: ../../packages/openmuse_market_ui
+  openmuse_registry_provider:
+    path: ../../packages/openmuse_registry_provider
+  openmuse_host_shell:
+    path: ../../packages/openmuse_host_shell
+  openmuse_app_update:
+    path: ../../packages/openmuse_app_update
+  openmuse_cli_plugin:
+    path: ../../plugins/cli
+  openmuse_workbench_layout:
+    path: ../../packages/openmuse_workbench_layout
+  openmuse_dsh_plugin:
+    path: ../../plugins/dsh-agent
+  openmuse_workspace_paired:
+    path: ../../plugins/workspace-paired
+  path: ^1.9.1
+  pub_semver: ^2.2.0
+  yaml: ^3.1.3
+  path_provider: ^2.1.5
+  package_info_plus: ^9.0.1
+  url_launcher: ^6.3.3
+  archive: ^4.5.2
+  mcp_dart: ^2.4.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  openmuse_helix_plugin:
+    path: ../../plugins/helix
+
+flutter:
+  uses-material-design: true

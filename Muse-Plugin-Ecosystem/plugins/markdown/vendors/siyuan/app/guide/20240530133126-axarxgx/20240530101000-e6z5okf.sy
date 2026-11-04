@@ -1,0 +1,1280 @@
+{
+	"ID": "20240530101000-e6z5okf",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-h31xkta",
+		"icon": "1f4f1",
+		"id": "20240530101000-e6z5okf",
+		"title": "モバイルアプリ",
+		"type": "doc",
+		"updated": "20261024164212"
+	},
+	"Children": [
+		{
+			"ID": "20240530101000-2nn9stf",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-peznsnc",
+				"id": "20240530101000-2nn9stf",
+				"updated": "20261012014930"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-pnwqee0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240530101000-pnwqee0",
+				"updated": "20250114214341"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan は Android、iOS、HarmonyOS アプリを提供しており、一部のモバイル アプリ ストアに掲載されています。アプリ ストアで「思源笔记」または「SiYuan」を検索してください。"
+				}
+			]
+		},
+		{
+			"ID": "20261024162311-ovu0u7w",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024162311-ovu0u7w",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "インストールと更新"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20261024162311-zkftric",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024162311-zkftric",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "公式の "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://b3log.org/siyuan/en/download.html",
+					"TextMarkTextContent": "ダウンロードページ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で、端末に対応する入手方法と更新方法を確認してください。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014537-e3i64fc",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261012014537-e3i64fc",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画面の操作"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20260921090531-0l8vdyb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260921090531-0l8vdyb",
+				"updated": "20260921210136"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エディターで右にスワイプすると左サイドバー、左にスワイプすると右サイドバーが開きます。アプリ起動後に各サイドバーを初めて開くと、表示されている先頭の機能が開きます。以降は、その側で最後に使った機能が開きます。機能の順序は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "スタイル"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "水平レイアウト"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で変更できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261010114821-jcdqygo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261010114821-jcdqygo",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Android でデスクトップレイアウトを使用する場合、システムの戻るボタンは最上位のダイアログ、メニュー、編集用の浮動画面、画像プレビューまたはフローティングドロワーを先に閉じます。1 回の操作で 1 つの画面だけを閉じ、背後の閲覧状態を保持します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-yd5qz4c",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-yd5qz4c",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "閉じられる浮動画面がない場合は、画面全体を再読み込みせず、アプリ内のドキュメント履歴を戻ります。履歴の先頭では確認メッセージが表示され、表示中にもう一度戻るボタンを押すとシステムのホーム画面に戻ります。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-tylg3qg",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-2lg2mb6",
+				"id": "20240530101000-tylg3qg",
+				"updated": "20260819132654"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "マーケットプレイスの利用"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-vma8ggh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-stdxnih",
+				"id": "20240530101000-vma8ggh",
+				"updated": "20260819224004"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "一部のアプリストア版では、審査要件によりアプリ内でマーケットプレイスを提供しない場合があります。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-2ydz6oj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-4ppspg1",
+				"id": "20240530101000-2ydz6oj",
+				"updated": "20260819132654"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "制限されているバージョンでもマーケットプレイスを利用するには、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "認証"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "ネットワークサービス"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を有効にして、デスクトップブラウザから SiYuan にアクセスしてください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-zx8lkgl",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-yx7xlm6",
+				"id": "20240530101000-zx8lkgl",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-vg6rjty",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-355qyas",
+				"id": "20240530101000-vg6rjty",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-502th4f",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-60p9bne",
+						"id": "20240530101000-502th4f",
+						"updated": "20261024162311"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-gf939t8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-4ca3l4l",
+								"id": "20240530101000-gf939t8",
+								"updated": "20261024162311"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "アプリをアンインストールするとローカルデータが削除されます。事前に同期を完了し、アプリの外に復元可能なバックアップを保存してください。バックアップのないデータは復元できなくなる可能性があります"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-286lfpp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-2vsx7me",
+						"id": "20240530101000-286lfpp",
+						"updated": "20261024163013"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-w6mhqnc",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-8e3p06k",
+								"id": "20240530101000-w6mhqnc",
+								"updated": "20261024163013"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "アプリを終了するときは "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "詳細"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "アプリケーションを終了"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " から終了してください。スワイプして終了するとデータの同期が行われません"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-yoktfm7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-0flh6w7",
+						"id": "20240530101000-yoktfm7",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-p0zphjs",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-f7stnt5",
+								"id": "20240530101000-p0zphjs",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "iOS でアプリを切り替えると接続が中断されます。確認ボックスのボタンをクリックして手動で再接続してください"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-dvacc03",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-e7wxqk0",
+						"id": "20240530101000-dvacc03",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-fcln511",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-e3nl321",
+								"id": "20240530101000-fcln511",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "データ同期中はアプリを切り替えず、画面をオンのままにしてください。そうしないとデータ同期が失敗します"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260317195514-yho54qh",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260317195514-yho54qh",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Androidでのカスタム「Keep-Alive」通知"
+				}
+			]
+		},
+		{
+			"ID": "20260317195514-pwmwtf0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260317195514-pwmwtf0",
+				"updated": "20260317195514"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuanがバックグラウンドで動作し続ける機能を最大限に活用したい場合は、以下の手順に従ってください。"
+				}
+			]
+		},
+		{
+			"ID": "20260317195514-87rztvj",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1
+			},
+			"Properties": {
+				"id": "20260317195514-87rztvj",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"ID": "20260317195514-31osjhv",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "MS4=",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20260317195514-31osjhv",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20260317195514-r1jpi3g",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260317195514-r1jpi3g",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "省電力設定を「無制限」に調整しました"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260317195514-y0ftv3q",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "Mi4=",
+						"Num": 2
+					},
+					"Properties": {
+						"id": "20260317195514-y0ftv3q",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20260317195514-3yz94lq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260317195514-3yz94lq",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "通知機能を有効にします"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260317195514-wy353hn",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "My4=",
+						"Num": 3
+					},
+					"Properties": {
+						"id": "20260317195514-wy353hn",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20260317195514-vc2wyly",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260317195514-vc2wyly",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "デスクトップクライアント上で、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace/data/assets/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ フォルダ内に "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "android-notification-texts.txt"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ という名前のテキストファイルを作成します。このファイル内の各行が、通知メッセージのテキストとして使用されます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260317195514-7q5zeh1",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "NC4=",
+						"Num": 4
+					},
+					"Properties": {
+						"id": "20260317195514-7q5zeh1",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20260317195514-4xu3rev",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260317195514-4xu3rev",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20240530101000-wo49zvq",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "データ同期"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "機能を使用して、このファイルをAndroidデバイスに同期します"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260317195514-6utuus1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260317195514-6utuus1",
+				"updated": "20260317195514"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "上記の手順が完了すると、SiYuanは45秒ごとに通知を送信し、バックグラウンドでの動作を維持できるようになります。"
+				}
+			]
+		},
+		{
+			"ID": "20260613174259-xwu9036",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613174259-xwu9036",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ショートハンド"
+				}
+			]
+		},
+		{
+			"ID": "20260613174259-xv3y31i",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613174259-xv3y31i",
+				"updated": "20260613174259"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ショートハンドはモバイル端末でのクイックキャプチャ機能です。ひらめきや一時的な情報を記録したいとき、思源を開いてドキュメント編集に入らなくても、システム共有やショートカットからテキストを素早く保存できます。ショートハンドの内容は一時的にローカルに保存され、その後自動的にドキュメントパネルに取り込まれて整理されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260613174259-djgqfrn",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613174259-djgqfrn",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使い方"
+				}
+			]
+		},
+		{
+			"ID": "20260613174259-qbktiw5",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613174259-qbktiw5",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"ID": "20260613174259-2eicohy",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174259-2eicohy",
+						"updated": "20260613174259"
+					},
+					"Children": [
+						{
+							"ID": "20260613174259-8j93sje",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174259-8j93sje",
+								"updated": "20260613174259"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ショートハンドの作成"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：モバイル端末でシステム共有メニューからテキスト/リンクを思源に送信するか、ホーム画面に思源のショートカットを追加してワンタップで記録"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613174259-dxhkf5f",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174259-dxhkf5f",
+						"updated": "20261024162311"
+					},
+					"Children": [
+						{
+							"ID": "20260613174259-s1isw3o",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174259-s1isw3o",
+								"updated": "20261024162311"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "自動取り込み：SiYuan の動作中は 7 秒ごとにローカルのクイックメモフォルダを確認し、新しいメモを設定された保存先に取り込みます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261004052629-8qyrd3c",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261004052629-8qyrd3c",
+				"updated": "20261004052629"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "新しいショートハンドを取り込む際は、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エディタ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " の Markdown 構文の有効・無効の設定が適用されます。有効なインライン構文、中点のコードフェンス（"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "···"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "）、全角のタスク簡易構文（"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "【】"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "【X】"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "）は取り込み時に変換され、再編集は不要です。"
+				}
+			]
+		},
+		{
+			"ID": "20261004052629-mfqen9u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261004052629-mfqen9u",
+				"updated": "20261004052629"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各ショートハンドは個別に解析されるため、閉じられていないコードブロックが次のショートハンドに影響することはありません。取り込み済みのドキュメントは再解析されません。"
+				}
+			]
+		},
+		{
+			"ID": "20260613174259-9bcdyay",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613174259-9bcdyay",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "保存設定"
+				}
+			]
+		},
+		{
+			"ID": "20260613174259-etenqd8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613174259-etenqd8",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "ドキュメント"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "新規ドキュメント"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "クイックメモのデフォルト保存場所"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " でショートハンドの保存先を設定します："
+				}
+			]
+		},
+		{
+			"ID": "20260613174259-tquayrw",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613174259-tquayrw",
+				"updated": "20260613174259"
+			},
+			"Children": [
+				{
+					"ID": "20260613174259-u2l7l2t",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174259-u2l7l2t",
+						"updated": "20260613174259"
+					},
+					"Children": [
+						{
+							"ID": "20260613174259-509t8sc",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174259-509t8sc",
+								"updated": "20260613174259"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "保存先ノートブック"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ショートハンドを取り込むノートブックを選択"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613174259-bv23pwo",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174259-bv23pwo",
+						"updated": "20260613174259"
+					},
+					"Children": [
+						{
+							"ID": "20260613174259-yx6ij3w",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174259-yx6ij3w",
+								"updated": "20260613174259"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "保存パス"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ショートハンド内容の保存パステンプレートを設定："
+								}
+							]
+						},
+						{
+							"ID": "20260613174259-n13unyb",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613174259-n13unyb",
+								"updated": "20260613174259"
+							},
+							"Children": [
+								{
+									"ID": "20260613174259-nj2tl3g",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613174259-nj2tl3g",
+										"updated": "20260613174259"
+									},
+									"Children": [
+										{
+											"ID": "20260613174259-l7pnufg",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613174259-l7pnufg",
+												"updated": "20260613174259"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "パステンプレートなし：各ショートハンドがタイムスタンプをタイトルとする独立したドキュメントとして作成される"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613174259-fyp7e6b",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613174259-fyp7e6b",
+										"updated": "20260613174259"
+									},
+									"Children": [
+										{
+											"ID": "20260613174259-ijpwatf",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613174259-ijpwatf",
+												"updated": "20260613174259"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "パステンプレートあり：すべてのショートハンドが指定したドキュメントの末尾に追加される。パステンプレートはGo template構文に対応。例："
+												},
+												{
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "/ショートハンド/{{now | date \"20060102150405\"}}"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "​ は時刻ごとに独立したドキュメントを生成"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613174259-ysmvx7d",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613174259-ysmvx7d",
+				"updated": "20260613181400"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "受信トレイとの違い"
+				}
+			]
+		},
+		{
+			"ID": "20260613174259-dkzj9ni",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613174259-dkzj9ni",
+				"updated": "20260613174259"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ショートハンドとクラウド受信トレイは独立した二つのクイックキャプチャ方式です："
+				}
+			]
+		},
+		{
+			"ID": "20260613174259-buz8iza",
+			"Type": "NodeTable",
+			"TableAligns": [
+				0,
+				0,
+				0
+			],
+			"Properties": {
+				"colgroup": "||",
+				"id": "20260613174259-buz8iza",
+				"updated": "20260613174259"
+			},
+			"Children": [
+				{
+					"Type": "NodeTableHead",
+					"Data": "thead",
+					"Children": [
+						{
+							"Type": "NodeTableRow",
+							"Data": "tr",
+							"Children": [
+								{
+									"Type": "NodeTableCell",
+									"Data": "th"
+								},
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "ショートハンド"
+										}
+									]
+								},
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "クラウド受信トレイ"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "保存場所"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ローカル"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "クラウド"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "入力方法"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "システム共有/ショートカット"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "WeChat/API"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "取り込み方法"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "自動でドキュメントパネルに取り込み"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "受信トレイパネルから手動で処理"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "サブスクリプション"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "不要"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "必要"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "対応プラットフォーム"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "モバイルのみ"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "全プラットフォーム"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613181400-3k3d495",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613181400-3k3d495",
+				"updated": "20260613181400"
+			}
+		}
+	]
+}

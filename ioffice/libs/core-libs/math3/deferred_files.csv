@@ -1,0 +1,92 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/math3/src/org/apache/commons/math3/FieldElement.java,org/apache/commons/math3,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/RealFieldElement.java,org/apache/commons/math3,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/analysis/DifferentiableMultivariateFunction.java,org/apache/commons/math3/analysis,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/analysis/FunctionUtils.java,org/apache/commons/math3/analysis,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/complex/Complex.java,org/apache/commons/math3/complex,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/complex/ComplexFormat.java,org/apache/commons/math3/complex,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/complex/Quaternion.java,org/apache/commons/math3/complex,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/dfp/BracketingNthOrderBrentSolverDFP.java,org/apache/commons/math3/dfp,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/distribution/AbstractRealDistribution.java,org/apache/commons/math3/distribution,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/distribution/BetaDistribution.java,org/apache/commons/math3/distribution,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/distribution/ChiSquaredDistribution.java,org/apache/commons/math3/distribution,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/distribution/EnumeratedDistribution.java,org/apache/commons/math3/distribution,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/distribution/ExponentialDistribution.java,org/apache/commons/math3/distribution,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/distribution/KolmogorovSmirnovDistribution.java,org/apache/commons/math3/distribution,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/distribution/LevyDistribution.java,org/apache/commons/math3/distribution,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/distribution/MixtureMultivariateRealDistribution.java,org/apache/commons/math3/distribution,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/distribution/MultivariateNormalDistribution.java,org/apache/commons/math3/distribution,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/filter/DefaultMeasurementModel.java,org/apache/commons/math3/filter,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/filter/DefaultProcessModel.java,org/apache/commons/math3/filter,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/filter/KalmanFilter.java,org/apache/commons/math3/filter,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/fitting/AbstractCurveFitter.java,org/apache/commons/math3/fitting,Template structural validation failed:,
+Missing trait block for interface 'MaxCountExceededCallback',2026-05-22,,
+koffice/core-libs/math3/src/org/apache/commons/math3/fitting/CurveFitter.java,org/apache/commons/math3/fitting,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/fitting/GaussianCurveFitter.java,org/apache/commons/math3/fitting,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/fitting/HarmonicCurveFitter.java,org/apache/commons/math3/fitting,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/fitting/PolynomialCurveFitter.java,org/apache/commons/math3/fitting,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/genetics/AbstractListChromosome.java,org/apache/commons/math3/genetics,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/genetics/BinaryMutation.java,org/apache/commons/math3/genetics,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/genetics/ElitisticListPopulation.java,org/apache/commons/math3/genetics,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/genetics/FixedElapsedTime.java,org/apache/commons/math3/genetics,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/genetics/GeneticAlgorithm.java,org/apache/commons/math3/genetics,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/linear/ArrayFieldVector.java,org/apache/commons/math3/linear,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/linear/ConjugateGradient.java,org/apache/commons/math3/linear,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/linear/DefaultIterativeLinearSolverEvent.java,org/apache/commons/math3/linear,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/linear/JacobiPreconditioner.java,org/apache/commons/math3/linear,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/linear/OpenMapRealMatrix.java,org/apache/commons/math3/linear,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/linear/OpenMapRealVector.java,org/apache/commons/math3/linear,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/linear/SparseFieldMatrix.java,org/apache/commons/math3/linear,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/AbstractFieldIntegrator.java,org/apache/commons/math3/ode,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/AbstractIntegrator.java,org/apache/commons/math3/ode,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/FieldExpandableODE.java,org/apache/commons/math3/ode,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/FirstOrderConverter.java,org/apache/commons/math3/ode,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/FirstOrderIntegrator.java,org/apache/commons/math3/ode,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/JacobianMatrices.java,org/apache/commons/math3/ode,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/MultistepFieldIntegrator.java,org/apache/commons/math3/ode,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/MultistepIntegrator.java,org/apache/commons/math3/ode,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/optim/BaseMultiStartMultivariateOptimizer.java,org/apache/commons/math3/optim,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/optimization/InitialGuess.java,org/apache/commons/math3/optimization,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/random/EmpiricalDistribution.java,org/apache/commons/math3/random,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/random/GaussianRandomGenerator.java,org/apache/commons/math3/random,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/stat/StatUtils.java,org/apache/commons/math3/stat,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/transform/FastCosineTransformer.java,org/apache/commons/math3/transform,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/util/DefaultTransformer.java,org/apache/commons/math3/util,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/distribution/fitting/MultivariateNormalMixtureExpectationMaximization.java,org/apache/commons/math3/distribution/fitting,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/geometry/hull/ConvexHull.java,org/apache/commons/math3/geometry/hull,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/geometry/partitioning/BoundaryBuilder.java,org/apache/commons/math3/geometry/partitioning,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/geometry/partitioning/BoundaryProjector.java,org/apache/commons/math3/geometry/partitioning,Template structural validation failed:,
+Missing trait block for interface 'LeafMerger',,,
+Missing trait block for interface 'VanishingCutHandler',2026-05-22,,
+koffice/core-libs/math3/src/org/apache/commons/math3/geometry/partitioning/Characterization.java,org/apache/commons/math3/geometry/partitioning,Template structural validation failed:,
+Missing impl block for class 'SplitSubHyperplane',2026-05-22,,
+koffice/core-libs/math3/src/org/apache/commons/math3/ml/clustering/CentroidCluster.java,org/apache/commons/math3/ml/clustering,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ml/clustering/Clusterer.java,org/apache/commons/math3/ml/clustering,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ml/clustering/DBSCANClusterer.java,org/apache/commons/math3/ml/clustering,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ml/clustering/MultiKMeansPlusPlusClusterer.java,org/apache/commons/math3/ml/clustering,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ml/neuralnet/MapUtils.java,org/apache/commons/math3/ml/neuralnet,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/events/EventFilter.java,org/apache/commons/math3/ode/events,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/nonstiff/AdamsBashforthIntegrator.java,org/apache/commons/math3/ode/nonstiff,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/nonstiff/AdamsFieldIntegrator.java,org/apache/commons/math3/ode/nonstiff,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/nonstiff/AdamsIntegrator.java,org/apache/commons/math3/ode/nonstiff,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/ode/sampling/FieldStepNormalizer.java,org/apache/commons/math3/ode/sampling,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/optim/linear/LinearConstraint.java,org/apache/commons/math3/optim/linear,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/optim/linear/LinearOptimizer.java,org/apache/commons/math3/optim/linear,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/optim/linear/SimplexSolver.java,org/apache/commons/math3/optim/linear,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/optim/univariate/BrentOptimizer.java,org/apache/commons/math3/optim/univariate,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/optimization/direct/PowellOptimizer.java,org/apache/commons/math3/optimization/direct,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/optimization/linear/LinearConstraint.java,org/apache/commons/math3/optimization/linear,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/stat/clustering/Cluster.java,org/apache/commons/math3/stat/clustering,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/stat/correlation/PearsonsCorrelation.java,org/apache/commons/math3/stat/correlation,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/stat/correlation/SpearmansCorrelation.java,org/apache/commons/math3/stat/correlation,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/stat/descriptive/MultivariateSummaryStatistics.java,org/apache/commons/math3/stat/descriptive,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/stat/inference/TestUtils.java,org/apache/commons/math3/stat/inference,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/stat/interval/AgrestiCoullInterval.java,org/apache/commons/math3/stat/interval,too many dependencies,2026-05-22
+koffice/core-libs/math3/src/org/apache/commons/math3/geometry/euclidean/threed/Euclidean3D.java,org/apache/commons/math3/geometry/euclidean/threed,too many dependencies,2026-05-23
+koffice/core-libs/math3/src/org/apache/commons/math3/geometry/euclidean/threed/OutlineExtractor.java,org/apache/commons/math3/geometry/euclidean/threed,too many dependencies,2026-05-23
+koffice/core-libs/math3/src/org/apache/commons/math3/geometry/euclidean/threed/PolyhedronsSet.java,org/apache/commons/math3/geometry/euclidean/threed,too many dependencies,2026-05-23
+koffice/core-libs/math3/src/org/apache/commons/math3/geometry/euclidean/threed/RotationOrder.java,org/apache/commons/math3/geometry/euclidean/threed,too many dependencies,2026-05-23
+koffice/core-libs/math3/src/org/apache/commons/math3/geometry/euclidean/threed/SphereGenerator.java,org/apache/commons/math3/geometry/euclidean/threed,too many dependencies,2026-05-23
+koffice/core-libs/math3/src/org/apache/commons/math3/ml/neuralnet/sofm/KohonenTrainingTask.java,org/apache/commons/math3/ml/neuralnet/sofm,too many dependencies,2026-05-23
+koffice/core-libs/math3/src/org/apache/commons/math3/ml/neuralnet/sofm/LearningFactorFunctionFactory.java,org/apache/commons/math3/ml/neuralnet/sofm,too many dependencies,2026-05-23
+koffice/core-libs/math3/src/org/apache/commons/math3/ml/neuralnet/twod/util/HitHistogram.java,org/apache/commons/math3/ml/neuralnet/twod/util,too many dependencies,2026-05-23

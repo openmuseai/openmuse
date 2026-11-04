@@ -1,0 +1,8 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_importer_mode,格式mode开关,mode+optional Xml07/Xml03 context,isDocx/isXml07/isXml03/isGVml,(none),05_function_run_highfreq;06_function_para_convert,libs/word-core,pass
+2,02_function_attr_parse,Attributes取值,SAX attrs main ns,string/bool/int/hashCode,(none),03_function_measure_color;04_function_brc_shd;05_function_run_highfreq;06_function_para_convert,libs/word-core,pass
+3,03_function_measure_color,度量与颜色,attrs 12pt/hex/auto,twips/float/color,02_function_attr_parse,04_function_brc_shd;05_function_run_highfreq;06_function_para_convert,libs/word-core,pass
+4,04_function_brc_shd,边框与底纹,sz/val/color/space/shadow/frame,BRC/SHD,02_function_attr_parse;03_function_measure_color,05_function_run_highfreq;06_function_para_convert,libs/word-core,pass
+5,05_function_run_highfreq,rPr高频落桶,elementId+attrs+StyleId2Sti,run MutablePropertySet,01_function_importer_mode;02_function_attr_parse;03_function_measure_color;04_function_brc_shd,feature-output,libs/word-core,pass
+6,06_function_para_convert,pPr落桶,elementId+attrs+StyleId2Sti+NumIdRedirection,para MutablePropertySet,01_function_importer_mode;02_function_attr_parse;03_function_measure_color;04_function_brc_shd,07_function_correct_prop,libs/word-core,pass
+7,07_function_correct_prop,段末纠偏,para MutablePropertySet,191 default+tabs 236,06_function_para_convert,feature-output,libs/word-core,pass

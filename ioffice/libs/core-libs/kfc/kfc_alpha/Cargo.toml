@@ -1,0 +1,43 @@
+[package]
+name = "core_libs_kfc"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+core_libs_kfc_main = { path = "../kfc" }
+serde_json = "1"
+chrono = "0.4.44"
+chrono-tz = "0.10.3"
+iana-time-zone = "0.1.65"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[[test]]
+name = "01_function_package_open"
+path = "tests/cn/wps/kfc/ooxfr/OxfrPackage.rs"
+
+[[test]]
+name = "s0_01_function_zip_open"
+path = "tests/cn/wps/kfc/opcr/ZipFile.rs"
+
+[[test]]
+name = "s0_02_function_zip_entry_enum"
+path = "tests/cn/wps/kfc/opcr/ZipFile_entry_enum.rs"
+
+[[test]]
+name = "s0_03_function_zip_entry_stream"
+path = "tests/cn/wps/kfc/opcr/ZipFile_entry_stream.rs"
+
+[[test]]
+name = "s0_04_function_zip_name_guard"
+path = "tests/cn/wps/kfc/opcr/OpcrPackage_name_guard.rs"
+
+[[test]]
+name = "s0_05_function_zip_size_guard"
+path = "tests/cn/wps/kfc/opcr/OpcrPackage_size_guard.rs"
+
+[[test]]
+name = "s0_06_function_mod_wiring"
+path = "tests/cn/wps/kfc/compile_surface/mod_wiring.rs"

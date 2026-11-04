@@ -1,0 +1,11 @@
+{
+  "projectRoot": "../..",
+  "javaBase": "koffice/presentation/core",
+  "javaDepBase": "koffice/core-libs",
+  "rustCrate": "libs/ppt-core",
+  "rustDepRoot": "libs/core-libs",
+  "rewritingFilesCsv": "rewriting_files.csv",
+  "rewriteModulesCsv": "rewrite_modules.csv",
+  "historyReviewCsv": "rewriter_history_review.csv",
+  "historySteadyCsv": "rewriter_history_steady.csv"
+}

@@ -1,0 +1,6 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_content_width,本行可用宽,contentWidth+firstLineIndent+isFirst,maxWidth,wr-02,02;05,libs/word-core,pass
+2,02_function_wrap,Java断点折行,advances+maxWidth,lineCpRanges+width,01;wr-11,03;05,libs/word-core,pass
+3,03_function_alignment,jc到行起始x,lineWidth+contentWidth+jc,x,02,05,libs/word-core,pass
+4,04_function_line_box,行高与基线,wr11metrics+PAPX220/217/214,height+baseline,wr-11,05,libs/word-core,pass
+5,05_function_line_layouter,编排TypoTextLine,runs+contentWidth+PAPX,TypoTextLine[],01;02;03;04,wr-13,libs/word-core,pass

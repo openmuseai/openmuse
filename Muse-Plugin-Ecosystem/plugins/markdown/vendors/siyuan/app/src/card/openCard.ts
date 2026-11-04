@@ -1,0 +1,997 @@
+import {toggleMenu} from "../menus/menuToggle";
+import {Dialog} from "../dialog";
+import {openInputDialog} from "../dialog/inputDialog";
+import {fetchPost} from "../util/fetch";
+import {fetchDueCards} from "./fetchDueCards";
+import {isMobile} from "../util/functions";
+import {Protyle} from "../protyle";
+import {Constants} from "../constants";
+import {onGet} from "../protyle/util/onGet";
+import {hasClosestByAttribute, hasClosestByClassName} from "../protyle/util/hasClosest";
+import {hideElements} from "../protyle/ui/hideElements";
+import {fullscreen} from "../protyle/breadcrumb/action";
+import {MenuItem} from "../menus/Menu";
+import {escapeHtml} from "../util/escape";
+/// #if !MOBILE
+import {openFile} from "../editor/util";
+/// #endif
+/// #if !BROWSER
+import {ipcRenderer} from "electron";
+import {getWindowAppearance} from "../window/appearance";
+/// #endif
+import dayjs from "dayjs";
+import {getDisplayName, movePathTo} from "../util/pathName";
+import type {App} from "../index";
+import {resize} from "../protyle/util/resize";
+import {setStorageVal} from "../protyle/util/compatibility";
+import {focusByRange} from "../protyle/util/selectionOffsets";
+import {updateCardHV} from "./util";
+import {showMessage} from "../dialog/message";
+import {Menu} from "../plugin/Menu";
+import {transaction} from "../protyle/wysiwyg/transaction";
+import {
+    beginFlashcardLoad,
+    createFlashcardRevealState,
+    hasFlashcardAnswer,
+    hideFlashcardAnswer,
+    isCurrentFlashcardLoad,
+    revealFlashcardAfterUnfold,
+    showFlashcardAnswer
+} from "./flashcardMode";
+import {setFold} from "../protyle/util/blockFold";
+import {forEachPluginSubscriber} from "../plugin/EventBusCore";
+import {appendRemoteQuery} from "../util/hostCapabilities";
+
+const genCardCount = (cardsData: ICardData, allIndex = 0) => {
+    let newIndex = 0;
+    let oldIndex = 0;
+    cardsData.cards.forEach((item, index) => {
+        if (index > allIndex) {
+            return;
+        }
+        if (item.state === 0) {
+            newIndex++;
+        } else {
+            oldIndex++;
+        }
+    });
+    return `<span class="ariaLabel" aria-label="${window.siyuan.languages.flashcardNewCard}">
+    <span class="ft__error">${newIndex}</span> /
+    <span class="ariaLabel ft__primary" aria-label="${window.siyuan.languages.flashcardNewCard}">${cardsData.unreviewedNewCardCount}</span>
+</span>
+<span class="fn__space"></span>+<span class="fn__space"></span>
+<span class="ariaLabel" aria-label="${window.siyuan.languages.flashcardReviewCard}">
+    <span class="ft__error">${oldIndex}</span> /
+    <span class="ft__success">${cardsData.unreviewedOldCardCount}</span>
+</span>`;
+};
+
+export const genCardHTML = (options: {
+    id: string,
+    cardType: TCardType,
+    cardsData: ICardData,
+    isTab: boolean
+}) => {
+    let iconsHTML: string;
+    /// #if MOBILE
+    iconsHTML = `<div class="toolbar toolbar--border">
+    <svg class="toolbar__icon"><use xlink:href="#iconRiffCard"></use></svg>
+    <span class="fn__flex-1 fn__flex-center toolbar__text">${window.siyuan.languages.riffCard}</span>
+    <div data-type="count" class="${options.cardsData.cards.length === 0 ? "fn__none" : "fn__flex"}">${genCardCount(options.cardsData)}</span></div>
+    <svg class="toolbar__icon" data-id="${options.id || ""}" data-cardtype="${options.cardType}" data-type="filter"><use xlink:href="#iconFilter"></use></svg>
+    <svg class="toolbar__icon${options.cardsData.cards.length === 0 ? " fn__none" : ""}" data-type="more"><use xlink:href="#iconMore"></use></svg>
+    <svg class="toolbar__icon" data-type="close"><use xlink:href="#iconCloseRound"></use></svg>
+</div>`;
+    /// #else
+    iconsHTML = `<div class="block__icons">
+        ${options.isTab ? '<div class="fn__flex-1"></div>' : `<div class="block__logo block__logo--icon">
+            <svg class="block__logoicon"><use xlink:href="#iconRiffCard"></use></svg>${window.siyuan.languages.riffCard}
+        </div>`}
+        <span class="fn__flex-1 resize__move" style="min-height: 100%"></span>
+        <div data-type="count" class="ft__on-surface ft__smaller fn__flex-center${options.cardsData.cards.length === 0 ? " fn__none" : " fn__flex"}">${genCardCount(options.cardsData)}</span></div>
+        <div class="fn__space"></div>
+        <button data-id="${options.id || ""}" data-cardtype="${options.cardType}" data-type="filter" class="block__icon block__icon--show">
+            <svg><use xlink:href="#iconFilter"></use></svg>
+        </button>
+        <div class="fn__space"></div>
+        <div data-type="fullscreen" class="b3-tooltips b3-tooltips__sw block__icon block__icon--show" aria-label="${window.siyuan.languages.fullscreen}">
+            <svg><use xlink:href="#iconFullscreen"></use></svg>
+        </div>
+        <div data-type="more-space" class="fn__space${options.cardsData.cards.length === 0 ? " fn__none" : ""}"></div>
+        <div data-type="more" class="${options.cardsData.cards.length === 0 ? "fn__none " : ""}b3-tooltips b3-tooltips__sw block__icon block__icon--show" aria-label="${window.siyuan.languages.more}">
+            <svg><use xlink:href="#iconMore"></use></svg>
+        </div>
+        <div class="fn__space${options.isTab ? " fn__none" : ""}"></div>
+        <div data-type="sticktab" class="b3-tooltips b3-tooltips__sw block__icon block__icon--show${options.isTab ? " fn__none" : ""}" aria-label="${window.siyuan.languages.openBy}">
+            <svg><use xlink:href="#iconOpen"></use></svg>
+        </div>
+    </div>`;
+    /// #endif
+    return `<div class="card__main">
+    ${iconsHTML}
+    <div class="card__block fn__flex-1 ${options.cardsData.cards.length === 0 ? "fn__none" : ""}" data-type="render"></div>
+    <div class="card__empty card__empty--space${options.cardsData.cards.length === 0 ? "" : " fn__none"}" data-type="empty">
+        <div class="card__empty-icon">🔮</div>
+        ${window.siyuan.languages.noDueCard}
+    </div>
+    <div class="fn__flex card__action fn__none">
+        <button class="b3-button b3-button--cancel" disabled="disabled" data-type="-2" style="width: 25%;">
+            <svg><use xlink:href="#iconLeft"></use></svg>
+            ${!isMobile() ? "(p / q)" : ""}
+        </button>
+        <span class="fn__space"></span>
+        <button data-type="-1" aria-label="${window.siyuan.languages.space}/${window.siyuan.languages.enterKey}" class="b3-button b3-tooltips__n b3-tooltips">
+            <div class="card__icon">👀</div>
+            ${window.siyuan.languages.cardShowAnswer}
+        </button>
+        <span class="fn__space"></span>
+        <button data-type="-3" aria-label="0 / x" style="width: 25%" class="b3-button b3-button--cancel b3-tooltips__n b3-tooltips">
+            <div class="card__icon">💤</div>
+            ${window.siyuan.languages.skip}${!isMobile() ? " (0)" : ""}
+        </button>
+    </div>
+    <div class="fn__flex card__action fn__none">
+        <div>
+            <button class="b3-button b3-button--cancel" disabled="disabled" style="display: flex;margin-bottom: 8px;height: 28px;padding: 0;" data-type="-2"><svg><use xlink:href="#iconLeft"></use></svg>${!isMobile() ? "(p / q)" : ""}</button>
+            <button data-type="-3" aria-label="0 / x" class="b3-button b3-button--white b3-tooltips__n b3-tooltips">
+                <div class="card__icon">💤</div>
+                ${window.siyuan.languages.skip}${!isMobile() ? " (0)" : ""}
+            </button>
+        </div>
+        <div>
+            <span></span>
+            <button data-type="1" aria-label="1 / j / a" class="b3-button b3-button--error b3-tooltips__n b3-tooltips">
+                <div class="card__icon">🙈</div>
+                ${window.siyuan.languages.cardRatingAgain}${!isMobile() ? " (1)" : ""}
+            </button>
+        </div>
+        <div>
+            <span></span>
+            <button data-type="2" aria-label="2 / k / s" class="b3-button b3-button--warning b3-tooltips__n b3-tooltips">
+                <div class="card__icon">😬</div>
+                ${window.siyuan.languages.cardRatingHard}${!isMobile() ? " (2)" : ""}
+            </button>
+        </div>
+        <div>
+            <span></span>
+            <button data-type="3" aria-label="3 / l / d / ${window.siyuan.languages.space} / ${window.siyuan.languages.enterKey}" class="b3-button b3-button--info b3-tooltips__n b3-tooltips">
+                <div class="card__icon">😊</div>
+                ${window.siyuan.languages.cardRatingGood}${!isMobile() ? " (3)" : ""}
+            </button>
+        </div>
+        <div>
+            <span></span>
+            <button data-type="4" aria-label="4 / ; / f" class="b3-button b3-button--success b3-tooltips__n b3-tooltips">
+                <div class="card__icon">🌈</div>
+                ${window.siyuan.languages.cardRatingEasy}${!isMobile() ? " (4)" : ""}
+            </button>
+        </div>
+    </div>
+</div>`;
+};
+
+const flashcardRevealStates = new WeakMap<IProtyle, ReturnType<typeof createFlashcardRevealState>>();
+
+const getFlashcardRevealState = (protyle: IProtyle) => {
+    let state = flashcardRevealStates.get(protyle);
+    if (!state) {
+        state = createFlashcardRevealState();
+        flashcardRevealStates.set(protyle, state);
+    }
+    return state;
+};
+
+const showRatingActions = (actionElements: NodeListOf<Element>, currentCard: ICard) => {
+    actionElements[0].classList.add("fn__none");
+    actionElements[1].querySelectorAll("button.b3-button").forEach((element, btnIndex) => {
+        if (btnIndex < 2) {
+            return;
+        }
+        element.previousElementSibling.textContent = currentCard.nextDues[btnIndex - 1];
+    });
+    actionElements[1].classList.remove("fn__none");
+};
+
+const getEditor = (id: string, protyle: IProtyle, element: Element, currentCard: ICard) => {
+    const revealState = getFlashcardRevealState(protyle);
+    const generation = beginFlashcardLoad(revealState);
+    const actionElements = element.querySelectorAll(".card__action");
+    actionElements.forEach(item => item.classList.add("fn__none"));
+    actionElements[0].querySelectorAll('button[data-type="-1"], button[data-type="-3"]').forEach(item => {
+        item.removeAttribute("disabled");
+    });
+    fetchPost("/api/block/getDocInfo", {
+        id,
+    }, (docResponse) => {
+        if (!isCurrentFlashcardLoad(revealState, generation)) {
+            return;
+        }
+        protyle.wysiwyg.renderCustom(docResponse.data.ial);
+        fetchPost("/api/filetree/getDoc", {
+            id,
+            mode: 0,
+            size: Constants.SIZE_GET_MAX
+        }, (response) => {
+            if (!isCurrentFlashcardLoad(revealState, generation)) {
+                return;
+            }
+            onGet({
+                updateReadonly: true,
+                data: response,
+                protyle,
+                action: response.code === 0 && response.data.rootID === response.data.id ? [] : [Constants.CB_GET_ALL],
+                afterCB: () => {
+                    if (!isCurrentFlashcardLoad(revealState, generation) ||
+                        protyle.element.classList.contains("fn__none")) {
+                        return;
+                    }
+                    const hasHide = hasFlashcardAnswer(protyle.wysiwyg.element, window.siyuan.config.flashcard);
+                    if (!hasHide) {
+                        revealFlashcardAnswer(protyle, () => {
+                            showRatingActions(actionElements, currentCard);
+                        });
+                    } else {
+                        hideFlashcardAnswer(protyle.element, window.siyuan.config.flashcard);
+                        actionElements[0].classList.remove("fn__none");
+                        actionElements[1].classList.add("fn__none");
+                    }
+                }
+            });
+        });
+    });
+
+};
+
+const revealFlashcardAnswer = (protyle: IProtyle, callback: () => void) => {
+    const revealState = getFlashcardRevealState(protyle);
+    const generation = revealState.generation;
+    const cardElement = protyle.wysiwyg.element.querySelector(
+        `[data-node-id="${protyle.block.id}"][fold="1"]`
+    );
+    revealFlashcardAfterUnfold({
+        state: revealState,
+        generation,
+        unfold: cardElement ? (done) => {
+            const foldData = setFold(protyle, cardElement, true, false, true);
+            if (!foldData.doOperations?.length) {
+                done();
+                return;
+            }
+            transaction(protyle, foldData.doOperations, foldData.undoOperations, {callback: done});
+        } : undefined,
+        reveal: () => {
+            showFlashcardAnswer(protyle.element);
+            callback();
+        }
+    });
+};
+
+export const bindCardEvent = async (options: {
+    app: App,
+    element: Element,
+    title?: string,
+    cardsData: ICardData
+    cardType: TCardType,
+    id?: string,
+    dialog?: Dialog,
+    index?: number,
+}) => {
+    if (window.siyuan.storage[Constants.LOCAL_FLASHCARD].fullscreen) {
+        fullscreen(options.element.querySelector(".card__main"),
+            options.element.querySelector('[data-type="fullscreen"]'));
+    }
+    let index = 0;
+    if (typeof options.index === "number") {
+        index = options.index;
+    }
+    const editor = new Protyle(options.app, options.element.querySelector("[data-type='render']") as HTMLElement, {
+        blockId: "",
+        action: [Constants.CB_GET_ALL],
+        render: {
+            background: false,
+            gutter: true,
+            breadcrumbDocName: true,
+            title: true,
+            hideTitleOnZoom: true,
+        },
+        typewriterMode: false
+    });
+    if (window.siyuan.mobile) {
+        window.siyuan.mobile.popEditor = editor;
+    }
+    if (options.cardsData.cards.length > 0) {
+        getEditor(options.cardsData.cards[index].blockID, editor.protyle, options.element, options.cardsData.cards[index]);
+    }
+    options.element.setAttribute("data-key", Constants.DIALOG_OPENCARD);
+    const actionElements = options.element.querySelectorAll(".card__action");
+    if (options.index === 0 || typeof options.index === "undefined") {
+        actionElements[0].firstElementChild.setAttribute("disabled", "disabled");
+        actionElements[1].querySelector(".b3-button").setAttribute("disabled", "disabled");
+    } else {
+        actionElements[0].firstElementChild.removeAttribute("disabled");
+        actionElements[1].querySelector(".b3-button").removeAttribute("disabled");
+    }
+    const countElement = options.element.querySelector('[data-type="count"]');
+    const filterElement = options.element.querySelector('[data-type="filter"]');
+    let resetPending = false;
+    let resetRefresh: {card: ICard, onRefreshed: () => void};
+    const refreshResetCard = () => {
+        const refresh = resetRefresh;
+        resetPending = true;
+        return fetchPost("/api/riff/getRiffCardsByBlockIDs", {blockIDs: [refresh.card.blockID]}, response => {
+            const block = response.data.blocks.find(item => item.id === refresh.card.blockID);
+            if (!block?.riffCardID) {
+                showMessage(window.siyuan.languages.invalid, 3000, "error");
+                return;
+            }
+            refresh.card.cardID = block.riffCardID;
+            resetRefresh = undefined;
+            refresh.onRefreshed();
+        }).finally(() => {
+            resetPending = false;
+        });
+    };
+    const fetchNewRound = () => {
+        const currentCardType = filterElement.getAttribute("data-cardtype");
+        const docId = filterElement.getAttribute("data-id");
+        fetchDueCards(currentCardType, docId, undefined, async (treeCards) => {
+            index = 0;
+            options.cardsData = treeCards.data;
+            for (let i = 0; i < options.app.plugins.length; i++) {
+                options.cardsData = await options.app.plugins[i].updateCards(options.cardsData);
+            }
+            if (options.cardsData.cards.length > 0) {
+                nextCard({
+                    countElement,
+                    editor,
+                    actionElements,
+                    index,
+                    cardsData: options.cardsData
+                });
+            } else {
+                allDone(countElement, editor, actionElements);
+            }
+        });
+    };
+
+    countElement.innerHTML = genCardCount(options.cardsData, index);
+    options.element.firstChild.addEventListener("click", (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        let type = "";
+        const currentCard = options.cardsData.cards[index];
+        if (resetPending || (resetRefresh && resetRefresh.card === currentCard)) {
+            if (!resetPending) {
+                refreshResetCard();
+            }
+            event.stopPropagation();
+            event.preventDefault();
+            return;
+        }
+        const docId = filterElement.getAttribute("data-id");
+        if (typeof event.detail === "string") {
+            if (["1", "j", "a"].includes(event.detail)) {
+                type = "1";
+            } else if (["2", "k", "s"].includes(event.detail)) {
+                type = "2";
+            } else if (["3", "l", "d"].includes(event.detail)) {
+                type = "3";
+            } else if (["4", ";", "f"].includes(event.detail)) {
+                type = "4";
+            } else if ([" ", "enter"].includes(event.detail)) {
+                type = "-1";
+            } else if (["p", "q"].includes(event.detail)) {
+                type = "-2";
+            } else if (["0", "x"].includes(event.detail)) {
+                type = "-3";
+            }
+        } else {
+            const fullscreenElement = hasClosestByAttribute(target, "data-type", "fullscreen");
+            if (fullscreenElement) {
+                fullscreen(options.element.querySelector(".card__main"),
+                    options.element.querySelector('[data-type="fullscreen"]'));
+                resize(editor.protyle);
+                window.siyuan.storage[Constants.LOCAL_FLASHCARD].fullscreen = !window.siyuan.storage[Constants.LOCAL_FLASHCARD].fullscreen;
+                setStorageVal(Constants.LOCAL_FLASHCARD, window.siyuan.storage[Constants.LOCAL_FLASHCARD]);
+                event.stopPropagation();
+                event.preventDefault();
+                return;
+            }
+            const moreElement = hasClosestByAttribute(target, "data-type", "more");
+            if (moreElement && currentCard) {
+                toggleMenu({
+                    target: moreElement,
+                    build: (_menu, session) => {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        if (filterElement.getAttribute("data-cardtype") === "all" && filterElement.getAttribute("data-id")) {
+                            showMessage(window.siyuan.languages.noSupportTip);
+                            return;
+                        }
+                        const menu = new Menu();
+                        menu.addItem({
+                            id: "setDueTime",
+                            icon: "iconClock",
+                            label: window.siyuan.languages.setDueTime,
+                            click() {
+                                openInputDialog({
+                                    title: window.siyuan.languages.setDueTime,
+                                    label: window.siyuan.languages.showCardDay,
+                                    value: "1",
+                                    type: "number",
+                                    min: "1",
+                                    step: "1",
+                                    onConfirm: (value, timedialog) => {
+                                        const inputElement = timedialog.element.querySelector("input") as HTMLInputElement;
+                                        const days = Number(value);
+                                        if (!Number.isInteger(days) || days < 1) {
+                                            showMessage(window.siyuan.languages.invalid, 3000, "error");
+                                            inputElement.focus();
+                                            inputElement.select();
+                                            return;
+                                        }
+                                        const due = dayjs().add(days, "day");
+                                        if (!due.isValid() || due.year() > 9999) {
+                                            showMessage(window.siyuan.languages.invalid, 3000, "error");
+                                            inputElement.focus();
+                                            inputElement.select();
+                                            return;
+                                        }
+                                        fetchPost("/api/riff/batchSetRiffCardsDueTime", {
+                                            cardDues: [{
+                                                id: currentCard.cardID,
+                                                due: due.format("YYYYMMDDHHmmss")
+                                            }]
+                                        }, () => {
+                                            actionElements[0].classList.add("fn__none");
+                                            actionElements[1].classList.remove("fn__none");
+                                            if (currentCard.state === 0) {
+                                                options.cardsData.unreviewedNewCardCount--;
+                                            } else {
+                                                options.cardsData.unreviewedOldCardCount--;
+                                            }
+                                            options.element.firstElementChild.dispatchEvent(new CustomEvent("click", {detail: "0"}));
+                                            options.cardsData.cards.splice(index, 1);
+                                            index--;
+                                            timedialog.destroy();
+                                        });
+                                    },
+                                });
+                            }
+                        });
+                        if (currentCard.state !== 0) {
+                            menu.addItem({
+                                id: "reset",
+                                icon: "iconRefresh",
+                                label: window.siyuan.languages.reset,
+                                click() {
+                                    resetPending = true;
+                                    let refreshing: Promise<void>;
+                                    fetchPost("/api/riff/resetRiffCards", {
+                                        type: filterElement.getAttribute("data-cardtype"),
+                                        id: docId,
+                                        deckID: Constants.QUICK_DECK_ID,
+                                        blockIDs: [currentCard.blockID],
+                                    }, () => {
+                                        resetRefresh = {
+                                            card: currentCard, onRefreshed: () => {
+                                                const minLang = window.siyuan.languages._time["1m"].replace("%s", "");
+                                                currentCard.lapses = 0;
+                                                currentCard.lastReview = -62135596800000;
+                                                currentCard.reps = 0;
+                                                currentCard.state = 0;
+                                                currentCard.nextDues = {
+                                                    1: minLang,
+                                                    2: minLang.replace("1", "5"),
+                                                    3: minLang.replace("1", "10"),
+                                                    4: window.siyuan.languages._time["1d"].replace("%s", "").replace("1", "6")
+                                                };
+                                                actionElements[1].querySelectorAll("button.b3-button").forEach((element, btnIndex) => {
+                                                    if (btnIndex < 2) {
+                                                        return;
+                                                    }
+                                                    element.previousElementSibling.textContent = currentCard.nextDues[btnIndex - 1];
+                                                });
+                                                options.cardsData.unreviewedOldCardCount--;
+                                                options.cardsData.unreviewedNewCardCount++;
+                                                countElement.innerHTML = genCardCount(options.cardsData, index);
+                                            }
+                                        };
+                                        refreshing = refreshResetCard();
+                                    }).finally(async () => {
+                                        await refreshing;
+                                        resetPending = false;
+                                    });
+                                }
+                            });
+                        }
+                        menu.addItem({
+                            id: "removeRiffCard",
+                            icon: "iconTrashcan",
+                            label: `${window.siyuan.languages.remove} <b>${window.siyuan.languages.riffCard}</b>`,
+                            click() {
+                                actionElements[0].classList.add("fn__none");
+                                actionElements[1].classList.remove("fn__none");
+                                if (currentCard.state === 0) {
+                                    options.cardsData.unreviewedNewCardCount--;
+                                } else {
+                                    options.cardsData.unreviewedOldCardCount--;
+                                }
+                                options.element.firstElementChild.dispatchEvent(new CustomEvent("click", {detail: "0"}));
+                                transaction(undefined, [{
+                                    action: "removeFlashcards",
+                                    deckID: Constants.QUICK_DECK_ID,
+                                    blockIDs: [currentCard.blockID]
+                                }]);
+                                options.cardsData.cards.splice(index, 1);
+                                index--;
+                            }
+                        });
+                        menu.addSeparator();
+                        menu.addItem({
+                            id: "forgetCountAndRevisionCountAndCardStatusAndLastReviewTime",
+                            iconHTML: "",
+                            type: "readonly",
+                            label: `<div class="fn__flex">
+            <div class="fn__flex-1 ft__breakword">${window.siyuan.languages.forgetCount}</div>
+            <div class="fn__space"></div>
+            <div>${currentCard.lapses}</div>
+        </div><div class="fn__flex">
+            <div class="fn__flex-1 ft__breakword">${window.siyuan.languages.revisionCount}</div>
+            <div class="fn__space"></div>
+            <div>${currentCard.reps}</div>
+        </div><div class="fn__flex">
+            <div class="fn__flex-1 ft__breakword">${window.siyuan.languages.cardStatus}</div>
+            <div class="fn__space"></div>
+            <div class="${currentCard.state === 0 ? "ft__primary" : "ft__success"}">${currentCard.state === 0 ? window.siyuan.languages.flashcardNewCard : window.siyuan.languages.flashcardReviewCard}</div>
+        </div><div class="fn__flex${currentCard.lastReview > 0 ? "" : " fn__none"}">
+            <div class="fn__flex-1 ft__breakword" style="width: 170px;">${window.siyuan.languages.lastReviewTime}</div>
+            <div class="fn__space"></div>
+            <div>${dayjs(currentCard.lastReview).format("YYYY-MM-DD")}</div>
+        </div>`,
+                        });
+                        /// #if MOBILE
+                        session.show(() => menu.fullscreen());
+                        /// #else
+                        const rect = moreElement.getBoundingClientRect();
+                        session.show(() => menu.open({
+                            x: rect.left,
+                            y: rect.bottom,
+                            h: rect.height
+                        }));
+                        /// #endif
+
+                    },
+                });
+            return;
+            }
+            /// #if !MOBILE
+            const sticktabElement = hasClosestByAttribute(target, "data-type", "sticktab");
+            if (sticktabElement) {
+                toggleMenu({
+                    target: sticktabElement,
+                    build: (_menu, session) => {
+                        const stickMenu = new Menu();
+                        stickMenu.addItem({
+                            id: "openInNewTab",
+                            icon: "iconOpen",
+                            label: window.siyuan.languages.openInNewTab,
+                            click() {
+                                openFile({
+                                    app: options.app,
+                                    custom: {
+                                        icon: "iconRiffCard",
+                                        title: window.siyuan.languages.spaceRepetition,
+                                        data: {
+                                            cardsData: options.cardsData,
+                                            index,
+                                            cardType: filterElement.getAttribute("data-cardtype") as TCardType,
+                                            id: docId,
+                                            title: options.title
+                                        },
+                                        id: "siyuan-card"
+                                    },
+                                });
+                                options.dialog.destroy();
+                            }
+                        });
+                        stickMenu.addItem({
+                            id: "insertRight",
+                            icon: "iconLayoutRight",
+                            label: window.siyuan.languages.insertRight,
+                            click() {
+                                openFile({
+                                    app: options.app,
+                                    position: "right",
+                                    custom: {
+                                        icon: "iconRiffCard",
+                                        title: window.siyuan.languages.spaceRepetition,
+                                        data: {
+                                            cardsData: options.cardsData,
+                                            index,
+                                            cardType: filterElement.getAttribute("data-cardtype") as TCardType,
+                                            id: docId,
+                                            title: options.title
+                                        },
+                                        id: "siyuan-card"
+                                    },
+                                });
+                                options.dialog.destroy();
+                            }
+                        });
+                        /// #if !BROWSER
+                        stickMenu.addItem({
+                            id: "openByNewWindow",
+                            icon: "iconOpenWindow",
+                            label: window.siyuan.languages.openByNewWindow,
+                            click() {
+                                const json = [{
+                                    "title": window.siyuan.languages.spaceRepetition,
+                                    "icon": "iconRiffCard",
+                                    "instance": "Tab",
+                                    "children": {
+                                        "instance": "Custom",
+                                        "customModelType": "siyuan-card",
+                                        "customModelData": {
+                                            "cardsData": options.cardsData,
+                                            "index": index,
+                                            "cardType": filterElement.getAttribute("data-cardtype"),
+                                            "id": docId,
+                                            "title": options.title
+                                        }
+                                    }
+                                }];
+                                const url = new URL("/stage/build/app/window.html", window.location.origin);
+                                url.searchParams.set("v", Constants.SIYUAN_VERSION);
+                                url.searchParams.set("json", JSON.stringify(json));
+                                ipcRenderer.send(Constants.SIYUAN_OPEN_WINDOW, {
+                                    ...getWindowAppearance(), url: appendRemoteQuery(url).href,
+                                });
+                                options.dialog.destroy();
+                            }
+                        });
+                        /// #endif
+                        const rect = sticktabElement.getBoundingClientRect();
+                        session.show(() => stickMenu.open({
+                            x: rect.left,
+                            y: rect.bottom,
+                            h: rect.height
+                        }));
+
+                    },
+                });
+            event.stopPropagation();
+                event.preventDefault();
+                return;
+            }
+            /// #endif
+            const closeElement = hasClosestByAttribute(target, "data-type", "close");
+            if (closeElement) {
+                if (options.dialog) {
+                    options.dialog.destroy();
+                }
+                event.stopPropagation();
+                event.preventDefault();
+                return;
+            }
+            const filterTempElement = hasClosestByAttribute(target, "data-type", "filter");
+            if (filterTempElement) {
+                toggleMenu({
+                    target: filterTempElement,
+                    build: (_menu, session) => {
+                        fetchPost("/api/riff/getRiffDecks", {}, (response) => {
+                            if (!session.isCurrent()) {
+                                return;
+                            }
+
+                            window.siyuan.menus.menu.remove();
+                            window.siyuan.menus.menu.append(new MenuItem({
+                                id: "all",
+                                iconHTML: "",
+                                label: window.siyuan.languages.all,
+                                click() {
+                                    filterElement.setAttribute("data-id", "");
+                                    filterElement.setAttribute("data-cardtype", "all");
+                                    fetchNewRound();
+                                },
+                            }).element);
+                            window.siyuan.menus.menu.append(new MenuItem({
+                                id: "fileTree",
+                                iconHTML: "",
+                                label: window.siyuan.languages.fileTree,
+                                click() {
+                                    movePathTo({
+                                        cb: (toPath, toNotebook) => {
+                                            filterElement.setAttribute("data-id", toPath[0] === "/" ? toNotebook[0] : getDisplayName(toPath[0], true, true));
+                                            filterElement.setAttribute("data-cardtype", toPath[0] === "/" ? "notebook" : "doc");
+                                            fetchNewRound();
+                                        },
+                                        title: window.siyuan.languages.specifyPath,
+                                        flashcard: true
+                                    });
+                                }
+                            }).element);
+                            if (options.title || response.data.length > 0) {
+                                window.siyuan.menus.menu.append(new MenuItem({type: "separator"}).element);
+                            }
+                            if (options.title) {
+                                window.siyuan.menus.menu.append(new MenuItem({
+                                    iconHTML: "",
+                                    label: escapeHtml(options.title),
+                                    click() {
+                                        filterElement.setAttribute("data-id", options.id);
+                                        filterElement.setAttribute("data-cardtype", options.cardType);
+                                        fetchNewRound();
+                                    },
+                                }).element);
+                                if (response.data.length > 0) {
+                                    window.siyuan.menus.menu.append(new MenuItem({type: "separator"}).element);
+                                }
+                            }
+                            response.data.forEach((deck: {id: string, name: string}) => {
+                                window.siyuan.menus.menu.append(new MenuItem({
+                                    iconHTML: "",
+                                    label: escapeHtml(deck.name),
+                                    click() {
+                                        filterElement.setAttribute("data-id", deck.id);
+                                        filterElement.setAttribute("data-cardtype", "all");
+                                        fetchNewRound();
+                                    },
+                                }).element);
+                            });
+                            const filterRect = filterTempElement.getBoundingClientRect();
+                            session.show(() => window.siyuan.menus.menu.popup({x: filterRect.left, y: filterRect.bottom, h: filterRect.height}));
+                        });
+
+                    },
+                });
+            event.stopPropagation();
+                event.preventDefault();
+                return;
+            }
+
+            const newroundElement = hasClosestByAttribute(target, "data-type", "newround");
+            if (newroundElement) {
+                fetchNewRound();
+                event.stopPropagation();
+                event.preventDefault();
+                return;
+            }
+        }
+        if (!type) {
+            const buttonElement = hasClosestByClassName(target, "b3-button");
+            if (buttonElement) {
+                type = buttonElement.getAttribute("data-type");
+            }
+        }
+        if (!type || !currentCard) {
+            return;
+        }
+        const revealState = getFlashcardRevealState(editor.protyle);
+        if ((actionElements[0].classList.contains("fn__none") && actionElements[1].classList.contains("fn__none")) ||
+            revealState.pendingGeneration === revealState.generation) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        hideElements(["toolbar", "hint", "util", "gutter"], editor.protyle);
+        if (type === "-1") {    // 显示答案
+            if (actionElements[0].classList.contains("fn__none")) {
+                type = "3";
+            } else {
+                revealFlashcardAnswer(editor.protyle, () => {
+                    showRatingActions(actionElements, currentCard);
+                    emitEvent(currentCard, type);
+                });
+                const currentRevealState = getFlashcardRevealState(editor.protyle);
+                if (currentRevealState.pendingGeneration === currentRevealState.generation) {
+                    actionElements[0].querySelectorAll("button").forEach(item => {
+                        item.setAttribute("disabled", "disabled");
+                    });
+                }
+                return;
+            }
+        } else if (type === "-2") {    // 上一步
+            if (index > 0) {
+                index--;
+                nextCard({
+                    countElement,
+                    editor,
+                    actionElements,
+                    index,
+                    cardsData: options.cardsData
+                });
+                emitEvent(options.cardsData.cards[index + 1], type);
+            }
+            return;
+        }
+        if ("-3" === type || (["1", "2", "3", "4"].includes(type) && !actionElements[1].classList.contains("fn__none"))) {
+            fetchPost(type === "-3" ? "/api/riff/skipReviewRiffCard" : "/api/riff/reviewRiffCard", {
+                deckID: currentCard.deckID,
+                cardID: currentCard.cardID,
+                rating: parseInt(type),
+                reviewedCards: options.cardsData.cards
+            }, () => {
+                index++;
+                if (index > options.cardsData.cards.length - 1) {
+                    const currentCardType = filterElement.getAttribute("data-cardtype");
+                    fetchDueCards(currentCardType, docId, options.cardsData.cards, async (result) => {
+                        emitEvent(options.cardsData.cards[index - 1], type);
+                        index = 0;
+                        options.cardsData = result.data;
+                        for (let i = 0; i < options.app.plugins.length; i++) {
+                            options.cardsData = await options.app.plugins[i].updateCards(options.cardsData);
+                        }
+                        if (options.cardsData.cards.length === 0) {
+                            if (options.cardsData.unreviewedCount > 0) {
+                                newRound(countElement, editor, actionElements, result.data.unreviewedCount);
+                            } else {
+                                allDone(countElement, editor, actionElements);
+                            }
+                        } else {
+                            nextCard({
+                                countElement,
+                                editor,
+                                actionElements,
+                                index,
+                                cardsData: options.cardsData
+                            });
+                        }
+                    });
+                    return;
+                }
+                nextCard({
+                    countElement,
+                    editor,
+                    actionElements,
+                    index,
+                    cardsData: options.cardsData
+                });
+                emitEvent(options.cardsData.cards[index - 1], type);
+            });
+        }
+    });
+    return editor;
+};
+
+const emitEvent = (card: ICard, type: string) => {
+    forEachPluginSubscriber("click-flashcard-action", eventBus => {
+        eventBus.emit("click-flashcard-action", {
+            type,
+            card
+        });
+    });
+};
+
+export const openCard = (app: App, openOnly = false) => {
+    if (window.siyuan.config.readonly) {
+        return;
+    }
+    fetchPost("/api/riff/getRiffDueCards", {deckID: ""}, (cardsResponse) => {
+        openCardByData(app, cardsResponse.data, "all", undefined, undefined, openOnly);
+    });
+};
+
+export const openCardByData = async (app: App, cardsData: ICardData, cardType: TCardType, id?: string, title?: string,
+                                     openOnly = false) => {
+    const exit = window.siyuan.dialogs.find(item => {
+        if (item.element.getAttribute("data-key") === Constants.DIALOG_OPENCARD) {
+            if (!openOnly) {
+                item.destroy();
+            }
+            return true;
+        }
+    });
+    if (exit) {
+        return;
+    }
+    let lastRange: Range;
+    if (getSelection().rangeCount > 0) {
+        lastRange = getSelection().getRangeAt(0);
+    }
+    for (let i = 0; i < app.plugins.length; i++) {
+        cardsData = await app.plugins[i].updateCards(cardsData);
+    }
+    const dialog = new Dialog({
+        hideCloseIcon: true,
+        positionId: Constants.DIALOG_OPENCARD,
+        content: genCardHTML({id, cardType, cardsData, isTab: false}),
+        width: isMobile() ? "100vw" : "80vw",
+        height: isMobile() ? "100dvh" : "70vh",
+        destroyCallback() {
+            try {
+                editor?.destroy();
+            } finally {
+                // 仅释放当前复习窗口的编辑器，保留销毁期间打开的其他编辑器。
+                if (editor && window.siyuan.mobile?.popEditor === editor) {
+                    window.siyuan.mobile.popEditor = null;
+                }
+                if (lastRange) {
+                    focusByRange(lastRange);
+                }
+            }
+        },
+        resizeCallback(type: string) {
+            if (type !== "d" && type !== "t" && editor) {
+                editor.resize();
+            }
+        }
+    });
+    (dialog.element.querySelector(".b3-dialog__scrim") as HTMLElement).style.backgroundColor = "var(--b3-theme-surface)";
+    (dialog.element.querySelector(".b3-dialog__container") as HTMLElement).style.maxWidth = "1024px";
+    const editor = await bindCardEvent({
+        app,
+        element: dialog.element,
+        cardsData,
+        title,
+        id,
+        cardType,
+        dialog
+    });
+    editor.resize();
+    dialog.editors = {
+        card: editor
+    };
+    /// #if !MOBILE
+    const focusElement = dialog.element.querySelector(".block__icons button.block__icon") as HTMLElement;
+    focusElement.focus();
+    const range = document.createRange();
+    range.selectNodeContents(focusElement);
+    range.collapse();
+    focusByRange(range);
+    /// #endif
+    updateCardHV();
+};
+
+const nextCard = (options: {
+    countElement: Element,
+    editor: Protyle,
+    actionElements: NodeListOf<Element>,
+    index: number,
+    cardsData: ICardData
+}) => {
+    options.editor.protyle.element.classList.remove("fn__none");
+    options.editor.protyle.element.nextElementSibling.classList.add("fn__none");
+    options.countElement.innerHTML = genCardCount(options.cardsData, options.index);
+    options.countElement.classList.remove("fn__none");
+    options.countElement.parentElement.querySelectorAll('[data-type="more"], [data-type="more-space"]').forEach(element => {
+        element.classList.remove("fn__none");
+    });
+    if (options.index === 0) {
+        options.actionElements[0].firstElementChild.setAttribute("disabled", "disabled");
+        options.actionElements[1].querySelector(".b3-button").setAttribute("disabled", "disabled");
+    } else {
+        options.actionElements[0].firstElementChild.removeAttribute("disabled");
+        options.actionElements[1].querySelector(".b3-button").removeAttribute("disabled");
+    }
+    getEditor(options.cardsData.cards[options.index].blockID, options.editor.protyle,
+        hasClosestByAttribute(options.countElement, "data-key", Constants.DIALOG_OPENCARD) as HTMLElement,
+        options.cardsData.cards[options.index]);
+};
+
+const allDone = (countElement: Element, editor: Protyle, actionElements: NodeListOf<Element>) => {
+    countElement.classList.add("fn__none");
+    editor.protyle.element.classList.add("fn__none");
+    const emptyElement = editor.protyle.element.nextElementSibling;
+    emptyElement.innerHTML = `<div class="card__empty-icon">🔮</div>${window.siyuan.languages.noDueCard}`;
+    emptyElement.classList.remove("fn__none");
+    actionElements[0].classList.add("fn__none");
+    actionElements[1].classList.add("fn__none");
+    countElement.parentElement.querySelectorAll('[data-type="more"], [data-type="more-space"]').forEach(element => {
+        element.classList.add("fn__none");
+    });
+};
+
+const newRound = (countElement: Element, editor: Protyle, actionElements: NodeListOf<Element>, unreviewedCount: number) => {
+    countElement.classList.add("fn__none");
+    editor.protyle.element.classList.add("fn__none");
+    const emptyElement = editor.protyle.element.nextElementSibling;
+    emptyElement.innerHTML = `<div class="card__empty-icon">♻️ </div>
+<span>${window.siyuan.languages.continueReview2.replace("${count}", unreviewedCount)}</span>
+<div class="fn__hr"></div>
+<button data-type="newround" class="b3-button fn__size200">${window.siyuan.languages.continueReview1}</button>`;
+    emptyElement.classList.remove("fn__none");
+    actionElements[0].classList.add("fn__none");
+    actionElements[1].classList.add("fn__none");
+};

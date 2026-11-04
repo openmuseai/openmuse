@@ -1,0 +1,137 @@
+import {openSearchAV} from "./relation";
+import {transaction} from "../../wysiwyg/transaction";
+import {focusByRange} from "../../util/selectionOffsets";
+import {hasClosestBlock} from "../../util/hasClosest";
+import dayjs from "dayjs";
+import {getAVFilteredTipContext} from "./filteredTip";
+
+export const addFilesToDatabase = (fileLiElements: Element[]) => {
+    addBlocksToDatabase(fileLiElements.map(item => item.getAttribute("data-node-id")).filter(Boolean),
+        fileLiElements[0] as HTMLElement);
+};
+
+export const addBlocksToDatabase = (ids: string[], target: HTMLElement, position?: IPosition) => {
+    const srcs: IOperationSrcs[] = ids.map(id => ({itemID: Lute.NewNodeID(), id, isDetached: false}));
+    if (srcs.length > 0) {
+        openSearchAV({
+            avID: "",
+            target,
+            position,
+            purpose: "addToDatabase",
+            callback: (listItemElement) => {
+                const avID = listItemElement.dataset.avId;
+                const viewID = listItemElement.dataset.viewId;
+                transaction(undefined, [{
+                    action: "insertAttrViewBlock",
+                    ignoreDefaultFill: viewID ? false : true,
+                    viewID,
+                    avID,
+                    srcs,
+                    blockID: listItemElement.dataset.blockId,
+                    context: getAVFilteredTipContext(viewID ? "view" : "database"),
+                }, {
+                    action: "doUpdateUpdated",
+                    id: listItemElement.dataset.blockId,
+                    data: dayjs().format("YYYYMMDDHHmmss"),
+                }]);
+            }
+        });
+    }
+};
+
+export const addEditorToDatabase = (protyle: IProtyle, range: Range, type?: string) => {
+    if ((range && protyle.title?.editElement?.contains(range.startContainer)) || type === "title") {
+        openSearchAV({
+            avID: "",
+            target: protyle.breadcrumb.element,
+            purpose: "addToDatabase",
+            callback: (listItemElement) => {
+                const avID = listItemElement.dataset.avId;
+                const viewID = listItemElement.dataset.viewId;
+                transaction(protyle, [{
+                    action: "insertAttrViewBlock",
+                    ignoreDefaultFill: viewID ? false : true,
+                    viewID,
+                    avID,
+                    srcs: [{
+                        itemID: Lute.NewNodeID(),
+                        id: protyle.block.rootID,
+                        isDetached: false
+                    }],
+                    blockID: listItemElement.dataset.blockId,
+                    context: getAVFilteredTipContext(viewID ? "view" : "database", protyle),
+                }, {
+                    action: "doUpdateUpdated",
+                    id: listItemElement.dataset.blockId,
+                    data: dayjs().format("YYYYMMDDHHmmss"),
+                }], [{
+                    action: "removeAttrViewBlock",
+                    srcIDs: [protyle.block.rootID],
+                    avID,
+                }]);
+                focusByRange(range);
+            }
+        });
+    } else {
+        let targetElement: HTMLElement;
+        const ids: string[] = [];
+        protyle.wysiwyg.element.querySelectorAll(".protyle-wysiwyg--select").forEach((item: HTMLElement) => {
+            const block = hasClosestBlock(item, true) || item;
+            if (!targetElement) {
+                targetElement = block;
+            }
+            const id = block.getAttribute("data-node-id");
+            if (!ids.includes(id)) {
+                ids.push(id);
+            }
+        });
+        if (!targetElement) {
+            const nodeElement = hasClosestBlock(range.startContainer, true);
+            if (nodeElement) {
+                targetElement = nodeElement;
+                ids.push(nodeElement.getAttribute("data-node-id"));
+            }
+        }
+        if (!targetElement) {
+            targetElement = protyle.wysiwyg.element;
+            ids.push(protyle.block.rootID);
+        }
+        openSearchAV({
+            avID: "",
+            target: targetElement,
+            purpose: "addToDatabase",
+            callback: (listItemElement) => {
+                const srcIDs: string[] = [];
+                const srcs: IOperationSrcs[] = [];
+                ids.forEach(item => {
+                    srcIDs.push(item);
+                    srcs.push({
+                        itemID: Lute.NewNodeID(),
+                        id: item,
+                        isDetached: false
+                    });
+                });
+                const avID = listItemElement.dataset.avId;
+                const viewID = listItemElement.dataset.viewId;
+                transaction(protyle, [{
+                    action: "insertAttrViewBlock",
+                    ignoreDefaultFill: viewID ? false : true,
+                    viewID,
+                    avID,
+                    srcs,
+                    blockID: listItemElement.dataset.blockId,
+                    context: getAVFilteredTipContext(viewID ? "view" : "database", protyle),
+                }, {
+                    action: "doUpdateUpdated",
+                    id: listItemElement.dataset.blockId,
+                    data: dayjs().format("YYYYMMDDHHmmss"),
+                }], [{
+                    action: "removeAttrViewBlock",
+                    srcIDs,
+                    avID,
+                }]);
+                focusByRange(range);
+            }
+        });
+    }
+};

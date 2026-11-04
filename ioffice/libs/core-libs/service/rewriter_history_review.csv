@@ -1,0 +1,9 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id,tags
+2,koffice/core-libs/service/src/cn/wps/moffice/print/PdfWriter.java,PdfWriter,review,,main,,libs/core-libs/service/src/cn/wps/moffice/print/PdfWriter.rs,RandomAccessFile;FileUtil,,0524_rust_stub
+0,koffice/core-libs/service/src/cn/wps/moffice/print/PrintOptionDef.java,PrintOptionDef,review,,main,,libs/core-libs/service/src/cn/wps/moffice/print/PrintOptionDef.rs,,,0524_rust_stub
+2,koffice/core-libs/service/src/cn/wps/moffice/print/PrintPDF.java,PrintPDF,review,,main,,libs/core-libs/service/src/cn/wps/moffice/print/PrintPDF.rs,IPrintExport;PdfWriter,,0524_rust_stub
+4,koffice/core-libs/service/src/cn/wps/moffice/print/PrintPostScript.java,PrintPostScript,review,,main,,libs/core-libs/service/src/cn/wps/moffice/print/PrintPostScript.rs,File;FileWriter;FileUtil;IPrintExport,,0524_rust_stub
+0,koffice/core-libs/service/src/cn/wps/moffice/service/doc/Alignment.java,Alignment,review,,main,,libs/core-libs/service/src/cn/wps/moffice/service/doc/Alignment.rs,,,0524_rust_stub
+0,koffice/core-libs/service/src/cn/wps/moffice/service/doc/AroundType.java,AroundType,review,,main,,libs/core-libs/service/src/cn/wps/moffice/service/doc/AroundType.rs,,,0524_rust_stub
+0,koffice/core-libs/service/src/cn/wps/moffice/service/doc/PictureFormat.java,PictureFormat,review,,main,,libs/core-libs/service/src/cn/wps/moffice/service/doc/PictureFormat.rs,,,0524_rust_stub
+0,koffice/core-libs/service/src/cn/wps/moffice/service/doc/TextureIndex.java,TextureIndex,review,,main,,libs/core-libs/service/src/cn/wps/moffice/service/doc/TextureIndex.rs,,,0524_rust_stub

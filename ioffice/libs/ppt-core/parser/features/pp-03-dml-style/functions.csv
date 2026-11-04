@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_color_map,a:clrMap 配色槽,clrMap attrs+ColorMapping,ColorMapping scheme slots,pp-01:02;DGMap,pp-01:05;pp-01:07;pp-07-part-open,libs/ppt-core,pass
+2,02_function_text_list_style,a:lstStyle 列表样式,lstStyle sub-element ids+style slot,lvl handlers or None,pp-01:02,pp-01:07;pp-06-presentation-xml,libs/ppt-core,pass
+3,03_function_scheme_color,a:schemeClr 主题色槽,schemeClr attrs+Color+callback,Color.mode=4+putScheme+onAdjustThemeColor,01;DGMap;pp-01:02,pp-10:02;pp-04-theme-part,libs/ppt-core,pass

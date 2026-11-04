@@ -1,0 +1,110 @@
+import {getContenteditableElement} from "./getBlock";
+import {focusByOffset, getUndoFocusContext} from "../util/selection";
+import {getSelectionOffset, setLastNodeRange} from "../util/selectionOffsets";
+import {updateTransaction} from "./transaction";
+import {Constants} from "../../constants";
+import {
+    detectCodeTabSpaces,
+    getCodeBlockOutdentRange,
+    getCodeBlockLineRange,
+    getCodeTabSpace,
+    resolveCodeTabSpaces,
+    updateCodeBlockLines,
+} from "./codeBlockUtil";
+
+export const getCodeBlockTabSpace = (nodeElement: HTMLElement) => getCodeTabSpace(resolveCodeTabSpaces(
+    nodeElement.getAttribute(Constants.CUSTOM_SY_CODE_TAB_SPACES),
+    window.siyuan.config.editor.codeTabSpaces,
+));
+
+export const tabCodeBlock = (protyle: IProtyle, nodeElement: HTMLElement,
+                             range: Range, outdent = false) => {
+    const editableElement = getContenteditableElement(nodeElement) as HTMLElement;
+    if (!editableElement) {
+        return;
+    }
+    const undoFocusContext = getUndoFocusContext(protyle.wysiwyg.element, range, true);
+    const detectedSpaces = nodeElement.hasAttribute(Constants.CUSTOM_SY_CODE_TAB_SPACES) ? null :
+        detectCodeTabSpaces(editableElement.textContent);
+    const tabSpace = detectedSpaces === null ? getCodeBlockTabSpace(nodeElement) : getCodeTabSpace(detectedSpaces);
+    const oldHTML = nodeElement.outerHTML;
+    const commit = () => {
+        // 识别结果随缩进操作一同保存和撤销，后续操作沿用该代码块的设置。
+        if (detectedSpaces !== null) {
+            nodeElement.setAttribute(Constants.CUSTOM_SY_CODE_TAB_SPACES, detectedSpaces.toString());
+        }
+        updateTransaction(protyle, nodeElement, oldHTML, undoFocusContext);
+    };
+    if (range.collapsed) {
+        if (outdent) {
+            const caret = getSelectionOffset(editableElement, undefined, range).start;
+            const outdentRange = getCodeBlockOutdentRange(editableElement.textContent, caret, tabSpace);
+            if (outdentRange.start === outdentRange.end) {
+                return;
+            }
+            const deleteRange = focusByOffset(editableElement, outdentRange.start, outdentRange.end, false) as Range;
+            if (!deleteRange) {
+                return;
+            }
+            deleteRange.deleteContents();
+            const caretRange = focusByOffset(editableElement, outdentRange.caret, outdentRange.caret, false) as Range;
+            if (!caretRange) {
+                return;
+            }
+            range.setStart(caretRange.startContainer, caretRange.startOffset);
+            range.collapse(true);
+        } else {
+            const textNode = document.createTextNode(tabSpace);
+            range.insertNode(textNode);
+            range.setStartAfter(textNode);
+            range.collapse(true);
+        }
+        commit();
+        return;
+    }
+
+    const position = getSelectionOffset(editableElement, undefined, range);
+    const lineRange = getCodeBlockLineRange(editableElement.textContent, position.start, position.end);
+    const normalizedRange = focusByOffset(editableElement, lineRange.start, lineRange.end, false) as Range;
+    if (!normalizedRange) {
+        return;
+    }
+    range.setStart(normalizedRange.startContainer, normalizedRange.startOffset);
+    range.setEnd(normalizedRange.endContainer, normalizedRange.endOffset);
+    const selectedText = range.toString();
+    const text = updateCodeBlockLines(selectedText, tabSpace, outdent);
+    if (text === selectedText) {
+        return;
+    }
+
+    const wbrElement = document.createElement("wbr");
+    range.insertNode(wbrElement);
+    range.setStartAfter(wbrElement);
+    range.extractContents();
+    let language = nodeElement.querySelector(".protyle-action__language").textContent;
+    // 语言优先级处理 https://github.com/siyuan-note/siyuan/issues/14767
+    if (range.commonAncestorContainer.nodeType === 1) {
+        const snippetClassName = (range.commonAncestorContainer as HTMLElement).className;
+        if (snippetClassName.startsWith("language-")) {
+            language = snippetClassName.replace("language-", "");
+            // https://github.com/siyuan-note/siyuan/issues/14767
+            if (wbrElement.parentElement !== range.commonAncestorContainer) {
+                wbrElement.parentElement.after(wbrElement);
+                wbrElement.previousElementSibling.remove();
+            }
+        }
+    }
+    if (!window.hljs.getLanguage(language)) {
+        language = "plaintext";
+    }
+    wbrElement.insertAdjacentHTML("afterend", window.hljs.highlight(text, {
+        language,
+        ignoreIllegals: true
+    }).value + "<br>");
+    range.setStart(wbrElement.nextSibling, 0);
+    const brElement = wbrElement.parentElement.querySelector("br");
+    setLastNodeRange(brElement.previousSibling as Element, range, false);
+    brElement.remove();
+    commit();
+    wbrElement.remove();
+};

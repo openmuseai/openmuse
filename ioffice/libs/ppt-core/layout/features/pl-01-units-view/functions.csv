@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_emu_convert,EMU↔layout/render 单位换算,srcUnitType+srcVal / fromEmuX/Y 等便捷入口,目标单位换算值（f32/i32）,无（base/converter 已 keep）,02;pl-02;pr-01;pr-02,libs/ppt-core,pass
+2,02_function_slide_viewport,slide 内容区（白底视口）,slideSize cx/cy（EMU）+ zoom,render 档内容矩形（默认 12192000×6858000）,01;pp-06（sldSz 写入）,pr-01（白底）;pl-06,libs/ppt-core,pass

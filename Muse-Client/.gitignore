@@ -1,0 +1,141 @@
+# =============================================================================
+# OpenMuse local desktop — repository ignore rules
+#
+# Tracked on purpose: product source, workspace manifests and lockfiles, JSON
+# contracts and schemas, plugin manifests and their small assets, README.
+#
+# Ignored on purpose: build outputs, package-manager caches, native toolchain
+# scaffolding, generated runtime closures and release archives. Build scripts,
+# architecture/provenance docs and pinned third-party inputs are source assets.
+# =============================================================================
+
+# --- Build outputs -----------------------------------------------------------
+/target/
+/dist/
+**/build/
+**/coverage/
+
+# Per-domain fingerprints and reuse markers written by scripts/ci/build-windows.ps1.
+# They describe a local build, and in CI they travel inside the domain cache entry.
+/.muse-domain-cache/
+
+# --- Dart / Flutter ----------------------------------------------------------
+**/.dart_tool/
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/Flutter/ephemeral/
+**/Flutter/.last_build_id
+**/.symlinks/
+app.*.symbols
+app.*.map.json
+
+# --- Native / macOS / CocoaPods ---------------------------------------------
+**/Pods/
+**/xcuserdata/
+**/*.xcuserstate
+**/*.dgph
+**/DerivedData/
+*.ipa
+*.dSYM/
+*.hmap
+*.xcarchive/
+
+# --- Windows / Visual Studio -------------------------------------------------
+**/x64/
+**/x86/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# --- Node / sidecar runtime --------------------------------------------------
+**/node_modules/
+
+# --- Pinned engine and third-party build inputs ------------------------------
+# A fresh checkout has to be able to run scripts/package_macos.sh. Generated
+# node_modules stays ignored. Only the two themes the packager stages are kept;
+# the rest of the upstream theme catalogue is not.
+/plugins/helix/assets/engines/helix/runtime/themes/*
+!/plugins/helix/assets/engines/helix/runtime/themes/onelight.toml
+!/plugins/helix/assets/engines/helix/runtime/themes/openmuse_dark.toml
+
+# The Helix source fork carries the OpenMuse non-modal editor bridge, so its
+# Rust source is tracked. Its runtime/ is a build product that duplicates the
+# pinned engine runtime above byte for byte, and target/ is a multi-gigabyte
+# Rust build tree, so neither belongs in git.
+/third_party/helix/runtime/
+/third_party/helix/target/
+/vendors/
+
+# A local clone of an unrelated upstream project. It carries its own .git and a
+# .env holding a live API key, and it is not a build input of this repository.
+# Ignore the whole tree so neither can ever be committed from here.
+/third_party/openmuse/
+/third_party/Easel/
+
+# dsh-market source is tracked. These paths are generated or downloaded, matching
+# the upstream ignore list. node_modules is already ignored above.
+/third_party/dsh-market/lib/
+/third_party/dsh-market/research/
+/third_party/dsh-market/docs/
+/third_party/dsh-market/npm-cache/
+/third_party/dsh-market/data/readmes-snapshot.json
+/third_party/dsh-market/data/registry-snapshot.json
+/third_party/dsh-market/client/*.map
+/third_party/dsh-market/*.tgz
+
+# Gradle wrote a literal "~" directory here through an unexpanded home path.
+# It holds a partially downloaded 212 MB distribution, not source.
+/app/openmuse_mobile/android/~/
+
+# --- Release bundles ---------------------------------------------------------
+*.zip
+*.dmg
+*.pkg
+*.tar.gz
+!/third_party/node/v22.19.0/*.tar.gz
+
+# --- Development-process material -------------------------------------------
+# Keep architecture and release scripts in the independent source repository.
+/tmp/
+/scratch/
+/notes/
+# Marketing and social write-ups with their screenshots, slide-build scripts
+# and a login QR image. Draft material, not product source or a release input.
+/docs/meterials/
+*.local.md
+*.draft.md
+*.tmp
+*.bak
+*.orig
+*.rej
+
+# --- Tooling / editors -------------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.history/
+.atom/
+.buildlog/
+migrate_working_dir/
+*.swp
+*.class
+*.pyc
+
+# --- Local credentials (never commit) ----------------------------------------
+/.env.apple-review.local
+/chelsea-muse
+/chelsea-muse.pub
+id_rsa
+id_rsa.pub
+*.pem
+
+# --- OS noise ----------------------------------------------------------------
+.DS_Store
+._*
+*.log

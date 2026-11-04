@@ -1,0 +1,148 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"net"
+	"net/url"
+	"os"
+	"strings"
+	"testing"
+
+	"github.com/siyuan-note/dejavu"
+	"github.com/siyuan-note/dejavu/cloud"
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/util"
+	"github.com/studio-b12/gowebdav"
+)
+
+func TestCloudLockErrorDetail(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		err  error
+		want string
+	}{
+		{"dns", &url.Error{Op: "Post", URL: "https://user:password@up.qbox.me/private?token=secret", Err: &net.DNSError{Err: "no such host", Name: "up.qbox.me"}}, "408 [up.qbox.me]"},
+		{"timeout", &url.Error{URL: "https://user:password@example.com/private?token=secret", Err: context.DeadlineExceeded}, "24 [example.com]"},
+		{"deadline", context.DeadlineExceeded, "24"},
+		{"connection", &url.Error{URL: "https://example.com/private", Err: &net.OpError{Op: "read", Net: "tcp", Err: errors.New("connection aborted")}}, "409 [example.com]"},
+		{"eof", io.EOF, "409"},
+		{"unexpected eof", io.ErrUnexpectedEOF, "409"},
+		{"permission", &os.PathError{Op: "open", Path: "private/path", Err: os.ErrPermission}, "33"},
+		{"unknown", errors.New("<script>secret</script> token=secret"), ""},
+		{"invalid dns host", &net.DNSError{Err: "no such host", Name: "<img src=x onerror=alert(1)>"}, "408"},
+		{"dns query", &net.DNSError{Err: "no such host", Name: "example.com?token=secret"}, "408"},
+		{"ipv6", &url.Error{URL: "https://[::1]:443/?token=secret", Err: io.EOF}, "409 [::1]"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := fmt.Errorf("%w: %w", dejavu.ErrLockCloudFailed, tc.err)
+			got := cloudLockErrorDetail(err, func(number int) string { return fmt.Sprint(number) })
+			if got != tc.want {
+				t.Fatalf("got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestWebDAVErrorDetail(t *testing.T) {
+	previousConf, previousLangs := Conf, util.Langs
+	t.Cleanup(func() { Conf, util.Langs = previousConf, previousLangs })
+	Conf = &AppConf{Lang: "en", Sync: NewConfSection(&conf.Sync{Provider: conf.ProviderWebDAV})}
+	util.Langs = map[string]map[int]string{"en": {188: "lock failed"}}
+	for _, number := range []int{219, 249, 250, 425, 426, 427, 428, 429, 430} {
+		util.Langs["en"][number] = fmt.Sprint(number)
+	}
+	for _, tc := range []struct{ status, number int }{{400, 425}, {401, 426}, {403, 427}, {405, 428}, {409, 429}, {429, 250}, {500, 219}, {404, 249}} {
+		err := &os.PathError{Op: "Mkdir", Path: "https://user:password@host/private?token=secret", Err: gowebdav.StatusError{Status: tc.status}}
+		want := fmt.Sprintf("%d (HTTP %d)", tc.number, tc.status)
+		if got := webDAVErrorDetail(fmt.Errorf("private body: %w", err), Conf.Language); got != want {
+			t.Fatalf("got %q want %q", got, want)
+		}
+		for _, locked := range []bool{false, true} {
+			var input error = err
+			expected := want
+			if locked {
+				input = fmt.Errorf("%w: %w", dejavu.ErrLockCloudFailed, err)
+				expected = "lock failed: " + expected
+			}
+			if got := formatRepoErrorMsg(input); got != expected+" (Provider: WebDAV)" {
+				t.Fatalf("wrong formatted diagnostic: %q", got)
+			}
+		}
+	}
+	if got := webDAVErrorDetail(cloud.ErrWebDAVInvalidResponse, Conf.Language); got != "430" {
+		t.Fatal(got)
+	}
+	if got := webDAVErrorDetail(&os.PathError{Op: "Mkdir", Path: "private", Err: os.ErrExist}, Conf.Language); got != "429" {
+		t.Fatal(got)
+	}
+}
+
+func TestSafeWebDAVEndpoint(t *testing.T) {
+	for _, tc := range []struct{ source, want string }{
+		{"https://user:password@example.com:443/private?token=secret#fragment", "https://example.com:443"},
+		{"http://user:password@[::1]:8080/private?token=secret", "http://[::1]:8080"},
+		{"https://example.com\nprivate", ""}, {"ftp://host/path", ""}, {"https://bad_host/private", ""},
+	} {
+		if got := safeWebDAVEndpoint(tc.source); got != tc.want {
+			t.Fatalf("got %q want %q", got, tc.want)
+		}
+	}
+}
+
+func TestFormatRepoCloudLockError(t *testing.T) {
+	previousConf, previousLangs := Conf, util.Langs
+	t.Cleanup(func() { Conf, util.Langs = previousConf, previousLangs })
+	Conf = &AppConf{Lang: "en", Sync: NewConfSection(&conf.Sync{Provider: conf.ProviderSiYuan})}
+	util.Langs = map[string]map[int]string{"en": {
+		24: "timeout", 31: "auth", 188: "lock failed", 189: "another device", 249: "forbidden", 408: "DNS failed",
+	}}
+	dns := fmt.Errorf("%w: %w", dejavu.ErrLockCloudFailed, &url.Error{
+		URL: "https://user:password@up.qbox.me/private?token=secret",
+		Err: &net.DNSError{Err: "no such host", Name: "up.qbox.me"},
+	})
+	for _, tc := range []struct {
+		err  error
+		want string
+	}{
+		{dns, "lock failed: DNS failed [up.qbox.me]"},
+		{dejavu.ErrLockCloudFailed, "lock failed"},
+		{fmt.Errorf("%w: secret", dejavu.ErrLockCloudFailed), "lock failed"},
+		{dejavu.ErrCloudLocked, "another device"},
+		{cloud.ErrCloudAuthFailed, "auth"},
+		{cloud.ErrCloudForbidden, "forbidden"},
+	} {
+		got := formatRepoErrorMsg(tc.err)
+		want := tc.want + " (Provider: " + conf.ProviderToStr(conf.ProviderSiYuan) + ")"
+		if got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+		for _, secret := range []string{"password", "token", "secret", "/private"} {
+			if strings.Contains(got, secret) {
+				t.Fatalf("sensitive detail in message: %q", got)
+			}
+		}
+	}
+}
+
+func TestFormatRepoPermissionError(t *testing.T) {
+	previousConf, previousLangs := Conf, util.Langs
+	t.Cleanup(func() { Conf, util.Langs = previousConf, previousLangs })
+	Conf = &AppConf{Lang: "en", Sync: NewConfSection(&conf.Sync{Provider: conf.ProviderS3})}
+	util.Langs = map[string]map[int]string{"en": {33: "check workspace permissions"}}
+	for _, message := range []string{"Access is denied.", "access is denied", "ACCESS IS DENIED", "permission denied"} {
+		t.Run(message, func(t *testing.T) {
+			err := &os.LinkError{Op: "rename", Old: "private.jpg.tmp", New: "private.jpg", Err: errors.New(message)}
+			want := "check workspace permissions (Provider: " + conf.ProviderToStr(conf.ProviderS3) + ")"
+			if got := formatRepoErrorMsg(err); got != want {
+				t.Fatalf("got %q, want %q", got, want)
+			}
+		})
+	}
+}

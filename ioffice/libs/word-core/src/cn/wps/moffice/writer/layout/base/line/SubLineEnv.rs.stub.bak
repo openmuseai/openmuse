@@ -1,0 +1,17 @@
+// Rust stub for SubLineEnv (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/line/SubLineEnv.java
+use crate::*;
+
+pub struct SubLineEnv {
+    // TODO: fields
+}
+
+impl SubLineEnv {
+    pub fn new() -> Self { todo!() }
+    pub fn init(&self) { todo!() }
+    pub fn clear(&self) { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn hasGraphs(&self) -> bool { todo!() }
+    pub fn addGraphs(&self, run: Graphs) { todo!() }
+    pub fn alloc(&self) -> SubLineEnv { todo!() }
+}

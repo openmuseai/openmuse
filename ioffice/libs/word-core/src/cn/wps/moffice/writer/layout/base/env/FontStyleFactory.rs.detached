@@ -1,0 +1,43 @@
+#![allow(non_snake_case)]
+
+// Java: import cn.wps.moffice.property.PropertySet
+use util::moffice::property::PropertySet::PropertySet;
+// Java: import cn.wps.moffice.writer.core.KStyles
+use crate::cn::wps::moffice::writer::core::KStyles::KStyles;
+
+use super::FontNames::FontNames;
+use super::FontSize::FontSize;
+use super::RunFlags::RunFlags;
+use super::StyleMerge::StyleMerge;
+use super::TypoFontStyle::TypoFontStyle;
+
+/// Layout adapter: PropertySet → TypoFontStyle. No FontHost / ascent.
+pub struct FontStyleFactory {}
+
+impl FontStyleFactory {
+    // java public static TypoFontStyle create(PropertySet propSet, int langType)
+    pub fn create(propSet: &PropertySet, langType: i32) -> TypoFontStyle {
+        let langType = FontNames::applyHint(propSet, langType);
+        let mut style = TypoFontStyle::TypoFontStyle();
+        style.ascii = FontNames::getAscii(propSet);
+        style.eastAsia = FontNames::getEastAsia(propSet);
+        style.fontName = FontNames::getResolvedFontName(propSet, langType);
+        style.fontSize = FontSize::getFontSize(propSet, langType);
+        style.bold = RunFlags::getBold(propSet, langType);
+        style.italic = RunFlags::getItalic(propSet, langType);
+        style.fontColor = propSet.getInt__int_int(11, -16777216);
+        style.underline = propSet.getInt__int_int(8, 0);
+        style
+    }
+
+    // java public static TypoFontStyle createFromRun(PropertySet chpx, PropertySet papx, KStyles styles, int langType)
+    pub fn createFromRun(
+        chpx: &PropertySet,
+        papx: &PropertySet,
+        styles: Option<&KStyles>,
+        langType: i32,
+    ) -> TypoFontStyle {
+        let merged = StyleMerge::merge(chpx, papx, styles);
+        Self::create(&merged, langType)
+    }
+}

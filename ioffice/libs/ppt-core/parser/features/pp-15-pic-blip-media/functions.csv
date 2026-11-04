@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_pic_blip_embed,pic blipFill r:embed,p:pic XML,rId,pp-13:02,02,libs/ppt-core,pass
+2,02_function_slide_image_rel,rId→media part,slide rels+rId,ppt/media/…,01,03,libs/ppt-core,pass
+3,03_function_media_bytes_bind,zip 媒体字节挂 shape,partName+zip,media_id+bytes,02,pr-05,libs/ppt-core,pass

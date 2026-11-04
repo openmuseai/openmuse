@@ -1,0 +1,28 @@
+// Rust stub for CommentCacheCollector (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/balloons/CommentCacheCollector.java
+use crate::*;
+
+pub struct CommentCacheCollector {
+    // TODO: fields
+}
+
+impl CommentCacheCollector {
+    pub fn new() -> Self { todo!() }
+    pub fn compare(&self, o1: PLCCommentRef::CommentRefNode, o2: PLCCommentRef::CommentRefNode) -> i32 { todo!() }
+    pub fn initPageSpans(&self, layoutPage: TypoLayoutPage, spans: MergedSpans) { todo!() }
+    pub fn collect(&self, isShowComment: bool, skipSubPageComments: bool, balloonCacheLayouter: BalloonCacheLayouter, ignoreBalloonCache: bool, ignoreCommentCache: bool) { todo!() }
+    pub fn findAndRemoveItem(&self, targetNodeCP: i32, refNodeCP: i32, items: WIntArrayList, isCommentEnd: bool) -> i32 { todo!() }
+    pub fn updateItemPos(&self, document: Box<dyn Document>, startCP: i32, endCP: i32, items: WIntArrayList, newLines: Box<dyn IIntList>, balloonCacheLayouter: BalloonCacheLayouter) { todo!() }
+    pub fn addItems(&self, document: Box<dyn Document>) { todo!() }
+    pub fn findLineInList(&self, cp: i32, min: i32, max: i32, newLines: Box<dyn IIntList>) -> i32 { todo!() }
+    pub fn addCommentCache(&self, doc: Box<dyn Document>, page: i32, line: i32, node: BookmarkNode) -> i32 { todo!() }
+    pub fn canConvertCommentStart(startCP: i32, endCP: i32, nodeStartCP: i32, nodeEndCP: i32) -> bool { todo!() }
+    pub fn canConvertCommentEnd(startCP: i32, endCP: i32, nodeStartCP: i32, nodeEndCP: i32) -> bool { todo!() }
+    pub fn resetContainers(&self) { todo!() }
+    pub fn collectCommentNodes(&self, commentStarts: PLCBookmarkStart, spans: MergedSpans, tmpList: List, outItemList: KList) { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn removeAfterCP(&self, document: Box<dyn Document>, cp: i32) { todo!() }
+    pub fn toString_function toString() { [native code] }(&self) -> String { todo!() }
+    pub fn init(&self, node: CommentCacheItem) { todo!() }
+    pub fn alloc(&self) -> CommentCacheItem { todo!() }
+}

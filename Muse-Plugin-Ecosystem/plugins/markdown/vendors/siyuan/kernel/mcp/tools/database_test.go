@@ -1,0 +1,323 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package tools
+
+import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/siyuan/kernel/av"
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func TestDatabaseToolsRejectIncompleteUnusedScan(t *testing.T) {
+	previousConf, previousData, previousWorkspace := model.Conf, util.DataDir, util.WorkspaceDir
+	model.Conf = model.NewAppConf()
+	model.Conf.FileTree.Store(conf.NewFileTree())
+	util.WorkspaceDir = t.TempDir()
+	util.DataDir = filepath.Join(util.WorkspaceDir, "data")
+	t.Cleanup(func() { model.Conf, util.DataDir, util.WorkspaceDir = previousConf, previousData, previousWorkspace })
+	box := &model.Box{ID: "20260918000000-abcdefg"}
+	if err := box.SaveConf(conf.NewBoxConf()); err != nil {
+		t.Fatal(err)
+	}
+	docPath := filepath.Join(util.DataDir, box.ID, "20260918000001-abcdefg.sy")
+	if err := os.WriteFile(docPath, []byte(`{"Type":"NodeDocument","Spec":"99"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	const id = "20260913000000-unused1"
+	avPath := filepath.Join(util.DataDir, "storage", "av", id+".json")
+	if err := os.MkdirAll(filepath.Dir(avPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(avPath, []byte(`{"id":"`+id+`","spec":2,"name":"Protected"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range []map[string]any{{"action": "unused"}, {"action": "clean"}, {"action": "clean", "id": id}} {
+		result, err := DatabaseTool.Handler(args)
+		if err != nil || !result.IsError || len(result.Content) == 0 || !strings.Contains(result.Content[0].Text, filepath.Base(docPath)) {
+			t.Fatalf("database scan failure was hidden: args=%v result=%+v err=%v", args, result, err)
+		}
+	}
+	if _, err := os.Stat(avPath); err != nil {
+		t.Fatalf("rejected cleanup removed the database: %v", err)
+	}
+}
+
+func TestDatabaseStructuredRenderOutput(t *testing.T) {
+	attrView := &av.AttributeView{ID: "20260806000000-avtest1", Name: "Tasks"}
+	table := &av.Table{
+		BaseInstance: &av.BaseInstance{ID: "20260806000000-view001", Name: "Table"},
+		Columns: []*av.TableColumn{{BaseInstanceField: &av.BaseInstanceField{
+			ID:      "20260806000000-key0001",
+			Name:    "State",
+			Type:    av.KeyTypeSelect,
+			Options: []*av.SelectOption{{Name: "Todo", Color: "1"}},
+		}}},
+		Rows: []*av.TableRow{{
+			ID: "20260806000000-item001",
+			Cells: []*av.TableCell{{BaseValue: &av.BaseValue{
+				ID:        "20260806000000-value01",
+				ValueType: av.KeyTypeSelect,
+				Value: &av.Value{
+					ID:      "20260806000000-value01",
+					KeyID:   "20260806000000-key0001",
+					BlockID: "20260806000000-item001",
+					Type:    av.KeyTypeSelect,
+					MSelect: []*av.ValueSelect{{Content: "Todo", Color: "1"}},
+				},
+			}}},
+		}},
+		RowCount: 1,
+	}
+	data := model.NewAttributeViewRenderData(attrView, table, "", 1, 50)
+	result, err := databaseSuccess("render", data)
+	if nil != err {
+		t.Fatal(err)
+	}
+
+	validator, err := CompileToolValidator(DatabaseTool)
+	if nil != err {
+		t.Fatal(err)
+	}
+	if err = validator.ValidateOutput(result); nil != err {
+		t.Fatal(err)
+	}
+	serialized, err := json.Marshal(result.StructuredContent)
+	if nil != err {
+		t.Fatal(err)
+	}
+	if len(result.Content) != 1 || result.Content[0].Text != string(serialized) {
+		t.Fatalf("text and structured database results differ: %q, %s", result.Content[0].Text, serialized)
+	}
+
+	var output struct {
+		Action string `json:"action"`
+		Data   struct {
+			View struct {
+				Columns []struct {
+					Options []*av.SelectOption `json:"options"`
+				} `json:"columns"`
+				Rows []struct {
+					Cells []struct {
+						Value *av.Value `json:"value"`
+					} `json:"cells"`
+				} `json:"rows"`
+			} `json:"view"`
+		} `json:"data"`
+	}
+	if err = json.Unmarshal(serialized, &output); nil != err {
+		t.Fatal(err)
+	}
+	if output.Action != "render" || len(output.Data.View.Columns) != 1 ||
+		len(output.Data.View.Columns[0].Options) != 1 || output.Data.View.Columns[0].Options[0].Name != "Todo" {
+		t.Fatalf("unexpected rendered columns: %+v", output.Data.View.Columns)
+	}
+	value := output.Data.View.Rows[0].Cells[0].Value
+	if nil == value || len(value.MSelect) != 1 || value.MSelect[0].Content != "Todo" {
+		t.Fatalf("unexpected rendered select value: %+v", value)
+	}
+}
+
+func TestDatabaseNativeStructuredArguments(t *testing.T) {
+	validator, err := CompileToolValidator(DatabaseTool)
+	if nil != err {
+		t.Fatal(err)
+	}
+	if err = validator.ValidateInput(map[string]any{
+		"action":  "item_remove",
+		"itemIDs": []any{"20260806000000-item001"},
+	}); nil != err {
+		t.Fatal(err)
+	}
+	if err = validator.ValidateInput(map[string]any{
+		"action": "item_update",
+		"value":  map[string]any{"text": map[string]any{"content": "Updated"}},
+	}); nil != err {
+		t.Fatal(err)
+	}
+	if err = validator.ValidateInput(map[string]any{
+		"action":   "create",
+		"parentID": "20260816000000-parent1",
+		"keys": []any{
+			map[string]any{"name": "Name", "type": "text"},
+			map[string]any{"name": "Phone", "type": "phone"},
+		},
+	}); nil != err {
+		t.Fatal(err)
+	}
+	if err = validator.ValidateInput(map[string]any{"action": "item_remove", "itemIDs": "item-1,item-2"}); nil == err {
+		t.Fatal("expected comma-separated item IDs to be rejected")
+	}
+	if err = validator.ValidateInput(map[string]any{"action": "item_update", "value": `{"text":{"content":"Updated"}}`}); nil == err {
+		t.Fatal("expected string-encoded cell value to be rejected")
+	}
+}
+
+func TestDatabasePreviousKeyIDDefaultsToViewEnd(t *testing.T) {
+	view := &av.View{
+		ID:         "20260816000000-view001",
+		LayoutType: av.LayoutTypeTable,
+		Table: &av.LayoutTable{Columns: []*av.ViewTableColumn{
+			{BaseField: &av.BaseField{ID: "20260816000000-key0001"}},
+			{BaseField: &av.BaseField{ID: "20260816000000-key0002"}},
+		}},
+	}
+	attrView := &av.AttributeView{ID: "20260816000000-avtest1", Views: []*av.View{view}}
+
+	previousID, err := databasePreviousKeyID(attrView, map[string]any{})
+	if nil != err {
+		t.Fatal(err)
+	}
+	if "20260816000000-key0002" != previousID {
+		t.Fatalf("unexpected default previous key: %s", previousID)
+	}
+
+	previousID, err = databasePreviousKeyID(attrView, map[string]any{"prev": ""})
+	if nil != err || "" != previousID {
+		t.Fatalf("explicit empty previous key should be preserved: [%s], %v", previousID, err)
+	}
+	previousID, err = databasePreviousKeyID(attrView, map[string]any{"prev": "20260816000000-key0001"})
+	if nil != err || "20260816000000-key0001" != previousID {
+		t.Fatalf("explicit previous key should be preserved: [%s], %v", previousID, err)
+	}
+	if _, err = databasePreviousKeyID(attrView, map[string]any{"prev": "20260816000000-missing"}); nil == err {
+		t.Fatal("expected an unknown previous key to be rejected")
+	}
+}
+
+func TestDatabaseViewFieldIDsSupportsLayouts(t *testing.T) {
+	tests := []*av.View{
+		{
+			LayoutType: av.LayoutTypeList,
+			List: &av.LayoutList{Columns: []*av.ViewTableColumn{
+				{BaseField: &av.BaseField{ID: "list-1"}}, {BaseField: &av.BaseField{ID: "list-2", Hidden: true}},
+			}},
+		},
+		{
+			LayoutType: av.LayoutTypeTable,
+			Table: &av.LayoutTable{Columns: []*av.ViewTableColumn{
+				{BaseField: &av.BaseField{ID: "table-1"}}, {BaseField: &av.BaseField{ID: "table-2"}},
+			}},
+		},
+		{
+			LayoutType: av.LayoutTypeGallery,
+			Gallery: &av.LayoutGallery{CardFields: []*av.ViewGalleryCardField{
+				{BaseField: &av.BaseField{ID: "gallery-1"}}, {BaseField: &av.BaseField{ID: "gallery-2"}},
+			}},
+		},
+		{
+			LayoutType: av.LayoutTypeKanban,
+			Kanban: &av.LayoutKanban{Fields: []*av.ViewKanbanField{
+				{BaseField: &av.BaseField{ID: "kanban-1"}}, {BaseField: &av.BaseField{ID: "kanban-2"}},
+			}},
+		},
+	}
+	for _, view := range tests {
+		fieldIDs := databaseViewFieldIDs(view)
+		if len(fieldIDs) != 2 {
+			t.Fatalf("unexpected fields for layout [%s]: %v", view.LayoutType, fieldIDs)
+		}
+	}
+}
+
+func TestDatabaseActionEffects(t *testing.T) {
+	for _, action := range []string{"create", "key_add", "key_update", "key_set_template", "key_remove", "item_add", "item_remove", "item_update", "clean"} {
+		effects, ok := DatabaseTool.EffectsFor(action)
+		if !ok || !effects.LocalWrite {
+			t.Fatalf("database action [%s] should declare a local write", action)
+		}
+	}
+	for _, action := range []string{"search", "get", "render", "keys", "unused"} {
+		effects, ok := DatabaseTool.EffectsFor(action)
+		if !ok || !effects.LocalRead || effects.LocalWrite {
+			t.Fatalf("database action [%s] should declare a local read", action)
+		}
+	}
+}
+
+func TestDatabaseStringArray(t *testing.T) {
+	values := databaseStringArray([]any{" first ", 1, "", "second"})
+	if len(values) != 2 || values[0] != "first" || values[1] != "second" {
+		t.Fatalf("unexpected database string array: %+v", values)
+	}
+}
+
+func TestDatabaseKeySetTemplateArguments(t *testing.T) {
+	validator, err := CompileToolValidator(DatabaseTool)
+	if nil != err {
+		t.Fatal(err)
+	}
+	for _, templateContent := range []string{".action{add .数字 1}", ""} {
+		args := map[string]any{"action": "key_set_template", "id": "database", "keyID": "field", "template": templateContent}
+		if err = validator.ValidateInput(args); nil != err {
+			t.Fatal(err)
+		}
+		result, resultErr := databaseSuccess("key_set_template", map[string]any{"id": "database", "keyID": "field", "template": templateContent})
+		if nil != resultErr {
+			t.Fatal(resultErr)
+		}
+		if err = validator.ValidateOutput(result); nil != err {
+			t.Fatal(err)
+		}
+	}
+	for _, args := range []map[string]any{
+		{"action": "key_set_template", "id": "database", "keyID": "field"},
+		{"action": "key_set_template", "id": "database", "keyID": "field", "template": 1},
+		{"action": "key_set_template", "keyID": "field", "template": ""},
+		{"action": "key_set_template", "id": "database", "template": ""},
+	} {
+		result, callErr := databaseHandler(args)
+		if nil != callErr || !result.IsError {
+			t.Fatalf("invalid arguments should fail before accessing a database: %+v, %v", result, callErr)
+		}
+	}
+}
+
+func TestDatabaseKeyTemplatePersistence(t *testing.T) {
+	originalDataDir := util.DataDir
+	util.DataDir = t.TempDir()
+	t.Cleanup(func() { util.DataDir = originalDataDir })
+	attrView := &av.AttributeView{ID: ast.NewNodeID(), KeyValues: []*av.KeyValues{
+		{Key: &av.Key{ID: "number", Name: "数字", Type: av.KeyTypeNumber}},
+		{Key: &av.Key{ID: "template", Name: "模板", Type: av.KeyTypeTemplate}},
+	}}
+	if err := av.SaveAttributeView(attrView); nil != err {
+		t.Fatal(err)
+	}
+	for _, formula := range []string{".action{add .数字 1}", ""} {
+		if err := model.SetAttributeViewKeyTemplate(attrView.ID, "template", formula); nil != err {
+			t.Fatal(err)
+		}
+		stored, err := av.ParseAttributeView(attrView.ID)
+		if nil != err {
+			t.Fatal(err)
+		}
+		key, err := stored.GetKey("template")
+		if nil != err || formula != key.Template {
+			t.Fatalf("template was not persisted: %+v, %v", key, err)
+		}
+		for _, keyID := range []string{"number", "missing"} {
+			if err = model.SetAttributeViewKeyTemplate(attrView.ID, keyID, "invalid"); nil == err {
+				t.Fatalf("expected invalid target %q to be rejected", keyID)
+			}
+		}
+		stored, err = av.ParseAttributeView(attrView.ID)
+		if nil != err {
+			t.Fatal(err)
+		}
+		key, _ = stored.GetKey("template")
+		numberKey, _ := stored.GetKey("number")
+		if formula != key.Template || "" != numberKey.RenderTemplate || "" != numberKey.Template {
+			t.Fatal("rejected updates changed field configuration")
+		}
+	}
+}

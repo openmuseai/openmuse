@@ -1,0 +1,16 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_property_set,属性桶 freeze,propId+value,PropertySet,(none),10_function_handler_props;feature-output,libs/core-libs/util/util,pass
+2,02_function_unzip,从 docx 得到 zip entries,path/raf/stream,ZipEntrySource,physical,03_function_opc_content_types;04_function_opc_relationships;05_function_opc_parts;07_function_opc_package,libs/core-libs/io/wps-io,pass
+3,03_function_opc_content_types,解析 [Content_Types].xml,Content_Types XML bytes,ContentTypeManager,02_function_unzip,05_function_opc_parts;07_function_opc_package,libs/core-libs/io/wps-io,pass
+4,04_function_opc_relationships,解析 _rels / *.rels,rels XML + source URI,PackageRelationshipCollection,02_function_unzip,07_function_opc_package;11_function_poixml_load;13_function_xwpf_parse,libs/core-libs/io/wps-io,pass
+5,05_function_opc_parts,entry+类型变成 PackagePart,entries + ContentTypeManager,PackagePartCollection,02_function_unzip;03_function_opc_content_types,07_function_opc_package;06_function_xml_elementid,libs/core-libs/io/wps-io,pass
+6,06_function_xml_elementid,XML 字节变 elementId 事件,Part InputStream,start/end/characters,05_function_opc_parts,08_function_xml_dispatch,libs/core-libs/io/wps-io,pass
+7,07_function_opc_package,编排成 OPCPackage,path/raf/stream,OPCPackage,02_function_unzip;03_function_opc_content_types;04_function_opc_relationships;05_function_opc_parts,09_function_xwpf_package,libs/core-libs/io/wps-io,pass
+8,08_function_xml_dispatch,事件分发给 handler 栈,events + root handler,onStart/onEnd/onCharacters,06_function_xml_elementid,12_function_handler_body;10_function_handler_props;13_function_xwpf_parse,libs/core-libs/io/wps-io,pass
+9,09_function_xwpf_package,Word 薄封装,OPC open endpoints,XWPFPackage,07_function_opc_package,11_function_poixml_load,libs/core-libs/io/wps-io,pass
+10,10_function_handler_props,pPr/rPr 写属性桶,pPr/rPr events,MutablePropertySet on ParagraphSimple,08_function_xml_dispatch;01_function_property_set,12_function_handler_body,libs/core-libs/io/wps-io,pass
+11,11_function_poixml_load,rel 递归对象图,XWPFPackage + Factory,XWPFDocument graph,09_function_xwpf_package;04_function_opc_relationships,13_function_xwpf_parse,libs/core-libs/io/wps-io,pass
+12,12_function_handler_body,正文变段/run 回调,document.xml events,importer paragraph/run calls,08_function_xml_dispatch;10_function_handler_props,13_function_xwpf_parse;14_function_importer_boundary,libs/core-libs/io/wps-io,pass
+13,13_function_xwpf_parse,按 Part 顺序 parse,loaded XWPFDocument + importer,ordered callback storm,11_function_poixml_load;08_function_xml_dispatch;12_function_handler_body,14_function_importer_boundary,libs/core-libs/io/wps-io,pass
+14,14_function_importer_boundary,对外 IDocumentImporter 契约,callback shapes,IDocumentImporter trait,13_function_xwpf_parse;12_function_handler_body,feature-output,libs/core-libs/io/wps-io,pass
+15,15_function_styles_handler_chain,styles.xml 事件树→样式回调族,styles.xml SAX events,onImportStyleDocDefaults/Start/Child/End/StylesEnd/TblStylePrEnd 回调,08_function_xml_dispatch;10_function_handler_props,13_function_xwpf_parse;wc-05-02_function_style_event,libs/core-libs/io/wps-io,pass

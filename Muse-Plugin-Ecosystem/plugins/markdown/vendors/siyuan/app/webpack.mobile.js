@@ -1,0 +1,136 @@
+const path = require("path");
+const PreserveWatchAssetsPlugin = require("./scripts/preserve-watch-assets");
+const webpack = require("webpack");
+const pkg = require("./package.json");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+// const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+const {EsbuildPlugin} = require("esbuild-loader");
+
+module.exports = (env, argv) => {
+    return {
+        mode: argv.mode || "development",
+        watch: argv.mode !== "production",
+        devtool: argv.mode !== "production" ? "eval-source-map" : false,
+        output: {
+            // 首次输出时清理，开发期间的后续输出由插件保留旧资源。
+            clean: true,
+            // 不能使用 auto，否则 ios 导出图片获取不到 css。 https://github.com/siyuan-note/siyuan/issues/8532
+            publicPath: "/stage/build/mobile/",
+            filename: "[name].[chunkhash].js",
+            path: path.resolve(__dirname, "stage/build/mobile"),
+        },
+        entry: {
+            "startup": "./src/mobile/startup.ts",
+            "main": "./src/mobile/index.ts",
+        },
+        optimization: {
+            minimize: true,
+            minimizer: [
+                new EsbuildPlugin({
+                    target: "es6",
+                    sourcemap: argv.mode !== "production",
+                }),
+            ],
+        },
+        resolve: {
+            fallback: {
+                "path": require.resolve("path-browserify"),
+            },
+            extensions: [".ts", ".js", ".tpl", ".scss"],
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.tpl/,
+                    include: [
+                        path.resolve(__dirname, "src/assets/template/mobile/index.tpl")],
+                    loader: "html-loader",
+                    options: {
+                        sources: false,
+                    },
+                },
+                {
+                    test: /\.ts(x?)$/,
+                    include: [path.resolve(__dirname, "src")],
+                    use: [
+                        {
+                            loader: "esbuild-loader",
+                            options: {
+                                target: "es6",
+                                supported: {
+                                    "import-meta": true,
+                                },
+                                sourcemap: argv.mode !== "production",
+                            }
+                        },
+                        {
+                            loader: "ifdef-loader",
+                            options: {
+                                "ifdef-verbose": false,
+                                BROWSER: true,
+                                MOBILE: true,
+                            },
+                        },
+                    ],
+                },
+                {
+                    test: /\.scss$/,
+                    include: [
+                        path.resolve(__dirname, "src/assets/scss"),
+                    ],
+                    use: [
+                        MiniCssExtractPlugin.loader,
+                        {
+                            loader: "css-loader", // translates CSS into CommonJS
+                            options: {
+                                sourceMap: argv.mode !== "production",
+                            },
+                        },
+                        {
+                            loader: "sass-loader", // compiles Sass to CSS
+                            options: {
+                                sourceMap: argv.mode !== "production",
+                            },
+                        },
+                    ],
+                },
+                {
+                    test: /task-(canceled|in-progress|unchecked)\.svg$/,
+                    type: "asset/inline",
+                },
+                {
+                    test: /\.(png|svg)$/,
+                    exclude: /task-(canceled|in-progress|unchecked)\.svg$/,
+                    use: [
+                        {
+                            loader: "file-loader",
+                            options: {
+                                name: "[name].[ext]",
+                                outputPath: "../../",
+                            },
+                        },
+                    ],
+                },
+            ],
+        },
+        plugins: [
+            new PreserveWatchAssetsPlugin(),
+            // new BundleAnalyzerPlugin(),
+            new webpack.DefinePlugin({
+                SIYUAN_VERSION: JSON.stringify(pkg.version),
+                NODE_ENV: JSON.stringify(argv.mode),
+            }),
+            new MiniCssExtractPlugin({
+                filename: "base.[contenthash].css",
+            }),
+            new HtmlWebpackPlugin({
+                inject: "head",
+                chunks: ["startup", "main"],
+                chunksSortMode: "manual",
+                filename: "index.html",
+                template: "src/assets/template/mobile/index.tpl",
+            }),
+        ],
+    };
+};

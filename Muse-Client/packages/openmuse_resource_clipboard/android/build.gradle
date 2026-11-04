@@ -1,0 +1,13 @@
+group 'io.openmuse.resource_clipboard'
+version '1.0'
+buildscript {
+    repositories { google(); mavenCentral() }
+    dependencies { classpath 'com.android.tools.build:gradle:8.11.1' }
+}
+apply plugin: 'com.android.library'
+android {
+    namespace 'io.openmuse.resource_clipboard'
+    compileSdk 36
+    defaultConfig { minSdk 24 }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_11; targetCompatibility JavaVersion.VERSION_11 }
+}

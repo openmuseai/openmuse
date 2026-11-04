@@ -1,0 +1,755 @@
+// Java: import cn.wps.kso.kproto.KoAr
+use crate::kso::kproto::KoAr;
+// Java: import cn.wps.kso.kproto.KoBin
+use crate::kso::kproto::KoBin;
+// Java: import cn.wps.kso.kproto.KoClosable
+use crate::kso::kproto::KoClosable;
+// Java: import cn.wps.kso.kproto.KoZone
+use crate::kso::kproto::KoZone;
+// Java: import cn.wps.kso.kproto.internal.KpBinBox
+use crate::kso::kproto::internal::KpBinBox;
+// Java: import cn.wps.kso.kproto.internal.KpMap
+use crate::kso::kproto::internal::KpMap;
+
+// Java: public class CommonMediaNode implements KoAr, KoClosable
+pub struct CommonMediaNode {
+    // Java field: KoZone zone
+    pub(crate) zone: Arc<Mutex<KoZone>>,
+    // Java field: CommonTimeNode commonTimeNode
+    pub(crate) commonTimeNode: Arc<Mutex<CommonTimeNode>>,
+    // Java field: TargetElement targetElement
+    pub(crate) targetElement: Arc<Mutex<TargetElement>>,
+    // Java field: KpBinBox box
+    pub(crate) box: Arc<Mutex<KpBinBox>>,
+    // Java field: KpMap map
+    pub(crate) map: Arc<Mutex<KpMap>>,
+    // Java field: CommonMediaNode parent
+    pub(crate) parent: Arc<Mutex<CommonMediaNode>>,
+}
+
+// Java: public class CommonMediaNode implements KoAr, KoClosable
+impl CommonMediaNode {
+    // Java: static protected static <Value1 extends CommonMediaNode> Value1 initialize(Class<Value1> clazz, KoBin bin)
+    pub fn initialize(&self, Class<Value1> clazz, KoBin bin) -> protected static <Value1 extends CommonMediaNode> Value1 {
+      // Java: KoZone zone = KoZone.enter();
+      // TODO_RUST_CODE
+      // Java: Value1 inst = (Value1)(zone.allocate(clazz));
+      // TODO_RUST_CODE
+      // Java: inst.zone = zone;
+      // TODO_RUST_CODE
+      // Java: inst.load(bin);
+      // TODO_RUST_CODE
+      // Java: return inst;
+      // TODO_RUST_CODE
+    }
+
+    // Java: static CommonMediaNode create()
+    pub fn create(&self) -> CommonMediaNode {
+      // Java: return initialize(CommonMediaNode.class, KoBin.Null.empty());
+      // TODO_RUST_CODE
+    }
+
+    // Java: static CommonMediaNode open(KoBin bin)
+    pub fn open(&self, KoBin bin) -> CommonMediaNode {
+      // Java: return initialize(CommonMediaNode.class, bin);
+      // TODO_RUST_CODE
+    }
+
+    // Java: CommonMediaNode()
+    pub fn CommonMediaNode(&self) {
+      // Java: this.box = new KpBinBox();
+      // TODO_RUST_CODE
+      // Java: this.map = new KpMap();
+      // TODO_RUST_CODE
+    }
+
+    // Java: CommonMediaNode(KoBin bin)
+    pub fn CommonMediaNode(&self, KoBin bin) {
+      // Java: this.box = new KpBinBox(bin);
+      // TODO_RUST_CODE
+      // Java: this.map = new KpMap(bin);
+      // TODO_RUST_CODE
+    }
+
+    // Java: void loadBin(KoBin bin, KoZone zone)
+    pub fn loadBin(&self, KoBin bin, KoZone zone) {
+      // Java: this.cleanCache();
+      // TODO_RUST_CODE
+      // Java: this.cleanFollow();
+      // TODO_RUST_CODE
+      // Java: this.box.set(bin);
+      // TODO_RUST_CODE
+      // Java: this.map.load(this.box.get());
+      // TODO_RUST_CODE
+    }
+
+    // Java: void load(KoBin bin)
+    pub fn load(&self, KoBin bin) {
+      // Java: this.loadBin(bin, this.zone);
+      // TODO_RUST_CODE
+    }
+
+    // Java: void load(CommonMediaNode value)
+    pub fn load(&self, CommonMediaNode value) {
+      // Java: if (value != null)
+        // TODO_RUST_CODE
+      {
+         // Java: this.loadBin(value.lastBin(this.zone), this.zone);
+         // TODO_RUST_CODE
+      }
+    }
+
+    // Java: KoBin saveBin(KoZone zone)
+    pub fn saveBin(&self, KoZone zone) -> KoBin {
+      // Java: if (this.commonTimeNode != null && this.commonTimeNode.dirty())
+        // TODO_RUST_CODE
+      {
+         // Java: this.map.put(1, this.commonTimeNode.saveBin(zone));
+         // TODO_RUST_CODE
+      }
+      // Java: if (this.targetElement != null && this.targetElement.dirty())
+        // TODO_RUST_CODE
+      {
+         // Java: this.map.put(2, this.targetElement.saveBin(zone));
+         // TODO_RUST_CODE
+      }
+      // Java: return this.map.dirty() ? this.box.set(this.map.save(zone)) : this.box.get();
+      // TODO_RUST_CODE
+    }
+
+    // Java: boolean equalsLax(CommonMediaNode o)
+    pub fn equalsLax(&self, CommonMediaNode o) -> bool {
+      // Java: return this.equals(o, false);
+      // TODO_RUST_CODE
+    }
+
+    // Java: boolean equals(Object o)
+    pub fn equals(&self, Object o) -> bool {
+      // Java: return this.equals(o, true);
+      // TODO_RUST_CODE
+    }
+
+    // Java: boolean equals(Object o, boolean isStrict)
+    pub fn equals(&self, Object o, boolean isStrict) -> bool {
+      // Java: if (null != o && o instanceof CommonMediaNode)
+        // TODO_RUST_CODE
+      {
+         // Java: CommonMediaNode dst = (CommonMediaNode)o;
+         // TODO_RUST_CODE
+         // Java: if (this == dst)
+            // TODO_RUST_CODE
+         {
+            // Java: return true;
+            // TODO_RUST_CODE
+         }
+         // Java: else if ((this.hasCommonTimeNode() || !dst.hasCommonTimeNode()) && (!this.hasCommonTimeNode() || dst.hasCommonTimeNode()))
+            // TODO_RUST_CODE
+         {
+            // Java: if (this.hasCommonTimeNode() && dst.hasCommonTimeNode())
+                // TODO_RUST_CODE
+            {
+               // Java: if (isStrict && !this.commonTimeNode().equals(dst.commonTimeNode()))
+                    // TODO_RUST_CODE
+               {
+                  // Java: return false;
+                  // TODO_RUST_CODE
+               }
+               // Java: if (!isStrict && !this.commonTimeNode().equalsLax(dst.commonTimeNode()))
+                    // TODO_RUST_CODE
+               {
+                  // Java: return false;
+                  // TODO_RUST_CODE
+               }
+            }
+            // Java: if ((this.hasTargetElement() || !dst.hasTargetElement()) && (!this.hasTargetElement() || dst.hasTargetElement()))
+                // TODO_RUST_CODE
+            {
+               // Java: if (this.hasTargetElement() && dst.hasTargetElement())
+                    // TODO_RUST_CODE
+               {
+                  // Java: if (isStrict && !this.targetElement().equals(dst.targetElement()))
+                        // TODO_RUST_CODE
+                  {
+                     // Java: return false;
+                     // TODO_RUST_CODE
+                  }
+                  // Java: if (!isStrict && !this.targetElement().equalsLax(dst.targetElement()))
+                        // TODO_RUST_CODE
+                  {
+                     // Java: return false;
+                     // TODO_RUST_CODE
+                  }
+               }
+               // Java: if ((this.hasMute() || !dst.hasMute()) && (!this.hasMute() || dst.hasMute()))
+                    // TODO_RUST_CODE
+               {
+                  // Java: if (this.hasMute() && dst.hasMute() && this.isMute() != dst.isMute())
+                        // TODO_RUST_CODE
+                  {
+                     // Java: return false;
+                     // TODO_RUST_CODE
+                  }
+                  // Java: else if ((this.hasSlideNum() || !dst.hasSlideNum()) && (!this.hasSlideNum() || dst.hasSlideNum()))
+                        // TODO_RUST_CODE
+                  {
+                     // Java: if (this.hasSlideNum() && dst.hasSlideNum() && this.slideNum() != dst.slideNum())
+                            // TODO_RUST_CODE
+                     {
+                        // Java: return false;
+                        // TODO_RUST_CODE
+                     }
+                     // Java: else if ((this.hasShowWhenStopped() || !dst.hasShowWhenStopped()) && (!this.hasShowWhenStopped() || dst.hasShowWhenStopped()))
+                            // TODO_RUST_CODE
+                     {
+                        // Java: if (this.hasShowWhenStopped() && dst.hasShowWhenStopped() && this.isShowWhenStopped() != dst.isShowWhenStopped())
+                                // TODO_RUST_CODE
+                        {
+                           // Java: return false;
+                           // TODO_RUST_CODE
+                        }
+                        // Java: else if ((this.hasVolume() || !dst.hasVolume()) && (!this.hasVolume() || dst.hasVolume()))
+                                // TODO_RUST_CODE
+                        {
+                           // Java: return !this.hasVolume() || !dst.hasVolume() || this.volume() == dst.volume();
+                           // TODO_RUST_CODE
+                        }
+                        // Java: else
+                                // TODO_RUST_CODE
+                        {
+                           // Java: return false;
+                           // TODO_RUST_CODE
+                        }
+                     }
+                     // Java: else
+                            // TODO_RUST_CODE
+                     {
+                        // Java: return false;
+                        // TODO_RUST_CODE
+                     }
+                  }
+                  // Java: else
+                        // TODO_RUST_CODE
+                  {
+                     // Java: return false;
+                     // TODO_RUST_CODE
+                  }
+               }
+               // Java: else
+                    // TODO_RUST_CODE
+               {
+                  // Java: return false;
+                  // TODO_RUST_CODE
+               }
+            }
+            // Java: else
+                // TODO_RUST_CODE
+            {
+               // Java: return false;
+               // TODO_RUST_CODE
+            }
+         }
+         // Java: else
+            // TODO_RUST_CODE
+         {
+            // Java: return false;
+            // TODO_RUST_CODE
+         }
+      }
+      // Java: else
+        // TODO_RUST_CODE
+      {
+         // Java: return false;
+         // TODO_RUST_CODE
+      }
+    }
+
+    // Java: int hashCode()
+    pub fn hashCode(&self) -> i32 {
+      // Java: int ret = 0;
+      // TODO_RUST_CODE
+      // Java: if (this.hasCommonTimeNode())
+        // TODO_RUST_CODE
+      {
+         // Java: ret += this.commonTimeNode().hashCode();
+         // TODO_RUST_CODE
+      }
+      // Java: if (this.hasTargetElement())
+        // TODO_RUST_CODE
+      {
+         // Java: ret += this.targetElement().hashCode();
+         // TODO_RUST_CODE
+      }
+      // Java: if (this.hasMute())
+        // TODO_RUST_CODE
+      {
+         // Java: ret += Boolean.valueOf(this.isMute()).hashCode();
+         // TODO_RUST_CODE
+      }
+      // Java: if (this.hasSlideNum())
+        // TODO_RUST_CODE
+      {
+         // Java: ret += Integer.valueOf(this.slideNum()).hashCode();
+         // TODO_RUST_CODE
+      }
+      // Java: if (this.hasShowWhenStopped())
+        // TODO_RUST_CODE
+      {
+         // Java: ret += Boolean.valueOf(this.isShowWhenStopped()).hashCode();
+         // TODO_RUST_CODE
+      }
+      // Java: if (this.hasVolume())
+        // TODO_RUST_CODE
+      {
+         // Java: ret += Double.valueOf(this.volume()).hashCode();
+         // TODO_RUST_CODE
+      }
+      // Java: return ret;
+      // TODO_RUST_CODE
+    }
+
+    // Java: boolean dirty()
+    pub fn dirty(&self) -> bool {
+      // Java: if (this.commonTimeNode != null && this.commonTimeNode.dirty())
+        // TODO_RUST_CODE
+      {
+         // Java: return true;
+         // TODO_RUST_CODE
+      }
+      // Java: else
+        // TODO_RUST_CODE
+      {
+         // Java: return this.targetElement != null && this.targetElement.dirty() ? true : this.map.dirty();
+         // TODO_RUST_CODE
+      }
+    }
+
+    // Java: KoBin save()
+    pub fn save(&self) -> KoBin {
+      // Java: this.saveBin(this.zone);
+      // TODO_RUST_CODE
+      // Java: return this.box.get();
+      // TODO_RUST_CODE
+    }
+
+    // Java: KoBin lastBin(KoZone zone)
+    pub fn lastBin(&self, KoZone zone) -> KoBin {
+      // Java: return KoBin.Factory.dup(this.box.get(), zone);
+      // TODO_RUST_CODE
+    }
+
+    // Java: void discard(KoZone zone)
+    pub fn discard(&self, KoZone zone) {
+      // Java: this.loadBin(this.box.get(), zone);
+      // TODO_RUST_CODE
+    }
+
+    // Java: void close()
+    pub fn close(&self) {
+      // Java: this.cleanFollow();
+      // TODO_RUST_CODE
+      // Java: this.cleanCache();
+      // TODO_RUST_CODE
+      // Java: this.cleanParent();
+      // TODO_RUST_CODE
+      // Java: this.map.load(KoBin.Null.value1());
+      // TODO_RUST_CODE
+      // Java: this.box.clear();
+      // TODO_RUST_CODE
+      // Java: this.zone.leave();
+      // TODO_RUST_CODE
+      // Java: this.zone = KoZone.defaultZone();
+      // TODO_RUST_CODE
+    }
+
+    // Java: void cleanFollow()
+    pub fn cleanFollow(&self) {
+    // TODO_RUST_CODE
+    }
+
+    // Java: void cleanCache()
+    pub fn cleanCache(&self) {
+      // Java: this.commonTimeNode = null;
+      // TODO_RUST_CODE
+      // Java: this.targetElement = null;
+      // TODO_RUST_CODE
+    }
+
+    // Java: void follow(CommonMediaNode parent)
+    pub fn follow(&self, CommonMediaNode parent) {
+      // Java: if (parent != null)
+        // TODO_RUST_CODE
+      {
+         // Java: parent.discard();
+         // TODO_RUST_CODE
+         // Java: this.discard();
+         // TODO_RUST_CODE
+         // Java: this.parent = parent;
+         // TODO_RUST_CODE
+      }
+    }
+
+    // Java: void unFollow()
+    pub fn unFollow(&self) {
+      // Java: if (this.parent != null)
+        // TODO_RUST_CODE
+      {
+         // Java: this.discard();
+         // TODO_RUST_CODE
+         // Java: this.parent.discard();
+         // TODO_RUST_CODE
+         // Java: this.cleanParent();
+         // TODO_RUST_CODE
+      }
+    }
+
+    // Java: boolean hasParent()
+    pub fn hasParent(&self) -> bool {
+      // Java: return this.parent != null;
+      // TODO_RUST_CODE
+    }
+
+    // Java: CommonMediaNode parent()
+    pub fn parent(&self) -> CommonMediaNode {
+      // Java: return this.parent;
+      // TODO_RUST_CODE
+    }
+
+    // Java: void discard()
+    pub fn discard(&self) {
+      // Java: this.discard(this.zone);
+      // TODO_RUST_CODE
+    }
+
+    // Java: void cleanParent()
+    pub fn cleanParent(&self) {
+      // Java: this.parent = null;
+      // TODO_RUST_CODE
+    }
+
+    // Java: CommonTimeNode commonTimeNode()
+    pub fn commonTimeNode(&self) -> CommonTimeNode {
+      // Java: if (this.commonTimeNode == null)
+        // TODO_RUST_CODE
+      {
+         // Java: if (this.map.has(1))
+            // TODO_RUST_CODE
+         {
+            // Java: KoBin bin = this.map.byKey(1);
+            // TODO_RUST_CODE
+            // Java: this.commonTimeNode = (CommonTimeNode)KoBin.Decode.toAny(CommonTimeNode.class, bin, this.zone);
+            // TODO_RUST_CODE
+         }
+         // Java: else if (this.parent != null && this.parent.hasCommonTimeNode())
+            // TODO_RUST_CODE
+         {
+            // Java: this.commonTimeNode = this.parent.commonTimeNode();
+            // TODO_RUST_CODE
+         }
+         // Java: else
+            // TODO_RUST_CODE
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            // TODO_RUST_CODE
+            // Java: this.commonTimeNode = (CommonTimeNode)KoBin.Decode.toAny(CommonTimeNode.class, bin, this.zone);
+            // TODO_RUST_CODE
+         }
+      }
+      // Java: return this.commonTimeNode;
+      // TODO_RUST_CODE
+    }
+
+    // Java: boolean hasCommonTimeNode()
+    pub fn hasCommonTimeNode(&self) -> bool {
+      // Java: return this.map.has(1) || this.commonTimeNode != null && this.commonTimeNode.dirty() || this.parent != null && this.parent.hasCommonTimeNode();
+      // TODO_RUST_CODE
+    }
+
+    // Java: void deleteCommonTimeNode()
+    pub fn deleteCommonTimeNode(&self) {
+      // Java: this.map.put(1, (KoBin)null);
+      // TODO_RUST_CODE
+      // Java: if (this.commonTimeNode != null)
+        // TODO_RUST_CODE
+      {
+         // Java: this.commonTimeNode = null;
+         // TODO_RUST_CODE
+      }
+    }
+
+    // Java: void writeCommonTimeNode(CommonTimeNode value)
+    pub fn writeCommonTimeNode(&self, CommonTimeNode value) {
+      // Java: if (value != null)
+        // TODO_RUST_CODE
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         // TODO_RUST_CODE
+         // Java: if (KoBin.Null.notEmpty(bin))
+            // TODO_RUST_CODE
+         {
+            // Java: this.map.put(1, bin);
+            // TODO_RUST_CODE
+            // Java: if (this.commonTimeNode != null)
+                // TODO_RUST_CODE
+            {
+               // Java: this.commonTimeNode = null;
+               // TODO_RUST_CODE
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteCommonTimeNode(CommonTimeNode value)
+    pub fn forceWriteCommonTimeNode(&self, CommonTimeNode value) {
+      // Java: if (value != null)
+        // TODO_RUST_CODE
+      {
+         // Java: this.map.put(1, value.lastBin(this.zone));
+         // TODO_RUST_CODE
+         // Java: if (this.commonTimeNode != null)
+            // TODO_RUST_CODE
+         {
+            // Java: this.commonTimeNode = null;
+            // TODO_RUST_CODE
+         }
+      }
+    }
+
+    // Java: TargetElement targetElement()
+    pub fn targetElement(&self) -> TargetElement {
+      // Java: if (this.targetElement == null)
+        // TODO_RUST_CODE
+      {
+         // Java: if (this.map.has(2))
+            // TODO_RUST_CODE
+         {
+            // Java: KoBin bin = this.map.byKey(2);
+            // TODO_RUST_CODE
+            // Java: this.targetElement = (TargetElement)KoBin.Decode.toAny(TargetElement.class, bin, this.zone);
+            // TODO_RUST_CODE
+         }
+         // Java: else if (this.parent != null && this.parent.hasTargetElement())
+            // TODO_RUST_CODE
+         {
+            // Java: this.targetElement = this.parent.targetElement();
+            // TODO_RUST_CODE
+         }
+         // Java: else
+            // TODO_RUST_CODE
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            // TODO_RUST_CODE
+            // Java: this.targetElement = (TargetElement)KoBin.Decode.toAny(TargetElement.class, bin, this.zone);
+            // TODO_RUST_CODE
+         }
+      }
+      // Java: return this.targetElement;
+      // TODO_RUST_CODE
+    }
+
+    // Java: boolean hasTargetElement()
+    pub fn hasTargetElement(&self) -> bool {
+      // Java: return this.map.has(2) || this.targetElement != null && this.targetElement.dirty() || this.parent != null && this.parent.hasTargetElement();
+      // TODO_RUST_CODE
+    }
+
+    // Java: void deleteTargetElement()
+    pub fn deleteTargetElement(&self) {
+      // Java: this.map.put(2, (KoBin)null);
+      // TODO_RUST_CODE
+      // Java: if (this.targetElement != null)
+        // TODO_RUST_CODE
+      {
+         // Java: this.targetElement = null;
+         // TODO_RUST_CODE
+      }
+    }
+
+    // Java: void writeTargetElement(TargetElement value)
+    pub fn writeTargetElement(&self, TargetElement value) {
+      // Java: if (value != null)
+        // TODO_RUST_CODE
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         // TODO_RUST_CODE
+         // Java: if (KoBin.Null.notEmpty(bin))
+            // TODO_RUST_CODE
+         {
+            // Java: this.map.put(2, bin);
+            // TODO_RUST_CODE
+            // Java: if (this.targetElement != null)
+                // TODO_RUST_CODE
+            {
+               // Java: this.targetElement = null;
+               // TODO_RUST_CODE
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteTargetElement(TargetElement value)
+    pub fn forceWriteTargetElement(&self, TargetElement value) {
+      // Java: if (value != null)
+        // TODO_RUST_CODE
+      {
+         // Java: this.map.put(2, value.lastBin(this.zone));
+         // TODO_RUST_CODE
+         // Java: if (this.targetElement != null)
+            // TODO_RUST_CODE
+         {
+            // Java: this.targetElement = null;
+            // TODO_RUST_CODE
+         }
+      }
+    }
+
+    // Java: boolean isMute()
+    pub fn isMute(&self) -> bool {
+      // Java: if (!this.map.has(3))
+        // TODO_RUST_CODE
+      {
+         // Java: return this.parent == null ? false : this.parent.isMute();
+         // TODO_RUST_CODE
+      }
+      // Java: else
+        // TODO_RUST_CODE
+      {
+         // Java: KoBin bin = this.map.byKey(3);
+         // TODO_RUST_CODE
+         // Java: return KoBin.Decode.toBool(bin);
+         // TODO_RUST_CODE
+      }
+    }
+
+    // Java: boolean hasMute()
+    pub fn hasMute(&self) -> bool {
+      // Java: return this.map.has(3) || this.parent != null && this.parent.hasMute();
+      // TODO_RUST_CODE
+    }
+
+    // Java: void deleteMute()
+    pub fn deleteMute(&self) {
+      // Java: this.map.put(3, (KoBin)null);
+      // TODO_RUST_CODE
+    }
+
+    // Java: void putMute(boolean value)
+    pub fn putMute(&self, boolean value) {
+      // Java: this.map.put(3, KoBin.Encode.from(value, this.zone));
+      // TODO_RUST_CODE
+    }
+
+    // Java: int slideNum()
+    pub fn slideNum(&self) -> i32 {
+      // Java: if (!this.map.has(4))
+        // TODO_RUST_CODE
+      {
+         // Java: return this.parent == null ? 1 : this.parent.slideNum();
+         // TODO_RUST_CODE
+      }
+      // Java: else
+        // TODO_RUST_CODE
+      {
+         // Java: KoBin bin = this.map.byKey(4);
+         // TODO_RUST_CODE
+         // Java: return KoBin.Decode.toInt(bin);
+         // TODO_RUST_CODE
+      }
+    }
+
+    // Java: boolean hasSlideNum()
+    pub fn hasSlideNum(&self) -> bool {
+      // Java: return this.map.has(4) || this.parent != null && this.parent.hasSlideNum();
+      // TODO_RUST_CODE
+    }
+
+    // Java: void deleteSlideNum()
+    pub fn deleteSlideNum(&self) {
+      // Java: this.map.put(4, (KoBin)null);
+      // TODO_RUST_CODE
+    }
+
+    // Java: void putSlideNum(int value)
+    pub fn putSlideNum(&self, int value) {
+      // Java: this.map.put(4, KoBin.Encode.from(value, this.zone));
+      // TODO_RUST_CODE
+    }
+
+    // Java: boolean isShowWhenStopped()
+    pub fn isShowWhenStopped(&self) -> bool {
+      // Java: if (!this.map.has(5))
+        // TODO_RUST_CODE
+      {
+         // Java: return this.parent == null ? true : this.parent.isShowWhenStopped();
+         // TODO_RUST_CODE
+      }
+      // Java: else
+        // TODO_RUST_CODE
+      {
+         // Java: KoBin bin = this.map.byKey(5);
+         // TODO_RUST_CODE
+         // Java: return KoBin.Decode.toBool(bin);
+         // TODO_RUST_CODE
+      }
+    }
+
+    // Java: boolean hasShowWhenStopped()
+    pub fn hasShowWhenStopped(&self) -> bool {
+      // Java: return this.map.has(5) || this.parent != null && this.parent.hasShowWhenStopped();
+      // TODO_RUST_CODE
+    }
+
+    // Java: void deleteShowWhenStopped()
+    pub fn deleteShowWhenStopped(&self) {
+      // Java: this.map.put(5, (KoBin)null);
+      // TODO_RUST_CODE
+    }
+
+    // Java: void putShowWhenStopped(boolean value)
+    pub fn putShowWhenStopped(&self, boolean value) {
+      // Java: this.map.put(5, KoBin.Encode.from(value, this.zone));
+      // TODO_RUST_CODE
+    }
+
+    // Java: double volume()
+    pub fn volume(&self) -> f64 {
+      // Java: if (!this.map.has(6))
+        // TODO_RUST_CODE
+      {
+         // Java: return this.parent == null ? (double)0.5F : this.parent.volume();
+         // TODO_RUST_CODE
+      }
+      // Java: else
+        // TODO_RUST_CODE
+      {
+         // Java: KoBin bin = this.map.byKey(6);
+         // TODO_RUST_CODE
+         // Java: return KoBin.Decode.toDouble(bin);
+         // TODO_RUST_CODE
+      }
+    }
+
+    // Java: boolean hasVolume()
+    pub fn hasVolume(&self) -> bool {
+      // Java: return this.map.has(6) || this.parent != null && this.parent.hasVolume();
+      // TODO_RUST_CODE
+    }
+
+    // Java: void deleteVolume()
+    pub fn deleteVolume(&self) {
+      // Java: this.map.put(6, (KoBin)null);
+      // TODO_RUST_CODE
+    }
+
+    // Java: void putVolume(double value)
+    pub fn putVolume(&self, double value) {
+      // Java: this.map.put(6, KoBin.Encode.from(value, this.zone));
+      // TODO_RUST_CODE
+    }
+
+}
+
+impl KoAr for CommonMediaNode {
+}
+
+impl KoClosable for CommonMediaNode {
+}

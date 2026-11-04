@@ -1,0 +1,484 @@
+import {Constants} from "../../constants";
+import {isBrowser, isMobile} from "../../util/functions";
+import {updateHotkeyTip} from "../../protyle/util/compatibility";
+import {CODE_TAB_SPACE_VALUES, getCodeTabSpacesLabel} from "../../protyle/wysiwyg/codeBlockUtil";
+import {editorConfigApi} from "./editorRuntime";
+import type {SettingTabBuilder} from "../setting/builder";
+import {controlSelect} from "../setting/control";
+import {genStackHtml} from "../render/render";
+import type {StackLine} from "../render/parts";
+import {getHostCapabilities} from "../../util/hostCapabilities";
+/// #if !BROWSER
+import {ipcRenderer} from "electron";
+/// #endif
+
+/** 编辑器 Tab：各组注册实现（由 setting/tabs.ts 调用） */
+const registerEditorBehaviorGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("behavior", window.siyuan.languages.configGroupBehavior);
+    const readOnlyKeymap = window.siyuan.config.keymap.general.editReadonly.custom;
+    group.switch("editor.readOnly", {
+        title: isMobile()
+            ? window.siyuan.languages.editReadonly
+            : `${window.siyuan.languages.editReadonly} <code class="fn__code${readOnlyKeymap ? "" : " fn__none"}">${updateHotkeyTip(readOnlyKeymap)}</code>`,
+        desc: window.siyuan.languages.editReadonlyTip,
+    });
+    group.switch("editor.spellcheck", {
+        title: window.siyuan.languages.spellcheck,
+        desc: isBrowser() ? window.siyuan.languages.spellcheckTip : window.siyuan.languages.spellcheckTip2,
+        /// #if !BROWSER
+        afterMount: bindSpellcheckLanguagesVisibility,
+        /// #endif
+    });
+    /// #if !BROWSER
+    group.slot({
+        key: "spellcheckLanguages",
+        keywords: [
+            window.siyuan.languages.spellcheck,
+            window.siyuan.languages.spellcheckTip2,
+        ],
+        html: () => '<div class="fn__flex b3-label config-item fn__none"><div class="b3-chips" id="editor.spellcheckLanguages"></div></div>',
+        afterMount: bindSpellcheckLanguagesChips,
+    });
+    /// #endif
+    group.number("editor.cursorSurroundingLines", {
+        title: window.siyuan.languages.cursorSurroundingLines,
+        desc: window.siyuan.languages.cursorSurroundingLinesTip,
+        min: 0,
+        max: 20,
+    });
+    group.switch("editor.displayBookmarkIcon", {
+        title: window.siyuan.languages.md12,
+        desc: window.siyuan.languages.md16,
+    });
+    group.switch("editor.blockGutterMode", {
+        title: window.siyuan.languages.blockGutterMode,
+        desc: window.siyuan.languages.blockGutterModeTip,
+    });
+    group.select("editor.codeTabSpaces", {
+        title: window.siyuan.languages.md29,
+        desc: window.siyuan.languages.md30,
+        options: CODE_TAB_SPACE_VALUES.map((value) => ({value, label: getCodeTabSpacesLabel(value)})),
+    });
+    group.switch("editor.hashTagSearch", {
+        title: window.siyuan.languages.hashTagSearch,
+        desc: window.siyuan.languages.hashTagSearchTip,
+    });
+    group.switch("editor.pasteURLAutoConvert", {
+        title: window.siyuan.languages.pasteURLAutoConvert,
+        desc: window.siyuan.languages.pasteURLAutoConvertTip,
+    });
+    group.switch("editor.mathDelimiterCompatibility", {
+        title: window.siyuan.languages.mathDelimiterCompatibility,
+        desc: window.siyuan.languages.mathDelimiterCompatibilityTip,
+    });
+    group.switch("editor.keepLoadedContent", {
+        title: window.siyuan.languages.keepLazyLoad,
+        desc: window.siyuan.languages.keepLazyLoadTip,
+    });
+    group.switch("editor.pageScrollButtons", {
+        title: window.siyuan.languages.showPageScrollButtons,
+        desc: window.siyuan.languages.showPageScrollButtonsTip,
+    });
+    group.number("editor.dynamicLoadBlocks", {
+        title: window.siyuan.languages.dynamicLoadBlocks,
+        desc: window.siyuan.languages.dynamicLoadBlocksTip,
+        min: 48,
+    });
+    /// #if !MOBILE && !BROWSER
+    const assetOpenOptions = [
+        {value: "follow-tab", label: window.siyuan.languages.assetOpenFollowTab},
+        {value: "current", label: window.siyuan.languages.assetOpenCurrent},
+        {value: "right", label: window.siyuan.languages.insertRight},
+        {value: "bottom", label: window.siyuan.languages.insertBottom},
+        {value: "background", label: window.siyuan.languages.refTab},
+        {value: "new-window", label: window.siyuan.languages.openByNewWindow},
+        {value: "app", label: window.siyuan.languages.useDefault},
+        {value: "folder", label: window.siyuan.languages.showInFolder},
+    ].filter((item) => getHostCapabilities().localFileSystem || !["app", "folder"].includes(item.value));
+    const assetOpenControls = [
+        {
+            label: window.siyuan.languages.assetOpenClick,
+            control: controlSelect("editor.assetOpen.click", {options: assetOpenOptions}),
+        },
+        {
+            label: window.siyuan.languages.assetOpenCtrlClick,
+            control: controlSelect("editor.assetOpen.ctrlClick", {options: assetOpenOptions}),
+        },
+        {
+            label: window.siyuan.languages.assetOpenAltClick,
+            control: controlSelect("editor.assetOpen.altClick", {options: assetOpenOptions}),
+        },
+        {
+            label: window.siyuan.languages.assetOpenShiftClick,
+            control: controlSelect("editor.assetOpen.shiftClick", {options: assetOpenOptions}),
+        },
+    ];
+    group.composite({
+        key: "assetOpen",
+        keywords: [
+            window.siyuan.languages.assetOpen,
+            window.siyuan.languages.assetOpenTip,
+            ...assetOpenControls.map((item) => item.label),
+            ...assetOpenOptions.map((item) => item.label),
+        ],
+        html: () => genStackHtml([
+            {left: {kind: "title", text: window.siyuan.languages.assetOpen}},
+            {left: {kind: "desc", text: window.siyuan.languages.assetOpenTip}},
+            ...assetOpenControls.map((item) => ({
+                left: {kind: "desc" as const, text: item.label},
+                right: item.control,
+            })),
+        ] as StackLine[]),
+        controls: assetOpenControls.map((item) => ({
+            control: item.control,
+        })),
+    });
+    /// #endif
+};
+
+/// #if !BROWSER
+const bindSpellcheckLanguagesVisibility = async (root: HTMLElement) => {
+    const spellcheckSwitch = root.querySelector<HTMLInputElement>(`#${CSS.escape("editor.spellcheck")}`);
+    if (!spellcheckSwitch) {
+        return;
+    }
+    const toggleWrap = () => {
+        root.querySelector(`#${CSS.escape("editor.spellcheckLanguages")}`)?.closest(".config-item")?.classList.toggle("fn__none", !spellcheckSwitch.checked);
+    };
+    spellcheckSwitch.addEventListener("change", toggleWrap);
+    toggleWrap();
+};
+
+const bindSpellcheckLanguagesChips = async (root: HTMLElement) => {
+    const el = root.querySelector<HTMLDivElement>(`#${CSS.escape("editor.spellcheckLanguages")}`);
+    if (!el) {
+        return;
+    }
+    const languages: string[] = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
+        cmd: "availableSpellCheckerLanguages",
+    });
+    el.innerHTML = languages.map((item) =>
+        `<div class="fn__pointer b3-chip b3-chip--middle${window.siyuan.config.editor.spellcheckLanguages.includes(item) ? " b3-chip--current" : ""}">${item}</div>`
+    ).join("");
+    el.addEventListener("click", (event) => {
+        const target = event.target as Element;
+        if (target.classList.contains("b3-chip")) {
+            target.classList.toggle("b3-chip--current");
+            const selected = Array.from(el.querySelectorAll(".b3-chip--current")).map((chip) => chip.textContent || "");
+            ipcRenderer.send(Constants.SIYUAN_CMD, {
+                cmd: "setSpellCheckerLanguages",
+                languages: selected,
+            });
+            editorConfigApi.patch("spellcheckLanguages", selected);
+        }
+    });
+};
+/// #endif
+
+const bindDatabaseAttrSettingsVisibility = (root: HTMLElement) => {
+    const showSwitch = root.querySelector<HTMLInputElement>(`#${CSS.escape("editor.databaseAttrShow")}`);
+    if (!showSwitch) {
+        return;
+    }
+    const toggle = () => {
+        [
+            "editor.databaseAttrClickMode",
+            "editor.databaseAttrViewMode",
+            "editor.databaseAttrHideEmpty",
+            "editor.databaseAttrUseTabs",
+        ].forEach(id => {
+            root.querySelector(`#${CSS.escape(id)}`)?.closest(".config-item")?.classList.toggle("fn__none", !showSwitch.checked);
+        });
+    };
+    showSwitch.addEventListener("change", toggle);
+    toggle();
+};
+
+const registerEditorListsGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("lists", window.siyuan.languages.configGroupListBlocks);
+    group.switch("editor.listLogicalOutdent", {
+        title: window.siyuan.languages.outlineOutdent,
+        desc: window.siyuan.languages.outlineOutdentTip,
+    });
+    group.switch("editor.listItemDotNumberClickFocus", {
+        title: window.siyuan.languages.listItemDotNumberClickFocus,
+        desc: window.siyuan.languages.listItemDotNumberClickFocusTip,
+    });
+};
+
+const registerEditorHeadingsGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("headings", window.siyuan.languages.configGroupHeadings);
+    group.switch("editor.headingNumber", {
+        title: window.siyuan.languages.headingNumber,
+        desc: window.siyuan.languages.headingNumberTip,
+    });
+    group.select("editor.headingNumberFormat", {
+        title: window.siyuan.languages.headingNumberFormat,
+        options: [
+            {value: "decimal-hierarchical", label: "1.2.3"},
+            {value: "upper-alpha-hierarchical", label: "A.B.C"},
+            {value: "lower-alpha-hierarchical", label: "a.b.c"},
+            {value: "upper-roman-hierarchical", label: "I.II.III"},
+            {value: "lower-roman-hierarchical", label: "i.ii.iii"},
+            {value: "upper-greek-hierarchical", label: "Α.Β.Γ"},
+            {value: "lower-greek-hierarchical", label: "α.β.γ"},
+            {value: "decimal-parenthesized", label: "1）"},
+            {value: "chinese-document", label: "一、（一）1."},
+        ],
+    });
+};
+
+const registerEditorEmbedsGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("embeds", window.siyuan.languages.embedBlock);
+    group.select("editor.headingEmbedMode", {
+        title: window.siyuan.languages.headingEmbedMode,
+        desc: window.siyuan.languages.headingEmbedModeTip,
+        options: [
+            {value: 0, label: window.siyuan.languages.showHeadingWithBlocks},
+            {value: 1, label: window.siyuan.languages.showHeadingOnlyTitle},
+            {value: 2, label: window.siyuan.languages.showHeadingOnlyBlocks},
+        ],
+    });
+    group.switch("editor.embedBlockBreadcrumb", {
+        title: window.siyuan.languages.embedBlockBreadcrumb,
+        desc: window.siyuan.languages.embedBlockBreadcrumbTip,
+    });
+    group.switch("editor.embedBlockBreadcrumbParentPath", {
+        title: window.siyuan.languages.embedBlockBreadcrumbParentPath,
+        desc: window.siyuan.languages.embedBlockBreadcrumbParentPathTip,
+    });
+};
+
+const registerEditorImagesGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("images", window.siyuan.languages.configGroupImages);
+    group.switch("editor.displayImgName", {
+        title: window.siyuan.languages.displayImgName,
+        desc: window.siyuan.languages.displayImgNameTip,
+    });
+    group.switch("editor.displayImgAlt", {
+        title: window.siyuan.languages.displayImgAlt,
+        desc: window.siyuan.languages.displayImgAltTip,
+    });
+    group.switch("editor.displayNetImgMark", {
+        title: window.siyuan.languages.md7,
+        desc: window.siyuan.languages.md8,
+    });
+};
+
+const registerEditorDatabaseGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("database", window.siyuan.languages.database);
+    group.switch("editor.databaseAttrShow", {
+        title: window.siyuan.languages.databaseAttrShow,
+        desc: window.siyuan.languages.databaseAttrShowTip,
+        afterMount: bindDatabaseAttrSettingsVisibility,
+    });
+    group.select("editor.databaseAttrClickMode", {
+        title: window.siyuan.languages.databaseAttrClickMode,
+        desc: window.siyuan.languages.databaseAttrClickModeTip,
+        options: [
+            {value: 0, label: window.siyuan.languages.focusBlockAndExpandDatabasePanel},
+            {value: 1, label: window.siyuan.languages.openBlockAttributePanel},
+        ],
+    });
+    group.select("editor.databaseAttrViewMode", {
+        title: window.siyuan.languages.databaseAttrViewMode,
+        desc: window.siyuan.languages.databaseAttrViewModeTip,
+        options: [
+            {value: 0, label: window.siyuan.languages.expand},
+            {value: 1, label: window.siyuan.languages.collapse},
+        ],
+    });
+    group.switch("editor.databaseAttrHideEmpty", {
+        title: window.siyuan.languages.databaseAttrHideEmpty,
+        desc: window.siyuan.languages.databaseAttrHideEmptyTip,
+    });
+    group.switch("editor.databaseAttrUseTabs", {
+        title: window.siyuan.languages.databaseAttrUseTabs,
+        desc: window.siyuan.languages.databaseAttrUseTabsTip,
+    });
+    group.select("editor.databaseAttrLayout", {
+        title: window.siyuan.languages.databaseAttrLayout,
+        desc: window.siyuan.languages.databaseAttrLayoutTip,
+        options: [
+            {value: 0, label: window.siyuan.languages.databaseAttrLayoutSingle},
+            {value: 1, label: window.siyuan.languages.databaseAttrLayoutRow},
+            {value: 2, label: window.siyuan.languages.databaseAttrLayoutColumn},
+        ],
+    });
+};
+
+const registerEditorCodeGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("code", window.siyuan.languages.replaceTypes.codeBlock);
+    group.switch("editor.codeLineWrap", {
+        title: window.siyuan.languages.md31,
+        desc: window.siyuan.languages.md32,
+    });
+    group.switch("editor.codeLigatures", {
+        title: window.siyuan.languages.md2,
+        desc: window.siyuan.languages.md3,
+    });
+    group.switch("editor.codeSyntaxHighlightLineNum", {
+        title: window.siyuan.languages.md27,
+        desc: window.siyuan.languages.md28,
+    });
+};
+
+const registerEditorBidirectionalGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("bidirectional", window.siyuan.languages.configGroupBidirectionalLinks);
+    group.switch("editor.onlySearchForDoc", {
+        title: window.siyuan.languages.onlySearchForDoc,
+        desc: window.siyuan.languages.onlySearchForDocTip,
+    });
+    group.switch("editor.autoCloseRefBrackets", {
+        title: window.siyuan.languages.autoCloseRefBrackets,
+        desc: window.siyuan.languages.autoCloseRefBracketsTip,
+    });
+    group.number("editor.blockRefDynamicAnchorTextMaxLen", {
+        title: window.siyuan.languages.md37,
+        desc: window.siyuan.languages.md38,
+        min: 1,
+        max: 5120,
+    });
+    group.switch("editor.checkBlockRef", {
+        title: window.siyuan.languages.checkBlockRef,
+        desc: window.siyuan.languages.checkBlockRefTip,
+    });
+    group.switch("editor.virtualBlockRef", {
+        title: window.siyuan.languages.md33,
+        desc: window.siyuan.languages.md34,
+    });
+    group.textBlock("editor.virtualBlockRefInclude", {
+        title: window.siyuan.languages.md9,
+        desc: window.siyuan.languages.md36,
+        mode: "textarea",
+    });
+    group.textBlock("editor.virtualBlockRefExclude", {
+        title: window.siyuan.languages.md35,
+        desc: window.siyuan.languages.md41,
+        mode: "textarea",
+    });
+    group.textBlock("editor.backlinkMentionExclude", {
+        title: window.siyuan.languages.backlinkMentionExclude,
+        desc: window.siyuan.languages.md41,
+        mode: "textarea",
+    });
+    group.switch("editor.backlinkContainChildren", {
+        title: window.siyuan.languages.backlinkContainChildren,
+        desc: window.siyuan.languages.backlinkContainChildrenTip,
+    });
+    group.switch("editor.backlinkHideReference", {
+        title: window.siyuan.languages.backlinkHideReference,
+        desc: window.siyuan.languages.backlinkHideReferenceTip,
+    });
+    group.switch("editor.backlinkShowBottom", {
+        title: window.siyuan.languages.backlinkShowBottom,
+        desc: window.siyuan.languages.backlinkShowBottomTip,
+    });
+    group.number("editor.backlinkExpandCount", {
+        title: window.siyuan.languages.backlinkExpand,
+        desc: window.siyuan.languages.backlinkExpandTip,
+        min: -1,
+        max: 512,
+    });
+    group.number("editor.backmentionExpandCount", {
+        title: window.siyuan.languages.backmentionExpand,
+        desc: window.siyuan.languages.backmentionExpandTip,
+        min: -1,
+        max: 512,
+    });
+};
+
+const registerEditorMarkdownBlockGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("markdownBlock", window.siyuan.languages.configGroupMarkdownBlockSyntax);
+    group.switch("editor.markdown.codeBlockMiddleDot", {
+        title: window.siyuan.languages.codeBlockMiddleDot,
+        desc: window.siyuan.languages.codeBlockMiddleDotTip,
+    });
+    group.switch("editor.markdown.blockFullWidthTaskList", {
+        title: window.siyuan.languages.editorMarkdownBlockFullWidthTaskList,
+        desc: window.siyuan.languages.editorMarkdownBlockFullWidthTaskListTip,
+    });
+};
+
+const registerEditorMarkdownInlineGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("markdownInline", window.siyuan.languages.configGroupMarkdownInlineSyntax);
+    group.switch("editor.markdown.inlineAsterisk", {
+        title: window.siyuan.languages.editorMarkdownInlineAsterisk,
+        desc: window.siyuan.languages.editorMarkdownInlineAsteriskTip,
+    });
+    group.switch("editor.markdown.inlineUnderscore", {
+        title: window.siyuan.languages.editorMarkdownInlineUnderscore,
+        desc: window.siyuan.languages.editorMarkdownInlineUnderscoreTip,
+    });
+    group.switch("editor.markdown.inlineSup", {
+        title: window.siyuan.languages.editorMarkdownInlineSup,
+        desc: window.siyuan.languages.editorMarkdownInlineSupTip,
+    });
+    group.switch("editor.markdown.inlineSub", {
+        title: window.siyuan.languages.editorMarkdownInlineSub,
+        desc: window.siyuan.languages.editorMarkdownInlineSubTip,
+    });
+    group.switch("editor.markdown.inlineTag", {
+        title: window.siyuan.languages.editorMarkdownInlineTag,
+        desc: window.siyuan.languages.editorMarkdownInlineTagTip,
+    });
+    group.switch("editor.markdown.inlineMath", {
+        title: window.siyuan.languages.editorMarkdownInlineMath,
+        desc: window.siyuan.languages.editorMarkdownInlineMathTip,
+    });
+    group.switch("editor.markdown.inlineStrikethrough", {
+        title: window.siyuan.languages.editorMarkdownInlineStrikethrough,
+        desc: window.siyuan.languages.editorMarkdownInlineStrikethroughTip,
+    });
+    group.switch("editor.markdown.inlineFullWidthStrikethrough", {
+        title: window.siyuan.languages.editorMarkdownInlineFullWidthStrikethrough,
+        desc: window.siyuan.languages.editorMarkdownInlineFullWidthStrikethroughTip,
+    });
+    group.switch("editor.markdown.inlineMark", {
+        title: window.siyuan.languages.editorMarkdownInlineMark,
+        desc: window.siyuan.languages.editorMarkdownInlineMarkTip,
+    });
+};
+
+const registerEditorAdvancedGroup = (tab: SettingTabBuilder) => {
+    const group = tab.group("advanced", window.siyuan.languages.configGroupAdvanced);
+    group.text("editor.plantUMLServePath", {
+        spellcheck: false,
+        title: window.siyuan.languages.md39,
+        desc: window.siyuan.languages.md40,
+    });
+    group.textBlock("editor.katexMacros", {
+        spellcheck: false,
+        title: window.siyuan.languages.katexMacros,
+        desc: window.siyuan.languages.katexMacrosTip,
+        mode: "textarea",
+    });
+    if (!getHostCapabilities().remoteKernel) {
+        group.switch("editor.dragHTMLFileToIframe", {
+            title: window.siyuan.languages.dragHTMLFileToIframe,
+            desc: window.siyuan.languages.dragHTMLFileToIframeTip,
+        });
+        group.switch("editor.allowSVGScript", {
+            title: window.siyuan.languages.allowSVGScript,
+            desc: window.siyuan.languages.allowSVGScriptTip,
+        });
+        group.switch("editor.allowHTMLBLockScript", {
+            title: window.siyuan.languages.allowHTMLBLockScript,
+            desc: window.siyuan.languages.allowHTMLBLockScriptTip,
+        });
+    }
+};
+
+export const registerEditorTab = (tab: SettingTabBuilder) => {
+    registerEditorBehaviorGroup(tab);
+    registerEditorListsGroup(tab);
+    registerEditorHeadingsGroup(tab);
+    registerEditorEmbedsGroup(tab);
+    registerEditorImagesGroup(tab);
+    registerEditorDatabaseGroup(tab);
+    registerEditorCodeGroup(tab);
+    registerEditorBidirectionalGroup(tab);
+    registerEditorMarkdownBlockGroup(tab);
+    registerEditorMarkdownInlineGroup(tab);
+    registerEditorAdvancedGroup(tab);
+};

@@ -1,0 +1,277 @@
+import {Wnd} from "./Wnd";
+import {genUUID} from "../util/genID";
+import type {Model} from "./Model";
+import {hasClosestByTag} from "../protyle/util/hasClosest";
+import {Constants} from "../constants";
+import {escapeHtml, escapeAttr} from "../util/escape";
+import {unicode2Emoji} from "../emoji";
+import {hideTooltip} from "../dialog/tooltip";
+/// #if !BROWSER
+import {openNewWindow} from "../window/openNewWindow";
+import {ipcRenderer} from "electron";
+/// #endif
+import {layoutToJSON, saveLayout} from "./util";
+import {setTitle} from "../util/processTitle";
+import {clearTabDragPreview} from "./tabDrag";
+
+type TTabHeaderOptions = Pick<ITab, "title" | "icon" | "docIcon"> & {
+    id?: string,
+    draggable?: boolean,
+    focus?: boolean,
+    pin?: boolean,
+    unupdate?: boolean,
+};
+
+export const createTabHeaderElement = (options: TTabHeaderOptions) => {
+    const element = document.createElement("li");
+    element.setAttribute("data-type", "tab-header");
+    if (options.draggable) {
+        element.setAttribute("draggable", "true");
+    }
+    if (options.id) {
+        element.setAttribute("data-id", options.id);
+    }
+    element.classList.add("item");
+    if (options.focus) {
+        element.classList.add("item--focus");
+    }
+    if (options.pin) {
+        element.classList.add("item--pin");
+    }
+    if (options.unupdate) {
+        element.classList.add("item--unupdate");
+    }
+    let iconHTML = "";
+    if (options.icon) {
+        iconHTML = `<svg class="item__graphic"><use xlink:href="#${escapeAttr(escapeHtml(options.icon))}"></use></svg>`;
+    } else if (options.docIcon) {
+        iconHTML = `<span class="item__icon">${unicode2Emoji(options.docIcon)}</span>`;
+    }
+    element.innerHTML = `${iconHTML}<span class="item__text">${escapeHtml(options.title || "")}</span>
+<span class="item__close"><svg><use xlink:href="#iconClose"></use></svg></span>`;
+    if (options.pin && (options.icon || options.docIcon)) {
+        element.querySelector(".item__text").classList.add("fn__none");
+    }
+    return element;
+};
+
+export class Tab {
+    public parent: Wnd;
+    public id: string;
+    public headElement: HTMLElement;
+    public panelElement: HTMLElement;
+    public callback: (tab: Tab) => void;
+    public model: Model;
+    public title: string;
+    public icon: string;
+    public docIcon: string;
+
+    constructor(options: ITab) {
+        this.id = genUUID();
+        this.callback = options.callback;
+        if (options.title || options.icon) {
+            this.title = options.title;
+            this.icon = options.icon;
+            this.docIcon = options.docIcon;
+            this.headElement = createTabHeaderElement({
+                id: this.id,
+                title: options.title,
+                icon: options.icon,
+                docIcon: options.docIcon,
+                draggable: true,
+                focus: true,
+            });
+            this.headElement.addEventListener("dragstart", (event: DragEvent & { target: HTMLElement }) => {
+                window.getSelection().removeAllRanges();
+                hideTooltip();
+                window.siyuan.menus.menu.remove();
+                const tabElement = hasClosestByTag(event.target, "LI");
+                if (tabElement) {
+                    event.dataTransfer.setData("text/html", tabElement.outerHTML);
+                    const modeJSON = {id: this.id} as ILayoutJSON & {id: string};
+                    layoutToJSON(this, modeJSON);
+                    event.dataTransfer.setData(Constants.SIYUAN_DROP_TAB, JSON.stringify(modeJSON));
+                    const editorJSON = Array.isArray(modeJSON.children) ? undefined : modeJSON.children;
+                    delete tabElement.dataset.dragDocumentId;
+                    if (editorJSON?.instance === "Editor" && editorJSON.rootId) {
+                        event.dataTransfer.setData(Constants.SIYUAN_DROP_DOCUMENT_TAB, JSON.stringify({
+                            rootId: editorJSON.rootId,
+                            tabId: this.id,
+                            title: this.title,
+                        }));
+                        tabElement.dataset.dragDocumentId = editorJSON.rootId;
+                        window.siyuan.dragTitle = this.title;
+                    }
+                    event.dataTransfer.dropEffect = "move";
+                    tabElement.style.opacity = "0.38";
+                    window.siyuan.dragElement = this.headElement;
+                    const dragTabData: ITabDragData = {
+                        title: this.title,
+                        icon: this.icon,
+                        docIcon: this.docIcon,
+                        pin: tabElement.classList.contains("item--pin"),
+                        focus: tabElement.classList.contains("item--focus"),
+                        unupdate: tabElement.classList.contains("item--unupdate"),
+                    };
+                    window.siyuan.dragTab = dragTabData;
+                    /// #if !BROWSER
+                    ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "setTabDragData", data: dragTabData});
+                    /// #endif
+                }
+                /// #if !BROWSER
+                ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "resetTabsStyle", data: "removeRegionStyle"});
+                /// #endif
+            });
+            this.headElement.addEventListener("dragend", (event: DragEvent & { target: HTMLElement }) => {
+                const tabElement = hasClosestByTag(event.target, "LI");
+                if (tabElement) {
+                    tabElement.style.opacity = "1";
+                    delete tabElement.dataset.dragDocumentId;
+                }
+                /// #if !BROWSER
+                // 拖拽到屏幕外
+                setTimeout(() => {
+                    if (document.body.contains(this.panelElement) &&
+                        (event.clientX < 0 || event.clientY < 0 || event.clientX > window.innerWidth || event.clientY > window.innerHeight)) {
+                        openNewWindow(this);
+                    }
+                }, Constants.TIMEOUT_LOAD); // 等待主进程发送关闭消息
+                ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "resetTabsStyle", data: "rmDragStyle"});
+                /// #endif
+                clearTabDragPreview();
+                window.siyuan.dragTab = undefined;
+                window.siyuan.dragElement = undefined;
+                if (event.dataTransfer.dropEffect === "none") {
+                    // 按 esc 取消的时候应该还原在 dragover 时交换的 tab
+                    this.restoreHeadElementOrder();
+                }
+                /// #if !BROWSER
+                ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "resetTabsStyle", data: "addRegionStyle"});
+                /// #endif
+            });
+        }
+
+        this.panelElement = document.createElement("div");
+        this.panelElement.classList.add("fn__flex-1");
+        this.panelElement.innerHTML = options.panel || "";
+        this.panelElement.setAttribute("data-id", this.id);
+    }
+
+    public restoreHeadElementOrder() {
+        const headersElement = this.headElement?.parentElement;
+        if (!headersElement) {
+            return;
+        }
+        this.parent.children.forEach((item, index) => {
+            const currentElement = headersElement.children[index];
+            if (item.headElement !== currentElement) {
+                if (index === 0) {
+                    headersElement.firstElementChild.before(item.headElement);
+                } else {
+                    headersElement.children[index - 1].after(item.headElement);
+                }
+            }
+        });
+    }
+
+    public updateTitle(title: string) {
+        this.title = title;
+        this.headElement.querySelector(".item__text").innerHTML = escapeHtml(title);
+        this.updateWindowTitle();
+    }
+
+    private updateWindowTitle() {
+        const activeHeader = document.querySelector(".layout__wnd--active .layout-tab-bar .item--focus") ||
+            document.querySelector(".layout-tab-bar .item--focus");
+        if (activeHeader === this.headElement) {
+            setTitle(this.title, false, this.headElement.querySelector(".item__icon"));
+        }
+    }
+
+    public addModel(model: Model) {
+        this.model = model;
+        model.parent = this;
+    }
+
+    public pin() {
+        if (!this.headElement.previousElementSibling || (this.headElement.previousElementSibling && this.headElement.previousElementSibling.classList.contains("item--pin"))) {
+            // 如果是第一个，或者前一个是 pinned，则不处理
+        } else {
+            let tempTab: Tab;
+            let pinIndex = 0;
+            let lastHeadElement: Element;
+            this.parent.children.find((item, index) => {
+                if (item.headElement.classList.contains("item--pin")) {
+                    pinIndex = index + 1;
+                    lastHeadElement = item.headElement;
+                }
+                if (item.id === this.id) {
+                    tempTab = this.parent.children.splice(index, 1)[0];
+                    return true;
+                }
+            });
+            if (lastHeadElement) {
+                lastHeadElement.after(tempTab.headElement);
+            } else {
+                this.parent.children[0].headElement.before(tempTab.headElement);
+            }
+            this.parent.children.splice(pinIndex, 0, tempTab);
+        }
+        this.headElement.classList.add("item--pin");
+        if (this.docIcon || this.icon) {
+            this.headElement.querySelector(".item__text").classList.add("fn__none");
+        }
+        saveLayout();
+    }
+
+    public setDocIcon(icon: string) {
+        this.docIcon = icon;
+        if (this.docIcon) {
+            const iconElement = this.headElement.querySelector(".item__icon");
+            if (iconElement) {
+                iconElement.innerHTML = unicode2Emoji(icon);
+            } else {
+                this.headElement.querySelector(".item__text").insertAdjacentHTML("beforebegin", `<span class="item__icon">${unicode2Emoji(icon)}</span>`);
+            }
+            if (this.headElement.classList.contains("item--pin")) {
+                this.headElement.querySelector(".item__text").classList.add("fn__none");
+            }
+        } else {
+            // 添加图标后刷新界面，没有 icon
+            this.headElement.querySelector(".item__icon")?.remove();
+            this.headElement.querySelector(".item__text").classList.remove("fn__none");
+        }
+        this.updateWindowTitle();
+    }
+
+    public unpin() {
+        if (!this.headElement.nextElementSibling || (this.headElement.nextElementSibling && !this.headElement.nextElementSibling.classList.contains("item--pin"))) {
+            // 如果是最后一个，或者后一个是 unpinned，则不处理
+        } else {
+            let tempTab: Tab;
+            let pinIndex = 0;
+            let lastHeadElement: Element;
+            for (let index = 0; index < this.parent.children.length; index++) {
+                if (this.parent.children[index].id === this.id) {
+                    tempTab = this.parent.children.splice(index, 1)[0];
+                    index--;
+                }
+                if (index > -1 && this.parent.children[index].headElement.classList.contains("item--pin")) {
+                    pinIndex = index + 1;
+                    lastHeadElement = this.parent.children[index].headElement;
+                }
+            }
+            lastHeadElement.after(tempTab.headElement);
+            this.parent.children.splice(pinIndex, 0, tempTab);
+        }
+        this.headElement.classList.remove("item--pin");
+        if (this.docIcon || this.icon) {
+            this.headElement.querySelector(".item__text").classList.remove("fn__none");
+        }
+        saveLayout();
+    }
+
+    public close() {
+        this.parent.removeTab(this.id);
+    }
+}

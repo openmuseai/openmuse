@@ -1,0 +1,1626 @@
+{
+	"ID": "20240530101000-7yv4y5z",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-x8y063y",
+		"id": "20240530101000-7yv4y5z",
+		"title": "ウィンドウとタブ",
+		"type": "doc",
+		"updated": "20261024164212"
+	},
+	"Children": [
+		{
+			"ID": "20260613204552-rmgoc38",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613204552-rmgoc38",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20260613204552-j6hwlxx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613204552-j6hwlxx",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan はデスクトップ版とモバイル版の両方で複数のタブをサポートします。デスクトップ版では分割表示と複数ウィンドウも利用でき、モバイル版ではタッチ操作向けのタブ一覧を利用できます。"
+				}
+			]
+		},
+		{
+			"ID": "20260809170000-5b80d49",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260809170000-5b80d49",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "デスクトップ版"
+				}
+			]
+		},
+		{
+			"ID": "20260613204552-v3apeie",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613204552-v3apeie",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "タブ"
+				}
+			]
+		},
+		{
+			"ID": "20260613204552-bxaw5cp",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613204552-bxaw5cp",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"ID": "20260613204552-foq02w2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-foq02w2",
+						"updated": "20260613204552"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-kc2wd19",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-kc2wd19",
+								"updated": "20260613204552"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "新規タブ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ドキュメントパネルでドキュメントをクリックすると新規タブで開きます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204552-6u1bt08",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-6u1bt08",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-wkavag8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-wkavag8",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "閉じる：タブを右クリックして「閉じる」を選択するか、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "W"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "W"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を使用します"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204552-ue4khl6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-ue4khl6",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-9hot4kx",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-9hot4kx",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "再度開く："
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Shift"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "T"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⇧"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "T"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を使用して、最後に閉じたタブを再度開きます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204552-wvncepl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-wvncepl",
+						"updated": "20261016111305"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-pcf6xlh",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-pcf6xlh",
+								"updated": "20261016111305"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "切り替え："
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Shift"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "["
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⇧"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "["
+								},
+								{
+									"Type": "NodeText",
+									"Data": " で前のタブに切り替え、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Shift"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "]"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⇧"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "]"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " で次のタブに切り替えます。"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "1-8"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "1-8"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " で 1 番目から 8 番目のタブに移動し、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "9"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "9"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " で最後のタブに移動できます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204552-wm7bqie",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-wm7bqie",
+						"updated": "20260613204552"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-sj6m6xa",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-sj6m6xa",
+								"updated": "20260613204552"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ドラッグ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：タブはドラッグによる並べ替えが可能で、自由に位置を調整できます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260903130000-p2g7k4s",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260903130000-p2g7k4s",
+						"updated": "20260903130000"
+					},
+					"Children": [
+						{
+							"ID": "20260903130000-m8d1v6q",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260903130000-m8d1v6q",
+								"updated": "20260903130000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "文書の移動"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：文書パネルから文書をドラッグするときに "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Shift"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を押しながら、文書タブに一時表示される「同じ階層」または「子文書」の領域にドロップします"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613204552-u19ss69",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613204552-u19ss69",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "分割画面"
+				}
+			]
+		},
+		{
+			"ID": "20260613204552-x9bvnhy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613204552-x9bvnhy",
+				"updated": "20260613204552"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "タブは上下左右の分割画面に対応し、複数ドキュメントを同時に表示できます。"
+				}
+			]
+		},
+		{
+			"ID": "20260613204552-or56k0p",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613204552-or56k0p",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"ID": "20260613204552-l24kr96",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-l24kr96",
+						"updated": "20260613204552"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-n2i7tae",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-n2i7tae",
+								"updated": "20260613204552"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "分割方法"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：タブを編集エリアの上下左右の端にドラッグするか、タブ右クリックメニューから分割方向を選択"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204552-dzfkx4c",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-dzfkx4c",
+						"updated": "20260613204552"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-s2tbldk",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-s2tbldk",
+								"updated": "20260613204552"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "サイズ調整"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：分割境界をドラッグして各エリアのサイズを調整"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204552-oejq4sv",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-oejq4sv",
+						"updated": "20261024163013"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-q7b2nof",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-q7b2nof",
+								"updated": "20261024163013"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "分割解除"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：タブを右クリックして「分割解除」を選択、または "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "設定"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "キーマップ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " で分割解除のショートカットを設定"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204552-4zb2ybg",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-4zb2ybg",
+						"updated": "20260613204552"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-ahtvehv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-ahtvehv",
+								"updated": "20260613204552"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "リアルタイム同期"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：開いているすべてのタブはリアルタイムで内容が同期されます。同じドキュメントを複数タブで編集保存すると、他のタブも自動的に最新内容に同期され、データの競合を防ぎます。内容同期に加え、関連レンダリングも同時に更新され、コンテンツブロックのプレビューや関係図もリアルタイムで反映されます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613204552-rgjszv1",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613204552-rgjszv1",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "マルチウィンドウ"
+				}
+			]
+		},
+		{
+			"ID": "20260613204552-3jw4fwq",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613204552-3jw4fwq",
+				"updated": "20260613204552"
+			},
+			"Children": [
+				{
+					"ID": "20260613204552-7402dmz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-7402dmz",
+						"updated": "20260613204552"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-l4wmv2y",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-l4wmv2y",
+								"updated": "20260613204552"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "新規ウィンドウに移動"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：タブを右クリックして「新規ウィンドウに移動」を選択、またはタブを現在のウィンドウ外にドラッグして放す"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204552-tjgkfe4",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-tjgkfe4",
+						"updated": "20260613204552"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-95adeel",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-95adeel",
+								"updated": "20260613204552"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ウィンドウ間ドラッグ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：タブは異なるウィンドウ間でドラッグして移動できます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260922155242-vua2yiz",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260922155242-vua2yiz",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "新しいウィンドウのレイアウト"
+				}
+			]
+		},
+		{
+			"ID": "20260922155242-d7ab3nk",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260922155242-d7ab3nk",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "新しいウィンドウのレイアウトには、名前を付けたウィンドウのタブ、画面分割、閲覧位置が保存されます。メインウィンドウのレイアウトと新しいウィンドウのレイアウトは同じレイアウトメニュー内でグループ分けされ、別々に保存されます。メインウィンドウのレイアウトを保存または更新すると、ウィンドウのサイズ、位置、最大化や全画面表示の状態も記録されます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-xpv9wxs",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-xpv9wxs",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "名前を付けた新しいウィンドウでは、これらの情報が自動保存されます。レイアウトを開くとウィンドウの状態が復元され、ディスプレイ構成が変わった場合は利用可能な画面内に調整されます。ウィンドウ情報を含まない以前のレイアウトも引き続き使用できます。位置とサイズの復元はOSの制約を受け、Wayland環境では利用できない場合があります。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-d2p2cs7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-d2p2cs7",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "メインウィンドウのレイアウトは最大1件、新しいウィンドウのレイアウトは複数選択でき、一覧の上にある開くボタンでまとめて開けます。この選択内容は保存されません。この機能はデスクトップクライアントで利用できます。暗号化されたノートブックのタブは保存されません。"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "レイアウトボタンをもう一度クリックすると、名前の入力ダイアログが閉じます。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "スタイル"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "メニューとボタンの表示と順序"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "新しいウィンドウのトップバー"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " でレイアウトボタンと「ウィンドウを最前面に表示」ボタンの表示・非表示と順序を設定できます。"
+				}
+			]
+		},
+		{
+			"ID": "20260922155242-30pjomk",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260922155242-30pjomk",
+				"updated": "20260930224728"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "作成：新しいウィンドウでタブを配置し、「ウィンドウを最前面に表示」ボタンの横にある "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "新しいウィンドウのレイアウトとして保存"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " をクリックして、名前を入力して保存します。その後はタブ、画面分割、ドキュメントの閲覧位置、PDF のページ番号の変更が自動的に保存されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260922155242-k4faa32",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260922155242-k4faa32",
+				"updated": "20260923114823"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "再度開く：メインウィンドウで "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "レイアウト"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "新しいウィンドウのレイアウト"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を開き、レイアウトを選択すると、新しいウィンドウに保存したレイアウトが復元されます。対応するウィンドウが開いている場合は、そのウィンドウに切り替わります。一覧は名前で検索できます。"
+				}
+			]
+		},
+		{
+			"ID": "20260922155242-hc8rau9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260922155242-hc8rau9",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "管理："
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "メインウィンドウのレイアウト"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " の右側にある "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "保存"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " をクリックすると、現在のメインウィンドウのレイアウトを保存できます。各項目または右側の矢印にマウスポインターを合わせると、一覧を表示したままサブメニューが開きます。新しいウィンドウのレイアウトでは "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "開く"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "（対応するウィンドウが開いている場合は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "切り替え"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "）、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "名前の変更"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "削除"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " の順に表示されます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-7s6ng2e",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-7s6ng2e",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "メインウィンドウのレイアウトには "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "使用する"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " と "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "更新"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " があり、前者は選択したレイアウトを読み込み、後者は現在のメインウィンドウをその項目に保存します。新しいウィンドウのレイアウトは自動的に保存されます。どちらもサブメニューの末尾に最終保存日時が表示されます。「ウィンドウを最前面に表示」ボタンの横にあるレイアウトアイコンからも名前を変更できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-10uoywv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-10uoywv",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "名前変更ダイアログのタイトルはそれぞれ "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "メインウィンドウのレイアウト"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " と "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "新しいウィンドウのレイアウト"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で、キャンセルと確認のボタンが表示されます。レイアウトを削除しても、ドキュメント、添付ファイル、開いているウィンドウは保持されます。検索欄は上部に固定され、その下の一覧だけをスクロールできます。"
+				}
+			]
+		},
+		{
+			"ID": "20260613204552-tm8kqnq",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613204552-tm8kqnq",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ナビゲーション"
+				}
+			]
+		},
+		{
+			"ID": "20260613204552-by321c5",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613204552-by321c5",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"ID": "20260613204552-b975c9p",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-b975c9p",
+						"updated": "20260613204552"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-7o4uc9s",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-7o4uc9s",
+								"updated": "20260613204552"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "進む/戻る"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ツールバーの進む/戻るボタンで閲覧履歴間を素早く移動"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204552-kfxsbje",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-kfxsbje",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-1fkwwcp",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-1fkwwcp",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "最近のドキュメント："
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "E"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "E"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " で最近のドキュメント一覧を開きます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204552-3x3yqyk",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-3x3yqyk",
+						"updated": "20260613204552"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-iklhgzf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-iklhgzf",
+								"updated": "20260613204552"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ドキュメントの位置特定"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ドキュメントパネル上部の位置特定ボタンをクリックすると、現在開いているドキュメントをドキュメントパネル内で素早く特定"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204552-5007mjq",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204552-5007mjq",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260613204552-kkiwecr",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204552-kkiwecr",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "タブの切り替え："
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Tab"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌃"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Tab"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " で次の編集タブに切り替えます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261021161724-g2sq8su",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021161724-g2sq8su",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "デスクトップ版の最近のドキュメント一覧で、最近閲覧した、開いた、または閉じたドキュメントを選び、下部の「消去」ボタンを押して確認すると、この3種類の履歴をまとめて消去できます。モバイル版では一覧上部のごみ箱ボタンを使用します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-v8kvnzt",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-v8kvnzt",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "消去するのは現在のワークスペースのローカル履歴のみで、ドキュメント、最近作成・更新されたドキュメントの一覧、タブの進む・戻る履歴は保持され、これら2つの一覧では消去は使用できません。その後の閲覧、開く、閉じる操作は再び記録され、消去前から開いていたタブを閉じる場合も記録されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260930192450-sbtyvdc",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260930192450-sbtyvdc",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "### "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "設定ウィンドウ"
+				}
+			]
+		},
+		{
+			"ID": "20260930192450-wdavx3g",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930192450-wdavx3g",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "デスクトップクライアントでは、設定は既定でメインウィンドウ内で開きます。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "アプリ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定画面を独立したウィンドウで開く"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " をオンにすると、設定は独立したウィンドウで開き、移動、サイズ変更、最小化ができます。変更は次回設定画面を開くときに適用されます。独立したドキュメントウィンドウからも、設定済みのショートカットで設定を開けます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-wf1wcmg",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-wf1wcmg",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "設定を開いたまま、ドキュメントのスクロール、切り替え、編集ができます。設定を再度開くと、既存のウィンドウにフォーカスします。設定の変更は同じワークスペースのほかのウィンドウにも反映されます。未参照の添付ファイルやデータベースの一括削除、設定のインポート中は操作が一時的にブロックされます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-bayslnt",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-bayslnt",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ブラウザー版では設定ダイアログ、モバイル版では設定ページを使用します。従来のプラグイン設定は元のウィンドウで開き、そのウィンドウを最前面に表示します。独立した設定ウィンドウに対応したプラグインは、新しいウィンドウで開きます。独立した設定ウィンドウでは、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Ctrl+Shift+I"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "（Windows/Linux）または "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Cmd+Option+I"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "（macOS）で開発者ツールを切り替えられます。"
+				}
+			]
+		},
+		{
+			"ID": "20260809170000-4b69882",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260809170000-4b69882",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "モバイル版"
+				}
+			]
+		},
+		{
+			"ID": "20260809170000-af2044f",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260809170000-af2044f",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "モバイル版でも複数のタブを使用できます。画面上部のタブボタンをタップするとタブ一覧が開きます。"
+				}
+			]
+		},
+		{
+			"ID": "20260809170000-367a7cf",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260809170000-367a7cf",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"ID": "20260809170000-6f0e0f2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260809170000-6f0e0f2",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20260809170000-e847104",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260809170000-e847104",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "切り替え：一覧でタブをタップして切り替えます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260809170000-eb6e1d1",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260809170000-eb6e1d1",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20260809170000-19227c8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260809170000-19227c8",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ナビゲーション：一覧の戻るボタンと進むボタンで閲覧履歴を移動します"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260809170000-6aa5633",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260809170000-6aa5633",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20260809170000-bd25054",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260809170000-bd25054",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "新規作成：一覧の新規ドキュメントボタンでドキュメントを作成して開きます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260809170000-4071cd6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260809170000-4071cd6",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20260809170000-8862cf1",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260809170000-8862cf1",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "閉じる：各タブのカードから個別に閉じるか、メニューからすべてのタブを閉じます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613204554-fzmwd6k",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613204554-fzmwd6k",
+				"updated": "20260613204554"
+			}
+		}
+	]
+}

@@ -1,0 +1,6 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_nonvisual_shape_props,p:nvPr metadata,p:nvPr attrs+sub-events+ShowShape,flags+media+placeholder+custData,pp-01:01;pp-01:02,02;03;04;05,libs/ppt-core,pass
+2,02_function_auto_shape,p:sp leaf,p:sp events+KmoShowShape,protocol+DgStore type-1 row,01,05,libs/ppt-core,pass
+3,03_function_picture_shape,p:pic leaf,p:pic events+KmoShowShape,protocol+DgStore type-2 row+media binding,01,05,libs/ppt-core,pass
+4,04_function_connector_shape,p:cxnSp leaf,p:cxnSp events+KmoShowShape,protocol+DgStore type-3 row+connector callback,01,05,libs/ppt-core,pass
+5,05_function_shape_tree_dispatch,shape-tree orchestration,p:spTree+AlternateContent events,ordered recursive children+DgStore commits,01;02;03;04,pp-07-part-open;pp-13:02,libs/ppt-core,pass

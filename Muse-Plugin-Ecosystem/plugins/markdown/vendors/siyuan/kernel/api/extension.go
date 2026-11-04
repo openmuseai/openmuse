@@ -1,0 +1,292 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package api
+
+import (
+	"bytes"
+	"io"
+	"net/url"
+	"os"
+	"path"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/88250/lute"
+	"github.com/88250/lute/ast"
+	"github.com/88250/lute/parse"
+	"github.com/gabriel-vasile/mimetype"
+	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/apicontract"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+var extensionIframePattern = regexp.MustCompile(`(?i)<iframe[^>]*>([\s\S]*?)<\/iframe>`)
+
+var extensionCopy = contractHandler(apicontract.ExtensionCopy, func(c *gin.Context, request apicontract.ExtensionCopyRequest) apicontract.Response[*apicontract.ExtensionCopyData] {
+	code := 0
+	dom := request.DOM
+	assets := filepath.Join(util.DataDir, "assets")
+	targetBoxID := ""
+	encryptedBoxID := ""
+	if request.Notebook != nil {
+		nb := *request.Notebook
+		if ast.IsNodeIDPattern(nb) {
+			targetBoxID = nb
+			assets = model.GetImportAssetsDir(targetBoxID, "")
+			if model.IsEncryptedBox(targetBoxID) {
+				encryptedBoxID = targetBoxID
+			}
+		}
+	}
+	if err := holdEncryptedBoxRequest(c, encryptedBoxID); err != nil {
+		return apicontract.Failure[*apicontract.ExtensionCopyData](-1, err.Error())
+	}
+
+	if err := os.MkdirAll(assets, 0755); err != nil {
+		logging.LogErrorf("create assets folder [%s] failed: %s", assets, err)
+		return apicontract.SuccessWithMessage((*apicontract.ExtensionCopyData)(nil), err.Error())
+	}
+
+	clippingSym := false
+	symArticleHref := ""
+	hasHref := request.Href != nil
+	isPartClip := request.ClipType != nil && *request.ClipType == "part"
+	if hasHref && !isPartClip {
+		// 剪藏链滴帖子时直接使用 Markdown 接口的返回
+		// https://ld246.com/article/raw/1724850322251
+		symArticleHref = *request.Href
+
+		var baseURL, originalPrefix string
+		if strings.HasPrefix(symArticleHref, "https://ld246.com/article/") {
+			baseURL = "https://ld246.com/article/raw/"
+			originalPrefix = "https://ld246.com/article/"
+		} else if strings.HasPrefix(symArticleHref, "https://liuyun.io/article/") {
+			baseURL = "https://liuyun.io/article/raw/"
+			originalPrefix = "https://liuyun.io/article/"
+		}
+
+		if "" != baseURL {
+			articleID := strings.TrimPrefix(symArticleHref, originalPrefix)
+			if idx := strings.IndexAny(articleID, "/?#"); -1 != idx {
+				articleID = articleID[:idx]
+			}
+
+			symArticleHref = baseURL + articleID
+			clippingSym = true
+		}
+	}
+
+	uploaded := map[string]string{}
+	for originalName, file := range request.Files {
+		// 链滴/流云整页剪藏走服务端原始 Markdown，扩展上传的 DOM 资源地址与原始 Markdown 中的地址必然不一致，
+		// 上传的文件无法被匹配引用；该路径下由内核按“下载资源”开关统一下载本地化，因此跳过扩展上传的文件
+		if clippingSym {
+			continue
+		}
+
+		oName, err := url.PathUnescape(originalName)
+		unescaped := oName
+
+		if err != nil {
+			if strings.Contains(originalName, "%u") {
+				originalName = strings.ReplaceAll(originalName, "%u", "\\u")
+				originalName, err = strconv.Unquote("\"" + originalName + "\"")
+				if err != nil {
+					continue
+				}
+				oName, err = url.PathUnescape(originalName)
+				if err != nil {
+					continue
+				}
+			} else {
+				continue
+			}
+		}
+		if strings.Contains(oName, "%") {
+			unescaped, _ := url.PathUnescape(oName)
+			if "" != unescaped {
+				oName = unescaped
+			}
+		}
+
+		u, _ := url.Parse(oName)
+		if nil == u {
+			continue
+		}
+		if "" == u.Path {
+			continue
+		}
+		fName := path.Base(u.Path)
+
+		f, err := file[0].Open()
+		if err != nil {
+			code = -1
+			break
+		}
+
+		data, err := io.ReadAll(f)
+		if err != nil {
+			code = -1
+			break
+		}
+
+		fName = util.FilterUploadFileName(fName)
+		ext := util.Ext(fName)
+		if !util.IsCommonExt(ext) || strings.Contains(ext, "!") {
+			// 改进浏览器剪藏扩展转换本地图片后缀 https://github.com/siyuan-note/siyuan/issues/7467 https://github.com/siyuan-note/siyuan/issues/15320
+			if mtype := mimetype.Detect(data); nil != mtype {
+				ext = mtype.Extension()
+				fName += ext
+			}
+		}
+		if "" == ext && bytes.HasPrefix(data, []byte("<svg ")) && bytes.HasSuffix(data, []byte("</svg>")) {
+			ext = ".svg"
+			fName += ext
+		}
+
+		// 统一通过 storeAssetForBox 写入，加密 box 自动脱敏 + 加密落盘 + 追加 ?box=
+		storedName, storeErr := model.StoreAssetForBox(targetBoxID, assets, fName, data)
+		if storeErr != nil {
+			code = -1
+			break
+		}
+
+		assetURL := "assets/" + storedName
+		if encryptedBoxID != "" {
+			assetURL += "?box=" + encryptedBoxID
+		}
+		uploaded[unescaped] = assetURL
+	}
+
+	luteEngine := util.NewLute()
+	luteEngine.SetHTMLTag2TextMark(true)
+	var md string
+	var withMath bool
+
+	if clippingSym {
+		resp, err := httpclient.NewCloudRequest30s().Get(symArticleHref)
+		if err != nil {
+			logging.LogWarnf("get [%s] failed: %s", symArticleHref, err)
+		} else {
+			bodyData, readErr := io.ReadAll(resp.Body)
+			if nil != readErr {
+				return apicontract.Failure[*apicontract.ExtensionCopyData](-1, "read response body failed: "+readErr.Error())
+			}
+
+			md = string(bodyData)
+			luteEngine.SetIndentCodeBlock(true) // 链滴支持缩进代码块，因此需要开启
+			tree := parse.Parse("", []byte(md), luteEngine.ParseOptions)
+			tree.Box = targetBoxID
+			ast.Walk(tree.Root, func(n *ast.Node, entering bool) ast.WalkStatus {
+				if ast.NodeInlineMath == n.Type {
+					withMath = true
+					return ast.WalkStop
+				} else if ast.NodeCodeBlock == n.Type {
+					if !n.IsFencedCodeBlock {
+						// 将缩进代码块转换为围栏代码块
+						n.IsFencedCodeBlock = true
+						n.CodeBlockFenceChar = '`'
+						n.PrependChild(&ast.Node{Type: ast.NodeCodeBlockFenceInfoMarker})
+						n.PrependChild(&ast.Node{Type: ast.NodeCodeBlockFenceOpenMarker, Tokens: []byte("```"), CodeBlockFenceLen: 3})
+						n.LastChild.InsertAfter(&ast.Node{Type: ast.NodeCodeBlockFenceCloseMarker, Tokens: []byte("```"), CodeBlockFenceLen: 3})
+						code := n.ChildByType(ast.NodeCodeBlockCode)
+						if nil != code {
+							code.Tokens = bytes.TrimPrefix(code.Tokens, []byte("    "))
+							code.Tokens = bytes.ReplaceAll(code.Tokens, []byte("\n    "), []byte("\n"))
+							code.Tokens = bytes.TrimPrefix(code.Tokens, []byte("\t"))
+							code.Tokens = bytes.ReplaceAll(code.Tokens, []byte("\n\t"), []byte("\n"))
+						}
+					}
+				}
+				return ast.WalkContinue
+			})
+
+			// 链滴/流云整页剪藏时扩展上传的 DOM 资源地址与服务端原始 Markdown 中的地址不一致，
+			// 扩展上传的文件无法匹配；当用户开启“下载资源”时由内核直接下载原始 Markdown 中的网络资源到本地
+			if assetsOn := request.Assets != nil && *request.Assets == "true"; assetsOn {
+				model.DownloadNetAssets2LocalAssets(tree, false, symArticleHref, assets)
+			}
+
+			md, _ = lute.FormatNodeSync(tree.Root, luteEngine.ParseOptions, luteEngine.RenderOptions)
+		}
+	}
+
+	var tree *parse.Tree
+	if "" == md {
+		// 通过正则将 <iframe>.*</iframe> 标签中间包含的换行去掉
+		dom = extensionIframePattern.ReplaceAllStringFunc(dom, func(s string) string {
+			s = strings.ReplaceAll(s, "\n", "")
+			s = strings.ReplaceAll(s, "\r", "")
+			return s
+		})
+
+		tree, withMath = model.HTML2Tree(dom, luteEngine, targetBoxID)
+	} else {
+		tree = parse.Parse("", []byte(md), luteEngine.ParseOptions)
+	}
+
+	var unlinks []*ast.Node
+	ast.Walk(tree.Root, func(n *ast.Node, entering bool) ast.WalkStatus {
+		if !entering {
+			return ast.WalkContinue
+		}
+
+		if ast.NodeText == n.Type {
+			if ast.NodeParagraph == n.Parent.Type && n.Parent.FirstChild == n {
+				n.Tokens = bytes.TrimLeft(n.Tokens, " \t\n")
+			}
+		} else if ast.NodeImage == n.Type {
+			if dest := n.ChildByType(ast.NodeLinkDest); nil != dest {
+				assetPath := uploaded[string(dest.Tokens)]
+				if "" == assetPath {
+					assetPath = uploaded[string(dest.Tokens)+"?imageView2/2/interlace/1/format/webp"]
+				}
+				if "" != assetPath {
+					dest.Tokens = []byte(assetPath)
+				}
+
+				// 检测 alt 和 title 格式，如果不是文本的话转换为文本 https://github.com/siyuan-note/siyuan/issues/14233
+				if linkText := n.ChildByType(ast.NodeLinkText); nil != linkText {
+					if inlineTree := parse.Inline("", linkText.Tokens, luteEngine.ParseOptions); nil != inlineTree && nil != inlineTree.Root && nil != inlineTree.Root.FirstChild {
+						if fc := inlineTree.Root.FirstChild.FirstChild; nil != fc {
+							if ast.NodeText != fc.Type {
+								linkText.Tokens = []byte(fc.Text())
+							}
+						}
+					}
+				}
+				if title := n.ChildByType(ast.NodeLinkTitle); nil != title {
+					if inlineTree := parse.Inline("", title.Tokens, luteEngine.ParseOptions); nil != inlineTree && nil != inlineTree.Root && nil != inlineTree.Root.FirstChild {
+						if fc := inlineTree.Root.FirstChild.FirstChild; nil != fc {
+							if ast.NodeText != fc.Type {
+								title.Tokens = []byte(fc.Text())
+							}
+						}
+					}
+				}
+			}
+		}
+		return ast.WalkContinue
+	})
+	for _, unlink := range unlinks {
+		unlink.Unlink()
+	}
+
+	parse.TextMarks2Inlines(tree) // 先将 TextMark 转换为 Inlines https://github.com/siyuan-note/siyuan/issues/13056
+	parse.NestedInlines2FlattedSpansHybrid(tree, false)
+
+	md, _ = lute.FormatNodeSync(tree.Root, luteEngine.ParseOptions, luteEngine.RenderOptions)
+	data := &apicontract.ExtensionCopyData{Markdown: md, WithMath: withMath}
+	message := model.Conf.Language(72)
+	if code != 0 {
+		return apicontract.ExtensionCopy.FailureWithData(code, message, data)
+	}
+	return apicontract.SuccessWithMessage(data, message)
+})

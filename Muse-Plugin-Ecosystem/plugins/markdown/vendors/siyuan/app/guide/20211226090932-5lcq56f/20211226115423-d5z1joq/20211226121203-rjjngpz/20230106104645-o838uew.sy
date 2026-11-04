@@ -1,0 +1,842 @@
+{
+	"ID": "20230106104645-o838uew",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20230106104645-o838uew",
+		"title": "工作空間",
+		"type": "doc",
+		"updated": "20261021005205"
+	},
+	"Children": [
+		{
+			"ID": "20230106104714-um1pzdl",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230106104714-um1pzdl",
+				"updated": "20230106104714"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20230106104714-n8953p0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230106104714-n8953p0",
+				"updated": "20230106104714"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "工作空間用於保存資料、歷史、配置和運行時所需要的文件。"
+				}
+			]
+		},
+		{
+			"ID": "20230106104714-8d97m2z",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230106104714-8d97m2z",
+				"updated": "20230106104714"
+			},
+			"Children": [
+				{
+					"ID": "20230106104714-yhbnstl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230106104714-yhbnstl",
+						"updated": "20230106104714"
+					},
+					"Children": [
+						{
+							"ID": "20230106104714-4qcoopt",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230106104714-4qcoopt",
+								"updated": "20230106104714"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "不同工作空間通過文件系統文件夾相互隔離"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230106104714-kzgy9vb",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230106104714-kzgy9vb",
+						"updated": "20230106104714"
+					},
+					"Children": [
+						{
+							"ID": "20230106104714-4r3sws0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230106104714-4r3sws0",
+								"updated": "20230106104714"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "一個工作空間只能被一個Kernel程序伺服"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230109113932-sal9xjf",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230109113932-sal9xjf",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "切換工作空間"
+				}
+			]
+		},
+		{
+			"ID": "20230109113932-3g0ywic",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230109113932-3g0ywic",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"ID": "20230109113932-w8e5hz3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230109113932-w8e5hz3",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20230109113932-id1bb5p",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230109113932-id1bb5p",
+								"updated": "20230109113932"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "桌面端可以在頂欄左側下拉菜單中打開多個工作空間"
+								}
+							]
+						},
+						{
+							"ID": "20230109113932-8g1zoun",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230109113932-8g1zoun",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "如果你的多個工作空間需要經常啟動，可以考慮為每個工作空間建立不同的啟動入口並指定啟動參數 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--workspace=&quot;工作空間絕對路徑&quot;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​（請使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "&quot;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 將路徑包起來）。比如 Windows 系統上可以復制多個快捷方式，並在每個快捷方式 - 屬性 - 目標後跟隨工作空間路徑參數，例如 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--workspace=&quot;F:\\SiYuan&quot;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​。除此以外，還可以通過 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--port=12345"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 來指定Kernel偵聽的埠"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230109113932-81uif34",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230109113932-81uif34",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20230109113932-y9uqtyl",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230109113932-y9uqtyl",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "行動端可以在 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "更多"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "設定"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "應用"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "工作空間"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 中切換不同的工作空間"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261021005120-n8bw375",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20261021005120-n8bw375",
+				"updated": "20261021005205"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "重新命名工作空間"
+				}
+			]
+		},
+		{
+			"ID": "20261021005120-9cvvpgt",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021005120-9cvvpgt",
+				"updated": "20261021005205"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "桌面端的工作空間名稱與資料夾名稱相同，需要退出思源後在檔案管理員中修改。只需重新命名整個工作空間資料夾，無需清空其中的內容或遷移資料。"
+				}
+			]
+		},
+		{
+			"ID": "20261021005120-jbju9db",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1,
+				"Tight": true,
+				"Start": 1,
+				"Delimiter": 46
+			},
+			"Properties": {
+				"id": "20261021005120-jbju9db",
+				"updated": "20261021005205"
+			},
+			"Children": [
+				{
+					"ID": "20261021005120-1uxhs63",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "MS4=",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20261021005120-1uxhs63",
+						"updated": "20261021005205"
+					},
+					"Children": [
+						{
+							"ID": "20261021005120-s9pvy3z",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261021005120-s9pvy3z",
+								"updated": "20261021005205"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "在頂欄左側選單的 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "工作空間"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 中找到目標工作空間，選擇 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "在資料夾中顯示"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 定位資料夾"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261021005120-2hga3xi",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "Mi4=",
+						"Num": 2
+					},
+					"Properties": {
+						"id": "20261021005120-2hga3xi",
+						"updated": "20261021005205"
+					},
+					"Children": [
+						{
+							"ID": "20261021005120-lz1tk7m",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261021005120-lz1tk7m",
+								"updated": "20261021005205"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "透過頂欄左側選單的 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "退出應用"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 安全退出思源，並等待對應核心程序退出"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261021005120-rhvlea7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "My4=",
+						"Num": 3
+					},
+					"Properties": {
+						"id": "20261021005120-rhvlea7",
+						"updated": "20261021005205"
+					},
+					"Children": [
+						{
+							"ID": "20261021005120-s56i55m",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261021005120-s56i55m",
+								"updated": "20261021005205"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "在檔案管理員中修改工作空間資料夾的名稱，保留其中所有檔案和子資料夾"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261021005120-06fwxg3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "NC4=",
+						"Num": 4
+					},
+					"Properties": {
+						"id": "20261021005120-06fwxg3",
+						"updated": "20261021005205"
+					},
+					"Children": [
+						{
+							"ID": "20261021005120-t5xb1oy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261021005120-t5xb1oy",
+								"updated": "20261021005205"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "重新啟動思源，在工作空間選擇視窗中選擇改名後的資料夾；如果已進入其他工作空間，可透過頂欄左側選單的 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "工作空間"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "新建 / 打開"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 選擇該資料夾"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261021005120-kt4ceyn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021005120-kt4ceyn",
+				"updated": "20261021005205"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "僅關閉視窗或開啟另一個工作空間，不一定會退出原工作空間。如果使用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--workspace"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 參數指定了工作空間，請在重新啟動前將啟動命令或捷徑中的路徑更新為改名後的路徑。"
+				}
+			]
+		},
+		{
+			"ID": "20230106104714-4snblro",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230106104714-4snblro",
+				"updated": "20260918195936"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "文件系統結構"
+				}
+			]
+		},
+		{
+			"ID": "20230106104714-foziz16",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230106104714-foziz16",
+				"updated": "20230106104714"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "文件系統上工作空間下的結構："
+				}
+			]
+		},
+		{
+			"ID": "20230106104714-yyezfpg",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230106104714-yyezfpg",
+				"updated": "20230106104750"
+			},
+			"Children": [
+				{
+					"ID": "20230106104714-8hqlqm6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230106104714-8hqlqm6",
+						"updated": "20230106104714"
+					},
+					"Children": [
+						{
+							"ID": "20230106104714-d4on2tp",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230106104714-d4on2tp",
+								"updated": "20230106104714"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "conf"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 用於保存工作空間配置"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230106104714-ujf3xj7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230106104714-ujf3xj7",
+						"updated": "20230106104714"
+					},
+					"Children": [
+						{
+							"ID": "20230106104714-tzuyrck",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230106104714-tzuyrck",
+								"updated": "20230106104714"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "corrupted"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 用於保存已經損壞的資料文件"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230106104714-5qqki16",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230106104714-5qqki16",
+						"updated": "20230106104750"
+					},
+					"Children": [
+						{
+							"ID": "20230106104714-znd5d4f",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230106104714-znd5d4f",
+								"updated": "20230106104750"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "data"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 用於保存資料，具體結構請參考"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20211226115356-i1v42hf",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "這裡"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230106104714-itghjab",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230106104714-itghjab",
+						"updated": "20230106104714"
+					},
+					"Children": [
+						{
+							"ID": "20230106104714-zb4j1g4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230106104714-zb4j1g4",
+								"updated": "20230106104714"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "history"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 用於保存文件歷史"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230106104714-5ck4c0d",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230106104714-5ck4c0d",
+						"updated": "20230106104714"
+					},
+					"Children": [
+						{
+							"ID": "20230106104714-fdmry3k",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230106104714-fdmry3k",
+								"updated": "20230106104714"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "repo"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 用於保存資料倉庫資料"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230106104714-2zcy67l",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230106104714-2zcy67l",
+						"updated": "20230106104714"
+					},
+					"Children": [
+						{
+							"ID": "20230106104714-qqed0vk",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230106104714-qqed0vk",
+								"updated": "20230106104714"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "temp"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 用於保存運行時所需的臨時文件"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230106104714-s2nrsma",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230106104714-s2nrsma",
+						"updated": "20230106104714"
+					},
+					"Children": [
+						{
+							"ID": "20230106104714-2fqtvep",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230106104714-2fqtvep",
+								"updated": "20230106104714"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".lock"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ Kernel程序啟動後會建立該文件，用於鎖定工作空間"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260917190844-s9beduz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260917190844-s9beduz",
+				"updated": "20260918195936"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "第三方主題儲存在 data/themes/，圖示套件儲存在 data/icons/，參與資料同步和快照。各裝置的外觀選擇仍儲存在本機 conf/conf.json 中；內建外觀資源不參與同步。升級遷移將原目錄移入資料目錄，遷移後移除來源副本。"
+				}
+			]
+		}
+	]
+}

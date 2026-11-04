@@ -1,0 +1,3 @@
+executable("foo") {
+  sources = [ "foo.cc" ]  # This is a very very very very very very very very very very very very very very very very very very very very very very very very very long URL: https://www.google.com/very/long/url/that/exceeds/the/eighty/character/limit/for/a/line/length
+}

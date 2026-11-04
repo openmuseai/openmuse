@@ -1,0 +1,116 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package filesys
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+// DEKProvider 由 model 层在 init 时注入，用于查询 boxID 对应的 DEK。
+// 返回 (nil, nil) 表示该 box 非加密——加解密函数原样返回 data，对普通笔记本透明。
+// 返回 (nil, error) 表示加密但未解锁——加解密函数拒绝读写，避免未解锁时静默落盘明文。
+// filesys 不能直接 import model（会形成 model → filesys → model 循环依赖），故采用回调注入。
+var DEKProvider func(boxID string) ([]byte, error)
+
+// DEKLockAcquire / DEKLockRelease 由 model 层注入，在获取 DEK 前后持 box 读锁，
+// 防止 LockBox 在加解密期间清除缓存。非加密 box 的注入为空时不影响行为。
+var DEKLockAcquire func(boxID string)
+var DEKLockRelease func(boxID string)
+
+// acquireCryptoLease 在整个文件操作期间持有笔记本生命周期读锁，并返回当前笔记本的 DEK 副本。
+// 调用方必须执行 release，确保密钥副本清零且锁在缓存发布后才释放。
+func acquireCryptoLease(boxID string) (dek []byte, encrypted bool, release func(), err error) {
+	locked := false
+	release = func() {
+		for i := range dek {
+			dek[i] = 0
+		}
+		if locked && DEKLockRelease != nil {
+			DEKLockRelease(boxID)
+		}
+	}
+	if DEKProvider == nil {
+		return
+	}
+	if DEKLockAcquire != nil {
+		DEKLockAcquire(boxID)
+		locked = true
+	}
+	dek, err = DEKProvider(boxID)
+	if err != nil {
+		release()
+		release = func() {}
+		return nil, false, release, err
+	}
+	encrypted = dek != nil
+	return
+}
+
+func encryptDataWithDEK(boxID, relativePath string, data, dek []byte) ([]byte, error) {
+	if dek == nil {
+		return data, nil
+	}
+	fileKey := util.DeriveSubKey(dek, "siyuan/file")
+	defer func() {
+		for i := range fileKey {
+			fileKey[i] = 0
+		}
+	}()
+	aad, err := SyAAD(boxID, relativePath)
+	if err != nil {
+		return nil, err
+	}
+	return util.EncryptWithAAD(fileKey, data, []byte(aad))
+}
+
+func decryptDataWithDEK(boxID, relativePath string, data, dek []byte) ([]byte, error) {
+	if dek == nil {
+		return data, nil
+	}
+	fileKey := util.DeriveSubKey(dek, "siyuan/file")
+	defer func() {
+		for i := range fileKey {
+			fileKey[i] = 0
+		}
+	}()
+	aad, err := SyAAD(boxID, relativePath)
+	if err != nil {
+		return nil, err
+	}
+	return util.DecryptWithAAD(fileKey, data, []byte(aad))
+}
+
+// SyObjectBase 从 box 内相对路径提取稳定文件基名并校验合法性。
+// 接受形如 <rootID>.sy 的基名：扩展名必须是 .sy，且 stem 是合法节点 ID。
+// 非法扩展名或非节点 ID 模式返回错误，避免把任意路径当 AAD 绑定物产生不可解密的数据。
+// 由 filesys、model 历史查看/回滚、import 等所有 .sy 加解密路径共同使用，保证 AAD 一致。
+func SyObjectBase(relativePath string) (string, error) {
+	base := relativePath
+	if idx := strings.LastIndexAny(relativePath, "/\\"); idx >= 0 {
+		base = relativePath[idx+1:]
+	}
+	if !strings.HasSuffix(base, ".sy") {
+		return "", fmt.Errorf("invalid .sy base name [%s]: must end with .sy", base)
+	}
+	stem := strings.TrimSuffix(base, ".sy")
+	if !ast.IsNodeIDPattern(stem) {
+		return "", fmt.Errorf("invalid .sy base name [%s]: stem is not a node ID", base)
+	}
+	return base, nil
+}
+
+// SyAAD 构造 .sy 密文的 AAD：siyuan:file:<boxID>:<稳定文件基名>。
+// 父目录不进 AAD——同 box 内文件名不变的移动允许原样 Rename 密文，内容/box/类型/对象 ID 仍受认证。
+func SyAAD(boxID, relativePath string) (string, error) {
+	base, err := SyObjectBase(relativePath)
+	if err != nil {
+		return "", err
+	}
+	return "siyuan:file:" + boxID + ":" + base, nil
+}

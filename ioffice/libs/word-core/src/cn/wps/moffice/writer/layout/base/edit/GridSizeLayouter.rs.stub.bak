@@ -1,0 +1,53 @@
+// Rust stub for GridSizeLayouter (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/edit/GridSizeLayouter.java
+use crate::*;
+
+pub struct GridSizeLayouter {
+    // TODO: fields
+}
+
+impl GridSizeLayouter {
+    pub fn new() -> Self { todo!() }
+    pub fn createLayoutState(&self) -> LayoutState { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn doGridAutoResize(&self, changeRange: i64, document: Box<dyn Document>, reTypo: bool, typoCoreWidth: i32) -> Box<dyn GridSizeCommit> { todo!() }
+    pub fn recalcCellSizeInDeepTable(&self, deepTable: TableInfo, rootCell: CellInfo, changeRange: i64, autoSizeCommit: AutoSizeCommitImpl) -> bool { todo!() }
+    pub fn recalcCellSizeInTables(&self, tableInfos: Box<dyn TableInfos>, firstTableWantIgnore: TableInfo, changeRange: i64, autoSizeCommit: AutoSizeCommitImpl) -> bool { todo!() }
+    pub fn recalcCellInfoInTable(&self, tableInfo: TableInfo, firstRowWantIgnore: RowInfo, changeRange: i64, autoSizeCommit: AutoSizeCommitImpl) -> bool { todo!() }
+    pub fn recalcCellSizeInRow(&self, row: RowInfo, firstCellWnatIgnore: CellInfo, changeRange: i64, autoSizeCommit: AutoSizeCommitImpl) -> bool { todo!() }
+    pub fn recalcCellSize(&self, cellInfo: CellInfo, changeRange: i64, firstChildTableWantIgnore: TableInfo, autoSizeCommit: AutoSizeCommitImpl) -> bool { todo!() }
+    pub fn analyzeWidth(&self, starCp: i32, endCp: i32) { todo!() }
+    pub fn initGraphBuff(&self, layoutState: LayoutState) { todo!() }
+    pub fn recalsCellSizeInChildTable(&self, cellInfo: CellInfo, changeRange: i64, firstTableWantIgnore: TableInfo, autoSizeCommit: AutoSizeCommitImpl) -> bool { todo!() }
+    pub fn dumpEntryTest(&self, entry: IPapxTable::Entry) { todo!() }
+    pub fn toString_function toString() { [native code] }(buf: Vec<u16>) -> String { todo!() }
+    pub fn toString_function toString() { [native code] }1(buf: Vec<u16>, offset: i32, len: i32) -> String { todo!() }
+    pub fn initPageEnv(&self, cellInfo: CellInfo) { todo!() }
+    pub fn getTypoTextFlow(&self, cellInfo: CellInfo) -> i32 { todo!() }
+    pub fn getRotationAsia(&self, cellInfo: CellInfo) -> bool { todo!() }
+    pub fn cleanForkSnapshot(&self, typoDocument: TypoDocument) -> TypoSnapshot { todo!() }
+    pub fn initEnv(&self, document: Box<dyn Document>, firstTableInfo: TableInfo) { todo!() }
+    pub fn closeEnv(&self) { todo!() }
+    pub fn getInvalidRange(&self, changeRange: i64, papxTable: Box<dyn IPapxTable>) -> i64 { todo!() }
+    pub fn init(&self, cellInfo: CellInfo) { todo!() }
+    pub fn isComplete(&self) -> bool { todo!() }
+    pub fn submitInfo(&self, info: Box<dyn IWidthInfo>) { todo!() }
+    pub fn finish(&self) -> bool { todo!() }
+    pub fn commitWrapObject(&self) { todo!() }
+    pub fn isIgnoreGraphParse(&self) -> bool { todo!() }
+    pub fn isFitText(&self) -> bool { todo!() }
+    pub fn commitForFitText(&self) { todo!() }
+    pub fn isTextDirNormal(&self) -> bool { todo!() }
+    pub fn isAutoWidth(&self) -> bool { todo!() }
+    pub fn isAloneCache(&self) -> bool { todo!() }
+    pub fn isInTableHeader(&self) -> bool { todo!() }
+    pub fn newInstance() -> AutoSizeCommitImpl { todo!() }
+    pub fn isUsing(&self) -> bool { todo!() }
+    pub fn init_1(&self, document: Box<dyn Document>, typoCoreWidth: i32) -> AutoSizeCommitImpl { todo!() }
+    pub fn commitToCore(&self) { todo!() }
+    pub fn recycle(&self) { todo!() }
+    pub fn add(&self, commit: Box<dyn GridSizeCommit>) { todo!() }
+    pub fn commitWait(&self) { todo!() }
+    pub fn commitCell(&self, cellInfo: CellInfo) { todo!() }
+    pub fn finish_1(&self) -> Box<dyn GridSizeCommit> { todo!() }
+}

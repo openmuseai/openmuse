@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenMuse installed deployment bundle v1",
+  "type": "object",
+  "required": [
+    "bootstrap",
+    "snapshot"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "snapshot.schema.json"
+    },
+    "bootstrap": {
+      "type": "object",
+      "required": [
+        "discoveryUrls",
+        "publicKeys",
+        "allowedServiceOrigins",
+        "allowedResourceOrigins"
+      ],
+      "properties": {
+        "discoveryUrls": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          },
+          "uniqueItems": true
+        },
+        "publicKeys": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "allowedServiceOrigins": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https://"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "propertyNames": {
+            "enum": [
+              "auth",
+              "cloud",
+              "pluginRegistry",
+              "updates",
+              "relay"
+            ]
+          },
+          "required": [
+            "auth",
+            "cloud",
+            "pluginRegistry",
+            "updates"
+          ]
+        },
+        "allowedResourceOrigins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          },
+          "uniqueItems": true
+        },
+        "cohortRouting": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

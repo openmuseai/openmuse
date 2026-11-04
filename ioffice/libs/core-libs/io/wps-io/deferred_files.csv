@@ -1,0 +1,13 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/io/wps-io/src/cn/wps/io/opt/Token.java,cn/wps/io/opt,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-io/src/cn/wps/io/simple/DispatchHandler2.java,cn/wps/io/simple,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-io/src/cn/wps/io/simple/SAXSimpleReader.java,cn/wps/io/simple,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-io/src/cn/wps/io/util/IntEnumMap.java,cn/wps/io/util,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-io/src/cn/wps/io/gvml/handler/ClipboardThemeHandler.java,cn/wps/io/gvml/handler,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-io/src/cn/wps/io/gvml/usermodel/GVmlChartData.java,cn/wps/io/gvml/usermodel,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-io/src/cn/wps/io/gvml/usermodel/GVmlDrawing.java,cn/wps/io/gvml/usermodel,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-io/src/cn/wps/io/xwpf/element_handler/BackgroundHandler.java,cn/wps/io/xwpf/element_handler,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-io/src/cn/wps/io/xwpf/element_handler/xml03/BodyHandler.java,cn/wps/io/xwpf/element_handler/xml03,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-io/src/cn/wps/io/xwpf/element_handler/xml03/DocOleDataHandler.java,cn/wps/io/xwpf/element_handler/xml03,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-io/src/cn/wps/io/xwpf/element_handler/xml03/WordDocumentHandler.java,cn/wps/io/xwpf/element_handler/xml03,too many dependencies,2026-05-22
+koffice/core-libs/io/wps-io/src/cn/wps/io/xwpf/element_handler/theme/font/FontCollectionHandler.java,cn/wps/io/xwpf/element_handler/theme/font,too many dependencies,2026-05-22

@@ -1,0 +1,463 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"sync"
+
+	"github.com/88250/gulu"
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/bazaar"
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/util"
+	"golang.org/x/sync/singleflight"
+)
+
+// Petal represents a plugin's management status.
+type Petal struct {
+	Name                  string `json:"name"`                     // Plugin name
+	DisplayName           string `json:"displayName"`              // Plugin display name
+	Version               string `json:"version"`                  // Plugin version
+	Enabled               bool   `json:"enabled"`                  // Whether enabled
+	Incompatible          bool   `json:"incompatible"`             // Whether incompatible
+	DisabledInPublish     bool   `json:"disabledInPublish"`        // Whether disabled in publish mode
+	UserDisabledInPublish bool   `json:"userDisabledInPublish"`    // 是否由用户在发布服务中禁用
+	DisallowInstall       bool   `json:"disallowInstall"`          // Whether disallow install
+	SettingsWindow        bool   `json:"settingsWindow,omitempty"` // 已验证设置窗口运行声明
+
+	JS     string         `json:"js"`     // JS code
+	CSS    string         `json:"css"`    // CSS code
+	I18n   map[string]any `json:"i18n"`   // i18n text
+	Kernel KernelPetal    `json:"kernel"` // Kernel plugin info
+}
+
+type KernelPetal struct {
+	JS           string `json:"js"`           // Kernel JS code
+	Existed      bool   `json:"existed"`      // Whether kernel.js is exist
+	Incompatible bool   `json:"incompatible"` // Whether incompatible
+}
+
+var (
+	OnKernelPluginStart  func(petal *Petal) // Called when a plugin is enabled (after loading and starting the plugin)
+	OnKernelPluginStop   func(petal *Petal) // Called when a plugin is disabled (before stopping and unloading the plugin)
+	OnKernelPluginsStart func()             // Called to start all valid plugins
+	OnKernelPluginsStop  func()             // Called to stopping all valid plugins
+)
+
+func SetPetalEnabled(name string, enabled bool) (ret *Petal, err error) {
+	found, version, displayName, incompatible, disabledInPublish, disallowInstall, kernelIncompatible := bazaar.ParseInstalledPlugin(name, "")
+	if !found {
+		err = fmt.Errorf("plugin [%s] not found", name)
+		logging.LogErrorf("%s", err)
+		return
+	}
+
+	ret, err = updatePetal(name, func(petal *Petal) error {
+		petal.Version = version
+		petal.DisplayName = displayName
+		petal.Enabled = enabled
+		petal.Incompatible = incompatible
+		petal.DisabledInPublish = disabledInPublish
+		petal.DisallowInstall = disallowInstall
+		petal.Kernel = KernelPetal{
+			Incompatible: kernelIncompatible,
+		}
+
+		if enabled && disallowInstall {
+			return fmt.Errorf("require upgrade SiYuan to use this plugin [%s]", name)
+		}
+		return nil
+	})
+	if err != nil {
+		logging.LogInfof("%s", err)
+		return
+	}
+
+	loadCode(ret)
+
+	// Hook kernel plugin lifecycle (callbacks avoid circular import with plugin package)
+	if enabled {
+		if OnKernelPluginStart != nil {
+			OnKernelPluginStart(ret)
+		}
+	} else {
+		if OnKernelPluginStop != nil {
+			OnKernelPluginStop(ret)
+		}
+	}
+	return
+}
+
+func SetPetalPublishEnabled(name string, enabled bool) (ret *Petal, err error) {
+	found, version, displayName, incompatible, disabledInPublish, disallowInstall, kernelIncompatible := bazaar.ParseInstalledPlugin(name, "")
+	if !found {
+		err = fmt.Errorf("plugin [%s] not found", name)
+		logging.LogErrorf("%s", err)
+		return
+	}
+
+	ret, err = updatePetal(name, func(petal *Petal) error {
+		petal.Version = version
+		petal.DisplayName = displayName
+		petal.Incompatible = incompatible
+		petal.DisabledInPublish = disabledInPublish
+		petal.UserDisabledInPublish = !enabled
+		petal.DisallowInstall = disallowInstall
+		petal.Kernel.Incompatible = kernelIncompatible
+		return nil
+	})
+	return
+}
+
+func updatePetal(name string, update func(petal *Petal) error) (ret *Petal, err error) {
+	petalsStoreLock.Lock()
+	defer petalsStoreLock.Unlock()
+
+	petals := getPetals0()
+	ret = getPetalByName(name, petals)
+	if ret == nil {
+		ret = &Petal{Name: name}
+		petals = append(petals, ret)
+	}
+	if err = update(ret); err != nil {
+		return
+	}
+	err = savePetals0(petals)
+	if err == nil {
+		IncSyncIfNeeded(filepath.Join(util.DataDir, "storage", "petal", "petals.json"))
+	}
+	return
+}
+
+func getPetalByName(name string, petals []*Petal) (ret *Petal) {
+	for _, p := range petals {
+		if name == p.Name {
+			ret = p
+			break
+		}
+	}
+	return
+}
+
+func GetPetalByName(name string) (ret *Petal) {
+	petals := getPetals()
+	return getPetalByName(name, petals)
+}
+
+var loadPetalsFlight singleflight.Group
+
+// IsPetalsEnabled returns whether petals are enabled and trusted to be loaded
+func IsPetalsEnabled() bool {
+	return petalsEnabled(Conf.Bazaar.Load())
+}
+
+func petalsEnabled(confBazaarSnapshot *conf.Bazaar) bool {
+
+	if confBazaarSnapshot.PetalDisabled {
+		return false
+	}
+
+	if !confBazaarSnapshot.Trust {
+		// 移动端为了兼容通过同步获得的已有插件，不要求先确认集市信任；桌面端和 Docker 容器仍需用户手动确认
+		if util.Container == util.ContainerStd || util.Container == util.ContainerDocker {
+			return false
+		}
+	}
+	return true
+}
+
+func LoadPetals(frontend string, isPublish bool) (ret []*Petal) {
+	// 调用 setPetalEnabled 接口之后推送消息到所有前端实例，接着会同时调用 loadPetals 接口，合并相同类型的请求为一次执行
+	key := "loadPetals:" + frontend + ":" + strconv.FormatBool(isPublish)
+	v, err, _ := loadPetalsFlight.Do(key, func() (any, error) {
+		return loadPetals(frontend, isPublish, false), nil
+	})
+	if err != nil {
+		return []*Petal{}
+	}
+	return v.([]*Petal)
+}
+
+func LoadKernelPetals() (ret []*Petal) {
+	v, err, _ := loadPetalsFlight.Do("loadKernelPetals", func() (any, error) {
+		return loadPetals("", false, true), nil
+	})
+	if err != nil {
+		return []*Petal{}
+	}
+	return v.([]*Petal)
+}
+
+// LoadSettingsWindowPetals 保留启用、信任、前端兼容和发布权限检查，只返回主动声明支持设置窗口的插件。
+func LoadSettingsWindowPetals(frontend string, isPublish bool) (ret []*Petal) {
+	ret = []*Petal{}
+	for _, petal := range LoadPetals(frontend, isPublish) {
+		manifest, err := bazaar.ParsePackageJSON(filepath.Join(util.DataDir, "plugins", petal.Name, "plugin.json"))
+		if err == nil && bazaar.IsValidInstalledPackage(manifest, petal.Name) && manifest.SettingsWindow {
+			copy := *petal
+			copy.SettingsWindow = true
+			ret = append(ret, &copy)
+		}
+	}
+	return
+}
+
+func loadPetals(frontend string, isPublish, isKernel bool) (ret []*Petal) {
+	ret = []*Petal{}
+
+	if !IsPetalsEnabled() {
+		return
+	}
+
+	var petalNames []string
+	petals := getPetals()
+	for _, petal := range petals {
+		found, version, displayName, incompatible, disabledInPublish, disallowInstall, kernelIncompatible :=
+			bazaar.ParseInstalledPlugin(petal.Name, frontend)
+		if !found {
+			logging.LogWarnf("plugin [%s] manifest is invalid, skip loading", petal.Name)
+			continue
+		}
+		petal.Version, petal.DisplayName, petal.Incompatible, petal.DisabledInPublish, petal.DisallowInstall,
+			petal.Kernel.Incompatible = version, displayName, incompatible, disabledInPublish, disallowInstall, kernelIncompatible
+		if !petal.Enabled {
+			// disabled plugin
+			continue
+		}
+
+		if isKernel {
+			// kernel plugin
+			if petal.Kernel.Incompatible {
+				// incompatible kernel plugin
+				continue
+			}
+		} else {
+			// client plugin
+			if petal.Incompatible {
+				// incompatible client plugin
+				continue
+			}
+		}
+
+		if petal.DisallowInstall {
+			// disallow install plugin (require upgrade SiYuan), auto disable it to avoid potential issues, and skip loading
+			SetPetalEnabled(petal.Name, false)
+			logging.LogInfof("plugin [%s] disallowed install, auto disabled", petal.Name)
+			continue
+		}
+		if isPublish && !isPetalAccessableInPublish(petal, disabledInPublish, disallowInstall) {
+			continue
+		}
+
+		if isPublish {
+			if !loadPluginPublishCode(petal) {
+				continue
+			}
+		} else {
+			loadCode(petal)
+		}
+		if isKernel {
+			if !petal.Kernel.Existed {
+				logging.LogWarnf("plugin [%s] kernel.js not found, skip loading as kernel plugin", petal.Name)
+				continue
+			}
+		}
+
+		ret = append(ret, petal)
+		petalNames = append(petalNames, petal.Name)
+	}
+
+	logging.LogInfof("loaded petals [frontend=%s, isPublish=%v, isKernel=%v, petals=[%s]]", frontend, isPublish, isKernel, strings.Join(petalNames, ","))
+	return
+}
+
+func loadCode(petal *Petal) {
+	pluginDir := filepath.Join(util.DataDir, "plugins", petal.Name)
+	jsPath := filepath.Join(pluginDir, "index.js")
+	if !filelock.IsExist(jsPath) {
+		logging.LogErrorf("plugin [%s] index.js not found", petal.Name)
+		return
+	}
+
+	data, err := filelock.ReadFile(jsPath)
+	if err != nil {
+		logging.LogErrorf("read plugin [%s] index.js failed: %s", petal.Name, err)
+		return
+	}
+	petal.JS = string(data)
+
+	kernelJsPath := filepath.Join(pluginDir, "kernel.js")
+	if filelock.IsExist(kernelJsPath) {
+		data, err = filelock.ReadFile(kernelJsPath)
+		if err != nil {
+			logging.LogErrorf("read plugin [%s] kernel.js failed: %s", petal.Name, err)
+		} else {
+			petal.Kernel.JS = string(data)
+			petal.Kernel.Existed = true
+		}
+	}
+
+	cssPath := filepath.Join(pluginDir, "index.css")
+	if filelock.IsExist(cssPath) {
+		data, err = filelock.ReadFile(cssPath)
+		if err != nil {
+			logging.LogErrorf("read plugin [%s] index.css failed: %s", petal.Name, err)
+		} else {
+			petal.CSS = string(data)
+		}
+	}
+
+	i18nDir := filepath.Join(pluginDir, "i18n")
+	if gulu.File.IsDir(i18nDir) {
+		langJSONs, readErr := os.ReadDir(i18nDir)
+		if nil != readErr {
+			logging.LogErrorf("read plugin [%s] i18n failed: %s", petal.Name, readErr)
+		} else {
+			var langFiles []string
+			found := make(map[string]bool)
+			for _, langJSON := range langJSONs {
+				name := langJSON.Name()
+				if langJSON.IsDir() || !strings.HasSuffix(name, ".json") {
+					continue
+				}
+				langFiles = append(langFiles, name)
+				found[name] = true
+			}
+			if 0 < len(langFiles) {
+				// 按 Conf.Lang、en、zh-CN 及其历史下划线文件名依次回退，最后取首个可用文件
+				candidates := make([]string, 0, 6)
+				candidateSeen := make(map[string]bool, 6)
+				for _, lang := range []string{Conf.Lang, "en", "zh-CN"} {
+					for _, name := range []string{lang, util.LangToLegacy(lang)} {
+						fileName := name + ".json"
+						if candidateSeen[fileName] {
+							continue
+						}
+						candidateSeen[fileName] = true
+						candidates = append(candidates, fileName)
+					}
+				}
+				preferredLang := ""
+				for _, c := range candidates {
+					if found[c] {
+						preferredLang = c
+						break
+					}
+				}
+				if "" == preferredLang {
+					preferredLang = langFiles[0]
+				}
+
+				langFilePath := filepath.Join(i18nDir, preferredLang)
+				if gulu.File.IsExist(langFilePath) {
+					data, err = filelock.ReadFile(langFilePath)
+					if err != nil {
+						logging.LogErrorf("read plugin [%s] i18n failed: %s", petal.Name, err)
+					} else {
+						petal.I18n = map[string]any{}
+						if err = gulu.JSON.UnmarshalJSON(data, &petal.I18n); err != nil {
+							logging.LogErrorf("unmarshal plugin [%s] i18n failed: %s", petal.Name, err)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+var petalsStoreLock = sync.Mutex{}
+
+func savePetals(petals []*Petal) {
+	petalsStoreLock.Lock()
+	defer petalsStoreLock.Unlock()
+	if err := savePetals0(petals); err == nil {
+		IncSyncIfNeeded(filepath.Join(util.DataDir, "storage", "petal", "petals.json"))
+	}
+}
+
+func savePetals0(petals []*Petal) (err error) {
+	if 1 > len(petals) {
+		petals = []*Petal{}
+	}
+
+	petalDir := filepath.Join(util.DataDir, "storage", "petal")
+	confPath := filepath.Join(petalDir, "petals.json")
+	data, err := gulu.JSON.MarshalIndentJSON(petals, "", "\t")
+	if err != nil {
+		logging.LogErrorf("marshal petals failed: %s", err)
+		return
+	}
+	if err = filelock.WriteFile(confPath, data); err != nil {
+		logging.LogErrorf("write petals [%s] failed: %s", confPath, err)
+		return
+	}
+	return
+}
+
+func getPetals() (ret []*Petal) {
+	petalsStoreLock.Lock()
+	defer petalsStoreLock.Unlock()
+	return getPetals0()
+}
+
+func getPetals0() (ret []*Petal) {
+	ret = []*Petal{}
+	petalDir := filepath.Join(util.DataDir, "storage", "petal")
+	if err := os.MkdirAll(petalDir, 0755); err != nil {
+		logging.LogErrorf("create petal dir [%s] failed: %s", petalDir, err)
+		return
+	}
+
+	confPath := filepath.Join(petalDir, "petals.json")
+	if !filelock.IsExist(confPath) {
+		data, err := gulu.JSON.MarshalIndentJSON(ret, "", "\t")
+		if err != nil {
+			logging.LogErrorf("marshal petals failed: %s", err)
+			return
+		}
+		if err = filelock.WriteFile(confPath, data); err != nil {
+			logging.LogErrorf("write petals [%s] failed: %s", confPath, err)
+			return
+		}
+		return
+	}
+
+	data, err := filelock.ReadFile(confPath)
+	if err != nil {
+		logging.LogErrorf("read petal file [%s] failed: %s", confPath, err)
+		return
+	}
+
+	if err = gulu.JSON.UnmarshalJSON(data, &ret); err != nil {
+		logging.LogErrorf("unmarshal petals failed: %s", err)
+		return
+	}
+
+	var tmp []*Petal
+	pluginsDir := filepath.Join(util.DataDir, "plugins")
+	for _, petal := range ret {
+		pluginJSONPath := filepath.Join(pluginsDir, petal.Name, "plugin.json")
+		if filelock.IsExist(pluginJSONPath) {
+			tmp = append(tmp, petal)
+		} else {
+			// 插件不存在时，删除对应的持久化信息
+			bazaar.RemovePackageInfo("plugins", petal.Name)
+		}
+	}
+	if len(tmp) != len(ret) {
+		savePetals0(tmp)
+		ret = tmp
+	}
+	if 1 > len(ret) {
+		ret = []*Petal{}
+	}
+	return
+}

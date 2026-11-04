@@ -1,0 +1,116 @@
+@use "util/mixin" as *;
+@use "component/tooltips" as *;
+@use "component/loading" as *;
+@use "protyle/wysiwyg" as * with ($block-rtl-selector: '[style*="direction: rtl"]');
+@use "component/typography" as *;
+@use "protyle/attr" as *;
+@use "protyle/mindmap-view" as *;
+@use "util/function" as *;
+@use "business/history" as *;
+@use "business/block" as *;
+@use "component/button" as *;
+@use "component/select" as *;
+@use "component/switch" as *;
+@use "component/slider" as *;
+@use "component/text-field" as *;
+
+.protyle-wysiwyg a,
+.b3-typography a {
+  color: var(--b3-protyle-inline-link-color);
+  cursor: pointer;
+  transition: var(--b3-transition);
+}
+
+svg {
+  fill: currentColor;
+  display: inline-block;
+}
+
+.protyle-wysiwyg [data-node-id].iframe:hover .protyle-action__drag {
+  display: none;
+}
+
+.b3-typography,
+.protyle-wysiwyg .table[data-node-id] {
+  table {
+    display: table;
+  }
+}
+
+.protyle-wysiwyg .table[data-node-id] {
+  &[style*="text-align: left"][style*="direction: rtl"] {
+    direction: ltr !important;
+  }
+
+  &[style*="text-align: center"] {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  &[style*="text-align: right"] {
+    margin-left: auto;
+  }
+}
+
+.exporting .protyle-wysiwyg {
+  // 使用普通块布局以确保图片和列表跨页后保持内容流顺序。
+  display: block;
+
+  [data-node-id] {
+    &.list,
+    &.li {
+      display: block;
+    }
+  }
+}
+
+// 按纸张高度等比限制图片，预览和打印使用相同的尺寸约束。
+#preview .img img[data-export-image-fit="true"] {
+  max-height: var(--export-image-max-height);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+@media print {
+  .protyle-wysiwyg [data-export-heading-page-break="true"] {
+    break-before: page;
+  }
+
+  .b3-typography pre.code-block[style*="max-height:"],
+  .protyle-wysiwyg .code-block[data-type="NodeCodeBlock"]:not(.render-node):not(pre)[style*="max-height:"] {
+    max-height: none !important;
+    overflow: visible;
+
+    & > .hljs {
+      max-height: none !important;
+      overflow: visible !important;
+    }
+  }
+
+  .protyle-wysiwyg .code-block[data-type="NodeCodeBlock"]:not(.render-node):not(pre)[style*="max-height:"] {
+    display: block;
+    padding-top: 4px;
+
+    & > .hljs {
+      min-height: 22px !important;
+      padding-top: 2em;
+    }
+  }
+
+  // 尽量避免块内分页
+  .protyle-wysiwyg [data-node-id] {
+    &[data-type=NodeAudio],
+    &.render-node[data-type=NodeCodeBlock],
+    &[data-type=NodeHeading],
+    &[data-type=NodeIFrame],
+    &[data-type=NodeMathBlock],
+    // 移除段落块元素 https://github.com/siyuan-note/siyuan/issues/14702 &[data-type=NodeParagraph],
+    &[data-type=NodeThematicBreak],
+    &[data-type=NodeVideo],
+    &[data-type=NodeWidget],
+    .img {
+      break-inside: avoid;
+    }
+  }
+}

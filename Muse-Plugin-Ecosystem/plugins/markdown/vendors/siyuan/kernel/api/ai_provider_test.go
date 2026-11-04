@@ -1,0 +1,45 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package api
+
+import (
+	"github.com/siyuan-note/siyuan/kernel/apicontract"
+	"testing"
+)
+
+func TestResolveAIProviderDraft(t *testing.T) {
+	provider, err := resolveAIProvider(apicontract.AIProviderRequest{
+		ProviderConfig: &apicontract.SettingProvider{
+			BaseURL:        " http://127.0.0.1:8080/v1 ",
+			APIKey:         " key ",
+			Headers:        map[string]string{"X-Api-Key": "header-key"},
+			RequestTimeout: 700,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if provider.BaseURL != "http://127.0.0.1:8080/v1" {
+		t.Fatalf("base URL = %q", provider.BaseURL)
+	}
+	if provider.APIKey != "key" {
+		t.Fatalf("API key = %q", provider.APIKey)
+	}
+	if provider.Headers["X-Api-Key"] != "header-key" {
+		t.Fatal("provider headers were not retained")
+	}
+	if provider.RequestTimeout != 600 {
+		t.Fatalf("request timeout = %d, want 600", provider.RequestTimeout)
+	}
+	if provider.Protocol != "openai" || provider.ID == "" {
+		t.Fatalf("draft provider was not normalized: %#v", provider)
+	}
+}
+
+func TestResolveAIProviderDraftRequiresBaseURL(t *testing.T) {
+	if _, err := resolveAIProvider(apicontract.AIProviderRequest{ProviderConfig: &apicontract.SettingProvider{}}); err == nil {
+		t.Fatal("empty draft provider should be rejected")
+	}
+}

@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_shape_geometry_command,几何到DrawRect/DrawPath,层元素+pl-02几何,几何指令序列,pr-01-slide-layers,02,libs/ppt-core,pass
+2,02_function_fill_line_command,实色fill/line到指令样式,几何指令+FillBase+LineProperty,完成样式的RenderCommand,01,pr-04-ffi-flutter,libs/ppt-core,pass
+3,03_function_blip_image,blipFill到DrawImage,几何rect+mediaId/rId,DrawImage或占位DrawRect,01;pp-10:02,pr-04-ffi-flutter,libs/ppt-core,pass

@@ -1,0 +1,11 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_document_types,子文档类型号,constants,MAIN..HEADERTEXTBOX+COUNT=7,(none),09_function_subdocument_own;10_function_textdocument_create,libs/word-core,pass
+2,02_function_builtin_typesti,内置名到TypeSti,style name / sti,TypeSti+reserved+getName,01_function_document_types,03_function_styleid2sti,libs/word-core,pass
+3,03_function_styleid2sti,XML styleId到内核sti,styleId+name+type+isCustom,coreId map miss!=4095,02_function_builtin_typesti,feature-output,libs/word-core,pass
+4,04_function_kstyle_final,basedOn合成final,KStyle+base chain,frozen PropertySet,wave0-property_set,05_function_kstyles_table,libs/word-core,pass
+5,05_function_kstyles_table,样式表覆盖与查找,KStyle/id/name/defaults,getStyleById+empty-only defaults,04_function_kstyle_final,06_function_add_normal_style;10_function_textdocument_create,libs/word-core,pass
+6,06_function_add_normal_style,保证Normal sti=0,KStyles,id=0 type=1 prop10/193,05_function_kstyles_table,feature-output,libs/word-core,pass
+7,07_function_numid_redirection,OOXML numId重定向,numId,kernel id first=1,TextDocument.UUNumberingId,feature-output,libs/word-core,pass
+8,08_function_listeners_io_skip,通知顺序与IO跳过,insert/remove+IO flags,dispatcher-list order,wc-01-notify_order,09_function_subdocument_own,libs/word-core,pass
+9,09_function_subdocument_own,SubDocument拥有存储,parent+type,rope/chpx/papx/PLCSection,wc-01;01_function_document_types;08_function_listeners_io_skip,10_function_textdocument_create,libs/word-core,pass
+10,10_function_textdocument_create,建成7槽对象图,ctor/_create,7 SubDocuments+KStyles+pool+UUSti,05_function_kstyles_table;09_function_subdocument_own,feature-output,libs/word-core,pass

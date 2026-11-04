@@ -1,0 +1,1624 @@
+{
+	"ID": "20230429115206-ob8nl8t",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"icon": "1f5c2",
+		"id": "20230429115206-ob8nl8t",
+		"title": "術語表",
+		"type": "doc",
+		"updated": "20261024163828"
+	},
+	"Children": [
+		{
+			"ID": "20230429115316-48ryx5o",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230429115316-48ryx5o",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20230429115316-846m72w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115316-846m72w",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "本章解釋指南中常見的術語，並說明它們在思源中的具體含義。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115316-ar60tpc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115316-ar60tpc",
+				"updated": "20230429115316"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "請"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​，以下內容在涉及到具體功能時主要以桌面端為主進行介紹。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115345-lqayfnx",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230429115345-lqayfnx",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "編輯器"
+				}
+			]
+		},
+		{
+			"ID": "20230429115345-gdsi5kp",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115345-gdsi5kp",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "導覽路徑"
+				}
+			]
+		},
+		{
+			"ID": "20230429115345-9t42vsu",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20230429115345-9t42vsu",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20230429115345-sudqmid",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20230429115345-sudqmid",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "麵包屑是顯示目前位置及其上層結構的導覽路徑，可以用於返回上層內容。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230429115345-pwclyrj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115345-pwclyrj",
+				"updated": "20260730184353"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在思源中，導覽路徑指的是編輯器頂部由右箭頭相連的區塊路徑，用於在區塊結構中導航。其中每一層都由區塊標開頭，鼠標懸浮可以打開預覽浮窗。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115345-c4656ol",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115345-c4656ol",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "錨文字"
+				}
+			]
+		},
+		{
+			"ID": "20230429115345-ywgrvsd",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20230429115345-ywgrvsd",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20230429115345-rz1ooou",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20230429115345-rz1ooou",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "錨文字是連結中顯示給讀者的文字，用於說明連結所指向的內容。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230429115345-6ofc1rc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115345-6ofc1rc",
+				"updated": "20260730184353"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在思源中，我們將通常意義上的錨文字從超連結元素擴展到了區塊引用、PDF 標註引用元素上。特殊地，對於區塊引用元素錨文字還分為靜態錨文字和動態錨文字，具體細節請參考"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20220623200754-u00gfsg",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "引用內容區塊錨文字"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "章節。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115509-rfzye0g",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115509-rfzye0g",
+				"updated": "20260614111457"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "編輯器模式"
+				}
+			]
+		},
+		{
+			"ID": "20230429115509-ih62dmt",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230429115509-ih62dmt",
+				"updated": "20230429115509"
+			},
+			"Children": [
+				{
+					"ID": "20230429115509-9a5p3c2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230429115509-9a5p3c2",
+						"updated": "20230429115509"
+					},
+					"Children": [
+						{
+							"ID": "20230429115509-imrnzqd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230429115509-imrnzqd",
+								"updated": "20230429115509"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "所見即所得：常規情況下的編輯器界面"
+								}
+							]
+						},
+						{
+							"ID": "20230429115509-e6jz50o",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20230429115509-e6jz50o",
+								"updated": "20230429115509"
+							},
+							"Children": [
+								{
+									"ID": "20230429115509-nidqsav",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20230429115509-nidqsav",
+										"updated": "20230429115509"
+									},
+									"Children": [
+										{
+											"ID": "20230429115509-26m4h8o",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20230429115509-26m4h8o",
+												"updated": "20230429115509"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "可編輯：支持修改內容"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20230429115509-khjymyf",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20230429115509-khjymyf",
+										"updated": "20230429115509"
+									},
+									"Children": [
+										{
+											"ID": "20230429115509-t2pn0ci",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20230429115509-t2pn0ci",
+												"updated": "20230429115509"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "僅只讀：僅支持查看內容，不支持修改"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230429115509-b96qupr",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230429115509-b96qupr",
+						"updated": "20230429115509"
+					},
+					"Children": [
+						{
+							"ID": "20230429115509-iqe3mqw",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230429115509-iqe3mqw",
+								"updated": "20230429115509"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "導出預覽：轉換為標準 Markdown 後進行預覽"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230429115509-rl1jlhc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115509-rl1jlhc",
+				"updated": "20250115163209"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "所見即所得和導出預覽模式切換位於編輯器右上角 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "︙"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 菜單中；所見即所得編輯和只讀模式切換位於頂欄右上角。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-7uftgv5",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111457-7uftgv5",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "區塊引用"
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-blivagz",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111457-blivagz",
+				"updated": "20260614111457"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111457-8a6a678",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111457-8a6a678",
+						"updated": "20260614111457"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "參照是指向另一處內容的連結，使讀者可以跳轉到被參照的位置。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-el5qnm3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111457-el5qnm3",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在思源中，區塊引用是透過 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "(("
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 觸發的指向另一個內容區塊的連結，支援靜態錨文字和動態錨文字兩種方式。點擊區塊引用可跳轉到被參照的區塊，懸浮可預覽。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-nf8wq3v",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111457-nf8wq3v",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "反鏈"
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-6dfbm0o",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111457-6dfbm0o",
+				"updated": "20260614111457"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111457-1ad7mbw",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111457-1ad7mbw",
+						"updated": "20260614111457"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "反向連結（Backlink）是指其他頁面中指向當前頁面的連結，是雙向連結體系的重要組成部分。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-rizqw9m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111457-rizqw9m",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在思源中，反鏈面板展示了所有參照了當前區塊的區塊。反鏈分為兩部分：連結（透過區塊引用直接關聯）和提及（透過文字匹配的潛在關聯）。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-wh2unuw",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111457-wh2unuw",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "提及"
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-s49hyaw",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111457-s49hyaw",
+				"updated": "20260614111457"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111457-sjjoek5",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111457-sjjoek5",
+						"updated": "20260614111457"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "提及（Mention）是指在文字中發現的關鍵詞匹配，用於發現潛在的關聯關係。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-6pg0dna",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111457-6pg0dna",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在思源中，提及類似反鏈中的連結部分，但不是透過區塊引用建立的，而是透過搜尋內容區塊名稱、別名和參照錨文字來自動匹配的文字內容。提及可一鍵轉換為區塊引用。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-xqubcvr",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111457-xqubcvr",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "虛擬引用"
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-8yf6tx8",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111457-8yf6tx8",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111457-javkesq",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111457-javkesq",
+						"updated": "20261024163013"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "虛擬引用是一種自動發現潛在參照關係的技術，無需使用者手動建立即可在文字中標識可能存在關聯的內容區塊。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111457-xntm6ad",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111457-xntm6ad",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在思源中，虛擬引用基於內容區塊的命名、別名和錨文字進行自動探測，在編輯器中以虛線底線標識。滑鼠懸浮可預覽對應的內容區塊，點擊可轉換為正式的區塊引用。可在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "編輯器"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "雙向連結"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "虛擬引用"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中開啟或關閉。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-wfbg55f",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230429115527-wfbg55f",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "資料倉庫"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-yhcnfl4",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-yhcnfl4",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "密鑰"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-mm605dn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-mm605dn",
+				"updated": "20230429115611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "密鑰用於加密資料快照，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20220722002508-jixu469",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "有三種生成方式"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。建議普通用戶使用密碼短語生成，相同的密碼短語可在其他設備上生成相同的密鑰，以方便初始化資料同步。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-iafj3ly",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-iafj3ly",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "本地快照"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-gqi2gth",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-gqi2gth",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "保存在本地設備上的資料快照。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-nmj9453",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-nmj9453",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "本地標記的快照"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-jm8h91v",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-jm8h91v",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "本地快照中手動打過標記的快照。打標記的目的是為了方便查找，一個有意義的標記名稱可以在回復快照時起到足夠的提示作用。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-ugeqhhb",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-ugeqhhb",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "雲端快照"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-d5adyki",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-d5adyki",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "保存在雲端存儲上的資料快照。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-42pg7df",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-42pg7df",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "雲端標記的快照"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-guua5dg",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-guua5dg",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "本地標記的快照上傳到雲端后的資料快照。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-imhpeay",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230429115527-imhpeay",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "界面"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-sy9uq4j",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-sy9uq4j",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "停靠欄"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-s4n5iji",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-s4n5iji",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "主界面左側、右側和下側的邊欄，用於存放面板入口按鈕。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-fcbx6ig",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-fcbx6ig",
+				"updated": "20260426180217"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "面板"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-64gzr7x",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-64gzr7x",
+				"updated": "20260426180217"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "面板指的是從停靠欄上打開的功能區域，比如文檔、大綱和反鍊等。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-oih6gdv",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-oih6gdv",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "分頁"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-52jwrkc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-52jwrkc",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "分頁類似瀏覽器上的標籤頁，不同類型的分頁包含了不同的功能。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-xmzzd5f",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"id": "20230429115527-xmzzd5f",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "編輯器分頁"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-p4hnfk8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-p4hnfk8",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "用於加載文檔編輯器。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-4qzwtni",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"id": "20230429115527-4qzwtni",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PDF 分頁"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-0v1vlao",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-0v1vlao",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "用於加載 PDF。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-w2w1b9g",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"id": "20230429115527-w2w1b9g",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "搜索分頁"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-gkhm2ak",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-gkhm2ak",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "將搜索界面在分頁中打開，直接這樣用戶就可以同時使用其他分頁，不會被搜索窗口遮擋其他工作。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-4jd4m98",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"id": "20230429115527-4jd4m98",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "間隔重複分頁"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-aw8shk7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-aw8shk7",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "將間隔重複界面在分頁中打開。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-fa5g1fg",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-fa5g1fg",
+				"updated": "20260930224728"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "窗口"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-xozwhac",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-xozwhac",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "分頁可以轉換為獨立於主界面的窗口，窗口可以拖到主界面之外，避免主界面中過於擁擠。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-aflpo8c",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-aflpo8c",
+				"updated": "20260930224728"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "透過置頂視窗還可以讓該視窗位於所有應用程式之上，以便使用者更有效地利用有限的螢幕空間。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-89940fz",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-89940fz",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "佈局"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-a6wzl4m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-a6wzl4m",
+				"updated": "20230429115527"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "當前主界面的停靠欄、分頁和面板的狀態組成了佈局，佈局可以在左上角工作空間菜單中進行保存和切換。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-jjq4vik",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-jjq4vik",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "區塊標"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-1ghs629",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-1ghs629",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "出現在區塊前面的圖示，面板中出現的區塊標在大部分情況下都支持通過鼠標懸浮打開預覽浮窗，比如大綱面板、反連面板中的區塊標。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-o2we8gd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-o2we8gd",
+				"updated": "20260730184353"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "區塊標除了懸浮預覽，還支持 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Ctrl"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "點擊"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 在分頁中打開，這在反連面板等需要跳轉上下文的場景中尤其有用。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-hyrjbqs",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111508-hyrjbqs",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "集市"
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-fegr1zs",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111508-fegr1zs",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111508-qr2z8cv",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111508-qr2z8cv",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "集市是集中瀏覽和管理社群擴充的地方。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-asmiekc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111508-asmiekc",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在思源中，集市是瀏覽和安裝社群擴充的入口，包括外掛、主題、圖示、範本和小工具。使用者可直接在應用程式內搜尋、安裝和更新。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-h3us19q",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111508-h3us19q",
+				"updated": "20260614111508"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "收集箱"
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-5zfdv6g",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111508-5zfdv6g",
+				"updated": "20260614111508"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111508-2euyh9e",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111508-2euyh9e",
+						"updated": "20260614111508"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "收集箱（Inbox）是臨時存放待處理資訊的容器。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-ygdjeul",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111508-ygdjeul",
+				"updated": "20260614111508"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在思源中，收集箱是雲端快速記錄功能，透過 WeChat 發送或 API 呼叫將文字暫存到雲端，之後可在收集箱面板中將其移動到文件中進行整理。該功能需要訂閱會員。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-7otqkx3",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111508-7otqkx3",
+				"updated": "20260614111508"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "閃卡"
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-zw53p6s",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111508-zw53p6s",
+				"updated": "20260614111508"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111508-q89u31h",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111508-q89u31h",
+						"updated": "20260614111508"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "閃卡（Flashcard）是一種用於記憶訓練的卡片，正面寫問題，背面寫答案，透過間隔重複演算法安排複習時間。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-sef3t3q",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111508-sef3t3q",
+				"updated": "20260730184353"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在思源中，閃卡是基於內容區塊的間隔重複複習功能。可將內容區塊製作為閃卡，系統根據複習表現自動安排下次複習時間。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-gqxf0f5",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111508-gqxf0f5",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "命令面板"
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-u5rg5cf",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111508-u5rg5cf",
+				"updated": "20260614111508"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111508-4nzluhc",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111508-4nzluhc",
+						"updated": "20260614111508"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "命令面板（Command Palette）是一種透過鍵盤快速存取應用功能的入口，使用者輸入關鍵詞即可搜尋和執行命令。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111508-3gu2eju",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111508-3gu2eju",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "預設透過 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Alt"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "P"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "（macOS 為 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Option"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "P"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "）開啟命令面板，輸入關鍵字尋找並執行命令。可用命令取決於目前介面和焦點位置。"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-roo52g3",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230429115527-roo52g3",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "其他"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-zoaurau",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115527-zoaurau",
+				"updated": "20260614111516"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "伺服"
+				}
+			]
+		},
+		{
+			"ID": "20230429115527-e4gh1tt",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115527-e4gh1tt",
+				"updated": "20230429115652"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "通過思源Kernel提供的服務能力以便"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211226122523-rl8356a",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "在瀏覽器上使用"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111516-8op2j24",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111516-8op2j24",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "內核"
+				}
+			]
+		},
+		{
+			"ID": "20260614111516-ms7zh4q",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111516-ms7zh4q",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111516-guzmn5l",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111516-guzmn5l",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "本指南中的「內核」指思源負責處理資料的後端程式。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111516-jaeybfl",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111516-jaeybfl",
+				"updated": "20260614111516"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在思源中，內核指的是啟動後執行的後端服務進程，負責資料讀寫、索引搜尋、同步備份等核心功能。前端介面透過 HTTP/WebSocket 與內核通訊。桌面端和行動端內建內核，Docker 部署時單獨執行內核。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111516-xaresom",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111516-xaresom",
+				"updated": "20260614111516"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "工作空間"
+				}
+			]
+		},
+		{
+			"ID": "20260614111516-264i0vw",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111516-264i0vw",
+				"updated": "20260614111516"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111516-8ttqwlt",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111516-8ttqwlt",
+						"updated": "20260614111516"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "工作空間是使用者進行工作時的資料環境，類似於作業系統中的使用者目錄。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111516-bb2sqqp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111516-bb2sqqp",
+				"updated": "20260614111516"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在思源中，工作空間是一個資料夾，用於儲存所有資料，包括筆記本、文件、資源檔案、設定和歷史記錄等。不同工作空間透過檔案系統資料夾相互隔離，一個工作空間只能被一個內核進程伺服。"
+				}
+			]
+		}
+	]
+}

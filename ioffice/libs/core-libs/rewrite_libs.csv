@@ -1,0 +1,27 @@
+order,lib_path,crate_name,file_count,depends_on,state,description
+0,util/util,core_libs_util,309,,steady,基础工具库
+1,kfc/kfc,core_libs_kfc_main,139,,steady,KFC集合框架(主库)
+2,math3,core_libs_math3,990,,rewriting,Apache Commons Math数学库
+3,shaperecognized,core_libs_shaperecognized,14,,done,图形识别
+4,thirdparty/doc_encrypt,core_libs_doc_encrypt,2,,pending,文档加密
+5,thirdparty/jaxen,core_libs_jaxen,186,,steady,XPath引擎
+6,thirdparty/juniversalchardet,core_libs_juniversalchardet,58,,steady,字符集检测
+7,kfc/kfc_alpha,core_libs_kfc,229,,steady,KFC集合框架(alpha)
+8,kfs/kfs_app,core_libs_kfs,65,,steady,KFS文件系统
+9,thirdparty/font,core_libs_font,41,util/util,steady,字体处理
+10,util/adapter,util_adapter,207,util/util,steady,平台适配层
+11,thirdparty/dom4j,core_libs_dom4j,147,util/util;kfs/kfs_app;thirdparty/jaxen,steady,DOM4J XML解析
+12,thirdparty/kInk,core_libs_kink,150,util/util;kfs/kfs_app,steady,墨迹处理
+13,thirdparty/picparser,core_libs_picparser,225,util/util;kfs/kfs_app;thirdparty/font,rewriting,图片解析
+14,drawing,core_libs_drawing,235,util/util;kfc/kfc_alpha;kfs/kfs_app,steady,绘图库
+15,io/poi-compact,core_libs_poi_compact,401,util/util;kfc/kfc_alpha;kfs/kfs_app,rewriting,POI精简版
+16,io/wps-io,core_libs_io,573,util/util;kfs/kfs_app,done,WPS IO库
+17,io/imagetopdf,core_libs_imagetopdf,16,kfs/kfs_app,done,图片转PDF
+18,service,core_libs_service,9,util/util;kfs/kfs_app,done,服务组件
+19,io/css-io,css-io,66,util/util;io/wps-io,pending,CSS IO库
+20,io/enml_io,core_libs_enml_io,58,util/util;kfs/kfs_app;thirdparty/dom4j,done,ENML格式IO
+21,io/libfileformat,core_libs_libfileformat,55,util/util;kfs/kfs_app;io/wps-io;io/poi-compact,rewriting,文件格式基础库
+22,io/wps-security-file,core_libs_wps_security_file,20,util/util;kfs/kfs_app;io/poi-compact,done,安全文件处理
+23,thirdparty/writerauxlibs,core_libs_writerauxlibs,64,util/util;kfs/kfs_app;thirdparty/font;drawing,pending,Writer辅助库
+24,io/uof-io,core_libs_uof_io,180,util/util;kfs/kfs_app;kfc/kfc;io/wps-io;io/poi-compact,done,UOF格式IO
+25,wpslayout,core_libs_wpslayout,133,util/util;kfs/kfs_app;kfc/kfc;thirdparty/font;drawing,done,WPS排版引擎

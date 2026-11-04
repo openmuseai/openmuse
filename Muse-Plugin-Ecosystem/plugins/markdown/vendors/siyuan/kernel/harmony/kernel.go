@@ -1,0 +1,284 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package main
+
+import (
+	"C"
+	"encoding/json"
+	"fmt"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/88250/gulu"
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/cache"
+	"github.com/siyuan-note/siyuan/kernel/job"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/plugin"
+	"github.com/siyuan-note/siyuan/kernel/server"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+// LANSyncDiscoveryInfo 返回原生 MDNS 发现需要发布的服务信息。
+//
+//export LANSyncDiscoveryInfo
+func LANSyncDiscoveryInfo() *C.char {
+	info := model.GetLANSyncDiscoveryInfo()
+	if nil == info {
+		return nil
+	}
+	data, err := json.Marshal(info)
+	if nil != err {
+		return nil
+	}
+	return C.CString(string(data))
+}
+
+// AddLANSyncPeer 将原生 MDNS 发现的设备交给内核验证。
+//
+//export AddLANSyncPeer
+func AddLANSyncPeer(instance, address *C.char, port int, txtJSON *C.char) bool {
+	txt := map[string]string{}
+	if err := json.Unmarshal([]byte(C.GoString(txtJSON)), &txt); nil != err {
+		return false
+	}
+	return model.AddLANSyncPeer(C.GoString(instance), C.GoString(address), port, txt)
+}
+
+// RemoveLANSyncPeer 将原生 MDNS 移除的设备从内核中删除。
+//
+//export RemoveLANSyncPeer
+func RemoveLANSyncPeer(instance *C.char) bool {
+	return model.RemoveLANSyncPeer(C.GoString(instance))
+}
+
+// LANSyncActive 返回局域网同步服务是否正在运行。
+//
+//export LANSyncActive
+func LANSyncActive() bool {
+	return model.LANSyncActive()
+}
+
+// UpdateLocalIPs 更新原生容器提供的局域网地址并刷新局域网同步服务。
+//
+//export UpdateLocalIPs
+func UpdateLocalIPs(localIPs *C.char) {
+	util.SetLocalIPs(strings.Split(C.GoString(localIPs), ","))
+	model.RefreshLANSyncNetwork()
+}
+
+//export AcquireExportFile
+func AcquireExportFile(exportPath *C.char) *C.char {
+	pathStr := C.GoString(exportPath)
+	lease, err := model.AcquireMobileExportLease(pathStr)
+	if err != nil {
+		logging.LogErrorf("acquire export file [%s] failed: %s", pathStr, err)
+		return nil
+	}
+	data, err := json.Marshal(lease)
+	if err != nil {
+		model.ReleaseMobileExportLease(lease.ID)
+		return nil
+	}
+	return C.CString(string(data))
+}
+
+//export ReleaseExportFile
+func ReleaseExportFile(leaseID *C.char) {
+	model.ReleaseMobileExportLease(C.GoString(leaseID))
+}
+
+// GetExportFileName 返回普通导出的资源名称；加密导出应读取 AcquireExportFile 返回的 Name。
+//
+//export GetExportFileName
+func GetExportFileName(exportPath *C.char) *C.char {
+	name := model.GetMobileExportName(C.GoString(exportPath))
+	if name == "" {
+		return nil
+	}
+	return C.CString(name)
+}
+
+//export StartKernelFast
+func StartKernelFast(container, appDir, workspaceBaseDir, localIPs *C.char) {
+	model.InitJwtKey()
+	go server.Serve(true, model.Conf.CookieKey)
+}
+
+//export StartKernel
+func StartKernel(container, appDir, workspaceBaseDir, timezoneID, localIPs, lang, osVer *C.char) {
+	model.InitJwtKey()
+	SetTimezone(container, appDir, timezoneID)
+	util.Mode = "prod"
+	util.MobileOSVer = C.GoString(osVer)
+	util.SetLocalIPs(strings.Split(C.GoString(localIPs), ","))
+	util.BootMobile(C.GoString(container), C.GoString(appDir), C.GoString(workspaceBaseDir), C.GoString(lang))
+
+	model.InitConf()
+	go server.Serve(false, model.Conf.CookieKey)
+	go func() {
+		model.InitAppearance()
+		sql.InitDatabase(false)
+		sql.InitHistoryDatabase(false)
+		sql.InitAssetContentDatabase(false)
+		// 数据库打开后重新应用搜索配置，使 PRAGMA case_sensitive_like 对新连接生效
+		model.ApplySearchRuntime()
+
+		model.BootSyncData()
+		model.CleanupEmptyPluginStorageDirs()
+		model.InitBoxes()
+		model.LoadFlashcards()
+		util.LoadAssetsTexts()
+
+		util.SetBooted()
+		util.PushClearAllMsg()
+
+		job.StartCron()
+		go model.AutoGenerateFileHistory()
+		go cache.LoadAssets()
+		go plugin.InitManager()
+	}()
+}
+
+//export Language
+func Language(num int) *C.char {
+	return C.CString(model.Conf.Language(num))
+}
+
+//export ShowMsg
+func ShowMsg(msg *C.char, timeout int) {
+	util.PushMsg(C.GoString(msg), timeout)
+}
+
+//export IsHttpServing
+func IsHttpServing() bool {
+	return util.HttpServing
+}
+
+//export GetCurrentWorkspacePath
+func GetCurrentWorkspacePath() *C.char {
+	return C.CString(util.WorkspaceDir)
+}
+
+//export GetAssetAbsPath
+func GetAssetAbsPath(relativePath *C.char) *C.char {
+	absPath, err := model.GetAssetAbsPath(C.GoString(relativePath))
+	if err == nil {
+		err = model.EnsureAssetLocal(absPath)
+	}
+	if nil != err {
+		logging.LogErrorf("get asset abs path failed: %s", err)
+		return relativePath
+	}
+	return C.CString(absPath)
+}
+
+//export GetMimeTypeByExt
+func GetMimeTypeByExt(ext *C.char) *C.char {
+	return C.CString(util.GetMimeTypeByExt(C.GoString(ext)))
+}
+
+//export SetTimezone
+func SetTimezone(container, appDir, timezoneID *C.char) {
+	z, err := time.LoadLocation(strings.TrimSpace(C.GoString(timezoneID)))
+	if err != nil {
+		fmt.Printf("load location failed: %s\n", err)
+		time.Local = time.FixedZone("CST", 8*3600)
+		return
+	}
+	time.Local = z
+}
+
+//export DisableFeature
+func DisableFeature(feature *C.char) {
+	util.DisableFeature(C.GoString(feature))
+}
+
+//export FilepathBase
+func FilepathBase(path *C.char) *C.char {
+	return C.CString(filepath.Base(C.GoString(path)))
+}
+
+//export FilterUploadFileName
+func FilterUploadFileName(name *C.char) *C.char {
+	return C.CString(util.FilterUploadFileName(C.GoString(name)))
+}
+
+//export AssetName
+func AssetName(name *C.char) *C.char {
+	return C.CString(util.AssetName(C.GoString(name), ast.NewNodeID()))
+}
+
+//export HTML2Markdown
+func HTML2Markdown(html *C.char) *C.char {
+	return C.CString(util.NewLute().HTML2Md(C.GoString(html)))
+}
+
+//export Unzip
+func Unzip(zipFilePath, destination *C.char) {
+	var zipPath string = C.GoString(zipFilePath)
+	if err := gulu.Zip.Unzip(zipPath, C.GoString(destination)); nil != err {
+		logging.LogErrorf("unzip [%s] failed: %s", zipPath, err)
+		panic(err)
+	}
+}
+
+//export GetExportFilePath
+func GetExportFilePath(exportPath *C.char) *C.char {
+	pathStr := C.GoString(exportPath)
+	var absPath string
+	if fileName, ok := strings.CutPrefix(pathStr, "/export/"); ok {
+		if decoded, err := url.PathUnescape(fileName); err == nil {
+			fileName = decoded
+		}
+		fileName = filepath.Clean(fileName)
+		if strings.HasPrefix(fileName, "..") {
+			logging.LogWarnf("get export file path [%s] blocked: path traversal attempt [%s]", pathStr, fileName)
+			return nil
+		}
+		// 加密导出需要持有覆盖原生复制过程的租约，旧路径解析接口不再返回其明文地址。
+		if model.IsManagedEncryptedExportPath(fileName) {
+			logging.LogWarnf("get export file path [%s] blocked: use AcquireExportFile for encrypted exports", pathStr)
+			return nil
+		}
+		absPath = filepath.Join(util.TempDir, "export", fileName)
+		exportBaseDir := filepath.Join(util.TempDir, "export")
+		if !gulu.File.IsSubPath(exportBaseDir, absPath) {
+			logging.LogWarnf("get export file path [%s] blocked: path [%s] is outside export base dir [%s]", pathStr, absPath, exportBaseDir)
+			return nil
+		}
+	} else if strings.HasPrefix(pathStr, "assets/") {
+		var err error
+		absPath, err = model.GetAssetAbsPath(pathStr)
+		if err == nil {
+			err = model.EnsureAssetLocal(absPath)
+		}
+		if nil != err {
+			logging.LogErrorf("get asset abs path [%s] failed: %s", pathStr, err)
+			return nil
+		}
+	} else {
+		logging.LogWarnf("get export file path [%s] failed: unsupported path prefix", pathStr)
+		return nil
+	}
+
+	if "" == absPath {
+		logging.LogWarnf("get export file path [%s] failed: resolved to empty abs path", pathStr)
+		return nil
+	}
+	return C.CString(absPath)
+}
+
+//export Exit
+func Exit() {
+	os.Exit(logging.ExitCodeOk)
+}
+
+func main() {}

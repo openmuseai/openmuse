@@ -1,0 +1,8 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_sw_reader_map,OOXML 枚举映射,XML 属性字符串,Option<i32> 查表结果,,03;06;pp-02-shape-tree-parse,libs/ppt-core,pass
+2,02_function_handler_callback,DML 回调默认策略,parser mode+typed callback 调用,mode 判定+identity/-1/None/no-op fallback,,03;04;05;06;07;pp-02-shape-tree-parse,libs/ppt-core,pass
+3,03_function_sw_nvpr,p:nvPr metadata,p:nvPr attrs+sub-events+ShowShape,flags+media+placeholder+custData,01;02,pp-02-shape-tree-parse;04,libs/ppt-core,pass
+4,04_function_common_slide_data,p:cSld film+protocol,p:cSld attrs+sub-events+film+DgStore,name+child handlers+initRoot+updateProtocol,02;pp-02:05,05;06;07,libs/ppt-core,pass
+5,05_function_slide_handler,p:sld part XML,p:sld attrs+sub-events+KmoSlide,Slide flags+child dispatch+protocol save,02;04,pp-07-part-open,libs/ppt-core,pass
+6,06_function_slide_layout,p:sldLayout XML,p:sldLayout attrs+sub-events+KmoSlideLayout,layout type/flags+cSld/hf dispatch+protocol,01;02;04,pp-07-part-open,libs/ppt-core,pass
+7,07_function_slide_master,p:sldMaster XML,p:sldMaster attrs+sub-events+KmoSlideMaster,preserve+id map+txStyles/hf/cSld dispatch+protocol,02;04,pp-07-part-open,libs/ppt-core,pass

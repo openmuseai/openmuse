@@ -1,0 +1,9 @@
+{
+  "name": "OpenMuse",
+  "short_name": "OpenMuse",
+  "start_url": "/app/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4c63d9",
+  "description": "OpenMuse Web"
+}

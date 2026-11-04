@@ -1,0 +1,9 @@
+[36mConfig path: /Users/mac/src/ioffice/libs/core-libs/util/util/rewrite_config.json[0m
+[36mJava base: /Users/mac/src/ioffice/koffice/core-libs/util/util/src[0m
+[36mRust root: /Users/mac/src/ioffice/libs/core-libs/util/util/src[0m
+[36mRust crate root: /Users/mac/src/ioffice/libs/core-libs/util/util[0m
+[36mJava dep base: /Users/mac/src/ioffice/koffice/core-libs[0m
+[36mRust dep root: /Users/mac/src/ioffice/libs/core-libs[0m
+[36mProject: /Users/mac/src/ioffice[0m
+[36mResolved module_path "cn/wps/collections/IShareObjIndexdMap.java" → /Users/mac/src/ioffice/koffice/core-libs/util/util/src/cn/wps/collections/IShareObjIndexdMap.java[0m
+[36mTemplate generated: /Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/IShareObjIndexdMap.rs[0m

@@ -1,0 +1,11 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id,tags
+0,koffice/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/AffEntry.java,AffEntry,steady,,main,,libs/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/AffEntry.rs,,worker-7e3a9f12,0524_rust_stub
+0,koffice/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/Hentry.java,Hentry,steady,,main,,libs/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/Hentry.rs,,worker-7e3a9f12,0524_rust_stub
+1,koffice/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/ReplaceEntry.java,ReplaceEntry,steady,,main,,libs/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/ReplaceEntry.rs,,worker-7e3a9f12,0524_rust_stub
+2,koffice/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/MapEntry.java,MapEntry,steady,,main,,libs/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/MapEntry.rs,,worker-7e3a9f12,0524_rust_stub
+3,koffice/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/FlagEntry.java,FlagEntry,steady,,main,,libs/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/FlagEntry.rs,,worker-7e3a9f12,0524_rust_stub
+4,koffice/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/PatEntry.java,PatEntry,steady,,main,,libs/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/PatEntry.rs,,worker-7e3a9f12,0524_rust_stub
+5,koffice/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/CSInfo.java,CSInfo,steady,,main,,libs/core-libs/thirdparty/writerauxlibs/src/cn/wps/hunspell/CSInfo.rs,,worker-7e3a9f12,0524_rust_stub
+13,koffice/core-libs/thirdparty/writerauxlibs/src/cn/wps/pdfExporter/KStream.java,KStream,steady,,writerauxlibs,,libs/core-libs/thirdparty/writerauxlibs/src/cn/wps/pdfExporter/KStream.rs,,worker-7e3a9f12,0524_rust_stub
+12,koffice/core-libs/thirdparty/writerauxlibs/src/cn/wps/pdfExporter/KPdfVal.java,KPdfVal,steady,,main,,libs/core-libs/thirdparty/writerauxlibs/src/cn/wps/pdfExporter/KPdfVal.rs,,worker-7e3a9f12,0524_rust_stub
+12,koffice/core-libs/thirdparty/writerauxlibs/src/cn/wps/pdfExporter/KClipStack.java,KClipStack,steady,,main,,libs/core-libs/thirdparty/writerauxlibs/src/cn/wps/pdfExporter/KClipStack.rs,,worker-7e3a9f12,0524_rust_stub

@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "id": "official-china",
+  "market": "china",
+  "defaultLocale": "zh-Hans",
+  "selection": "fixed",
+  "regions": [
+    {
+      "id": "cn",
+      "labels": {
+        "en": "China",
+        "zh-Hans": "中国"
+      },
+      "available": true,
+      "bundle": {
+        "bootstrap": {
+          "discoveryUrls": [],
+          "publicKeys": {},
+          "allowedServiceOrigins": {
+            "auth": [
+              "https://cn.openmuseai.com"
+            ],
+            "cloud": [
+              "https://cn.openmuseai.com"
+            ],
+            "pluginRegistry": [
+              "https://plugins.openmuseai.com"
+            ],
+            "updates": [
+              "https://openmuseai.com"
+            ]
+          },
+          "allowedResourceOrigins": []
+        },
+        "snapshot": {
+          "schemaVersion": 1,
+          "releaseId": "bundled-china-v1",
+          "sequence": 0,
+          "productId": "openmuse",
+          "environment": "production",
+          "distributionId": "official",
+          "scope": {
+            "dataRegion": "cn",
+            "platform": "any",
+            "variantId": "default"
+          },
+          "compatibility": {
+            "minBuild": 0,
+            "requiredCapabilities": [
+              "config.v1"
+            ]
+          },
+          "deployment": {
+            "id": "china",
+            "authBindingId": "china",
+            "services": {
+              "auth": {
+                "baseUrl": "https://cn.openmuseai.com/gotrue"
+              },
+              "cloud": {
+                "baseUrl": "https://cn.openmuseai.com"
+              },
+              "pluginRegistry": {
+                "baseUrl": "https://plugins.openmuseai.com"
+              },
+              "updates": {
+                "baseUrl": "https://openmuseai.com"
+              }
+            }
+          },
+          "localization": {
+            "defaultLocale": "zh-Hans",
+            "enabledLocales": [
+              "en",
+              "zh-Hans"
+            ],
+            "aliases": {
+              "zh": "zh-Hans",
+              "zh-CN": "zh-Hans",
+              "zh-SG": "zh-Hans"
+            },
+            "bundleRefs": []
+          },
+          "origins": {
+            "website": "https://openmuseai.com",
+            "filing": "https://beian.miit.gov.cn"
+          },
+          "links": {
+            "legal.terms": {
+              "originRef": "website",
+              "pathByLocale": {
+                "en": "/en/terms",
+                "zh-Hans": "/zh/terms"
+              },
+              "fallbackLocale": "en"
+            },
+            "legal.privacy": {
+              "originRef": "website",
+              "pathByLocale": {
+                "en": "/en/privacy",
+                "zh-Hans": "/zh/privacy"
+              },
+              "fallbackLocale": "en"
+            },
+            "legal.accountDeletion": {
+              "originRef": "website",
+              "pathByLocale": {
+                "en": "/en/account-deletion",
+                "zh-Hans": "/zh/account-deletion"
+              },
+              "fallbackLocale": "en"
+            },
+            "regulatory.filing": {
+              "originRef": "filing",
+              "pathByLocale": {
+                "en": "/",
+                "zh-Hans": "/"
+              },
+              "fallbackLocale": "en"
+            }
+          },
+          "updates": {
+            "channel": "stable"
+          },
+          "resources": [],
+          "authentication": {
+            "sessionStorageKey": "openmuse.auth.gotrue.session.cn.v1"
+          },
+          "web": {
+            "servicePaths": {
+              "auth": "/gotrue",
+              "cloud": "/",
+              "relay": "/"
+            },
+            "sessionStorageKey": "openmuse.auth.session.cn.v1"
+          },
+          "support": {
+            "email": "developer@openmuseai.com"
+          },
+          "navigation": {
+            "entryRouteId": "home",
+            "routes": {
+              "home": {
+                "path": "/",
+                "handler": "session"
+              },
+              "login": {
+                "path": "/sign-in",
+                "handler": "login"
+              }
+            }
+          },
+          "regulatory": {
+            "appFilingNumber": ""
+          }
+        }
+      }
+    }
+  ],
+  "fixedRegion": "cn"
+}

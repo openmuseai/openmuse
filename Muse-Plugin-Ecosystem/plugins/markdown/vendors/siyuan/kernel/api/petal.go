@@ -1,0 +1,69 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package api
+
+import (
+	"github.com/emirpasic/gods/sets/hashset"
+	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/siyuan/kernel/apicontract"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+var loadPetals = contractHandler(apicontract.LoadPetals, func(c *gin.Context, request apicontract.LoadPetalsRequest) apicontract.Response[[]*apicontract.Petal] {
+	if model.IsReadOnlyRoleContext(c) {
+		c.Header("Cache-Control", "private, no-store")
+	}
+	var values []*model.Petal
+	if request.SettingsWindow {
+		values = model.LoadSettingsWindowPetals(request.Frontend, model.IsReadOnlyRoleContext(c))
+	} else {
+		values = model.LoadPetals(request.Frontend, model.IsReadOnlyRoleContext(c))
+	}
+	var result []*apicontract.Petal
+	if values != nil {
+		result = make([]*apicontract.Petal, len(values))
+	}
+	for i, value := range values {
+		item, err := petalContract(value)
+		if err != nil {
+			return apicontract.Failure[[]*apicontract.Petal](-1, err.Error())
+		}
+		result[i] = item
+	}
+	return apicontract.Success(result)
+})
+
+var setPetalEnabled = contractHandler(apicontract.SetPetalEnabled, func(c *gin.Context, request apicontract.SetPetalEnabledRequest) apicontract.Response[*apicontract.Petal] {
+	data, err := model.SetPetalEnabled(request.PackageName, request.Enabled)
+	if err != nil {
+		return apicontract.Failure[*apicontract.Petal](-1, err.Error())
+	}
+	if request.Enabled {
+		reloadPluginSet := hashset.New(request.PackageName)
+		model.PushReloadPlugin(nil, nil, reloadPluginSet, nil, request.App, "")
+	} else {
+		unloadPluginSet := hashset.New(request.PackageName)
+		model.PushReloadPlugin(nil, unloadPluginSet, nil, nil, request.App, "")
+	}
+	result, err := petalContract(data)
+	if err != nil {
+		return apicontract.Failure[*apicontract.Petal](-1, err.Error())
+	}
+	return apicontract.Success(result)
+})
+
+var setPetalPublishEnabled = contractHandler(apicontract.SetPetalPublishEnabled, func(c *gin.Context, request apicontract.SetPetalPublishEnabledRequest) apicontract.Response[*apicontract.Petal] {
+	data, err := model.SetPetalPublishEnabled(request.PackageName, request.Enabled)
+	if err != nil {
+		return apicontract.Failure[*apicontract.Petal](-1, err.Error())
+	}
+	util.ReloadPublishServiceSessions()
+	result, err := petalContract(data)
+	if err != nil {
+		return apicontract.Failure[*apicontract.Petal](-1, err.Error())
+	}
+	return apicontract.Success(result)
+})

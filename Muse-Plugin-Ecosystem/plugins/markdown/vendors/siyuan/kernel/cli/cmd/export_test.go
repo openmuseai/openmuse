@@ -1,0 +1,101 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package cmd
+
+import (
+	"net/url"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/siyuan-note/siyuan/kernel/util"
+	"github.com/spf13/cobra"
+)
+
+func TestMaterializeExportArtifact(t *testing.T) {
+	tempDir := t.TempDir()
+	originalTempDir := util.TempDir
+	util.TempDir = tempDir
+	defer func() {
+		util.TempDir = originalTempDir
+	}()
+
+	exportDir := filepath.Join(tempDir, "export")
+	if err := os.MkdirAll(exportDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	name := "artifact with spaces.zip"
+	source := filepath.Join(exportDir, name)
+	content := []byte("export content")
+	if err := os.WriteFile(source, content, 0644); err != nil {
+		t.Fatal(err)
+	}
+	exportPath := "/export/" + url.PathEscape(name)
+
+	actualPath, err := materializeExportArtifact(exportPath, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actualPath != source {
+		t.Fatalf("unexpected artifact path: got %q, want %q", actualPath, source)
+	}
+
+	target := filepath.Join(tempDir, "target.zip")
+	resultPath, err := materializeExportArtifact(exportPath, target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultPath != target {
+		t.Fatalf("unexpected result path: got %q, want %q", resultPath, target)
+	}
+	copied, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(copied) != string(content) {
+		t.Fatalf("unexpected copied content: got %q, want %q", copied, content)
+	}
+}
+
+func TestMaterializeExportArtifactRejectsEmptyPath(t *testing.T) {
+	if _, err := materializeExportArtifact("", ""); err == nil {
+		t.Fatal("expected empty export path to fail")
+	}
+}
+
+func TestWriteExportContentPreservesExistingOutputOnFailure(t *testing.T) {
+	output := filepath.Join(t.TempDir(), "existing.md")
+	if err := os.WriteFile(output, []byte("keep"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeExportContent("", output); err == nil {
+		t.Fatal("empty export was accepted")
+	}
+	if data, err := os.ReadFile(output); err != nil || string(data) != "keep" {
+		t.Fatalf("output changed: %q %v", data, err)
+	}
+	if err := writeExportContent("exported", output); err != nil {
+		t.Fatal(err)
+	}
+	if data, err := os.ReadFile(output); err != nil || string(data) != "exported" {
+		t.Fatalf("unexpected output: %q %v", data, err)
+	}
+}
+
+func TestTextExportDryRunWithoutOutput(t *testing.T) {
+	previous := dryRun
+	dryRun = true
+	t.Cleanup(func() { dryRun = previous })
+	for _, command := range []*cobra.Command{exportMdCmd, exportHTMLCmd, exportPreviewCmd} {
+		t.Run(command.Name(), func(t *testing.T) {
+			input := &cobra.Command{}
+			input.Flags().String("id", "20260913000000-missing", "")
+			input.Flags().String("output", "", "")
+			if err := command.RunE(input, nil); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}

@@ -1,0 +1,10 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_graph_nodes,SrcNode/CharsNode真实类型,LayoutState槽位,去影子的图节点,P0,02,libs/word-core,pass
+2,02_function_graph_buff,GraphBuff.prepareGraphs,LayoutState,doPrepareGraphs入口,01,03,libs/word-core,pass
+3,03_function_graph_reader,GraphReader读绳,hello rope,src/chars/graph 列表,02,04,libs/word-core,pass
+4,04_function_graph_factory,GraphFactory量宽,graphs,width/baseline,03,05,libs/word-core,pass
+5,05_function_flow_text_line,解开flowTextLine,graphList,TypoTextLine,04,06,libs/word-core,pass
+6,06_function_product_switch,layout_document切Java栈,docx,LayoutFrame from snapshot,05,07,libs/word-core,pass
+7,07_function_e2e_render,真实docx端到端UI,hello/sample2/multipage,L2+FFI+screenshot,06,08,libs/word-core,pass
+8,08_function_wrap_para_env,CJK折行+段环境+页溢出,sample2.docx+WPS png,wrapped DrawText+indent+pages,07,09,libs/word-core,wired
+9,09_function_section_grid,sectPr docGrid行高网格,sample2.docx sepx,gridHeight=312 line≈468 WPS p1,08,,libs/word-core,wired

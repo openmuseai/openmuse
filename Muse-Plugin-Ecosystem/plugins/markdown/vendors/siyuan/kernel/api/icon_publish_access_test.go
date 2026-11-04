@@ -1,0 +1,227 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package api
+
+import (
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/88250/lute/ast"
+	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/filesys"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+// TestGetDynamicIconEnforcesPublishAccess 覆盖动态图标模板的发布访问控制。
+// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-whcx-xxqh-c838
+func TestGetDynamicIconEnforcesPublishAccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	const (
+		boxID      = "20260918000000-ic0nb0x"
+		publicID   = "20260918000001-ic0n001"
+		hiddenID   = "20260918000002-ic0n002"
+		disabledID = "20260918000003-ic0n003"
+		passwordID = "20260918000004-ic0n004"
+		password   = "secret123"
+	)
+
+	oldWorkspaceDir, oldConfDir, oldDataDir := util.WorkspaceDir, util.ConfDir, util.DataDir
+	oldHistoryDir, oldTempDir, oldQueueDir := util.HistoryDir, util.TempDir, util.QueueDir
+	oldBlockTreeDBPath := util.BlockTreeDBPath
+	oldConf := model.Conf
+
+	root := t.TempDir()
+	t.Cleanup(func() {
+		treenode.CloseDatabase()
+		model.Conf = oldConf
+		util.WorkspaceDir, util.ConfDir, util.DataDir = oldWorkspaceDir, oldConfDir, oldDataDir
+		util.HistoryDir, util.TempDir, util.QueueDir = oldHistoryDir, oldTempDir, oldQueueDir
+		util.BlockTreeDBPath = oldBlockTreeDBPath
+	})
+
+	util.WorkspaceDir = root
+	util.ConfDir = filepath.Join(root, "conf")
+	util.DataDir = filepath.Join(root, "data")
+	util.HistoryDir = filepath.Join(root, "history")
+	util.TempDir = filepath.Join(root, "temp")
+	util.QueueDir = filepath.Join(util.TempDir, "queue")
+	util.BlockTreeDBPath = filepath.Join(util.TempDir, "blocktree.db")
+	for _, dir := range []string{util.ConfDir, util.DataDir, util.HistoryDir, util.TempDir, util.QueueDir} {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	model.Conf = model.NewAppConf()
+	model.Conf.Sync.Store(conf.NewSync())
+	model.Conf.Lang = "en"
+	model.Conf.Editor.Store(conf.NewEditor())
+
+	boxConf := conf.NewBoxConf()
+	boxConf.Name = "Dynamic icon publish access"
+	boxConf.Closed = false
+	if err := (&model.Box{ID: boxID}).SaveConf(boxConf); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(util.DataDir, boxID, ".siyuan"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	treenode.InitBlockTree(true)
+
+	addDoc := func(id, title, icon string, attrs map[string]string) {
+		tree := treenode.NewTree(boxID, "/"+id+".sy", "/"+title, title)
+		tree.Root.FirstChild.Unlink()
+		if "" != icon {
+			tree.Root.SetIALAttr("icon", icon)
+		}
+		for name, value := range attrs {
+			tree.Root.SetIALAttr(name, value)
+		}
+		node := &ast.Node{Type: ast.NodeParagraph, ID: id[:21] + "c"}
+		node.AppendChild(&ast.Node{Type: ast.NodeText, Tokens: []byte("body")})
+		tree.Root.AppendChild(node)
+		treenode.IndexBlockTree(tree)
+		if _, err := filesys.WriteTree(tree); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// 文档图标保存为动态图标模板，只读角色渲染时必须使用这份已保存的源码
+	storedIcon := func(id string) string {
+		return "api/icon/getDynamicIcon?type=8&color=%23d23f31&content=.action%7B.title%7D&id=" + id
+	}
+	addDoc(publicID, "Public Doc", storedIcon(publicID), nil)
+	addDoc(hiddenID, "Hidden Doc", "", nil)
+	// 禁止发布的文档带上有辨识度的名称与别名，用于验证只读角色读不到这些元数据
+	addDoc(disabledID, "Disabled Doc", "", map[string]string{"name": "CODENAME-BLUEJAY", "alias": "ALIAS-DEAL-7"})
+	addDoc(passwordID, "Password Doc", storedIcon(passwordID), nil)
+
+	if err := model.SetPublishAccess(model.PublishAccess{
+		{ID: hiddenID, Visible: false},
+		{ID: disabledID, Disable: true},
+		{ID: passwordID, Password: password},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// requestIcon 以指定角色请求动态图标，返回原始 SVG 响应
+	requestIcon := func(role model.Role, id, content string, cookies ...*http.Cookie) string {
+		recorder := httptest.NewRecorder()
+		context, _ := gin.CreateTestContext(recorder)
+		context.Request = httptest.NewRequest(http.MethodGet, "/api/icon/getDynamicIcon", nil)
+		context.Request.URL.RawQuery = "type=8&color=%23d23f31&id=" + id + "&content=" + content
+		for _, cookie := range cookies {
+			context.Request.AddCookie(cookie)
+		}
+		context.Set(model.RoleContextKey, role)
+		getDynamicIcon(context)
+
+		requireAPIContract(t, http.MethodGet, "/api/icon/getDynamicIcon", recorder)
+		if http.StatusOK != recorder.Code {
+			t.Fatalf("unexpected status code %d: %s", recorder.Code, recorder.Body.String())
+		}
+		if "Cookie" != recorder.Header().Get("Vary") {
+			t.Fatalf("response varies by caller but Vary header is %q", recorder.Header().Get("Vary"))
+		}
+		return recorder.Body.String()
+	}
+
+	// 模板分隔符为 .action{ 与 }，动作只写一层花括号
+	const titleContent = ".action%7B.title%7D"
+
+	if svg := requestIcon(model.RoleReader, publicID, titleContent); !strings.Contains(svg, "Public Doc") {
+		t.Fatalf("publish reader cannot render an accessible template icon: %s", svg)
+	}
+	if svg := requestIcon(model.RoleAdministrator, publicID, titleContent); !strings.Contains(svg, "Public Doc") {
+		t.Fatalf("administrator cannot render a template icon: %s", svg)
+	}
+
+	// 只读角色不能自带模板源码：请求中的 content 被忽略，渲染的是文档已保存的图标模板
+	// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-cxwr-r7cq-xw52
+	submittedContent := ".action%7BgetHPathByID%20%22" + disabledID + "%22%7D"
+	if svg := requestIcon(model.RoleReader, publicID, submittedContent); !strings.Contains(svg, "Public Doc") || strings.Contains(svg, "Disabled Doc") {
+		t.Fatalf("publish reader replaced the saved template icon: %s", svg)
+	}
+	// 文档没有已保存的动态图标模板时，请求中的模板不参与渲染
+	if svg := requestIcon(model.RoleReader, hiddenID, titleContent); strings.Contains(svg, "Hidden Doc") {
+		t.Fatalf("publish reader rendered an unsaved template: %s", svg)
+	}
+
+	// 隐藏（不列出）与禁止发布、密码保护不同：发布访问控制按设计仍允许按 ID 读取隐藏文档，
+	// 仅禁止其被枚举，因此这里只断言禁止与密码保护两类
+	for _, id := range []string{disabledID, passwordID} {
+		if svg := requestIcon(model.RoleReader, id, titleContent); strings.Contains(svg, " Doc") {
+			t.Fatalf("publish reader read a protected doc title through the dynamic icon: %s", svg)
+		}
+	}
+
+	// 通过发布密码认证的读者必须仍能渲染
+	authCookie := &http.Cookie{
+		Name:  "publish-auth-" + passwordID,
+		Value: util.SHA256Hash([]byte(passwordID + password)),
+	}
+	if svg := requestIcon(model.RoleReader, passwordID, titleContent, authCookie); !strings.Contains(svg, "Password Doc") {
+		t.Fatalf("authenticated publish reader cannot render the template icon: %s", svg)
+	}
+
+	// 禁止发布文档的标题、名称、别名、祖先路径与块统计都不得通过动态图标模板外泄
+	// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-cx4v-vf22-wh6h
+	for _, content := range []string{
+		titleContent,
+		".action%7B.name%7D",
+		".action%7B.alias%7D",
+		".action%7BtoJson%20.%7D",
+		".action%7BgetHPathByID%20%22" + disabledID + "%22%7D",
+		".action%7BstatBlock%20%22" + disabledID + "%22%7D",
+	} {
+		svg := requestIcon(model.RoleReader, disabledID, content)
+		for _, marker := range []string{"Disabled Doc", "CODENAME-BLUEJAY", "ALIAS-DEAL-7"} {
+			if strings.Contains(svg, marker) {
+				t.Fatalf("publish reader read forbidden doc metadata [%s] through [%s]: %s", marker, content, svg)
+			}
+		}
+	}
+	// 正向对照：可写角色能读到同样的元数据，说明上面的断言不是空转
+	for content, marker := range map[string]string{
+		".action%7B.name%7D":  "CODENAME-BLUEJAY",
+		".action%7B.alias%7D": "ALIAS-DEAL-7",
+	} {
+		if svg := requestIcon(model.RoleAdministrator, disabledID, content); !strings.Contains(svg, marker) {
+			t.Fatalf("administrator cannot read [%s] through [%s]: %s", marker, content, svg)
+		}
+	}
+
+	statContent := ".action%7BstatBlock%20%22" + disabledID + "%22%7D"
+
+	// 通用模板函数不得成为绕过发布访问控制的第二条通路
+	if svg := requestIcon(model.RoleReader, publicID, submittedContent); strings.Contains(svg, "Disabled Doc") {
+		t.Fatalf("publish reader read a protected doc path through getHPathByID: %s", svg)
+	}
+	// statBlock 返回结构体，模板渲染为 {runeCount wordCount linkCount imageCount refCount blockCount}
+	if svg := requestIcon(model.RoleReader, publicID, statContent); strings.Contains(svg, "{4 1 0 0 0 1}") {
+		t.Fatalf("publish reader read protected block stats through statBlock: %s", svg)
+	}
+
+	// 可写角色不受影响
+	if svg := requestIcon(model.RoleAdministrator, publicID, submittedContent); !strings.Contains(svg, "Disabled Doc") {
+		t.Fatalf("administrator cannot use getHPathByID in a template icon: %s", svg)
+	}
+	if svg := requestIcon(model.RoleAdministrator, publicID, statContent); !strings.Contains(svg, "{4 1 0 0 0 1}") {
+		t.Fatalf("administrator cannot use statBlock in a template icon: %s", svg)
+	}
+
+	// 模板解析失败时不应回显模板原文
+	if svg := requestIcon(model.RoleAdministrator, publicID, ".action%7B%7B.title%7D%7D"); strings.Contains(svg, ".title") {
+		t.Fatalf("dynamic icon echoed the raw template content: %s", svg)
+	}
+}

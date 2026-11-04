@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "namespace": "shell",
+  "sourceRevision": 2,
+  "messages": {
+    "shell.refreshWorkspaces": "Refresh workspaces",
+    "shell.accountDevices": "Account devices",
+    "shell.signOut": "Sign out",
+    "shell.notSignedIn": "Not signed in",
+    "shell.signInCloud": "Sign in to access Cloud workspaces",
+    "shell.workspacesFailed": "Unable to load workspaces",
+    "shell.noWorkspaces": "No workspaces available",
+    "shell.desktopDirect": "Desktop · same-account connection"
+  }
+}

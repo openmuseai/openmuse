@@ -1,0 +1,1575 @@
+{
+	"ID": "20240530101000-1vvnhju",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-c9sim04",
+		"id": "20240530101000-1vvnhju",
+		"title": "埋め込みコンテンツブロック",
+		"type": "doc",
+		"updated": "20261024163828"
+	},
+	"Children": [
+		{
+			"ID": "20240530101000-c8571y7",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-1ws77tk",
+				"id": "20240530101000-c8571y7",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-s50yfpn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-f1ikbpj",
+				"id": "20240530101000-s50yfpn",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "埋め込みブロックは、クエリで選んだブロックを現在の位置に表示します。タスクやテーマ別の内容をまとめたり、複数の場所にあるノートを一緒に確認したりするときに使えます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163828-e6xse5k",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163828-e6xse5k",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SQL 埋め込みの挿入"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261024163828-82wq5b2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024163828-82wq5b2",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SQL クエリを "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "{{"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " と "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "}}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で囲み、独立した行に記述します。例は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "{{ SELECT * FROM blocks WHERE content LIKE '%キーワード%' }}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " です。利用できるテーブルとフィールドは、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240530101000-58z6rjh",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "SQL インデックステーブル"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "を参照してください。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163828-ts7hngu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024163828-ts7hngu",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "コンテンツブロック/埋め込み"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-f3y73rq",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-32r7es9",
+				"id": "20240530101000-f3y73rq",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用例"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-mo42kxt",
+			"Type": "NodeList",
+			"ListData": {
+				"BulletChar": 42,
+				"Padding": 2,
+				"Marker": "Kg==",
+				"Num": -1
+			},
+			"Properties": {
+				"ID": "20240530101000-04eiu3r",
+				"id": "20240530101000-mo42kxt",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-blkfj2a",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"ID": "20240530101000-0vfdfs8",
+						"id": "20240530101000-blkfj2a",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-lpkbqym",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-segvb5z",
+								"id": "20240530101000-lpkbqym",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "内容に "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "コンテンツブロック"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を含むリスト項目を検索する:"
+								}
+							]
+						},
+						{
+							"ID": "20240530101000-6ngkipe",
+							"Type": "NodeCodeBlock",
+							"IsFencedCodeBlock": true,
+							"Properties": {
+								"ID": "20240530101000-g45ymuk",
+								"id": "20240530101000-6ngkipe",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeCodeBlockFenceOpenMarker",
+									"Data": "```"
+								},
+								{
+									"Type": "NodeCodeBlockFenceInfoMarker",
+									"CodeBlockInfo": "c3Fs"
+								},
+								{
+									"Type": "NodeCodeBlockCode",
+									"Data": "{{ SELECT * FROM blocks WHERE content LIKE '%コンテンツブロック%' AND type = 'i' }}\n"
+								},
+								{
+									"Type": "NodeCodeBlockFenceCloseMarker",
+									"Data": "```"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-bwttj5l",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"ID": "20240530101000-82jbqm7",
+						"id": "20240530101000-bwttj5l",
+						"updated": "20261016111305"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-rr4g8rw",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-n7ml7p4",
+								"id": "20240530101000-rr4g8rw",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "内容に "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "コンテンツブロック"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ と "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "参照"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を含む段落ブロックを検索する:"
+								}
+							]
+						},
+						{
+							"ID": "20240530101000-xkfup1r",
+							"Type": "NodeCodeBlock",
+							"IsFencedCodeBlock": true,
+							"Properties": {
+								"ID": "20240530101000-sc7oqkj",
+								"id": "20240530101000-xkfup1r",
+								"updated": "20261016111305"
+							},
+							"Children": [
+								{
+									"Type": "NodeCodeBlockFenceOpenMarker",
+									"Data": "```"
+								},
+								{
+									"Type": "NodeCodeBlockFenceInfoMarker",
+									"CodeBlockInfo": "c3Fs"
+								},
+								{
+									"Type": "NodeCodeBlockCode",
+									"Data": "{{ SELECT * FROM blocks WHERE content LIKE '%コンテンツブロック%' AND content LIKE '%参照%' AND type = 'p' }}\n"
+								},
+								{
+									"Type": "NodeCodeBlockFenceCloseMarker",
+									"Data": "```"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-ev008nl",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"ID": "20240530101000-i9x9tsj",
+						"id": "20240530101000-ev008nl",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-uwleczn",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-qrl8jzb",
+								"id": "20240530101000-uwleczn",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "内容に "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "コンテンツブロック"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ と "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "埋め込み"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を含む見出しブロックを検索し、更新日時で降順にソートして上位 2 件を取得する:"
+								}
+							]
+						},
+						{
+							"ID": "20240530101000-2y7gm5o",
+							"Type": "NodeCodeBlock",
+							"IsFencedCodeBlock": true,
+							"Properties": {
+								"ID": "20240530101000-drojm8c",
+								"id": "20240530101000-2y7gm5o",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeCodeBlockFenceOpenMarker",
+									"Data": "```"
+								},
+								{
+									"Type": "NodeCodeBlockFenceInfoMarker",
+									"CodeBlockInfo": "c3Fs"
+								},
+								{
+									"Type": "NodeCodeBlockCode",
+									"Data": "{{ SELECT * FROM blocks WHERE content LIKE '%コンテンツブロック%' AND content LIKE '%埋め込み%' AND type = 'h' ORDER BY updated DESC LIMIT 2 }}\n"
+								},
+								{
+									"Type": "NodeCodeBlockFenceCloseMarker",
+									"Data": "```"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-jd6u3d9",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-9mmcc4k",
+				"id": "20240530101000-jd6u3d9",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ケース 1"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ergevro",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-7gfrraw",
+				"id": "20240530101000-ergevro",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "最近更新された空でない段落ブロックを 7 件取得します："
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ik2io37",
+			"Type": "NodeBlockQueryEmbed",
+			"Properties": {
+				"id": "20240530101000-ik2io37",
+				"style": "height: 64px;",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeBlockQueryEmbedScript",
+					"Data": "SELECT * FROM blocks WHERE type = 'p' AND content != '' ORDER BY updated DESC LIMIT 7"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-wi5nstx",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-eiazno1",
+				"id": "20240530101000-wi5nstx",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ケース 2"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-06nikcu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240530101000-06nikcu",
+				"updated": "20240731205025"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "#コンテンツブロック/埋め込み#"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ または "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "#コンテンツブロック/参照#"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ のタグを含む段落ブロックを検索します:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-0qh2kff",
+			"Type": "NodeBlockQueryEmbed",
+			"Properties": {
+				"id": "20240530101000-0qh2kff",
+				"style": "height: 116px;",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeBlockQueryEmbedScript",
+					"Data": "SELECT * FROM blocks WHERE (content LIKE '%#コンテンツブロック/埋め込み#%' OR content LIKE '%#コンテンツブロック/参照#%') AND hpath NOT LIKE '%埋め込みコンテンツブロック%' AND type = 'p'"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-6bufkjz",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-jascxkh",
+				"id": "20240530101000-6bufkjz",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ケース 3"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-6pxr8uc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-r823xt6",
+				"id": "20240530101000-6pxr8uc",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "設定した条件に基づいてコンテンツブロックをランダムに表示します:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-uyuunkk",
+			"Type": "NodeBlockQueryEmbed",
+			"Properties": {
+				"id": "20240530101000-uyuunkk",
+				"style": "height: 234px;",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeBlockQueryEmbedScript",
+					"Data": "SELECT * FROM blocks ORDER BY random() LIMIT 3"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-liqp77v",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-kdlm913",
+				"id": "20240530101000-liqp77v",
+				"updated": "20260612202513"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ケース 4"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-vr6lrkq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-0w531jg",
+				"id": "20240530101000-vr6lrkq",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "未完了のタスクリスト項目を取得するには "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "content"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ フィールドではなく "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "markdown"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ フィールドを使用する必要があります:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-oqhotgw",
+			"Type": "NodeBlockQueryEmbed",
+			"Properties": {
+				"ID": "20240530101000-db1tgin",
+				"id": "20240530101000-oqhotgw",
+				"style": "height: 221px;",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeBlockQueryEmbedScript",
+					"Data": "SELECT * FROM blocks WHERE markdown LIKE '%[ ]%' AND subtype = 't' AND type = 'i'"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-yhlrbpu",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260612202513-yhlrbpu",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "埋め込みブロックでJavaScriptを実行する"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-yxwvpxl",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260612202513-yxwvpxl",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "埋め込みブロックは "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "//!js"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ プレフィックスを使用してJavaScriptコードを実行し、埋め込むブロックを動的に決定できます。SQLクエリでは対応できない複雑なケースに適しています。"
+				}
+			]
+		},
+		{
+			"ID": "20260924143000-en2de29",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260924143000-en2de29",
+				"updated": "20260924143000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画像や PDF のエクスポート時には JavaScript 埋め込みブロックも描画され、スクリプトとブロックのクエリが完了してから出力されます。セーフモードおよびリモートカーネル環境では、スクリプトの実行は引き続き無効です。"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-ewrm2vu",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260612202513-ewrm2vu",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "編集方法"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-ja76rsv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260612202513-ja76rsv",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "埋め込みブロックの編集ボックスで "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "//!js"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ で始まるコードを入力するとJSモードに入ります。"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-19hv4qk",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260612202513-19hv4qk",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "利用可能なコンテキスト変数"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-vhqtc2u",
+			"Type": "NodeTable",
+			"TableAligns": [
+				0,
+				0,
+				0
+			],
+			"Properties": {
+				"colgroup": "||",
+				"id": "20260612202513-vhqtc2u",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeTableHead",
+					"Data": "thead",
+					"Children": [
+						{
+							"Type": "NodeTableRow",
+							"Data": "tr",
+							"Children": [
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "パラメータ"
+										}
+									]
+								},
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "型"
+										}
+									]
+								},
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "説明"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "fetchSyncPost"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "(url, data?, headers?, process?, signal?) =&gt; Promise&lt;IWebSocketData&gt;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "非同期 POST リクエストを送信し、await または .then() で応答を読み取ります。第 3 引数はコールバックではなくヘッダーオブジェクトです"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "item"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "HTMLElement"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "現在の埋め込みブロックのDOM要素"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "protyle"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "IProtyle"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "現在のドキュメントのProtyleエディタインスタンス"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "top"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "number &#124; undefined"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "スクロール位置（進む/戻るの位置決め用）"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-x2r5w1f",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260612202513-x2r5w1f",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "戻り値"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-vi0swg2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260612202513-vi0swg2",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "コンテンツブロックを自動描画するには、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "strong",
+					"TextMarkTextContent": "ブロックIDの配列"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "（"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "string[]"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、形式は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "YYYYMMDDHHMMSS-[a-z0-9]{7}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​）を返す必要があります。同期と非同期の両方をサポートします："
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-wlx9c05",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20260612202513-wlx9c05",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "anM="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "//!js\n// 同期的に返す\nreturn [\"20240601150405-a1b2c3d\", \"20240601150405-e4f5g6h\"];\n"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20261024162311-61bwy1b",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024162311-61bwy1b",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Promise を返すこともできます。次のコードは、上の同期処理の例とは別の選択肢として使ってください。"
+				}
+			]
+		},
+		{
+			"ID": "20261024162311-7r7dweu",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20261024162311-7r7dweu",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "anM="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "//!js\n// 非同期的に返す（Promiseは自動的にawaitされる）\nreturn fetchSyncPost(\"/api/search/fulltextSearch\", { query: \"TODO\" })\n    .then(r => r.data.blocks.map(b => b.id));\n"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-nnq73ws",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260612202513-nnq73ws",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "返された配列内のIDの順序が最終的な表示順序になります。"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-l6jncw7",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260612202513-l6jncw7",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "実用例"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-kuc3bzo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260612202513-kuc3bzo",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "固定のブロックを埋め込む："
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-bujer9j",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20260612202513-bujer9j",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "anM="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "//!js\nreturn [\n    \"20240601150405-a1b2c3d\",\n    \"20240601150405-e4f5g6h\"\n];\n"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-ah8dn5j",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260612202513-ah8dn5j",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "全文検索で動的に取得："
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-v3xc4yv",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20260612202513-v3xc4yv",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "anM="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "//!js\nconst resp = await fetchSyncPost(\"/api/search/fulltextSearch\", { query: \"TODO\" });\nif (resp.code !== 0) {\n    throw new Error(resp.msg);\n}\nreturn resp.data.blocks.map(b => b.id);\n"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-tsy5jda",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260612202513-tsy5jda",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "現在のドキュメントの直接の子ブロックを取得："
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-xmi5ilb",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20260612202513-xmi5ilb",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "anM="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "//!js\nconst docID = protyle.block.rootID;\nconst resp = await fetchSyncPost(\"/api/block/getChildBlocks\", { id: docID });\nif (resp.code !== 0) {\n    throw new Error(resp.msg);\n}\nreturn resp.data.map(b => b.id);\n"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-zx75ddl",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260612202513-zx75ddl",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "カスタム属性でフィルタリング："
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-zj8ks59",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20260612202513-zj8ks59",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "anM="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "//!js\nconst resp = await fetchSyncPost(\"/api/attr/batchGetBlockAttrs\", {\n    ids: [\"20240601150405-a1b2c3d\", \"20240601150405-e4f5g6h\"]\n});\nif (resp.code !== 0) {\n    throw new Error(resp.msg);\n}\nconst filtered = Object.entries(resp.data)\n    .filter(([id, attrs]) => attrs[\"custom-tag\"] === \"重要\")\n    .map(([id]) => id);\nreturn filtered;\n"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-sow3tzu",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260612202513-sow3tzu",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "特性と制限"
+				}
+			]
+		},
+		{
+			"ID": "20260612202513-3lgymqo",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1
+			},
+			"Properties": {
+				"id": "20260612202513-3lgymqo",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"ID": "20260612202513-d7nom6r",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "MS4=",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20260612202513-d7nom6r",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260612202513-743m4h2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612202513-743m4h2",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "自動インデックス非対応"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：JSモードの埋め込みブロックはブラウザの実行環境が必要なため、バックエンドは自動的に内容をインデックスせず、フロントエンドがアクティブにレンダリングします"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612202513-wlpr983",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "Mi4=",
+						"Num": 2
+					},
+					"Properties": {
+						"id": "20260612202513-wlpr983",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260612202513-87klqer",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612202513-87klqer",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "最大4階層までネスト可能"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：埋め込みブロック内の埋め込みブロックは最大4階層まで再帰的にレンダリングされ、それ以上は展開されません"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612202513-hwfb9c2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "My4=",
+						"Num": 3
+					},
+					"Properties": {
+						"id": "20260612202513-hwfb9c2",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260612202513-n5fiwqt",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612202513-n5fiwqt",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "自身の型をネストしない"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：埋め込みブロックの内部に他の "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "query_embed"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ ブロックが含まれることはありません"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612202513-vevjm1h",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "NC4=",
+						"Num": 4
+					},
+					"Properties": {
+						"id": "20260612202513-vevjm1h",
+						"updated": "20261016111305"
+					},
+					"Children": [
+						{
+							"ID": "20260612202513-1eher1f",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612202513-1eher1f",
+								"updated": "20261016111305"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "描画とエラー表示：ブロック ID の配列を返すと対象ブロックを自動描画し、結果が空の場合は「参照が期限切れです」と表示します。配列以外を返す場合は、スクリプトが作成した DOM を保持して読み込みを終了します。実行時に例外が発生した場合は、実際のエラーメッセージを表示します"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612202513-7gppogm",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "NS4=",
+						"Num": 5
+					},
+					"Properties": {
+						"id": "20260612202513-7gppogm",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260612202513-2ig16g2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612202513-2ig16g2",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "セキュリティ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：バックエンドでのレンダリング/エクスポート時に "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "&lt;script&gt;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ タグや "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "javascript:"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ プロトコルなどの危険な内容が除去されます"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

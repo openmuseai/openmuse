@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "locale": "zh-Hans",
+  "namespace": "shell",
+  "sourceRevision": 2,
+  "messages": {
+    "shell.refreshWorkspaces": "刷新工作区",
+    "shell.accountDevices": "账号设备",
+    "shell.signOut": "退出登录",
+    "shell.notSignedIn": "未登录",
+    "shell.signInCloud": "请登录以访问 Cloud Workspace",
+    "shell.workspacesFailed": "工作区加载失败",
+    "shell.noWorkspaces": "没有可用的 Workspace",
+    "shell.desktopDirect": "Desktop · 同账号免码连接"
+  }
+}

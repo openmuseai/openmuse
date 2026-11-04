@@ -1,0 +1,4 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id
+112,koffice/core-libs/thirdparty/picparser/src/cn/wps/graphics/gdi/LogFont.java,LogFont,pending,,picparser,,libs/core-libs/thirdparty/picparser/src/cn/wps/graphics/gdi/LogFont.rs,Log;EMFHeader;MetaFileParser;CharsetUtils;IGdiObject;GDIFont,worker-7e3a9f12
+169,koffice/core-libs/thirdparty/picparser/src/cn/wps/graphics/record/wmf/WMF_Brush.java,WMF_Brush,pending,,main,,libs/core-libs/thirdparty/picparser/src/cn/wps/graphics/record/wmf/WMF_Brush.rs,ReColorMap;WMFParser;BitGdiPaint;ColorPaint;GdiPainter;IGdiObject;PixelImage,worker-7e3a9f12
+174,koffice/core-libs/thirdparty/picparser/src/cn/wps/graphics/record/wmf/WMF_Pen.java,WMF_Pen,pending,,main,,libs/core-libs/thirdparty/picparser/src/cn/wps/graphics/record/wmf/WMF_Pen.rs,ReColorMap;WMFParser;ColorPaint;GdiPainter;GdiStroke;GdiTool;IGdiObject,worker-7e3a9f12

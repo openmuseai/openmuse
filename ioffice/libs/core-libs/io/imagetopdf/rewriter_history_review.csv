@@ -1,0 +1,14 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id,tags
+1,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/OutputStreamCounter.java,OutputStreamCounter,review,,imagetopdf,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/OutputStreamCounter.rs,,,0524_rust_stub
+4,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/Image.java,Image,review,,imagetopdf,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/Image.rs,,,0524_rust_stub
+6,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/Utils.java,Utils,review,,imagetopdf,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/Utils.rs,DictObj,,0524_rust_stub
+7,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/StreamObj.java,StreamObj,review,,main,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/StreamObj.rs,MyStringBuilder;DictObj,,0524_rust_stub
+8,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/PDFInfo.java,PDFInfo,review,,imagetopdf,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/PDFInfo.rs,MyStringBuilder;OutputStreamCounter;Utils;DictObj,,0524_rust_stub
+9,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/PDFPage.java,PDFPage,review,,imagetopdf,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/PDFPage.rs,Image;MyStringBuilder;OutputStreamCounter;Utils;DictObj,,0524_rust_stub
+10,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/ImageObj.java,ImageObj,review,,imagetopdf,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/ImageObj.rs,Image;MyStringBuilder;StreamObj,,0524_rust_stub
+11,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/PDFPages.java,PDFPages,review,,main,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/PDFPages.rs,DictObj;ImageObj;PDFPage;OutputStreamCounter,,0524_rust_stub
+12,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/PDFFile.java,PDFFile,review,,imagetopdf,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/PDFFile.rs,DictObj;PDFInfo;File;FileOutputStream;OutputStreamCounter;PDFPages,,0524_rust_stub
+13,koffice/core-libs/io/imagetopdf/src/test/Tester.java,Tester,review,,main,,libs/core-libs/io/imagetopdf/src/test/Tester.rs,PDFFile;PDFInfo;PDFPage;File,,0524_rust_stub
+3,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/ContentObj.java,ContentObj,review,,main,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/ContentObj.rs,Image;MyStringBuilder;StreamObj,,0524_rust_stub
+3,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/JPEGImg.java,JPEGImg,review,,main,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/JPEGImg.rs,Image;MyStringBuilder;ImageObj,,0524_rust_stub
+4,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/PNGImg.java,PNGImg,review,,main,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/PNGImg.rs,Image;MyStringBuilder;Utils;ImageObj,,0524_rust_stub

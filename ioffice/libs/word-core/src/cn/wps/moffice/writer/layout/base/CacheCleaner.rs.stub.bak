@@ -1,0 +1,25 @@
+// Rust stub for CacheCleaner (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/CacheCleaner.java
+use crate::*;
+
+pub struct CacheCleaner {
+    // TODO: fields
+}
+
+impl CacheCleaner {
+    pub fn new() -> Self { todo!() }
+    pub fn init(&self, mainState: MainState, docEnv: DocumentEnv) { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn cleanAfter(&self, env: LayoutState) { todo!() }
+    pub fn clearRedundantEmbeds(&self, layoutState: LayoutState) { todo!() }
+    pub fn getFootNotesPage(&self, curPage: i32) -> i32 { todo!() }
+    pub fn adjustFootNotesPage(&self, footNotes: i32) { todo!() }
+    pub fn recycleLine(&self, line: TypoTextLine, env: LayoutState) { todo!() }
+    pub fn recycleRow(&self, row: i32) { todo!() }
+    pub fn recycleRow_1(&self, row: i32, needRecycleDrawingsInLayers: TypoDrawingLayers) { todo!() }
+    pub fn recyclePageContent(&self, page: i32) { todo!() }
+    pub fn recycleFootNote(&self, startCP: i32, endCP: i32, footNotesPage: i32) { todo!() }
+    pub fn recycleDrawing(&self, remove: i32) { todo!() }
+    pub fn recycleDrawing_1(&self, remove: i32, drawingLayers: TypoDrawingLayers) { todo!() }
+    pub fn recycleColumns(&self, typoColumns: i32) { todo!() }
+}

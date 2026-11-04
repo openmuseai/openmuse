@@ -1,0 +1,452 @@
+{
+	"ID": "20260614104322-shrqj15",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20260614104322-shrqj15",
+		"title": "網路代理",
+		"type": "doc",
+		"updated": "20261022120655"
+	},
+	"Children": [
+		{
+			"ID": "20260614104332-dq69z7p",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614104332-dq69z7p",
+				"updated": "20260614104332"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20260614104332-7gg85hg",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104332-7gg85hg",
+				"updated": "20260614104332"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源支援通過設定網路代理來轉發網路請求，適用於網路受限或需要通過代理存取網路服務的場景。"
+				}
+			]
+		},
+		{
+			"ID": "20260614104332-ojj5e46",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614104332-ojj5e46",
+				"updated": "20261022120655"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "設定方式"
+				}
+			]
+		},
+		{
+			"ID": "20260614104332-ai09rt7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104332-ai09rt7",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "應用"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "一般"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "網路代理"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中設定："
+				}
+			]
+		},
+		{
+			"ID": "20260614104332-3skahri",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614104332-3skahri",
+				"updated": "20261022120655"
+			},
+			"Children": [
+				{
+					"ID": "20260614104332-9ixe357",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104332-9ixe357",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20260614104332-l69p8fd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104332-l69p8fd",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "協議：可選直接連線（不使用代理）、使用系統代理、HTTP、HTTPS 或 SOCKS5；直接連線和使用系統代理無需填寫主機與連接埠"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261016112115-rt8undd",
+					"Type": "NodeListItem",
+					"Properties": {
+						"id": "20261016112115-rt8undd",
+						"updated": "20261022120655"
+					},
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Children": [
+						{
+							"ID": "20261016112115-6yyf4an",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261016112115-6yyf4an",
+								"updated": "20261022120655"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "系統模式使用支援的系統設定，或核心啟動時繼承的代理環境變數。核心支援讀取 Windows、Linux GNOME 和 macOS 的手動代理，Linux 和 macOS 上明確設定的代理環境變數優先。這些讀取器不支援自動 PAC 設定，Windows 和 macOS 自動偵測也不受支援；其他平台的核心保留啟動時的代理環境，不讀取作業系統代理設定"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261022120655-wdl5gm4",
+					"Type": "NodeListItem",
+					"Properties": {
+						"id": "20261022120655-wdl5gm4",
+						"updated": "20261022120655"
+					},
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Children": [
+						{
+							"ID": "20261022120655-sjevvj7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261022120655-sjevvj7",
+								"updated": "20261022120655"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "macOS 支援手動 HTTP、HTTPS 和 SOCKS5 代理。例外清單轉換為 NO_PROXY 規則，支援 IP 位址、CIDR 網段（包括 169.254/16）、網域、以 *. 開頭的網域模式，以及 10.* 等 IPv4 尾端萬用字元。不支援「排除簡單主機名稱」和其他萬用字元模式，請改用明確的例外項目。讀取或轉換失敗時，核心記錄警告並保留啟動時的代理環境。修改 macOS 系統代理後，需重新啟動核心，或先切換至其他代理模式再切回系統模式"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104332-diqg6fh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104332-diqg6fh",
+						"updated": "20260614104332"
+					},
+					"Children": [
+						{
+							"ID": "20260614104332-bwnmuvh",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104332-bwnmuvh",
+								"updated": "20260614104332"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "主機"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：填寫代理伺服器位址，格式為 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "IP"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 或 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "使用者名稱:密碼@IP"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​（需要認證時）"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104332-yh5ktoz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104332-yh5ktoz",
+						"updated": "20260614104332"
+					},
+					"Children": [
+						{
+							"ID": "20260614104332-n16c23g",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104332-n16c23g",
+								"updated": "20260614104332"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "連接埠"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：填寫代理伺服器連接埠"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614104332-wt5rf88",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104332-wt5rf88",
+				"updated": "20260614104332"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "設定完成後點擊確認即可生效，無需重啟。"
+				}
+			]
+		},
+		{
+			"ID": "20260614104332-uhwyd7m",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614104332-uhwyd7m",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "作用範圍"
+				}
+			]
+		},
+		{
+			"ID": "20260614104332-ownl7lh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104332-ownl7lh",
+				"updated": "20260614104332"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "網路代理設定對以下功能生效："
+				}
+			]
+		},
+		{
+			"ID": "20260614104332-jcedjvg",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614104332-jcedjvg",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"ID": "20260614104332-qqwelly",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104332-qqwelly",
+						"updated": "20260614104332"
+					},
+					"Children": [
+						{
+							"ID": "20260614104332-mrexg7w",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104332-mrexg7w",
+								"updated": "20260614104332"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "雲端同步和資料備份"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104332-47oabr9",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104332-47oabr9",
+						"updated": "20260614104332"
+					},
+					"Children": [
+						{
+							"ID": "20260614104332-irtel28",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104332-irtel28",
+								"updated": "20260614104332"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "版本更新檢查"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104332-h46lyt3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104332-h46lyt3",
+						"updated": "20260614104332"
+					},
+					"Children": [
+						{
+							"ID": "20260614104332-959iune",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104332-959iune",
+								"updated": "20260614104332"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "AI 功能請求"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104332-pg3xiur",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104332-pg3xiur",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20260614104332-ewwgxf4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104332-ewwgxf4",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "透過思源受管理代理用戶端發出的其他網路請求；外部瀏覽器、外掛和 stdio 子程序可能有各自的代理設定"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

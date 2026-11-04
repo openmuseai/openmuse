@@ -1,0 +1,144 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package cmd
+
+import (
+	"fmt"
+	"path/filepath"
+
+	"github.com/siyuan-note/siyuan/kernel/model"
+
+	"github.com/spf13/cobra"
+)
+
+var importCmd = &cobra.Command{
+	Use:   "import",
+	Short: "Import files",
+}
+
+var importMdCmd = &cobra.Command{
+	Use:   "md --file <path> --notebook <id>",
+	Short: "Import Markdown file or directory",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		filePath, _ := cmd.Flags().GetString("file")
+		notebook, _ := cmd.Flags().GetString("notebook")
+		toPath, _ := cmd.Flags().GetString("path")
+		hpath, _ := cmd.Flags().GetString("hpath")
+		if filePath == "" {
+			return fmt.Errorf("--file is required")
+		}
+		if notebook == "" {
+			return fmt.Errorf("--notebook is required")
+		}
+
+		absPath, err := filepath.Abs(filePath)
+		if err != nil {
+			return err
+		}
+		targetPath, err := resolvePath(notebook, toPath, hpath)
+		if err != nil {
+			return err
+		}
+
+		if dryRun {
+			if err := model.ValidateImportFromLocalPath(notebook, absPath, targetPath); err != nil {
+				return formatNotebookWriteError(notebook, err)
+			}
+			fmt.Printf("[dry-run] Would import Markdown from \"%s\" to notebook %s\n", filePath, notebook)
+			return nil
+		}
+
+		if err := model.ImportFromLocalPath(notebook, absPath, targetPath); err != nil {
+			return formatNotebookWriteError(notebook, err)
+		}
+		model.AppendPushReloadFiletreeEntry()
+		fmt.Println("ok")
+		return nil
+	},
+}
+
+var importSYCmd = &cobra.Command{
+	Use:   "sy --file <path> --notebook <id>",
+	Short: "Import .sy.zip archive",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		filePath, _ := cmd.Flags().GetString("file")
+		notebook, _ := cmd.Flags().GetString("notebook")
+		toPath, _ := cmd.Flags().GetString("path")
+		hpath, _ := cmd.Flags().GetString("hpath")
+		if filePath == "" {
+			return fmt.Errorf("--file is required")
+		}
+		if notebook == "" {
+			return fmt.Errorf("--notebook is required")
+		}
+
+		absPath, err := filepath.Abs(filePath)
+		if err != nil {
+			return err
+		}
+		targetPath, err := resolvePath(notebook, toPath, hpath)
+		if err != nil {
+			return err
+		}
+
+		if dryRun {
+			fmt.Printf("[dry-run] Would import .sy.zip from \"%s\" to notebook %s\n", filePath, notebook)
+			return nil
+		}
+
+		if err := model.ImportSY(absPath, notebook, targetPath); err != nil {
+			return err
+		}
+		model.AppendPushReloadFiletreeEntry()
+		fmt.Println("ok")
+		return nil
+	},
+}
+
+var importDataCmd = &cobra.Command{
+	Use:   "data --file <path>",
+	Short: "Import data backup",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		filePath, _ := cmd.Flags().GetString("file")
+		if filePath == "" {
+			return fmt.Errorf("--file is required")
+		}
+
+		absPath, err := filepath.Abs(filePath)
+		if err != nil {
+			return err
+		}
+
+		if dryRun {
+			fmt.Printf("[dry-run] Would import data backup from \"%s\"\n", filePath)
+			return nil
+		}
+
+		if err := model.ImportData(absPath); err != nil {
+			return err
+		}
+		fmt.Println("ok")
+		return nil
+	},
+}
+
+func init() {
+	importMdCmd.Flags().String("file", "", "file or directory path")
+	importMdCmd.Flags().StringP("notebook", "n", "", "notebook ID")
+	importMdCmd.Flags().String("path", "", "target parent document internal path, with or without .sy suffix (default /)")
+	importMdCmd.Flags().String("hpath", "", "target human-readable path")
+
+	importSYCmd.Flags().String("file", "", ".sy.zip file path")
+	importSYCmd.Flags().StringP("notebook", "n", "", "notebook ID")
+	importSYCmd.Flags().String("path", "", "target internal path (default /)")
+	importSYCmd.Flags().String("hpath", "", "target human-readable path")
+
+	importDataCmd.Flags().String("file", "", "data backup zip path")
+
+	rootCmd.AddCommand(importCmd)
+	importCmd.AddCommand(importMdCmd)
+	importCmd.AddCommand(importSYCmd)
+	importCmd.AddCommand(importDataCmd)
+}

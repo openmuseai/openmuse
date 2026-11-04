@@ -1,0 +1,395 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package apicontract
+
+import (
+	"encoding/json"
+	"reflect"
+	"strings"
+	"testing"
+)
+
+func TestAVNewItemTemplateOpenAfterCreateContract(t *testing.T) {
+	endpoint := Endpoint[AVNewItemTemplate, Null]{definition: Definition{Path: "/test", Body: JSONBody}}
+	for _, test := range []struct {
+		body string
+		want *bool
+	}{
+		{`{}`, nil}, {`{"openAfterCreate":null}`, nil},
+		{`{"openAfterCreate":false}`, new(false)}, {`{"openAfterCreate":true}`, new(true)},
+	} {
+		value, err := endpoint.Decode(strings.NewReader(test.body))
+		if err != nil || (value.OpenAfterCreate == nil) != (test.want == nil) ||
+			test.want != nil && *value.OpenAfterCreate != *test.want {
+			t.Fatalf("opening preference %s: %+v %v", test.body, value, err)
+		}
+		raw, _ := json.Marshal(value)
+		var output map[string]json.RawMessage
+		if err = json.Unmarshal(raw, &output); err != nil || (output["openAfterCreate"] != nil) != (test.want != nil) {
+			t.Fatalf("opening preference presence lost: %s %v", raw, err)
+		}
+	}
+	for _, body := range []string{`{"openAfterCreate":0}`, `{"openAfterCreate":"false"}`, `{"openAfterCreate":[]}`} {
+		if _, err := endpoint.Decode(strings.NewReader(body)); err == nil {
+			t.Fatalf("invalid opening preference accepted: %s", body)
+		}
+	}
+}
+
+func TestAVAutomationDocumentDepthContract(t *testing.T) {
+	endpoint := Endpoint[AVAutomationBlockSource, Null]{definition: Definition{Path: "/test", Body: JSONBody}}
+	for _, test := range []struct {
+		body  string
+		depth *int
+	}{
+		{`{}`, nil}, {`{"documentDepth":null}`, nil}, {`{"documentDepth":0}`, new(0)},
+		{`{"documentDepth":1}`, new(1)}, {`{"documentDepth":12}`, new(12)},
+	} {
+		value, err := endpoint.Decode(strings.NewReader(test.body))
+		if err != nil || (value.DocumentDepth == nil) != (test.depth == nil) ||
+			value.DocumentDepth != nil && *value.DocumentDepth != *test.depth {
+			t.Fatalf("depth input %s: %+v %v", test.body, value, err)
+		}
+		raw, err := json.Marshal(value)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var output map[string]json.RawMessage
+		if err = json.Unmarshal(raw, &output); err != nil {
+			t.Fatal(err)
+		}
+		if (output["documentDepth"] != nil) != (test.depth != nil) {
+			t.Fatalf("depth presence lost: %s", raw)
+		}
+	}
+	for _, body := range []string{`{"documentDepth":1.5}`, `{"documentDepth":"1"}`, `{"documentDepth":true}`} {
+		if _, err := endpoint.Decode(strings.NewReader(body)); err == nil {
+			t.Fatalf("invalid depth type accepted: %s", body)
+		}
+	}
+}
+
+func TestAVAutomationSelectedDocumentsContract(t *testing.T) {
+	endpoint := Endpoint[AVAutomationBlockSource, Null]{definition: Definition{Path: "/test", Body: JSONBody}}
+	for _, test := range []struct {
+		body    string
+		include *bool
+	}{
+		{`{}`, nil}, {`{"includeSelectedDocuments":null}`, nil},
+		{`{"includeSelectedDocuments":true}`, new(true)}, {`{"includeSelectedDocuments":false}`, new(false)},
+	} {
+		value, err := endpoint.Decode(strings.NewReader(test.body))
+		if err != nil || (value.IncludeSelectedDocuments == nil) != (test.include == nil) ||
+			value.IncludeSelectedDocuments != nil && *value.IncludeSelectedDocuments != *test.include {
+			t.Fatalf("include selected documents %s: %+v %v", test.body, value, err)
+		}
+		raw, _ := json.Marshal(value)
+		var output map[string]json.RawMessage
+		if err = json.Unmarshal(raw, &output); err != nil ||
+			(output["includeSelectedDocuments"] != nil) != (test.include != nil) {
+			t.Fatalf("include selected documents presence lost: %s %v", raw, err)
+		}
+	}
+	for _, body := range []string{`{"includeSelectedDocuments":0}`, `{"includeSelectedDocuments":"false"}`, `{"includeSelectedDocuments":[]}`} {
+		if _, err := endpoint.Decode(strings.NewReader(body)); err == nil {
+			t.Fatalf("invalid inclusion type accepted: %s", body)
+		}
+	}
+}
+
+func TestAVAutomationAttributeNameContract(t *testing.T) {
+	endpoint := Endpoint[AVAutomationBlockAttribute, Null]{definition: Definition{Path: "/test", Body: JSONBody}}
+	for _, mode := range []string{"", "equals", "contains", "regex"} {
+		raw, _ := json.Marshal(map[string]string{"name": "custom-state", "nameOperator": mode, "operator": "exists"})
+		value, err := endpoint.Decode(strings.NewReader(string(raw)))
+		if err != nil || value.NameOperator != mode {
+			t.Fatalf("name operator %q: %+v %v", mode, value, err)
+		}
+	}
+	value, err := endpoint.Decode(strings.NewReader(`{"name":"custom-state","operator":"exists"}`))
+	if err != nil || value.NameOperator != "" {
+		t.Fatalf("legacy exact default: %+v %v", value, err)
+	}
+	for _, raw := range []string{`{"name":"state","nameOperator":"glob","operator":"exists"}`,
+		`{"name":"state","nameOperator":1,"operator":"exists"}`} {
+		if _, err := endpoint.Decode(strings.NewReader(raw)); err == nil {
+			t.Fatalf("invalid name operator accepted: %s", raw)
+		}
+	}
+}
+
+func TestAVRequestCompatibility(t *testing.T) {
+	group, err := SetAttrViewGroup.Decode(strings.NewReader(`{"avID":" av ","blockID":" block ","group":{"FIELD":"key","method":2,"unknown":true},"ignoreRows":"ignored"}`))
+	if err != nil || group.AvID != " av " || group.BlockID != " block " || group.Group.Field != "key" || group.Group.Method != 2 || group.IgnoreRows {
+		t.Fatalf("group compatibility: %+v %v", group, err)
+	}
+	filters, err := SetAttrViewFilters.Decode(strings.NewReader(`{"avID":"av","blockID":"block","data":[{"COLUMN":"key","value":{"text":{"content":"a"}}},null]}`))
+	if err != nil || len(filters.Data) != 2 || filters.Data[0].Column != "key" || filters.Data[1] != nil {
+		t.Fatalf("filter compatibility: %+v %v", filters, err)
+	}
+	request, err := GetAttributeViewPrimaryKeyValues.Decode(strings.NewReader(`{"id":" av ","page":2.9,"pageSize":-1.9,"blockIDs":["a",null,3,"","b"]}`))
+	if err != nil || int(*request.Page) != 2 || int(*request.PageSize) != -1 || !reflect.DeepEqual(request.BlockIDs, []string{"a", "", "b"}) {
+		t.Fatalf("pagination compatibility: %+v %v", request, err)
+	}
+	search, err := SearchAttributeView.Decode(strings.NewReader(`{"keyword":"x","includeViewMatches":23}`))
+	if err != nil || search.IncludeViewMatches {
+		t.Fatalf("ignored boolean: %+v %v", search, err)
+	}
+	for _, body := range []string{`{"avID":"a","blockIDs":[null]}`, `{"avID":"a","blockIDs":[1]}`} {
+		if _, err := GetAttributeViewItemIDsByBoundIDs.Decode(strings.NewReader(body)); err == nil {
+			t.Fatalf("invalid ID array accepted: %s", body)
+		}
+	}
+}
+
+func TestAVImagesGroupContract(t *testing.T) {
+	for _, body := range []string{`{"id":"av"}`, `{"id":"av","groupID":null}`, `{"id":"av","groupID":""}`} {
+		request, err := GetCurrentAttrViewImages.Decode(strings.NewReader(body))
+		if err != nil || request.GroupID != "" {
+			t.Fatalf("legacy image request: %+v %v", request, err)
+		}
+	}
+	request, err := GetCurrentAttrViewImages.Decode(strings.NewReader(`{"id":"av","groupID":"group"}`))
+	if err != nil || request.GroupID != "group" {
+		t.Fatalf("group image request: %+v %v", request, err)
+	}
+	if _, err := GetCurrentAttrViewImages.Decode(strings.NewReader(`{"id":"av","groupID":12}`)); err == nil {
+		t.Fatal("non-string group ID accepted")
+	}
+}
+
+func TestAVRelationItemNameChoiceCompatibility(t *testing.T) {
+	base := `"avID":"av","blockID":"block","keyID":"key","keyword":"Input","cells":[],"preview":{"templateID":"template","primaryKey":"Template","createdAt":123}`
+	for _, test := range []struct {
+		field string
+		want  bool
+	}{
+		{"", false}, {`,"useInputName":false`, false}, {`,"useInputName":null`, false}, {`,"useInputName":true`, true},
+	} {
+		request, err := CreateAttributeViewRelationItem.Decode(strings.NewReader(`{` + base + test.field + `}`))
+		if err != nil || request.UseInputName != test.want {
+			t.Fatalf("name choice compatibility: %+v %v", request, err)
+		}
+	}
+	if _, err := CreateAttributeViewRelationItem.Decode(strings.NewReader(`{` + base + `,"useInputName":"true"}`)); err == nil {
+		t.Fatal("invalid name choice accepted")
+	}
+}
+
+func TestAVValuePatchPresence(t *testing.T) {
+	for _, patch := range []string{`{}`, `{"text":{}}`, `{"text":{"content":""}}`, `{"text":null}`, `{"TEXT":{"CONTENT":"x"},"unknown":{"keep":true}}`,
+		`{"location":{}}`, `{"location":null}`, `{"location":{"name":"Home"}}`,
+		`{"location":{"latitude":null,"longitude":null}}`,
+		`{"location":{"latitude":0,"longitude":0,"originalInput":" 0.0, +0 "}}`} {
+		request, err := SetAttributeViewBlockAttr.Decode(strings.NewReader(`{"avID":"av","keyID":"key","itemID":"item","value":` + patch + `}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		actual, err := json.Marshal(request.Value)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var expectedValue, actualValue any
+		if err = json.Unmarshal([]byte(patch), &expectedValue); err != nil {
+			t.Fatal(err)
+		}
+		if err = json.Unmarshal(actual, &actualValue); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(expectedValue, actualValue) {
+			t.Fatalf("patch changed: %s -> %s", patch, actual)
+		}
+	}
+	request, err := BatchSetAttributeViewBlockAttrs.Decode(strings.NewReader(`{"avID":"av","values":[{"keyID":"key","itemID":"item","value":{"text":{}}},{"keyID":"key","value":null}]}`))
+	if err != nil || len(request.Values) != 2 || request.Values[1].Value != nil {
+		t.Fatalf("batch null compatibility: %+v %v", request, err)
+	}
+	encoded, err := json.Marshal(request.Values[0].Value)
+	if err != nil || string(encoded) != `{"text":{}}` {
+		t.Fatalf("batch patch changed: %s %v", encoded, err)
+	}
+	if _, err := SetAttributeViewBlockAttr.Decode(strings.NewReader(`{"avID":"av","keyID":"key","value":{"number":{"content":"invalid"}}}`)); err == nil {
+		t.Fatal("invalid fixed value structure accepted")
+	}
+}
+
+func TestAVLocationContract(t *testing.T) {
+	for _, patch := range []string{
+		`{"location":{"latitude":"0","longitude":0}}`,
+		`{"location":{"latitude":0,"longitude":false}}`,
+		`{"location":{"originalInput":123}}`,
+		`{"location":{"latitude":0,"longitude":0,"coordinateSystem":"wgs84"}}`,
+		`{"location":{"latitude":0,"longitude":0,"coordinateSystem":"gcj02"}}`,
+		`{"location":{"latitude":0,"longitude":0,"coordinateSystem":"unknown"}}`,
+		`{"location":{"name":"Home","unknown":true}}`,
+	} {
+		if _, err := SetAttributeViewBlockAttr.Decode(strings.NewReader(`{"avID":"av","keyID":"key","value":` + patch + `}`)); err == nil {
+			t.Fatalf("invalid location structure accepted: %s", patch)
+		}
+	}
+	filters, err := SetAttrViewFilters.Decode(strings.NewReader(`{"avID":"av","blockID":"block","data":[{"column":"key","operator":"Contains","value":{"type":"location","text":{"content":"Home"}}}]}`))
+	if err != nil || len(filters.Data) != 1 || filters.Data[0].Value.Text.Content != "Home" {
+		t.Fatalf("location text filter: %+v %v", filters, err)
+	}
+	bundle, err := BuildBundle()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, value := range []string{
+		`{"type":"location","location":{"name":"Home","latitude":0,"longitude":0,"originalInput":"0,0"}}`,
+		`{"type":"location","location":{"name":"Home"}}`,
+		`{"type":"location"}`,
+		`{"type":"rollup","rollup":{"contents":[{"type":"location","location":{"latitude":-90,"longitude":180}}]}}`,
+	} {
+		body := []byte(`{"code":0,"msg":"","data":{"values":{"key":` + value + `}}}`)
+		if err := bundle.ValidateResponse("POST", "/api/av/getAttributeViewAddingBlockDefaultValues", body); err != nil {
+			t.Fatalf("location response rejected: %s %v", value, err)
+		}
+	}
+	keyData, err := json.Marshal(map[string]any{"code": 0, "msg": "", "data": []*AVKey{{
+		ID: "location-key", Type: "location",
+	}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := bundle.ValidateResponse("POST", "/api/av/getAttributeViewKeysByID", keyData); err != nil {
+		t.Fatalf("location field rejected: %v", err)
+	}
+	for _, location := range []string{
+		`{"latitude":0,"longitude":0,"coordinateSystem":"wgs84"}`,
+		`{"latitude":0,"longitude":0,"coordinateSystem":"gcj02"}`,
+		`{"latitude":0,"longitude":0,"coordinateSystem":"unknown"}`,
+	} {
+		body := []byte(`{"code":0,"msg":"","data":{"values":{"key":{"type":"location","location":` + location + `}}}}`)
+		if err := bundle.ValidateResponse("POST", "/api/av/getAttributeViewAddingBlockDefaultValues", body); err == nil {
+			t.Fatalf("removed location coordinate system accepted: %s", location)
+		}
+	}
+	legacyKey := []byte(`{"code":0,"msg":"","data":[{"id":"location-key","type":"location","location":{"defaultCoordinateSystem":"wgs84"}}]}`)
+	if err := bundle.ValidateResponse("POST", "/api/av/getAttributeViewKeysByID", legacyKey); err == nil {
+		t.Fatal("removed location field defaults accepted")
+	}
+}
+
+func TestAVLocationSchemaSeparatesInputNulls(t *testing.T) {
+	for _, inputFirst := range []bool{false, true} {
+		builder := &schemaBuilder{definitions: map[string]*Schema{}, owners: map[string]reflect.Type{}}
+		for _, input := range []bool{inputFirst, !inputFirst} {
+			if _, err := builder.schema(reflect.TypeFor[AVValueLocation](), input); err != nil {
+				t.Fatal(err)
+			}
+		}
+		bundle := &Bundle{Definitions: builder.definitions}
+		input, output := builder.definitions["AVValueLocationInput"], builder.definitions["AVValueLocation"]
+		for _, field := range []string{"name", "latitude", "longitude", "originalInput"} {
+			value := map[string]any{field: nil}
+			if err := bundle.validate(input, value, "$"); err != nil {
+				t.Fatalf("location input cannot clear %s: %v", field, err)
+			}
+			if err := bundle.validate(output, value, "$"); err == nil {
+				t.Fatalf("location output accepted omitted field %s as null", field)
+			}
+		}
+		if err := bundle.validate(input, map[string]any{"coordinateSystem": "gcj02"}, "$"); err == nil {
+			t.Fatal("location schema accepted an explicit coordinate system")
+		}
+	}
+}
+
+func TestAVResponseSchemas(t *testing.T) {
+	bundle, err := BuildBundle()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct{ path, body string }{
+		{"/api/av/getAttributeViewAddingBlockDefaultValues", `{"code":0,"msg":"","data":{"values":{"key":{"text":{"content":"x"}}}}}`},
+		{"/api/av/getAttributeViewAddingBlockDefaultValues", `{"code":0,"msg":"","data":{"values":null}}`},
+		{"/api/av/renderAttributeView", `{"code":-1,"msg":"missing","data":{"error":"viewNotFound"}}`},
+		{"/api/av/createAttributeViewItem", `{"code":1,"msg":"","data":{"unavailableNotebook":true}}`},
+		{"/api/av/createAttributeViewRelationItem", `{"code":1,"msg":"","data":{"unavailableNotebook":true}}`},
+		{"/api/av/createAttributeViewItemDocs", `{"code":1,"msg":"","data":{"unavailableNotebook":true}}`},
+		{"/api/av/getAttributeViewRowSort", `{"code":0,"msg":"","data":{"conflict":false,"doOperations":[],"undoOperations":[]}}`},
+	} {
+		if err = bundle.ValidateResponse("POST", test.path, []byte(test.body)); err != nil {
+			t.Fatalf("%s: %v", test.path, err)
+		}
+	}
+	if err = bundle.ValidateResponse("POST", "/api/av/getAttributeViewAddingBlockDefaultValues", []byte(`{"code":0,"msg":"","data":{"values":[]}}`)); err == nil {
+		t.Fatal("incorrect default values array accepted")
+	}
+}
+
+func TestAVRelationItemInputContract(t *testing.T) {
+	valid := `{"avID":" av ","blockID":"block","keyID":"key","cells":[{"itemID":"item","relatedItemIDs":[]}],"preview":{"templateID":"","primaryKey":"Task","createdAt":123}}`
+	request, err := CreateAttributeViewRelationItem.Decode(strings.NewReader(valid))
+	if err != nil || request.AvID != "av" || request.Keyword != "" || request.Preview.PrimaryKey != "Task" {
+		t.Fatalf("relation creation input: %+v %v", request, err)
+	}
+	for _, invalid := range []string{
+		strings.Replace(valid, `"createdAt":123`, `"createdAt":"123"`, 1),
+		strings.Replace(valid, `"relatedItemIDs":[]`, `"relatedItemIDs":[null]`, 1),
+		strings.Replace(valid, `"cells":[{"itemID":"item","relatedItemIDs":[]}]`, `"cells":null`, 1),
+	} {
+		if _, err = CreateAttributeViewRelationItem.Decode(strings.NewReader(invalid)); err == nil {
+			t.Fatalf("invalid relation input accepted: %s", invalid)
+		}
+	}
+}
+
+func TestAVParsedRequestErrors(t *testing.T) {
+	for _, test := range []struct{ body, message string }{
+		{`{"avID":null}`, "Field [avID] is required"},
+		{`{"avID":1}`, "Field [avID] should be of type [String]"},
+		{`{"avID":"a","blockID":"b","saveMode":"subDoc","itemIDs":{}}`, "Field [itemIDs] should be of type [Array]"},
+	} {
+		_, err := CreateAttributeViewItemDocs.Decode(strings.NewReader(test.body))
+		if err == nil || err.Error() != test.message {
+			t.Fatalf("parsed field response: %s %v", test.body, err)
+		}
+	}
+	row, err := GetAttributeViewRowSort.Decode(strings.NewReader(`{"AVID":" av ","ITEMIDS":[null,"x"]}`))
+	if err != nil || row.AvID != " av " || !reflect.DeepEqual(row.ItemIDs, []string{"", "x"}) {
+		t.Fatalf("row struct binding: %+v %v", row, err)
+	}
+	if _, err = GetAttributeViewRowSort.Decode(strings.NewReader("{")); err == nil || err.Error() != "unexpected EOF" {
+		t.Fatalf("row parse error changed: %v", err)
+	}
+	keys, err := GetAttributeViewKeysByID.Decode(strings.NewReader(`{"avID":"av","keyIDs":[null]}`))
+	if err != nil || keys.KeyIDsError == nil {
+		t.Fatalf("key ID validation was not deferred: %+v %v", keys, err)
+	}
+}
+
+func TestAVContractCalendarCreateRequest(t *testing.T) {
+	for _, test := range []struct {
+		name, field string
+		want        int64
+		present     bool
+	}{
+		{"omitted", "", 0, false},
+		{"null", `,"calendarDate":null`, 0, false},
+		{"epoch", `,"calendarDate":0`, 0, true},
+		{"beforeEpoch", `,"calendarDate":-86400000`, -86400000, true},
+		{"selectedDay", `,"calendarDate":1790006400000`, 1790006400000, true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			request, err := CreateAttributeViewItem.Decode(strings.NewReader(`{"avID":" av ","blockID":"block","viewID":"calendar","templateID":"template"` + test.field + `}`))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if (request.CalendarDate != nil) != test.present || test.present && *request.CalendarDate != test.want {
+				t.Fatalf("unexpected calendar date: %+v", request.CalendarDate)
+			}
+			if request.AvID != " av " || request.BlockID != "block" || request.ViewID != "calendar" || request.TemplateID != "template" {
+				t.Fatalf("creation fields changed: %+v", request)
+			}
+		})
+	}
+	for _, value := range []string{`"1790006400000"`, `true`, `{}`, `[]`, `1.5`, `9223372036854775808`} {
+		if _, err := CreateAttributeViewItem.Decode(strings.NewReader(`{"avID":"av","blockID":"block","calendarDate":` + value + `}`)); err == nil {
+			t.Fatalf("invalid calendar date accepted: %s", value)
+		}
+	}
+}

@@ -1,0 +1,8 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_textrope_append,字符进 rope,char/char[]/String,length+charAt+getText,(none),02_function_notify_order;07_function_corehelper_write,libs/word-core,pass
+2,02_function_notify_order,before-mutate-after,append/insert/erase,Listener callback order,01_function_textrope_append,03_function_chpx_insert;04_function_papx_insert;05_function_plcsection,libs/word-core,pass
+3,03_function_chpx_insert,CHPX 挂 CP 区间,cp+PropertySet,CHPX Entry [cp next),01_function_textrope_append;02_function_notify_order;wave0-property_set,07_function_corehelper_write,libs/word-core,pass
+4,04_function_papx_insert,PAPX 挂段首 CP,cp0+PropertySet,PAPX Entry,01_function_textrope_append;02_function_notify_order;wave0-property_set,07_function_corehelper_write,libs/word-core,pass
+5,05_function_plcsection,分节符与节查询,\f length / addSection(cp),SectionNode start/end,01_function_textrope_append;02_function_notify_order,feature-output,libs/word-core,pass
+6,06_function_cpiecetable,存储门面,Document triple / guessed length,getters+charAt+setGuessedTotalLength,01_function_textrope_append;03_function_chpx_insert;04_function_papx_insert,07_function_corehelper_write,libs/word-core,pass
+7,07_function_corehelper_write,写入编排,text+endMark+chpx+papx+cp0,rope+CHPX+PAPX aligned,01_function_textrope_append;03_function_chpx_insert;04_function_papx_insert,feature-output,libs/word-core,pass

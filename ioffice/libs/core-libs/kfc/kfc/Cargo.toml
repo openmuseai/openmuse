@@ -1,0 +1,17 @@
+﻿[package]
+name = "core_libs_kfc_main"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+
+quick-xml = "0.36"
+num-bigint = "0.4.6"
+num-traits = "0.2"
+regex = "1"
+
+chrono = "0.4.44"
+parking_lot = { version = "0.12", features = ["arc_lock"] }

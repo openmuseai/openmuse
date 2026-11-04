@@ -1,0 +1,252 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package agent
+
+import (
+	"encoding/json"
+	"testing"
+
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/mcp/tools"
+	kernelModel "github.com/siyuan-note/siyuan/kernel/model"
+)
+
+func TestFrontendCapabilityModelNamesAreStableAndDistinct(t *testing.T) {
+	first := frontendCapabilityModelName("plugin/frontend/example/a/b")
+	second := frontendCapabilityModelName("plugin/frontend/example/a_b")
+	if first == second {
+		t.Fatalf("different capability IDs produced the same model name: %s", first)
+	}
+	if first != frontendCapabilityModelName("plugin/frontend/example/a/b") {
+		t.Fatal("capability model name is not stable")
+	}
+	if len(first) > maxCapabilityModelNameLen || len(second) > maxCapabilityModelNameLen {
+		t.Fatal("capability model name exceeds the provider limit")
+	}
+}
+
+func TestContentCapabilitiesExposeSharedToolDescriptions(t *testing.T) {
+	originalConf := kernelModel.Conf
+	kernelModel.Conf = kernelModel.NewAppConf()
+	kernelModel.Conf.AI.Store(conf.NewAI())
+	t.Cleanup(func() { kernelModel.Conf = originalConf })
+	for _, tc := range []struct {
+		tool     *tools.Tool
+		property string
+	}{
+		{tools.BlockTool, "data"}, {tools.DocumentTool, "markdown"},
+		{tools.DailynoteTool, "data"}, {tools.TemplateTool, "content"},
+	} {
+		t.Run(tc.tool.Name, func(t *testing.T) {
+			id := tools.CapabilityIDForTool(tc.tool)
+			kernelModel.Conf.AI.Load().Agent.CapabilityPolicy = &conf.CapabilityPolicy{
+				Default: "deny", Overrides: map[string]string{id: "allow"},
+			}
+			set, err := buildCapabilitySet(nil, capabilityAccessContext{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(set.definitions) != 1 || set.definitions[0].Function.Name != tc.tool.Name {
+				t.Fatal("content capability was not exposed independently")
+			}
+			definition := set.definitions[0].Function
+			if definition.Description != tc.tool.Description {
+				t.Fatal("agent did not receive the shared content tool description")
+			}
+			data, err := json.Marshal(definition.Parameters)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var schema tools.ToolSchema
+			if err = json.Unmarshal(data, &schema); err != nil {
+				t.Fatal(err)
+			}
+			if schema.Properties[tc.property].Description != tc.tool.InputSchema.Properties[tc.property].Description {
+				t.Fatal("agent did not receive the shared content syntax")
+			}
+			kernelModel.Conf.AI.Load().Agent.CapabilityPolicy.Overrides[id] = "deny"
+			set, err = buildCapabilitySet(nil, capabilityAccessContext{})
+			if err != nil || len(set.definitions) != 0 {
+				t.Fatalf("disabled content tool descriptions were still exposed: %v", err)
+			}
+		})
+	}
+}
+
+func TestCapabilityPolicyControlsExposureAndExecution(t *testing.T) {
+	const toolName = "test_capability_policy_tool"
+	const backendID = "native/backend/test_capability_policy_tool"
+	const frontendID = "native/frontend/test_capability_policy"
+
+	originalConf := kernelModel.Conf
+	kernelModel.Conf = kernelModel.NewAppConf()
+	kernelModel.Conf.AI.Store(conf.NewAI())
+	kernelModel.Conf.AI.Load().Agent.CapabilityPolicy = &conf.CapabilityPolicy{
+		Default: "deny",
+		Overrides: map[string]string{
+			backendID:  "allow",
+			frontendID: "allow",
+		},
+	}
+	t.Cleanup(func() { kernelModel.Conf = originalConf })
+
+	tool := &tools.Tool{
+		Name:         toolName,
+		CapabilityID: backendID,
+		Description:  "Test capability policy",
+		InputSchema:  tools.ToolSchema{Type: "object"},
+		Handler: func(args map[string]any) (tools.CallToolResult, error) {
+			return tools.CallToolResult{}, nil
+		},
+	}
+	if err := tools.SetTool(toolName, tool); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { tools.RemoveTool(toolName) })
+
+	set, err := buildCapabilitySet([]FrontendCapability{{
+		ID:          frontendID,
+		Description: "Test browser capability",
+		InputSchema: tools.ToolSchema{Type: "object"},
+		Source:      "native",
+		Generation:  1,
+	}}, capabilityAccessContext{SessionID: "test-session", NotebookID: "test-notebook"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	backendRegistration := set.registration(toolName)
+	if backendRegistration == nil {
+		t.Fatal("allowed backend capability was not exposed")
+	}
+	frontendRegistration := set.registration(frontendCapabilityModelName(frontendID))
+	if frontendRegistration == nil {
+		t.Fatal("allowed browser capability was not exposed")
+	}
+	kernelModel.Conf.AI.Load().Agent.ApprovalPolicy.Overrides[backendID] = &conf.CapabilityApproval{
+		Default: "allow",
+		Actions: map[string]string{"write": "confirm"},
+	}
+	if required, _ := capabilityConfirmRequirement(backendRegistration, "delete", nil, false, nil); required {
+		t.Fatal("capability auto approval was not applied")
+	}
+	if required, _ := capabilityConfirmRequirement(backendRegistration, "write", nil, false, nil); !required {
+		t.Fatal("action confirmation override was not applied")
+	}
+	if required, _ := capabilityConfirmRequirement(backendRegistration, "write", nil, true, nil); !required {
+		t.Fatal("explicit confirmation was bypassed by the session approval mode")
+	}
+
+	kernelModel.Conf.AI.Load().Agent.CapabilityPolicy.Overrides[backendID] = "deny"
+	kernelModel.Conf.AI.Load().Agent.CapabilityPolicy.Overrides[frontendID] = "deny"
+	if capabilityStillExecutable(backendRegistration, nil) || capabilityStillExecutable(frontendRegistration, nil) {
+		t.Fatal("disabled capability remained executable from an earlier model round")
+	}
+
+	set, err = buildCapabilitySet(nil, capabilityAccessContext{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if set.registration(toolName) != nil {
+		t.Fatal("disabled backend capability remained exposed")
+	}
+}
+
+func TestMCPCapabilityRequiresEnabledConfiguredServer(t *testing.T) {
+	const toolName = "test_mcp_owner_availability"
+	const serverID = "test-mcp-server"
+
+	originalConf := kernelModel.Conf
+	kernelModel.Conf = kernelModel.NewAppConf()
+	kernelModel.Conf.AI.Store(conf.NewAI())
+	t.Cleanup(func() { kernelModel.Conf = originalConf })
+
+	tool := &tools.Tool{
+		Name:         toolName,
+		CapabilityID: tools.BuildCapabilityID("mcp", "backend", serverID, "read"),
+		Description:  "Test MCP owner availability",
+		InputSchema:  tools.ToolSchema{Type: "object"},
+		Source:       "mcp",
+		OwnerID:      serverID,
+		Runtime:      "mcp",
+		Handler: func(args map[string]any) (tools.CallToolResult, error) {
+			return tools.CallToolResult{}, nil
+		},
+	}
+	if err := tools.SetTool(toolName, tool); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { tools.RemoveTool(toolName) })
+
+	set, err := buildCapabilitySet(nil, capabilityAccessContext{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if set.registration(toolName) != nil {
+		t.Fatal("MCP capability without a configured server was exposed")
+	}
+
+	kernelModel.Conf.AI.Load().MCP.Servers = []conf.MCPServer{{ID: serverID, Enabled: true}}
+	set, err = buildCapabilitySet(nil, capabilityAccessContext{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	registration := set.registration(toolName)
+	if registration == nil || !capabilityStillExecutable(registration, nil) {
+		t.Fatal("MCP capability for an enabled configured server was unavailable")
+	}
+
+	kernelModel.Conf.AI.Load().MCP.Servers[0].Enabled = false
+	if capabilityStillExecutable(registration, nil) {
+		t.Fatal("MCP capability remained executable after its server was disabled")
+	}
+	set, err = buildCapabilitySet(nil, capabilityAccessContext{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if set.registration(toolName) != nil {
+		t.Fatal("MCP capability for a disabled server was exposed")
+	}
+}
+
+func TestExplicitCapabilityConfirmationOverridesRiskAndSessionApproval(t *testing.T) {
+	originalConf := kernelModel.Conf
+	kernelModel.Conf = kernelModel.NewAppConf()
+	kernelModel.Conf.AI.Store(conf.NewAI())
+	t.Cleanup(func() { kernelModel.Conf = originalConf })
+
+	registration := &capabilityRegistration{
+		ID:        "native/backend/search",
+		ModelName: "search",
+		Source:    "native",
+		Runtime:   "kernel",
+		Tool:      tools.SearchTool,
+	}
+	if required, _ := capabilityConfirmRequirement(registration, "fulltext", nil, false, nil); required {
+		t.Fatal("risk-based local search unexpectedly required confirmation")
+	}
+	required, forced := capabilityConfirmRequirement(registration, "semantic", nil, false, nil)
+	if !required || forced {
+		t.Fatal("risk-based semantic search did not require confirmation")
+	}
+	if required, _ := capabilityConfirmRequirement(registration, "semantic", nil, true, nil); required {
+		t.Fatal("session approval did not bypass risk-based confirmation")
+	}
+
+	kernelModel.Conf.AI.Load().Agent.ApprovalPolicy.Overrides[registration.ID] = &conf.CapabilityApproval{
+		Default: conf.ApprovalDecisionConfirm,
+		Actions: map[string]string{"semantic": conf.ApprovalDecisionAllow},
+	}
+	required, forced = capabilityConfirmRequirement(registration, "fulltext", nil, false, nil)
+	if !required || !forced {
+		t.Fatal("explicit confirmation did not protect local search")
+	}
+	required, forced = capabilityConfirmRequirement(registration, "fulltext", nil, true, nil)
+	if !required || !forced {
+		t.Fatal("session approval bypassed explicit capability confirmation")
+	}
+	if required, _ := capabilityConfirmRequirement(registration, "semantic", nil, false, nil); required {
+		t.Fatal("action auto approval did not override capability confirmation")
+	}
+}

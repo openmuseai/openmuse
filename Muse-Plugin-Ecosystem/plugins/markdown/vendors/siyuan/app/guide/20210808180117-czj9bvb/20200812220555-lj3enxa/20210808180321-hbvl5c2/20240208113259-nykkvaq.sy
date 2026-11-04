@@ -1,0 +1,5348 @@
+{
+	"ID": "20240208113259-nykkvaq",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"icon": "1f5c3-fe0f",
+		"id": "20240208113259-nykkvaq",
+		"title": "数据库",
+		"type": "doc",
+		"updated": "20261028120132"
+	},
+	"Children": [
+		{
+			"ID": "20240208113259-sp3g7zb",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240208113259-sp3g7zb",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20240208114024-40auf5m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240208114024-40auf5m",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "数据库用于按字段管理条目。条目可以绑定已有内容块，也可以独立存在。同一组数据可通过表格、列表、日历、看板和卡片视图呈现，各视图可分别设置布局、过滤和排序。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014537-er8y3wx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014537-er8y3wx",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "字段的用途和能力见 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260613155453-n1se73o",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "字段类型"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "；列底部的统计见 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260617122823-56cr2zv",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "表格计算"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				}
+			]
+		},
+		{
+			"ID": "20240208115136-9g2b46l",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240208115136-9g2b46l",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "创建数据库"
+				}
+			]
+		},
+		{
+			"ID": "20240208115415-bvq6noy",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20240208115415-bvq6noy",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20240208115511-6a9a2xn",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240208115511-6a9a2xn",
+						"updated": "20240208164823"
+					},
+					"Children": [
+						{
+							"ID": "20240208115511-eia5i60",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240208115511-eia5i60",
+								"updated": "20251224101527"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "通过 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/数据库"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 创建，默认视图是表格视图，可在布局中切换"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240208115512-ecutymg",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240208115512-ecutymg",
+						"updated": "20260613160412"
+					},
+					"Children": [
+						{
+							"ID": "20240208115512-pcoezgv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240208115512-pcoezgv",
+								"updated": "20260613160412"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "添加"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20260613155453-n1se73o",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "字段"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261016191345-t2t1ou7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20261016191345-t2t1ou7",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20261016191345-zdl33xf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261016191345-zdl33xf",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "查看"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20260617122823-56cr2zv",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "表格计算"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240208115523-6cy1bjq",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240208115523-6cy1bjq",
+						"updated": "20250115152026"
+					},
+					"Children": [
+						{
+							"ID": "20240208115523-8vancj5",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240208115523-8vancj5",
+								"updated": "20240208115528"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "添加条目"
+								}
+							]
+						},
+						{
+							"ID": "20240208115529-u91catr",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20240208115529-u91catr",
+								"updated": "20250115152026"
+							},
+							"Children": [
+								{
+									"ID": "20240208115529-6o006s5",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20240208115529-6o006s5",
+										"updated": "20240208115529"
+									},
+									"Children": [
+										{
+											"ID": "20240208115529-h73qpv6",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20240208115529-h73qpv6",
+												"updated": "20251224101456"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "非内容块：直接在视图中添加的条目，不绑定到任何内容块"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20240208115626-nvhu91r",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20240208115626-nvhu91r",
+										"updated": "20250115152026"
+									},
+									"Children": [
+										{
+											"ID": "20240208115626-5tboobu",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20240208115626-5tboobu",
+												"updated": "20251224101503"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "内容块：通过拖拽到视图添加的条目，或者通过块标菜单 "
+												},
+												{
+													"Type": "NodeTextMark",
+													"TextMarkType": "kbd",
+													"TextMarkTextContent": "添加到数据库"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "​ 添加的条目"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240208120016-3d7euem",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240208120016-3d7euem",
+						"updated": "20251224102244"
+					},
+					"Children": [
+						{
+							"ID": "20240208120016-7vdgyf1",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240208120016-7vdgyf1",
+								"updated": "20251224102244"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "按需设置过滤和排序"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240208115934-tayls7s",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240208115934-tayls7s",
+						"updated": "20251224102323"
+					},
+					"Children": [
+						{
+							"ID": "20240208115934-aowaqra",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240208115934-aowaqra",
+								"updated": "20251224102323"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "同一个数据库可以添加多个视图，所有视图共享相同的数据，但过滤和排序设置相互独立"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-8jwf2oj",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161058-8jwf2oj",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "视图布局"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20260613162748-0xbvbws",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613162748-0xbvbws",
+				"updated": "20260613162748"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "表格视图"
+				}
+			]
+		},
+		{
+			"ID": "20260613162748-yywc839",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613162748-yywc839",
+				"updated": "20260613162748"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "数据库的默认视图，以行列表格形式展示数据。"
+				}
+			]
+		},
+		{
+			"ID": "20260613162748-8ll0v5f",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613162748-8ll0v5f",
+				"updated": "20260613162748"
+			},
+			"Children": [
+				{
+					"ID": "20260613162748-8gkksue",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-8gkksue",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-30u424e",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-30u424e",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "切换方式"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：数据库创建后默认为表格视图；从其他视图切换时在下拉菜单中选择「表格视图」"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-if707yu",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-if707yu",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-1c3b33p",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-1c3b33p",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "列管理"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：每列为一条字段，支持拖拽调整列宽和列顺序；右键列头可编辑、删除、隐藏字段"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-3z7050d",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-3z7050d",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-s33sewu",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-s33sewu",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "行操作"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：点击行首可展开行详情；拖拽行可调整顺序；右键行可删除、复制、移动到其他数据库"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-akjizml",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-akjizml",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-uvwiy7f",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-uvwiy7f",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "新增行"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：点击表格底部空白行或使用加号按钮添加新条目"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-v8tvmf4",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-v8tvmf4",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-vct65q7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-vct65q7",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "适用场景"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：数据录入、批量编辑、字段类型丰富的表格场景、与 Excel 类似的常规数据管理"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260920084445-ujj7y47",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260920084445-ujj7y47",
+				"updated": "20260920084445"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "列表视图"
+				}
+			]
+		},
+		{
+			"ID": "20260920084445-iglvf09",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920084445-iglvf09",
+				"updated": "20260920084445"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "每个条目显示为一行，不显示表头和表格网格。新建列表视图默认只显示主键字段，其他字段均隐藏。"
+				}
+			]
+		},
+		{
+			"ID": "20260920084445-hq4xiri",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260920084445-hq4xiri",
+				"updated": "20260920084445"
+			},
+			"Children": [
+				{
+					"ID": "20260920084445-brs3h3s",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-brs3h3s",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-yahw7bf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-yahw7bf",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "切换方式：在视图设置中选择 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "布局"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "列表"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "，也可通过斜杠菜单插入数据库列表视图"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920084445-3oqs6eb",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-3oqs6eb",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-vy20kr8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-vy20kr8",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "字段显示：打开 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "字段"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 面板启用需要显示的字段。可见字段与主键同行显示，并支持编辑字段值"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920084445-8rdt2le",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-8rdt2le",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-fj2rtkf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-fj2rtkf",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "视图设置：复制列表视图或切回该视图的列表布局时，会保留已配置的字段显隐设置"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920084445-zgww1e6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-zgww1e6",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-akby47e",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-akby47e",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "过滤、排序和分组：与同一数据库的其他视图共享数据，支持独立设置过滤、排序和分组"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260920225154-xtg5hn3",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260920225154-xtg5hn3",
+				"updated": "20261025011205"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "日历视图"
+				}
+			]
+		},
+		{
+			"ID": "20260920225154-5w7mqrf",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920225154-5w7mqrf",
+				"updated": "20260923103343"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "按月或周显示有日期的条目。周视图包含七个日期列，跨日条目会连续显示在对应日期上。各编辑器的当前模式和浏览日期互不影响。每个日历视图的月、周模式会保存在当前工作空间中，在新编辑器中打开或重启思源后恢复。新编辑器从今天开始浏览。"
+				}
+			]
+		},
+		{
+			"ID": "20260920225154-09h9ysf",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260920225154-09h9ysf",
+				"updated": "20261025011205"
+			},
+			"Children": [
+				{
+					"ID": "20260920225154-35fzona",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-35fzona",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-0e8suyc",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-0e8suyc",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "切换方式：在视图设置中选择 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "布局"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "日历"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "，也可通过斜杠菜单插入数据库日历视图"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-15vow2u",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-15vow2u",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-g9w1vkr",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-g9w1vkr",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期字段：在布局设置中选择一个日期、创建时间或更新时间字段。没有适用字段时，日历会提示选择或创建字段，不会为已有条目自动填写普通日期；没有日期的条目不显示在日期格内。绑定普通日期字段时，可在无日期列表中找到这些条目"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260929122307-mutfp6g",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260929122307-mutfp6g",
+						"updated": "20260929123717"
+					},
+					"Children": [
+						{
+							"ID": "20260929122307-3aos75m",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260929122307-3aos75m",
+								"updated": "20260929123717"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "模板日期：日期字段设置显示模板后，日历按模板计算出的日期显示条目，原始日期保持不变。模板需输出纯文本日期，支持 YYYY-MM-DD、字段所选的数字日期格式，以及当前语言的本地日期格式（如 2026年10月2日）；可附加 HH:mm 或 HH:mm:ss，以空格或 T 分隔。日期按当前设备的本地时区解释，斜杠日期按字段格式解释，不猜测日月顺序。空结果、无效日期和其他格式不会显示，也不会进入无日期列表。计算日期不支持拖动、清空或按日期新建，请修改来源字段或模板来调整日期；跨语言使用时建议输出 YYYY-MM-DD"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-s45tw42",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-s45tw42",
+						"updated": "20260923095432"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-g06jlzk",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-g06jlzk",
+								"updated": "20260923095432"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "浏览日期：使用上一页、下一页、今天或日期选择器切换日期。月视图会折叠条目较多的日期，点击更多按钮可展开所在周。日期按当前设备的本地时区显示。月视图按当月实际需要显示四、五或六周。月视图和周视图都在每行起始日期显示 ISO 周数。点击日历按钮可按日期或 ISO 周所属年份和周数跳转。每周起始日不是星期一时，以该行的星期四确定周数"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-4u642qz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-4u642qz",
+						"updated": "20260924110133"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-gev35tw",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-gev35tw",
+								"updated": "20260924110133"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "编辑条目：点击条目使用现有数据库条目编辑界面。使用普通日期字段时，可通过日期格内的加号创建条目，拖动条目调整日期，或拖动两端调整日期范围。点击视图筛选旁的无日期按钮，可搜索未安排的条目；将条目拖到日期格，或先选中条目再点选日期格，触屏设备也可使用后一种方式。排期会填写全天日期，清空日期后条目会回到无日期列表。日期修改支持撤销，触屏设备可拖动日历中已有条目上的移动手柄。点击或新建条目后自动聚焦主键字段；拖动时预览调整后的日期范围并高亮对应日期格，松手后保存。右键菜单还支持复制、新建文档并绑定、添加到其他数据库、编辑字段及在所选日期新建条目"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-yrj2wk7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-yrj2wk7",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-j1gax2j",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-j1gax2j",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "系统时间：创建时间和更新时间沿用条目或绑定块的实际时间，不支持拖动修改，也不提供日期格内的新建按钮"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-tr5u6pz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-tr5u6pz",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-ah94f55",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-ah94f55",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期范围：全天范围包含结束当天；带时间的范围若在午夜结束，则显示到前一天。仅有一个端点时显示在该日期，结束早于开始时标记异常并保留原值"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-t3u47pu",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-t3u47pu",
+						"updated": "20260927112821"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-zbl70ln",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-zbl70ln",
+								"updated": "20260927112821"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "视图设置：沿用数据库的过滤、排序、字段显隐和新条目模板，可通过条件颜色设置条目背景。日历布局暂不应用分组，切换回其他布局时保留原有分组设置。布局设置中的条目显示行数可选 3、5、10 或全部，默认为 3，保存在当前日历视图中。该设置仅控制月视图折叠，周视图显示全部条目，日期范围内的数据仍完整加载"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261025011205-rre2xnb",
+					"Type": "NodeListItem",
+					"Properties": {
+						"id": "20261025011205-rre2xnb",
+						"updated": "20261025011205"
+					},
+					"Children": [
+						{
+							"ID": "20261025011205-601x92p",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261025011205-601x92p",
+								"updated": "20261025011205"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "字段名称：在视图设置中开启 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "布局"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "显示字段名称"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "，即可在非主键字段值旁显示字段名称，主键仍作为条目标题。该选项默认关闭，按日历视图保存，关闭后恢复为只显示字段值"
+								}
+							]
+						}
+					],
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					}
+				}
+			]
+		},
+		{
+			"ID": "20260613162748-v93usth",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613162748-v93usth",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "看板视图"
+				}
+			]
+		},
+		{
+			"ID": "20260613162748-6ibsqxo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613162748-6ibsqxo",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "以分列卡片展示条目，每列对应一个分组。分组能力取决于字段类型；使用单选或多选字段时，还可通过跨列拖动卡片修改选项。"
+				}
+			]
+		},
+		{
+			"ID": "20260613162748-zeeswbq",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613162748-zeeswbq",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"ID": "20260613162748-shmfhis",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-shmfhis",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-7b25kgv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-7b25kgv",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "切换方式"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：在视图布局下拉菜单中选择「看板视图」"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-rjxo8r3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-rjxo8r3",
+						"updated": "20261024161058"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-zy5vy1g",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-zy5vy1g",
+								"updated": "20261024161058"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "分组字段：在分组设置中选择支持分组的字段及分组方式，详见本章的「分组」说明"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-cfi3bs0",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-cfi3bs0",
+						"updated": "20261025011511"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-7cpchiq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-7cpchiq",
+								"updated": "20261025011511"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "卡片内容"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：每张卡片展示主键所绑定块的内容摘要，以及该视图中所选字段的值"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "。在视图设置中开启 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "布局"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "显示字段名称"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "，可在字段值旁显示字段名称；该选项按视图保存，关闭后隐藏字段名称"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-si2h4p3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-si2h4p3",
+						"updated": "20261024161058"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-58fjjxo",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-58fjjxo",
+								"updated": "20261024161058"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "拖拽操作：分组字段为单选或多选时，将卡片拖到其他列会修改该条目的选项值"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-8hbj8b0",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-8hbj8b0",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-85ryppz",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-85ryppz",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "新增条目"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：在列底部点击加号可直接在该列中添加新卡片，新卡片的字段值自动设为当前列对应的选项"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-ciwdnmr",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-ciwdnmr",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-mkuzz5t",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-mkuzz5t",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "视图独立性"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：与同一数据库的其他视图共享数据，但过滤、排序和分组设置互相独立"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-37sxl0u",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-37sxl0u",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-2sgqpxu",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-2sgqpxu",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "适用场景"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：项目管理看板（待办→进行中→已完成）、状态流转管理、分类浏览"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613162748-amp8zb3",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613162748-amp8zb3",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "卡片视图"
+				}
+			]
+		},
+		{
+			"ID": "20260613162748-84ay2k9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613162748-84ay2k9",
+				"updated": "20260613162748"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "以独立卡片网格形式展示数据，适合以内容预览为主的场景。"
+				}
+			]
+		},
+		{
+			"ID": "20260613162748-2p2jtiq",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613162748-2p2jtiq",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"ID": "20260613162748-od1gybe",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-od1gybe",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-71m2cyd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-71m2cyd",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "切换方式"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：在视图布局下拉菜单中选择「卡片视图」"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-2hkin4f",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-2hkin4f",
+						"updated": "20261025011511"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-fuiujj7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-fuiujj7",
+								"updated": "20261025011511"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "展示形式"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：每条记录渲染为一张卡片，卡片中展示主键块的内容摘要和所选字段值，适合快速浏览和以内容为主的查看方式"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "。在视图设置中开启 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "布局"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "显示字段名称"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "，可在字段值旁显示字段名称；该选项按视图保存，关闭后隐藏字段名称"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-dyzd9bh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-dyzd9bh",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-mv058vy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-mv058vy",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "卡片操作"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：点击卡片可展开详情或打开绑定的内容块；支持右键菜单进行删除、复制等操作"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-goqgjzj",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-goqgjzj",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-fcr3b8f",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-fcr3b8f",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "过滤和排序"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：支持与其他视图相同的过滤和排序设置"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613162748-xnp7v9n",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613162748-xnp7v9n",
+						"updated": "20260613162748"
+					},
+					"Children": [
+						{
+							"ID": "20260613162748-sd2y20u",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613162748-sd2y20u",
+								"updated": "20260613162748"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "适用场景"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：图片/媒体资料库、读书笔记卡片、以视觉预览为主的内容管理"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-o4rnb9h",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260927112821-o4rnb9h",
+				"updated": "20261012014930"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "条件颜色"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-980swoy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-980swoy",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "打开数据库视图设置，选择 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "条件颜色"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 后添加规则。选择一个字段并设置条件，再选择背景颜色及其应用目标。修改即时生效，支持撤销和重做。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-mnm5naq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-mnm5naq",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "规则保存在当前视图中。表格、列表、日历、看板和卡片视图均支持整个条目的背景颜色；表格视图还支持只为条件所属的属性着色。属性规则在其他布局中保留，但不生效。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-zrasje3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-zrasje3",
+				"updated": "20260927123058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "每条规则独立判断一个字段的条件，多条规则不是“并且”关系。拖动规则左侧的抓手调整优先级，触屏设备也可使用，每个属性采用首个命中规则的颜色。整条目规则命中后为剩余区域着色，并停止后续判断；此前已命中的属性颜色会保留。默认背景也会占据匹配优先级。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-yp1jrfz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-yp1jrfz",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例如，第一条规则将某个属性设为蓝色，第二条规则将整个条目设为绿色。两条都命中时，该属性保持蓝色，其余区域为绿色；把绿色整条目规则移到最前面后，整个条目都显示绿色。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-43t3l7j",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-43t3l7j",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "单选、多选字段可选择匹配第一个选项，按条目内已选选项的顺序取第一个选项的颜色，包括默认颜色，不按字段的选项定义顺序取色。也可选择固定的内置颜色或自定义颜色。条件沿用已有过滤操作符，支持的字段还可按显示模板的结果判断。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-6bzkt5e",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-6bzkt5e",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "条件颜色不修改字段值，也不会过滤条目。隐藏的字段仍可作为判断依据。尚未填写完整的条件和引用已删除字段的规则不生效。复制视图会复制规则，此后各视图独立设置。已有日历的选项取色会兼容显示为一条规则，删除全部规则后清除颜色。"
+				}
+			]
+		},
+		{
+			"ID": "20260613170258-y3mj135",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613170258-y3mj135",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "过滤、排序和分组"
+				}
+			]
+		},
+		{
+			"ID": "20260613170258-xq639je",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613170258-xq639je",
+				"updated": "20260613170258"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "每个视图可以独立设置过滤条件和排序规则，不同视图的过滤和排序互不影响。"
+				}
+			]
+		},
+		{
+			"ID": "20260613170258-kfaoevw",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613170258-kfaoevw",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "过滤"
+				}
+			]
+		},
+		{
+			"ID": "20260613170258-dve1str",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613170258-dve1str",
+				"updated": "20260613170258"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "用于筛选视图中显示的条目，只展示满足条件的数据。"
+				}
+			]
+		},
+		{
+			"ID": "20260613170258-stvvay1",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613170258-stvvay1",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20260613170258-3jxm05p",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-3jxm05p",
+						"updated": "20260613170258"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-6c8cy3r",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-6c8cy3r",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "添加入口"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：点击视图工具栏中的菜单按钮进入「过滤」，在过滤子菜单中点击「添加过滤器」，选择要过滤的字段"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-lz9xxbn",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-lz9xxbn",
+						"updated": "20260613170258"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-yji6crr",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-yji6crr",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "条件类型"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：不同字段类型支持不同的过滤条件："
+								}
+							]
+						},
+						{
+							"ID": "20260613170258-shcxm5g",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613170258-shcxm5g",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"ID": "20260613170258-krpj1ke",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-krpj1ke",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-s198gef",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-s198gef",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "文本/网址/邮箱/电话：等于、不等于、包含、不包含、开头是、结尾是、为空、不为空"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-nzgfltt",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-nzgfltt",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-m1k1ehe",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-m1k1ehe",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "数字：等于、不等于、大于、大于等于、小于、小于等于、为空、不为空"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-i6nmnl7",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-i6nmnl7",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-9p6jqpa",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-9p6jqpa",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "日期/创建时间/更新时间：等于、早于、早于或等于、晚于、晚于或等于、区间、为空、不为空"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-yav5pep",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-yav5pep",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-aydkj4u",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-aydkj4u",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "单选：等于、不等于、为空、不为空"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-o9a4v0n",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-o9a4v0n",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-ods02zx",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-ods02zx",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "多选：包含、不包含、为空、不为空"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-ggdua33",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-ggdua33",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-apvi6h2",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-apvi6h2",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "复选框：已勾选、未勾选"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-r2bm4l3",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-r2bm4l3",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-i1a36gj",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-i1a36gj",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "关联：包含、不包含、为空、不为空"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260904022100-u8yv871",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260904022100-u8yv871",
+						"updated": "20261012014859"
+					},
+					"Children": [
+						{
+							"ID": "20261012014537-084hlwy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261012014537-084hlwy",
+								"updated": "20261012014859"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "汇总：目标为关联字段且计算方式为“显示原始值”或“显示唯一值”时，支持普通筛选中的“包含任一”和“不包含任一”：可以搜索并勾选最终关联数据库的条目，按整个汇总条目集合匹配，同名条目通过条目 ID 区分；原有关键词筛选及其“任一”“所有”“没有”量词保持原有行为"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-uwddfvi",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-uwddfvi",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-2mrv7ni",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-2mrv7ni",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "添加多条"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：可为多个字段设置条件，默认以「与」（AND）组合，要求全部满足；可切换为「或」（OR），满足任一条件即可，也可添加嵌套条件组"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-9jsilli",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-9jsilli",
+						"updated": "20260613170258"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-z40uvpa",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-z40uvpa",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "移除过滤"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：点击过滤条件右侧的删除按钮移除单条；通过过滤菜单可一键清除全部"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-ia81fdv",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-ia81fdv",
+						"updated": "20260613170258"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-sul6e2g",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-sul6e2g",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "注意"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：行号字段不支持过滤"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261012014537-rj1eu2j",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261012014537-rj1eu2j",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "上下文筛选"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20260904022100-k06aj5m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260904022100-k06aj5m",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "从数据库块工具栏打开 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "上下文筛选"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，并选择一个已配置的关联字段，或目标为关联字段且计算方式为“显示原始值”或“显示唯一值”的汇总字段。面板会列出数据库中所有符合条件的字段，但同时只能启用一个。点击其他字段可切换；再次点击当前已勾选字段可关闭上下文筛选。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-r48xtgz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-r48xtgz",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "启用后，系统会对该数据库块的所有视图应用固定条件“包含任一 - 当前文档”；各视图原有筛选仍保持独立，并与上下文筛选按“且”组合。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-64an1i1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-64an1i1",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "当前文档必须已经绑定为最终关联目标数据库中的条目，否则不会显示匹配项，也无法从该数据库块新增条目。选择直接关联字段时，新增条目会自动关联当前文档；选择汇总字段时，新增条目不会回填汇总值，也不会修改中间数据库的关联，可能因不满足条件而被隐藏。"
+				}
+			]
+		},
+		{
+			"ID": "20260613170258-kdajpht",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613170258-kdajpht",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "排序"
+				}
+			]
+		},
+		{
+			"ID": "20260613170258-cvnt3oa",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613170258-cvnt3oa",
+				"updated": "20260613170258"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "用于对视图中的条目按指定字段排序。"
+				}
+			]
+		},
+		{
+			"ID": "20260613170258-h59ky9v",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613170258-h59ky9v",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20260613170258-1d2yodg",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-1d2yodg",
+						"updated": "20260613170258"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-7yxx8k1",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-7yxx8k1",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "添加入口"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：点击视图工具栏菜单进入「排序」，添加排序条件，选择排序字段和排序方向"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-a4ufisj",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-a4ufisj",
+						"updated": "20260613170258"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-4nptehx",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-4nptehx",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "排序方向"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：升序或降序，点击可切换"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-jcpf8qk",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-jcpf8qk",
+						"updated": "20260613170258"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-ni78yur",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-ni78yur",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "多重排序"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：可添加多个排序条件，系统按条件添加的先后顺序依次应用。例如先按「日期」降序、再按「标题」升序"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-okatryh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-okatryh",
+						"updated": "20260613170258"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-rw55n7h",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-rw55n7h",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "移除排序"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：点击排序条件右侧的删除按钮移除单条；通过排序菜单可清除全部"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-gumqkwl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-gumqkwl",
+						"updated": "20260613170258"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-qbv41yd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-qbv41yd",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "字段类型差异"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "："
+								}
+							]
+						},
+						{
+							"ID": "20260613170258-4x6ht42",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613170258-4x6ht42",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"ID": "20260613170258-gsujudv",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-gsujudv",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-xkp72p5",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-xkp72p5",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "文本：按拼音或 Unicode 码点排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-l5o9htz",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-l5o9htz",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-65z7s0u",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-65z7s0u",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "数字：按数值大小排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-8cjxy9z",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-8cjxy9z",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-5kqfewh",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-5kqfewh",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "日期/创建时间/更新时间：按时间先后排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-8j2ages",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-8j2ages",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-p4mswvi",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-p4mswvi",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "单选/多选：按选项在列表中的排列顺序排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-sbkrdka",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-sbkrdka",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-toy9h8s",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-toy9h8s",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "复选框：按勾选/未勾选状态排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-u6zl36h",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-u6zl36h",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-ccym49a",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-ccym49a",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "汇总：按计算结果排序"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-rq2h626",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-rq2h626",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-fhw9225",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-fhw9225",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "注意"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "："
+								}
+							]
+						},
+						{
+							"ID": "20260613170258-cd1b6oz",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613170258-cd1b6oz",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"ID": "20260613170258-x4s0pde",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-x4s0pde",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-mvj8zq7",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-mvj8zq7",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "行号字段不支持排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-3io8uax",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-3io8uax",
+										"updated": "20261016191345"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-rpriwkn",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-rpriwkn",
+												"updated": "20261016191345"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "未编辑过的行排在最后并保留手动顺序；排序条件相同的条目也保留手动顺序"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261016130603-jqn6bi8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016130603-jqn6bi8",
+				"updated": "20261016130603"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "锁定编辑时，点击数据库工具栏的排序图标，选择字段及升序或降序。临时排序仅影响当前窗口中的当前数据库块和视图，不修改已保存的排序规则。选择恢复默认排序、解除锁定或关闭文档后，恢复已保存的规则。"
+				}
+			]
+		},
+		{
+			"ID": "20260613170258-j738gis",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613170258-j738gis",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "分组"
+				}
+			]
+		},
+		{
+			"ID": "20260613170258-yln1b5y",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613170258-yln1b5y",
+				"updated": "20260613170258"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "将一个字段作为分组依据，将条目按分组值归类展示。"
+				}
+			]
+		},
+		{
+			"ID": "20260613170258-jcdhbkf",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613170258-jcdhbkf",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20260613170258-f8xxwzi",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-f8xxwzi",
+						"updated": "20260613170258"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-5yj7gwp",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-5yj7gwp",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "设置入口"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：点击视图工具栏菜单进入「分组」，选择分组字段和分组方式"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-lineysf",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-lineysf",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-9qu7z0j",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-9qu7z0j",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "支持的字段"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：汇总、行号和位置字段不支持分组，其他字段类型支持分组；资源字段需先配置显示模板，并按模板结果分组。不同字段类型对应不同分组方式："
+								}
+							]
+						},
+						{
+							"ID": "20260613170258-qnyhuv4",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613170258-qnyhuv4",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"ID": "20260613170258-92ckt5c",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-92ckt5c",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-i98u7g5",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-i98u7g5",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "文本/单选/多选/网址/邮箱/电话/复选框/关联/模板：按值分组，每个不同值独立成组"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-f1ey3un",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-f1ey3un",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-bbvv8dl",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-bbvv8dl",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "数字：按数字范围分组"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-qn1i10f",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-qn1i10f",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-n1zfb6e",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-n1zfb6e",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "日期/创建时间/更新时间：按相对日期分组"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-5q65i2h",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-5q65i2h",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-c47aega",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-c47aega",
+								"updated": "20260613170258"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "视图差异"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "："
+								}
+							]
+						},
+						{
+							"ID": "20260613170258-57c2uxa",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613170258-57c2uxa",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"ID": "20260613170258-8levr5l",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-8levr5l",
+										"updated": "20260920084445"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-wnuyau1",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-wnuyau1",
+												"updated": "20260920084445"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "表格和列表视图：分组后行按分组归类，每个分组可折叠展开"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-7ugqjao",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-7ugqjao",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-19turg8",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-19turg8",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "卡片视图：分组后卡片按分组归类"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613170258-bixot3j",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613170258-bixot3j",
+										"updated": "20260613170258"
+									},
+									"Children": [
+										{
+											"ID": "20260613170258-p8lu3xj",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613170258-p8lu3xj",
+												"updated": "20260613170258"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "看板视图：必须设置分组，每个分组值生成一列；不支持取消分组。分组字段为单选或多选时，拖拽卡片到其他列会自动修改字段值（模板、创建时间、更新时间字段除外）"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613170258-r43mzwx",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613170258-r43mzwx",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260613170258-vy3k2oa",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613170258-vy3k2oa",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "移除分组"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：表格、列表和卡片视图中可选择「无」取消分组；看板视图不可取消"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261028100554-8qephai",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261028100554-8qephai",
+				"updated": "20261028120132"
+			},
+			"HeadingLevel": 2,
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "数据库面板布局与排序"
+				}
+			]
+		},
+		{
+			"ID": "20261028100554-4angel6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261028100554-4angel6",
+				"updated": "20261028120132"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "编辑器"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "数据库"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中通过「数据库面板字段布局」选择「单栏」「双栏（按行）」或「双栏（按列）」，默认「双栏（按行）」。该设置同时作用于文档顶部数据库面板和独立条目面板，空间不足时自动使用单栏，切换布局不会改变字段顺序。"
+				}
+			]
+		},
+		{
+			"ID": "20261028100554-n4mrrtp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261028100554-n4mrrtp",
+				"updated": "20261028110235"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "按行排列时，字段从左到右、从上到下显示。使用鼠标拖动字段左侧的手柄到目标字段所在的格位，可以实时预览新的排列，松手后保存排序。按列排列时，先从上到下显示左栏，再显示右栏；可见字段按数量均分，奇数时左栏多一个，编辑字段内容不会导致字段自动换栏。按列和单栏布局使用横向指示线提示上下插入位置。取消拖拽恢复原顺序，字段排序支持撤销和重做。"
+				}
+			]
+		},
+		{
+			"ID": "20260930175958-maj1ve9",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260930175958-maj1ve9",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "数据库面板字段可见性"
+				}
+			]
+		},
+		{
+			"ID": "20260930175958-aw9rfh1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930175958-aw9rfh1",
+				"updated": "20261001060000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在文档顶部、数据库条目页或块属性对话框的数据库属性面板中点击字段名，可以将“数据库面板字段可见性”设置为“始终显示”“空白时隐藏”或“始终隐藏”。“默认”保留面板原有的显示设置，其中文档顶部面板沿用全局隐藏空字段设置。规则对该数据库的属性面板生效，不影响数据库各视图的字段显隐。点击面板的编辑按钮可以临时展开隐藏字段，编辑字段值或修改显示规则。"
+				}
+			]
+		},
+		{
+			"ID": "20260929105001-kyrojkr",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260929105001-kyrojkr",
+				"updated": "20260929105001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "条目图标"
+				}
+			]
+		},
+		{
+			"ID": "20260929105001-6j7k32f",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260929105001-6j7k32f",
+				"updated": "20260930140000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "未绑定条目可以拥有自己的图标，点击主键旁、条目详情或关联字段中的图标即可修改或清除。条目模板可以为未绑定条目和文档条目预设图标。未设置自定义图标的未绑定条目显示短横线，视图的图标显示设置仍然生效。"
+				}
+			]
+		},
+		{
+			"ID": "20260929105001-5d3o0dm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260929105001-5d3o0dm",
+				"updated": "20260930140000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "绑定或重新绑定到未设置自定义图标的普通块时，块会继承条目的图标。普通块已有图标或绑定到已有文档时，使用目标块自身的图标。绑定时新建的文档会继承条目已设置的图标；条目未设置图标时，沿用文档模板图标。绑定后，条目与绑定块共享图标。取消绑定会保留最后显示的图标，之后可以独立修改。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-zd46z9j",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161058-zd46z9j",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "条目模板"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20261024161058-va6kb7z",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161058-va6kb7z",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "打开新建条目按钮旁的下拉菜单，选择「新建模板」配置条目模板。可预设条目类型、图标、主键内容和字段值；文档条目还可设置保存位置、内容模板及是否在文档树中隐藏。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-oog6p25",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161058-oog6p25",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "从同一菜单选择模板，即可按其配置新建条目。模板的更多菜单提供编辑、设为默认和删除；普通新建操作使用默认模板，也可选择空白条目。更改模板不会追溯修改已经创建的条目。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-equvt3n",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161058-equvt3n",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "条目模板用于新建时预填内容；模板字段用于在视图中计算已有条目的字段值，两者用途不同。日期字段可预设固定时间或新建时的当前时间。"
+				}
+			]
+		},
+		{
+			"ID": "20261025205717-sfr9z2f",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261025205717-sfr9z2f",
+				"updated": "20261025205717"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在条目模板中启用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "创建后分屏打开条目"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 后，从数据库视图使用该模板新建绑定或游离条目时，会自动在右侧打开。绑定文档的标题可编辑时聚焦标题，否则聚焦主键；游离条目聚焦主键。移动端使用已有的页面或弹层打开。"
+				}
+			]
+		},
+		{
+			"ID": "20261025205717-vkvh44q",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261025205717-vkvh44q",
+				"updated": "20261025205717"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "新模板默认关闭此选项，关闭开关即可停止自动打开。已有模板在未改动此开关时保留原行为，包括日历中的自动打开。不使用模板的空白新建沿用视图原有行为；若需配置，可创建空白游离条目模板并设为默认。"
+				}
+			]
+		},
+		{
+			"ID": "20240208115420-4440x2c",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240208115420-4440x2c",
+				"updated": "20240208120133"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "镜像数据库"
+				}
+			]
+		},
+		{
+			"ID": "20240208120134-fu4vdbm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240208120134-fu4vdbm",
+				"updated": "20240208120322"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "复制数据库块后粘贴将形成镜像数据库，即这些数据库块共享相同的数据库数据，修改任何一个数据库块的数据会同步到其他所有镜像中。"
+				}
+			]
+		},
+		{
+			"ID": "20240208120825-ktzju1z",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240208120825-ktzju1z",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "关联和汇总"
+				}
+			]
+		},
+		{
+			"ID": "20240208120943-f2nyglj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240208120943-f2nyglj",
+				"updated": "20240208162557"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "两个数据库之间可以通过 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "关联"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 建立联系，以便联动管理。比如 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "作者"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 和 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "书籍"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 两个数据库之间的关联："
+				}
+			]
+		},
+		{
+			"ID": "20261007101857-61awmsy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261007101857-61awmsy",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "桌面端和移动端的关联选择面板始终提供新建入口，并应用关联数据库的默认模板。当输入名称与主键模板生成的名称不同时，会显示两个入口及各自的实际名称：按默认模板新建，或使用输入名称新建。使用输入名称仅覆盖主键，字段默认值、图标、内容模板和保存位置仍按默认模板应用。输入为空、未配置主键模板或名称相同时，只显示一个入口。未配置默认模板时新建独立条目。新建条目与关联更新可以一起撤销。"
+				}
+			]
+		},
+		{
+			"ID": "20240208155807-kf97pho",
+			"Type": "NodeAttributeView",
+			"Properties": {
+				"id": "20240208155807-kf97pho",
+				"updated": "20240208162539"
+			},
+			"AttributeViewID": "20240208155809-en6nazm",
+			"AttributeViewType": "table"
+		},
+		{
+			"ID": "20240208155914-zazoj5v",
+			"Type": "NodeAttributeView",
+			"Properties": {
+				"custom-sy-av-view": "20250615173530-5yn6s87",
+				"id": "20240208155914-zazoj5v",
+				"updated": "20250615173511"
+			},
+			"AttributeViewID": "20240208155918-uylgwbj",
+			"AttributeViewType": "gallery"
+		},
+		{
+			"ID": "20240208161029-tbovh3b",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240208161029-tbovh3b",
+				"updated": "20240208162625"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "作者"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 数据库中 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "作品数"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 汇总对其 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "作品"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 进行了汇总统计，统计方式是 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "条目数"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​。"
+				}
+			]
+		},
+		{
+			"ID": "20240208120846-72y7j0d",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240208120846-72y7j0d",
+				"updated": "20260902120000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "模板"
+				}
+			]
+		},
+		{
+			"ID": "20240208120239-p91v2cn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240208120239-p91v2cn",
+				"updated": "20240208164309"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "模板可通过"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20201204181006-7bkppue",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "模板片段"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "中介绍的语法访问、计算并渲染同一条数据中其他字段的值："
+				}
+			]
+		},
+		{
+			"ID": "20260612204505-8vpmfjp",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260612204505-8vpmfjp",
+				"updated": "20260612204505"
+			},
+			"Children": [
+				{
+					"ID": "20260612204505-qi2ao6d",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204505-qi2ao6d",
+						"updated": "20260612204505"
+					},
+					"Children": [
+						{
+							"ID": "20260612204505-47bz3of",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204505-47bz3of",
+								"updated": "20260612204505"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .字段名 }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 访问视图字段"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204505-2na9efc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204505-2na9efc",
+						"updated": "20260612204505"
+					},
+					"Children": [
+						{
+							"ID": "20260612204505-fkbdhg8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204505-fkbdhg8",
+								"updated": "20260612204505"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index . \"custom-xxx\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 访问内容块自定义属性"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204505-t8tqrfk",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204505-t8tqrfk",
+						"updated": "20260612204505"
+					},
+					"Children": [
+						{
+							"ID": "20260612204505-ugfo8q4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204505-ugfo8q4",
+								"updated": "20260612204505"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .字段名_end }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 访问日期字段的结束日期，"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_end"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 后缀仅对日期类型有效"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204505-fbr1lej",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204505-fbr1lej",
+						"updated": "20260612204505"
+					},
+					"Children": [
+						{
+							"ID": "20260612204505-99uaffd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204505-99uaffd",
+								"updated": "20260612204505"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .字段名_str }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 访问多选字段的格式化字符串，"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_str"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 后缀仅对多选类型有效"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204505-occ6pzq",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204505-occ6pzq",
+						"updated": "20260612204505"
+					},
+					"Children": [
+						{
+							"ID": "20260612204505-ffcqvb2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204505-ffcqvb2",
+								"updated": "20260612204505"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .字段名_created }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 访问块字段绑定块的创建时间，"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_created"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 后缀仅对块类型有效"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204505-gu8594l",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204505-gu8594l",
+						"updated": "20260612204505"
+					},
+					"Children": [
+						{
+							"ID": "20260612204505-28nt7ok",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204505-28nt7ok",
+								"updated": "20260612204505"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .字段名_raw }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 访问字段原始值对象，"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_raw"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 后缀对所有字段类型有效"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204505-lqkx5o4",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204505-lqkx5o4",
+						"updated": "20260612204505"
+					},
+					"Children": [
+						{
+							"ID": "20260612204505-fwno29s",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204505-fwno29s",
+								"updated": "20260612204505"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index .id_mod \"字段ID\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 按字段 ID 访问格式化值"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204505-zde689i",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204505-zde689i",
+						"updated": "20260612204505"
+					},
+					"Children": [
+						{
+							"ID": "20260612204505-ble2kwv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204505-ble2kwv",
+								"updated": "20260612204505"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index . \"entryCreated\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 访问行绑定块的创建时间"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204505-ai1bphl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204505-ai1bphl",
+						"updated": "20260612204505"
+					},
+					"Children": [
+						{
+							"ID": "20260612204505-f9xsrye",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204505-f9xsrye",
+								"updated": "20260612204505"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index . \"entryUpdated\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 访问行绑定块的更新时间"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240208164554-2lmfwcw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240208164554-2lmfwcw",
+				"updated": "20240208165258"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "比如下面的 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "账单"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 数据库 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "模板"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 字段演示了 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "餐饮"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 和 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "服装"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 求和："
+				}
+			]
+		},
+		{
+			"ID": "20240208163916-efx3nkg",
+			"Type": "NodeAttributeView",
+			"Properties": {
+				"id": "20240208163916-efx3nkg",
+				"updated": "20250101093504"
+			},
+			"AttributeViewID": "20240208163918-rxu3llx",
+			"AttributeViewType": "table"
+		},
+		{
+			"ID": "20260830120100-a1dspcn",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260830120100-a1dspcn",
+				"updated": "20260902120000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "显示模板"
+				}
+			]
+		},
+		{
+			"ID": "20260830120101-b2dspcn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120101-b2dspcn",
+				"updated": "20260830120101"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "普通字段无需更改字段类型即可配置显示模板。在列头打开字段菜单，在底部的模板输入框中输入模板。显示模板仅改变展示内容；编辑单元格时仍然读取和写入原始存储值。模板、汇总、行号、创建时间和更新时间字段不支持显示模板。"
+				}
+			]
+		},
+		{
+			"ID": "20260830120102-c3dspcn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120102-c3dspcn",
+				"updated": "20260830124002"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "显示模板使用与模板片段相同的 Go 模板语法，以 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 和 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 为分隔符，并可包含 HTML。例如，进度字段存储值为 42 时，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&lt;progress value=\".action{.进度}\" max=\"100\"&gt;&lt;/progress&gt; .action{.进度}%"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 会显示进度为 42% 的进度条及文本 42%。HTML 默认会经过安全过滤。"
+				}
+			]
+		},
+		{
+			"ID": "20260830120103-d4dspcn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120103-d4dspcn",
+				"updated": "20260830124003"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可以按名称引用同一行中的其他字段。例如，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&lt;strong&gt;.action{.名称}&lt;/strong&gt;：.action{.进度}%"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 会组合名称和进度字段。字段名包含空格或符号时，使用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{index . \"项目 名称\"}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。为避免字段重名或改名产生歧义，可使用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{index .id_mod \"字段ID\"}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 按字段 ID 引用。"
+				}
+			]
+		},
+		{
+			"ID": "20260830120104-e5dspcn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120104-e5dspcn",
+				"updated": "20260902120000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "显示模板读取各字段的原始存储值，不会读取其他字段的显示模板结果。过滤、排序和分组可选择使用原始值或模板渲染值。清空显示模板即可恢复字段原有的展示方式。关联字段会跟随目标数据库主键的显示模板，包括空结果，原始主键值和关联关系保持不变。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-l8jclpi",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20261002224707-l8jclpi",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "自动化"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-vffcre6",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-vffcre6",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "配置规则"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-5gkk78g",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-5gkk78g",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在数据库视图中打开 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "自动化"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，添加规则。修改会自动保存，文本在失焦或回车时保存。新规则默认停用；配置不完整时会自动停用并提示缺项，完善后手动启用。规则由整个数据库共享，在任一视图或镜像中的条目修改都可触发"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-cizabk4",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-cizabk4",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "引用的字段被删除或改型、目标数据库被删除后，后续条目写入会自动停用受影响规则，并提示规则名和失效引用。用户修改正常保存，规则配置保留；修复配置后需手动启用。数据库锁定、认证失败、数据损坏或写入失败时，用户修改和自动操作仍会一起回滚。"
+				}
+			]
+		},
+		{
+			"ID": "20261017202044-0g91x8n",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261017202044-0g91x8n",
+				"updated": "20261018000619"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「执行成功时通知」默认开启，每条规则可独立设置。只有自动新增、更新或收集实际产生变化，且整个事务提交成功后才提示；同一事务合并为一条消息，仅统计开启通知的规则，同一条目的多个字段更新按一个条目统计。关闭通知不会停止执行，也不会隐藏错误。条件不符、没有目标、值未改变、重复匹配、手动收集或清理、撤销重做及失败事务均不发送成功通知。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-g166b7k",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-g166b7k",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "触发条件"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-6us9kvt",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-6us9kvt",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "配置按「当发生以下事件」「且触发条目满足以下条件（可选）」「执行以下动作」三个区段组织。先选择新增条目或字段变化事件；字段变化可监听指定字段或任意可编辑字段，相同值的重复写入不会触发。第二区段按触发条目修改后的字段值判断，不设置条件时不作限制。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-1qkvpvz",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-1qkvpvz",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "动作与赋值"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-8p4kqzu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-8p4kqzu",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "每条规则可包含多个按顺序执行的动作。先选择操作和操作对象，再添加要设置的字段及赋值方式。修改操作支持触发条目、关联条目或所选数据库中符合条件的条目；动作内的条件用于筛选要修改的条目，与触发条目的条件分开，不设置目标条件时匹配所选目标中的所有条目。新增操作会在本库或其他数据库中创建非绑定条目。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-zhikh2u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-zhikh2u",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "动作中的字段值可以是固定值、类型兼容的源字段、触发时间，或关联到触发条目，也可以使用模板计算。触发时间适用于日期字段；关联到触发条目适用于指向源数据库的关联字段。修改主键文本会保留原有绑定关系和图标。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-1ay6kk6",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-1ay6kk6",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用模板赋值"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261016165601-0p95j4w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-0p95j4w",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "赋值方式选择「模板」后，可在行内编辑 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{...}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 模板。编辑模板会暂停规则，完成后请重新启用。所有可编辑字段均支持模板；创建时间、更新时间、行号、汇总和模板字段等计算字段不支持赋值。主键只修改文本，保留已有绑定。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-cgid9sj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-cgid9sj",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例如，将状态为已完成的浇花任务作为触发条目，新增下一次任务，并将日期设为 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{((now).AddDate 0 0 7).Format \"2006-01-02\"}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "now"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 固定为本次触发时间，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "AddDate 0 0 7"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 按自然日期顺延七天。规则首次使用模板时保存当前前端时区，跨设备执行继续使用该时区。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-9k1r41o",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-9k1r41o",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "field \"字段ID\""
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 读取源条目的存储值，日期可参与 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "AddDate"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 运算；字段重命名不影响 ID 引用。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "value \"字段ID\""
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 读取结构化载荷，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "toJson"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 输出 JSON。例如，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{toJson (dateAdd 0 0 7 (value \"字段ID\"))}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 可同时顺延日期范围的起止时间，并保留纯日期或具体时间设置。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-6n3qtz0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-6n3qtz0",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "文本、链接、邮箱和电话使用文本结果，数字必须是有效的有限数值，复选框使用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "true"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 或 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "false"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。日期接受 ISO 日期、日期时间或日期载荷 JSON；单选使用已有选项名称，多选使用 JSON 名称数组或选项数组；关联使用已有条目 ID 数组；资源与位置使用现有载荷 JSON。不会自动创建选项、关联条目或资源。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-9odotkr",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-9odotkr",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "展开「预览使用的数据」，选择实际条目作为示例，修改预览日期或引用字段后，再查看预览结果。这些输入只影响预览，不修改实际条目。合法空输出清空字段；缺失变量、空源日期、类型或引用错误使触发修改和全部自动动作一起回滚。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-gnpd7xm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-gnpd7xm",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "模板结果只在触发时写入，重做复用首次结果。模板不支持 SQL、文件、网络、循环或递归；源码最多 8 KiB，单个输入和输出最多 64 KiB。保存模板后，该数据库需要支持自动化版本 2 的客户端读取，旧版会明确拒绝读取；原有版本 1 的规则保持兼容。"
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-qli8mci",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20261016174753-qli8mci",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "模板示例"
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-tw20bbb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016174753-tw20bbb",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "将完整示例复制到模板输入框。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "FIELD_ID"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 是占位符，请替换为触发条目所在数据库的源字段 ID，而不是字段名称。复制字段时，源字段与目标字段应为相同类型；复制关联时，两个关联字段还须指向同一数据库。"
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-foj8hiq",
+			"Type": "NodeTable",
+			"TableAligns": [
+				0,
+				0
+			],
+			"Properties": {
+				"id": "20261016174753-foj8hiq",
+				"updated": "20261016174753"
+			},
+			"Children": [
+				{
+					"Type": "NodeTableHead",
+					"Children": [
+						{
+							"Type": "NodeTableRow",
+							"Children": [
+								{
+									"Type": "NodeTableCell",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "用途"
+										}
+									]
+								},
+								{
+									"Type": "NodeTableCell",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "模板内容"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期：触发当天"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{now | date \"2006-01-02\"}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期：触发七天后"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{((now).AddDate 0 0 7).Format \"2006-01-02\"}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期：源日期或范围顺延七天，保留时间设置"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{toJson (dateAdd 0 0 7 (value \"FIELD_ID\"))}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "文本、主键、链接、邮箱或电话：复制源字段"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{field \"FIELD_ID\"}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "文本或主键：在源文本后添加后缀"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{field \"FIELD_ID\"}（下次）"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "数字：源数字加一，支持小数"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{addf (field \"FIELD_ID\") 1}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "复选框：取源字段的相反值"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{not (field \"FIELD_ID\")}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "单选：设置为已有选项"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "已完成"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "多选：设置两个已有选项"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "[\"工作\",\"重要\"]"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期、多选、关联、资源或位置：复制同类型源字段"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{toJson (value \"FIELD_ID\")}"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-dc87okn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016174753-dc87okn",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "日期格式中的 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "2006-01-02"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 是固定的格式写法，不要替换为当前日期。单选和多选示例中的选项名称须已存在于目标字段，可按需替换。配置后先使用预览检查结果，再启用规则。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-pobmync",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024164212-pobmync",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "规则示例"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261016113125-d72afa0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016113125-d72afa0",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例如，要记录首次完成时间，可监听「状态」字段变化，要求触发条目的「状态」为「已完成」且「完成时间」为空，再修改触发条目，将「完成时间」设为「触发时间」。完善配置后启用规则。不添加完成时间为空的条件时，再次完成可能覆盖原来的完成时间。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-54y5lhu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-54y5lhu",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例如，在任务库和计时库之间建立双向关联。任务状态变为进行中时，在计时库新增条目，将开始时间设为触发时间并关联到触发任务；状态变为完成时，修改关联的计时条目，只筛选结束时间为空的记录，并将结束时间设为触发时间。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-7faemvk",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024164212-7faemvk",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "执行、撤销与兼容性"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-ch67jtv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-ch67jtv",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "自动操作与原修改一起撤销和重做，执行失败时一起回滚。重做保留首次执行时的条目 ID 和时间。自动操作不会继续触发其他规则，导入、同步、历史恢复和撤销重放也不会重新触发规则；普通 API 写入会触发规则，但不生成编辑器撤销记录。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-yyyd6oi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-yyyd6oi",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "加密数据库只能操作同一加密笔记本内的数据库。请先解锁相关笔记本；目标数据库或字段不可用时，需要修正规则或暂停规则。复制数据库后规则保留但处于暂停状态，请检查目标和关联字段后再启用。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-j06dkl9",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20261015141042-j06dkl9",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "收集普通块"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-33obidb",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-33obidb",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "监听范围和条件"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20261015141042-ux38r6d",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-ux38r6d",
+				"updated": "20261027120633"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "选择「普通块符合条件」触发器，通过「监听范围」下的添加按钮选择笔记本或文档，范围取并集。在选择窗口中勾选多个笔记本或文档后确认，即可一次添加；搜索和展开目录时会保留已勾选项。重复范围会自动去重，每条规则最多可包含 32 个笔记本或文档。点击文档标题可在浮窗中预览，保留自动化设置；也可将鼠标悬停在图标上预览。块类型、标签和自定义属性分别使用 Chip 分组，通过各组的添加按钮配置，点击 Chip 的关闭图标移除。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-zagpzd9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-zagpzd9",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "块类型列表支持搜索和连续多选；点击标签或属性 Chip 可编辑，标签按回车确认，属性先作为草稿编辑，确认后才保存，按 Esc 或取消不影响现有条件。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-h4vcbhu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-h4vcbhu",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "标签会去除首尾空格并自动去重。块类型取任一匹配；标签和属性分别默认为「全部满足」，可独立改为「任一满足」。三个分组之间仍须全部满足，空分组不限制。属性支持等于、包含、存在和不存在，后两者不需要属性值。「任一满足」需要自动化格式 3，已有规则保留全部满足的行为。"
+				}
+			]
+		},
+		{
+			"ID": "20261020211145-i92h6in",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261020211145-i92h6in",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "选择文档范围后，「监听范围」下方显示「子文档深度」。默认「不限」，包含全部后代文档；「仅当前文档」只包含每个选中文档本身；选择「最多层数」后输入正整数，1 表示选中文档及一级子文档，2 再包含二级子文档，以此类推。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-jea9mdr",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-jea9mdr",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "同一规则的所有文档范围共用此设置，笔记本范围不受限制，重叠范围仍取并集。修改深度保留已有条目和字段，不自动补收存量内容；可通过收集管理预览并收集匹配内容，或检查并移出不匹配条目。有限深度需要自动化格式 5，旧客户端会拒绝读取且不改写数据库。"
+				}
+			]
+		},
+		{
+			"ID": "20261022092813-5tt0fe5",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261022092813-5tt0fe5",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "“包含所选文档自身”默认开启。关闭后跳过每个所选文档及其内部所有块，子文档仍按设定深度监听。例如，关闭此选项并将深度设为 1，就只监听一级子文档；与“仅当前文档”组合时，各文档范围为空。同一规则的所有文档范围共用此设置。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-y094f6y",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-y094f6y",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各范围仍取并集，笔记本范围或其他重叠文档范围仍可能包含该文档。修改此选项保留已有条目和字段，不自动补收或移出条目；可通过收集管理预览、收集，或检查并移出条目。排除所选文档自身需要自动化格式 7，既有格式 1–6 仍可读取，旧客户端会拒绝格式 7 且不改写数据库。"
+				}
+			]
+		},
+		{
+			"ID": "20261026103001-owfyyeu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261026103001-owfyyeu",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "收集块引用时，选择引用目标并粘贴目标块 ID 或块链接，也可选择「当前文档」。目标保存为固定的块 ID，由所有数据库镜像共享。文档目标包含对其内部内容块的引用，不含子文档。仅匹配正文中的块引用，不包含普通链接、嵌入块和数据库富文本字段中的引用。"
+				}
+			]
+		},
+		{
+			"ID": "20261026103001-quehwxj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261026103001-quehwxj",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "引用来源按反链规则归并，包括列表项、引述块、超级块、提示块，以及文档首段或标题后首段为纯块引用时的传递规则。块类型和自定义属性约束归并后的最终块，标签条件约束引用来源块；设置引用目标后，标签的收集对象选项不参与选择。清除引用目标可恢复普通收集。移除引用会保留已有条目和字段，历史引用可通过收集管理预览并补收。引用目标需要自动化格式 8，既有格式 1–7 仍可读取，旧客户端会拒绝格式 8 且不改写数据库。"
+				}
+			]
+		},
+		{
+			"ID": "20261021135332-xudc33f",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021135332-xudc33f",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「属性名」可独立选择「等于」（默认）、「包含」或「正则表达式」，不影响属性值的条件。「等于」使用 custom-state 这样的完整名称；「包含」只需输入字面子串，无需 custom- 前缀，例如 dailynote 可匹配 custom-dailynote-20261021；正则使用 Go 语法匹配完整名称，例如 ^custom-dailynote-[0-9]{8}$。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-wxv43jk",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-wxv43jk",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "只检查自定义属性，名称和值区分大小写，且须由同一条属性同时满足条件；「存在」要求至少一个名称匹配，「不存在」要求没有名称匹配，两者忽略属性值。非法正则无法保存，名称模式最多 256 字节。「包含」和「正则表达式」需要自动化格式 6；已有格式 1–5 仍可读取，旧客户端会拒绝格式 6 且不改写数据库。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-earatc9",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-earatc9",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "选择收集对象"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20261017204817-4ocp9jq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261017204817-4ocp9jq",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "块类型上方的「收集对象」提供「默认」「标签所在块」和「容器块」。默认在列表项首个内容块包含标签且列表项满足类型和属性条件时优先收集列表项，否则尝试符合条件的标签所在块；同时选择段落和列表项也不会为同一个标签来源收集两个层级；标签所在块按实际包含标签的块的类型和属性筛选并收集；容器块向上选择最近的符合类型和属性条件的容器，并按块 ID 去重，文档只有被显式选择时才参与。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-rgw01bd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-rgw01bd",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "要求全部标签时，标签必须出现在同一个来源块中，不会合并不同子块的标签。没有标签条件时，此选项不影响筛选。预览显示最终收集对象。切换不会转换已有条目的绑定块或修改其字段。两种显式模式需要自动化格式 4，已有格式仍可读取；旧客户端会拒绝格式 4，不会改写数据库。"
+				}
+			]
+		},
+		{
+			"ID": "20261017195341-0qeydtk",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261017195341-0qeydtk",
+				"updated": "20261018000619"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "选择主块类型会匹配其全部子类型，也可单独选择 H1～H6 标题、无序／有序／任务列表及列表项，以及内置或自定义提示块类型。列表和列表项独立匹配，多个选项取任一匹配，不选择类型则不限制。选择主类型会替换已选的子类型。修改块子类型后，自动收集、主动清理检查和预览使用同一匹配逻辑。子类型筛选需要自动化格式 3，已有格式 1 和 2 的规则仍可读取；旧客户端会拒绝格式 3，不会改写数据库。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-4c491yc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-4c491yc",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "标签只匹配块本身，不会自动收集其所有父容器。列表项使用首段的标签；只有显式选择段落类型时，才单独匹配这个首段。收集将原块绑定到当前数据库，不复制或移动原文；初始化字段支持固定值和日期字段的触发时间，主键保留原块绑定。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-dk7mh7v",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-dk7mh7v",
+				"updated": "20261018000619"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "块首次符合条件时新增条目。自动收集只添加条目；原文变化、移出监控范围、修改条件或收集对象、停用或删除规则，均保留已有条目及字段。再次匹配时仍使用原条目，保留手动填写或修改的字段。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-quufwgx",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-quufwgx",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "管理与补充收集"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20261015141042-jtlpv7x",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-jtlpv7x",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "打开 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "自动化"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "收集管理"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，选择「数据库条目」，按全部启用的普通块收集规则的并集检查已有条目，手动和自动收集的条目采用相同标准。「符合规则」「不符合规则」「无法判断」分别显示数量并独立分页，首次优先显示不符合规则的条目。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-vbdz9lj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-vbdz9lj",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "无法判断的条目会说明原因。「移出本页不匹配条目」会显示数量并要求确认，执行前重新检查规则、原文及绑定关系，仅移出仍明确不匹配的本页条目。不符合规则和无法判断的条目还可逐项移出。移出保留原文，撤销和重做恢复原条目 ID、字段及顺序；源块缺失时不会重建原始块，读取或认证失败时保留数据并返回错误。主动移出后再发生新的匹配会创建并初始化新条目，不恢复已移出的字段值。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-7sdwuop",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-7sdwuop",
+				"updated": "20261018122207"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "启用或编辑规则不会收集已有块。在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "自动化"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "收集管理"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中选择「规则匹配」，再选择已启用的收集规则，查看匹配块及其已收集或未收集状态。「收集本页匹配块」仅收集当前页中尚未收集的块。分页控件显示当前页码，每页最多 100 个块，初始化字段较多时会缩小页大小。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-8gdn7c9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-8gdn7c9",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "用户新增、复制、修改正文或属性、应用内容模板、全局查找替换，以及将块或文档移入监听范围后，都会判断收集条件。文档树复制和移动包含子文档。已有条目保留字段值。Markdown 和 .sy 导入、同步、历史恢复、撤销及重做不会触发新的收集，可通过预览手动收集存量内容。自动动作不会串联触发其他规则。来源与目标数据库须处于同一加密边界，加密笔记本需先解锁再预览或编辑规则。"
+				}
+			]
+		},
+		{
+			"ID": "20240818174119-3zag9wr",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240818174119-3zag9wr",
+				"updated": "20260803171606"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20240818174124-ab1x2an",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240818174124-ab1x2an",
+				"updated": "20260803171606"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "如果需要在数据库单元格中换行，请使用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "回车"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​。"
+				}
+			]
+		},
+		{
+			"ID": "20260613194228-iha8ygq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613194228-iha8ygq",
+				"updated": "20260613194228"
+			}
+		}
+	]
+}

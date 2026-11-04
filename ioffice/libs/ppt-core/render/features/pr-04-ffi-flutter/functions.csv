@@ -1,0 +1,6 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_command_json,指令JSON序列化/反序列化,RenderCommand[],JSON(serde roundtrip),pr-02-shape-command;pr-03-text-command,02,libs/ppt-core,pass
+2,02_function_flutter_painter,Flutter消费指令,指令JSON,屏幕像素,01,用户可见,samples/ppt-mvp-render/flutter,pass
+3,03_function_multipage_envelope,多页文档协议,PptxDocument,MvpEnvelope(page_count+pages[]+首屏兼容字段),pp-13:04;01,04;05,libs/ppt-core,pass
+4,04_function_indexed_page_ffi,FFI 多页交付,pptx bytes,多页 JSON 或指定页 JSON,03,05,samples/ppt-render/native,pass
+5,05_function_flutter_pager,Flutter 分页与当前页绘制,多页 envelope,page rail+page switch+selected commands,03;04,用户可见,samples/libs/ppt/ppt_show,pass

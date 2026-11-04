@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_bg_pr_solid,p:bgPr 实色→ARGB,bgPr XML+theme,页 fill ARGB,pp-16:01,03,libs/ppt-core,pass
+2,02_function_bg_ref,p:bgRef→ARGB,bgRef+theme,页 fill ARGB,pp-16:01,03,libs/ppt-core,pass
+3,03_function_background_layer,has_background 入层,KmoSlide,LayerItem::Background,01;02;pr-01,pr-07,libs/ppt-core,pass

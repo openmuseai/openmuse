@@ -1,0 +1,11 @@
+// Match this review build's ARM64 application ABI in CargoKit dependencies.
+// CargoKit otherwise adds an unused x64 debug engine even for ARM64-only apps.
+gradle.projectsEvaluated {
+    allprojects { project ->
+        project.tasks.configureEach { task ->
+            if (task.name.startsWith('cargokitCargoBuild') && task.hasProperty('targetPlatforms')) {
+                task.targetPlatforms = task.targetPlatforms.findAll { it == 'android-arm64' }
+            }
+        }
+    }
+}

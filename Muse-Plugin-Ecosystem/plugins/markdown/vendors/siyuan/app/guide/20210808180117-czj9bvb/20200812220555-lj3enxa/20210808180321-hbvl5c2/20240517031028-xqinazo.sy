@@ -1,0 +1,766 @@
+{
+	"ID": "20240517031028-xqinazo",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20240517031028-xqinazo",
+		"title": "发布服务",
+		"type": "doc",
+		"updated": "20261024163013"
+	},
+	"Children": [
+		{
+			"ID": "20260315160139-f7uwjbl",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260315160139-f7uwjbl",
+				"updated": "20260315160022"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20260315160139-lntfcpb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260315160139-lntfcpb",
+				"updated": "20260315160022"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源笔记支持以只读模式在局域网中发布当前工作空间的内容。"
+				}
+			]
+		},
+		{
+			"ID": "20260315160139-adeko8a",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260315160139-adeko8a",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用方式"
+				}
+			]
+		},
+		{
+			"ID": "20260315160139-at1ed35",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260315160139-at1ed35",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"ID": "20260315160139-wx28byy",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160139-wx28byy",
+						"updated": "20261024163013"
+					},
+					"Children": [
+						{
+							"ID": "20260315160139-u2qtl1j",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160139-u2qtl1j",
+								"updated": "20261024163013"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "打开 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "设置"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "发布"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 进入发布服务的设置面板"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260315160139-b1xi49d",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160139-b1xi49d",
+						"updated": "20260918190000"
+					},
+					"Children": [
+						{
+							"ID": "20260315160139-m3hulv3",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160139-m3hulv3",
+								"updated": "20260315160022"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "设置 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "服务端口号"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"ID": "20260315160139-s6g9em2",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260315160139-s6g9em2",
+								"updated": "20260918190000"
+							},
+							"Children": [
+								{
+									"ID": "20260315160139-mrop3l5",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260315160139-mrop3l5",
+										"updated": "20260918190000"
+									},
+									"Children": [
+										{
+											"ID": "20260315160139-qvpt75f",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260315160139-qvpt75f",
+												"updated": "20260918190000"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "默认的端口号为 "
+												},
+												{
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "6808"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "​"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "。通过 Docker 部署并启用发布服务时，除伺服端口映射外，还需在创建容器的命令中添加 "
+												},
+												{
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "-p 6808:6808"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "。Docker 端口映射格式为宿主机端口:容器端口；若修改发布服务端口，应同步调整容器端口，访问时使用宿主机端口。请使用固定的发布服务端口，不要设置为 0"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260315160139-cp8674z",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260315160139-cp8674z",
+										"updated": "20260315160022"
+									},
+									"Children": [
+										{
+											"ID": "20260315160139-gv6ww6w",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260315160139-gv6ww6w",
+												"updated": "20260315160022"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "若端口号设置为 "
+												},
+												{
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "0"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "​ 将使用随机端口"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260315160139-bh5jcvr",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160139-bh5jcvr",
+						"updated": "20260315160022"
+					},
+					"Children": [
+						{
+							"ID": "20260315160139-l7mnitj",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160139-l7mnitj",
+								"updated": "20260315160022"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "开启 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "发布服务"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 开关"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260315160139-f15jf3z",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160139-f15jf3z",
+						"updated": "20260426175433"
+					},
+					"Children": [
+						{
+							"ID": "20260315160139-3z9v2te",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160139-3z9v2te",
+								"updated": "20260613195112"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "开启 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "服务 Basic 认证"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 开关并添加 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "认证账户"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​：将使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Guides/Authentication#basic_%E9%AA%8C%E8%AF%81%E6%96%B9%E6%A1%88",
+									"TextMarkTextContent": "Basic 验证方案"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "对访问者进行认证。访问者在浏览发布内容前必须正确输入 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "认证账户"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 中设置的用户名与密码"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613195219-mibifya",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613195219-mibifya",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "访问控制"
+				}
+			]
+		},
+		{
+			"ID": "20260613195219-nr4qfv9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613195219-nr4qfv9",
+				"updated": "20260613195219"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可对笔记本和文档设置发布时的访问级别，实现细粒度的权限管理。访问控制与 Basic 认证是两套独立机制：Basic 认证是全局锁，开启后所有访问者都需输入统一密码；访问控制按笔记本/文档粒度分别设置，可单独或叠加使用。"
+				}
+			]
+		},
+		{
+			"ID": "20260613195219-xz40zrg",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613195219-xz40zrg",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20260613195219-3wuqcjz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613195219-3wuqcjz",
+						"updated": "20260613195219"
+					},
+					"Children": [
+						{
+							"ID": "20260613195219-dclhgqg",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613195219-dclhgqg",
+								"updated": "20260613195219"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "入口"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：在文档面板中点击「更多」菜单，选择「发布访问控制」，进入发布访问控制界面"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613195219-mx2oy8p",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613195219-mx2oy8p",
+						"updated": "20260613195219"
+					},
+					"Children": [
+						{
+							"ID": "20260613195219-hwyj9kq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613195219-hwyj9kq",
+								"updated": "20260613195219"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "设置范围"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：支持对笔记本或单个文档分别设置访问级别"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613195219-drawcs8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613195219-drawcs8",
+						"updated": "20260613195219"
+					},
+					"Children": [
+						{
+							"ID": "20260613195219-hcyoncg",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613195219-hcyoncg",
+								"updated": "20260613195219"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "访问级别"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "："
+								}
+							]
+						},
+						{
+							"ID": "20260613195219-tjisx92",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613195219-tjisx92",
+								"updated": "20260613195219"
+							},
+							"Children": [
+								{
+									"ID": "20260613195219-qafc2gt",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613195219-qafc2gt",
+										"updated": "20260613195219"
+									},
+									"Children": [
+										{
+											"ID": "20260613195219-bx3s6na",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613195219-bx3s6na",
+												"updated": "20260613195219"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "🌐 公开：公开发布，无需密码即可访问"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613195219-yge7606",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613195219-yge7606",
+										"updated": "20260613195219"
+									},
+									"Children": [
+										{
+											"ID": "20260613195219-j9fywtr",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613195219-j9fywtr",
+												"updated": "20260613195219"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "🔒 受保护：公开发布，但访问前需输入密码"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613195219-xhimb4w",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613195219-xhimb4w",
+										"updated": "20260613195219"
+									},
+									"Children": [
+										{
+											"ID": "20260613195219-93h6s38",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613195219-93h6s38",
+												"updated": "20260613195219"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "👻 隐藏：不在目录列表中显示，但拥有链接仍可访问"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613195219-s1i11pl",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613195219-s1i11pl",
+										"updated": "20260613195219"
+									},
+									"Children": [
+										{
+											"ID": "20260613195219-6ak9c04",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613195219-6ak9c04",
+												"updated": "20260613195219"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "🤫 私有：隐藏且需密码，仅持有链接和密码的用户可访问"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613195219-bswm62r",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613195219-bswm62r",
+										"updated": "20260613195219"
+									},
+									"Children": [
+										{
+											"ID": "20260613195219-paglji3",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613195219-paglji3",
+												"updated": "20260613195219"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "🚫 禁止：完全禁止访问，该笔记本或文档不会被发布"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613195219-zcdeho3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613195219-zcdeho3",
+						"updated": "20260613195219"
+					},
+					"Children": [
+						{
+							"ID": "20260613195219-dhk5474",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613195219-dhk5474",
+								"updated": "20260613195219"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "密码设置"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：选择需要密码的访问级别后，在弹出的对话框中设置密码"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613195219-0c6xhq5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613195219-0c6xhq5",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20260613195219-p7hzan7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613195219-p7hzan7",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "默认行为"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：普通笔记本未设置任何访问限制时默认公开；文档还受父文档和笔记本的访问控制影响，会继承适用的密码、隐藏和禁止发布规则。加密笔记本不能发布，无论是否已解锁"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260315160139-tx9ddyn",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260315160139-tx9ddyn",
+				"updated": "20260315160022"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20260315160139-ey0hoeh",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260315160139-ey0hoeh",
+				"updated": "20260315160022"
+			},
+			"Children": [
+				{
+					"ID": "20260315160139-nybcanh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160139-nybcanh",
+						"updated": "20260315160022"
+					},
+					"Children": [
+						{
+							"ID": "20260315160139-kg8j82g",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160139-kg8j82g",
+								"updated": "20260315160022"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "开启发布服务后，访问者默认可以获取整个工作空间的内容，请确保工作空间中不包含敏感信息"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

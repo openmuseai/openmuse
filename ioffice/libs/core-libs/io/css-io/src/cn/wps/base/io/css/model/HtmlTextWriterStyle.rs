@@ -1,0 +1,220 @@
+#![allow(dead_code, non_snake_case, non_camel_case_types)]
+
+// Java: public enum HtmlTextWriterStyle
+pub struct HtmlTextWriterStyle {
+    // Java field: String mName
+    pub(crate) mName: &'static str,
+}
+
+// Java: public enum HtmlTextWriterStyle
+impl HtmlTextWriterStyle {
+    // Java: HtmlTextWriterStyle(String name)
+    pub fn new(name: &'static str) -> Self {
+      // Java: this.mName = name;
+      HtmlTextWriterStyle { mName: name }
+    }
+
+    // Java: String toString()
+    pub fn toString(&self) -> &str {
+      // Java: return this.mName;
+      self.mName
+    }
+
+    pub const Background: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "background" };
+    pub const BackgroundColor: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "background-color" };
+    pub const BackgroundImage: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "background-image" };
+    pub const Border: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "border" };
+    pub const BorderCollapse: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "border-collapse" };
+    pub const BorderColor: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "border-color" };
+    pub const BorderStyle: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "border-style" };
+    pub const BorderWidth: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "border-width" };
+    pub const BorderTop: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "border-top" };
+    pub const BorderLeft: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "border-left" };
+    pub const BorderBottom: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "border-bottom" };
+    pub const BorderRight: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "border-right" };
+    pub const Color: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "color" };
+    pub const Cursor: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "cursor" };
+    pub const Direction: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "direction" };
+    pub const Display: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "display" };
+    pub const Filter: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "filter" };
+    pub const FontEmphasize: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "font-emphasize" };
+    pub const FontFamily: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "font-family" };
+    pub const FontSize: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "font-size" };
+    pub const FontStyle: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "font-style" };
+    pub const FontVariant: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "font-variant" };
+    pub const FontWeight: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "font-weight" };
+    pub const Height: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "height" };
+    pub const LayoutGrid: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "layout-grid" };
+    pub const LayoutGridMode: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "layout-grid-mode" };
+    pub const Left: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "left" };
+    pub const LetterSpacing: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "letter-spacing" };
+    pub const ListStyleImage: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "list-style-image" };
+    pub const ListStyleType: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "list-style-type" };
+    pub const LineHeight: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "line-height" };
+    pub const Margin: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "margin" };
+    pub const MarginBottom: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "margin-bottom" };
+    pub const MarginLeft: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "margin-left" };
+    pub const MarginRight: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "margin-right" };
+    pub const MarginTop: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "margin-top" };
+    pub const MsoRowMarginLeft: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-row-margin-left" };
+    pub const MsoRowMarginRight: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-row-margin-right" };
+    pub const OverflowX: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "overflow-x" };
+    pub const OverflowY: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "overflow-y" };
+    pub const Overflow: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "overflow" };
+    pub const Page: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "page" };
+    pub const Padding: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "padding" };
+    pub const PaddingBottom: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "padding-bottom" };
+    pub const PaddingLeft: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "padding-left" };
+    pub const PaddingRight: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "padding-right" };
+    pub const PaddingTop: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "padding-top" };
+    pub const Position: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "position" };
+    pub const TabInterval: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "tab-interval" };
+    pub const TextAlign: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-align" };
+    pub const TextDecoration: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-decoration" };
+    pub const TextEffect: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-effect" };
+    pub const TextIndent: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-indent" };
+    pub const TextJustify: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-justify" };
+    pub const TextKashida: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-kashida" };
+    pub const TextLinethrough: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-line-through" };
+    pub const TextOverflow: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-overflow" };
+    pub const TextShadow: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-shadow" };
+    pub const TextTransform: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-transform" };
+    pub const TextUnderline: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-underline" };
+    pub const Top: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "top" };
+    pub const VerticalAlign: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "vertical-align" };
+    pub const Visibility: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "visibility" };
+    pub const Width: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "width" };
+    pub const WhiteSpace: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "white-space" };
+    pub const ZIndex: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "z-index" };
+    pub const MsoBidiFontSize: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-bidi-font-size" };
+    pub const MsoAnsiLanguage: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-ansi-language" };
+    pub const MsoFareastLanguage: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-fareast-language" };
+    pub const MsoBidiLanguage: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-bidi-language" };
+    pub const MsoAsciiFontFamily: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-ascii-font-family" };
+    pub const MsoFareastFontFamily: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-fareast-font-family" };
+    pub const MsoHansiFontFamily: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-hansi-font-family" };
+    pub const MsoBidiFontFamily: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-bidi-font-family" };
+    pub const MsoHide: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-hide" };
+    pub const MsoParaMargin: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-para-margin" };
+    pub const MsoParaMarginLeft: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-para-margin-left" };
+    pub const MsoParaMarginRight: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-para-margin-right" };
+    pub const MsoParaMarginTop: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-para-margin-top" };
+    pub const MsoParaMarginBottom: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-para-margin-bottom" };
+    pub const MsoCharIndentCount: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-char-indent-count" };
+    pub const MsoMarginTopAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-margin-top-alt" };
+    pub const MsoMarginBottomAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-margin-bottom-alt" };
+    pub const MsoLineHeightRule: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-line-height-rule" };
+    pub const MsoLineHeightAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-line-height-alt" };
+    pub const MsoOutlineLevel: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-outline-level" };
+    pub const MsoHighlight: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-highlight" };
+    pub const MsoFontWidth: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-font-width" };
+    pub const MsoFontKerning: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-font-kerning" };
+    pub const MsoTextAnimation: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-text-animation" };
+    pub const MsoNoProof: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-no-proof" };
+    pub const TextFit: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-fit" };
+    pub const MsoTextFitId: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-text-fit-id" };
+    pub const MsoBorderAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-border-alt" };
+    pub const MsoBorderShadow: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-border-shadow" };
+    pub const MsoBorderTopAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-border-top-alt" };
+    pub const MsoBorderLeftAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-border-left-alt" };
+    pub const MsoBorderBottomAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-border-bottom-alt" };
+    pub const MsoBorderRightAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-border-right-alt" };
+    pub const MsoBorderColorAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-border-color-alt" };
+    pub const MsoBorderWidthAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-border-width-alt" };
+    pub const MsoShading: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-shading" };
+    pub const MsoPattern: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-pattern" };
+    pub const MsoLayoutGridAlign: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-layout-grid-align" };
+    pub const MsoMirrorIndents: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-mirror-indents" };
+    pub const MsoPagination: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-pagination" };
+    pub const MsoPaddingAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-padding-alt" };
+    pub const MsoBorderBetween: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-border-between" };
+    pub const MsoPaddingBetween: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-padding-between" };
+    pub const MsoElement: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-element" };
+    pub const MsoElementFrameWidth: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-element-frame-width" };
+    pub const MsoElementFrameHeight: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-element-frame-height" };
+    pub const MsoElementFrameHspace: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-element-frame-hspace" };
+    pub const MsoElementFrameVspace: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-element-frame-vspace" };
+    pub const MsoElementWrap: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-element-wrap" };
+    pub const MsoElementAnchorVertical: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-element-anchor-vertical" };
+    pub const MsoElementAnchorHorizontal: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-element-anchor-horizontal" };
+    pub const MsoElementLeft: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-element-left" };
+    pub const MsoElementTop: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-element-top" };
+    pub const MsoHeightRule: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-height-rule" };
+    pub const MsoElementAnchorLock: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-element-anchor-lock" };
+    pub const MsoBorderInsideh: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-border-insideh" };
+    pub const MsoBorderInsidev: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-border-insidev" };
+    pub const MsoDiagonalDown: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-diagonal-down" };
+    pub const MsoDiagonalUp: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-diagonal-up" };
+    pub const MsoTableOverlap: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-table-overlap" };
+    pub const MsoTableLspace: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-table-lspace" };
+    pub const MsoTableTspace: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-table-tspace" };
+    pub const MsoTableBspace: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-table-bspace" };
+    pub const MsoTableRspace: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-table-rspace" };
+    pub const MsoStyleName: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-style-name" };
+    pub const MsoStyleParent: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-style-parent" };
+    pub const MsoStyleQFormat: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-style-qformat" };
+    pub const MsoCellspacing: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-cellspacing" };
+    pub const MsoTstyleShading: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tstyle-shading" };
+    pub const MsoTstylePattern: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tstyle-pattern" };
+    pub const MsoTstyleWhitespace: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tstyle-whitespace" };
+    pub const MsoTstyleBorderTop: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tstyle-border-top" };
+    pub const MsoTstyleBorderLeft: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tstyle-border-left" };
+    pub const MsoTstyleBorderBottom: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tstyle-border-bottom" };
+    pub const MsoTstyleBorderRight: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tstyle-border-right" };
+    pub const MsoTstyleBorderInsideh: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tstyle-border-insideh" };
+    pub const MsoTstyleBorderInsidev: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tstyle-border-insidev" };
+    pub const MsoTableCondition: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-table-condition" };
+    pub const MsoTstyleRowbandSize: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tstyle-rowband-size" };
+    pub const MsoTstyleColbandSize: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tstyle-colband-size" };
+    pub const MsoTableLeft: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-table-left" };
+    pub const MsoTableTop: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-table-top" };
+    pub const MsoTableAnchorVertical: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-table-anchor-vertical" };
+    pub const MsoTableAnchorHorizontal: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-table-anchor-horizontal" };
+    pub const MsoTextRaise: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-text-raise" };
+    pub const MsoYftiIrow: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-yfti-irow" };
+    pub const MsoYftiFirstrow: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-yfti-firstrow" };
+    pub const MsoYftiLastrow: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-yfti-lastrow" };
+    pub const MsoYftiTblLook: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-yfti-tbllook" };
+    pub const MsoColumns: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-columns" };
+    pub const MsoHeaderMargin: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-header-margin" };
+    pub const MsoFooterMargin: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-footer-margin" };
+    pub const Size: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "size" };
+    pub const LayoutFlow: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "layout-flow" };
+    pub const MsoRotate: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-rotate" };
+    pub const MsoBreakType: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-break-type" };
+    pub const MsoPageOrientation: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-page-orientation" };
+    pub const MsoGutterMargin: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-gutter-margin" };
+    pub const MsoGutterPosition: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-gutter-position" };
+    pub const MsoVerticalPageAlign: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-vertical-page-align" };
+    pub const MsoLineNumbersStart: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-line-numbers-start" };
+    pub const MsoLineNumbersCountby: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-line-numbers-count-by" };
+    pub const MsoLineNumbersDistance: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-line-numbers-distance" };
+    pub const MsoLineNumbersRestart: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-line-numbers-restart" };
+    pub const MsoLayoutGridCharAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-layout-grid-char-alt" };
+    pub const PageBreakBefore: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "page-break-before" };
+    pub const MsoFacingPages: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-facing-pages" };
+    pub const MsoMirrorMargins: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-mirror-margins" };
+    pub const MsoTitlePage: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-title-page" };
+    pub const PageBreakAfter: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "page-break-after" };
+    pub const MsoLineBreakOverride: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-line-break-override" };
+    pub const PunctuationWrap: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "punctuation-wrap" };
+    pub const WordBreak: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "word-break" };
+    pub const PunctuationTrim: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "punctuation-trim" };
+    pub const TextAutospace: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "text-autospace" };
+    pub const MsoFieldCode: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-field-code" };
+    pub const MsoFieldLock: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-field-lock" };
+    pub const MsoSpacerun: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-spacerun" };
+    pub const MsoTabCount: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-tab-count" };
+    pub const TabStops: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "tab-stops" };
+    pub const MsoCellSpecial: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-cell-special" };
+    pub const MsoCommentAuthor: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-comment-author" };
+    pub const MsoCommentReference: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-comment-reference" };
+    pub const MsoCommentDate: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-comment-date" };
+    pub const MsoCommentContinuation: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-comment-continuation" };
+    pub const MsoBookmark: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-bookmark" };
+    pub const MsoSpecialCharacter: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-special-character" };
+    pub const MsoTableLayoutAlt: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-table-layout-alt" };
+    pub const Page_Break_Inside: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "page-break-inside" };
+    pub const MsoCharType: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-char-type" };
+    pub const MsoSymbolFontFamily: HtmlTextWriterStyle = HtmlTextWriterStyle { mName: "mso-symbol-font-family" };
+}

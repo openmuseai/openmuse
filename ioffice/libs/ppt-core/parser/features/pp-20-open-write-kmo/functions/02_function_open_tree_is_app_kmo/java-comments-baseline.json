@@ -1,0 +1,17 @@
+{
+  "total": 633,
+  "files": [
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/pptxr/handler/slides/CommonSlideDataHandler.rs",
+      "count": 50
+    },
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/app/slide/KmoFilm.rs",
+      "count": 76
+    },
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/app/shape/KmoShapeTree.rs",
+      "count": 507
+    }
+  ]
+}

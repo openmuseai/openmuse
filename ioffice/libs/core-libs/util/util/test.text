@@ -1,0 +1,725 @@
+[36mConfig path: /Users/mac/src/ioffice/libs/core-libs/util/util/rewrite_config.json[0m
+[36mJava base: /Users/mac/src/ioffice/koffice/core-libs/util/util/src[0m
+[36mRust root: /Users/mac/src/ioffice/libs/core-libs/util/util/src[0m
+[36mRust crate root: /Users/mac/src/ioffice/libs/core-libs/util/util[0m
+[36mJava dep base: /Users/mac/src/ioffice/koffice/core-libs[0m
+[36mRust dep root: /Users/mac/src/ioffice/libs/core-libs[0m
+[36mProject: /Users/mac/src/ioffice[0m
+[36mstarting LSP server[0m
+🚀 starting RA...
+workspaceRoot: /Users/mac/src/ioffice/libs/core-libs/util/util
+pid: 42484
+spawn ok
+📄 didOpen file
+⏳ waiting analysis...
+
+🧩 documentSymbol:
+[
+  {
+    "name": "KTreeNodePool",
+    "kind": 23,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 8,
+          "character": 0
+        },
+        "end": {
+          "line": 17,
+          "character": 1
+        }
+      }
+    }
+  },
+  {
+    "name": "super_",
+    "kind": 8,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 11,
+          "character": 4
+        },
+        "end": {
+          "line": 12,
+          "character": 29
+        }
+      }
+    },
+    "containerName": "KTreeNodePool"
+  },
+  {
+    "name": "mHead",
+    "kind": 8,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 13,
+          "character": 4
+        },
+        "end": {
+          "line": 14,
+          "character": 12
+        }
+      }
+    },
+    "containerName": "KTreeNodePool"
+  },
+  {
+    "name": "mAlloc",
+    "kind": 8,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 15,
+          "character": 4
+        },
+        "end": {
+          "line": 16,
+          "character": 25
+        }
+      }
+    },
+    "containerName": "KTreeNodePool"
+  },
+  {
+    "name": "impl KTreeNodePool<T>",
+    "kind": 19,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 19,
+          "character": 0
+        },
+        "end": {
+          "line": 103,
+          "character": 1
+        }
+      }
+    }
+  },
+  {
+    "name": "new",
+    "kind": 12,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 21,
+          "character": 4
+        },
+        "end": {
+          "line": 24,
+          "character": 5
+        }
+      }
+    },
+    "containerName": "impl KTreeNodePool<T>"
+  },
+  {
+    "name": "dispose",
+    "kind": 6,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 26,
+          "character": 4
+        },
+        "end": {
+          "line": 39,
+          "character": 5
+        }
+      }
+    },
+    "containerName": "impl KTreeNodePool<T>"
+  },
+  {
+    "name": "obtain",
+    "kind": 6,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 41,
+          "character": 4
+        },
+        "end": {
+          "line": 61,
+          "character": 5
+        }
+      }
+    },
+    "containerName": "impl KTreeNodePool<T>"
+  },
+  {
+    "name": "recycle",
+    "kind": 6,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 63,
+          "character": 4
+        },
+        "end": {
+          "line": 70,
+          "character": 5
+        }
+      }
+    },
+    "containerName": "impl KTreeNodePool<T>"
+  },
+  {
+    "name": "recycle__ktreet",
+    "kind": 6,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 72,
+          "character": 4
+        },
+        "end": {
+          "line": 79,
+          "character": 5
+        }
+      }
+    },
+    "containerName": "impl KTreeNodePool<T>"
+  },
+  {
+    "name": "doRecycle",
+    "kind": 6,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 81,
+          "character": 4
+        },
+        "end": {
+          "line": 101,
+          "character": 5
+        }
+      }
+    },
+    "containerName": "impl KTreeNodePool<T>"
+  },
+  {
+    "name": "impl std::ops::Deref for KTreeNodePool",
+    "kind": 19,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 105,
+          "character": 0
+        },
+        "end": {
+          "line": 111,
+          "character": 1
+        }
+      }
+    }
+  },
+  {
+    "name": "Target",
+    "kind": 26,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 106,
+          "character": 4
+        },
+        "end": {
+          "line": 106,
+          "character": 32
+        }
+      }
+    },
+    "containerName": "impl std::ops::Deref for KTreeNodePool"
+  },
+  {
+    "name": "deref",
+    "kind": 6,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 108,
+          "character": 4
+        },
+        "end": {
+          "line": 110,
+          "character": 5
+        }
+      }
+    },
+    "containerName": "impl std::ops::Deref for KTreeNodePool"
+  },
+  {
+    "name": "impl std::ops::DerefMut for KTreeNodePool",
+    "kind": 19,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 113,
+          "character": 0
+        },
+        "end": {
+          "line": 117,
+          "character": 1
+        }
+      }
+    }
+  },
+  {
+    "name": "deref_mut",
+    "kind": 6,
+    "tags": [],
+    "deprecated": false,
+    "location": {
+      "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+      "range": {
+        "start": {
+          "line": 114,
+          "character": 4
+        },
+        "end": {
+          "line": 116,
+          "character": 5
+        }
+      }
+    },
+    "containerName": "impl std::ops::DerefMut for KTreeNodePool"
+  }
+]
+
+🔎 workspaceSymbol:
+🔥 diagnostics  KTreeNodePool received:
+{
+  "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+  "diagnostics": [
+    {
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 11
+        },
+        "end": {
+          "line": 1,
+          "character": 16
+        }
+      },
+      "severity": 1,
+      "code": "E0432",
+      "codeDescription": {
+        "href": "https://doc.rust-lang.org/error-index.html#E0432"
+      },
+      "source": "rustc",
+      "message": "unresolved import `stubs::KTree`\ncould not find `KTree` in `stubs`",
+      "data": {
+        "rendered": "error[E0432]: unresolved import `stubs::KTree`\n --> src/cn/wps/collections/KTreeNodePool.rs:2:12\n  |\n2 | use stubs::KTree::*;\n  |            ^^^^^ could not find `KTree` in `stubs`\n\n"
+      }
+    },
+    {
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 11
+        },
+        "end": {
+          "line": 3,
+          "character": 16
+        }
+      },
+      "severity": 1,
+      "code": "E0432",
+      "codeDescription": {
+        "href": "https://doc.rust-lang.org/error-index.html#E0432"
+      },
+      "source": "rustc",
+      "message": "unresolved import `stubs::KTree`\ncould not find `KTree` in `stubs`",
+      "data": {
+        "rendered": "error[E0432]: unresolved import `stubs::KTree`\n --> src/cn/wps/collections/KTreeNodePool.rs:4:12\n  |\n4 | use stubs::KTree::*;\n  |            ^^^^^ could not find `KTree` in `stubs`\n\n"
+      }
+    }
+  ],
+  "version": 1
+}
+🔥 diagnostics  KTreeNodePool received:
+{
+  "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+  "diagnostics": [
+    {
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 11
+        },
+        "end": {
+          "line": 1,
+          "character": 16
+        }
+      },
+      "severity": 1,
+      "code": "E0432",
+      "codeDescription": {
+        "href": "https://doc.rust-lang.org/error-index.html#E0432"
+      },
+      "source": "rustc",
+      "message": "unresolved import `stubs::KTree`\ncould not find `KTree` in `stubs`",
+      "data": {
+        "rendered": "error[E0432]: unresolved import `stubs::KTree`\n --> src/cn/wps/collections/KTreeNodePool.rs:2:12\n  |\n2 | use stubs::KTree::*;\n  |            ^^^^^ could not find `KTree` in `stubs`\n\n"
+      }
+    },
+    {
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 11
+        },
+        "end": {
+          "line": 3,
+          "character": 16
+        }
+      },
+      "severity": 1,
+      "code": "E0432",
+      "codeDescription": {
+        "href": "https://doc.rust-lang.org/error-index.html#E0432"
+      },
+      "source": "rustc",
+      "message": "unresolved import `stubs::KTree`\ncould not find `KTree` in `stubs`",
+      "data": {
+        "rendered": "error[E0432]: unresolved import `stubs::KTree`\n --> src/cn/wps/collections/KTreeNodePool.rs:4:12\n  |\n4 | use stubs::KTree::*;\n  |            ^^^^^ could not find `KTree` in `stubs`\n\n"
+      }
+    },
+    {
+      "range": {
+        "start": {
+          "line": 105,
+          "character": 25
+        },
+        "end": {
+          "line": 105,
+          "character": 38
+        }
+      },
+      "severity": 1,
+      "code": "E0107",
+      "codeDescription": {
+        "href": "https://doc.rust-lang.org/error-index.html#E0107"
+      },
+      "source": "rustc",
+      "message": "missing generics for struct `cn::wps::collections::KTreeNodePool::KTreeNodePool`\nexpected 1 generic argument",
+      "relatedInformation": [
+        {
+          "location": {
+            "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 11
+              },
+              "end": {
+                "line": 10,
+                "character": 24
+              }
+            }
+          },
+          "message": "struct defined here, with 1 generic parameter: `T`"
+        },
+        {
+          "location": {
+            "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+            "range": {
+              "start": {
+                "line": 105,
+                "character": 38
+              },
+              "end": {
+                "line": 105,
+                "character": 38
+              }
+            }
+          },
+          "message": "add missing generic argument: `<T>`"
+        }
+      ],
+      "data": {
+        "rendered": "error[E0107]: missing generics for struct `cn::wps::collections::KTreeNodePool::KTreeNodePool`\n   --> src/cn/wps/collections/KTreeNodePool.rs:106:26\n    |\n106 | impl std::ops::Deref for KTreeNodePool {\n    |                          ^^^^^^^^^^^^^ expected 1 generic argument\n    |\nnote: struct defined here, with 1 generic parameter: `T`\n   --> src/cn/wps/collections/KTreeNodePool.rs:11:12\n    |\n 11 | pub struct KTreeNodePool<T> {\n    |            ^^^^^^^^^^^^^ -\nhelp: add missing generic argument\n    |\n106 | impl std::ops::Deref for KTreeNodePool<T> {\n    |                                       +++\n\n"
+      }
+    },
+    {
+      "range": {
+        "start": {
+          "line": 113,
+          "character": 28
+        },
+        "end": {
+          "line": 113,
+          "character": 41
+        }
+      },
+      "severity": 1,
+      "code": "E0107",
+      "codeDescription": {
+        "href": "https://doc.rust-lang.org/error-index.html#E0107"
+      },
+      "source": "rustc",
+      "message": "missing generics for struct `cn::wps::collections::KTreeNodePool::KTreeNodePool`\nexpected 1 generic argument",
+      "relatedInformation": [
+        {
+          "location": {
+            "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 11
+              },
+              "end": {
+                "line": 10,
+                "character": 24
+              }
+            }
+          },
+          "message": "struct defined here, with 1 generic parameter: `T`"
+        },
+        {
+          "location": {
+            "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+            "range": {
+              "start": {
+                "line": 113,
+                "character": 41
+              },
+              "end": {
+                "line": 113,
+                "character": 41
+              }
+            }
+          },
+          "message": "add missing generic argument: `<T>`"
+        }
+      ],
+      "data": {
+        "rendered": "error[E0107]: missing generics for struct `cn::wps::collections::KTreeNodePool::KTreeNodePool`\n   --> src/cn/wps/collections/KTreeNodePool.rs:114:29\n    |\n114 | impl std::ops::DerefMut for KTreeNodePool {\n    |                             ^^^^^^^^^^^^^ expected 1 generic argument\n    |\nnote: struct defined here, with 1 generic parameter: `T`\n   --> src/cn/wps/collections/KTreeNodePool.rs:11:12\n    |\n 11 | pub struct KTreeNodePool<T> {\n    |            ^^^^^^^^^^^^^ -\nhelp: add missing generic argument\n    |\n114 | impl std::ops::DerefMut for KTreeNodePool<T> {\n    |                                          +++\n\n"
+      }
+    }
+  ],
+  "version": 1
+}
+[
+  {
+    name: 'KTreeNodePool',
+    kind: 23,
+    location: {
+      uri: 'file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs',
+      range: [Object]
+    }
+  }
+]
+
+🧠 hover test:
+hover result: {
+  "contents": {
+    "kind": "plaintext",
+    "value": "core_libs_util::cn::wps::collections::KTreeNodePool\n\npub struct KTreeNodePool<T> {\n    pub super_: {unknown},\n    mHead: T,\n    mAlloc: {unknown},\n}"
+  },
+  "range": {
+    "start": {
+      "line": 20,
+      "character": 8
+    },
+    "end": {
+      "line": 20,
+      "character": 21
+    }
+  }
+}
+
+📍 definition test:
+[
+  {
+    "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+    "range": {
+      "start": {
+        "line": 10,
+        "character": 11
+      },
+      "end": {
+        "line": 10,
+        "character": 24
+      }
+    }
+  }
+]
+
+🔁 references test:
+[
+  {
+    "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+    "range": {
+      "start": {
+        "line": 20,
+        "character": 8
+      },
+      "end": {
+        "line": 20,
+        "character": 21
+      }
+    }
+  },
+  {
+    "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+    "range": {
+      "start": {
+        "line": 22,
+        "character": 40
+      },
+      "end": {
+        "line": 22,
+        "character": 53
+      }
+    }
+  },
+  {
+    "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+    "range": {
+      "start": {
+        "line": 105,
+        "character": 25
+      },
+      "end": {
+        "line": 105,
+        "character": 38
+      }
+    }
+  },
+  {
+    "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+    "range": {
+      "start": {
+        "line": 113,
+        "character": 28
+      },
+      "end": {
+        "line": 113,
+        "character": 41
+      }
+    }
+  },
+  {
+    "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+    "range": {
+      "start": {
+        "line": 23,
+        "character": 6
+      },
+      "end": {
+        "line": 23,
+        "character": 10
+      }
+    }
+  },
+  {
+    "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+    "range": {
+      "start": {
+        "line": 108,
+        "character": 24
+      },
+      "end": {
+        "line": 108,
+        "character": 28
+      }
+    }
+  },
+  {
+    "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+    "range": {
+      "start": {
+        "line": 114,
+        "character": 36
+      },
+      "end": {
+        "line": 114,
+        "character": 40
+      }
+    }
+  },
+  {
+    "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+    "range": {
+      "start": {
+        "line": 10,
+        "character": 11
+      },
+      "end": {
+        "line": 10,
+        "character": 24
+      }
+    }
+  }
+]
+
+🏷 typeDefinition test:
+[
+  {
+    "uri": "file:///Users/mac/src/ioffice/libs/core-libs/util/util/src/cn/wps/collections/KTreeNodePool.rs",
+    "range": {
+      "start": {
+        "line": 10,
+        "character": 11
+      },
+      "end": {
+        "line": 10,
+        "character": 24
+      }
+    }
+  }
+]
+didChange result: undefined
+didSave result: undefined
+
+✅ done
+[31mError: Failed to deserialize shutdown: invalid type: sequence, expected unit; [null][0m

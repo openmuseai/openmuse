@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_theme_scheme_table,theme→scheme RGB 表,theme XML,slot→RGB,pp-04,02;03,libs/ppt-core,pass
+2,02_function_shape_fill_argb,spPr fill→ARGB,spPr+表,has_fill+fill,01;pp-10:02,pr-05,libs/ppt-core,pass
+3,03_function_run_fill_argb,rPr solidFill→字色,rPr+表,font_color,01;pp-11,pr-03;pr-05,libs/ppt-core,pass

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "PG-STICKY",
+    "silent_skip": false,
+    "trigger": "Java AndroidTypeface: FreeTypeJNI.getGlyphAdvance returns -1, then Paint.measureText sticky for the rest of the run",
+    "rust_behavior": "ttf-parser only; missing cmap is LayoutErrorKind::Measure. Not emulated. Latin MvpLatin fixtures never hit this."
+  },
+  {
+    "id": "PG-FALLBACK-FAMILY",
+    "silent_skip": false,
+    "trigger": "Java FallbackFontFamilyWrapper.getNativeFreeTypeFontPointer returns 0 → entire run uses Paint",
+    "rust_behavior": "No Android Typeface fallback. Unknown names fall back to injected default TTF or fail missing glyph."
+  },
+  {
+    "id": "PG-HINT-100PX",
+    "silent_skip": false,
+    "trigger": "Java measures at size=100px then scales (hinting baked at 100). ttf-parser uses unhinted hmtx at layout pt",
+    "rust_behavior": "glyph_advance_twip = round(hmtx * pt * 20 / upem). May differ 1 twip vs FT hinted 100px path on some CJK/complex faces. Latin MVP TTF is grid-fitted enough for G1."
+  },
+  {
+    "id": "PG-WIDTH-EQ-SIZE",
+    "silent_skip": false,
+    "trigger": "Java last resort widths[i] = size when Paint also returns <= 0",
+    "rust_behavior": "Forbidden. Never width=size."
+  }
+]

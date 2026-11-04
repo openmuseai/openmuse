@@ -1,0 +1,23 @@
+name: openmuse_host_shell
+description: Shared OpenMuse Host shell contracts, theme and application chrome.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter_localizations:
+    sdk: flutter
+  openmuse_i18n:
+    path: ../openmuse_i18n
+  flutter:
+    sdk: flutter
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: OpenMuse UI CJK
+      fonts:
+        - asset: assets/fonts/OpenMuseUI-CJK.otf

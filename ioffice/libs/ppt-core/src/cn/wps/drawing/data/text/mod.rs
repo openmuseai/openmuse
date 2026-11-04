@@ -1,0 +1,15 @@
+pub mod textbody_hosts;
+pub mod TextBody;
+#[cfg(feature = "full")]
+pub mod TextCharacterProperties;
+#[cfg(feature = "full")]
+pub mod TextParagraphProperties;
+#[cfg(feature = "full")]
+pub mod TextBodyProperties;
+#[cfg(feature = "full")]
+pub mod TextListStyle;
+#[cfg(feature = "full")]
+pub mod TextParagraph;
+#[cfg(feature = "full")]
+pub mod TextRun;
+pub mod TextShape;

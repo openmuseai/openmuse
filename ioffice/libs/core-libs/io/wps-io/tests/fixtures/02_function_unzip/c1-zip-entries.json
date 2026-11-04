@@ -1,0 +1,69 @@
+{
+  "input": {
+    "path": "tests/fixtures/wave0-ooxml-standards/standard-hello.docx",
+    "sha256": "c8740d24b0943ac2c52039d168b12e01db43b0dcde11d23476b0138eddca8110",
+    "size": 3502
+  },
+  "zip.entries": [
+    {
+      "index": 0,
+      "name": "[Content_Types].xml",
+      "uncompressed_size": 1333,
+      "sha256": "7b620185757cce71161cacd693f09f9861ea5e2aed6535116bb2b5f3713c41a2"
+    },
+    {
+      "index": 1,
+      "name": "_rels/.rels",
+      "uncompressed_size": 600,
+      "sha256": "f86f1893aecb510b25f41025ced61dd4a921d4188a6056e2f3fb17af8545e8e6"
+    },
+    {
+      "index": 2,
+      "name": "word/_rels/document.xml.rels",
+      "uncompressed_size": 698,
+      "sha256": "c66dc0215e8f7a8d3ad50582287738b7759a7985ca428edbe6613e2451b8618a"
+    },
+    {
+      "index": 3,
+      "name": "word/document.xml",
+      "uncompressed_size": 658,
+      "sha256": "a8a6a617255998545e01601291df9987cf26faf0c3c7d2a73825f6cff7133f71"
+    },
+    {
+      "index": 4,
+      "name": "word/styles.xml",
+      "uncompressed_size": 273,
+      "sha256": "f637ffa3f50aa97d37d0ef2b17d7cf134fab2293d5dff3a4f9446c1ccafa8590"
+    },
+    {
+      "index": 5,
+      "name": "word/settings.xml",
+      "uncompressed_size": 182,
+      "sha256": "e71adaa5b9eb3e974104b4f72184c61d1191f9e2b66bdecb64f61eaf8c9be17e"
+    },
+    {
+      "index": 6,
+      "name": "word/webSettings.xml",
+      "uncompressed_size": 186,
+      "sha256": "f0ad5b8163102d0ffbad1286c3aa67f3754a75d10eda9d69d9e10480b504ca42"
+    },
+    {
+      "index": 7,
+      "name": "word/fontTable.xml",
+      "uncompressed_size": 246,
+      "sha256": "ebbba141fa5a7d757eae618136c9d27323ddf1847f8c9fcbe55c3f6f3926aa20"
+    },
+    {
+      "index": 8,
+      "name": "docProps/core.xml",
+      "uncompressed_size": 638,
+      "sha256": "9ce6943f07a077aefe86673406cc513727bc83bd2d4cc3fe7fca14efe6773639"
+    },
+    {
+      "index": 9,
+      "name": "docProps/app.xml",
+      "uncompressed_size": 429,
+      "sha256": "1cc392edeba62e0fb2b88b65649774ed243fb4182a42e312aef83bc36ae58929"
+    }
+  ]
+}

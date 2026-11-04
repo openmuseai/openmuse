@@ -1,0 +1,631 @@
+import 'dart:io';
+
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter/material.dart';
+import 'package:openmuse_i18n/openmuse_i18n.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:path/path.dart' as p;
+
+import 'design_system.dart';
+import 'local_settings.dart';
+import 'plugin_distribution.dart';
+import 'workspace_controller.dart';
+
+typedef OpenMusePluginWorkspaceChoice =
+    Future<void> Function({
+      required String pluginId,
+      required String path,
+      required bool enabled,
+    });
+
+Future<void> choosePluginWorkspace({
+  required LocalWorkspaceController workspace,
+  required String pluginId,
+  required String path,
+  required bool enabled,
+}) async {
+  if (enabled) {
+    await workspace.ensurePluginWorkspace(pluginId: pluginId, path: path);
+    return;
+  }
+  await workspace.releasePluginWorkspace(path);
+}
+
+Future<void> showOpenMuseSettings(
+  BuildContext context,
+  OpenMuseLocalSettings settings,
+  OpenMusePluginRegistry registry, {
+  OpenMusePluginWorkspaceChoice? onPluginWorkspace,
+}) => showDialog<void>(
+  context: context,
+  barrierColor: OpenMuseTokens.scrim,
+  builder: (_) => _SettingsDialog(
+    settings: settings,
+    registry: registry,
+    onPluginWorkspace: onPluginWorkspace,
+  ),
+);
+
+final class _SettingsDialog extends StatefulWidget {
+  const _SettingsDialog({
+    required this.settings,
+    required this.registry,
+    this.onPluginWorkspace,
+  });
+
+  final OpenMuseLocalSettings settings;
+  final OpenMusePluginRegistry registry;
+  final OpenMusePluginWorkspaceChoice? onPluginWorkspace;
+
+  @override
+  State<_SettingsDialog> createState() => _SettingsDialogState();
+}
+
+final class _SettingsDialogState extends State<_SettingsDialog> {
+  int selected = 1;
+
+  static const sections = <(IconData, String)>[
+    (Icons.account_circle_outlined, '账号与设备'),
+    (Icons.dashboard_outlined, '工作区'),
+    (Icons.extension_outlined, '插件'),
+    (Icons.smart_toy_outlined, 'Agent'),
+    (Icons.keyboard_outlined, '快捷键'),
+    (Icons.info_outline, '关于'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final width = MediaQuery.sizeOf(context).width;
+    final height = MediaQuery.sizeOf(context).height;
+    return Dialog(
+      insetPadding: const EdgeInsets.all(20),
+      child: SizedBox(
+        width: width < 950 ? width - 40 : 950,
+        height: height < 590 ? height - 40 : 590,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Row(
+            children: [
+              Container(
+                width: 204,
+                color: dark ? const Color(0xff202228) : const Color(0xfff8faff),
+                padding: const EdgeInsets.fromLTRB(11, 25, 11, 12),
+                child: Column(
+                  children: [
+                    for (var i = 0; i < sections.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Material(
+                          color: selected == i
+                              ? (dark
+                                    ? const Color(0xff244154)
+                                    : const Color(0xffd9f2ff))
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(9),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(9),
+                            onTap: () => setState(() => selected = i),
+                            child: SizedBox(
+                              height: 36,
+                              child: Row(
+                                children: [
+                                  const SizedBox(width: 10),
+                                  Icon(sections[i].$1, size: 18),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    sections[i].$2,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              VerticalDivider(width: 1, color: Theme.of(context).dividerColor),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ListenableBuilder(
+                        listenable: widget.settings,
+                        builder: (context, _) => switch (selected) {
+                          0 => _AccountSettings(registry: widget.registry),
+                          1 => _WorkspaceSettings(settings: widget.settings),
+                          2 => _PluginSettings(
+                            settings: widget.settings,
+                            registry: widget.registry,
+                            onPluginWorkspace: widget.onPluginWorkspace,
+                          ),
+                          3 => _AgentSettings(
+                            settings: widget.settings,
+                            registry: widget.registry,
+                          ),
+                          4 => const _StaticSettings(
+                            title: '快捷键',
+                            description: '编辑器按键映射可在插件设置中调整。',
+                          ),
+                          _ => const _StaticSettings(
+                            title: '关于 OpenMuse',
+                            description: '本地优先的独立 Host + Plugin + DSH 产品。',
+                          ),
+                        },
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: IconButton(
+                        tooltip: '关闭设置',
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _AccountSettings extends StatelessWidget {
+  const _AccountSettings({required this.registry});
+  final OpenMusePluginRegistry registry;
+
+  @override
+  Widget build(BuildContext context) {
+    final contributors = [
+      registry.plugin('com.openmuse.auth.gotrue'),
+      registry.plugin('com.openmuse.workspace.paired.host'),
+    ].whereType<OpenMuseSettingsContributor>().toList(growable: false);
+    return _SettingsBody(
+      title: '账号与设备',
+      description: '登录同一账号后查看设备在线状态，并直接访问在线 Desktop 的 Workspace。',
+      children: [
+        for (final contributor in contributors)
+          contributor.buildSettings(context),
+      ],
+    );
+  }
+}
+
+final class _SettingsBody extends StatelessWidget {
+  const _SettingsBody({
+    required this.title,
+    required this.description,
+    required this.children,
+  });
+
+  final String title;
+  final String description;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+    children: [
+      Text(
+        title,
+        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+      ),
+      const SizedBox(height: 3),
+      Text(
+        description,
+        style: TextStyle(
+          fontSize: 12,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+      const SizedBox(height: 18),
+      Divider(height: 1, color: Theme.of(context).dividerColor),
+      const SizedBox(height: 23),
+      ...children,
+    ],
+  );
+}
+
+final class _WorkspaceSettings extends StatelessWidget {
+  const _WorkspaceSettings({required this.settings});
+  final OpenMuseLocalSettings settings;
+
+  @override
+  Widget build(BuildContext context) => _SettingsBody(
+    title: 'Workspace',
+    description: '自定义本地工作区外观和面板布局。',
+    children: [
+      const OpenMuseLanguageSelector(),
+      const SizedBox(height: 16),
+      const Text(
+        'Appearance',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+      const SizedBox(height: 16),
+      Wrap(
+        spacing: 16,
+        children: [
+          for (final item in const [
+            (ThemeMode.system, 'Auto', Icons.brightness_auto_outlined),
+            (ThemeMode.light, 'Light', Icons.light_mode_outlined),
+            (ThemeMode.dark, 'Dark', Icons.dark_mode_outlined),
+          ])
+            _AppearanceCard(
+              label: item.$2,
+              icon: item.$3,
+              selected: settings.themeMode == item.$1,
+              onTap: () => settings.setThemeMode(item.$1),
+            ),
+        ],
+      ),
+      const SizedBox(height: 24),
+      const Text(
+        '布局',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+      const SizedBox(height: 7),
+      Text(
+        '拖动任意分隔线可调整窗格大小，布局会自动保存。使用窗格右上角菜单可横向或纵向切分、'
+        '绑定内容、交换相邻窗格、关闭窗格或恢复默认布局。',
+        style: TextStyle(
+          fontSize: 12,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+      const SizedBox(height: 24),
+      if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) ...[
+        const Text(
+          'PDF 生成文件默认目录',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 7),
+        Text(
+          settings.generatedOutputDirectory ?? '默认：应用文档目录/OpenMuse',
+          key: const Key('generated-output-directory-value'),
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('generated-output-directory-choose'),
+              onPressed: () async {
+                final chosen = await getDirectoryPath(confirmButtonText: '选取');
+                if (chosen != null) {
+                  await settings.setGeneratedOutputDirectory(chosen);
+                }
+              },
+              icon: const Icon(Icons.folder_open_outlined, size: 16),
+              label: const Text('选取目录'),
+            ),
+            if (settings.generatedOutputDirectory != null)
+              TextButton(
+                key: const Key('generated-output-directory-reset'),
+                onPressed: () => settings.setGeneratedOutputDirectory(null),
+                child: const Text('恢复默认'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
+      Text(
+        '工作区文件保存在已添加的本地 Project Workspace；PDF 抽取生成的文件保存在上方目录。',
+        style: TextStyle(
+          fontSize: 12,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+    ],
+  );
+}
+
+final class _AppearanceCard extends StatelessWidget {
+  const _AppearanceCard({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(7),
+    child: SizedBox(
+      width: 88,
+      child: Column(
+        children: [
+          Container(
+            width: 88,
+            height: 70,
+            decoration: BoxDecoration(
+              color: label == 'Dark'
+                  ? const Color(0xff252a35)
+                  : const Color(0xfffafbff),
+              border: Border.all(
+                color: selected
+                    ? OpenMuseTokens.cyan
+                    : Theme.of(context).dividerColor,
+                width: selected ? 2 : 1,
+              ),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Stack(
+              children: [
+                Center(
+                  child: Icon(
+                    icon,
+                    color: label == 'Dark'
+                        ? Colors.white70
+                        : OpenMuseTokens.accent,
+                  ),
+                ),
+                if (selected)
+                  const Positioned(
+                    top: 3,
+                    left: 3,
+                    child: Icon(
+                      Icons.check_circle,
+                      size: 15,
+                      color: Color(0xff31b88a),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(label, style: const TextStyle(fontSize: 13)),
+        ],
+      ),
+    ),
+  );
+}
+
+final class _SettingRow extends StatelessWidget {
+  const _SettingRow(this.label, this.value);
+  final String label;
+  final String value;
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 46,
+    child: Row(
+      children: [
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 13))),
+        Text(value, style: const TextStyle(fontSize: 12)),
+      ],
+    ),
+  );
+}
+
+final class _PluginSettings extends StatelessWidget {
+  const _PluginSettings({
+    required this.settings,
+    required this.registry,
+    this.onPluginWorkspace,
+  });
+
+  final OpenMuseLocalSettings settings;
+  final OpenMusePluginRegistry registry;
+  final OpenMusePluginWorkspaceChoice? onPluginWorkspace;
+
+  @override
+  Widget build(BuildContext context) {
+    final plugin = registry.plugin('com.openmuse.helix');
+    final OpenMuseSettingsContributor? contributor =
+        plugin is OpenMuseSettingsContributor
+        ? plugin as OpenMuseSettingsContributor
+        : null;
+    return _SettingsBody(
+      title: 'Plugin',
+      description: '配置 Host 内嵌的编辑器插件；部分选项在下次打开文件时生效。',
+      children: [
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('底部 CLI 控制台'),
+          subtitle: const Text('在编辑区下方运行本机终端；关闭会结束控制台会话。'),
+          value: settings.pluginValues('com.openmuse.cli')['enabled'] != false,
+          onChanged: (enabled) async {
+            final current = settings.pluginValues('com.openmuse.cli');
+            await settings.updatePluginValues('com.openmuse.cli', {
+              ...current,
+              'enabled': enabled,
+            });
+            if (!enabled) await registry.deactivate('com.openmuse.cli');
+          },
+        ),
+        if (contributor != null)
+          FutureBuilder<void>(
+            future: registry.activate(plugin!.descriptor.id),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Text('Helix 设置加载失败：${snapshot.error}');
+              }
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const LinearProgressIndicator(minHeight: 2);
+              }
+              return contributor.buildSettings(context);
+            },
+          )
+        else
+          const Text('Helix 插件未安装。'),
+        const SizedBox(height: 24),
+        const Text(
+          '已安装插件',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        for (final receipt in _distributedPlugins(settings))
+          _DistributedPluginRow(receipt),
+        for (final descriptor in registry.descriptors)
+          if (descriptor.workspace == null)
+            _SettingRow(descriptor.name, descriptor.version)
+          else
+            _PluginWorkspaceRow(
+              descriptor: descriptor,
+              enabled:
+                  settings.pluginValues(descriptor.id)['workspaceEnabled'] !=
+                  false,
+              onChanged: (enabled) async {
+                final workspace = descriptor.workspace!;
+                final current = settings.pluginValues(descriptor.id);
+                await settings.updatePluginValues(descriptor.id, {
+                  ...current,
+                  'workspaceEnabled': enabled,
+                  if (enabled) 'workspacePath': workspace.path,
+                });
+                if (onPluginWorkspace != null) {
+                  await onPluginWorkspace!(
+                    pluginId: descriptor.id,
+                    path: workspace.path,
+                    enabled: enabled,
+                  );
+                }
+              },
+            ),
+      ],
+    );
+  }
+}
+
+List<DistributedPluginReceipt> _distributedPlugins(
+  OpenMuseLocalSettings settings,
+) {
+  final file = settings.file;
+  if (file == null) return const [];
+  return readInstalledPlugins(Directory(p.join(file.parent.path, 'plugins')));
+}
+
+final class _DistributedPluginRow extends StatelessWidget {
+  const _DistributedPluginRow(this.receipt);
+
+  final DistributedPluginReceipt receipt;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      key: ValueKey('distributed-plugin-${receipt.pluginId}'),
+      height: 52,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(receipt.name, style: const TextStyle(fontSize: 13)),
+                Text(
+                  receipt.workspacePath,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          Text(receipt.version, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 12),
+          const Text('已安装', style: TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+final class _PluginWorkspaceRow extends StatelessWidget {
+  const _PluginWorkspaceRow({
+    required this.descriptor,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final OpenMusePluginDescriptor descriptor;
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final workspace = descriptor.workspace!;
+    return SizedBox(
+      height: 52,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(descriptor.name, style: const TextStyle(fontSize: 13)),
+                Text(
+                  enabled ? workspace.path : '未挂载插件工作区',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          Text(descriptor.version, style: const TextStyle(fontSize: 12)),
+          if (workspace.optional)
+            Switch(value: enabled, onChanged: onChanged)
+          else
+            const Switch(value: true, onChanged: null),
+        ],
+      ),
+    );
+  }
+}
+
+final class _AgentSettings extends StatelessWidget {
+  const _AgentSettings({required this.settings, required this.registry});
+  final OpenMuseLocalSettings settings;
+  final OpenMusePluginRegistry registry;
+
+  @override
+  Widget build(BuildContext context) {
+    final contributors = [
+      registry.plugin('com.openmuse.dsh-agent'),
+    ].whereType<OpenMuseSettingsContributor>().toList(growable: false);
+    return _SettingsBody(
+      title: 'Agent',
+      description: '配置本机 DSH 助手及右侧面板。',
+      children: [
+        const Text(
+          '面板',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('显示 Agent', style: TextStyle(fontSize: 13)),
+          subtitle: const Text('关闭后隐藏右侧面板，可随时重新打开。'),
+          value: settings.assistantVisible,
+          onChanged: settings.setAssistantVisible,
+        ),
+        for (final contributor in contributors)
+          contributor.buildSettings(context),
+      ],
+    );
+  }
+}
+
+final class _StaticSettings extends StatelessWidget {
+  const _StaticSettings({required this.title, required this.description});
+  final String title;
+  final String description;
+  @override
+  Widget build(BuildContext context) =>
+      _SettingsBody(title: title, description: description, children: const []);
+}

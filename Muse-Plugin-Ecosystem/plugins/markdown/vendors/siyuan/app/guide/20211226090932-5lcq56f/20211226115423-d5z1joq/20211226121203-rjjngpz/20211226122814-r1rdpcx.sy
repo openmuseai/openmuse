@@ -1,0 +1,232 @@
+{
+	"ID": "20211226122814-r1rdpcx",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20211226122814-r1rdpcx",
+		"title": "虛擬引用",
+		"type": "doc",
+		"updated": "20261024163013"
+	},
+	"Children": [
+		{
+			"ID": "20211226122825-b3dgpzv",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211226122825-b3dgpzv",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20211226122825-l5wv8k9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226122825-l5wv8k9",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "虛擬引用依據既有引用的錨文字、內容區塊命名等資訊，在編輯器中標記可能相關的文字，並支援浮窗預覽。它只是關聯提示，不會自動建立實際的區塊引用。"
+				}
+			]
+		},
+		{
+			"ID": "20211226122825-sua3d6c",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211226122825-sua3d6c",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用方式"
+				}
+			]
+		},
+		{
+			"ID": "20211226122825-xjba5oj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226122825-xjba5oj",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "打開 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "編輯器"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "雙向連結"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "虛擬引用"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 開關即可。"
+				}
+			]
+		},
+		{
+			"ID": "20211226122825-w6wxq0c",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211226122825-w6wxq0c",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "探測規則"
+				}
+			]
+		},
+		{
+			"ID": "20211226122825-z7izmqi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226122825-z7izmqi",
+				"updated": "20260730184353"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "根據已有區塊引用的錨文本/定義區塊文本、區塊的命名和別名作為關鍵字搜索，如果在當前內容區塊的純文本元素上搜索到這些關鍵字，那麽就會作為虛擬引用。"
+				}
+			]
+		},
+		{
+			"ID": "20240228163908-37qjtmk",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240228163908-37qjtmk",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "搜索"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "虛擬引用"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中調整關鍵字搜尋範圍。"
+				}
+			]
+		},
+		{
+			"ID": "20221003215030-sldbsma",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20221003215030-sldbsma",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				}
+			]
+		},
+		{
+			"ID": "20221003215030-n76ec39",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20221003215030-n76ec39",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"ID": "20221003215030-w2qi431",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20221003215030-w2qi431",
+						"updated": "20261016202635"
+					},
+					"Children": [
+						{
+							"ID": "20221003215030-v8qcvra",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20221003215030-v8qcvra",
+								"updated": "20261016202635"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "虛擬引用不會即時更新。請等待搜索索引完成後重新整理或重新打開文檔；如果關鍵字仍未更新，再嘗試重建索引"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

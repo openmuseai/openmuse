@@ -1,0 +1,6 @@
+{
+  "projectRoot": "../../..",
+  "javaBase": "koffice/core-libs/wpslayout/src",
+  "javaDepBase": "koffice/core-libs",
+  "rustDepRoot": "libs/core-libs"
+}

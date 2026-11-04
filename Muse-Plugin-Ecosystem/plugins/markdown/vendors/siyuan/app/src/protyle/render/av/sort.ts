@@ -1,0 +1,183 @@
+import {Menu} from "../../../plugin/Menu";
+import {hasAVCapability} from "./capabilities";
+import {getColIconByType} from "./col";
+import {transaction} from "../../wysiwyg/transaction";
+import {setPosition} from "../../../util/setPosition";
+import {unicode2Emoji} from "../../../emoji";
+import {escapeHtml} from "../../../util/escape";
+import {getFieldsByData} from "./view";
+import {Constants} from "../../../constants";
+
+export const addSort = (options: {
+    data: IAV,
+    rect: DOMRect,
+    menuElement: HTMLElement,
+    tabRect: DOMRect,
+    avId: string,
+    protyle: IProtyle,
+    blockID: string,
+}) => {
+    const menu = new Menu(Constants.MENU_AV_ADD_SORT);
+    const fields = getFieldsByData(options.data);
+    fields.forEach((column) => {
+        let hasSort = false;
+
+        // 根据字段能力排除不支持排序的列。
+        if (!hasAVCapability(column.type, "sortable")) {
+            hasSort = true;
+        } else {
+            options.data.view.sorts.find((sort) => {
+                if (sort.column === column.id) {
+                    hasSort = true;
+                    return true;
+                }
+            });
+        }
+
+        if (!hasSort) {
+            menu.addItem({
+                label: column.name,
+                iconHTML: column.icon ? unicode2Emoji(column.icon, "b3-menu__icon", true) : `<svg class="b3-menu__icon"><use xlink:href="#${getColIconByType(column.type)}"></use></svg>`,
+                click: () => {
+                    const oldSorts = Object.assign([], options.data.view.sorts);
+                    options.data.view.sorts.push({
+                        column: column.id,
+                        order: "ASC",
+                    });
+                    transaction(options.protyle, [{
+                        action: "setAttrViewSorts",
+                        avID: options.data.id,
+                        data: options.data.view.sorts,
+                        blockID: options.blockID,
+                    }], [{
+                        action: "setAttrViewSorts",
+                        avID: options.data.id,
+                        data: oldSorts,
+                        blockID: options.blockID,
+                    }]);
+                    options.menuElement.innerHTML = getSortsHTML(fields, options.data.view.sorts);
+                    bindSortsEvent(options.protyle, options.menuElement, options.data, options.blockID);
+                    setPosition(options.menuElement, options.tabRect.right - options.menuElement.clientWidth, options.tabRect.bottom, options.tabRect.height, 0, true);
+                }
+            });
+        }
+    });
+    menu.open({
+        x: options.rect.left,
+        y: options.rect.bottom,
+        h: options.rect.height,
+    });
+};
+
+export const bindSortsEvent = (protyle: IProtyle, menuElement: HTMLElement, data: IAV, blockID: string) => {
+    const fields = getFieldsByData(data);
+    menuElement.querySelectorAll("select").forEach((item: HTMLSelectElement) => {
+        item.addEventListener("change", () => {
+            const colId = item.closest("[data-id]").getAttribute("data-id");
+            const oldSort = JSON.parse(JSON.stringify(data.view.sorts));
+            const sort = data.view.sorts.find((sort: IAVSort) => sort.column === colId);
+            if (!sort) {
+                return;
+            }
+            let reRender = false;
+            if (item.dataset.type === "sortColumn") {
+                const oldColumn = fields.find((column) => column.id === sort.column);
+                const newColumn = fields.find((column) => column.id === item.value);
+                sort.column = item.value;
+                if (!newColumn?.renderTemplate?.trim() || newColumn?.type === "template") {
+                    delete sort.valueSource;
+                }
+                if (oldColumn?.type !== "date" || newColumn?.type !== "date") {
+                    delete sort.dateEndpoint;
+                }
+                reRender = true;
+            } else if (item.dataset.type === "sortValueSource") {
+                if (item.value === "rendered") {
+                    sort.valueSource = "rendered";
+                    delete sort.dateEndpoint;
+                } else {
+                    delete sort.valueSource;
+                }
+                reRender = true;
+            } else if (item.dataset.type === "sortDateEndpoint") {
+                if (item.value === "end") {
+                    sort.dateEndpoint = "end";
+                } else {
+                    delete sort.dateEndpoint;
+                }
+            } else if (item.dataset.type === "sortOrder") {
+                sort.order = item.value as "ASC" | "DESC";
+            }
+            transaction(protyle, [{
+                action: "setAttrViewSorts",
+                avID: data.id,
+                data: data.view.sorts,
+                blockID
+            }], [{
+                action: "setAttrViewSorts",
+                avID: data.id,
+                data: oldSort,
+                blockID
+            }]);
+            if (reRender) {
+                menuElement.innerHTML = getSortsHTML(fields, data.view.sorts);
+                bindSortsEvent(protyle, menuElement, data, blockID);
+            }
+        });
+    });
+};
+
+export const getSortsHTML = (columns: IAVColumn[], sorts: IAVSort[]) => {
+    let html = "";
+    const genSortItem = (id: string) => {
+        let sortHTML = "";
+        columns.forEach((item) => {
+            sortHTML += `<option value="${item.id}" ${item.id === id ? "selected" : ""}>${item.icon && unicode2Emoji(item.icon)}${escapeHtml(item.name)}</option>`;
+        });
+        return sortHTML;
+    };
+    sorts.forEach((item: IAVSort) => {
+        const column = columns.find((column) => column.id === item.column);
+        const valueSourceHTML = column?.type !== "template" && (column?.renderTemplate?.trim() || item.valueSource === "rendered") ? `
+    <select class="b3-select" data-type="sortValueSource">
+        <option value="stored" ${item.valueSource !== "rendered" ? "selected" : ""}>${window.siyuan.languages.originalValue}</option>
+        <option value="rendered" ${item.valueSource === "rendered" ? "selected" : ""}>${window.siyuan.languages.templateRenderedValue}</option>
+    </select>` : "";
+        const dateEndpointHTML = column?.type === "date" && item.valueSource !== "rendered" ? `
+    <select class="b3-select" data-type="sortDateEndpoint">
+        <option value="start" ${item.dateEndpoint !== "end" ? "selected" : ""}>${window.siyuan.languages.startDate}</option>
+        <option value="end" ${item.dateEndpoint === "end" ? "selected" : ""}>${window.siyuan.languages.endDate}</option>
+    </select>` : "";
+        html += `<button draggable="true" class="b3-menu__item av__sort-row" data-id="${item.column}">
+    <svg class="b3-menu__icon fn__grab"><use xlink:href="#iconDrag"></use></svg>
+    <span class="av__sort-controls">
+    <select class="b3-select" data-type="sortColumn">
+        ${genSortItem(item.column)}
+    </select>${valueSourceHTML}${dateEndpointHTML}
+    <select class="b3-select" data-type="sortOrder">
+        <option value="ASC" ${item.order === "ASC" ? "selected" : ""}>${window.siyuan.languages.asc}</option>
+        <option value="DESC" ${item.order === "DESC" ? "selected" : ""}>${window.siyuan.languages.desc}</option>
+    </select>
+    </span>
+    <svg class="b3-menu__action" data-type="removeSort"><use xlink:href="#iconTrashcan"></use></svg>
+</button>`;
+    });
+    return `<div class="b3-menu__items">
+<button class="b3-menu__item" data-type="nobg">
+    <span class="block__icon block__icon--menu-back" data-type="go-config">
+        <svg><use xlink:href="#iconLeft"></use></svg>
+    </span>
+    <span class="b3-menu__label ft__center">${window.siyuan.languages.sort}</span>
+</button>
+<button class="b3-menu__separator"></button>
+${html}
+<button class="b3-menu__item${sorts.length === columns.length ? " fn__none" : ""}" data-type="addSort">
+    <svg class="b3-menu__icon"><use xlink:href="#iconAdd"></use></svg>
+    <span class="b3-menu__label">${window.siyuan.languages.addSort}</span>
+</button>
+<button class="b3-menu__item b3-menu__item--warning${html ? "" : " fn__none"}" data-type="removeSorts">
+    <svg class="b3-menu__icon"><use xlink:href="#iconTrashcan"></use></svg>
+    <span class="b3-menu__label">${window.siyuan.languages.removeSorts}</span>
+</button>
+</div>`;
+};

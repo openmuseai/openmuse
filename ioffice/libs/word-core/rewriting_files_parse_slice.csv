@@ -1,0 +1,8 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id,tags
+1,koffice/writer/core/cn/wps/moffice/writer/data/PLC.java,PLC,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/PLC.rs,INotifyTextRope;ListIndexPositionTree,,01-storage;mvp-must
+2,koffice/writer/core/cn/wps/moffice/writer/data/PLCSection.java,PLCSection,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/PLCSection.rs,PLC;PropertySet,,01-storage;mvp-must
+3,koffice/writer/core/cn/wps/moffice/writer/data/internal_v2/ChpxTableFactory.java,ChpxTableFactory,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/internal_v2/ChpxTableFactory.rs,ChpxTable,,01-storage;mvp-must
+4,koffice/writer/core/cn/wps/moffice/writer/data/internal_v2/PapxTable.java,PapxTable,in_progress,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/internal_v2/PapxTable.rs,CPTable;IPapxTable,,01-storage;mvp-must
+5,koffice/writer/core/cn/wps/moffice/writer/data/internal_v2/PapxTableFactory.java,PapxTableFactory,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/internal_v2/PapxTableFactory.rs,PapxTable,,01-storage;mvp-must
+6,koffice/writer/core/cn/wps/moffice/writer/data/CPieceTable.java,CPieceTable,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/CPieceTable.rs,IChpxTable;IPapxTable;ITextRope,,01-storage;mvp-must
+7,koffice/writer/core/cn/wps/moffice/writer/helper/CoreHelper.java,CoreHelper,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/helper/CoreHelper.rs,IChpxTable;IPapxTable;ITextRope;PropertySet,,01-storage;mvp-must

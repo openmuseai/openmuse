@@ -1,0 +1,212 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package apicontract
+
+import "mime/multipart"
+
+type SystemWallpaperUploadRequest struct {
+	File *multipart.FileHeader `json:"file"`
+}
+
+// SystemRuntimeInfoData 提供可复制的运行诊断文本，不包含工作空间路径或设备标识。
+type SystemRuntimeInfoData struct {
+	Text string `json:"text"`
+}
+
+// SystemFileTraversalData contains a bounded JSON-lines metadata diagnostic.
+type SystemFileTraversalData struct {
+	Text string `json:"text"`
+}
+
+type SystemPathRequest struct {
+	Path string `json:"path"`
+}
+type SystemWorkspaceCheckData struct {
+	IsWorkspace bool `json:"isWorkspace"`
+}
+type SystemWorkspace struct {
+	Path   string `json:"path"`
+	Closed bool   `json:"closed"`
+}
+type SystemChangelogRequest struct {
+	Force bool `json:"force" api:"optional,nullable"`
+}
+type SystemChangelogData struct {
+	Show    bool   `json:"show"`
+	HTML    string `json:"html"`
+	Version string `json:"version"`
+}
+type SystemCheckUpdateRequest struct {
+	ShowMsg bool `json:"showMsg"`
+}
+
+type SystemDownloadUpdateRequest struct {
+	Version string `json:"version"`
+}
+type SystemZipData struct {
+	Zip string `json:"zip"`
+}
+
+// SystemExportConfData 返回设置导出文件名和压缩包路径。导出副本清空 ChatGPT 本机账户引用、AI 密钥和 OIDC 客户端密钥，
+// 不修改当前工作空间配置；导出的设置文件不包含笔记本加密密钥及恢复材料。
+type SystemExportConfData struct {
+	Name string `json:"name"`
+	Zip  string `json:"zip"`
+}
+type SystemPathData struct {
+	Path string `json:"path"`
+}
+type SystemMessageData struct {
+	Msg string `json:"msg"`
+}
+type SystemConfData struct {
+	Conf      *SystemAppConf `json:"conf"`
+	Start     bool           `json:"start"`
+	IsPublish bool           `json:"isPublish"`
+	// SettingTasks 为当前仍执行的设置维护任务，前端初始化和重连时恢复任务阻塞。
+	SettingTasks *SettingTaskState `json:"settingTasks,omitempty"`
+	// Revision 是读取开始前的配置提交序号，客户端据此丢弃已包含在本次读取中的通知。
+	Revision uint64 `json:"revision"`
+}
+
+type SettingTask struct {
+	ID       string `json:"id"`
+	Active   bool   `json:"active"`
+	Message  string `json:"message"`
+	Revision uint64 `json:"revision"`
+}
+
+type SettingTaskState struct {
+	Revision uint64        `json:"revision"`
+	Tasks    []SettingTask `json:"tasks"`
+}
+type SystemImportConfRequest struct {
+	File []*multipart.FileHeader `json:"file" api:"optional"`
+}
+type SystemImportFileRequest struct {
+	File *multipart.FileHeader `json:"file" api:"optional"`
+}
+type SystemCustomEmojiRequest struct {
+	File *multipart.FileHeader `json:"file" api:"optional"`
+	URL  string                `json:"url" api:"optional"`
+	Name string                `json:"name" api:"optional"`
+}
+type SystemEmojiGroup struct {
+	ID        string         `json:"id"`
+	Title     string         `json:"title"`
+	TitleZhCN string         `json:"title_zh_cn"`
+	TitleJaJP string         `json:"title_ja_jp"`
+	Items     []*SystemEmoji `json:"items"`
+}
+type SystemEmoji struct {
+	Unicode         string `json:"unicode"`
+	Description     string `json:"description"`
+	DescriptionZhCN string `json:"description_zh_cn"`
+	DescriptionJaJP string `json:"description_ja_jp"`
+	Keywords        string `json:"keywords"`
+}
+type SystemUILayoutRequest struct {
+	Layout      map[string]JSONValue `json:"layout" api:"optional,nullable"`
+	layoutError error
+}
+
+func (r SystemUILayoutRequest) LayoutError() error { return r.layoutError }
+
+type SystemAPITokenRequest struct {
+	Token string `json:"token"`
+}
+type SystemAccessAuthCodeRequest struct {
+	AccessAuthCode string `json:"accessAuthCode"`
+}
+type SystemRemoveCustomFontRequest struct {
+	ID string `json:"id" api:"optional,nullable,ignoretype"`
+}
+type SystemRemoveCustomFontData struct {
+	Font       *SystemCustomFont  `json:"font"`
+	Editor     *SettingEditor     `json:"editor"`
+	Appearance *SettingAppearance `json:"appearance"`
+}
+type SystemAppearanceModeRequest struct {
+	Mode float64 `json:"mode"`
+}
+type SystemAppearanceData struct {
+	Appearance *SettingAppearance `json:"appearance"`
+}
+type SystemExitRequest struct {
+	Force               bool               `json:"force" api:"optional,nullable"`
+	ExecInstallPkg      float64            `json:"execInstallPkg" api:"optional,nullable"`
+	SetCurrentWorkspace *bool              `json:"setCurrentWorkspace" api:"optional,nullable"`
+	RecoverExit         *SystemRecoverExit `json:"recoverExit" api:"optional,nullable"`
+}
+type SystemRecoverExit struct {
+	PID       int   `json:"pid"`
+	StartedAt int64 `json:"startedAt"`
+	Force     bool  `json:"force" api:"optional,nullable"`
+}
+type SystemExitData struct {
+	CloseTimeout   int    `json:"closeTimeout"`
+	InstallPkgPath string `json:"installPkgPath,omitempty"`
+}
+type SystemOIDCStartRequest struct {
+	Flow       string `json:"flow" api:"optional,nullable"`
+	To         string `json:"to" api:"optional,nullable"`
+	RememberMe bool   `json:"rememberMe" api:"optional,nullable"`
+	parseError error
+}
+
+func (r SystemOIDCStartRequest) ParseError() error { return r.parseError }
+
+type SystemOIDCRequest struct {
+	SystemOIDC
+	parseError error
+}
+
+func (r SystemOIDCRequest) ParseError() error { return r.parseError }
+
+type SystemOIDCStartData struct {
+	AuthURL   string `json:"authURL"`
+	ExpiresIn int    `json:"expiresIn"`
+	PollToken string `json:"pollToken,omitempty"`
+}
+type SystemOIDCMobileRequest struct {
+	CallbackURL string `json:"callbackURL" api:"optional,nullable"`
+	parseError  error
+}
+
+func (r SystemOIDCMobileRequest) ParseError() error { return r.parseError }
+
+type SystemOIDCMobileData struct {
+	Validation bool   `json:"validation,omitempty" api:"const=true"`
+	To         string `json:"to,omitempty"`
+}
+type SystemOIDCPollRequest struct {
+	PollToken  string `json:"pollToken" api:"optional,nullable"`
+	parseError error
+}
+
+func (r SystemOIDCPollRequest) ParseError() error { return r.parseError }
+
+type SystemOIDCPollData struct {
+	Status string `json:"status" api:"enum=pending|completed"`
+	To     string `json:"to,omitempty"`
+}
+
+type SystemOIDCValidatePollData struct {
+	Status string `json:"status" api:"enum=pending|completed"`
+}
+type SystemOIDCActivateData struct {
+	Status string      `json:"status" api:"const=\"completed\""`
+	Config *SystemOIDC `json:"config"`
+}
+type SystemLoginAuthRequest struct {
+	AuthCode      string `json:"authCode"`
+	Captcha       string `json:"captcha" api:"optional,nullable"`
+	RememberMe    bool   `json:"rememberMe" api:"optional,nullable"`
+	authCodeError error
+	captchaError  error
+}
+
+func (r SystemLoginAuthRequest) AuthCodeError() error { return r.authCodeError }
+func (r SystemLoginAuthRequest) CaptchaError() error  { return r.captchaError }

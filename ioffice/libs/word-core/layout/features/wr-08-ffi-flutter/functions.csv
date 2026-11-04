@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_uniffi_export,render_docx 单入口,docx bytes,commands JSON,wr-07;wc-05,02,libs/word-core,pass
+2,02_function_flutter_painter,Flutter 消费指令,commands,像素,01,用户可见,libs/word-core,pass
+3,03_function_interaction,滚动缩放,手势,视口,02,M4,libs/word-core,pass

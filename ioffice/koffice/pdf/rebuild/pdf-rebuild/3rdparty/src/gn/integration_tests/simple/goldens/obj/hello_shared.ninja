@@ -1,0 +1,17 @@
+defines = -DHELLO_SHARED_IMPLEMENTATION
+include_dirs =
+cflags = -fPIC -pthread
+target_out_dir = obj
+target_output_name = libhello_shared
+
+build obj/libhello_shared.hello_shared.o: cxx ../hello_shared.cc
+  source_file_part = hello_shared.cc
+  source_name_part = hello_shared
+
+build ./libhello_shared.so: solink obj/libhello_shared.hello_shared.o
+  ldflags =
+  libs =
+  frameworks =
+  swiftmodules =
+  output_extension = .so
+  output_dir = .

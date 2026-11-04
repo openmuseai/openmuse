@@ -1,0 +1,7 @@
+{
+  "projectRoot": "../..",
+  "javaBase": "koffice/writer/core",
+  "javaDepBase": "koffice/core-libs",
+  "rustDepRoot": "libs/core-libs",
+  "rewritingFilesCsv": "rewriting_files.csv"
+}

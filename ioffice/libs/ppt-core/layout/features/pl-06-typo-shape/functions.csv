@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_typo_shape_snapshot,快照flags+rect,KmoShowShape+InterpretCtx+geometry,ShowTypoShape(isHidden/ph/isTextBox/rect),pl-02-xfrm-geometry;pl-03-ph-merge,02_function_child_walk;pr-01-slide-layers,libs/ppt-core,pass
+2,02_function_child_walk,group子级递归,parent ShowTypoShape(children),子ShowTypoShape[]惰性缓存,01_function_typo_shape_snapshot,pr-01-slide-layers,libs/ppt-core,pass

@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_text_body,p:txBody 段落与 run 链,txBody events+TextBody,paraLst 段落+run(文本/mode)+rPr 最小集,pp-02:02;pp-02:03;pp-02:04,02;pl-04-text-box,libs/ppt-core,pass
+2,02_function_text_body_props,a:bodyPr 属性,bodyPr attrs+TextBodyProperties,insets/anchor/vert/wrap/autofit/rot 写入,01,pl-04-text-box;pr-03-text-command,libs/ppt-core,pass

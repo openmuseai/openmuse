@@ -1,0 +1,14 @@
+.build/
+dist/
+__pycache__/
+flutter_runtime/.dart_tool/
+flutter_runtime/build/
+flutter_runtime/android/src/main/jniLibs/
+flutter_runtime/ios/Libraries/
+flutter_runtime/macos/Libraries/
+flutter_runtime/assets/runtime.zip
+flutter_runtime/example/build/
+flutter_runtime/example/android/build/
+flutter_runtime/example/.dart_tool/
+flutter_runtime/example/ios/Pods/
+flutter_runtime/example/macos/Pods/

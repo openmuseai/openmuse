@@ -1,0 +1,250 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package conf
+
+import "github.com/siyuan-note/siyuan/kernel/util"
+
+const (
+	AssetOpenActionFollowTab  = "follow-tab"
+	AssetOpenActionCurrent    = "current"
+	AssetOpenActionRight      = "right"
+	AssetOpenActionBottom     = "bottom"
+	AssetOpenActionBackground = "background"
+	AssetOpenActionNewWindow  = "new-window"
+	AssetOpenActionApp        = "app"
+	AssetOpenActionFolder     = "folder"
+)
+
+type AssetOpen struct {
+	Click      string `json:"click"`      // 单击资源的打开方式
+	CtrlClick  string `json:"ctrlClick"`  // Ctrl 或 Command 加单击资源的打开方式
+	AltClick   string `json:"altClick"`   // Alt 加单击资源的打开方式
+	ShiftClick string `json:"shiftClick"` // Shift 加单击资源的打开方式
+}
+
+// EditorFont 描述编辑器字体及其显示信息。
+type EditorFont struct {
+	Family      string `json:"family"`
+	Weight      int    `json:"weight"`
+	DisplayName string `json:"displayName"`
+}
+
+type Editor struct {
+	AllowSVGScript                  bool           `json:"allowSVGScript"`                  // 允许执行 SVG 内脚本
+	AllowHTMLBLockScript            bool           `json:"allowHTMLBLockScript"`            // 允许执行 HTML 内容中的脚本
+	CursorSurroundingLines          int            `json:"cursorSurroundingLines"`          // 光标上下文行数
+	FontSize                        int            `json:"fontSize"`                        // 字体大小
+	FontSizeScrollZoom              bool           `json:"fontSizeScrollZoom"`              // 保留用于配置兼容，前端不再使用
+	FontFamily                      string         `json:"fontFamily"`                      // 首选字体（兼容旧版本）
+	FontWeight                      int            `json:"fontWeight"`                      // 首选字体字重（兼容旧版本）
+	FontFamilyDisplay               string         `json:"fontFamilyDisplay"`               // 设置面板中展示的字体名称（与 FontFamily/FontWeight 对应，可选）
+	FontFamilies                    []*EditorFont  `json:"fontFamilies"`                    // 按优先级排列的字体
+	CodeFontFamilies                []*EditorFont  `json:"codeFontFamilies"`                // 按优先级排列的等宽字体
+	CodeSyntaxHighlightLineNum      bool           `json:"codeSyntaxHighlightLineNum"`      // 代码块是否显示行号
+	CodeTabSpaces                   int            `json:"codeTabSpaces"`                   // 代码块中 Tab 转换空格数，配置为 0 则表示不转换
+	CodeLineWrap                    bool           `json:"codeLineWrap"`                    // 代码块是否自动折行
+	CodeLigatures                   bool           `json:"codeLigatures"`                   // 代码块是否连字
+	DisplayBookmarkIcon             bool           `json:"displayBookmarkIcon"`             // 是否显示内容块角标
+	BlockGutterMode                 bool           `json:"blockGutterMode"`                 // 是否显示完整块标
+	DisplayNetImgMark               bool           `json:"displayNetImgMark"`               // 是否显示网络图片角标
+	DisplayImgName                  bool           `json:"displayImgName"`                  // 是否显示图片文件名
+	DisplayImgAlt                   bool           `json:"displayImgAlt"`                   // 是否显示图片提示文本
+	DatabaseAttrShow                *bool          `json:"databaseAttrShow"`                // 是否在文档顶部显示数据库属性
+	DatabaseAttrClickMode           int            `json:"databaseAttrClickMode"`           // 数据库角标点击模式，0：聚焦块并展开数据库面板，1：打开块属性面板
+	DatabaseAttrViewMode            int            `json:"databaseAttrViewMode"`            // 数据库属性默认展开状态，0：展开，1：折叠
+	DatabaseAttrHideEmpty           bool           `json:"databaseAttrHideEmpty"`           // 是否隐藏数据库空属性
+	DatabaseAttrUseTabs             *bool          `json:"databaseAttrUseTabs"`             // 数据库属性是否使用页签
+	DatabaseAttrLayout              *int           `json:"databaseAttrLayout"`              // 数据库字段布局，0：单栏，1：双栏按行，2：双栏按列
+	GenerateHistoryInterval         int            `json:"generateHistoryInterval"`         // 生成历史时间间隔，单位：分钟
+	HistoryRetentionDays            int            `json:"historyRetentionDays"`            // 历史保留天数
+	Emoji                           []string       `json:"emoji"`                           // 常用表情
+	VirtualBlockRef                 bool           `json:"virtualBlockRef"`                 // 是否启用虚拟引用
+	VirtualBlockRefExclude          string         `json:"virtualBlockRefExclude"`          // 虚拟引用关键字排除列表
+	VirtualBlockRefInclude          string         `json:"virtualBlockRefInclude"`          // 虚拟引用关键字包含列表
+	CheckBlockRef                   *bool          `json:"checkBlockRef"`                   // 删除或剪切前是否检查块引用和数据库绑定
+	BlockRefDynamicAnchorTextMaxLen int            `json:"blockRefDynamicAnchorTextMaxLen"` // 块引动态锚文本最大长度
+	AssetOpen                       *AssetOpen     `json:"assetOpen"`                       // 资源打开方式
+	PlantUMLServePath               string         `json:"plantUMLServePath"`               // PlantUML 伺服地址
+	FullWidth                       bool           `json:"fullWidth"`                       // 是否使用最大宽度
+	KaTexMacros                     string         `json:"katexMacros"`                     // KeTex 宏定义
+	ReadOnly                        bool           `json:"readOnly"`                        // 只读模式
+	EmbedBlockBreadcrumb            bool           `json:"embedBlockBreadcrumb"`            // 嵌入块是否显示面包屑
+	EmbedBlockBreadcrumbParentPath  *bool          `json:"embedBlockBreadcrumbParentPath"`  // 嵌入块面包屑是否显示文档上层路径
+	ListLogicalOutdent              bool           `json:"listLogicalOutdent"`              // 列表逻辑反向缩进
+	ListItemDotNumberClickFocus     bool           `json:"listItemDotNumberClickFocus"`     // 单击列表项标记聚焦
+	FloatWindowMode                 int            `json:"floatWindowMode"`                 // 浮窗触发模式，0：光标悬停，1：按住 Ctrl 悬停，2：不触发浮窗
+	FloatWindowDelay                *int           `json:"floatWindowDelay"`                // 浮窗悬停触发延迟，单位：毫秒，默认 620，nil 表示未设置
+	KeepLoadedContent               bool           `json:"keepLoadedContent"`               // 是否保持动态加载的内容
+	PageScrollButtons               bool           `json:"pageScrollButtons"`               // 是否显示翻屏按钮，默认关闭
+	DynamicLoadBlocks               int            `json:"dynamicLoadBlocks"`               // 块动态数，下限 48
+	Justify                         bool           `json:"justify"`                         // 是否两端对齐
+	RTL                             bool           `json:"rtl"`                             // 是否从右到左显示
+	AutoDirection                   bool           `json:"autoDirection"`                   // 是否自动判定段落和标题的文本方向
+	Spellcheck                      bool           `json:"spellcheck"`                      // 是否启用拼写检查
+	SpellcheckLanguages             []string       `json:"spellcheckLanguages"`             // 拼写检查语言
+	HashTagSearch                   *bool          `json:"hashTagSearch"`                   // 输入 # 时是否进行标签搜索
+	OnlySearchForDoc                bool           `json:"onlySearchForDoc"`                // 是否启用 [[ 仅搜索文档块
+	AutoCloseRefBrackets            bool           `json:"autoCloseRefBrackets"`            // 输入 [[ 时自动补全 ]]，输入 ]] 时完成引用
+	BacklinkExpandCount             int            `json:"backlinkExpandCount"`             // 反向链接默认展开数量
+	BackmentionExpandCount          int            `json:"backmentionExpandCount"`          // 反链提及默认展开数量
+	BacklinkMentionExclude          string         `json:"backlinkMentionExclude"`          // 反链提及关键字排除列表
+	BacklinkContainChildren         bool           `json:"backlinkContainChildren"`         // 反向链接是否包含子块进行计算
+	BacklinkHideReference           bool           `json:"backlinkHideReference"`           // 反链面板是否隐藏传递型纯引用块
+	BacklinkShowBottom              bool           `json:"backlinkShowBottom"`              // 是否在文档底部显示反向链接
+	BacklinkSort                    *int           `json:"backlinkSort"`                    // 反向链接排序方式
+	BacklinkGlobalSort              int            `json:"backlinkGlobalSort"`              // 0 文档分组，1 全局锚文本升序，2 全局锚文本降序
+	BacklinkBlockSort               int            `json:"backlinkBlockSort"`               // 文档内引用排序：0 正文顺序，1 锚文本升序，2 锚文本降序
+	BackmentionSort                 *int           `json:"backmentionSort"`                 // 反链提及排序方式
+	HeadingNumber                   bool           `json:"headingNumber"`                   // 是否显示标题编号
+	HeadingNumberFormat             string         `json:"headingNumberFormat"`             // 标题编号格式
+	HeadingEmbedMode                int            `json:"headingEmbedMode"`                // 标题嵌入块模式，0：显示标题与下方的块，1：仅显示标题，2：仅显示标题下方的块
+	PasteURLAutoConvert             bool           `json:"pasteURLAutoConvert"`             // 粘贴网址时自动转为链接
+	MathDelimiterCompatibility      *bool          `json:"mathDelimiterCompatibility"`      // 粘贴和导入时兼容 LaTeX 公式分隔符，默认开启
+	DragHTMLFileToIframe            bool           `json:"dragHTMLFileToIframe"`            // 是否将拖拽的 HTML 文件嵌入为 IFrame 块
+	Markdown                        *util.Markdown `json:"markdown"`                        // Markdown 配置
+}
+
+// NormalizeFontFamilies 清理字体列表并同步兼容旧版本的首选字体字段。
+func (editor *Editor) NormalizeFontFamilies() {
+	if nil == editor.FontFamilies && "" != editor.FontFamily {
+		editor.FontFamilies = []*EditorFont{{
+			Family:      editor.FontFamily,
+			Weight:      editor.FontWeight,
+			DisplayName: editor.FontFamilyDisplay,
+		}}
+	}
+
+	editor.FontFamilies = normalizeEditorFontFamilies(editor.FontFamilies)
+	editor.CodeFontFamilies = normalizeEditorFontFamilies(editor.CodeFontFamilies)
+	if 0 == len(editor.FontFamilies) {
+		editor.FontFamily = ""
+		editor.FontWeight = 400
+		editor.FontFamilyDisplay = ""
+		return
+	}
+
+	editor.FontFamily = editor.FontFamilies[0].Family
+	editor.FontWeight = editor.FontFamilies[0].Weight
+	editor.FontFamilyDisplay = editor.FontFamilies[0].DisplayName
+}
+
+func normalizeEditorFontFamilies(fontFamilies []*EditorFont) []*EditorFont {
+	fonts := make([]*EditorFont, 0, len(fontFamilies))
+	families := map[string]bool{}
+	for _, font := range fontFamilies {
+		if nil == font || "" == font.Family || families[font.Family] {
+			continue
+		}
+		families[font.Family] = true
+		if 1 > font.Weight || 1000 < font.Weight {
+			font.Weight = 400
+		}
+		fonts = append(fonts, font)
+	}
+	return fonts
+}
+
+const (
+	MinDynamicLoadBlocks       = 48
+	MaxCursorSurroundingLines  = 20
+	DefaultHeadingNumberFormat = "decimal-hierarchical"
+)
+
+func NormalizeBacklinkExpandCount(count int) int {
+	return max(-1, count)
+}
+
+func NormalizeCursorSurroundingLines(lines int) int {
+	return max(0, min(MaxCursorSurroundingLines, lines))
+}
+
+func NewAssetOpen() *AssetOpen {
+	return &AssetOpen{
+		Click:      AssetOpenActionFollowTab,
+		CtrlClick:  AssetOpenActionFolder,
+		AltClick:   AssetOpenActionCurrent,
+		ShiftClick: AssetOpenActionApp,
+	}
+}
+
+func NormalizeAssetOpen(assetOpen *AssetOpen) *AssetOpen {
+	defaults := NewAssetOpen()
+	if nil == assetOpen {
+		return defaults
+	}
+	assetOpen.Click = normalizeAssetOpenAction(assetOpen.Click, defaults.Click)
+	assetOpen.CtrlClick = normalizeAssetOpenAction(assetOpen.CtrlClick, defaults.CtrlClick)
+	assetOpen.AltClick = normalizeAssetOpenAction(assetOpen.AltClick, defaults.AltClick)
+	assetOpen.ShiftClick = normalizeAssetOpenAction(assetOpen.ShiftClick, defaults.ShiftClick)
+	return assetOpen
+}
+
+func normalizeAssetOpenAction(action, fallback string) string {
+	switch action {
+	case AssetOpenActionFollowTab, AssetOpenActionCurrent, AssetOpenActionRight, AssetOpenActionBottom,
+		AssetOpenActionBackground, AssetOpenActionNewWindow, AssetOpenActionApp, AssetOpenActionFolder:
+		return action
+	default:
+		return fallback
+	}
+}
+
+func NewEditor() *Editor {
+	return &Editor{
+		CursorSurroundingLines:          0,
+		FontSize:                        16,
+		FontSizeScrollZoom:              false,
+		CodeSyntaxHighlightLineNum:      false,
+		CodeTabSpaces:                   0,
+		CodeLineWrap:                    false,
+		CodeLigatures:                   false,
+		DisplayBookmarkIcon:             true,
+		DisplayNetImgMark:               true,
+		DatabaseAttrShow:                new(true),
+		DatabaseAttrClickMode:           0,
+		DatabaseAttrViewMode:            0,
+		DatabaseAttrHideEmpty:           false,
+		DatabaseAttrUseTabs:             new(true),
+		DatabaseAttrLayout:              new(1),
+		GenerateHistoryInterval:         10,
+		HistoryRetentionDays:            30,
+		Emoji:                           []string{},
+		VirtualBlockRef:                 false,
+		CheckBlockRef:                   new(true),
+		BlockRefDynamicAnchorTextMaxLen: 96,
+		AssetOpen:                       NewAssetOpen(),
+		PlantUMLServePath:               "https://www.plantuml.com/plantuml/svg/~1",
+		FullWidth:                       true,
+		KaTexMacros:                     "{}",
+		ReadOnly:                        false,
+		EmbedBlockBreadcrumb:            false,
+		EmbedBlockBreadcrumbParentPath:  new(true),
+		ListLogicalOutdent:              false,
+		ListItemDotNumberClickFocus:     true,
+		FloatWindowMode:                 0,
+		FloatWindowDelay:                new(620),
+		KeepLoadedContent:               false,
+		DynamicLoadBlocks:               192,
+		Justify:                         false,
+		RTL:                             false,
+		Spellcheck:                      false,
+		SpellcheckLanguages:             []string{"en-US"},
+		HashTagSearch:                   new(true),
+		AutoCloseRefBrackets:            false,
+		BacklinkExpandCount:             8,
+		BackmentionExpandCount:          -1,
+		BacklinkContainChildren:         true,
+		BacklinkShowBottom:              false,
+		BacklinkSort:                    new(util.SortModeUpdatedDESC),
+		BackmentionSort:                 new(util.SortModeUpdatedDESC),
+		HeadingNumber:                   false,
+		HeadingNumberFormat:             DefaultHeadingNumberFormat,
+		HeadingEmbedMode:                0,
+		PasteURLAutoConvert:             false,
+		MathDelimiterCompatibility:      new(true),
+		DragHTMLFileToIframe:            false,
+		Markdown:                        util.NewMarkdown(),
+	}
+}

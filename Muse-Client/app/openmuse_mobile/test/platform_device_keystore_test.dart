@@ -1,0 +1,110 @@
+import 'dart:convert';
+
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:openmuse_mobile/platform_device_keystore.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const channel = MethodChannel('test/device_keystore');
+  const store = PlatformDeviceKeyStore(channel: channel);
+
+  tearDown(() async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
+  });
+
+  test('returns only an opaque platform descriptor', () async {
+    final calls = <MethodCall>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          calls.add(call);
+          return {
+            'keyRef': 'device-key:abc',
+            'storage': 'android-keystore-wrapped',
+            'hardwareBacked': true,
+            'created': true,
+          };
+        });
+    final value = await store.ensure(
+      accountRef: 'account:a',
+      deviceRef: 'mobile:1',
+    );
+    expect(value.keyRef, 'device-key:abc');
+    expect(value.hardwareBacked, isTrue);
+    expect(calls.single.method, 'ensure');
+    expect(calls.single.arguments.toString(), isNot(contains('seed')));
+  });
+
+  test('secret-bearing and malformed responses fail closed', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          channel,
+          (call) async => {
+            'keyRef': 'device-key:abc',
+            'storage': 'bad',
+            'hardwareBacked': false,
+            'created': true,
+            'seed': [1, 2, 3],
+          },
+        );
+    await expectLater(
+      store.ensure(accountRef: 'account:a', deviceRef: 'mobile:1'),
+      throwsStateError,
+    );
+    await expectLater(
+      store.ensure(accountRef: '', deviceRef: 'mobile:1'),
+      throwsArgumentError,
+    );
+  });
+
+  test('public identity accepts only two bounded public keys', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          expect(call.method, 'publicIdentity');
+          return {
+            'signingPublic': Uint8List(32),
+            'agreementPublic': Uint8List.fromList(List.filled(32, 1)),
+          };
+        });
+    final identity = await store.publicIdentity('device-key:abc');
+    expect(identity.signingPublic, hasLength(32));
+    expect(identity.agreementPublic, hasLength(32));
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          channel,
+          (call) async => {
+            'signingPublic': Uint8List(32),
+            'agreementPublic': Uint8List(32),
+            'privateKey': Uint8List(32),
+          },
+        );
+    await expectLater(store.publicIdentity('device-key:abc'), throwsStateError);
+  });
+
+  test('signed offer is strictly decoded without secret fields', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          expect(call.method, 'issueOffer');
+          return jsonEncode({
+            'accountRef': 'account:a',
+            'deviceRef': 'mobile:1',
+            'signingPublic': List.filled(32, 1),
+            'agreementPublic': List.filled(32, 2),
+            'nonce': List.filled(32, 3),
+            'registrationGeneration': 4,
+            'signature': List.filled(64, 5),
+          });
+        });
+    final offer = await store.issueOffer(
+      keyRef: 'device-key:abc',
+      accountRef: 'account:a',
+      deviceRef: 'mobile:1',
+      registrationGeneration: 4,
+    );
+    expect(offer.accountRef, 'account:a');
+    expect(offer.signature, hasLength(64));
+    expect(offer.registrationGeneration, 4);
+  });
+}

@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_page_break,页满判定与断页,行流+contentHeight+分页符,页序列(页末行/已用高),wr-04;wc-04 \f,02_function_section_grid;wr-06,libs/word-core,pass
+2,02_function_section_grid,节页网格(尺寸切换+cp→页),PLCSection节序列+PageSetup,每页尺寸+page_index_from_cp,wc-01 PLCSection;wr-02,wr-06/07,libs/word-core,pass
+3,03_function_relayout_cache,重排范围(全量占位),编辑事件(cp,rm,ins),需重排区间,wc-02编辑,wr-06,libs/word-core,pass
+4,03_function_layout_cache,全量重排占位,invalidate,丢弃可绘制snapshot,01_function_page_break,wr-06,libs/word-core,pass

@@ -1,0 +1,4 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id,tags
+0,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/MyStringBuilder.java,MyStringBuilder,steady,,imagetopdf,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/MyStringBuilder.rs,,,0524_rust_stub
+5,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/DictObj.java,DictObj,steady,,imagetopdf,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/obj/DictObj.rs,MyStringBuilder,,0524_rust_stub
+0,koffice/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/BuildConfig.java,BuildConfig,steady,,main,,libs/core-libs/io/imagetopdf/src/cn/wps/imagetopdf/BuildConfig.rs,,,0524_rust_stub

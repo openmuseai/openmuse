@@ -1,0 +1,6 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_units_to_twip,font units转twip,units+sizePt+upem,twip,wr-03,02;04;05,libs/word-core,pass
+2,02_function_glyph_advance,单字hmtx advance,FontStack+face+char+pt,advanceTwip,01,05,libs/word-core,pass
+3,03_function_face_select,ascii与eastAsia选面,TypoFontStyle+char,familyName,wr-10,05,libs/word-core,pass
+4,04_function_line_metrics,hhea行格,FontStack+face+pt,ascent+descent+lineGap,01,05,libs/word-core,pass
+5,05_function_run_metrics,编排RunMetrics,text+TypoFontStyle+FontHost,RunMetrics,01;02;03;04,wr-12,libs/word-core,pass

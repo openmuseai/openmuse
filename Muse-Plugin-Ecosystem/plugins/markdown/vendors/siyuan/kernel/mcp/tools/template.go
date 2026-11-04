@@ -1,0 +1,148 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package tools
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/siyuan-note/siyuan/kernel/model"
+)
+
+var TemplateTool = &Tool{
+	Name:        "template",
+	Description: "Template management. Actions: search(keyword?), get(path), remove(path), render(path, id), save_as(id, name, overwrite?), create(name, content, overwrite?).",
+	InputSchema: ToolSchema{
+		Type: "object",
+		Properties: map[string]Property{
+			"action":    {Type: "string", Description: "Operation", Enum: []string{"search", "get", "remove", "render", "save_as", "create"}},
+			"keyword":   {Type: "string", Description: "Search keyword; empty lists all (for search)"},
+			"path":      {Type: "string", Description: "Template file path as returned by search (for get, remove, render)"},
+			"id":        {Type: "string", Description: "Block ID (for render, save_as)"},
+			"name":      {Type: "string", Description: "Template name without extension (for save_as, create)"},
+			"content":   {Type: "string", Description: "Markdown content (for create).\n\n" + markdownContentSyntax},
+			"overwrite": {Type: "boolean", Description: "Overwrite if exists (for save_as, create, default false)"},
+		},
+		Required: []string{"action"},
+	},
+	Handler: templateHandler,
+}
+
+func init() {
+	register(TemplateTool)
+}
+
+func templateHandler(args map[string]any) (CallToolResult, error) {
+	action, _ := args["action"].(string)
+	switch action {
+	case "search":
+		return templateSearch(args)
+	case "get":
+		return templateGet(args)
+	case "remove":
+		return templateRemove(args)
+	case "render":
+		return templateRender(args)
+	case "save_as":
+		return templateSaveAs(args)
+	case "create":
+		return templateCreate(args)
+	}
+	return CallToolResult{
+		Content: []ContentItem{{Type: "text", Text: "unknown action '" + action + "', expected one of: [search, get, remove, render, save_as, create]"}},
+		IsError: true,
+	}, nil
+}
+
+func templateSearch(args map[string]any) (CallToolResult, error) {
+	keyword, _ := args["keyword"].(string)
+	results := model.SearchTemplate(keyword)
+	if len(results) == 0 {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "no templates found"}}}, nil
+	}
+
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "Templates (%d):\n\n", len(results))
+	for _, r := range results {
+		fmt.Fprintf(&sb, "- %s\n", r.Content)
+		fmt.Fprintf(&sb, "  path: %s\n", r.Path)
+	}
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: sb.String()}}}, nil
+}
+
+func templateGet(args map[string]any) (CallToolResult, error) {
+	p, _ := args["path"].(string)
+	data, err := model.ReadTemplateFile(p)
+	if err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "read template failed: " + err.Error()}}, IsError: true}, nil
+	}
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: string(data)}}}, nil
+}
+
+func templateRemove(args map[string]any) (CallToolResult, error) {
+	p, _ := args["path"].(string)
+	abs, err := model.ResolveTemplatePath(p)
+	if err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: err.Error()}}, IsError: true}, nil
+	}
+	if err := model.RemoveTemplate(abs); err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "remove template failed: " + err.Error()}}, IsError: true}, nil
+	}
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: "template removed: " + p}}}, nil
+}
+
+func templateRender(args map[string]any) (CallToolResult, error) {
+	p, _ := args["path"].(string)
+	id, _ := args["id"].(string)
+	if id == "" {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "id is required"}}, IsError: true}, nil
+	}
+	abs, err := model.ResolveTemplatePath(p)
+	if err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: err.Error()}}, IsError: true}, nil
+	}
+
+	_, dom, err := model.RenderTemplate(abs, id, true)
+	if err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "render template failed: " + err.Error()}}, IsError: true}, nil
+	}
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: dom}}}, nil
+}
+
+func templateSaveAs(args map[string]any) (CallToolResult, error) {
+	id, _ := args["id"].(string)
+	name, _ := args["name"].(string)
+	if id == "" || name == "" {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "id and name are required"}}, IsError: true}, nil
+	}
+	overwrite, _ := args["overwrite"].(bool)
+
+	code, err := model.DocSaveAsTemplate(id, name, overwrite)
+	if err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "save as template failed: " + err.Error()}}, IsError: true}, nil
+	}
+	if code == 1 {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "template already exists, set overwrite=true to replace: " + name}}, IsError: true}, nil
+	}
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: "template saved: " + name + ".md"}}}, nil
+}
+
+func templateCreate(args map[string]any) (CallToolResult, error) {
+	name, _ := args["name"].(string)
+	content, _ := args["content"].(string)
+	if name == "" {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "name is required"}}, IsError: true}, nil
+	}
+	overwrite, _ := args["overwrite"].(bool)
+
+	code, err := model.CreateTemplate(name, content, overwrite)
+	if err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "create template failed: " + err.Error()}}, IsError: true}, nil
+	}
+	if code == 1 {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "template already exists, set overwrite=true to replace: " + name}}, IsError: true}, nil
+	}
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: "template created: " + name + ".md"}}}, nil
+}

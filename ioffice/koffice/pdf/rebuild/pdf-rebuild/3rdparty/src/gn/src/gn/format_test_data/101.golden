@@ -1,0 +1,12 @@
+group("foo") {
+  if (true) {
+    if (true) {
+      # TODO(crbug.com/123456789): Remove this circular dependency once the
+      # following headers get componentized:
+      # a/b/custom_handlers/protocol_handler_registry_factory.h
+      # a/b/profiles/profile_io_data.h
+      # a/b/history/top_sites_factory.h
+      # a/b/history_embeddings/history_embeddings_service_factory.h
+    }
+  }
+}

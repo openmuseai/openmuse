@@ -1,0 +1,44 @@
+import {ToolbarItem} from "./ToolbarItem";
+import {hasClosestBlock, hasClosestByAttribute} from "../util/hasClosest";
+import {stripSemanticMarkersFromRangeText} from "../util/inlineElementMarker";
+import {Constants} from "../../constants";
+import {getFirstSelectedInlineMemoContent, isExactInlineMemoSelection} from "./inlineMemoSelection";
+import {getContenteditableElement} from "../wysiwyg/getBlock";
+import {getSelectionOffset} from "../util/selectionOffsets";
+
+export class InlineMemo extends ToolbarItem {
+    public element: HTMLElement;
+
+    constructor(protyle: IProtyle, menuItem: IMenuItem) {
+        super(protyle, menuItem);
+        this.element.addEventListener("click", async (event: MouseEvent & { changedTouches: MouseEvent[] }) => {
+            protyle.toolbar.element.classList.add("fn__none");
+            event.stopPropagation();
+
+            const range = protyle.toolbar.range;
+            const nodeElement = hasClosestBlock(range.startContainer);
+            if (!nodeElement) {
+                return;
+            }
+            const memoElement = hasClosestByAttribute(range.startContainer, "data-type", "inline-memo");
+            const memoContent = getFirstSelectedInlineMemoContent(range);
+            const selectedText = stripSemanticMarkersFromRangeText(range).split(Constants.ZWSP).join("");
+            const editableElement = memoElement && getContenteditableElement(nodeElement, range.startContainer);
+            if (memoElement && editableElement && isExactInlineMemoSelection(range, memoElement, currentRange =>
+                getSelectionOffset(editableElement, undefined, currentRange, true))) {
+                // https://github.com/siyuan-note/siyuan/issues/6569
+                protyle.toolbar.showRender(protyle, memoElement);
+                return;
+            }
+
+            if (selectedText === "") {
+                return;
+            }
+
+            protyle.toolbar.setInlineMark(protyle, "inline-memo", "range", {
+                type: "inline-memo",
+                color: memoContent,
+            });
+        });
+    }
+}

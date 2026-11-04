@@ -1,0 +1,20 @@
+use super::CipherParameters::CipherParameters;
+
+// Java: public interface StreamCipher
+pub trait StreamCipher {
+    // Java: abstract void init(boolean var1, CipherParameters var2)
+    fn init(&mut self, var1: bool, var2: &dyn CipherParameters);
+
+    // Java: abstract String getAlgorithmName()
+    fn getAlgorithmName(&self) -> String;
+
+    // Java: abstract byte returnByte(byte var1)
+    fn returnByte(&mut self, var1: u8) -> u8;
+
+    // Java: abstract int processBytes(byte[] var1, int var2, int var3, byte[] var4, int var5)
+    fn processBytes(&mut self, var1: &[u8], var2: i32, var3: i32, var4: &mut [u8], var5: i32) -> i32;
+
+    // Java: abstract void reset()
+    fn reset(&mut self);
+
+}

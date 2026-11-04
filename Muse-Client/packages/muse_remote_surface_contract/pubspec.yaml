@@ -1,0 +1,12 @@
+name: muse_remote_surface_contract
+description: Typed Dart projection of the OpenMuse remote surface and control wire contract.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 日本 -->
+<resouce>
+    <token-escape-ex type="string">!</token-escape-ex>
+	<token-general type="string-array" size="2">
+		<item>g</item>
+		<item>G/標準</item>
+		<item>true</item>
+	</token-general>
+	<token-bracket type="string-array" size="">
+		<item>[</item>
+		<item name="ncl"/>
+		<item name="color">黒|青|水|緑|紫|赤|白|黄|色\s*(\d{1,2})</item>
+		<item name="dbnum"/>
+		<item name="condition"/>
+		<item name="helapsed"/>
+		<item name="melapsed"/>
+		<item name="selapsed"/>
+	</token-bracket>
+</resouce>

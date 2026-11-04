@@ -1,0 +1,724 @@
+﻿module,mvp_layer,rust_path,java_path,lines,stub_markers,javacom,verdict,reason
+base,infra-binary,cn/wps/base/mod.rs,,2,0,0,keep,module wiring
+base/converter,infra-binary,cn/wps/base/converter/UnitConverter.rs,,141,0,39,keep,faithful EMU/DPI conversion; layout depends on it
+base/converter,infra-binary,cn/wps/base/converter/UnitsConverter.rs,public class UnitsConverter extends UnitConverter,486,0,136,keep,faithful unit converter singletons; real logic
+base/converter,infra-binary,cn/wps/base/converter/mod.rs,,2,0,0,keep,module wiring
+base/util,infra-binary,cn/wps/base/util/IntObjectHashMap.rs,,404,3,156,keep,faithful int-key hashmap; used across crate
+base/util,infra-binary,cn/wps/base/util/LongObjectHashMap.rs,,448,0,135,keep,faithful long-key hashmap; generic infra
+base/util,infra-binary,cn/wps/base/util/MRUIntKeyCache.rs,,286,1,85,keep,faithful MRU cache over IntObjectHashMap
+base/util,infra-binary,cn/wps/base/util/MRULongKeyCache.rs,public class MRULongKeyCache,237,0,78,keep,faithful generic MRU cache; no stubs
+base/util,infra-binary,cn/wps/base/util/mod.rs,,4,0,0,keep,module wiring
+cn/mod.rs,other,cn/mod.rs,,1,0,0,keep,namespace root
+cn/wps/mod.rs,other,cn/wps/mod.rs,,7,0,0,keep,namespace root
+drawing,other,cn/wps/drawing/DG.rs,,4269,6,269,keep,huge constant/type-code tables; reader depends on them
+drawing,other,cn/wps/drawing/mod.rs,,4,0,0,keep,drawing data-model root (dependency)
+drawing/app,model,cn/wps/drawing/app/DgCanvas.rs,,682,16,300,delete,canvas rendering; MVP emits RenderCommands not canvas draws
+drawing/app,model,cn/wps/drawing/app/DgCanvasDele.rs,public class DgCanvasDele,21,0,4,delete,"canvas delete ops, editor-only shell"
+drawing/app,model,cn/wps/drawing/app/DgHostApp.rs,,280,29,80,delete,"app host glue, 29 stubs, editor-only"
+drawing/app,model,cn/wps/drawing/app/DgStore.rs,,135,3,34,keep_refactor,"runtime shape store, small gaps, needed for ids"
+drawing/app,model,cn/wps/drawing/app/DgStoreData.rs,,188,0,46,keep,"store data model, faithful, 0 stubs"
+drawing/app,model,cn/wps/drawing/app/KmoProtocol.rs,,12,0,4,keep,"protocol trait, tiny"
+drawing/app,model,cn/wps/drawing/app/chart/KmoOleChart.rs,,826,1,240,delete,"OLE chart handling, editor-only, out of MVP"
+drawing/app,model,cn/wps/drawing/app/chart/mod.rs,,1,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/color/KmoSysColor.rs,,99,0,31,keep,"system color table, needed for color resolution"
+drawing/app,model,cn/wps/drawing/app/color/mod.rs,,1,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/diagrams/DiagramPair.rs,public class DiagramPair,77,0,23,delete,"smartart/diagram linkage, out of scope"
+drawing/app,model,cn/wps/drawing/app/diagrams/mod.rs,,2,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/eval/DgFormatLocator.rs,,43,0,8,keep,"inherit-chain locator, load-bearing for style resolve"
+drawing/app,model,cn/wps/drawing/app/eval/DgFormatMixer.rs,,77,0,16,keep,"format mixer, load-bearing inherit chains"
+drawing/app,model,cn/wps/drawing/app/eval/color/DgColorEval.rs,,65,0,21,keep,"color eval, real logic"
+drawing/app,model,cn/wps/drawing/app/eval/color/mod.rs,,1,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/eval/mod.rs,,3,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/format/color/DgColor.rs,,212,0,59,keep,"color format logic, faithful"
+drawing/app,model,cn/wps/drawing/app/format/color/DgColorFormat.rs,,390,3,138,keep_refactor,"color format eval, few gaps"
+drawing/app,model,cn/wps/drawing/app/format/color/mod.rs,,2,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/format/effect/DgEffectFormat.rs,,262,12,68,keep_refactor,"effect format resolve, stubby"
+drawing/app,model,cn/wps/drawing/app/format/effect/DgEffectGlow.rs,,590,8,222,keep_refactor,"glow format, stubby"
+drawing/app,model,cn/wps/drawing/app/format/effect/DgEffectReflection.rs,,460,12,163,keep_refactor,"reflection format, stubby"
+drawing/app,model,cn/wps/drawing/app/format/effect/DgEffectShadow.rs,,1270,45,498,keep_refactor,"shadow format, core effect, stubby"
+drawing/app,model,cn/wps/drawing/app/format/effect/DgEffectSoftEdge.rs,,69,2,15,keep_refactor,"soft-edge format, stubby"
+drawing/app,model,cn/wps/drawing/app/format/effect/mod.rs,,5,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/format/fill/DgFillFormat.rs,,1280,26,439,keep_refactor,"fill format resolution, 26 stubs"
+drawing/app,model,cn/wps/drawing/app/format/fill/mod.rs,,1,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/format/geometry/DgGeometry2D.rs,,46,0,13,keep,"geometry wrapper, small faithful"
+drawing/app,model,cn/wps/drawing/app/format/geometry/mod.rs,,1,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/format/mod.rs,,6,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/format/outline/DgOutlineFormat.rs,,565,3,196,keep_refactor,"outline format, few gaps"
+drawing/app,model,cn/wps/drawing/app/format/outline/mod.rs,,1,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/format/threeD/Dg3DFormat.rs,﻿import cn.wps.drawing.app.format.color.DgColorFormat,948,0,328,delete,"3D formatting, out of MVP scope"
+drawing/app,model,cn/wps/drawing/app/format/threeD/mod.rs,,1,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/graphic/GraphicObject.rs,public interface GraphicObject,10,0,3,keep,"graphic object interface, tiny"
+drawing/app,model,cn/wps/drawing/app/graphic/GraphicStore.rs,,75,1,18,keep_refactor,"graphic store, minimal stub, needed by DgShape"
+drawing/app,model,cn/wps/drawing/app/graphic/mod.rs,,2,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/mod.rs,,21,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/shape/DgConnector.rs,,151,15,38,delete,"connector edit ops, 15 stubs, editor-oriented"
+drawing/app,model,cn/wps/drawing/app/shape/DgGroup.rs,,784,56,267,rewrite,"group realization, local stub deps, redo typed"
+drawing/app,model,cn/wps/drawing/app/shape/DgPicture.rs,,731,0,198,rewrite,"picture realization, all deps local stubs"
+drawing/app,model,cn/wps/drawing/app/shape/DgShape.rs,,2817,162,1056,rewrite,"shape nucleus, 162 stubs, inline stub types"
+drawing/app,model,cn/wps/drawing/app/shape/DgShapeStyle.rs,,1253,24,471,keep_refactor,"style resolution, 24 stubs, core but gappy"
+drawing/app,model,cn/wps/drawing/app/shape/mod.rs,,10,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/table/KmoTable.rs,,2747,0,967,keep,"table runtime, faithful, real logic"
+drawing/app,model,cn/wps/drawing/app/table/KmoTableCell.rs,,431,6,139,keep_refactor,"table cell logic, 6 stubs"
+drawing/app,model,cn/wps/drawing/app/table/mod.rs,,2,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/text/KmoTextBody.rs,,5748,0,2118,keep,"text body runtime, faithful, real logic"
+drawing/app,model,cn/wps/drawing/app/text/mod.rs,,2,0,0,keep,mod
+drawing/app,model,cn/wps/drawing/app/util/FieldTypeUtil.rs,,105,0,28,delete,"field-code enums, editor-only, out of MVP"
+drawing/app,model,cn/wps/drawing/app/util/KmoPoint.rs,public class KmoPoint,83,0,25,keep,"point helper, real logic"
+drawing/app,model,cn/wps/drawing/app/util/KmoRange.rs,public class KmoRange,110,0,33,keep,"range helper, real logic"
+drawing/app,model,cn/wps/drawing/app/util/KmoRect.rs,,145,0,40,keep,"rect helper, real logic"
+drawing/app,model,cn/wps/drawing/app/util/PrecisionUtil.rs,,75,0,26,keep,"precision math helper, real logic"
+drawing/app,model,cn/wps/drawing/app/util/UnitsConverter.rs,public class UnitsConverter,95,0,26,keep,"unit conversion, real logic"
+drawing/app,model,cn/wps/drawing/app/util/mod.rs,,7,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/basic/Array.rs,,870,7,309,delete,binary list base; typed model uses Vec
+drawing/data,model,cn/wps/drawing/data/basic/BaseType.rs,,618,2,204,delete,"binary primitive protocol, retired"
+drawing/data,model,cn/wps/drawing/data/basic/GroupTransform2D.rs,,510,3,175,keep,"group transform primitive, needed"
+drawing/data,model,cn/wps/drawing/data/basic/IndexRange.rs,,424,0,124,keep,"range primitive, needed"
+drawing/data,model,cn/wps/drawing/data/basic/Point2D.rs,,383,1,124,keep,"point primitive, needed"
+drawing/data,model,cn/wps/drawing/data/basic/PositiveSize2D.rs,,383,1,124,keep,"size primitive, needed"
+drawing/data,model,cn/wps/drawing/data/basic/RelativeRect.rs,,505,1,162,keep,"relative rect, needed for fills"
+drawing/data,model,cn/wps/drawing/data/basic/Transform2D.rs,,687,3,232,keep,"transform geometry, needed"
+drawing/data,model,cn/wps/drawing/data/basic/Vector.rs,,702,2,236,keep,"vector primitive, needed"
+drawing/data,model,cn/wps/drawing/data/basic/mod.rs,,9,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/blip/Blip.rs,,793,0,277,keep,"image blip model, faithful"
+drawing/data,model,cn/wps/drawing/data/blip/mod.rs,,1,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/color/Color.rs,,2454,0,882,keep,"core color model, faithful"
+drawing/data,model,cn/wps/drawing/data/color/ColorTransform.rs,,1686,1,542,keep,"color transforms, faithful"
+drawing/data,model,cn/wps/drawing/data/color/CustomColor.rs,,425,0,147,keep,"theme custom colors, faithful"
+drawing/data,model,cn/wps/drawing/data/color/mod.rs,,3,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/effect/AlphaBiLevelEffect.rs,,325,1,105,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/AlphaInverseEffect.rs,,385,3,131,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/AlphaModEffect.rs,,387,0,130,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/AlphaModFixEffect.rs,,325,1,105,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/AlphaOutsetEffect.rs,,324,1,105,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/AlphaReplaceEffect.rs,,325,1,105,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/BiLevelEffect.rs,,325,1,105,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/BlendEffect.rs,,440,0,149,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/BlurEffect.rs,,383,1,124,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/ColorChangeEffect.rs,,566,3,195,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/ColorReplacementEffect.rs,,385,2,131,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/DuotoneEffect.rs,,499,3,176,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/Effect.rs,,3315,0,1294,keep,"effect container, core model"
+drawing/data,model,cn/wps/drawing/data/effect/EffectContainer.rs,,759,5,257,keep,"effect DAG container, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/EffectList.rs,,1380,57,439,keep_refactor,"57 stubs, effect chain list"
+drawing/data,model,cn/wps/drawing/data/effect/EffectProperties.rs,,620,15,194,keep_refactor,"15 stubs, effect props"
+drawing/data,model,cn/wps/drawing/data/effect/EffectReference.rs,,327,1,105,keep,"effect reference, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/FillEffect.rs,,375,0,131,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/FillOverlayEffect.rs,,428,0,150,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/GlowEffect.rs,,440,2,150,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/HSLEffect.rs,,444,1,143,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/InnerShadowEffect.rs,,558,2,188,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/LumEffect.rs,,385,1,124,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/OuterShadowEffect.rs,,885,2,302,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/PresetShadowEffect.rs,,558,2,188,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/ReflectionEffect.rs,,1072,1,352,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/RelOffEffect.rs,,369,0,124,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/SoftEdgeEffect.rs,,316,0,105,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/TintEffect.rs,,369,0,124,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/XfrmEffect.rs,,640,1,200,keep,"effect data, faithful"
+drawing/data,model,cn/wps/drawing/data/effect/mod.rs,,30,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/fill/BlipFill.rs,,943,0,348,keep,"fill model, faithful"
+drawing/data,model,cn/wps/drawing/data/fill/Fill.rs,,702,4,279,keep,"core fill model, faithful"
+drawing/data,model,cn/wps/drawing/data/fill/FillMode.rs,,1608,13,511,keep_refactor,"fill modes, 13 stubs"
+drawing/data,model,cn/wps/drawing/data/fill/GradientFill.rs,,1388,0,491,keep,"gradient model, faithful"
+drawing/data,model,cn/wps/drawing/data/fill/PatternFill.rs,,558,3,195,keep,"pattern fill, faithful"
+drawing/data,model,cn/wps/drawing/data/fill/RecolorEntryBlush.rs,,1233,21,395,keep_refactor,"21 stubs, picture recolor"
+drawing/data,model,cn/wps/drawing/data/fill/RecolorEntryColor.rs,,676,11,214,keep_refactor,"11 stubs, picture recolor"
+drawing/data,model,cn/wps/drawing/data/fill/RecolorInfo.rs,,1160,0,395,keep,"recolor info, faithful"
+drawing/data,model,cn/wps/drawing/data/fill/Shade.rs,,1272,4,437,keep,"shade fills, faithful"
+drawing/data,model,cn/wps/drawing/data/fill/mod.rs,,9,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/font/TextFont.rs,,512,1,162,keep,"text font model, faithful"
+drawing/data,model,cn/wps/drawing/data/font/mod.rs,,1,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/geometry/AdjAngle.rs,,395,1,124,keep,"adjustable angle, faithful"
+drawing/data,model,cn/wps/drawing/data/geometry/AdjCoordinate.rs,,395,1,124,keep,"adjustable coord, faithful"
+drawing/data,model,cn/wps/drawing/data/geometry/AdjPoint2D.rs,,562,15,175,keep_refactor,"adjustable point, 15 stubs"
+drawing/data,model,cn/wps/drawing/data/geometry/CustomGeometry.rs,,10577,388,3340,keep_refactor,"custom path engine, faithful but 388 stubs"
+drawing/data,model,cn/wps/drawing/data/geometry/GeomGuide.rs,,396,1,124,keep,"geometry guide, faithful"
+drawing/data,model,cn/wps/drawing/data/geometry/Geometry2D.rs,,608,17,190,keep_refactor,"geometry wrapper, 17 stubs"
+drawing/data,model,cn/wps/drawing/data/geometry/PresetGeometry.rs,,703,13,238,keep_refactor,"preset shape mapping, 13 stubs"
+drawing/data,model,cn/wps/drawing/data/geometry/mod.rs,,7,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/hyperlink/Hyperlink.rs,,1018,11,327,keep_refactor,"hyperlink data, 11 stubs"
+drawing/data,model,cn/wps/drawing/data/hyperlink/mod.rs,,1,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/media/Media.rs,,4010,16,1517,keep_refactor,"media model, 16 stubs"
+drawing/data,model,cn/wps/drawing/data/media/mod.rs,,2,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/mod.rs,,17,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/model3d/A3DAnimation.rs,,2037,10,666,delete,"3D model animation, out of MVP"
+drawing/data,model,cn/wps/drawing/data/model3d/AmbientLight.rs,,581,1,176,delete,"3D lighting, out of MVP"
+drawing/data,model,cn/wps/drawing/data/model3d/DirectionalLight.rs,,983,1,301,delete,"3D lighting, out of MVP"
+drawing/data,model,cn/wps/drawing/data/model3d/Model3D.rs,,3407,20,1127,delete,"3D model, out of MVP"
+drawing/data,model,cn/wps/drawing/data/model3d/Model3DCamera.rs,,1709,6,531,delete,"3D camera, out of MVP"
+drawing/data,model,cn/wps/drawing/data/model3d/Model3DTransform.rs,,2099,8,657,delete,"3D transform, out of MVP"
+drawing/data,model,cn/wps/drawing/data/model3d/PointLight.rs,,839,1,257,delete,"3D lighting, out of MVP"
+drawing/data,model,cn/wps/drawing/data/model3d/PositiveRatio.rs,,399,1,124,delete,"3D ratio helper, out of MVP"
+drawing/data,model,cn/wps/drawing/data/model3d/SpotLight.rs,,1042,1,320,delete,"3D lighting, out of MVP"
+drawing/data,model,cn/wps/drawing/data/model3d/Vector3D.rs,,434,0,143,delete,"3D vector, out of MVP"
+drawing/data,model,cn/wps/drawing/data/model3d/mod.rs,,10,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/outline/Outline.rs,,2657,41,863,keep_refactor,"outline/line model, 41 stubs"
+drawing/data,model,cn/wps/drawing/data/outline/mod.rs,,1,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/shape/CNvPr.rs,,781,0,271,keep,"shape non-visual props, faithful"
+drawing/data,model,cn/wps/drawing/data/shape/Shape.rs,,2975,1,1258,keep,"core shape model, renderer-consumed"
+drawing/data,model,cn/wps/drawing/data/shape/ShapeExt.rs,,524,1,162,keep,"shape extensions, faithful"
+drawing/data,model,cn/wps/drawing/data/shape/ShapePr.rs,,1300,22,408,keep_refactor,"shape properties, 22 stubs"
+drawing/data,model,cn/wps/drawing/data/shape/mod.rs,,4,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/style/ColorMapping.rs,,957,2,313,keep,"theme color mapping, faithful"
+drawing/data,model,cn/wps/drawing/data/style/ColorScheme.rs,,1984,27,634,keep_refactor,"color scheme, 27 stubs"
+drawing/data,model,cn/wps/drawing/data/style/EffectStyle.rs,,702,10,225,keep_refactor,"effect style, 10 stubs"
+drawing/data,model,cn/wps/drawing/data/style/FontCollection.rs,,1535,7,475,keep_refactor,"font collection, 7 stubs"
+drawing/data,model,cn/wps/drawing/data/style/FontRef.rs,,471,4,152,keep,"font reference, faithful"
+drawing/data,model,cn/wps/drawing/data/style/FontScheme.rs,,559,0,194,keep,"font scheme, faithful"
+drawing/data,model,cn/wps/drawing/data/style/ShapeStyle.rs,,844,13,268,keep_refactor,"shape style, 13 stubs"
+drawing/data,model,cn/wps/drawing/data/style/StyleMatrix.rs,,1799,38,634,keep_refactor,"format scheme, 38 stubs"
+drawing/data,model,cn/wps/drawing/data/style/StyleMatrixReference.rs,,471,4,152,keep,"style matrix ref, faithful"
+drawing/data,model,cn/wps/drawing/data/style/Theme.rs,,2932,0,1107,keep,"core theme model, faithful"
+drawing/data,model,cn/wps/drawing/data/style/mod.rs,,10,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/table/Headers.rs,,417,4,131,keep,"table headers, faithful"
+drawing/data,model,cn/wps/drawing/data/table/Table.rs,,1147,13,373,keep_refactor,"table model, 13 stubs"
+drawing/data,model,cn/wps/drawing/data/table/TableCell.rs,,715,4,225,keep,"table cell, faithful"
+drawing/data,model,cn/wps/drawing/data/table/TableCellProperties.rs,,1975,28,638,keep_refactor,"cell props, 28 stubs"
+drawing/data,model,cn/wps/drawing/data/table/TableStyle.rs,,3260,80,1079,keep_refactor,"table style, 80 stubs, needed"
+drawing/data,model,cn/wps/drawing/data/table/TableStyleCellStyle.rs,,1826,0,653,keep,"table style cell, faithful"
+drawing/data,model,cn/wps/drawing/data/table/TableStyleTextStyle.rs,,687,10,214,keep_refactor,"table text style, 10 stubs"
+drawing/data,model,cn/wps/drawing/data/table/ThemeableEffectStyle.rs,,571,10,177,keep_refactor,"themeable effect, 10 stubs"
+drawing/data,model,cn/wps/drawing/data/table/ThemeableFillStyle.rs,,518,0,177,keep,"themeable fill, faithful"
+drawing/data,model,cn/wps/drawing/data/table/ThemeableFontStyles.rs,,584,13,177,keep_refactor,"themeable fonts, 13 stubs"
+drawing/data,model,cn/wps/drawing/data/table/ThemeableLineStyle.rs,,571,10,177,keep_refactor,"themeable line, 10 stubs"
+drawing/data,model,cn/wps/drawing/data/table/mod.rs,,11,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/text/TextBody.rs,,953,12,309,keep_refactor,"text body model, 12 stubs"
+drawing/data,model,cn/wps/drawing/data/text/TextBodyProperties.rs,,3209,18,1031,keep_refactor,"text body props, 18 stubs"
+drawing/data,model,cn/wps/drawing/data/text/TextCharacterProperties.rs,,2922,18,1118,keep_refactor,"char props, 18 stubs, core"
+drawing/data,model,cn/wps/drawing/data/text/TextListStyle.rs,,1650,22,528,keep_refactor,"list style, 22 stubs"
+drawing/data,model,cn/wps/drawing/data/text/TextParagraph.rs,,953,12,308,keep_refactor,"paragraph model, 12 stubs"
+drawing/data,model,cn/wps/drawing/data/text/TextParagraphProperties.rs,,4151,41,1317,keep_refactor,"para props, 41 stubs, core"
+drawing/data,model,cn/wps/drawing/data/text/TextRun.rs,,2089,7,771,keep_refactor,"run model, 7 stubs"
+drawing/data,model,cn/wps/drawing/data/text/TextShape.rs,,600,6,193,keep_refactor,"text shape, 6 stubs"
+drawing/data,model,cn/wps/drawing/data/text/mod.rs,,8,0,0,keep,mod
+drawing/data,model,cn/wps/drawing/data/threeD/Apply3DShapeProperties.rs,,1056,13,338,delete,"3D shape props, out of MVP"
+drawing/data,model,cn/wps/drawing/data/threeD/BackdropPlane.rs,,693,10,219,delete,"3D backdrop, out of MVP"
+drawing/data,model,cn/wps/drawing/data/threeD/Bevel.rs,,454,1,143,delete,"3D bevel, out of MVP"
+drawing/data,model,cn/wps/drawing/data/threeD/Camera.rs,,591,4,187,delete,"3D camera, out of MVP"
+drawing/data,model,cn/wps/drawing/data/threeD/Cell3D.rs,,615,7,194,delete,"3D cell, out of MVP"
+drawing/data,model,cn/wps/drawing/data/threeD/LightRig.rs,,527,4,166,delete,"3D light rig, out of MVP"
+drawing/data,model,cn/wps/drawing/data/threeD/Point3D.rs,,493,2,143,delete,"3D point, out of MVP"
+drawing/data,model,cn/wps/drawing/data/threeD/Rotation.rs,,454,1,143,delete,"3D rotation, out of MVP"
+drawing/data,model,cn/wps/drawing/data/threeD/Scene3DProperties.rs,,710,11,219,delete,"3D scene, out of MVP"
+drawing/data,model,cn/wps/drawing/data/threeD/mod.rs,,9,0,0,keep,mod
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/color/ColorHandler.rs,,66,0,13,rewrite,template garbage; local stub types shadow real Color
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/color/ColorHandlerFactory.rs,,72,0,22,rewrite,local stub handlers; returns fake element ids
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/color/mod.rs,,2,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/font/TextFontHandler.rs,,78,4,19,rewrite,local stub font types; 4 stubs
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/font/mod.rs,,1,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/media/AudioCDHandler.rs,,130,0,27,rewrite,local Media stub types; dispatch empty
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/media/AudioFileHandler.rs,,74,0,15,rewrite,local Media stub types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/media/EmbeddedWAVAudioFileHandler.rs,,76,0,15,rewrite,local Media stub types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/media/MediaExtLstHandler.rs,,361,0,89,rewrite,local stub types; rename suffix misuse
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/media/QuickTimeFileHandler.rs,,65,0,13,rewrite,local Media stub types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/media/VideoFileHandler.rs,,74,0,15,rewrite,local Media stub types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/media/mod.rs,,6,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/mod.rs,,5,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/mod.rs,,4,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/nvsppr/cnv/CNvCxnSpPrHandler.rs,,212,4,56,rewrite,local stub Shape types; dispatch returns None
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/nvsppr/cnv/CNvGraphicFramePrHandler.rs,,145,0,33,rewrite,local stub Shape types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/nvsppr/cnv/CNvGrpSpPrHandler.rs,,133,1,33,rewrite,local stub Shape types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/nvsppr/cnv/CNvPicPrHandler.rs,,172,4,47,rewrite,local stub Shape types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/nvsppr/cnv/CNvPrHandler.rs,,163,2,46,rewrite,local stub CNvPr redefined; real struct ignored
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/nvsppr/cnv/CNvSpPrHandler.rs,,181,1,47,rewrite,local stub Shape types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/nvsppr/cnv/hyperlink/HyperLinkHandler.rs,,126,0,37,rewrite,local stub Hyperlink/types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/nvsppr/cnv/hyperlink/mod.rs,,1,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/nvsppr/cnv/mod.rs,,7,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/nvsppr/mod.rs,,1,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/GroupShapePropertiesHandler.rs,,183,0,42,rewrite,local stub Shape types; empty handlers
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/ShapePropertiesHandler.rs,,275,0,71,rewrite,local stub ShapePr/Fill/etc.; all empty
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/effect/EffectContainerHandler.rs,,136,0,30,rewrite,local stub Effect types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/effect/EffectListHandler.rs,,113,0,29,rewrite,local stub Effect types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/effect/EffectPropertiesHandler.rs,,76,0,20,rewrite,local stub types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/effect/mod.rs,,3,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/fill/BlipFillHandler.rs,,318,1,81,rewrite,local stub BlipFill/FillMode; todo! bodies
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/fill/FillPropertiesHandler.rs,,110,0,34,rewrite,local stub Fill types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/fill/mod.rs,,2,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/geometry/CustomGeometryHandler.rs,,1191,8,381,rewrite,local stub geometry types; dispatch empty
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/geometry/PresetGeometryHandler.rs,,129,0,31,rewrite,local stub geometry types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/geometry/mod.rs,,2,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/mod.rs,,8,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/outline/OutlineHandler.rs,,428,0,140,rewrite,local stub Outline types; handler shells
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/outline/mod.rs,,1,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/threeD/BevelHandler.rs,,88,0,20,rewrite,local stub Bevel types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/threeD/Scene3DHandler.rs,,260,0,82,rewrite,local stub 3D types; empty dispatch
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/threeD/Shape3DHandler.rs,,207,14,55,rewrite,local stub 3D types; 14 stubs
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/threeD/mod.rs,,3,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/transform/GroupTransform2DHandler.rs,,203,0,53,rewrite,local stub transform types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/transform/Point2DHandler.rs,,72,0,15,rewrite,local stub Point2D types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/transform/PositiveSize2DHandler.rs,,72,0,15,rewrite,local stub PositiveSize2D types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/transform/Transform2DHandler.rs,,121,0,25,rewrite,local _stub types shadow real Transform2D
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/sppr/transform/mod.rs,,4,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/style/ShapeStyleHandler.rs,,107,0,33,rewrite,local stub ShapeStyle types
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/style/mod.rs,,1,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/textshape/mod.rs,,1,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/textshape/text/TextBodyHandler.rs,,160,10,38,rewrite,local stub text types; 10 stubs
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/textshape/text/mod.rs,,3,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/textshape/text/paragraph/ParagraphHandler.rs,,415,0,108,rewrite,local stub TextParagraph/TextRun; runs broken
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/textshape/text/paragraph/mod.rs,,1,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/textshape/text/run/TextCharacterPropertiesHandler.rs,,452,49,137,rewrite,49 stubs; all deps locally stubbed todo!
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/shape/textshape/text/run/mod.rs,,1,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/style/StyleMatrixReferenceHandler.rs,,118,7,25,rewrite,local stub reference types; 7 stubs
+drawing/dmlr,parser,cn/wps/drawing/dmlr/handler/style/mod.rs,,1,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/mod.rs,,3,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/model/HandlerCallback.rs,,184,0,55,keep_refactor,callback base faithful; FileManager stubbed
+drawing/dmlr,parser,cn/wps/drawing/dmlr/model/mod.rs,,1,0,0,keep,module wiring
+drawing/dmlr,parser,cn/wps/drawing/dmlr/util/DGMap.rs,,12,0,4,delete,empty shell; static maps must rebuild
+drawing/dmlr,parser,cn/wps/drawing/dmlr/util/mod.rs,,1,0,0,keep,module wiring
+io,infra-binary,cn/wps/io/mod.rs,,1,0,0,keep,module wiring
+io/file,infra-binary,cn/wps/io/file/Tools.rs,,23,0,6,delete,OLE-only trivial passthrough shell
+io/file,infra-binary,cn/wps/io/file/mod.rs,,1,0,0,keep,module wiring
+kso,infra-binary,cn/wps/kso/KsoRoot.rs,,27,1,6,delete,filter repo bootstrap; off XML parse path
+kso,infra-binary,cn/wps/kso/mod.rs,,5,0,0,keep,module wiring
+kso/exception,infra-binary,cn/wps/kso/exception/EncryptFileException.rs,,47,4,10,delete,encrypted-file support; not in MVP
+kso/exception,infra-binary,cn/wps/kso/exception/mod.rs,,1,0,0,keep,module wiring
+kso/filter,infra-binary,cn/wps/kso/filter/KsoFilter.rs,,37,0,10,delete,legacy filter framework; not XML parse
+kso/filter,infra-binary,cn/wps/kso/filter/KsoFilterDesc.rs,public class KsoFilterDesc,19,0,2,delete,legacy filter framework descriptor
+kso/filter,infra-binary,cn/wps/kso/filter/KsoFilterEvent.rs,public interface KsoFilterEvent,3,0,1,delete,legacy filter event interface
+kso/filter,infra-binary,cn/wps/kso/filter/KsoFilterMedium.rs,,132,5,40,delete,legacy IO medium; 5 stubs
+kso/filter,infra-binary,cn/wps/kso/filter/KsoFilterPasswdProvider.rs,,21,0,7,delete,password browsing; encrypted files only
+kso/filter,infra-binary,cn/wps/kso/filter/KsoFilterRepo.rs,public interface KsoFilterRepo extends KsoFilter,23,1,2,delete,legacy filter registry interface
+kso/filter,infra-binary,cn/wps/kso/filter/impl/KsoFilterRepoImpl.rs,,149,6,49,delete,filter dispatch; all deps local stubs
+kso/filter,infra-binary,cn/wps/kso/filter/impl/mod.rs,,2,0,0,keep,module wiring
+kso/filter,infra-binary,cn/wps/kso/filter/mod.rs,,8,0,0,keep,module wiring
+kso/framework,infra-binary,cn/wps/kso/framework/KsoDocument.rs,public interface KsoDocument,3,0,1,delete,filter-framework document interface
+kso/framework,infra-binary,cn/wps/kso/framework/mod.rs,,1,0,0,keep,module wiring
+kso/kproto,infra-binary,cn/wps/kso/kproto/KoAr.rs,public interface KoAr,22,0,6,delete,WPS binary persistence trait; not XML
+kso/kproto,infra-binary,cn/wps/kso/kproto/KoBin.rs,,574,4,174,delete,binary encode/decode base; WPS-only
+kso/kproto,infra-binary,cn/wps/kso/kproto/KoClosable.rs,public interface KoClosable,6,0,2,delete,persistence lifecycle trait
+kso/kproto,infra-binary,cn/wps/kso/kproto/KoZone.rs,public class KoZone,39,0,15,delete,zone allocator; persistence-only
+kso/kproto,infra-binary,cn/wps/kso/kproto/internal/KpBinBox.rs,,56,0,16,delete,binary box node; not XML parse
+kso/kproto,infra-binary,cn/wps/kso/kproto/internal/KpBool.rs,,132,0,41,delete,binary bool node; not XML parse
+kso/kproto,infra-binary,cn/wps/kso/kproto/internal/KpList.rs,,283,4,93,delete,binary list node; not XML parse
+kso/kproto,infra-binary,cn/wps/kso/kproto/internal/KpMap.rs,,274,5,97,delete,binary map node; not XML parse
+kso/kproto,infra-binary,cn/wps/kso/kproto/internal/mod.rs,,4,0,0,keep,module wiring
+kso/kproto,infra-binary,cn/wps/kso/kproto/memory/KpBytePool.rs,,155,0,45,delete,binary byte pool; not XML parse
+kso/kproto,infra-binary,cn/wps/kso/kproto/memory/KpPaged.rs,,146,0,40,delete,binary paged memory; not XML parse
+kso/kproto,infra-binary,cn/wps/kso/kproto/memory/KpStringPool.rs,,189,0,50,delete,binary string pool; not XML parse
+kso/kproto,infra-binary,cn/wps/kso/kproto/memory/mod.rs,,4,0,0,keep,module wiring
+kso/kproto,infra-binary,cn/wps/kso/kproto/mod.rs,,8,0,0,keep,module wiring
+kso/kproto,infra-binary,cn/wps/kso/kproto/util/KoIntList.rs,,321,1,97,delete,binary list collection; WPS persistence
+kso/kproto,infra-binary,cn/wps/kso/kproto/util/KoTextList.rs,,303,1,91,delete,binary text list; WPS persistence
+kso/kproto,infra-binary,cn/wps/kso/kproto/util/mod.rs,,2,0,0,keep,module wiring
+lib.rs,other,lib.rs,,3,0,0,keep,"crate root, module wiring"
+show,other,cn/wps/show/AndroidResourceProvider.rs,,137,0,35,keep_refactor,host asset provider; Context/AssetManager stubbed
+show,other,cn/wps/show/JavaResourceProvider.rs,,138,0,42,keep_refactor,default-template resources; dup trait needs merge
+show,other,cn/wps/show/KAssetManager.rs,,65,0,14,keep_refactor,asset host wrapper; inner stubs need binding
+show,other,cn/wps/show/PptFileCache.rs,,760,1,256,keep,faithful temp-file/cache infra; self-contained
+show,other,cn/wps/show/mod.rs,,15,0,0,keep,module wiring (data/pptxr parse side)
+show/app,app-editor,cn/wps/show/app/GeneratorId.rs,public class GeneratorId,29,0,8,delete,editor id generator
+show/app,app-editor,cn/wps/show/app/ISlideCache.rs,,56,0,18,delete,editor slide cache
+show/app,app-editor,cn/wps/show/app/Ink/KmoInkLib.rs,,121,3,32,delete,"ink shell, editor"
+show/app,app-editor,cn/wps/show/app/Ink/mod.rs,,1,0,0,delete,Ink subtree fully deleted
+show/app,app-editor,cn/wps/show/app/KmoPresentation.rs,,2182,1,750,keep_refactor,top container needed; strip editor refs (brush/clipboard/ink)
+show/app,app-editor,cn/wps/show/app/KmoPresentationOperator.rs,,1777,0,684,delete,"open/save operators, editor-side"
+show/app,app-editor,cn/wps/show/app/KmoPresentations.rs,,90,0,32,delete,"multi-document container, editor"
+show/app,app-editor,cn/wps/show/app/KmoShowTransaction.rs,public interface KmoShowTransaction,30,0,10,delete,"transaction framework, editor"
+show/app,app-editor,cn/wps/show/app/KsoWMInfo.rs,,77,0,21,delete,"watermark info, editor"
+show/app,app-editor,cn/wps/show/app/brush/BrushContext.rs,public class BrushContext,92,0,24,delete,editor brush context
+show/app,app-editor,cn/wps/show/app/brush/CharBrush.rs,,114,0,34,delete,editor char brush
+show/app,app-editor,cn/wps/show/app/brush/KmoBrush.rs,,599,0,216,delete,editor brush model
+show/app,app-editor,cn/wps/show/app/brush/ShapeBrush.rs,,297,0,121,delete,editor shape brush
+show/app,app-editor,cn/wps/show/app/brush/SlideBrush.rs,,72,0,22,delete,editor slide brush
+show/app,app-editor,cn/wps/show/app/brush/TextBrush.rs,,51,0,18,delete,editor text brush
+show/app,app-editor,cn/wps/show/app/brush/mod.rs,,10,0,0,delete,brush subtree fully deleted
+show/app,app-editor,cn/wps/show/app/chart/KmoChartOperator.rs,,109,0,27,delete,"chart operator, editor"
+show/app,app-editor,cn/wps/show/app/chart/mod.rs,,1,0,0,delete,chart subtree fully deleted
+show/app,app-editor,cn/wps/show/app/clipboard/ClipBoardContext.rs,,109,0,30,delete,editor clipboard
+show/app,app-editor,cn/wps/show/app/clipboard/CopiedTableIdxs.rs,public class CopiedTableIdxs,15,0,2,delete,editor clipboard
+show/app,app-editor,cn/wps/show/app/clipboard/CopyedCell.rs,,201,0,56,delete,editor clipboard
+show/app,app-editor,cn/wps/show/app/clipboard/KmoCopiedText.rs,,55,0,17,delete,editor clipboard
+show/app,app-editor,cn/wps/show/app/clipboard/KmoShowClipboard.rs,,2410,0,921,delete,editor clipboard model
+show/app,app-editor,cn/wps/show/app/clipboard/mod.rs,,5,0,0,delete,clipboard subtree fully deleted
+show/app,app-editor,cn/wps/show/app/crypt/KmoPresentationCrypt.rs,,216,0,65,delete,"doc crypt, editor/io"
+show/app,app-editor,cn/wps/show/app/crypt/mod.rs,,1,0,0,delete,crypt subtree fully deleted
+show/app,app-editor,cn/wps/show/app/diagram/KmoDiagram.rs,,766,0,225,delete,"smartart diagram, editor"
+show/app,app-editor,cn/wps/show/app/diagram/mod.rs,,1,0,0,delete,diagram subtree fully deleted
+show/app,app-editor,cn/wps/show/app/docproperty/KmoDocProperty.rs,,266,0,94,delete,editor doc property
+show/app,app-editor,cn/wps/show/app/docproperty/mod.rs,,1,0,0,delete,docproperty subtree fully deleted
+show/app,app-editor,cn/wps/show/app/event/KmoPresOpenEventListener.rs,,40,0,8,delete,editor event listener
+show/app,app-editor,cn/wps/show/app/event/KmoPresOpenEventListenerGroup.rs,,86,0,23,delete,editor event group
+show/app,app-editor,cn/wps/show/app/event/KmoPresReadModeEventListeners.rs,public class KmoPresReadModeEventListeners extends KmoPresentationSelectionListeners,24,0,2,delete,editor read-mode events
+show/app,app-editor,cn/wps/show/app/event/KmoPresSaveEventListener.rs,,24,0,4,delete,editor save events
+show/app,app-editor,cn/wps/show/app/event/KmoPresSaveEventListenerGroup.rs,,49,0,11,delete,editor save events
+show/app,app-editor,cn/wps/show/app/event/KmoPresentationEventListener.rs,,65,0,10,delete,editor events
+show/app,app-editor,cn/wps/show/app/event/KmoPresentationEventListeners.rs,,455,0,152,delete,editor events
+show/app,app-editor,cn/wps/show/app/event/KmoPresentationSelectionListener.rs,public interface KmoPresentationSelectionListener,6,0,2,delete,editor selection events
+show/app,app-editor,cn/wps/show/app/event/KmoPresentationSelectionListeners.rs,,92,0,24,delete,editor selection events
+show/app,app-editor,cn/wps/show/app/event/KmoSlideEventListener.rs,,37,0,7,delete,editor events
+show/app,app-editor,cn/wps/show/app/event/KmoSlideEventListeners.rs,,410,0,130,delete,editor events
+show/app,app-editor,cn/wps/show/app/event/mod.rs,,16,0,0,delete,event subtree fully deleted
+show/app,app-editor,cn/wps/show/app/font/KmoFontLib.rs,,120,2,33,delete,editor font asset lib
+show/app,app-editor,cn/wps/show/app/font/mod.rs,,1,0,0,delete,font subtree fully deleted
+show/app,app-editor,cn/wps/show/app/format/KmoBulletFormat.rs,,1337,0,480,delete,editor bullet format
+show/app,app-editor,cn/wps/show/app/format/KmoFont.rs,,3193,0,1168,delete,editor font model; resolve from drawing data
+show/app,app-editor,cn/wps/show/app/format/KmoParagraphFormat.rs,,2352,94,845,delete,editor paragraph format
+show/app,app-editor,cn/wps/show/app/format/KmoPropertiesMerger.rs,,369,10,145,delete,editor format merge; style resolve via data model
+show/app,app-editor,cn/wps/show/app/format/KmoTextFormat.rs,,478,0,168,delete,editor text format
+show/app,app-editor,cn/wps/show/app/format/mod.rs,,5,0,0,delete,format subtree fully deleted
+show/app,app-editor,cn/wps/show/app/gradient/FillBean.rs,,109,0,38,delete,editor fill wrapper
+show/app,app-editor,cn/wps/show/app/gradient/mod.rs,,1,0,0,delete,gradient subtree fully deleted
+show/app,app-editor,cn/wps/show/app/hyperlink/KmoHyperlink.rs,,207,0,56,delete,editor hyperlink model
+show/app,app-editor,cn/wps/show/app/hyperlink/mod.rs,,1,0,0,delete,hyperlink subtree fully deleted
+show/app,app-editor,cn/wps/show/app/io/clipx/ClipPasteResult.rs,,50,0,9,delete,clipboard paste result; not MVP
+show/app,app-editor,cn/wps/show/app/io/clipx/IClipReader.rs,,11,0,3,delete,clipboard reader interface; not MVP
+show/app,app-editor,cn/wps/show/app/io/clipx/IClipWriter.rs,public interface IClipWriter,6,0,2,delete,clipboard writer interface; not MVP
+show/app,app-editor,cn/wps/show/app/io/clipx/IHtmlReader.rs,,11,0,3,delete,clipboard html reader; not MVP
+show/app,app-editor,cn/wps/show/app/io/clipx/IHtmlWriter.rs,,9,0,3,delete,clipboard html writer; not MVP
+show/app,app-editor,cn/wps/show/app/io/clipx/mod.rs,,5,0,0,keep,module wiring
+show/app,app-editor,cn/wps/show/app/io/mod.rs,,2,0,0,keep,module wiring
+show/app,app-editor,cn/wps/show/app/io/ppt14/IPpt14Reader.rs,public interface IPpt14Reader,6,0,2,delete,ppt14 legacy interface; not MVP
+show/app,app-editor,cn/wps/show/app/io/ppt14/IPpt14Writer.rs,public interface IPpt14Writer,6,0,2,delete,ppt14 legacy interface; not MVP
+show/app,app-editor,cn/wps/show/app/io/ppt14/mod.rs,,2,0,0,keep,module wiring
+show/app,app-editor,cn/wps/show/app/media/KmoMediaData.rs,,226,0,58,delete,"media pipeline, editor"
+show/app,app-editor,cn/wps/show/app/media/KmoMediaLib.rs,,509,10,170,delete,"media pipeline, editor"
+show/app,app-editor,cn/wps/show/app/media/KmoMediaUtil.rs,,93,0,13,delete,"media pipeline, editor"
+show/app,app-editor,cn/wps/show/app/media/MediaLibImpl.rs,,219,6,63,delete,"media impl, editor"
+show/app,app-editor,cn/wps/show/app/media/mod.rs,,4,0,0,delete,media subtree fully deleted
+show/app,app-editor,cn/wps/show/app/mod.rs,,42,0,0,keep,"app module root, MVP-gated"
+show/app,app-editor,cn/wps/show/app/model3d/KmoModel3D.rs,,175,0,39,delete,"model3d, editor"
+show/app,app-editor,cn/wps/show/app/model3d/mod.rs,,1,0,0,delete,model3d subtree fully deleted
+show/app,app-editor,cn/wps/show/app/ole/IOleManager.rs,,31,0,8,delete,"OLE embedding, editor"
+show/app,app-editor,cn/wps/show/app/ole/KmoOleManager.rs,,257,0,64,delete,"OLE manager, editor"
+show/app,app-editor,cn/wps/show/app/ole/KmoOleObject.rs,,287,3,65,delete,"OLE object, editor"
+show/app,app-editor,cn/wps/show/app/ole/KmoOleOperator.rs,,342,12,106,delete,"OLE ops, editor"
+show/app,app-editor,cn/wps/show/app/ole/mod.rs,,4,0,0,delete,ole subtree fully deleted
+show/app,app-editor,cn/wps/show/app/selection/ClearPropInfo.rs,,34,0,4,delete,"selection ops, editor"
+show/app,app-editor,cn/wps/show/app/selection/IKmoSelection.rs,,61,0,15,delete,"selection ops, editor"
+show/app,app-editor,cn/wps/show/app/selection/KmoCaret.rs,public class KmoCaret,83,0,23,delete,"selection ops, editor"
+show/app,app-editor,cn/wps/show/app/selection/KmoSelection.rs,,2019,36,674,delete,"selection ops, editor"
+show/app,app-editor,cn/wps/show/app/selection/KmoSelectionReadMode.rs,,157,0,49,delete,"selection ops, editor"
+show/app,app-editor,cn/wps/show/app/selection/KmoSelectionTransactionObserver.rs,,421,6,103,delete,"selection ops, editor"
+show/app,app-editor,cn/wps/show/app/selection/KmoShapeRange.rs,,225,0,75,delete,"selection ops, editor"
+show/app,app-editor,cn/wps/show/app/selection/KmoSlideRange.rs,,60,1,17,delete,"selection ops, editor"
+show/app,app-editor,cn/wps/show/app/selection/KmoTextRange.rs,,3535,122,1205,delete,"selection ops, editor"
+show/app,app-editor,cn/wps/show/app/selection/mod.rs,,9,0,0,delete,selection subtree fully deleted
+show/app,app-editor,cn/wps/show/app/shadow/KmoShadow.rs,,654,0,184,delete,shadow editor model
+show/app,app-editor,cn/wps/show/app/shadow/mod.rs,,1,0,0,delete,shadow subtree fully deleted
+show/app,app-editor,cn/wps/show/app/shape/IShape2Bitmap.rs,,12,0,3,delete,"shape-to-bitmap, editor"
+show/app,app-editor,cn/wps/show/app/shape/KmoShapeTree.rs,,14,0,0,keep_refactor,shape tree needed; no-op shell missing ops
+show/app,app-editor,cn/wps/show/app/shape/KmoShowShape.rs,,42,12,0,keep_refactor,shape accessor needed; 12 stubs
+show/app,app-editor,cn/wps/show/app/shape/PlaceHolderMerger.rs,,7,0,0,delete,editor merge op; layout layer reimplements
+show/app,app-editor,cn/wps/show/app/shape/ShapeTool.rs,,9,1,0,delete,"OLE/3D export tool, editor"
+show/app,app-editor,cn/wps/show/app/shape/mod.rs,,5,0,0,keep,shape module root (KmoShapeTree/KmoShowShape kept)
+show/app,app-editor,cn/wps/show/app/slide/FilmAtomData.rs,,35,0,9,delete,"atom persistence, editor"
+show/app,app-editor,cn/wps/show/app/slide/ISlide.rs,,54,0,19,keep,"slide access interface, load-bearing"
+show/app,app-editor,cn/wps/show/app/slide/KmoFilm.rs,,592,0,219,delete,"filmstrip container, editor"
+show/app,app-editor,cn/wps/show/app/slide/KmoHandoutMaster.rs,,206,14,53,delete,"handout master, editor"
+show/app,app-editor,cn/wps/show/app/slide/KmoNoteMaster.rs,,204,14,53,delete,"note master, editor"
+show/app,app-editor,cn/wps/show/app/slide/KmoSlide.rs,,1934,0,700,keep_refactor,slide container needed; TODO bodies + editor deps
+show/app,app-editor,cn/wps/show/app/slide/KmoSlideLayout.rs,,658,5,168,delete,local-stub heap; new layout layer replaces
+show/app,app-editor,cn/wps/show/app/slide/KmoSlideMaster.rs,,669,4,178,delete,"master container, editor"
+show/app,app-editor,cn/wps/show/app/slide/LayoutRecognize.rs,,237,4,82,delete,"auto layout detect, editor"
+show/app,app-editor,cn/wps/show/app/slide/mod.rs,,14,0,0,keep,slide module root (ISlide/KmoSlide kept)
+show/app,app-editor,cn/wps/show/app/table/KmoTableOperator.rs,,538,0,151,delete,"table ops, editor"
+show/app,app-editor,cn/wps/show/app/table/KmoTableStyleList.rs,,92,0,28,keep_refactor,table style lookup needed; stub getStyleById
+show/app,app-editor,cn/wps/show/app/table/TableStyleFactory.rs,,2849,0,1147,delete,"default style builder, editor"
+show/app,app-editor,cn/wps/show/app/table/mod.rs,,4,0,0,keep,table module root (KmoTableStyleList kept)
+show/app,app-editor,cn/wps/show/app/tag/BeautifyCallback.rs,public class BeautifyCallback,12,0,3,delete,"tag/beautify, editor"
+show/app,app-editor,cn/wps/show/app/tag/KmoBeautifyOperator.rs,,1283,6,486,delete,"tag/beautify, editor"
+show/app,app-editor,cn/wps/show/app/tag/KmoBeautifyTagMap.rs,,116,0,25,delete,"tag/beautify, editor"
+show/app,app-editor,cn/wps/show/app/tag/KmoBeautifyTags.rs,,886,0,286,delete,"tag/beautify, editor"
+show/app,app-editor,cn/wps/show/app/tag/KmoFilmBeautifyTags.rs,,210,3,53,delete,"tag/beautify, editor"
+show/app,app-editor,cn/wps/show/app/tag/KmoShapeBeautifyTags.rs,,1157,12,385,delete,"tag/beautify, editor"
+show/app,app-editor,cn/wps/show/app/tag/KmoShapeBeautifyTagsTree.rs,,890,0,340,delete,"tag/beautify, editor"
+show/app,app-editor,cn/wps/show/app/tag/KmoSlideBeautifyTags.rs,,399,0,116,delete,"tag/beautify, editor"
+show/app,app-editor,cn/wps/show/app/tag/KmoStructureTags.rs,,103,0,30,delete,"tag/beautify, editor"
+show/app,app-editor,cn/wps/show/app/tag/mod.rs,,9,0,0,delete,tag subtree fully deleted
+show/app,app-editor,cn/wps/show/app/text/KmoCellTextOperator.rs,,475,0,179,delete,"cell text editing, editor"
+show/app,app-editor,cn/wps/show/app/text/KmoContext.rs,,121,0,33,delete,"text op context, editor"
+show/app,app-editor,cn/wps/show/app/text/KmoTextHyphen.rs,,100,0,33,delete,"hyphenation, editor"
+show/app,app-editor,cn/wps/show/app/text/KmoTextOperator.rs,,2029,0,808,delete,"text editing ops, editor"
+show/app,app-editor,cn/wps/show/app/text/KmoTextStyleManager.rs,,575,10,189,delete,"text style manager, editor"
+show/app,app-editor,cn/wps/show/app/text/mod.rs,,5,0,0,delete,text subtree fully deleted
+show/app,app-editor,cn/wps/show/app/theme/IThemeInterpret.rs,,20,0,7,keep,"theme interp interface, load-bearing"
+show/app,app-editor,cn/wps/show/app/theme/KmoTheme.rs,,461,0,141,keep_refactor,theme holder needed; fill/outline disconn. stubbed
+show/app,app-editor,cn/wps/show/app/theme/mod.rs,,3,0,0,keep,theme module root (IThemeInterpret/KmoTheme kept)
+show/app,app-editor,cn/wps/show/app/timing/KmoAnimEffect.rs,,599,45,190,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/KmoAnimOperator.rs,,966,2,414,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/KmoAnimTarget.rs,,152,10,48,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/KmoBehavior.rs,,186,1,33,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/KmoMediaBehavior.rs,,123,0,34,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/KmoSeq.rs,,415,5,147,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/KmoTimeNode.rs,,306,1,105,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/KmoTiming.rs,,440,3,143,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/KmoTransition.rs,,129,11,37,delete,"transition, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/KmoTrigger.rs,,94,8,23,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/effect/AnimEffectDefinition.rs,﻿public class AnimEffectDefinition,1509,202,427,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/effect/AnimEffectOperator.rs,,1349,0,514,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/effect/AnimEffectOptionList.rs,,1073,4,371,delete,"animation, out of MVP"
+show/app,app-editor,cn/wps/show/app/timing/effect/mod.rs,,4,0,0,delete,effect subtree fully deleted
+show/app,app-editor,cn/wps/show/app/timing/mod.rs,,11,0,0,delete,timing subtree fully deleted
+show/app,app-editor,cn/wps/show/app/util/AppCache.rs,,58,0,12,delete,editor cache
+show/app,app-editor,cn/wps/show/app/util/ArrayListLocal.rs,,51,0,9,delete,editor list helper
+show/app,app-editor,cn/wps/show/app/util/CharMap.rs,public class CharMap,126,0,33,delete,editor char map
+show/app,app-editor,cn/wps/show/app/util/CharParse.rs,public class CharParse,434,3,120,delete,editor char parse
+show/app,app-editor,cn/wps/show/app/util/ColorInterpretCtx.rs,,628,0,234,delete,editor color interp chain
+show/app,app-editor,cn/wps/show/app/util/ColorInterpreter.rs,,808,39,303,delete,editor color interp chain
+show/app,app-editor,cn/wps/show/app/util/FontHelper.rs,,457,3,173,delete,"font asset lookup, editor"
+show/app,app-editor,cn/wps/show/app/util/KmoShapeUtil.rs,,397,0,144,delete,"shape clone/equals, editor"
+show/app,app-editor,cn/wps/show/app/util/ModularGroupUtil.rs,,143,0,42,delete,editor group util
+show/app,app-editor,cn/wps/show/app/util/ReflectionHelper.rs,,521,0,182,delete,"reflection helper, editor"
+show/app,app-editor,cn/wps/show/app/util/TableStyleUtil.rs,,431,47,122,delete,editor table style calc
+show/app,app-editor,cn/wps/show/app/util/TagUtil.rs,,822,12,276,delete,"tag util, editor"
+show/app,app-editor,cn/wps/show/app/util/TransitionUtil.rs,,4237,0,1461,delete,"transition util, editor"
+show/app,app-editor,cn/wps/show/app/util/mod.rs,,13,0,0,delete,util subtree fully deleted
+show/app,app-editor,cn/wps/show/app/vml/KmoVmlDrawing.rs,,54,0,16,delete,"vml drawing, editor"
+show/app,app-editor,cn/wps/show/app/vml/mod.rs,,1,0,0,delete,vml subtree fully deleted
+show/clipxr,other,cn/wps/show/clipxr/gvml/handler/TxSpHandler.rs,,71,0,12,delete,"clipboard gvml reader, editor"
+show/clipxr,other,cn/wps/show/clipxr/gvml/handler/mod.rs,,1,0,0,delete,handler subtree fully deleted
+show/clipxr,other,cn/wps/show/clipxr/gvml/mod.rs,,1,0,0,delete,clipxr subtree fully deleted
+show/clipxr,other,cn/wps/show/clipxr/mod.rs,,1,0,0,delete,clipxr subtree fully deleted
+show/convert,add,MISSING,cn/wps/show/convert/ConvertTool.java,,,,add,DML shape→geometry converter unported
+show/convert,add,MISSING,cn/wps/show/convert/GeomtryConvert.java,,,,add,DML shape→geometry converter unported
+show/convert,add,MISSING,cn/wps/show/convert/FillConvert.java,,,,add,fill conversion unported
+show/convert,add,MISSING,cn/wps/show/convert/LineStyleConvert.java,,,,add,line style conversion unported
+show/convert,add,MISSING,cn/wps/show/convert/Vertices.java,,,,add,OOXML geometry writer unported
+show/convert,render,cn/wps/show/convert/PresetShapeTypeMap.rs,public class PresetShapeTypeMap,415,0,198,keep,"preset shape name table, faithful, needed"
+show/convert,render,cn/wps/show/convert/mod.rs,,1,0,0,keep,convert module root
+show/data,model,cn/wps/show/data/CommonSlideData.rs,,1013,0,330,keep,"slide assembly semantics, needed"
+show/data,model,cn/wps/show/data/HeaderFooter.rs,,381,1,121,keep,"footer semantic, referenced by assembly"
+show/data,model,cn/wps/show/data/Presentation.rs,,5426,0,2061,keep,"core presentation assembly, keep semantic"
+show/data,model,cn/wps/show/data/background/Background.rs,,833,1,260,keep,"slide background refs, needed"
+show/data,model,cn/wps/show/data/background/mod.rs,,1,0,0,keep,mod
+show/data,model,cn/wps/show/data/comment/Comment.rs,,593,0,205,delete,comments not rendered in MVP
+show/data,model,cn/wps/show/data/comment/CommentAuthor.rs,,560,0,181,delete,"comment authors, editor-only"
+show/data,model,cn/wps/show/data/comment/mod.rs,,2,0,0,keep,mod
+show/data,model,cn/wps/show/data/control/Control.rs,,671,1,222,delete,"OLE/X controls, not in MVP render"
+show/data,model,cn/wps/show/data/control/mod.rs,,1,0,0,keep,mod
+show/data,model,cn/wps/show/data/custdatalst/CustDataLst.rs,,1019,0,334,delete,"custom data list, metadata"
+show/data,model,cn/wps/show/data/custdatalst/Tag.rs,,382,34,124,delete,"custom tags, 34 stubs, metadata"
+show/data,model,cn/wps/show/data/custdatalst/mod.rs,,2,0,0,keep,mod
+show/data,model,cn/wps/show/data/docproperty/AppProperty.rs,,2053,0,674,delete,"app metadata, not needed"
+show/data,model,cn/wps/show/data/docproperty/CoreProperty.rs,,1243,1,394,delete,"core metadata, not needed"
+show/data,model,cn/wps/show/data/docproperty/CustomProperties.rs,,1343,0,451,delete,"custom metadata, not needed"
+show/data,model,cn/wps/show/data/docproperty/DocProperty.rs,,726,0,238,delete,"document metadata, not needed"
+show/data,model,cn/wps/show/data/docproperty/KeyWords.rs,,1093,1,354,delete,"keywords metadata, not needed"
+show/data,model,cn/wps/show/data/docproperty/mod.rs,,5,0,0,keep,mod
+show/data,model,cn/wps/show/data/mod.rs,,17,0,0,keep,mod
+show/data,model,cn/wps/show/data/ole/Ole.rs,,618,0,200,delete,"OLE embedding, not in MVP"
+show/data,model,cn/wps/show/data/ole/OleObject.rs,,617,0,206,delete,"OLE object, not in MVP"
+show/data,model,cn/wps/show/data/ole/mod.rs,,4,0,0,keep,mod
+show/data,model,cn/wps/show/data/presproperty/PresProperty.rs,,1002,1,309,delete,"presentation settings, editor/persistence"
+show/data,model,cn/wps/show/data/presproperty/PrintProperty.rs,,578,1,181,delete,"print settings, not needed"
+show/data,model,cn/wps/show/data/presproperty/ShowProperty.rs,,951,1,294,delete,"show settings, not needed"
+show/data,model,cn/wps/show/data/presproperty/ShowType.rs,,460,1,143,delete,"show type enums, not needed"
+show/data,model,cn/wps/show/data/presproperty/SlideListChoice.rs,,541,1,167,delete,"slide list choice, not needed"
+show/data,model,cn/wps/show/data/presproperty/mod.rs,,5,0,0,keep,mod
+show/data,model,cn/wps/show/data/shape/ShowShape.rs,,7,0,0,delete,7-line empty shell
+show/data,model,cn/wps/show/data/shape/mod.rs,,1,0,0,keep,mod
+show/data,model,cn/wps/show/data/slidelayouts/SlideLayout.rs,,1116,1,379,keep,"layout assembly semantics, needed"
+show/data,model,cn/wps/show/data/slidelayouts/mod.rs,,1,0,0,keep,mod
+show/data,model,cn/wps/show/data/slidemasters/SlideMaster.rs,,1180,0,419,keep,"master assembly semantics, needed"
+show/data,model,cn/wps/show/data/slidemasters/mod.rs,,1,0,0,keep,mod
+show/data,model,cn/wps/show/data/slides/Slide.rs,,1283,0,413,keep,"slide assembly semantics, needed"
+show/data,model,cn/wps/show/data/slides/mod.rs,,1,0,0,keep,mod
+show/data,model,cn/wps/show/data/timing/Build.rs,,920,0,280,delete,"timing/animation, out of render MVP"
+show/data,model,cn/wps/show/data/timing/BuildDiagram.rs,,454,1,149,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/BuildEmbeddedChart.rs,,505,0,168,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/BuildGraphics.rs,,1407,1,474,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/BuildParagraph.rs,,1230,0,378,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/TLBuild.rs,,474,0,143,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/TemplateEffects.rs,,763,0,238,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/Timing.rs,,1143,0,351,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/mod.rs,,9,0,0,keep,mod
+show/data,model,cn/wps/show/data/timing/timenode/Animate.rs,,1118,0,357,delete,"timing node, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/AnimateColorBehavior.rs,,954,0,300,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/AnimateEffect.rs,,729,0,230,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/AnimateMotion.rs,,1364,0,419,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/AnimateRotation.rs,,582,0,185,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/AnimateScale.rs,,893,0,280,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/AnimateVariant.rs,,681,0,224,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/Audio.rs,,464,0,147,delete,"timing media, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/BookmarkTarget.rs,,371,0,124,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/Command.rs,,527,0,166,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/CommonBehavior.rs,,1144,0,370,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/CommonMediaNode.rs,,793,0,249,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/CommonTimeNode.rs,,3007,0,980,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/Condition.rs,,683,0,223,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/EmbeddedChartElement.rs,,380,1,124,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/GraphicElement.rs,,1386,1,447,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/Iterate.rs,,561,1,181,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/SequenceTimeNode.rs,,1114,0,363,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/SetTimeNodeBehavior.rs,,565,0,175,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/ShapeTarget.rs,,906,0,295,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/TLPoint.rs,,371,0,124,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/TargetElement.rs,,798,0,258,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/TextElement.rs,,472,1,150,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/TimeNode.rs,,1967,0,678,delete,"timing, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/Video.rs,,464,0,147,delete,"timing media, out of render MVP"
+show/data,model,cn/wps/show/data/timing/timenode/mod.rs,,25,0,0,keep,mod
+show/data,model,cn/wps/show/data/timing/transition/mod.rs,,1,0,0,keep,mod
+show/data,model,cn/wps/show/data/transition/Transition.rs,,3888,2,1247,delete,"transitions, Phase 4 player, not MVP"
+show/data,model,cn/wps/show/data/transition/mod.rs,,1,0,0,keep,mod
+show/data,model,cn/wps/show/data/viewproperty/CommonSlideViewProperty.rs,,1357,1,437,delete,"view settings, editor-only"
+show/data,model,cn/wps/show/data/viewproperty/CommonViewProperty.rs,,1529,1,480,delete,"view settings, editor-only"
+show/data,model,cn/wps/show/data/viewproperty/NormalViewProperty.rs,,1147,0,395,delete,"view settings, editor-only"
+show/data,model,cn/wps/show/data/viewproperty/OutlineViewProperty.rs,,1186,1,382,delete,"view settings, editor-only"
+show/data,model,cn/wps/show/data/viewproperty/SorterViewProperty.rs,,472,1,147,delete,"view settings, editor-only"
+show/data,model,cn/wps/show/data/viewproperty/ViewProperty.rs,,1243,0,432,delete,"view settings, editor-only"
+show/data,model,cn/wps/show/data/viewproperty/mod.rs,,6,0,0,keep,mod
+show/graphics,render,cn/wps/show/graphics/mod.rs,,1,0,0,keep,module root
+show/graphics,render,cn/wps/show/graphics/shape3d/I3DShapeRegion.rs,,35,0,11,delete,"3D shading, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/ICore2DDrawing.rs,,42,0,13,delete,"3D shading, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/IDraw3DFilter.rs,,27,0,9,delete,"3D shading, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/IShaderScheme.rs,,41,0,11,delete,"3D shading, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/IVertsMaker.rs,public interface IVertsMaker,28,0,8,delete,"3D shading, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/LightMaterial.rs,,3025,0,962,delete,"3D shading, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/ModelBase.rs,,4,0,0,delete,"3D shading, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/Object3DExt.rs,,342,0,75,delete,"3D shading, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/Shape3dConvert.rs,,545,0,281,delete,"3D shading, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/ShapeMemReusePool.rs,,423,0,128,delete,"3D pool, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/math/Matrix3D.rs,,507,0,140,delete,math used only by 3D shading
+show/graphics,render,cn/wps/show/graphics/shape3d/math/Vector3f.rs,public class Vector3f,374,0,123,delete,math used only by 3D shading
+show/graphics,render,cn/wps/show/graphics/shape3d/math/Vector4f.rs,public class Vector4f,256,0,95,delete,math used only by 3D shading
+show/graphics,render,cn/wps/show/graphics/shape3d/math/mod.rs,,3,0,0,delete,math subtree fully deleted
+show/graphics,render,cn/wps/show/graphics/shape3d/mod.rs,,14,0,0,delete,shape3d subtree fully deleted
+show/graphics,render,cn/wps/show/graphics/shape3d/shader2D/FlatSurfaceRender.rs,,243,12,71,delete,"canvas shader, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/shader2D/Render2DBase.rs,,100,0,21,delete,"canvas shader, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/shader2D/ShaderSoftImpl.rs,,322,8,96,delete,"canvas shader, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/shader2D/mod.rs,,3,0,0,delete,shader2D subtree fully deleted
+show/graphics,render,cn/wps/show/graphics/shape3d/shaderOpengl/core/GlProgram.rs,,420,0,131,delete,"opengl program, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/shaderOpengl/core/GlSprite.rs,,323,0,92,delete,"opengl sprite, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/shaderOpengl/core/GlUtil.rs,,263,0,93,delete,"opengl util, out of MVP"
+show/graphics,render,cn/wps/show/graphics/shape3d/shaderOpengl/core/mod.rs,,3,0,0,delete,opengl core subtree fully deleted
+show/graphics,render,cn/wps/show/graphics/shape3d/shaderOpengl/mod.rs,,1,0,0,delete,opengl subtree fully deleted
+show/layout,add,MISSING,cn/wps/show/layout/ShowTextLayout.java,,,,add,layout layer unported; text layout entry
+show/layout/dataaction,add,MISSING,cn/wps/show/layout/dataaction/DefineConverter.java,,,,add,layout dataaction unported
+show/layout/dataaction,add,MISSING,cn/wps/show/layout/dataaction/DataTransform.java,,,,add,layout dataaction unported
+show/layout/dataaction,add,MISSING,cn/wps/show/layout/dataaction/CellDataTransform.java,,,,add,layout dataaction unported
+show/layout/dataaction,add,MISSING,cn/wps/show/layout/dataaction/ShapeDataTransform.java,,,,add,layout dataaction unported
+show/layout/dataaction,add,MISSING,cn/wps/show/layout/dataaction/TextAutoNum.java,,,,add,layout dataaction unported
+show/layout/dataaction,add,MISSING,cn/wps/show/layout/dataaction/PlainTextAutoNum.java,,,,add,layout dataaction unported
+show/layout/dataaction,add,MISSING,cn/wps/show/layout/dataaction/AutoNumTransform.java,,,,add,layout dataaction unported
+show/layout/dataaction,add,MISSING,cn/wps/show/layout/dataaction/ArabicPlain.java,,,,add,layout dataaction unported
+show/model,model,cn/wps/show/model/PPT.rs,public class PPT,46,0,6,keep,"constant holder, trivial but referenced"
+show/model,model,cn/wps/show/model/PptStringUtil.rs,,140,0,49,keep,"string utils, real logic"
+show/model,model,cn/wps/show/model/mod.rs,,2,0,0,keep,mod
+show/moffice,render,cn/wps/show/moffice/drawing/graphics/ClipAntiAliasFilter.rs,,423,0,145,delete,offscreen bitmap anti-alias trick
+show/moffice,render,cn/wps/show/moffice/drawing/graphics/GraphicsFlags.rs,public class GraphicsFlags,130,0,36,delete,"canvas-era render flags, not needed"
+show/moffice,render,cn/wps/show/moffice/drawing/graphics/mod.rs,,3,0,0,keep,module root
+show/moffice,render,cn/wps/show/moffice/drawing/graphics/pathgradfill/PathGradFillBase.rs,,669,0,243,keep_refactor,fill/path math kept; strip Canvas/Shader deps
+show/moffice,render,cn/wps/show/moffice/drawing/graphics/pathgradfill/mod.rs,,2,0,0,keep,module root
+show/moffice,render,cn/wps/show/moffice/drawing/mod.rs,,4,0,0,keep,module root
+show/moffice,render,cn/wps/show/moffice/drawing/pool/BitmapCreatorEx.rs,,462,0,159,delete,"bitmap pool, canvas-era"
+show/moffice,render,cn/wps/show/moffice/drawing/pool/CalcInSamplePolicies.rs,public interface ICalcInSamplePolicy,147,0,44,delete,"bitmap sample policies, canvas-era"
+show/moffice,render,cn/wps/show/moffice/drawing/pool/IPoolConfig.rs,,33,0,10,delete,"bitmap pool config, canvas-era"
+show/moffice,render,cn/wps/show/moffice/drawing/pool/ImageHelper.rs,,246,0,91,delete,"bitmap image helper, canvas-era"
+show/moffice,render,cn/wps/show/moffice/drawing/pool/LruNodeList.rs,public class LruNode,167,0,42,delete,LRU list for bitmap pool
+show/moffice,render,cn/wps/show/moffice/drawing/pool/NodeList.rs,public class Node,174,0,47,delete,list node for bitmap pool
+show/moffice,render,cn/wps/show/moffice/drawing/pool/mod.rs,,6,0,0,delete,pool subtree fully deleted
+show/moffice,render,cn/wps/show/moffice/drawing/render/IRenderEvent.rs,,27,0,9,delete,canvas render events
+show/moffice,render,cn/wps/show/moffice/drawing/render/IShapeRender.rs,,133,0,50,delete,canvas shape render interface
+show/moffice,render,cn/wps/show/moffice/drawing/render/ITypoShape.rs,,44,0,15,delete,canvas typo shape interface
+show/moffice,render,cn/wps/show/moffice/drawing/render/RenderInterrupt.rs,public class RenderInterrupt,53,0,14,delete,canvas interrupt flag
+show/moffice,render,cn/wps/show/moffice/drawing/render/ShapeEnv.rs,,663,0,183,delete,canvas render environment
+show/moffice,render,cn/wps/show/moffice/drawing/render/mod.rs,,5,0,0,delete,render subtree fully deleted
+show/moffice,render,cn/wps/show/moffice/drawing/util/AnyObjPool.rs,,226,0,77,delete,"object pooling, canvas-era"
+show/moffice,render,cn/wps/show/moffice/drawing/util/ShapeBitmapPool.rs,,354,1,94,delete,"bitmap pooling, canvas-era"
+show/moffice,render,cn/wps/show/moffice/drawing/util/mod.rs,,2,0,0,delete,util subtree fully deleted
+show/moffice,render,cn/wps/show/moffice/mod.rs,,2,0,0,keep,module root
+show/moffice,render,cn/wps/show/moffice/util/CanvasUtil.rs,,237,0,70,delete,"canvas utility, canvas-era"
+show/moffice,render,cn/wps/show/moffice/util/ColorMatrixUtil.rs,,441,0,178,delete,"bitmap color matrix, canvas-era"
+show/moffice,render,cn/wps/show/moffice/util/mod.rs,,2,0,0,delete,util subtree fully deleted
+show/pptxr,parser,cn/wps/show/pptxr/handler/custdatas/CustDataLstHandler.rs,,106,0,26,keep_refactor,real HandlerCallback binding; kfc imports commented
+show/pptxr,parser,cn/wps/show/pptxr/handler/custdatas/mod.rs,,1,0,0,keep,module wiring
+show/pptxr,parser,cn/wps/show/pptxr/handler/mod.rs,,2,0,0,keep,module wiring
+show/pptxr,parser,cn/wps/show/pptxr/handler/shape/SwConnectorShapeHandler.rs,,207,0,60,keep_refactor,real deps; deferred child handler construction
+show/pptxr,parser,cn/wps/show/pptxr/handler/shape/SwGroupShapeHandler.rs,,474,0,119,rewrite,local stub structs replace real Shape/KmoShowShape
+show/pptxr,parser,cn/wps/show/pptxr/handler/shape/SwNvPrHandler.rs,,250,35,87,keep_refactor,"real dispatch logic; 35 stubs, deferred handlers"
+show/pptxr,parser,cn/wps/show/pptxr/handler/shape/SwPictureHandler.rs,,308,0,95,keep_refactor,real deps; child handler wiring deferred
+show/pptxr,parser,cn/wps/show/pptxr/handler/shape/SwShapeAlertnateContentHandler.rs,,562,0,177,keep_refactor,real deps; kfc imports commented out
+show/pptxr,parser,cn/wps/show/pptxr/handler/shape/SwShapeHandler.rs,,417,0,128,keep_refactor,core shape dispatch real; deps commented
+show/pptxr,parser,cn/wps/show/pptxr/handler/shape/graphicframe/SwGraphicFrameHandler.rs,,199,0,61,rewrite,entire body behind cfg(any()) dead module
+show/pptxr,parser,cn/wps/show/pptxr/handler/shape/graphicframe/mod.rs,,1,0,0,keep,module wiring
+show/pptxr,parser,cn/wps/show/pptxr/handler/shape/mod.rs,,7,0,0,keep,module wiring
+show/pptxr,parser,cn/wps/show/pptxr/mod.rs,,2,0,0,keep,module wiring
+show/pptxr,parser,cn/wps/show/pptxr/util/MapManager.rs,,167,0,45,rewrite,xsd maps replaced by stub_map returning -1
+show/pptxr,parser,cn/wps/show/pptxr/util/ModularGroupParseUtils.rs,,87,0,24,rewrite,reader/handler deps all local stubs
+show/pptxr,parser,cn/wps/show/pptxr/util/PptxrFileDecrypt.rs,    static void setDecryptTimeListener(DecryptTimeListener listener),33,4,7,delete,decryption stubs; encrypted files not MVP
+show/pptxr,parser,cn/wps/show/pptxr/util/SWReaderMap.rs,,555,8,4,keep,full string→int enum tables; no stubs
+show/pptxr,parser,cn/wps/show/pptxr/util/mod.rs,,4,0,0,keep,module wiring
+show/radapter,render,cn/wps/show/radapter/interpreter/ContentInterpretCtx.rs,,34,0,8,keep_refactor,page-number interp; setSlide stubbed
+show/radapter,render,cn/wps/show/radapter/interpreter/FilterInterpretCtx.rs,public class FilterInterpretCtx,54,0,12,keep,"filter flag interp, faithful, needed"
+show/radapter,render,cn/wps/show/radapter/interpreter/TableInterpreCtx.rs,,46,1,11,keep_refactor,table style interp; styleList stub
+show/radapter,render,cn/wps/show/radapter/interpreter/ThemeInterpretCtx.rs,,164,0,50,keep_refactor,theme fill/outline interp; KmoTheme stub
+show/radapter,render,cn/wps/show/radapter/interpreter/mod.rs,,4,0,0,keep,module root
+show/radapter,render,cn/wps/show/radapter/mod.rs,,1,0,0,keep,module root
+show/render,add,MISSING,cn/wps/show/render/ISlideRender.java,,,,add,render_slide interface unported
+show/render,add,MISSING,cn/wps/show/render/SlideRenderBase.java,,,,add,render_slide base unported
+show/render,add,MISSING,cn/wps/show/render/SlideRenderContext.java,,,,add,render_slide context unported
+show/render,add,MISSING,cn/wps/show/render/SlideRender.java,,,,add,render_slide traversal unported
+show/render,add,MISSING,cn/wps/show/render/LayoutRender.java,,,,add,layout render/style resolve unported
+show/render,add,MISSING,cn/wps/show/render/MasterSlideRender.java,,,,add,master render unported
+show/render,add,MISSING,cn/wps/show/render/BackgroundShapeRender.java,,,,add,background render unported
+show/render,add,MISSING,cn/wps/show/render/ShapeRender.java,,,,add,shape dispatch render unported
+show/render,add,MISSING,cn/wps/show/render/ShapeTextRender.java,,,,add,shape text render unported
+show/render,add,MISSING,cn/wps/show/render/TextRender.java,,,,add,text render unported
+show/render,add,MISSING,cn/wps/show/render/TableRender.java,,,,add,table render unported
+show/render,add,MISSING,cn/wps/show/render/ShowTypoShape.java,,,,add,final typo shape geometry unported
+show/render,render,cn/wps/show/render/ShapeText.rs,,168,0,42,keep_refactor,text-body helper needed; KmoTextBody stub + drawing dep
+show/render,render,cn/wps/show/render/mod.rs,,3,0,0,keep,module root
+show/render,render,cn/wps/show/render/table/TableInfo.rs,,246,9,72,keep_refactor,table geometry helper; KmoTable stub
+show/render,render,cn/wps/show/render/table/mod.rs,,1,0,0,keep,module root
+show/render/cache,add,MISSING,cn/wps/show/render/cache/GeometryCache.java,,,,add,geometry cache for path conversion
+show/util,add,MISSING,cn/wps/show/util/ShapeUtil.java,,,,add,geometry helper used by GeomtryConvert
+show/util,render,cn/wps/show/util/FormulaParser.rs,,843,0,297,keep,"geometry formula eval, faithful, needed"
+show/util,render,cn/wps/show/util/RenderLogDumper.rs,,126,0,32,delete,"debug dump tool, editor"
+show/util,render,cn/wps/show/util/mod.rs,,2,0,0,keep,module root
+smartart,out-of-scope,cn/wps/smartart/IStHostApp.rs,,68,7,14,delete,"smartart host, out of MVP"
+smartart,out-of-scope,cn/wps/smartart/ST.rs,public class ST,1169,0,116,delete,"smartart constants, out of MVP"
+smartart,out-of-scope,cn/wps/smartart/mod.rs,,4,0,0,keep,mod
+smartart/data,out-of-scope,cn/wps/smartart/data/base/Adj.rs,,56,5,0,delete,smartart data model; diagram engine out of scope
+smartart/data,out-of-scope,cn/wps/smartart/data/base/Background.rs,,560,0,177,delete,smartart background; out of MVP scope
+smartart/data,out-of-scope,cn/wps/smartart/data/base/Category.rs,,390,0,124,delete,smartart category model; out of scope
+smartart/data,out-of-scope,cn/wps/smartart/data/base/Name.rs,,391,0,124,delete,smartart name model; out of scope
+smartart/data,out-of-scope,cn/wps/smartart/data/base/Shape.rs,,1024,0,329,delete,smartart shape model; out of MVP scope
+smartart/data,out-of-scope,cn/wps/smartart/data/base/WholeE2oFormatting.rs,,560,0,177,delete,smartart formatting model; out of scope
+smartart/data,out-of-scope,cn/wps/smartart/data/base/mod.rs,,6,0,0,keep,module wiring
+smartart/data,out-of-scope,cn/wps/smartart/data/color/ColorStyleLbl.rs,,1169,0,370,delete,"smartart color, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/color/ColorTransform.rs,,1780,0,564,delete,"smartart color, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/color/Colors.rs,,813,0,258,delete,"smartart color, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/color/mod.rs,,3,0,0,keep,mod
+smartart/data,out-of-scope,cn/wps/smartart/data/datamodel/Cxn.rs,,794,0,257,delete,"smartart data, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/datamodel/DataModel.rs,,1395,0,440,delete,"smartart data, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/datamodel/ElemPropSet.rs,,2170,0,708,delete,"smartart data, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/datamodel/LayoutVariablePropertySet.rs,,788,0,257,delete,"smartart data, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/datamodel/Pt.rs,,54,5,0,delete,"smartart data, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/datamodel/mod.rs,,5,0,0,keep,mod
+smartart/data,out-of-scope,cn/wps/smartart/data/font/SmartArtFSFont.rs,public class SmartArtFSFont,137,0,36,delete,"smartart font, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/font/mod.rs,,1,0,0,keep,mod
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/Algorithm.rs,,801,0,255,delete,"smartart layout, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/Choose.rs,,901,0,281,delete,"smartart layout, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/DiagramDefinition.rs,,2000,0,629,delete,"smartart layout, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/ForEach.rs,,962,0,302,delete,"smartart layout, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/IteratorAttributes.rs,,1113,0,352,delete,"smartart layout, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/LayoutNode.rs,,919,0,293,delete,"smartart layout, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/NodeMember.rs,,60,6,0,delete,"smartart layout, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/Otherwise.rs,,745,0,236,delete,"smartart layout, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/Parameter.rs,,560,0,181,delete,"smartart layout, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/SampleData.rs,,487,0,150,delete,"smartart layout, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/When.rs,,73,5,0,delete,"smartart layout, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/layout/mod.rs,,11,0,0,keep,mod
+smartart/data,out-of-scope,cn/wps/smartart/data/mod.rs,,6,0,0,keep,mod
+smartart/data,out-of-scope,cn/wps/smartart/data/style/FlatText.rs,,441,0,143,delete,"smartart style, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/style/StyleDefinition.rs,,1895,0,609,delete,"smartart style, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/style/StyleLbl.rs,,81,5,0,delete,"smartart style, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/style/TextProps.rs,,611,0,195,delete,"smartart style, out of MVP"
+smartart/data,out-of-scope,cn/wps/smartart/data/style/mod.rs,,4,0,0,keep,mod
+smartart/element,out-of-scope,cn/wps/smartart/element/KStElementData.rs,,14,0,4,delete,"smartart element, out of MVP"
+smartart/element,out-of-scope,cn/wps/smartart/element/mod.rs,,1,0,0,keep,mod
+text,other,cn/wps/text/mod.rs,,1,0,0,keep,module root
+text/layout,add,MISSING,cn/wps/text/layout/ITextLayout.java,,,,add,text layout base interface unported
+text/layout,other,cn/wps/text/layout/IShowTextLayout.rs,,44,0,15,rewrite,Canvas-typed render API; re-abstract for typed layout
+text/layout,other,cn/wps/text/layout/mod.rs,,1,0,0,keep,module root
+text/layout/data,add,MISSING,cn/wps/text/layout/data/TextData.java,,,,add,text layout data unported
+text/layout/data,add,MISSING,cn/wps/text/layout/data/ParaInfo.java,,,,add,text layout data unported
+text/layout/data,add,MISSING,cn/wps/text/layout/data/LineInfo.java,,,,add,text layout data unported
+text/layout/data,add,MISSING,cn/wps/text/layout/data/SpanInfo.java,,,,add,text layout data unported
+text/layout/data,add,MISSING,cn/wps/text/layout/data/TextRange.java,,,,add,text layout data unported
+text/layout/layouter,add,MISSING,cn/wps/text/layout/layouter/WpsLayout.java,,,,add,text layout engine unported
+text/layout/typo,add,MISSING,cn/wps/text/layout/typo/RichTextLayout.java,,,,add,text layout engine unported
+text/layout/typo,add,MISSING,cn/wps/text/layout/typo/BaseTextLayout.java,,,,add,text layout engine unported
+text/layout/typo,add,MISSING,cn/wps/text/layout/typo/TypoLayoutGen.java,,,,add,text layout engine unported
+text/layout/typo/layout,add,MISSING,cn/wps/text/layout/typo/layout/Layout.java,,,,add,text layout engine unported

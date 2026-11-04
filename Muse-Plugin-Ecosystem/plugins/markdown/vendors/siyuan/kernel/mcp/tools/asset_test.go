@@ -1,0 +1,103 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package tools
+
+import (
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func TestNormalizeHTMLAssetName(t *testing.T) {
+	if got, err := normalizeHTMLAssetName(nil); err != nil || got != "component.html" {
+		t.Fatalf("default HTML asset name = %q, %v", got, err)
+	}
+	if got, err := normalizeHTMLAssetName("../Widget.HTM"); err != nil || got != "Widget.HTM" {
+		t.Fatalf("normalized HTML asset name = %q, %v", got, err)
+	}
+	if _, err := normalizeHTMLAssetName("component.xhtml"); err == nil {
+		t.Fatal("XHTML asset name must be rejected")
+	}
+}
+
+func TestHTMLAssetIFrameBlockDOM(t *testing.T) {
+	dom, blockID, err := htmlAssetIFrameBlockDOM("assets/component.html?box=box-id")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if blockID == "" {
+		t.Fatal("IFrame block ID is empty")
+	}
+	if !strings.Contains(dom, `sandbox="allow-scripts"`) || strings.Contains(dom, "allow-same-origin") {
+		t.Fatalf("IFrame sandbox is unsafe: %s", dom)
+	}
+	if !strings.Contains(dom, "iframe=true") {
+		t.Fatalf("IFrame source is missing the render marker: %s", dom)
+	}
+	tree := util.NewLute().BlockDOM2Tree(dom)
+	if tree.Root.FirstChild == nil || tree.Root.FirstChild.Type != ast.NodeIFrame {
+		t.Fatalf("created block is not an IFrame: %s", dom)
+	}
+}
+
+func TestValidateAssetUploadPaths(t *testing.T) {
+	origWorkspace, origHome := util.WorkspaceDir, util.HomeDir
+	util.WorkspaceDir = filepath.Join(t.TempDir(), "workspace")
+	util.HomeDir = filepath.Join(t.TempDir(), "home")
+	t.Cleanup(func() { util.WorkspaceDir, util.HomeDir = origWorkspace, origHome })
+
+	inside := filepath.Join(util.WorkspaceDir, "data", "assets", "foo.png")
+	normalized, err := validateAssetUploadPaths([]string{inside})
+	if err != nil {
+		t.Fatalf("workspace-internal path must pass: %v", err)
+	}
+	if normalized[0] != inside {
+		t.Fatalf("path must be normalized to absolute: %q", normalized[0])
+	}
+
+	external := filepath.Join(util.HomeDir, "Documents", "report.pdf")
+	if util.IsSensitivePath(external) {
+		t.Skipf("test home path unexpectedly sensitive: %s", external)
+	}
+	if _, err = validateAssetUploadPaths([]string{external}); err != nil {
+		t.Fatalf("non-sensitive absolute path outside the workspace must pass: %v", err)
+	}
+
+	sensitive := filepath.Join(util.WorkspaceDir, "conf", "conf.json")
+	if _, err = validateAssetUploadPaths([]string{sensitive}); err == nil {
+		t.Fatal("sensitive path must be rejected")
+	}
+
+	sshKey := filepath.Join(util.HomeDir, ".ssh", "id_rsa")
+	if _, err = validateAssetUploadPaths([]string{sshKey}); err == nil {
+		t.Fatal("credential path must be rejected")
+	}
+
+	// GHSA-q768-4j87-gf3w：家目录 dotenv 配置文件同样必须拒绝
+	for _, envFile := range []string{".env", ".env.local", ".env.production"} {
+		if _, err = validateAssetUploadPaths([]string{filepath.Join(util.HomeDir, envFile)}); err == nil {
+			t.Fatalf("dotenv credential path must be rejected: %s", envFile)
+		}
+	}
+}
+
+func TestNewAssetUploadToolResultPreservesPartialResults(t *testing.T) {
+	succeeded := []model.AssetUploadSuccess{{Index: 0, Name: "good.png", Path: "assets/good.png"}}
+	failed := []model.AssetUploadFailure{{Index: 1, Name: "missing.png", Error: "file not found"}}
+
+	result := newAssetUploadToolResult(succeeded, failed)
+
+	if !result.IsError {
+		t.Fatal("partial upload result must be marked as an error")
+	}
+	content := result.Content[0].Text
+	if !strings.Contains(content, "good.png -> assets/good.png") || !strings.Contains(content, "missing.png: file not found") {
+		t.Fatalf("partial upload content = %q", content)
+	}
+}

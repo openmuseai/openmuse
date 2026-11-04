@@ -1,0 +1,31 @@
+name: openmuse_mobile_plugin_market
+description: Mobile plugin market panel for OpenMuse.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  openmuse_i18n:
+    path: ../../packages/openmuse_i18n
+  flutter:
+    sdk: flutter
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+  openmuse_mobile_plugin_runtime:
+    path: ../../packages/openmuse_mobile_plugin_runtime
+  openmuse_market_ui:
+    path: ../../packages/openmuse_market_ui
+  openmuse_registry_provider:
+    path: ../../packages/openmuse_registry_provider
+  mcp_dart: ^2.4.3
+  file_picker: ^10.3.10
+  path_provider: ^2.1.5
+  video_player: 2.14.1
+  webview_flutter: ^4.13.1
+  webview_flutter_android: ^4.14.1
+  archive: ^4.0.7
+  crypto: ^3.0.6
+  pub_semver: ^2.2.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

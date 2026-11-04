@@ -1,0 +1,462 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package util
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net"
+	"net/http"
+	"net/url"
+	"os"
+	"strconv"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/88250/lute/ast"
+	"github.com/gin-gonic/gin"
+	"github.com/imroc/req/v3"
+	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
+)
+
+var auditedAddresses sync.Map // 用于记录已审计的 SSRF 地址，避免重复日志输出
+
+// GetPrivateIPv4s 获取本地所有的私有 IPv4 地址（排除虚拟网卡）
+func GetPrivateIPv4s() (ret []string) {
+	ret = []string{}
+
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return
+	}
+
+	// 常见的虚拟网卡名称关键字黑名单
+	virtualKeywords := []string{"docker", "veth", "br-", "vmnet", "vbox", "utun", "tun", "tap", "bridge", "cloud", "hyper-"}
+
+	for _, itf := range interfaces {
+		// 1. 基础状态过滤：必须是启动状态且不能是回环网卡
+		if itf.Flags&net.FlagUp == 0 || itf.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+
+		// 2. 硬件地址过滤：物理网卡通常必须有 MAC 地址
+		if len(itf.HardwareAddr) == 0 {
+			continue
+		}
+
+		// 3. 名称过滤：排除已知虚拟网卡前缀
+		name := strings.ToLower(itf.Name)
+		isVirtual := false
+		for _, kw := range virtualKeywords {
+			if strings.Contains(name, kw) {
+				isVirtual = true
+				break
+			}
+		}
+		if isVirtual {
+			continue
+		}
+
+		// 4. 提取并校验 IP
+		addrs, err := itf.Addrs()
+		if err != nil {
+			continue
+		}
+
+		for _, addr := range addrs {
+			ipNet, ok := addr.(*net.IPNet)
+			if !ok {
+				continue
+			}
+
+			ip := ipNet.IP
+			// 仅保留 IPv4 且必须是私有局域网地址 (10.x, 172.16.x, 192.168.x)
+			if ip.To4() != nil && ip.IsPrivate() {
+				ret = append(ret, ip.String())
+			}
+		}
+	}
+	return
+}
+
+func IsLocalHostname(hostname string) bool {
+	if "localhost" == hostname || strings.HasSuffix(hostname, ".localhost") {
+		return true
+	}
+	if ip := net.ParseIP(hostname); nil != ip {
+		return ip.IsLoopback()
+	}
+	return false
+}
+
+func IsLocalHost(host string) bool {
+	if hostname, _, err := net.SplitHostPort(strings.TrimSpace(host)); err != nil {
+		return false
+	} else {
+		return IsLocalHostname(hostname)
+	}
+}
+
+// IsTLSRequest 判断这条客户端连接是否使用 TLS。
+//
+// 内核在同一端口上通过 cmux 同时承载 HTTP 与 HTTPS，入站方向由 request.TLS 区分；
+// 固定端口反代以 HTTPS 回源内核，由它写入的 ClientTLSHeader 标记客户端侧的真实连接方式。
+// 该头部仅在直连对端为本机时优先采信，区分客户端协议与回源协议，其他连接只判断实际 TLS 状态。
+// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-hpj5-f7cj-vvwr
+func IsTLSRequest(request *http.Request) bool {
+	if nil == request {
+		return false
+	}
+	if IsLocalHost(request.RemoteAddr) {
+		switch request.Header.Get(ClientTLSHeader) {
+		case ClientTLSHeaderValue:
+			return true
+		case ClientTLSHeaderPlaintextValue:
+			return false
+		}
+	}
+	return nil != request.TLS
+}
+
+// IsValidRedirectHost 校验 Host 是否为可以直接拼接跳转地址的合法 authority。
+//
+// 仅接受 host 或 host:port 形式，拒绝凭据、路径、查询、片段与空白字符，
+// 避免被污染的 Host 让 HTTPS 跳转指向站外地址。
+func IsValidRedirectHost(host string) bool {
+	if "" == host || host != strings.TrimSpace(host) || strings.ContainsAny(host, "/\\?#@,; \t\r\n") {
+		return false
+	}
+
+	hostname, port, err := net.SplitHostPort(host)
+	if err != nil {
+		// 不含端口时按纯主机名处理，但要排除 "host:" 这类残留冒号的写法
+		if strings.Contains(host, ":") {
+			return false
+		}
+		hostname, port = host, ""
+	}
+	if "" == hostname || (strings.Contains(host, ":") && "" == port) {
+		return false
+	}
+	if "" != port {
+		if portNum, portErr := strconv.Atoi(port); nil != portErr || 1 > portNum || 65535 < portNum {
+			return false
+		}
+	}
+	return true
+}
+
+func IsLocalOrigin(origin string) bool {
+	if u, err := url.Parse(origin); err == nil {
+		return IsLocalHostname(u.Hostname())
+	}
+	return false
+}
+
+// IsSessionOriginAllowed 校验会话 Cookie 认证请求的 Origin，防止跨站请求伪造
+// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-hhm2-g993-p656
+func IsSessionOriginAllowed(origin, host string) bool {
+	if "" == origin {
+		// 浏览器发起的跨站请求都会携带 Origin，未携带时视为非浏览器客户端，按原行为放行
+		return true
+	}
+	if IsLocalOrigin(origin) {
+		return true
+	}
+	// 已设置锁屏密码的远程访问场景：Origin 必须与 Host 一致，否则视为跨站请求
+	return originHostEquals(origin, host)
+}
+
+// IsCrossSiteFetchSite 根据 Sec-Fetch-Site 请求头判断是否为浏览器发起的跨站请求。
+// 浏览器为所有请求携带 Sec-Fetch-Site，取值 same-origin（同源）、same-site（同站跨源）、
+// cross-site（跨站）、none（用户直接输入地址等）；跨站顶层 GET 导航不携带 Origin，
+// 仅凭 Origin 无法识别，因此需要结合该请求头判断。未携带时视为非浏览器客户端。
+// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-2w6q-wgc8-q743
+func IsCrossSiteFetchSite(site string) bool {
+	return "" != site && "same-origin" != site && "none" != site
+}
+
+// IsSessionOriginAllowedRequest 校验会话认证请求：应用入口的顶层 GET 页面导航可放行，
+// 其他跨源请求拒绝，其余请求继续校验 Origin。
+// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-2w6q-wgc8-q743
+func IsSessionOriginAllowedRequest(r *http.Request) bool {
+	if IsCrossSiteFetchSite(r.Header.Get("Sec-Fetch-Site")) {
+		// 已登录用户可从子域、外部链接或 PWA 图标进入应用；API、资源和嵌入页面请求仍须拒绝。
+		site := r.Header.Get("Sec-Fetch-Site")
+		return (site == "same-site" || site == "cross-site") &&
+			r.Method == http.MethodGet && r.Header.Get("Origin") == "" &&
+			r.Header.Get("Sec-Fetch-Mode") == "navigate" &&
+			r.Header.Get("Sec-Fetch-Dest") == "document" && isAppEntryPath(r.URL.Path)
+	}
+	return IsSessionOriginAllowed(r.Header.Get("Origin"), r.Host)
+}
+
+func isAppEntryPath(path string) bool {
+	switch path {
+	case "/", "/stage/build/app/", "/stage/build/desktop/", "/stage/build/mobile/",
+		"/stage/build/app/index.html", "/stage/build/desktop/index.html", "/stage/build/mobile/index.html":
+		return true
+	}
+	return false
+}
+
+func originHostEquals(origin, host string) bool {
+	u, err := url.Parse(origin)
+	if nil != err {
+		return false
+	}
+	originHost := strings.ToLower(strings.TrimSuffix(strings.TrimSuffix(u.Host, ":80"), ":443"))
+	host = strings.ToLower(strings.TrimSuffix(strings.TrimSuffix(strings.TrimSpace(host), ":80"), ":443"))
+	return "" != originHost && originHost == host
+}
+
+// SSRFSafeDialer returns a net.Dialer whose Control hook blocks private, loopback, link-local and unspecified IPs.
+func SSRFSafeDialer(timeout time.Duration) *net.Dialer {
+	return &net.Dialer{
+		Timeout: timeout,
+		Control: func(network, address string, _ syscall.RawConn) error {
+			host, _, err := net.SplitHostPort(address)
+			if err != nil {
+				return err
+			}
+			if ip := net.ParseIP(host); ip != nil && isPrivateIP(ip) {
+				if _, loaded := auditedAddresses.LoadOrStore(address, struct{}{}); !loaded {
+					logging.LogWarnf("Establishing a connection to the private network [address=%s, network=%s]", address, network)
+				}
+				if SafeMode {
+					return fmt.Errorf("ip address [%s] is prohibited", host)
+				}
+			}
+			return nil
+		},
+	}
+}
+
+// ssrfSafeDialContext 返回智能体出站请求专用的拨号函数：拨号时自行解析主机名并拒绝私网地址，
+// 同时直接连接解析出的公网 IP，使 CheckHostSSRF 的守卫结果与拨号目标一致，
+// 从根上杜绝 DNS 重绑定导致的 TOCTOU 绕过。
+// 与 SSRFSafeDialer 不同，本拨号函数不依赖 SafeMode，始终强制执行。
+// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-x8gv-g2g3-65fj
+func ssrfSafeDialContext(timeout time.Duration) func(ctx context.Context, network, addr string) (net.Conn, error) {
+	dialer := &net.Dialer{Timeout: timeout}
+	return func(ctx context.Context, network, addr string) (net.Conn, error) {
+		host, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			return nil, err
+		}
+		if ip := net.ParseIP(host); ip != nil {
+			if isPrivateIP(ip) {
+				return nil, errors.New("access to private/internal IP is prohibited")
+			}
+			return dialer.DialContext(ctx, network, addr)
+		}
+		ips, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+		if err != nil {
+			return nil, err
+		}
+		var lastErr error
+		for _, ipAddr := range ips {
+			if isPrivateIP(ipAddr.IP) {
+				continue
+			}
+			conn, err := dialer.DialContext(ctx, network, net.JoinHostPort(ipAddr.IP.String(), port))
+			if err == nil {
+				return conn, nil
+			}
+			lastErr = err
+		}
+		if lastErr != nil {
+			return nil, lastErr
+		}
+		return nil, errors.New("host has no public IP: " + host)
+	}
+}
+
+// isPrivateIP 判断 IP 是否为私网地址，含内嵌私网 IPv4 的 IPv6 过渡地址（NAT64、6to4、Teredo、IPv4 兼容）。
+// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-qq8m-8p8v-x4xg
+// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-rg26-cg95-gq6p
+func isPrivateIP(ip net.IP) bool {
+	if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
+		ip.IsPrivate() || ip.IsUnspecified() || ip.IsMulticast() {
+		return true
+	}
+	// Go 标准库的分类方法不识别 IPv6 过渡地址，需按 RFC 内嵌格式提取其中的 IPv4 后再递归判断。
+	if ip4 := extractEmbeddedIPv4(ip); nil != ip4 && !ip4.Equal(ip) {
+		return isPrivateIP(ip4)
+	}
+	return false
+}
+
+// extractEmbeddedIPv4 提取 IPv6 过渡地址（NAT64、6to4、Teredo、IPv4 兼容）中内嵌的 IPv4 地址，非过渡地址返回 nil。
+func extractEmbeddedIPv4(ip net.IP) net.IP {
+	ip16 := ip.To16()
+	if nil == ip16 || 16 != len(ip16) {
+		return nil
+	}
+	// NAT64（RFC 6052 64:ff9b::/96，含 RFC 8215 64:ff9b:1::/48）：低 32 位为内嵌 IPv4。
+	if ip16[0] == 0x00 && ip16[1] == 0x64 && ip16[2] == 0xff && ip16[3] == 0x9b {
+		return net.IPv4(ip16[12], ip16[13], ip16[14], ip16[15])
+	}
+	// 6to4（RFC 3056 2002::/16）：第 16-47 位为内嵌 IPv4。
+	if ip16[0] == 0x20 && ip16[1] == 0x02 {
+		return net.IPv4(ip16[2], ip16[3], ip16[4], ip16[5])
+	}
+	// Teredo（RFC 4380 2001:0000::/32）：低 32 位按位取反后为内嵌 IPv4。
+	if ip16[0] == 0x20 && ip16[1] == 0x01 && ip16[2] == 0x00 && ip16[3] == 0x00 {
+		return net.IPv4(ip16[12]^0xff, ip16[13]^0xff, ip16[14]^0xff, ip16[15]^0xff)
+	}
+	// IPv4 兼容地址（RFC 4291 已废弃 ::/96）：低 32 位为内嵌 IPv4。
+	if isZeroIPv6(ip16[0:12]) {
+		return net.IPv4(ip16[12], ip16[13], ip16[14], ip16[15])
+	}
+	return nil
+}
+
+// isZeroIPv6 判断字节切片是否全为零。
+func isZeroIPv6(b []byte) bool {
+	for _, v := range b {
+		if 0 != v {
+			return false
+		}
+	}
+	return true
+}
+
+func IsOnline(checkURL string, skipTlsVerify bool, timeout int) bool {
+	if "" == checkURL {
+		return false
+	}
+
+	u, err := url.Parse(checkURL)
+	if err != nil {
+		logging.LogWarnf("invalid check URL [%s]", checkURL)
+		return false
+	}
+	if u.Scheme == "file" {
+		filePath := strings.TrimPrefix(checkURL, "file://")
+		_, err := os.Stat(filePath)
+		return err == nil
+	}
+
+	if isOnline(checkURL, skipTlsVerify, timeout) {
+		return true
+	}
+
+	logging.LogWarnf("network is offline [checkURL=%s]", checkURL)
+	return false
+}
+
+func IsPortOpen(port string) bool {
+	timeout := time.Second
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort("127.0.0.1", port), timeout)
+	if err != nil {
+		return false
+	}
+	if nil != conn {
+		conn.Close()
+		return true
+	}
+	return false
+}
+
+func isOnline(checkURL string, skipTlsVerify bool, timeout int) (ret bool) {
+	c := req.C().
+		SetTimeout(time.Duration(timeout) * time.Millisecond).
+		SetProxy(httpclient.ProxyFromEnvironment).
+		SetUserAgent(UserAgent)
+	if skipTlsVerify {
+		c.EnableInsecureSkipVerify()
+	}
+
+	for range 2 {
+		resp, err := c.R().Get(checkURL)
+		if resp.GetHeader("Location") != "" {
+			return true
+		}
+
+		var urlErr *url.Error
+		if errors.As(err, &urlErr) && urlErr.URL != checkURL {
+			// DNS 重定向
+			logging.LogWarnf("network is online [DNS redirect, checkURL=%s, retURL=%s]", checkURL, urlErr.URL)
+			return true
+		}
+
+		ret = err == nil
+		if ret {
+			break
+		}
+
+		logging.LogWarnf("check url [%s] is online failed: %s", checkURL, err)
+		time.Sleep(1 * time.Second)
+	}
+	return
+}
+
+func GetRemoteAddr(req *http.Request) string {
+	ret := req.Header.Get("X-forwarded-for")
+	ret = strings.TrimSpace(ret)
+	if "" == ret {
+		ret = req.Header.Get("X-Real-IP")
+	}
+	ret = strings.TrimSpace(ret)
+	if "" == ret {
+		return req.RemoteAddr
+	}
+	return strings.Split(ret, ",")[0]
+}
+
+// GetRequestUrlStringParam extracts a string parameter from URL (path or query parameters).
+func GetRequestUrlStringParam(c *gin.Context, key string) string {
+	// /path/:name
+	if value := c.Param(key); value != "" {
+		return value
+	}
+
+	// /path?name=xxx
+	if value := c.Query(key); value != "" {
+		return value
+	}
+
+	return ""
+}
+
+// ErrInvalidID 表示块或笔记本 ID 不是合法的 SiYuan ID 形态。
+var ErrInvalidID = errors.New("invalid ID argument")
+
+// ValidateID 检查块或笔记本 ID 形态，不合法时返回 ErrInvalidID。
+// 返回错误而不是往调用方的信封里写字，让调用方决定用哪个错误码响应。
+func ValidateID(idArg string) error {
+	if ast.IsNodeIDPattern(idArg) {
+		return nil
+	}
+	return ErrInvalidID
+}
+
+// ValidateOptionalID 与 ValidateID 相同，但把空字符串视为「未提供」而非非法值。
+// 用于可选的对端 ID 等参数，避免调用方各自重复判空。
+func ValidateOptionalID(idArg string) error {
+	if idArg == "" {
+		return nil
+	}
+	return ValidateID(idArg)
+}
+
+func initHttpClient() {
+	http.DefaultClient = httpclient.GetCloudFileClient2Min()
+	http.DefaultTransport = httpclient.NewTransport(false)
+}
+
+func ParsePort(portString string) (uint16, error) {
+	port, err := strconv.ParseUint(portString, 10, 16)
+	if err != nil {
+		logging.LogErrorf("parse port [%s] failed: %s", portString, err)
+		return 0, err
+	}
+	return uint16(port), nil
+}

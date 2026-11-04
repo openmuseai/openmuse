@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_sw_group_on_mod,SwGroup 进默认 mod 并分发,grpSp 事件 int-id（3211593/1594/1469/1592/1595/1596）,enterSubElement 返回对应 handler；sp/grp/pic 已 addChild,pp-19:04,02,libs/ppt-core,pass
+2,02_function_open_tree_is_app_kmo,open 产物是 app Kmo 树,最小 pptx zip（一页一 sp）,app::KmoShapeTree.shapeCount()==1 且 type()==DgStore.queryType(id),01;pp-19:01,03;04,libs/ppt-core,pass
+3,03_function_open_ln_survives,open 路径 ln 不丢,spPr 含 a:ln w=25400 的 zip,dgShape.spPr().ln() 可查宽度,02;pp-19:05,pr-08,libs/ppt-core,pass
+4,04_function_typo_host_app_kmo,ShowTypoShape 宿主切 app Kmo,app::KmoShowShape,ShowTypoShape.mShapeBase 类型非 layout_shape,02,pr-08,libs/ppt-core,pass

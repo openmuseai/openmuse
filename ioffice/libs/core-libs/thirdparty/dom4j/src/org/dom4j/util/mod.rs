@@ -1,0 +1,15 @@
+pub mod SingletonStrategy;
+pub mod SimpleSingleton;
+pub mod PerThreadSingleton;
+pub mod DoubleNameMap;
+pub mod AttributeHelper;
+pub mod NodeComparator;
+pub mod XMLErrorHandler;
+pub mod IndexedDocumentFactory;
+pub mod IndexedElement;
+pub mod NonLazyDocumentFactory;
+pub mod NonLazyElement;
+pub mod ProxyDocumentFactory;
+pub mod UserDataAttribute;
+pub mod UserDataDocumentFactory;
+pub mod UserDataElement;

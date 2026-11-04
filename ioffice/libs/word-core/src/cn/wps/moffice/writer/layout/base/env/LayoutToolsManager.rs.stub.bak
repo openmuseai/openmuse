@@ -1,0 +1,49 @@
+// Rust stub for LayoutToolsManager (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/LayoutToolsManager.java
+use crate::*;
+
+pub struct LayoutToolsManager {
+    // TODO: fields
+}
+
+impl LayoutToolsManager {
+    pub fn new() -> Self { todo!() }
+    pub fn reuseClean(&self) -> bool { todo!() }
+    pub fn reuseInit(&self) { todo!() }
+    pub fn getFastDrawPosHandler(&self) -> IDrawPosHandler { todo!() }
+    pub fn getNormalDrawPosHandler(&self) -> IDrawPosHandler { todo!() }
+    pub fn getRotationFarEastDrawPosHandler(&self) -> IDrawPosHandler { todo!() }
+    pub fn getUnderlineCollector(&self) -> UnderlineCollector { todo!() }
+    pub fn getStrikeThroughCollector(&self) -> StrikeThroughCollector { todo!() }
+    pub fn getSHDCollector(&self) -> SHDCollector { todo!() }
+    pub fn getBorderCollector(&self) -> BordersCollector { todo!() }
+    pub fn getHighlightCollector(&self) -> HighlightCollector { todo!() }
+    pub fn getTextOpCollector(&self) -> TextOpCollector { todo!() }
+    pub fn getCapsHandler(&self, prop: PropertySet, mCapsCallback: Box<dyn ICapsCallback>) -> Box<dyn ICapsHandler> { todo!() }
+    pub fn getHAlignHandler(&self, alignment: i32) -> Box<dyn IHAlignHandler> { todo!() }
+    pub fn getVAlignHandler(&self, wordAlingFont: i32) -> IVAlignHandler { todo!() }
+    pub fn getCharSpaceHandler(&self, env: LayoutState) -> Box<dyn IWhiteSpaceHandler> { todo!() }
+    pub fn getPhoneSpaceHandler(&self, env: LayoutState) -> Box<dyn IWhiteSpaceHandler> { todo!() }
+    pub fn getAutoSpaceHandler(&self, mEnv: LayoutState) -> Box<dyn IAutoSpaceHandler> { todo!() }
+    pub fn getMahtOpSpaceHandler(&self) -> Box<dyn IAutoSpaceHandler> { todo!() }
+    pub fn getPunctSpaceHandler(&self, layoutState: LayoutState) -> Box<dyn IPunctSpaceHandler> { todo!() }
+    pub fn getGridHandler(&self, gridModel: i32) -> Box<dyn IGridHandler> { todo!() }
+    pub fn getTabHandler(&self) -> TabHandler { todo!() }
+    pub fn getHAlignMathParaHandler(&self) -> Box<dyn IHAlignHandler> { todo!() }
+    pub fn getHAlignOMathParaHandler(&self) -> Box<dyn IHAlignHandler> { todo!() }
+    pub fn getWingdingsConvert(&self) -> Box<dyn ISymbolConvert> { todo!() }
+    pub fn getWebdingsConvert(&self) -> Box<dyn ISymbolConvert> { todo!() }
+    pub fn getExtraConvert(&self) -> Box<dyn ISymbolConvert> { todo!() }
+    pub fn getSymbolConvert(&self) -> Box<dyn ISymbolConvert> { todo!() }
+    pub fn getKingsoftConfettiConvert(&self) -> Box<dyn ISymbolConvert> { todo!() }
+    pub fn getKingsoftExtraConvert(&self) -> Box<dyn ISymbolConvert> { todo!() }
+    pub fn getKingsoftSignConvert(&self) -> Box<dyn ISymbolConvert> { todo!() }
+    pub fn getParaBrcLayouter(&self) -> ParaBrcLayouter { todo!() }
+    pub fn getKerningHandler(&self) -> KerningHandler { todo!() }
+    pub fn getCharBorderHandler(&self) -> CharBorderHandler { todo!() }
+    pub fn getFitTextHandler(&self) -> Box<dyn IHAlignHandler> { todo!() }
+    pub fn getWidthAnalyzer(&self) -> WidthAnalyzer { todo!() }
+    pub fn getDefaultFastGraph(&self) -> Box<dyn IFastGraph> { todo!() }
+    pub fn getDocFieldColect(&self) -> DocFieldCollector { todo!() }
+    pub fn getViewEnv(&self) -> ViewEnv { todo!() }
+}

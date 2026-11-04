@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+<!-- 阿拉伯 -->
+<shape-02 type="string-array" size="10">
+<item>٠</item>
+<item>١</item>
+<item>٢</item>
+<item>٣</item>
+<item>٤</item>
+<item>٥</item>
+<item>٦</item>
+<item>٧</item>
+<item>٨</item>
+<item>٩</item>
+</shape-02>
+<shape-03 type="string-array" size="10">
+<item>٠</item>
+<item>١</item>
+<item>٢</item>
+<item>٣</item>
+<item>٤</item>
+<item>٥</item>
+<item>٦</item>
+<item>٧</item>
+<item>٨</item>
+<item>٩</item>
+</shape-03>
+<!-- 简体中文大写1 -->
+<shape-1E type="string-array" size="10">
+<item>〇</item>
+<item>一</item>
+<item>二</item>
+<item>三</item>
+<item>四</item>
+<item>五</item>
+<item>六</item>
+<item>七</item>
+<item>八</item>
+<item>九</item>
+</shape-1E>
+<shape-unit-1E type="string-array" size="8">
+<item>十</item>
+<item>百</item>
+<item>千</item>
+<item>万</item>
+<item>亿</item>
+<item>兆</item>
+<item>-</item>
+<item>.</item>
+</shape-unit-1E>
+<!-- 简体中文大写2 -->
+<shape-1F type="string-array" size="10">
+<item>零</item>
+<item>壹</item>
+<item>贰</item>
+<item>叁</item>
+<item>肆</item>
+<item>伍</item>
+<item>陆</item>
+<item>柒</item>
+<item>捌</item>
+<item>玖</item>
+</shape-1F>
+<shape-unit-1F type="string-array" size="8">
+<item>拾</item>
+<item>佰</item>
+<item>仟</item>
+<item>万</item>
+<item>亿</item>
+<item>兆</item>
+<item>-</item>
+<item>.</item>
+<item>元</item>
+<item>角</item>
+<item>分</item>
+<item>整</item>
+</shape-unit-1F>
+<shape-20 type="string-array" size="10">
+<item>０</item>
+<item>１</item>
+<item>２</item>
+<item>３</item>
+<item>４</item>
+<item>５</item>
+<item>６</item>
+<item>７</item>
+<item>８</item>
+<item>９</item>
+</shape-20>
+<shape-unit-20 type="string-array" size="8">
+<item>十</item>
+<item>百</item>
+<item>千</item>
+<item>万</item>
+<item>亿</item>
+<item>兆</item>
+</shape-unit-20>
+<!-- 繁体中文大写1 -->
+<shape-21 type="string-array" size="10">
+<item>〇</item>
+<item>一</item>
+<item>二</item>
+<item>三</item>
+<item>四</item>
+<item>五</item>
+<item>六</item>
+<item>七</item>
+<item>八</item>
+<item>九</item>
+</shape-21>
+<shape-unit-21 type="string-array" size="8">
+<item>十</item>
+<item>百</item>
+<item>千</item>
+<item>萬</item>
+<item>亿</item>
+<item>兆</item>
+<item>-</item>
+<item>.</item>
+</shape-unit-21>
+<!-- 繁体中文大写2 -->
+<shape-22 type="string-array" size="10">
+<item>零</item>
+<item>壹</item>
+<item>貳</item>
+<item>參</item>
+<item>肆</item>
+<item>伍</item>
+<item>陸</item>
+<item>柒</item>
+<item>捌</item>
+<item>玖</item>
+</shape-22>
+<shape-unit-22 type="string-array" size="8">
+<item>拾</item>
+<item>佰</item>
+<item>仟</item>
+<item>萬</item>
+<item>亿</item>
+<item>兆</item>
+<item>-</item>
+<item>.</item>
+</shape-unit-22>
+<!-- 繁体中文大写3 -->
+<shape-23 type="string-array" size="10">
+<item>０</item>
+<item>１</item>
+<item>２</item>
+<item>３</item>
+<item>４</item>
+<item>５</item>
+<item>６</item>
+<item>７</item>
+<item>８</item>
+<item>９</item>
+</shape-23>
+<shape-unit-23 type="string-array" size="8">
+<item>十</item>
+<item>百</item>
+<item>千</item>
+<item>万</item>
+<item>亿</item>
+<item>兆</item>
+</shape-unit-23>
+<!-- 日本1 -->
+<shape-1B type="string-array" size="10">
+<item>〇</item>
+<item>一</item>
+<item>二</item>
+<item>三</item>
+<item>四</item>
+<item>五</item>
+<item>六</item>
+<item>七</item>
+<item>八</item>
+<item>九</item>
+</shape-1B>
+<shape-unit-1B type="string-array" size="8">
+<item>十</item>
+<item>百</item>
+<item>千</item>
+<item>万</item>
+<item>億</item>
+<item>兆</item>
+<item>-</item>
+<item>.</item>
+</shape-unit-1B>
+<shape-1C type="string-array" size="10">
+<item>〇</item>
+<item>壱</item>
+<item>弐</item>
+<item>参</item>
+<item>四</item>
+<item>伍</item>
+<item>六</item>
+<item>七</item>
+<item>八</item>
+<item>九</item>
+</shape-1C>
+<shape-unit-1C type="string-array" size="8">
+<item>拾</item>
+<item>百</item>
+<item>阡</item>
+<item>萬</item>
+<item>億</item>
+<item>兆</item>
+<item>-</item>
+<item>.</item>
+</shape-unit-1C>
+<shape-1D type="string-array" size="10">
+<item>０</item>
+<item>１</item>
+<item>２</item>
+<item>３</item>
+<item>４</item>
+<item>５</item>
+<item>６</item>
+<item>７</item>
+<item>８</item>
+<item>９</item>
+</shape-1D>
+<shape-unit-1D type="string-array" size="8">
+<item>十</item>
+<item>百</item>
+<item>千</item>
+<item>万</item>
+<item>億</item>
+<item>兆</item>
+</shape-unit-1D>
+<!-- 朝鲜语1 -->
+<shape-24 type="string-array" size="10">
+<item>０</item>
+<item>一</item>
+<item>二</item>
+<item>三</item>
+<item>四</item>
+<item>五</item>
+<item>六</item>
+<item>七</item>
+<item>八</item>
+<item>九</item>
+</shape-24>
+<shape-unit-24 type="string-array" size="8">
+<item>十</item>
+<item>百</item>
+<item>千</item>
+<item>万</item>
+<item>億</item>
+<item>兆</item>
+<item>-</item>
+<item>.</item>
+</shape-unit-24>
+<shape-25 type="string-array" size="10">
+<item>零</item>
+<item>壹</item>
+<item>貳</item>
+<item>參</item>
+<item>四</item>
+<item>伍</item>
+<item>六</item>
+<item>七</item>
+<item>八</item>
+<item>九</item>
+</shape-25>
+<shape-unit-25 type="string-array" size="8">
+<item>拾</item>
+<item>百</item>
+<item>阡</item>
+<item>萬</item>
+<item>億</item>
+<item>兆</item>
+<item>-</item>
+<item>.</item>
+</shape-unit-25>
+<shape-26 type="string-array" size="10">
+<item>０</item>
+<item>１</item>
+<item>２</item>
+<item>３</item>
+<item>４</item>
+<item>５</item>
+<item>６</item>
+<item>７</item>
+<item>８</item>
+<item>９</item>
+</shape-26>
+<shape-unit-26 type="string-array" size="8">
+<item>十</item>
+<item>百</item>
+<item>千</item>
+<item>万</item>
+<item>億</item>
+<item>兆</item>
+</shape-unit-26>
+<shape-27 type="string-array" size="10">
+<item>영</item>
+<item>일</item>
+<item>이</item>
+<item>삼</item>
+<item>사</item>
+<item>오</item>
+<item>육</item>
+<item>칠</item>
+<item>팔</item>
+<item>구</item>
+</shape-27>
+<!-- 泰语 -->
+<shape-0D type="string-array" size="10">
+<item>๐</item>
+<item>๑</item>
+<item>๒</item>
+<item>๓</item>
+<item>๔</item>
+<item>๕</item>
+<item>๖</item>
+<item>๗</item>
+<item>๘</item>
+<item>๙</item>
+</shape-0D>
+<!-- 印地语 -->
+<shape-04 type="string-array" size="10">
+<item>०</item>
+<item>१</item>
+<item>२</item>
+<item>३</item>
+<item>४</item>
+<item>५</item>
+<item>६</item>
+<item>७</item>
+<item>८</item>
+<item>९</item>
+</shape-04>
+</resource>

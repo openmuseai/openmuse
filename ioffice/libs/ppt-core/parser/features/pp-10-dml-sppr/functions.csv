@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_shape_properties,p:spPr 顶层分发与 xfrm,p:spPr/grpSpPr events+ShapePr,bwMode+Transform2D 写入与 fill/ln/geom/effect 子分发,pp-02:02;pp-02:03;pp-02:04;pp-02:05,02;03;04;pl-02-xfrm-geometry,libs/ppt-core,pass
+2,02_function_fill,a:fill 子树,solid/grad/patt/blip fill events+Fill,fillType+SolidFill/Gradient/Blip 最小集,01,pl-03-ph-merge;pr-02-shape-command,libs/ppt-core,pass
+3,03_function_outline,a:ln 子树,ln events+Outline,w/cmpd/cap/algn+lineJoin+最小 dash/end,01,pr-02-shape-command,libs/ppt-core,pass
+4,04_function_geometry,a:prstGeom/custGeom 最小集,geometry events+Geometry2D,prst id+avLst / custGeom rect+path 最小子集,01,pr-02-shape-command,libs/ppt-core,pass

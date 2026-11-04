@@ -1,0 +1,6890 @@
+{
+	"ID": "20200924093441-ft2rhps",
+	"Spec": "5",
+	"Type": "NodeDocument",
+	"Properties": {
+		"icon": "1f4f0",
+		"id": "20200924093441-ft2rhps",
+		"title": "Formatting elements",
+		"title-img": "background-color:#269;background-image: linear-gradient(white 2px, transparent 2px),linear-gradient(90deg, white 2px, transparent 2px),linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px);background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;background-position:-2px -2px, -2px -2px, -1px -1px, -1px -1px;",
+		"type": "doc",
+		"updated": "20261028111611"
+	},
+	"Children": [
+		{
+			"ID": "20210104091509-sg4pt12",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-sg4pt12",
+				"updated": "20261019194432"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Inline elements"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-8csaq4j",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20210104091509-8csaq4j",
+				"updated": "20261019194432"
+			},
+			"Children": [
+				{
+					"ID": "20210604224351-furcz4d",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604224351-furcz4d",
+						"updated": "20240416114218"
+					},
+					"Children": [
+						{
+							"ID": "20210604224351-arkd1t6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604224351-arkd1t6",
+								"updated": "20240416114218"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20200923234011-ieuun1p",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "Block Ref"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210206215048-zg5vnou",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210206215048-zg5vnou",
+						"updated": "20240506230853"
+					},
+					"Children": [
+						{
+							"ID": "20210206215048-elufsn1",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210206215048-elufsn1",
+								"updated": "20240506230853"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://liuyun.io",
+									"TextMarkTextContent": "Hyperlink"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20220916200111-8pnrqr2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220916200111-8pnrqr2",
+						"updated": "20261019194432"
+					},
+					"Children": [
+						{
+							"ID": "20220916200111-4swvak0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220916200111-4swvak0",
+								"updated": "20220916200114"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Picture"
+								}
+							]
+						},
+						{
+							"ID": "20210604225055-4pq8g38",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604225055-4pq8g38",
+								"updated": "20261019194432"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Paste or drag images to upload them. Hover over an image to reveal the small handles outside its border, then drag the right, bottom, or bottom-right handle to resize it proportionally. On touchscreens, tap an image to reveal its handles, then drag a handle"
+								}
+							]
+						},
+						{
+							"ID": "20220916200115-rstez65",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220916200115-rstez65",
+								"updated": "20240702222031"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeImage",
+									"Data": "span",
+									"Children": [
+										{
+											"Type": "NodeBang"
+										},
+										{
+											"Type": "NodeOpenBracket"
+										},
+										{
+											"Type": "NodeLinkText"
+										},
+										{
+											"Type": "NodeCloseBracket"
+										},
+										{
+											"Type": "NodeOpenParen"
+										},
+										{
+											"Type": "NodeLinkDest",
+											"Data": "assets/siyuan-128-20210604092437-7iqzf90.png"
+										},
+										{
+											"Type": "NodeCloseParen"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210206214931-w9oisat",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210206214931-w9oisat"
+					},
+					"Children": [
+						{
+							"ID": "20210206214931-1sh9b0l",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210206214931-1sh9b0l",
+								"updated": "20210604224336"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Bold"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210206215019-e5bni0p",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210206215019-e5bni0p"
+					},
+					"Children": [
+						{
+							"ID": "20210206215019-gvr3fcc",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210206215019-gvr3fcc",
+								"updated": "20210604224518"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "em",
+									"TextMarkTextContent": "Italic"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604224516-2oimqad",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604224516-2oimqad"
+					},
+					"Children": [
+						{
+							"ID": "20210604224516-cywxsz9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604224516-cywxsz9",
+								"updated": "20210604224521"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "u",
+									"TextMarkTextContent": "Underline"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210206215025-g8xa9oy",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210206215025-g8xa9oy"
+					},
+					"Children": [
+						{
+							"ID": "20210206215025-4eeazmc",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210206215025-4eeazmc",
+								"updated": "20210604224444"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "s",
+									"TextMarkTextContent": "Strikethrough"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604224529-gc4i2vp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604224529-gc4i2vp"
+					},
+					"Children": [
+						{
+							"ID": "20210604224529-z6ek81b",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604224529-z6ek81b",
+								"updated": "20210604224531"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "mark",
+									"TextMarkTextContent": "Mark"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604224538-xv90it6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604224538-xv90it6"
+					},
+					"Children": [
+						{
+							"ID": "20210604224538-djj2qd0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604224538-djj2qd0",
+								"updated": "20210604224554"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "sup",
+									"TextMarkTextContent": "Superscript"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604224541-bgxj0zh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604224541-bgxj0zh"
+					},
+					"Children": [
+						{
+							"ID": "20210604224541-iybudmr",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604224541-iybudmr",
+								"updated": "20210604224558"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "sub",
+									"TextMarkTextContent": "Subscript"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604224629-ccqhari",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604224629-ccqhari"
+					},
+					"Children": [
+						{
+							"ID": "20210604224629-1w1xs2b",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604224629-1w1xs2b",
+								"updated": "20210604224641"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Keymap"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604224645-6278xzz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604224645-6278xzz"
+					},
+					"Children": [
+						{
+							"ID": "20210604224645-6qpjclf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604224645-6qpjclf",
+								"updated": "20210604224648"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "tag",
+									"TextMarkTextContent": "Tag"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210206215033-chf0vtc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210206215033-chf0vtc"
+					},
+					"Children": [
+						{
+							"ID": "20210206215033-q33tp81",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210206215033-q33tp81",
+								"updated": "20210604224707"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "Inline Code"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604224617-wbxy1s0",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604224617-wbxy1s0"
+					},
+					"Children": [
+						{
+							"ID": "20210604224617-c5yo2df",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604224617-c5yo2df",
+								"updated": "20210604224719"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "inline-math",
+									"TextMarkInlineMathContent": "a^2 + b^2 = \\color{red}c^2"
+								},
+								{
+									"Type": "NodeText"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20220918174910-8q5x3x0",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220918174910-8q5x3x0",
+						"updated": "20220918174924"
+					},
+					"Children": [
+						{
+							"ID": "20220918174910-p5i5ltq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220918174910-p5i5ltq",
+								"updated": "20220918174924"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "inline-memo",
+									"TextMarkInlineMemoContent": "This is a memo.",
+									"TextMarkTextContent": "Memo"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604224724-pa2a6tz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604224724-pa2a6tz",
+						"updated": "20220521234603"
+					},
+					"Children": [
+						{
+							"ID": "20210604224728-rs32cdu",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604224728-rs32cdu",
+								"updated": "20220521234603"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color1); background-color: var(--b3-font-background1);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 1"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color1); background-color: var(--b3-font-background1);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color2); background-color: var(--b3-font-background2);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 2"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color2); background-color: var(--b3-font-background2);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "  "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color3); background-color: var(--b3-font-background3);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 3"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color3); background-color: var(--b3-font-background3);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color4); background-color: var(--b3-font-background4);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 4"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color4); background-color: var(--b3-font-background4);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color5); background-color: var(--b3-font-background5);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 5"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color5); background-color: var(--b3-font-background5);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color6); background-color: var(--b3-font-background6);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 6"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color6); background-color: var(--b3-font-background6);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color7); background-color: var(--b3-font-background7);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 7"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color7); background-color: var(--b3-font-background7);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color8); background-color: var(--b3-font-background8);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 8"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color8); background-color: var(--b3-font-background8);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color9); background-color: var(--b3-font-background9);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 9"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color9); background-color: var(--b3-font-background9);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color10); background-color: var(--b3-font-background10);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 10"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color10); background-color: var(--b3-font-background10);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color11); background-color: var(--b3-font-background11);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 11"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color11); background-color: var(--b3-font-background11);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color12); background-color: var(--b3-font-background12);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 12"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color12); background-color: var(--b3-font-background12);\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "color: var(--b3-font-color13); background-color: var(--b3-font-background13);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Color 13"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"color: var(--b3-font-color13); background-color: var(--b3-font-background13);\"}"
+								}
+							]
+						},
+						{
+							"ID": "20210604224728-wxycvn5",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604224728-wxycvn5",
+								"updated": "20220115192946"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "-webkit-text-stroke: 0.2px var(--b3-theme-on-background); -webkit-text-fill-color: transparent;"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Style 1"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"-webkit-text-stroke: 0.2px var(--b3-theme-on-background); -webkit-text-fill-color: transparent;\"}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " "
+								},
+								{
+									"Type": "NodeTextMark",
+									"Properties": {
+										"style": "text-shadow: 1px 1px var(--b3-border-color), 2px 2px var(--b3-border-color), 3px 3px var(--b3-border-color), 4px 4px var(--b3-border-color);"
+									},
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Style 2"
+								},
+								{
+									"Type": "NodeKramdownSpanIAL",
+									"Data": "{: style=\"text-shadow: 1px 1px var(--b3-border-color), 2px 2px var(--b3-border-color), 3px 3px var(--b3-border-color), 4px 4px var(--b3-border-color);\"}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604224956-4srnyy7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604224956-4srnyy7",
+						"updated": "20220115193741"
+					},
+					"Children": [
+						{
+							"ID": "20210604224956-3c5ta1w",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604224956-3c5ta1w",
+								"updated": "20220115193741"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Trigger an emoji search by typing "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ":"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " followed by a letter 😄 😆 😵 😭 😰 😅 😢 😤 😍 😌👍 👎 💯 👏 🔔 🎁 ❓ 💣 ❤️ ☕️ 🌀 🙇 💋 🙏 💢"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261015131447-lgzshyq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015131447-lgzshyq",
+				"updated": "20261016011750"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Under "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Appearance"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Content"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Manage colors"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", click the corresponding button to manage combined colors, font colors, or background colors."
+				}
+			]
+		},
+		{
+			"ID": "20210604225457-qsanq8c",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210604225457-qsanq8c",
+				"updated": "20210604225504"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Super block"
+				}
+			]
+		},
+		{
+			"ID": "20210604235938-8t6fpd8",
+			"Type": "NodeSuperBlock",
+			"Properties": {
+				"id": "20210604235938-8t6fpd8",
+				"updated": "20210612222558"
+			},
+			"Children": [
+				{
+					"Type": "NodeSuperBlockOpenMarker"
+				},
+				{
+					"Type": "NodeSuperBlockLayoutMarker",
+					"Data": "col"
+				},
+				{
+					"ID": "20210604235929-6qqehly",
+					"Type": "NodeSuperBlock",
+					"Properties": {
+						"id": "20210604235929-6qqehly",
+						"updated": "20210612222556"
+					},
+					"Children": [
+						{
+							"Type": "NodeSuperBlockOpenMarker"
+						},
+						{
+							"Type": "NodeSuperBlockLayoutMarker",
+							"Data": "row"
+						},
+						{
+							"ID": "20210604235911-c703q2f",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604235911-c703q2f",
+								"style": "color: var(--b3-card-error-color);background-color: var(--b3-card-error-background);",
+								"updated": "20210604235915"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Paragraph 1"
+								}
+							]
+						},
+						{
+							"ID": "20210604235917-ksnu4s8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604235917-ksnu4s8",
+								"style": "color: var(--b3-card-warning-color); background-color: var(--b3-card-warning-background); text-align: center;",
+								"updated": "20210612222556"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Paragraph 2 Center"
+								}
+							]
+						},
+						{
+							"Type": "NodeSuperBlockCloseMarker"
+						}
+					]
+				},
+				{
+					"ID": "20210604235934-72p934x",
+					"Type": "NodeSuperBlock",
+					"Properties": {
+						"id": "20210604235934-72p934x",
+						"updated": "20210612222558"
+					},
+					"Children": [
+						{
+							"Type": "NodeSuperBlockOpenMarker"
+						},
+						{
+							"Type": "NodeSuperBlockLayoutMarker",
+							"Data": "row"
+						},
+						{
+							"ID": "20210604235918-8x3pz9s",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604235918-8x3pz9s",
+								"style": "color: var(--b3-card-info-color);background-color: var(--b3-card-info-background);",
+								"updated": "20210604235921"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Paragraph 3"
+								}
+							]
+						},
+						{
+							"ID": "20210604235918-n3ml6hh",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604235918-n3ml6hh",
+								"style": "color: var(--b3-card-success-color); background-color: var(--b3-card-success-background); text-align: right;",
+								"updated": "20210612222558"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Paragraph 4 Right"
+								}
+							]
+						},
+						{
+							"Type": "NodeSuperBlockCloseMarker"
+						}
+					]
+				},
+				{
+					"Type": "NodeSuperBlockCloseMarker"
+				}
+			]
+		},
+		{
+			"ID": "20210604225457-7lq09oe",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210604225457-7lq09oe",
+				"updated": "20261024171608"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Embed block"
+				}
+			]
+		},
+		{
+			"ID": "20210604225655-wpv0w9t",
+			"Type": "NodeBlockQueryEmbed",
+			"Properties": {
+				"id": "20210604225655-wpv0w9t",
+				"updated": "20210604225655"
+			},
+			"Children": [
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeBlockQueryEmbedScript",
+					"Data": "select * from blocks where id='20210428222033-bhbz6yg'"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				}
+			]
+		},
+		{
+			"ID": "20261024171608-ctwgnun",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024171608-ctwgnun",
+				"updated": "20261024171608"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Embed block"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", choose whether embedded blocks show breadcrumbs and include the path above the document. Hiding the parent path keeps the document title and its internal structure."
+				}
+			]
+		},
+		{
+			"ID": "20261024171608-9eg0kvq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024171608-9eg0kvq",
+				"updated": "20261024171608"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The block menu entries "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Embed block"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Embed Block Breadcrumb"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " and "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Embed block"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Show parent path in breadcrumbs"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " each offer Enable, Disable and Default. Default removes the block override and follows the global setting."
+				}
+			]
+		},
+		{
+			"ID": "20210604225720-p4ywemu",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210604225720-p4ywemu",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Heading block"
+				}
+			]
+		},
+		{
+			"ID": "20260730103436-f9q2v5b",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260730103436-f9q2v5b",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Click the triangle to the left of a heading to fold or expand the current heading; "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Alt"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "-click ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "⌥"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "-click on macOS) the triangle to fold or expand its direct subheadings; "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Alt"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "-click ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "⌥"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "-click on macOS) the block icon to fold or expand sibling headings. You can also use “Fold/expand direct subheadings” and “Fold/expand sibling headings” in the block icon menu."
+				}
+			]
+		},
+		{
+			"ID": "20260730103436-r4m7z1k",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260730103436-r4m7z1k",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The shortcuts for these two operations are unassigned by default and can be configured in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Keymap"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-6uxwbx1",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-6uxwbx1",
+				"updated": "20210415200926"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Ordered, unordered, task list"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-dyshnes",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20210104091509-dyshnes",
+				"updated": "20210415200927"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Unordered List"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-4361ij9",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20210104091509-4361ij9",
+				"updated": "20210604230004"
+			},
+			"Children": [
+				{
+					"ID": "20210604225923-dct4raj",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604225923-dct4raj"
+					},
+					"Children": [
+						{
+							"ID": "20210604225923-9ua6jb2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604225923-9ua6jb2"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Java"
+								}
+							]
+						},
+						{
+							"ID": "20210604225929-u0buxhq",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20210604225929-u0buxhq"
+							},
+							"Children": [
+								{
+									"ID": "20210604225928-w3hplrd",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20210604225928-w3hplrd"
+									},
+									"Children": [
+										{
+											"ID": "20210604225928-w62b8ph",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210604225928-w62b8ph",
+												"updated": "20210604225931"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Spring"
+												}
+											]
+										},
+										{
+											"ID": "20210604225940-25ugvnu",
+											"Type": "NodeList",
+											"ListData": {},
+											"Properties": {
+												"id": "20210604225940-25ugvnu"
+											},
+											"Children": [
+												{
+													"ID": "20210604225932-sogkswl",
+													"Type": "NodeListItem",
+													"ListData": {
+														"BulletChar": 42,
+														"Marker": "Kg=="
+													},
+													"Properties": {
+														"id": "20210604225932-sogkswl"
+													},
+													"Children": [
+														{
+															"ID": "20210604225932-1r65zhj",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20210604225932-1r65zhj",
+																"updated": "20210604225933"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "IoC"
+																}
+															]
+														}
+													]
+												},
+												{
+													"ID": "20210604225934-nq2c5y3",
+													"Type": "NodeListItem",
+													"ListData": {
+														"BulletChar": 42,
+														"Marker": "Kg=="
+													},
+													"Properties": {
+														"id": "20210604225934-nq2c5y3"
+													},
+													"Children": [
+														{
+															"ID": "20210604225934-regfxee",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20210604225934-regfxee",
+																"updated": "20210604225936"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "AOP"
+																}
+															]
+														}
+													]
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604225936-rieg10b",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"fold": "1",
+						"id": "20210604225936-rieg10b"
+					},
+					"Children": [
+						{
+							"ID": "20210604225936-8pi4lgx",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604225936-8pi4lgx"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Go"
+								}
+							]
+						},
+						{
+							"ID": "20210604225948-0q1xz0y",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20210604225948-0q1xz0y"
+							},
+							"Children": [
+								{
+									"ID": "20210604225948-18xyb3m",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20210604225948-18xyb3m"
+									},
+									"Children": [
+										{
+											"ID": "20210604225948-9404wiz",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210604225948-9404wiz",
+												"updated": "20210604225950"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "gofmt"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20210604225950-o0kyu4f",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20210604225950-o0kyu4f"
+									},
+									"Children": [
+										{
+											"ID": "20210604225950-fkijujy",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210604225950-fkijujy",
+												"updated": "20210604225953"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Wide"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604225953-rgasko9",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"fold": "1",
+						"id": "20210604225953-rgasko9",
+						"updated": "20210604230004"
+					},
+					"Children": [
+						{
+							"ID": "20210604225953-t1bb52y",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604225953-t1bb52y"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Node.js"
+								}
+							]
+						},
+						{
+							"ID": "20210604230002-57hr1nk",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20210604230002-57hr1nk",
+								"updated": "20210604230004"
+							},
+							"Children": [
+								{
+									"ID": "20210604230001-i5yfwa3",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20210604230001-i5yfwa3",
+										"updated": "20210604230004"
+									},
+									"Children": [
+										{
+											"ID": "20210604230001-p0a5v7i",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210604230001-p0a5v7i",
+												"updated": "20210604230004"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "KoaExpress"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20210604230005-pwazu1q",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20210604230005-pwazu1q"
+									},
+									"Children": [
+										{
+											"ID": "20210604230005-tti5287",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210604230005-tti5287"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Express"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-6vdzi1s",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20210104091509-6vdzi1s",
+				"updated": "20210415200930"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Ordered List"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-14bo3es",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1
+			},
+			"Properties": {
+				"id": "20210104091509-14bo3es",
+				"updated": "20210104091509"
+			},
+			"Children": [
+				{
+					"ID": "20210104091509-uoj0v4u",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "MS4=",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20210104091509-uoj0v4u"
+					},
+					"Children": [
+						{
+							"ID": "20210104091509-466uqpv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210104091509-466uqpv"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Node.js"
+								}
+							]
+						},
+						{
+							"ID": "20210104091509-tz6b667",
+							"Type": "NodeList",
+							"ListData": {
+								"Typ": 1
+							},
+							"Properties": {
+								"id": "20210104091509-tz6b667"
+							},
+							"Children": [
+								{
+									"ID": "20210104091509-7f27hw2",
+									"Type": "NodeListItem",
+									"ListData": {
+										"Typ": 1,
+										"Delimiter": 46,
+										"Marker": "MS4=",
+										"Num": 1
+									},
+									"Properties": {
+										"id": "20210104091509-7f27hw2"
+									},
+									"Children": [
+										{
+											"ID": "20210201203340-ww6edm7",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210201203340-ww6edm7"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Express"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20210104091509-9nn3xgv",
+									"Type": "NodeListItem",
+									"ListData": {
+										"Typ": 1,
+										"Delimiter": 46,
+										"Marker": "Mi4=",
+										"Num": 2
+									},
+									"Properties": {
+										"id": "20210104091509-9nn3xgv"
+									},
+									"Children": [
+										{
+											"ID": "20210201203340-3d47swl",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210201203340-3d47swl"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Koa"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20210104091509-ththxjo",
+									"Type": "NodeListItem",
+									"ListData": {
+										"Typ": 1,
+										"Delimiter": 46,
+										"Marker": "My4=",
+										"Num": 3
+									},
+									"Properties": {
+										"id": "20210104091509-ththxjo"
+									},
+									"Children": [
+										{
+											"ID": "20210201203340-pu8imaz",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210201203340-pu8imaz"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Sails"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210104091509-q2i8lew",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "Mi4=",
+						"Num": 2
+					},
+					"Properties": {
+						"fold": "1",
+						"id": "20210104091509-q2i8lew"
+					},
+					"Children": [
+						{
+							"ID": "20210104091509-a4qoj4e",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210104091509-a4qoj4e"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Go"
+								}
+							]
+						},
+						{
+							"ID": "20210104091509-bwtgbgh",
+							"Type": "NodeList",
+							"ListData": {
+								"Typ": 1
+							},
+							"Properties": {
+								"id": "20210104091509-bwtgbgh"
+							},
+							"Children": [
+								{
+									"ID": "20210104091509-9nnoi3q",
+									"Type": "NodeListItem",
+									"ListData": {
+										"Typ": 1,
+										"Delimiter": 46,
+										"Marker": "MS4=",
+										"Num": 1
+									},
+									"Properties": {
+										"id": "20210104091509-9nnoi3q"
+									},
+									"Children": [
+										{
+											"ID": "20210201203340-aqoyzlw",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210201203340-aqoyzlw"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "gofmt"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20210104091509-isoqrw3",
+									"Type": "NodeListItem",
+									"ListData": {
+										"Typ": 1,
+										"Delimiter": 46,
+										"Marker": "Mi4=",
+										"Num": 2
+									},
+									"Properties": {
+										"id": "20210104091509-isoqrw3"
+									},
+									"Children": [
+										{
+											"ID": "20210201203340-fpw52jv",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210201203340-fpw52jv"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Wide"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210104091509-46ksbxh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "My4=",
+						"Num": 3
+					},
+					"Properties": {
+						"fold": "1",
+						"id": "20210104091509-46ksbxh"
+					},
+					"Children": [
+						{
+							"ID": "20210104091509-ys7x4p9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210104091509-ys7x4p9"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Java"
+								}
+							]
+						},
+						{
+							"ID": "20210104091509-epzcxbq",
+							"Type": "NodeList",
+							"ListData": {
+								"Typ": 1
+							},
+							"Properties": {
+								"id": "20210104091509-epzcxbq"
+							},
+							"Children": [
+								{
+									"ID": "20210104091509-hwzgjv7",
+									"Type": "NodeListItem",
+									"ListData": {
+										"Typ": 1,
+										"Delimiter": 46,
+										"Marker": "MS4=",
+										"Num": 1
+									},
+									"Properties": {
+										"id": "20210104091509-hwzgjv7"
+									},
+									"Children": [
+										{
+											"ID": "20210201203340-10fwtz7",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210201203340-10fwtz7"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Latke"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20210104091509-x6gh9pt",
+									"Type": "NodeListItem",
+									"ListData": {
+										"Typ": 1,
+										"Delimiter": 46,
+										"Marker": "Mi4=",
+										"Num": 2
+									},
+									"Properties": {
+										"id": "20210104091509-x6gh9pt"
+									},
+									"Children": [
+										{
+											"ID": "20210201203340-iadta7n",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20210201203340-iadta7n"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "IDEA"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-lgi6kq5",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20210104091509-lgi6kq5",
+				"updated": "20210415200936"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Task list"
+				}
+			]
+		},
+		{
+			"ID": "20210604230103-mqmn79t",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 3
+			},
+			"Properties": {
+				"id": "20210604230103-mqmn79t",
+				"updated": "20210604230105"
+			},
+			"Children": [
+				{
+					"ID": "20210604230106-jaa932m",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 3,
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604230106-jaa932m"
+					},
+					"Children": [
+						{
+							"Type": "NodeTaskListItemMarker",
+							"TaskListItemChecked": true
+						},
+						{
+							"ID": "20210604230106-nkcpaj8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604230106-nkcpaj8",
+								"updated": "20210604230115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Release SiYuan"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210604230135-lzb14f7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 3,
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20210604230135-lzb14f7"
+					},
+					"Children": [
+						{
+							"Type": "NodeTaskListItemMarker"
+						},
+						{
+							"ID": "20210604230135-3f5535m",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210604230135-3f5535m",
+								"updated": "20210604230136"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Book a dentist"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-v1x69oc",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-v1x69oc",
+				"updated": "20261028111611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Mind map block"
+				}
+			]
+		},
+		{
+			"ID": "20261012014859-9tz0em8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014859-9tz0em8",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "For definitions and list conversion, see "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260921215916-r1kfene",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "Mind map block"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20261023003049-1oqzzuq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261023003049-1oqzzuq",
+				"updated": "20261023003049"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The bottom node menu provides "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Delete"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Copy"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Cut"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", and "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Paste"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " directly. "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Paste"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " adds child nodes; "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "More"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " retains the sibling paste option. Hover over or tap "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Color"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to open the styles and style management panel above the bar. Unsupported actions are disabled."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-f51bzy4",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161816-f51bzy4",
+				"updated": "20261028111611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Canvas navigation"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261018163000-gjcy3xw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261018163000-gjcy3xw",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Mind maps initially leave the mouse wheel and one-finger swipes to document scrolling. Click the map on desktop or tap it once on mobile to activate canvas interaction. On mobile, use the Hand Tool for one-finger panning, or double-tap a node to edit it. Turn off the Hand Tool to select or drag nodes."
+				}
+			]
+		},
+		{
+			"ID": "20261028111611-1147a49",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261028111611-1147a49",
+				"updated": "20261028111611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "On mobile, use Undo and Redo in the document breadcrumb bar, even when the keyboard is closed or a mind map is full screen. These actions use the document history and can also undo changes outside the mind map. The buttons are hidden when both histories are empty or the document is read-only."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-m2f0ujc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-m2f0ujc",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "An active canvas has a highlighted border. Use the wheel or drag with the right mouse button to pan; the Hand Tool also allows left-button panning. Ordinary left dragging on blank canvas does not pan. Active one-finger gestures pan the canvas on touch screens. At the pan boundary, input stays with the canvas instead of scrolling the document."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-82afeip",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-82afeip",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Click outside the map, move keyboard focus outside it, or press Esc on the canvas to return to reading. Full-screen maps stay active until you exit full screen."
+				}
+			]
+		},
+		{
+			"ID": "20261019142953-4rt40w7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261019142953-4rt40w7",
+				"updated": "20261024212002"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Resizing the document canvas preserves its center and zoom. Full-screen entry keeps the zoom and centers the view when the document canvas is shorter than the full-screen viewport; otherwise it preserves the visible top edge, accounting for document scrolling. By default, leaving fullscreen restores the document view and reading position saved on entry; node content edits are retained."
+				}
+			]
+		},
+		{
+			"ID": "20261024194010-0bhyie7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024194010-0bhyie7",
+				"updated": "20261025114801"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In fullscreen, click "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Document layout"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to edit the document view. The solid frame includes dashed horizontal and vertical center guides and a faint dot grid to help judge position and scale. The fixed frame has the same size as the document viewport on entry. It is centered when the fullscreen viewport is taller, or aligned to the top center otherwise, and follows window resizing. Pan and zoom the map beneath the frame, then exit fullscreen with this mode still enabled to apply the framed view to the document. Click the button again to cancel the pending view change. Locking the canvas also cancels an unapplied view change."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-37ywd8s",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-37ywd8s",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The alignment updates as the window height changes. Full-screen panning and zooming remain temporary; exiting restores the previous document view and reading position. Node edits still take effect."
+				}
+			]
+		},
+		{
+			"ID": "20261020165811-dthghbx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261020165811-dthghbx",
+				"updated": "20261020165811"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Hover over or tap the zoom percentage in the toolbar to open the zoom panel. Use the slider to adjust zoom. Click "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Reset"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to restore 100%, or "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Fit to canvas"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to adjust the zoom and center the whole map."
+				}
+			]
+		},
+		{
+			"ID": "20261018163000-cvdncjc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261018163000-cvdncjc",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Without activating the canvas, hold Ctrl (Command on macOS) while using the mouse wheel to zoom around the pointer, or hold the same key and drag with the right mouse button to pan temporarily. You can also hold the middle mouse button and drag to pan temporarily without switching to the hand tool; release it to stop."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-jcc2o9a",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-jcc2o9a",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Temporary panning preserves keyboard focus and node selection. On a touch screen, use two fingers to zoom and pan. These gestures preserve the current reading or active state. A saved view lock still disables editing, zooming, and panning; activate the canvas after unlocking when needed."
+				}
+			]
+		},
+		{
+			"ID": "20260928143000-4j2cxng",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260928143000-4j2cxng",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Use Lock view in the mind map toolbar to prevent editing, zooming and panning. Swiping or using the mouse wheel over the map then scrolls the document. Use Unlock view to resume interaction. The lock state is saved with the block."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-4szpxtc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-4szpxtc",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "When directly embedding a complete mind map block or a document containing it, unlock the map to edit its nodes and styles. Changes update the source block and other embedded copies. Read-only and history previews remain non-editable."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-00aln26",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161816-00aln26",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Edit nodes"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261022181804-c0rm54w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261022181804-c0rm54w",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Select one or more nodes and hover over or tap "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Width"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " in the bottom node menu. The panel opens above the bar. The slider starts centered on the current width; move left to narrow or right to widen the selected nodes."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-vrnts6z",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-vrnts6z",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Dragging previews the result, and releasing saves one undoable change. You can also enter a pixel width. "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Restore original widths"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " returns each selected node to its width when this panel was opened, including automatic widths. "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Default"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", or clearing the number field, fits the width to the content."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-tllgy59",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-tllgy59",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Widening a node can keep a long inline formula on one line. Widths are saved with the document and support undo and redo."
+				}
+			]
+		},
+		{
+			"ID": "20261003225941-mxlfdrn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261003225941-mxlfdrn",
+				"updated": "20261024133605"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Hold "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Alt"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "⌥"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " on macOS) and click a node's fold button to fold or expand sibling branches under the same parent. If any sibling branch is expanded, all are folded; otherwise, all are expanded. Deeper folding states are preserved. A normal click only toggles the current node. Expansion and folding use a short transition for nodes and lines. The animation follows the system's reduced motion preference."
+				}
+			]
+		},
+		{
+			"ID": "20260930234403-jmgkoqd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930234403-jmgkoqd",
+				"updated": "20261017003253"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "While editing a node, type "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "/"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " and choose “Insert image or file” to upload a local image. You can also paste clipboard images. Images are stored as document attachments. The virtual center title used for multiple top-level nodes remains plain text. Double-click an image in a node to preview it at a larger size without entering node editing first."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-kuq9j6z",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161816-kuq9j6z",
+				"updated": "20261024195223"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Appearance and connectors"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261017110432-mq248cg",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261017110432-mq248cg",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In the mind map toolbar, use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "More"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Appearance"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Connector style"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to select Curved fork, Orthogonal, Curved fan, or Rounded orthogonal. The choice applies to the whole map, is saved with the document, and supports undo and redo."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-wf4frxv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-wf4frxv",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "It changes parent-child connectors without moving nodes or changing relationship lines. Shared trunks cannot be selected separately; with a palette enabled, they follow their parent branch color. Horizontal branches can still be selected and colored individually. SiYuan-format HTML and PDF previews use the saved style."
+				}
+			]
+		},
+		{
+			"ID": "20261017113512-rxzvh9f",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261017113512-rxzvh9f",
+				"updated": "20261022102848"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "More"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Default connector style for new maps"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " you can choose the style used when creating a map or converting a list or tabs to a map for the first time. This preference is saved locally in the current workspace and is not included in cloud sync. Changing it does not affect existing maps. Copies, imports, and maps converted to lists or tabs and back retain their original style."
+				}
+			]
+		},
+		{
+			"ID": "20261022102848-11epv5y",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261022102848-11epv5y",
+				"updated": "20261024195223"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "More"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Appearance"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Theme"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to choose from 47 color themes for the current map. Root and first-level nodes use colored backgrounds with white text; deeper nodes use transparent backgrounds, with black or white text chosen automatically for the canvas color. Branch lines inherit their first-level color and use a consistent width. In orthogonal and rounded styles, overlapping root trunk segments are painted in node order, with later branches covering earlier ones."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-gukhw19",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-gukhw19",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Theme text and lines adapt to the canvas brightness. Reordering branches preserves their assigned colors. New nodes follow the map's palette automatically. Manual colors, font sizes, and font weights take precedence. Choosing Default removes the palette while preserving manual colors and the canvas background."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-89rv8gd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-89rv8gd",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Existing maps keep their saved colors; select the theme again to apply the new layered style. The theme does not change node content, structure, or folding states."
+				}
+			]
+		},
+		{
+			"ID": "20261022102848-3decujr",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261022102848-3decujr",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "More"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Appearance"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Canvas background"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to choose a solid canvas background, or Default to follow the application theme. Use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "More"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Appearance"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Clear manual colors"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to remove manual colors from nodes, hierarchy lines, relationship lines, and summaries so that palette or default colors apply again."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-colf627",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-colf627",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "This does not reset the canvas background or other formatting. Appearance changes are saved with the document, support undo and redo, and are included in SiYuan-format HTML and PDF previews."
+				}
+			]
+		},
+		{
+			"ID": "20261022102848-5nohuq1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261022102848-5nohuq1",
+				"updated": "20261022132341"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Select multiple nodes, then use the bottom palette to change their text and background colors together. The branch line palette changes the incoming hierarchy lines of the selected nodes. Each batch change can be undone in one step. Choose Default in a palette to restore the theme or default colors. On touch screens, use the Multi-select button in the top toolbar to select the nodes."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-b13pkc3",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161816-b13pkc3",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Relationship lines"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261024161816-gm84aoo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-gm84aoo",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Select a starting node, click the connect button in the bottom node menu, then choose a target node to create a relationship line. Use it for connections outside the parent-child hierarchy."
+				}
+			]
+		},
+		{
+			"ID": "20261001015635-my9v7og",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261001015635-my9v7og",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Select a relation line and use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Arrow direction"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " in the bottom settings to choose "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Forward arrow"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " (start to end, the default), "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Reverse arrow"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " (end to start), "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Arrows at both ends"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", or "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "No arrows"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ". Changing direction preserves the connected nodes, label, and manual path, supports undo and redo, and does not affect parent-child lines."
+				}
+			]
+		},
+		{
+			"ID": "20261001015635-yca6fy3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261001015635-yca6fy3",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "On a selected relation, the hollow circle marks the start and the filled circle marks the end, regardless of arrow direction. Drag either circle along any of its node’s four edges to position the connection point, or onto another valid node to reconnect. Mouse and touch dragging are supported. Releasing saves one undoable change."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-fcd022g",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-fcd022g",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Dropping on blank space, an invalid target, the opposite endpoint’s node, or an existing same-direction connection cancels the change. A position that cannot avoid nodes or controls is also rejected. Connection points remain automatic until adjusted; adjusted positions follow the node as its text size or layout changes."
+				}
+			]
+		},
+		{
+			"ID": "20261001051950-ow14bv7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261001051950-ow14bv7",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In the bottom relation settings, choose "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Restore automatic connection points"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to reset both connection points while keeping the manually adjusted intermediate path. Double-clicking a path-segment handle resets only the intermediate path and preserves the connection points. Labels, styles, and arrow direction are unchanged."
+				}
+			]
+		},
+		{
+			"ID": "20261001051950-ue75z7f",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261001051950-ue75z7f",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "If a layout change blocks the saved manual path, the line temporarily uses an automatic path while retaining the specified connection points. If those connection points are also unavailable, it temporarily uses automatic connection points."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-87uvr34",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-87uvr34",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "A notice identifies which setting cannot be used. Saved settings are retained and restored when the layout permits. Read-only views and exports use the same drawing rules without adjustment handles; read-only views also show fallback notices."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-udolwsg",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161816-udolwsg",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Canvas size"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261001015635-3w0f58c",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261001015635-3w0f58c",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Hover over the outer frame to reveal the small handles outside the border. Drag the handle at the center of the right edge to change width, the one at the center of the bottom edge to change height, or the rounded bottom-right handle to change both."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-c0l62ko",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-c0l62ko",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "On touch devices, drag the handles directly. This changes the block size in the document, not the canvas zoom. Releasing saves one undoable change; press "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Esc"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " or cancel the touch gesture to restore the original size. The block menu’s width and height settings remain available."
+				}
+			]
+		},
+		{
+			"ID": "20261001015635-8tls0r0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261001015635-8tls0r0",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Resize handles are hidden in read-only, locked, and full-screen views. A mind map directly inside a super block has only the bottom height handle; use the super block’s column divider to change its width."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-xo714c2",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161816-xo714c2",
+				"updated": "20261027231810"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Summaries"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20260926151827-kkcg79g",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260926151827-kkcg79g",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Select one or more nodes, then click "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Summary"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " in the bottom node menu to create summaries immediately, without selecting again or confirming. Selecting nodes alone does not preview or create summaries. On desktop, drag on blank canvas or Ctrl/Command-click nodes; on touch screens, enable "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Multi-select"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " in the top toolbar, then tap nodes."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-x08ucs7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-x08ucs7",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Consecutive selected siblings form one summary; separate ranges and different parents form separate summaries, without including unselected nodes. Selected ancestors take precedence over their descendants. Groups may contain a single node, and nested summaries are supported. Existing identical summaries are skipped; crossing ranges disable creation, with the reason available on the button."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-t1o8rer",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-t1o8rer",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The bracket encloses the visible subtree and inner summaries. All groups are created in one undoable operation, then the first new summary is revealed and its text is focused for editing. Unavailable node actions are disabled. Esc on the canvas leaves multi-select mode."
+				}
+			]
+		},
+		{
+			"ID": "20260926151827-2f033n1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260926151827-2f033n1",
+				"updated": "20261027231810"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Double-click the summary text to edit it. Enter saves and Esc cancels. You can change its color or delete it using the bottom toolbar; Delete also removes the selected summary. These changes support undo and redo."
+				}
+			]
+		},
+		{
+			"ID": "20260926151827-z49ph4y",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260926151827-z49ph4y",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Converting to a list hides the summary but preserves its data; converting back restores it. Nodes inserted inside the range are included automatically. Removing or moving members out shrinks the range; one remaining member keeps the summary, while removing all members removes it. Summary text is an annotation, not an independently searchable or referenceable block."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-c5yttu1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-c5yttu1",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan-format HTML and PDF previews display summaries. Deleting an inner summary preserves the nodes and the outer summary. Nested configurations require a newer client; older clients preserve the configuration and display the source list instead of the mind map."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-udkldmt",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161816-udkldmt",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Example"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20210104091509-ilh76fd",
+			"Type": "NodeMindmap",
+			"Properties": {
+				"id": "20210104091509-ilh76fd",
+				"updated": "20260923221935",
+				"custom-sy-list-mindmap-data": "{\"version\":1,\"nodes\":{},\"relations\":[]}"
+			},
+			"ListData": {
+				"Typ": 0,
+				"Tight": true,
+				"BulletChar": 45,
+				"Marker": "LQ=="
+			},
+			"Children": [
+				{
+					"ID": "20260920131944-32pa6r2",
+					"Type": "NodeMindmapItem",
+					"Properties": {
+						"id": "20260920131944-32pa6r2",
+						"updated": "20260923221935"
+					},
+					"ListData": {
+						"Typ": 0,
+						"BulletChar": 45,
+						"Marker": "LQ=="
+					},
+					"Children": [
+						{
+							"ID": "20260920131944-46mi5iv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920131944-46mi5iv",
+								"updated": "20260920131944"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Tutorial"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920131944-nneeewj",
+					"Type": "NodeMindmapItem",
+					"Properties": {
+						"id": "20260920131944-nneeewj",
+						"updated": "20260923221935"
+					},
+					"ListData": {
+						"Typ": 0,
+						"BulletChar": 45,
+						"Marker": "LQ=="
+					},
+					"Children": [
+						{
+							"ID": "20260920131944-8pwrgj0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920131944-8pwrgj0",
+								"updated": "20260920131944"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Grammar guidance"
+								}
+							]
+						},
+						{
+							"ID": "20260920131944-yl7l84e",
+							"Type": "NodeMindmap",
+							"Properties": {
+								"id": "20260920131944-yl7l84e",
+								"updated": "20260923221935"
+							},
+							"ListData": {
+								"Typ": 0,
+								"Tight": true,
+								"BulletChar": 45,
+								"Marker": "LQ=="
+							},
+							"Children": [
+								{
+									"ID": "20260920131944-ste8s04",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-ste8s04",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-mkxg6b5",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-mkxg6b5",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "General content"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-vgolvcd",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-vgolvcd",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-72emauy",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-72emauy",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Mention users"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-p8pa8mj",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-p8pa8mj",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-eymvivo",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-eymvivo",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Emoji"
+												}
+											]
+										},
+										{
+											"ID": "20260920131944-b70ixbx",
+											"Type": "NodeMindmap",
+											"Properties": {
+												"id": "20260920131944-b70ixbx",
+												"updated": "20260923221935"
+											},
+											"ListData": {
+												"Typ": 0,
+												"Tight": true,
+												"BulletChar": 45,
+												"Marker": "LQ=="
+											},
+											"Children": [
+												{
+													"ID": "20260920131944-9hn3ngn",
+													"Type": "NodeMindmapItem",
+													"Properties": {
+														"id": "20260920131944-9hn3ngn",
+														"updated": "20260923221935"
+													},
+													"ListData": {
+														"Typ": 0,
+														"BulletChar": 45,
+														"Marker": "LQ=="
+													},
+													"Children": [
+														{
+															"ID": "20260920131944-x4iokmm",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20260920131944-x4iokmm",
+																"updated": "20260920131944"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "Some emoji examples"
+																}
+															]
+														}
+													]
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-je8tnpe",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-je8tnpe",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-q05l3vg",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-q05l3vg",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Heading-Heading 3"
+												}
+											]
+										},
+										{
+											"ID": "20260920131944-hc3u4mt",
+											"Type": "NodeMindmap",
+											"Properties": {
+												"id": "20260920131944-hc3u4mt",
+												"updated": "20260923221935"
+											},
+											"ListData": {
+												"Typ": 0,
+												"Tight": true,
+												"BulletChar": 45,
+												"Marker": "LQ=="
+											},
+											"Children": [
+												{
+													"ID": "20260920131944-zfajac1",
+													"Type": "NodeMindmapItem",
+													"Properties": {
+														"id": "20260920131944-zfajac1",
+														"updated": "20260923221935"
+													},
+													"ListData": {
+														"Typ": 0,
+														"BulletChar": 45,
+														"Marker": "LQ=="
+													},
+													"Children": [
+														{
+															"ID": "20260920131944-eqvvly1",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20260920131944-eqvvly1",
+																"updated": "20260920131944"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "Heading 4"
+																}
+															]
+														},
+														{
+															"ID": "20260920131944-yuzs9po",
+															"Type": "NodeMindmap",
+															"Properties": {
+																"id": "20260920131944-yuzs9po",
+																"updated": "20260923221935"
+															},
+															"ListData": {
+																"Typ": 0,
+																"Tight": true,
+																"BulletChar": 45,
+																"Marker": "LQ=="
+															},
+															"Children": [
+																{
+																	"ID": "20260920131944-zfr4t1i",
+																	"Type": "NodeMindmapItem",
+																	"Properties": {
+																		"id": "20260920131944-zfr4t1i",
+																		"updated": "20260923221935"
+																	},
+																	"ListData": {
+																		"Typ": 0,
+																		"BulletChar": 45,
+																		"Marker": "LQ=="
+																	},
+																	"Children": [
+																		{
+																			"ID": "20260920131944-u38zt6c",
+																			"Type": "NodeParagraph",
+																			"Properties": {
+																				"id": "20260920131944-u38zt6c",
+																				"updated": "20260920131944"
+																			},
+																			"Children": [
+																				{
+																					"Type": "NodeText",
+																					"Data": "Heading 5"
+																				}
+																			]
+																		},
+																		{
+																			"ID": "20260920131944-gxyhb29",
+																			"Type": "NodeMindmap",
+																			"Properties": {
+																				"id": "20260920131944-gxyhb29",
+																				"updated": "20260923221935"
+																			},
+																			"ListData": {
+																				"Typ": 0,
+																				"Tight": true,
+																				"BulletChar": 45,
+																				"Marker": "LQ=="
+																			},
+																			"Children": [
+																				{
+																					"ID": "20260920131944-d3fi5i4",
+																					"Type": "NodeMindmapItem",
+																					"Properties": {
+																						"id": "20260920131944-d3fi5i4",
+																						"updated": "20260923221935"
+																					},
+																					"ListData": {
+																						"Typ": 0,
+																						"BulletChar": 45,
+																						"Marker": "LQ=="
+																					},
+																					"Children": [
+																						{
+																							"ID": "20260920131944-upwuqer",
+																							"Type": "NodeParagraph",
+																							"Properties": {
+																								"id": "20260920131944-upwuqer",
+																								"updated": "20260920131944"
+																							},
+																							"Children": [
+																								{
+																									"Type": "NodeText",
+																									"Data": "Heading 6"
+																								}
+																							]
+																						}
+																					]
+																				}
+																			]
+																		}
+																	]
+																}
+															]
+														}
+													]
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-sr1m9g9",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-sr1m9g9",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-1j0dh1u",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-1j0dh1u",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Picture"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-8bv41f2",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-8bv41f2",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-575wh1r",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-575wh1r",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Code block"
+												}
+											]
+										},
+										{
+											"ID": "20260920131944-164repm",
+											"Type": "NodeMindmap",
+											"Properties": {
+												"id": "20260920131944-164repm",
+												"updated": "20260923221935"
+											},
+											"ListData": {
+												"Typ": 0,
+												"Tight": true,
+												"BulletChar": 45,
+												"Marker": "LQ=="
+											},
+											"Children": [
+												{
+													"ID": "20260920131944-zvmelb7",
+													"Type": "NodeMindmapItem",
+													"Properties": {
+														"id": "20260920131944-zvmelb7",
+														"updated": "20260923221935"
+													},
+													"ListData": {
+														"Typ": 0,
+														"BulletChar": 45,
+														"Marker": "LQ=="
+													},
+													"Children": [
+														{
+															"ID": "20260920131944-ypkwzdp",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20260920131944-ypkwzdp",
+																"updated": "20260920131944"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "Normal"
+																}
+															]
+														}
+													]
+												},
+												{
+													"ID": "20260920131944-6x2v6j4",
+													"Type": "NodeMindmapItem",
+													"Properties": {
+														"id": "20260920131944-6x2v6j4",
+														"updated": "20260923221935"
+													},
+													"ListData": {
+														"Typ": 0,
+														"BulletChar": 45,
+														"Marker": "LQ=="
+													},
+													"Children": [
+														{
+															"ID": "20260920131944-bptoec3",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20260920131944-bptoec3",
+																"updated": "20260920131944"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "Syntax highlighting support"
+																}
+															]
+														},
+														{
+															"ID": "20260920131944-57fb48x",
+															"Type": "NodeMindmap",
+															"Properties": {
+																"id": "20260920131944-57fb48x",
+																"updated": "20260923221935"
+															},
+															"ListData": {
+																"Typ": 0,
+																"Tight": true,
+																"BulletChar": 45,
+																"Marker": "LQ=="
+															},
+															"Children": [
+																{
+																	"ID": "20260920131944-7pmm2l7",
+																	"Type": "NodeMindmapItem",
+																	"Properties": {
+																		"id": "20260920131944-7pmm2l7",
+																		"updated": "20260923221935"
+																	},
+																	"ListData": {
+																		"Typ": 0,
+																		"BulletChar": 45,
+																		"Marker": "LQ=="
+																	},
+																	"Children": [
+																		{
+																			"ID": "20260920131944-gi2fo4x",
+																			"Type": "NodeParagraph",
+																			"Properties": {
+																				"id": "20260920131944-gi2fo4x",
+																				"updated": "20260920131944"
+																			},
+																			"Children": [
+																				{
+																					"Type": "NodeText",
+																					"Data": "Demonstrate Go code highlighting"
+																				}
+																			]
+																		}
+																	]
+																},
+																{
+																	"ID": "20260920131944-3ferk3u",
+																	"Type": "NodeMindmapItem",
+																	"Properties": {
+																		"id": "20260920131944-3ferk3u",
+																		"updated": "20260923221935"
+																	},
+																	"ListData": {
+																		"Typ": 0,
+																		"BulletChar": 45,
+																		"Marker": "LQ=="
+																	},
+																	"Children": [
+																		{
+																			"ID": "20260920131944-ht517b4",
+																			"Type": "NodeParagraph",
+																			"Properties": {
+																				"id": "20260920131944-ht517b4",
+																				"updated": "20260920131944"
+																			},
+																			"Children": [
+																				{
+																					"Type": "NodeText",
+																					"Data": "Demo Java highlighting"
+																				}
+																			]
+																		}
+																	]
+																}
+															]
+														}
+													]
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-k0p2g04",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-k0p2g04",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-cq17uph",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-cq17uph",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Ordered, disordered, task list"
+												}
+											]
+										},
+										{
+											"ID": "20260920131944-87nnbgu",
+											"Type": "NodeMindmap",
+											"Properties": {
+												"id": "20260920131944-87nnbgu",
+												"updated": "20260923221935"
+											},
+											"ListData": {
+												"Typ": 0,
+												"Tight": true,
+												"BulletChar": 45,
+												"Marker": "LQ=="
+											},
+											"Children": [
+												{
+													"ID": "20260920131944-9k44l1s",
+													"Type": "NodeMindmapItem",
+													"Properties": {
+														"id": "20260920131944-9k44l1s",
+														"updated": "20260923221935"
+													},
+													"ListData": {
+														"Typ": 0,
+														"BulletChar": 45,
+														"Marker": "LQ=="
+													},
+													"Children": [
+														{
+															"ID": "20260920131944-1boauyu",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20260920131944-1boauyu",
+																"updated": "20260920131944"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "Unordered list"
+																}
+															]
+														}
+													]
+												},
+												{
+													"ID": "20260920131944-q81qepa",
+													"Type": "NodeMindmapItem",
+													"Properties": {
+														"id": "20260920131944-q81qepa",
+														"updated": "20260923221935"
+													},
+													"ListData": {
+														"Typ": 0,
+														"BulletChar": 45,
+														"Marker": "LQ=="
+													},
+													"Children": [
+														{
+															"ID": "20260920131944-tbv5dyc",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20260920131944-tbv5dyc",
+																"updated": "20260920131944"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "Ordered list"
+																}
+															]
+														}
+													]
+												},
+												{
+													"ID": "20260920131944-y899rob",
+													"Type": "NodeMindmapItem",
+													"Properties": {
+														"id": "20260920131944-y899rob",
+														"updated": "20260923221935"
+													},
+													"ListData": {
+														"Typ": 0,
+														"BulletChar": 45,
+														"Marker": "LQ=="
+													},
+													"Children": [
+														{
+															"ID": "20260920131944-v22icb0",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20260920131944-v22icb0",
+																"updated": "20260920131944"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "task list"
+																}
+															]
+														}
+													]
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-4g4s51d",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-4g4s51d",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-smfuunp",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-smfuunp",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Form"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-nyt13uo",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-nyt13uo",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-td8trau",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-td8trau",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Hide details"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-kk2e5d0",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-kk2e5d0",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-zg7ypmn",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-zg7ypmn",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Paragraph"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-uj1mkik",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-uj1mkik",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-ybk5iok",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-ybk5iok",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Link reference"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-j0ntarq",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-j0ntarq",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-18gdowp",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-18gdowp",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Mathematical formula"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-yejr476",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-yejr476",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-mtjb2gb",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-mtjb2gb",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Mind Map"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-gcleek7",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-gcleek7",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-a1aeqg9",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-a1aeqg9",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Flow chart"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-u944mbs",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-u944mbs",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-hnvdb8d",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-hnvdb8d",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Timing diagram"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-5ljorc6",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-5ljorc6",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-3jokn5i",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-3jokn5i",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Gantt chart"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-0khw9tq",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-0khw9tq",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-bjpzmgc",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-bjpzmgc",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Chart"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-xtp71q3",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-xtp71q3",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-yizx32a",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-yizx32a",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Staff"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-s61x53e",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-s61x53e",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-unhvte8",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-unhvte8",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Graphviz"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-izfgynr",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-izfgynr",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-uzevhaz",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-uzevhaz",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Multimedia"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-t87lh69",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-t87lh69",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-ww63hrg",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-ww63hrg",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Footnote"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260920131944-0noiniq",
+									"Type": "NodeMindmapItem",
+									"Properties": {
+										"id": "20260920131944-0noiniq",
+										"updated": "20260923221935"
+									},
+									"ListData": {
+										"Typ": 0,
+										"BulletChar": 45,
+										"Marker": "LQ=="
+									},
+									"Children": [
+										{
+											"ID": "20260920131944-xbkywi5",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260920131944-xbkywi5",
+												"updated": "20260920131944"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Shortcuts"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20210604230145-zsjeri5",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210604230145-zsjeri5",
+				"updated": "20251209212851"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Blockquote"
+				}
+			]
+		},
+		{
+			"ID": "20210604230152-vpxtzjj",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20210604230152-vpxtzjj",
+				"updated": "20251209212850"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": ">"
+				},
+				{
+					"ID": "20210604230153-s8x7oko",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20210604230153-s8x7oko",
+						"updated": "20210604230216"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "Note that it is not a content block ref, but a block quote (Blockquote)."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20251209212851-yo274kb",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20251209212851-yo274kb",
+				"updated": "20251211094305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Callout block"
+				}
+			]
+		},
+		{
+			"ID": "20251211094305-py67twd",
+			"Type": "NodeCallout",
+			"Properties": {
+				"id": "20251211094305-py67twd",
+				"updated": "20251211094305"
+			},
+			"CalloutType": "NOTE",
+			"CalloutTitle": "Note",
+			"CalloutIcon": "✏️",
+			"Children": [
+				{
+					"ID": "20251211094305-ow2t21o",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20251211094305-ow2t21o",
+						"updated": "20251211094305"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "Highlights information that users should take into account, even when skimming."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20251211094305-7j529td",
+			"Type": "NodeCallout",
+			"Properties": {
+				"id": "20251211094305-7j529td",
+				"updated": "20251211094305"
+			},
+			"CalloutType": "TIP",
+			"CalloutTitle": "Tip",
+			"CalloutIcon": "💡",
+			"Children": [
+				{
+					"ID": "20251211094305-49y1j3r",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20251211094305-49y1j3r",
+						"updated": "20251211094305"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "Optional information to help a user be more successful."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20251211094305-6tapwrt",
+			"Type": "NodeCallout",
+			"Properties": {
+				"id": "20251211094305-6tapwrt",
+				"updated": "20251211094305"
+			},
+			"CalloutType": "IMPORTANT",
+			"CalloutTitle": "Important",
+			"CalloutIcon": "❗",
+			"Children": [
+				{
+					"ID": "20251211094305-pmwapsh",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20251211094305-pmwapsh",
+						"updated": "20251211094305"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "Crucial information necessary for users to succeed."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20251211094305-kq893ph",
+			"Type": "NodeCallout",
+			"Properties": {
+				"id": "20251211094305-kq893ph",
+				"updated": "20251211094305"
+			},
+			"CalloutType": "WARNING",
+			"CalloutTitle": "Warning",
+			"CalloutIcon": "⚠️",
+			"Children": [
+				{
+					"ID": "20251211094305-2622twh",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20251211094305-2622twh",
+						"updated": "20251211094305"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "Critical content demanding immediate user attention due to potential risks."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20251211094305-bmbbwkp",
+			"Type": "NodeCallout",
+			"Properties": {
+				"id": "20251211094305-bmbbwkp",
+				"updated": "20251211094305"
+			},
+			"CalloutType": "CAUTION",
+			"CalloutTitle": "Caution",
+			"CalloutIcon": "🚨",
+			"Children": [
+				{
+					"ID": "20251211094305-tmokbr0",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20251211094305-tmokbr0",
+						"updated": "20251211094305"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "Negative potential consequences of an action."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260905124213-top2oxl",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20260905124213-top2oxl",
+				"updated": "20261024164212"
+			},
+			"HeadingLevel": 2,
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Tabbed container"
+				}
+			]
+		},
+		{
+			"ID": "20260905124213-swdj34k",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260905124213-swdj34k",
+				"updated": "20260905124213"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Type / and choose Tabbed container to create two tabs. Click a title to switch tabs; double-click it or use the tab menu to edit it. Titles support the same inline formatting as callouts, and tab content can contain nested tabbed containers."
+				}
+			]
+		},
+		{
+			"ID": "20260905124213-zh5dvu9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260905124213-zh5dvu9",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Use the menu beside the tabs to add, duplicate, delete or reorder tabs and choose a top or left layout. The active tab and layout are saved and synced with the document. In a locked document, the last tab viewed is saved in the local workspace without changing the document default."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-k8zan0u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-k8zan0u",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Published pages, read-only kernels and encrypted notebooks keep this position only for the current session. Removing the tab layout preserves every title and its content in order."
+				}
+			]
+		},
+		{
+			"ID": "20261003234156-ki04gzc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261003234156-ki04gzc",
+				"updated": "20261003234156"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Use a tab item's menu to choose "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Zoom in"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ". Only that item and its title are displayed, and backlinks follow that item. Whether backlinks include its child blocks follows the existing setting. Choose "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Exit focus"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to restore the full tab group. Nested tab groups inside the focused item can still be switched normally."
+				}
+			]
+		},
+		{
+			"ID": "20260905124213-kvygzam",
+			"Type": "NodeTabs",
+			"Properties": {
+				"id": "20260905124213-kvygzam",
+				"updated": "20260905124213",
+				"tabs-active-id": "20260905124213-i84zxk7",
+				"tabs-position": "top"
+			},
+			"Children": [
+				{
+					"ID": "20260905124213-i84zxk7",
+					"Type": "NodeTabItem",
+					"Properties": {
+						"id": "20260905124213-i84zxk7",
+						"updated": "20260905124213"
+					},
+					"TabItemTitle": "Option one",
+					"Children": [
+						{
+							"ID": "20260905124213-zp9buah",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260905124213-zp9buah",
+								"updated": "20260905124213"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "This is the first tab content."
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260905124213-jjarsdb",
+					"Type": "NodeTabItem",
+					"Properties": {
+						"id": "20260905124213-jjarsdb",
+						"updated": "20260905124213"
+					},
+					"TabItemTitle": "Option two",
+					"Children": [
+						{
+							"ID": "20260905124213-d4ogy30",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260905124213-d4ogy30",
+								"updated": "20260905124213"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "This is the second tab content."
+								}
+							]
+						},
+						{
+							"ID": "20260905124213-h42tupr",
+							"Type": "NodeTabs",
+							"Properties": {
+								"id": "20260905124213-h42tupr",
+								"updated": "20260905124213",
+								"tabs-active-id": "20260905124213-458mbf6",
+								"tabs-position": "left"
+							},
+							"Children": [
+								{
+									"ID": "20260905124213-458mbf6",
+									"Type": "NodeTabItem",
+									"Properties": {
+										"id": "20260905124213-458mbf6",
+										"updated": "20260905124213"
+									},
+									"TabItemTitle": "Nested tabs",
+									"Children": [
+										{
+											"ID": "20260905124213-exqp25u",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260905124213-exqp25u",
+												"updated": "20260905124213"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "This is the first tab content."
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-606oli4",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-606oli4",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Code block"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-wae7knn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104091509-wae7knn",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Write the language name immediately after the opening ``` fence to enable syntax highlighting, for example:"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-v2agp4t",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20210104091509-v2agp4t",
+				"updated": "20210415200922"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Demonstrate Go code highlighting"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-7jdx2zj",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"CodeBlockFenceChar": 96,
+			"CodeBlockFenceLen": 3,
+			"CodeBlockOpenFence": "YGBg",
+			"CodeBlockInfo": "Z28=",
+			"CodeBlockCloseFence": "YGBg",
+			"Properties": {
+				"id": "20210104091509-7jdx2zj"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "Z28="
+				},
+				{
+					"ID": "20220307092214-ame28qb",
+					"Type": "NodeCodeBlockCode",
+					"Data": "package main\n\nimport \"fmt\"\n\nfunc main() {\nfmt.Println(\"Hello, World\")\n}\n",
+					"Properties": {
+						"id": "20220307092214-ame28qb"
+					}
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-yzs0dlz",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20210104091509-yzs0dlz",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Demo Java highlighting"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-686b9xi",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"CodeBlockFenceChar": 96,
+			"CodeBlockFenceLen": 3,
+			"CodeBlockOpenFence": "YGBg",
+			"CodeBlockInfo": "amF2YQ==",
+			"CodeBlockCloseFence": "YGBg",
+			"Properties": {
+				"id": "20210104091509-686b9xi"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "amF2YQ=="
+				},
+				{
+					"ID": "20220307092214-m4qj7wx",
+					"Type": "NodeCodeBlockCode",
+					"Data": "public class HelloWorld {\n\n    public static void main(String[] args) {\n        System.out.println(\"Hello World!\");\n    }\n\n}\n",
+					"Properties": {
+						"id": "20220307092214-m4qj7wx"
+					}
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-3a5p9xt",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20210104091509-3a5p9xt",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "> "
+				},
+				{
+					"ID": "20210104091509-ozjt2fc",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20210104091509-ozjt2fc",
+						"updated": "20261024163828"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "Tip: Language names support the following: "
+						},
+						{
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "ruby"
+						},
+						{
+							"Type": "NodeText",
+							"Data": "​, "
+						},
+						{
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "python"
+						},
+						{
+							"Type": "NodeText",
+							"Data": "​, "
+						},
+						{
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "js"
+						},
+						{
+							"Type": "NodeText",
+							"Data": "​, "
+						},
+						{
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "html"
+						},
+						{
+							"Type": "NodeText",
+							"Data": "​, "
+						},
+						{
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "erb"
+						},
+						{
+							"Type": "NodeText",
+							"Data": "​, "
+						},
+						{
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "css"
+						},
+						{
+							"Type": "NodeText",
+							"Data": "​, "
+						},
+						{
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "coffee"
+						},
+						{
+							"Type": "NodeText",
+							"Data": "​, "
+						},
+						{
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "bash"
+						},
+						{
+							"Type": "NodeText",
+							"Data": "​, "
+						},
+						{
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "json"
+						},
+						{
+							"Type": "NodeText",
+							"Data": "​, "
+						},
+						{
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "yml"
+						},
+						{
+							"Type": "NodeText",
+							"Data": "​, "
+						},
+						{
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "xml"
+						},
+						{
+							"Type": "NodeText",
+							"Data": "​ ..."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260616221442-2iocv82",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260616221442-2iocv82",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Additionally, code block language supports "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "siyuan-template"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ and "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "template"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, both equivalent. Using them enables syntax highlighting for "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20201204184532-3qm9l8n",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "SiYuan template"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " syntax. When exporting as a template, the code block is not exported as a code block, but converted to plain paragraph text instead."
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-qr9enpx",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-qr9enpx",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Table"
+				}
+			]
+		},
+		{
+			"ID": "20260908091355-rch0007",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260908091355-rch0007",
+				"updated": "20260908091355"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Table cells support paragraphs, headings, lists, blockquotes, code, and math without manual conversion. Existing Markdown-looking text stays literal, and existing bold text, links, and other inline formatting are preserved."
+				}
+			]
+		},
+		{
+			"ID": "20260908091355-rch0008",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260908091355-rch0008",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Click a cell to edit it. After creating a table, type directly without clicking again. "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Enter"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " creates a new paragraph, continues a list item, or inserts a line break in code according to the normal editor rules. "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Shift+Enter"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " inserts a soft line break within a paragraph. "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Tab"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " and "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Shift+Tab"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " switch cells; lists and code blocks retain their indentation and outdent behavior."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-etaou6w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-etaou6w",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Close suggestions, then press "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Escape"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " or click outside the cell to finish editing and save automatically. Copying a table as plain text preserves blank lines between paragraphs within a cell."
+				}
+			]
+		},
+		{
+			"ID": "20260908091355-rch0009",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260908091355-rch0009",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Internal paragraphs and list items have no independent block IDs. References to existing blocks, images, and existing inline formatting are supported. Nested tables, databases, super blocks, tabs, callouts, query embeds, thematic breaks, executable diagrams, audio, video, widgets, HTML, and custom blocks are not supported."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-4j6syup",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-4j6syup",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "If pasted content contains an unsupported block, the entire paste is rejected with a message listing the unsupported types; existing content stays unchanged. Standard Markdown exports readable inline content, while HTML, PDF, and Word preserve rich text layout."
+				}
+			]
+		},
+		{
+			"ID": "20261022190543-c7n71wx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261022190543-c7n71wx",
+				"updated": "20261022190543"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Drag the lower edge of a row to adjust its height. On mobile, tap a horizontal cell boundary first, then drag the handle. The height is a minimum: content can still expand the row. Select the row and choose "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Auto-fit row height"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " from its menu to restore automatic height. Row heights are saved with the document; standard Markdown export does not guarantee that they are retained."
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-kjhoeyo",
+			"Type": "NodeTable",
+			"TableAligns": [
+				0,
+				0
+			],
+			"Properties": {
+				"id": "20210104091509-kjhoeyo",
+				"updated": "20210104091509"
+			},
+			"Children": [
+				{
+					"Type": "NodeTableHead",
+					"Data": "thead",
+					"Children": [
+						{
+							"Type": "NodeTableRow",
+							"Data": "tr",
+							"Children": [
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "header 1"
+										}
+									]
+								},
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "header 2"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "cell 1"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "cell 2"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "cell 3"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "cell 4"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "cell 5"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "cell 6"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20220312004745-onue5ab",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20220312004745-onue5ab",
+				"updated": "20220312122833"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "HTML block"
+				}
+			]
+		},
+		{
+			"ID": "20220312004751-frosojs",
+			"Type": "NodeHTMLBlock",
+			"Data": "<div>\n<ruby>\n你<rt>nǐ</rt>\n　好<rt>　hǎo</rt>\n　世<rt>　shì</rt>\n　界<rt>　jiè</rt>\n</ruby><br>\nHello World\n</div>",
+			"Properties": {
+				"id": "20220312004751-frosojs",
+				"updated": "20220828102624"
+			}
+		},
+		{
+			"ID": "20220312122714-jgaetrv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20220312122714-jgaetrv",
+				"updated": "20240427231204"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240427231112-lcwev4m",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "HTML Block Notes"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for more details."
+				}
+			]
+		},
+		{
+			"ID": "20210604230313-t41l7jd",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210604230313-t41l7jd",
+				"updated": "20220312004843"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Thematic break"
+				}
+			]
+		},
+		{
+			"ID": "20210604230332-t9wwcol",
+			"Type": "NodeThematicBreak",
+			"Properties": {
+				"id": "20210604230332-t9wwcol",
+				"updated": "20210604230332"
+			}
+		},
+		{
+			"ID": "20210104091509-5te4mca",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-5te4mca",
+				"updated": "20210415200947"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Mathematical formula"
+				}
+			]
+		},
+		{
+			"ID": "20261027172226-6hnjkr0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261027172226-6hnjkr0",
+				"updated": "20261027172226"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "When pasting or importing Markdown, SiYuan recognizes "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "\\(...\\)"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " as inline math and "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "\\[...\\]"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " in a separate paragraph as block math by default. Pasted HTML supports the same delimiters. Code is preserved, and Markdown exports continue to use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "$"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " and "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "$$"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20261027172226-neji60s",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261027172226-neji60s",
+				"updated": "20261027172226"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "You can disable this in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Behavior"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " with “Recognize LaTeX math delimiters when pasting and importing”. Disabling it affects subsequent pastes and imports; formulas already converted remain unchanged."
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-oizpd0y",
+			"Type": "NodeMathBlock",
+			"Properties": {
+				"id": "20210104091509-oizpd0y",
+				"updated": "20230328091244"
+			},
+			"Children": [
+				{
+					"Type": "NodeMathBlockOpenMarker"
+				},
+				{
+					"Type": "NodeMathBlockContent",
+					"Data": "\\frac{1}{\n  \\Bigl(\\sqrt{\\phi \\sqrt{5}}-\\phi\\Bigr) e^{\n  \\frac25 \\pi}} = 1+\\frac{e^{-2\\pi}} {1+\\frac{e^{-4\\pi}} {\n    1+\\frac{e^{-6\\pi}}\n    {1+\\frac{e^{-8\\pi}}{1+\\cdots}}\n  }\n}"
+				},
+				{
+					"Type": "NodeMathBlockCloseMarker"
+				}
+			]
+		},
+		{
+			"ID": "20210604230350-ql890l0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210604230350-ql890l0",
+				"updated": "20261002002136"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "IFrame"
+				}
+			]
+		},
+		{
+			"ID": "20220909095329-0tocxte",
+			"Type": "NodeIFrame",
+			"Data": "<iframe src=\"https://player.bilibili.com/player.html?bvid=BV1ov41187qM&amp;page=1&amp;high_quality=1&amp;as_wide=1&amp;allowfullscreen=true&amp;aid=247401039&amp;cid=319662466&amp;autoplay=0\" data-src=\"//player.bilibili.com/player.html?aid=247401039&amp;bvid=BV1ov41187qM&amp;cid=319662466&amp;page=1\" scrolling=\"no\" border=\"0\" frameborder=\"no\" framespacing=\"0\" allowfullscreen=\"true\" style=\"width: 981px; height: 440px;\" sandbox=\"allow-top-navigation-by-user-activation allow-same-origin allow-forms allow-scripts allow-popups\"></iframe>",
+			"Properties": {
+				"id": "20220909095329-0tocxte",
+				"updated": "20220909095329"
+			}
+		},
+		{
+			"ID": "20261002002136-2v39dr6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002002136-2v39dr6",
+				"updated": "20261002002136"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Hover over the block to reveal the small handles outside its border. Drag the handle at the center of the right edge to change width, the one at the center of the bottom edge to change height, or the rounded bottom-right handle to change both. On touch devices, drag the handles directly; changing one dimension preserves the other."
+				}
+			]
+		},
+		{
+			"ID": "20210608121322-k9l5wuv",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210608121322-k9l5wuv",
+				"updated": "20210608121326"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Video"
+				}
+			]
+		},
+		{
+			"ID": "20220909095340-rr23xv7",
+			"Type": "NodeVideo",
+			"Data": "<video controls=\"controls\" src=\"assets/formatting_elements-20210607225733-o1keasx.mp4\" data-src=\"assets/formatting_elements-20210607213508-y2r3y55-20210608113914-q11ou4j.mp4\" style=\"width: 640px; height: 327px;\"></video>",
+			"Properties": {
+				"id": "20220909095340-rr23xv7",
+				"updated": "20220909095340"
+			}
+		},
+		{
+			"ID": "20210608121327-5vbk32w",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210608121327-5vbk32w",
+				"updated": "20210608121331"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Audio"
+				}
+			]
+		},
+		{
+			"ID": "20210608121458-7rrz8f2",
+			"Type": "NodeAudio",
+			"Data": "<audio controls=\"controls\" src=\"assets/record1623077643753-20210607225403-7cg1jkq.wav\" data-src=\"assets/record1623077643753-20210607225403-7cg1jkq-20210608121458-mc4mcvz.wav\"></audio>",
+			"Properties": {
+				"id": "20210608121458-7rrz8f2",
+				"updated": "20210608121458"
+			}
+		},
+		{
+			"ID": "20210104091509-oihpzcz",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-oihpzcz",
+				"updated": "20261018213321"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Flow chart"
+				}
+			]
+		},
+		{
+			"ID": "20261018213321-j5qp01p",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261018213321-j5qp01p",
+				"updated": "20261018213321"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Drag the handle on the right edge of a Mermaid block to adjust its width. After reducing the width, choose "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Layout"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Center"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " from the block menu to center the block."
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-viqif92",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"CodeBlockFenceChar": 96,
+			"CodeBlockFenceLen": 3,
+			"CodeBlockOpenFence": "YGBg",
+			"CodeBlockInfo": "bWVybWFpZA==",
+			"CodeBlockCloseFence": "YGBg",
+			"Properties": {
+				"id": "20210104091509-viqif92"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "bWVybWFpZA=="
+				},
+				{
+					"ID": "20220307092214-zethwqv",
+					"Type": "NodeCodeBlockCode",
+					"Data": "graph TB\n    c1-->a2\n    subgraph one\n    a1-->a2\n    end\n    subgraph two\n    b1-->b2\n    end\n    subgraph three\n    c1-->c2\n    end\n",
+					"Properties": {
+						"id": "20220307092214-zethwqv"
+					}
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				}
+			]
+		},
+		{
+			"ID": "20211213121738-ul6f1wq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211213121738-ul6f1wq",
+				"updated": "20211213121840"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-fim1ztl",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-fim1ztl",
+				"updated": "20210415200957"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Timing diagram"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-mwfs4sw",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"CodeBlockFenceChar": 96,
+			"CodeBlockFenceLen": 3,
+			"CodeBlockOpenFence": "YGBg",
+			"CodeBlockInfo": "bWVybWFpZA==",
+			"CodeBlockCloseFence": "YGBg",
+			"Properties": {
+				"id": "20210104091509-mwfs4sw"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "bWVybWFpZA=="
+				},
+				{
+					"ID": "20220307092214-vl4e2wj",
+					"Type": "NodeCodeBlockCode",
+					"Data": "sequenceDiagram\n    Alice->>John: Hello John, how are you?\n    loop Every minute\n        John-->>Alice: Great!\n    end\n",
+					"Properties": {
+						"id": "20220307092214-vl4e2wj"
+					}
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				}
+			]
+		},
+		{
+			"ID": "20211213121843-a3ldisx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211213121843-a3ldisx",
+				"updated": "20211213121844"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-gjag91d",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-gjag91d",
+				"updated": "20210415200959"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Gantt chart"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-ki9cxs7",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20210104091509-ki9cxs7",
+				"updated": "20210104091509"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "bWVybWFpZA=="
+				},
+				{
+					"ID": "20220307092214-3rx5pwx",
+					"Type": "NodeCodeBlockCode",
+					"Data": "gantt\n    title A Gantt Diagram\n    dateFormat YYYY-MM-DD\n    section Section\n    A task :a1, 2019-01-01, 30d\n    Another task :after a1, 20d\n    section Another\n    Task in sec :2019-01-12, 12d\n    another task: 24d",
+					"Properties": {
+						"id": "20220307092214-3rx5pwx"
+					}
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20211213121846-1uefhok",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211213121846-1uefhok",
+				"updated": "20211213121847"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-rvtulhv",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211221131201-rvtulhv",
+				"updated": "20211221131239"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Class diagram"
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-dzwtwxl",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20211221131201-dzwtwxl",
+				"updated": "20211221130538"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "bWVybWFpZA=="
+				},
+				{
+					"ID": "20220307092214-nz25d7y",
+					"Type": "NodeCodeBlockCode",
+					"Data": "classDiagram\nClass01 &lt;|-- AveryLongClass : Cool\nClass03 *-- Class04\nClass05 o-- Class06\nClass07 .. Class08\nClass09 --&gt; C2 : Where am i?\nClass09 --* C3\nClass09 --|&gt; Class07\nClass07 : equals()\nClass07 : Object[] elementData\nClass01 : size()\nClass01 : int chimp\nClass01 : int gorilla\nClass08 &lt;--&gt; C2: Cool label",
+					"Properties": {
+						"id": "20220307092214-nz25d7y"
+					}
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-btdpj6w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211221131201-btdpj6w",
+				"updated": "20211221131207"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-red5ubq",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211221131201-red5ubq",
+				"updated": "20211221131331"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "User Journey Diagram"
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-7bh269l",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20211221131201-7bh269l",
+				"updated": "20211221130820"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "bWVybWFpZA=="
+				},
+				{
+					"ID": "20220307092214-d59o3x8",
+					"Type": "NodeCodeBlockCode",
+					"Data": "journey\n    title My working day\n    section Go to work\n      Make tea: 5: Me\n      Go upstairs: 3: Me\n      Do work: 1: Me, Cat\n    section Go home\n      Go downstairs: 5: Me\n      Sit down: 5: Me",
+					"Properties": {
+						"id": "20220307092214-d59o3x8"
+					}
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-in8ft2f",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211221131201-in8ft2f",
+				"updated": "20211221131210"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-extvbqp",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211221131201-extvbqp",
+				"updated": "20211221131304"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Git graph"
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-600dcnw",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20211221131201-600dcnw",
+				"updated": "20220602101151"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "bWVybWFpZA=="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "    gitGraph\n       commit\n       commit\n       branch develop\n       commit\n       commit\n       commit\n       checkout main\n       commit\n       commit"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-29ok6tj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211221131201-29ok6tj",
+				"updated": "20211221131215"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-2w053g4",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211221131201-2w053g4",
+				"updated": "20211221131318"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Entity Relationship Diagram"
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-39tk9i1",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20211221131201-39tk9i1",
+				"updated": "20211221130710"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "bWVybWFpZA=="
+				},
+				{
+					"ID": "20220307092214-f81hagp",
+					"Type": "NodeCodeBlockCode",
+					"Data": "erDiagram\n    CUSTOMER ||--o{ ORDER : places\n    ORDER ||--|{ LINE-ITEM : contains\n    CUSTOMER }|..|{ DELIVERY-ADDRESS : uses",
+					"Properties": {
+						"id": "20220307092214-f81hagp"
+					}
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20211221131201-c36wsze",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211221131201-c36wsze",
+				"updated": "20211221131218"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20260820124102-zenumle",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260820124102-zenumle",
+				"updated": "20260820124102"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ZenUML sequence diagram"
+				}
+			]
+		},
+		{
+			"ID": "20260820124102-zeneng1",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20260820124102-zeneng1",
+				"updated": "20260820124102"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "bWVybWFpZA=="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "zenuml\ntitle Order Service\nCustomer-&gt;OrderService: Submit order\nOrderService-&gt;Database: Save order\nDatabase-&gt;OrderService: Order saved\nOrderService-&gt;Customer: Order confirmed\n"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20260820124102-zeneng2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260820124102-zeneng2",
+				"updated": "20260820124102"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/syntax/zenuml",
+					"TextMarkTextContent": "Mermaid"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20260820124102-tidyen1",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260820124102-tidyen1",
+				"updated": "20260820124102"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Tidy Tree layout"
+				}
+			]
+		},
+		{
+			"ID": "20260820124102-tidyen2",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"custom-mermaid-layout": "tidy-tree",
+				"id": "20260820124102-tidyen2",
+				"updated": "20260820124102"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "bWVybWFpZA=="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "mindmap\n  root((Project))\n    Requirements\n      Research\n      Scope\n    Design\n      Prototype\n      Review\n    Development\n      Frontend\n      Backend\n    Release\n      Testing\n      Launch\n"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20260820124102-tidyen3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260820124102-tidyen3",
+				"updated": "20260820124102"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "This example sets the code block custom attribute "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "mermaid-layout"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "tidy-tree"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​. For layout details, see "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/config/layouts",
+					"TextMarkTextContent": "Mermaid"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-hlh01sn",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-hlh01sn",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Chart"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-2kh9v50",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20210104091509-2kh9v50",
+				"updated": "20220820214308"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "ZWNoYXJ0cw=="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "{\n  &quot;title&quot;: { &quot;text&quot;: &quot;Latest 30 days&quot; },\n  &quot;backgroundColor&quot;: &quot;transparent&quot;,\n  &quot;tooltip&quot;: { &quot;trigger&quot;: &quot;axis&quot;, &quot;axisPointer&quot;: { &quot;lineStyle&quot;: { &quot;width&quot;: 0 } } },\n  &quot;legend&quot;: { &quot;data&quot;: [&quot;Articles&quot;, &quot;Users&quot;, &quot;Replies&quot;] },\n  &quot;xAxis&quot;: [{\n      &quot;type&quot;: &quot;category&quot;,\n      &quot;boundaryGap&quot;: false,\n      &quot;data&quot;: [&quot;2019-05-08&quot;,&quot;2019-05-09&quot;,&quot;2019-05-10&quot;,&quot;2019-05-11&quot;,&quot;2019-05-12&quot;,&quot;2019-05-13&quot;,&quot;2019-05-14&quot;,&quot;2019-05-15&quot;,&quot;2019-05-16&quot;,&quot;2019-05-17&quot;,&quot;2019-05-18&quot;,&quot;2019-05-19&quot;,&quot;2019-05-20&quot;,&quot;2019-05-21&quot;,&quot;2019-05-22&quot;,&quot;2019-05-23&quot;,&quot;2019-05-24&quot;,&quot;2019-05-25&quot;,&quot;2019-05-26&quot;,&quot;2019-05-27&quot;,&quot;2019-05-28&quot;,&quot;2019-05-29&quot;,&quot;2019-05-30&quot;,&quot;2019-05-31&quot;,&quot;2019-06-01&quot;,&quot;2019-06-02&quot;,&quot;2019-06-03&quot;,&quot;2019-06-04&quot;,&quot;2019-06-05&quot;,&quot;2019-06-06&quot;,&quot;2019-06-07&quot;],\n      &quot;axisTick&quot;: { &quot;show&quot;: false },\n      &quot;axisLine&quot;: { &quot;show&quot;: false }\n  }],\n  &quot;yAxis&quot;: [{ &quot;type&quot;: &quot;value&quot;, &quot;axisTick&quot;: { &quot;show&quot;: false }, &quot;axisLine&quot;: { &quot;show&quot;: false }, &quot;splitLine&quot;: { &quot;lineStyle&quot;: { &quot;color&quot;: &quot;rgba(0, 0, 0, .38)&quot;, &quot;type&quot;: &quot;dashed&quot; } } }],\n  &quot;series&quot;: [\n    {\n      &quot;name&quot;: &quot;Articles&quot;, &quot;type&quot;: &quot;line&quot;, &quot;smooth&quot;: true, &quot;itemStyle&quot;: { &quot;color&quot;: &quot;#d23f31&quot; }, &quot;areaStyle&quot;: { &quot;normal&quot;: {} }, &quot;z&quot;: 3,\n      &quot;data&quot;: [&quot;18&quot;,&quot;14&quot;,&quot;22&quot;,&quot;9&quot;,&quot;7&quot;,&quot;18&quot;,&quot;10&quot;,&quot;12&quot;,&quot;13&quot;,&quot;16&quot;,&quot;6&quot;,&quot;9&quot;,&quot;15&quot;,&quot;15&quot;,&quot;12&quot;,&quot;15&quot;,&quot;8&quot;,&quot;14&quot;,&quot;9&quot;,&quot;10&quot;,&quot;29&quot;,&quot;22&quot;,&quot;14&quot;,&quot;22&quot;,&quot;9&quot;,&quot;10&quot;,&quot;15&quot;,&quot;9&quot;,&quot;9&quot;,&quot;15&quot;,&quot;0&quot;]\n    },\n    {\n      &quot;name&quot;: &quot;Users&quot;, &quot;type&quot;: &quot;line&quot;, &quot;smooth&quot;: true, &quot;itemStyle&quot;: { &quot;color&quot;: &quot;#f1e05a&quot; }, &quot;areaStyle&quot;: { &quot;normal&quot;: {} }, &quot;z&quot;: 2,\n      &quot;data&quot;: [&quot;31&quot;,&quot;33&quot;,&quot;30&quot;,&quot;23&quot;,&quot;16&quot;,&quot;29&quot;,&quot;23&quot;,&quot;37&quot;,&quot;41&quot;,&quot;29&quot;,&quot;16&quot;,&quot;13&quot;,&quot;39&quot;,&quot;23&quot;,&quot;38&quot;,&quot;136&quot;,&quot;89&quot;,&quot;35&quot;,&quot;22&quot;,&quot;50&quot;,&quot;57&quot;,&quot;47&quot;,&quot;36&quot;,&quot;59&quot;,&quot;14&quot;,&quot;23&quot;,&quot;46&quot;,&quot;44&quot;,&quot;51&quot;,&quot;43&quot;,&quot;0&quot;]\n    },\n    {\n      &quot;name&quot;: &quot;Replies&quot;, &quot;type&quot;: &quot;line&quot;, &quot;smooth&quot;: true, &quot;itemStyle&quot;: { &quot;color&quot;: &quot;#4285f4&quot; }, &quot;areaStyle&quot;: { &quot;normal&quot;: {} }, &quot;z&quot;: 1,\n      &quot;data&quot;: [&quot;35&quot;,&quot;42&quot;,&quot;73&quot;,&quot;15&quot;,&quot;43&quot;,&quot;58&quot;,&quot;55&quot;,&quot;35&quot;,&quot;46&quot;,&quot;87&quot;,&quot;36&quot;,&quot;15&quot;,&quot;44&quot;,&quot;76&quot;,&quot;130&quot;,&quot;73&quot;,&quot;50&quot;,&quot;20&quot;,&quot;21&quot;,&quot;54&quot;,&quot;48&quot;,&quot;73&quot;,&quot;60&quot;,&quot;89&quot;,&quot;26&quot;,&quot;27&quot;,&quot;70&quot;,&quot;63&quot;,&quot;55&quot;,&quot;37&quot;,&quot;0&quot;]\n    }\n  ]\n}"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20221225013111-k0tinm3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20221225013111-k0tinm3",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "With a local kernel, the following three formats are supported. When connected to a remote kernel, only strict JSON is supported; JavaScript object expressions and functions are not executed. See "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260903150000-s4hctea",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "Connect to a Remote Kernel"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20221225013111-f97ur4a",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20221225013111-f97ur4a",
+				"updated": "20221225103242"
+			},
+			"Children": [
+				{
+					"ID": "20221225013111-jhcu06t",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20221225013111-jhcu06t",
+						"updated": "20221225103242"
+					},
+					"Children": [
+						{
+							"ID": "20221225013111-6lkoa8j",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20221225013111-6lkoa8j",
+								"updated": "20221225013111"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "JSON"
+								}
+							]
+						},
+						{
+							"ID": "20221225103239-3a212px",
+							"Type": "NodeCodeBlock",
+							"IsFencedCodeBlock": true,
+							"Properties": {
+								"id": "20221225103239-3a212px",
+								"updated": "20221225103242"
+							},
+							"Children": [
+								{
+									"Type": "NodeCodeBlockFenceOpenMarker",
+									"Data": "```"
+								},
+								{
+									"Type": "NodeCodeBlockFenceInfoMarker",
+									"CodeBlockInfo": "anNvbg=="
+								},
+								{
+									"Type": "NodeCodeBlockCode",
+									"Data": "{\n    \"propName\": \"propValue\"\n}\n"
+								},
+								{
+									"Type": "NodeCodeBlockFenceCloseMarker",
+									"Data": "```"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20221225013111-whe7nls",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20221225013111-whe7nls",
+						"updated": "20221225013111"
+					},
+					"Children": [
+						{
+							"ID": "20221225013111-nspyxcz",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20221225013111-nspyxcz",
+								"updated": "20221225013111"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "JavaScript Object"
+								}
+							]
+						},
+						{
+							"ID": "20221225103231-nffgx96",
+							"Type": "NodeCodeBlock",
+							"IsFencedCodeBlock": true,
+							"Properties": {
+								"id": "20221225103231-nffgx96",
+								"updated": "20221225103236"
+							},
+							"Children": [
+								{
+									"Type": "NodeCodeBlockFenceOpenMarker",
+									"Data": "```"
+								},
+								{
+									"Type": "NodeCodeBlockFenceInfoMarker",
+									"CodeBlockInfo": "amF2YXNjcmlwdA=="
+								},
+								{
+									"Type": "NodeCodeBlockCode",
+									"Data": "{\n    propName: 'propValue',\n}\n"
+								},
+								{
+									"Type": "NodeCodeBlockFenceCloseMarker",
+									"Data": "```"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20221225013111-jpxi1rx",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20221225013111-jpxi1rx",
+						"updated": "20221225013408"
+					},
+					"Children": [
+						{
+							"ID": "20221225013111-n32s76k",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20221225013111-n32s76k",
+								"updated": "20221225013408"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "An Immediately-Invoked Function Expression (IIFE)  that returns a JavaScript Object"
+								}
+							]
+						},
+						{
+							"ID": "20221225103222-gizv6uz",
+							"Type": "NodeCodeBlock",
+							"IsFencedCodeBlock": true,
+							"Properties": {
+								"id": "20221225103222-gizv6uz",
+								"updated": "20221225103227"
+							},
+							"Children": [
+								{
+									"Type": "NodeCodeBlockFenceOpenMarker",
+									"Data": "```"
+								},
+								{
+									"Type": "NodeCodeBlockFenceInfoMarker",
+									"CodeBlockInfo": "amF2YXNjcmlwdA=="
+								},
+								{
+									"Type": "NodeCodeBlockCode",
+									"Data": "(() => {\n    const option = {};\n    option.propName = `propValue`;\n    return option;\n})()\n"
+								},
+								{
+									"Type": "NodeCodeBlockFenceCloseMarker",
+									"Data": "```"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20221105164926-hhpq6np",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20221105164926-hhpq6np",
+				"updated": "20221225013054"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "For the specific syntax, please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://echarts.apache.org/zh/index.html",
+					"TextMarkTextContent": "ECharts"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-j6xq9xm",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-j6xq9xm",
+				"updated": "20260804235500"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Staff"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-d5oimqr",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20210104091509-d5oimqr",
+				"updated": "20240429100032"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "YWJj"
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "%%params {tablature: [{instrument: &quot;violin&quot;}]}\nX: 24\nT: Clouds Thicken\nC: Paul Rosen\nS: Copyright 2005, Paul Rosen\nM: 6/8\nL: 1/8\nQ: 3/8=116\nR: Creepy Jig\nK: Em\n|:&quot;Em&quot;EEE E2G|&quot;C7&quot;_B2A G2F|&quot;Em&quot;EEE E2G|\\\n&quot;C7&quot;_B2A &quot;B7&quot;=B3|&quot;Em&quot;EEE E2G|\n&quot;C7&quot;_B2A G2F|&quot;Em&quot;GFE &quot;D (Bm7)&quot;F2D|\\\n1&quot;Em&quot;E3-E3:|2&quot;Em&quot;E3-E2B|:&quot;Em&quot;e2e gfe|\n&quot;G&quot;g2ab3|&quot;Em&quot;gfeg2e|&quot;D&quot;fedB2A|&quot;Em&quot;e2e gfe|\\\n&quot;G&quot;g2ab3|&quot;Em&quot;gfe&quot;D&quot;f2d|&quot;Em&quot;e3-e3:|"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20240429100035-0ggzlxi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240429100035-0ggzlxi",
+				"updated": "20240429100058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "You can add "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "%%params JSON"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ in the first line to use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "JSON"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ as a parameter of "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "renderAbc options"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​."
+				}
+			]
+		},
+		{
+			"ID": "20211213121948-zo8q9wp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211213121948-zo8q9wp",
+				"updated": "20260804235500"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to abcjs (GitHub repo: paulrosen/abcjs) for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-p75cyqy",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-p75cyqy",
+				"updated": "20210415201008"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Graphviz"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-5oabbxe",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20210104091509-5oabbxe",
+				"updated": "20210104091509"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```"
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "Z3JhcGh2aXo="
+				},
+				{
+					"ID": "20220307092214-nebefi0",
+					"Type": "NodeCodeBlockCode",
+					"Data": "digraph finite_state_machine {\n     rankdir=LR;\n     size=\"8,5\"\n     node [shape = doublecircle]; S;\n     node [shape = point ]; qi\n\n     node [shape = circle];\n     qi -> S;\n     S -> q1 [label = \"a\" ];\n     S -> S [label = \"a\" ];\n     q1 -> S [label = \"a\" ];\n     q1 -> q2 [label = \"ddb\" ];\n     q2 -> q1 [label = \"b\" ];\n     q2 -> q2 [label = \"b\" ];\n}",
+					"Properties": {
+						"id": "20220307092214-nebefi0"
+					}
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20211213122050-hi7x86c",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211213122050-hi7x86c",
+				"updated": "20211213122120"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://graphviz.org",
+					"TextMarkTextContent": "Graphviz"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-3e348ea",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091509-3e348ea",
+				"updated": "20251203220553"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Flowchart"
+				}
+			]
+		},
+		{
+			"ID": "20210104091509-u0vtq1c",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"CodeBlockFenceChar": 96,
+			"CodeBlockFenceLen": 3,
+			"CodeBlockOpenFence": "YGBg",
+			"CodeBlockInfo": "Zmxvd2NoYXJ0",
+			"CodeBlockCloseFence": "YGBg",
+			"Properties": {
+				"id": "20210104091509-u0vtq1c"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "Zmxvd2NoYXJ0"
+				},
+				{
+					"ID": "20220307092214-g0q2ftq",
+					"Type": "NodeCodeBlockCode",
+					"Data": "st=>start: Start\nop=>operation: Your Operation\ncond=>condition: Yes or No?\ne=>end\n\nst->op->cond\ncond(yes)->e\ncond(no)->op\n",
+					"Properties": {
+						"id": "20220307092214-g0q2ftq"
+					}
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				}
+			]
+		},
+		{
+			"ID": "20211213122144-gdl5u9e",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211213122144-gdl5u9e",
+				"updated": "20251203220553"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://flowchart.js.org/",
+					"TextMarkTextContent": "flowchart.js"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20210201203412-n26xya3",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210201203412-n26xya3",
+				"updated": "20210415201012"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PlantUML"
+				}
+			]
+		},
+		{
+			"ID": "20210201203424-ohqom70",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"CodeBlockFenceChar": 96,
+			"CodeBlockFenceLen": 3,
+			"CodeBlockOpenFence": "YGBg",
+			"CodeBlockInfo": "cGxhbnR1bWw=",
+			"CodeBlockCloseFence": "YGBg",
+			"Properties": {
+				"id": "20210201203424-ohqom70"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "cGxhbnR1bWw="
+				},
+				{
+					"ID": "20220307092214-o62g9x1",
+					"Type": "NodeCodeBlockCode",
+					"Data": "@startuml component\nactor client\nnode app\ndatabase db\ndb -> app\napp -> client\n@enduml\n",
+					"Properties": {
+						"id": "20220307092214-o62g9x1"
+					}
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				}
+			]
+		},
+		{
+			"ID": "20211213122348-4djtm9e",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211213122348-4djtm9e",
+				"updated": "20211213122415"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://plantuml.com",
+					"TextMarkTextContent": "PlantUML"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the syntax."
+				}
+			]
+		},
+		{
+			"ID": "20260928090424-08cios0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260928090424-08cios0",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Automatic text direction"
+				}
+			]
+		},
+		{
+			"ID": "20260928090424-voiqqta",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260928090424-voiqqta",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "On desktop and mobile, enable "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Appearance"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Automatic text direction"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " below Right to Left (RTL). This option is off by default. Paragraphs and headings use their first strong directional character to choose RTL or LTR; numbers, punctuation, and emoji at the beginning do not decide the direction."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-sdzy54w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-sdzy54w",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Manual block and inline directions take priority. Each list item, including nested items, independently follows the direction of its own first text block: checkboxes, bullets, numbers, and indentation move to the corresponding side. Manual list directions take priority. Table column order keeps its existing setting. Preview and HTML/PDF export also use automatic text direction."
+				}
+			]
+		}
+	]
+}

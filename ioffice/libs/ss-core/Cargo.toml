@@ -1,0 +1,133 @@
+[package]
+name = "ss-core"
+version = "0.1.0"
+edition = "2021"
+description = """
+Cross-platform spreadsheet engine: parse, calculate, layout, and render-command generation.
+
+Rust port of koffice/et/core — designed to produce output identical to the
+original Java implementation while enabling three-platform unification
+(Web, Desktop, Mobile) via the ioffice Flutter+Rust architecture.
+"""
+
+[lib]
+name = "ss_core"
+path = "src/lib.rs"
+crate-type = ["rlib", "cdylib"]
+
+[features]
+default = []
+uniffi = ["dep:uniffi"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+quick-xml = { version = "0.36", features = ["serialize"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
+uniffi = { version = "0.28", optional = true }
+util = { package = "core_libs_util", path = "../core-libs/util/util" }
+kfc = { package = "core_libs_kfc_main", path = "../core-libs/kfc/kfc" }
+kfc_kfc_alpha = { package = "core_libs_kfc", path = "../core-libs/kfc/kfc_alpha" }
+kfs_kfs_app = { package = "core_libs_kfs_app", path = "../core-libs/kfs/kfs_app" }
+util_adapter = { path = "../core-libs/util/adapter" }
+io_poi_compact = { package = "core_libs_poi_compact", path = "../core-libs/io/poi-compact" }
+regex = "1"
+chrono = "0.4.44"
+libm = "=0.2.16"
+num-bigint = "0.4.6"
+num-traits = "0.2"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+zip = { version = "2", features = ["lzma", "zstd", "bzip2"] }
+memmap2 = "0.9.10"
+
+[dev-dependencies]
+pretty_assertions = "1"
+sha2 = "0.10.9"
+
+[[test]]
+name = "01_function_cell_codec"
+path = "tests/cn/wps/moss/engine/grid/KmoCellData.rs"
+
+[[test]]
+name = "02_function_value_store"
+path = "tests/cn/wps/moss/engine/grid/KmoCellValueStore.rs"
+
+[[test]]
+name = "03_function_sparse_grid"
+path = "tests/cn/wps/moss/engine/grid/KmoMatrix.rs"
+
+[[test]]
+name = "04_function_book_sheet"
+path = "tests/cn/wps/moss/app/KmoBook.rs"
+
+[[test]]
+name = "05_function_cell_write_read"
+path = "tests/cn/wps/moss/io/QuickInitCell.rs"
+
+[[test]]
+name = "06_function_opc_package"
+path = "tests/cn/wps/moss/xlsxr/util/XlsxrPackage.rs"
+
+[[test]]
+name = "07_function_xml_events"
+path = "tests/cn/wps/moss/xlsxr/util/UnifiedXmlReader.rs"
+
+[[test]]
+name = "08_function_sheet_decl"
+path = "tests/cn/wps/moss/xlsxr/handler/WorkbookHandler.rs"
+
+[[test]]
+name = "09_function_workbook_open"
+path = "tests/cn/wps/moss/xlsxr/xl/XlsxrWorkbook.rs"
+
+[[test]]
+name = "10_function_styles_xf"
+path = "tests/cn/wps/moss/xlsxr/xl/XlsxrStyles.rs"
+
+[[test]]
+name = "11_function_shared_strings"
+path = "tests/cn/wps/moss/xlsxr/xl/XlsxrSharedStrings.rs"
+
+[[test]]
+name = "12_function_sheet_route"
+path = "tests/cn/wps/moss/xlsxr/xl/worksheets/XlsxrSheets.rs"
+
+[[test]]
+name = "13_function_row_cell"
+path = "tests/cn/wps/moss/xlsxr/handler/sheet/CellHandler.rs"
+
+[[test]]
+name = "14_function_open_book"
+path = "tests/cn/wps/moss/app/KmoBookApi.rs"
+
+[[test]]
+name = "15_function_product_session"
+path = "tests/api/SpreadsheetSession.rs"
+
+[[test]]
+name = "16_function_grid_diff"
+path = "tests/api/GridDiff.rs"
+
+[[test]]
+name = "17_function_delayed_formula"
+path = "tests/cn/wps/moss/xlsxr/handler/sheet/CellFmlBackupHandler.rs"
+
+[[test]]
+name = "18_function_col_infos"
+path = "tests/cn/wps/moss/core/sheet/KmoColInfos.rs"
+
+[[test]]
+name = "19_function_merge_ranges"
+path = "tests/cn/wps/moss/engine/grid/KmoMergeDelegate.rs"
+
+[[test]]
+name = "20_function_sheet_format"
+path = "tests/cn/wps/moss/xlsxr/handler/sheet/SheetFormatPrHandler.rs"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "=0.21.1"

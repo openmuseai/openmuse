@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<!-- <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd"> -->
+<resource>
+	<!-- 简体中文 -->
+	<thous-separator type="string">,</thous-separator>
+	<decimal-point type="string">.</decimal-point>
+	<general type="string">G/通用格式</general>
+	<color-name type="string-array" size="9">
+		<item>黑色</item>
+		<item>蓝色</item>
+		<item>蓝绿色</item>
+		<item>绿色</item>
+		<item>洋红</item>
+		<item>红色</item>
+		<item>白色</item>
+		<item>黄色</item>
+		<item>颜色</item>
+	</color-name>
+	<long-week type="string-array" size="7">
+		<item>星期日</item>
+		<item>星期一</item>
+		<item>星期二</item>
+		<item>星期三</item>
+		<item>星期四</item>
+		<item>星期五</item>
+		<item>星期六</item>
+	</long-week>
+	<short-week type="string-array" size="7">
+		<item>日</item>
+		<item>一</item>
+		<item>二</item>
+		<item>三</item>
+		<item>四</item>
+		<item>五</item>
+		<item>六</item>
+	</short-week>
+	<long-month type="string-array" size="12">
+	<item>一月</item>
+	<item>二月</item>
+	<item>三月</item>
+	<item>四月</item>
+	<item>五月</item>
+	<item>六月</item>
+	<item>七月</item>
+	<item>八月</item>
+	<item>九月</item>
+	<item>十月</item>
+	<item>十一月</item>
+	<item>十二月</item>
+	</long-month>
+	<short-month type="string-array" size="12">
+	<item>1月</item>
+	<item>2月</item>
+	<item>3月</item>
+	<item>4月</item>
+	<item>5月</item>
+	<item>6月</item>
+	<item>7月</item>
+	<item>8月</item>
+	<item>9月</item>
+	<item>10月</item>
+	<item>11月</item>
+	<item>12月</item>
+	</short-month>
+	<shortest-month type="string-array" size="12">
+	<item>一</item>
+	<item>二</item>
+	<item>三</item>
+	<item>四</item>
+	<item>五</item>
+	<item>六</item>
+	<item>七</item>
+	<item>八</item>
+	<item>九</item>
+	<item>十</item>
+	<item>十一</item>
+	<item>十二</item>
+	</shortest-month>
+	<am-pm type="string-array" size="2">
+	<item>上午</item>
+	<item>下午</item>
+	</am-pm>
+	<year type="string">y</year>
+	<month type="string">m</month>
+	<day type="string">d</day>
+	<hour type="string">h</hour>
+	<minute type="string">m</minute>
+	<second type="string">s</second>
+	<escape type="string">!</escape>
+	<f400-f800 type="string-array" size="2">
+	<item>h:mm:ss</item>
+	<item>yyyy"年"m"月"d"日"</item>
+	</f400-f800>
+</resource>

@@ -1,0 +1,298 @@
+{
+  "filePath": "/Users/mac/src/ioffice/libs/writer/core/cn/wps/collections/IntervalMapNode.rs",
+  "javaFilePath": "/Users/mac/src/ioffice/koffice/writer/core/cn/wps/collections/IntervalMapNode.java",
+  "createdAt": "2026-06-24T02:06:18.622Z",
+  "lastModified": "2026-06-24T02:06:18.623Z",
+  "version": 1,
+  "lines": [
+    {
+      "id": "rl:out:0",
+      "ln": 0,
+      "text": "// Java: import cn.wps.collections.IntervalNode",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:1",
+      "ln": 1,
+      "text": "use stubs::cn::wps::collections::IntervalNode::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:2",
+      "ln": 2,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:3",
+      "ln": 3,
+      "text": "// Java: public abstract class IntervalMapNode extends IntervalNode ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:4",
+      "ln": 4,
+      "text": "#[derive(Default)]\npub struct IntervalMapNode {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:5",
+      "ln": 5,
+      "text": "    // Java field: IntervalNode super_;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:6",
+      "ln": 6,
+      "text": "    pub super_: IntervalNode,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:7",
+      "ln": 7,
+      "text": "    // Java field:    IntervalMapNode peer;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:8",
+      "ln": 8,
+      "text": "    pub peer: IntervalMapNode,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:9",
+      "ln": 9,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:10",
+      "ln": 10,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:11",
+      "ln": 11,
+      "text": "// Java: public abstract class IntervalMapNode extends IntervalNode ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:12",
+      "ln": 12,
+      "text": "impl IntervalMapNode {",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:13",
+      "ln": 13,
+      "text": "    // Java: public final IntervalMapNode getPeer() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:14",
+      "ln": 14,
+      "text": "    pub fn getPeer(&mut self) -> &IntervalMapNode {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:15",
+      "ln": 15,
+      "text": "      // Java: return this.peer;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:16",
+      "ln": 16,
+      "text": "      return self.peer;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:17",
+      "ln": 17,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:18",
+      "ln": 18,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:19",
+      "ln": 19,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:20",
+      "ln": 20,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:21",
+      "ln": 21,
+      "text": "impl std::ops::Deref for IntervalMapNode {\n    type Target = IntervalNode;\n\n    fn deref(&self) -> &Self::Target {\n        &self.super_\n    }\n}",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:22",
+      "ln": 22,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:23",
+      "ln": 23,
+      "text": "impl std::ops::DerefMut for IntervalMapNode {\n    fn deref_mut(&mut self) -> &mut Self::Target {\n        &mut self.super_\n    }\n}",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:24",
+      "ln": 24,
+      "text": "",
+      "type": "empty"
+    }
+  ],
+  "imports": [
+    {
+      "id": "ri:ji:syn:0",
+      "javaCodeId": "ji:syn:0",
+      "usePath": "use stubs::cn::wps::collections::IntervalNode::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:0",
+          "ln": -1,
+          "text": "// Java: import cn.wps.collections.IntervalNode",
+          "type": "java_comment",
+          "jcid": "ji:syn:0"
+        },
+        {
+          "id": "rl:ji:syn:0",
+          "ln": -1,
+          "text": "use stubs::cn::wps::collections::IntervalNode::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:0"
+        }
+      ]
+    }
+  ],
+  "statics": [],
+  "structs": [
+    {
+      "id": "rs:IntervalMapNode",
+      "javaCodeId": "jc:IntervalMapNode",
+      "structName": "IntervalMapNode",
+      "javaSignature": "// Java: public abstract class IntervalMapNode extends IntervalNode ",
+      "fields": [
+        {
+          "id": "rf:jf:super:IntervalMapNode",
+          "javaCodeId": "jf:super:IntervalMapNode",
+          "javaFieldName": "super_",
+          "javaFieldType": "IntervalNode",
+          "rustText": "",
+          "rewriteState": "pending"
+        },
+        {
+          "id": "rf:jf:IntervalMapNode:peer",
+          "javaCodeId": "jf:IntervalMapNode:peer",
+          "javaFieldName": "peer",
+          "javaFieldType": "IntervalMapNode",
+          "rustText": "",
+          "rewriteState": "pending"
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    }
+  ],
+  "impls": [
+    {
+      "id": "ri:impl:IntervalMapNode",
+      "javaCodeId": "jc:IntervalMapNode",
+      "structName": "IntervalMapNode",
+      "javaSignature": "// Java: public abstract class IntervalMapNode extends IntervalNode ",
+      "methods": [
+        {
+          "id": "rm:IntervalMapNode:getPeer",
+          "javaCodeId": "jm:IntervalMapNode:getPeer",
+          "methodName": "getPeer",
+          "javaSignature": "// Java: public final IntervalMapNode getPeer() ",
+          "params": [],
+          "returnType": "IntervalMapNode",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.622Z",
+              "action": "template_gen"
+            }
+          ]
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "ri:deref:IntervalMapNode",
+      "javaCodeId": "jc:IntervalMapNode",
+      "structName": "IntervalMapNode",
+      "methods": [],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "ri:deref_mut:IntervalMapNode",
+      "javaCodeId": "jc:IntervalMapNode",
+      "structName": "IntervalMapNode",
+      "methods": [],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    }
+  ],
+  "traits": [],
+  "fileLineMap": {
+    "ri:ji:syn:0": {
+      "start": 0,
+      "end": 2
+    },
+    "rf:jf:super:IntervalMapNode": {
+      "start": 5,
+      "end": 7
+    },
+    "rf:jf:IntervalMapNode:peer": {
+      "start": 7,
+      "end": 9
+    },
+    "rs:IntervalMapNode": {
+      "start": 3,
+      "end": 11
+    },
+    "rb:jb:jm:IntervalMapNode:getPeer:block": {
+      "start": 15,
+      "end": 17
+    },
+    "rm:IntervalMapNode:getPeer": {
+      "start": 13,
+      "end": 19
+    },
+    "ri:impl:IntervalMapNode": {
+      "start": 11,
+      "end": 21
+    },
+    "ri:deref:IntervalMapNode": {
+      "start": 21,
+      "end": 23
+    },
+    "ri:deref_mut:IntervalMapNode": {
+      "start": 23,
+      "end": 25
+    }
+  }
+}

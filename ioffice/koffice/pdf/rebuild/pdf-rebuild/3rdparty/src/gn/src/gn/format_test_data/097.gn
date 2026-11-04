@@ -1,0 +1,2 @@
+# problematic for FooBar because of targets like
+#   //third_party/an_foo_b/src/trace_processor/an_foo_b_sql/stdlib:stdlib_generated_file

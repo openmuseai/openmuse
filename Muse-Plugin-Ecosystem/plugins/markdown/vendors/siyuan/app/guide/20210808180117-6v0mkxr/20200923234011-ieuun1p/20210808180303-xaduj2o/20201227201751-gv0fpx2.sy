@@ -1,0 +1,68 @@
+{
+	"ID": "20201227201751-gv0fpx2",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20201227201751-gv0fpx2",
+		"title": "Kernel API",
+		"type": "doc",
+		"updated": "20261024163429"
+	},
+	"Children": [
+		{
+			"ID": "20261024161816-ckc5ft1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-ckc5ft1",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The kernel API exposes operations on documents, blocks, assets, and other data over HTTP for scripts and external tools. Start the SiYuan kernel before making requests and use an API token where required. See the API documentation below for parameters and examples."
+				}
+			]
+		},
+		{
+			"ID": "20210822164043-6gvv84p",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210822164043-6gvv84p",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkTextContent": "API documentation",
+					"TextMarkAHref": "https://github.com/siyuan-note/siyuan/blob/dev/docs/API.md"
+				}
+			]
+		},
+		{
+			"ID": "20260804225002-apien01",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260804225002-apien01",
+				"updated": "20260804230000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan also provides tools to external clients through MCP. For connection and permission details, see "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260804223002-mcpsv03",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "MCP Service"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		}
+	]
+}

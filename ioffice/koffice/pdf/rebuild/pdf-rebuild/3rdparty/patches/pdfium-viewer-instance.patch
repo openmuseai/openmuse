@@ -1,0 +1,27 @@
+diff --git a/BUILD.gn b/BUILD.gn
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -6,6 +6,12 @@ import("//build/config/gclient_args.gni")
+ import("//testing/test.gni")
+ import("pdfium.gni")
+ 
++declare_args() {
++  # Keep the reader's process-wide font callbacks separate until ProductSession
++  # owns rendering and editing on one scheduler.
++  ksp_pdfium_viewer = false
++}
++
+ group("default") {
+   testonly = true
+   deps = [ ":pdfium" ]
+@@ -232,7 +238,10 @@ config("pdfium_public_config") {
+ }
+ 
+ shared_library("pdfium") {
+   output_name = "pdfium"
++  if (ksp_pdfium_viewer) {
++    output_name = "pdfium_viewer"
++  }
+   libs = []
+   configs += [ ":pdfium_strict_config" ]
+   if (is_android) {

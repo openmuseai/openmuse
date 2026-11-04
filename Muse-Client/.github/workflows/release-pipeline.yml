@@ -1,0 +1,54 @@
+name: Release pipeline records
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_directory:
+        description: Repository-relative release run directory
+        type: string
+        default: docs/release/runs/2026-11-overseas
+  pull_request:
+    paths:
+      - config/release/**
+      - docs/release/pipeline/**
+      - docs/release/runs/**
+      - scripts/release/pipeline.py
+      - scripts/release/test_pipeline.py
+      - scripts/release/release-tasks.mk
+      - .github/workflows/release-pipeline.yml
+
+permissions:
+  contents: read
+
+jobs:
+  definition:
+    name: 01 Flow definition
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 scripts/release/pipeline.py lint
+
+  archive-tests:
+    name: 02 Archive and gate boundary tests
+    needs: definition
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/release/test_pipeline.py
+
+  record:
+    name: 03 Run receipts and evidence
+    needs: archive-tests
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_RUN: ${{ inputs.run_directory || 'docs/release/runs/2026-11-overseas' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate run and show separate node states
+        run: |
+          python3 scripts/release/pipeline.py check --run "$RELEASE_RUN" --metadata-only
+          python3 scripts/release/pipeline.py plan --run "$RELEASE_RUN"
+

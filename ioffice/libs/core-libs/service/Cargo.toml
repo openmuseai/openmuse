@@ -1,0 +1,12 @@
+﻿[package]
+name = "core_libs_service"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+util = { package="core_libs_util", path = "../util/util" }
+kfs_app = { package = "core_libs_kfs_app", path = "../kfs/kfs_app" }
+stubs = {  path = "../stubs"}

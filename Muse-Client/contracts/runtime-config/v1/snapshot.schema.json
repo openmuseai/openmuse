@@ -1,0 +1,742 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenMuse runtime snapshot v1",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "releaseId",
+    "sequence",
+    "productId",
+    "environment",
+    "distributionId",
+    "scope",
+    "compatibility",
+    "deployment",
+    "localization",
+    "origins",
+    "links",
+    "authentication",
+    "web",
+    "updates",
+    "support"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1,
+      "type": "integer"
+    },
+    "releaseId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "productId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "environment": {
+      "type": "string",
+      "minLength": 1
+    },
+    "distributionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "issuedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "dataRegion",
+        "platform",
+        "variantId"
+      ],
+      "properties": {
+        "dataRegion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1
+        },
+        "variantId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "compatibility": {
+      "type": "object",
+      "required": [
+        "minBuild",
+        "requiredCapabilities"
+      ],
+      "properties": {
+        "minBuild": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "requiredCapabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "deployment": {
+      "type": "object",
+      "required": [
+        "id",
+        "authBindingId",
+        "services"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authBindingId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "services": {
+          "type": "object",
+          "required": [
+            "auth",
+            "cloud",
+            "pluginRegistry",
+            "updates"
+          ],
+          "properties": {
+            "auth": {
+              "type": "object",
+              "required": [
+                "baseUrl"
+              ],
+              "properties": {
+                "baseUrl": {
+                  "type": "string",
+                  "format": "uri",
+                  "pattern": "^https://"
+                },
+                "credentialScope": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            "cloud": {
+              "type": "object",
+              "required": [
+                "baseUrl"
+              ],
+              "properties": {
+                "baseUrl": {
+                  "type": "string",
+                  "format": "uri",
+                  "pattern": "^https://[^/?#]+/?$"
+                },
+                "credentialScope": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            "pluginRegistry": {
+              "type": "object",
+              "required": [
+                "baseUrl"
+              ],
+              "properties": {
+                "baseUrl": {
+                  "type": "string",
+                  "format": "uri",
+                  "pattern": "^https://"
+                },
+                "credentialScope": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            "updates": {
+              "type": "object",
+              "required": [
+                "baseUrl"
+              ],
+              "properties": {
+                "baseUrl": {
+                  "type": "string",
+                  "format": "uri",
+                  "pattern": "^https://"
+                },
+                "credentialScope": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            "relay": {
+              "type": "object",
+              "required": [
+                "baseUrl"
+              ],
+              "properties": {
+                "baseUrl": {
+                  "type": "string",
+                  "format": "uri",
+                  "pattern": "^https://[^/?#]+/?$"
+                },
+                "credentialScope": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "localization": {
+      "type": "object",
+      "required": [
+        "defaultLocale",
+        "enabledLocales"
+      ],
+      "properties": {
+        "defaultLocale": {
+          "type": "string",
+          "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-[0-9]{3})?$"
+        },
+        "enabledLocales": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-[0-9]{3})?$"
+          },
+          "uniqueItems": true
+        },
+        "aliases": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-[0-9]{3})?$"
+          }
+        },
+        "bundleRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "localeCatalog": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "required": [
+              "tag",
+              "label",
+              "direction",
+              "formatLocale",
+              "aliases",
+              "uiKey"
+            ],
+            "properties": {
+              "tag": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-[0-9]{3})?$"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "direction": {
+                "enum": [
+                  "ltr",
+                  "rtl"
+                ]
+              },
+              "formatLocale": {
+                "type": "string",
+                "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-[0-9]{3})?$"
+              },
+              "aliases": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-[0-9]{3})?$"
+                }
+              },
+              "uiKey": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "origins": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "format": "uri",
+        "pattern": "^https://"
+      }
+    },
+    "links": {
+      "type": "object",
+      "required": [
+        "legal.terms",
+        "legal.privacy",
+        "legal.accountDeletion",
+        "regulatory.filing"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "originRef",
+          "pathByLocale",
+          "fallbackLocale"
+        ],
+        "properties": {
+          "originRef": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pathByLocale": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^/(?!/)"
+            }
+          },
+          "fallbackLocale": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-[0-9]{3})?$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "authentication": {
+      "type": "object",
+      "required": [
+        "sessionStorageKey"
+      ],
+      "properties": {
+        "sessionStorageKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,180}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "web": {
+      "type": "object",
+      "required": [
+        "servicePaths",
+        "sessionStorageKey"
+      ],
+      "properties": {
+        "servicePaths": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "auth",
+              "cloud",
+              "pluginRegistry",
+              "updates",
+              "relay"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^/(?!/)"
+          }
+        },
+        "sessionStorageKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,180}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "updates": {
+      "type": "object",
+      "required": [
+        "channel"
+      ],
+      "properties": {
+        "channel": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,31}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "resources": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "url",
+          "sha256",
+          "maxBytes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "maxBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 524288
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "locale": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-[0-9]{3})?$"
+          },
+          "namespace": {
+            "type": "string",
+            "minLength": 1
+          },
+          "delivery": {
+            "const": "onDemand"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "support": {
+      "type": "object",
+      "required": [
+        "email"
+      ],
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email"
+        }
+      },
+      "additionalProperties": false
+    },
+    "navigation": {
+      "type": "object",
+      "required": [
+        "entryRouteId",
+        "routes"
+      ],
+      "properties": {
+        "entryRouteId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "routes": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 32,
+          "propertyNames": {
+            "pattern": "^[a-z][a-zA-Z0-9.]{0,63}$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "path",
+              "handler"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^/(?!/)"
+              },
+              "handler": {
+                "enum": [
+                  "session",
+                  "login"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "regulatory": {
+      "type": "object",
+      "required": [
+        "appFilingNumber"
+      ],
+      "properties": {
+        "appFilingNumber": {
+          "type": "string",
+          "maxLength": 100,
+          "pattern": "^[^<>\\u0000-\\u001f]*$"
+        },
+        "websiteFilingNumber": {
+          "type": "string",
+          "maxLength": 100,
+          "pattern": "^[^<>\\u0000-\\u001f]*$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "features": {
+          "type": "object",
+          "maxProperties": 128,
+          "propertyNames": {
+            "pattern": "^[a-z][a-zA-Z0-9_.-]{0,127}$"
+          },
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "maxProperties": 128,
+          "propertyNames": {
+            "pattern": "^[a-z][a-zA-Z0-9_.-]{0,127}$"
+          },
+          "properties": {
+            "runtime.refreshIntervalSeconds": {
+              "type": "integer",
+              "minimum": 60,
+              "maximum": 1800
+            }
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "maxLength": 4096
+              }
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "portal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "defaultRegion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "regions": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 8,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9-]{0,31}$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "dataRegion": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "labels": {
+                "type": "object",
+                "minProperties": 1,
+                "maxProperties": 32,
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                }
+              },
+              "portalLinkId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "appLinkId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "media": {
+                "type": "object",
+                "minProperties": 1,
+                "maxProperties": 64,
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "image",
+                        "video"
+                      ]
+                    },
+                    "fallbackLocale": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 160
+                    },
+                    "byLocale": {
+                      "type": "object",
+                      "minProperties": 1,
+                      "maxProperties": 32,
+                      "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "linkId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 160
+                          },
+                          "posterLinkId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 160
+                          }
+                        },
+                        "required": [
+                          "linkId"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "fallbackLocale",
+                    "byLocale"
+                  ]
+                }
+              },
+              "downloads": {
+                "type": "array",
+                "maxItems": 32,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "platform": {
+                      "type": "string",
+                      "pattern": "^(macos|windows|linux|android|ios)(-[a-z0-9]+)?$"
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "linkId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 160
+                    }
+                  },
+                  "required": [
+                    "platform",
+                    "version",
+                    "sha256",
+                    "linkId"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "dataRegion",
+              "labels",
+              "portalLinkId",
+              "appLinkId",
+              "media",
+              "downloads"
+            ]
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "defaultRegion",
+        "regions"
+      ]
+    }
+  },
+  "dependentRequired": {
+    "issuedAt": [
+      "expiresAt"
+    ],
+    "expiresAt": [
+      "issuedAt"
+    ]
+  },
+  "additionalProperties": false
+}

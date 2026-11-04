@@ -1,0 +1,7 @@
+load(":relative.scl", "relative")
+load("//load:absolute.scl", "absolute")
+load("//load:relative.scl", relative_as_absolute = "relative")
+
+absolute_value = absolute
+relative_value = relative
+relative_as_absolute_value = relative_as_absolute

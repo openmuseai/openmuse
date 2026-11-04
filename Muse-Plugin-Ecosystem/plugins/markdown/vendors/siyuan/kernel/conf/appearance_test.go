@@ -1,0 +1,213 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package conf
+
+import (
+	"bytes"
+	"encoding/json"
+	"testing"
+)
+
+func TestGlobalFontFamiliesCompatibility(t *testing.T) {
+	for _, source := range []string{`{}`, `{"globalFontFamilies":null}`, `{"globalFontFamilies":[]}`} {
+		appearance := NewAppearance()
+		if err := json.Unmarshal([]byte(source), appearance); err != nil {
+			t.Fatal(err)
+		}
+		appearance.NormalizeGlobalFontFamilies()
+		if nil == appearance.GlobalFontFamilies || 0 != len(appearance.GlobalFontFamilies) {
+			t.Fatalf("expected theme defaults for %s, got %+v", source, appearance.GlobalFontFamilies)
+		}
+	}
+}
+
+func TestGlobalFontFamiliesPreservesPriority(t *testing.T) {
+	appearance := NewAppearance()
+	appearance.GlobalFontFamilies = []*EditorFont{
+		nil,
+		{Family: ""},
+		{Family: "Example Sans", Weight: 0, DisplayName: "Example"},
+		{Family: "Fallback Sans", Weight: 400},
+		{Family: "Example Sans", Weight: 700},
+	}
+	appearance.NormalizeGlobalFontFamilies()
+	if len(appearance.GlobalFontFamilies) != 2 || appearance.GlobalFontFamilies[0].Family != "Example Sans" ||
+		appearance.GlobalFontFamilies[1].Family != "Fallback Sans" || appearance.GlobalFontFamilies[0].Weight != 400 {
+		t.Fatalf("unexpected normalized fonts: %+v", appearance.GlobalFontFamilies)
+	}
+	data, err := json.Marshal(appearance)
+	if err != nil {
+		t.Fatal(err)
+	}
+	loaded := &Appearance{}
+	if err = json.Unmarshal(data, loaded); err != nil {
+		t.Fatal(err)
+	}
+	if len(loaded.GlobalFontFamilies) != 2 || loaded.GlobalFontFamilies[0].DisplayName != "Example" {
+		t.Fatalf("font preferences did not survive round trip: %+v", loaded.GlobalFontFamilies)
+	}
+}
+
+func TestNormalizeEntryVisibilityDefaults(t *testing.T) {
+	entryVisibility := NormalizeEntryVisibility(nil, EntryVisibilityProfileSimple)
+	if entryVisibility.Version != EntryVisibilityVersion || entryVisibility.Active != EntryVisibilityProfileSimple {
+		t.Fatalf("unexpected defaults: %+v", entryVisibility)
+	}
+	if nil == entryVisibility.Profiles || 0 != len(entryVisibility.Profiles) {
+		t.Fatalf("unexpected profiles: %+v", entryVisibility.Profiles)
+	}
+}
+
+func TestNormalizeEntryVisibilityDefaultsCompatibility(t *testing.T) {
+	for _, version := range []int{6, 7} {
+		for _, defaults := range []string{"", "simple", "full", "invalid"} {
+			profile := &EntryVisibilityProfile{ID: "custom", Name: "Custom", Defaults: defaults,
+				Entries: map[string]bool{"editor.toolbar.strong": false, "plugin:unavailable:item": true},
+				Orders:  map[string][]string{"dock": {"plugin:unavailable:dock"}}}
+			config := NormalizeEntryVisibility(&EntryVisibility{Version: version, Active: "custom", Profiles: []*EntryVisibilityProfile{profile}}, EntryVisibilityProfileFull)
+			want := defaults
+			if version < 7 || defaults == "invalid" {
+				want = ""
+			}
+			if profile.Defaults != want || len(profile.Entries) != 2 || profile.Entries["editor.toolbar.strong"] ||
+				!profile.Entries["plugin:unavailable:item"] || profile.Orders["dock"][0] != "plugin:unavailable:dock" {
+				t.Fatalf("profile compatibility lost for version %d defaults %q: %+v", version, defaults, profile)
+			}
+			NormalizeEntryVisibility(config, EntryVisibilityProfileFull)
+			if profile.Defaults != want || len(profile.Entries) != 2 {
+				t.Fatal("normalization changed a normalized profile")
+			}
+		}
+	}
+}
+
+func TestNormalizeEntryVisibilityProfiles(t *testing.T) {
+	entryVisibility := NormalizeEntryVisibility(&EntryVisibility{
+		Version: 99,
+		Active:  "missing",
+		Profiles: []*EntryVisibilityProfile{
+			nil,
+			{ID: "", Name: "missing-id"},
+			{ID: EntryVisibilityProfileSimple, Name: "Reserved"},
+			{ID: "custom", Name: "Custom", Entries: map[string]bool{"future.entry": false},
+				Orders: map[string][]string{"future": {"entry"}}},
+			{ID: "custom", Name: "Duplicate"},
+		},
+	}, EntryVisibilityProfileFull)
+
+	if entryVisibility.Version != EntryVisibilityVersion || entryVisibility.Active != EntryVisibilityProfileFull {
+		t.Fatalf("unexpected normalized config: %+v", entryVisibility)
+	}
+	if 1 != len(entryVisibility.Profiles) {
+		t.Fatalf("unexpected profiles: %+v", entryVisibility.Profiles)
+	}
+	profile := entryVisibility.Profiles[0]
+	if profile.Entries["future.entry"] {
+		t.Fatalf("unexpected normalized profile: %+v", profile)
+	}
+	if len(profile.Orders["future"]) != 1 || profile.Orders["future"][0] != "entry" {
+		t.Fatalf("unexpected normalized profile orders: %+v", profile.Orders)
+	}
+}
+
+func TestNormalizeEntryVisibilityActiveCustomProfile(t *testing.T) {
+	entryVisibility := NormalizeEntryVisibility(&EntryVisibility{
+		Active: "custom",
+		Profiles: []*EntryVisibilityProfile{
+			{ID: "custom", Name: "Custom"},
+		},
+	}, EntryVisibilityProfileFull)
+
+	if entryVisibility.Active != "custom" {
+		t.Fatalf("unexpected active profile: %s", entryVisibility.Active)
+	}
+	if nil == entryVisibility.Profiles[0].Orders {
+		t.Fatal("profile orders should be initialized")
+	}
+}
+
+func TestNormalizeEntryVisibilityRemovesLegacyBase(t *testing.T) {
+	legacy := []byte(`{"version":2,"active":"custom","profiles":[{"id":"custom","name":"Custom","base":"simple","entries":{"future.entry":false},"orders":{}}]}`)
+	entryVisibility := &EntryVisibility{}
+	if err := json.Unmarshal(legacy, entryVisibility); nil != err {
+		t.Fatalf("unmarshal legacy config failed: %v", err)
+	}
+
+	entryVisibility = NormalizeEntryVisibility(entryVisibility, EntryVisibilityProfileFull)
+	data, err := json.Marshal(entryVisibility)
+	if nil != err {
+		t.Fatalf("marshal normalized config failed: %v", err)
+	}
+	if bytes.Contains(data, []byte(`"base"`)) {
+		t.Fatalf("legacy base should not be persisted: %s", data)
+	}
+	if entryVisibility.Version != EntryVisibilityVersion || entryVisibility.Active != "custom" ||
+		entryVisibility.Profiles[0].Entries["future.entry"] {
+		t.Fatalf("unexpected normalized legacy config: %+v", entryVisibility)
+	}
+}
+
+func TestNormalizeEntryVisibilityMigratesEditMode(t *testing.T) {
+	entryVisibility := NormalizeEntryVisibility(&EntryVisibility{
+		Version: 3,
+		Active:  "custom",
+		Profiles: []*EntryVisibilityProfile{
+			{
+				ID:   "custom",
+				Name: "Custom",
+				Entries: map[string]bool{
+					"document.more.editMode":         true,
+					"document.more.editMode.wysiwyg": false,
+					"document.more.editMode.preview": false,
+				},
+				Orders: map[string][]string{
+					"document.more.editMode": {"preview", "wysiwyg"},
+				},
+			},
+		},
+	}, EntryVisibilityProfileFull)
+
+	profile := entryVisibility.Profiles[0]
+	if profile.Entries["document.more.editMode"] {
+		t.Fatalf("hidden legacy mode entries should hide the merged entry: %+v", profile.Entries)
+	}
+	if _, ok := profile.Entries["document.more.editMode.wysiwyg"]; ok {
+		t.Fatalf("legacy WYSIWYG entry should be removed: %+v", profile.Entries)
+	}
+	if _, ok := profile.Entries["document.more.editMode.preview"]; ok {
+		t.Fatalf("legacy preview entry should be removed: %+v", profile.Entries)
+	}
+	if _, ok := profile.Orders["document.more.editMode"]; ok {
+		t.Fatalf("legacy mode order should be removed: %+v", profile.Orders)
+	}
+}
+func TestDatabaseMenuMigration(t *testing.T) {
+	config := &EntryVisibility{Version: 4, Active: "custom", Profiles: []*EntryVisibilityProfile{{
+		ID: "custom", Name: "Custom",
+		Entries: map[string]bool{"gutter.single.exportCSV": false, "gutter.single.showDatabaseInFolder": true},
+		Orders:  map[string][]string{"gutter.single": {"pluginBefore", "separator_exportCSV", "showDatabaseInFolder", "pluginMiddle", "exportCSV", "pluginAfter"}},
+	}}}
+	NormalizeEntryVisibility(config, EntryVisibilityProfileFull)
+	profile := config.Profiles[0]
+	if visible, ok := profile.Entries["gutter.single.database.exportCSV"]; !ok || visible {
+		t.Fatal("export visibility was not preserved")
+	}
+	if !profile.Entries["gutter.single.database.showDatabaseInFolder"] {
+		t.Fatal("folder visibility was not preserved")
+	}
+	if _, ok := profile.Entries["gutter.single.exportCSV"]; ok {
+		t.Fatal("legacy visibility remains")
+	}
+	want := []string{"pluginBefore", "separator_exportCSV", "database", "pluginMiddle", "pluginAfter"}
+	for i, key := range want {
+		if len(profile.Orders["gutter.single"]) != len(want) || profile.Orders["gutter.single"][i] != key {
+			t.Fatal("parent order was not preserved")
+		}
+	}
+	children := profile.Orders["gutter.single.database"]
+	if len(children) != 2 || children[0] != "showDatabaseInFolder" || children[1] != "exportCSV" {
+		t.Fatal("child order was not preserved")
+	}
+}

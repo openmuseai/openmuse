@@ -1,0 +1,692 @@
+{
+	"ID": "20210808180320-gyngv2x",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"icon": "1f50d",
+		"id": "20210808180320-gyngv2x",
+		"title": "搜索进阶",
+		"type": "doc",
+		"updated": "20261026182843"
+	},
+	"Children": [
+		{
+			"ID": "20260613193351-207nxog",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613193351-207nxog",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20260613193351-96cq5gr",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613193351-96cq5gr",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "全局搜索用于查找工作空间中的内容块，支持关键字、查询语法、正则表达式和 SQL；配置语义索引后，还可使用语义搜索。打开搜索后，先选择搜索方式，再输入关键字或查询条件。本章介绍各方式的可用选项，以及索引和搜索范围的设置。"
+				}
+			]
+		},
+		{
+			"ID": "20261009182324-ljls7op",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261009182324-ljls7op",
+				"updated": "20261026182843"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各搜索方式的控件范围"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20261009182324-wscenpu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261009182324-wscenpu",
+				"updated": "20261026182843"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "关键字与查询语法搜索支持块类型、笔记本和文档路径筛选、包含子文档，以及排序、分组和替换。按内容顺序排序仅在按文档分组时可用。直接输入块 ID 时，同样遵循笔记本、文档路径、块类型、子类型和忽略条件。关键字模式的多词搜索会按字面量匹配 %、_ 和反斜杠。按文档分组只整理当前页的结果，不改变当前搜索方式的分页单位；按块分页时，同一文档的命中块可能分布在多页。"
+				}
+			]
+		},
+		{
+			"ID": "20261009182324-4yld8po",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261009182324-4yld8po",
+				"updated": "20261009182324"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "正则搜索支持相同的筛选、分组和替换，以及按类型、创建时间和更新时间排序。不支持按相关度排序；按内容顺序仅用于文档分组内的结果。"
+				}
+			]
+		},
+		{
+			"ID": "20261009182324-i0gjmmp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261009182324-i0gjmmp",
+				"updated": "20261009182324"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SQL 搜索使用语句中指定的筛选条件和结果顺序。面板中的块类型、路径筛选，包括当前文档范围与包含子文档选项，不会生效，也不支持替换。仍可按文档分组；分组后可按类型、创建时间、更新时间与内容顺序整理结果，但不支持按相关度排序。"
+				}
+			]
+		},
+		{
+			"ID": "20261010113646-r0h5r0j",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261010113646-r0h5r0j",
+				"updated": "20261010113646"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "桌面端和移动端的 SQL 搜索支持粘贴多行语句并保留注释。SQL 模式下按 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Enter"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 换行；请保留 -- 行注释后的换行，避免后续语句被视为注释。搜索窗口需要完整块字段，例如 SELECT b.* FROM blocks b；仅选择部分字段或统计结果应交给智能体的 sql.query。"
+				}
+			]
+		},
+		{
+			"ID": "20261009182324-mayn7w7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261009182324-mayn7w7",
+				"updated": "20261009182324"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "语义搜索支持块类型、笔记本和文档路径筛选，以及包含子文档。结果按语义相关性排列，不支持面板中的排序、分组和替换。"
+				}
+			]
+		},
+		{
+			"ID": "20261009182324-o78o1c9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261009182324-o78o1c9",
+				"updated": "20261009182324"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "当前搜索方式不支持的控件会禁用并显示说明提示。SQL 与语义搜索会隐藏替换输入行，但保留已输入文本和展开状态，切回支持替换的方式时恢复显示。保存和重置查询条件仍可使用。"
+				}
+			]
+		},
+		{
+			"ID": "20260929000700-huot6nw",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20260929000700-huot6nw",
+				"updated": "20260929000700"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思维导图搜索"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20260929000700-kuhjj5g",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260929000700-kuhjj5g",
+				"updated": "20260929000700"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "搜索"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中启用「思维导图块」，即可在块引用和嵌入块候选搜索中通过节点文本找到整张思维导图。全局搜索需在「搜索类型」中勾选「思维导图块」。也可以单独开启「思维导图项块」以搜索各个分支。思维导图块默认开启，思维导图项块默认关闭。旧搜索配置缺少这些选项时继承全局搜索设置，已明确选择的开关状态会保留。"
+				}
+			]
+		},
+		{
+			"ID": "20260613193351-4der7qg",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613193351-4der7qg",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "大小写敏感"
+				}
+			]
+		},
+		{
+			"ID": "20260613193351-wl9s0lb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613193351-wl9s0lb",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "搜索"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "区分大小写"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中配置。默认关闭，即搜索 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Hello"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 和 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "hello"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 结果相同。开启后搜索将严格区分大小写。切换该选项后需等待索引重建完成方可生效。"
+				}
+			]
+		},
+		{
+			"ID": "20260613193351-ficr182",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613193351-ficr182",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "繁简体敏感"
+				}
+			]
+		},
+		{
+			"ID": "20260613193351-bmbm91y",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613193351-bmbm91y",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "搜索"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "区分繁简"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中配置。默认开启，即搜索\"经济\"不会匹配\"經濟\"。关闭后搜索\"经济\"将同时匹配\"经济\"和\"經濟\"。切换该选项后需等待索引重建完成方可生效。"
+				}
+			]
+		},
+		{
+			"ID": "20260613193351-plms286",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613193351-plms286",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "替换"
+				}
+			]
+		},
+		{
+			"ID": "20260613193351-k55b9x3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613193351-k55b9x3",
+				"updated": "20260613193351"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "搜索对话框集成了文本替换功能，可对搜索结果进行批量替换。"
+				}
+			]
+		},
+		{
+			"ID": "20260613193351-ucgzev5",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613193351-ucgzev5",
+				"updated": "20261010225402"
+			},
+			"Children": [
+				{
+					"ID": "20260613193351-o9uponf",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613193351-o9uponf",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20260613193351-0teytuj",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613193351-0teytuj",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "入口"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：在搜索对话框（"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "P"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​）中点击替换图标按钮，展开替换输入行"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613193351-rx5hsdr",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613193351-rx5hsdr",
+						"updated": "20260613193351"
+					},
+					"Children": [
+						{
+							"ID": "20260613193351-e4th5pc",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613193351-e4th5pc",
+								"updated": "20260613193351"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "替换操作"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "："
+								}
+							]
+						},
+						{
+							"ID": "20260613193351-o8k0ubr",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613193351-o8k0ubr",
+								"updated": "20260613193351"
+							},
+							"Children": [
+								{
+									"ID": "20260613193351-4a2kn2o",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613193351-4a2kn2o",
+										"updated": "20260613193351"
+									},
+									"Children": [
+										{
+											"ID": "20260613193351-heazmez",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613193351-heazmez",
+												"updated": "20260613193351"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "在搜索结果列表中选中一条记录，点击「↵ 替换」替换该条"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613193351-ifyp99u",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613193351-ifyp99u",
+										"updated": "20260613193351"
+									},
+									"Children": [
+										{
+											"ID": "20260613193351-ewbnug8",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613193351-ewbnug8",
+												"updated": "20260613193351"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "点击「全部替换」一次性替换当前搜索结果中的所有匹配项"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613193351-yr9aqlg",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613193351-yr9aqlg",
+						"updated": "20260613193351"
+					},
+					"Children": [
+						{
+							"ID": "20260613193351-0ofm7tb",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613193351-0ofm7tb",
+								"updated": "20260613193351"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "替换类型"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：点击替换过滤器可选择替换范围（内容块文本、命名、别名、备注等）"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613193351-2ykewgm",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613193351-2ykewgm",
+						"updated": "20261010225402"
+					},
+					"Children": [
+						{
+							"ID": "20260613193351-0iq5ns5",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613193351-0iq5ns5",
+								"updated": "20261010225402"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "注意事项"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：替换后不支持 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Z"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 撤销，执行前系统会自动生成数据历史，如需恢复请通过数据历史回滚"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "。普通和加密文档都会保留替换期间的编辑。保存前文档发生修改或被删除时，替换会停止并报错，保留该文档的当前内容；此前已保存的文档仍保留替换结果。完成编辑后可重新执行替换"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240507235528-fs3ue7a",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240507235528-fs3ue7a",
+				"updated": "20240507235528"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20220415190432-r3xqn3r",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "查询语法"
+				}
+			]
+		},
+		{
+			"ID": "20240507235528-oyyqh0l",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240507235528-oyyqh0l",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20201222093044-rx4zjoy",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "SQL 索引表"
+				}
+			]
+		},
+		{
+			"ID": "20240507235528-mvec0bf",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240507235528-mvec0bf",
+				"updated": "20240507235528"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20201222095049-hghafhe",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "类型过滤"
+				}
+			]
+		},
+		{
+			"ID": "20240507235528-ltl5jsc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240507235528-ltl5jsc",
+				"updated": "20240507235528"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240119205452-o8xp4ve",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "忽略索引"
+				}
+			]
+		},
+		{
+			"ID": "20240507235528-tov8lr5",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240507235528-tov8lr5",
+				"updated": "20240507235528"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240119205543-hknwwrl",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "忽略搜索"
+				}
+			]
+		}
+	]
+}

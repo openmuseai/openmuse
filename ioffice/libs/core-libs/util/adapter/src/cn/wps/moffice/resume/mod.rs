@@ -1,0 +1,17 @@
+pub mod BaseData;
+pub mod BaseInfo;
+pub mod CustomModule;
+pub mod Period;
+pub mod Education;
+pub mod Experience;
+pub mod Extra;
+pub mod ICreateResume;
+pub mod Intern;
+pub mod JobIntention;
+pub mod Module;
+pub mod ProgramExperience;
+pub mod Qualifications;
+pub mod ResumeData;
+pub mod ResumeModuleConstant;
+pub mod SchoolExp;
+pub mod richtext;

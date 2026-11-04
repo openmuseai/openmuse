@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_emit_draw_image,pic→DrawImage,pic+rect,DrawImage或占位Rect,pr-02:03;pp-15,03,libs/ppt-core,pass
+2,02_function_emit_solid_fill,hasFill→DrawRect.fill,LayerItem,fill ARGB,pp-16;pl-07,pr-04,libs/ppt-core,pass
+3,03_function_painter_draw_image,Flutter 画 DrawImage,JSON+bytes,像素,01;pr-04:02,用户可见,samples/libs/ppt/ppt_render,pass

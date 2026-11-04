@@ -1,0 +1,1120 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package sql
+
+import (
+	"bytes"
+	"context"
+	"database/sql"
+	"errors"
+	"math"
+	"sort"
+	"strconv"
+	"strings"
+
+	"github.com/88250/lute/ast"
+	"github.com/88250/lute/html"
+	"github.com/88250/vitess-sqlparser/sqlparser"
+	"github.com/emirpasic/gods/sets/hashset"
+	sqlparser2 "github.com/rqlite/sql"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+)
+
+func QueryEmptyContentEmbedBlocks() (ret []*Block) {
+	stmt := "SELECT * FROM blocks WHERE type = 'query_embed' AND content = ''"
+	rows, err := query(stmt)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", stmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if block := scanBlockRows(rows); nil != block {
+			ret = append(ret, block)
+		}
+	}
+	return
+}
+
+func QueryEmptyContentEmbedBlocksInBox(boxID string) (ret []*Block) {
+	stmt := "SELECT * FROM blocks WHERE type = 'query_embed' AND content = ''"
+	rows, err := queryForBox(boxID, stmt)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", stmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if block := scanBlockRows(rows); block != nil {
+			ret = append(ret, block)
+		}
+	}
+	return
+}
+
+func queryBlockHashes(tx *sql.Tx, rootID string) (ret map[string]string) {
+	stmt := "SELECT id, hash FROM blocks WHERE root_id = ?"
+	rows, err := queryTx(tx, stmt, rootID)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", stmt, err)
+		return
+	}
+	defer rows.Close()
+	ret = map[string]string{}
+	for rows.Next() {
+		var id, hash string
+		if err = rows.Scan(&id, &hash); err != nil {
+			logging.LogErrorf("query scan field failed: %s", err)
+			return
+		}
+		ret[id] = hash
+	}
+	return
+}
+
+func QueryRootBlockByCondition(condition, exactKeyword string, limit int, args ...any) (ret []*Block) {
+	exactCondition, exactArg := rootBlockExactMatchCondition(exactKeyword, caseSensitive.Load())
+	sqlStmt := "SELECT *, length(path) - length(replace(path, '/', '')) AS lv FROM blocks WHERE type = 'd' AND " + condition +
+		" ORDER BY CASE WHEN " + exactCondition + " THEN 0 ELSE 1 END ASC, box DESC, lv ASC LIMIT ?"
+	args = append(args, exactArg...)
+	args = append(args, limit)
+	rows, err := query(sqlStmt, args...)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var block Block
+		var sepCount int
+		if err = rows.Scan(&block.ID, &block.ParentID, &block.RootID, &block.Hash, &block.Box, &block.Path, &block.HPath, &block.Name, &block.Alias, &block.Memo, &block.Tag, &block.Content, &block.FContent, &block.Markdown, &block.Length, &block.Type, &block.SubType, &block.IAL, &block.Sort, &block.Created, &block.Updated, &sepCount); err != nil {
+			logging.LogErrorf("query scan field failed: %s", err)
+			return
+		}
+		ret = append(ret, &block)
+	}
+	return
+}
+
+func QueryRootBlockByConditionInBox(condition, exactKeyword string, limit int, boxID string, args ...any) (ret []*Block) {
+	exactCondition, exactArg := rootBlockExactMatchCondition(exactKeyword, caseSensitive.Load())
+	sqlStmt := "SELECT *, length(path) - length(replace(path, '/', '')) AS lv FROM blocks WHERE type = 'd' AND " + condition +
+		" ORDER BY CASE WHEN " + exactCondition + " THEN 0 ELSE 1 END ASC, box DESC, lv ASC LIMIT ?"
+	args = append(args, exactArg...)
+	args = append(args, limit)
+	rows, err := queryForBox(boxID, sqlStmt, args...)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var block Block
+		var sepCount int
+		if err = rows.Scan(&block.ID, &block.ParentID, &block.RootID, &block.Hash, &block.Box, &block.Path, &block.HPath, &block.Name, &block.Alias, &block.Memo, &block.Tag, &block.Content, &block.FContent, &block.Markdown, &block.Length, &block.Type, &block.SubType, &block.IAL, &block.Sort, &block.Created, &block.Updated, &sepCount); err != nil {
+			logging.LogErrorf("query scan field failed: %s", err)
+			return
+		}
+		ret = append(ret, &block)
+	}
+	return
+}
+
+func rootBlockExactMatchCondition(keyword string, sensitive bool) (condition string, args []any) {
+	if sensitive {
+		condition = "content = ? OR name = ?"
+		args = []any{keyword, keyword}
+	} else {
+		condition = "content LIKE ? ESCAPE '\\' OR name LIKE ? ESCAPE '\\'"
+		args = []any{escapeLikePattern(keyword), escapeLikePattern(keyword)}
+	}
+	if "" != keyword && !strings.Contains(keyword, ",") {
+		if sensitive {
+			condition += " OR instr(',' || alias || ',', ?) > 0"
+			args = append(args, ","+keyword+",")
+		} else {
+			condition += " OR (',' || alias || ',') LIKE ? ESCAPE '\\'"
+			args = append(args, "%,"+escapeLikePattern(keyword)+",%")
+		}
+	}
+	return
+}
+
+func (block *Block) IsContainerBlock() bool {
+	return treenode.IsContainerType(block.Type)
+}
+
+func queryBlockChildrenIDs(id string) (ret []string) {
+	ret = append(ret, id)
+	childIDs := queryBlockIDByParentID(id)
+	for _, childID := range childIDs {
+		ret = append(ret, queryBlockChildrenIDs(childID)...)
+	}
+	return
+}
+
+func queryBlockIDByParentID(parentID string) (ret []string) {
+	sqlStmt := "SELECT id FROM blocks WHERE parent_id = ?"
+	rows, err := query(sqlStmt, parentID)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		rows.Scan(&id)
+		ret = append(ret, id)
+	}
+	return
+}
+
+func queryNames(searchIgnoreLines []string, boxIDs ...string) (ret []string) {
+	ret = []string{}
+	sqlStmt := "SELECT name FROM blocks WHERE name != ''"
+	buf := bytes.Buffer{}
+	for _, line := range searchIgnoreLines {
+		buf.WriteString(" AND ")
+		buf.WriteString(line)
+	}
+	sqlStmt += buf.String()
+	sqlStmt += " LIMIT ?"
+	boxID := ""
+	if len(boxIDs) > 0 {
+		boxID = boxIDs[0]
+	}
+	rows, err := queryForBox(boxID, sqlStmt, 10240)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+
+	var namesRows []string
+	for rows.Next() {
+		var name string
+		rows.Scan(&name)
+		namesRows = append(namesRows, name)
+	}
+
+	set := hashset.New()
+	for _, namesStr := range namesRows {
+		names := strings.SplitSeq(namesStr, ",")
+		for name := range names {
+			if "" == strings.TrimSpace(name) {
+				continue
+			}
+			set.Add(name)
+		}
+	}
+	for _, v := range set.Values() {
+		ret = append(ret, v.(string))
+	}
+	return
+}
+
+func queryAliases(searchIgnoreLines []string, boxIDs ...string) (ret []string) {
+	ret = []string{}
+	sqlStmt := "SELECT alias FROM blocks WHERE alias != ''"
+	buf := bytes.Buffer{}
+	for _, line := range searchIgnoreLines {
+		buf.WriteString(" AND ")
+		buf.WriteString(line)
+	}
+	sqlStmt += buf.String()
+	sqlStmt += " LIMIT ?"
+	boxID := ""
+	if len(boxIDs) > 0 {
+		boxID = boxIDs[0]
+	}
+	rows, err := queryForBox(boxID, sqlStmt, 10240)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+
+	var aliasesRows []string
+	for rows.Next() {
+		var alias string
+		rows.Scan(&alias)
+		aliasesRows = append(aliasesRows, alias)
+	}
+
+	set := hashset.New()
+	for _, aliasStr := range aliasesRows {
+		aliases := strings.SplitSeq(aliasStr, ",")
+		for alias := range aliases {
+			if "" == strings.TrimSpace(alias) {
+				continue
+			}
+			set.Add(alias)
+		}
+	}
+	for _, v := range set.Values() {
+		ret = append(ret, v.(string))
+	}
+	return
+}
+
+func queryDocTitles(searchIgnoreLines []string, boxIDs ...string) (ret []string) {
+	ret = []string{}
+	sqlStmt := "SELECT content FROM blocks WHERE type = 'd'"
+	buf := bytes.Buffer{}
+	for _, line := range searchIgnoreLines {
+		buf.WriteString(" AND ")
+		buf.WriteString(line)
+	}
+	sqlStmt += buf.String()
+	boxID := ""
+	if len(boxIDs) > 0 {
+		boxID = boxIDs[0]
+	}
+	rows, err := queryForBox(boxID, sqlStmt)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+
+	var docNamesRows []string
+	for rows.Next() {
+		var name string
+		rows.Scan(&name)
+		docNamesRows = append(docNamesRows, name)
+	}
+
+	set := hashset.New()
+	for _, nameStr := range docNamesRows {
+		names := strings.SplitSeq(nameStr, ",")
+		for name := range names {
+			if "" == strings.TrimSpace(name) {
+				continue
+			}
+			set.Add(name)
+		}
+	}
+	for _, v := range set.Values() {
+		ret = append(ret, v.(string))
+	}
+	return
+}
+
+const bookmarkBlockPredicate = "id IN (SELECT block_id FROM attributes WHERE name = 'bookmark' AND type = 'b')"
+const bookmarkLabelBlocksQuery = "SELECT (SELECT value FROM attributes WHERE block_id = blocks.id AND name = 'bookmark' AND type = 'b' LIMIT 1), box, path FROM blocks WHERE " + bookmarkBlockPredicate
+
+func QueryBookmarkBlocks() (ret []*Block) {
+	sqlStmt := "SELECT * FROM blocks WHERE " + bookmarkBlockPredicate
+	rows, err := query(sqlStmt)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if block := scanBlockRows(rows); nil != block {
+			ret = append(ret, block)
+		}
+	}
+	return
+}
+
+type BookmarkLabelBlock struct {
+	Label string
+	Box   string
+	Path  string
+}
+
+func QueryBookmarkLabelBlocks() (ret []*BookmarkLabelBlock) {
+	ret = []*BookmarkLabelBlock{}
+	sqlStmt := bookmarkLabelBlocksQuery
+	rows, err := query(sqlStmt)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var label, box, blockPath string
+		if err = rows.Scan(&label, &box, &blockPath); err != nil {
+			logging.LogErrorf("scan query rows failed: %s", err)
+			continue
+		}
+		if label != "" {
+			// 标签按属性表取值，返回时保留既有 IAL 转义形式。
+			ret = append(ret, &BookmarkLabelBlock{Label: html.EscapeAttrVal(label), Box: box, Path: blockPath})
+		}
+	}
+	return
+}
+
+func QueryBookmarkLabels() (ret []string) {
+	ret = []string{}
+	labels := map[string]bool{}
+	for _, block := range QueryBookmarkLabelBlocks() {
+		labels[block.Label] = true
+	}
+
+	for label := range labels {
+		ret = append(ret, label)
+	}
+	sort.Strings(ret)
+	return
+}
+
+func QueryNoLimit(stmt string) (ret []map[string]any, err error) {
+	return queryRawStmt(stmt, math.MaxInt)
+}
+
+// QueryNoLimitArgs 与 QueryNoLimit 一致，但支持参数化查询（stmt 中用 ? 占位，args 顺序填入）。
+// 用于 embedding 索引器按 fail_count/last_tried 调度时的带参 SELECT。
+func QueryNoLimitArgs(stmt string, args ...any) (ret []map[string]any, err error) {
+	return queryRawStmtArgs(stmt, args, math.MaxInt)
+}
+
+func Query(stmt string, limit int) (ret []map[string]any, err error) {
+	return queryWithLimitInfo(stmt, limit, nil)
+}
+
+func queryWithLimitInfo(stmt string, limit int, info *QueryLimitInfo) (ret []map[string]any, err error) {
+	if info != nil && containsMultipleStatements(stmt) {
+		return queryRawStmtWithLimitInfo(stmt, limit, info)
+	}
+	originalStmt := stmt
+	fallbackStmt := originalStmt
+	// Kernel API `/api/query/sql` support `||` operator https://github.com/siyuan-note/siyuan/issues/9662
+	// 这里为了支持 || 操作符，使用了另一个 sql 解析器，但是这个解析器无法处理 UNION https://github.com/siyuan-note/siyuan/issues/8226
+	// 考虑到 UNION 的使用场景不多，这里还是以支持 || 操作符为主
+	p := sqlparser2.NewParser(strings.NewReader(stmt))
+	parsedStmt2, err := p.ParseStatement()
+	if err != nil {
+		if !strings.Contains(stmt, "||") {
+			// 这个解析器无法处理 || 连接字符串操作符
+			parsedStmt, err2 := sqlparser.Parse(stmt)
+			if nil != err2 {
+				return queryRawStmtWithLimitInfo(stmt, limit, info)
+			}
+
+			switch parsedStmt := parsedStmt.(type) {
+			case *sqlparser.Select:
+				if info != nil && parsedStmt.Limit != nil && parsedStmt.Limit.Rowcount != nil {
+					info.Limit = 0
+				}
+				if nil == parsedStmt.Limit || nil == parsedStmt.Limit.Rowcount {
+					fallbackStmt += " LIMIT " + strconv.Itoa(limit)
+				}
+				limitClause := getLimitClause(parsedStmt, limit)
+				parsedStmt.Limit = limitClause
+				stmt = sqlparser.String(parsedStmt)
+			case *sqlparser.Union:
+				// Kernel API `/api/query/sql` support `UNION` statement https://github.com/siyuan-note/siyuan/issues/8226
+				if info != nil && parsedStmt.Limit != nil && parsedStmt.Limit.Rowcount != nil {
+					info.Limit = 0
+				}
+				if nil == parsedStmt.Limit || nil == parsedStmt.Limit.Rowcount {
+					fallbackStmt += " LIMIT " + strconv.Itoa(limit)
+				}
+				limitClause := getLimitClause(parsedStmt, limit)
+				parsedStmt.Limit = limitClause
+				stmt = sqlparser.String(parsedStmt)
+			default:
+				return queryRawStmtWithLimitInfo(stmt, limit, info)
+			}
+		} else {
+			return queryRawStmtWithLimitInfo(stmt, limit, info)
+		}
+	} else {
+		switch parsedStmt2 := parsedStmt2.(type) {
+		case *sqlparser2.SelectStatement:
+			if info != nil && parsedStmt2.LimitExpr != nil {
+				info.Limit = 0
+			}
+			if nil == parsedStmt2.LimitExpr {
+				fallbackStmt += " LIMIT " + strconv.Itoa(limit)
+				parsedStmt2.LimitExpr = &sqlparser2.NumberLit{Value: strconv.Itoa(limit)}
+				serialized, ok := stringifySelectStatement(parsedStmt2)
+				if !ok {
+					return queryRawStmtWithLimitInfo(originalStmt, limit, info)
+				}
+				stmt = serialized
+			}
+		default:
+			return queryRawStmtWithLimitInfo(stmt, limit, info)
+		}
+	}
+
+	ret = []map[string]any{}
+	queryStmt := stmt
+	rows, err := query(queryStmt)
+	if err != nil && queryStmt != fallbackStmt {
+		queryStmt = fallbackStmt
+		rows, err = query(queryStmt)
+	}
+	if err != nil {
+		logging.LogWarnf("sql query [%s] failed: %s", queryStmt, err)
+		return
+	}
+	defer rows.Close()
+
+	cols, _ := rows.Columns()
+	if nil == cols {
+		return
+	}
+
+	for rows.Next() {
+		columns := make([]any, len(cols))
+		columnPointers := make([]any, len(cols))
+		for i := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		if err = rows.Scan(columnPointers...); err != nil {
+			return
+		}
+
+		m := make(map[string]any)
+		for i, colName := range cols {
+			val := columnPointers[i].(*any)
+			m[colName] = *val
+		}
+		ret = append(ret, m)
+		if info != nil && info.Limit > 0 && len(ret) >= limit {
+			break
+		}
+	}
+	err = rows.Err()
+	return
+}
+
+func stringifySelectStatement(stmt *sqlparser2.SelectStatement) (ret string, ok bool) {
+	// rqlite/sql 可能出现解析成功但序列化 panic，失败时由调用方回退原始 SQL。
+	defer func() {
+		if nil != recover() {
+			ret = ""
+			ok = false
+		}
+	}()
+	return stmt.String(), true
+}
+
+func ToBlocks(result []map[string]any) (ret []*Block) {
+	for _, row := range result {
+		b := &Block{
+			ID:       row["id"].(string),
+			ParentID: row["parent_id"].(string),
+			RootID:   row["root_id"].(string),
+			Hash:     row["hash"].(string),
+			Box:      row["box"].(string),
+			Path:     row["path"].(string),
+			HPath:    row["hpath"].(string),
+			Name:     row["name"].(string),
+			Alias:    row["alias"].(string),
+			Memo:     row["memo"].(string),
+			Tag:      row["tag"].(string),
+			Content:  row["content"].(string),
+			FContent: row["fcontent"].(string),
+			Markdown: row["markdown"].(string),
+			Length:   int(row["length"].(int64)),
+			Type:     row["type"].(string),
+			SubType:  row["subtype"].(string),
+			IAL:      row["ial"].(string),
+			Sort:     int(row["sort"].(int64)),
+			Created:  row["created"].(string),
+			Updated:  row["updated"].(string),
+		}
+		ret = append(ret, b)
+	}
+	return
+}
+
+func getLimitClause(parsedStmt sqlparser.Statement, limit int) (ret *sqlparser.Limit) {
+	switch stmtNode := parsedStmt.(type) {
+	case *sqlparser.Select:
+		if nil != stmtNode.Limit {
+			ret = stmtNode.Limit
+		}
+	case *sqlparser.Union:
+		if nil != stmtNode.Limit {
+			ret = stmtNode.Limit
+		}
+	}
+
+	if nil == ret || nil == ret.Rowcount {
+		ret = &sqlparser.Limit{
+			Rowcount: &sqlparser.SQLVal{
+				Type: sqlparser.IntVal,
+				Val:  []byte(strconv.Itoa(limit)),
+			},
+		}
+	}
+	return
+}
+
+func queryRawStmt(stmt string, limit int) (ret []map[string]any, err error) {
+	return queryRawStmtWithLimitInfo(stmt, limit, nil)
+}
+
+func queryRawStmtWithLimitInfo(stmt string, limit int, info *QueryLimitInfo) (ret []map[string]any, err error) {
+	return queryRawStmtRows(stmt, limit, info, false)
+}
+
+func queryRawStmtRows(stmt string, limit int, info *QueryLimitInfo, enforceLimit bool) (ret []map[string]any, err error) {
+	rows, err := query(stmt)
+	if err != nil {
+		if strings.Contains(err.Error(), "syntax error") {
+			return
+		}
+		return
+	}
+	defer rows.Close()
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return
+	}
+
+	// 无结果列的语句也必须调用 Next，执行 SQLite 语句并读取执行错误。
+	noLimit := !containsLimitClause(stmt)
+	if info != nil {
+		noLimit = !containsOuterLimitClause(stmt)
+		if !noLimit {
+			info.Limit = 0
+		}
+	}
+	var count int
+	for rows.Next() {
+		columns := make([]any, len(cols))
+		columnPointers := make([]any, len(cols))
+		for i := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		if err = rows.Scan(columnPointers...); err != nil {
+			return
+		}
+
+		m := make(map[string]any)
+		for i, colName := range cols {
+			val := columnPointers[i].(*any)
+			m[colName] = *val
+		}
+
+		ret = append(ret, m)
+		count++
+		if (noLimit || enforceLimit) && count >= limit {
+			break
+		}
+	}
+	err = rows.Err()
+	return
+}
+
+// queryRawStmtArgs 与 queryRawStmt 一致，但走带参数的 query，避免 SQL 拼接注入与时间格式问题。
+func queryRawStmtArgs(stmt string, args []any, limit int) (ret []map[string]any, err error) {
+	rows, err := query(stmt, args...)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return
+	}
+
+	noLimit := !containsLimitClause(stmt)
+	var count int
+	for rows.Next() {
+		columns := make([]any, len(cols))
+		columnPointers := make([]any, len(cols))
+		for i := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		if err = rows.Scan(columnPointers...); err != nil {
+			return
+		}
+
+		m := make(map[string]any)
+		for i, colName := range cols {
+			val := columnPointers[i].(*any)
+			m[colName] = *val
+		}
+
+		ret = append(ret, m)
+		count++
+		if noLimit && count >= limit {
+			break
+		}
+	}
+	err = rows.Err()
+	return
+}
+
+// checkRawBlockQueryStmt 校验原始块查询语句为单条只读查询，未通过时记录告警并返回 false。
+// 所有把完整 SQL 交给 db.Query 的块查询出口都必须先调用本函数，保证没有调用方能绕过校验。
+func checkRawBlockQueryStmt(stmt, boxID string) bool {
+	if err := CheckReadonlyBlockQueryStatement(stmt, boxID); nil != err {
+		// 空脚本和 JS 嵌入块（//!js）本来就不是 SQL，由前端负责执行，校验不通过属正常情况
+		trimmed := strings.TrimSpace(stmt)
+		if "" != trimmed && !strings.HasPrefix(trimmed, "//!js") {
+			logging.LogWarnf("sql query [%s] rejected as non-readonly: %s", stmt, err)
+		}
+		return false
+	}
+	return true
+}
+
+func SelectBlocksRawStmtNoParse(stmt string, limit int) (ret []*Block) {
+	return selectBlocksRawStmt(stmt, limit)
+}
+
+// SelectBlocksRawStmtArgs 与 selectBlocksRawStmt 行为一致，但通过绑定参数执行，
+// 绕开 sqlparser 解析（vitess 会把 "?" 改写为 ":vN" 导致占位失效），用于含用户可控参数的搜索语句。
+func SelectBlocksRawStmtArgs(stmt string, args []any, limit int) (ret []*Block) {
+	if !checkRawBlockQueryStmt(stmt, "") {
+		return
+	}
+
+	rows, err := query(stmt, args...)
+	if err != nil {
+		if strings.Contains(err.Error(), "syntax error") {
+			return
+		}
+		logging.LogWarnf("sql query [%s] failed: %s", stmt, err)
+		return
+	}
+	defer rows.Close()
+
+	noLimit := !containsLimitClause(stmt)
+	var count, errCount int
+	for rows.Next() {
+		count++
+		if block := scanBlockRows(rows); nil != block {
+			ret = append(ret, block)
+		} else {
+			logging.LogWarnf("raw sql query [%s] failed", stmt)
+			errCount++
+		}
+
+		if (noLimit && count >= limit) || 0 < errCount {
+			break
+		}
+	}
+	return
+}
+
+type queryRowsFunc func(string, ...any) (*sql.Rows, error)
+
+func SelectBlocksRawStmt(stmt string, page, limit int) (ret []*Block) {
+	return selectBlocksRawStmtWithQuery(stmt, page, limit, "", query)
+}
+
+func selectBlocksRawStmtWithQuery(stmt string, page, limit int, boxID string, queryFn queryRowsFunc) (ret []*Block) {
+	parsedStmt, err := sqlparser.Parse(stmt)
+	if err != nil {
+		// 解析失败时按原样执行，因此只读校验必须在执行前完成，不能依赖下面的语句类型分派
+		return selectBlocksRawStmtNoParseWithQuery(stmt, limit, boxID, queryFn)
+	}
+
+	switch parsedStmt.(type) {
+	case *sqlparser.Select:
+		slct := parsedStmt.(*sqlparser.Select)
+		if nil == slct.Limit {
+			slct.Limit = &sqlparser.Limit{
+				Rowcount: &sqlparser.SQLVal{
+					Type: sqlparser.IntVal,
+					Val:  []byte(strconv.Itoa(limit)),
+				},
+			}
+			slct.Limit.Offset = &sqlparser.SQLVal{
+				Type: sqlparser.IntVal,
+				Val:  []byte(strconv.Itoa((page - 1) * limit)),
+			}
+		} else {
+			if nil != slct.Limit.Rowcount && 0 < len(slct.Limit.Rowcount.(*sqlparser.SQLVal).Val) {
+				limit, _ = strconv.Atoi(string(slct.Limit.Rowcount.(*sqlparser.SQLVal).Val))
+				if 0 >= limit {
+					limit = 32
+				}
+			}
+
+			slct.Limit.Rowcount = &sqlparser.SQLVal{
+				Type: sqlparser.IntVal,
+				Val:  []byte(strconv.Itoa(limit)),
+			}
+			slct.Limit.Offset = &sqlparser.SQLVal{
+				Type: sqlparser.IntVal,
+				Val:  []byte(strconv.Itoa((page - 1) * limit)),
+			}
+		}
+
+		stmt = sqlparser.String(slct)
+	case *sqlparser.Union:
+		union := parsedStmt.(*sqlparser.Union)
+		if nil == union.Limit {
+			union.Limit = &sqlparser.Limit{
+				Rowcount: &sqlparser.SQLVal{
+					Type: sqlparser.IntVal,
+					Val:  []byte(strconv.Itoa(limit)),
+				},
+			}
+			union.Limit.Offset = &sqlparser.SQLVal{
+				Type: sqlparser.IntVal,
+				Val:  []byte(strconv.Itoa((page - 1) * limit)),
+			}
+		} else {
+			if nil != union.Limit.Rowcount && 0 < len(union.Limit.Rowcount.(*sqlparser.SQLVal).Val) {
+				limit, _ = strconv.Atoi(string(union.Limit.Rowcount.(*sqlparser.SQLVal).Val))
+				if 0 >= limit {
+					limit = 32
+				}
+			}
+
+			union.Limit.Rowcount = &sqlparser.SQLVal{
+				Type: sqlparser.IntVal,
+				Val:  []byte(strconv.Itoa(limit)),
+			}
+			union.Limit.Offset = &sqlparser.SQLVal{
+				Type: sqlparser.IntVal,
+				Val:  []byte(strconv.Itoa((page - 1) * limit)),
+			}
+		}
+
+		stmt = sqlparser.String(union)
+	default:
+		return
+	}
+
+	stmt = strings.ReplaceAll(stmt, "\\'", "''")
+	stmt = strings.ReplaceAll(stmt, "\\\"", "\"")
+	stmt = strings.ReplaceAll(stmt, "\\\\*", "\\*")
+	stmt = strings.ReplaceAll(stmt, "from dual", "")
+	if !checkRawBlockQueryStmt(stmt, boxID) {
+		return
+	}
+	rows, err := queryFn(stmt)
+	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return
+		}
+		if strings.Contains(err.Error(), "syntax error") {
+			return
+		}
+		logging.LogWarnf("sql query [%s] failed: %s", stmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if block := scanBlockRows(rows); nil != block {
+			ret = append(ret, block)
+		}
+	}
+	return
+}
+
+func selectBlocksRawStmt(stmt string, limit int) (ret []*Block) {
+	return selectBlocksRawStmtNoParseWithQuery(stmt, limit, "", query)
+}
+
+func selectBlocksRawStmtNoParseWithQuery(stmt string, limit int, boxID string, queryFn queryRowsFunc) (ret []*Block) {
+	if !checkRawBlockQueryStmt(stmt, boxID) {
+		return
+	}
+
+	rows, err := queryFn(stmt)
+	if err != nil {
+		if strings.Contains(err.Error(), "syntax error") {
+			return
+		}
+		return
+	}
+	defer rows.Close()
+
+	noLimit := !containsLimitClause(stmt)
+	var count, errCount int
+	for rows.Next() {
+		count++
+		if block := scanBlockRows(rows); nil != block {
+			ret = append(ret, block)
+		} else {
+			logging.LogWarnf("raw sql query [%s] failed", stmt)
+			errCount++
+		}
+
+		if (noLimit && count >= limit) || 0 < errCount {
+			break
+		}
+	}
+	return
+}
+
+func scanBlockRows(rows *sql.Rows) (ret *Block) {
+	var block Block
+	if err := rows.Scan(&block.ID, &block.ParentID, &block.RootID, &block.Hash, &block.Box, &block.Path, &block.HPath, &block.Name, &block.Alias, &block.Memo, &block.Tag, &block.Content, &block.FContent, &block.Markdown, &block.Length, &block.Type, &block.SubType, &block.IAL, &block.Sort, &block.Created, &block.Updated); err != nil {
+		logging.LogErrorf("query scan field failed: %s\n%s", err, logging.ShortStack())
+		return
+	}
+	ret = &block
+	putBlockCache(ret)
+	return
+}
+
+func scanBlockRow(row *sql.Row) (ret *Block) {
+	var block Block
+	if err := row.Scan(&block.ID, &block.ParentID, &block.RootID, &block.Hash, &block.Box, &block.Path, &block.HPath, &block.Name, &block.Alias, &block.Memo, &block.Tag, &block.Content, &block.FContent, &block.Markdown, &block.Length, &block.Type, &block.SubType, &block.IAL, &block.Sort, &block.Created, &block.Updated); err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			logging.LogErrorf("query scan field failed: %s\n%s", err, logging.ShortStack())
+		}
+		return
+	}
+	ret = &block
+	putBlockCache(ret)
+	return
+}
+
+func GetChildBlocks(parentID, condition string, limit int) (ret []*Block) {
+	blockIDs := queryBlockChildrenIDs(parentID)
+	var params []string
+	for _, id := range blockIDs {
+		params = append(params, "\""+id+"\"")
+	}
+
+	ret = []*Block{}
+	sqlStmt := "SELECT * FROM blocks AS ref WHERE ref.id IN (" + strings.Join(params, ",") + ")"
+	if "" != condition {
+		sqlStmt += " AND " + condition
+	}
+	sqlStmt += " LIMIT " + strconv.Itoa(limit)
+	// 关系图查询条件由用户输入动态拼接，执行前校验单条只读语句，防止注入
+	if err := CheckSingleStatement(sqlStmt); nil != err {
+		logging.LogErrorf("sql query [%s] rejected as non-single statement: %s", sqlStmt, err)
+		return
+	}
+	if err := CheckReadonlyStatement(sqlStmt); nil != err {
+		logging.LogErrorf("sql query [%s] rejected as non-readonly statement: %s", sqlStmt, err)
+		return
+	}
+	rows, err := query(sqlStmt)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if block := scanBlockRows(rows); nil != block {
+			ret = append(ret, block)
+		}
+	}
+	return
+}
+
+func GetAllChildBlocks(rootIDs []string, condition string, limit int) (ret []*Block) {
+	ret = []*Block{}
+	sqlStmt := "SELECT * FROM blocks AS ref WHERE ref.root_id IN ('" + strings.Join(rootIDs, "','") + "')"
+	if "" != condition {
+		sqlStmt += " AND " + condition
+	}
+	sqlStmt += " LIMIT " + strconv.Itoa(limit)
+	// 关系图查询条件由用户输入动态拼接，执行前校验单条只读语句，防止注入
+	if err := CheckSingleStatement(sqlStmt); nil != err {
+		logging.LogErrorf("sql query [%s] rejected as non-single statement: %s", sqlStmt, err)
+		return
+	}
+	if err := CheckReadonlyStatement(sqlStmt); nil != err {
+		logging.LogErrorf("sql query [%s] rejected as non-readonly statement: %s", sqlStmt, err)
+		return
+	}
+	rows, err := query(sqlStmt)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", sqlStmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if block := scanBlockRows(rows); nil != block {
+			ret = append(ret, block)
+		}
+	}
+	return
+}
+
+func GetBlock(id string) (ret *Block) {
+	ret = getBlockCache(id)
+	if nil != ret {
+		return
+	}
+	row := queryRow("SELECT * FROM blocks WHERE id = ?", id)
+	if nil == row {
+		return
+	}
+	ret = scanBlockRow(row)
+	if nil != ret {
+		putBlockCache(ret)
+	}
+	return
+}
+
+func GetRootUpdated() (ret map[string]string, err error) {
+	rows, err := query("SELECT root_id, updated FROM `blocks` WHERE type = 'd'")
+	if err != nil {
+		logging.LogErrorf("sql query failed: %s", err)
+		return
+	}
+	defer rows.Close()
+
+	ret = map[string]string{}
+	for rows.Next() {
+		var rootID, updated string
+		rows.Scan(&rootID, &updated)
+		ret[rootID] = updated
+	}
+	return
+}
+
+func GetDuplicatedRootIDs(blocksTable string) (ret []string) {
+	rows, err := query("SELECT DISTINCT root_id FROM `" + blocksTable + "` GROUP BY id HAVING COUNT(*) > 1")
+	if err != nil {
+		logging.LogErrorf("sql query failed: %s", err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		rows.Scan(&id)
+		ret = append(ret, id)
+	}
+	return
+}
+
+func GetAllRootBlocks() (ret []*Block) {
+	stmt := "SELECT * FROM blocks WHERE type = 'd'"
+	rows, err := query(stmt)
+	if err != nil {
+		logging.LogErrorf("sql query [%s] failed: %s", stmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if block := scanBlockRows(rows); nil != block {
+			ret = append(ret, block)
+		}
+	}
+	return
+}
+
+func GetBlocks(ids []string) (ret []*Block) {
+	var notHitIDs []string
+	cached := map[string]*Block{}
+	for _, id := range ids {
+		b := getBlockCache(id)
+		if nil != b {
+			cached[id] = b
+		} else {
+			notHitIDs = append(notHitIDs, id)
+		}
+	}
+
+	if 1 > len(notHitIDs) {
+		for _, id := range ids {
+			ret = append(ret, cached[id])
+		}
+		return
+	}
+
+	if err := queryBlocksInBatches(notHitIDs, "", cached, true); err != nil {
+		logging.LogErrorf("query blocks failed: %s", err)
+		return
+	}
+	for _, id := range ids {
+		ret = append(ret, cached[id])
+	}
+	return
+}
+
+// queryBlocksInBatches 限制每批参数数量，并在读取下一批前关闭游标，保留笔记本查询边界。
+func queryBlocksInBatches(ids []string, boxID string, blocks map[string]*Block, populateCache bool) error {
+	return queryBlocksInBatchesContext(context.Background(), ids, boxID, blocks, populateCache)
+}
+
+func queryBlocksInBatchesContext(ctx context.Context, ids []string, boxID string, blocks map[string]*Block, populateCache bool) error {
+	const batchSize = 512
+	for start := 0; start < len(ids); start += batchSize {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		batch := ids[start:min(start+batchSize, len(ids))]
+		statement := "SELECT * FROM blocks WHERE id IN (" + strings.Repeat("?,", len(batch)-1) + "?)"
+		args := make([]any, len(batch))
+		for i, id := range batch {
+			args[i] = id
+		}
+		rows, err := queryForBoxContext(ctx, boxID, statement, args...)
+		if err != nil {
+			return err
+		}
+		for rows.Next() {
+			if err = ctx.Err(); err != nil {
+				rows.Close()
+				return err
+			}
+			if block := scanBlockRows(rows); block != nil {
+				if populateCache {
+					putBlockCache(block)
+				}
+				blocks[block.ID] = block
+			}
+		}
+		err = rows.Err()
+		closeErr := rows.Close()
+		if err != nil {
+			return err
+		}
+		if closeErr != nil {
+			return closeErr
+		}
+	}
+	return nil
+}
+
+func GetContainerText(container *ast.Node) string {
+	buf := &bytes.Buffer{}
+	buf.Grow(4096)
+	leaf := treenode.FirstLeafBlock(container)
+	if nil == leaf {
+		return ""
+	}
+
+	ast.Walk(leaf, func(n *ast.Node, entering bool) ast.WalkStatus {
+		if !entering {
+			return ast.WalkContinue
+		}
+		switch n.Type {
+		case ast.NodeText, ast.NodeLinkText, ast.NodeFileAnnotationRefText, ast.NodeCodeBlockCode, ast.NodeMathBlockContent:
+			buf.Write(n.Tokens)
+		case ast.NodeTextMark:
+			buf.WriteString(n.Content())
+		case ast.NodeBlockRef:
+			if anchor := n.ChildByType(ast.NodeBlockRefText); nil != anchor {
+				buf.WriteString(anchor.Text())
+			} else if anchor = n.ChildByType(ast.NodeBlockRefDynamicText); nil != anchor {
+				buf.WriteString(anchor.Text())
+			} else {
+				text := GetRefText(n.TokensStr())
+				buf.WriteString(text)
+			}
+			return ast.WalkSkipChildren
+		}
+		return ast.WalkContinue
+	})
+	return buf.String()
+}
+
+func containsLimitClause(stmt string) bool {
+	return strings.Contains(strings.ToLower(stmt), " limit ") ||
+		strings.Contains(strings.ToLower(stmt), "\nlimit ") ||
+		strings.Contains(strings.ToLower(stmt), "\tlimit ")
+}

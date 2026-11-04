@@ -1,0 +1,24 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/BaseXPath.java,org/jaxen,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/DefaultNavigator.java,org/jaxen,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/JaxenHandler.java,org/jaxen,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/XPathFunctionContext.java,org/jaxen,Plan too large: 33 entries (31 unresolved deps exceed limit 30). File deferred.,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/AdditiveExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultAbsoluteLocationPath.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultAdditiveExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultAllNodeStep.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultAndExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultDivExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultEqualityExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultGreaterThanEqualExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultLiteralExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultNameStep.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultNumberExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultPathExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultProcessingInstructionNodeStep.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultTextNodeStep.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultUnaryExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultUnionExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/DefaultVariableReferenceExpr.java,org/jaxen/expr,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/pattern/AnyChildNodeTest.java,org/jaxen/pattern,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/jaxen/src/org/jaxen/saxpath/base/XPathReader.java,org/jaxen/saxpath/base,too many dependencies,2026-05-22

@@ -1,0 +1,29 @@
+# X0 provider fixture. A profile patch re-inserts existing Base row ids; DSH's
+# last-write-by-id composition replaces the complete row without changing the
+# Agent Loop or model-facing tool registrations.
+- insert:
+    - id: subprocess
+      name: '@deepseek-ai/dsh-subprocess-local'
+
+    - id: sandbox
+      name: '@deepseek-ai/dsh-sandbox-local'
+
+    - id: sandbox-policy
+      name: '@deepseek-ai/dsh-sandbox-policy'
+      config:
+        mode: workspace-write
+        workspaceRoot: !!js process.cwd()
+
+    - id: bash-sandbox
+      name: '@deepseek-ai/dsh-bash-sandbox'
+      disabled: !!js process.platform === 'win32'
+
+    - id: pwsh-sandbox
+      name: '@deepseek-ai/dsh-pwsh-sandbox'
+      disabled: !!js process.platform !== 'win32'
+
+    - id: fs-sandbox
+      name: '@deepseek-ai/dsh-fs-sandbox'
+
+    - id: jobs
+      name: '@deepseek-ai/dsh-jobs-local'

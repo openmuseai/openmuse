@@ -1,0 +1,13 @@
+group = 'io.openmuse.siyuan.client'
+version = '0.1.0'
+buildscript {
+    repositories { google(); mavenCentral() }
+    dependencies { classpath 'com.android.tools.build:gradle:8.6.1' }
+}
+apply plugin: 'com.android.library'
+android {
+    namespace = 'io.openmuse.siyuan.client'
+    compileSdk = 36
+    defaultConfig { minSdk = 24 }
+    sourceSets { main { jniLibs.srcDirs = ['src/main/jniLibs'] } }
+}

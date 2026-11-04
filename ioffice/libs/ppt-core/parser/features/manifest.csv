@@ -1,0 +1,22 @@
+feature_id,title,description,depends_on_feature,status
+pp-01-pptx-parse,PPTX parser 基础契约与 slide XML 装配,OOXML 枚举映射、DML callback、nvPr、cSld/sld/layout/master XML,,pass
+pp-02-shape-tree-parse,Slide shape tree 解析,p:spTree XML 事件生成 KmoShowShape 与 DgStore shape rows,pp-01-pptx-parse,pass
+pp-03-dml-style,DML clrMap 与 lstStyle,a:clrMap/a:lstStyle 写入 ColorMapping 与文本列表样式,pp-01-pptx-parse,pass
+pp-04-theme-part,theme/themeOverride part,theme part XML → KmoTheme 及 partName 缓存,pp-01-pptx-parse;pp-03-dml-style,pass
+pp-05-timing-transition,p:transition 与 p:timing 列表,过渡属性与 timing 列表容器（动画行为树后置）,pp-01-pptx-parse,pass
+pp-06-presentation-xml,p:presentation 根 XML,presentation 属性、尺寸、sldIdLst/sldMasterIdLst 回调,pp-01-pptx-parse;pp-03-dml-style,pass
+pp-07-part-open,slide/layout/master part 读入,UnifiedXmlReader + callback.load + PptxrSlide/Layout/Master.open,pp-01-pptx-parse;pp-02-shape-tree-parse;pp-04-theme-part,pass
+pp-08-slides-walk,rId 装配与阅读顺序,onSlideIds 建壳 + UnReadSlides 阅读顺序 + changeLayout,pp-06-presentation-xml;pp-07-part-open,pass
+pp-09-pptx-open,PptxReader 编排,pptx package → KmoPresentation 打开顺序与 close,pp-04-theme-part;pp-06-presentation-xml;pp-08-slides-walk,pass
+pp-10-dml-sppr,形状 spPr（渲染阻塞）,xfrm/prstGeom/solidFill/ln 写入 ShapePr,pp-01-pptx-parse;pp-02-shape-tree-parse,pass
+pp-11-dml-txbody,形状 txBody,段落/run 纯文本写入 KmoTextBody,pp-01-pptx-parse;pp-02-shape-tree-parse;pp-10-dml-sppr,pass
+pp-12-opc-package,PPTX OPC 包桥接,path/RAF→wps-io OPCPackage 桥接 + officeDocument/presPart 定位 + part 流,,pass
+pp-13-document-assembly,文档级装配,rId 页序→结构树→继承几何→PptxDocument,pp-12-opc-package;pp-06-presentation-xml;pp-02-shape-tree-parse,pass
+pp-14-layout-master-bind,产品绑定 layout/master/nvPr,slide rels→版式母版树+ph,pp-13-document-assembly,pass
+pp-15-pic-blip-media,pic blipFill 与媒体字节,r:embed+rels+zip media→shape media,pp-13-document-assembly;pp-02-shape-tree-parse,pass
+pp-16-scheme-color-resolve,主题色落到 fill/run,theme+schemeClr/srgb→ARGB,pp-04-theme-part;pp-03-dml-style,pass
+pp-17-slide-background,幻灯片底色（cSld bg）,p:bgPr/bgRef 写 KmoSlide 背景 fill,pp-16-scheme-color-resolve,pass
+pp-18-sp-picture-fill,形状上的图片填充（非仅 p:pic）,p:sp 上 a:blipFill→DrawImage,pp-15-pic-blip-media,pass
+pp-19-kmo-tree-write,S4 真实 Kmo 树写入（替换 layout_shape host）,handler 双 bin→app::KmoShowShape+data ShapePr/TextBody,pp-02-shape-tree-parse;pp-10-dml-sppr;pp-11-dml-txbody;pl-09-public-shape-convert,pass
+pp-20-open-write-kmo,打开期产物=Java Kmo 树,产线 Sw* 写入 app::KmoShowShape 替换 layout_shape,pp-19-kmo-tree-write;pp-02-shape-tree-parse;pp-13-document-assembly,spec
+pp-21-show-master-sp,母版形状入胶片,解析 showMasterSp 并 film master→layout→slide,pp-14-layout-master-bind;pr-01-slide-layers,spec

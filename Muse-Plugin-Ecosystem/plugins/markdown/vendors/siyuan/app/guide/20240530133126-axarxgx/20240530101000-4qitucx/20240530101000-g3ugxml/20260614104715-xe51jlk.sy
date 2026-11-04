@@ -1,0 +1,448 @@
+{
+	"ID": "20260614104715-xe51jlk",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20260614104715-xe51jlk",
+		"title": "ネットワークプロキシ",
+		"type": "doc",
+		"updated": "20261022120655"
+	},
+	"Children": [
+		{
+			"ID": "20260614104730-4q3zhj3",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614104730-4q3zhj3",
+				"updated": "20260614104730"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20260614104730-2gedzeo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104730-2gedzeo",
+				"updated": "20260614104730"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源はネットワークプロキシを設定してネットワークリクエストを転送することをサポートしています。ネットワーク制限がある環境や、プロキシ経由でネットワークサービスにアクセスする必要がある場合に適しています。"
+				}
+			]
+		},
+		{
+			"ID": "20260614104730-7u2gg5k",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614104730-7u2gg5k",
+				"updated": "20261022120655"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "設定方法"
+				}
+			]
+		},
+		{
+			"ID": "20260614104730-tbz888i",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104730-tbz888i",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "アプリ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "一般"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "ネットワークプロキシ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で設定します："
+				}
+			]
+		},
+		{
+			"ID": "20260614104730-16ja8ya",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614104730-16ja8ya",
+				"updated": "20261022120655"
+			},
+			"Children": [
+				{
+					"ID": "20260614104730-b7upuvp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104730-b7upuvp",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20260614104730-2p8n4ok",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104730-2p8n4ok",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "プロトコル：直接接続（プロキシ不使用）、システムプロキシを使用、HTTP、HTTPS、SOCKS5 から選択します。直接接続とシステムプロキシではホストとポートの入力は不要です"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261016112115-s6u6kl7",
+					"Type": "NodeListItem",
+					"Properties": {
+						"id": "20261016112115-s6u6kl7",
+						"updated": "20261022120655"
+					},
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Children": [
+						{
+							"ID": "20261016112115-ezc3mdr",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261016112115-ezc3mdr",
+								"updated": "20261022120655"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "システムモードは、対応する OS 設定またはカーネル起動時に継承したプロキシ環境変数を使用します。カーネルは Windows、Linux GNOME、macOS の手動プロキシを読み取り、Linux と macOS では明示的なプロキシ環境変数を優先します。これらの読み取り処理は自動 PAC 設定に対応せず、Windows と macOS の自動検出にも対応しません。その他の OS では OS 設定を読み取らず、起動時のプロキシ環境を保持します"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261022120655-cbp7kzj",
+					"Type": "NodeListItem",
+					"Properties": {
+						"id": "20261022120655-cbp7kzj",
+						"updated": "20261022120655"
+					},
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Children": [
+						{
+							"ID": "20261022120655-td5nltm",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261022120655-td5nltm",
+								"updated": "20261022120655"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "macOS は手動の HTTP、HTTPS、SOCKS5 プロキシに対応しています。除外リストは NO_PROXY ルールに変換され、IP アドレス、CIDR 範囲（169.254/16 を含む）、ドメイン、*. で始まるドメインパターン、10.* などの IPv4 末尾のワイルドカードに対応しています。「単純なホスト名を除外」とその他のワイルドカードパターンには対応していないため、明示的な除外項目を使用してください。読み取りや変換に失敗すると、カーネルは警告を記録し、起動時のプロキシ環境を保持します。macOS のシステムプロキシを変更した後は、カーネルを再起動するか、別のプロキシモードに切り替えてからシステムモードに戻してください"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104730-pebzh9s",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104730-pebzh9s",
+						"updated": "20260614104730"
+					},
+					"Children": [
+						{
+							"ID": "20260614104730-kwo2uzv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104730-kwo2uzv",
+								"updated": "20260614104730"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ホスト"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：プロキシサーバーのアドレスを入力。形式は "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "IP"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ または "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "ユーザー名:パスワード@IP"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​（認証が必要な場合）"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104730-76l8q11",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104730-76l8q11",
+						"updated": "20260614104730"
+					},
+					"Children": [
+						{
+							"ID": "20260614104730-jkyi440",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104730-jkyi440",
+								"updated": "20260614104730"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ポート"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：プロキシサーバーのポートを入力"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614104730-fwszfos",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104730-fwszfos",
+				"updated": "20260614104730"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "設定後に確認をクリックすると即座に反映され、再起動は不要です。"
+				}
+			]
+		},
+		{
+			"ID": "20260614104730-pacusxy",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614104730-pacusxy",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "適用範囲"
+				}
+			]
+		},
+		{
+			"ID": "20260614104730-8gwuk14",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614104730-8gwuk14",
+				"updated": "20260614104730"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ネットワークプロキシ設定は以下の機能に適用されます："
+				}
+			]
+		},
+		{
+			"ID": "20260614104730-voo7oe8",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614104730-voo7oe8",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"ID": "20260614104730-g1lra66",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104730-g1lra66",
+						"updated": "20260614104730"
+					},
+					"Children": [
+						{
+							"ID": "20260614104730-qdaat10",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104730-qdaat10",
+								"updated": "20260614104730"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "クラウド同期とデータバックアップ"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104730-vx8725r",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104730-vx8725r",
+						"updated": "20260614104730"
+					},
+					"Children": [
+						{
+							"ID": "20260614104730-5yyhbx7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104730-5yyhbx7",
+								"updated": "20260614104730"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "バージョン更新チェック"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104730-olk6qfr",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104730-olk6qfr",
+						"updated": "20260614104730"
+					},
+					"Children": [
+						{
+							"ID": "20260614104730-2cz0rg4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104730-2cz0rg4",
+								"updated": "20260614104730"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "AI機能リクエスト"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614104730-7in2v85",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614104730-7in2v85",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20260614104730-q4wc0fm",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614104730-q4wc0fm",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "SiYuan が管理するプロキシクライアントを通したその他の通信。外部ブラウザ、プラグイン、stdio 子プロセスは独自のプロキシ設定を使用する場合があります"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

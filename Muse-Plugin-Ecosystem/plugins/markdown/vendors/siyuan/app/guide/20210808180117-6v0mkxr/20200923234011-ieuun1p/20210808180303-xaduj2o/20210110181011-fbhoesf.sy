@@ -1,0 +1,768 @@
+{
+	"ID": "20210110181011-fbhoesf",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20210110181011-fbhoesf",
+		"title": "Daily notes",
+		"type": "doc",
+		"updated": "20261027135536"
+	},
+	"Children": [
+		{
+			"ID": "20260613180619-15jwt8e",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613180619-15jwt8e",
+				"updated": "20261027135536"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Overview"
+				}
+			]
+		},
+		{
+			"ID": "20260613180619-3ykl8f4",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613180619-3ykl8f4",
+				"updated": "20260613180619"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "A diary is a way to quickly create and locate documents by date. It is useful for daily journaling, work logs, daily to-do lists, and more."
+				}
+			]
+		},
+		{
+			"ID": "20260613180619-njydei7",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613180619-njydei7",
+				"updated": "20261027135536"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Creating and Opening"
+				}
+			]
+		},
+		{
+			"ID": "20260613180619-y24gzqt",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613180619-y24gzqt",
+				"updated": "20261027135536"
+			},
+			"Children": [
+				{
+					"ID": "20260613180619-jeorm2w",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613180619-jeorm2w",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20260613180619-a3cmnuj",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613180619-a3cmnuj",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Entry"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Click the \"Diary\" button in the top main menu, or use the shortcut "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Alt"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "5"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ ("
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌃"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "5"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ on macOS)"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613180619-4b92fgb",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613180619-4b92fgb",
+						"updated": "20260613180619"
+					},
+					"Children": [
+						{
+							"ID": "20260613180619-6qfwhs6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613180619-6qfwhs6",
+								"updated": "20260613180619"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Shortcut Behavior"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": When using the shortcut to open a diary, it uses the last selected notebook"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613180619-4cz2avf",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613180619-4cz2avf",
+						"updated": "20261027135536"
+					},
+					"Children": [
+						{
+							"ID": "20260613180619-byb9lcr",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613180619-byb9lcr",
+								"updated": "20261027135536"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Opening behavior"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": The button and shortcut open the document at the name and location resolved from today's save path template, or create it if missing. They do not search by the daily note date attribute, so renaming or moving the original can cause another daily note to be created"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261008101708-b7c9jyj",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20261008101708-b7c9jyj",
+				"updated": "20261027135536"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Create and reference daily notes by date"
+				}
+			]
+		},
+		{
+			"ID": "20261008101708-65762qi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261008101708-65762qi",
+				"updated": "20261008101708"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Type "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "[[today"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "[[tomorrow"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", or "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "[[25 sept"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " in the editor to show a daily note candidate in reference completion. Relative dates and full or abbreviated month names are recognized in the interface language and English. Complete Gregorian dates such as "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "[[2026-09-25"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " are also supported."
+				}
+			]
+		},
+		{
+			"ID": "20261008101708-8o948mt",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261008101708-8o948mt",
+				"updated": "20261008172530"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Dates without a year use the current year. Candidates display the actual document name or the name resolved from the creation template, the full path, and the target date. Existing daily note icons support hover previews. For ambiguous expressions such as "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "03/04"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " or invalid dates, no daily note candidate is shown. Use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "YYYY-MM-DD"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ". Regular document search remains available."
+				}
+			]
+		},
+		{
+			"ID": "20261008101708-3n0qxms",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261008101708-3n0qxms",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Candidates use the last selected daily note notebook. If none is selected or that notebook is unavailable, candidates show the full paths for available notebooks. Selecting a candidate saves its notebook as the daily note notebook."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-v6e0cgk",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-v6e0cgk",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Leaving candidates unselected creates no document. Encrypted notebooks can reference daily notes only within the same notebook; ordinary notebooks cannot reference daily notes in encrypted notebooks."
+				}
+			]
+		},
+		{
+			"ID": "20261008101708-yprxiyp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261008101708-yprxiyp",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Typing and viewing candidates create no document. Missing daily notes display New daily note and a calendar-plus icon. Moving the caret after a creation request does not cancel insertion at the original input position; modified or deleted input is not overwritten."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-ma3a2a1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-ma3a2a1",
+				"updated": "20261027135536"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Selecting a candidate first searches the target notebook by the daily note date attribute, including moved or renamed documents that retain it. If several match, the document at the template name and location is preferred; otherwise, the one with the smallest ID is used. If the ordinary button creates another daily note at that location, date candidates will prefer it. Neither entry point reapplies the content template when reusing a document."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-m4mro3d",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-m4mro3d",
+				"updated": "20261027135536"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "If no date attribute matches, the document at the template name and location is reused or created, and a reference is inserted. The path template, now in the content template, and the daily note date attribute use the target date; actual creation and update timestamps retain the real operation time."
+				}
+			]
+		},
+		{
+			"ID": "20260613180619-9fh070b",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613180619-9fh070b",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Configuration"
+				}
+			]
+		},
+		{
+			"ID": "20260613180619-om57ubp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613180619-om57ubp",
+				"updated": "20260803171606"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Right-click a notebook and open "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, then configure under the new diary settings:"
+				}
+			]
+		},
+		{
+			"ID": "20260613180619-q2wvciq",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613180619-q2wvciq",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"ID": "20260613180619-pbo5rls",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613180619-pbo5rls",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20260613180619-u3yunb3",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613180619-u3yunb3",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Save Path"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Set the save path for diary documents within the notebook. Supports "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20210104091444-c7gg3ak",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "template variables"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ""
+								}
+							]
+						},
+						{
+							"ID": "20260613180619-r69colp",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613180619-r69colp",
+								"updated": "20260614204928"
+							},
+							"Children": [
+								{
+									"ID": "20260613180619-7bt2ars",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613180619-7bt2ars",
+										"updated": "20260614204928"
+									},
+									"Children": [
+										{
+											"ID": "20260613180619-7i4grcm",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613180619-7i4grcm",
+												"updated": "20260613180619"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Common examples:"
+												}
+											]
+										},
+										{
+											"ID": "20260613180619-1u6x9uf",
+											"Type": "NodeList",
+											"ListData": {},
+											"Properties": {
+												"id": "20260613180619-1u6x9uf",
+												"updated": "20260614204928"
+											},
+											"Children": [
+												{
+													"ID": "20260613180619-1wpqu11",
+													"Type": "NodeListItem",
+													"ListData": {
+														"BulletChar": 42,
+														"Marker": "Kg=="
+													},
+													"Properties": {
+														"id": "20260613180619-1wpqu11",
+														"updated": "20260614204928"
+													},
+													"Children": [
+														{
+															"ID": "20260613180619-2wsn8nc",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20260613180619-2wsn8nc",
+																"updated": "20260614204928"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "​"
+																},
+																{
+																	"Type": "NodeTextMark",
+																	"TextMarkType": "code",
+																	"TextMarkTextContent": "/daily note/{{now | date \"2006/01/2006-01-02\"}}"
+																},
+																{
+																	"Type": "NodeText",
+																	"Data": "​ — Group by year/month, one file per day"
+																}
+															]
+														}
+													]
+												},
+												{
+													"ID": "20260613180619-qmsamx6",
+													"Type": "NodeListItem",
+													"ListData": {
+														"BulletChar": 42,
+														"Marker": "Kg=="
+													},
+													"Properties": {
+														"id": "20260613180619-qmsamx6",
+														"updated": "20260613180619"
+													},
+													"Children": [
+														{
+															"ID": "20260613180619-09wez3m",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20260613180619-09wez3m",
+																"updated": "20260613180619"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "​"
+																},
+																{
+																	"Type": "NodeTextMark",
+																	"TextMarkType": "code",
+																	"TextMarkTextContent": "/diary/{{now | date \"2006-01-02\"}}"
+																},
+																{
+																	"Type": "NodeText",
+																	"Data": "​ — All diaries in one folder"
+																}
+															]
+														}
+													]
+												},
+												{
+													"ID": "20260613180619-1lvi0k2",
+													"Type": "NodeListItem",
+													"ListData": {
+														"BulletChar": 42,
+														"Marker": "Kg=="
+													},
+													"Properties": {
+														"id": "20260613180619-1lvi0k2",
+														"updated": "20260613180619"
+													},
+													"Children": [
+														{
+															"ID": "20260613180619-05jl86h",
+															"Type": "NodeParagraph",
+															"Properties": {
+																"id": "20260613180619-05jl86h",
+																"updated": "20260613180619"
+															},
+															"Children": [
+																{
+																	"Type": "NodeText",
+																	"Data": "​"
+																},
+																{
+																	"Type": "NodeTextMark",
+																	"TextMarkType": "code",
+																	"TextMarkTextContent": "/{{now | date \"2006/01/02\"}}"
+																},
+																{
+																	"Type": "NodeText",
+																	"Data": "​ — Group by day directly under root"
+																}
+															]
+														}
+													]
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613180619-btjm9do",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613180619-btjm9do",
+						"updated": "20261024163429"
+					},
+					"Children": [
+						{
+							"ID": "20260613180619-2vcqs2g",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613180619-2vcqs2g",
+								"updated": "20261024163429"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Template Path"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " (optional): Select an existing document as a diary template. When a new diary is created, the template content is used as the initial content. Commonly used for preset daily to-do structures, daily report templates, etc"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613180619-cvbtwrj",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613180619-cvbtwrj",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Tips"
+				}
+			]
+		},
+		{
+			"ID": "20260613180619-55afgzj",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613180619-55afgzj",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"ID": "20260613180619-50gkpvz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613180619-50gkpvz",
+						"updated": "20261024163828"
+					},
+					"Children": [
+						{
+							"ID": "20260613180619-mlaw90y",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613180619-mlaw90y",
+								"updated": "20261024163828"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Embedded To-Do Summary"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20201117112518-dott91x",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "Embed content blocks"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ in your diary template to aggregate to-do items or content blocks you need to review daily"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613180619-je2hzyz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613180619-je2hzyz",
+						"updated": "20260613180619"
+					},
+					"Children": [
+						{
+							"ID": "20260613180619-9yai31q",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613180619-9yai31q",
+								"updated": "20260613180619"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Per-Notebook Configuration"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Each notebook can independently configure its diary save path and template, with no interference between notebooks"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613180724-oocauyd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613180724-oocauyd",
+				"updated": "20260613180724"
+			}
+		}
+	]
+}

@@ -1,0 +1,2 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/io/imagetopdf/src/test/Tester.java,test,too many dependencies,2026-05-22

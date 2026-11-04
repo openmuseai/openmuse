@@ -1,0 +1,8 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id,tags,feature_role
+225,koffice/writer/core/cn/wps/moffice/writer/data/internal_v2/PapxTable.java,PapxTable,in_progress,repairing from rust.json restore,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/internal_v2/PapxTable.rs,CPTable;IPapxTable,,01-storage;mvp-must,core
+226,koffice/writer/core/cn/wps/moffice/writer/data/internal_v2/ChpxTableFactory.java,ChpxTableFactory,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/internal_v2/ChpxTableFactory.rs,ChpxTable,,01-storage;mvp-must,core
+227,koffice/writer/core/cn/wps/moffice/writer/data/internal_v2/PapxTableFactory.java,PapxTableFactory,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/internal_v2/PapxTableFactory.rs,PapxTable,,01-storage;mvp-must,core
+228,koffice/writer/core/cn/wps/moffice/writer/data/PLC.java,PLC,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/PLC.rs,ListIndexPositionTree;INotifyTextRope,,01-storage;mvp-must,core
+229,koffice/writer/core/cn/wps/moffice/writer/data/PLCSection.java,PLCSection,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/PLCSection.rs,PLC;PropertySet,,01-storage;mvp-must,core
+232,koffice/writer/core/cn/wps/moffice/writer/data/CPieceTable.java,CPieceTable,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/data/CPieceTable.rs,ITextRope;IChpxTable;IPapxTable,,01-storage;mvp-must,core
+233,koffice/writer/core/cn/wps/moffice/writer/helper/CoreHelper.java,CoreHelper,pending,,main,parse-01-storage,libs/word-core/src/cn/wps/moffice/writer/helper/CoreHelper.rs,ITextRope;IChpxTable;IPapxTable;PropertySet,,01-storage;mvp-must,core

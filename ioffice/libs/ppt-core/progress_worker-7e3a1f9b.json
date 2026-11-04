@@ -1,0 +1,23 @@
+{
+  "mainJavaPath": "d:\\agentic\\src\\wordOffice\\koffice\\presentation\\core\\cn\\wps\\show\\graphics\\shape3d\\LightMaterial.java",
+  "mode": "rewrite",
+  "files": [
+    {
+      "javaPath": "d:\\agentic\\src\\wordOffice\\koffice\\presentation\\core\\cn\\wps\\show\\graphics\\shape3d\\Object3DExt.java",
+      "rustPath": "d:\\agentic\\src\\wordOffice\\libs\\ppt-core\\src\\cn\\wps\\show\\graphics\\shape3d\\Object3DExt.rs",
+      "currentStep": "cargo_test",
+      "status": "done",
+      "retryCount": 0,
+      "errorCnt": 0
+    },
+    {
+      "javaPath": "d:\\agentic\\src\\wordOffice\\koffice\\presentation\\core\\cn\\wps\\show\\graphics\\shape3d\\LightMaterial.java",
+      "rustPath": "d:\\agentic\\src\\wordOffice\\libs\\ppt-core\\src\\cn\\wps\\show\\graphics\\shape3d\\LightMaterial.rs",
+      "currentStep": "gen_template",
+      "status": "pending",
+      "retryCount": 0,
+      "errorCnt": 0
+    }
+  ],
+  "timestamp": "2026-06-06T04:49:03.800Z"
+}

@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "findings": [
+    {
+      "file": "app/openmuse_host/lib/src/host/mcp_installed_app.dart",
+      "rule": "absolute-url",
+      "value": "http://127.0.0.1",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "app/openmuse_host/lib/src/host/mcp_installed_app.dart",
+      "rule": "absolute-url",
+      "value": "http://127.0.0.1/candidate.mcpb",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "app/openmuse_linux/lib/src/host/mcp_installed_app.dart",
+      "rule": "absolute-url",
+      "value": "http://127.0.0.1",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "app/openmuse_linux/lib/src/host/mcp_installed_app.dart",
+      "rule": "absolute-url",
+      "value": "http://127.0.0.1/candidate.mcpb",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "app/openmuse_mobile/lib/main.dart",
+      "rule": "absolute-url",
+      "value": "http://127.0.0.1:13180",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "app/openmuse_resource_lab/lib/main.dart",
+      "rule": "locale-literal",
+      "value": "en",
+      "count": 2,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Non-shipping resource acceptance harness pins English as test input and advertises en/zh to Flutter. Reviewed 2026-11-03."
+    },
+    {
+      "file": "app/openmuse_resource_lab/lib/main.dart",
+      "rule": "locale-literal",
+      "value": "zh",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Non-shipping resource acceptance harness supported-locale fixture; no service-region selection. Reviewed 2026-11-03."
+    },
+    {
+      "file": "packages/muse_remote_surface_core/lib/src/web_guard.dart",
+      "rule": "absolute-url",
+      "value": "https://surface.openmuse.invalid",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "packages/openmuse_i18n/lib/src/region_bootstrap.dart",
+      "rule": "locale-literal",
+      "value": "en",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Material localization bridge for the fixed English overseas legal documents; legal language is intentionally independent from UI language. Reviewed 2026-11-03."
+    },
+    {
+      "file": "packages/openmuse_i18n/lib/src/region_bootstrap.dart",
+      "rule": "locale-literal",
+      "value": "zh",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Material localization bridge for the fixed Chinese domestic legal documents; no remote endpoint or business region branch. Reviewed 2026-11-03."
+    },
+    {
+      "file": "packages/openmuse_mobile_plugin_runtime/market_sources/pptx.js",
+      "rule": "absolute-url",
+      "value": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "packages/openmuse_mobile_plugin_runtime/market_sources/task_board.js",
+      "rule": "absolute-url",
+      "value": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "packages/openmuse_mobile_plugin_runtime/market_sources/usage_budget.js",
+      "rule": "absolute-url",
+      "value": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "plugins/dsh-agent/lib/src/resource_reference_bridge.dart",
+      "rule": "absolute-url",
+      "value": "http://www.w3.org/2000/svg",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "W3C SVG namespace used by createElementNS; not fetched or used as a service endpoint. Reviewed 2026-11-03."
+    },
+    {
+      "file": "plugins/siyuan-client/lib/openmuse_siyuan_plugin.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Existing two-language editor save/retry copy; en/zh output reviewed. Move to typed message keys before expanding supported translations. Reviewed 2026-11-03."
+    },
+    {
+      "file": "plugins/workspace-paired/lib/src/desktop_outbound_relay.dart",
+      "rule": "absolute-url",
+      "value": "http://127.0.0.1$rawPath",
+      "count": 2,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "plugins/workspace-paired/lib/src/paired_desktop_gateway.dart",
+      "rule": "absolute-url",
+      "value": "http://$hostHeader",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "web/dev-edge.mjs",
+      "rule": "absolute-url",
+      "value": "http://${host}",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "web/dev-edge.mjs",
+      "rule": "absolute-url",
+      "value": "http://${req.headers.host}",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "web/dev-edge.mjs",
+      "rule": "absolute-url",
+      "value": "http://127.0.0.1:13180",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "web/dev-edge.mjs",
+      "rule": "absolute-url",
+      "value": "http://local.invalid",
+      "count": 2,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    }
+  ]
+}

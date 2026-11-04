@@ -1,0 +1,5340 @@
+{
+	"ID": "20240208171522-y7dxcno",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"icon": "1f5c3-fe0f",
+		"id": "20240208171522-y7dxcno",
+		"title": "資料庫",
+		"type": "doc",
+		"updated": "20261028120132"
+	},
+	"Children": [
+		{
+			"ID": "20251224101729-y8gjlt8",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20251224101729-y8gjlt8",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20251224101729-3lny7un",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20251224101729-3lny7un",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "資料庫用於依欄位管理條目。條目可以綁定既有內容區塊，也可以獨立存在。同一組資料可透過表格、列表、日曆、看板和卡片視圖呈現，各視圖可分別設定版面配置、篩選和排序。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014537-wuukhda",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014537-wuukhda",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "欄位的用途和能力見 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260613155453-pxxzmhc",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "欄位類型"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "；欄底部的統計見 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260617124140-ttdzn7n",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "表格計算"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				}
+			]
+		},
+		{
+			"ID": "20251224101729-yhz5zrt",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20251224101729-yhz5zrt",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "建立資料庫"
+				}
+			]
+		},
+		{
+			"ID": "20251224101729-lwgcyhc",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20251224101729-lwgcyhc",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20251224101729-n23jrss",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20251224101729-n23jrss",
+						"updated": "20251224101729"
+					},
+					"Children": [
+						{
+							"ID": "20251224101729-t3zkp0p",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20251224101729-t3zkp0p",
+								"updated": "20251224101729"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "透過 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/資料庫"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 創建，預設視圖是表格視圖，可在佈局中切換"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20251224101729-4bf1fkr",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20251224101729-4bf1fkr",
+						"updated": "20260613160512"
+					},
+					"Children": [
+						{
+							"ID": "20251224101729-24c0xqx",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20251224101729-24c0xqx",
+								"updated": "20260613160512"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "新增"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20260613155453-pxxzmhc",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "字段"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261016191345-3oz6ehx",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20261016191345-3oz6ehx",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20261016191345-0seu7cf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261016191345-0seu7cf",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "查看"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20260617124140-ttdzn7n",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "表格計算"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20251224101729-2jw2x1q",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20251224101729-2jw2x1q",
+						"updated": "20251224101729"
+					},
+					"Children": [
+						{
+							"ID": "20251224101729-cebzpvt",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20251224101729-cebzpvt",
+								"updated": "20251224101729"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "新增條目"
+								}
+							]
+						},
+						{
+							"ID": "20251224101731-wtymkf7",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20251224101731-wtymkf7",
+								"updated": "20251224101731"
+							},
+							"Children": [
+								{
+									"ID": "20251224101729-ennq3b4",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20251224101729-ennq3b4",
+										"updated": "20251224101729"
+									},
+									"Children": [
+										{
+											"ID": "20251224101729-ynq0s7b",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20251224101729-ynq0s7b",
+												"updated": "20260730184353"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "非內容區塊：直接在視圖中新增的條目，不綁定到任何內容區塊"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20251224101729-v5y9dgy",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20251224101729-v5y9dgy",
+										"updated": "20251224101729"
+									},
+									"Children": [
+										{
+											"ID": "20251224101729-g39ct0p",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20251224101729-g39ct0p",
+												"updated": "20260730184353"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "內容區塊：透過拖曳到視圖新增的條目，或透過區塊標選單 "
+												},
+												{
+													"Type": "NodeTextMark",
+													"TextMarkType": "kbd",
+													"TextMarkTextContent": "新增至資料庫"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "​ 新增的條目"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20251224101729-bwcgcqe",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20251224101729-bwcgcqe",
+						"updated": "20251224101729"
+					},
+					"Children": [
+						{
+							"ID": "20251224101729-lkwlo0p",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20251224101729-lkwlo0p",
+								"updated": "20251224101729"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "按需設定過濾和排序"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20251224101729-8oqf0mk",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20251224101729-8oqf0mk",
+						"updated": "20251224101729"
+					},
+					"Children": [
+						{
+							"ID": "20251224101729-p81lwen",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20251224101729-p81lwen",
+								"updated": "20251224101729"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "同一個資料庫可以新增多個視圖，所有視圖共享相同的數據，但過濾和排序設定相互獨立"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-ua2g4rk",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161058-ua2g4rk",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "視圖版面配置"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20260613164228-p5ektpr",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613164228-p5ektpr",
+				"updated": "20260613164228"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "表格視圖"
+				}
+			]
+		},
+		{
+			"ID": "20260613164228-hx1c01m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613164228-hx1c01m",
+				"updated": "20260613164228"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "資料庫的預設視圖，以行列表格形式展示資料。"
+				}
+			]
+		},
+		{
+			"ID": "20260613164228-rcbjy2u",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613164228-rcbjy2u",
+				"updated": "20260613164228"
+			},
+			"Children": [
+				{
+					"ID": "20260613164228-35itq6b",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-35itq6b",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-smuvqu2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-smuvqu2",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "切換方式"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：資料庫創建後預設為表格視圖；從其他視圖切換時在下拉選單中選擇「表格視圖」"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-1gfscd6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-1gfscd6",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-5byqii8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-5byqii8",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "列管理"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：每列為一條字段，支援拖拽調整列寬和列順序；右鍵列頭可編輯、刪除、隱藏字段"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-muk3ej7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-muk3ej7",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-3xwjx5z",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-3xwjx5z",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "行操作"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：點擊行首可展開行詳情；拖拽行可調整順序；右鍵行可刪除、複製、移動到其他資料庫"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-9ttive7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-9ttive7",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-da6nmn9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-da6nmn9",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "新增行"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：點擊表格底部空白行或使用加號按鈕添加新條目"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-5sk67wg",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-5sk67wg",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-ciht90o",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-ciht90o",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "適用場景"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：資料錄入、批量編輯、字段類型豐富的表格場景、與 Excel 類似的常規資料管理"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260920084445-j00bcic",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260920084445-j00bcic",
+				"updated": "20260920084445"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "列表視圖"
+				}
+			]
+		},
+		{
+			"ID": "20260920084445-smyd92u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920084445-smyd92u",
+				"updated": "20260920084445"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "每個項目顯示為一行，不顯示表頭和表格格線。新建列表視圖預設只顯示主鍵欄位，其他欄位均隱藏。"
+				}
+			]
+		},
+		{
+			"ID": "20260920084445-8tidkbr",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260920084445-8tidkbr",
+				"updated": "20260920084445"
+			},
+			"Children": [
+				{
+					"ID": "20260920084445-x1l8sd3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-x1l8sd3",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-derir4d",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-derir4d",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "切換方式：在視圖設定中選擇 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "佈局"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "列表"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "，也可透過斜線選單插入資料庫列表檢視"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920084445-m4ql9o3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-m4ql9o3",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-25af675",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-25af675",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "欄位顯示：開啟 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "欄位"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 面板啟用需要顯示的欄位。可見欄位與主鍵顯示於同一行，並支援編輯欄位值"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920084445-n3ijykx",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-n3ijykx",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-k2g10dv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-k2g10dv",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "視圖設定：複製列表視圖或切回該視圖的列表佈局時，會保留已設定的欄位顯示與隱藏狀態"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920084445-nz5oupp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-nz5oupp",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-z20o9jj",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-z20o9jj",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "篩選、排序和分組：與同一資料庫的其他視圖共享資料，支援獨立設定篩選、排序和分組"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260920225154-xknvq29",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260920225154-xknvq29",
+				"updated": "20261025011205"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "日曆視圖"
+				}
+			]
+		},
+		{
+			"ID": "20260920225154-z9ga0hb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920225154-z9ga0hb",
+				"updated": "20260923103343"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "按月或週顯示有日期的項目。週視圖包含七個日期欄，跨日項目會連續顯示在對應日期上。各編輯器的目前模式與瀏覽日期互不影響。每個日曆視圖的月、週模式會儲存在目前工作空間，在新編輯器中開啟或重新啟動思源後恢復。新編輯器從今天開始瀏覽。"
+				}
+			]
+		},
+		{
+			"ID": "20260920225154-mpwyzfe",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260920225154-mpwyzfe",
+				"updated": "20261025011205"
+			},
+			"Children": [
+				{
+					"ID": "20260920225154-6a8qyqe",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-6a8qyqe",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-r1vw5b7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-r1vw5b7",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "切換方式：在視圖設定中選擇 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "佈局"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "日曆"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "，也可透過斜線選單插入資料庫日曆檢視"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-nvf2ccc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-nvf2ccc",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-6aj594a",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-6aj594a",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期欄位：在佈局設定中選擇一個日期、建立時間或更新時間欄位。沒有適用欄位時，日曆會提示選擇或建立欄位，不會為既有項目自動填入一般日期；沒有日期的項目不會顯示在日期格中。綁定一般日期欄位時，可在無日期清單中找到這些項目"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260929122307-ltcytyu",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260929122307-ltcytyu",
+						"updated": "20260929123717"
+					},
+					"Children": [
+						{
+							"ID": "20260929122307-s1kwa3w",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260929122307-s1kwa3w",
+								"updated": "20260929123717"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "範本日期：日期欄位設定顯示範本後，日曆依範本計算出的日期顯示項目，原始日期保持不變。範本需輸出純文字日期，支援 YYYY-MM-DD、欄位所選的數字日期格式，以及目前語言的本地日期格式（如 2026年10月2日）；可附加 HH:mm 或 HH:mm:ss，以空格或 T 分隔。日期依目前裝置的本地時區解讀，斜線日期依欄位格式解讀，不猜測日月順序。空白結果、無效日期及其他格式不會顯示，也不會進入無日期列表。計算日期不支援拖曳、清空或按日期新增，請修改來源欄位或範本來調整日期；跨語言使用時建議輸出 YYYY-MM-DD"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-aibikc5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-aibikc5",
+						"updated": "20260923095432"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-t9xok0u",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-t9xok0u",
+								"updated": "20260923095432"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "瀏覽日期：使用上一頁、下一頁、今天或日期選擇器切換日期。月視圖會摺疊項目較多的日期，點擊更多按鈕可展開所在週。日期依目前裝置的本地時區顯示。月視圖依當月實際需要顯示四、五或六週。月視圖和週視圖都在每列起始日期顯示 ISO 週數。點擊日曆按鈕可依日期或 ISO 週所屬年份和週數跳轉。每週起始日不是星期一時，以該列的星期四決定週數"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-8jo2ad8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-8jo2ad8",
+						"updated": "20260924110133"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-wxzch42",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-wxzch42",
+								"updated": "20260924110133"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "編輯項目：點擊項目使用既有資料庫項目編輯介面。使用一般日期欄位時，可透過日期格內的加號建立項目，拖曳項目調整日期，或拖曳兩端調整日期範圍。點擊檢視篩選旁的無日期按鈕，可搜尋尚未安排的項目；將項目拖到日期格，或先選取項目再點選日期格，觸控裝置也可使用後一種方式。安排時會填入全天日期，清空日期後項目會回到無日期清單。日期修改支援復原，觸控裝置可拖曳日曆中既有項目上的移動把手。點擊或新增項目後自動聚焦主鍵欄位；拖曳時預覽調整後的日期範圍並醒目提示對應日期格，放開後儲存。右鍵選單也支援複製、新建文件並綁定、新增至其他資料庫、編輯欄位及在所選日期新增項目"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-xpzcvxc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-xpzcvxc",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-z6bn57l",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-z6bn57l",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "系統時間：建立時間和更新時間沿用項目或綁定區塊的實際時間，不支援拖曳修改，也不提供日期格內的新增按鈕"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-csqj5ki",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-csqj5ki",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-embq9da",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-embq9da",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期範圍：全天範圍包含結束當天；帶時間的範圍若在午夜結束，則顯示到前一天。僅有一個端點時顯示在該日期，結束早於開始時標記異常並保留原值"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-0na3b4b",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-0na3b4b",
+						"updated": "20260927112821"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-dp0msus",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-dp0msus",
+								"updated": "20260927112821"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "視圖設定：沿用資料庫的篩選、排序、欄位顯示與隱藏及新項目範本，可透過條件顏色設定項目背景。日曆佈局暫不套用分組，切換回其他佈局時保留原有分組設定。佈局設定中的項目顯示行數可選 3、5、10 或全部，預設為 3，儲存在目前日曆視圖中。此設定僅控制月視圖摺疊，週視圖顯示全部項目，日期範圍內的資料仍完整載入"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261025011205-hpy47l0",
+					"Type": "NodeListItem",
+					"Properties": {
+						"id": "20261025011205-hpy47l0",
+						"updated": "20261025011205"
+					},
+					"Children": [
+						{
+							"ID": "20261025011205-9vepwg6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261025011205-9vepwg6",
+								"updated": "20261025011205"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "欄位名稱：在檢視設定中開啟 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "佈局"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "顯示欄位名稱"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "，即可在非主鍵欄位值旁顯示欄位名稱，主鍵仍作為項目標題。此選項預設關閉，依日曆檢視儲存，關閉後恢復為僅顯示欄位值"
+								}
+							]
+						}
+					],
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					}
+				}
+			]
+		},
+		{
+			"ID": "20260613164228-rrw0f53",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613164228-rrw0f53",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "看板視圖"
+				}
+			]
+		},
+		{
+			"ID": "20260613164228-tpydd1i",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613164228-tpydd1i",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "以分欄卡片顯示條目，每欄對應一個分組。分組能力取決於欄位類型；使用單選或多選欄位時，還可透過跨欄拖曳卡片修改選項。"
+				}
+			]
+		},
+		{
+			"ID": "20260613164228-hqf3wj5",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613164228-hqf3wj5",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"ID": "20260613164228-tr3hi3x",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-tr3hi3x",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-xt6dxgt",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-xt6dxgt",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "切換方式"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：在視圖佈局下拉選單中選擇「看板視圖」"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-64hvnh2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-64hvnh2",
+						"updated": "20261024161058"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-or0dma4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-or0dma4",
+								"updated": "20261024161058"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "分組欄位：在分組設定中選擇支援分組的欄位及分組方式，詳見本章的「分組」說明"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-yv431bq",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-yv431bq",
+						"updated": "20261025011511"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-cosafjo",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-cosafjo",
+								"updated": "20261025011511"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "卡片內容"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：每張卡片展示主鍵所繫結區塊的內容摘要，以及該視圖中所選字段的值"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "。在視圖設定中開啟 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "佈局"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "顯示欄位名稱"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "，可在欄位值旁顯示欄位名稱；此選項依視圖儲存，關閉後隱藏欄位名稱"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-1dlbsxm",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-1dlbsxm",
+						"updated": "20261024161058"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-5dfddo0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-5dfddo0",
+								"updated": "20261024161058"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "拖曳操作：分組欄位為單選或多選時，將卡片拖到其他欄會修改該條目的選項值"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-cmb9sgl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-cmb9sgl",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-xhycr6u",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-xhycr6u",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "新增條目"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：在列底部點擊加號可直接在該列中添加新卡片，新卡片的字段值自動設為當前列對應的選項"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-n6dsw98",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-n6dsw98",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-9fds8ei",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-9fds8ei",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "視圖獨立性"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：與同一資料庫的其他視圖共享資料，但過濾、排序和分組設定互相獨立"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-lyykrgm",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-lyykrgm",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-svrex83",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-svrex83",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "適用場景"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：專案管理看板（待辦→進行中→已完成）、狀態流轉管理、分類瀏覽"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613164228-jqu76ou",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613164228-jqu76ou",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "卡片視圖"
+				}
+			]
+		},
+		{
+			"ID": "20260613164228-8lv8vm8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613164228-8lv8vm8",
+				"updated": "20260613164228"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "以獨立卡片網格形式展示資料，適合以內容預覽為主的場景。"
+				}
+			]
+		},
+		{
+			"ID": "20260613164228-cgmduwb",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613164228-cgmduwb",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"ID": "20260613164228-oh9c90e",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-oh9c90e",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-gpy7bj7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-gpy7bj7",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "切換方式"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：在視圖佈局下拉選單中選擇「卡片視圖」"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-imp49ba",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-imp49ba",
+						"updated": "20261025011511"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-4efi1s4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-4efi1s4",
+								"updated": "20261025011511"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "展示形式"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：每條記錄渲染為一張卡片，卡片中展示主鍵區塊的內容摘要和所選字段值，適合快速瀏覽和以內容為主的檢視方式"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "。在視圖設定中開啟 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "佈局"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "顯示欄位名稱"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "，可在欄位值旁顯示欄位名稱；此選項依視圖儲存，關閉後隱藏欄位名稱"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-7p1ohb0",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-7p1ohb0",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-ak126dh",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-ak126dh",
+								"updated": "20260730184353"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "卡片操作"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：點擊卡片可展開詳情或打開繫結的內容區塊；支援右鍵選單進行刪除、複製等操作"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-xhb29dm",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-xhb29dm",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-nlykdte",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-nlykdte",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "過濾和排序"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：支援與其他視圖相同的過濾和排序設定"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164228-xybrcfz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164228-xybrcfz",
+						"updated": "20260613164228"
+					},
+					"Children": [
+						{
+							"ID": "20260613164228-eh72e9v",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164228-eh72e9v",
+								"updated": "20260613164228"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "適用場景"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：圖片/媒體資料庫、讀書筆記卡片、以視覺預覽為主的內容管理"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-431ln3h",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260927112821-431ln3h",
+				"updated": "20261012014930"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "條件顏色"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-rxehtxz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-rxehtxz",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "開啟資料庫視圖設定，選擇 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "條件顏色"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 後新增規則。選擇一個欄位並設定條件，再選擇背景顏色及其套用目標。修改立即生效，支援復原和重做。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-s0848z1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-s0848z1",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "規則儲存在目前視圖中。表格、列表、日曆、看板和卡片視圖皆支援整個項目的背景顏色；表格視圖還支援只為條件所屬的屬性著色。屬性規則在其他佈局中保留，但不生效。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-er6zp67",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-er6zp67",
+				"updated": "20260927123058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "每條規則獨立判斷一個欄位的條件，多條規則不是「且」的關係。拖曳規則左側的把手調整優先順序，觸控裝置也可使用，每個屬性採用首個符合規則的顏色。整個項目的規則符合後會為其餘區域著色，並停止後續判斷；先前已符合的屬性顏色會保留。預設背景也會占據符合條件的優先順序。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-qzdsdet",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-qzdsdet",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例如，第一條規則將某個屬性設為藍色，第二條規則將整個項目設為綠色。兩條都符合時，該屬性保持藍色，其餘區域為綠色；把綠色整個項目的規則移到最前面後，整個項目都顯示綠色。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-bocp51w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-bocp51w",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "單選、多選欄位可選擇符合第一個選項，依項目內已選選項的順序取得第一個選項的顏色，包括預設顏色，不依欄位的選項定義順序取色。也可選擇固定的內建顏色或自訂顏色。條件沿用既有篩選運算子，支援的欄位還可依顯示範本的結果判斷。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-66iv1yc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-66iv1yc",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "條件顏色不修改欄位值，也不會篩除項目。隱藏的欄位仍可作為判斷依據。尚未填寫完整的條件和引用已刪除欄位的規則不生效。複製視圖會複製規則，此後各視圖獨立設定。既有日曆的選項取色會相容顯示為一條規則，刪除全部規則後清除顏色。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171246-whfdkq8",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613171246-whfdkq8",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "篩選、排序與分組"
+				}
+			]
+		},
+		{
+			"ID": "20260613171246-wkrnl57",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613171246-wkrnl57",
+				"updated": "20260613171246"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "每個視圖可以獨立設定過濾條件和排序規則，不同視圖的過濾和排序互不影響。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171246-qovn46w",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613171246-qovn46w",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "過濾"
+				}
+			]
+		},
+		{
+			"ID": "20260613171246-29zdh44",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613171246-29zdh44",
+				"updated": "20260613171246"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "用於篩選視圖中顯示的條目，只展示滿足條件的資料。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171246-frygk48",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613171246-frygk48",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20260613171246-2f6qd75",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-2f6qd75",
+						"updated": "20260613171246"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-22k265q",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-22k265q",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "添加入口"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：點擊視圖工具欄中的選單按鈕進入「過濾」，在過濾子選單中點擊「添加過濾器」，選擇要過濾的字段"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-6dyogfl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-6dyogfl",
+						"updated": "20260613171246"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-s7ro5ya",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-s7ro5ya",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "條件類型"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：不同字段類型支援不同的過濾條件："
+								}
+							]
+						},
+						{
+							"ID": "20260613171246-349bjfz",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613171246-349bjfz",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"ID": "20260613171246-tkrrc1q",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-tkrrc1q",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-4zdhh6q",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-4zdhh6q",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "文本/網址/郵箱/電話：等於、不等於、包含、不包含、開頭是、結尾是、為空、不為空"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-u59y93l",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-u59y93l",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-cvu3yly",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-cvu3yly",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "數字：等於、不等於、大於、大於等於、小於、小於等於、為空、不為空"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-eb2qnsf",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-eb2qnsf",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-s8jjj5j",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-s8jjj5j",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "日期/創建時間/更新時間：等於、早於、早於或等於、晚於、晚於或等於、區間、為空、不為空"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-74f2pmx",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-74f2pmx",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-d7k1m0z",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-d7k1m0z",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "單選：等於、不等於、為空、不為空"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-3l68n88",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-3l68n88",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-6c18vdi",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-6c18vdi",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "多選：包含、不包含、為空、不為空"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-iza3229",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-iza3229",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-8fwn2yf",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-8fwn2yf",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "覈取方塊：已勾選、未勾選"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-32z2c92",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-32z2c92",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-g060a3j",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-g060a3j",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "關聯：包含、不包含、為空、不為空"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260904022100-5x68nm2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260904022100-5x68nm2",
+						"updated": "20261012014859"
+					},
+					"Children": [
+						{
+							"ID": "20261012014537-q4cjhuu",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261012014537-q4cjhuu",
+								"updated": "20261012014859"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "彙總：目標為關聯欄位且計算方式為「顯示原始值」或「顯示唯一值」時，支援一般篩選中的「包含任一項」與「不包含任一項」：可搜尋並勾選最終關聯資料庫的項目，依整個彙總項目集合比對，同名項目透過項目 ID 區分；既有關鍵字篩選及其「任一」「所有」「沒有」量詞維持原有行為"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-7d13uv1",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-7d13uv1",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-8hb6p7s",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-8hb6p7s",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "添加多條"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：可為多個欄位設定條件，預設以「與」（AND）組合，要求全部滿足；可切換為「或」（OR），滿足任一條件即可，也可新增巢狀條件群組"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-l23khwe",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-l23khwe",
+						"updated": "20260613171246"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-4z4y9q3",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-4z4y9q3",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "移除過濾"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：點擊過濾條件右側的刪除按鈕移除單條；通過過濾選單可一鍵清除全部"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-t0vxhaq",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-t0vxhaq",
+						"updated": "20260613171246"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-ahtb95q",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-ahtb95q",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "注意"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：行號字段不支援過濾"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261012014537-260z7cx",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261012014537-260z7cx",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "情境篩選"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20260904022100-ivb080o",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260904022100-ivb080o",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "從資料庫區塊工具列開啟 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "情境篩選"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，並選取一個已設定的關聯欄位，或目標為關聯欄位且計算方式為「顯示原始值」或「顯示唯一值」的彙總欄位。面板會列出資料庫中所有符合條件的欄位，但一次只能啟用一個。選取其他欄位即可切換；再次選取目前已勾選的欄位即可關閉情境篩選。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-cveo3jo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-cveo3jo",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "啟用後，固定條件「包含任一項 - 目前文件」會套用於此資料庫區塊的所有檢視；各檢視原有篩選仍保持獨立，並與情境篩選以「且」組合。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-tqi9o1j",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-tqi9o1j",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "目前文件必須已綁定為最終關聯目標資料庫中的項目，否則不會顯示相符項目，也無法從此資料庫區塊新增項目。選取直接關聯欄位時，新增項目會自動關聯目前文件；選取彙總欄位時，新增項目不會回填彙總值，也不會修改中間資料庫的關聯，可能因不符合條件而被隱藏。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171246-pzgnfvu",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"id": "20260613171246-pzgnfvu",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "排序"
+				}
+			]
+		},
+		{
+			"ID": "20260613171246-l0mk9kl",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613171246-l0mk9kl",
+				"updated": "20260613171246"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "用於對視圖中的條目按指定字段排序。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171246-2i0wjrk",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613171246-2i0wjrk",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20260613171246-sbfhizr",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-sbfhizr",
+						"updated": "20260613171246"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-75ynvoe",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-75ynvoe",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "添加入口"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：點擊視圖工具欄選單進入「排序」，添加排序條件，選擇排序字段和排序方向"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-kt10cxp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-kt10cxp",
+						"updated": "20260613171246"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-9lou3l1",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-9lou3l1",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "排序方向"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：升序或降序，點擊可切換"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-fcxegow",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-fcxegow",
+						"updated": "20260613171246"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-hvk6o7k",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-hvk6o7k",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "多重排序"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：可添加多個排序條件，系統按條件添加的先後順序依次應用。例如先按「日期」降序、再按「標題」升序"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-8xphhsb",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-8xphhsb",
+						"updated": "20260613171246"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-tx8c6p1",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-tx8c6p1",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "移除排序"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：點擊排序條件右側的刪除按鈕移除單條；通過排序選單可清除全部"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-9ir1pow",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-9ir1pow",
+						"updated": "20260613171246"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-qtfts0k",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-qtfts0k",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "字段類型差異"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "："
+								}
+							]
+						},
+						{
+							"ID": "20260613171246-z591w2q",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613171246-z591w2q",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"ID": "20260613171246-v0na8xp",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-v0na8xp",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-85tdmy0",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-85tdmy0",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "文本：按拼音或 Unicode 碼點排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-40038dy",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-40038dy",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-wumwuoo",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-wumwuoo",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "數字：按數值大小排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-1ubn1gg",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-1ubn1gg",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-lugov2x",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-lugov2x",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "日期/創建時間/更新時間：按時間先後排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-wy3sgok",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-wy3sgok",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-hgpt33o",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-hgpt33o",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "單選/多選：按選項在列表中的排列順序排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-kbxx1va",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-kbxx1va",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-nnul8va",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-nnul8va",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "覈取方塊：按勾選/未勾選狀態排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-c0f0r4q",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-c0f0r4q",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-41l1vxl",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-41l1vxl",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "彙總：按計算結果排序"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-b3x0cmn",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-b3x0cmn",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-b02vhus",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-b02vhus",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "注意"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "："
+								}
+							]
+						},
+						{
+							"ID": "20260613171246-qvc4bzw",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613171246-qvc4bzw",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"ID": "20260613171246-klhqi3n",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-klhqi3n",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-g9sv41o",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-g9sv41o",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "行號字段不支援排序"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-noigz1s",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-noigz1s",
+										"updated": "20261016191345"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-st49k5h",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-st49k5h",
+												"updated": "20261016191345"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "未編輯過的行排在最後並保留手動順序；排序條件相同的條目也保留手動順序"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261016130603-aubknch",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016130603-aubknch",
+				"updated": "20261016130603"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "鎖定編輯時，點擊資料庫工具列的排序圖示，選擇欄位及升冪或降冪。暫時排序僅影響目前視窗中的目前資料庫區塊和視圖，不修改已儲存的排序規則。選擇恢復預設排序、解除鎖定或關閉文件後，恢復已儲存的規則。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171246-35o76s9",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613171246-35o76s9",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "分組"
+				}
+			]
+		},
+		{
+			"ID": "20260613171246-1vtfl8j",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613171246-1vtfl8j",
+				"updated": "20260613171246"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "將一個字段作為分組依據，將條目按分組值歸類展示。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171246-7c32wem",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613171246-7c32wem",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20260613171246-n9r98pg",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-n9r98pg",
+						"updated": "20260613171246"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-rfo5yxt",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-rfo5yxt",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "設定入口"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：點擊視圖工具欄選單進入「分組」，選擇分組字段和分組方式"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-8q8bqa6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-8q8bqa6",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-ia0a4eb",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-ia0a4eb",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "支援的字段"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：彙總、行號和位置欄位不支援分組，其他欄位類型支援分組；資源欄位須先設定顯示範本，並依範本結果分組。不同欄位類型對應不同分組方式："
+								}
+							]
+						},
+						{
+							"ID": "20260613171246-xhkgzaq",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613171246-xhkgzaq",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"ID": "20260613171246-i9nrsft",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-i9nrsft",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-p9ity34",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-p9ity34",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "文本/單選/多選/網址/郵箱/電話/覈取方塊/關聯/範本：按值分組，每個不同值獨立成組"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-z01976a",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-z01976a",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-lvib5ou",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-lvib5ou",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "數字：按數字範圍分組"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-57wsp35",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-57wsp35",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-3madenh",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-3madenh",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "日期/創建時間/更新時間：按相對日期分組"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-3rb2k71",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-3rb2k71",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-l4ron5z",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-l4ron5z",
+								"updated": "20260613171246"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "視圖差異"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "："
+								}
+							]
+						},
+						{
+							"ID": "20260613171246-gfghf2c",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613171246-gfghf2c",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"ID": "20260613171246-5qgzfeh",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-5qgzfeh",
+										"updated": "20260920084445"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-b6yc0id",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-b6yc0id",
+												"updated": "20260920084445"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "表格和列表視圖：分組後行按分組歸類，每個分組可摺疊展開"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-scmcrzb",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-scmcrzb",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-b8o3n49",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-b8o3n49",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "卡片視圖：分組後卡片按分組歸類"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171246-knaaco9",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171246-knaaco9",
+										"updated": "20260613171246"
+									},
+									"Children": [
+										{
+											"ID": "20260613171246-b52831b",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171246-b52831b",
+												"updated": "20260613171246"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "看板視圖：必須設定分組，每個分組值生成一列；不支援取消分組。分組字段為單選或多選時，拖拽卡片到其他列會自動修改字段值（範本、創建時間、更新時間字段除外）"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171246-2v29lph",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171246-2v29lph",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260613171246-510h6ik",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171246-510h6ik",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "移除分組"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：表格、列表和卡片視圖中可選擇「無」取消分組；看板視圖不可取消"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261028100554-7lm3pcm",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261028100554-7lm3pcm",
+				"updated": "20261028120132"
+			},
+			"HeadingLevel": 2,
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "資料庫面板佈局與排序"
+				}
+			]
+		},
+		{
+			"ID": "20261028100554-7r40o96",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261028100554-7r40o96",
+				"updated": "20261028120132"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "編輯器"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "資料庫"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中透過「資料庫面板欄位佈局」選擇「單欄」「雙欄（按行）」或「雙欄（按列）」，預設為「雙欄（按行）」。此設定同時作用於文件頂部資料庫面板和獨立項目面板，空間不足時自動使用單欄，切換佈局不會改變欄位順序。"
+				}
+			]
+		},
+		{
+			"ID": "20261028100554-tchwmuu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261028100554-tchwmuu",
+				"updated": "20261028110235"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "按行排列時，欄位由左到右、由上到下顯示。使用滑鼠拖曳欄位左側的把手至目標欄位所在的格位，可以即時預覽新的排列，放開後儲存排序。按列排列時，先由上到下顯示左欄，再顯示右欄；可見欄位依數量均分，奇數時左欄多一個，編輯欄位內容不會導致欄位自動換欄。按列和單欄佈局使用水平指示線提示上下插入位置。取消拖曳會恢復原順序，欄位排序支援復原與重做。"
+				}
+			]
+		},
+		{
+			"ID": "20260930175958-lm4h64b",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260930175958-lm4h64b",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "資料庫面板欄位可見性"
+				}
+			]
+		},
+		{
+			"ID": "20260930175958-m98nd8z",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930175958-m98nd8z",
+				"updated": "20261001060000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在文件頂部、資料庫項目頁或區塊屬性對話方塊的資料庫屬性面板中點選欄位名稱，可以將「資料庫面板欄位可見性」設為「始終顯示」「空白時隱藏」或「始終隱藏」。「預設」保留面板原有的顯示設定，其中文件頂部面板沿用全域隱藏空欄位設定。規則對該資料庫的屬性面板生效，不影響資料庫各檢視的欄位顯隱。點選面板的編輯按鈕可以暫時展開隱藏欄位，編輯欄位值或修改顯示規則。"
+				}
+			]
+		},
+		{
+			"ID": "20260929105001-ao0pcy0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260929105001-ao0pcy0",
+				"updated": "20260929105001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "條目圖示"
+				}
+			]
+		},
+		{
+			"ID": "20260929105001-6i0c6yq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260929105001-6i0c6yq",
+				"updated": "20260930140000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "未綁定條目可以擁有自己的圖示，點擊主鍵旁、條目詳情或關聯欄位中的圖示即可修改或清除。條目範本可以為未綁定條目和文件條目預設圖示。未設定自訂圖示的未綁定條目顯示短橫線，檢視的圖示顯示設定仍然生效。"
+				}
+			]
+		},
+		{
+			"ID": "20260929105001-jnlk4z8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260929105001-jnlk4z8",
+				"updated": "20260930140000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "綁定或重新綁定到未設定自訂圖示的一般區塊時，區塊會繼承條目的圖示。一般區塊已有圖示或綁定到既有文件時，使用目標區塊本身的圖示。綁定時新建的文件會繼承條目已設定的圖示；條目未設定圖示時，沿用文件範本圖示。綁定後，條目與綁定區塊共用圖示。取消綁定會保留最後顯示的圖示，之後可以獨立修改。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-24pg7al",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161058-24pg7al",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "條目範本"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20261024161058-eygwfsh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161058-eygwfsh",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "開啟新增條目按鈕旁的下拉選單，選擇「新增範本」設定條目範本。可預設條目類型、圖示、主鍵內容和欄位值；文檔條目還可設定儲存位置、內容範本及是否在文檔樹中隱藏。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-w91d0ki",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161058-w91d0ki",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "從同一選單選擇範本，即可依其設定新增條目。範本的更多選單提供編輯、設為預設和刪除；一般新增操作使用預設範本，也可選擇空白條目。變更範本不會回溯修改已經建立的條目。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-f4utwdn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161058-f4utwdn",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "條目範本用於新增時預填內容；範本欄位用於在視圖中計算既有條目的欄位值，兩者用途不同。日期欄位可預設固定時間或新增時的目前時間。"
+				}
+			]
+		},
+		{
+			"ID": "20261025205717-hk9622e",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261025205717-hk9622e",
+				"updated": "20261025205717"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在條目範本中啟用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "建立後分割畫面開啟條目"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 後，從資料庫視圖使用該範本新增綁定或游離條目時，會自動在右側開啟。綁定文檔的標題可編輯時聚焦標題，否則聚焦主鍵；游離條目聚焦主鍵。行動端使用既有的頁面或彈出層開啟。"
+				}
+			]
+		},
+		{
+			"ID": "20261025205717-tlxui8k",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261025205717-tlxui8k",
+				"updated": "20261025205717"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "新範本預設關閉此選項，關閉開關即可停止自動開啟。既有範本在未變更此開關時保留原行為，包括日曆中的自動開啟。不使用範本的空白新增沿用視圖原有行為；如需設定，可建立空白游離條目範本並設為預設。"
+				}
+			]
+		},
+		{
+			"ID": "20240208171620-kdmsvx8",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240208171620-kdmsvx8",
+				"updated": "20241018105418"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "鏡像資料庫"
+				}
+			]
+		},
+		{
+			"ID": "20240208171620-3oc3qf5",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240208171620-3oc3qf5",
+				"updated": "20260730184353"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "複製資料庫區塊後貼上將形成鏡像資料庫，即這些資料庫區塊共享相同的資料庫數據，修改任何一個資料庫區塊的資料會同步到其他所有鏡像中。"
+				}
+			]
+		},
+		{
+			"ID": "20240208171620-5ek5rxs",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240208171620-5ek5rxs",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "關聯和匯總"
+				}
+			]
+		},
+		{
+			"ID": "20240208171620-h5pdt3a",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240208171620-h5pdt3a",
+				"updated": "20240208174001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "兩個資料庫之間可以透過 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "關聯"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 建立聯繫，以便聯動管理。 例如 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "作者"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 和 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "書籍"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 兩個資料庫之間的關聯："
+				}
+			]
+		},
+		{
+			"ID": "20261007101857-ij3301g",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261007101857-ij3301g",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "桌面端和行動端的關聯選擇面板始終提供新增入口，並套用關聯資料庫的預設範本。當輸入名稱與主鍵範本產生的名稱不同時，會顯示兩個入口及各自的實際名稱：依預設範本新增，或使用輸入名稱新增。使用輸入名稱僅覆蓋主鍵，欄位預設值、圖示、內容範本和儲存位置仍依預設範本套用。輸入為空、未設定主鍵範本或名稱相同時，只顯示一個入口。未設定預設範本時新增獨立條目。新增條目與關聯更新可以一起復原。"
+				}
+			]
+		},
+		{
+			"ID": "20240208171652-gn3wc06",
+			"Type": "NodeAttributeView",
+			"Properties": {
+				"id": "20240208171652-gn3wc06",
+				"updated": "20240208171956"
+			},
+			"AttributeViewID": "20240208171654-5egzrvx",
+			"AttributeViewType": "table"
+		},
+		{
+			"ID": "20240208171718-01yn7et",
+			"Type": "NodeAttributeView",
+			"Properties": {
+				"custom-sy-av-view": "20250615173733-4es9lsl",
+				"id": "20240208171718-01yn7et",
+				"updated": "20250615173721"
+			},
+			"AttributeViewID": "20240208171724-zfkzgwi",
+			"AttributeViewType": "gallery"
+		},
+		{
+			"ID": "20240208171846-ym84dpx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240208171846-ym84dpx",
+				"updated": "20240208172029"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "作者"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 資料庫中 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "作品數"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 匯總對其 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "作品"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 進行了匯總統計，統計方式是 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "條目數"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​。"
+				}
+			]
+		},
+		{
+			"ID": "20240208172038-fewwv8i",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240208172038-fewwv8i",
+				"updated": "20260902120000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "模板"
+				}
+			]
+		},
+		{
+			"ID": "20240208172038-uzdlisz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240208172038-uzdlisz",
+				"updated": "20240208172049"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "模板可透過"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211226123004-dplpw0o",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "範本片段"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "中介紹的語法存取、計算並渲染同一資料中其他欄位的值："
+				}
+			]
+		},
+		{
+			"ID": "20260612204716-guf0q6f",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260612204716-guf0q6f",
+				"updated": "20260612204716"
+			},
+			"Children": [
+				{
+					"ID": "20260612204716-146echg",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204716-146echg",
+						"updated": "20260612204716"
+					},
+					"Children": [
+						{
+							"ID": "20260612204716-c26gm90",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204716-c26gm90",
+								"updated": "20260612204716"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .欄位名 }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 存取檢視欄位"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204716-4tit920",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204716-4tit920",
+						"updated": "20260612204716"
+					},
+					"Children": [
+						{
+							"ID": "20260612204716-cfwtd6z",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204716-cfwtd6z",
+								"updated": "20260730184353"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index . \"custom-xxx\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 存取內容區塊自訂屬性"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204716-6diot9i",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204716-6diot9i",
+						"updated": "20260612204716"
+					},
+					"Children": [
+						{
+							"ID": "20260612204716-g49p2qv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204716-g49p2qv",
+								"updated": "20260612204716"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .欄位名_end }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 存取日期欄位的結束日期，"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_end"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 後綴僅對日期型別有效"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204716-5vama84",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204716-5vama84",
+						"updated": "20260612204716"
+					},
+					"Children": [
+						{
+							"ID": "20260612204716-9ujnkk6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204716-9ujnkk6",
+								"updated": "20260612204716"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .欄位名_str }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 存取多選欄位的格式化字串，"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_str"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 後綴僅對多選型別有效"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204716-u2r5170",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204716-u2r5170",
+						"updated": "20260612204716"
+					},
+					"Children": [
+						{
+							"ID": "20260612204716-7i7f2ca",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204716-7i7f2ca",
+								"updated": "20260730184353"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .欄位名_created }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 存取區塊欄位繫結區塊的建立時間，"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_created"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 後綴僅對區塊型別有效"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204716-xdz4aph",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204716-xdz4aph",
+						"updated": "20260612204716"
+					},
+					"Children": [
+						{
+							"ID": "20260612204716-y526s9j",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204716-y526s9j",
+								"updated": "20260612204716"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .欄位名_raw }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 存取欄位原始值物件，"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_raw"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 後綴對所有欄位型別有效"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204716-6r39gn4",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204716-6r39gn4",
+						"updated": "20260612204716"
+					},
+					"Children": [
+						{
+							"ID": "20260612204716-fypdyxz",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204716-fypdyxz",
+								"updated": "20260612204716"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index .id_mod \"欄位ID\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 按欄位 ID 存取格式化值"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204716-0qgqv5y",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204716-0qgqv5y",
+						"updated": "20260612204716"
+					},
+					"Children": [
+						{
+							"ID": "20260612204716-on1y99t",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204716-on1y99t",
+								"updated": "20260730184353"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index . \"entryCreated\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 存取行繫結區塊的建立時間"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204716-xuqp4ic",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204716-xuqp4ic",
+						"updated": "20260612204716"
+					},
+					"Children": [
+						{
+							"ID": "20260612204716-y62vcoa",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204716-y62vcoa",
+								"updated": "20260730184353"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index . \"entryUpdated\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 存取行繫結區塊的更新時間"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240208172038-6tc4kdm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240208172038-6tc4kdm",
+				"updated": "20240208172039"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例如下面的 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "帳單"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 資料庫 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "模板"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 欄位示範了 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "餐飲"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 和 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "服裝"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 求和："
+				}
+			]
+		},
+		{
+			"ID": "20240208172110-1izrwj1",
+			"Type": "NodeAttributeView",
+			"Properties": {
+				"id": "20240208172110-1izrwj1",
+				"updated": "20250101093843"
+			},
+			"AttributeViewID": "20240208172113-d44j7tk",
+			"AttributeViewType": "table"
+		},
+		{
+			"ID": "20260830120200-a1dsptw",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260830120200-a1dsptw",
+				"updated": "20260902120000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "顯示範本"
+				}
+			]
+		},
+		{
+			"ID": "20260830120201-b2dsptw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120201-b2dsptw",
+				"updated": "20260830120201"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "普通欄位無須變更欄位類型即可設定顯示範本。在欄頭開啟欄位選單，於底部的範本輸入框中輸入範本。顯示範本只會變更顯示內容；編輯儲存格時仍會讀取和寫入原始儲存值。範本、匯總、行號、建立時間和更新時間欄位不支援顯示範本。"
+				}
+			]
+		},
+		{
+			"ID": "20260830120202-c3dsptw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120202-c3dsptw",
+				"updated": "20260830124002"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "顯示範本使用與範本片段相同的 Go 範本語法，以 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 和 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 為分隔符號，並可包含 HTML。例如，進度欄位的儲存值為 42 時，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&lt;progress value=\".action{.進度}\" max=\"100\"&gt;&lt;/progress&gt; .action{.進度}%"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 會顯示進度為 42% 的進度列及文字 42%。HTML 預設會經過安全過濾。"
+				}
+			]
+		},
+		{
+			"ID": "20260830120203-d4dsptw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120203-d4dsptw",
+				"updated": "20260830124003"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可以依名稱引用同一筆資料中的其他欄位。例如，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&lt;strong&gt;.action{.名稱}&lt;/strong&gt;：.action{.進度}%"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 會組合名稱和進度欄位。欄位名稱包含空格或符號時，使用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{index . \"專案 名稱\"}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。為避免欄位重名或重新命名產生歧義，可使用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{index .id_mod \"欄位ID\"}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 依欄位 ID 引用。"
+				}
+			]
+		},
+		{
+			"ID": "20260830120204-e5dsptw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120204-e5dsptw",
+				"updated": "20260902120000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "顯示範本讀取各欄位的原始儲存值，不會讀取其他欄位的顯示範本結果。篩選、排序和分組可選擇使用原始值或範本渲染值。清空顯示範本即可還原欄位原本的顯示方式。關聯欄位會依照目標資料庫主鍵的顯示範本呈現，包括空結果，原始主鍵值和關聯關係保持不變。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-f9wjtlr",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20261002224707-f9wjtlr",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "自動化"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-jmpp4dt",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-jmpp4dt",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "設定規則"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-zvqappp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-zvqappp",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在資料庫檢視中開啟 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "自動化"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，新增規則。修改會自動儲存，文字在失焦或按下 Enter 時儲存。新規則預設停用；設定不完整時會自動停用並提示缺少的項目，完善後手動啟用。規則由整個資料庫共用，在任一檢視或鏡像中的條目修改都可觸發"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-nagxmh3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-nagxmh3",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "引用的欄位被刪除或變更類型、目標資料庫被刪除後，後續條目寫入會自動停用受影響規則，並提示規則名稱及失效引用。使用者修改正常儲存，規則設定保留；修復設定後需手動啟用。資料庫鎖定、驗證失敗、資料損毀或寫入失敗時，使用者修改和自動操作仍會一起回復。"
+				}
+			]
+		},
+		{
+			"ID": "20261017202044-5hl3pi0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261017202044-5hl3pi0",
+				"updated": "20261018000619"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「執行成功時通知」預設開啟，每條規則可獨立設定。只有自動新增、更新或收集實際產生變化，且整個交易提交成功後才提示；同一交易合併為一則訊息，僅統計開啟通知的規則，同一項目的多個欄位更新按一個項目統計。關閉通知不會停止執行，也不會隱藏錯誤。條件不符、沒有目標、值未改變、重複匹配、手動收集或清理、復原重做及失敗交易均不傳送成功通知。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-plejkd4",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-plejkd4",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "觸發條件"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-81zsovc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-81zsovc",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "設定依「當發生以下事件」「且觸發項目符合以下條件（選填）」「執行以下動作」三個區段組織。先選擇新增項目或欄位變更事件；欄位變更可監聽指定欄位或任意可編輯欄位，重複寫入相同值不會觸發。第二區段依觸發項目修改後的欄位值判斷，未設定條件時不作限制。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-orbe5gh",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-orbe5gh",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "動作與賦值"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-c2n63q5",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-c2n63q5",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "每條規則可包含多個依序執行的動作。先選擇操作和操作對象，再新增要設定的欄位及賦值方式。修改操作支援觸發項目、關聯項目或所選資料庫中符合條件的項目；動作內的條件用於篩選要修改的項目，與觸發項目的條件分開，未設定目標條件時符合所選目標中的所有項目。新增操作會在本資料庫或其他資料庫中建立未繫結項目。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-vi6feb3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-vi6feb3",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "動作中的欄位值可以是固定值、類型相容的來源欄位、觸發時間，或關聯至觸發項目，也可使用模板計算。觸發時間適用於日期欄位；關聯至觸發項目適用於指向來源資料庫的關聯欄位。修改主鍵文字會保留原有繫結關係與圖示。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-7ehaqdc",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-7ehaqdc",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用範本賦值"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261016165601-zk0dnna",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-zk0dnna",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "賦值方式選擇「模板」後，可在行內編輯 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{...}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 模板。編輯模板會暫停規則，完成後請重新啟用。所有可編輯欄位均支援模板；建立時間、更新時間、行號、彙總及模板欄位等計算欄位不支援賦值。主鍵只修改文字，保留既有繫結。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-ay013u0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-ay013u0",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例如，以狀態為已完成的澆花任務作為觸發項目，新增下一次任務，並將日期設為 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{((now).AddDate 0 0 7).Format \"2006-01-02\"}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "now"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 固定為本次觸發時間，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "AddDate 0 0 7"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 依自然日期順延七天。規則首次使用模板時儲存目前前端時區，跨裝置執行仍使用該時區。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-zvjhh4u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-zvjhh4u",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "field \"欄位ID\""
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 讀取來源項目的儲存值，日期可參與 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "AddDate"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 運算；欄位重新命名不影響 ID 引用。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "value \"欄位ID\""
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 讀取結構化資料，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "toJson"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 輸出 JSON。例如，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{toJson (dateAdd 0 0 7 (value \"欄位ID\"))}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 可同時順延日期範圍的起訖時間，並保留純日期或具體時間設定。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-meihq9p",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-meihq9p",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "文字、連結、電子郵件和電話使用文字結果，數字必須為有效的有限數值，核取方塊使用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "true"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 或 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "false"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。日期接受 ISO 日期、日期時間或日期資料 JSON；單選使用既有選項名稱，多選使用 JSON 名稱陣列或選項陣列；關聯使用既有項目 ID 陣列；資源與位置使用既有資料結構的 JSON。不會自動建立選項、關聯項目或資源。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-6akhx0e",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-6akhx0e",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "展開「預覽使用的資料」，選擇實際項目作為範例，修改預覽日期或引用欄位後，再查看預覽結果。這些輸入只影響預覽，不修改實際項目。合法空輸出清空欄位；缺少變數、空來源日期、類型或引用錯誤會讓觸發修改與全部自動動作一起復原。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-c9mzs9w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-c9mzs9w",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "模板結果只在觸發時寫入，重做沿用首次結果。模板不支援 SQL、檔案、網路、迴圈或遞迴；原始碼最多 8 KiB，單一輸入與輸出最多 64 KiB。儲存模板後，該資料庫需要支援自動化版本 2 的用戶端讀取，舊版會明確拒絕讀取；既有版本 1 的規則保持相容。"
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-ir30l97",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20261016174753-ir30l97",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "模板範例"
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-bfygs5z",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016174753-bfygs5z",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "將完整範例複製到模板輸入框。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "FIELD_ID"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 是預留位置，請替換為觸發條目所在資料庫的來源欄位 ID，而非欄位名稱。複製欄位時，來源與目標欄位應為相同類型；複製關聯時，兩個關聯欄位還須指向同一資料庫。"
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-8mlxif2",
+			"Type": "NodeTable",
+			"TableAligns": [
+				0,
+				0
+			],
+			"Properties": {
+				"id": "20261016174753-8mlxif2",
+				"updated": "20261016174753"
+			},
+			"Children": [
+				{
+					"Type": "NodeTableHead",
+					"Children": [
+						{
+							"Type": "NodeTableRow",
+							"Children": [
+								{
+									"Type": "NodeTableCell",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "用途"
+										}
+									]
+								},
+								{
+									"Type": "NodeTableCell",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "模板內容"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期：觸發當天"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{now | date \"2006-01-02\"}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期：觸發七天後"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{((now).AddDate 0 0 7).Format \"2006-01-02\"}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期：來源日期或範圍順延七天，保留時間設定"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{toJson (dateAdd 0 0 7 (value \"FIELD_ID\"))}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "文字、主鍵、連結、電子郵件或電話：複製來源欄位"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{field \"FIELD_ID\"}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "文字或主鍵：在來源文字後加上後綴"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{field \"FIELD_ID\"}（下次）"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "數字：來源數字加一，支援小數"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{addf (field \"FIELD_ID\") 1}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "核取方塊：取來源欄位的相反值"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{not (field \"FIELD_ID\")}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "單選：設定為既有選項"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "已完成"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "多選：設定兩個既有選項"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "[\"工作\",\"重要\"]"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日期、多選、關聯、資源或位置：複製同類型來源欄位"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{toJson (value \"FIELD_ID\")}"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-m04acgg",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016174753-m04acgg",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "日期格式中的 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "2006-01-02"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 是固定的格式寫法，請勿替換為目前日期。單選與多選範例中的選項名稱須已存在於目標欄位，可依需要替換。設定後先使用預覽檢查結果，再啟用規則。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-biqvd4n",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024164212-biqvd4n",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "規則範例"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261016113125-eee5a44",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016113125-eee5a44",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例如，要記錄首次完成時間，可監聽「狀態」欄位變更，要求觸發項目的「狀態」為「已完成」且「完成時間」為空，再修改觸發項目，將「完成時間」設為「觸發時間」。完善設定後啟用規則。未新增完成時間為空的條件時，再次完成可能覆寫原來的完成時間。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-8iufzoy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-8iufzoy",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例如，在任務資料庫與計時資料庫之間建立雙向關聯。任務狀態變為進行中時，在計時資料庫新增項目，將開始時間設為觸發時間並關聯至觸發任務；狀態變為完成時，修改關聯的計時項目，僅篩選結束時間為空的記錄，並將結束時間設為觸發時間。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-qtdig2q",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024164212-qtdig2q",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "執行、復原與相容性"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-chibw3w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-chibw3w",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "自動動作與原修改一起復原與重做，執行失敗時一起回復。重做保留首次執行時的項目 ID 與時間。自動動作不會繼續觸發其他規則，匯入、同步、歷史還原與復原重放也不會重新觸發規則；一般 API 寫入會觸發規則，但不產生編輯器復原記錄。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-af4txwz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-af4txwz",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "加密資料庫只能操作同一加密筆記本內的資料庫。請先解鎖相關筆記本；目標資料庫或欄位無法使用時，需要修正或暫停規則。複製資料庫後規則保留但處於暫停狀態，請檢查目標與關聯欄位後再啟用。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-sk1ubzp",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20261015141042-sk1ubzp",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "收集一般區塊"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-n6h5527",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-n6h5527",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "監聽範圍與條件"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20261015141042-155k3zl",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-155k3zl",
+				"updated": "20261027120633"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "選擇「普通區塊符合條件」觸發器，透過「監聽範圍」下的新增按鈕選擇筆記本或文件，範圍取聯集。在選擇視窗中勾選多個筆記本或文件後確認，即可一次新增；搜尋和展開目錄時會保留已勾選項目。重複範圍會自動去重，每條規則最多可包含 32 個筆記本或文件。點擊文件標題可在浮動視窗中預覽，保留自動化設定；也可將滑鼠移到圖示上預覽。區塊類型、標籤和自訂屬性分別使用 Chip 分組，透過各組的新增按鈕設定，點擊 Chip 的關閉圖示移除。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-j3xt0go",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-j3xt0go",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "區塊類型列表支援搜尋和連續多選；點擊標籤或屬性 Chip 可編輯，標籤按 Enter 確認，屬性先作為草稿編輯，確認後才儲存，按 Esc 或取消不影響既有條件。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-kqfhcqh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-kqfhcqh",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "標籤會去除首尾空白並自動去重。區塊類型取任一匹配；標籤和屬性分別預設為「全部滿足」，可獨立改為「任一滿足」。三個分組之間仍須全部滿足，空分組不限制。屬性支援等於、包含、存在和不存在，後兩者不需要屬性值。「任一滿足」需要自動化格式 3，既有規則保留全部滿足的行為。"
+				}
+			]
+		},
+		{
+			"ID": "20261020211145-9wvol2h",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261020211145-9wvol2h",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "選擇文件範圍後，「監聽範圍」下方顯示「子文件深度」。預設「不限」，包含全部後代文件；「僅目前文件」只包含每個所選文件本身；選擇「最多層數」後輸入正整數，1 表示所選文件及一級子文件，2 再包含二級子文件，依此類推。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-62wz44n",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-62wz44n",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "同一規則的所有文件範圍共用此設定，筆記本範圍不受限制，重疊範圍仍取聯集。修改深度保留既有項目和欄位，不自動補收既有內容；可透過收集管理預覽並收集符合條件的內容，或檢查並移出不符合條件的項目。有限深度需要自動化格式 5，舊用戶端會拒絕讀取且不改寫資料庫。"
+				}
+			]
+		},
+		{
+			"ID": "20261022092813-rlh1kqo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261022092813-rlh1kqo",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「包含所選文件本身」預設開啟。關閉後跳過每個所選文件及其內部所有區塊，子文件仍按設定深度監聽。例如，關閉此選項並將深度設為 1，就只監聽一級子文件；與「僅目前文件」組合時，各文件範圍為空。同一規則的所有文件範圍共用此設定。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-v0ob59t",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-v0ob59t",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各範圍仍取聯集，筆記本範圍或其他重疊文件範圍仍可能包含該文件。修改此選項保留既有項目和欄位，不自動補收或移出項目；可透過收集管理預覽、收集，或檢查並移出項目。排除所選文件本身需要自動化格式 7，既有格式 1–6 仍可讀取，舊用戶端會拒絕格式 7 且不改寫資料庫。"
+				}
+			]
+		},
+		{
+			"ID": "20261026103001-covc0xz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261026103001-covc0xz",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "收集區塊引用時，選擇引用目標並貼上目標區塊 ID 或區塊連結，也可選擇「目前文件」。目標儲存為固定的區塊 ID，由所有資料庫鏡像共用。文件目標包含對內部內容區塊的引用，不含子文件。僅匹配正文中的區塊引用，不包含一般連結、嵌入區塊和資料庫富文字欄位中的引用。"
+				}
+			]
+		},
+		{
+			"ID": "20261026103001-jv2ou95",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261026103001-jv2ou95",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "引用來源依反鏈規則合併，包括列表項、引述區塊、超級區塊、提示區塊，以及文件首段或標題後首段為純區塊引用時的傳遞規則。區塊類型和自訂屬性限制合併後的最終區塊，標籤條件限制引用來源區塊；設定引用目標後，標籤的收集對象選項不參與選擇。清除引用目標可恢復一般收集。移除引用會保留既有項目和欄位，歷史引用可透過收集管理預覽並補收。引用目標需要自動化格式 8，既有格式 1–7 仍可讀取，舊用戶端會拒絕格式 8 且不改寫資料庫。"
+				}
+			]
+		},
+		{
+			"ID": "20261021135332-36rh1ee",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021135332-36rh1ee",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「屬性名稱」可獨立選擇「等於」（預設）、「包含」或「正規表示式」，不影響屬性值的條件。「等於」使用 custom-state 這類完整名稱；「包含」只需輸入字面子字串，不必輸入 custom- 前綴，例如 dailynote 可符合 custom-dailynote-20261021；正規表示式使用 Go 語法比對完整名稱，例如 ^custom-dailynote-[0-9]{8}$。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-umd4qhc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-umd4qhc",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "僅檢查自訂屬性，名稱和值區分大小寫，且須由同一條屬性同時滿足條件；「存在」要求至少一個名稱符合，「不存在」要求沒有名稱符合，兩者忽略屬性值。無效的正規表示式無法儲存，名稱模式最多 256 位元組。「包含」和「正規表示式」需要自動化格式 6；既有格式 1–5 仍可讀取，舊用戶端會拒絕格式 6 且不改寫資料庫。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-ecomado",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-ecomado",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "選擇收集對象"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20261017204817-t0qt0db",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261017204817-t0qt0db",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "區塊類型上方的「收集對象」提供「預設」「標籤所在區塊」和「容器區塊」。預設在清單項目首個內容區塊包含標籤且清單項目符合類型與屬性條件時優先收集清單項目，否則嘗試符合條件的標籤所在區塊；同時選取段落和清單項目也不會為同一個標籤來源收集兩個層級；標籤所在區塊依實際包含標籤的區塊類型與屬性篩選並收集；容器區塊向上選擇最近且符合類型與屬性條件的容器，並依區塊 ID 去除重複，文件只有被明確選取時才參與。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-7ivkkz3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-7ivkkz3",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "要求全部標籤時，標籤必須出現在同一個來源區塊中，不會合併不同子區塊的標籤。沒有標籤條件時，此選項不影響篩選。預覽顯示最終收集對象。切換不會轉換既有項目的繫結區塊或修改其欄位。兩種明確模式需要自動化格式 4，既有格式仍可讀取；舊用戶端會拒絕格式 4，不會改寫資料庫。"
+				}
+			]
+		},
+		{
+			"ID": "20261017195341-h2pn2cd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261017195341-h2pn2cd",
+				"updated": "20261018000619"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "選擇主區塊類型會匹配其全部子類型，也可單獨選擇 H1～H6 標題、無序／有序／任務列表及列表項，以及內建或自訂提示區塊類型。列表和列表項獨立匹配，多個選項取任一匹配，不選擇類型則不限制。選擇主類型會替換已選的子類型。修改區塊子類型後，自動收集、主動清理檢查和預覽使用同一匹配邏輯。子類型篩選需要自動化格式 3，既有格式 1 和 2 的規則仍可讀取；舊版客戶端會拒絕格式 3，不會改寫資料庫。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-yui12an",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-yui12an",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "標籤只匹配區塊本身，不會自動收集其所有父容器。清單項目使用首段的標籤；只有明確選擇段落類型時，才單獨匹配這個首段。收集會將原區塊綁定到目前資料庫，不複製或移動原文；初始化欄位支援固定值及日期欄位的觸發時間，主鍵保留原區塊綁定。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-2s5d204",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-2s5d204",
+				"updated": "20261018000619"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "區塊首次符合條件時新增條目。自動收集只新增條目；原文變化、移出監控範圍、修改條件或收集對象、停用或刪除規則，均保留既有條目及欄位。再次匹配時仍使用原條目，保留手動填寫或修改的欄位。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-8328hha",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-8328hha",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "管理與補充收集"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20261015141042-3djfm18",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-3djfm18",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "開啟 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "自動化"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "收集管理"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，選擇「資料庫條目」，按全部啟用的一般區塊收集規則的聯集檢查既有條目，手動和自動收集的條目採用相同標準。「符合規則」「不符合規則」「無法判斷」分別顯示數量並獨立分頁，首次優先顯示不符合規則的條目。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-fqn1t6d",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-fqn1t6d",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "無法判斷的條目會說明原因。「移出本頁不匹配條目」會顯示數量並要求確認，執行前重新檢查規則、原文及繫結關係，僅移出仍明確不匹配的本頁條目。不符合規則和無法判斷的條目還可逐項移出。移出保留原文，復原及重做恢復原條目 ID、欄位及順序；原始區塊缺失時不會重建，讀取或驗證失敗時保留資料並傳回錯誤。主動移出後再發生新的匹配會建立並初始化新條目，不恢復已移出的欄位值。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-8hkobl6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-8hkobl6",
+				"updated": "20261018122207"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "啟用或編輯規則不會收集既有區塊。在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "自動化"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "收集管理"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中選擇「規則匹配」，再選擇已啟用的收集規則，查看匹配區塊及其已收集或未收集狀態。「收集本頁符合的區塊」僅收集目前頁面中尚未收集的區塊。分頁控制項顯示目前頁碼，每頁最多 100 個區塊，初始化欄位較多時會縮小頁面大小。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-jl5ybhg",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-jl5ybhg",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用者新增、複製、修改內文或屬性、套用內容範本、全域尋找取代，以及將區塊或文件移入監聽範圍後，都會判斷收集條件。文件樹複製和移動包含子文件。既有條目保留欄位值。Markdown 和 .sy 匯入、同步、歷史復原、復原及重做不會觸發新的收集，可透過預覽手動收集既有內容。自動動作不會連鎖觸發其他規則。來源與目標資料庫須處於同一加密邊界，加密筆記本需先解鎖再預覽或編輯規則。"
+				}
+			]
+		},
+		{
+			"ID": "20240818174403-xnbqd38",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240818174403-xnbqd38",
+				"updated": "20260803171606"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20240818174421-v5il1as",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240818174421-v5il1as",
+				"updated": "20260803171606"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "如果需要在資料庫單元格中換行，請使用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "回車"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​。"
+				}
+			]
+		}
+	]
+}

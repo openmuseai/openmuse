@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_doc_props,app/core 文档属性,OxfrApp/Core parts,AppProperty+CoreProperty,opc parts,04,libs/ppt-core,pass
+2,02_function_pres_open_global,openGlobalData,pres rels+stream,theme+presentation xml+defaults,pp-04;pp-06,03,libs/ppt-core,pass
+3,03_function_pres_open,PptxrPresentation.open,KmoPresentation+presPart,initialized pres+slides.open+media delay,02;pp-08,04,libs/ppt-core,pass
+4,04_function_pptx_reader,PptxReader.open,path/RAF,KmoPresentation+exceptions+close,01;03;pp-12:02,pp-13-document-assembly,libs/ppt-core,pass

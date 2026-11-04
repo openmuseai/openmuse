@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_font_stack,字体栈与 pt 换算,pt/bold,ITypeface handle + twip/em,core_libs_font,02_function_run_metrics,libs/word-core,pass
+2,02_function_run_metrics,run 宽度,text+font,width_twip + ascent/descent,01_function_font_stack,wr-04,libs/word-core,pass
+3,03_function_rich_text_layout,RichTextLayout 不接入声明,审计,报告/LineMetrics,wpslayout 红,后续形状文本,libs/word-core,pass
+4,04_function_font_host,FontHost注入表+SchemaItem映射,FontBlob[]/scheme,FontStack+default_id,01_function_font_stack,layout_document,libs/word-core,pass

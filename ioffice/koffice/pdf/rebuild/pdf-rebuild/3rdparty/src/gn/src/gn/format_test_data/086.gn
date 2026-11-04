@@ -1,0 +1,11 @@
+# This is a very very very very very very very very very very very very very very very very very very very very very very very very very long comment.
+# Another line.
+executable("foo") {
+  sources = [ "foo.cc" ]
+
+  # And here is an indented comment that is also extremely long and needs to be wrapped properly at the 80 character limit.
+  if (is_win) {
+    # This is a block comment in an inner scope.
+    # It also has a long line that exceeds the 80 column limit and should be wrapped to the next line keeping the same indentation.
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "name": "OpenMuse store release lifecycle",
+  "stages": [
+    {
+      "id": "01-scope",
+      "title": "需求与首发范围",
+      "needs": [],
+      "ownerRole": "产品负责人",
+      "document": "docs/release/pipeline/stages/01-scope.zh-CN.md"
+    },
+    {
+      "id": "02-development",
+      "title": "需求开发与变更冻结",
+      "needs": [
+        "01-scope"
+      ],
+      "ownerRole": "研发负责人",
+      "document": "docs/release/pipeline/stages/02-development.zh-CN.md"
+    },
+    {
+      "id": "03-privacy",
+      "title": "隐私、权限及政策整改",
+      "needs": [
+        "02-development"
+      ],
+      "ownerRole": "产品与隐私负责人",
+      "document": "docs/release/pipeline/stages/03-privacy.zh-CN.md"
+    },
+    {
+      "id": "04-tests",
+      "title": "功能与多端测试",
+      "needs": [
+        "02-development",
+        "03-privacy"
+      ],
+      "ownerRole": "测试负责人",
+      "document": "docs/release/pipeline/stages/04-tests.zh-CN.md"
+    },
+    {
+      "id": "05-build",
+      "title": "分渠道构建与正式签名",
+      "needs": [
+        "04-tests"
+      ],
+      "ownerRole": "构建负责人",
+      "document": "docs/release/pipeline/stages/05-build.zh-CN.md"
+    },
+    {
+      "id": "06-binary",
+      "title": "最终发行包验证",
+      "needs": [
+        "05-build"
+      ],
+      "ownerRole": "测试与构建负责人",
+      "document": "docs/release/pipeline/stages/06-binary.zh-CN.md"
+    },
+    {
+      "id": "07-materials",
+      "title": "演示资源与商店物料",
+      "needs": [
+        "03-privacy",
+        "06-binary"
+      ],
+      "ownerRole": "产品、设计与发布负责人",
+      "document": "docs/release/pipeline/stages/07-materials.zh-CN.md"
+    },
+    {
+      "id": "08-upload",
+      "title": "上传、后处理与渠道安装",
+      "needs": [
+        "06-binary",
+        "07-materials"
+      ],
+      "ownerRole": "发布与测试负责人",
+      "document": "docs/release/pipeline/stages/08-upload.zh-CN.md"
+    },
+    {
+      "id": "09-submit",
+      "title": "正式提交审核",
+      "needs": [
+        "08-upload"
+      ],
+      "ownerRole": "发布负责人",
+      "document": "docs/release/pipeline/stages/09-submit.zh-CN.md"
+    },
+    {
+      "id": "10-review",
+      "title": "审核跟进与拒审修复",
+      "needs": [
+        "09-submit"
+      ],
+      "ownerRole": "发布、研发及产品负责人",
+      "document": "docs/release/pipeline/stages/10-review.zh-CN.md"
+    },
+    {
+      "id": "11-publish",
+      "title": "上架与分批发布",
+      "needs": [
+        "10-review"
+      ],
+      "ownerRole": "发布及运维负责人",
+      "document": "docs/release/pipeline/stages/11-publish.zh-CN.md"
+    },
+    {
+      "id": "12-archive",
+      "title": "上线观察、复盘与归档",
+      "needs": [
+        "11-publish"
+      ],
+      "ownerRole": "发布与运维负责人",
+      "document": "docs/release/pipeline/stages/12-archive.zh-CN.md"
+    }
+  ]
+}

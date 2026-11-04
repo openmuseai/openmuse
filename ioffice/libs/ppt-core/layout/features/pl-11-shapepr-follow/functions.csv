@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_follow_fill,follow fill 惰性,slide ShapePr 无 fill + parent 有 solid,fill() 色 = parent；改 parent 后未覆盖槽可见,pp-20;pl-03,03,libs/ppt-core,spec
+2,02_function_follow_xfrm,follow xfrm,slide 无 xfrm + parent 有框,xfrm() 用 parent 框；hosts Transform2D.follow 真实现,01,03,libs/ppt-core,spec
+3,03_function_local_overrides,本地写了不 follow,slide 已 writeFill / writeXfrm,读本地；改 parent 不影响覆盖槽,01;02,—,libs/ppt-core,spec

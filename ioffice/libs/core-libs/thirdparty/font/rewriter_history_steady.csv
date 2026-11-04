@@ -1,0 +1,14 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id,tags
+4,koffice/core-libs/thirdparty/font/src/cn/wps/font/IFontTable.java,IFontTable,steady,,font,,libs/core-libs/thirdparty/font/src/cn/wps/font/IFontTable.rs,,,0524_rust_stub
+7,koffice/core-libs/thirdparty/font/src/cn/wps/font/IMathFontFamily.java,IMathFontFamily,steady,,font,,libs/core-libs/thirdparty/font/src/cn/wps/font/IMathFontFamily.rs,,,0524_rust_stub
+17,koffice/core-libs/thirdparty/font/src/cn/wps/font/impl/FontTableFactory.java,FontTableFactory,steady,,font,,libs/core-libs/thirdparty/font/src/cn/wps/font/impl/FontTableFactory.rs,IFontTable,,0524_rust_stub
+23,koffice/core-libs/thirdparty/font/src/cn/wps/font/ITypeface.java,ITypeface,steady,,font,,libs/core-libs/thirdparty/font/src/cn/wps/font/ITypeface.rs,BuildinGlyphMetrics;RectF,,0524_rust_stub
+24,koffice/core-libs/thirdparty/font/src/cn/wps/font/impl/BuildinGlyphMetrics.java,BuildinGlyphMetrics,steady,,font,,libs/core-libs/thirdparty/font/src/cn/wps/font/impl/BuildinGlyphMetrics.rs,FreeTypeJNI;ITypeface;Rect,,0524_rust_stub
+0,koffice/core-libs/thirdparty/font/src/cn/wps/font/FontMetrics.java,FontMetrics,steady,,main,,libs/core-libs/thirdparty/font/src/cn/wps/font/FontMetrics.rs,,,0524_rust_stub
+0,koffice/core-libs/thirdparty/font/src/cn/wps/font/FreeTypeJNIPointer.java,FreeTypeJNIPointer,steady,,main,,libs/core-libs/thirdparty/font/src/cn/wps/font/FreeTypeJNIPointer.rs,,,0524_rust_stub
+0,koffice/core-libs/thirdparty/font/src/cn/wps/util/PrimitivePackTool.java,PrimitivePackTool,steady,,main,,libs/core-libs/thirdparty/font/src/cn/wps/util/PrimitivePackTool.rs,,,0524_rust_stub
+0,koffice/core-libs/thirdparty/font/src/cn/wps/font/emoji/EmojiServiceFactory.java,EmojiServiceFactory,steady,,main,,libs/core-libs/thirdparty/font/src/cn/wps/font/emoji/EmojiServiceFactory.rs,,,0524_rust_stub
+0,koffice/core-libs/thirdparty/font/src/cn/wps/font/emoji/IEmojiService.java,IEmojiService,steady,,main,,libs/core-libs/thirdparty/font/src/cn/wps/font/emoji/IEmojiService.rs,,,0524_rust_stub
+3,koffice/core-libs/thirdparty/font/src/cn/wps/font/impl/IFontDelayAdapter.java,IFontDelayAdapter,steady,,main,,libs/core-libs/thirdparty/font/src/cn/wps/font/impl/IFontDelayAdapter.rs,IFontFamily,,0524_rust_stub
+0,koffice/core-libs/thirdparty/font/src/cn/wps/font/impl/FontReplaceBindHelper.java,FontReplaceBindHelper,steady,,main,,libs/core-libs/thirdparty/font/src/cn/wps/font/impl/FontReplaceBindHelper.rs,,,0524_rust_stub
+0,koffice/core-libs/thirdparty/font/src/cn/wps/font/impl/KerningCacheFactory.java,KerningCacheFactory,steady,,main,,libs/core-libs/thirdparty/font/src/cn/wps/font/impl/KerningCacheFactory.rs,,,0524_rust_stub

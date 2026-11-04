@@ -1,0 +1,17 @@
+[package]
+name = "word_core_ffi"
+version = "0.1.1"
+edition = "2021"
+description = "Thin flutter_rust_bridge surface over word-core layout_document (P2)."
+
+[lib]
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[dependencies]
+word-core = { path = "../../../libs/word-core" }
+util_adapter = { path = "../../../libs/core-libs/util/adapter" }
+flutter_rust_bridge = "=2.13.0"
+serde_json = "1"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

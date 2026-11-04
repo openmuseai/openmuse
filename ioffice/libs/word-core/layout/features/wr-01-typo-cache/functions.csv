@@ -1,0 +1,6 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_typo_page,TypoPage 结构 cp+边距+行容器,start/end cp + margins + documentType,TypoPage 可插入行/查询 range,无,02_function_typo_line;03,libs/word-core,pass
+2,02_function_typo_line,TypoTextLine 几何+flags,y/height/ascent/descent/graph/cp/flags,TypoTextLine 查询,01_function_typo_page,03_function_typo_snapshot,libs/word-core,pass
+3,03_function_typo_snapshot,TypoSnapshot 页集合,页流,version+page_count+get_page,01;02,wr-06;04_function_typo_iterator,libs/word-core,pass
+4,04_function_typo_iterator,页行迭代与 cp 命中,TypoPage,iterator / contains,03_function_typo_snapshot,wr-05 locate 延后,libs/word-core,pass
+5,05_function_typo_run,run对象+cp编辑平移,run参数+updatePageRanges(cp,rm,ins),TypoRun+区间平移,01;02;03_function_typo_snapshot,wr-07,libs/word-core,pass

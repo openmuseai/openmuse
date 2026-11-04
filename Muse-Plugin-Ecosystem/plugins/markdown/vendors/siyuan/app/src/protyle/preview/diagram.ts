@@ -1,0 +1,91 @@
+import {Constants} from "../../constants";
+import {addScript} from "../util/addScript";
+import {previewImages} from "./image";
+import {getPlantumlImageURL} from "../render/plantumlImage";
+
+const DIAGRAM_SUBTYPES = ["mermaid", "graphviz", "flowchart", "echarts", "plantuml"];
+
+// 从图表所在容器向外查找背景，使独立预览与编辑器中的图表保持一致。
+const getDiagramBackground = (element: HTMLElement) => {
+    for (let parent = element; parent; parent = parent.parentElement) {
+        const color = window.getComputedStyle(parent).backgroundColor;
+        if (color && color !== "transparent" && !/^rgba\([^)]*,\s*0\)$/.test(color)) {
+            return color;
+        }
+    }
+    return "#fff";
+};
+
+export const getDiagramBlock = (element: HTMLElement) => {
+    if (!element) {
+        return false;
+    }
+    if (DIAGRAM_SUBTYPES.includes(element.getAttribute("data-subtype"))) {
+        return element;
+    }
+    return false;
+};
+
+// 将继承的样式写入副本，使 SVG 在独立图片中保留编辑器内的显示效果。
+const createDiagramSVG = (element: SVGSVGElement, backgroundColor: string) => {
+    const clone = element.cloneNode(true) as SVGSVGElement;
+    const elements = [element, ...Array.from(element.querySelectorAll("*"))];
+    const clones = [clone, ...Array.from(clone.querySelectorAll("*"))];
+    elements.forEach((source, index) => {
+        const style = window.getComputedStyle(source);
+        const target = clones[index] as SVGElement;
+        for (let i = 0; i < style.length; i++) {
+            const property = style.item(i);
+            target.style.setProperty(property, style.getPropertyValue(property));
+        }
+    });
+    const bounds = element.getBoundingClientRect();
+    const viewBox = element.viewBox.baseVal;
+    // 使用图表坐标尺寸，避免将编辑器内缩小后的显示尺寸作为复制图片的分辨率。
+    const scale = viewBox.width > 0 && viewBox.height > 0 ?
+        Math.max(1, bounds.width / viewBox.width, bounds.height / viewBox.height) : 1;
+    const width = viewBox.width > 0 && viewBox.height > 0 ? viewBox.width * scale : bounds.width;
+    const height = viewBox.width > 0 && viewBox.height > 0 ? viewBox.height * scale : bounds.height;
+    clone.setAttribute("width", `${width}`);
+    clone.setAttribute("height", `${height}`);
+    clone.style.width = `${width}px`;
+    clone.style.height = `${height}px`;
+    clone.style.maxWidth = "none";
+    clone.style.backgroundColor = backgroundColor;
+    return new Blob([new XMLSerializer().serializeToString(clone)], {type: "image/svg+xml"});
+};
+
+// SVG 图表保留矢量内容，画布图表使用 PNG，共用图片预览的缩放和拖动控件。
+export const previewDiagram = (diagramElement: HTMLElement) => {
+    if (diagramElement.getAttribute("data-subtype") === "plantuml") {
+        const url = getPlantumlImageURL(diagramElement);
+        if (url) {
+            previewImages([url], url);
+        }
+        return Promise.resolve();
+    }
+    return addScript(`${Constants.PROTYLE_CDN}/js/html-to-image.min.js?v=1.11.13`, "protyleHtml2image").then(async () => {
+        const type = diagramElement.getAttribute("data-subtype");
+        const renderElement = type === "echarts" ?
+            diagramElement.querySelector("canvas") :
+            diagramElement.querySelector('[contenteditable="false"] svg');
+        if (!renderElement) {
+            return;
+        }
+
+        let blob: Blob;
+        try {
+            const backgroundColor = getDiagramBackground(diagramElement);
+            blob = type === "echarts" ?
+                await window.htmlToImage.toBlob(renderElement, {backgroundColor}) :
+                createDiagramSVG(renderElement as SVGSVGElement, backgroundColor);
+        } catch (e) {
+            return;
+        }
+        if (!blob) {
+            return;
+        }
+        const objectURL = URL.createObjectURL(blob);
+        previewImages([objectURL], objectURL, () => URL.revokeObjectURL(objectURL));
+    });
+};

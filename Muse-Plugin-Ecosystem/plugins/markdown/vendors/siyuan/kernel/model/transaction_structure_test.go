@@ -1,0 +1,170 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"errors"
+	"path/filepath"
+	"testing"
+
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/siyuan/kernel/filesys"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func setupStructureTransactionTest(t *testing.T) *fileOperationTestFixture {
+	originalHistoryDir := util.HistoryDir
+	util.HistoryDir = filepath.Join(t.TempDir(), "history")
+	t.Cleanup(func() {
+		util.HistoryDir = originalHistoryDir
+	})
+	return setupFileOperationTest(t)
+}
+
+func addOrderedListForStructureTest(t *testing.T, rootID string) (listID, itemID string) {
+	tree, err := LoadTreeByBlockID(rootID)
+	if nil != err {
+		t.Fatalf("load test tree failed: %s", err)
+	}
+
+	listID = "20260808000000-list001"
+	itemID = "20260808000000-item001"
+	paragraphID := "20260808000000-block01"
+	list := &ast.Node{Type: ast.NodeList, ID: listID, ListData: &ast.ListData{Typ: 1}}
+	item := &ast.Node{Type: ast.NodeListItem, ID: itemID, ListData: &ast.ListData{Typ: 1}}
+	paragraph := treenode.NewParagraph(paragraphID)
+	list.SetIALAttr("id", listID)
+	item.SetIALAttr("id", itemID)
+	item.AppendChild(paragraph)
+	list.AppendChild(item)
+	tree.Root.AppendChild(list)
+	if _, err = filesys.WriteTree(tree); nil != err {
+		t.Fatalf("write test tree failed: %s", err)
+	}
+	treenode.UpsertBlockTree(tree)
+	return
+}
+
+func requireStructureTransactionError(t *testing.T, err error) {
+	t.Helper()
+	if nil == err {
+		t.Fatal("expected invalid structure transaction to be rejected")
+	}
+	var txErr *TxErr
+	if !errors.As(err, &txErr) {
+		t.Fatalf("expected transaction error, got [%T] %v", err, err)
+	}
+	if TxErrCodeReloadUI != txErr.Code() {
+		t.Fatalf("unexpected transaction error code: got %d, want %d", txErr.Code(), TxErrCodeReloadUI)
+	}
+}
+
+func TestInsertRejectsParagraphDirectlyUnderList(t *testing.T) {
+	fixture := setupStructureTransactionTest(t)
+	listID, _ := addOrderedListForStructureTest(t, fixture.sourceID)
+	dom := util.NewLute().Md2BlockDOM("inserted", false)
+	tx := &Transaction{DoOperations: []*Operation{{
+		Action:   "insert",
+		ParentID: listID,
+		Data:     dom,
+	}}}
+
+	requireStructureTransactionError(t, PerformTxSync(tx))
+
+	tree, err := LoadTreeByBlockID(listID)
+	if nil != err {
+		t.Fatalf("reload test tree failed: %s", err)
+	}
+	list := treenode.GetNodeInTree(tree, listID)
+	if ast.NodeListItem != list.FirstChild.Type || nil != list.FirstChild.Next {
+		t.Fatal("rejected insert changed the persisted list structure")
+	}
+}
+
+func TestInsertMissingTargetReturnsTransactionError(t *testing.T) {
+	setupStructureTransactionTest(t)
+	dom := util.NewLute().Md2BlockDOM("inserted", false)
+	tx := &Transaction{DoOperations: []*Operation{{
+		Action:   "insert",
+		ParentID: "20260816000000-missing",
+		Data:     dom,
+	}}}
+
+	requireStructureTransactionError(t, PerformTxSync(tx))
+}
+
+func TestInsertRejectsDocumentSiblingAnchor(t *testing.T) {
+	for _, field := range []string{"previousID", "nextID"} {
+		t.Run(field, func(t *testing.T) {
+			fixture := setupStructureTransactionTest(t)
+			dom := util.NewLute().Md2BlockDOM("inserted", false)
+			operation := &Operation{Action: "insert", Data: dom}
+			if field == "previousID" {
+				operation.PreviousID = fixture.sourceID
+			} else {
+				operation.NextID = fixture.sourceID
+			}
+			err := PerformTxSync(&Transaction{DoOperations: []*Operation{operation}})
+			requireStructureTransactionError(t, err)
+			if err.Error() != "`"+field+"` cannot be the ID of a document" {
+				t.Fatalf("expected explicit document anchor error, got %v", err)
+			}
+			tree, err := LoadTreeByBlockID(fixture.sourceID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tree.Root.FirstChild.ID != fixture.childID || tree.Root.FirstChild != tree.Root.LastChild {
+				t.Fatal("rejected anchor changed the document")
+			}
+		})
+	}
+}
+
+func TestMoveRejectsParagraphDirectlyUnderList(t *testing.T) {
+	tests := []struct {
+		name      string
+		operation func(sourceID, listID, itemID string) *Operation
+	}{
+		{
+			name: "parent id",
+			operation: func(sourceID, listID, itemID string) *Operation {
+				return &Operation{Action: "move", ID: sourceID, ParentID: listID}
+			},
+		},
+		{
+			name: "previous id",
+			operation: func(sourceID, listID, itemID string) *Operation {
+				return &Operation{Action: "move", ID: sourceID, ParentID: listID, PreviousID: itemID}
+			},
+		},
+		{
+			name: "next id",
+			operation: func(sourceID, listID, itemID string) *Operation {
+				return &Operation{Action: "move", ID: sourceID, ParentID: listID, NextID: itemID}
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fixture := setupStructureTransactionTest(t)
+			listID, itemID := addOrderedListForStructureTest(t, fixture.sourceID)
+			tx := &Transaction{DoOperations: []*Operation{
+				test.operation(fixture.childID, listID, itemID),
+			}}
+
+			requireStructureTransactionError(t, PerformTxSync(tx))
+
+			tree, err := LoadTreeByBlockID(fixture.childID)
+			if nil != err {
+				t.Fatalf("reload test tree failed: %s", err)
+			}
+			paragraph := treenode.GetNodeInTree(tree, fixture.childID)
+			if nil == paragraph || ast.NodeDocument != paragraph.Parent.Type {
+				t.Fatal("rejected move changed the persisted paragraph parent")
+			}
+		})
+	}
+}

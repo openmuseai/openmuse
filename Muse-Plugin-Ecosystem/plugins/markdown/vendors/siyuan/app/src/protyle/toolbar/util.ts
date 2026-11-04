@@ -1,0 +1,426 @@
+import {fetchSyncPost} from "../../util/fetch";
+import {markToolbarHotkey} from "./hotkey";
+import {Constants} from "../../constants";
+import {focusByWbr} from "../util/selection";
+import {focusByRange} from "../util/selectionOffsets";
+import {isDisabledFeature, writeText} from "../util/compatibility";
+import {isArrayEqual} from "../../util/functions";
+import {hasSameTextStyle} from "./Font";
+import {AIActions} from "../../ai/actions";
+import {
+    hasSemanticInlineType,
+    normalizeSemanticInlineElement,
+    normalizeSemanticInternalMarkerPrefix,
+    removeSemanticInlineExternalBoundaries,
+    setSemanticInlineElementMarker,
+    stripSemanticInternalMarkerPrefix
+} from "../util/inlineElementMarker";
+import {normalizeHTMLAssetIFrameBlockDOM} from "../../asset/html";
+import {destroyTabsRender, tabsRender} from "../render/tabsRender";
+import {genTemplateDocTreePlanHTML} from "../../template/docTree";
+
+const templatePreviewRequests = new WeakMap<Element, object>();
+
+export const clearTemplatePreview = (element: Element) => {
+    templatePreviewRequests.delete(element);
+    if (element.firstElementChild) {
+        destroyTabsRender(element.firstElementChild);
+    }
+    element.innerHTML = "";
+};
+
+export const previewTemplate = (pathString: string, element: Element, parentId: string, source?: string) => {
+    if (!pathString || !element.isConnected || element.closest(".fn__none")) {
+        clearTemplatePreview(element);
+        return;
+    }
+    const request = {};
+    templatePreviewRequests.set(element, request);
+    fetchSyncPost("/api/template/render", {
+        id: parentId,
+        path: pathString,
+        mode: "preview",
+        preview: true,
+        ...(source === undefined ? {} : {content: source})
+    }).then((response) => {
+        // 切换模板或关闭预览后，忽略先前请求的返回结果。
+        if (templatePreviewRequests.get(element) !== request || !element.isConnected) {
+            return;
+        }
+        clearTemplatePreview(element);
+        if (response.code !== 0) {
+            return;
+        }
+        const content = normalizeHTMLAssetIFrameBlockDOM(response.data.content.replace(/contenteditable="true"/g, ""));
+        element.innerHTML = `<div class="protyle-wysiwyg" style="padding: 8px">${content}</div>`;
+        if (response.data.docTreePlan?.nodes?.length) {
+            element.insertAdjacentHTML("beforeend", genTemplateDocTreePlanHTML(response.data.docTreePlan,
+                window.siyuan.languages.newSubDoc));
+        }
+        tabsRender(element.firstElementChild, {label: window.siyuan.languages.tabItem});
+    }).catch(() => {
+        if (templatePreviewRequests.get(element) === request) {
+            clearTemplatePreview(element);
+        }
+    });
+};
+
+const mergeElement = (a: Element, b: Element, after = true) => {
+    if (!a.getAttribute("data-type") || !b.getAttribute("data-type")) {
+        return false;
+    }
+    a.setAttribute("data-type", a.getAttribute("data-type").replace("search-mark", "").trim());
+    b.setAttribute("data-type", b.getAttribute("data-type").replace("search-mark", "").trim());
+    const attributes = a.attributes;
+    let isMatch = true;
+    for (let i = 0; i < attributes.length; i++) {
+        if (b.getAttribute(attributes[i].name) !== attributes[i].value) {
+            isMatch = false;
+        }
+    }
+
+    if (isMatch) {
+        if (after) {
+            a.innerHTML = a.innerHTML + b.innerHTML;
+        } else {
+            a.innerHTML = b.innerHTML + a.innerHTML;
+        }
+        b.remove();
+    }
+    return isMatch;
+};
+
+export const mergeSameInlineElement = (currentElement: HTMLElement, previousElement: HTMLElement) => {
+    if (!currentElement || currentElement.nodeType !== 1 || !previousElement || previousElement.nodeType !== 1) {
+        return false;
+    }
+    const currentType = currentElement.getAttribute("data-type");
+    const previousType = previousElement.getAttribute("data-type");
+    if (!currentType || !previousType || currentElement.tagName === "BR" || currentElement.classList.contains("img")) {
+        return false;
+    }
+    const types = currentType.split(" ");
+    if (!isArrayEqual(types, previousType.split(" ")) || !hasSameTextStyle(currentElement, previousElement)) {
+        return false;
+    }
+    const isSemanticInline = hasSemanticInlineType(currentType);
+    const previousText = isSemanticInline ?
+        stripSemanticInternalMarkerPrefix(previousElement.innerText) : previousElement.innerText;
+    const currentText = isSemanticInline ?
+        stripSemanticInternalMarkerPrefix(currentElement.innerText) : currentElement.innerText;
+    if (types.includes("inline-math")) {
+        currentElement.setAttribute("data-content",
+            previousElement.getAttribute("data-content") + currentElement.getAttribute("data-content"));
+    } else if (types.includes("block-ref") &&
+        previousElement.getAttribute("data-id") === currentElement.getAttribute("data-id")) {
+        if (previousElement.dataset.subtype !== "d") {
+            currentElement.setAttribute("data-subtype", "s");
+            currentElement.textContent = previousText + currentText;
+        }
+    } else {
+        // textContent：防止赋值后 \n 转换为 br；innerText：获取 br 的 \n。
+        currentElement.textContent = previousText + currentText;
+        if (types.includes("inline-memo")) {
+            currentElement.setAttribute("data-inline-memo-content",
+                (previousElement.getAttribute("data-inline-memo-content") || "") +
+                (currentElement.getAttribute("data-inline-memo-content") || ""));
+        }
+    }
+    if (isSemanticInline) {
+        currentElement.textContent = normalizeSemanticInternalMarkerPrefix(currentElement.textContent);
+        normalizeSemanticInlineElement(currentElement);
+    }
+    return true;
+};
+
+export const removeSearchMark = (element: HTMLElement) => {
+    let previousElement = element.previousSibling as HTMLElement;
+    while (previousElement && previousElement.nodeType !== 3) {
+        if (!mergeElement(element, previousElement, false)) {
+            break;
+        } else {
+            previousElement = element.previousSibling as HTMLElement;
+        }
+    }
+    let nextElement = element.nextSibling as HTMLElement;
+    while (nextElement && nextElement.nodeType !== 3) {
+        if (!mergeElement(element, nextElement)) {
+            break;
+        } else {
+            nextElement = element.nextSibling as HTMLElement;
+        }
+    }
+
+    if ((element.getAttribute("data-type") || "").includes("search-mark")) {
+        element.setAttribute("data-type", element.getAttribute("data-type").replace("search-mark", "").trim());
+    }
+};
+
+export const removeInlineType = (inlineElement: HTMLElement, type: string, range?: Range) => {
+    const wasSemanticInline = hasSemanticInlineType(inlineElement.getAttribute("data-type"));
+    const types = (inlineElement.getAttribute("data-type") || "").split(" ").filter((item) => item !== "" && item !== type);
+    if (wasSemanticInline && !hasSemanticInlineType(types.join(" "))) {
+        removeSemanticInlineExternalBoundaries(inlineElement);
+    }
+    if (types.length === 0) {
+        const linkParentElement = inlineElement.parentElement;
+        if (wasSemanticInline) {
+            setSemanticInlineElementMarker(inlineElement, "remove");
+        }
+        inlineElement.outerHTML = inlineElement.innerHTML + "<wbr>";
+        if (range) {
+            focusByWbr(linkParentElement, range);
+        }
+    } else {
+        inlineElement.setAttribute("data-type", types.join(" "));
+        if (type === "a") {
+            inlineElement.removeAttribute("data-href");
+        } else if (type === "file-annotation-ref") {
+            inlineElement.removeAttribute("data-id");
+        } else if (type === "block-ref") {
+            inlineElement.removeAttribute("data-id");
+            inlineElement.removeAttribute("data-subtype");
+        }
+        if (hasSemanticInlineType(types.join(" "))) {
+            normalizeSemanticInlineElement(inlineElement);
+        } else if (wasSemanticInline) {
+            setSemanticInlineElementMarker(inlineElement, "remove");
+        }
+        if (range) {
+            range.selectNodeContents(inlineElement);
+            range.collapse(false);
+            focusByRange(range);
+        }
+    }
+};
+
+export const toolbarKeyToMenu = (toolbar: Array<string | IMenuItem>) => {
+    const toolbarItem: IMenuItem [] = [{
+        name: "block-type",
+        lang: "turnInto",
+        icon: "iconParagraph",
+        tipPosition: "n",
+    }, {
+        name: "block-ref",
+        hotkey: window.siyuan.config.keymap.editor.insert.ref.custom,
+        lang: "ref",
+        icon: "iconRef",
+        tipPosition: "ne",
+    }, {
+        name: "a",
+        hotkey: window.siyuan.config.keymap.editor.insert.link.custom,
+        lang: "link",
+        icon: "iconLink",
+        tipPosition: "n",
+    }, {
+        name: "ai",
+        hotkey: window.siyuan.config.keymap.editor.general.ai.custom,
+        lang: "aiEdit",
+        icon: "iconSparkles",
+        tipPosition: "n",
+        click(protyle) {
+            const editor = protyle.protyle;
+            const range = editor.toolbar.range?.cloneRange();
+            if (range && !range.collapsed) {
+                AIActions([], editor, range, editor.toolbar.element.querySelector('[data-type="ai"]'));
+            }
+        },
+    }, {
+        name: "strong",
+        lang: "bold",
+        hotkey: window.siyuan.config.keymap.editor.insert.bold.custom,
+        icon: "iconBold",
+        tipPosition: "n",
+    }, {
+        name: "em",
+        lang: "italic",
+        hotkey: window.siyuan.config.keymap.editor.insert.italic.custom,
+        icon: "iconItalic",
+        tipPosition: "n",
+    }, {
+        name: "u",
+        lang: "underline",
+        hotkey: window.siyuan.config.keymap.editor.insert.underline.custom,
+        icon: "iconUnderline",
+        tipPosition: "n",
+    }, {
+        name: "s",
+        lang: "strike",
+        hotkey: window.siyuan.config.keymap.editor.insert.strike.custom,
+        icon: "iconStrike",
+        tipPosition: "n",
+    }, {
+        name: "mark",
+        lang: "mark",
+        hotkey: window.siyuan.config.keymap.editor.insert.mark.custom,
+        icon: "iconMark",
+        tipPosition: "n",
+    }, {
+        name: "sup",
+        lang: "sup",
+        hotkey: window.siyuan.config.keymap.editor.insert.sup.custom,
+        icon: "iconSup",
+        tipPosition: "n",
+    }, {
+        name: "sub",
+        lang: "sub",
+        hotkey: window.siyuan.config.keymap.editor.insert.sub.custom,
+        icon: "iconSub",
+        tipPosition: "n",
+    }, {
+        name: "kbd",
+        lang: "kbd",
+        hotkey: window.siyuan.config.keymap.editor.insert.kbd.custom,
+        icon: "iconKeymap",
+        tipPosition: "n",
+    }, {
+        name: "tag",
+        lang: "tag",
+        hotkey: window.siyuan.config.keymap.editor.insert.tag.custom,
+        icon: "iconTag",
+        tipPosition: "n",
+    }, {
+        name: "code",
+        lang: "inline-code",
+        hotkey: window.siyuan.config.keymap.editor.insert["inline-code"].custom,
+        icon: "iconInlineCode",
+        tipPosition: "n",
+    }, {
+        name: "inline-math",
+        lang: "inline-math",
+        hotkey: window.siyuan.config.keymap.editor.insert["inline-math"].custom,
+        icon: "iconMath",
+        tipPosition: "n",
+    }, {
+        name: "inline-memo",
+        lang: "memo",
+        hotkey: window.siyuan.config.keymap.editor.insert.memo.custom,
+        icon: "iconM",
+        tipPosition: "n",
+    }, {
+        name: "text",
+        lang: "appearance",
+        hotkey: window.siyuan.config.keymap.editor.insert.appearance.custom,
+        icon: "iconFont",
+        tipPosition: "n",
+    }, {
+        name: "font-family",
+        lang: "fontFamily",
+        icon: "iconFont",
+        tipPosition: "n",
+    }, {
+        name: "font-size",
+        lang: "fontSize",
+        icon: "iconFont",
+        tipPosition: "n",
+    }, {
+        name: "clear",
+        lang: "clearInline",
+        hotkey: window.siyuan.config.keymap.editor.insert.clearInline.custom,
+        icon: "iconEraser",
+        tipPosition: "n",
+    }, {
+        name: "format-painter",
+        lang: "formatPainter",
+        icon: "iconPaintRoller",
+        tipPosition: "n",
+    }, {
+        name: "|",
+    }];
+    const toolbarResult: IMenuItem[] = [];
+    toolbar.forEach((menuItem: IMenuItem) => {
+        let currentMenuItem = menuItem;
+        toolbarItem.find((defaultMenuItem: IMenuItem) => {
+            if (typeof menuItem === "string" && defaultMenuItem.name === menuItem) {
+                currentMenuItem = defaultMenuItem;
+                markToolbarHotkey(currentMenuItem, menuItem);
+                return true;
+            }
+            if (typeof menuItem === "object" && defaultMenuItem.name === menuItem.name) {
+                currentMenuItem = Object.assign({}, defaultMenuItem, menuItem);
+                markToolbarHotkey(currentMenuItem, menuItem);
+                return true;
+            }
+        });
+        if (isDisabledFeature("ai") && currentMenuItem.name === "ai") {
+            return;
+        }
+        toolbarResult.push(currentMenuItem);
+    });
+    return toolbarResult;
+};
+
+/**
+ * Detect a URL from text, handling the `assets/` prefix and `GetLinkDest`.
+ * Returns the resolved href, or an empty string if no URL was detected.
+ */
+export const resolveLinkDest = (text: string, lute: Lute): string => {
+    if (text.startsWith("assets/")) {
+        return text;
+    }
+    return lute.GetLinkDest(text);
+};
+
+/**
+ * Generate a display label for a link URL: decode, optionally strip protocol, and truncate.
+ * Shared between Ctrl+K link handler and paste URL auto-convert.
+ * @param stripScheme When true, removes https:// and http:// prefixes (used by Ctrl+K).
+ */
+export const genLinkText = (href: string, stripScheme: boolean = true, decodeURI: boolean = false): string => {
+    try {
+        let text = stripScheme
+            ? href.replace("https://", "").replace("http://", "")
+            : href;
+        if (decodeURI) {
+            text = decodeURIComponent(text);
+        }
+        if (text.length > Constants.SIZE_LINK_TEXT_MAX) {
+            text = text.substring(0, Constants.SIZE_LINK_TEXT_MAX) + "...";
+        }
+        return text;
+    } catch {
+        return href;
+    }
+};
+
+export const copyTextByType = async (ids: string[],
+                                     type: "ref" | "blockEmbed" | "protocol" | "protocolMd" | "hPath" | "id" | "webURL") => {
+    let text = "";
+    for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        if (ids.length > 1) {
+            text += "- ";
+        }
+        if (type === "ref") {
+            const response = await fetchSyncPost("/api/block/getRefText", {id});
+            if (response.code !== 0) {
+                return;
+            }
+            text += `((${id} '${response.data}'))`;
+        } else if (type === "blockEmbed") {
+            text += `{{select * from blocks where id='${id}'}}`;
+        } else if (type === "protocol") {
+            text += `siyuan://blocks/${id}`;
+        } else if (type === "protocolMd") {
+            const response = await fetchSyncPost("/api/block/getRefText", {id});
+            if (response.code !== 0) {
+                return;
+            }
+            text += `[${response.data.replace("[", "\\[").replace("]", "\\]")}](siyuan://blocks/${id})`;
+        } else if (type === "hPath") {
+            const response = await fetchSyncPost("/api/filetree/getHPathByID", {id});
+            if (response.code !== 0 || typeof response.data !== "string") {
+                continue;
+            }
+            text += response.data;
+        } else if (type === "webURL") {
+            text += `${window.location.origin}?id=${id}`;
+        } else if (type === "id") {
+            text += id;
+        }
+        if (ids.length > 1 && i !== ids.length - 1) {
+            text += "\n";
+        }
+    }
+    writeText(text);
+};

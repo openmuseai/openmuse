@@ -1,0 +1,35 @@
+name: openmuse_siyuan_client
+description: Plugin-owned local SiYuan kernel and original browser frontend.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_timezone: 5.0.1
+  archive: ^4.5.2
+  crypto: ^3.0.6
+  ffi: ^2.2.0
+  file_picker: ^10.3.10
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  open_filex: 4.7.0
+  url_launcher: ^6.3.3
+  webview_flutter: ^4.14.1
+  webview_flutter_android: ^4.14.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  assets:
+    - assets/runtime.zip
+  plugin:
+    platforms:
+      android:
+        ffiPlugin: true
+      ios:
+        ffiPlugin: true
+      macos:
+        ffiPlugin: true

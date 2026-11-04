@@ -1,0 +1,6 @@
+// Rust stub for IFootEndNoteNumLayouter (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/footendnote/IFootEndNoteNumLayouter.java
+use crate::*;
+
+pub trait IFootEndNoteNumLayouter {
+}

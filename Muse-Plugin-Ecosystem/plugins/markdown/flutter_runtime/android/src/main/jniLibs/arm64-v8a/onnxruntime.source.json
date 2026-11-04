@@ -1,0 +1,7 @@
+{
+  "version": "1.24.3",
+  "url": "https://repo.maven.apache.org/maven2/com/microsoft/onnxruntime/onnxruntime-android/1.24.3/onnxruntime-android-1.24.3.aar",
+  "sha256": "67397e4a970e75617f765d2015ceaf911917e1d822276cfb5792744e8085cbce",
+  "library": "libsiyuan_ort.so",
+  "artifactSha256": "9fcaade7202c101d2f72eeed3c93dbddfbb25eb1236f5c9de50f3a79ca459860"
+}

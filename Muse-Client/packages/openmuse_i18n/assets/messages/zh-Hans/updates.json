@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "locale": "zh-Hans",
+  "namespace": "updates",
+  "sourceRevision": 2,
+  "messages": {
+    "updates.update_ready.ef88289a": "更新已就绪",
+    "updates.openmuse_is_downloaded_and_verified_restar.14710fdb": "OpenMuse {value1} 已下载并校验。立即重启以安装更新，或稍后在左下角再次点击更新。",
+    "updates.restart_later.d2da82eb": "稍后重启",
+    "updates.restart_now.09959419": "立即重启",
+    "updates.update_failed.9d48e538": "更新失败：{value1}",
+    "updates.ready_to_update.b17ee8fe": "更新已就绪",
+    "updates.downloading_update.63359be5": "正在下载新版本",
+    "updates.update_failed.6aaaf1ba": "更新下载失败",
+    "updates.update_available.eb64bf34": "发现新版本 {value1}",
+    "updates.restart.8c8f1d01": "重启",
+    "updates.retry.4c2e361c": "重试",
+    "updates.update_available.5157b4c7": "发现新版本",
+    "updates.later.78fd2cc2": "稍后",
+    "updates.get_update.987882f6": "获取更新",
+    "updates.whatsNew": "更新内容",
+    "updates.update": "更新",
+    "updates.dismiss": "隐藏更新提示"
+  }
+}

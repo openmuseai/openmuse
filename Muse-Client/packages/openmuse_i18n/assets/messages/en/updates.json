@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "namespace": "updates",
+  "sourceRevision": 2,
+  "messages": {
+    "updates.update_ready.ef88289a": "Update ready",
+    "updates.openmuse_is_downloaded_and_verified_restar.14710fdb": "OpenMuse {value1} is downloaded and verified. Restart now to install, or use the update notice later.",
+    "updates.restart_later.d2da82eb": "Restart later",
+    "updates.restart_now.09959419": "Restart now",
+    "updates.update_failed.9d48e538": "Update failed: {value1}",
+    "updates.ready_to_update.b17ee8fe": "Ready to update",
+    "updates.downloading_update.63359be5": "Downloading update",
+    "updates.update_failed.6aaaf1ba": "Update failed",
+    "updates.update_available.eb64bf34": "Update available {value1}",
+    "updates.restart.8c8f1d01": "Restart",
+    "updates.retry.4c2e361c": "Retry",
+    "updates.update_available.5157b4c7": "Update available",
+    "updates.later.78fd2cc2": "Later",
+    "updates.get_update.987882f6": "Get update",
+    "updates.whatsNew": "What's new",
+    "updates.update": "Update",
+    "updates.dismiss": "Hide update notice"
+  }
+}

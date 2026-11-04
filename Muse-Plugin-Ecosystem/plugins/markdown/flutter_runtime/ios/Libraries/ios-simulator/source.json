@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/siyuan-note/siyuan",
+  "commit": "d3af9d5782082b379d45a69eedf4ebcfe8ba6889",
+  "version": "3.8.9",
+  "license": "AGPL-3.0-or-later",
+  "go": "1.26.10",
+  "buildTags": [
+    "fts5",
+    "sqlcipher"
+  ]
+}

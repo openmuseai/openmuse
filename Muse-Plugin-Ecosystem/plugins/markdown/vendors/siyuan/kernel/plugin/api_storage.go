@@ -1,0 +1,515 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package plugin
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/dop251/goja"
+	"github.com/samber/lo"
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/plugin/gojaext"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+// injectStorage 向沙箱安装限定存储目录的文件操作与监听 API。
+func injectStorage(p *KernelPlugin, rt *goja.Runtime, siyuan *goja.Object) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("injectStorage: %v", r)
+		}
+	}()
+
+	resolvePath := func(relPath string) (abs string, err error) {
+		abs = filepath.Join(p.storageDir, filepath.Clean(relPath))
+		if !(abs == p.storageDir || strings.HasPrefix(abs, p.storageDir+string(filepath.Separator))) {
+			err = fmt.Errorf("siyuan.storage: path traversal not allowed")
+		}
+		return
+	}
+
+	watcher := rt.NewObject()
+
+	// siyuan.storage.watcher.add(path) -> Promise<void>
+	bindStorageWatcherAdd(p, rt, watcher, resolvePath)
+
+	// siyuan.storage.watcher.remove(path) -> void
+	bindStorageWatcherRemove(p, rt, watcher, resolvePath)
+
+	lo.Must0(gojaext.Freeze(rt, watcher))
+
+	storage := rt.NewObject()
+
+	// siyuan.storage.get(path) -> Promise<{text, json, buffer, arrayBuffer, bytes, blob}>
+	bindStorageGet(p, rt, storage, resolvePath)
+
+	// siyuan.storage.put(path, content) -> Promise<void>
+	bindStoragePut(p, rt, storage, resolvePath)
+
+	// siyuan.storage.remove(path) -> Promise<void>
+	bindStorageRemove(p, rt, storage, resolvePath)
+
+	// siyuan.storage.list(path) -> Promise<Entry[]>
+	bindStorageList(p, rt, storage, resolvePath)
+
+	// siyuan.storage.watcher
+	lo.Must0(storage.Set("watcher", watcher))
+
+	lo.Must0(gojaext.Freeze(rt, storage))
+
+	lo.Must0(siyuan.Set("storage", storage))
+	return
+}
+
+// bindStorageWatcherAdd 安装对应的沙箱方法，异步操作仍通过插件工作线程执行。
+func bindStorageWatcherAdd(p *KernelPlugin, rt *goja.Runtime, watcher *goja.Object, resolvePath func(string) (string, error)) {
+	lo.Must0(watcher.Set("add", rt.ToValue(func(call goja.FunctionCall, rt *goja.Runtime) goja.Value {
+		promise, resolve, reject := rt.NewPromise()
+
+		var argErr error
+		var path string
+		if len(call.Arguments) >= 1 && goja.IsString(call.Argument(0)) {
+			path = call.Argument(0).String()
+		} else {
+			argErr = fmt.Errorf("path required")
+		}
+
+		runErr := p.worker.Run(func(rt *goja.Runtime) (result any, err error) {
+			if argErr != nil {
+				err = argErr
+				return
+			}
+			abs, resolveErr := resolvePath(path)
+			if resolveErr != nil {
+				err = resolveErr
+				return
+			}
+			if addErr := p.addStorageWatch(abs); addErr != nil {
+				err = fmt.Errorf("failed to add storage path to watcher: %v", addErr)
+			}
+			return
+		}, func(rt *goja.Runtime, result any, err error) {
+			if lo.IsNil(err) {
+				if resolveErr := resolve(result); resolveErr != nil {
+					logging.LogErrorf("[plugin:%s] siyuan.storage.watcher.add resolve: %v", p.Name, resolveErr)
+				}
+			} else {
+				if rejectErr := reject(rt.NewGoError(err)); rejectErr != nil {
+					logging.LogErrorf("[plugin:%s] siyuan.storage.watcher.add reject: %v", p.Name, rejectErr)
+				}
+			}
+		})
+		if runErr != nil {
+			logging.LogErrorf("[plugin:%s] siyuan.storage.watcher.add worker run: %v", p.Name, runErr)
+			if rejectErr := reject(rt.NewGoError(runErr)); rejectErr != nil {
+				logging.LogErrorf("[plugin:%s] siyuan.storage.watcher.add reject: %v", p.Name, rejectErr)
+			}
+		}
+
+		return rt.ToValue(promise)
+	})))
+}
+
+// bindStorageWatcherRemove 安装对应的沙箱方法，异步操作仍通过插件工作线程执行。
+func bindStorageWatcherRemove(p *KernelPlugin, rt *goja.Runtime, watcher *goja.Object, resolvePath func(string) (string, error)) {
+	lo.Must0(watcher.Set("remove", rt.ToValue(func(call goja.FunctionCall, rt *goja.Runtime) goja.Value {
+		promise, resolve, reject := rt.NewPromise()
+
+		var argErr error
+		var path string
+		if len(call.Arguments) >= 1 && goja.IsString(call.Argument(0)) {
+			path = call.Argument(0).String()
+		} else {
+			argErr = fmt.Errorf("path required")
+		}
+
+		runErr := p.worker.Run(func(rt *goja.Runtime) (result any, err error) {
+			if argErr != nil {
+				err = argErr
+				return
+			}
+			abs, resolveErr := resolvePath(path)
+			if resolveErr != nil {
+				err = resolveErr
+				return
+			}
+			if removeErr := p.removeStorageWatch(abs); removeErr != nil {
+				err = fmt.Errorf("failed to remove storage path from watcher: %v", removeErr)
+			}
+			return
+		}, func(rt *goja.Runtime, result any, err error) {
+			if lo.IsNil(err) {
+				if resolveErr := resolve(result); resolveErr != nil {
+					logging.LogErrorf("[plugin:%s] siyuan.storage.watcher.remove resolve: %v", p.Name, resolveErr)
+				}
+			} else {
+				if rejectErr := reject(rt.NewGoError(err)); rejectErr != nil {
+					logging.LogErrorf("[plugin:%s] siyuan.storage.watcher.remove reject: %v", p.Name, rejectErr)
+				}
+			}
+		})
+		if runErr != nil {
+			logging.LogErrorf("[plugin:%s] siyuan.storage.watcher.remove worker run: %v", p.Name, runErr)
+			if rejectErr := reject(rt.NewGoError(runErr)); rejectErr != nil {
+				logging.LogErrorf("[plugin:%s] siyuan.storage.watcher.remove reject: %v", p.Name, rejectErr)
+			}
+		}
+
+		return rt.ToValue(promise)
+	})))
+}
+
+// bindStorageGet 安装对应的沙箱方法，异步操作仍通过插件工作线程执行。
+func bindStorageGet(p *KernelPlugin, rt *goja.Runtime, storage *goja.Object, resolvePath func(string) (string, error)) {
+	lo.Must0(storage.Set("get", rt.ToValue(func(call goja.FunctionCall, rt *goja.Runtime) goja.Value {
+		promise, resolve, reject := rt.NewPromise()
+
+		var argErr error
+		var path string
+		if len(call.Arguments) >= 1 && goja.IsString(call.Argument(0)) {
+			path = call.Argument(0).String()
+		} else {
+			argErr = fmt.Errorf("path required")
+		}
+
+		runErr := p.worker.Run(func(rt *goja.Runtime) (result any, err error) {
+			if argErr != nil {
+				err = argErr
+				return
+			}
+			abs, resolveErr := resolvePath(path)
+			if resolveErr != nil {
+				err = resolveErr
+				return
+			}
+
+			go func() (result []byte, err error) {
+				defer func() {
+					if r := recover(); r != nil {
+						err = fmt.Errorf("panic during siyuan.storage.get: %v", r)
+					}
+					p.worker.Run(func(rt *goja.Runtime) (_ any, _ error) {
+						if err != nil {
+							return nil, err
+						}
+
+						// 存储文件没有媒体类型，blob() 返回的 Blob 的 type 为空串。
+						// 错误存入局部变量而不是外层的 err：外层 goroutine 返回时会读取 err，在事件循环上写入它会构成数据竞争。
+						content := rt.NewObject()
+						if setErr := ObjectSetDataMethods(p, rt, content, result, ""); setErr != nil {
+							return nil, setErr
+						}
+
+						return content, nil
+					}, func(rt *goja.Runtime, result any, err error) {
+						if lo.IsNil(err) {
+							if resolveErr := resolve(result); resolveErr != nil {
+								logging.LogErrorf("[plugin:%s] siyuan.storage.get resolve: %v", p.Name, resolveErr)
+							}
+						} else {
+							if rejectErr := reject(rt.NewGoError(err)); rejectErr != nil {
+								logging.LogErrorf("[plugin:%s] siyuan.storage.get reject: %v", p.Name, rejectErr)
+							}
+						}
+					})
+				}()
+
+				data, readErr := filelock.ReadFile(abs)
+				if readErr != nil {
+					err = readErr
+					return
+				}
+
+				result = data
+				return
+			}()
+
+			return
+		}, func(rt *goja.Runtime, result any, err error) {
+			if !lo.IsNil(err) {
+				if rejectErr := reject(rt.NewGoError(err)); rejectErr != nil {
+					logging.LogErrorf("[plugin:%s] siyuan.storage.get reject: %v", p.Name, rejectErr)
+				}
+			}
+		})
+		if runErr != nil {
+			logging.LogErrorf("[plugin:%s] siyuan.storage.get worker run: %v", p.Name, runErr)
+			if rejectErr := reject(rt.NewGoError(runErr)); rejectErr != nil {
+				logging.LogErrorf("[plugin:%s] siyuan.storage.get reject: %v", p.Name, rejectErr)
+			}
+		}
+
+		return rt.ToValue(promise)
+	})))
+}
+
+// bindStoragePut 安装对应的沙箱方法，异步操作仍通过插件工作线程执行。
+func bindStoragePut(p *KernelPlugin, rt *goja.Runtime, storage *goja.Object, resolvePath func(string) (string, error)) {
+	lo.Must0(storage.Set("put", rt.ToValue(func(call goja.FunctionCall, rt *goja.Runtime) goja.Value {
+		promise, resolve, reject := rt.NewPromise()
+
+		var argErr error
+		var path, content string
+		if len(call.Arguments) < 2 {
+			argErr = fmt.Errorf("path and content required")
+		} else {
+			path = call.Argument(0).String()
+			content = call.Argument(1).String()
+		}
+
+		runErr := p.worker.Run(func(rt *goja.Runtime) (result any, err error) {
+			if argErr != nil {
+				err = argErr
+				return
+			}
+			if util.ReadOnly {
+				err = fmt.Errorf("The current kernel is in read-only mode, storage.put is not allowed")
+				return
+			}
+
+			abs, resolveErr := resolvePath(path)
+			if resolveErr != nil {
+				err = resolveErr
+				return
+			}
+
+			done, admissionErr := p.beginStorageWrite()
+			if admissionErr != nil {
+				return nil, admissionErr
+			}
+			go func() (result any, err error) {
+				defer done()
+				defer func() {
+					if r := recover(); r != nil {
+						err = fmt.Errorf("panic during siyuan.storage.put: %v", r)
+					}
+
+					p.worker.Run(func(rt *goja.Runtime) (_ any, _ error) {
+						if lo.IsNil(err) {
+							if resolveErr := resolve(result); resolveErr != nil {
+								logging.LogErrorf("[plugin:%s] siyuan.storage.put resolve: %v", p.Name, resolveErr)
+							}
+						} else {
+							if rejectErr := reject(rt.NewGoError(err)); rejectErr != nil {
+								logging.LogErrorf("[plugin:%s] siyuan.storage.put reject: %v", p.Name, rejectErr)
+							}
+						}
+						return
+					}, nil)
+				}()
+
+				if mkdirErr := os.MkdirAll(filepath.Dir(abs), 0755); mkdirErr != nil {
+					err = fmt.Errorf("failed to make directory: %w", mkdirErr)
+					return
+				}
+				if writeErr := filelock.WriteFile(abs, []byte(content)); writeErr != nil {
+					err = fmt.Errorf("failed to write file: %w", writeErr)
+					return
+				}
+				model.IncSyncIfNeeded(abs)
+				return
+			}()
+
+			return
+		}, func(rt *goja.Runtime, result any, err error) {
+			if !lo.IsNil(err) {
+				if rejectErr := reject(rt.NewGoError(err)); rejectErr != nil {
+					logging.LogErrorf("[plugin:%s] siyuan.storage.put reject: %v", p.Name, rejectErr)
+				}
+			}
+		})
+		if runErr != nil {
+			logging.LogErrorf("[plugin:%s] siyuan.storage.put worker run: %v", p.Name, runErr)
+			if rejectErr := reject(rt.NewGoError(runErr)); rejectErr != nil {
+				logging.LogErrorf("[plugin:%s] siyuan.storage.put reject: %v", p.Name, rejectErr)
+			}
+		}
+
+		return rt.ToValue(promise)
+	})))
+}
+
+// bindStorageRemove 安装对应的沙箱方法，异步操作仍通过插件工作线程执行。
+func bindStorageRemove(p *KernelPlugin, rt *goja.Runtime, storage *goja.Object, resolvePath func(string) (string, error)) {
+	lo.Must0(storage.Set("remove", rt.ToValue(func(call goja.FunctionCall, rt *goja.Runtime) goja.Value {
+		promise, resolve, reject := rt.NewPromise()
+
+		var argErr error
+		var path string
+		if len(call.Arguments) < 1 {
+			argErr = fmt.Errorf("path required")
+		} else {
+			path = call.Argument(0).String()
+		}
+
+		runErr := p.worker.Run(func(rt *goja.Runtime) (result any, err error) {
+			if argErr != nil {
+				err = argErr
+				return
+			}
+			if util.ReadOnly {
+				err = fmt.Errorf("The current kernel is in read-only mode, storage.remove is not allowed")
+				return
+			}
+
+			abs, resolveErr := resolvePath(path)
+			if resolveErr != nil {
+				err = resolveErr
+				return
+			}
+			if abs == p.storageDir {
+				err = fmt.Errorf("cannot remove storage root")
+				return
+			}
+
+			done, admissionErr := p.beginStorageWrite()
+			if admissionErr != nil {
+				return nil, admissionErr
+			}
+			go func() (result any, err error) {
+				defer done()
+				defer func() {
+					if r := recover(); r != nil {
+						err = fmt.Errorf("panic during siyuan.storage.remove: %v", r)
+					}
+
+					p.worker.Run(func(rt *goja.Runtime) (_ any, _ error) {
+						if lo.IsNil(err) {
+							if resolveErr := resolve(result); resolveErr != nil {
+								logging.LogErrorf("[plugin:%s] siyuan.storage.remove resolve: %v", p.Name, resolveErr)
+							}
+						} else {
+							if rejectErr := reject(rt.NewGoError(err)); rejectErr != nil {
+								logging.LogErrorf("[plugin:%s] siyuan.storage.remove reject: %v", p.Name, rejectErr)
+							}
+						}
+						return
+					}, nil)
+				}()
+
+				_, statErr := os.Lstat(abs)
+				affectsSync := !os.IsNotExist(statErr) && model.PathsAffectSync(abs)
+				// 删除可能部分成功，提前记录目录内是否存在参与同步的文件。
+				defer func() {
+					if affectsSync {
+						model.IncSync()
+					}
+				}()
+				if removeErr := os.RemoveAll(abs); removeErr != nil {
+					err = fmt.Errorf("failed to remove: %w", removeErr)
+					return
+				}
+				return
+			}()
+
+			return
+		}, func(rt *goja.Runtime, result any, err error) {
+			if !lo.IsNil(err) {
+				if rejectErr := reject(rt.NewGoError(err)); rejectErr != nil {
+					logging.LogErrorf("[plugin:%s] siyuan.storage.remove reject: %v", p.Name, rejectErr)
+				}
+			}
+		})
+		if runErr != nil {
+			logging.LogErrorf("[plugin:%s] siyuan.storage.remove worker run: %v", p.Name, runErr)
+			if rejectErr := reject(rt.NewGoError(runErr)); rejectErr != nil {
+				logging.LogErrorf("[plugin:%s] siyuan.storage.remove reject: %v", p.Name, rejectErr)
+			}
+		}
+
+		return rt.ToValue(promise)
+	})))
+}
+
+// bindStorageList 安装对应的沙箱方法，异步操作仍通过插件工作线程执行。
+func bindStorageList(p *KernelPlugin, rt *goja.Runtime, storage *goja.Object, resolvePath func(string) (string, error)) {
+	lo.Must0(storage.Set("list", rt.ToValue(func(call goja.FunctionCall, rt *goja.Runtime) goja.Value {
+		promise, resolve, reject := rt.NewPromise()
+
+		var argErr error
+		var path string
+		if len(call.Arguments) < 1 {
+			argErr = fmt.Errorf("path required")
+		} else {
+			path = call.Argument(0).String()
+		}
+
+		runErr := p.worker.Run(func(rt *goja.Runtime) (result any, err error) {
+			if argErr != nil {
+				err = argErr
+				return
+			}
+			abs, resolveErr := resolvePath(path)
+			if resolveErr != nil {
+				err = resolveErr
+				return
+			}
+
+			go func() (result any, err error) {
+				defer func() {
+					if r := recover(); r != nil {
+						err = fmt.Errorf("panic during siyuan.storage.list: %v", r)
+					}
+					p.worker.Run(func(rt *goja.Runtime) (_ any, _ error) {
+						if lo.IsNil(err) {
+							if resolveErr := resolve(result); resolveErr != nil {
+								logging.LogErrorf("[plugin:%s] siyuan.storage.list resolve: %v", p.Name, resolveErr)
+							}
+						} else {
+							if rejectErr := reject(rt.NewGoError(err)); rejectErr != nil {
+								logging.LogErrorf("[plugin:%s] siyuan.storage.list reject: %v", p.Name, rejectErr)
+							}
+						}
+						return
+					}, nil)
+				}()
+
+				entries, readErr := os.ReadDir(abs)
+				if readErr != nil {
+					err = fmt.Errorf("failed to read directory: %w", readErr)
+					return
+				}
+
+				results := make([]R, 0, len(entries))
+				for _, entry := range entries {
+					info, infoErr := entry.Info()
+					if infoErr != nil {
+						continue
+					}
+					results = append(results, R{
+						"name":      entry.Name(),
+						"isDir":     info.IsDir(),
+						"isSymlink": util.IsSymlink(entry),
+						"updated":   info.ModTime().Unix(),
+					})
+				}
+
+				result = results
+				return
+			}()
+
+			return
+		}, func(rt *goja.Runtime, result any, err error) {
+			if !lo.IsNil(err) {
+				if rejectErr := reject(rt.NewGoError(err)); rejectErr != nil {
+					logging.LogErrorf("[plugin:%s] siyuan.storage.list reject: %v", p.Name, rejectErr)
+				}
+			}
+		})
+		if runErr != nil {
+			logging.LogErrorf("[plugin:%s] siyuan.storage.list worker run: %v", p.Name, runErr)
+			if rejectErr := reject(rt.NewGoError(runErr)); rejectErr != nil {
+				logging.LogErrorf("[plugin:%s] siyuan.storage.list reject: %v", p.Name, rejectErr)
+			}
+		}
+
+		return rt.ToValue(promise)
+	})))
+}

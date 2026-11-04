@@ -1,0 +1,390 @@
+import {isOnlyMeta, writeText} from "../util/compatibility";
+import {focusByRange} from "../util/selectionOffsets";
+import {openLink} from "../../editor/openLink";
+import {showMessage} from "../../dialog/message";
+import {previewDocImage} from "./image";
+import {getDiagramBlock, previewDiagram} from "./diagram";
+import {needSubscribe} from "../../util/needSubscribe";
+import {Constants} from "../../constants";
+/// #if !BROWSER
+import {
+    enhanceRichClipboard,
+    hasRichClipboardImages,
+    hasRichClipboardMath,
+    hasRichClipboardTables,
+    prepareExternalClipboardHTML,
+} from "../util/richClipboard";
+/// #endif
+/// #if !MOBILE
+import {getAllModels} from "../../layout/getAll";
+/// #endif
+import {fetchPost} from "../../util/fetch";
+import {processRender} from "../util/processCode";
+import {destroyTabsRender, tabsRender} from "../render/tabsRender";
+import {highlightRender} from "../render/highlightRender";
+import {speechRender} from "../render/speechRender";
+import {avRender} from "../render/av/render";
+import {getPadding} from "../ui/initUI";
+import {hasTopClosestByAttribute} from "../util/hasClosest";
+import {prepareWechatCopy, prepareZhihuCopy} from "./platformCopy";
+import {renderWechatMath} from "./wechatMath";
+import {getHostCapabilities} from "../../util/hostCapabilities";
+import {destroyAutoDirection, setAutoDirection} from "../render/autoDirection";
+
+export class Preview {
+    public element: HTMLElement;
+    public previewElement: HTMLElement;
+    private mdTimeoutId: number;
+    private copyingToX = false;
+    private copyEventHandler?: (event: ClipboardEvent) => void;
+
+    constructor(protyle: IProtyle) {
+        this.element = document.createElement("div");
+        this.element.className = "protyle-preview fn__none";
+
+        const previewElement = document.createElement("div");
+        previewElement.className = "b3-typography";
+        if (protyle.options.classes.preview) {
+            previewElement.classList.add(protyle.options.classes.preview);
+        }
+        const actions = protyle.options.preview.actions;
+        if (actions.includes("desktop")) {
+            this.element.dataset.device = "desktop";
+        }
+        const actionElement = document.createElement("div");
+        actionElement.className = "protyle-preview__action";
+        const actionHtml: string[] = [];
+        for (let i = 0; i < actions.length; i++) {
+            const action = actions[i];
+            if (typeof action === "object") {
+                actionHtml.push(`<button type="button" data-type="${action.key}" class="${action.className}">${action.text}</button>`);
+                continue;
+            }
+            switch (action) {
+                case "desktop":
+                    actionHtml.push(`<button type="button" class="protyle-preview__action--current" data-type="desktop">${window.siyuan.languages.desktop}</button>`);
+                    break;
+                case "tablet":
+                    actionHtml.push(`<button type="button" data-type="tablet">${window.siyuan.languages.tablet}</button>`);
+                    break;
+                case "mobile":
+                    actionHtml.push(`<button type="button" data-type="mobile">${window.siyuan.languages.mobile}</button>`);
+                    break;
+                case "mp-wechat":
+                    actionHtml.push(`<button type="button" data-type="mp-wechat" class="b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.copyToWechatMP}"><svg><use xlink:href="#iconMp"></use></svg></button>`);
+                    break;
+                case "zhihu":
+                    actionHtml.push(`<button type="button" data-type="zhihu" class="b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.copyToZhihu}"><svg><use xlink:href="#iconZhihu"></use></svg></button>`);
+                    break;
+                case "yuque":
+                    actionHtml.push(`<button type="button" data-type="yuque" class="b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.copyToYuque}"><svg><use xlink:href="#iconYuque"></use></svg></button>`);
+                    break;
+            }
+        }
+        actionElement.innerHTML = actionHtml.join("");
+        this.element.appendChild(actionElement);
+        this.element.appendChild(previewElement);
+
+        /// #if !BROWSER
+        this.copyEventHandler = (event: ClipboardEvent) => {
+            if (this.copyingToX || !event.clipboardData) {
+                return;
+            }
+
+            const selection = window.getSelection();
+            if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+                return;
+            }
+            const range = selection.getRangeAt(0);
+            if (!previewElement.contains(range.startContainer) || !previewElement.contains(range.endContainer)) {
+                return;
+            }
+
+            const copyElement = document.createElement("div");
+            copyElement.appendChild(range.cloneContents());
+            const copiedHTML = copyElement.innerHTML;
+            const hasImages = hasRichClipboardImages(copiedHTML);
+            const hasMath = hasRichClipboardMath(copiedHTML);
+            const hasTables = hasRichClipboardTables(copiedHTML);
+            if (!hasImages && !hasMath && !hasTables) {
+                return;
+            }
+            const clipboardHTML = hasMath || hasTables ?
+                prepareExternalClipboardHTML(copiedHTML) : copiedHTML;
+
+            const marker = `<!--siyuan-rich-clipboard='${Lute.NewNodeID()}'-->`;
+            const text = selection.toString();
+            const html = marker + clipboardHTML;
+            event.preventDefault();
+            event.clipboardData.setData("text/plain", text);
+            event.clipboardData.setData("text/html", html);
+            if (hasImages) {
+                enhanceRichClipboard(text, html, protyle.notebookId, {
+                    marker,
+                    removeMarker: true,
+                });
+            }
+        };
+        document.addEventListener("copy", this.copyEventHandler);
+        /// #endif
+
+        this.element.addEventListener("dblclick", (event) => {
+            const diagramElement = getDiagramBlock((event.target as Element).closest('[data-subtype="plantuml"]') as HTMLElement);
+            if (diagramElement) {
+                previewDiagram(diagramElement);
+                event.stopPropagation();
+                event.preventDefault();
+            }
+        });
+        this.element.addEventListener("click", (event) => {
+            let target = event.target as HTMLElement;
+            while (target && !target.isEqualNode(this.element)) {
+                if (target.tagName === "A") {
+                    const linkAddress = target.getAttribute("href");
+                    if (linkAddress.startsWith("#")) {
+                        // 导出预览模式点击块引转换后的脚注跳转不正确 https://github.com/siyuan-note/siyuan/issues/5700
+                        const hash = linkAddress.substring(1);
+                        previewElement.querySelector('[data-node-id="' + hash + '"], [id="' + hash + '"]').scrollIntoView();
+                        event.stopPropagation();
+                        event.preventDefault();
+                        break;
+                    }
+
+                    event.stopPropagation();
+                    event.preventDefault();
+                    openLink(protyle.app, linkAddress, event, isOnlyMeta(event));
+                    break;
+                } else if (target.tagName === "IMG") {
+                    const diagramElement = getDiagramBlock(target.closest('[data-subtype="plantuml"]') as HTMLElement);
+                    if (diagramElement) {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        return;
+                    }
+                    previewDocImage((event.target as HTMLElement).getAttribute("src"), protyle.block.rootID,
+                        target.getAttribute(Constants.CUSTOM_SY_LIVE_PHOTO) === "1" ?
+                            target.getAttribute(Constants.CUSTOM_SY_LIVE_PHOTO_VIDEO) || "" : "");
+                    event.stopPropagation();
+                    event.preventDefault();
+                    break;
+                } else if (target.tagName === "BUTTON") {
+                    const type = target.getAttribute("data-type");
+                    if (type !== "mp-wechat" && type !== "zhihu" && type !== "yuque") {
+                        actionElement.querySelectorAll("button").forEach((item) => {
+                            item.classList.remove("protyle-preview__action--current");
+                        });
+                        target.classList.add("protyle-preview__action--current");
+                        if (["desktop", "tablet", "mobile"].includes(type)) {
+                            this.element.dataset.device = type;
+                        }
+                    }
+                    const actionCustom = actions.find((w: IPreviewActionCustom) => w?.key === type) as IPreviewActionCustom;
+                    if (actionCustom) {
+                        actionCustom.click(type);
+                    } else if ((type === "mp-wechat" || type === "zhihu" || type === "yuque")) {
+                        const tempElement = document.createElement("div");
+                        tempElement.appendChild(this.element.lastElementChild.cloneNode(true));
+                        this.copyToX(tempElement, protyle, type);
+                    } else if (type === "desktop") {
+                        previewElement.style.width = "";
+                        this.updatePadding(getPadding(protyle));
+                    } else if (type === "tablet") {
+                        previewElement.style.width = "1024px";
+                        previewElement.style.padding = "8px 16px";
+                    } else {
+                        previewElement.style.width = "360px";
+                        previewElement.style.padding = "8px";
+                    }
+                }
+                target = target.parentElement;
+            }
+            const nodeElement = hasTopClosestByAttribute(event.target as HTMLElement, "id", undefined);
+            if (nodeElement) {
+                // 用于点击后大纲定位
+                this.element.querySelectorAll(".protyle-wysiwyg--select").forEach(item => {
+                    item.classList.remove("selected");
+                });
+                nodeElement.classList.add("selected");
+                /// #if !MOBILE
+                if (protyle.model) {
+                    getAllModels().outline.forEach(item => {
+                        if (item.blockId === protyle.block.rootID) {
+                            item.setCurrentByPreview(nodeElement);
+                        }
+                    });
+                }
+                /// #else
+                window.siyuan.mobile.docks.outline?.setCurrentByPreview(nodeElement);
+                /// #endif
+                const diagramElement = getDiagramBlock(nodeElement);
+                if (diagramElement && diagramElement.getAttribute("data-subtype") !== "plantuml") {
+                    previewDiagram(diagramElement);
+                    event.stopPropagation();
+                    event.preventDefault();
+                    return;
+                }
+            }
+        });
+
+        this.previewElement = previewElement;
+    }
+
+    public destroy() {
+        destroyAutoDirection(this.previewElement);
+        destroyTabsRender(this.previewElement);
+        window.clearTimeout(this.mdTimeoutId);
+        /// #if !BROWSER
+        if (this.copyEventHandler) {
+            document.removeEventListener("copy", this.copyEventHandler);
+            this.copyEventHandler = undefined;
+        }
+        /// #endif
+    }
+
+    public updatePadding(padding: { left: number, right: number, bottom: number, top: number }) {
+        if (!this.element.classList.contains("fn__none") &&
+            this.element.querySelector('.protyle-preview__action [data-type="desktop"]')?.classList.contains("protyle-preview__action--current")) {
+            if (this.element.dataset.paddingMode === "responsive") {
+                this.previewElement.style.padding = "";
+                this.previewElement.style.paddingTop = `${padding.top}px`;
+                this.previewElement.style.paddingBottom = `${padding.bottom}px`;
+            } else {
+                this.previewElement.style.padding = `${padding.top}px ${padding.left}px ${padding.bottom}px ${padding.right}px`;
+            }
+        }
+    }
+
+    public render(protyle: IProtyle, callback?: () => void, onError?: () => void) {
+        if (this.element.style.display === "none") {
+            callback?.();
+            return;
+        }
+        this.updatePadding(getPadding(protyle));
+
+        let loadingElement = this.element.querySelector(".fn__loading");
+        if (!loadingElement) {
+            this.element.insertAdjacentHTML("beforeend", `<div style="flex-direction: column;" class="fn__loading">
+    <span class="b3-loading b3-loading--large" aria-hidden="true"></span>
+</div>`);
+            loadingElement = this.element.querySelector(".fn__loading");
+        }
+        this.mdTimeoutId = window.setTimeout(() => {
+            let handled = false;
+            void fetchPost("/api/export/preview", {
+                id: protyle.block.id || protyle.options.blockId || protyle.block.parentID,
+            }, response => {
+                handled = true;
+                if (response.code !== 0 || !response.data) {
+                    onError?.();
+                    return;
+                }
+                const oldScrollTop = protyle.preview.previewElement.scrollTop;
+                protyle.preview.previewElement.innerHTML = getHostCapabilities().remoteKernel ?
+                    window.DOMPurify.sanitize(response.data.html) : response.data.html;
+                /// #if MOBILE
+                protyle.preview.previewElement.querySelector(`#${CSS.escape(protyle.block.rootID)}`)
+                    ?.classList.add("protyle-preview__title");
+                /// #endif
+                processRender(protyle.preview.previewElement);
+                setAutoDirection(protyle.preview.previewElement, window.siyuan.config.editor.autoDirection);
+                tabsRender(protyle.preview.previewElement, {label: window.siyuan.languages.tabItem,
+                    shown: item => processRender(item)});
+                highlightRender(protyle.preview.previewElement);
+                void avRender(protyle.preview.previewElement, protyle).then(() => callback?.(), () => onError?.());
+                speechRender(protyle.preview.previewElement, window.siyuan.config.appearance.lang);
+                protyle.preview.previewElement.scrollTop = oldScrollTop;
+                loadingElement.remove();
+            }, undefined, () => onError?.()).then(() => {
+                if (!handled) onError?.();
+            }, () => onError?.());
+        }, protyle.options.preview.delay);
+    }
+
+    private link2online(copyElement: HTMLElement) {
+        if (needSubscribe("")) {
+            return;
+        }
+        copyElement.querySelectorAll("[href],[src]").forEach(item => {
+            const oldLink = item.getAttribute("href") || item.getAttribute("src");
+            if (oldLink && oldLink.startsWith("assets/")) {
+                const newLink = Constants.ASSETS_ADDRESS + window.siyuan.user.userId + "/" + oldLink;
+                if (item.getAttribute("href")) {
+                    item.setAttribute("href", newLink);
+                } else {
+                    item.setAttribute("src", newLink);
+                }
+            }
+        });
+    }
+
+    private async copyToX(copyElement: HTMLElement, protyle: IProtyle, type?: string) {
+        if (type === "mp-wechat") {
+            this.link2online(copyElement);
+            await renderWechatMath(copyElement);
+            prepareWechatCopy(copyElement, this.previewElement);
+        } else if (type === "zhihu") {
+            this.link2online(copyElement);
+            copyElement.querySelectorAll('[data-subtype="math"]').forEach((item: HTMLElement) => {
+                // https://github.com/siyuan-note/siyuan/issues/10015
+                item.outerHTML = `<img class="Formula-image" data-eeimg="true" src="//www.zhihu.com/equation?tex=" alt="${item.getAttribute("data-content")}" style="${item.tagName === "DIV" ? "display: block; max-width: 100%;" : ""}margin: 0 auto;">`;
+            });
+            prepareZhihuCopy(copyElement);
+        } else if (type === "yuque") {
+            fetchPost("/api/lute/copyStdMarkdown", {
+                id: protyle.block.id || protyle.options.blockId || protyle.block.parentID,
+                assetsDestSpace2Underscore: true,
+                fillCSSVar: true,
+                adjustHeadingLevel: true,
+            }, (response) => {
+                writeText(response.data);
+                showMessage(`${window.siyuan.languages.pasteToYuque}`);
+            });
+            return;
+        }
+
+        // 防止背景色被粘贴到公众号中
+        copyElement.style.backgroundColor = "#fff";
+        // 代码背景
+        copyElement.querySelectorAll("code").forEach((item) => {
+            item.style.backgroundImage = "none";
+        });
+        const copyEditElement = copyElement.querySelector(".b3-typography") as HTMLElement;
+        if (copyEditElement.firstElementChild.tagName === "DIV") {
+            // 最后/第一个块是公式块时无法复制下来
+            copyElement.insertAdjacentHTML("afterbegin", "<p>&zwj;</p>");
+        }
+        if (copyEditElement.lastElementChild.tagName === "DIV") {
+            copyElement.insertAdjacentHTML("beforeend", "<p>&zwj;</p>");
+
+        }
+        this.element.append(copyElement);
+        let cloneRange;
+        if (getSelection().rangeCount > 0) {
+            cloneRange = getSelection().getRangeAt(0).cloneRange();
+        }
+        const range = copyElement.ownerDocument.createRange();
+        if (copyEditElement.firstElementChild.tagName === "DIV") {
+            range.setStart(copyElement.firstElementChild, 0);
+        } else {
+            range.setStartBefore(copyElement.firstElementChild);
+        }
+        if (copyEditElement.lastElementChild.tagName === "DIV") {
+            range.setEndBefore(copyElement.lastElementChild);
+        } else {
+            range.setEndAfter(copyElement.lastElementChild);
+        }
+        focusByRange(range);
+        this.copyingToX = true;
+        try {
+            document.execCommand("copy");
+        } finally {
+            this.copyingToX = false;
+        }
+        this.element.lastElementChild.remove();
+        focusByRange(cloneRange);
+        if (type) {
+            showMessage(`${type === "zhihu" ? window.siyuan.languages.pasteToZhihu : window.siyuan.languages.pasteToWechatMP}`);
+        }
+    }
+
+}

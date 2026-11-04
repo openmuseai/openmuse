@@ -1,0 +1,13 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id,tags
+0,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/FunctionContext.java,FunctionContext,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/FunctionContext.rs,,,0524_rust_stub
+1,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/NamespaceContext.java,NamespaceContext,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/NamespaceContext.rs,,,0524_rust_stub
+2,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/VariableContext.java,VariableContext,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/VariableContext.rs,,,0524_rust_stub
+5,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/Function.java,Function,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/Function.rs,,,0524_rust_stub
+7,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/saxpath/SAXPathEventSource.java,SAXPathEventSource,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/saxpath/SAXPathEventSource.rs,,,0524_rust_stub
+9,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/XPath.java,XPath,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/XPath.rs,,,0524_rust_stub
+2,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/expr/XPathFactory.java,XPathFactory,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/expr/XPathFactory.rs,,,0524_rust_stub
+0,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/javabean/Element.java,Element,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/javabean/Element.rs,,,0524_rust_stub
+0,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/pattern/Pattern.java,Pattern,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/pattern/Pattern.rs,,,0524_rust_stub
+0,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/saxpath/Operator.java,Operator,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/saxpath/Operator.rs,,,0524_rust_stub
+0,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/saxpath/XPathHandler.java,XPathHandler,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/saxpath/XPathHandler.rs,,,0524_rust_stub
+0,koffice/core-libs/thirdparty/jaxen/src/org/jaxen/saxpath/base/Token.java,Token,steady,,main,,libs/core-libs/thirdparty/jaxen/src/org/jaxen/saxpath/base/Token.rs,,,0524_rust_stub

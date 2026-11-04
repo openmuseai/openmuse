@@ -1,0 +1,14 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/io/poi-compact/src/cn/wps/crypt/CryptDocFile.java,cn/wps/crypt,Plan too large: 229 entries (164 unresolved deps exceed limit 30). File deferred.,2026-05-22
+koffice/core-libs/io/poi-compact/src/cn/wps/encrypt/AgileDecryptor.java,cn/wps/encrypt,too many dependencies,2026-05-23
+koffice/core-libs/io/poi-compact/src/org/apache/poi/ddf/EscherBitmapBlip.java,org/apache/poi/ddf,too many dependencies,2026-05-23
+koffice/core-libs/io/poi-compact/src/org/apache/poi/ddf/EscherMetafileBlip.java,org/apache/poi/ddf,too many dependencies,2026-05-23
+koffice/core-libs/io/poi-compact/src/org/apache/poi/ddf/DefaultEscherRecordFactory.java,org/apache/poi/ddf,too many dependencies,2026-06-06
+koffice/core-libs/io/poi-compact/src/org/apache/poi/ddf/EscherArrayProperty.java,org/apache/poi/ddf,too many dependencies,2026-06-06
+koffice/core-libs/io/poi-compact/src/org/apache/poi/ddf/EscherBlipRecord.java,org/apache/poi/ddf,too many dependencies,2026-06-06
+koffice/core-libs/io/poi-compact/src/org/apache/poi/ddf/EscherBoolProperty.java,org/apache/poi/ddf,too many dependencies,2026-06-06
+koffice/core-libs/io/poi-compact/src/org/apache/poi/ddf/EscherBStoreContainerRecord.java,org/apache/poi/ddf,too many dependencies,2026-06-06
+koffice/core-libs/io/poi-compact/src/org/apache/poi/ddf/EscherOptRecord.java,org/apache/poi/ddf,too many dependencies,2026-06-06
+koffice/core-libs/io/poi-compact/src/org/apache/poi/hpsf/CustomProperty.java,org/apache/poi/hpsf,too many dependencies,2026-06-06
+koffice/core-libs/io/poi-compact/src/org/apache/poi/hpsf/IllegalVariantTypeException.java,org/apache/poi/hpsf,too many dependencies,2026-06-06
+koffice/core-libs/io/poi-compact/src/org/apache/poi/hpsf/ReadingNotSupportedException.java,org/apache/poi/hpsf,too many dependencies,2026-06-06

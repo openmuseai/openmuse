@@ -1,0 +1,16 @@
+{
+  "mainJavaPath": "d:\\agentic\\src\\wordOffice\\koffice\\presentation\\core\\cn\\wps\\show\\app\\KmoPresentations.java",
+  "mode": "rewrite",
+  "files": [
+    {
+      "javaPath": "d:\\agentic\\src\\wordOffice\\koffice\\presentation\\core\\cn\\wps\\show\\app\\KmoPresentations.java",
+      "rustPath": "d:\\agentic\\src\\wordOffice\\libs\\ppt-core\\src\\cn\\wps\\show\\app\\KmoPresentations.rs",
+      "currentStep": "cargo_check",
+      "status": "error",
+      "error": "[cargo check]\n    Blocking waiting for file lock on package cache\n    Blocking waiting for file lock on package cache\n    Checking ppt-core v0.1.0 (D:\\agentic\\src\\wordOffice\\libs\\ppt-core)\nerror: expected expression, found `;`\n  --> src\\cn\\wps\\show\\graphics\\shape3d\\LightMaterial.rs:11:42\n   |\n11 | pub(crate) const TAG: String = /* TODO */;\n   |                                          ^ expected expression\n\nerror[E0432]: unresolved import `crate::cn::wps::drawing::app::shape::DgShapeStyle`\n --> src\\cn\\wps\\show\\app\\KmoPresentations.rs:6:42\n  |\n6 | use crate::cn::wps::drawing::app::shape::DgShapeStyle::DgShapeStyle;\n  |                                          ^^^^^^^^^^^^ could not find `DgShapeStyle` in `shape`\n  |\nnote: found an item that was configured out\n --> src\\cn\\wps\\drawing\\app\\shape\\mod.rs:8:9\n  |\n7 | #[cfg(any())]\n  |          -- the item is gated here\n8 | pub mod DgShapeStyle;\n  |         ^^^^^^^^^^^^\n\nerror[E0433]: cannot find `cn` in `kfc_kfc_alpha`\n --> src\\cn\\wps\\kso\\kproto\\memory\\KpPaged.rs:4:20\n  |\n4 | use kfc_kfc_alpha::cn::wps::kfc::util::KcByte::KcByte;\n  |                    ^^ could not find `cn` in `kfc_kfc_alpha`\n\nerror[E0432]: unresolved import `crate::cn::wps::show::app::KmoPresentation`\n  --> src\\cn\\wps\\show\\app\\KmoPresentations.rs:13:32\n   |\n13 | use crate::cn::wps::show::app::KmoPresentation::KmoPresentation;\n   |                                ^^^^^^^^^^^^^^^ could not find `KmoPresentation` in `app`\n   |\nnote: found an item that was configured out\n  --> src\\cn\\wps\\show\\app\\mod.rs:4:9\n   |\n 3 | #[cfg(any())]\n   |          -- the item is gated here\n 4 | pub mod KmoPresentation;\n   |         ^^^^^^^^^^^^^^^\n\nSome errors have detailed explanations: E0432, E0433.\nFor more information about an error, try `rustc --explain E0432`.\nerror: could not compile `ppt-core` (lib) due to 4 previous errors\n",
+      "retryCount": 0,
+      "errorCnt": 0
+    }
+  ],
+  "timestamp": "2026-06-06T11:29:08.417Z"
+}

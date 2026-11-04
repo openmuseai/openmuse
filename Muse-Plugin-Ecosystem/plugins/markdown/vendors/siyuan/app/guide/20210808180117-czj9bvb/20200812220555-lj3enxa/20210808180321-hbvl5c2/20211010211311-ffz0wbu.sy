@@ -1,0 +1,232 @@
+{
+	"ID": "20211010211311-ffz0wbu",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20211010211311-ffz0wbu",
+		"title": "虚拟引用",
+		"type": "doc",
+		"updated": "20261024163013"
+	},
+	"Children": [
+		{
+			"ID": "20211010211311-p49lqrm",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211010211311-p49lqrm",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20211010211345-ewlmf4o",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211010211345-ewlmf4o",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "虚拟引用根据已有引用的锚文本、内容块命名等信息，在编辑器中标记可能相关的文本，并支持浮窗预览。它只是关联提示，不会自动建立实际的块引用。"
+				}
+			]
+		},
+		{
+			"ID": "20211010211443-fekufvk",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211010211443-fekufvk",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用方式"
+				}
+			]
+		},
+		{
+			"ID": "20211010211616-b5kzfqf",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211010211616-b5kzfqf",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "打开 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "编辑器"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "双向链接"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "虚拟引用"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 开关即可。"
+				}
+			]
+		},
+		{
+			"ID": "20211010211708-0qn8cpl",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211010211708-0qn8cpl",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "探测规则"
+				}
+			]
+		},
+		{
+			"ID": "20211010211712-g08nujc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211010211712-g08nujc",
+				"updated": "20211010212520"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "根据已有块引的锚文本/定义块文本、块的命名和别名作为关键字搜索，如果在当前内容块的纯文本元素上搜索到这些关键字，那么就会作为虚拟引用。"
+				}
+			]
+		},
+		{
+			"ID": "20240228163645-zvlgahq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240228163645-zvlgahq",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "搜索"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "虚拟引用"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中调整关键字搜索范围。"
+				}
+			]
+		},
+		{
+			"ID": "20221003214348-710vren",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20221003214348-710vren",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				}
+			]
+		},
+		{
+			"ID": "20221003214411-d3c0jte",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20221003214411-d3c0jte",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"ID": "20221003214412-j7wcb07",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20221003214412-j7wcb07",
+						"updated": "20261016202635"
+					},
+					"Children": [
+						{
+							"ID": "20221003214412-uixysyj",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20221003214412-uixysyj",
+								"updated": "20261016202635"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "虚拟引用不会即时更新。请等待搜索索引完成后刷新或重新打开文档；如果关键词仍未更新，再尝试重建索引"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

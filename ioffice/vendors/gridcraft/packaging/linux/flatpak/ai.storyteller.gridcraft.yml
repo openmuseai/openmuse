@@ -1,0 +1,67 @@
+# Flatpak manifest for GridCraft, ready for a Flathub submission.
+#
+# Flatpak builds run offline, so the crate sources must be vendored first. From the repo root:
+#
+#   curl -fsSLO https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/cargo/flatpak-cargo-generator.py
+#   python3 flatpak-cargo-generator.py Cargo.lock -o packaging/linux/flatpak/cargo-sources.json
+#   flatpak-builder --user --install --force-clean build-flatpak packaging/linux/flatpak/ai.storyteller.gridcraft.yml
+#   flatpak run ai.storyteller.gridcraft
+#
+# For Flathub, replace the `dir` source with a `git` source pinned to a release tag and commit.
+# The single-file .flatpak attached to each release comes from ai.storyteller.gridcraft.bundle.yml,
+# which repackages the prebuilt release binaries. Keep runtime-version and finish-args identical.
+id: ai.storyteller.gridcraft
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: gridcraft
+finish-args:
+  # Display: Wayland first; X11 only when no Wayland compositor is running.
+  - --socket=wayland
+  - --socket=fallback-x11
+  # X11 shared memory (MIT-SHM). Without it the X11 fallback is slow or fails.
+  - --share=ipc
+  # GPU access for rendering.
+  - --device=dri
+  # Open/Save dialogs use the file-chooser portal (rfd), and drag-and-drop uses the document
+  # portal, so broad filesystem access isn't needed. Documents and Downloads are granted for
+  # opening workbooks by path from the command line.
+  - --filesystem=xdg-documents
+  - --filesystem=xdg-download
+  # Deliberately not granted: network (the optional --control channel listens on 127.0.0.1 in
+  # the sandbox; `flatpak override --user --share=network ai.storyteller.gridcraft` exposes it to
+  # host agents) and home/host filesystem access.
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+modules:
+  - name: gridcraft
+    buildsystem: simple
+    build-options:
+      env:
+        CARGO_HOME: /run/build/gridcraft/cargo
+        CARGO_NET_OFFLINE: 'true'
+    build-commands:
+      - cargo --offline build --release --locked -p gridcraft -p gridcraft-cli
+      - install -Dm755 target/release/gridcraft /app/bin/gridcraft
+      - install -Dm755 target/release/gridcraft-cli /app/bin/gridcraft-cli
+      - install -Dm644 packaging/linux/ai.storyteller.gridcraft.desktop /app/share/applications/ai.storyteller.gridcraft.desktop
+      - install -Dm644 packaging/linux/ai.storyteller.gridcraft.mime.xml /app/share/mime/packages/ai.storyteller.gridcraft.xml
+      - mkdir -p /app/share/icons && cp -R assets/app-icon/hicolor /app/share/icons/
+      - >-
+        version=$(awk '/^\[/{p=($0=="[workspace.package]");next} p&&$1=="version"{gsub(/[" ]/,"",$3);print $3;exit}' Cargo.toml);
+        install -d /app/share/metainfo;
+        sed -e "s/@VERSION@/$version/" -e "s/@DATE@/$(date -u +%Y-%m-%d)/"
+        packaging/linux/ai.storyteller.gridcraft.metainfo.xml.in > /app/share/metainfo/ai.storyteller.gridcraft.metainfo.xml
+    sources:
+      - type: dir
+        path: ../../..
+        skip:
+          - target
+          - target-xtask
+          - dist
+          - corpus
+          - build-flatpak
+          - .flatpak-builder
+      - cargo-sources.json

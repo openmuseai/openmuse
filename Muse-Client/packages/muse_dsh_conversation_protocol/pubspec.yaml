@@ -1,0 +1,8 @@
+name: muse_dsh_conversation_protocol
+description: Versioned native conversation protocol for the pinned DSH runtime.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dev_dependencies:
+  test: ^1.26.0

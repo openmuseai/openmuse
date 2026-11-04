@@ -1,0 +1,499 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package util
+
+import (
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
+	"net/url"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime/debug"
+	"strconv"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/88250/go-humanize"
+	"github.com/88250/gulu"
+	"github.com/88250/lute/ast"
+	"github.com/88250/lute/html"
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/ocr"
+)
+
+var (
+	TesseractBin     = "tesseract"
+	TesseractEnabled bool
+	TesseractMaxSize = 2 * 1000 * uint64(1000)
+	TesseractLangs   []string
+
+	assetsTexts        = map[string]string{}
+	assetsTextAliases  = map[string][]string{}
+	assetsTextsLock    = sync.Mutex{}
+	assetsTextsChanged = atomic.Bool{}
+)
+
+func CleanNotExistAssetsTexts(exists func(string) bool) {
+	assetsTextsLock.Lock()
+	defer assetsTextsLock.Unlock()
+
+	assetsPath := GetDataAssetsAbsPath()
+	var toRemoves []string
+	for asset := range assetsTexts {
+		assetAbsPath := strings.TrimPrefix(OCRAssetKey(asset), "assets")
+		assetAbsPath = filepath.Join(assetsPath, assetAbsPath)
+		if !filelock.IsExist(assetAbsPath) && !exists(asset) {
+			toRemoves = append(toRemoves, asset)
+		}
+	}
+
+	for _, asset := range toRemoves {
+		delete(assetsTexts, asset)
+		assetsTextsChanged.Store(true)
+	}
+}
+
+func LoadAssetsTexts() {
+	assetsPath := GetDataAssetsAbsPath()
+	assetsTextsPath := filepath.Join(assetsPath, "ocr-texts.json")
+	if !filelock.IsExist(assetsTextsPath) {
+		return
+	}
+
+	start := time.Now()
+	data, err := filelock.ReadFile(assetsTextsPath)
+	if err != nil {
+		logging.LogErrorf("read assets texts failed: %s", err)
+		return
+	}
+
+	loaded := map[string]string{}
+	if err = gulu.JSON.UnmarshalJSON(data, &loaded); err == nil && loaded == nil {
+		err = errors.New("OCR texts must be an object")
+	}
+	if err != nil {
+		logging.LogErrorf("unmarshal assets texts failed: %s", err)
+		return
+	}
+	aliases := map[string][]string{}
+	for reference := range loaded {
+		if key := OCRAssetKey(reference); key != reference {
+			aliases[key] = append(aliases[key], reference)
+		}
+	}
+	assetsTextsLock.Lock()
+	assetsTexts = loaded
+	assetsTextAliases = aliases
+	assetsTextsLock.Unlock()
+	debug.FreeOSMemory()
+
+	if elapsed := time.Since(start).Seconds(); 2 < elapsed {
+		logging.LogWarnf("read assets texts [%s] to [%s], elapsed [%.2fs]", humanize.BytesCustomCeil(uint64(len(data)), 2), assetsTextsPath, elapsed)
+	}
+}
+
+func SaveAssetsTexts() {
+	if !assetsTextsChanged.Load() {
+		return
+	}
+
+	start := time.Now()
+
+	assetsPath := GetDataAssetsAbsPath()
+	assetsTextsPath := filepath.Join(assetsPath, "ocr-texts.json")
+
+	assetsTextsLock.Lock()
+	// OCR 功能未开启且 ocr-texts.json 不存在时，如果 assetsTexts 为空则不创建文件
+	if !filelock.IsExist(assetsTextsPath) && 0 == len(assetsTexts) {
+		assetsTextsLock.Unlock()
+		assetsTextsChanged.Store(false)
+		return
+	}
+	data, err := gulu.JSON.MarshalIndentJSON(assetsTexts, "", "  ")
+	if err != nil {
+		logging.LogErrorf("marshal assets texts failed: %s", err)
+		assetsTextsLock.Unlock()
+		return
+	}
+	if err = filelock.WriteFile(assetsTextsPath, data); err != nil {
+		assetsTextsLock.Unlock()
+		logging.LogErrorf("write assets texts failed: %s", err)
+		return
+	}
+	assetsTextsChanged.Store(false)
+	assetsTextsLock.Unlock()
+	debug.FreeOSMemory()
+
+	if elapsed := time.Since(start).Seconds(); 2 < elapsed {
+		logging.LogWarnf("save assets texts [size=%s] to [%s], elapsed [%.2fs]", humanize.BytesCustomCeil(uint64(len(data)), 2), assetsTextsPath, elapsed)
+	}
+}
+
+func SetAssetText(asset, text string) {
+	asset = OCRAssetKey(asset)
+	assetsTextsLock.Lock()
+	oldText, ok := assetsTexts[asset]
+	assetsTexts[asset] = text
+	assetsTextsLock.Unlock()
+	if !ok || oldText != text {
+		assetsTextsChanged.Store(true)
+	}
+}
+
+func ExistsAssetText(asset string) (ret bool) {
+	assetsTextsLock.Lock()
+	_, ret = assetsTexts[asset]
+	if !ret {
+		_, ret = assetsTexts[OCRAssetKey(asset)]
+	}
+	assetsTextsLock.Unlock()
+	return
+}
+
+func GetAssetText(asset string) (ret string) {
+	assetsTextsLock.Lock()
+	var found bool
+	ret, found = assetsTexts[OCRAssetKey(asset)]
+	if !found {
+		ret = assetsTexts[asset]
+	}
+	assetsTextsLock.Unlock()
+	return
+}
+
+func RemoveAssetText(asset string) {
+	key := OCRAssetKey(asset)
+	assetsTextsLock.Lock()
+	delete(assetsTexts, asset)
+	delete(assetsTexts, key)
+	// 同时移除旧版本保存的完整查询参数别名，避免删除规范键后重新读到旧结果。
+	for _, reference := range assetsTextAliases[key] {
+		delete(assetsTexts, reference)
+	}
+	delete(assetsTextAliases, key)
+	assetsTextsLock.Unlock()
+	assetsTextsChanged.Store(true)
+}
+
+// OCRAssetKey 保留本地资源的笔记本身份，只合并显示参数和片段；外部地址保留完整查询参数。
+func OCRAssetKey(asset string) string {
+	asset = strings.SplitN(asset, "#", 2)[0]
+	if index := strings.IndexByte(asset, '?'); index >= 0 && strings.HasPrefix(asset, "assets/") {
+		query, err := url.ParseQuery(asset[index+1:])
+		if err != nil {
+			return asset
+		}
+		if boxID := strings.TrimSpace(query.Get("box")); boxID != "" {
+			return asset[:index] + "?box=" + url.QueryEscape(boxID)
+		}
+		return asset[:index]
+	}
+	return asset
+}
+
+var tesseractExts = []string{
+	".png",
+	".jpg",
+	".jpeg",
+	".tif",
+	".tiff",
+	".bmp",
+	".gif",
+	".webp",
+	".pbm",
+	".pgm",
+	".ppm",
+	".pnm",
+}
+
+func IsTesseractExtractable(p string) bool {
+	lowerName := strings.ToLower(p)
+	for _, ext := range tesseractExts {
+		if strings.HasSuffix(lowerName, ext) {
+			return true
+		}
+	}
+	return false
+}
+
+// tesseractOCRLock 用于 Tesseract OCR 加锁串行执行提升稳定性 https://github.com/siyuan-note/siyuan/issues/7265
+var tesseractOCRLock = sync.Mutex{}
+
+type TesseractProvider struct{}
+
+func (TesseractProvider) Available() bool {
+	return ContainerStd == Container && TesseractEnabled
+}
+
+func (TesseractProvider) Recognize(parent context.Context, imgAbsPath string) (ret []map[string]string, err error) {
+	if ContainerStd != Container || !TesseractEnabled {
+		err = ocr.ErrUnavailable
+		return
+	}
+
+	tesseractOCRLock.Lock()
+	defer tesseractOCRLock.Unlock()
+
+	if !IsTesseractExtractable(imgAbsPath) {
+		err = errors.New("unsupported Tesseract image format")
+		return
+	}
+
+	info, err := os.Stat(imgAbsPath)
+	if err != nil {
+		return
+	}
+
+	if TesseractMaxSize < uint64(info.Size()) {
+		err = errors.New("image exceeds Tesseract size limit")
+		return
+	}
+
+	timeout := 7000
+	timeoutEnv := os.Getenv("SIYUAN_TESSERACT_TIMEOUT")
+	if "" != timeoutEnv {
+		if timeoutParsed, parseErr := strconv.Atoi(timeoutEnv); nil == parseErr && timeoutParsed > 0 {
+			timeout = timeoutParsed
+		} else {
+			logging.LogWarnf("parse tesseract timeout [%s] failed: %s", timeoutEnv, parseErr)
+		}
+	}
+	ctx, cancel := context.WithTimeout(parent, time.Duration(timeout)*time.Millisecond)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, TesseractBin, "-c", "debug_file=/dev/null", imgAbsPath, "stdout", "-l", strings.Join(TesseractLangs, "+"), "tsv")
+	gulu.CmdAttr(cmd)
+	output, err := cmd.Output()
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		logging.LogWarnf("tesseract [path=%s, size=%d] timeout [%dms]", imgAbsPath, info.Size(), timeout)
+		err = ctx.Err()
+		return
+	}
+
+	if err != nil {
+		logging.LogWarnf("tesseract [path=%s, size=%d] failed: %s", imgAbsPath, info.Size(), err)
+		return
+	}
+
+	tsv := string(output)
+	//logging.LogInfof("tesseract [path=%s] success [%s]", imgAbsPath, tsv)
+
+	// 按行分割 TSV 数据
+	tsv = strings.ReplaceAll(tsv, "\r", "")
+	lines := strings.Split(tsv, "\n")
+	if len(lines) == 0 || !strings.HasPrefix(lines[0], "level\t") {
+		return nil, errors.New("invalid Tesseract TSV response")
+	}
+
+	// 解析 TSV 数据 跳过标题行，从第二行开始处理
+	for _, line := range lines[1:] {
+		if line == "" {
+			continue // 跳过空行
+		}
+		// 分割每列数据
+		fields := strings.Split(line, "\t")
+		// 将字段名和字段值映射到一个 map 中
+		dataMap := make(map[string]string)
+		headers := strings.Split(lines[0], "\t")
+		for i, header := range headers {
+			if i < len(fields) {
+				dataMap[header] = fields[i]
+			} else {
+				dataMap[header] = ""
+			}
+		}
+		ret = append(ret, dataMap)
+	}
+
+	tsv = RemoveInvalid(tsv)
+	tsv = RemoveRedundantSpace(tsv)
+	msg := fmt.Sprintf("OCR [%s] [%s]", html.EscapeString(info.Name()), html.EscapeString(GetOcrJsonText(ret)))
+	PushStatusBar(msg)
+	return
+}
+
+// GetOcrJsonText 提取并连接所有 text 字段的函数
+func GetOcrJsonText(jsonData []map[string]string) (ret string) {
+	for _, dataMap := range jsonData {
+		// 检查 text 字段是否存在
+		if text, ok := dataMap["text"]; ok {
+			ret += " " + strings.ReplaceAll(text, "\r", "")
+		}
+	}
+	ret = RemoveInvalid(ret)
+	ret = RemoveRedundantSpace(ret)
+	return ret
+}
+
+var tesseractInited = atomic.Bool{}
+
+func WaitForTesseractInit() {
+	_ = WaitForTesseractInitContext(context.Background())
+}
+
+func WaitForTesseractInitContext(ctx context.Context) error {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+	for !tesseractInited.Load() {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+		}
+	}
+	return ctx.Err()
+}
+
+func InitTesseract() {
+	defer BroadcastByType("main", "ocrChanged", 0, "", nil)
+	ver := getTesseractVer()
+	if "" == ver {
+		tesseractInited.Store(true)
+		return
+	}
+
+	langs := getTesseractLangs()
+	if 1 > len(langs) {
+		logging.LogWarnf("no tesseract langs found, disabling tesseract-ocr")
+		TesseractEnabled = false
+		tesseractInited.Store(true)
+		return
+	}
+
+	maxSizeVal := os.Getenv("SIYUAN_TESSERACT_MAX_SIZE")
+	if "" != maxSizeVal {
+		if maxSize, parseErr := strconv.ParseUint(maxSizeVal, 10, 64); nil == parseErr {
+			TesseractMaxSize = maxSize
+		}
+	}
+
+	// Supports via environment var `SIYUAN_TESSERACT_ENABLED=false` to close OCR https://github.com/siyuan-note/siyuan/issues/9619
+	if enabled := os.Getenv("SIYUAN_TESSERACT_ENABLED"); "" != enabled {
+		if enabledBool, parseErr := strconv.ParseBool(enabled); nil == parseErr {
+			TesseractEnabled = enabledBool
+			if !enabledBool {
+				logging.LogInfof("tesseract-ocr disabled by env")
+				tesseractInited.Store(true)
+				return
+			}
+		}
+	}
+
+	TesseractLangs = filterTesseractLangs(langs)
+	logging.LogInfof("tesseract-ocr enabled [ver=%s, maxSize=%s, langs=%s]", ver, humanize.BytesCustomCeil(TesseractMaxSize, 2), strings.Join(TesseractLangs, "+"))
+	tesseractInited.Store(true)
+}
+
+func filterTesseractLangs(langs []string) (ret []string) {
+	ret = []string{}
+
+	envLangsVal := os.Getenv("SIYUAN_TESSERACT_LANGS")
+	if "" != envLangsVal {
+		envLangs := strings.Split(envLangsVal, "+")
+		for _, lang := range langs {
+			if gulu.Str.Contains(lang, envLangs) {
+				ret = append(ret, lang)
+			}
+		}
+	} else {
+		for _, lang := range langs {
+			if "eng" == lang || strings.HasPrefix(lang, "chi") || "fra" == lang || "spa" == lang || "deu" == lang ||
+				"rus" == lang || "jpn" == lang || "osd" == lang {
+				ret = append(ret, lang)
+			}
+		}
+	}
+	return ret
+}
+
+func getTesseractVer() (ret string) {
+	if ContainerStd != Container {
+		return
+	}
+
+	cmd := exec.Command(TesseractBin, "--version")
+	gulu.CmdAttr(cmd)
+	data, err := cmd.CombinedOutput()
+	if err != nil {
+		errMsg := strings.ToLower(err.Error())
+		if strings.Contains(errMsg, "executable file not found") || strings.Contains(errMsg, "no such file or directory") {
+			// macOS 端 Tesseract OCR 安装后不识别 https://github.com/siyuan-note/siyuan/issues/7107
+			TesseractBin = "/usr/local/bin/tesseract"
+			cmd = exec.Command(TesseractBin, "--version")
+			gulu.CmdAttr(cmd)
+			data, err = cmd.CombinedOutput()
+			if err != nil {
+				errMsg = strings.ToLower(err.Error())
+				if strings.Contains(errMsg, "executable file not found") || strings.Contains(errMsg, "no such file or directory") {
+					TesseractBin = "/opt/homebrew/bin/tesseract"
+					cmd = exec.Command(TesseractBin, "--version")
+					gulu.CmdAttr(cmd)
+					data, err = cmd.CombinedOutput()
+				}
+			}
+		}
+	}
+	if err != nil {
+		return
+	}
+
+	if strings.HasPrefix(string(data), "tesseract ") {
+		parts := bytes.Split(data, []byte("\n"))
+		if 0 < len(parts) {
+			ret = strings.TrimPrefix(string(parts[0]), "tesseract ")
+			ret = strings.TrimSpace(ret)
+			TesseractEnabled = true
+		}
+		return
+	}
+	return
+}
+
+func getTesseractLangs() (ret []string) {
+	if !TesseractEnabled {
+		return nil
+	}
+
+	cmd := exec.Command(TesseractBin, "--list-langs")
+	gulu.CmdAttr(cmd)
+	data, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil
+	}
+
+	parts := bytes.Split(data, []byte("\n"))
+	if 0 < len(parts) {
+		parts = parts[1:]
+	}
+	for _, part := range parts {
+		part = bytes.TrimSpace(part)
+		if 0 == len(part) {
+			continue
+		}
+		ret = append(ret, string(part))
+	}
+	return
+}
+
+var (
+	NodeOCRQueue     []string
+	NodeOCRQueueLock = sync.Mutex{}
+)
+
+func PushNodeOCRQueue(n *ast.Node) {
+	if nil == n {
+		return
+	}
+
+	NodeOCRQueueLock.Lock()
+	defer NodeOCRQueueLock.Unlock()
+	NodeOCRQueue = append(NodeOCRQueue, n.ID)
+}

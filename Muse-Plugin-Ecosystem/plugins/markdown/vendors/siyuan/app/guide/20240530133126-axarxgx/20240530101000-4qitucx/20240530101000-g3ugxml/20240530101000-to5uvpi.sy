@@ -1,0 +1,661 @@
+{
+	"ID": "20240530101000-to5uvpi",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-am0hzhl",
+		"id": "20240530101000-to5uvpi",
+		"title": "PDF 注釈",
+		"type": "doc",
+		"updated": "20261027103930"
+	},
+	"Children": [
+		{
+			"ID": "20260614112611-ydoehak",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614112611-ydoehak",
+				"updated": "20261027103930"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-0wtch1l",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614112611-0wtch1l",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源はPDFファイルのプレビューと注釈をサポートしています。PDF内のテキストや領域にマークを付け、注釈参照をドキュメントにコピーすることで、文献読書とノート作成の双方向連携を実現します。"
+				}
+			]
+		},
+		{
+			"ID": "20261027103930-tbpnc0f",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261027103930-tbpnc0f",
+				"updated": "20261027103930"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "同じ PDF を複数のビューアーで開いている場合、異なる注釈への変更は保存時に統合されます。同じ注釈が別のビューアーですでに変更または削除されていると、古い状態に基づく保存は拒否され、PDF を開き直すよう表示されます。必要な未保存の変更を確認してコピーしてから、PDF を開き直して最新の注釈を読み込み、編集を続けてください。"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-gzxk32l",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614112611-gzxk32l",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PDFアセットの挿入"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-stw592m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614112611-stw592m",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PDFファイルをエディタからアップロードして挿入すると、PDFはassetsフォルダに配置され、ドキュメント内に "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "[filename](assets/filename.pdf)"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 形式のリンクが生成されます。リンクをクリックすると思源でプレビューできます。"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-t6idhna",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614112611-t6idhna",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ハイパーリンクページジャンプ"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-he6z12e",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614112611-he6z12e",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "新しいタブでPDFプレビューを開く際、リンクに "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "page"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ パラメータを追加することでページを指定できます。例えば7ページ目にジャンプするには、リンクを "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "[filename](assets/filename.pdf?page=7)"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ に編集します。"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-0hlnngu",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614112611-0hlnngu",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "注釈"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-fnnkdp6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614112611-fnnkdp6",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PDFプレビューでテキストや領域に注釈を付け、注釈参照をドキュメントにコピーして、読書とノート作成をシームレスに連携できます。"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-i11y4bf",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614112611-i11y4bf",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "注釈の作成"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-vyd54x7",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614112611-vyd54x7",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"ID": "20260614112611-840pum1",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614112611-840pum1",
+						"updated": "20260614112611"
+					},
+					"Children": [
+						{
+							"ID": "20260614112611-7iawm45",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614112611-7iawm45",
+								"updated": "20260614112611"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "テキスト選択ハイライト"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：PDF内でテキストを選択し、ポップアップのカラーツールバーから色をクリックすると、半透明のハイライトが追加されます。同時に注釈参照テキストが自動的にクリップボードにコピーされ、ドキュメントに直接貼り付けて参照リンクとして利用できます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614112611-03wopqi",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614112611-03wopqi",
+						"updated": "20260614112611"
+					},
+					"Children": [
+						{
+							"ID": "20260614112611-q2oooxk",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614112611-q2oooxk",
+								"updated": "20260614112611"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "矩形領域注釈"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：PDFツールバーの領域注釈ボタンをクリックし、PDFページ上でドラッグして矩形を描画します。二つのスタイル（背景色付きの塗りつぶし矩形と境界線のみの矩形）をサポートし、注釈メニューのスタイル切替ボタンで切り替えられます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-k351we9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614112611-k351we9",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "注釈は7種類のプリセットカラーをサポートします。注釈データはPDFと同じディレクトリに、PDFと同名の "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".sya"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ ファイルとして自動的に保存されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-39347eh",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614112611-39347eh",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "注釈の操作"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-qwc9p3h",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614112611-qwc9p3h",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PDFページ上の既存の注釈をクリックすると操作メニューが表示されます："
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-vaeeyzu",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614112611-vaeeyzu",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"ID": "20260614112611-6ymisbc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614112611-6ymisbc",
+						"updated": "20260614112611"
+					},
+					"Children": [
+						{
+							"ID": "20260614112611-dnbnxqv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614112611-dnbnxqv",
+								"updated": "20260614112611"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "色の変更"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：新しい色をクリックして注釈の色を変更"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614112611-1eyrji8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614112611-1eyrji8",
+						"updated": "20260614112611"
+					},
+					"Children": [
+						{
+							"ID": "20260614112611-z95ng2n",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614112611-z95ng2n",
+								"updated": "20260614112611"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "スタイル切替"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：スタイル切替ボタンで塗りつぶし矩形と境界線矩形を切り替え（領域注釈のみ）"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614112611-ksdkq06",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614112611-ksdkq06",
+						"updated": "20260614112611"
+					},
+					"Children": [
+						{
+							"ID": "20260614112611-aomwwxy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614112611-aomwwxy",
+								"updated": "20260614112611"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "注釈の削除"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：削除ボタンで注釈を削除"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614112611-8mex4hi",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614112611-8mex4hi",
+						"updated": "20260614112611"
+					},
+					"Children": [
+						{
+							"ID": "20260614112611-dll5cef",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614112611-dll5cef",
+								"updated": "20260614112611"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "再コピー"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：コピーボタンで注釈参照テキストを再度クリップボードにコピー"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614112611-49fyhhb",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614112611-49fyhhb",
+						"updated": "20260614112611"
+					},
+					"Children": [
+						{
+							"ID": "20260614112611-7e65c4l",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614112611-7e65c4l",
+								"updated": "20260614112611"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ブロック関連付け"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：関連付けボタンをクリックし、既存のブロックIDを入力して注釈とドキュメントブロックを手動で関連付け"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-mwv5999",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614112611-mwv5999",
+				"updated": "20260614112612"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "注釈参照"
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-9bzln5i",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614112611-9bzln5i",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "注釈はドキュメントとの双方向連携をサポートします："
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-ykrf33f",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614112611-ykrf33f",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"ID": "20260614112611-xjwntjq",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614112611-xjwntjq",
+						"updated": "20260614112611"
+					},
+					"Children": [
+						{
+							"ID": "20260614112611-ashxyqa",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614112611-ashxyqa",
+								"updated": "20260614112611"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ドキュメントにコピー"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：注釈作成後、参照テキストは "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "&lt;&lt;assets/xxx.pdf/注釈ID \"選択テキスト\"&gt;&gt;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 形式となり、ドキュメントに直接貼り付けて参照リンクとして利用できます。領域注釈をコピーすると、注釈領域のスクリーンショット画像も一緒にコピーされます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614112611-ahmh3rf",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614112611-ahmh3rf",
+						"updated": "20260614112611"
+					},
+					"Children": [
+						{
+							"ID": "20260614112611-8mz7lee",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614112611-8mz7lee",
+								"updated": "20260614112611"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ドキュメントからジャンプ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ドキュメント内の注釈参照リンクをクリックすると、自動的にPDFが開き注釈のあるページにジャンプし、注釈矩形が位置特定のために点滅ハイライトされます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614112611-03rf490",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614112611-03rf490",
+						"updated": "20260614112611"
+					},
+					"Children": [
+						{
+							"ID": "20260614112611-3k4zfkg",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614112611-3k4zfkg",
+								"updated": "20260614112611"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "バックリンクプレビュー"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：PDFページ上で注釈にホバーまたはクリックすると、その注釈を参照しているドキュメントブロックのリストを表示できます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614112611-sujercl",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614112611-sujercl",
+				"updated": "20260614112611"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ドキュメント内の注釈参照のアンカーテキストは編集可能で、右クリックで表示テキストの変更やプレーンテキストへの変換が可能です。"
+				}
+			]
+		},
+		{
+			"ID": "20260614112612-lhs5ylu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614112612-lhs5ylu",
+				"updated": "20260614112612"
+			}
+		}
+	]
+}

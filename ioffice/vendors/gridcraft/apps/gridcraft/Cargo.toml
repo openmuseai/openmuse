@@ -1,0 +1,54 @@
+[package]
+name = "gridcraft"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+default-run = "gridcraft"
+description = "GridCraft desktop app"
+
+[lints]
+workspace = true
+
+[dependencies]
+gridcraft-engine = { workspace = true }
+gridcraft-ui-egui = { workspace = true }
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "wayland", "x11"] }
+egui = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+image = { workspace = true }
+
+[build-dependencies]
+# Icon + VERSIONINFO for gridcraft.exe; build.rs only uses it when the target is Windows.
+winresource = "0.1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+craft-print = { git = "https://github.com/storytold/craft-libs", rev = "d27646a5f7c8b4fc85d9dd3213b8c88b58e0088d" }
+rfd = { workspace = true }
+arboard = { workspace = true }
+
+[target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies]
+arboard = { workspace = true, features = ["wayland-data-control"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+# Blocks on the start-up DirectX 12 adapter probe (`graphics.rs`); already in the tree via eframe.
+pollster = "1"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+muda = { version = "0.21", default-features = false }
+# Finder double-click, Open With, Dock drops and `open -a GridCraft file.xlsx` arrive as a
+# kAEOpenDocuments Apple event, which winit 0.30 doesn't handle (#69). This audited crate (also used
+# by PdfCraft and PhotoCraft) registers the handler (Objective-C interop needs unsafe, which our
+# workspace forbids) behind a safe API. Pinned exactly: review the diff before bumping.
+fmv-macos-events = "=0.1.0"
+
+# tests/mac_menu_appkit.rs: reads AppKit's menu bar back. Already in Cargo.lock (muda, winit);
+# pinned exactly to the same versions.
+[target.'cfg(target_os = "macos")'.dev-dependencies]
+objc2 = "=0.6.5"
+objc2-app-kit = { version = "=0.3.2", default-features = false, features = ["std", "NSApplication", "NSMenu", "NSMenuItem", "NSResponder"] }
+
+[[test]]
+name = "mac_menu_appkit"
+harness = false

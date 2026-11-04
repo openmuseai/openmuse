@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "namespace": "office",
+  "sourceRevision": 2,
+  "messages": {
+    "office.unable_to_safely_open_this_docx_file.d2dd2cd6": "Unable to safely open this DOCX file",
+    "office.paragraph.e6bbad92": "Paragraph {value1}",
+    "office.saving.b528e788": "Saving…",
+    "office.save.70f4816a": "Save",
+    "office.this_document_contains_unsupported_structu.ee583283": "This document contains unsupported structures and is read only",
+    "office.saved.7c66f039": "Saved · {value1}",
+    "office.save_conflict_or_service_unavailable.8869ea79": "Save conflict or service unavailable",
+    "office.unable_to_safely_open_this_document.c0a1ba9d": "Unable to safely open this document",
+    "office.pptx_read_only_compatibility_view.fc7ca3d5": "PPTX · Read-only compatibility view",
+    "office.pdf_read_only_text_view.213a26ed": "PDF · Read-only text view",
+    "office.xlsx_read_only_compatibility_view.9db253b8": "XLSX · Read-only compatibility view"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@openmuse/siyuan-client-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "prepare:source": "python3 scripts/build.py prepare",
+    "build:web": "python3 scripts/build.py web",
+    "build:desktop": "python3 scripts/build.py macos",
+    "build:android": "python3 scripts/build.py android",
+    "build:ios": "python3 scripts/build.py ios",
+    "build:ios-simulator": "python3 scripts/build.py ios-simulator",
+    "test": "python3 scripts/build.py test"
+  }
+}

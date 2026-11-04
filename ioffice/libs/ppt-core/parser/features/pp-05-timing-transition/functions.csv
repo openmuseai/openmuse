@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_transition,p:transition+AlternateContent,transition attrs+mc events,Transition fields+child dispatch,pp-01:01;pp-01:02,pp-01:05;pp-01:06;pp-01:07,libs/ppt-core,pass
+2,02_function_timing_lists,p:timing 列表容器,timing sub ids+Timing model,tnLst/bldLst write on end,pp-01:02,03;pp-01:05,libs/ppt-core,pass
+3,03_function_time_node_list,p:tnLst 收集,tnLst child events,TimeNode list,02,post-mvp-animate,libs/ppt-core,pass

@@ -1,0 +1,833 @@
+[package]
+name = "word-core"
+version = "0.1.1"
+edition = "2021"
+description = """
+Cross-platform Word document engine: parse, layout, and render-command generation.
+Rust port of koffice/writer/core — designed to produce output identical to the
+original Java implementation while enabling three-platform unification
+(Web, Desktop, Mobile) via the ioffice-word Flutter+Rust architecture.
+"""
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[[bin]]
+name = "docx_mvp_render"
+path = "src/bin/docx_mvp_render.rs"
+
+[features]
+default = []
+# Enable UniFFI bindings for Kotlin/Swift (Android/iOS bridge)
+uniffi = ["dep:uniffi"]
+
+[dependencies]
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+quick-xml = { version = "0.36", features = ["serialize"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
+ropey = "1"
+chrono = "0.4"
+uniffi = { version = "0.28", optional = true }
+regex = "1.12.3"
+ttf-parser = "0.24"
+
+# Workspace internal crates — dependency keys match generated `use <key>::…` paths
+util = { package = "core_libs_util", path = "../core-libs/util/util" }
+util_adapter = { path = "../core-libs/util/adapter" }
+drawing = { package = "core_libs_drawing", path = "../core-libs/drawing" }
+kfc = { package = "core_libs_kfc_main", path = "../core-libs/kfc/kfc" }
+kfc_kfc_alpha = { package = "core_libs_kfc", path = "../core-libs/kfc/kfc_alpha" }
+kfs_kfs_app = { package = "core_libs_kfs_app", path = "../core-libs/kfs/kfs_app" }
+io_wps_io = { package = "core_libs_io", path = "../core-libs/io/wps-io" }
+io_poi_compact = { package = "core_libs_poi_compact", path = "../core-libs/io/poi-compact" }
+io_uof_io = { package = "core_libs_uof_io", path = "../core-libs/io/uof-io" }
+io_css_io = { package = "css-io", path = "../core-libs/io/css-io" }
+core_libs_libfileformat = { path = "../core-libs/io/libfileformat" }
+thirdparty_dom4j = { package = "core_libs_dom4j", path = "../core-libs/thirdparty/dom4j" }
+thirdparty_font = { package = "core_libs_font", path = "../core-libs/thirdparty/font" }
+thirdparty_kInk = { package = "core_libs_kink", path = "../core-libs/thirdparty/kInk" }
+thirdparty_juniversalchardet = { package = "core_libs_juniversalchardet", path = "../core-libs/thirdparty/juniversalchardet" }
+stubs = { path = "../core-libs/stubs" }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21" 
+
+[target.'cfg(all(not(target_family = "wasm"), not(target_os = "android")))'.dependencies]
+zip = { version = "2", features = ["lzma", "zstd", "bzip2"] }
+
+# uuid 1.x v4 needs a JS entropy source on wasm32-unknown-unknown.
+[target.'cfg(target_family = "wasm")'.dependencies]
+uuid = { version = "1", features = ["v4", "serde", "js"] }
+
+[dev-dependencies]
+pretty_assertions = "1"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [] }
+
+# wc-01-storage-write function tests (feature-function skill).
+# name = function_id; path mirrors src/<relpath>/<Type>.rs
+
+[[test]]
+name = "01_function_textrope_append"
+path = "tests/cn/wps/collections/textrope/KNotifyTextRope.rs"
+
+[[test]]
+name = "02_function_notify_order"
+path = "tests/cn/wps/collections/textrope/INotifyTextRope.rs"
+
+[[test]]
+name = "03_function_chpx_insert"
+path = "tests/cn/wps/moffice/writer/data/internal_v2/ChpxTable.rs"
+
+[[test]]
+name = "04_function_papx_insert"
+path = "tests/cn/wps/moffice/writer/data/internal_v2/PapxTable.rs"
+
+[[test]]
+name = "05_function_plcsection"
+path = "tests/cn/wps/moffice/writer/data/PLCSection.rs"
+
+[[test]]
+name = "06_function_cpiecetable"
+path = "tests/cn/wps/moffice/writer/data/CPieceTable.rs"
+
+[[test]]
+name = "07_function_corehelper_write"
+path = "tests/cn/wps/moffice/writer/helper/CoreHelper.rs"
+
+# wc-02-document-model function tests (feature-function skill).
+# name = function_id; path mirrors src/<relpath>/<Type>.rs
+
+[[test]]
+name = "01_function_document_types"
+path = "tests/cn/wps/moffice/writer/core/Document.rs"
+
+[[test]]
+name = "02_function_builtin_typesti"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/helpers/BuildinStyleSheet.rs"
+
+[[test]]
+name = "03_function_styleid2sti"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/StyleId2Sti.rs"
+
+[[test]]
+name = "04_function_kstyle_final"
+path = "tests/cn/wps/moffice/writer/core/KStyle.rs"
+
+[[test]]
+name = "05_function_kstyles_table"
+path = "tests/cn/wps/moffice/writer/core/KStyles.rs"
+
+[[test]]
+name = "06_function_add_normal_style"
+path = "tests/cn/wps/moffice/writer/io/reader/helper/IOHelper.rs"
+
+[[test]]
+name = "07_function_numid_redirection"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/NumIdRedirection.rs"
+
+[[test]]
+name = "08_function_listeners_io_skip"
+path = "tests/cn/wps/moffice/writer/core/TextRopeListeners.rs"
+
+[[test]]
+name = "09_function_subdocument_own"
+path = "tests/cn/wps/moffice/writer/core/SubDocument.rs"
+
+[[test]]
+name = "10_function_textdocument_create"
+path = "tests/cn/wps/moffice/writer/core/TextDocument.rs"
+
+# wc-10-subdocument-pipeline
+[[test]]
+name = "01_function_parent_alias"
+path = "tests/cn/wps/moffice/writer/core/01_function_parent_alias.rs"
+
+[[test]]
+name = "02_function_document_read_surface"
+path = "tests/cn/wps/moffice/writer/core/02_function_document_read_surface.rs"
+
+[[test]]
+name = "03_function_createplc_stories"
+path = "tests/cn/wps/moffice/writer/core/03_function_createplc_stories.rs"
+
+[[test]]
+name = "04_function_math_plc"
+path = "tests/cn/wps/moffice/writer/core/04_function_math_plc.rs"
+
+[[test]]
+name = "05_function_document_fields"
+path = "tests/cn/wps/moffice/writer/core/05_function_document_fields.rs"
+
+[[test]]
+name = "06_function_autonum_cache"
+path = "tests/cn/wps/moffice/writer/core/06_function_autonum_cache.rs"
+
+[[test]]
+name = "07_function_text_stream"
+path = "tests/cn/wps/moffice/writer/core/07_function_text_stream.rs"
+
+[[test]]
+name = "08_function_shape_anchor"
+path = "tests/cn/wps/moffice/writer/core/08_function_shape_anchor.rs"
+
+[[test]]
+name = "09_function_table_infos"
+path = "tests/cn/wps/moffice/writer/core/09_function_table_infos.rs"
+
+[[test]]
+name = "10_function_autowordstat"
+path = "tests/cn/wps/moffice/writer/core/10_function_autowordstat.rs"
+
+[[test]]
+name = "11_function_headings_words"
+path = "tests/cn/wps/moffice/writer/core/11_function_headings_words.rs"
+
+[[test]]
+name = "12_function_revision_listeners"
+path = "tests/cn/wps/moffice/writer/core/12_function_revision_listeners.rs"
+
+# wc-03-property-convert function tests (feature-function skill).
+# name = function_id; path mirrors src/<relpath>/<Type>.rs (ConvertHelper / ParaProps
+# split across I/O: extra test files in the same helpers directory).
+
+[[test]]
+name = "01_function_importer_mode"
+path = "tests/cn/wps/moffice/writer/io/reader/ImporterBase.rs"
+
+[[test]]
+name = "02_function_attr_parse"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/helpers/ConvertHelper.rs"
+
+[[test]]
+name = "03_function_measure_color"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/helpers/ConvertHelperMeasure.rs"
+
+[[test]]
+name = "04_function_brc_shd"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/helpers/ConvertHelperBrc.rs"
+
+[[test]]
+name = "05_function_run_highfreq"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/helpers/RunPropsConverterSimple.rs"
+
+[[test]]
+name = "06_function_para_convert"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/helpers/ParaPropsConverterSimple.rs"
+
+[[test]]
+name = "07_function_correct_prop"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/helpers/ParaPropsConverterSimpleCorrect.rs"
+
+# wc-04-paragraph-import function tests (feature-function skill).
+# name = function_id; path mirrors src/<relpath>/<Type>.rs
+
+[[test]]
+name = "01_function_paragraph_context"
+path = "tests/cn/wps/moffice/writer/io/reader/helper/ParagraphContext.rs"
+
+[[test]]
+name = "02_function_run_text"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/document/SubDocumentImporter.rs"
+
+[[test]]
+name = "03_function_paragraph_end"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/document/SubDocumentImporterEnd.rs"
+
+[[test]]
+name = "04_function_table_cell"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/document/SubDocumentImporterTable.rs"
+
+[[test]]
+name = "05_function_field_control"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/document/SubDocumentImporterField.rs"
+
+[[test]]
+name = "06_function_maindoc_guard"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/document/MainDocumentImporter.rs"
+
+[[test]]
+name = "07_function_section_add"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/document/MainDocumentImporterSection.rs"
+
+# wc-05-orchestration function tests (feature-function skill).
+
+[[test]]
+name = "01_function_io_style"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/IOStyle.rs"
+
+[[test]]
+name = "02_function_style_event"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/StylesImporter.rs"
+
+[[test]]
+name = "03_function_di_construct_route"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/DocumentImporter.rs"
+
+[[test]]
+name = "04_function_di_main_content"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/DocumentImporterContent.rs"
+
+[[test]]
+name = "05_function_di_meta_forward"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/DocumentImporterForward.rs"
+
+[[test]]
+name = "06_function_finish_work"
+path = "tests/cn/wps/moffice/writer/io/reader/tools/FinishReadingWork.rs"
+
+[[test]]
+name = "07_function_docx_read"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/DocxReader.rs"
+
+[[test]]
+name = "01_function_typo_page"
+path = "tests/cn/wps/moffice/writer/cache/TypoPage.rs"
+
+[[test]]
+name = "02_function_typo_line"
+path = "tests/cn/wps/moffice/writer/cache/TypoTextLine.rs"
+
+[[test]]
+name = "03_function_typo_snapshot"
+path = "tests/cn/wps/moffice/writer/cache/TypoSnapshot.rs"
+
+[[test]]
+name = "04_function_typo_iterator"
+path = "tests/cn/wps/moffice/writer/cache/TypoPageLinesIterator.rs"
+
+[[test]]
+name = "05_function_typo_run"
+path = "tests/cn/wps/moffice/writer/cache/TypoRun.rs"
+
+[[test]]
+name = "01_function_page_setup"
+path = "tests/cn/wps/moffice/writer/data/value/PageSetup.rs"
+
+[[test]]
+name = "02_function_view_env"
+path = "tests/cn/wps/moffice/writer/layout/base/env/ViewEnv.rs"
+
+[[test]]
+name = "01_function_font_stack"
+path = "tests/cn/wps/moffice/writer/layout/text/FontStack.rs"
+
+[[test]]
+name = "04_function_font_host"
+path = "tests/cn/wps/moffice/writer/layout/text/FontHost.rs"
+
+[[test]]
+name = "02_function_run_metrics"
+path = "tests/cn/wps/moffice/writer/layout/base/line/RunMetrics.rs"
+
+[[test]]
+name = "03_function_rich_text_layout"
+path = "tests/cn/wps/moffice/writer/layout/audit/RichTextLayoutAudit.rs"
+
+[[test]]
+name = "01_function_run_width_cache"
+path = "tests/cn/wps/moffice/writer/layout/base/text/RunWidthCache.rs"
+
+[[test]]
+name = "01_function_run_width"
+path = "tests/cn/wps/moffice/writer/layout/base/line/LineLayouter.rs"
+
+[[test]]
+name = "02_function_wrap"
+path = "tests/cn/wps/moffice/writer/layout/base/env/LineWrap.rs"
+
+[[test]]
+name = "02_function_wrap_greedy"
+path = "tests/cn/wps/moffice/writer/layout/base/text/Wrap.rs"
+
+[[test]]
+name = "03_function_alignment"
+path = "tests/cn/wps/moffice/writer/layout/base/env/LineAlign.rs"
+
+[[test]]
+name = "03_function_alignment_hello"
+path = "tests/cn/wps/moffice/writer/layout/base/text/Alignment.rs"
+
+[[test]]
+name = "04_function_line_box"
+path = "tests/cn/wps/moffice/writer/layout/base/env/LineBox.rs"
+
+[[test]]
+name = "05_function_line_layouter"
+path = "tests/cn/wps/moffice/writer/layout/base/env/LineLayout.rs"
+
+[[test]]
+name = "04_function_line_height"
+path = "tests/cn/wps/moffice/writer/layout/base/text/LineHeight.rs"
+
+[[test]]
+name = "01_function_cp_text"
+path = "tests/cn/wps/moffice/writer/layout/base/text/CpText.rs"
+
+[[test]]
+name = "02_function_chpx_runs"
+path = "tests/cn/wps/moffice/writer/layout/base/text/ChpxRuns.rs"
+
+[[test]]
+name = "03_function_papx_paras"
+path = "tests/cn/wps/moffice/writer/layout/base/text/PapxParas.rs"
+
+[[test]]
+name = "04_function_run_stream"
+path = "tests/cn/wps/moffice/writer/layout/base/text/RunStream.rs"
+
+[[test]]
+name = "01_function_font_size"
+path = "tests/cn/wps/moffice/writer/layout/base/env/FontSize.rs"
+
+[[test]]
+name = "02_function_run_flags"
+path = "tests/cn/wps/moffice/writer/layout/base/env/RunFlags.rs"
+
+[[test]]
+name = "03_function_font_names"
+path = "tests/cn/wps/moffice/writer/layout/base/env/FontNames.rs"
+
+[[test]]
+name = "04_function_style_merge"
+path = "tests/cn/wps/moffice/writer/layout/base/env/StyleMerge.rs"
+
+[[test]]
+name = "05_function_font_style_factory"
+path = "tests/cn/wps/moffice/writer/layout/base/env/FontStyleFactory.rs"
+
+[[test]]
+name = "01_function_units_to_twip"
+path = "tests/cn/wps/moffice/writer/layout/base/env/UnitsToTwip.rs"
+
+[[test]]
+name = "02_function_glyph_advance"
+path = "tests/cn/wps/moffice/writer/layout/base/env/GlyphAdvance.rs"
+
+[[test]]
+name = "03_function_face_select"
+path = "tests/cn/wps/moffice/writer/layout/base/env/FaceSelect.rs"
+
+[[test]]
+name = "04_function_line_metrics"
+path = "tests/cn/wps/moffice/writer/layout/base/env/LineMetrics.rs"
+
+[[test]]
+name = "05_function_run_metrics"
+path = "tests/cn/wps/moffice/writer/layout/base/tools/TypefaceTool.rs"
+
+[[test]]
+name = "01_function_content_width"
+path = "tests/cn/wps/moffice/writer/layout/base/env/ContentWidth.rs"
+
+[[test]]
+name = "01_function_page_break"
+path = "tests/cn/wps/moffice/writer/layout/base/PageBreak.rs"
+
+[[test]]
+name = "p0_function_page_break"
+path = "tests/cn/wps/moffice/writer/api/p0_function_page_break.rs"
+
+[[test]]
+name = "01_function_graph_nodes"
+path = "tests/cn/wps/moffice/writer/layout/base/graph/SrcNode.rs"
+
+[[test]]
+name = "02_function_graph_buff"
+path = "tests/cn/wps/moffice/writer/layout/base/graph/GraphBuff.rs"
+
+[[test]]
+name = "03_function_graph_reader"
+path = "tests/cn/wps/moffice/writer/layout/base/graph/GraphReader.rs"
+
+[[test]]
+name = "04_function_graph_factory"
+path = "tests/cn/wps/moffice/writer/layout/base/graph/GraphFactory.rs"
+
+[[test]]
+name = "05_function_flow_text_line"
+path = "tests/cn/wps/moffice/writer/layout/base/line/LineHeightLayouter.rs"
+
+[[test]]
+name = "06_function_product_switch"
+path = "tests/cn/wps/moffice/writer/api/java_pipeline_pages.rs"
+
+[[test]]
+name = "07_function_e2e_render"
+path = "tests/cn/wps/moffice/writer/api/java_pipeline_e2e.rs"
+
+[[test]]
+name = "08_function_wrap_para_env"
+path = "tests/cn/wps/moffice/writer/layout/base/line/SubLineLayouter.rs"
+
+[[test]]
+name = "09_function_section_grid"
+path = "tests/cn/wps/moffice/writer/layout/base/SectionTool.rs"
+
+
+
+
+
+
+
+[[test]]
+name = "02_function_section_grid"
+path = "tests/cn/wps/moffice/writer/layout/base/PageGrid.rs"
+
+[[test]]
+name = "03_function_relayout_cache"
+path = "tests/cn/wps/moffice/writer/layout/base/RelayoutCache.rs"
+
+[[test]]
+name = "03_function_layout_cache"
+path = "tests/cn/wps/moffice/writer/layout/FlowLayout.rs"
+
+[[test]]
+name = "01_function_typo_document"
+path = "tests/cn/wps/moffice/writer/cache/TypoDocument.rs"
+
+[[test]]
+name = "02_function_snapshot_build"
+path = "tests/cn/wps/moffice/writer/cache/SnapshotBuild.rs"
+
+[[test]]
+name = "01_function_text_command"
+path = "tests/cn/wps/moffice/writer/rendercommand/TextCommand.rs"
+
+[[test]]
+name = "02_function_deco_command"
+path = "tests/cn/wps/moffice/writer/rendercommand/DecoCommand.rs"
+
+[[test]]
+name = "03_function_serialize"
+path = "tests/cn/wps/moffice/writer/rendercommand/Serialize.rs"
+
+[[test]]
+name = "04_function_stage3_golden"
+path = "tests/cn/wps/moffice/writer/rendercommand/Stage3Golden.rs"
+
+[[test]]
+name = "01_function_layout_document"
+path = "tests/cn/wps/moffice/writer/api/LayoutDocument.rs"
+
+[[test]]
+name = "01_function_uniffi_export"
+path = "tests/cn/wps/moffice/writer/api/RenderDocx.rs"
+
+[[test]]
+name = "02_function_flutter_painter"
+path = "tests/cn/wps/moffice/writer/api/RenderPainter.rs"
+
+[[test]]
+name = "03_function_interaction"
+path = "tests/cn/wps/moffice/writer/api/Viewport.rs"
+
+# wr-13..wr-17 function tests (feature-function skill).
+[[test]]
+name = "01_function_page_fit"
+path = "tests/cn/wps/moffice/writer/layout/base/env/PageFit.rs"
+
+[[test]]
+name = "02_function_widow_control"
+path = "tests/cn/wps/moffice/writer/layout/base/env/WidowControl.rs"
+
+[[test]]
+name = "03_function_page_layouter"
+path = "tests/cn/wps/moffice/writer/layout/base/env/PageLayout.rs"
+
+[[test]]
+name = "01_function_stage2_rows"
+path = "tests/cn/wps/moffice/writer/cache/Stage2Rows.rs"
+
+[[test]]
+name = "02_function_snapshot_commit"
+path = "tests/cn/wps/moffice/writer/cache/SnapshotCommit.rs"
+
+[[test]]
+name = "03_function_stage2_json"
+path = "tests/cn/wps/moffice/writer/cache/Stage2Json.rs"
+
+[[test]]
+name = "01_function_style_runs"
+path = "tests/cn/wps/moffice/writer/rendercommand/StyleRuns.rs"
+
+[[test]]
+name = "02_function_style_commands"
+path = "tests/cn/wps/moffice/writer/rendercommand/StyleCommands.rs"
+
+[[test]]
+name = "03_function_page_commands"
+path = "tests/cn/wps/moffice/writer/rendercommand/PageCommands.rs"
+
+[[test]]
+name = "01_function_line_normalize"
+path = "tests/cn/wps/moffice/writer/linegolden/LineNormalize.rs"
+
+[[test]]
+name = "02_function_line_compare"
+path = "tests/cn/wps/moffice/writer/linegolden/LineCompare.rs"
+
+[[test]]
+name = "03_function_line_corpus"
+path = "tests/cn/wps/moffice/writer/linegolden/LineCorpus.rs"
+
+[[test]]
+name = "01_function_page_hit"
+path = "tests/cn/wps/moffice/writer/cache/PageHit.rs"
+
+[[test]]
+name = "02_function_cp_hit"
+path = "tests/cn/wps/moffice/writer/cache/CpHit.rs"
+
+[[test]]
+name = "03_function_hit_test"
+path = "tests/cn/wps/moffice/writer/cache/HitTest.rs"
+
+# wr-18-session-caret function tests (feature-function skill).
+[[test]]
+name = "01_function_session_open"
+path = "tests/cn/wps/moffice/writer/api/DocumentSession.rs"
+
+[[test]]
+name = "02_function_session_append"
+path = "tests/cn/wps/moffice/writer/api/SessionAppend.rs"
+
+[[test]]
+name = "03_function_caret_hit"
+path = "tests/cn/wps/moffice/writer/api/SessionCaret.rs"
+
+[[test]]
+name = "04_function_session_relayout"
+path = "tests/cn/wps/moffice/writer/api/SessionRelayout.rs"
+
+# wr-19-selection function tests (feature-function skill).
+[[test]]
+name = "01_function_sel_clamp"
+path = "tests/cn/wps/moffice/writer/api/SelectionRange.rs"
+
+[[test]]
+name = "02_function_sel_rects"
+path = "tests/cn/wps/moffice/writer/api/SelectionRects.rs"
+
+[[test]]
+name = "03_function_sel_fill"
+path = "tests/cn/wps/moffice/writer/api/SelectionFill.rs"
+
+# wr-20-edit-relayout function tests (feature-function skill).
+[[test]]
+name = "01_function_event_insert"
+path = "tests/cn/wps/moffice/writer/api/SessionInsert.rs"
+
+[[test]]
+name = "02_function_event_remove"
+path = "tests/cn/wps/moffice/writer/api/SessionRemove.rs"
+
+[[test]]
+name = "03_function_event_relayout"
+path = "tests/cn/wps/moffice/writer/api/SessionEventRelayout.rs"
+
+# wc-06-stage1-live function tests (feature-function skill).
+[[test]]
+name = "01_function_rope_dump"
+path = "tests/cn/wps/moffice/writer/api/stage1/RopeDump.rs"
+
+[[test]]
+name = "02_function_prop_dump"
+path = "tests/cn/wps/moffice/writer/api/stage1/PropDump.rs"
+
+[[test]]
+name = "03_function_stage1_compare"
+path = "tests/cn/wps/moffice/writer/api/stage1/Stage1Compare.rs"
+
+# wc-07-papx-geometry function tests (feature-function skill).
+[[test]]
+name = "01_function_indent_sprm"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/helpers/ParaPropsConverterSimple.rs"
+
+[[test]]
+name = "02_function_spacing_sprm"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/helpers/ParaPropsConverterSimple.rs"
+
+[[test]]
+name = "03_function_content_width"
+path = "tests/cn/wps/moffice/writer/layout/base/env/ContentWidth.rs"
+
+# wr-21-para-layouter function tests (feature-function skill).
+[[test]]
+name = "01_function_para_spacing"
+path = "tests/cn/wps/moffice/writer/layout/base/ParaLayouter.rs"
+
+[[test]]
+name = "02_function_line_spacing"
+path = "tests/cn/wps/moffice/writer/layout/base/02_function_line_spacing.rs"
+
+[[test]]
+name = "03_function_para_indent"
+path = "tests/cn/wps/moffice/writer/layout/base/03_function_para_indent.rs"
+
+[[test]]
+name = "04_function_para_start"
+path = "tests/cn/wps/moffice/writer/layout/base/04_function_para_start.rs"
+
+# wr-22-text-flow
+[[test]]
+name = "01_function_pre_flow"
+path = "tests/cn/wps/moffice/writer/layout/base/TextLayouter.rs"
+
+[[test]]
+name = "02_function_do_flow_line"
+path = "tests/cn/wps/moffice/writer/layout/base/02_function_do_flow_line.rs"
+
+[[test]]
+name = "03_function_flow_loop"
+path = "tests/cn/wps/moffice/writer/layout/base/03_function_flow_loop.rs"
+
+[[test]]
+name = "04_function_post_flow"
+path = "tests/cn/wps/moffice/writer/layout/base/04_function_post_flow.rs"
+
+# wr-23-pageview-main
+[[test]]
+name = "01_function_pageview_mode"
+path = "tests/cn/wps/moffice/writer/layout/01_function_pageview_mode.rs"
+
+[[test]]
+name = "02_function_flow_to_page"
+path = "tests/cn/wps/moffice/writer/layout/pageview/PageViewLayouter.rs"
+
+[[test]]
+name = "03_function_product_switch"
+path = "tests/cn/wps/moffice/writer/api/03_function_product_switch.rs"
+
+# wr-24-live-stage2
+[[test]]
+name = "01_function_rust_stage2"
+path = "tests/cn/wps/moffice/writer/cache/RustStage2.rs"
+
+[[test]]
+name = "02_function_l2_compare"
+path = "tests/cn/wps/moffice/writer/linegolden/02_function_l2_compare.rs"
+
+[[test]]
+name = "03_function_live_corpus"
+path = "tests/cn/wps/moffice/writer/linegolden/LiveCorpus.rs"
+
+# wr-25-line-compress
+[[test]]
+name = "01_function_compress_env"
+path = "tests/cn/wps/moffice/writer/layout/base/line/LineCompressEnv.rs"
+
+[[test]]
+name = "02_function_compress"
+path = "tests/cn/wps/moffice/writer/layout/base/line/LineCompressTool.rs"
+
+# wr-26-kinsoku
+[[test]]
+name = "01_function_kinsoku_flag"
+path = "tests/cn/wps/moffice/writer/layout/base/01_function_kinsoku_flag.rs"
+
+[[test]]
+name = "02_function_kinsoku_rollback"
+path = "tests/cn/wps/moffice/writer/layout/base/line/SubLineLayouterBase.rs"
+
+# wr-27-table-layout
+[[test]]
+name = "01_function_table_detect"
+path = "tests/cn/wps/moffice/writer/layout/base/table/TableLayouter.rs"
+
+[[test]]
+name = "02_function_table_flow"
+path = "tests/cn/wps/moffice/writer/layout/base/table/02_function_table_flow.rs"
+
+# wr-28-drawing-wrap
+[[test]]
+name = "01_function_wrap_maxwidth"
+path = "tests/cn/wps/moffice/writer/layout/base/drawing/01_function_wrap_maxwidth.rs"
+
+[[test]]
+name = "02_function_drawing_flow"
+path = "tests/cn/wps/moffice/writer/layout/base/drawing/DrawingLayouter.rs"
+
+# wc-08-numbering-apply
+[[test]]
+name = "01_function_num_table"
+path = "tests/cn/wps/moffice/writer/data/autonum/AutoNumTable.rs"
+
+[[test]]
+name = "02_function_auto_num_string"
+path = "tests/cn/wps/moffice/writer/layout/base/line/AutoNumLayouter.rs"
+
+# wc-09-hdrftr-story
+[[test]]
+name = "01_function_hdrftr_rid"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/document/HdrFtrDocumentImporter.rs"
+
+[[test]]
+name = "02_function_hdrftr_story"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/document/02_function_hdrftr_story.rs"
+
+[[test]]
+name = "54_function_error_panic_guard"
+path = "tests/cn/wps/moffice/writer/api/54_function_error_panic_guard.rs"
+
+# ★M-STAGE1 P3：XWPFDocument 装配闭环的**产品路径**端到端验证（63）。
+[[test]]
+name = "63_function_xwpf_assembly_loop"
+path = "tests/cn/wps/moffice/writer/api/63_function_xwpf_assembly_loop.rs"
+
+[[test]]
+name = "64_function_textdocument_document_trait"
+path = "tests/cn/wps/moffice/writer/core/64_function_textdocument_document_trait.rs"
+
+# ★M-STAGE1 P4：首份**真实语料**上的 Stage1 双端差异报告（64）。
+[[test]]
+name = "64_function_stage1_dual_run"
+path = "tests/cn/wps/moffice/writer/api/stage1/64_function_stage1_dual_run.rs"
+
+# ★M-STAGE1 P2：FontInfo 由 compile-surface shell 实化的语义锁定（65）。
+[[test]]
+name = "65_function_font_info_realized"
+path = "tests/cn/wps/moffice/writer/core/65_function_font_info_realized.rs"
+
+# ★M-STAGE1 P2：SettingsImporter 依赖闭包首批类型（66）。
+[[test]]
+name = "66_function_settings_closure"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/settings/66_function_settings_closure.rs"
+
+# ★M-STAGE1 P2：SettingsImporter 闭包第二层 —— OfficePasswordUtil（67）。
+[[test]]
+name = "67_function_office_password_util"
+path = "tests/cn/wps/moffice/writer/core/protection/67_function_office_password_util.rs"
+
+# ★M-STAGE1 P2：SettingsImporter 闭包第三层 —— ProtectionPassword（68）。
+[[test]]
+name = "68_function_protection_password"
+path = "tests/cn/wps/moffice/writer/core/protection/68_function_protection_password.rs"
+
+# ★M-STAGE1 P2：SettingsImporter 闭包最后一环 —— DocumentProtectionIO（69）。
+[[test]]
+name = "69_function_document_protection_io"
+path = "tests/cn/wps/moffice/writer/core/protection/69_function_document_protection_io.rs"
+
+# ★M-STAGE1 P2：SettingsImporter 闭包最后成员 —— CapationsImporter（70）。
+[[test]]
+name = "72_function_theme_font_chain"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/theme/72_function_theme_font_chain.rs"
+
+[[test]]
+name = "70_function_capations_importer"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/settings/70_function_capations_importer.rs"
+
+# ★M-STAGE1 P2：SettingsImporter [S1] MathPr 静态叶子批次（71）。
+[[test]]
+name = "71_function_settings_math"
+path = "tests/cn/wps/moffice/writer/io/reader/docxReader/importer/settings/71_function_settings_math.rs"
+
+# M3：TableInfosImpl.size 按 KTableManager.createRow 从 PAPX 收顶层表。
+[[test]]
+name = "03_function_table_infos"
+path = "tests/cn/wps/moffice/writer/data/table/03_function_table_infos.rs"

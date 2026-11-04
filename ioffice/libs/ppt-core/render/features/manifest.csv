@@ -1,0 +1,14 @@
+feature_id,title,description,depends_on_feature,status
+pr-01-slide-layers,三层胶片顺序,白底+bg+master/layout/slide 形状序与drawFlags过滤,pl-06-typo-shape,pass
+pr-02-shape-command,形状RenderCommand,几何fill/line→DrawRect/DrawPath,pr-01-slide-layers,pass
+pr-03-text-command,文本RenderCommand,排版行→DrawText,pl-05-text-typo;pr-01-slide-layers,pass
+pr-04-ffi-flutter,指令到Flutter,RenderCommand JSON/UniFFI 绘制,pr-02-shape-command;pr-03-text-command,pass
+pr-05-visual-emit-paint,色块图片指令与Flutter位图,DrawImage+实色fill+painter,pr-02-shape-command;pp-15-pic-blip-media,pass
+pr-06-prstgeom-skeleton,预置几何骨架指令,prstGeom→DrawPath 与文本框去线框,pr-02-shape-command;pl-08-group-abs-geom,pass
+pr-07-clip-host-paint,裁剪与宿主绘制,指令裁剪到 slide + Flutter 无默认描边,pr-06-prstgeom-skeleton;pr-05-visual-emit-paint,pass
+pr-08-render-from-public-shape,指令来自公开 Shape,render_slide 消费 getShape FillBase/LineProperty/GraphicsPath,pl-09-public-shape-convert;pp-20-open-write-kmo;pr-02-shape-command,spec
+pr-09-drawflags-product,产品 DrawFlags 过滤,render_slide 接 hidden/ph/背景 flags,pr-01-slide-layers;pr-08-render-from-public-shape,spec
+pr-10-text-span-emit,行/run DrawText,产品路径逐 run 发射并尊重 textRect inset,pl-12-textbox-live-paths;pl-05-text-typo,spec
+pr-11-line-style-paint,线宽线色,指令携带 stroke 宽 px 与色,pr-08-render-from-public-shape,spec
+pr-12-blip-decode-paint,位图解码绘制,Flutter decode JPEG/PNG 不再灰块,pp-18-sp-picture-fill;pr-05-visual-emit-paint,spec
+pr-13-pixel-gate,页级像素门闩,金图 RMSE/IoU 不把全 Sample 当唯一用例,pr-08-render-from-public-shape;pr-12-blip-decode-paint,spec

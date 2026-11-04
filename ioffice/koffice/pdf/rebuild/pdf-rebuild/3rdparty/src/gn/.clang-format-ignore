@@ -1,0 +1,7 @@
+# Exclude third party and vendored code
+**/third_party/**
+src/gn/starlark/vendor/**
+
+# Exclude generated FFI bridge files
+src/gn/ffi/bridge.cc
+src/gn/ffi/bridge.h

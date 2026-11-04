@@ -1,0 +1,472 @@
+{
+	"ID": "20200924101106-19z4kaa",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20200924101106-19z4kaa",
+		"title": "What is a Content Block",
+		"type": "doc",
+		"updated": "20261024163828"
+	},
+	"Children": [
+		{
+			"ID": "20210118101709-5a7bzl0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210118101709-5a7bzl0",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "## "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "Content block definition"
+				}
+			]
+		},
+		{
+			"ID": "20210118101709-9lqij9d",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210118101709-9lqij9d",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "A content block is a unit of content that you can edit, reference, and organize independently in SiYuan. Each block has an automatically generated, globally unique ID, such as "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "20200825000000-a1b2c3d"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ". It consists of a 14-digit timestamp ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "YYYYMMDDHHMMSS"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "), a hyphen, and seven random lowercase letters or digits."
+				}
+			]
+		},
+		{
+			"ID": "20210104091535-aqraylz",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091535-aqraylz",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "## "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "Content block types"
+				}
+			]
+		},
+		{
+			"ID": "20210104091535-6ark8fi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104091535-6ark8fi",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Paragraphs are the most common block type and hold the body of your text. Each paragraph is a separate block that you can move, assign attributes to, or reference from elsewhere."
+				}
+			]
+		},
+		{
+			"ID": "20210104091535-vhbubwx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104091535-vhbubwx",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Headings, lists, tables, and blockquotes express different structures. Headings divide content into sections, unordered lists group related items, and ordered lists present steps or a sequence. Choosing a suitable type makes both the layout and the meaning clearer."
+				}
+			]
+		},
+		{
+			"ID": "20210104091535-pnp9cmo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104091535-pnp9cmo",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "See "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200924101225-k254i8g",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "Content Block Type"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " for the available types and their containment rules."
+				}
+			]
+		},
+		{
+			"ID": "20210104091535-sbufc1h",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091535-sbufc1h",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "## "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "Combined content blocks"
+				}
+			]
+		},
+		{
+			"ID": "20210104091535-2ybzqz1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104091535-2ybzqz1",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "A document is made up of content blocks. Types that can contain other blocks, such as lists and blockquotes, are called container blocks."
+				}
+			]
+		},
+		{
+			"ID": "20210104091535-11dba0r",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104091535-11dba0r",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "A document is itself a block. You can use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200924101256-f8b1sbi",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "block references"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to link to either a whole document or an individual paragraph, without turning that paragraph into a separate document."
+				}
+			]
+		},
+		{
+			"ID": "20210118104710-tmyyac4",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210118104710-tmyyac4",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Names, aliases, and memos"
+				}
+			]
+		},
+		{
+			"ID": "20210118104710-sb9ti9s",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210118104710-sb9ti9s",
+				"memo": "The memo is usually a short sentence.",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "You can give a block a name, aliases, and a memo. Names and aliases are used in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20210106204950-gjw62fp",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "backlink mention"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " searches; memos hold supplementary information that you do not want in the body text."
+				}
+			]
+		},
+		{
+			"ID": "20210118104710-2sb91b3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210118104710-2sb91b3",
+				"updated": "20261016013311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Enable "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Behavior"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Content block corner icon"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to display names, aliases, and memos in the editor. When a document block has a name or memo, hovering over it in the document tree displays that information."
+				}
+			]
+		},
+		{
+			"ID": "20210118104710-b71o7og",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210118104710-b71o7og",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "You can use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20201117112518-dott91x",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "Embed content blocks"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to search and summarize the naming and memo, such as listing the content blocks that contain the keyword "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "short"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " in the memo:"
+				}
+			]
+		},
+		{
+			"ID": "20210118104710-ymm678p",
+			"Type": "NodeBlockQueryEmbed",
+			"Data": "{{SELECT * FROM blocks WHERE memo LIKE '%short%'}}\n",
+			"Properties": {
+				"id": "20210118104710-ymm678p"
+			},
+			"Children": [
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeBlockQueryEmbedScript",
+					"Data": "SELECT * FROM blocks WHERE memo LIKE '%short%'"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				}
+			]
+		},
+		{
+			"ID": "20230419153621-jw11s0z",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230419153621-jw11s0z",
+				"updated": "20230419153625"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​:"
+				}
+			]
+		},
+		{
+			"ID": "20230419153621-c80sc5z",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230419153621-c80sc5z",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"ID": "20230419153621-08jsrq5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230419153621-08jsrq5",
+						"updated": "20261024160716"
+					},
+					"Children": [
+						{
+							"ID": "20230419153621-anbp5lj",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230419153621-anbp5lj",
+								"updated": "20261024160716"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Each block can have one name; different blocks may share the same name"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230419153621-8d4uul5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230419153621-8d4uul5",
+						"updated": "20230419153621"
+					},
+					"Children": [
+						{
+							"ID": "20230419153621-ekwrodk",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230419153621-ekwrodk",
+								"updated": "20230419153621"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Multiple aliases can be set, separated by commas ("
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ","
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​) in English"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230419153621-iukqnpo",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230419153621-iukqnpo",
+						"updated": "20230419153642"
+					},
+					"Children": [
+						{
+							"ID": "20230419153621-ij7hh67",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230419153621-ij7hh67",
+								"updated": "20230419153642"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Memos only support plain text"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

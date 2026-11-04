@@ -1,0 +1,613 @@
+{
+	"ID": "20240530101000-boiita2",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-oskxx6c",
+		"id": "20240530101000-boiita2",
+		"title": "コンテンツブロックのナビゲーション",
+		"type": "doc",
+		"updated": "20261024163013"
+	},
+	"Children": [
+		{
+			"ID": "20240530101000-ip6pa7z",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-bo4tmm0",
+				"id": "20240530101000-ip6pa7z",
+				"updated": "20260809160000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "リンク"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-3kuklim",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-r3xx4o3",
+				"id": "20240530101000-3kuklim",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ドキュメントのコンテンツには 2 種類のリンクがあります:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-v6ik0nk",
+			"Type": "NodeList",
+			"ListData": {
+				"Tight": true,
+				"BulletChar": 42,
+				"Padding": 2,
+				"Marker": "Kg==",
+				"Num": -1
+			},
+			"Properties": {
+				"ID": "20240530101000-hm3ta7d",
+				"id": "20240530101000-v6ik0nk",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-epktksj",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"ID": "20240530101000-1nxzqpj",
+						"id": "20240530101000-epktksj",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-ztc3efa",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-4tcqdas",
+								"id": "20240530101000-ztc3efa",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ハイパーリンク"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": ブラウザで開かれるインターネットリソースへのリンク"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-n9fofgt",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"ID": "20240530101000-n5t2x30",
+						"id": "20240530101000-n9fofgt",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-277xazh",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-cn1e8nw",
+								"id": "20240530101000-277xazh",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref strong",
+									"TextMarkBlockRefID": "20240530101000-uxno1yp",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "コンテンツブロックの参照"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": SiYuan 内での双方向リンク"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-2orq4in",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-2blohkj",
+				"id": "20240530101000-2orq4in",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "フォーカス"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-grlshb3",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-wi054qx",
+				"id": "20240530101000-grlshb3",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-jfko153",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-4oh4r80",
+						"id": "20240530101000-jfko153",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-fwdxisd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-89ylx9x",
+								"id": "20240530101000-fwdxisd",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ブロックメニューからフォーカスを選択すると、エディタがそのコンテンツブロックにフォーカスします"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-w1k85a9",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-ju7wvtw",
+						"id": "20240530101000-w1k85a9",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-3a6bw3p",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-3pudqbq",
+								"id": "20240530101000-3a6bw3p",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "エディタ上部のパンくずリストからコンテキスト内を移動できます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-0ljj6fo",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-ze8q2b0",
+				"id": "20240530101000-0ljj6fo",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "関係図"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-1yyg1ck",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-ci5unzy",
+				"id": "20240530101000-1yyg1ck",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "グラフパネルに表示される関係図はドキュメントレベルとグローバルレベルに分かれています。ドキュメントレベルの関係図は現在のドキュメントブロックに基づいて展開され、関連するすべてのコンテンツブロック (フォワードリンクとバックリンク) を表示します。グローバルの関係図はすべてのノートブック内のブロックとリンクの関係を示しています。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-g1gkl7m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-9b3vknk",
+				"id": "20240530101000-g1gkl7m",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ノードをクリックすると対応するブロックが開きます。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Ctrl"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "（macOS では "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Command"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "）を押しながらクリックすると、フローティングプレビューが開きます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-mclq02e",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-of5c9sy",
+				"id": "20240530101000-mclq02e",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "バックリンク"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ahalu3r",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-06vw0q2",
+				"id": "20240530101000-ahalu3r",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "バックリンクはドキュメント単位で計算され、現在のドキュメント内のコンテンツブロックを参照または言及しているブロックが一覧表示されます。子ブロックを含めるかどうかは、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エディタ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "バックリンクに子ブロックを含める"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で制御します。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ew3g0wx",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-ytqv5td",
+				"id": "20240530101000-ew3g0wx",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "リンク"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-fza3v0v",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-ci0s043",
+				"id": "20240530101000-fza3v0v",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-rhgidcc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-hsmvt7q",
+						"id": "20240530101000-rhgidcc",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-ayb3zpi",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-6ezmh9d",
+								"id": "20240530101000-ayb3zpi",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "バックリンクリストの参照元ドキュメントまたはバックリンク内容のブロックアイコンにマウスポインターを合わせると、プレビューできます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-g75j1g4",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-p5yjjww",
+						"id": "20240530101000-g75j1g4",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-25ptzt0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-p5hvb4x",
+								"id": "20240530101000-25ptzt0",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "参照元ドキュメントをクリックしてコンテキストを展開し、コンテキスト内の参照ブロックをクリックすると移動できます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261024160716-dzezmwq",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024160716-dzezmwq",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "絞り込みと折りたたみ"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261024160716-q7upkxp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024160716-q7upkxp",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ドキュメント下部またはサイドバーのバックリンクで "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "バックリンクの参照元を絞り込む"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を開くと、参照元の絞り込みや、ブロックの種類に応じた折りたたみができます。この 2 種類の設定は保存方法が異なります。"
+				}
+			]
+		},
+		{
+			"ID": "20261024160716-9deuxpj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024160716-9deuxpj",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "デイリーノート、ノートブック、現在のドキュメントの除外、参照の除外は一時的な絞り込みです。現在のパネルにのみ適用され、永続的には保存されません。下部パネルとサイドバーパネルの間でも共有されません。"
+				}
+			]
+		},
+		{
+			"ID": "20261024160716-rhl5l2i",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024160716-rhl5l2i",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "ブロックの種類で折りたたむ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 設定は記憶されます。たとえば、ドキュメント A の下部バックリンクでリストを折りたたむと、開き直しても維持され、ドキュメント B には影響しません。同じドキュメントでも下部とサイドバーは別々に記憶されます。個々のブロックのバックリンクにも、それぞれの折りたたみ設定が保存されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-b39286y",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-s6bgqlw",
+				"id": "20240530101000-b39286y",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "逆参照"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-wz1614w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-su0tplm",
+				"id": "20240530101000-wz1614w",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "逆参照は、現在のドキュメント内でコンテンツブロックの名前、別名、参照アンカーテキスト、ドキュメント名をキーワードとして検索し、これらのキーワードを含むコンテンツブロックを検索結果として表示します。キーワードの検索範囲は、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "検索"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "逆参照"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " から調整できます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-q4rtiu4",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-qci4t7y",
+				"id": "20240530101000-q4rtiu4",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​: 逆参照では通常のテキストのみが検索対象となり、太字、斜体などのインライン要素や、コードブロック、チャートなどのブロック要素は検索に含まれません。これは"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240530101000-flxygac",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "仮想参照の検出ルール"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "と同様です。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-tjl3eac",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-m1pvv4u",
+				"id": "20240530101000-tjl3eac"
+			}
+		}
+	]
+}

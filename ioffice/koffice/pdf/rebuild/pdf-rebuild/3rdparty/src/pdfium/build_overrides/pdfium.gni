@@ -1,0 +1,57 @@
+# Copyright 2016 The PDFium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This file contains PDFium-related build overrides.
+
+# Build PDFium either using a bundled FreeType library, or using the FreeType
+# target defined in //build/config/freetype.
+# Default: Use a bundled FreeType.
+pdf_bundle_freetype_override = true
+
+# Build PDFium with experimental Brotli compression support.
+# Default: Brotli support is disabled until PDF 2.0 spec is confirmed.
+pdf_enable_brotli_override = false
+
+# Build PDFium either with or without v8 support.
+# Default: With V8 support.
+pdf_enable_v8_override = true
+
+# Build PDFium either with or without XFA Forms support.
+# Default: Without XFA support.
+pdf_enable_xfa_override = false
+
+# Build PDFium with PartitionAlloc support, directing `fxcrt` to use
+# it as its memory allocator in lieu of `malloc()`.
+# Default: Use PartitionAlloc when building with Clang.
+pdf_use_partition_alloc_override = is_clang
+
+# Build PDFium to use Skia (experimental) for all PDFium graphics.
+# If enabled, coexists in build with AGG graphics and the default
+# renderer is selectable at runtime.
+# The default is to use AGG when `pdf_use_skia_override` is false.
+pdf_use_skia_override = false
+
+# When building PDFium with Skia enabled, optionally define a custom font
+# manager target that is used to override the pre-chosen font manager.
+# Default: No override. Use the pre-chosen font manager.
+pdf_skia_font_manager_target_override = ""
+
+# Build PDFium with experimental Fontations library support.
+# If enabled, coexists in build with FreeType library and the default font
+# library is selectable at runtime.
+# The default is to use FreeType when `pdf_enable_fontations_override` is false.
+pdf_enable_fontations_override = false
+
+# Build PDFium with Rust-based BMP decoder. If enabled, it ensures that PDFium
+# doesn't depend on its native C++ BMP decoder. Note that `pdf_enable_rust_bmp`
+# requires Skia and Rust support.
+pdf_enable_rust_bmp_override = false
+
+# Build PDFium with Skia/Rust-based JPEG decoder.
+pdf_enable_rust_jpeg_override = false
+
+# Build PDFium with Rust-based PNG decoder and encoder.
+# If enabled, it ensures that PDFium doesn't depend on `libpng`.
+# Note that `pdf_enable_rust_png` requires Skia and Rust support.
+pdf_enable_rust_png_override = false

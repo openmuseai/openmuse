@@ -1,0 +1,11 @@
+# X2 remote execution-world overlay. These ids replace the Base provider rows;
+# model-facing tools and the Agent Loop remain unchanged.
+- insert:
+    - id: subprocess
+      name: '@openmuse/dsh-workspace-runtime/subprocess'
+
+    - id: sandbox
+      name: '@openmuse/dsh-workspace-runtime/sandbox'
+
+    - id: fs-sandbox
+      name: '@openmuse/dsh-workspace-runtime/fs'

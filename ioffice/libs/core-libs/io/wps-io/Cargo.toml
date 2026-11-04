@@ -1,0 +1,277 @@
+[package]
+name = "core_libs_io"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+# 前置 ①（s01-10）：Rust 侧 S01 dump 的 CLI（工装面，非产品链）。
+# 见 57_function_parity_rust_dump/FUNCTION.md §1.5；**不改**既有 15 个 [[test]]。
+[[bin]]
+name = "s01_package_dump"
+path = "src/bin/s01_package_dump.rs"
+
+# Function tests: mirror of src/<relpath>/<Type>.rs under tests/.
+# See .cursor/skills/feature-function/SKILL.md
+[[test]]
+name = "02_function_unzip"
+path = "tests/cn/wps/io/xwpf/util/ZipEntrySource.rs"
+
+[[test]]
+name = "uri_unicode_relationship_target"
+path = "tests/cn/wps/io/util/URI_unicode_relationship_target.rs"
+
+[[test]]
+name = "16_function_zip_open"
+path = "tests/cn/wps/io/xwpf/util/ZipFileZipEntrySource.rs"
+
+[[test]]
+name = "17_function_zip_entry_stream"
+path = "tests/cn/wps/io/xwpf/util/ZipInputStreamZipEntrySource.rs"
+
+[[test]]
+name = "18_function_zip_name_guard"
+path = "tests/cn/wps/io/opc/OPCPackage_name_guard.rs"
+
+[[test]]
+name = "19_function_zip_size_guard"
+path = "tests/cn/wps/io/opc/OPCPackage_size_guard.rs"
+
+[[test]]
+name = "20_function_zip_opf_name"
+path = "tests/cn/wps/io/opc/internal/ZipHelper.rs"
+
+[[test]]
+name = "03_function_opc_content_types"
+path = "tests/cn/wps/io/opc/internal/ContentTypeManager.rs"
+
+[[test]]
+name = "04_function_opc_relationships"
+path = "tests/cn/wps/io/opc/PackageRelationshipCollection.rs"
+
+[[test]]
+name = "28_function_part_name_ext"
+path = "tests/cn/wps/io/opc/28_function_part_name_ext.rs"
+
+[[test]]
+name = "29_function_parts_scan_ct"
+path = "tests/cn/wps/io/opc/OPCPackage_scan_ct.rs"
+
+[[test]]
+name = "30_function_parts_dup_guard"
+path = "tests/cn/wps/io/opc/PackagePartCollection_dup_guard.rs"
+
+[[test]]
+name = "31_function_part_io"
+path = "tests/cn/wps/io/opc/PackagePart_io.rs"
+
+[[test]]
+name = "32_function_part_rels_bind"
+path = "tests/cn/wps/io/opc/PackagePart_rels_bind.rs"
+
+[[test]]
+name = "33_function_rels_xml_parse"
+path = "tests/cn/wps/io/opc/PackageRelationship_rels_xml_parse.rs"
+
+[[test]]
+name = "34_function_rels_add"
+path = "tests/cn/wps/io/opc/PackageRelationshipCollection_rels_add.rs"
+
+[[test]]
+name = "35_function_rels_by_index"
+path = "tests/cn/wps/io/opc/PackageRelationshipCollection_by_index.rs"
+
+[[test]]
+name = "36_function_rels_rels_part_name"
+path = "tests/cn/wps/io/opc/PackageRelationshipCollection_rels_part_name.rs"
+
+[[test]]
+name = "37_function_rels_pkg_level"
+path = "tests/cn/wps/io/opc/OPCPackage_rels_pkg_level.rs"
+
+[[test]]
+name = "38_function_rels_query_type"
+path = "tests/cn/wps/io/opc/PackageRelationshipCollection_query_type.rs"
+
+[[test]]
+name = "39_function_docprops_core"
+path = "tests/cn/wps/io/opc/internal/unmarshallers/PackagePropertiesUnmarshaller.rs"
+
+[[test]]
+name = "40_function_docprops_extended"
+path = "tests/cn/wps/io/opc/internal/unmarshallers/ExtendedPackagePropertiesUnmarshaller.rs"
+
+[[test]]
+name = "41_function_docprops_custom"
+path = "tests/cn/wps/io/opc/internal/unmarshallers/CustomPackagePropertiesUnmarshaller.rs"
+
+[[test]]
+name = "42_function_docprops_views"
+path = "tests/cn/wps/io/xwpf/docprops_views.rs"
+
+[[test]]
+name = "43_function_docprops_custom_xml"
+path = "tests/cn/wps/io/xwpf/custom_xml_items.rs"
+
+[[test]]
+name = "27_function_part_name_resolve"
+path = "tests/cn/wps/io/opc/27_function_part_name_resolve.rs"
+
+[[test]]
+name = "26_function_part_name_rels_name"
+path = "tests/cn/wps/io/opc/26_function_part_name_rels_name.rs"
+
+[[test]]
+name = "25_function_part_name_is_rels"
+path = "tests/cn/wps/io/opc/25_function_part_name_is_rels.rs"
+
+[[test]]
+name = "24_function_part_name_conformance"
+path = "tests/cn/wps/io/opc/24_function_part_name_conformance.rs"
+
+[[test]]
+name = "23_function_part_name_create"
+path = "tests/cn/wps/io/opc/23_function_part_name_create.rs"
+
+[[test]]
+name = "22_function_content_type_value"
+path = "tests/cn/wps/io/opc/internal/ContentType.rs"
+
+[[test]]
+name = "21_function_content_types_guess"
+path = "tests/cn/wps/io/opc/ContentTypes.rs"
+
+[[test]]
+name = "05_function_opc_parts"
+path = "tests/cn/wps/io/opc/PackagePart.rs"
+
+[[test]]
+name = "06_function_xml_elementid"
+path = "tests/cn/wps/io/opt/XmlReader.rs"
+
+[[test]]
+name = "07_function_opc_package"
+path = "tests/cn/wps/io/opc/OPCPackage.rs"
+
+[[test]]
+name = "08_function_xml_dispatch"
+path = "tests/cn/wps/io/simple/DispatchHandler2.rs"
+
+[[test]]
+name = "09_function_xwpf_package"
+path = "tests/cn/wps/io/xwpf/XWPFPackage.rs"
+
+[[test]]
+name = "10_function_handler_props"
+path = "tests/cn/wps/io/xwpf/element_handler/PprHandler.rs"
+
+[[test]]
+name = "11_function_poixml_load"
+path = "tests/cn/wps/io/opc/model/POIXMLDocument.rs"
+
+[[test]]
+name = "12_function_handler_body"
+path = "tests/cn/wps/io/xwpf/element_handler/DocumentHandler.rs"
+
+[[test]]
+name = "13_function_xwpf_parse"
+path = "tests/cn/wps/io/xwpf/usermodel/XWPFDocument.rs"
+
+[[test]]
+name = "14_function_importer_boundary"
+path = "tests/cn/wps/io/xwpf/IDocumentImporter.rs"
+
+[[test]]
+name = "15_function_styles_handler_chain"
+path = "tests/cn/wps/io/xwpf/element_handler/styles/StylesHandler.rs"
+
+# Feature-level smoke (01–09 wired path). Full importer E2E waits on 10–14.
+[[test]]
+name = "wave0_e2e_standard_docx"
+path = "tests/wave0_e2e_standard_docx.rs"
+
+[dependencies]
+adapter = { package = "util_adapter", path = "../../util/adapter" }
+core_libs_kfs = { package = "core_libs_kfs_app", path = "../../kfs/kfs_app" }
+core_libs_util = { path = "../../util/util" }
+uuid = { version = "1", features = ["v4"] }
+# 前置 ⑦（s01-10）：canonical JSON 序列化。**仅工装面**（`opc/Dump.rs` + `bin/s01_package_dump.rs`）
+# 使用，产品链（`api/DocumentOpen.rs`）不引用 —— 见 57_function_parity_rust_dump/FUNCTION.md §1.5。
+serde_json = "1"
+
+[dev-dependencies]
+# Rust-only: 用例用第三方 `zip` crate **造夹具**（写 zip 字节）。生产路径（src/）只经 kfs，
+# 见 16_function_zip_open/FUNCTION.md §1.7「不再有第二套解析器」。
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+
+[[test]]
+name = "53_function_error_taxonomy"
+path = "tests/cn/wps/io/opc/S01Error.rs"
+
+[[test]]
+name = "55_function_error_trace"
+path = "tests/cn/wps/io/opc/ApiTrace.rs"
+
+[[test]]
+name = "44_function_pkg_open_bytes"
+path = "tests/cn/wps/io/xwpf/44_function_pkg_open_bytes.rs"
+
+[[test]]
+name = "45_function_pkg_open_path"
+path = "tests/cn/wps/io/xwpf/45_function_pkg_open_path.rs"
+
+[[test]]
+name = "46_function_pkg_open_raf"
+path = "tests/cn/wps/io/xwpf/46_function_pkg_open_raf.rs"
+
+[[test]]
+name = "47_function_pkg_orchestrate"
+path = "tests/cn/wps/io/xwpf/47_function_pkg_orchestrate.rs"
+
+[[test]]
+name = "48_function_pkg_configure_close"
+path = "tests/cn/wps/io/xwpf/48_function_pkg_configure_close.rs"
+
+[[test]]
+name = "49_function_xwpf_bind_main"
+path = "tests/cn/wps/io/xwpf/usermodel/49_function_xwpf_bind_main.rs"
+
+[[test]]
+name = "50_function_xwpf_ns_mode"
+path = "tests/cn/wps/io/opc/50_function_xwpf_ns_mode.rs"
+
+[[test]]
+name = "51_function_xwpf_on_read"
+path = "tests/cn/wps/io/xwpf/usermodel/51_function_xwpf_on_read.rs"
+
+
+
+[[test]]
+name = "52_function_xwpf_main_stream"
+path = "tests/cn/wps/io/xwpf/usermodel/52_function_xwpf_main_stream.rs"
+
+[[test]]
+name = "57_function_parity_rust_dump"
+path = "tests/cn/wps/io/opc/57_function_parity_rust_dump.rs"
+
+[[test]]
+name = "59_function_parity_canonical"
+path = "tests/cn/wps/io/opc/59_function_parity_canonical.rs"
+
+[[test]]
+name = "60_function_parity_compare"
+path = "tests/cn/wps/io/opc/60_function_parity_compare.rs"
+
+[[test]]
+name = "56_function_parity_schema"
+path = "tests/cn/wps/io/opc/56_function_parity_schema.rs"
+
+[[test]]
+name = "01_function_table_sax_dispatch"
+path = "tests/cn/wps/io/xwpf/element_handler/01_function_table_sax_dispatch.rs"
+
+[[test]]
+name = "02_function_table_prop_convert"
+path = "tests/cn/wps/io/xwpf/element_handler/02_function_table_prop_convert.rs"

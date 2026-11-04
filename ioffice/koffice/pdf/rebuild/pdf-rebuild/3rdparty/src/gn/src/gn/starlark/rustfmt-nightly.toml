@@ -1,0 +1,29 @@
+# This enables unstable features *for the formatter*.
+# It does not do so for the compiler.
+unstable_features = true
+
+# Automatically group imports into distinct, standard sections
+group_imports = "StdExternalCrate"
+# Merge imports from the same crate into a single nested block
+imports_granularity = "Crate"
+
+# Bring macros into the formatting pipeline
+format_macro_matchers = true
+format_macro_bodies = true
+
+# Logical grouping inside impl blocks
+reorder_impl_items = true
+
+# Tidier visual layouts
+normalize_comments = true
+
+# Stable formatter features.
+# LINT.IfChange
+
+# Automatically wrap comments and documentation at the line limit
+wrap_comments = true
+
+# Ensure match blocks have trailing commas for cleaner git diffs
+match_block_trailing_comma = true
+
+# LINT.ThenChange(//src/gn/starlark/rustfmt.toml)

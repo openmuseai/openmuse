@@ -1,0 +1,2 @@
+{"version":"v0.9","createSurface":{"surfaceId":"pptx-preview","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}
+{"version":"v0.9","updateComponents":{"surfaceId":"pptx-preview","components":[{"id":"root","component":"Column","children":["title","note"]},{"id":"title","component":"Text","text":"PPTX structure preview","variant":"h2"},{"id":"note","component":"Text","text":"Choose a presentation to inspect its structure through authorized MCP tools."}]}}

@@ -1,0 +1,58 @@
+{
+  "name": "@openmuse/genoffice-pptx-plugin",
+  "version": "0.8.2",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "vendor/agent-core",
+    "vendor/pptx-engine",
+    "vendor/zip-gate"
+  ],
+  "scripts": {
+    "build": "esbuild src/mcp_server.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/server.mjs",
+    "build:http": "esbuild src/http_server.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/http.mjs",
+    "serve:http": "npm run build:http && node dist/http.mjs",
+    "pack:desktop": "npm run build:web && npm run build && node ../../packages/plugin-sdk/scripts/export-offline.mjs dist/server.mjs dist/web/mcp-offline.json && python3 scripts/pack_desktop.py",
+    "inspect": "node --import tsx src/worker.ts inspect",
+    "roundtrip": "node --import tsx src/worker.ts roundtrip",
+    "test": "npm run build:web && npm run build && npm run build:http && node --import tsx --test test/*.test.ts",
+    "build:web": "npm run i18n:check && node scripts/build_web.mjs",
+    "verify:web": "node scripts/verify_web.mjs",
+    "i18n:generate": "node scripts/generate_i18n.mjs",
+    "i18n:check": "node scripts/generate_i18n.mjs --check"
+  },
+  "dependencies": {
+    "@fontsource/arimo": "^5.3.0",
+    "@genoffice/agent-core": "*",
+    "@genoffice/pptx-engine": "*",
+    "@genoffice/zip-gate": "*",
+    "@modelcontextprotocol/ext-apps": "^2.0.3",
+    "@modelcontextprotocol/node": "^2.1.1",
+    "@modelcontextprotocol/server": "^2.3.1",
+    "@noble/hashes": "^2.0.1",
+    "acorn": "^8.16.0",
+    "bidi-js": "^1.0.3",
+    "buffer": "^6.0.3",
+    "fast-xml-parser": "^5.3.4",
+    "harfbuzzjs": "^1.4.0",
+    "jszip": "^3.10.1",
+    "konva": "^9.3.20",
+    "opentype.js": "^2.0.0",
+    "pako": "^2.1.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-konva": "^19.0.10",
+    "three": "^0.186.1",
+    "utif2": "^4.1.0",
+    "zod": "^4.6.7",
+    "pngjs": "^7.0.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.3.1",
+    "@types/node": "^24.10.1",
+    "pixelmatch": "^7.2.0",
+    "playwright-core": "^1.61.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

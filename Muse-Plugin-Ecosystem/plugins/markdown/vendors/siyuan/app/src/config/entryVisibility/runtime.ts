@@ -1,0 +1,529 @@
+import {config as configApi} from "../util/configApi";
+import {Constants} from "../../constants";
+import {getSettingsOwnerApp} from "../setting/windowContext";
+import {
+    getEntryCatalogDefaultVisibility,
+    getEntryCatalogCustomDefaultVisibility,
+    getEntryCatalogChildren,
+    getEntryCatalogNode,
+    getDockEntryKey,
+    getEntryParentPath,
+    getEntryPaths,
+    isEntryCatalogNodeConfigurable,
+    refreshDockCatalog,
+    refreshTopBarCatalog,
+    TOP_BAR_ROOT_PATH,
+    STATUS_BAR_ROOT_PATH,
+    WINDOW_TOP_BAR_ROOT_PATH,
+    SLASH_MENU_ROOT_PATH,
+} from "./catalog";
+import {
+    mergeEntryOrderPreservingUnknown,
+    reorderEntrySlots,
+    resolveEntryOrder,
+    resolveEntryOrderWithBoundaryDefaults,
+} from "./order";
+import {getDocTreeEntryScope} from "./docTreeScope";
+import {getBuiltinProfileEntryVisibility, getProfileEntryVisibility, getSavedEntryOrder} from "./profile";
+import {TOOLBAR_ENTRY_ROOT_PATH} from "../../protyle/toolbar/defaults";
+import {resolveToolbarItems} from "../../protyle/toolbar/entryVisibility";
+import {syncDockBarVisibility} from "../../layout/dock/barVisibility";
+import {genUUID} from "../../util/genID";
+import {
+    applyDockEntryOrderSnapshot,
+    DOCK_ORDER_SCOPES,
+    getCurrentDockEntryOrderSnapshot,
+    getDefaultDockEntryOrderSnapshot,
+    getDockEntryOrderSnapshot,
+    getDockOrderScopePosition,
+    isDockOrderScope,
+    mergeCurrentDockEntryOrders,
+    mergeDockEntryOrderSnapshot,
+} from "./dockOrder";
+
+export const ENTRY_VISIBILITY_VERSION = 7;
+export const ENTRY_PROFILE_SIMPLE = "simple";
+export const ENTRY_PROFILE_FULL = "full";
+export type TEntryVisibilityTemplate = typeof ENTRY_PROFILE_SIMPLE | typeof ENTRY_PROFILE_FULL;
+
+const getConfig = () => window.siyuan.config.appearance.entryVisibility;
+
+export const getActiveEntryProfile = () => {
+    const config = getConfig();
+    return config.profiles.find((item) => item.id === config.active);
+};
+
+const getTemplateVisibility = (path: string, template: TEntryVisibilityTemplate) => {
+    const entry = getEntryCatalogNode(path);
+    return getBuiltinProfileEntryVisibility(
+        template,
+        entry?.simple !== false,
+        getEntryCatalogDefaultVisibility(path),
+        entry?.simpleDefaultVisible,
+    );
+};
+
+export const getEntryProfileDefaultVisibility = (profile: Config.IEntryVisibilityProfile | undefined, path: string) =>
+    profile?.defaults === ENTRY_PROFILE_SIMPLE || profile?.defaults === ENTRY_PROFILE_FULL
+        ? getTemplateVisibility(path, profile.defaults)
+        : getEntryCatalogCustomDefaultVisibility(path);
+
+export const isEntryVisible = (path: string): boolean => {
+    /// #if MOBILE
+    if (!path.startsWith(`${TOOLBAR_ENTRY_ROOT_PATH}.`) &&
+        path !== SLASH_MENU_ROOT_PATH && !path.startsWith(`${SLASH_MENU_ROOT_PATH}.`) &&
+        path !== "editor.image" && !path.startsWith("editor.image.") &&
+        path !== "editor.blockEmbed" && !path.startsWith("editor.blockEmbed.")) {
+        return true;
+    }
+    /// #endif
+    return getConfiguredEntryVisibility(path);
+};
+
+export const getConfiguredEntryVisibility = (path: string, stopAt?: string): boolean => {
+    // 独立入口可只复用指定菜单内部的配置，不继承该菜单触发入口的总开关。
+    if (path === stopAt) {
+        return true;
+    }
+    const config = getConfig();
+    const active = config.active;
+    let visible: boolean;
+    if (active === ENTRY_PROFILE_FULL) {
+        visible = getTemplateVisibility(path, ENTRY_PROFILE_FULL);
+    } else if (active === ENTRY_PROFILE_SIMPLE) {
+        visible = getTemplateVisibility(path, ENTRY_PROFILE_SIMPLE);
+    } else {
+        const profile = getActiveEntryProfile();
+        visible = getProfileEntryVisibility(profile, path, getEntryProfileDefaultVisibility(profile, path));
+    }
+    if (!visible) {
+        return false;
+    }
+    const parentPath = getEntryParentPath(path);
+    if (parentPath && getEntryCatalogNode(parentPath)) {
+        return getConfiguredEntryVisibility(parentPath, stopAt);
+    }
+    return true;
+};
+
+export const createEntryProfileSnapshot = (template: TEntryVisibilityTemplate) => {
+    return getEntryPaths().reduce<Record<string, boolean>>((entries, path) => {
+        entries[path] = getTemplateVisibility(path, template);
+        return entries;
+    }, {});
+};
+
+export const getEntryOrder = (parentPath: string, profile = getActiveEntryProfile()) => {
+    if (parentPath === "dock" || isDockOrderScope(parentPath)) {
+        const current = getDockEntryOrderSnapshot();
+        const snapshot = mergeDockEntryOrderSnapshot(
+            profile ? getDefaultDockEntryOrderSnapshot(current) : current, profile?.orders,
+        );
+        return parentPath === "dock" ? DOCK_ORDER_SCOPES.flatMap(scope => snapshot[scope]) : snapshot[parentPath];
+    }
+    const nodes = getEntryCatalogChildren(parentPath) || [];
+    const defaultOrder = nodes.map((item) => item.key);
+    const separatorKeys = new Set(nodes.filter((item) => item.type === "separator").map((item) => item.key));
+    if (parentPath === TOP_BAR_ROOT_PATH) {
+        return resolveEntryOrderWithBoundaryDefaults(defaultOrder, profile?.orders?.[parentPath], "drag", separatorKeys);
+    }
+    if (parentPath === STATUS_BAR_ROOT_PATH) {
+        return resolveEntryOrderWithBoundaryDefaults(defaultOrder, profile?.orders?.[parentPath], "spacer", separatorKeys);
+    }
+    return resolveEntryOrder(defaultOrder, getSavedEntryOrder(profile, parentPath, defaultOrder), separatorKeys);
+};
+
+export const createEntryOrderSnapshot = (current = false) => {
+    return current ? JSON.parse(JSON.stringify(getActiveEntryProfile()?.orders || {})) as Record<string, string[]> : {};
+};
+
+const cloneEntryVisibilityConfig = () => JSON.parse(JSON.stringify(
+    window.siyuan.config.appearance.entryVisibility
+)) as Config.IEntryVisibility;
+
+const uniqueEntryProfileName = (name: string, profiles: Config.IEntryVisibilityProfile[]) => {
+    if (!profiles.some((item) => item.name === name)) {
+        return name;
+    }
+    let index = 2;
+    while (profiles.some((item) => item.name === `${name} (${index})`)) {
+        index++;
+    }
+    return `${name} (${index})`;
+};
+
+const getWritableEntryProfile = (config: Config.IEntryVisibility) => {
+    const activeProfile = config.profiles.find((item) => item.id === config.active);
+    if (activeProfile) {
+        return activeProfile;
+    }
+    const template = config.active === ENTRY_PROFILE_SIMPLE ? ENTRY_PROFILE_SIMPLE : ENTRY_PROFILE_FULL;
+    const profile: Config.IEntryVisibilityProfile = {
+        id: genUUID(),
+        name: uniqueEntryProfileName(window.siyuan.languages.entryCustomProfile, config.profiles),
+        defaults: template,
+        entries: {},
+        orders: {},
+    };
+    config.profiles.push(profile);
+    config.active = profile.id;
+    return profile;
+};
+
+export const setEntryVisibilityValue = (path: string, visible: boolean) => {
+    const node = getEntryCatalogNode(path);
+    if (window.siyuan.config.readonly || !node || !isEntryCatalogNodeConfigurable(node)) {
+        return;
+    }
+    const config = cloneEntryVisibilityConfig();
+    const profile = getWritableEntryProfile(config);
+    profile.entries[path] = visible;
+    saveEntryVisibility(config);
+};
+
+export const setEntryOrderValue = (parentPath: string, order: string[]) => {
+    const dockOrder = isDockOrderScope(parentPath) ? getDockEntryOrderSnapshot()[parentPath] : undefined;
+    const nodes = dockOrder ? undefined : getEntryCatalogChildren(parentPath);
+    if (window.siyuan.config.readonly || (!dockOrder && !nodes)) {
+        return;
+    }
+    const config = cloneEntryVisibilityConfig();
+    const profile = getWritableEntryProfile(config);
+    const defaultOrder = dockOrder || nodes.map((item) => item.key);
+    const separatorKeys = new Set(nodes?.filter((item) => item.type === "separator").map((item) => item.key));
+    profile.orders[parentPath] = mergeEntryOrderPreservingUnknown(
+        defaultOrder,
+        getSavedEntryOrder(profile, parentPath, defaultOrder),
+        order,
+        separatorKeys,
+    );
+    saveEntryVisibility(config);
+};
+
+let savePending: Config.IEntryVisibility | undefined;
+let saveRunning = false;
+
+const flushEntryVisibility = () => {
+    if (saveRunning || !savePending) {
+        return;
+    }
+    saveRunning = true;
+    const next = savePending;
+    savePending = undefined;
+    void configApi.set("appearance.entryVisibility", next, data => {
+        if (!savePending) applyEntryVisibility((data as Config.IAppearance).entryVisibility);
+    }).catch(error => console.warn("Could not save entry visibility", error)).finally(() => {
+        saveRunning = false;
+        flushEntryVisibility();
+    });
+};
+
+export const saveEntryVisibility = (config: Config.IEntryVisibility) => {
+    config.version = ENTRY_VISIBILITY_VERSION;
+    applyEntryVisibilityLocal(config);
+    savePending = config;
+    flushEntryVisibility();
+};
+
+export const syncDockEntryOrders = () => {
+    if (window.siyuan.config.readonly) {
+        return;
+    }
+    refreshDockCatalog(getSettingsOwnerApp()?.plugins || []);
+    const currentOrders = getCurrentDockEntryOrderSnapshot();
+    const config = cloneEntryVisibilityConfig();
+    const profile = getWritableEntryProfile(config);
+    profile.orders ||= {};
+    Object.assign(profile.orders, mergeCurrentDockEntryOrders(currentOrders, profile.orders));
+    saveEntryVisibility(config);
+};
+
+const entryScope = (menuElement: HTMLElement): string => {
+    switch (menuElement.dataset.name) {
+        case Constants.MENU_DOC_TREE_PANEL_MORE:
+            return "docTree.panel";
+        case Constants.MENU_DOC_TREE_MORE:
+            return getDocTreeEntryScope(menuElement.dataset.from, {
+                notebook: Constants.MENU_FROM_DOC_TREE_MORE_NOTEBOOK,
+                notebooks: Constants.MENU_FROM_DOC_TREE_MORE_NOTEBOOKS,
+                doc: Constants.MENU_FROM_DOC_TREE_MORE_DOC,
+                docs: Constants.MENU_FROM_DOC_TREE_MORE_DOCS,
+                items: Constants.MENU_FROM_DOC_TREE_MORE_ITEMS,
+            });
+        case Constants.MENU_TAB:
+            return "tab";
+        case Constants.MENU_TITLE:
+            return "document.title";
+        case Constants.MENU_BREADCRUMB_MORE:
+            return "document.more";
+        case Constants.MENU_BLOCK_SINGLE:
+            return "gutter.single";
+        case Constants.MENU_BLOCK_MULTI:
+            return "gutter.multi";
+        case Constants.MENU_INLINE_CONTEXT:
+            return "inline.text";
+        case Constants.MENU_INLINE_IMG:
+            return "inline.image";
+        case Constants.MENU_INLINE_REF:
+            return "inline.ref";
+        case Constants.MENU_INLINE_A:
+            return "inline.link";
+        case Constants.MENU_INLINE_FILE_ANNOTATION_REF:
+            return "inline.fileAnnotation";
+        case Constants.MENU_INLINE_TAG:
+            return "inline.tag";
+        case Constants.MENU_INLINE_MATH:
+            return "inline.math";
+        default:
+            return "";
+    }
+};
+
+const normalizeSeparators = (itemsElement: Element) => {
+    Array.from(itemsElement.children).forEach((item) => {
+        const submenu = item.querySelector(":scope > .b3-menu__submenu > .b3-menu__items");
+        if (submenu) {
+            normalizeSeparators(submenu);
+            if (!submenu.querySelector(":scope > .b3-menu__item")) {
+                item.remove();
+            }
+        }
+    });
+    let hasItem = false;
+    let previousSeparator = false;
+    const children = Array.from(itemsElement.children);
+    children.forEach((item, index) => {
+        if (item.classList.contains("b3-menu__separator")) {
+            const hasNextItem = children.slice(index + 1).some((next) =>
+                !next.classList.contains("b3-menu__separator") && next.isConnected);
+            if (!hasItem || !hasNextItem || previousSeparator) {
+                item.remove();
+            } else {
+                previousSeparator = true;
+            }
+            return;
+        }
+        hasItem = true;
+        previousSeparator = false;
+    });
+};
+
+const sortMenuItems = (itemsElement: Element, prefix: string) => {
+    const catalogNodes = getEntryCatalogChildren(prefix);
+    if (catalogNodes) {
+        const children = Array.from(itemsElement.children);
+        reorderEntrySlots(children, getEntryOrder(prefix), (item) => item.getAttribute("data-id"))
+            .forEach((item) => itemsElement.append(item));
+    }
+    Array.from(itemsElement.children).forEach((item) => {
+        if (!item.classList.contains("b3-menu__item")) {
+            return;
+        }
+        const id = item.getAttribute("data-id");
+        const submenu = item.querySelector(":scope > .b3-menu__submenu > .b3-menu__items");
+        if (id && submenu && getEntryCatalogNode(`${prefix}.${id}`)) {
+            sortMenuItems(submenu, `${prefix}.${id}`);
+        }
+    });
+};
+
+const filterMenuItems = (itemsElement: Element, prefix: string) => {
+    Array.from(itemsElement.children).forEach((item) => {
+        const id = item.getAttribute("data-id");
+        const path = id ? `${prefix}.${id}` : "";
+        if (item.classList.contains("b3-menu__separator")) {
+            if (path && getEntryCatalogNode(path) && !isEntryVisible(path)) {
+                item.remove();
+            }
+            return;
+        }
+        if (!item.classList.contains("b3-menu__item")) {
+            return;
+        }
+        if (path && getEntryCatalogNode(path) && !isEntryVisible(path)) {
+            item.remove();
+            return;
+        }
+        const submenu = item.querySelector(":scope > .b3-menu__submenu > .b3-menu__items");
+        if (submenu) {
+            filterMenuItems(submenu, path || prefix);
+        }
+    });
+};
+
+export const applyMenuEntryVisibility = (menuElement: HTMLElement) => {
+    /// #if !MOBILE
+    const scope = entryScope(menuElement);
+    if (!scope) {
+        return;
+    }
+    const itemsElement = menuElement.querySelector(":scope > .b3-menu__items") || menuElement.lastElementChild;
+    if (!itemsElement) {
+        return;
+    }
+    sortMenuItems(itemsElement, scope);
+    filterMenuItems(itemsElement, scope);
+    normalizeSeparators(itemsElement);
+    /// #endif
+};
+
+export const applyDockEntryVisibility = () => {
+    /// #if !MOBILE
+    refreshDockCatalog(getSettingsOwnerApp()?.plugins || []);
+    const profile = getActiveEntryProfile();
+    const current = getDockEntryOrderSnapshot();
+    applyDockEntryOrderSnapshot(mergeDockEntryOrderSnapshot(
+        profile ? getDefaultDockEntryOrderSnapshot(current) : current,
+        profile?.orders,
+    ), undefined, (scope, item, previousItem) => {
+        const position = getDockOrderScopePosition(scope);
+        const dock = position.startsWith("Left")
+            ? window.siyuan.layout.leftDock
+            : position.startsWith("Right")
+                ? window.siyuan.layout.rightDock
+                : window.siyuan.layout.bottomDock;
+        const index = position === "LeftBottom" || position === "RightBottom" || position === "BottomRight" ? 1 : 0;
+        dock?.add(index, item, previousItem?.getAttribute("data-type") || undefined, {syncEntryOrders: false});
+    });
+    document.querySelectorAll<HTMLElement>(".dock__item[data-type]").forEach((item) => {
+        const type = item.dataset.type;
+        const key = getDockEntryKey(item);
+        const path = key ? `dock.${key}` : "";
+        if (!getEntryCatalogNode(path)) {
+            return;
+        }
+        const visible = isEntryVisible(path);
+        if (!visible && item.classList.contains("dock__item--active")) {
+            const dock = [window.siyuan.layout.leftDock, window.siyuan.layout.rightDock, window.siyuan.layout.bottomDock]
+                .find((candidate) => candidate?.elements.some((element) => element.contains(item)));
+            dock?.toggleModel(type, false, false, false, true, false);
+        }
+        item.classList.toggle("fn__none", !visible);
+    });
+    syncDockBarVisibility();
+    /// #endif
+};
+
+export const applyToolbarEntryVisibility = (toolbarElement: HTMLElement) => {
+    /// #if !MOBILE
+    const children = Array.from(toolbarElement.children) as HTMLElement[];
+    const resolveKey = (item: HTMLElement) => {
+        const id = item.dataset.id;
+        return id && getEntryCatalogNode(`${TOOLBAR_ENTRY_ROOT_PATH}.${id}`) ? id : undefined;
+    };
+    const result = resolveToolbarItems(children, {
+        getKey: resolveKey,
+        isSeparator: (item) => item.classList.contains("protyle-toolbar__divider"),
+        isVisible: (key) => isEntryVisible(`${TOOLBAR_ENTRY_ROOT_PATH}.${key}`) &&
+            children.some(item => resolveKey(item) === key && item.dataset.entryUnavailable !== "true"),
+        order: getEntryOrder(TOOLBAR_ENTRY_ROOT_PATH),
+    });
+    result.ordered.forEach((item) => toolbarElement.append(item));
+    const visibleItems = new Set(result.visible);
+    result.ordered.forEach((item) => item.classList.toggle("fn__none", !visibleItems.has(item)));
+    const empty = !result.visible.some((item) => item.classList.contains("protyle-toolbar__item"));
+    toolbarElement.toggleAttribute("data-entry-empty", empty);
+    if (empty) {
+        toolbarElement.classList.add("fn__none");
+    }
+    /// #endif
+};
+
+export const refreshTopBarEntryCatalog = () => {
+    /// #if !MOBILE
+    refreshTopBarCatalog(getSettingsOwnerApp()?.plugins || []);
+    /// #endif
+};
+
+export const applyTopBarEntryVisibility = () => {
+    /// #if !MOBILE
+    const toolbarElement = document.getElementById("toolbar");
+    const barMoreElement = document.getElementById("barMore");
+    const dragElement = document.getElementById("drag");
+    if (!toolbarElement || !barMoreElement || !dragElement) {
+        return;
+    }
+    refreshTopBarEntryCatalog();
+    const entryElements = Array.from(toolbarElement.querySelectorAll<HTMLElement>(
+        ":scope > [data-topbar-entry]"));
+    const elementByKey = new Map(entryElements.map((item) => [item.dataset.topbarEntry, item]));
+    getEntryOrder(TOP_BAR_ROOT_PATH).forEach((key) => {
+        const item = key === "drag" ? dragElement : elementByKey.get(key);
+        if (item) {
+            barMoreElement.before(item);
+        }
+    });
+    entryElements.forEach((item) => {
+        const key = item.dataset.topbarEntry;
+        const path = key ? `${TOP_BAR_ROOT_PATH}.${key}` : "";
+        if (path && getEntryCatalogNode(path) && !isEntryVisible(path)) {
+            item.setAttribute("data-entry-hidden", "true");
+        } else {
+            item.removeAttribute("data-entry-hidden");
+        }
+    });
+    /// #endif
+};
+
+export const applyWindowTopBarEntryVisibility = () => {
+    /// #if !MOBILE
+    const toolbar = document.querySelector(".toolbar__window");
+    if (!toolbar) {
+        return;
+    }
+    const children = Array.from(toolbar.children) as HTMLElement[];
+    reorderEntrySlots(children, getEntryOrder(WINDOW_TOP_BAR_ROOT_PATH), item => item.dataset.windowTopbarEntry)
+        .forEach(item => toolbar.append(item));
+    children.forEach(item => {
+        const key = item.dataset.windowTopbarEntry;
+        if (key && getEntryCatalogNode(`${WINDOW_TOP_BAR_ROOT_PATH}.${key}`)) {
+            item.classList.toggle("fn__none", !isEntryVisible(`${WINDOW_TOP_BAR_ROOT_PATH}.${key}`));
+        }
+    });
+    /// #endif
+};
+
+export const applyStatusBarEntryVisibility = () => {
+    /// #if !MOBILE
+    const status = document.getElementById("status");
+    if (!status) {
+        return;
+    }
+    const children = Array.from(status.children) as HTMLElement[];
+    reorderEntrySlots(children, getEntryOrder(STATUS_BAR_ROOT_PATH), item => item.dataset.statusbarEntry)
+        .forEach(item => status.append(item));
+    children.forEach((item) => {
+        const key = item.dataset.statusbarEntry;
+        if (!key) {
+            return;
+        }
+        const path = `${STATUS_BAR_ROOT_PATH}.${key}`;
+        const node = getEntryCatalogNode(path);
+        if (node && isEntryCatalogNodeConfigurable(node) && !isEntryVisible(path)) {
+            item.setAttribute("data-entry-hidden", "true");
+        } else {
+            item.removeAttribute("data-entry-hidden");
+        }
+    });
+    /// #endif
+};
+
+const applyEntryVisibilityLocal = (config: Config.IEntryVisibility) => {
+    window.siyuan.config.appearance.entryVisibility = config;
+    /// #if !MOBILE
+    window.siyuan.menus?.menu?.remove();
+    applyTopBarEntryVisibility();
+    applyWindowTopBarEntryVisibility();
+    applyStatusBarEntryVisibility();
+    applyDockEntryVisibility();
+    document.querySelectorAll<HTMLElement>(".protyle-toolbar").forEach(applyToolbarEntryVisibility);
+    /// #endif
+    window.dispatchEvent(new CustomEvent("siyuan-entry-visibility"));
+};
+
+export const applyEntryVisibility = (config: Config.IEntryVisibility) => {
+    if (saveRunning || savePending) {
+        return;
+    }
+    applyEntryVisibilityLocal(config);
+};

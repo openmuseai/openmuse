@@ -1,0 +1,23 @@
+[package]
+name = "core_libs_util"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+# Function tests: mirror of src/<relpath>/<Type>.rs under tests/.
+# See .cursor/skills/feature-function/SKILL.md
+[[test]]
+name = "01_function_property_set"
+path = "tests/cn/wps/moffice/property/PropertySet.rs"
+
+[dependencies]
+kfc_kfc_alpha = { package = "core_libs_kfc", path = "../../kfc/kfc_alpha" }
+#io_poi_compact = { package = "core_libs_poi_compact", path = "../../io/poi-compact" }
+#kfs_kfs_app = { package = "core_libs_kfs_app", path = "../../kfs/kfs_app" }
+sha1 = "0.10"
+stubs = { path = "../../stubs" }
+
+parking_lot = "0.12.5"
+uuid = { version = "1", features = ["v4"] }

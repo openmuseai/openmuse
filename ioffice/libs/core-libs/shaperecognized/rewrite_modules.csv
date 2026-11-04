@@ -1,0 +1,5 @@
+order,module_path,category,file_count,rust_file_count,depends_on,state,description,session_id
+0,cn/wps/shaperecognize,shaperecognize,2,2,,done,,
+1,com/example/shaperecognized,shaperecognized,1,1,,done,,
+2,cn/wps/shaperecognize/algorithm,algorithm,1,1,,done,,
+3,cn/wps/shaperecognize/shape,shape,10,10,,done,,

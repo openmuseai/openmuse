@@ -1,0 +1,11 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/kfc/kfc/src/cn/wps/memor4j/AtomStoreImpl.java,cn/wps/memor4j,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc/src/cn/wps/memor4j/EmptyAtomData.java,cn/wps/memor4j,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc/src/cn/wps/memor4j/KmoAtom.java,cn/wps/memor4j,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc/src/cn/wps/kfc/numfmt/INumFormatter.java,cn/wps/kfc/numfmt,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc/src/cn/wps/kfc/numfmt/IWordFormatter.java,cn/wps/kfc/numfmt,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc/src/cn/wps/kfc/numfmt/NumFmtFactory.java,cn/wps/kfc/numfmt,Plan too large: 82 entries (56 unresolved deps exceed limit 30). File deferred.,2026-05-22
+koffice/core-libs/kfc/kfc/src/cn/wps/kfc/numfmt/global/NumFmtLocaleHandler.java,cn/wps/kfc/numfmt/global,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc/src/cn/wps/kfc/numfmt/math/HebrewCalc.java,cn/wps/kfc/numfmt/math,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc/src/cn/wps/kfc/numfmt/numbering/Alphabet.java,cn/wps/kfc/numfmt/numbering,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc/src/cn/wps/kfc/numfmt/numbering/CardinalText.java,cn/wps/kfc/numfmt/numbering,too many dependencies,2026-05-22

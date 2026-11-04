@@ -1,0 +1,17 @@
+[package]
+name = "testutils"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+test = false
+doctest = false
+
+[dependencies]
+allocative = { workspace = true }
+attr = { path = "../attr" }
+providers = { path = "../providers" }
+rule = { path = "../rule" }
+starlark = { workspace = true }
+starlark_derive = { workspace = true }
+types = { path = "../types" }

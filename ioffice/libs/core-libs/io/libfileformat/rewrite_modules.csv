@@ -1,0 +1,11 @@
+order,module_path,category,file_count,rust_file_count,depends_on,state,description,session_id
+0,cn/wps/io/file,file,4,2,,pending,,
+1,cn/wps/io/file/csv,csv,1,1,,done,,
+2,cn/wps/io/file/parser,parser,13,1,,pending,,
+3,cn/wps/io/file/checker/html,html,2,2,,done,,
+4,cn/wps/io/file/checker/ole,ole,4,4,,done,,
+5,cn/wps/io/file/checker/ooxml,ooxml,20,20,,done,,
+6,cn/wps/io/file/checker/pdf,pdf,1,1,,done,,
+7,cn/wps/io/file/checker/rtf,rtf,1,1,,done,,
+8,cn/wps/io/file/checker/xml,xml,2,2,,done,,
+9,cn/wps/io/file/parser/textual/helper,helper,7,0,,pending,,

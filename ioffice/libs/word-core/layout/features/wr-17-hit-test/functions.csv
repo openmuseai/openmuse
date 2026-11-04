@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_page_hit,页内选行,page+y+rows,line,wr-14;wr-16,03,libs/word-core,pass
+2,02_function_cp_hit,行内cp,line+x+advances,cp,wr-11;wr-14,03,libs/word-core,pass
+3,03_function_hit_test,命中编排,rows+advances+point,pageLineCp,01;02,cursor,libs/word-core,pass

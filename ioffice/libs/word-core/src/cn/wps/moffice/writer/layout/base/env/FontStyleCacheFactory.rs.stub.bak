@@ -1,0 +1,17 @@
+// Rust stub for FontStyleCacheFactory (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/FontStyleCacheFactory.java
+use crate::*;
+
+pub struct FontStyleCacheFactory {
+    // TODO: fields
+}
+
+impl FontStyleCacheFactory {
+    pub fn new() -> Self { todo!() }
+    pub fn create(&self, doc: Box<dyn Document>) -> FontStyleCache { todo!() }
+    pub fn reuseClean(&self) -> bool { todo!() }
+    pub fn reuseInit(&self) { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn clearCoreCharStyleCache(&self) { todo!() }
+    pub fn setBalloonContentProperty(&self, prop: PropertySet) { todo!() }
+}

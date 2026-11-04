@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "locale": "zh-Hans",
+  "namespace": "cloud",
+  "sourceRevision": 2,
+  "messages": {
+    "cloud.title": "云工作区",
+    "cloud.refresh": "刷新",
+    "cloud.empty": "没有可用的云工作区",
+    "cloud.workspace": "云工作区",
+    "cloud.running": "Remote DSH 运行中 · {devices} 设备",
+    "cloud.connect": "连接",
+    "cloud.reuse": "复用",
+    "cloud.unavailable": "云工作区暂时不可用，请稍后重试。",
+    "cloud.dshUnavailable": "无法连接 Remote DSH，请检查工作区与服务状态。"
+  }
+}

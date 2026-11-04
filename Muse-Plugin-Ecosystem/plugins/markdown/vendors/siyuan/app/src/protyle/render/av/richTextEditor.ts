@@ -1,0 +1,265 @@
+import {escapeHtml} from "../../../util/escape";
+import {isMobile} from "../../../util/functions";
+import {callMobileAppShowKeyboard} from "../../../mobile/util/mobileAppUtil";
+import {hintRef, hintSlash} from "../../hint/extend";
+import {registerBuiltinSlashHint} from "../../hint/builtinSlash";
+import {mountProtyleLiteFragment} from "../../lite/fragmentEditor";
+import {getDefaultToolbar} from "../../toolbar/defaults";
+import {highlightRender} from "../highlightRender";
+import {mathRender} from "../mathRender";
+import {positionAVRichTextEditor} from "./richTextEditorPosition";
+import {getAVData} from "./virtualScroll";
+import {resolveAVSelectedCell} from "./selectionState";
+import {beginAVEditorSession} from "./editorSession";
+import {updateOutlineCurrentBlock} from "../../util/outlineBlock";
+import {focusBlock} from "../../util/selection";
+import {
+    configureAVRichTextLute,
+    createAVRichTextValue,
+    getAVRichTextLute,
+    getAVRichTextBlockDOM,
+    getAVRichTextUnsupportedPasteBlocks,
+    getAVTextSource,
+    sanitizeAVRichTextBlockDOM,
+    serializeAVRichTextBlockDOM,
+} from "./richText";
+
+const SAFE_SLASH_IDS = new Set([
+    "ref",
+    "heading1",
+    "heading2",
+    "heading3",
+    "heading4",
+    "heading5",
+    "heading6",
+    "list",
+    "orderedList",
+    "check",
+    "quote",
+    "code",
+    "math",
+    "link",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "mark",
+    "sup",
+    "sub",
+    "inlineCode",
+    "kbd",
+    "tag",
+    "inlineMath",
+]);
+
+interface AVRichTextEditorOptions {
+    protyle: IProtyle;
+    nodeElement: HTMLElement;
+    anchorElement: HTMLElement;
+    value: IAVCellValue;
+    stableCells: import("./selectionState").IAVSelectedCell[];
+    onSave: (value: IAVCellValue, nodeElement: HTMLElement,
+             stableCells: import("./selectionState").IAVSelectedCell[]) => void | Promise<void>;
+    onDestroy?: () => void;
+}
+
+interface ActiveEditor {
+    finish: (save: boolean) => Promise<void>;
+}
+
+let activeEditor: ActiveEditor | undefined;
+
+const prepareHint = (protyle: IProtyle) => {
+    if (protyle.hint.element.classList.contains("fn__none")) {
+        protyle.hint.element.style.zIndex = (++window.siyuan.zIndex).toString();
+    }
+};
+
+const hintAVRef = (key: string, protyle: IProtyle, source: THintSource) => {
+    prepareHint(protyle);
+    return hintRef(key, protyle, source);
+};
+
+const hintAVSlash = registerBuiltinSlashHint((key: string, protyle: IProtyle, source: THintSource) => {
+    prepareHint(protyle);
+    return hintSlash(key, protyle, source).filter((item) => item.id && SAFE_SLASH_IDS.has(item.id));
+});
+
+const setPanelPosition = (panelElement: HTMLElement, anchorElement: HTMLElement) => {
+    if (isMobile()) {
+        panelElement.classList.add("av__richtext-editor--mobile");
+        panelElement.removeAttribute("style");
+        return;
+    }
+    positionAVRichTextEditor(panelElement, anchorElement);
+};
+
+export const destroyAVRichTextEditor = (save = false) => {
+    void activeEditor?.finish(save);
+};
+
+export const openAVRichTextEditor = (options: AVRichTextEditorOptions) => {
+    void activeEditor?.finish(false);
+
+    const mobile = isMobile();
+    const maskElement = document.createElement("div");
+    maskElement.className = "av__mask av__richtext-mask";
+    maskElement.dataset.avBlockId = options.nodeElement.dataset.nodeId;
+    maskElement.style.zIndex = (++window.siyuan.zIndex).toString();
+    maskElement.innerHTML = `<div class="av__richtext-editor" role="dialog">
+    ${mobile ? `<div class="av__richtext-actions">
+        <button type="button" class="b3-button b3-button--text" data-type="confirm">${escapeHtml(window.siyuan.languages.confirm)}</button>
+    </div>` : ""}
+    <div class="av__richtext-host"></div>
+</div>`;
+    document.body.appendChild(maskElement);
+    // 独立记录详情使用未挂载的编辑器上下文，浮层生命周期跟随实际可见的详情面板。
+    const ownerElement = options.nodeElement.closest<HTMLElement>(".protyle-db-row") || options.protyle.element;
+    const endEditorSession = beginAVEditorSession(ownerElement);
+    const panelElement = maskElement.firstElementChild as HTMLElement;
+    const hostElement = panelElement.querySelector<HTMLElement>(".av__richtext-host");
+    hostElement.dataset.protyleLiteRender = "safe";
+    setPanelPosition(panelElement, options.anchorElement);
+
+    const source = getAVTextSource(options.value);
+    const toolbar = getDefaultToolbar(mobile);
+    const hint: IProtyleOptions["hint"] = {
+        extend: [{key: "((", hint: hintAVRef}, {key: "【【", hint: hintAVRef},
+            {key: "（（", hint: hintAVRef}, {key: "[[", hint: hintAVRef},
+            {key: "/", hint: hintAVSlash}, {key: "、", hint: hintAVSlash}],
+    };
+    const fragment = mountProtyleLiteFragment(hostElement, {
+        initialBlockHTML: source.kind === "rich" ? getAVRichTextBlockDOM(source.content) : undefined,
+        initialPlainText: source.kind === "plain" ? source.content : undefined,
+        placeholder: window.siyuan.languages.empty,
+        protyleOptions: {
+            notebookId: options.protyle.notebookId ||
+                options.nodeElement.closest<HTMLElement>(".protyle")?.dataset.notebookId,
+            toolbar,
+            hint,
+        },
+        runtimeCapabilities: {
+            upload: false,
+            websocket: false,
+            lute: getAVRichTextLute(),
+            lockedOptions: {toolbar, hint},
+            pluginExtensions: false,
+            customBlockRender: false,
+            sanitizeBlockDOM: sanitizeAVRichTextBlockDOM,
+            getUnsupportedPasteBlocks: getAVRichTextUnsupportedPasteBlocks,
+            restoreLuteMarkdownSyntax: configureAVRichTextLute,
+        },
+        afterSetContent: (protyle, element) => {
+            mathRender(element);
+            highlightRender(element);
+            protyle.undo.clear();
+        },
+    });
+    // 临时块不在块树中，块引搜索和新建文档使用所属文档及真实载体块的上下文。
+    fragment.protyle.block.rootID = options.protyle.block.rootID;
+    fragment.protyle.block.parentID = options.nodeElement.dataset.nodeId;
+    fragment.protyle.path = options.protyle.path;
+    setPanelPosition(panelElement, options.anchorElement);
+    const initialMarkdown = serializeAVRichTextBlockDOM(fragment.getBlockHTML()).markdown;
+
+    let finished = false;
+    let cancelled = false;
+    const isOwnerConnected = () => {
+        if (!ownerElement.isConnected || !options.nodeElement.isConnected) {
+            return false;
+        }
+        if (options.anchorElement.isConnected) {
+            return true;
+        }
+        // 行重渲染后按稳定标识确认编辑目标，避免其他单元格的事务丢弃尚未保存的输入。
+        const data = getAVData(options.nodeElement);
+        return data && options.stableCells.length > 0 && options.stableCells.every(cell =>
+            resolveAVSelectedCell(data, cell)?.column.type === "text");
+    };
+    const resize = () => {
+        if (!options.anchorElement.isConnected) {
+            const cell = options.stableCells[0];
+            if (cell) {
+                const group = cell.groupID ? `.av__body[data-group-id="${cell.groupID}"] ` : "";
+                const anchor = options.nodeElement.querySelector<HTMLElement>(
+                    `${group}.av__row[data-id="${cell.rowID}"] [data-col-id="${cell.colID}"]`);
+                if (anchor) {
+                    options.anchorElement = anchor;
+                }
+            }
+        }
+        if (options.anchorElement.isConnected) {
+            setPanelPosition(panelElement, options.anchorElement);
+        }
+    };
+    window.addEventListener("resize", resize);
+    const panelResizeObserver = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(resize);
+    panelResizeObserver?.observe(panelElement);
+    const ownerObserver = new MutationObserver(() => {
+        if (!isOwnerConnected()) {
+            void finish(false);
+        } else if (!options.anchorElement.isConnected) {
+            resize();
+        }
+    });
+    ownerObserver.observe(document.body, {childList: true, subtree: true});
+
+    const finish = async (save: boolean, restoreFocus = false) => {
+        if (!save) {
+            cancelled = true;
+        }
+        if (finished) {
+            return;
+        }
+        finished = true;
+        try {
+            if (save) {
+                await fragment.protyle.wysiwyg.flushPendingInput();
+                if (cancelled || !isOwnerConnected()) {
+                    return;
+                }
+                const serialized = serializeAVRichTextBlockDOM(fragment.getBlockHTML());
+                if (serialized.markdown !== initialMarkdown) {
+                    await options.onSave(createAVRichTextValue(serialized.markdown, serialized.plainText, options.value),
+                        options.nodeElement, options.stableCells);
+                }
+            }
+        } finally {
+            ownerObserver.disconnect();
+            panelResizeObserver?.disconnect();
+            window.removeEventListener("resize", resize);
+            fragment.destroy();
+            maskElement.remove();
+            if (activeEditor?.finish === finish) {
+                activeEditor = undefined;
+            }
+            endEditorSession();
+            options.onDestroy?.();
+            if (restoreFocus && !mobile && !cancelled && !activeEditor && isOwnerConnected() &&
+                options.protyle.wysiwyg.element.contains(options.nodeElement)) {
+                focusBlock(options.nodeElement);
+            }
+        }
+    };
+
+    activeEditor = {finish};
+    maskElement.addEventListener("mousedown", (event) => {
+        if (event.target === maskElement) {
+            void finish(true);
+        }
+    });
+    panelElement.querySelector('[data-type="confirm"]')?.addEventListener("click", () => void finish(true));
+    panelElement.addEventListener("keydown", (event: KeyboardEvent) => {
+        if (event.key === "Escape" && fragment.hintElement.classList.contains("fn__none") &&
+            fragment.protyle.toolbar.element.classList.contains("fn__none") &&
+            fragment.protyle.toolbar.subElement.classList.contains("fn__none")) {
+            event.preventDefault();
+            event.stopPropagation();
+            void finish(true, true);
+        }
+    }, true);
+    fragment.focus(true);
+    // 浮层编辑器自行接管焦点，编辑区收不到块级点击，需在此按所属数据库块同步大纲高亮
+    updateOutlineCurrentBlock(options.protyle, options.nodeElement);
+    callMobileAppShowKeyboard();
+};

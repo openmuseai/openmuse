@@ -1,0 +1,526 @@
+import {escapeHtml} from "../../../util/escape";
+import {Constants} from "../../../constants";
+import {CODE_TAB_SPACE_VALUES} from "../../wysiwyg/codeBlockUtil";
+import {highlightRender} from "../highlightRender";
+import {getAgentLute} from "../setLute";
+import {restoreInlineElementBoundaries} from "../../util/inlineElementBoundary";
+import {mathRender} from "../mathRender";
+import {
+    createAVRichTextStyleBackslashEncoding,
+    createAVRichTextStyleEntityReplacer,
+    configureAVRichTextLute,
+    getAVRichTextSafeURL,
+    isAVRichTextEditorAllowedTag,
+    isAVRichTextExecutableCodeLanguage,
+    projectAVRichTextPlainBlocks,
+    protectAVRichTextKramdownStyleEntities,
+    sanitizeAVRichTextInlineMemoContent,
+    sanitizeAVRichTextInlineStyle,
+    AV_RICH_TEXT_PREVIEW_SANITIZE_OPTIONS,
+    AV_RICH_TEXT_PREVIEW_TEXT_ONLY_TAGS,
+    AV_RICH_TEXT_EDITOR_ALLOWED_ATTRIBUTES,
+} from "./richTextValue";
+import type {AVRichTextStyleEntityProtection} from "./richTextValue";
+
+export {
+    AV_RICH_TEXT_FORMAT,
+    AV_RICH_TEXT_EDITOR_ALLOWED_ATTRIBUTES,
+    AV_RICH_TEXT_EDITOR_ALLOWED_TAGS,
+    AV_RICH_TEXT_PREVIEW_ALLOWED_ATTRIBUTES,
+    AV_RICH_TEXT_PREVIEW_ALLOWED_TAGS,
+    AV_RICH_TEXT_PREVIEW_SANITIZE_OPTIONS,
+    AV_RICH_TEXT_PREVIEW_TEXT_ONLY_TAGS,
+    AV_RICH_TEXT_SPEC,
+    configureAVRichTextLute,
+    createAVPlainTextValue,
+    createAVPlainTextEditValue,
+    createAVRichTextStyleBackslashEncoding,
+    createAVRichTextValue,
+    getAVTextCopyContent,
+    getAVTextPlainContent,
+    getAVTextSource,
+    getAVRichTextSafeURL,
+    isAVRichTextExecutableCodeLanguage,
+    projectAVRichTextPlainBlocks,
+    protectAVRichTextKramdownStyleEntities,
+    restoreAVRichTextStyleEntities,
+    sanitizeAVRichTextInlineMemoContent,
+    sanitizeAVRichTextInlineStyle,
+} from "./richTextValue";
+export type {AVTextSource} from "./richTextValue";
+export const AV_RICH_TEXT_CLASS = "av__celltext--rich";
+
+const ALLOWED_BLOCK_TYPES = new Set([
+    "NodeParagraph",
+    "NodeHeading",
+    "NodeList",
+    "NodeListItem",
+    "NodeBlockquote",
+    "NodeCodeBlock",
+    "NodeMathBlock",
+]);
+const ALLOWED_INLINE_TYPES = new Set([
+    "a",
+    "block-ref",
+    "code",
+    "em",
+    "file-annotation-ref",
+    "inline-math",
+    "inline-memo",
+    "kbd",
+    "mark",
+    "s",
+    "strong",
+    "sub",
+    "sup",
+    "tag",
+    "text",
+    "u",
+]);
+const TABLE_CELL_CUSTOM_INLINE_TYPE = /^custom_[A-Za-z0-9_-]{1,128}$/;
+const TABLE_CELL_CUSTOM_STYLE_PROPERTY = /^--custom-[a-z0-9-]{1,128}$/;
+const previewCache = new Map<string, string>();
+const PREVIEW_CACHE_LIMIT = 256;
+let richTextLute: Lute | undefined;
+
+// 数据库存储的是稳定的 Kramdown 片段，解析不能跟随用户的 Markdown 语法开关变化。
+export const getAVRichTextLute = () => {
+    if (!richTextLute) {
+        richTextLute = getAgentLute({
+            emojiSite: "/emojis",
+            emojis: {},
+            headingAnchor: false,
+            listStyle: false,
+            paragraphBeginningSpace: true,
+            sanitize: true,
+        });
+        configureAVRichTextLute(richTextLute);
+    }
+    return richTextLute;
+};
+
+const replaceWithText = (element: Element) => {
+    element.replaceWith(document.createTextNode(element.textContent || ""));
+};
+
+const sanitizeTableCellCustomStyle = (style: string) => {
+    if (style.length > 2048) {
+        return "";
+    }
+    const declarations: string[] = [];
+    style.split(";").forEach(declaration => {
+        const separator = declaration.indexOf(":");
+        if (separator < 0) {
+            return;
+        }
+        const property = declaration.slice(0, separator).trim();
+        const value = declaration.slice(separator + 1).trim();
+        if (!TABLE_CELL_CUSTOM_STYLE_PROPERTY.test(property)) {
+            return;
+        }
+        if (/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(value)) {
+            declarations.push(`${property}: ${value};`);
+            return;
+        }
+        if (/^var\(--b3-font-(?:color|background)(?:[1-9]|1[0-3])\)$/.test(value)) {
+            declarations.push(`${property}: ${value};`);
+            return;
+        }
+        const rgb = value.match(/^rgba?\(\s*(\d{1,3})(?:,\s*|\s+)(\d{1,3})(?:,\s*|\s+)(\d{1,3})(?:\s*[,/]\s*(0(?:\.\d+)?|1(?:\.0+)?))?\s*\)$/i);
+        if (rgb && [rgb[1], rgb[2], rgb[3]].every(channel => Number(channel) <= 255)) {
+            declarations.push(`${property}: ${value};`);
+        }
+    });
+    return declarations.join(" ");
+};
+
+const removeUnsupportedBlockAttributes = (element: HTMLElement, codeSettings: boolean) => {
+    Array.from(element.attributes).forEach((attribute) => {
+        if (codeSettings && element.dataset.type === "NodeCodeBlock" &&
+            attribute.name === Constants.CUSTOM_SY_CODE_TAB_SPACES) {
+            return;
+        }
+        if (attribute.name.startsWith("custom-") || attribute.name === "bookmark" ||
+            attribute.name === "memo" || attribute.name === "name" || attribute.name === "style") {
+            element.removeAttribute(attribute.name);
+        }
+    });
+};
+
+const isSupportedAVRichTextBlock = (element: HTMLElement) => {
+    const type = element.dataset.type;
+    return ALLOWED_BLOCK_TYPES.has(type) &&
+        (type !== "NodeHeading" || /^h[1-6]$/.test(element.dataset.subtype || "")) &&
+        (type !== "NodeCodeBlock" || !element.classList.contains("render-node") &&
+            !isAVRichTextExecutableCodeLanguage(element.dataset.subtype || ""));
+};
+
+export const getAVRichTextUnsupportedPasteBlocks = (blockDOM: string, images = false) => {
+    const template = document.createElement("template");
+    template.innerHTML = blockDOM;
+    const names = new Set<string>();
+    const keys: Record<string, string> = {
+        NodeTable: "table", NodeBlockQueryEmbed: "blockEmbed", NodeThematicBreak: "line",
+        NodeVideo: "video", NodeAudio: "audio", NodeWidget: "widget", NodeAttributeView: "database",
+        NodeCustomBlock: "custom", NodeSuperBlock: "superBlock", NodeCallout: "callout",
+        NodeTabs: "tabs", NodeTabItem: "tabItem", NodeCodeBlock: "code", NodeHeading: "headings",
+    };
+    template.content.querySelectorAll<HTMLElement>('[data-type^="Node"]').forEach(element => {
+        const type = element.dataset.type;
+        if (!isSupportedAVRichTextBlock(element)) {
+            names.add(type === "NodeHTMLBlock" ? "HTML" : type === "NodeIFrame" ? "IFrame" :
+                type === "NodeCodeBlock" && element.dataset.subtype ? element.dataset.subtype :
+                    window.siyuan.languages[keys[type]] || window.siyuan.languages.agentCatBlock);
+        }
+    });
+    if (!images && template.content.querySelector(".img, img")) {
+        names.add(window.siyuan.languages.image);
+    }
+    return Array.from(names);
+};
+
+export const sanitizeAVRichTextBlockDOM = (blockDOM: string, images = false, tableCellCustomInline = false) => {
+    const template = document.createElement("template");
+    template.innerHTML = blockDOM;
+    // 在过滤临时属性前恢复边界，避免把显示占位符当成富文本内容保存。
+    restoreInlineElementBoundaries(template.content);
+    template.content.querySelectorAll<HTMLElement>('[data-type^="Node"]').forEach((element) => {
+        const type = element.dataset.type;
+        if (!isSupportedAVRichTextBlock(element)) {
+            element.remove();
+            return;
+        }
+        if (type === "NodeHeading") {
+            element.className = element.dataset.subtype;
+        }
+        removeUnsupportedBlockAttributes(element, images);
+    });
+    template.content.querySelectorAll(
+        (images ? "" : ".img, img, ") +
+        "iframe, audio, video, object, embed, script, style, link, meta, form, input, button, textarea, select"
+    ).forEach((element) => {
+        element.remove();
+    });
+    template.content.querySelectorAll<HTMLElement>("*").forEach((element) => {
+        if (!isAVRichTextEditorAllowedTag(element.tagName) && !(images && element.tagName === "IMG")) {
+            replaceWithText(element);
+        }
+    });
+    template.content.querySelectorAll<HTMLElement>("span[data-type]").forEach((element) => {
+        const types = (element.dataset.type || "").split(" ").filter(Boolean);
+        if (images && types.length === 1 && types[0] === "img") {
+            return;
+        }
+        if (types.some((type) => !ALLOWED_INLINE_TYPES.has(type) &&
+            !(tableCellCustomInline && TABLE_CELL_CUSTOM_INLINE_TYPE.test(type)))) {
+            replaceWithText(element);
+            return;
+        }
+        const hasCustomType = tableCellCustomInline && types.some(type => TABLE_CELL_CUSTOM_INLINE_TYPE.test(type));
+        const sourceStyle = element.getAttribute("style") || "";
+        const style = [types.includes("text") || hasCustomType ? sanitizeAVRichTextInlineStyle(sourceStyle) : "",
+            hasCustomType ? sanitizeTableCellCustomStyle(sourceStyle) : ""].filter(Boolean).join(" ");
+        if (style) {
+            element.setAttribute("style", style);
+        } else {
+            element.removeAttribute("style");
+        }
+        if (types.includes("inline-memo")) {
+            element.dataset.inlineMemoContent = sanitizeAVRichTextInlineMemoContent(
+                element.dataset.inlineMemoContent || "");
+        }
+    });
+    template.content.querySelectorAll<HTMLElement>("*").forEach((element) => {
+        Array.from(element.attributes).forEach((attribute) => {
+            const name = attribute.name.toLowerCase();
+            const imageAttribute = images && ["src", "data-src", "alt", "title", "data-title", "loading"].includes(name) &&
+                (element.tagName === "IMG" || element.classList.contains("img"));
+            const linkTitleAttribute = tableCellCustomInline && name === "data-title" &&
+                (element.dataset.type || "").split(" ").includes("a");
+            const codeAttribute = images && element.dataset.type === "NodeCodeBlock" &&
+                (["linewrap", "ligatures", "linenumber"].includes(name) && ["true", "false"].includes(attribute.value) ||
+                    name === Constants.CUSTOM_SY_CODE_TAB_SPACES &&
+                    CODE_TAB_SPACE_VALUES.some(value => value.toString() === attribute.value));
+            if ((!AV_RICH_TEXT_EDITOR_ALLOWED_ATTRIBUTES.includes(name) && !imageAttribute && !linkTitleAttribute && !codeAttribute) ||
+                name === "xlink:href" && !attribute.value.startsWith("#icon")) {
+                element.removeAttribute(attribute.name);
+            }
+        });
+    });
+    template.content.querySelectorAll<HTMLElement>('[data-type~="a"][data-href]').forEach((element) => {
+        const href = getAVRichTextSafeURL(element.dataset.href, tableCellCustomInline, true);
+        if (href) {
+            element.dataset.href = href;
+        } else {
+            element.removeAttribute("data-href");
+        }
+    });
+    template.content.querySelectorAll<HTMLElement>('[data-type~="file-annotation-ref"][data-id]')
+        .forEach((element) => {
+            if (!getAVRichTextSafeURL(element.dataset.id)) {
+                element.removeAttribute("data-id");
+            }
+        });
+    template.content.querySelectorAll<HTMLElement>('[data-type~="block-ref"][data-id]').forEach((element) => {
+        if (!/^\d{14}-[a-z0-9]{7}$/.test(element.dataset.id || "")) {
+            element.removeAttribute("data-id");
+        }
+    });
+    template.content.querySelectorAll<HTMLElement>("[style]:not(span[data-type])")
+        .forEach((element) => {
+            if (!images || !element.closest(".img")) {
+                element.removeAttribute("style");
+            }
+        });
+    if (images) {
+        template.content.querySelectorAll<HTMLElement>(".img[style], .img [style]").forEach(element => {
+            if (/[\\<>@]|url\s*\(|expression\s*\(/i.test(element.getAttribute("style"))) {
+                element.removeAttribute("style");
+            }
+        });
+        template.content.querySelectorAll<HTMLImageElement>("img").forEach(element => {
+            const source = getAVRichTextSafeURL(element.getAttribute("data-src") || element.getAttribute("src"));
+            if (!source) {
+                (element.closest(".img") || element).remove();
+                return;
+            }
+            element.setAttribute("src", source);
+            element.setAttribute("data-src", source);
+        });
+    }
+    return (template.innerHTML || "").trim();
+};
+
+const cleanAVRichTextBlockDOMStructure = (blockDOM: string, preserveBlockIDs = false) => {
+    const template = document.createElement("template");
+    template.innerHTML = blockDOM;
+    template.content.querySelectorAll(".protyle-attr, .protyle-icons").forEach((element) => element.remove());
+    template.content.querySelectorAll<HTMLElement>("*").forEach((element) => {
+        (preserveBlockIDs ? ["data-node-index", "updated"] : ["data-node-id", "data-node-index", "updated"]).forEach((attribute) => {
+            element.removeAttribute(attribute);
+        });
+        if (preserveBlockIDs && ALLOWED_BLOCK_TYPES.has(element.dataset.type) && !element.dataset.nodeId) {
+            element.dataset.nodeId = Lute.NewNodeID();
+        }
+    });
+    return (template.innerHTML || "").trim();
+};
+
+const protectAVRichTextStyleBackslashes = (
+    blockDOM: string,
+    encoding: ReturnType<typeof createAVRichTextStyleBackslashEncoding>,
+) => {
+    const template = document.createElement("template");
+    template.innerHTML = blockDOM;
+    template.content.querySelectorAll<HTMLElement>('span[data-type~="text"][style]').forEach((element) => {
+        element.setAttribute("style", encoding.protectStyle(element.getAttribute("style") || ""));
+    });
+    return (template.innerHTML || "").trim();
+};
+
+const restoreAVRichTextBlockDOMStyleEntities = (
+    blockDOM: string,
+    protections: AVRichTextStyleEntityProtection[],
+) => {
+    if (protections.length === 0) {
+        return blockDOM;
+    }
+    const template = document.createElement("template");
+    template.innerHTML = blockDOM;
+    const restored = new Set<string>();
+    const replaceProtections = createAVRichTextStyleEntityReplacer(protections);
+    template.content.querySelectorAll<HTMLElement>('span[data-type~="text"][style]').forEach((element) => {
+        const style = element.getAttribute("style") || "";
+        element.setAttribute("style", replaceProtections(style, true, restored));
+    });
+    const restoreLiteralText = (element: Element) => {
+        const visit = (node: Node) => {
+            if (node.nodeType === Node.TEXT_NODE) {
+                node.nodeValue = replaceProtections(node.nodeValue || "", false, restored);
+                return;
+            }
+            node.childNodes.forEach(visit);
+        };
+        visit(element);
+    };
+    template.content.querySelectorAll('[data-type="NodeCodeBlock"], span[data-type~="code"]')
+        .forEach(restoreLiteralText);
+    template.content.querySelectorAll<HTMLElement>(
+        '[data-type="NodeMathBlock"][data-content], [data-type="NodeMathBlock"] [data-content], ' +
+        'span[data-type~="inline-math"][data-content]'
+    ).forEach((element) => {
+        element.setAttribute("data-content",
+            replaceProtections(element.getAttribute("data-content") || "", false, restored));
+    });
+    if (protections.some((protection) => !restored.has(protection.token))) {
+        throw new Error("Invalid attribute view rich text style entity");
+    }
+    return (template.innerHTML || "").trim();
+};
+
+const parseAVRichTextKramdown = (markdown: string, lute = getAVRichTextLute()) => {
+    const protectedStyle = protectAVRichTextKramdownStyleEntities(markdown);
+    return restoreAVRichTextBlockDOMStyleEntities(lute.Md2BlockDOM(protectedStyle.content),
+        protectedStyle.protections);
+};
+
+const getAVRichTextPlainContent = (blockDOM: string, lute: Lute) => {
+    const template = document.createElement("template");
+    template.innerHTML = blockDOM;
+    const blocks = Array.from(template.content.querySelectorAll<HTMLElement>(
+        '[data-type="NodeParagraph"], [data-type="NodeHeading"], [data-type="NodeCodeBlock"], ' +
+        '[data-type="NodeMathBlock"]'
+    )).map((element) => lute.BlockDOM2Content(element.outerHTML));
+    return projectAVRichTextPlainBlocks(blocks, lute.BlockDOM2Content(blockDOM));
+};
+
+export const serializeAVRichTextBlockDOM = (blockDOM: string, lute = getAVRichTextLute(), images = false,
+                                          tableCellCustomInline = false) => {
+    const sanitizedBlockDOM = sanitizeAVRichTextBlockDOM(blockDOM, images, tableCellCustomInline);
+    let cleanBlockDOM = cleanAVRichTextBlockDOMStructure(sanitizedBlockDOM);
+    const template = document.createElement("template");
+    template.innerHTML = cleanBlockDOM;
+    const paragraphs = Array.from(template.content.querySelectorAll<HTMLElement>('[data-type="NodeParagraph"]'));
+    const hasEmptyParagraph = paragraphs.some(element => lute.BlockDOM2Md(element.outerHTML).trim() === "");
+    const singleEmptyParagraph = template.content.children.length === 1 &&
+        template.content.firstElementChild === paragraphs[0] && hasEmptyParagraph;
+    const hasCodeSettings = images && !!template.content.querySelector(
+        `[data-type="NodeCodeBlock"]:is([linewrap], [ligatures], [linenumber], [${Constants.CUSTOM_SY_CODE_TAB_SPACES}])`);
+    // 空段落和代码设置依靠块属性列表保留，同时保留相邻块的标识，避免属性被合并到前一段。
+    if ((hasEmptyParagraph && !singleEmptyParagraph) || hasCodeSettings) {
+        cleanBlockDOM = cleanAVRichTextBlockDOMStructure(sanitizedBlockDOM, true);
+    }
+    const styleBackslashEncoding = createAVRichTextStyleBackslashEncoding(cleanBlockDOM);
+    const protectedBlockDOM = protectAVRichTextStyleBackslashes(cleanBlockDOM, styleBackslashEncoding);
+    const markdown = protectedBlockDOM ?
+        styleBackslashEncoding.encodeMarkdown(lute.BlockDOM2Md(protectedBlockDOM).trim()) : "";
+    const normalizedBlockDOM = markdown ?
+        sanitizeAVRichTextBlockDOM(parseAVRichTextKramdown(markdown, lute), images, tableCellCustomInline) : "";
+    return {
+        blockDOM: normalizedBlockDOM,
+        markdown,
+        plainText: normalizedBlockDOM ? getAVRichTextPlainContent(normalizedBlockDOM, lute) : "",
+    };
+};
+
+export const getAVRichTextBlockDOM = (markdown: string, images = false, tableCellCustomInline = false) => markdown ?
+    sanitizeAVRichTextBlockDOM(parseAVRichTextKramdown(markdown), images, tableCellCustomInline) : "";
+
+const getAVRichTextPreviewBlockDOM = (blockDOM: string) => {
+    const template = document.createElement("template");
+    // 转换为 HTML 前保留块标识，以保留空段落，预览净化时再移除标识。
+    template.innerHTML = cleanAVRichTextBlockDOMStructure(blockDOM, true);
+    // 代码块操作节点和待办操作节点参与内容解析，需要保留到 HTML 转换完成。
+    return (template.innerHTML || "").trim();
+};
+
+const prepareAVRichTextPreviewHTML = (html: string) => {
+    const template = document.createElement("template");
+    template.innerHTML = window.DOMPurify.sanitize(html, AV_RICH_TEXT_PREVIEW_SANITIZE_OPTIONS);
+    template.content.querySelectorAll<HTMLElement>(AV_RICH_TEXT_PREVIEW_TEXT_ONLY_TAGS.join(","))
+        .forEach((element) => {
+        // BlockDOM2HTML 使用 sup 输出备注内容；这里只保留文本，避免备注伪造可交互标记。
+            element.textContent = element.textContent || "";
+        });
+    template.content.querySelectorAll<HTMLElement>("div.language-math").forEach((element) => {
+        const content = element.textContent || "";
+        element.className = "render-node";
+        element.dataset.subtype = "math";
+        element.dataset.content = content;
+        element.replaceChildren(document.createElement("div"));
+    });
+    template.content.querySelectorAll<HTMLElement>("pre > code").forEach((element) => {
+        const languageClass = Array.from(element.classList).find((className) => className.startsWith("language-"));
+        element.parentElement.className = "code-block";
+        element.parentElement.dataset.language = languageClass?.slice("language-".length) || "plaintext";
+    });
+    template.content.querySelectorAll<HTMLElement>("*").forEach((element) => {
+        ["id", "data-node-id", "data-node-index", "updated", "contenteditable", "spellcheck", "draggable"]
+            .forEach((attribute) => element.removeAttribute(attribute));
+        const types = (element.dataset.type || "").split(" ").filter(Boolean);
+        const style = element.tagName === "SPAN" && types.includes("text") ?
+            sanitizeAVRichTextInlineStyle(element.getAttribute("style")) : "";
+        if (style) {
+            element.setAttribute("style", style);
+        } else {
+            element.removeAttribute("style");
+        }
+    });
+    template.content.querySelectorAll<HTMLInputElement>("input").forEach((element) => {
+        if (element.type !== "checkbox") {
+            element.remove();
+            return;
+        }
+        element.disabled = true;
+    });
+    template.content.querySelectorAll<HTMLElement>("[data-href], a[href]").forEach((element) => {
+        const href = getAVRichTextSafeURL(element.getAttribute("href") || element.dataset.href, false, true);
+        if (!href) {
+            element.removeAttribute("href");
+            element.removeAttribute("data-href");
+            return;
+        }
+        element.setAttribute("href", href);
+        element.dataset.href = href;
+    });
+    template.content.querySelectorAll<HTMLElement>('[data-type~="file-annotation-ref"][data-id]')
+        .forEach((element) => {
+            if (!getAVRichTextSafeURL(element.dataset.id)) {
+                element.removeAttribute("data-id");
+            }
+        });
+    template.content.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((element) => {
+        const types = new Set((element.dataset.type || "").split(" ").filter(Boolean));
+        types.add("a");
+        element.dataset.type = Array.from(types).join(" ");
+    });
+    return template.innerHTML;
+};
+
+export const getAVRichTextPreviewHTML = (markdown: string) => {
+    if (!markdown) {
+        return "";
+    }
+    const cached = previewCache.get(markdown);
+    if (typeof cached === "string") {
+        previewCache.delete(markdown);
+        previewCache.set(markdown, cached);
+        return cached;
+    }
+    try {
+        const lute = getAVRichTextLute();
+        const blockDOM = getAVRichTextBlockDOM(markdown);
+        const previewBlockDOM = getAVRichTextPreviewBlockDOM(blockDOM);
+        const html = previewBlockDOM ? prepareAVRichTextPreviewHTML(lute.BlockDOM2HTML(previewBlockDOM)) : "";
+        previewCache.set(markdown, html);
+        if (previewCache.size > PREVIEW_CACHE_LIMIT) {
+            const oldestKey = previewCache.keys().next().value;
+            if (oldestKey) {
+                previewCache.delete(oldestKey);
+            }
+        }
+        return html;
+    } catch (error) {
+        console.error(error);
+        return escapeHtml(markdown);
+    }
+};
+
+export const renderAVRichTextElements = (root: Element) => {
+    const selector = `.${AV_RICH_TEXT_CLASS}:not([data-rich-rendered="true"])`;
+    const elements: HTMLElement[] = [];
+    if (root.matches(selector)) {
+        elements.push(root as HTMLElement);
+    }
+    elements.push(...root.querySelectorAll<HTMLElement>(selector));
+    if (elements.length === 0) {
+        return;
+    }
+    elements.forEach((element) => {
+        element.dataset.richRendered = "true";
+    });
+    elements.forEach((element) => {
+        mathRender(element);
+        highlightRender(element);
+    });
+};

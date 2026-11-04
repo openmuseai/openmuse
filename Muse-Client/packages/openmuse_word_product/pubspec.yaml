@@ -1,0 +1,14 @@
+name: openmuse_word_product
+description: Signed Word product resource verification for OpenMuse hosts.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  archive: '>=3.6.1 <5.0.0'
+  crypto: ^3.0.6
+  cryptography: ^2.7.0
+  flutter:
+    sdk: flutter
+  word_editor:
+    path: ../../../ioffice/samples/libs/word/word_editor

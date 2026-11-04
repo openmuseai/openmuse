@@ -1,0 +1,3 @@
+# To regenerate this list, run:
+# sed -i '/^[^#][^[]*$/d' an_foo_java_resources.gni
+# (for f in $(find java/res/*/ -type f); do echo '  "'$f'",'; done; echo ']') >> an_foo_java_resources.gni

@@ -1,0 +1,4 @@
+# These sources depend on targets from "//content/browser", which means they can
+# only be loaded on A_Foo builds.
+# NOTE: If/when targets used on iOS are refactored into a separate BUILD file,
+# this check can be removed.

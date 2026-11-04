@@ -1,0 +1,1537 @@
+{
+	"ID": "20240113110040-7sgw8kl",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"icon": "1f4f1",
+		"id": "20240113110040-7sgw8kl",
+		"title": "Mobile App",
+		"type": "doc",
+		"updated": "20261024164212"
+	},
+	"Children": [
+		{
+			"ID": "20240113110114-xav9o1n",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240113110114-xav9o1n",
+				"updated": "20261012014930"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Overview"
+				}
+			]
+		},
+		{
+			"ID": "20240113110114-j6okyut",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240113110114-j6okyut",
+				"updated": "20250114214300"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan provides Android, iOS and HarmonyOS apps, and has been listed on some mobile app stores. Please search for "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "思源笔记"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ or "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "SiYuan"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ in the app store."
+				}
+			]
+		},
+		{
+			"ID": "20240113110114-rugjxcf",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240113110114-rugjxcf",
+				"updated": "20250114213934"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Installation and updates"
+				}
+			]
+		},
+		{
+			"ID": "20240113110114-aqce9bb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240113110114-aqce9bb",
+				"updated": "20240113110114"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Currently available on the app store:"
+				}
+			]
+		},
+		{
+			"ID": "20240113110114-2r0390j",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20240113110114-2r0390j",
+				"updated": "20250114213934"
+			},
+			"Children": [
+				{
+					"ID": "20240113110114-vpn2w0q",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113110114-vpn2w0q",
+						"updated": "20240113110114"
+					},
+					"Children": [
+						{
+							"ID": "20240113110114-xwxkfdw",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113110114-xwxkfdw",
+								"updated": "20240113110136"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Mi"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113110114-o3ddwpp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113110114-o3ddwpp",
+						"updated": "20240113110114"
+					},
+					"Children": [
+						{
+							"ID": "20240113110114-aw8tod9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113110114-aw8tod9",
+								"updated": "20240113110114"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Huawei"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20250114213931-fxnfiur",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20250114213931-fxnfiur",
+						"updated": "20250114213934"
+					},
+					"Children": [
+						{
+							"ID": "20250114213931-76n4b06",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20250114213931-76n4b06",
+								"updated": "20250114213934"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Honor"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113110114-gpwaczm",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113110114-gpwaczm",
+						"updated": "20240113110114"
+					},
+					"Children": [
+						{
+							"ID": "20240113110114-pnj3nky",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113110114-pnj3nky",
+								"updated": "20240113110141"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "OPPO"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113110141-gyywbkd",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113110141-gyywbkd",
+						"updated": "20240113110141"
+					},
+					"Children": [
+						{
+							"ID": "20240113110141-zlrxqnn",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113110141-zlrxqnn",
+								"updated": "20240113110141"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "vivo"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113110114-s58cwy2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113110114-s58cwy2",
+						"updated": "20240113110144"
+					},
+					"Children": [
+						{
+							"ID": "20240113110114-cdqjctx",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113110114-cdqjctx",
+								"updated": "20240113110144"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Apple"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113110114-v5x1rvc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113110114-v5x1rvc",
+						"updated": "20240113110151"
+					},
+					"Children": [
+						{
+							"ID": "20240113110114-in0jqwy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113110114-in0jqwy",
+								"updated": "20240113110151"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Kuan"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113110114-mhekema",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113110114-mhekema",
+						"updated": "20240113110114"
+					},
+					"Children": [
+						{
+							"ID": "20240113110114-0ul416g",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113110114-0ul416g",
+								"updated": "20240113110114"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Google Play"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240113110114-dixpfgf",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240113110114-dixpfgf",
+				"updated": "20240119205358"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "APK download: "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://b3log.org/siyuan/en/download.html",
+					"TextMarkTextContent": "https://b3log.org/siyuan/en/download.html"
+				}
+			]
+		},
+		{
+			"ID": "20261012014537-535lvyo",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261012014537-535lvyo",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Interface navigation"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20260921090531-lx0v0bv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260921090531-lx0v0bv",
+				"updated": "20260921210136"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Swipe right in the editor to open the left sidebar, or swipe left to open the right sidebar. After starting the app, each sidebar initially opens its first visible feature. Subsequent openings restore the last used feature on that side. Change the feature order in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Appearance"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Left and right layout"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20261010114821-igdube1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261010114821-igdube1",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "When using desktop layout on Android, the system Back button first closes the topmost dialog, menu, editing overlay, image preview or floating drawer. Each press closes one layer and preserves the browsing state underneath."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-hm1vwrd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-hm1vwrd",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "With no dismissible layer open, Back follows the app's document history without reloading the interface. At the start of the history, a prompt appears; press Back again while the prompt is visible to return to the system home screen."
+				}
+			]
+		},
+		{
+			"ID": "20240113110114-ekanw3f",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240113110114-ekanw3f",
+				"updated": "20260819122705"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Use the marketplace"
+				}
+			]
+		},
+		{
+			"ID": "20240113110114-54bc1f8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240113110114-54bc1f8",
+				"updated": "20260819224004"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Some app store versions may not provide the marketplace in the app due to review requirements."
+				}
+			]
+		},
+		{
+			"ID": "20240113110114-5cymxj6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240113110114-5cymxj6",
+				"updated": "20260819114702"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "If your version is restricted, you can still use the marketplace: enable "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Authentication"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Network serving"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", then access SiYuan from a desktop browser."
+				}
+			]
+		},
+		{
+			"ID": "20240113110114-3h7r74i",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240113110114-3h7r74i",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20240113110114-7cvpqyg",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20240113110114-7cvpqyg",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"ID": "20240113110114-erqy4o6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113110114-erqy4o6",
+						"updated": "20261024162311"
+					},
+					"Children": [
+						{
+							"ID": "20240113110114-eheouiq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113110114-eheouiq",
+								"updated": "20261024162311"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Uninstalling the app removes local data. Finish syncing and save a recoverable backup outside the app before uninstalling; data without a backup may be unrecoverable"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113110114-fn3cur4",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113110114-fn3cur4",
+						"updated": "20261024163013"
+					},
+					"Children": [
+						{
+							"ID": "20240113110114-z7ij7u2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113110114-z7ij7u2",
+								"updated": "20261024163013"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "To exit the application normally, use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "More"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Exit Application"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ". Swiping away directly will force the application to end, resulting in data synchronization not being executed"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113110114-7yqcofv",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113110114-7yqcofv",
+						"updated": "20240113110425"
+					},
+					"Children": [
+						{
+							"ID": "20240113110114-mnulyqm",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113110114-mnulyqm",
+								"updated": "20240113110425"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Switching apps on iOS will cause the connection to be interrupted. Please click the button in the prompt box to manually reconnect"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113110114-oz77ny6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113110114-oz77ny6",
+						"updated": "20240113110431"
+					},
+					"Children": [
+						{
+							"ID": "20240113110114-rqu8ptk",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113110114-rqu8ptk",
+								"updated": "20240113110431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Please do not switch applications and keep the screen on during data synchronization, otherwise data synchronization will fail"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260317195658-ar294xg",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260317195658-ar294xg",
+				"updated": "20260613174243"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Custom Keep-Alive Notifications on Android"
+				}
+			]
+		},
+		{
+			"ID": "20260317195658-s3yjpnv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260317195658-s3yjpnv",
+				"updated": "20260317195658"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "If you wish to maximize SiYuan's ability to remain active in the background, please follow these steps:"
+				}
+			]
+		},
+		{
+			"ID": "20260317195658-hcngw3t",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1
+			},
+			"Properties": {
+				"id": "20260317195658-hcngw3t",
+				"updated": "20260317195743"
+			},
+			"Children": [
+				{
+					"ID": "20260317195658-4k2hume",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "MS4=",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20260317195658-4k2hume",
+						"updated": "20260317195707"
+					},
+					"Children": [
+						{
+							"ID": "20260317195658-m2u3kcy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260317195658-m2u3kcy",
+								"updated": "20260317195707"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Set the battery saver strategy to "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "Unrestricted"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260317195658-i3iboj4",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "Mi4=",
+						"Num": 2
+					},
+					"Properties": {
+						"id": "20260317195658-i3iboj4",
+						"updated": "20260317195706"
+					},
+					"Children": [
+						{
+							"ID": "20260317195658-0esdnhw",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260317195658-0esdnhw",
+								"updated": "20260317195706"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Enable notifications"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260317195658-dvg9wtj",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "My4=",
+						"Num": 3
+					},
+					"Properties": {
+						"id": "20260317195658-dvg9wtj",
+						"updated": "20260317195705"
+					},
+					"Children": [
+						{
+							"ID": "20260317195658-3da1b5m",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260317195658-3da1b5m",
+								"updated": "20260317195705"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "On the desktop client, create a text file named "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "android-notification-texts.txt"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ within the "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace/data/assets/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ folder; each line in this file will serve as the text for a notification"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260317195658-mlb61zl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "NC4=",
+						"Num": 4
+					},
+					"Properties": {
+						"id": "20260317195658-mlb61zl",
+						"updated": "20260317195743"
+					},
+					"Children": [
+						{
+							"ID": "20260317195658-j9rp2em",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260317195658-j9rp2em",
+								"updated": "20260317195743"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Sync this file to your Android device via "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20210721112206-mhr9wxi",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "Data Sync"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260317195658-3rqfzal",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260317195658-3rqfzal",
+				"updated": "20260317195658"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Once the above steps are completed, SiYuan will send a notification every 45 seconds to help ensure it remains active in the background."
+				}
+			]
+		},
+		{
+			"ID": "20260613174243-53h143k",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613174243-53h143k",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Shorthand"
+				}
+			]
+		},
+		{
+			"ID": "20260613174243-6npuum2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613174243-6npuum2",
+				"updated": "20260613174243"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Shorthand is a quick capture feature on mobile. When inspiration strikes or you need to jot down temporary information, you can quickly save text via system share or a shortcut entry without opening SiYuan and entering a document editor. Shorthand content is temporarily stored locally and then automatically moved into the doc tree for organization."
+				}
+			]
+		},
+		{
+			"ID": "20260613174243-r1hbexb",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613174243-r1hbexb",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Usage"
+				}
+			]
+		},
+		{
+			"ID": "20260613174243-hwdpey5",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613174243-hwdpey5",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"ID": "20260613174243-7hmhfd6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174243-7hmhfd6",
+						"updated": "20260613174243"
+					},
+					"Children": [
+						{
+							"ID": "20260613174243-9os4im2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174243-9os4im2",
+								"updated": "20260613174243"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Creating a Shorthand"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": On mobile, share text/links to SiYuan via the system share menu, or add a SiYuan shortcut entry on your home screen for one-tap recording"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613174243-tk2xinl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174243-tk2xinl",
+						"updated": "20261024162311"
+					},
+					"Children": [
+						{
+							"ID": "20260613174243-fnm4km4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174243-fnm4km4",
+								"updated": "20261024162311"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Automatic import: While SiYuan is running, it checks the local shorthand folder every 7 seconds and imports new notes to the configured destination"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261004052629-w95ysdy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261004052629-w95ysdy",
+				"updated": "20261004052629"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "New shorthands use the Markdown syntax switches in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " when imported. Enabled inline syntax, middle-dot code fences ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "···"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "), and full-width task shortcuts ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "【】"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " and "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "【X】"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ") are converted immediately, without editing the imported text again."
+				}
+			]
+		},
+		{
+			"ID": "20261004052629-inj9eiy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261004052629-inj9eiy",
+				"updated": "20261004052629"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Each shorthand is parsed separately, so an unclosed code block cannot affect the next one. Previously imported documents are not re-parsed."
+				}
+			]
+		},
+		{
+			"ID": "20260613174243-tm05xft",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613174243-tm05xft",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Storage Configuration"
+				}
+			]
+		},
+		{
+			"ID": "20260613174243-2fim9a2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613174243-2fim9a2",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Configure the shorthand save location in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Documents"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "New Document"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Default shorthand save path"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ":"
+				}
+			]
+		},
+		{
+			"ID": "20260613174243-nae40wa",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613174243-nae40wa",
+				"updated": "20260613174243"
+			},
+			"Children": [
+				{
+					"ID": "20260613174243-s2uh22m",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174243-s2uh22m",
+						"updated": "20260613174243"
+					},
+					"Children": [
+						{
+							"ID": "20260613174243-hgvtrpg",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174243-hgvtrpg",
+								"updated": "20260613174243"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Target Notebook"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Select the notebook to which shorthands will be imported"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613174243-xiuy0dr",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174243-xiuy0dr",
+						"updated": "20260613174243"
+					},
+					"Children": [
+						{
+							"ID": "20260613174243-l4q7jer",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174243-l4q7jer",
+								"updated": "20260613174243"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Save Path"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Set the path template for shorthand content:"
+								}
+							]
+						},
+						{
+							"ID": "20260613174243-4s30lk4",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613174243-4s30lk4",
+								"updated": "20260613174243"
+							},
+							"Children": [
+								{
+									"ID": "20260613174243-wuod08q",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613174243-wuod08q",
+										"updated": "20260613174243"
+									},
+									"Children": [
+										{
+											"ID": "20260613174243-itrmnzb",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613174243-itrmnzb",
+												"updated": "20260613174243"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "No path template: Each shorthand creates a separate document with a timestamp as the title"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613174243-t3c99ru",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613174243-t3c99ru",
+										"updated": "20260613174243"
+									},
+									"Children": [
+										{
+											"ID": "20260613174243-rd2otp0",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613174243-rd2otp0",
+												"updated": "20260613174243"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "With a path template: All shorthands are appended to the end of the specified document. The path template supports Go template syntax, e.g. "
+												},
+												{
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "/shorthand/{{now | date \"20060102150405\"}}"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "​ generates independent documents by time"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613174243-jz36fsj",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613174243-jz36fsj",
+				"updated": "20260613181402"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Difference from Inbox"
+				}
+			]
+		},
+		{
+			"ID": "20260613174243-bgncfkl",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613174243-bgncfkl",
+				"updated": "20260613174243"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Shorthand and cloud inbox are two separate quick capture methods:"
+				}
+			]
+		},
+		{
+			"ID": "20260613174243-em1vwmu",
+			"Type": "NodeTable",
+			"TableAligns": [
+				0,
+				0,
+				0
+			],
+			"Properties": {
+				"colgroup": "||",
+				"id": "20260613174243-em1vwmu",
+				"updated": "20260613174243"
+			},
+			"Children": [
+				{
+					"Type": "NodeTableHead",
+					"Data": "thead",
+					"Children": [
+						{
+							"Type": "NodeTableRow",
+							"Data": "tr",
+							"Children": [
+								{
+									"Type": "NodeTableCell",
+									"Data": "th"
+								},
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "Shorthand"
+										}
+									]
+								},
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "Cloud Inbox"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Storage"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Local"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Cloud"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Input Method"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "System share / shortcut"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "WeChat / API"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Import Method"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Auto-import to doc tree"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Manual processing from inbox panel"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Subscription Required"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "No"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Yes"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Available On"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Mobile only"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "All platforms"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613181402-55wa9vo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613181402-55wa9vo",
+				"updated": "20260613181402"
+			}
+		}
+	]
+}

@@ -1,0 +1,54 @@
+use kfc_kfc_alpha::kfc::opcr::{OpcUtil::OpcUtil,nativeDate};
+#[test]
+fn original_android_opc_dates(){
+    let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("rewrite-review/milestones/m4-edit-save/evidence/docprops-read-r0b36");
+    let input=std::fs::read_to_string(root.join("android-java-dates.tsv")).unwrap();
+    let mut output=String::new();let mut differences=Vec::new();
+    for line in input.lines(){let parts:Vec<_>=line.split('\t').collect();let units:Vec<_>=parts[1].as_bytes().chunks(4).map(|c|u16::from_str_radix(std::str::from_utf8(c).unwrap(),16).unwrap()).collect();let text=String::from_utf16(&units).unwrap();let actual=nativeDate::withTimeZone(parts[0],||OpcUtil::getDate(&text)).map(|n|n.to_string()).unwrap_or("null".into());output.push_str(&format!("{}\t{}\t{}\n",parts[0],parts[1],actual));if actual!=parts[2]{differences.push(format!("{} {:?}: Java={} Rust={}",parts[0],text,parts[2],actual));}}
+    std::fs::write(root.join("native-dates.tsv"),output).unwrap();std::fs::write(root.join("date-differences.txt"),differences.join("\n")).unwrap();assert!(differences.is_empty(),"{} date differences:\n{}",differences.len(),differences.join("\n"));
+}
+use serde_json::{json,Value};
+use ss_core::{java_runtime::Rc,cn::wps::moss::{app::{KmoBook::KmoBook,KmoBookApi::KmoBookApi},xlsxr::docProps::{XlsxrApp::XlsxrApp,XlsxrCore::XlsxrCore,XlsxrCustom::XlsxrCustom},xlsxw::docProps::{XlsxwApp::XlsxwApp,XlsxwCore::XlsxwCore,XlsxwCustom::XlsxwCustom}}};
+use kfc_kfc_alpha::kfc::{ooxfr::{OxfrPackage::OxfrPackage,OxfrAppPart::OxfrAppPart,OxfrCorePart::OxfrCorePart},ooxfw::OxfwPackage::OxfwPackage};
+use io_poi_compact::org::apache::poi::hpsf::Property::{Property,PropertyValue};
+use std::{io::{Cursor,Read},panic::{catch_unwind,AssertUnwindSafe},path::Path};
+fn property(p:&Property)->Value{let mut out=json!({"id":p.getID(),"type":p.getType()});match p.getValue(){PropertyValue::Date(v)=>out["date"]=json!(v.getTime()),PropertyValue::Str(v)=>out["value"]=json!(v),PropertyValue::Bool(v)=>out["value"]=json!(v),PropertyValue::Int(v)=>out["value"]=json!(v),_=>panic!("unobserved property")};out}
+fn snapshot(book:&KmoBook)->Value{let s=book.getAppSettings();let s=s.borrow();let props:Vec<_>=s.getCustomProps().borrow().entrySet().map(|(key,p)|json!({"key":key,"property":p.as_deref().map(property)})).collect();json!({"AppName":s.getAppName(),"AppVersion":s.getAppVersion(),"HyperlinkBase":s.getHyperlinkBase(),"Manager":s.getManager(),"Company":s.getCompany(),"Creator":s.getCreator(),"LastModifiedBy":s.getLastModifiedBy(),"Title":s.getTitle(),"Keywords":s.getKeywords(),"Category":s.getCategory(),"Description":s.getDescription(),"ContentStatus":s.getContentStatus(),"ContentType":s.getContentType(),"Subject":s.getSubject(),"Scale":s.getScale(),"LinkDirty":s.getLinkDirty(),"Security":s.getSecurity(),"Created":s.getCreated().map(|d|d.getTime()),"Modified":s.getModified().map(|d|d.getTime()),"props":props})}
+fn app_fields(p:&OxfrAppPart)->Value{json!({"AppName":p.getAppName(),"AppVersion":p.getAppVersion(),"DocSecurity":p.getDocSecurity(),"HyperlinkBase":p.getHyperlinkBase(),"Manager":p.getManager(),"Company":p.getCompany(),"Scale":p.getScale(),"LinkDirty":p.getLinkDirty()})}
+fn core_fields(p:&OxfrCorePart)->Value{json!({"Creator":p.getCreator(),"Created":p.getCreated().map(|d|d.getTime()),"LastModifiedBy":p.getLastModifiedBy(),"Modified":p.getModified().map(|d|d.getTime()),"Title":p.getTitle(),"Keywords":p.getKeywords(),"Category":p.getCategory(),"Description":p.getDescription(),"ContentStatus":p.getContentStatus(),"Subject":p.getSubject()})}
+fn parse_result(f:impl FnOnce()->std::io::Result<()>)->String{match catch_unwind(AssertUnwindSafe(f)){Ok(Ok(()))=>"ok".into(),Ok(Err(e))=>format!("IOException: {e}"),Err(e)=>{let s=e.downcast_ref::<String>().map(String::as_str).or_else(||e.downcast_ref::<&str>().copied()).unwrap_or("");if s.contains("NumberFormatException"){"NumberFormatException".into()}else{format!("panic: {s}")}}}}
+fn read(book:&Rc<KmoBook>,pack:&mut OxfrPackage){XlsxrCustom::open(book.clone(),pack.getCustomPart().map(|p|&*p)).unwrap();XlsxrApp::open(book,pack.getAppPart()).unwrap();XlsxrCore::open(book,pack.getCorePart()).unwrap();}
+fn base64(bytes:&[u8])->String{let alphabet=b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";let mut out=String::new();for part in bytes.chunks(3){let v=((part[0]as u32)<<16)|((part.get(1).copied().unwrap_or(0)as u32)<<8)|part.get(2).copied().unwrap_or(0)as u32;for i in 0..4{out.push(if i>part.len(){'='}else{alphabet[((v>>(18-i*6))&63)as usize]as char});}}out}
+fn entries(file:&Path)->Value{let mut zip=zip::ZipArchive::new(Cursor::new(std::fs::read(file).unwrap())).unwrap();let mut out=vec![];for i in 0..zip.len(){let mut entry=zip.by_index(i).unwrap();let mut bytes=vec![];entry.read_to_end(&mut bytes).unwrap();out.push(json!({"name":entry.name(),"method":entry.compression().to_u16(),"size":entry.size(),"crc":entry.crc32(),"bytes":base64(&bytes)}));}json!(out)}
+fn case(source:&Value,root:&Path,index:usize)->Value{
+    let mut pack=OxfrPackage::OxfrPackage(root.join("inputs").join(source["file"].as_str().unwrap()).to_str().unwrap()).unwrap();
+    let app_id=pack.getAppPart().map(|p|p as *mut _);let core_id=pack.getCorePart().map(|p|p as *mut _);let custom_id=pack.getCustomPart().map(|p|p as *mut _);
+    let app=pack.getAppPart().map(|p|{let before=app_fields(p);let result=parse_result(||p.parse());let after=app_fields(p);let second_result=parse_result(||p.parse());json!({"before":before,"result":result,"after":after,"secondResult":second_result,"second":app_fields(p)})});
+    let core=pack.getCorePart().map(|p|{let before=core_fields(p);let result=parse_result(||p.parse());let after=core_fields(p);let second_result=parse_result(||p.parse());json!({"before":before,"result":result,"after":after,"secondResult":second_result,"second":core_fields(p)})});
+    let mut row=json!({"name":source["name"],"app":app,"core":core,"appSame":app_id==pack.getAppPart().map(|p|p as *mut _),"coreSame":core_id==pack.getCorePart().map(|p|p as *mut _),"customSame":custom_id==pack.getCustomPart().map(|p|p as *mut _)});
+    let book=KmoBook::KmoBook();read(&book,&mut pack);row["settings"]=snapshot(&book);let date=pack.getCorePart().and_then(|p|p.getCreated());let saved=book.getAppSettings().borrow().getCreated();row["createdSame"]=json!(match (&date,&saved){(Some(a),Some(b))=>Rc::ptr_eq(a,b),(None,None)=>true,_=>false});if let Some(d)=date{let old=d.getTime();d.setTime(123456789);row["createdMutation"]=json!(book.getAppSettings().borrow().getCreated().unwrap().getTime());d.setTime(old);}read(&book,&mut pack);row["secondSettings"]=snapshot(&book);pack.close().unwrap();
+    if source["roundtrip"]==true {
+        let settings=book.getAppSettings();let mut settings=settings.borrow_mut();if !settings.hasIcv(){settings.getCustomProps().borrow_mut().put("ICV".into(),Some(Rc::new(Property::new(-1,31,PropertyValue::Str("r36-fixed-icv".into())))));}
+        let file=root.join(format!("native-written-{index}.zip"));let mut writer=OxfwPackage::OxfwPackage(file.to_str().unwrap()).unwrap();XlsxwApp::write(&mut writer.getAppPart().borrow_mut(),&settings);XlsxwCore::write(&mut writer.getCorePart().borrow_mut(),&settings);XlsxwCustom::write(&mut writer.getCustomPart().borrow_mut(),&mut settings);writer.close().unwrap();row["written"]=entries(&file);let reopened=KmoBook::KmoBook();let mut reader=OxfrPackage::OxfrPackage(file.to_str().unwrap()).unwrap();read(&reopened,&mut reader);row["reopened"]=snapshot(&reopened);reader.close().unwrap();
+    }row
+}
+#[test]
+fn original_android_docprops_read_write_read(){
+    let root=Path::new(env!("CARGO_MANIFEST_DIR")).join("rewrite-review/milestones/m4-edit-save/evidence/docprops-read-r0b36");let input:Value=serde_json::from_slice(&std::fs::read(root.join("inputs.json")).unwrap()).unwrap();let java:Value=serde_json::from_slice(&std::fs::read(root.join("android-java.json")).unwrap()).unwrap();ss_core::java_runtime::KfsZip::install();util_adapter::cn::wps::core::runtime::Platform::Platform::setUserName(Some("r36-user"));
+    let integers:Vec<_>=input["integers"].as_array().unwrap().iter().map(|v|json!(ss_core::cn::wps::moss::xlsxr::util::ValueHelper::ValueHelper::toInt(v.as_str()))).collect();assert_eq!(json!(integers),java["integers"],"original TypeConversion BigDecimal/Long path");
+    let api=KmoBookApi::KmoBookApi();nativeDate::withTimeZone("Asia/Shanghai",||assert_eq!(api.open(root.join("inputs/m4-readprops-normal-Asia-Shanghai.xlsx").to_str().unwrap(),None,true),1));let loaded=snapshot(&api.book());assert_eq!(loaded,java["loaded"],"original XlsxReader call sites");
+    let mut cases=vec![];let mut differences=vec![];for (i,s)in input["cases"].as_array().unwrap().iter().enumerate(){let value=nativeDate::withTimeZone(s["zone"].as_str().unwrap(),||case(s,&root,i));if value!=java["cases"][i]{differences.push(s["name"].as_str().unwrap().to_string());}cases.push(value);}
+    std::fs::write(root.join("native-cases.json"),serde_json::to_vec_pretty(&json!({"loaded":loaded,"cases":cases})).unwrap()).unwrap();assert!(differences.is_empty(),"different property cases: {differences:?}");
+}
+#[test]
+fn reused_inner_handler_retains_outer_after_parent_reference_drops(){
+    use kfc_kfc_alpha::kfc::xpxml::reader::ElementStrHandler::ElementStrHandler;
+    use ss_core::cn::wps::moss::xlsxr::handler::docProps::PropertiesHandler::PropertiesHandler;
+    let book=KmoBook::KmoBook();let mut root=PropertiesHandler::PropertiesHandler(book.clone());let mut first=root.enter_sub_element("property").unwrap();first.start_element("property");first.add_attr("name","old");let mut second=root.enter_sub_element("property").unwrap();second.start_element("property");second.add_attr("name","new");let mut value=first.enter_sub_element("vt:lpwstr").unwrap();drop(root);value.characters("kept");drop(value);second.end_element("property");drop(first);drop(second);let s=book.getAppSettings();let props=s.borrow().getCustomProps();let props=props.borrow();assert!(props.get("old").is_none());assert_eq!(property(props.get("new").unwrap().as_deref().unwrap()),json!({"id":-1,"type":31,"value":"kept"}));
+}
+#[test]
+fn password_cancel_exception_constructor_transport(){
+    use ss_core::cn::wps::moss::io::except::PasswordCancelException::PasswordCancelException as E;
+    use std::error::Error;
+    assert_eq!(E::PasswordCancelException().to_string(),"PasswordCancelException");assert_eq!(E::PasswordCancelException__message(Some("cancel".into())).to_string(),"cancel");let cause:std::sync::Arc<dyn Error+Send+Sync>=std::sync::Arc::new(std::io::Error::other("cause"));let e=E::PasswordCancelException__message_throwable(Some("cancel".into()),Some(cause.clone()));assert_eq!(e.source().unwrap().to_string(),"cause");assert_eq!(E::PasswordCancelException__throwable(Some(cause)).to_string(),"cause");
+}

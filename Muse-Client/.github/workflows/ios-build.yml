@@ -1,0 +1,105 @@
+name: iOS build
+
+# Thin caller: the build itself is scripts/ci/build-ios.sh, which delegates to
+# scripts/test_ios_beta.sh (Rust mobile artifacts, device arm64 Runner.app with
+# --no-codesign, privacy/bundle/symbol/runtime verification) and stages dist/.
+#
+# Signing: the gate deliberately asserts the artifact is UNSIGNED, because
+# signing needs a distribution certificate and a provisioning profile. The
+# uploaded zip is a build/QA artifact and is not installable on a device or
+# TestFlight; a store release needs those credentials supplied through secrets,
+# and then an .ipa.
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: Ignore every cache and rebuild the mobile outputs from scratch
+        type: boolean
+        default: false
+      retention_days:
+        description: Artifact retention in days
+        type: string
+        default: "14"
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: "3.44.2"
+  PYTHONUTF8: "1"
+
+jobs:
+  ios:
+    name: iOS arm64 release (unsigned)
+    runs-on: macos-14
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Build
+        run: |
+          args=()
+          if [ "${{ inputs.force_rebuild || false }}" = "true" ] || [ "${{ github.ref_type }}" = "tag" ]; then
+            args+=(--force-rebuild)
+          fi
+          ./scripts/ci/build-ios.sh "${args[@]}"
+
+      - name: Upload archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenMuse-ios-${{ github.sha }}
+          path: |
+            dist/OpenMuse-iOS-unsigned.app.zip
+            dist/SHA256SUMS.txt
+            dist/build-info.txt
+            dist/ios-gate-report.md
+          if-no-files-found: error
+          retention-days: ${{ fromJSON(inputs.retention_days || '14') }}
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## iOS build"
+            echo
+            if [ -f dist/build-info.txt ]; then
+              grep -E '^(commit|domains|signing):' dist/build-info.txt | while IFS= read -r line; do
+                echo "\`${line}\`"
+              done
+              echo
+            fi
+            if [ -f dist/OpenMuse-iOS-unsigned.app.zip ]; then
+              echo "| artifact | size |"
+              echo "| --- | --- |"
+              mb="$(python3 -c 'import os,sys; print("%.1f" % (os.path.getsize(sys.argv[1]) / 1048576))' dist/OpenMuse-iOS-unsigned.app.zip)"
+              echo "| OpenMuse-iOS-unsigned.app.zip | ${mb} MB |"
+            else
+              echo "No artifacts were produced under \`dist/\`."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

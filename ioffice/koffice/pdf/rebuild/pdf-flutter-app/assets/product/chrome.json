@@ -1,0 +1,1090 @@
+{
+  "profile": "openmuse-pdf-chrome/1",
+  "initialTab": "home",
+  "themes": {
+    "default": "light",
+    "light": {
+      "chrome": "#ffffff",
+      "surface": "#ffffff",
+      "canvas": "#e6e6e6",
+      "status": "#f3f4f6",
+      "statusBorder": "#e1e4e8",
+      "text": "#242424",
+      "muted": "#605e5c",
+      "border": "#e3e6ea",
+      "borderStrong": "#d9d9d9",
+      "accent": "#c43e1c",
+      "hover": "#f5f5f5",
+      "saveOk": "#217346",
+      "saveError": "#c0392b"
+    },
+    "dark": {
+      "chrome": "#252525",
+      "surface": "#1e1e1e",
+      "canvas": "#2b2b2b",
+      "status": "#252525",
+      "statusBorder": "#3a3a3a",
+      "text": "#e4e4e4",
+      "muted": "#a0a0a0",
+      "border": "#3a3a3a",
+      "borderStrong": "#555555",
+      "accent": "#e8663f",
+      "hover": "#333333",
+      "saveOk": "#58b380",
+      "saveError": "#e57373"
+    }
+  },
+  "metrics": {
+    "tabHeight": 35,
+    "ribbonHeight": 80,
+    "statusHeight": 24,
+    "sidebarWidth": 150,
+    "aiRailWidth": 34,
+    "compactRibbonHeight": 45
+  },
+  "responsiveLayout": {
+    "profile": "openmuse-pdf-layout/1",
+    "mobileBelow": 600,
+    "compactBelow": 900,
+    "minDocumentWidth": 400
+  },
+  "menuPresentation": {
+    "ribbon": {
+      "minWidth": 148,
+      "padding": 4,
+      "radius": 10,
+      "offsetY": 6,
+      "itemHeight": 28,
+      "itemHorizontalPadding": 10,
+      "fontSize": 12.5,
+      "elevation": 4,
+      "shadowOpacity": 0.14
+    },
+    "thumbnail": {
+      "minWidth": 170,
+      "padding": 5,
+      "radius": 6,
+      "offsetY": 0,
+      "itemHeight": 32,
+      "itemHorizontalPadding": 12,
+      "fontSize": 13,
+      "elevation": 5,
+      "shadowOpacity": 0.18
+    },
+    "palette": {
+      "minWidth": 0,
+      "padding": 8,
+      "radius": 10,
+      "offsetY": 6,
+      "itemHeight": 0,
+      "itemHorizontalPadding": 0,
+      "fontSize": 12.5,
+      "elevation": 4,
+      "shadowOpacity": 0.14
+    }
+  },
+  "sidebar": {
+    "minWidth": 120,
+    "maxWidth": 320,
+    "maxViewportFraction": 0.4,
+    "rasterInset": 24,
+    "resizerWidth": 6,
+    "resizerOverlap": 3,
+    "preferenceKey": "openmuse.pdf.sidebar.width"
+  },
+  "pageViewport": {
+    "horizontalPadding": 24,
+    "verticalPadding": 16,
+    "pageGap": 16,
+    "shadow": {
+      "color": "#000000",
+      "opacity": 0.18,
+      "blurRadius": 4,
+      "spreadRadius": 0,
+      "offsetX": 0,
+      "offsetY": 1
+    }
+  },
+  "pageArrangement": {
+    "profile": "openmuse-pdf-page-arrangement/1",
+    "command": "pdf.view.toggleSpread",
+    "singleButton": {"label": "双页", "icon": "IconSpread"},
+    "spreadButton": {"label": "单页", "icon": "IconSinglePage"}
+  },
+  "aiDock": {
+    "defaultWidth": 360,
+    "minWidth": 280,
+    "maxWidth": 720,
+    "maxViewportFraction": 0.6,
+    "railWidth": 34,
+    "resizerWidth": 6,
+    "transitionMs": 180,
+    "widthPreferenceKey": "openmuse.pdf.ai.width",
+    "openPreferenceKey": "openmuse.pdf.ai.open",
+    "initiallyOpen": true,
+    "title": "Muse AI",
+    "openLabel": "打开 AI 助手",
+    "collapseLabel": "收起 AI 助手",
+    "emptyTitle": "问问这份 PDF",
+    "emptyBody": "基于文档内容总结、解释、查找信息",
+    "unavailable": "尚未连接 AI 插件",
+    "summaryLabel": "总结全文",
+    "keyPointsLabel": "提取要点",
+    "promptPlaceholder": "询问这份 PDF…"
+  },
+  "statusBar": {
+    "pageLabel": "第 {current} 页，共 {total} 页",
+    "zoomOut": "缩小",
+    "zoomIn": "放大",
+    "thumbnails": "缩略图",
+    "minZoom": 0.1,
+    "maxZoom": 8,
+    "sliderStep": 0.05,
+    "sliderWidth": 110,
+    "minSliderColumnWidth": 380,
+    "zoomSteps": [0.1, 0.25, 0.5, 0.67, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5, 6, 8]
+  },
+  "ribbonState": {
+    "unsaved": "未保存",
+    "savingCopy": "正在保存副本…",
+    "copySaved": "副本已保存",
+    "copyFailed": "副本保存失败",
+    "readOnly": "加密文档仅支持查看",
+    "fontSize": 12,
+    "feedbackMs": 3000
+  },
+  "dialogs": {
+    "extractRange": {
+      "command": "pdf.page.extract",
+      "title": "抽取页面为 PDF",
+      "hint": "页码或范围，如 1-3,5（共 {total} 页）",
+      "desktopDestination": "generatedDirectory",
+      "desktopOpenResult": "newDocumentTab",
+      "mobileDestination": "savePicker",
+      "singleNamePattern": "{base}-p{first}.pdf",
+      "rangeNamePattern": "{base}-p{first}-{last}.pdf",
+      "cancel": "取消",
+      "confirm": "确定"
+    },
+    "splitPdf": {
+      "command": "pdf.page.split",
+      "title": "拆分 PDF",
+      "hint": "每 N 页拆分为一个文件（共 {total} 页）",
+      "destinationMode": "directory",
+      "fileNamePattern": "{base}-{index}.pdf",
+      "cancel": "取消",
+      "confirm": "确定"
+    }
+  },
+  "searchBar": {
+    "command": "pdf.search.open",
+    "placeholder": "搜索",
+    "previous": "上一个",
+    "next": "下一个",
+    "close": "关闭",
+    "noResults": "无结果",
+    "searching": "搜索中",
+    "inputWidth": 180
+  },
+  "keyboardShortcuts": {
+    "primary+s": "pdf.file.saveCopy",
+    "primary+z": "pdf.edit.undo",
+    "primary+shift+z": "pdf.edit.redo",
+    "primary+f": "pdf.search.open",
+    "primary+=": "pdf.view.zoomIn",
+    "primary+-": "pdf.view.zoomOut",
+    "primary+0": "pdf.view.fitWidth"
+  },
+  "keyboardNavigation": {
+    "linePixels": 60,
+    "viewportInset": 40,
+    "document": {
+      "PageDown": "viewportNext",
+      "Space": "viewportNext",
+      "PageUp": "viewportPrevious",
+      "Home": "documentStart",
+      "End": "documentEnd",
+      "ArrowDown": "lineNext",
+      "ArrowUp": "linePrevious",
+      "ArrowRight": "pageNext",
+      "ArrowLeft": "pagePrevious"
+    },
+    "thumbnails": {
+      "ArrowDown": "pageNext",
+      "ArrowUp": "pagePrevious"
+    }
+  },
+  "quickAccess": [
+    {
+      "id": "save",
+      "label": "保存",
+      "icon": "save",
+      "command": "pdf.file.saveCopy"
+    },
+    {
+      "id": "undo",
+      "label": "撤销",
+      "icon": "undo",
+      "command": "pdf.edit.undo"
+    },
+    {
+      "id": "redo",
+      "label": "重做",
+      "icon": "redo",
+      "command": "pdf.edit.redo"
+    }
+  ],
+  "tabs": [
+    {
+      "id": "home",
+      "label": "开始",
+      "groups": [
+        {
+          "id": "ai",
+          "items": [
+            [
+              "ai",
+              "Muse AI",
+              "auto_awesome",
+              "pdf.ai.run"
+            ],
+            [
+              "summary",
+              "AI 总结",
+              "summarize",
+              "pdf.ai.run"
+            ],
+            [
+              "keypoints",
+              "AI 要点",
+              "format_list_bulleted",
+              "pdf.ai.run"
+            ]
+          ]
+        },
+        {
+          "id": "markup",
+          "items": [
+            [
+              "highlight",
+              "高亮",
+              "border_color",
+              "pdf.annotate.highlight"
+            ],
+            [
+              "underline",
+              "下划线",
+              "format_underlined",
+              "pdf.annotate.underline"
+            ],
+            [
+              "strike",
+              "删除线",
+              "strikethrough_s",
+              "pdf.annotate.strike"
+            ]
+          ]
+        },
+        {
+          "id": "text",
+          "items": [
+            [
+              "editText",
+              "编辑文字",
+              "edit_note",
+              "pdf.edit.text"
+            ],
+            [
+              "insertText",
+              "插入文字",
+              "text_fields",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "convert",
+          "items": [
+            [
+              "convert",
+              "PDF 转换",
+              "sync",
+              null,
+              "convert"
+            ]
+          ]
+        },
+        {
+          "id": "navigation",
+          "items": [
+            [
+              "goPage",
+              "页码",
+              "find_in_page",
+              "pdf.view.goPage"
+            ],
+            [
+              "zoomOut",
+              "缩小",
+              "zoom_out",
+              "pdf.view.zoomOut"
+            ],
+            [
+              "zoomIn",
+              "放大",
+              "zoom_in",
+              "pdf.view.zoomIn"
+            ],
+            [
+              "fitWidth",
+              "适应宽度",
+              "fit_screen",
+              "pdf.view.fitWidth"
+            ],
+            [
+              "fitPage",
+              "适应页面",
+              "crop_free",
+              "pdf.view.fitPage"
+            ]
+          ],
+          "layout": "pageZoom"
+        },
+        {
+          "id": "file",
+          "items": [
+            [
+              "search",
+              "搜索",
+              "search",
+              "pdf.search.open"
+            ],
+            [
+              "print",
+              "打印",
+              "print",
+              null
+            ],
+            [
+              "exportImage",
+              "导出图片",
+              "image",
+              null
+            ],
+            [
+              "properties",
+              "属性",
+              "info_outline",
+              "pdf.file.properties"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "annotate",
+      "label": "注释",
+      "groups": [
+        {
+          "id": "ai",
+          "items": [
+            [
+              "review",
+              "AI 审阅",
+              "auto_awesome",
+              "pdf.ai.run"
+            ],
+            [
+              "notes",
+              "处理批注",
+              "summarize",
+              "pdf.ai.run"
+            ]
+          ]
+        },
+        {
+          "id": "markup",
+          "items": [
+            [
+              "highlight",
+              "高亮",
+              "border_color",
+              "pdf.annotate.highlight"
+            ],
+            [
+              "underline",
+              "下划线",
+              "format_underlined",
+              "pdf.annotate.underline"
+            ],
+            [
+              "strike",
+              "删除线",
+              "strikethrough_s",
+              "pdf.annotate.strike"
+            ]
+          ]
+        },
+        {
+          "id": "drawing",
+          "items": [
+            [
+              "ink",
+              "墨迹",
+              "gesture",
+              "pdf.annotate.draw"
+            ],
+            [
+              "rect",
+              "矩形",
+              "crop_square",
+              "pdf.annotate.draw"
+            ],
+            [
+              "ellipse",
+              "椭圆",
+              "circle_outlined",
+              "pdf.annotate.draw"
+            ],
+            [
+              "arrow",
+              "箭头",
+              "arrow_forward",
+              "pdf.annotate.draw"
+            ],
+            [
+              "note",
+              "便签",
+              "sticky_note_2_outlined",
+              "pdf.annotate.draw"
+            ],
+            [
+              "redact",
+              "涂黑",
+              "block",
+              "pdf.annotate.redact"
+            ],
+            [
+              "sign",
+              "签名",
+              "draw",
+              "pdf.sign.open"
+            ],
+            [
+              "certSign",
+              "证书签名",
+              "verified_user_outlined",
+              "pdf.sign.open"
+            ],
+            [
+              "color",
+              "颜色",
+              "palette_outlined",
+              null
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edit",
+      "label": "编辑",
+      "groups": [
+        {
+          "id": "text",
+          "items": [
+            [
+              "editText",
+              "编辑文字",
+              "edit_note",
+              "pdf.edit.text"
+            ],
+            [
+              "insertText",
+              "插入文字",
+              "text_fields",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "image",
+          "items": [
+            [
+              "insertImage",
+              "插入图片",
+              "add_photo_alternate_outlined",
+              null
+            ],
+            [
+              "editImage",
+              "编辑图片",
+              "image_outlined",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "stamp",
+          "items": [
+            [
+              "watermark",
+              "水印",
+              "branding_watermark_outlined",
+              null
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page",
+      "label": "页面",
+      "groups": [
+        {
+          "id": "rotate",
+          "items": [
+            [
+              "rotateLeft",
+              "左旋",
+              "rotate_left",
+              null
+            ],
+            [
+              "rotateRight",
+              "右旋",
+              "rotate_right",
+              null
+            ],
+            [
+              "rotateAll",
+              "全部旋转",
+              "rotate_90_degrees_ccw_outlined",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "pages",
+          "items": [
+            [
+              "delete",
+              "删除页面",
+              "delete_outline",
+              "pdf.page.delete"
+            ],
+            [
+              "extract",
+              "抽取页面",
+              "file_copy_outlined",
+              "pdf.page.extract"
+            ],
+            [
+              "insertPdf",
+              "插入 PDF",
+              "note_add_outlined",
+              null
+            ],
+            [
+              "insertBlank",
+              "插入空白页",
+              "post_add",
+              null
+            ],
+            [
+              "replace",
+              "替换页面",
+              "swap_horiz",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "geometry",
+          "items": [
+            [
+              "crop",
+              "裁剪页面",
+              "crop",
+              null
+            ],
+            [
+              "size",
+              "纸张大小",
+              "aspect_ratio",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "compose",
+          "items": [
+            [
+              "reverse",
+              "倒序",
+              "sort",
+              "pdf.page.reverse"
+            ],
+            [
+              "splitPdf",
+              "拆分 PDF",
+              "call_split",
+              "pdf.page.split"
+            ],
+            [
+              "mergePdf",
+              "合并 PDF",
+              "merge_type",
+              "pdf.page.merge"
+            ],
+            [
+              "mergePages",
+              "合并页面",
+              "view_week_outlined",
+              null
+            ],
+            [
+              "splitPages",
+              "分割页面",
+              "splitscreen_outlined",
+              null
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "view",
+      "label": "视图",
+      "groups": [
+        {
+          "id": "navigation",
+          "items": [
+            [
+              "thumbs",
+              "缩略图",
+              "view_sidebar_outlined",
+              "pdf.view.thumbs"
+            ],
+            [
+              "outline",
+              "大纲",
+              "list_alt_outlined",
+              "pdf.view.outline"
+            ],
+            [
+              "search",
+              "搜索",
+              "search",
+              "pdf.search.open"
+            ],
+            [
+              "spread",
+              "双页",
+              "menu_book_outlined",
+              "pdf.view.toggleSpread"
+            ],
+            [
+              "night",
+              "夜间模式",
+              "dark_mode_outlined",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "zoom",
+          "items": [
+            [
+              "goPage",
+              "页码",
+              "find_in_page",
+              "pdf.view.goPage"
+            ],
+            [
+              "zoomOut",
+              "缩小",
+              "zoom_out",
+              "pdf.view.zoomOut"
+            ],
+            [
+              "zoomIn",
+              "放大",
+              "zoom_in",
+              "pdf.view.zoomIn"
+            ],
+            [
+              "fitWidth",
+              "适应宽度",
+              "fit_screen",
+              "pdf.view.fitWidth"
+            ],
+            [
+              "fitPage",
+              "适应页面",
+              "crop_free",
+              "pdf.view.fitPage"
+            ]
+          ],
+          "layout": "pageZoom"
+        }
+      ]
+    },
+    {
+      "id": "fillForm",
+      "label": "填写表单",
+      "groups": [
+        {
+          "id": "ai",
+          "items": [
+            [
+              "aiFill",
+              "AI 填表",
+              "auto_awesome",
+              "pdf.ai.run"
+            ]
+          ]
+        },
+        {
+          "id": "fields",
+          "items": [
+            [
+              "addText",
+              "添加文字",
+              "text_fields",
+              "pdf.form.fill"
+            ],
+            [
+              "check",
+              "勾选",
+              "check_box_outlined",
+              "pdf.form.fill"
+            ],
+            [
+              "cross",
+              "叉选",
+              "close",
+              "pdf.form.fill"
+            ],
+            [
+              "previous",
+              "上一字段",
+              "arrow_back",
+              null
+            ],
+            [
+              "next",
+              "下一字段",
+              "arrow_forward",
+              null
+            ]
+          ]
+        },
+        {
+          "id": "finish",
+          "items": [
+            [
+              "sign",
+              "签名",
+              "draw",
+              "pdf.sign.open"
+            ],
+            [
+              "image",
+              "图片",
+              "image_outlined",
+              null
+            ],
+            [
+              "complete",
+              "完成检查",
+              "task_alt",
+              null
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "formDesign",
+      "label": "表单设计",
+      "groups": [
+        {
+          "id": "fields",
+          "items": [
+            [
+              "text",
+              "文本字段",
+              "text_fields",
+              "pdf.form.design"
+            ],
+            [
+              "date",
+              "日期字段",
+              "event_outlined",
+              "pdf.form.design"
+            ],
+            [
+              "checkbox",
+              "复选框",
+              "check_box_outlined",
+              "pdf.form.design"
+            ],
+            [
+              "radio",
+              "单选框",
+              "radio_button_checked",
+              "pdf.form.design"
+            ],
+            [
+              "choice",
+              "选项字段",
+              "arrow_drop_down_circle_outlined",
+              "pdf.form.design"
+            ],
+            [
+              "signature",
+              "签名字段",
+              "draw",
+              "pdf.form.design"
+            ]
+          ]
+        },
+        {
+          "id": "tools",
+          "items": [
+            [
+              "keep",
+              "连续放置",
+              "push_pin_outlined",
+              null
+            ],
+            [
+              "preview",
+              "预览",
+              "visibility_outlined",
+              null
+            ],
+            [
+              "detect",
+              "自动识别",
+              "auto_fix_high_outlined",
+              null
+            ],
+            [
+              "arrange",
+              "排列",
+              "align_horizontal_left",
+              null,
+              "arrange"
+            ],
+            [
+              "delete",
+              "删除字段",
+              "delete_outline",
+              null
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "menus": {
+    "convert": [
+      {
+        "label": "转为 Word",
+        "command": "pdf.convert.run",
+        "args": {
+          "format": "docx"
+        }
+      },
+      {
+        "label": "转为 Excel",
+        "command": "pdf.convert.run",
+        "args": {
+          "format": "xlsx"
+        }
+      },
+      {
+        "label": "转为 PPT",
+        "command": "pdf.convert.run",
+        "args": {
+          "format": "pptx"
+        }
+      },
+      {
+        "label": "转为 Markdown",
+        "command": "pdf.convert.run",
+        "args": {
+          "format": "md"
+        }
+      },
+      {
+        "label": "转为 HTML",
+        "command": "pdf.convert.run",
+        "args": {
+          "format": "html"
+        }
+      }
+    ],
+    "arrange": [
+      {
+        "label": "左对齐"
+      },
+      {
+        "label": "水平居中"
+      },
+      {
+        "label": "右对齐"
+      },
+      {
+        "label": "上对齐"
+      },
+      {
+        "label": "垂直居中"
+      },
+      {
+        "label": "下对齐"
+      },
+      {
+        "label": "水平分布"
+      },
+      {
+        "label": "垂直分布"
+      },
+      {
+        "label": "同宽"
+      },
+      {
+        "label": "同高"
+      },
+      {
+        "label": "同尺寸"
+      }
+    ],
+    "thumbnail": [
+      {
+        "label": "左旋"
+      },
+      {
+        "label": "右旋"
+      },
+      {
+        "label": "删除页面",
+        "command": "pdf.page.delete"
+      },
+      {
+        "label": "抽取页面",
+        "command": "pdf.page.extract"
+      },
+      {
+        "label": "插入 PDF"
+      },
+      {
+        "label": "插入空白页"
+      }
+    ]
+  },
+  "presentations": {
+    "ai": "panelToggle",
+    "highlight": "splitColor",
+    "color": "colorPalette",
+    "arrange": "selectionRequired",
+    "spread": "pageArrangementToggle"
+  },
+  "sidebarContextMenu": "thumbnail",
+  "palette": {
+    "profile": "openmuse-pdf-palette/1",
+    "theme": [
+      "#ffffff",
+      "#000000",
+      "#e7e6e6",
+      "#0e2841",
+      "#156082",
+      "#e97132",
+      "#196b24",
+      "#0f9ed5",
+      "#a02b93",
+      "#4ea72e"
+    ],
+    "shades": [
+      [
+        "#f2f2f2",
+        "#7f7f7f",
+        "#d0cece",
+        "#ddebf7",
+        "#ddebf7",
+        "#fce4d6",
+        "#e2f0d9",
+        "#ddebf7",
+        "#e4dfec",
+        "#e2f0d9"
+      ],
+      [
+        "#d9d9d9",
+        "#595959",
+        "#aeaaaa",
+        "#bdd7ee",
+        "#9dc3e6",
+        "#f8cbad",
+        "#c6e0b4",
+        "#9dc3e6",
+        "#d9e1f2",
+        "#c6e0b4"
+      ],
+      [
+        "#bfbfbf",
+        "#3f3f3f",
+        "#757171",
+        "#8ea9db",
+        "#5b9bd5",
+        "#f4b084",
+        "#a9d18e",
+        "#5b9bd5",
+        "#b4c6e7",
+        "#a9d18e"
+      ],
+      [
+        "#a6a6a6",
+        "#262626",
+        "#3a3838",
+        "#4472c4",
+        "#2e75b6",
+        "#c65911",
+        "#70ad47",
+        "#00b0f0",
+        "#8064a2",
+        "#70ad47"
+      ],
+      [
+        "#808080",
+        "#0d0d0d",
+        "#171616",
+        "#203864",
+        "#1f4e78",
+        "#843c0c",
+        "#375623",
+        "#0070c0",
+        "#5b315e",
+        "#385723"
+      ]
+    ],
+    "standard": [
+      "#c00000",
+      "#ff0000",
+      "#ffc000",
+      "#ffff00",
+      "#92d050",
+      "#00b050",
+      "#00b0f0",
+      "#0070c0",
+      "#002060",
+      "#7030a0"
+    ],
+    "labels": {
+      "theme": "主题颜色",
+      "standard": "标准颜色",
+      "more": "更多颜色…"
+    }
+  }
+}

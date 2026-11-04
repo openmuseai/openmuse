@@ -1,0 +1,15 @@
+pub mod DerivativeStructure;
+pub mod MultivariateDifferentiableFunction;
+pub mod UnivariateDifferentiableFunction;
+pub mod MultivariateDifferentiableVectorFunction;
+pub mod DSCompiler;
+pub mod FiniteDifferencesDifferentiator;
+pub mod GradientFunction;
+pub mod JacobianFunction;
+#[path = "package-info.rs"] pub mod package_info;
+pub mod SparseGradient;
+pub mod UnivariateDifferentiableMatrixFunction;
+pub mod UnivariateDifferentiableVectorFunction;
+pub mod UnivariateFunctionDifferentiator;
+pub mod UnivariateMatrixFunctionDifferentiator;
+pub mod UnivariateVectorFunctionDifferentiator;

@@ -1,0 +1,755 @@
+{
+	"ID": "20240517031132-jmr5ihm",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20240517031132-jmr5ihm",
+		"title": "Publish service",
+		"type": "doc",
+		"updated": "20261024163013"
+	},
+	"Children": [
+		{
+			"ID": "20260315160303-zox2zes",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260315160303-zox2zes",
+				"updated": "20260315160305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Overview"
+				}
+			]
+		},
+		{
+			"ID": "20260315160303-oj2v1y6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260315160303-oj2v1y6",
+				"updated": "20260315160305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan supports publishing the contents of the current workspace over a local area network (LAN) in read-only mode."
+				}
+			]
+		},
+		{
+			"ID": "20260315160303-vbqukj8",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260315160303-vbqukj8",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Usage"
+				}
+			]
+		},
+		{
+			"ID": "20260315160303-5spvi7o",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260315160303-5spvi7o",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"ID": "20260315160303-g9yfha5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160303-g9yfha5",
+						"updated": "20261024163013"
+					},
+					"Children": [
+						{
+							"ID": "20260315160303-mosilo4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160303-mosilo4",
+								"updated": "20261024163013"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Open "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Publish"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " to access the publishing service configuration panel"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260315160303-zqg7nqj",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160303-zqg7nqj",
+						"updated": "20260315160303"
+					},
+					"Children": [
+						{
+							"ID": "20260315160303-ecemvi6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160303-ecemvi6",
+								"updated": "20260315160327"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Set the "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Service Port"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260315160303-27cpoh4",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160303-27cpoh4",
+						"updated": "20260918190000"
+					},
+					"Children": [
+						{
+							"ID": "20260315160303-pber85t",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160303-pber85t",
+								"updated": "20260918190000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "The default port number is "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "6808"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ". When deploying with Docker and enabling the publish service, add "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "-p 6808:6808"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " to the container creation command in addition to the hosting port mapping. Docker uses host-port:container-port mappings; if you change the publish service port, update the container port accordingly and use the host port to access the service. Use a fixed publish service port rather than 0"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260315160303-1tk6z1l",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160303-1tk6z1l",
+						"updated": "20260315160303"
+					},
+					"Children": [
+						{
+							"ID": "20260315160303-c0lep91",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160303-c0lep91",
+								"updated": "20260315160329"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "If the port number is set to "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "0"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​, a random port will be used"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260315160303-d2xmsd9",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160303-d2xmsd9",
+						"updated": "20260315160303"
+					},
+					"Children": [
+						{
+							"ID": "20260315160303-gibkmda",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160303-gibkmda",
+								"updated": "20260315160329"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Toggle on the "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Publish Service"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ switch"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260315160303-u4zmpim",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160303-u4zmpim",
+						"updated": "20260426175821"
+					},
+					"Children": [
+						{
+							"ID": "20260315160303-o4t761o",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160303-o4t761o",
+								"updated": "20260613195413"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Toggle on the "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Service Basic Authentication"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ switch and add "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Authentication Accounts"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: This utilizes the "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#basic_authentication_scheme",
+									"TextMarkTextContent": "Basic authentication scheme"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " to authenticate visitors. Visitors must correctly enter the username and password configured in the "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Authentication Accounts"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ section before they can view the published content"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613195415-pbh6hjr",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613195415-pbh6hjr",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Access Control"
+				}
+			]
+		},
+		{
+			"ID": "20260613195415-80h81pg",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613195415-80h81pg",
+				"updated": "20260613195415"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Set access levels for notebooks and documents when publishing, enabling granular permission management. Access control and Basic auth are two independent mechanisms: Basic auth is a global lock — when enabled, all visitors must enter a unified password; access control is set per notebook/document and can be used alone or combined."
+				}
+			]
+		},
+		{
+			"ID": "20260613195415-996cb6x",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613195415-996cb6x",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20260613195415-p3v5ud8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613195415-p3v5ud8",
+						"updated": "20260613195415"
+					},
+					"Children": [
+						{
+							"ID": "20260613195415-w7v2huz",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613195415-w7v2huz",
+								"updated": "20260613195415"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Entry"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": In the doc tree, click the \"More\" menu and select \"Publish Access Control\" to open the publish access control interface"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613195415-05gwvxu",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613195415-05gwvxu",
+						"updated": "20260613195415"
+					},
+					"Children": [
+						{
+							"ID": "20260613195415-qi80y8c",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613195415-qi80y8c",
+								"updated": "20260613195415"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Scope"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Supports setting access levels per notebook or per document"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613195415-24ltn76",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613195415-24ltn76",
+						"updated": "20260613195415"
+					},
+					"Children": [
+						{
+							"ID": "20260613195415-rs1gj90",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613195415-rs1gj90",
+								"updated": "20260613195415"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Access Levels"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ":"
+								}
+							]
+						},
+						{
+							"ID": "20260613195415-hhd0fgl",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613195415-hhd0fgl",
+								"updated": "20260613195415"
+							},
+							"Children": [
+								{
+									"ID": "20260613195415-p2c99ql",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613195415-p2c99ql",
+										"updated": "20260613195415"
+									},
+									"Children": [
+										{
+											"ID": "20260613195415-3m1b9b8",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613195415-3m1b9b8",
+												"updated": "20260613195415"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "🌐 Public: Published openly, accessible without a password"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613195415-lq5e4xa",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613195415-lq5e4xa",
+										"updated": "20260613195415"
+									},
+									"Children": [
+										{
+											"ID": "20260613195415-3mkteud",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613195415-3mkteud",
+												"updated": "20260613195415"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "🔒 Protected: Published openly, but requires a password to access"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613195415-52l6mpd",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613195415-52l6mpd",
+										"updated": "20260613195415"
+									},
+									"Children": [
+										{
+											"ID": "20260613195415-52pyp21",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613195415-52pyp21",
+												"updated": "20260613195415"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "👻 Hidden: Not shown in the directory listing, but accessible with the link"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613195415-vtq214e",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613195415-vtq214e",
+										"updated": "20260613195415"
+									},
+									"Children": [
+										{
+											"ID": "20260613195415-ggwavup",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613195415-ggwavup",
+												"updated": "20260613195415"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "🤫 Private: Hidden and requires a password, accessible only to users with both the link and password"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613195415-fqhy7iv",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613195415-fqhy7iv",
+										"updated": "20260613195415"
+									},
+									"Children": [
+										{
+											"ID": "20260613195415-0n9df0x",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613195415-0n9df0x",
+												"updated": "20260613195415"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "🚫 Forbidden: Completely blocked from access; the notebook or document will not be published"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613195415-5yx1ff3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613195415-5yx1ff3",
+						"updated": "20260613195415"
+					},
+					"Children": [
+						{
+							"ID": "20260613195415-grp1vwh",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613195415-grp1vwh",
+								"updated": "20260613195415"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Password"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": When selecting an access level that requires a password, set the password in the popup dialog"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613195415-7uieb9g",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613195415-7uieb9g",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20260613195415-k9sglmf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613195415-k9sglmf",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Default"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Ordinary notebooks are public by default only when no access restrictions apply. Documents also inherit applicable password, hidden, and disabled-publishing rules from parent documents and the notebook. Encrypted notebooks cannot be published, even when unlocked"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260315160303-piyz4rj",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260315160303-piyz4rj",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20260315160303-b2t92la",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260315160303-b2t92la",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"ID": "20260315160303-zlheijx",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260315160303-zlheijx",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20260315160303-z9g657o",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260315160303-z9g657o",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Once the publishing service is enabled, visitors have access to the entire workspace content by default; please ensure that your workspace does not contain any sensitive information"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

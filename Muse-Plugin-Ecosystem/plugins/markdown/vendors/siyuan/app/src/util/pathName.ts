@@ -1,0 +1,924 @@
+import {toggleMenu} from "../menus/menuToggle";
+import * as path from "path";
+import {fetchPost} from "./fetch";
+import {Dialog} from "../dialog";
+import {escapeAriaLabel, escapeHtml, escapeHtmlTextAndAttr} from "./escape";
+import {genFileTreeDocAriaLabel} from "./fileTreeTooltip";
+import {isMobile} from "./functions";
+import {focusByRange} from "../protyle/util/selectionOffsets";
+import {Constants} from "../constants";
+import {getFileTreeDefaultIconAttr, getFileTreeIconHTML} from "../emoji/fileTreeIcon";
+/// #if !BROWSER
+import {ipcRenderer} from "electron";
+/// #endif
+/// #if !MOBILE
+/// #endif
+import {showMessage} from "../dialog/message";
+import {isOnlyMeta, isWindows, setStorageVal, updateHotkeyTip} from "../protyle/util/compatibility";
+import {matchHotKey} from "../protyle/util/hotKey";
+import {Menu} from "../plugin/Menu";
+import {hasClosestByClassName} from "../protyle/util/hasClosest";
+import {mergePathSegments} from "./mergePathSegments";
+import {expandFileTree} from "../layout/dock/fileTreeAnimation";
+import {getHostCapabilities} from "./hostCapabilities";
+import {highlightSearchText} from "./searchHighlight";
+import {addClearButton} from "./addClearButton";
+import {normalizeSiYuanUri} from "./normalizeSiYuanUri";
+
+export const useShell = (cmd: "showItemInFolder" | "openPath", filePath: string) => {
+    if (!getHostCapabilities().localFileSystem) {
+        return;
+    }
+    /// #if !BROWSER
+    ipcRenderer.send(Constants.SIYUAN_CMD, {
+        cmd,
+        filePath: filePath
+    });
+    /// #endif
+};
+
+/**
+ * Check if the given URI is a valid SiYuan URI protocol (siyuan:// or web+siyuan://)
+ * @param uri - the URI to check
+ */
+export const isSiYuanUriProtocol = (uri: URL | string | null | undefined): boolean => {
+    try {
+        if (uri == null) return false;
+
+        const uriObj = uri instanceof URL ? uri : new URL(uri);
+        if (uriObj.protocol === "siyuan:" || uriObj.protocol === "web+siyuan:") {
+            return true;
+        }
+        return false;
+    } catch (error) {
+        return false;
+    }
+};
+
+/**
+ * Parse siyuan://blocks/20221031001313-rk7sd0e?focus=1&fullscreen=1
+ * @param uri - the siyuan block uri to parse
+ * @returns the block id and other info, or null if the uri is not a valid siyuan block uri
+ */
+export const parseSiYuanUriInfo = (uri: URL | string | null | undefined): ISiYuanUriBlockInfo | null => {
+    try {
+        if (uri == null) return null;
+
+        const parsedURI = uri instanceof URL ? uri : new URL(uri);
+        if (!isSiYuanUriProtocol(parsedURI)) {
+            return null;
+        }
+        const uriObj = normalizeSiYuanUri(parsedURI);
+        if (uriObj.hostname === "blocks" && /^\/\d{14}-\w{7}/.test(uriObj.pathname)) {
+            const avItemID = uriObj.searchParams.get("avItemID") || undefined;
+            const avViewID = uriObj.searchParams.get("avViewID") || undefined;
+            const avGroupID = uriObj.searchParams.get("avGroupID") || undefined;
+            const isNodeID = (id?: string) => !id || /^\d{14}-\w{7}$/.test(id);
+            if (!isNodeID(avItemID) || !isNodeID(avViewID) || !isNodeID(avGroupID)) {
+                return null;
+            }
+            return {
+                id: uriObj.pathname.substring(1, 1 + 22),
+                focus: uriObj.searchParams.get("focus") === "1",
+                fullscreen: uriObj.searchParams.get("fullscreen") === "1",
+                avItemID,
+                avViewID,
+                avGroupID,
+                avStandalone: uriObj.searchParams.get("avStandalone") === "1",
+            };
+        }
+        return null;
+    } catch (error) {
+        return null;
+    }
+};
+
+export const parseUriInfo = (): ISiYuanUriBlockInfo => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.has("url")) {
+        const dataInfo = parseSiYuanUriInfo(searchParams.get("url"));
+        if (dataInfo != null) {
+            window.siyuan.editorIsFullscreen = dataInfo.fullscreen;
+            return dataInfo;
+        }
+    }
+
+    if (window.JSAndroid) {
+        const dataInfo = parseSiYuanUriInfo(window.JSAndroid.getBlockURL());
+        if (dataInfo != null) {
+            window.siyuan.editorIsFullscreen = dataInfo.fullscreen;
+            return dataInfo;
+        }
+    }
+
+    // 支持通过 URL 查询字符串参数 `id` 和 `focus` 跳转到 Web 端指定块 https://github.com/siyuan-note/siyuan/pull/7086
+    const fullscreen = searchParams.get("fullscreen") === "1";
+    window.siyuan.editorIsFullscreen = fullscreen;
+    return {
+        id: searchParams.get("id") ?? "",
+        focus: searchParams.get("focus") === "1",
+        fullscreen,
+    };
+};
+
+/* redirect to auth page */
+export const redirectToCheckAuth = async (to: string = window.location.href) => {
+    if (window.siyuan.config.readonly || window.siyuan.isPublish) {
+        return;
+    }
+
+    const url = new URL(window.location.origin);
+    url.pathname = "/check-auth";
+    url.searchParams.set("to", to);
+    if (getHostCapabilities().remoteKernel) {
+        url.searchParams.set("lang", window.siyuan.config.appearance.lang);
+        url.searchParams.set("remote", "1");
+    }
+    window.location.href = url.href;
+};
+
+export const addBaseURL = () => {
+    let baseURLElement = document.getElementById("baseURL");
+    if (!baseURLElement) {
+        baseURLElement = document.createElement("base");
+        baseURLElement.id = "baseURL";
+    }
+    baseURLElement.setAttribute("href", location.origin);
+    document.getElementsByTagName("head")[0].appendChild(baseURLElement);
+};
+
+export const getDisplayName = (filePath: string, basename = true, removeSY = false) => {
+    let name = filePath;
+    if (basename) {
+        name = pathPosix().basename(filePath);
+    }
+    if (removeSY && name.endsWith(".sy")) {
+        name = name.substr(0, name.length - 3);
+    }
+    return name;
+};
+
+export const getDocDisplayName = (name: string, titleEmpty?: boolean, escape?: boolean) => {
+    if (titleEmpty) {
+        return window.siyuan.languages["_kernel"][16];
+    }
+    // 文档接口返回原始标题，斜杠和 .sy 都是标题内容，不能按文件路径处理。
+    if (escape) {
+        return escapeHtmlTextAndAttr(name);
+    }
+    return name;
+};
+
+export const getAssetPathWithoutQuery = (assetPath: string) => {
+    return assetPath.split(/[?#]/, 1)[0];
+};
+
+// 只去掉片段，保留查询：内核依赖 box 等查询参数定位资源，但不处理片段。
+export const getAssetPathWithoutFragment = (assetPath: string) => {
+    return assetPath.split("#", 1)[0];
+};
+
+export const getAssetExtension = (assetPath: string) => {
+    return pathPosix().extname(getAssetPathWithoutQuery(assetPath));
+};
+
+export const getAssetName = (assetPath: string) => {
+    const pathWithoutQuery = getAssetPathWithoutQuery(assetPath);
+    return pathPosix().basename(pathWithoutQuery, getAssetExtension(pathWithoutQuery)).replace(/-\d{14}-\w{7}$/, "");
+};
+
+export const isLocalPath = (link: string) => {
+    if (!link) {
+        return false;
+    }
+
+    link = link.trim();
+    if (1 > link.length) {
+        return false;
+    }
+
+    link = link.toLowerCase();
+    if (link.startsWith("assets/") || link.startsWith("file://") || link.startsWith("\\\\") /* Windows 网络共享路径 */) {
+        return true;
+    }
+
+    if (isWindows()) {
+        const colonIdx = link.indexOf(":");
+        return 1 === colonIdx; // 冒号前面只有一个字符认为是 Windows 盘符而不是网络协议
+    }
+    return link.startsWith("/");
+};
+
+export const pathPosix = () => {
+    if (path.posix) {
+        return path.posix;
+    }
+    return path;
+};
+
+export const originalPath = () => {
+    return path;
+};
+
+export const getTopPaths = (liElements: Element[]) => {
+    const fromPaths: string[] = [];
+    liElements.forEach((item: HTMLElement) => {
+        if (item.getAttribute("data-type") !== "navigation-root") {
+            const dataPath = item.getAttribute("data-path");
+            const isChild = fromPaths.find(item => {
+                if (dataPath.startsWith(item.replace(".sy", ""))) {
+                    return true;
+                }
+            });
+            if (!isChild) {
+                fromPaths.push(dataPath);
+            }
+        }
+    });
+    return fromPaths;
+};
+
+export const isMoveTargetAllowed = (sourceNotebookIds: string[] = [], targetNotebookId: string) => {
+    const sourceIds = Array.from(new Set(sourceNotebookIds.filter(Boolean)));
+    if (sourceIds.length === 0) {
+        return true;
+    }
+    const encryptedSourceIds = sourceIds.filter(isEncryptedBox);
+    if (encryptedSourceIds.length > 0) {
+        return encryptedSourceIds.length === sourceIds.length && sourceIds.length === 1 && sourceIds[0] === targetNotebookId;
+    }
+    return !isEncryptedBox(targetNotebookId);
+};
+
+export const moveToPath = (fromPaths: string[], toNotebook: string, toPath: string) => {
+    fetchPost("/api/filetree/moveDocs", {
+        toNotebook,
+        fromPaths,
+        toPath,
+    });
+};
+
+export const movePathTo = (options: {
+    cb: (toPath: string[], toNotebook: string[]) => void,
+    validate?: (toPath: string[], toNotebook: string[]) => boolean,
+    paths?: string[],
+    range?: Range,
+    restoreFocus?: () => void,
+    title?: string,
+    flashcard: boolean
+    rootIDs?: string[],
+    sourceNotebookIds?: string[],
+    multiple?: boolean,
+}) => {
+    const exitDialog = window.siyuan.dialogs.find((item) => {
+        if (item.element.querySelector("#foldList")) {
+            item.destroy();
+            return true;
+        }
+    });
+    if (exitDialog) {
+        return;
+    }
+    const dialog = new Dialog({
+        title: `<div style="padding: 8px;">
+    ${options.title || window.siyuan.languages.move}
+    <div style="max-height: 16px;line-height: 14px;-webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0) 0, #000 6px);padding-bottom: 4px;margin-bottom: -4px" class="ft__smaller ft__on-surface fn__hidescrollbar"></div>
+</div>`,
+        content: `<div class="b3-form__icon" style="margin: 8px">
+    <span data-menu="true" class="b3-form__icon-list fn__a b3-tooltips b3-tooltips__s" aria-label="${updateHotkeyTip("⌥↓")}">
+        <svg class="svg--mid"><use xlink:href="#iconSearch"></use></svg>
+        <svg class="svg--smaller"><use xlink:href="#iconDown"></use></svg>
+    </span>
+    <input spellcheck="false" class="b3-text-field fn__block" style="padding-left: 42px;" value="" placeholder="${window.siyuan.languages.searchPlaceholder}">
+</div>
+<ul id="foldList" class="fn__flex-1 fn__none b3-list b3-list--background${isMobile() ? " b3-list--mobile" : ""}" style="overflow: auto;position: relative"></ul>
+<div id="foldTree" class="fn__flex-1${isMobile() ? " b3-list--mobile" : ""}" style="overflow: auto;position: relative"></div>
+<div class="fn__hr"></div>
+<div class="b3-dialog__action">
+    <button class="b3-button b3-button--cancel">${window.siyuan.languages.cancel}</button><div class="fn__space"></div>
+    <button class="b3-button b3-button--text">${window.siyuan.languages.confirm}</button>
+</div>`,
+        width: isMobile() ? "92vw" : "50vw",
+        height: isMobile() ? "80vh" : "70vh",
+        destroyCallback() {
+            if (options.restoreFocus) {
+                options.restoreFocus();
+            } else if (options.range) {
+                focusByRange(options.range);
+            }
+        }
+    });
+    dialog.element.querySelector(".b3-dialog__header").setAttribute("style", "padding:0");
+    dialog.element.setAttribute("data-key", Constants.DIALOG_MOVEPATHTO);
+    if (options.paths && options.paths.length > 0) {
+        fetchPost("/api/filetree/getHPathsByPaths", {paths: options.paths}, (response) => {
+            dialog.element.querySelector(".b3-dialog__header .ft__smaller").innerHTML = escapeHtml(response.data.join(" "));
+        });
+    }
+    const searchListElement = dialog.element.querySelector("#foldList");
+    const searchTreeElement = dialog.element.querySelector("#foldTree");
+    const confirmElement = dialog.element.querySelector<HTMLButtonElement>(".b3-button--text");
+    const selected = new Map<string, {path: string, notebook: string}>();
+    const selectionKey = (row: HTMLElement) => `${row.dataset.box}:${row.dataset.path}`;
+    const renderSelection = (root: Element) => {
+        if (!options.multiple) { return; }
+        root.querySelectorAll<HTMLElement>(".b3-list-item").forEach(row => {
+            let checkbox = row.querySelector<HTMLInputElement>("[data-path-select]");
+            if (!checkbox) {
+                checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.className = "b3-switch fn__flex-center";
+                checkbox.setAttribute("data-path-select", "true");
+                checkbox.setAttribute("aria-label", row.querySelector(".b3-list-item__text, .b3-list-item__showall").textContent);
+                row.append(checkbox);
+                checkbox.addEventListener("click", event => event.stopPropagation());
+                checkbox.addEventListener("change", () => {
+                    const key = selectionKey(row);
+                    if (checkbox.checked) {
+                        selected.set(key, {path: row.dataset.path, notebook: row.dataset.box});
+                    } else {
+                        selected.delete(key);
+                    }
+                    renderSelection(searchTreeElement);
+                    renderSelection(searchListElement);
+                });
+            }
+            checkbox.checked = selected.has(selectionKey(row));
+        });
+        confirmElement.textContent = `${window.siyuan.languages.confirm} (${selected.size})`;
+        confirmElement.disabled = selected.size === 0;
+    };
+    const expand = (row: HTMLElement) => getLeaf(row, options.flashcard, renderSelection);
+    const submit = () => {
+        const currentPanelElement = searchListElement.classList.contains("fn__none") ? searchTreeElement : searchListElement;
+        const items = options.multiple ? Array.from(selected.values()) :
+            Array.from(currentPanelElement.querySelectorAll<HTMLElement>(".b3-list-item--focus"))
+                .map(row => ({path: row.dataset.path, notebook: row.dataset.box}));
+        if (!items.length) { return; }
+        const paths = items.map(item => item.path);
+        const notebooks = items.map(item => item.notebook);
+        if (!options.validate || options.validate(paths, notebooks)) {
+            options.cb(paths, notebooks);
+            dialog.destroy();
+        }
+    };
+    renderSelection(searchTreeElement);
+    setNoteBook((notebooks) => {
+        let html = "";
+        notebooks.forEach((item) => {
+            if (!item.closed && isMoveTargetAllowed(options.sourceNotebookIds, item.id)) {
+                let countHTML = "";
+                if (options.flashcard) {
+                    countHTML = `<span class="counter counter--right b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.flashcardNewCard}">${item.newFlashcardCount}</span>
+<span class="counter counter--right b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.flashcardDueCard}">${item.dueFlashcardCount}</span>
+<span class="counter counter--right b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.flashcardCard}">${item.flashcardCount}</span>`;
+                }
+                html += `<ul class="b3-list b3-list--background">
+<li class="b3-list-item${html === "" ? " b3-list-item--focus" : ""}" data-path="/" data-box="${item.id}"${getFileTreeDefaultIconAttr(item.icon, "notebook")}>
+    <span class="b3-list-item__toggle b3-list-item__toggle--hl">
+        <svg class="b3-list-item__arrow"><use xlink:href="#iconRight"></use></svg>
+    </span>
+    ${getFileTreeIconHTML(item.icon, "notebook", "b3-list-item__graphic", true)}
+    <span class="b3-list-item__text">${escapeHtml(item.name)}</span>
+    ${countHTML}
+</li></ul>`;
+            }
+        });
+        searchTreeElement.innerHTML = html;
+        renderSelection(searchTreeElement);
+    }, options.flashcard);
+
+    const inputElement = dialog.element.querySelector(".b3-text-field") as HTMLInputElement;
+    inputElement.value = window.siyuan.storage[Constants.LOCAL_MOVE_PATH].k;
+    /// #if !MOBILE
+    inputElement.select();
+    /// #endif
+    const inputEvent = (event?: InputEvent) => {
+        if (event && event.isComposing) {
+            return;
+        }
+        if (inputElement.value.trim() === "") {
+            searchListElement.classList.add("fn__none");
+            searchTreeElement.classList.remove("fn__none");
+            return;
+        }
+        searchTreeElement.classList.add("fn__none");
+        searchListElement.classList.remove("fn__none");
+        searchListElement.scrollTo(0, 0);
+        const keyword = inputElement.value;
+        const caseSensitive = window.siyuan.config.search.caseSensitive;
+        fetchPost("/api/filetree/searchDocs", {
+            k: keyword,
+            flashcard: options.flashcard,
+            excludeIDs: options.rootIDs,
+        }, (data) => {
+            if (inputElement.value !== keyword) {
+                return;
+            }
+            const highlight = (text: string) => highlightSearchText(text, keyword, caseSensitive);
+            let fileHTML = "";
+            data.data.forEach((item: {
+                boxIcon: string,
+                box: string,
+                hPath: string,
+                path: string,
+                name?: string,
+                alias?: string,
+                newFlashcardCount: string,
+                dueFlashcardCount: string,
+                flashcardCount: string
+            }) => {
+                if (!isMoveTargetAllowed(options.sourceNotebookIds, item.box)) {
+                    return;
+                }
+                let countHTML = "";
+                if (options.flashcard) {
+                    countHTML = `<span class="counter counter--right b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.flashcardNewCard}">${item.newFlashcardCount}</span>
+<span class="counter counter--right b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.flashcardDueCard}">${item.dueFlashcardCount}</span>
+<span class="counter counter--right b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.flashcardCard}">${item.flashcardCount}</span>`;
+                }
+                let attributesHTML = "";
+                if (item.name) {
+                    attributesHTML += `<span class="b3-list-item__meta fn__flex" style="max-width: 30%" aria-label="${window.siyuan.languages.name} ${escapeAriaLabel(item.name)}"><svg class="b3-list-item__hinticon"><use xlink:href="#iconN"></use></svg><span class="b3-list-item__hinttext">${highlight(item.name)}</span></span>`;
+                }
+                if (item.alias) {
+                    attributesHTML += `<span class="b3-list-item__meta fn__flex" style="max-width: 30%" aria-label="${window.siyuan.languages.alias} ${escapeAriaLabel(item.alias)}"><svg class="b3-list-item__hinticon"><use xlink:href="#iconA"></use></svg><span class="b3-list-item__hinttext">${highlight(item.alias)}</span></span>`;
+                }
+                fileHTML += `<li class="b3-list-item${fileHTML === "" ? " b3-list-item--focus" : ""}" data-path="${item.path}" data-box="${item.box}"${getFileTreeDefaultIconAttr(item.boxIcon, "notebook")}>
+    ${getFileTreeIconHTML(item.boxIcon, "notebook", "b3-list-item__graphic", true)}
+    <span class="b3-list-item__showall fn__flex-1" style="padding: 4px 0; min-width: 0">${highlight(item.hPath)}</span>
+    ${attributesHTML}
+    ${countHTML}
+</li>`;
+            });
+            searchListElement.innerHTML = fileHTML;
+            renderSelection(searchListElement);
+        });
+    };
+
+    const saveMovePathHistory = () => {
+        if (inputElement.value) {
+            let list: string[] = window.siyuan.storage[Constants.LOCAL_MOVE_PATH].keys;
+            list.splice(0, 0, inputElement.value);
+            list = Array.from(new Set(list));
+            if (list.length > window.siyuan.config.search.limit) {
+                list.splice(window.siyuan.config.search.limit, list.length - window.siyuan.config.search.limit);
+            }
+            window.siyuan.storage[Constants.LOCAL_MOVE_PATH].keys = list;
+        }
+        window.siyuan.storage[Constants.LOCAL_MOVE_PATH].k = inputElement.value;
+        setStorageVal(Constants.LOCAL_MOVE_PATH, window.siyuan.storage[Constants.LOCAL_MOVE_PATH]);
+    };
+    const toggleMovePathHistory = () => {
+        toggleMenu({
+            target: inputElement.previousElementSibling,
+            build: (_menu, session) => {
+                const keys = window.siyuan.storage[Constants.LOCAL_MOVE_PATH].keys;
+                if (!keys || keys.length === 0) {
+                    return;
+                }
+                const menu = new Menu(Constants.MENU_MOVE_PATH_HISTORY);
+                if (menu.isOpen) {
+                    return;
+                }
+                menu.element.classList.add("b3-menu--list");
+                menu.addItem({
+                    iconHTML: "",
+                    label: window.siyuan.languages.clearHistory,
+                    click() {
+                        window.siyuan.storage[Constants.LOCAL_MOVE_PATH].keys = [];
+                        setStorageVal(Constants.LOCAL_MOVE_PATH, window.siyuan.storage[Constants.LOCAL_MOVE_PATH]);
+                    }
+                });
+                const separatorElement = menu.addSeparator(1);
+                let current = true;
+                keys.forEach((s: string) => {
+                    if (s) {
+                        const menuItem = menu.addItem({
+                            iconHTML: "",
+                            label: escapeHtml(s),
+                            action: "iconCloseRound",
+                            bind(element) {
+                                element.addEventListener("click", (itemEvent) => {
+                                    if (hasClosestByClassName(itemEvent.target as Element, "b3-menu__action")) {
+                                        keys.find((item: string, index: number) => {
+                                            if (item === s) {
+                                                keys.splice(index, 1);
+                                                return true;
+                                            }
+                                        });
+                                        window.siyuan.storage[Constants.LOCAL_MOVE_PATH].keys = keys;
+                                        setStorageVal(Constants.LOCAL_MOVE_PATH, window.siyuan.storage[Constants.LOCAL_MOVE_PATH]);
+                                        if (element.previousElementSibling?.classList.contains("b3-menu__separator") && !element.nextElementSibling) {
+                                            window.siyuan.menus.menu.remove();
+                                        } else {
+                                            element.remove();
+                                        }
+                                    } else {
+                                        inputElement.value = s;
+                                        inputElement.dispatchEvent(new Event("change"));
+                                        saveMovePathHistory();
+                                        inputEvent();
+                                        window.siyuan.menus.menu.remove();
+                                    }
+                                    itemEvent.preventDefault();
+                                    itemEvent.stopPropagation();
+                                });
+                            }
+                        });
+                        if (current) {
+                            menuItem.classList.add("b3-menu__item--current");
+                        }
+                        current = false;
+                    }
+                });
+                if (current) {
+                    separatorElement.remove();
+                }
+                const rect = inputElement.getBoundingClientRect();
+                session.show(() => menu.open({
+                    x: rect.left,
+                    y: rect.bottom,
+                    h: rect.height
+                }));
+
+            },
+        });
+    };
+    inputEvent();
+    addClearButton({
+        inputElement,
+        right: 8,
+        height: inputElement.clientHeight,
+        clearCB() {
+            saveMovePathHistory();
+            inputEvent();
+        }
+    });
+    inputElement.addEventListener("compositionend", (event: InputEvent) => {
+        inputEvent(event);
+    });
+    inputElement.addEventListener("input", (event: InputEvent) => {
+        inputEvent(event);
+    });
+    inputElement.addEventListener("blur", saveMovePathHistory);
+    inputElement.addEventListener("keydown", (event: KeyboardEvent) => {
+        if (event.isComposing) {
+            return;
+        }
+        if (matchHotKey("⌥↓", event)) {
+            event.stopPropagation();
+            toggleMovePathHistory();
+            return;
+        }
+        if (window.siyuan.menus.menu.element.getAttribute("data-name") === Constants.MENU_MOVE_PATH_HISTORY) {
+            return;
+        }
+        if (event.key === "Enter") {
+            submit();
+            event.preventDefault();
+            return;
+        }
+        const currentPanelElement = searchListElement.classList.contains("fn__none") ? searchTreeElement : searchListElement;
+        const currentItemElements = currentPanelElement.querySelectorAll(".b3-list-item--focus");
+        if (currentItemElements.length === 0) {
+            return;
+        }
+        let currentItemElement: HTMLElement = currentItemElements[0] as HTMLElement;
+        if (event.key.startsWith("Arrow")) {
+            currentItemElements.forEach((item, index) => {
+                if (index !== 0) {
+                    item.classList.remove("b3-list-item--focus");
+                }
+            });
+        }
+        if (searchListElement.classList.contains("fn__none")) {
+            if ((event.key === "ArrowRight" && !currentItemElement.querySelector(".b3-list-item__arrow--open") && !currentItemElement.querySelector(".b3-list-item__toggle").classList.contains("fn__hidden")) ||
+                (event.key === "ArrowLeft" && currentItemElement.querySelector(".b3-list-item__arrow--open"))) {
+                expand(currentItemElement);
+                event.preventDefault();
+                return;
+            }
+            if (event.key === "ArrowLeft") {
+                let parentElement = currentItemElement.parentElement.previousElementSibling;
+                if (parentElement) {
+                    if (parentElement.tagName !== "LI") {
+                        parentElement = currentPanelElement.querySelector(".b3-list-item");
+                    }
+                    currentItemElement.classList.remove("b3-list-item--focus");
+                    parentElement.classList.add("b3-list-item--focus");
+                    const parentRect = parentElement.getBoundingClientRect();
+                    const fileRect = currentPanelElement.getBoundingClientRect();
+                    if (parentRect.top < fileRect.top || parentRect.bottom > fileRect.bottom) {
+                        parentElement.scrollIntoView(parentRect.top < fileRect.top);
+                    }
+                }
+                event.preventDefault();
+                return true;
+            }
+            if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+                let nextElement = currentItemElement;
+                while (nextElement) {
+                    if (nextElement.nextElementSibling) {
+                        if (nextElement.nextElementSibling.classList.contains("fn__none")) {
+                            nextElement = nextElement.nextElementSibling as HTMLElement;
+                        } else {
+                            if (nextElement.nextElementSibling.tagName === "UL") {
+                                nextElement = nextElement.nextElementSibling.firstElementChild as HTMLElement;
+                            } else {
+                                nextElement = nextElement.nextElementSibling as HTMLElement;
+                            }
+                            break;
+                        }
+                    } else {
+                        if (nextElement.parentElement.id === "foldTree") {
+                            break;
+                        } else {
+                            nextElement = nextElement.parentElement;
+                        }
+                    }
+                }
+                if (nextElement.classList.contains("b3-list-item")) {
+                    currentItemElement.classList.remove("b3-list-item--focus");
+                    nextElement.classList.add("b3-list-item--focus");
+                    const nextRect = nextElement.getBoundingClientRect();
+                    const fileRect = searchTreeElement.getBoundingClientRect();
+                    if (nextRect.top < fileRect.top || nextRect.bottom > fileRect.bottom) {
+                        nextElement.scrollIntoView(nextRect.top < fileRect.top);
+                    }
+                }
+                event.preventDefault();
+                return true;
+            }
+            if (event.key === "ArrowUp") {
+                let previousElement = currentItemElement;
+                while (previousElement) {
+                    if (previousElement.previousElementSibling) {
+                        if (previousElement.previousElementSibling.classList.contains("fn__none")) {
+                            previousElement = previousElement.previousElementSibling as HTMLElement;
+                        } else {
+                            if (previousElement.previousElementSibling.tagName === "LI") {
+                                previousElement = previousElement.previousElementSibling as HTMLElement;
+                            } else {
+                                const liElements = previousElement.previousElementSibling.querySelectorAll(".b3-list-item");
+                                previousElement = liElements[liElements.length - 1] as HTMLElement;
+                            }
+                            break;
+                        }
+                    } else {
+                        if (previousElement.parentElement.id === "foldTree") {
+                            break;
+                        } else {
+                            previousElement = previousElement.parentElement;
+                        }
+                    }
+                }
+                if (previousElement.classList.contains("b3-list-item")) {
+                    currentItemElement.classList.remove("b3-list-item--focus");
+                    previousElement.classList.add("b3-list-item--focus");
+                    const previousRect = previousElement.getBoundingClientRect();
+                    const fileRect = searchTreeElement.getBoundingClientRect();
+                    if (previousRect.top < fileRect.top || previousRect.bottom > fileRect.bottom) {
+                        previousElement.scrollIntoView(previousRect.top < fileRect.top);
+                    }
+                }
+                event.preventDefault();
+            }
+        } else {
+            if (event.key === "ArrowDown") {
+                currentItemElement.classList.remove("b3-list-item--focus");
+                if (!currentItemElement.nextElementSibling) {
+                    currentPanelElement.children[0].classList.add("b3-list-item--focus");
+                } else {
+                    currentItemElement.nextElementSibling.classList.add("b3-list-item--focus");
+                }
+                currentItemElement = currentPanelElement.querySelector(".b3-list-item--focus");
+                if (currentPanelElement.scrollTop < currentItemElement.offsetTop - currentPanelElement.clientHeight + currentItemElement.offsetHeight ||
+                    currentPanelElement.scrollTop > currentItemElement.offsetTop) {
+                    currentPanelElement.scrollTop = currentItemElement.offsetTop - currentPanelElement.clientHeight + currentItemElement.offsetHeight;
+                }
+                event.preventDefault();
+                return;
+            }
+            if (event.key === "ArrowUp") {
+                currentItemElement.classList.remove("b3-list-item--focus");
+                if (!currentItemElement.previousElementSibling) {
+                    const length = currentPanelElement.children.length;
+                    currentPanelElement.children[length - 1].classList.add("b3-list-item--focus");
+                } else {
+                    currentItemElement.previousElementSibling.classList.add("b3-list-item--focus");
+                }
+                currentItemElement = currentPanelElement.querySelector(".b3-list-item--focus");
+                if (currentPanelElement.scrollTop < currentItemElement.offsetTop - currentPanelElement.clientHeight + currentItemElement.offsetHeight ||
+                    currentPanelElement.scrollTop > currentItemElement.offsetTop - currentItemElement.offsetHeight * 2) {
+                    currentPanelElement.scrollTop = currentItemElement.offsetTop - currentItemElement.offsetHeight * 2;
+                }
+                event.preventDefault();
+                return;
+            }
+        }
+    });
+    dialog.element.addEventListener("click", (event) => {
+        let target = event.target as HTMLElement;
+        while (target && !target.isEqualNode(dialog.element)) {
+            if (target.classList.contains("b3-list-item__toggle")) {
+                expand(target.parentElement);
+                event.preventDefault();
+                event.stopPropagation();
+                break;
+            } else if (target.classList.contains("b3-form__icon-list")) {
+                toggleMovePathHistory();
+                event.preventDefault();
+                event.stopPropagation();
+                break;
+            } else if (target.classList.contains("b3-button--text")) {
+                submit();
+                event.preventDefault();
+                event.stopPropagation();
+                break;
+            } else if (target.classList.contains("b3-button--cancel")) {
+                dialog.destroy();
+                event.preventDefault();
+                event.stopPropagation();
+                break;
+            } else if (target.classList.contains("b3-list-item")) {
+                if (options.multiple) {
+                    dialog.element.querySelectorAll(".b3-list-item--focus").forEach(item => item.classList.remove("b3-list-item--focus"));
+                    target.classList.add("b3-list-item--focus");
+                    target.querySelector<HTMLInputElement>("[data-path-select]").click();
+                    event.preventDefault();
+                    event.stopPropagation();
+                    break;
+                }
+                const currentPanelElement = searchListElement.classList.contains("fn__none") ? searchTreeElement : searchListElement;
+                const currentItemElements = currentPanelElement.querySelectorAll(".b3-list-item--focus");
+                if (currentItemElements.length === 0) {
+                    return;
+                }
+                if (options.title === window.siyuan.languages.specifyPath && isOnlyMeta(event)) {
+                    if (currentItemElements.length === 1 && currentItemElements[0] === target) {
+                        // 至少需选中一个
+                    } else {
+                        target.classList.toggle("b3-list-item--focus");
+                    }
+                } else {
+                    currentItemElements[0].classList.remove("b3-list-item--focus");
+                    target.classList.add("b3-list-item--focus");
+                }
+                if (target.getAttribute("data-path") === "/") {
+                    expand(target);
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                break;
+            }
+            target = target.parentElement;
+        }
+        /// #if !MOBILE
+        inputElement.focus();
+        /// #endif
+    });
+};
+
+const getLeaf = (liElement: HTMLElement, flashcard: boolean, onRender?: (root: Element) => void) => {
+    const toggleElement = liElement.querySelector(".b3-list-item__arrow");
+    if (toggleElement.classList.contains("b3-list-item__arrow--open")) {
+        toggleElement.classList.remove("b3-list-item__arrow--open");
+        if (liElement.nextElementSibling && liElement.nextElementSibling.tagName === "UL") {
+            liElement.nextElementSibling.classList.add("fn__none");
+        }
+        return;
+    }
+    if (liElement.nextElementSibling && liElement.nextElementSibling.tagName === "UL") {
+        toggleElement.classList.add("b3-list-item__arrow--open");
+        liElement.nextElementSibling.classList.remove("fn__none");
+        return;
+    }
+    if (liElement.getAttribute("data-loading") === "true") {
+        return;
+    }
+    liElement.setAttribute("data-loading", "true");
+    const notebookId = liElement.getAttribute("data-box");
+    fetchPost("/api/filetree/listDocsByPath", {
+        notebook: notebookId,
+        path: liElement.getAttribute("data-path"),
+        flashcard,
+        app: Constants.SIYUAN_APPID,
+    }, response => {
+        liElement.removeAttribute("data-loading");
+        if (response.data.files.length === 0) {
+            showMessage(window.siyuan.languages.emptyContent);
+            return;
+        }
+        let fileHTML = "";
+        response.data.files.forEach((item: IFile) => {
+            let countHTML = "";
+            if (flashcard) {
+                countHTML = `<span class="counter counter--right b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.flashcardNewCard}">${item.newFlashcardCount}</span>
+<span class="counter counter--right b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.flashcardDueCard}">${item.dueFlashcardCount}</span>
+<span class="counter counter--right b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.flashcardCard}">${item.flashcardCount}</span>`;
+            } else if (item.count && item.count > 0) {
+                countHTML = `<span class="popover__block counter b3-tooltips b3-tooltips__w" aria-label="${window.siyuan.languages.ref}">${item.count}</span>`;
+            }
+            const defaultIcon = item.subFileCount === 0 ? "file" : "folder";
+            fileHTML += `<li data-box="${notebookId}" class="b3-list-item" data-path="${item.path}"${getFileTreeDefaultIconAttr(item.icon, defaultIcon)}>
+    <span style="padding-left: ${item.path.split("/").length * 8}px" class="b3-list-item__toggle b3-list-item__toggle--hl${item.subFileCount === 0 ? " fn__hidden" : ""}">
+        <svg class="b3-list-item__arrow"><use xlink:href="#iconRight"></use></svg>
+    </span>
+    ${getFileTreeIconHTML(item.icon, defaultIcon, "b3-list-item__graphic", true)}
+    <span class="b3-list-item__text ariaLabel" data-position="parentE" data-tooltip-encoding="none" aria-label="${genFileTreeDocAriaLabel(item, true)}">${getDocDisplayName(item.name, item.titleEmpty, true)}</span>
+    ${countHTML}
+</li>`;
+        });
+        if (fileHTML === "") {
+            return;
+        }
+        toggleElement.classList.add("b3-list-item__arrow--open");
+        liElement.insertAdjacentHTML("afterend", `<ul>${fileHTML}</ul>`);
+        onRender?.(liElement.nextElementSibling);
+        expandFileTree(liElement.nextElementSibling as HTMLElement);
+    });
+};
+
+export const getNotebookName = (id: string) => {
+    let rootPath = "";
+    window.siyuan.notebooks.find((item) => {
+        if (item.id === id) {
+            rootPath = item.name;
+            return true;
+        }
+    });
+    return rootPath;
+};
+
+export const getNotebookIcon = (id: string) => {
+    let rootPath = "";
+    window.siyuan.notebooks.find((item) => {
+        if (item.id === id) {
+            rootPath = item.icon;
+            return true;
+        }
+    });
+    return rootPath;
+};
+
+export const setNotebookName = (id: string, name: string) => {
+    window.siyuan.notebooks.find((item) => {
+        if (item.id === id) {
+            item.name = name;
+            return true;
+        }
+    });
+};
+
+export const getOpenNotebookCount = () => {
+    let count = 0;
+    window.siyuan.notebooks.forEach(item => {
+        if (!item.closed) {
+            count++;
+        }
+    });
+    return count;
+};
+
+export const setNoteBook = (cb?: (notebook: INotebook[]) => void, flashcard = false) => {
+    return fetchPost("/api/notebook/lsNotebooks", {
+        flashcard
+    }, (response) => {
+        if (!response.data?.notebooks) {
+            return;
+        }
+        if (!flashcard) {
+            window.siyuan.notebooks = response.data.notebooks;
+            if (window.siyuan.config?.fileTree) {
+                window.siyuan.config.fileTree.boxDocEnabled = response.data.boxDocEnabled;
+            }
+        }
+        if (cb) {
+            cb(response.data.notebooks);
+        }
+    });
+};
+
+/**
+ * 返回指定 boxID 是否为加密笔记本。
+ * 用于前端在加密 box 上下文里给 getDoc / 反链 / 搜索请求带上 notebook 参数，
+ * 让内核走 InBox 版（查加密 blocktree + content db）。
+ */
+export const isEncryptedBox = (boxId: string): boolean => {
+    if (!boxId) {
+        return false;
+    }
+    return !!window.siyuan.notebooks?.find((item) => item.id === boxId && item.encrypted);
+};
+
+/**
+ * 规范化并校验相对路径：允许子目录，但禁止通过 ".." 穿越到根外。
+ * 用于插件存储，确保路径不逃出指定根目录。
+ * @returns 规范化后的相对路径（使用 /）；不含有效文件段（如 ".."、"."、空串）时返回 null，避免指向根目录自身或其上级
+ */
+export const normalizeStoragePath = (storageName: string): string | null => {
+    const segments = storageName.replace(/\\/g, "/").split("/");
+    const merged = mergePathSegments([], segments);
+    return merged.length > 0 ? merged.join("/") : null;
+};

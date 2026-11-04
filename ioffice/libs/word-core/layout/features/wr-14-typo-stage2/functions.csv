@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_stage2_rows,Stage2行表投影,pagesOrSnapshot,Stage2Line[],wr-13,03;wr-16;wr-17,libs/word-core,pass
+2,02_function_snapshot_commit,Snapshot全量提交,pages,TypoSnapshot,wr-13,01,libs/word-core,pass
+3,03_function_stage2_json,Stage2 JSON,Stage2Line[],json,01,wr-16,libs/word-core,pass

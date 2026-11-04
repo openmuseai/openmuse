@@ -1,0 +1,8 @@
+// Rust stub for Reusable (auto-generated)
+// Original: cn/wps/moffice/writer/core/pool/Reusable.java
+use crate::*;
+
+pub trait Reusable {
+}
+
+pub trait SafeRef {}

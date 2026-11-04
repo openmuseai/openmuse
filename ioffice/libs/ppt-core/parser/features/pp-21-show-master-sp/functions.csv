@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_parse_show_master_sp,解析 showMasterSp,p:sld / sldLayout 属性 true/false/缺省,isShowMasterSp：缺省 **true**（Slide.java:345-347 parent==null ? true）,pp-14,02,libs/ppt-core,pass
+2,02_function_film_master_then_layout,true 时 master→layout→slide,slide+layout+master 皆 showMasterSp true,层序含 master 形状再 layout 再 slide（SlideRender.java:104-110）,01;pr-01,03,libs/ppt-core,pass
+3,03_function_false_skips_master,false 不 film master,slide showMasterSp=false,无 master 树形状,02,—,libs/ppt-core,pass

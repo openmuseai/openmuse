@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_text_command,run→DrawText(字体/字号/色/坐标),TypoRun+页坐标+对齐偏移,DrawText序列,wr-01/06;wr-04-03,03_function_serialize;wr-08,libs/word-core,pass
+2,02_function_deco_command,装饰/背景→DrawRect/DrawLine,run样式(下划线/背景)+DecoLineCache语义,装饰指令,wr-01;wpslayout DecoLineCache,03;wr-08,libs/word-core,pass
+3,03_function_serialize,指令JSON序列化,RenderCommand序列,JSON(Stage3对比格式),01;02,wr-08,libs/word-core,pass

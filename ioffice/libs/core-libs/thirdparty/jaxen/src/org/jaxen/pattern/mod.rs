@@ -1,0 +1,13 @@
+pub mod Pattern;
+pub mod NodeTest;
+pub mod AnyChildNodeTest;
+pub mod AnyNodeTest;
+pub mod LocationPathPattern;
+pub mod NamespaceTest;
+pub mod NameTest;
+pub mod NodeTypeTest;
+pub mod NoNodeTest;
+pub mod PatternHandler;
+pub mod PatternParser;
+pub mod TextNodeTest;
+pub mod UnionPattern;

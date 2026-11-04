@@ -1,0 +1,14 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/ITextEdit.java,cn/wps/text/layout,Plan too large: 47 entries (39 unresolved deps exceed limit 30). File deferred.,2026-05-22
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/ITextLayout.java,cn/wps/text/layout,too many dependencies,2026-05-22
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/cache/LayoutSharedObjects.java,cn/wps/text/layout/cache,too many dependencies,2026-05-22
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/layouter/AudioLayout.java,cn/wps/text/layout/layouter,too many dependencies,2026-05-22
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/layouter/MeasuredText.java,cn/wps/text/layout/layouter,too many dependencies,2026-05-22
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/typo/ArabicPlain.java,cn/wps/text/layout/typo,too many dependencies,2026-05-22
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/typo/PatternPaintSetter.java,cn/wps/text/layout/typo,too many dependencies,2026-05-22
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/typo/RichTextLayout.java,cn/wps/text/layout/typo,too many dependencies,2026-05-22
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/typo/TimingLayout.java,cn/wps/text/layout/typo,too many dependencies,2026-05-22
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/typo/WpsStyleSpan.java,cn/wps/text/layout/typo,too many dependencies,2026-05-22
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/util/PicFormatConvertUtils.java,cn/wps/text/layout/util,too many dependencies,2026-05-22
+koffice/core-libs/wpslayout/src/cn/wps/text/layout/typo/layout/SpannableString.java,cn/wps/text/layout/typo/layout,Template structural validation failed:
+Missing impl block for class 'Concrete',2026-05-23

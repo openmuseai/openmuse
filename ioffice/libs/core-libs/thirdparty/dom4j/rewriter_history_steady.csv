@@ -1,0 +1,12 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id,tags
+0,koffice/core-libs/thirdparty/dom4j/src/org/dom4j/NodeFilter.java,NodeFilter,steady,,main,,libs/core-libs/thirdparty/dom4j/src/org/dom4j/NodeFilter.rs,,,0524_rust_stub
+6,koffice/core-libs/thirdparty/dom4j/src/org/dom4j/dtd/Declaration.java,Declaration,steady,,main,,libs/core-libs/thirdparty/dom4j/src/org/dom4j/dtd/Declaration.rs,,,0524_rust_stub
+8,koffice/core-libs/thirdparty/dom4j/src/org/dom4j/util/SingletonStrategy.java,SingletonStrategy,steady,,main,,libs/core-libs/thirdparty/dom4j/src/org/dom4j/util/SingletonStrategy.rs,,,0524_rust_stub
+105,koffice/core-libs/thirdparty/dom4j/src/org/dom4j/Visitor.java,Visitor,steady,,main,,libs/core-libs/thirdparty/dom4j/src/org/dom4j/Visitor.rs,,,0524_rust_stub
+162,koffice/core-libs/thirdparty/dom4j/src/org/dom4j/NodeType.java,NodeType,steady,,main,,libs/core-libs/thirdparty/dom4j/src/org/dom4j/NodeType.rs,,,0524_rust_stub
+333,koffice/core-libs/thirdparty/dom4j/src/org/dom4j/rule/Action.java,Action,steady,,main,,libs/core-libs/thirdparty/dom4j/src/org/dom4j/rule/Action.rs,,,0524_rust_stub
+358,koffice/core-libs/thirdparty/dom4j/src/org/dom4j/io/ElementModifier.java,ElementModifier,steady,,main,,libs/core-libs/thirdparty/dom4j/src/org/dom4j/io/ElementModifier.rs,,,0524_rust_stub
+358,koffice/core-libs/thirdparty/dom4j/src/org/dom4j/io/JAXPHelper.java,JAXPHelper,steady,,main,,libs/core-libs/thirdparty/dom4j/src/org/dom4j/io/JAXPHelper.rs,,,0524_rust_stub
+5,koffice/core-libs/thirdparty/dom4j/src/org/dom4j/ElementHandler.java,ElementHandler,steady,,dom4j,,libs/core-libs/thirdparty/dom4j/src/org/dom4j/ElementHandler.rs,,,0524_rust_stub
+118,koffice/core-libs/thirdparty/dom4j/src/org/dom4j/ElementPath.java,ElementPath,steady,,dom4j,,libs/core-libs/thirdparty/dom4j/src/org/dom4j/ElementPath.rs,,,0524_rust_stub
+2,koffice/core-libs/thirdparty/dom4j/src/org/dom4j/util/ProxyDocumentFactory.java,ProxyDocumentFactory,steady,,main,,libs/core-libs/thirdparty/dom4j/src/org/dom4j/util/ProxyDocumentFactory.rs,XPath;VariableContext,,0524_rust_stub

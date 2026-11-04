@@ -1,0 +1,5524 @@
+{
+	"ID": "20240530101000-3eaevtp",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-8g2uue4",
+		"icon": "1f5c3-fe0f",
+		"id": "20240530101000-3eaevtp",
+		"title": "データベース",
+		"type": "doc",
+		"updated": "20261028120132"
+	},
+	"Children": [
+		{
+			"ID": "20251224101829-7bloks9",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20251224101829-7bloks9",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20251224101829-j0vtpnz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20251224101829-j0vtpnz",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データベースは、エントリをフィールドごとに整理します。エントリは既存のブロックにバインドすることも、独立して作成することもできます。同じデータをテーブル、リスト、カレンダー、かんばん、カードの各ビューで表示し、レイアウト、フィルタ、並べ替えを個別に設定できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014537-fg8d16i",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014537-fg8d16i",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各フィールドの用途と機能は"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260613155453-sncbsow",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "フィールドタイプ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、列の下部に表示する統計は"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260617123701-ju7eee5",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "テーブル計算"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "を参照してください。"
+				}
+			]
+		},
+		{
+			"ID": "20251224101829-lva3op2",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20251224101829-lva3op2",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データベースの作成"
+				}
+			]
+		},
+		{
+			"ID": "20251224101829-v3hcvn9",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20251224101829-v3hcvn9",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"ID": "20251224101828-b51gq76",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20251224101828-b51gq76",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20251224101829-nahieq9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20251224101829-nahieq9",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/データベース"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ で作成され、デフォルトのビューはテーブルビューです。レイアウトで切り替えることができます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20251224101828-2a5gd2v",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20251224101828-2a5gd2v",
+						"updated": "20260613160915"
+					},
+					"Children": [
+						{
+							"ID": "20251224101829-rmah7sv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20251224101829-rmah7sv",
+								"updated": "20260613160915"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20260613155453-sncbsow",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "フィールド"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "の追加"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261016191345-dwzoz59",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20261016191345-dwzoz59",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20261016191345-8je8zpx",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261016191345-8je8zpx",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20260617123701-ju7eee5",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "テーブル計算"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "を参照"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20251224101828-il385ww",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20251224101828-il385ww",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20251224101829-uwpfgrc",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20251224101829-uwpfgrc",
+								"updated": "20251224101829"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "エントリの追加"
+								}
+							]
+						},
+						{
+							"ID": "20251224101832-46yjrsx",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20251224101832-46yjrsx",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"ID": "20251224101828-o2k0u2l",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20251224101828-o2k0u2l",
+										"updated": "20261016202856"
+									},
+									"Children": [
+										{
+											"ID": "20251224101829-u1xda60",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20251224101829-u1xda60",
+												"updated": "20261016202856"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "非コンテンツブロック: ビューに直接追加されたエントリで、どのコンテンツブロックにもバインドされていません"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20251224101828-n4zvp3w",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20251224101828-n4zvp3w",
+										"updated": "20261016202856"
+									},
+									"Children": [
+										{
+											"ID": "20251224101829-fvmo0l6",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20251224101829-fvmo0l6",
+												"updated": "20261016202856"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "コンテンツブロック: ビューにドラッグ＆ドロップするか、ブロックラベルメニューの "
+												},
+												{
+													"Type": "NodeTextMark",
+													"TextMarkType": "kbd",
+													"TextMarkTextContent": "データベースに追加"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "​ からデータベースに追加することで追加されたエントリです"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20251224101828-xh5li76",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20251224101828-xh5li76",
+						"updated": "20251224101828"
+					},
+					"Children": [
+						{
+							"ID": "20251224101829-sq7d75m",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20251224101829-sq7d75m",
+								"updated": "20251224101829"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "必要に応じてフィルタリングと並べ替えを設定"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20251224101828-kq5kwxx",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20251224101828-kq5kwxx",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20251224101829-8hoyjam",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20251224101829-8hoyjam",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "同じデータベースに複数のビューを追加できます。すべてのビューは同じデータを共有しますが、フィルタリングと並べ替えの設定はそれぞれ独立しています"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-y2nsz1y",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161058-y2nsz1y",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ビューのレイアウト"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20260613164213-4gv3exa",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613164213-4gv3exa",
+				"updated": "20260613164213"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "テーブルビュー"
+				}
+			]
+		},
+		{
+			"ID": "20260613164213-vw1l8nt",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613164213-vw1l8nt",
+				"updated": "20260613164213"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データベースの既定ビューで、行と列の表形式でデータを表示します。"
+				}
+			]
+		},
+		{
+			"ID": "20260613164213-ex5x3mt",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613164213-ex5x3mt",
+				"updated": "20260613164213"
+			},
+			"Children": [
+				{
+					"ID": "20260613164213-0utelmi",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-0utelmi",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-56cq7vl",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-56cq7vl",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "切り替え"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：データベース作成時はデフォルトでテーブルビュー。他のビューから切り替える場合は、ドロップダウンメニューで「テーブルビュー」を選択"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-icc6um7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-icc6um7",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-5lvv5ka",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-5lvv5ka",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "列管理"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：各列はフィールドを表します。列幅の調整や列順序の入れ替えはドラッグで行えます。列ヘッダーを右クリックでフィールドの編集、削除、非表示が可能"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-81cr4p5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-81cr4p5",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-ycnw7o9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-ycnw7o9",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "行操作"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：行の先頭をクリックで行詳細を展開。ドラッグで行の順序を入れ替え可能。行を右クリックで削除、複製、他データベースへの移動が可能"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-q1mup7f",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-q1mup7f",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-3ncjdsy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-3ncjdsy",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "行の追加"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：テーブル下部の空白行をクリック、またはプラスボタンで新規エントリを追加"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-mpxrajz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-mpxrajz",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-b9xio2x",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-b9xio2x",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "利用シーン"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：データ入力、一括編集、多様なフィールドタイプを含む表管理、スプレッドシートに似た一般的なデータ管理"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260920084445-49cpwr3",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260920084445-49cpwr3",
+				"updated": "20260920084445"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "リストビュー"
+				}
+			]
+		},
+		{
+			"ID": "20260920084445-8jydb2r",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920084445-8jydb2r",
+				"updated": "20260920084445"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各エントリを1行で表示し、列ヘッダーや表の罫線は表示しません。新しく作成したリストビューでは主キーフィールドのみが表示され、ほかのフィールドはすべて非表示になります。"
+				}
+			]
+		},
+		{
+			"ID": "20260920084445-ksbezy4",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260920084445-ksbezy4",
+				"updated": "20260920084445"
+			},
+			"Children": [
+				{
+					"ID": "20260920084445-uvsrid1",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-uvsrid1",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-jieo1xv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-jieo1xv",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "切り替え：ビュー設定で "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "レイアウト"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "リスト"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を選択します。スラッシュメニューからデータベースのリストビューを挿入することもできます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920084445-ux0p6c6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-ux0p6c6",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-qg8vpt6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-qg8vpt6",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "フィールドの表示："
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "属性"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " パネルで表示するフィールドを有効にします。表示するフィールドは主キーと同じ行に並び、値を編集できます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920084445-lthew83",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-lthew83",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-49wkcie",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-49wkcie",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ビュー設定：リストビューを複製した場合や、そのビューをリストレイアウトに戻した場合も、設定したフィールドの表示・非表示は保持されます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920084445-5evfzws",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920084445-5evfzws",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260920084445-6ki99qy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920084445-6ki99qy",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "フィルター、ソート、グループ化：同じデータベースのほかのビューとデータを共有し、フィルター、ソート、グループ化を個別に設定できます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260920225154-vntgfc2",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260920225154-vntgfc2",
+				"updated": "20261025011205"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "カレンダービュー"
+				}
+			]
+		},
+		{
+			"ID": "20260920225154-m98kczu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920225154-m98kczu",
+				"updated": "20260923103343"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "日付のあるエントリを月または週ごとに表示します。週表示には7つの日付列があり、複数日にわたるエントリは各日に連続して表示されます。各エディターの現在の表示モードと閲覧日付は互いに影響しません。月・週の表示モードはカレンダービューごとにこのワークスペースへ保存され、新しいエディターで開いたときや SiYuan の再起動後に復元されます。新しいエディターでは今日から閲覧を始めます。"
+				}
+			]
+		},
+		{
+			"ID": "20260920225154-wh2lupo",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260920225154-wh2lupo",
+				"updated": "20261025011205"
+			},
+			"Children": [
+				{
+					"ID": "20260920225154-bqni3yl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-bqni3yl",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-5h99m0g",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-5h99m0g",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "切り替え：ビュー設定で "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "レイアウト"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "カレンダー"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を選択します。スラッシュメニューからデータベースのカレンダービューを挿入することもできます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-fbmp8he",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-fbmp8he",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-5j74pzy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-5j74pzy",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日付フィールド：レイアウト設定で日付、作成日時、更新日時のいずれかのフィールドを1つ選択します。対象のフィールドがない場合は、選択または作成を案内します。既存のエントリに通常の日付を自動入力することはなく、日付のないエントリは日付欄に表示されません。通常の日付フィールドを使用する場合は、日付なしの一覧に表示されます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260929122307-wsjglj5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260929122307-wsjglj5",
+						"updated": "20260929123717"
+					},
+					"Children": [
+						{
+							"ID": "20260929122307-aw4496z",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260929122307-aw4496z",
+								"updated": "20260929123717"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "テンプレートによる日付：日付フィールドに表示テンプレートを設定すると、保存された日付は変更せず、計算結果の日付にエントリを表示します。YYYY-MM-DD、フィールドで選択した数字の日付形式、または現在の言語のローカル日付形式（例：2026年10月2日）でプレーンテキストを出力してください。空白または T の後に HH:mm または HH:mm:ss の時刻を付けることもできます。現在の端末のローカルタイムゾーンで解釈され、スラッシュ区切りの日付はフィールドの形式に従い、月と日の順序は推測しません。空の結果、無効な日付、その他の形式はカレンダーにも日付なしリストにも表示されません。計算された日付のドラッグ、クリア、指定日の新規作成はできません。調整には参照元のフィールドまたはテンプレートを変更してください。異なる言語間で共有するテンプレートには YYYY-MM-DD をおすすめします"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-z254pew",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-z254pew",
+						"updated": "20260923095432"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-6vyud50",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-6vyud50",
+								"updated": "20260923095432"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日付の移動：前へ、次へ、今日のボタンや日付選択で移動します。月表示でエントリが多い日は折りたたまれ、追加表示ボタンでその週を展開できます。日付は端末のローカルタイムゾーンで表示されます。月表示は、その月に必要な4、5、6週を表示します。月表示と週表示では各行の先頭に ISO 週番号が表示されます。カレンダーボタンから日付、または ISO 週年と週番号を指定して移動できます。週の開始曜日が月曜日以外の場合は、その行の木曜日で週番号を決定します"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-cng1h41",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-cng1h41",
+						"updated": "20260924110133"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-ibvcks0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-ibvcks0",
+								"updated": "20260924110133"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "編集：エントリをクリックすると既存のデータベースエントリ編集画面が開きます。通常の日付フィールドでは、日付欄のプラスボタンで作成し、エントリのドラッグで日付を移動し、両端のドラッグで範囲を変更できます。ビューのフィルターの横にある日付なしボタンから未設定のエントリを検索し、日付欄へドラッグするか、エントリを選択して日付欄を選ぶと予定を設定できます。後者はタッチ画面でも使用できます。終日の予定として設定され、日付を消すと一覧に戻ります。日付の変更は元に戻せます。タッチ画面ではカレンダー内の既存エントリの移動ハンドルをドラッグします。エントリをクリックするか作成すると、主キーフィールドに自動でフォーカスします。ドラッグ中は変更後の日付範囲をプレビューし、対象の日付欄を強調表示します。変更は放したときに保存されます。右クリックメニューからコピー、文書の作成と関連付け、別のデータベースへの追加、フィールドの編集、選択した日付での新規作成も行えます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-d8n7q67",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-d8n7q67",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-l2pfg6h",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-l2pfg6h",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "システム日時：作成日時と更新日時には、エントリまたは関連付けられたブロックの実際の日時が使われます。ドラッグでは変更できず、日付欄の作成ボタンも表示されません"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-so2ig6k",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-so2ig6k",
+						"updated": "20260920225154"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-kqw2mjj",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-kqw2mjj",
+								"updated": "20260920225154"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日付範囲：終日の範囲には終了日も含まれます。時刻付きの範囲が午前0時に終了する場合は前日まで表示されます。片方の端点だけがある場合はその日に表示し、終了が開始より前の場合は警告を表示して元の値を保持します"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260920225154-fwx2u0n",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260920225154-fwx2u0n",
+						"updated": "20260927112821"
+					},
+					"Children": [
+						{
+							"ID": "20260920225154-v9bc5j0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260920225154-v9bc5j0",
+								"updated": "20260927112821"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ビュー設定：既存のフィルター、ソート、フィールドの表示設定、新規エントリのテンプレートを使用します。条件付きの色でエントリの背景を設定できます。カレンダーではグループ化を適用せず、ほかのレイアウトに戻すと元のグループ設定が保持されています。レイアウト設定の項目の表示行数は3、5、10、すべてから選べ、初期値は3です。設定はカレンダービューごとに保存され、月表示の折りたたみだけに適用されます。週表示は全項目を表示し、対象の日付範囲のデータは常にすべて読み込みます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261025011205-or11gjy",
+					"Type": "NodeListItem",
+					"Properties": {
+						"id": "20261025011205-or11gjy",
+						"updated": "20261025011205"
+					},
+					"Children": [
+						{
+							"ID": "20261025011205-1vqd168",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261025011205-1vqd168",
+								"updated": "20261025011205"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "フィールド名：ビュー設定で "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "レイアウト"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "フィールド名を表示"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を有効にすると、主キー以外の値の横にフィールド名を表示します。主キーは引き続きエントリのタイトルになります。初期状態では無効で、カレンダービューごとに保存されます。無効にすると値だけの表示に戻ります"
+								}
+							]
+						}
+					],
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					}
+				}
+			]
+		},
+		{
+			"ID": "20260613164213-x497lrs",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613164213-x497lrs",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "カンバンビュー"
+				}
+			]
+		},
+		{
+			"ID": "20260613164213-ipxry61",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613164213-ipxry61",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エントリをグループごとの列にカードとして表示します。グループ化の方法はフィールドの種類によって異なります。単一選択または複数選択の場合は、カードを別の列へドラッグして選択肢を変更できます。"
+				}
+			]
+		},
+		{
+			"ID": "20260613164213-kvig09h",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613164213-kvig09h",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"ID": "20260613164213-87ykbt2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-87ykbt2",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-m4reh6s",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-m4reh6s",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "切り替え"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ビューレイアウトのドロップダウンメニューで「カンバンビュー」を選択"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-o372zwc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-o372zwc",
+						"updated": "20261024161058"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-y58ne7c",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-y58ne7c",
+								"updated": "20261024161058"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "グループ化フィールド：設定で対応するフィールドとグループ化の方法を選びます。詳しくは後述の「グループ化」を参照してください"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-9h3zw60",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-9h3zw60",
+						"updated": "20261025011511"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-nkkuyiq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-nkkuyiq",
+								"updated": "20261025011511"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "カードの内容"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：各カードには主キーにバインドされたコンテンツブロックの概要と、そのビューで選択したフィールドの値が表示されます"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "。ビュー設定で "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "レイアウト"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "フィールド名を表示"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を有効にすると、値の横にフィールド名を表示します。この設定はビューごとに保存され、無効にするとフィールド名を非表示にできます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-n8cp52e",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-n8cp52e",
+						"updated": "20261024161058"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-ue7m3hg",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-ue7m3hg",
+								"updated": "20261024161058"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ドラッグ操作：単一選択または複数選択でグループ化した場合、カードを別の列へ移動すると選択肢の値が変更されます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-f3gnbn3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-f3gnbn3",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-jy2m1wd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-jy2m1wd",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "エントリの追加"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：各列の下部にあるプラスボタンをクリックすると、その列に直接新しいカードを追加できます。新しいカードのフィールド値は自動的にその列のオプション値に設定されます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-prg2oij",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-prg2oij",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-wj0oq79",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-wj0oq79",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ビューの独立性"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：同一データベースの他のビューとデータを共有しますが、フィルター、ソート、グループ化の設定はビューごとに独立しています"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-0chc2f6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-0chc2f6",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-026uhu4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-026uhu4",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "利用シーン"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：プロジェクト管理ボード（Todo → 進行中 → 完了）、ステータスフロー管理、カテゴリ別ブラウジング"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613164213-zanxpx0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613164213-zanxpx0",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ギャラリービュー"
+				}
+			]
+		},
+		{
+			"ID": "20260613164213-wi4qlgu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613164213-wi4qlgu",
+				"updated": "20260613164213"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "独立したカードグリッド形式でデータを表示し、コンテンツプレビューを中心としたシナリオに適しています。"
+				}
+			]
+		},
+		{
+			"ID": "20260613164213-5bpycoo",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613164213-5bpycoo",
+				"updated": "20261025011511"
+			},
+			"Children": [
+				{
+					"ID": "20260613164213-i9ib4ge",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-i9ib4ge",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-k8qe1c8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-k8qe1c8",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "切り替え"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ビューレイアウトのドロップダウンメニューで「ギャラリービュー」を選択"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-gwzs1xh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-gwzs1xh",
+						"updated": "20261025011511"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-2ltygil",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-2ltygil",
+								"updated": "20261025011511"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "表示形式"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：各エントリがカードとしてレンダリングされ、主キーブロックのコンテンツ概要と選択したフィールド値が表示されます。クイックブラウジングやコンテンツファーストの閲覧に最適"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "。ビュー設定で "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "レイアウト"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "フィールド名を表示"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を有効にすると、値の横にフィールド名を表示します。この設定はビューごとに保存され、無効にするとフィールド名を非表示にできます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-brvsdme",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-brvsdme",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-prrwjh9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-prrwjh9",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "カード操作"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：カードをクリックで詳細を展開、またはバインドされたコンテンツブロックを開きます。右クリックメニューで削除、複製などの操作が可能"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-i2p3ph1",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-i2p3ph1",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-jvt5912",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-jvt5912",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "フィルターとソート"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：他のビューと同様のフィルターおよびソート設定に対応"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613164213-uaf7k4m",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613164213-uaf7k4m",
+						"updated": "20260613164213"
+					},
+					"Children": [
+						{
+							"ID": "20260613164213-4qgjft9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613164213-4qgjft9",
+								"updated": "20260613164213"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "利用シーン"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：画像・メディアライブラリ、読書ノートカード、ビジュアルプレビューを中心としたコンテンツ管理"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-jd0d1rb",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260927112821-jd0d1rb",
+				"updated": "20261012014930"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "条件付きの色"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-tix6rt2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-tix6rt2",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データベースのビュー設定を開き、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "条件付きの色"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を選択してルールを追加します。フィールドと条件を1つ選び、背景色と適用先を指定します。変更はすぐに反映され、元に戻す操作とやり直しに対応します。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-v4pd31f",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-v4pd31f",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ルールは現在のビューに保存されます。テーブル、リスト、カレンダー、カンバン、ギャラリーではエントリ全体の背景色を設定できます。テーブルでは条件に使ったプロパティだけにも色を付けられます。プロパティのルールはほかのレイアウトでも保持されますが、適用されません。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-sxrmvva",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-sxrmvva",
+				"updated": "20260927123058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各ルールは1つのフィールドの条件を独立して判定し、複数のルールを AND で結合しません。ルール左側のハンドルをドラッグして優先順位を変更できます。タッチ画面でも使用できます。各プロパティには最初に一致した色を適用します。エントリ全体のルールが一致すると残りの領域に色を付け、その後の判定を終了します。それ以前のプロパティの色は保持されます。デフォルトの背景も一致として扱います。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-ps80r2t",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-ps80r2t",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例えば、最初にプロパティを青にするルール、その次にエントリ全体を緑にするルールを置きます。両方に一致した場合、そのプロパティは青のまま、残りは緑になります。緑のルールを先頭に移動すると全体が緑になります。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-bodzj7s",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-bodzj7s",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "単一選択と複数選択では最初の選択肢の色を使用できます。フィールド側の選択肢の定義順ではなく、エントリ内で選択された順序の先頭を使い、デフォルトの色も対象です。固定の組み込み色やカスタム色も選べます。条件には既存のフィルター演算子を使い、対応するフィールドでは表示テンプレートの結果でも判定できます。"
+				}
+			]
+		},
+		{
+			"ID": "20260927112821-i3fkhe1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927112821-i3fkhe1",
+				"updated": "20260927112821"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "条件付きの色はフィールド値を変更せず、エントリを非表示にしません。非表示のフィールドも判定に使えます。未完成の条件や削除済みフィールドを参照するルールは適用されません。ビューの複製時にはルールも複製され、その後は独立して設定できます。既存のカレンダーの選択肢による色は互換ルールとして表示され、すべてのルールを削除すると色が解除されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171234-4oam4x1",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613171234-4oam4x1",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "フィルタ・並べ替え・グループ化"
+				}
+			]
+		},
+		{
+			"ID": "20260613171234-y8hcl3j",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613171234-y8hcl3j",
+				"updated": "20260613171234"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各ビューは独立してフィルター条件とソートルールを設定でき、フィルターとソートはビュー間で互いに影響しません。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171234-x40bu7m",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613171234-x40bu7m",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "フィルター"
+				}
+			]
+		},
+		{
+			"ID": "20260613171234-cbc8zlr",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613171234-cbc8zlr",
+				"updated": "20260613171234"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ビューに表示されるエントリを条件に基づいて絞り込みます。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171234-lbxo0ro",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613171234-lbxo0ro",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20260613171234-anp9y5u",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-anp9y5u",
+						"updated": "20260613171234"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-d2tepj7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-d2tepj7",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "入り口"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ビューツールバーのメニューボタンをクリックし、「フィルター」→「フィルターを追加」でフィルターするフィールドを選択"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-pq9f6ye",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-pq9f6ye",
+						"updated": "20260613171234"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-i60nznl",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-i60nznl",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "条件タイプ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：フィールドタイプごとに異なるフィルター条件が利用可能："
+								}
+							]
+						},
+						{
+							"ID": "20260613171234-ycdp0pi",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613171234-ycdp0pi",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"ID": "20260613171234-w0q08ab",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-w0q08ab",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-wdvmpdv",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-wdvmpdv",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "テキスト/URL/メール/電話：等しい、等しくない、含む、含まない、で始まる、で終わる、空、空でない"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-02w4dto",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-02w4dto",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-d0jfw2v",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-d0jfw2v",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "数値：=、≠、>、≥、<、≤、空、空でない"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-xjzvjvh",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-xjzvjvh",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-irj58og",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-irj58og",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "日付/作成日時/更新日時：=、より後、以降、より前、以前、範囲、空、空でない"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-wqdsinn",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-wqdsinn",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-546edq2",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-546edq2",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "セレクト：=、≠、空、空でない"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-2dt5gio",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-2dt5gio",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-zz1y09i",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-zz1y09i",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "マルチセレクト：含む、含まない、空、空でない"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-2g8eqod",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-2g8eqod",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-atup6kr",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-atup6kr",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "チェックボックス：真、偽"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-dwm45cz",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-dwm45cz",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-5n48f9a",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-5n48f9a",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "リレーション：含む、含まない、空、空でない"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260904022100-hzqmv7b",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260904022100-hzqmv7b",
+						"updated": "20261012014859"
+					},
+					"Children": [
+						{
+							"ID": "20261012014537-eqoxgx7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261012014537-eqoxgx7",
+								"updated": "20261012014859"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ロールアップ：リレーションフィールドを対象とし、計算方法が「元の値を表示」か「一意の値を表示」の場合、通常のフィルターで「いずれかを含む」「いずれも含まない」を使用できます。最終的な関連先データベースの項目を検索して選択し、集計された項目全体と照合します。同名の項目は項目 ID で区別されます。既存のキーワードフィルターと 「いずれか」「すべて」「なし」の量化子の動作は変わりません"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-y9o6lwt",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-y9o6lwt",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-d3igeac",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-d3igeac",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "複数条件"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：複数のフィールドに条件を設定できます。デフォルトは AND（すべての条件を満たす）ですが、OR（いずれかの条件を満たす）に切り替えたり、条件グループを入れ子にしたりできます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-2ypqooc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-2ypqooc",
+						"updated": "20260613171234"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-kvvf8ia",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-kvvf8ia",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "フィルターの解除"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：フィルター条件右側の削除ボタンで個別解除、フィルターメニューで全解除"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-fnd67bm",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-fnd67bm",
+						"updated": "20260613171234"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-60b779y",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-60b779y",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "注意"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：行番号フィールドはフィルター非対応"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261012014537-7x5eyyg",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261012014537-7x5eyyg",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "コンテキストフィルター"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20260904022100-mif3i0m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260904022100-mif3i0m",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データベースブロックのツールバーから "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "コンテキストフィルター"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を開き、設定済みのリレーションフィールド、またはリレーションフィールドを対象とし、計算方法が「元の値を表示」か「一意の値を表示」のロールアップフィールドを1つ選択します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-s4byeld",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-s4byeld",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "パネルにはデータベース内の条件を満たすフィールドがすべて表示されますが、一度に有効にできるのは1つだけです。別のフィールドを選択すると切り替わり、チェック済みのフィールドをもう一度選択するとコンテキストフィルターが無効になります。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-39ifatj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-39ifatj",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "有効にすると、固定条件「いずれかを含む - 現在の文書」がこのデータベースブロックのすべてのビューに適用されます。通常のビューフィルターは各ビューで独立したままで、コンテキストフィルターとは AND で組み合わせられます。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-9rujy6w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-9rujy6w",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "現在の文書は、最終的な関連先データベースの項目としてあらかじめ紐付けられている必要があります。紐付けられていない場合、一致する項目は表示されず、このデータベースブロックから項目を追加することもできません。直接のリレーションフィールドを選択した場合、新しい項目は現在の文書に自動的に関連付けられます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-9s6csze",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-9s6csze",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ロールアップを選択した場合、計算値の入力や中間データベースの関連付けの変更は行われず、新しい項目がフィルターによって非表示になることがあります。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171234-qx49xnf",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"id": "20260613171234-qx49xnf",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ソート"
+				}
+			]
+		},
+		{
+			"ID": "20260613171234-72g5upx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613171234-72g5upx",
+				"updated": "20260613171234"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "指定したフィールドでビュー内のエントリを並べ替えます。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171234-z7g4s8l",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613171234-z7g4s8l",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20260613171234-52rtv28",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-52rtv28",
+						"updated": "20260613171234"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-e8v3ri7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-e8v3ri7",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "入り口"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ビューツールバーメニューから「ソート」に入り、ソート条件を追加してソートフィールドと方向を選択"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-d6967p9",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-d6967p9",
+						"updated": "20260613171234"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-beo9uke",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-beo9uke",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ソート方向"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：昇順または降順、クリックで切り替え"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-7duqlih",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-7duqlih",
+						"updated": "20260613171234"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-ijvucjc",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-ijvucjc",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "複数ソート"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：複数のソート条件を追加可能。追加した順に適用される。例：まず「日付」降順、次に「タイトル」昇順"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-fskpuab",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-fskpuab",
+						"updated": "20260613171234"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-0neblcq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-0neblcq",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ソートの解除"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ソート条件右側の削除ボタンで個別解除、ソートメニューで全解除"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-464at6i",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-464at6i",
+						"updated": "20260613171234"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-ooxynli",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-ooxynli",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "フィールドタイプによる違い"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "："
+								}
+							]
+						},
+						{
+							"ID": "20260613171234-jw8tjs3",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613171234-jw8tjs3",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"ID": "20260613171234-1ujft2n",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-1ujft2n",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-rzzyd0o",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-rzzyd0o",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "テキスト：拼音またはUnicodeコードポイントでソート"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-cedr26b",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-cedr26b",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-ad3u0us",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-ad3u0us",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "数値：数値の大小でソート"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-5s447yp",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-5s447yp",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-94b7tzu",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-94b7tzu",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "日付/作成日時/更新日時：時系列順にソート"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-bktfl22",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-bktfl22",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-hrdqp05",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-hrdqp05",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "セレクト/マルチセレクト：リスト内のオプション順でソート"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-aslp1mu",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-aslp1mu",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-wga437u",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-wga437u",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "チェックボックス：チェック状態でソート"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-hbptpo9",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-hbptpo9",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-g4qvs0m",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-g4qvs0m",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "ロールアップ：計算結果でソート"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-od6h0vp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-od6h0vp",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-j48vksz",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-j48vksz",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "注意"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "："
+								}
+							]
+						},
+						{
+							"ID": "20260613171234-bfb6j5k",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613171234-bfb6j5k",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"ID": "20260613171234-v372kpb",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-v372kpb",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-2ikgrag",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-2ikgrag",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "行番号フィールドはソート非対応"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-50x5z31",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-50x5z31",
+										"updated": "20261016191345"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-7orv5n3",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-7orv5n3",
+												"updated": "20261016191345"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "未編集の行は最後に配置され、手動の並び順が保持されます。ソート条件の値が同じエントリも手動の並び順を保持します"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261016130603-vb0j81p",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016130603-vb0j81p",
+				"updated": "20261016130603"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "編集をロックしているときは、データベースのツールバーにある並べ替えアイコンをクリックし、フィールドと昇順または降順を選択します。一時的な並べ替えは、このウィンドウの現在のデータベースブロックとビューにのみ適用され、保存済みのルールは変更しません。既定の並び順に戻すか、編集のロックを解除するか、文書を閉じると、保存済みのルールに戻ります。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171234-567esec",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613171234-567esec",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "グループ化"
+				}
+			]
+		},
+		{
+			"ID": "20260613171234-jpw4poh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613171234-jpw4poh",
+				"updated": "20260613171234"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "フィールドをグループ化の基準として、エントリをグループ値ごとに分類表示します。"
+				}
+			]
+		},
+		{
+			"ID": "20260613171234-5xm22ao",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613171234-5xm22ao",
+				"updated": "20261016191345"
+			},
+			"Children": [
+				{
+					"ID": "20260613171234-2r3e3vf",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-2r3e3vf",
+						"updated": "20260613171234"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-tcs77w2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-tcs77w2",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "入り口"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ビューツールバーメニューから「グループ化」に入り、グループ化フィールドと方式を選択"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-g8f23il",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-g8f23il",
+						"updated": "20261016191345"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-a2ly9id",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-a2ly9id",
+								"updated": "20261016191345"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "対応フィールド"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ロールアップ、行番号、位置フィールドはグループ化に対応していません。他のタイプは対応しますが、アセットフィールドでは表示テンプレートを設定し、その結果でグループ化します。グループ化の方法はフィールドタイプによって異なります："
+								}
+							]
+						},
+						{
+							"ID": "20260613171234-sk16lfe",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613171234-sk16lfe",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"ID": "20260613171234-201n1vs",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-201n1vs",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-fcwvv5d",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-fcwvv5d",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "テキスト/セレクト/マルチセレクト/URL/メール/電話/チェックボックス/リレーション/テンプレート：値でグループ化"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-z8bqvv2",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-z8bqvv2",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-3qicdd7",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-3qicdd7",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "数値：数値範囲でグループ化"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-pzrl6n6",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-pzrl6n6",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-0cyv3h9",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-0cyv3h9",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "日付/作成日時/更新日時：相対日付でグループ化"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-kyk19y3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-kyk19y3",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-rqv3fsf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-rqv3fsf",
+								"updated": "20260613171234"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ビューごとの違い"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "："
+								}
+							]
+						},
+						{
+							"ID": "20260613171234-dmaihcf",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613171234-dmaihcf",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"ID": "20260613171234-kd8txk4",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-kd8txk4",
+										"updated": "20260920084445"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-5ul4iy6",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-5ul4iy6",
+												"updated": "20260920084445"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "テーブルビューとリストビュー：行がグループごとに分類され、各グループは折りたたみ/展開可能"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-cy419bc",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-cy419bc",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-hn45qb6",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-hn45qb6",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "ギャラリービュー：カードがグループごとに分類"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613171234-o5g2qip",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613171234-o5g2qip",
+										"updated": "20260613171234"
+									},
+									"Children": [
+										{
+											"ID": "20260613171234-mvlfeha",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613171234-mvlfeha",
+												"updated": "20260613171234"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "カンバンビュー：グループ化が必須で、各グループ値が列を生成。グループ化の解除不可。グループ化フィールドがセレクト/マルチセレクトの場合、カードを他の列にドラッグするとフィールド値が自動更新（テンプレート、作成日時、更新日時フィールドを除く）"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613171234-fn0tmi6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613171234-fn0tmi6",
+						"updated": "20260920084445"
+					},
+					"Children": [
+						{
+							"ID": "20260613171234-195iexs",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613171234-195iexs",
+								"updated": "20260920084445"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "グループ化の解除"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：テーブルビュー、リストビュー、ギャラリービューでは「なし」を選択して解除可能。カンバンビューでは解除不可"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261028100554-r4kl6qy",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261028100554-r4kl6qy",
+				"updated": "20261028120132"
+			},
+			"HeadingLevel": 2,
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データベースパネルのレイアウトと並べ替え"
+				}
+			]
+		},
+		{
+			"ID": "20261028100554-n216b4x",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261028100554-n216b4x",
+				"updated": "20261028120132"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エディター"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "データベース"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " の「データベースパネルのフィールドレイアウト」で「1列」「2列（行順）」「2列（列順）」を選べます。デフォルトは「2列（行順）」です。ドキュメント上部のデータベースパネルと独立した項目パネルに適用され、スペースが不足する場合は自動的に1列になります。レイアウトを切り替えてもフィールドの順序は変わりません。"
+				}
+			]
+		},
+		{
+			"ID": "20261028100554-oitbzhe",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261028100554-oitbzhe",
+				"updated": "20261028110235"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "行順では左から右、上から下へフィールドを表示します。マウスで左側のハンドルを移動先フィールドの位置へドラッグすると配置をプレビューし、ドロップすると順序を保存します。列順では左列を上から下へ表示してから右列を表示します。表示中のフィールドを個数で二等分し、奇数の場合は左列が一つ多くなります。内容を編集してもフィールドの列は変わりません。列順と1列では横の挿入線で上下の挿入位置を示します。ドラッグをキャンセルすると元の順序に戻り、並べ替えは元に戻す操作とやり直しに対応しています。"
+				}
+			]
+		},
+		{
+			"ID": "20260930175958-ucbrk0m",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260930175958-ucbrk0m",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データベースパネルのフィールド表示"
+				}
+			]
+		},
+		{
+			"ID": "20260930175958-49g85qs",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930175958-49g85qs",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ドキュメント上部、データベース項目ページ、またはブロック属性ダイアログのデータベース属性パネルでフィールド名をクリックすると、「データベースパネルのフィールド表示」を「常に表示」「空の場合は非表示」「常に非表示」に設定できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-ecuko56",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-ecuko56",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「デフォルト」はパネルの従来の表示設定を維持し、ドキュメント上部のパネルでは空のフィールドを非表示にする全体設定に従います。ルールはそのデータベースの属性パネルに適用され、各ビューのフィールド表示には影響しません。パネルの編集ボタンをクリックすると、非表示のフィールドを一時的に展開して値や表示ルールを編集できます。"
+				}
+			]
+		},
+		{
+			"ID": "20260929105001-sfv8f41",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260929105001-sfv8f41",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エントリのアイコン"
+				}
+			]
+		},
+		{
+			"ID": "20260929105001-hlf4mxi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260929105001-hlf4mxi",
+				"updated": "20260930140000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "未バインドのエントリには独自のアイコンを設定できます。主キーの横、エントリの詳細、またはリレーションフィールドにあるアイコンをクリックすると、変更や削除ができます。エントリテンプレートでは、未バインドのエントリとドキュメントのエントリの両方にアイコンを事前設定できます。独自のアイコンがない未バインドのエントリには短い横線が表示され、ビューのアイコン表示設定も適用されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260929105001-jz7tl6b",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260929105001-jz7tl6b",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "独自のアイコンがない通常のブロックにバインドまたは再バインドすると、ブロックはエントリのアイコンを引き継ぎます。ブロックにアイコンがある場合や既存のドキュメントにバインドする場合は、対象のアイコンを使用します。バインド時に新規作成するドキュメントは、エントリに設定されたアイコンを引き継ぎます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-p4vhjpc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-p4vhjpc",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エントリにアイコンがない場合は、ドキュメントテンプレートのアイコンを使用します。バインド後はエントリとブロックでアイコンを共有します。バインドを解除すると最後に表示されたアイコンが残り、個別に変更できるようになります。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-w2g3xst",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024161058-w2g3xst",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エントリテンプレート"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20261024161058-xqad8h1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161058-xqad8h1",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エントリ作成ボタンの横のドロップダウンから「新規テンプレート」を選びます。エントリの種類、アイコン、主キーの内容、フィールド値を設定できます。ドキュメントエントリには、保存先、内容テンプレート、ドキュメントツリーでの表示も設定できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-sg2tdy0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161058-sg2tdy0",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "同じメニューからテンプレートを選ぶと、その設定でエントリが作成されます。各テンプレートのその他メニューで編集、デフォルトへの設定、削除ができます。通常の作成操作はデフォルトテンプレートを使い、空のエントリも選択できます。テンプレートを変更しても、作成済みのエントリには反映されません。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161058-v5ot03g",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161058-v5ot03g",
+				"updated": "20261024161058"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エントリテンプレートは作成時の初期値を設定します。一方、テンプレートフィールドはビューの描画時に既存エントリの値を計算します。エントリテンプレートの日付フィールドには、固定日時または作成時の現在日時を指定できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261025205717-ima2aoo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261025205717-ima2aoo",
+				"updated": "20261025205717"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エントリテンプレートで "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "作成後に項目を分割表示で開く"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を有効にすると、データベースビューでそのテンプレートを使ってバインド済みまたは未バインドのエントリを作成した後、右側で自動的に開きます。バインドされたドキュメントは編集可能なタイトルにフォーカスし、タイトルを編集できない場合は主キーにフォーカスします。未バインドのエントリは主キーにフォーカスします。モバイルでは既存のページまたはダイアログを使用します。"
+				}
+			]
+		},
+		{
+			"ID": "20261025205717-gqvztkm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261025205717-gqvztkm",
+				"updated": "20261025205717"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "新しいテンプレートでは既定で無効です。スイッチを無効にすると自動で開かなくなります。既存のテンプレートは、このスイッチを変更するまでカレンダーでの自動表示を含む従来の動作を維持します。テンプレートを使わない空のエントリ作成は、ビューの従来の動作を維持します。設定が必要な場合は、空の未バインドエントリ用テンプレートを作成してデフォルトにしてください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-nfsvrj5",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-gibuum4",
+				"id": "20240530101000-nfsvrj5",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ミラーデータベース"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-26x3p6o",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-ux6yzwj",
+				"id": "20240530101000-26x3p6o",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データベースブロックをコピーして貼り付けるとミラーデータベースが形成されます。それらのデータベースブロックは同じデータベースデータを共有しており、どのデータベースブロックのデータを変更しても他のすべてのミラーに同期されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-jgap8im",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-x6r9yyj",
+				"id": "20240530101000-jgap8im",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "関連付けと集計"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ug0d39v",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240530101000-ug0d39v",
+				"updated": "20240818190253"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "2 つのデータベース間で "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "関連"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ を行うことによって、連携して管理できるようになります。たとえば、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "著者"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ と "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "書名"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ という 2 つのデータベース間の関連は以下のようになります:"
+				}
+			]
+		},
+		{
+			"ID": "20261007101857-pxb1ynm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261007101857-pxb1ynm",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "デスクトップ版とモバイル版の関連選択パネルには常に新規作成の項目が表示され、関連先データベースのデフォルトテンプレートが適用されます。入力した名前と主キーテンプレートで生成された名前が異なる場合は、それぞれの実際の名前とともに「デフォルトテンプレートで新規作成」と「入力した名前で新規作成」の2つの項目が表示されます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-plq1ps4",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-plq1ps4",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "入力した名前を使う場合は主キーのみを上書きし、フィールドのデフォルト値、アイコン、コンテンツテンプレート、保存先は引き続き適用されます。入力が空、主キーテンプレートが未設定、または名前が同じ場合は1つの項目のみ表示されます。デフォルトテンプレートが未設定の場合は独立した項目が作成されます。項目の作成と関連の更新はまとめて元に戻せます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-6ho7y0p",
+			"Type": "NodeAttributeView",
+			"Properties": {
+				"ID": "20240530101000-i7st7t2",
+				"id": "20240530101000-6ho7y0p",
+				"updated": "20240530101000"
+			},
+			"AttributeViewID": "20240530133134-tcqdrt2",
+			"AttributeViewType": "table"
+		},
+		{
+			"ID": "20240530101000-ab5ovyw",
+			"Type": "NodeAttributeView",
+			"Properties": {
+				"ID": "20240530101000-ftsbbgi",
+				"custom-sy-av-view": "20250615173942-0xk5p5h",
+				"id": "20240530101000-ab5ovyw",
+				"updated": "20250615173941"
+			},
+			"AttributeViewID": "20240530133134-c2251lc",
+			"AttributeViewType": "gallery"
+		},
+		{
+			"ID": "20240530101000-snvlmxi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-ajd29mr",
+				"id": "20240530101000-snvlmxi",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "著者データベースでは、それぞれの "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "著者"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ の "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "作品"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ を "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "すべての数"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ で集計し、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "作品数"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ として表示しています。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-yinvvxy",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-gdiaw90",
+				"id": "20240530101000-yinvvxy",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "テンプレート"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-qslpi11",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240530101000-qslpi11",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "テンプレートは"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240530101000-6x9ivi7",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "テンプレートスニペット"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "で紹介されている構文を使用して、同一データ内の他の属性の値にアクセスして演算や表示を行えます:"
+				}
+			]
+		},
+		{
+			"ID": "20260612204659-cjy1pmm",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260612204659-cjy1pmm",
+				"updated": "20260612204659"
+			},
+			"Children": [
+				{
+					"ID": "20260612204659-xrekm4a",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204659-xrekm4a",
+						"updated": "20260612204659"
+					},
+					"Children": [
+						{
+							"ID": "20260612204659-h21hmef",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204659-h21hmef",
+								"updated": "20260612204659"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .フィールド名 }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ でビューフィールドにアクセスします"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204659-aikd98a",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204659-aikd98a",
+						"updated": "20260612204659"
+					},
+					"Children": [
+						{
+							"ID": "20260612204659-zjaztqe",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204659-zjaztqe",
+								"updated": "20260612204659"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index . \"custom-xxx\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ でブロックのカスタム属性にアクセスします"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204659-weck8nr",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204659-weck8nr",
+						"updated": "20260612204659"
+					},
+					"Children": [
+						{
+							"ID": "20260612204659-15kzvjh",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204659-15kzvjh",
+								"updated": "20260612204659"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .フィールド名_end }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ で日付フィールドの終了日にアクセスします。"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_end"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ サフィックスは日付タイプのみ有効です"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204659-e84649b",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204659-e84649b",
+						"updated": "20260612204659"
+					},
+					"Children": [
+						{
+							"ID": "20260612204659-nwaw75j",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204659-nwaw75j",
+								"updated": "20260612204659"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .フィールド名_str }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ でマルチセレクトフィールドのフォーマット済み文字列にアクセスします。"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_str"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ サフィックスはマルチセレクトタイプのみ有効です"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204659-7g9p785",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204659-7g9p785",
+						"updated": "20260612204659"
+					},
+					"Children": [
+						{
+							"ID": "20260612204659-mtt6d0b",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204659-mtt6d0b",
+								"updated": "20260612204659"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .フィールド名_created }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ でブロックフィールドのバインドされたブロックの作成時間にアクセスします。"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_created"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ サフィックスはブロックタイプのみ有効です"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204659-ivtfca8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204659-ivtfca8",
+						"updated": "20260612204659"
+					},
+					"Children": [
+						{
+							"ID": "20260612204659-jz1u4y7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204659-jz1u4y7",
+								"updated": "20260612204659"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ .フィールド名_raw }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ でフィールドの生の値オブジェクトにアクセスします。"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "_raw"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ サフィックスはすべてのフィールドタイプで有効です"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204659-itw5gdw",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204659-itw5gdw",
+						"updated": "20260612204659"
+					},
+					"Children": [
+						{
+							"ID": "20260612204659-ptlqy30",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204659-ptlqy30",
+								"updated": "20260612204659"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index .id_mod \"フィールドID\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ でフィールドIDによってフォーマット済みの値にアクセスします"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204659-ro1goz1",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204659-ro1goz1",
+						"updated": "20260612204659"
+					},
+					"Children": [
+						{
+							"ID": "20260612204659-b5thlw2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204659-b5thlw2",
+								"updated": "20260612204659"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index . \"entryCreated\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ で行のバインドされたブロックの作成時間にアクセスします"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260612204659-2nzr675",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260612204659-2nzr675",
+						"updated": "20260612204659"
+					},
+					"Children": [
+						{
+							"ID": "20260612204659-49l0244",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260612204659-49l0244",
+								"updated": "20260612204659"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{ index . \"entryUpdated\" }"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ で行のバインドされたブロックの更新時間にアクセスします"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-3cev50z",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-30nwm53",
+				"id": "20240530101000-3cev50z",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "たとえば、以下の "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "請求書"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ データベースの "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "テンプレート"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 属性は、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "食事代"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ と "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "衣装代"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ の合計を算出しています:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-f2texj8",
+			"Type": "NodeAttributeView",
+			"Properties": {
+				"ID": "20240530101000-aw1m47o",
+				"id": "20240530101000-f2texj8",
+				"updated": "20250101093828"
+			},
+			"AttributeViewID": "20240530133134-wlxgyny",
+			"AttributeViewType": "table"
+		},
+		{
+			"ID": "20260830120300-a1dspja",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260830120300-a1dspja",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "表示テンプレート"
+				}
+			]
+		},
+		{
+			"ID": "20260830120301-b2dspja",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120301-b2dspja",
+				"updated": "20260830120301"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "通常のフィールドは、フィールドタイプを変更せずに表示テンプレートを設定できます。列ヘッダーからフィールドメニューを開き、下部のテンプレート入力欄にテンプレートを入力します。表示テンプレートは表示内容だけを変更し、セルの編集では元の保存値を読み書きします。テンプレート、ロールアップ、行番号、作成日時、更新日時フィールドは表示テンプレートに対応していません。"
+				}
+			]
+		},
+		{
+			"ID": "20260830120302-c3dspja",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120302-c3dspja",
+				"updated": "20260830124002"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "表示テンプレートはテンプレートスニペットと同じ Go テンプレート構文を使用し、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " と "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を区切り文字として HTML を含めることもできます。たとえば、進捗フィールドの保存値が 42 の場合、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&lt;progress value=\".action{.進捗}\" max=\"100\"&gt;&lt;/progress&gt; .action{.進捗}%"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " は進捗 42% のプログレスバーとテキスト 42% を表示します。HTML はデフォルトでサニタイズされます。"
+				}
+			]
+		},
+		{
+			"ID": "20260830120303-d4dspja",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120303-d4dspja",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "同じ行の他のフィールドを名前で参照できます。たとえば、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&lt;strong&gt;.action{.名前}&lt;/strong&gt;: .action{.進捗}%"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " は名前と進捗フィールドを組み合わせます。フィールド名に空白や記号が含まれる場合は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{index . \"プロジェクト 名\"}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を使用します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-wtpzle8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-wtpzle8",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "フィールドの重複名や名前変更による曖昧さを避けるには、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{index .id_mod \"フィールドID\"}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " でフィールド ID を指定します。"
+				}
+			]
+		},
+		{
+			"ID": "20260830120304-e5dspja",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830120304-e5dspja",
+				"updated": "20260902120000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "表示テンプレートが読み取るのは各フィールドの元の保存値であり、他の表示テンプレートが生成した表示結果ではありません。フィルター、ソート、グループ化では、元の値またはテンプレートレンダリング値を選択できます。表示テンプレートを空にすると、フィールド本来の表示に戻ります。リレーションフィールドには、関連先データベースの主キーの表示テンプレートの結果が表示されます。結果が空の場合もそのまま表示され、元の主キーの値と関連付けは変更されません。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-2ctdjhm",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20261002224707-2ctdjhm",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "自動化"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-z06cqjz",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-z06cqjz",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ルールの設定"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-ffzbedy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-ffzbedy",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データベースビューで "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "自動化"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " からルールを追加します。変更は自動保存され、テキストはフォーカスを外すか Enter を押すと保存されます。新しいルールは既定で無効です。設定が不完全な場合は自動的に無効になり、不足項目が表示されます。設定を完了してから手動で有効にしてください。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-t4fbzh2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-t4fbzh2",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ルールはデータベース全体で共有され、どのビューやミラーでの項目変更でも実行できます"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。参照するフィールドが削除されたり型が変更されたり、対象データベースが削除された場合、次の項目の書き込み時に該当ルールが自動的に無効になり、ルール名と無効な参照が表示されます。ユーザーの編集は保存され、ルール設定も保持されます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-ts93hlz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-ts93hlz",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "設定を修復した後、手動で有効にしてください。データベースのロック、認証失敗、データ破損、書き込み失敗の場合は、編集と自動操作が引き続き一緒にロールバックされます。"
+				}
+			]
+		},
+		{
+			"ID": "20261017202044-wiy1os1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261017202044-wiy1os1",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「実行成功時に通知」は既定で有効で、ルールごとに設定できます。自動追加・更新・収集による実際の変更を、トランザクション全体の確定後に通知します。同じトランザクションの結果は一つにまとめ、通知を有効にしたルールだけを集計します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-dnb8i1a",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-dnb8i1a",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "一つの項目の複数フィールド更新は一項目として数えます。通知を無効にしても実行を止めず、エラーも隠しません。条件不一致、対象なし、値の変更なし、継続した一致、手動収集や整理、元に戻す、やり直し、失敗時は成功通知を送りません。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-bawrkji",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-bawrkji",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "トリガー"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-1kdcd41",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-1kdcd41",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "設定は「次のイベントが発生したとき」「かつ、トリガー項目が次の条件を満たす場合（任意）」「次のアクションを実行」の三つの区分に分かれています。まず項目の追加またはフィールドの変更を選びます。変更の監視対象は特定のフィールド、または編集可能な任意のフィールドです。同じ値を再度書き込んでも実行されません。二つ目の区分では変更後のトリガー項目の値で判定し、条件を設定しない場合は制限しません。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-t37equ9",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-t37equ9",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "アクションと値の設定"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-uotpkn8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-uotpkn8",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各ルールでは複数のアクションを順番に実行できます。操作と対象を選び、設定するフィールドと値の設定方法を追加します。編集の対象にはトリガー項目、関連項目、選択したデータベース内で条件に一致する項目を指定できます。アクション内の条件は変更する項目を絞り込み、トリガー項目の条件とは別に設定します。対象の条件を設定しない場合は、その対象のすべての項目が一致します。追加操作では現在または別のデータベースに未バインド項目を作成します。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-odr4vof",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-odr4vof",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "アクションの値には固定値、互換性のある型のソースフィールド、トリガー時刻、トリガー項目への関連、または計算用テンプレートを指定できます。トリガー時刻は日付フィールドに使用します。トリガー項目への関連には、ソースデータベースを参照する関連フィールドが必要です。主キーのテキストを編集しても既存のバインドとアイコンは維持されます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-8jxmfku",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-8jxmfku",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "テンプレートによる値の設定"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261016165601-3mbpi7s",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-3mbpi7s",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "値の設定方法で「テンプレート」を選ぶと、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{...}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " をインラインで編集できます。テンプレートを編集するとルールが一時停止するため、編集後に再度有効にしてください。編集可能なすべてのフィールドに対応しますが、作成日時、更新日時、行番号、ロールアップ、テンプレートなどの計算フィールドには代入できません。主キーは既存のバインドを維持します。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-udw7gbs",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-udw7gbs",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例えば、水やりタスクを完了したときに次のタスクを追加し、日付を "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{((now).AddDate 0 0 7).Format \"2006-01-02\"}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " に設定します。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "now"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " はトリガー時刻に固定され、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "AddDate 0 0 7"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " は暦上の七日後を計算します。テンプレートを初めて使用するときにフロントエンドのタイムゾーンを保存し、他の端末でも同じタイムゾーンで実行します。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-8ub6ywb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-8ub6ywb",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "field \"フィールドID\""
+				},
+				{
+					"Type": "NodeText",
+					"Data": " はソース項目の保存値を読み取り、日付では "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "AddDate"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を使用できます。フィールド名を変更しても ID 参照は維持されます。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "value \"フィールドID\""
+				},
+				{
+					"Type": "NodeText",
+					"Data": " は構造化データを読み取り、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "toJson"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " は JSON を出力します。例えば "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".action{toJson (dateAdd 0 0 7 (value \"フィールドID\"))}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " は日付範囲の開始と終了を進め、日付のみか時刻付きかの設定も維持します。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-vimxvf5",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-vimxvf5",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "テキスト、リンク、メール、電話には文字列を使用し、数値には有限の値、チェックボックスには "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "true"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " または "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "false"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を使用します。日付には ISO 日付、日時、既存の日付データの JSON を使用できます。単一選択は既存の選択肢名、複数選択は名前または選択肢オブジェクトの JSON 配列、関連は既存項目 ID の配列を使用します。アセットと位置には既存のデータ構造の JSON を使用します。選択肢、関連項目、アセットは自動作成しません。"
+				}
+			]
+		},
+		{
+			"ID": "20261016165601-4qrtsdm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016165601-4qrtsdm",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「プレビューに使用するデータ」を開き、実際の項目を選び、日付や参照フィールドを変更してから結果を確認します。入力はプレビュー専用で、項目を変更しません。空の出力はフィールドを消去し、変数の不足、空のソース日付、型や参照のエラーは元の編集と全アクションを取り消します。結果は一度だけ保存し、やり直しでも再利用します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-74qc87t",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-74qc87t",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SQL、ファイル、ネットワーク、ループ、再帰は使用できません。ソースは最大 8 KiB、各入力と出力は最大 64 KiB です。テンプレート保存後は自動化形式 2 に対応したクライアントが必要で、旧版はデータベースの読み込みを明示的に拒否します。既存の形式 1 のルールは引き続き使用できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-54vbc83",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20261016174753-54vbc83",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "テンプレートの使用例"
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-fyb1nlk",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016174753-fyb1nlk",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用例全体をテンプレート入力欄にコピーしてください。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "FIELD_ID"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " はプレースホルダーです。フィールド名ではなく、トリガー元アイテムのデータベースにあるソースフィールドの ID に置き換えます。コピー元とコピー先のフィールドは同じ型にしてください。リレーションをコピーする場合は、両方のリレーションフィールドが同じデータベースを参照している必要があります。"
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-z6xd85j",
+			"Type": "NodeTable",
+			"TableAligns": [
+				0,
+				0
+			],
+			"Properties": {
+				"id": "20261016174753-z6xd85j",
+				"updated": "20261016174753"
+			},
+			"Children": [
+				{
+					"Type": "NodeTableHead",
+					"Children": [
+						{
+							"Type": "NodeTableRow",
+							"Children": [
+								{
+									"Type": "NodeTableCell",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "用途"
+										}
+									]
+								},
+								{
+									"Type": "NodeTableCell",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "テンプレートの内容"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日付：トリガー当日"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{now | date \"2006-01-02\"}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日付：トリガーの7日後"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{((now).AddDate 0 0 7).Format \"2006-01-02\"}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日付：ソースの日付または範囲を7日後にずらし、時刻設定を保持"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{toJson (dateAdd 0 0 7 (value \"FIELD_ID\"))}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "テキスト、主キー、URL、メール、電話：ソースフィールドをコピー"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{field \"FIELD_ID\"}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "テキストまたは主キー：ソーステキストに接尾辞を追加"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{field \"FIELD_ID\"}（次回）"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "数値：ソースの数値に1を加算、小数にも対応"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{addf (field \"FIELD_ID\") 1}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "チェックボックス：ソースの値を反転"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{not (field \"FIELD_ID\")}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "選択：既存の選択肢を設定"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "完了"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "複数選択：既存の選択肢を2つ設定"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "[\"仕事\",\"重要\"]"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "日付、複数選択、リレーション、アセット、位置：同じ型のソースフィールドをコピー"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".action{toJson (value \"FIELD_ID\")}"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261016174753-9csv5xs",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016174753-9csv5xs",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "日付書式の "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "2006-01-02"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " は固定の書式指定です。現在の日付に置き換えないでください。選択と複数選択の例では、コピー先フィールドに既存の選択肢名を指定し、必要に応じて置き換えます。ルールを有効にする前にプレビューで結果を確認してください。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-6qh2s71",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024164212-6qh2s71",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ルールの例"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261016113125-5e67e35",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016113125-5e67e35",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例えば、最初の完了日時を記録するには「状態」の変更を監視し、トリガー項目の「状態」が「完了」で「完了日時」が空であることを条件にします。次にトリガー項目を編集し、「完了日時」を「トリガー時刻」に設定します。設定を完了してからルールを有効にしてください。日時が空という条件がなければ、再び完了した際に元の完了日時が上書きされる場合があります。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-d1gx7gt",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-d1gx7gt",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例えば、タスクと時間記録のデータベースに双方向の関連を設定します。タスクの状態が進行中になったら時間記録を追加し、開始日時をトリガー時刻に設定して元のタスクに関連付けます。状態が完了になったら、終了日時が空の関連記録を選び、その終了日時をトリガー時刻に設定します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-22w315i",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024164212-22w315i",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "実行・元に戻す操作・互換性"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261002224707-a8z60e1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-a8z60e1",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "自動アクションと元の編集はまとめて元に戻したり、やり直したりできます。実行に失敗した場合は両方をロールバックします。やり直しでは最初の項目 ID と時刻を保持します。自動アクションは別のルールを連鎖的に実行しません。インポート、同期、履歴の復元、元に戻す操作もルールを再実行しません。通常の API 書き込みはルールを実行しますが、エディターの取り消し履歴を作成しません。"
+				}
+			]
+		},
+		{
+			"ID": "20261002224707-gz9l6gy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002224707-gz9l6gy",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "暗号化されたデータベースは、同じ暗号化ノートブック内のデータベースだけを操作できます。先にノートブックのロックを解除してください。対象のデータベースやフィールドが利用できない場合は、ルールを修正するか一時停止します。データベースをコピーするとルールは一時停止した状態で保持されるため、対象と関連フィールドを確認してから有効にしてください。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-aj3t5af",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20261015141042-aj3t5af",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "通常ブロックの収集"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-daifyta",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-daifyta",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "監視範囲と条件"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20261015141042-qt2jps9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-qt2jps9",
+				"updated": "20261027120633"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「通常ブロックが条件に一致」トリガーを選び、「監視範囲」の下にある追加ボタンでノートブックや文書を指定します。選択画面で複数のノートブックや文書にチェックを入れて確定すると、まとめて追加できます。検索やツリーの展開中も選択は保持されます。重複する範囲は除外され、各ルールに含められるノートブックや文書は合計32件までです。文書名を押すと、自動化設定を開いたままフローティングウィンドウでプレビューできます。アイコンへのマウスオーバーでもプレビューできます。範囲は和集合です。ブロック種類・タグ・カスタム属性はそれぞれ Chip で管理し、各組の追加ボタンで条件を加え、閉じるボタンで削除します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-ebc5tgy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-ebc5tgy",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "種類の一覧は検索と連続した複数選択に対応します。タグや属性の Chip を押すと編集でき、タグは Enter で確定します。属性は確定するまで下書きとして保持し、Esc またはキャンセルで既存条件を変えずに取り消せます。タグの前後の空白と重複は除去します。種類は OR、タグと属性はそれぞれ既定で「すべてに一致」で、「いずれかに一致」に個別に変更できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-vfe93tv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-vfe93tv",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "三つの組の間は AND のままで、空の組は制限しません。属性は等しい・含む・存在する・存在しないを使え、後二者は値が不要です。「いずれかに一致」には自動化形式 3 が必要で、既存ルールの AND 動作は維持します。"
+				}
+			]
+		},
+		{
+			"ID": "20261020211145-mwlwm6k",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261020211145-mwlwm6k",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "文書の範囲を選ぶと、「監視範囲」の下に「子文書の深さ」が表示されます。既定の「無制限」はすべての子孫文書を含み、「現在の文書のみ」は選択した各文書自体だけを含みます。「最大階層数」では正の整数を入力します。1 は選択した文書と直接の子文書、2 はさらに孫文書までを含みます。同じルールの文書範囲すべてに共通し、ノートブックの範囲は制限しません。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-d4i2aq1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-d4i2aq1",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "重なる範囲は和集合です。深さを変更しても既存の項目とフィールドを保持し、既存の内容を自動で追加収集しません。収集管理で一致する内容をプレビューして収集するか、不一致の項目を確認して除去できます。深さの制限には自動化形式 5 が必要で、古いクライアントはデータベースを書き換えずに読み取りを拒否します。"
+				}
+			]
+		},
+		{
+			"ID": "20261022092813-g7jbf4j",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261022092813-g7jbf4j",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「選択した文書自体を含める」は既定で有効です。無効にすると、選択した各文書とその内部のすべてのブロックを除外し、子孫文書は設定した深さまで監視します。例えば、この設定を無効にして深さを 1 にすると、直接の子文書のみを監視します。「現在の文書のみ」と組み合わせると、各文書範囲は空になります。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-cv1730q",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-cv1730q",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "この設定はルール内の文書範囲すべてに共通です。範囲は和集合のままなので、ノートブックの範囲や重なる別の文書範囲によって、その文書が含まれる場合があります。設定を変更しても既存の項目とフィールドは維持され、自動で追加収集や除去は行いません。収集管理でプレビュー、収集、または確認と除去を行ってください。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-m2pj9pq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-m2pj9pq",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "選択した文書自体の除外には自動化形式 7 が必要です。既存の形式 1–6 は引き続き読み取れますが、古いクライアントはデータベースを書き換えずに形式 7 を拒否します。"
+				}
+			]
+		},
+		{
+			"ID": "20261026103001-u3e7mth",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261026103001-u3e7mth",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ブロック参照を収集するには、参照先を選択してブロック ID またはブロックリンクを貼り付けるか、「現在の文書」を選択します。参照先は固定のブロック ID として保存され、すべてのデータベースミラーで共有されます。文書を指定すると、その内部のコンテンツブロックへの参照も対象になりますが、子文書は含まれません。本文中のブロック参照のみが対象で、通常のリンク、埋め込み、データベースのリッチテキストフィールド内の参照は含まれません。"
+				}
+			]
+		},
+		{
+			"ID": "20261026103001-ceuhthk",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261026103001-ceuhthk",
+				"updated": "20261026103001"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "参照元はバックリンクと同じ規則でまとめられます。リスト項目、引用ブロック、スーパーブロック、コールアウトに加え、文書の先頭段落または見出し直後の段落がブロック参照のみの場合の引き継ぎも適用されます。ブロック種類とカスタム属性はまとめた後のブロックを、タグ条件は参照元のブロックを判定します。参照先の設定中はタグの収集対象設定を使用しません。参照先を解除すると通常の収集に戻ります。参照を削除しても既存の項目とフィールドは保持され、以前の参照は収集管理でプレビューして追加できます。参照先の設定には自動化形式 8 が必要です。既存の形式 1–7 は引き続き読み取れますが、古いクライアントはデータベースを書き換えずに形式 8 を拒否します。"
+				}
+			]
+		},
+		{
+			"ID": "20261021135332-1xj7aht",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021135332-1xj7aht",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「属性名」は値の条件とは独立して「等しい」（既定）、「含む」、「正規表現」を選べます。「等しい」は custom-state のような完全な名前を使用します。「含む」は custom- 接頭辞を入力する必要がなく、dailynote で custom-dailynote-20261021 に一致します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-ar7qw3i",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-ar7qw3i",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "正規表現は Go の構文で完全な名前と照合し、例は ^custom-dailynote-[0-9]{8}$ です。カスタム属性だけを対象とし、名前と値は大文字小文字を区別して同じ属性で条件を満たす必要があります。「存在する」は名前の一致が一つ以上、「存在しない」は一致がないことを要求し、値は無視します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-xqmwrt3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-xqmwrt3",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "不正な式は保存できず、名前パターンは最大 256 バイトです。「含む」と「正規表現」には自動化形式 6 が必要です。既存の形式 1–5 は読み込めますが、古いクライアントは形式 6 を拒否し、データベースを書き換えません。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-t4gkr5f",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-t4gkr5f",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "収集対象の選択"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20261017204817-a41svnn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261017204817-a41svnn",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ブロック種類の上にある「収集対象」では、「デフォルト」「タグを含むブロック」「コンテナブロック」を選べます。デフォルトは最初の内容ブロックにタグがあり、種類と属性の条件に合うリスト項目を優先します。それ以外は条件に合うタグ付きブロックを収集します。段落とリスト項目を両方選んでも、同じタグ元から二つの階層を収集しません。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-4xxxtrm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-4xxxtrm",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「タグを含むブロック」はタグが実際にあるブロックの種類と属性で絞り込み、収集します。「コンテナブロック」は種類と属性の条件に一致する最も近いコンテナを選び、ブロック ID で重複を除きます。文書は明示的に選択した場合のみ対象になります。すべてのタグを要求する場合、同じ元ブロック内にそろっている必要があり、別々の子ブロックのタグは結合しません。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-nryww89",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-nryww89",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "タグ条件がなければ、この設定は絞り込みに影響しません。プレビューには最終的な収集対象が表示されます。切り替えても既存項目のバインド先やフィールドは変更されません。明示的な二つのモードには自動化形式 4 が必要です。既存形式は引き続き読み込めますが、古いクライアントは形式 4 を拒否し、データベースを書き換えません。"
+				}
+			]
+		},
+		{
+			"ID": "20261017195341-nu6ize6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261017195341-nu6ize6",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ブロックの主種類を選ぶと、そのすべてのサブタイプに一致します。H1～H6 の見出し、箇条書き・番号付き・タスクリストとその項目、組み込みまたは独自のコールアウト種類を個別に選べます。リストとリスト項目は別々に判定し、複数選択は OR、未選択は種類を制限しません。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-77h2q62",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-77h2q62",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "主種類を選ぶと、そのサブタイプの選択を置き換えます。サブタイプの変更後も自動収集・整理時の確認・プレビューは同じ判定を使います。サブタイプ条件には自動化形式 3 が必要です。既存の形式 1 と 2 は引き続き読み込めます。旧クライアントは形式 3 を拒否し、データベースを書き換えません。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-ag8e3p7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-ag8e3p7",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "タグはブロック自体と照合し、すべての親コンテナを自動収集しません。リスト項目は先頭段落のタグを使用し、段落の種類を明示的に選んだ場合にのみ先頭段落も個別に照合します。収集は元のブロックを現在のデータベースにバインドし、原文をコピーしたり移動したりしません。初期フィールドには固定値、日付フィールドのトリガー時刻、テンプレートを指定でき、主キーは元のブロックへのバインドを保持します。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-2xt3u2k",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-2xt3u2k",
+				"updated": "20261018000619"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "新たに条件に一致すると項目を追加します。自動収集は項目の追加だけを行います。原文の変更、監視範囲外への移動、条件や収集対象の変更、ルールの無効化や削除でも、既存の項目とフィールド値は保持します。再び一致しても同じ項目を使い、手動入力・編集したフィールドを保持します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-cc1ifg2",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-cc1ifg2",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "管理と既存ブロックの収集"
+				}
+			],
+			"HeadingLevel": 4
+		},
+		{
+			"ID": "20261015141042-kpasryz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-kpasryz",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "自動化"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "収集管理"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を開き、「データベース項目」で有効な通常ブロック収集ルールの和集合に対して既存項目を確認します。手動と自動で収集した項目を同じ基準で判定します。「ルールに一致」「ルールに不一致」「判定不能」はそれぞれ件数と独立したページを持ち、初回は不一致の項目を優先表示します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-w28sw40",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-w28sw40",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "判定不能の項目には理由を表示します。「このページの不一致項目を除去」は件数の確認後、ルール・原文・バインド先を再確認し、不一致が確定した現在のページの項目だけを除去します。不一致と判定不能の項目は個別にも除去できます。原文は保持され、元に戻す操作とやり直しで元の項目 ID、フィールド、順序を復元できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-wzk6i0b",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-wzk6i0b",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "失われた元のブロックは再作成しません。読み取りや認証に失敗した場合はデータを保持してエラーを返します。除去後に新たな一致が発生すると、初期化した新しい項目を作成し、除去したフィールド値は復元しません。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-ew0zsib",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-ew0zsib",
+				"updated": "20261018122207"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ルールを有効化または編集しても既存ブロックは収集しません。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "自動化"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "収集管理"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で「ルールの一致」を選び、有効な収集ルールを選択して、一致するブロックと収集済み・未収集の状態を確認します。「このページの一致ブロックを収集」は表示中の未収集ブロックだけを収集します。ページ操作部には現在のページ番号を表示します。1 ページは最大 100 個のブロックで、初期化するフィールドが多い場合は少なくなります。"
+				}
+			]
+		},
+		{
+			"ID": "20261015141042-ye4wajb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015141042-ye4wajb",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ユーザーによる作成、コピー、本文や属性の編集、内容テンプレートの適用、全体検索置換、および監視範囲へのブロックや文書の移動後に収集条件を評価します。文書ツリーのコピーと移動には子文書も含まれます。既存の項目のフィールド値は保持します。Markdown と .sy のインポート、同期、履歴の復元、元に戻す操作、やり直しでは新たな収集を実行しません。既存内容はプレビューから手動で収集してください。自動アクションは他のルールを連鎖的に実行しません。元のブロックと対象データベースは同じ暗号化境界内にある必要があります。暗号化ノートブックでは、先にロックを解除してからプレビューやルールの編集を行ってください。"
+				}
+			]
+		},
+		{
+			"ID": "20240818180118-fq3wqdb",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240818180118-fq3wqdb",
+				"updated": "20250115145155"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20240818180153-gokxpbv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240818180153-gokxpbv",
+				"updated": "20250115145155"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データベースのセルで改行する必要がある場合は、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Enter"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ を使用してください。"
+				}
+			]
+		}
+	]
+}

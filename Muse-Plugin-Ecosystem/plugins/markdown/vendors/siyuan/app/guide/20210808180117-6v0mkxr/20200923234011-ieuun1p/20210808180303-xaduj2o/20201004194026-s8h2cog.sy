@@ -1,0 +1,496 @@
+{
+	"ID": "20201004194026-s8h2cog",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20201004194026-s8h2cog",
+		"title": "Use on browser",
+		"type": "doc",
+		"updated": "20261024161816"
+	},
+	"Children": [
+		{
+			"ID": "20210104091447-8iiuxlt",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104091447-8iiuxlt",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Browser usage"
+				}
+			]
+		},
+		{
+			"ID": "20221025092947-gd0wmbi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20221025092947-gd0wmbi",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "On this computer, open "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Authentication"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Server"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Use on browser"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Open browser"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " in the running app. Keep the kernel running and use the address it opens, including its port."
+				}
+			]
+		},
+		{
+			"ID": "20221025092947-5m97t0e",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20221025092947-5m97t0e",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "For another device on the same LAN, first configure a lock screen password or a valid configuration for "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260804190002-oidcen1",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "OIDC login"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", enable "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Authentication"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Server"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Network serving"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", and reopen SiYuan after it exits. Then use the kernel computer’s LAN IP in place of "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "127.0.0.1"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", keeping the displayed port. The firewall must allow that port. For public-network access, the following deployment options are available:"
+				}
+			]
+		},
+		{
+			"ID": "20210104091447-6y4386v",
+			"Type": "NodeList",
+			"ListData": {
+				"Tight": true,
+				"BulletChar": 42,
+				"Padding": 2,
+				"Marker": "Kg==",
+				"Num": -1
+			},
+			"Properties": {
+				"id": "20210104091447-6y4386v",
+				"updated": "20221025093157"
+			},
+			"Children": [
+				{
+					"ID": "20210104091447-2wey9jj",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"id": "20210104091447-2wey9jj"
+					},
+					"Children": [
+						{
+							"ID": "20210302223802-1mbrz5a",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210302223802-1mbrz5a"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Publish local kernel services on the public network through the \"intranet penetration\" technology (more troublesome and unstable, not recommended)"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20210104091447-oo5sodh",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"id": "20210104091447-oo5sodh",
+						"updated": "20221025093157"
+					},
+					"Children": [
+						{
+							"ID": "20210302223802-ghpurq7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210302223802-ghpurq7",
+								"updated": "20221025093157"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Build your own SiYuan Server (recommended)"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20210104091447-br9zpri",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104091447-br9zpri",
+				"updated": "20260804235500"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Before embarking on these two solutions, please start with understanding SiYuan Technical Architecture (GitHub repo: siyuan-note/siyuan)."
+				}
+			]
+		},
+		{
+			"ID": "20260903150000-cr1ft15",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260903150000-cr1ft15",
+				"updated": "20260903150000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "To connect to a remote kernel from the desktop app, see "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260903150000-s4hctea",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "Connect to a Remote Kernel"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20210104091447-dluat0m",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20210104091447-dluat0m",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "### "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "Lock screen password"
+				}
+			]
+		},
+		{
+			"ID": "20210104091447-3vmymbk",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104091447-3vmymbk",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Configure the lock screen password in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Authentication"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Login and tokens"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Lock screen password"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ". Leaving it blank disables password login; normal nonlocal access still requires a password or valid OIDC configuration. Configure authentication before making the kernel accessible to other devices."
+				}
+			]
+		},
+		{
+			"ID": "20210117211053-tq2km4f",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210117211053-tq2km4f"
+			}
+		},
+		{
+			"ID": "20261022093855-9vgq1sq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261022093855-9vgq1sq",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Authentication"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Login and tokens"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Lock screen wallpaper"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", upload one JPEG, PNG or WebP image (up to 10 MiB and 16 megapixels) to customize the authentication page shown at startup and after locking. Click Built-in to choose a picture from the categorized document cover gallery. Built-in pictures are wide and are centered and cropped to fill the screen; portrait screens crop more of the picture."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-v5madqo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-v5madqo",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Selecting or uploading another image replaces it; click Reset to restore the default background. The wallpaper setting is shown when a password is configured or OIDC sign-in is enabled. With a custom wallpaper, the authentication page first shows the wallpaper and local time. Click, tap, or press a key to reveal the login panel; typing your password also keeps the first character."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-q3h5bbu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-q3h5bbu",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Without a wallpaper, or if the image fails to load, the usual login page appears directly."
+				},
+				{
+					"Type": "NodeText",
+					"Data": " Press "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Esc"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to return from the login panel to the wallpaper and clock. Your password and captcha input are kept. Both directions use a short transition; the system preference to reduce motion is respected."
+				}
+			]
+		},
+		{
+			"ID": "20261022093855-vbzdq85",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261022093855-vbzdq85",
+				"updated": "20261022093855"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The wallpaper belongs to the current workspace, is not synced with notes, and is not included in settings exports. Anyone who can access the authentication page can see it before login, so avoid images containing sensitive information."
+				}
+			]
+		},
+		{
+			"ID": "20260804120101-oidclog",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260804120101-oidclog",
+				"updated": "20260804193000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "OIDC login"
+				}
+			]
+		},
+		{
+			"ID": "20260804190502-oidcrf3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260804190502-oidcrf3",
+				"updated": "20260804193000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "For complete guidance on providers, callback URLs, claim rules, client sign-in, Docker configuration, and troubleshooting, see "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260804190002-oidcen1",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "OIDC login"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		}
+	]
+}

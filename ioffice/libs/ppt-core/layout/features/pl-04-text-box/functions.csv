@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_shape_to_textbox,段与run→TextBoxData文本,shape+exToInternal,TextBoxData(TextData/ParaInfo/SpanInfo),pp-11;pl-03-ph-merge,02_function_textbox_props;pl-05-text-typo,libs/ppt-core,pass
+2,02_function_textbox_props,框属性insets/anchor/vertical/wrap/autofit,TextBoxData+TextBodyProperties,TextBoxData框属性字段,01_function_shape_to_textbox,pl-05-text-typo,libs/ppt-core,pass

@@ -1,0 +1,106 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package cmd
+
+import (
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/cache"
+	"github.com/siyuan-note/siyuan/kernel/job"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/plugin"
+	"github.com/siyuan-note/siyuan/kernel/server"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/util"
+
+	"github.com/spf13/cobra"
+)
+
+// serve 子命令自己的 flag 值。--workspace 复用 rootCmd 的 persistent flag，不再重复声明。
+var (
+	serveWdPath         string
+	servePort           string
+	serveReadOnly       string
+	serveAccessAuthCode string
+	serveLang           string
+	serveMode           string
+	serveSSL            bool
+	serveAttachUI       bool
+	serveSafeMode       bool
+	serveEnablePprof    bool
+)
+
+var serveCmd = &cobra.Command{
+	Use:   "serve",
+	Short: "Start kernel HTTP server",
+	Long:  "Start kernel HTTP server. All serving-related options below are passed to the kernel boot.",
+	// 这些 flag 由 cobra 解析（见 init），serve -h 可直接列出全部参数。
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if err := util.SetHomeDir(homeDirPath); err != nil {
+			return err
+		}
+		// serve 绕过 root 的初始化，但 --log-level 需在 BootWithFlags（含 logBootInfo 等启动日志）之前应用，
+		// 否则命令行指定的级别会被丢弃；同时记入 util.CLILogLevel，使随后的 model.InitConf 不再用 conf.json 覆盖。
+		if "" != logLevel {
+			logging.SetLogLevel(logLevel)
+			util.CLILogLevel = logLevel
+		}
+		return nil // bypass root's init — BootWithFlags() handles it
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		// --workspace 使用 rootCmd 的 persistent flag，环境变量回退与默认值由 util.BootWithFlags 处理。
+		ws := workspacePath
+
+		util.BootWithFlags(ws, serveWdPath, servePort, serveReadOnly, serveAccessAuthCode, serveLang, serveMode, serveSSL, serveAttachUI, serveSafeMode, serveEnablePprof)
+
+		model.InitJwtKey()
+		model.InitConf()
+		go server.Serve(false, model.Conf.CookieKey)
+		model.InitAppearance()
+		sql.InitDatabase(false)
+		sql.InitHistoryDatabase(false)
+		sql.InitAssetContentDatabase(false)
+		// 数据库打开后重新应用搜索配置，使 PRAGMA case_sensitive_like 对新连接生效
+		model.ApplySearchRuntime()
+
+		model.BootSyncData()
+		model.CleanupEmptyPluginStorageDirs()
+		model.InitBoxes()
+		model.LoadFlashcards()
+		util.LoadAssetsTexts()
+
+		util.SetBooted()
+		util.PushClearAllMsg()
+
+		job.StartCron()
+
+		go model.AutoGenerateFileHistory()
+		go cache.LoadAssets()
+		go util.CheckFileSysStatus()
+		go plugin.InitManager()
+		go model.StartEmbeddingIndexer()
+
+		model.WatchAssets()
+		model.WatchEmojis()
+		model.WatchThemes()
+		model.HandleSignal()
+	},
+}
+
+func init() {
+	// --wd 默认值取内核可执行文件所在目录的上一级（打包后的 resources/，appearance/、stage/ 所在目录），
+	// 与 rootCmd.PersistentPreRunE 走同一个 resolveWorkingDir()，确保两条启动路径行为一致。
+	serveCmd.Flags().StringVar(&serveWdPath, "wd", resolveWorkingDir(), "working directory of SiYuan")
+	serveCmd.Flags().StringVar(&servePort, "port", "0", "port of the HTTP server")
+	serveCmd.Flags().StringVar(&serveReadOnly, "readonly", "false", "read-only mode")
+	serveCmd.Flags().StringVar(&serveAccessAuthCode, "accessAuthCode", "", "access auth code")
+	serveCmd.Flags().StringVar(&serveLang, "lang", "", "ar/de/en/es/fr/he/hi/id/it/ja/ko/nl/pl/pt-BR/ru/sk/sr/th/tr/uk/zh-CN/zh-TW")
+	serveCmd.Flags().StringVar(&serveMode, "mode", "prod", "dev/prod (non-prod values must not be used on network-exposed instances)")
+	serveCmd.Flags().BoolVar(&serveSSL, "ssl", false, "for https and wss")
+	serveCmd.Flags().BoolVar(&serveAttachUI, "attach-ui", false, "attach kernel lifecycle to desktop UI process (used by Electron)")
+	serveCmd.Flags().BoolVar(&serveSafeMode, "safe-mode", false, "boot in safe mode")
+	serveCmd.Flags().BoolVar(&serveEnablePprof, "enable-pprof", false, "register unauthenticated /debug/pprof/ endpoints exposing process memory dumps (dev only, never enable on a network-exposed instance)")
+
+	rootCmd.AddCommand(serveCmd)
+}

@@ -1,0 +1,82 @@
+# Copyright 2026 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# We don't actually care about being able to run any of these tools, but we
+# strongly care about generating the exact same file for all platforms.
+toolchain("gcc") {
+  tool("cc") {
+    depfile = "{{output}}.d"
+    command = "cc --depfile=$depfile DEFINES {{defines}} INCLUDE_DIRS {{include_dirs}} CFLAGS {{cflags}} CFLAGS_CC {{cflags_c}} SOURCE {{source}} OUTPUT {{output}}"
+    depsformat = "gcc"
+    description = "CC {{output}}"
+    outputs =
+        [ "{{source_out_dir}}/{{target_output_name}}.{{source_name_part}}.o" ]
+  }
+
+  tool("cxx") {
+    depfile = "{{output}}.d"
+    command = "cxx --depfile=$depfile DEFINES {{defines}} INCLUDE_DIRS {{include_dirs}} CFLAGS {{cflags}} CFLAGS_CC {{cflags_c}} SOURCE {{source}} OUTPUT {{output}}"
+    depsformat = "gcc"
+    description = "CXX {{output}}"
+    outputs =
+        [ "{{source_out_dir}}/{{target_output_name}}.{{source_name_part}}.o" ]
+  }
+
+  tool("alink") {
+    command = "alink {{output}} INPUTS {{inputs}}"
+    description = "AR {{target_output_name}}{{output_extension}}"
+
+    outputs =
+        [ "{{target_out_dir}}/{{target_output_name}}{{output_extension}}" ]
+    default_output_extension = ".a"
+    output_prefix = "lib"
+  }
+
+  tool("solink") {
+    soname = "{{target_output_name}}{{output_extension}}"  # e.g. "libfoo.so".
+    sofile = "{{output_dir}}/$soname"
+    rspfile = soname + ".rsp"
+    rspfile_content = "{{inputs}} {{solibs}} {{libs}}"
+
+    command = "solink $sofile @$rspfile"
+
+    description = "SOLINK $soname"
+
+    # Use this for {{output_extension}} expansions unless a target manually
+    # overrides it (in which case {{output_extension}} will be what the target
+    # specifies).
+    default_output_extension = ".so"
+
+    # Use this for {{output_dir}} expansions unless a target manually overrides
+    # it (in which case {{output_dir}} will be what the target specifies).
+    default_output_dir = "{{root_out_dir}}"
+
+    outputs = [ sofile ]
+    link_output = sofile
+    depend_output = sofile
+    output_prefix = "lib"
+  }
+
+  tool("link") {
+    outfile = "{{target_output_name}}{{output_extension}}"
+    rspfile = "$outfile.rsp"
+    rspfile_content = "{{inputs}}"
+
+    command = "link $outfile @$rspfile {{solibs}} {{libs}}"
+
+    description = "LINK $outfile"
+    default_output_dir = "{{root_out_dir}}"
+    outputs = [ outfile ]
+  }
+
+  tool("stamp") {
+    command = "stamp {{output}}"
+    description = "STAMP {{output}}"
+  }
+
+  tool("copy") {
+    command = "copy {{source}} {{output}}"
+    description = "COPY {{source}} {{output}}"
+  }
+}

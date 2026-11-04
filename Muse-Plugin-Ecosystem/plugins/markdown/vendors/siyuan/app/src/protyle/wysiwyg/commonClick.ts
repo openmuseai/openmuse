@@ -1,0 +1,137 @@
+import {hasClosestByClassName} from "../util/hasClosest";
+import {openAttr, openFileAttr} from "../../menus/commonMenuItem";
+/// #if !MOBILE
+import {openGlobalSearch} from "../../search/util";
+/// #endif
+import {isMobile} from "../../util/functions";
+import {isOnlyMeta} from "../util/compatibility";
+import {hasClosestBlock} from "../util/hasClosest";
+import {zoomOut} from "../../menus/protyle";
+/// #if MOBILE
+import {openMobileBacklinks} from "../../mobile/util/openBacklinks";
+/// #endif
+
+export const commonClick = (event: MouseEvent & {
+    target: HTMLElement
+}, protyle: IProtyle, data?: Record<string, string>) => {
+    const isM = isMobile();
+    /// #if MOBILE
+    const attrRefCountElement = hasClosestByClassName(event.target, "protyle-attr--refcount");
+    if (isM && attrRefCountElement) {
+        const blockId = attrRefCountElement.parentElement.parentElement.getAttribute("data-node-id");
+        if (blockId) {
+            openMobileBacklinks(protyle, blockId);
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
+    }
+    /// #endif
+    const attrBookmarkElement = hasClosestByClassName(event.target, "protyle-attr--bookmark");
+    if (attrBookmarkElement) {
+        if (!isM && isOnlyMeta(event)) {
+            /// #if !MOBILE
+            openGlobalSearch(protyle.app, attrBookmarkElement.textContent.trim(), true);
+            /// #endif
+        } else {
+            if (data) {
+                openFileAttr(data, "bookmark", protyle);
+            } else {
+                openAttr(attrBookmarkElement.parentElement.parentElement, "bookmark", protyle);
+            }
+        }
+        event.stopPropagation();
+        return true;
+    }
+
+    const attrNameElement = hasClosestByClassName(event.target, "protyle-attr--name");
+    if (attrNameElement) {
+        if (!isM && isOnlyMeta(event)) {
+            /// #if !MOBILE
+            openGlobalSearch(protyle.app, attrNameElement.textContent.trim(), true);
+            /// #endif
+        } else {
+            if (data) {
+                openFileAttr(data, "name", protyle);
+            } else {
+                openAttr(attrNameElement.parentElement.parentElement, "name", protyle);
+            }
+        }
+        event.stopPropagation();
+        return true;
+    }
+
+    const avElement = hasClosestByClassName(event.target, "protyle-attr--av");
+    if (avElement) {
+        const avIDElement = event.target.closest("[data-av-id]") as HTMLElement;
+        const avID = avIDElement && avElement.contains(avIDElement) ? avIDElement.dataset.avId : "";
+        const databaseAttributePanel = window.siyuan.config.editor.databaseAttrShow &&
+            window.siyuan.config.editor.databaseAttrClickMode === 0 &&
+            protyle.databaseAttributePanel;
+        if (!databaseAttributePanel) {
+            if (data) {
+                openFileAttr(data, "av", protyle);
+            } else {
+                openAttr(avElement.parentElement.parentElement, "av", protyle);
+            }
+        } else if (data) {
+            if (avID) {
+                databaseAttributePanel.expand(avID, true);
+            } else {
+                databaseAttributePanel.toggle();
+            }
+        } else {
+            const blockElement = hasClosestBlock(avElement);
+            const blockID = blockElement ? blockElement.getAttribute("data-node-id") : "";
+            if (blockID && protyle.block.showAll && blockID === protyle.block.id) {
+                if (avID) {
+                    databaseAttributePanel.expand(avID, true);
+                } else {
+                    databaseAttributePanel.toggle();
+                }
+            } else if (blockID) {
+                zoomOut({
+                    protyle,
+                    id: blockID,
+                    callback: avID ? () => databaseAttributePanel.expand(avID, true) : undefined,
+                });
+            }
+        }
+        event.stopPropagation();
+        return true;
+    }
+
+    const attrAliasElement = hasClosestByClassName(event.target, "protyle-attr--alias");
+    if (attrAliasElement) {
+        if (!isM && isOnlyMeta(event)) {
+            /// #if !MOBILE
+            openGlobalSearch(protyle.app, attrAliasElement.textContent.trim(), true);
+            /// #endif
+        } else {
+            if (data) {
+                openFileAttr(data, "alias", protyle);
+            } else {
+                openAttr(attrAliasElement.parentElement.parentElement, "alias", protyle);
+            }
+        }
+        event.stopPropagation();
+        return true;
+    }
+
+    const attrMemoElement = hasClosestByClassName(event.target, "protyle-attr--memo");
+    if (attrMemoElement) {
+        if (!isM && isOnlyMeta(event)) {
+            /// #if !MOBILE
+            openGlobalSearch(protyle.app, attrMemoElement.getAttribute("aria-label").trim(), true);
+            /// #endif
+        } else {
+            if (data) {
+                openFileAttr(data, "memo", protyle);
+            } else {
+                openAttr(attrMemoElement.parentElement.parentElement, "memo", protyle);
+            }
+        }
+        event.stopPropagation();
+        return true;
+    }
+};

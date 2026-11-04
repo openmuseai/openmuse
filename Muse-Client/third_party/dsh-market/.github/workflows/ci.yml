@@ -1,0 +1,175 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # `data/registry-snapshot.json` is a DOWNLOAD, not the catalog (see the
+  # `snapshot` script in package.json). A plugin entry hand-written into it
+  # survives exactly until the next refresh, so a contributor who adds one
+  # here has built something that cannot work — and it has now happened
+  # twice, despite the PR template saying so in words. Say it at the point
+  # the mistake is made instead, and say where the entry actually goes.
+  #
+  # Refreshing the snapshot for real is legitimate: label the PR
+  # `snapshot-refresh` and this step stands down.
+  wrong-repo-guard:
+    if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'snapshot-refresh')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Refuse a committed catalog copy
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # --diff-filter=AM: adding or editing the file is the mistake.
+          # Removing it is not, and a guard that cannot tell those apart
+          # blocks its own retirement — which is how this one first fired,
+          # on the PR deleting the file it was written to protect.
+          if git diff --name-only --diff-filter=AM "$BASE" "$HEAD" | grep -qx 'data/registry-snapshot.json'; then
+            echo "::error file=data/registry-snapshot.json::This repository does not carry a copy of the plugin catalog any more (#545). The market reads the live catalog, the site build downloads its own, and the merge gate validates the live one — so a file added here is read by nothing and goes stale immediately, while looking enough like the source of truth to mislead the next person. To list a plugin, add it to https://github.com/awesome-dsh-plugin/awesome-dsh-plugin."
+            exit 1
+          fi
+          echo "no committed catalog copy"
+
+  check:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: npm install
+      - run: npm run check
+      # The committed client bundle must be reproducible from the committed
+      # source (#472, and the review-noise half of the same problem: a
+      # 320-line artifact diff on every client PR is where a bad change can
+      # hide). npm run check just rebuilt it; if the rebuild differs from
+      # what is committed, either the source and artifact are out of sync or
+      # the build is environment-dependent — both are things to know loudly.
+      # The output of a bare `git diff --exit-code client/` is a diff of a
+      # 560KB generated file: it shows WHAT changed and never what to do.
+      # Four contributors in one month hit this (#518, #563, #570, #538) and
+      # each needed a person to tell them the same sentence. A failure that
+      # explains itself costs one step and saves that.
+      - name: the committed client bundle must match src/client
+        # bash explicitly: `run:` defaults to PowerShell on windows-latest,
+        # where `if ! cmd` is a parser error rather than a test — so the step
+        # that exists to explain a failure died with a syntax error instead
+        # of explaining one.
+        shell: bash
+        run: |
+          if ! git diff --exit-code client/; then
+            echo "::error file=client/client.js::client/ is a committed build artifact and no longer matches src/client/. Run \`npm run check\` (or \`npm run build:client\`) and commit the result. Do not hand-edit it — the next build overwrites any manual change."
+            exit 1
+          fi
+          echo "client/ matches src/client"
+      - run: npm test
+      - run: node scripts/preflight.mjs
+      - run: node scripts/validate-registry.mjs
+      - run: node scripts/smoke-spawn.mjs
+
+  # Real-pnpm matrix (9/10/11/12 via npx) pinning the failure signatures behind
+  # #20/#21/#22 and the recovery paths the market automates. Network-bound and
+  # slower, so it runs as its own lane on Linux only.
+  pnpm-compat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install
+      - run: npm run test:compat
+
+  # Layer-3 web e2e: real dsh (pinned rc) + packed market + real Chromium.
+  web-e2e:
+    # Both platforms: the install chain is where the market meets pnpm, the
+    # loader and the filesystem, and every one of those behaves differently
+    # on Windows — the shim, the PATH probe, path separators, process
+    # teardown. Running it on Linux alone left every fix to that chain
+    # unverified there, while a third of the bug reports come from Windows.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        # The released line is what users run today; the alpha is what they
+        # will run next, and it is where the market breaks first. dsh
+        # 0.1.2-alpha.1 removed two exports this plugin imported by name, and
+        # the result was the HOST FAILING TO BOOT with the market installed —
+        # nothing in CI could see it, because CI only ever ran the released
+        # line. A plugin that can stop the host from starting has to be
+        # caught before the alpha becomes `latest`.
+        # 0.1.7 is the next line, and it is the one that changed the most
+        # under this plugin: it moved a plugin's own configuration onto its
+        # bundle's page in the sidebar's Plugins page and derives settings
+        # from a Config schema instead of a plugin-registered namespace
+        # (#677). Both of those are exercised here now — the settings card
+        # registers into `plugins.bundle.config` and the spec asserts it at
+        # that seat — which is exactly the kind of change nothing in CI could
+        # see back when the alpha broke the host's boot.
+        # The 0.1.7 line is tracked at its published `latest` (rc.2), and 0.2
+        # is the new `next`: it is where this plugin broke first, and it broke
+        # SILENTLY (#756) — the host's own compatibility gate refused the peer
+        # range and skipped the bundle, so the market vanished from the UI with
+        # one stderr line. A caret over a prerelease ends at `<0.2.0-0`, so no
+        # amount of OR-ing earlier lines admits a 0.2 prerelease; the range has
+        # to name the new line. Running it here is what keeps that from
+        # shipping again on the line after this one.
+        dsh: ['0.1.0-rc.8', '0.1.2-alpha.2', '0.1.7-rc.2', '0.2.0-rc.1']
+        exclude:
+          # Host-API breakage is platform-independent, and Windows web-e2e is
+          # the slowest job in the matrix (~8 min). Running the newer lines on
+          # Linux alone catches the class without doubling the critical path;
+          # the released line still runs on both, because the install chain
+          # itself is where Windows differs.
+          - os: windows-latest
+            dsh: '0.1.2-alpha.2'
+          - os: windows-latest
+            dsh: '0.1.7-rc.2'
+          - os: windows-latest
+            dsh: '0.2.0-rc.1'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: npm install
+      # rc.8+: earlier CLIs unconditionally launched a system browser on
+      # `dsh web` boot, which on the Windows runner left orphaned msedge
+      # processes and the status endpoint never answering — read as a
+      # flaky "dsh boot timeout" (and, on longer specs, an hours-long stuck
+      # job) with nothing wrong in this repo's own code. rc.8 added
+      # `--no-open`, which tests/web/scaffold.ts now passes.
+      # Not `npm install -g`: the older CLIs pin only themselves while their
+      # cordis plugins float, and since 2026-09-22 the newest of them no
+      # longer boot (#684). The script installs the host under `overrides`,
+      # which a global install ignores, and puts it on PATH — for the lines
+      # that need it: 0.1.7 declares its own ranges and installs as published,
+      # so CI tests the composition its users get. See the script for the
+      # bisect.
+      - run: node scripts/install-e2e-host.mjs ${{ matrix.dsh }}
+      # --with-deps installs system libraries and is Linux-only.
+      - run: npx playwright install --with-deps chromium
+        if: runner.os == 'Linux'
+      - run: npx playwright install chromium
+        if: runner.os == 'Windows'
+      - run: npm run test:web
+        # Fail loudly if the CLI install above ever breaks: without this the
+        # specs would skip and the job would pass green having asserted nothing.
+        env:
+          DSHM_E2E_REQUIRED: '1'

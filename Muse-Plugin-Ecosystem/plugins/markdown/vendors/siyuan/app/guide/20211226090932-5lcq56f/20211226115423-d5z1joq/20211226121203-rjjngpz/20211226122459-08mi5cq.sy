@@ -1,0 +1,1051 @@
+{
+	"ID": "20211226122459-08mi5cq",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20211226122459-08mi5cq",
+		"title": "Docker 伺服",
+		"type": "doc",
+		"updated": "20261016202635"
+	},
+	"Children": [
+		{
+			"ID": "20220518213326-bk4p9a6",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20220518213326-bk4p9a6",
+				"updated": "20220518213342"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20220521230221-lttufyw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20220521230221-lttufyw",
+				"updated": "20220521230221"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在服務器上伺服思源最簡單的方案是通過 Docker 部署。"
+				}
+			]
+		},
+		{
+			"ID": "20220521230221-hwwahvr",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20220521230221-hwwahvr",
+				"updated": "20220521230221"
+			},
+			"Children": [
+				{
+					"ID": "20220521230221-yeqkg58",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220521230221-yeqkg58",
+						"updated": "20220521230221"
+					},
+					"Children": [
+						{
+							"ID": "20220521230221-yulxs59",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220521230221-yulxs59",
+								"updated": "20220521230221"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "鏡像名稱 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "b3log/siyuan"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20220521230221-vcehw0q",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220521230221-vcehw0q",
+						"updated": "20220521230221"
+					},
+					"Children": [
+						{
+							"ID": "20220521230221-k8vfzcf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220521230221-k8vfzcf",
+								"updated": "20220521230221"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://hub.docker.com/r/b3log/siyuan",
+									"TextMarkTextContent": "鏡像地址"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-4ed44x8",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211226122519-4ed44x8",
+				"updated": "20211226011647"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "文件結構"
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-kzprtsh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226122519-kzprtsh",
+				"updated": "20211228124513"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "整體程式位於 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/opt/siyuan/"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 下，基本上就是 Electron 安裝包 resources 文件夾下的結構："
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-dp4dv43",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20211226122519-dp4dv43",
+				"updated": "20230630170719"
+			},
+			"Children": [
+				{
+					"ID": "20211226122519-sw50upp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226122519-sw50upp",
+						"updated": "20211228132206"
+					},
+					"Children": [
+						{
+							"ID": "20211226122519-g4coowo",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226122519-g4coowo",
+								"updated": "20211228132206"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "appearance：圖示、主題、多語言"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20211226122519-1t88amn",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226122519-1t88amn"
+					},
+					"Children": [
+						{
+							"ID": "20211226122519-51tle6l",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226122519-51tle6l"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "guide：幫助文檔"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20211226122519-iewtwx8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226122519-iewtwx8",
+						"updated": "20211228104843"
+					},
+					"Children": [
+						{
+							"ID": "20211226122519-fftnvkg",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226122519-fftnvkg",
+								"updated": "20211228104843"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "stage：界面和靜態資料"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20211226122519-sn8phpz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226122519-sn8phpz",
+						"updated": "20230630170719"
+					},
+					"Children": [
+						{
+							"ID": "20211226122519-s5nun1r",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226122519-s5nun1r",
+								"updated": "20230630170719"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "kernel：核心程式"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-kdp3vo5",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211226122519-kdp3vo5",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "啟動入口"
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-ygn57k3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226122519-ygn57k3",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "映像入口為 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "ENTRYPOINT [\"/opt/siyuan/entrypoint.sh\"]"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，預設指令為 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "CMD [\"serve\"]"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。映像名稱後的參數會替換預設指令，因此傳入核心參數時必須明確包含 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "serve"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				}
+			]
+		},
+		{
+			"ID": "20261016112115-ei2ulh1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016112115-ei2ulh1",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "啟動前先建立主機工作空間目錄並設定鑑權。以下範例從主機已匯出的 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "SIYUAN_ACCESS_AUTH_CODE"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 環境變數讀取強鎖屏密碼；新的 Docker 工作空間沒有密碼或有效的 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260804190001-oidctw1",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "OIDC 登入"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 時會拒絕啟動。例如，可在 Bash 中依下例私密輸入自行選擇的密碼。不要將真實密碼寫入共享檔案或指令歷史；有權限檢查容器環境的人仍可讀到該值。"
+				}
+			]
+		},
+		{
+			"ID": "20261016112115-ebh8s7k",
+			"Type": "NodeCodeBlock",
+			"Properties": {
+				"id": "20261016112115-ebh8s7k",
+				"updated": "20261016112115"
+			},
+			"IsFencedCodeBlock": true,
+			"CodeBlockFenceChar": 96,
+			"CodeBlockFenceLen": 3,
+			"CodeBlockOpenFence": "YGBg",
+			"CodeBlockInfo": "YmFzaA==",
+			"CodeBlockCloseFence": "YGBg",
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker",
+					"CodeBlockInfo": "YmFzaA=="
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "read -r -s -p \"鎖屏密碼：\" SIYUAN_ACCESS_AUTH_CODE\nprintf '\\n'\nexport SIYUAN_ACCESS_AUTH_CODE\n: \"${SIYUAN_ACCESS_AUTH_CODE:?請設定非空鎖屏密碼}\"\n"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-cpmotp6",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20211226122519-cpmotp6",
+				"updated": "20211226011647"
+			},
+			"Children": [
+				{
+					"ID": "20211226122519-l15oree",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226122519-l15oree"
+					},
+					"Children": [
+						{
+							"ID": "20211226122519-0g8i8mj",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226122519-0g8i8mj"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--workspace"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 指定工作空間文件夾路徑，在宿主機上通過 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "-v"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 掛載到容器中"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-ajimm1z",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226122519-ajimm1z",
+				"updated": "20261016202635"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "更多的參數可參考"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211226122358-hctqcn5",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "這裡"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。下面是一條啟動指令示例："
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "docker run -d -v workspace_dir_host:workspace_dir_container -p 6806:6806 -e SIYUAN_ACCESS_AUTH_CODE b3log/siyuan serve --workspace=workspace_dir_container"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。透過 Docker 部署並啟用發布服務時，除了伺服連接埠映射外，還需在建立容器的指令中加入 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "-p 6808:6808"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。Docker 連接埠映射格式為主機連接埠:容器連接埠；若修改發布服務連接埠，應同步調整容器連接埠，存取時使用主機連接埠。請使用固定的發布服務連接埠，不要設定為 0。"
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-5g8qw7j",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20211226122519-5g8qw7j",
+				"updated": "20211226011647"
+			},
+			"Children": [
+				{
+					"ID": "20211226122519-2t1ukwf",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226122519-2t1ukwf"
+					},
+					"Children": [
+						{
+							"ID": "20211226122519-g8sxt5u",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226122519-g8sxt5u"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace_dir_host"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：宿主機上的工作空間文件夾路徑"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20211226122519-kalelk8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226122519-kalelk8"
+					},
+					"Children": [
+						{
+							"ID": "20211226122519-75lsh4l",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226122519-75lsh4l"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace_dir_container"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：容器內工作空間文件夾路徑，和後面 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--workspace"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 指定成一樣的"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-yggdi08",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226122519-yggdi08",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "例如，在主機建立 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/siyuan/workspace"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 後執行 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "docker run -d -v /siyuan/workspace:/siyuan/workspace -p 6806:6806 -e SIYUAN_ACCESS_AUTH_CODE -e PUID=1000 -e PGID=1000 b3log/siyuan serve --workspace=/siyuan/workspace"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。主機與容器內路徑可以不同。啟動後開啟 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "http://server-ip:6806"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，使用剛才設定的密碼登入；啟動失敗時檢查容器日誌。"
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-s9mfeas",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211226122519-s9mfeas",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "用戶權限"
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-38pgtv3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226122519-38pgtv3",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "入口指令碼需要權限來建立或重複使用使用者和群組，並遞迴設定 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/opt/siyuan"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/home/siyuan"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 和工作空間的所有權，隨後透過 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "su-exec"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 以 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "PUID:PGID"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 執行核心，兩者預設均為 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "1000"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。如需符合主機擁有者，可傳入 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "-e PUID=1000 -e PGID=1000"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 並替換為相應數字 ID。不要加入 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "-u 1000:1000"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，否則入口指令碼無法準備權限。所有權調整也會作用於掛載的主機目錄。"
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-wwlpn5g",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211226122519-wwlpn5g",
+				"updated": "20260921003419"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "隱藏埠"
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-akxtjeg",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226122519-akxtjeg",
+				"updated": "20211226011647"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用 NGINX 反向代理可以隱藏 6806 埠，請註意："
+				}
+			]
+		},
+		{
+			"ID": "20211226122519-kh6qira",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20211226122519-kh6qira",
+				"updated": "20260921003419"
+			},
+			"Children": [
+				{
+					"ID": "20211226122519-orj98i7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226122519-orj98i7",
+						"updated": "20211228132828"
+					},
+					"Children": [
+						{
+							"ID": "20211226122519-pgqa7l6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226122519-pgqa7l6",
+								"updated": "20211228132828"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "配置 WebSocket 反代 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/ws"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260921003419-sn7b4ld",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Children": [
+						{
+							"ID": "20260921003419-w31hwdt",
+							"Type": "NodeParagraph",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "一般請求和 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/ws"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 的反向代理都需要保留原始 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "Host"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 請求標頭及連接埠，在 NGINX 的兩處代理設定中均設定 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "proxy_set_header Host $http_host;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "。使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "$host"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 會遺失非標準連接埠（如 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "8443"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "），可能導致來源驗證失敗，表現為登入後停留在 LOGO 並反覆重新整理、介面回傳 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "401"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 或 WebSocket 連線失敗"
+								}
+							],
+							"Properties": {
+								"id": "20260921003419-w31hwdt",
+								"updated": "20260921003419"
+							}
+						}
+					],
+					"Properties": {
+						"id": "20260921003419-sn7b4ld",
+						"updated": "20260921003419"
+					}
+				}
+			]
+		},
+		{
+			"ID": "20230406105213-87fl7tu",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230406105213-87fl7tu",
+				"updated": "20230406105213"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20230406105213-bhjbz5l",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230406105213-bhjbz5l",
+				"updated": "20230406105250"
+			},
+			"Children": [
+				{
+					"ID": "20230406105213-9bsxoem",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230406105213-9bsxoem",
+						"updated": "20230406105213"
+					},
+					"Children": [
+						{
+							"ID": "20230406105213-q4aecyp",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230406105213-q4aecyp",
+								"updated": "20230406105213"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "請務必確認掛載卷的正確性，否則容器刪除後資料會丟失"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230406105213-3hw3e6i",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230406105213-3hw3e6i",
+						"updated": "20230406105250"
+					},
+					"Children": [
+						{
+							"ID": "20230406105213-hy2wy2j",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230406105213-hy2wy2j",
+								"updated": "20230406105250"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "不要使用 URL 重寫進行重定向，否則鑑權可能會有問題，建議配置反向代理"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230406105213-yoyn08w",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230406105213-yoyn08w",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "限制"
+				}
+			]
+		},
+		{
+			"ID": "20230406105213-899tzed",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230406105213-899tzed",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"ID": "20230406105213-n1iq0nk",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230406105213-n1iq0nk",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20230406105213-8dbq6l2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230406105213-8dbq6l2",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "行動端應用仍不支援連線。桌面端可以透過遠端模式連線，詳見 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20260903150000-3qa6edk",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "連線至遠端內核"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ""
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230406105213-a8dt0r2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230406105213-a8dt0r2",
+						"updated": "20250926110600"
+					},
+					"Children": [
+						{
+							"ID": "20230406105213-2dqmoo6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230406105213-2dqmoo6",
+								"updated": "20250926110600"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "不支援匯出 PDF 和 Word 等格式"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

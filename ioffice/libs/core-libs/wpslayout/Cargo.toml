@@ -1,0 +1,11 @@
+﻿[package]
+name = "core_libs_wpslayout"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+kfc = { package = "core_libs_kfc_main", path = "../kfc/kfc" }
+drawing = { package = "core_libs_drawing", path = "../drawing" }

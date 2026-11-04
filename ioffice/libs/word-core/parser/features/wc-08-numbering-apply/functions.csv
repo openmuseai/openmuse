@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_num_table,numbering落库,numbering.xml,AutoNumTable,wc-02,02,libs/word-core,pass
+2,02_function_auto_num_string,编号可见串,234/235,autoNumString,01,wr-21,libs/word-core,pass

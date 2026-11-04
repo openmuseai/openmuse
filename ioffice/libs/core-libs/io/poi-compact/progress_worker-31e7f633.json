@@ -1,0 +1,16 @@
+{
+  "mainJavaPath": "/Users/mac/src/ioffice/koffice/core-libs/kfs/kfs_app/src/cn/wps/moffice/kfs/FileOutputStream.java",
+  "mode": "rewrite",
+  "files": [
+    {
+      "javaPath": "/Users/mac/src/ioffice/koffice/core-libs/kfs/kfs_app/src/cn/wps/moffice/kfs/FileOutputStream.java",
+      "rustPath": "/Users/mac/src/ioffice/libs/core-libs/kfs/kfs_app/src/cn/wps/moffice/kfs/FileOutputStream.rs",
+      "currentStep": "cargo_check",
+      "status": "error",
+      "error": "[cargo check]\n    Checking core_libs_kfs_app v0.1.0 (/Users/mac/src/ioffice/libs/core-libs/kfs/kfs_app)\nerror: visibility `pub` is not followed by an item\n --> src/lib.rs:3:1\n  |\n3 | pub mode cn;\n  | ^^^ the visibility\n  |\n  = help: you likely meant to define an item, e.g., `pub fn foo() {}`\nhelp: there is a keyword `mod` with a similar name\n  |\n3 - pub mode cn;\n3 + pub mod cn;\n  |\n\nerror: expected item, found `mode`\n --> src/lib.rs:3:5\n  |\n3 | pub mode cn;\n  |     ^^^^ expected item\n  |\n  = note: for a full list of items that can appear in modules, see <https://doc.rust-lang.org/reference/items.html>\n\nerror: could not compile `core_libs_kfs_app` (lib) due to 2 previous errors\n",
+      "retryCount": 0,
+      "errorCnt": 0
+    }
+  ],
+  "timestamp": "2026-06-23T00:40:08.608Z"
+}

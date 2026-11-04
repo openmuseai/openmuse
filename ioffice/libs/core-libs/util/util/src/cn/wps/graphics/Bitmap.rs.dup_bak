@@ -1,0 +1,64 @@
+#![allow(non_snake_case, dead_code, unused_variables, unused_imports)]
+
+// Java: public interface Bitmap
+pub trait Bitmap {
+    // Java: abstract boolean compress(CompressFormat var1, int var2, OutputStream var3)
+    fn compress(&self, var1: CompressFormat, var2: i32, var3: &dyn std::any::Any) -> bool;
+
+    // Java: abstract int getHeight()
+    fn getHeight(&self) -> i32;
+
+    // Java: abstract int getWidth()
+    fn getWidth(&self) -> i32;
+
+    // Java: abstract boolean isRecycled()
+    fn isRecycled(&self) -> bool;
+
+    // Java: abstract void recycle()
+    fn recycle(&self);
+
+    // Java: abstract void setFromType(FromType var1)
+    fn setFromType(&self, var1: FromType);
+
+    // Java: abstract boolean isInMemory()
+    fn isInMemory(&self) -> bool;
+
+    // Java: abstract Bitmap createScaleBitmap(int var1, int var2)
+    fn createScaleBitmap(&self, var1: i32, var2: i32) -> Box<dyn Bitmap>;
+
+    // Java: abstract boolean isMaxSize()
+    fn isMaxSize(&self) -> bool;
+
+    // Java: abstract int getAllocationByteCount()
+    fn getAllocationByteCount(&self) -> i32;
+}
+
+// Java: public enum CompressFormat
+pub struct CompressFormat {
+    // Java field: int nativeInt
+    pub(crate) nativeInt: i32,
+}
+
+impl CompressFormat {
+    // Java: CompressFormat(int nativeInt)
+    pub fn new(nativeInt: i32) -> Self {
+        let mut s = CompressFormat { nativeInt: 0 };
+        s._init(nativeInt);
+        s
+    }
+
+    fn _init(&mut self, nativeInt: i32) {
+        // Java: this.nativeInt = nativeInt;
+        self.nativeInt = nativeInt;
+    }
+}
+
+// Java: public enum FromType
+pub struct FromType;
+
+impl FromType {
+    // Java: FromType()
+    pub fn new() -> Self {
+        FromType
+    }
+}

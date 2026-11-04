@@ -1,0 +1,219 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package api
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+// TestRenderTemplatePathRestriction 验证 /api/template/render 拒绝读取 <data>/templates/ 目录之外的路径，
+// 防止通过模板渲染接口读取工作空间内的敏感文件（如 conf/conf.json）
+func TestRenderTemplatePathRestriction(t *testing.T) {
+	tmpWorkspace := t.TempDir()
+	origWorkspace, origData := util.WorkspaceDir, util.DataDir
+	util.WorkspaceDir = tmpWorkspace
+	util.DataDir = filepath.Join(tmpWorkspace, "data")
+	t.Cleanup(func() { util.WorkspaceDir, util.DataDir = origWorkspace, origData })
+
+	confFile := filepath.Join(tmpWorkspace, "conf", "conf.json")
+	if err := os.MkdirAll(filepath.Dir(confFile), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(confFile, []byte(`{"api":{"token":"secret"}}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
+	engine.Use(func(c *gin.Context) {
+		c.Set(model.RoleContextKey, model.RoleAdministrator)
+		c.Next()
+	})
+	ServeAPI(engine)
+
+	body, err := json.Marshal(map[string]any{
+		"id":   "20220724223548-j6g0o87",
+		"path": confFile,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/template/render", bytes.NewReader(body))
+	request.Header.Set("Content-Type", "application/json")
+	engine.ServeHTTP(recorder, request)
+
+	response := &struct {
+		Code int    `json:"code"`
+		Msg  string `json:"msg"`
+	}{}
+	if err := json.Unmarshal(recorder.Body.Bytes(), response); err != nil {
+		t.Fatal(err)
+	}
+	if -1 != response.Code {
+		t.Fatalf("conf.json should be rejected: got code %d, msg %q", response.Code, response.Msg)
+	}
+	if "Path ["+confFile+"] is not in templates directory" != response.Msg {
+		t.Fatalf("unexpected msg: got %q", response.Msg)
+	}
+}
+
+// TestIsPathInTemplatesDir 覆盖模板路径校验：仅接受 <data>/templates/ 目录内的文件，
+// 并拒绝通过符号链接指向目录外的敏感文件
+func TestIsPathInTemplatesDir(t *testing.T) {
+	tmpWorkspace := t.TempDir()
+	origWorkspace, origData := util.WorkspaceDir, util.DataDir
+	util.WorkspaceDir = tmpWorkspace
+	util.DataDir = filepath.Join(tmpWorkspace, "data")
+	t.Cleanup(func() { util.WorkspaceDir, util.DataDir = origWorkspace, origData })
+
+	templatesDir := filepath.Join(util.DataDir, "templates")
+	templateFile := filepath.Join(templatesDir, "sub", "foo.md")
+	if err := os.MkdirAll(filepath.Dir(templateFile), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(templateFile, []byte("foo"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	confFile := filepath.Join(tmpWorkspace, "conf", "conf.json")
+	if err := os.MkdirAll(filepath.Dir(confFile), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(confFile, []byte(`{"api":{"token":"secret"}}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	assetFile := filepath.Join(util.DataDir, "assets", "note.md")
+	if err := os.MkdirAll(filepath.Dir(assetFile), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(assetFile, []byte("asset"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	rejected := []string{
+		confFile,  // 工作空间内的敏感文件
+		assetFile, // 模板目录之外的工作空间文件
+		filepath.Join(util.DataDir, "templates2"), // 名称相近的目录
+		"foo.md", // 相对路径
+	}
+	for _, p := range rejected {
+		if got := isPathInTemplatesDir(p); got {
+			t.Errorf("isPathInTemplatesDir(%q) = true, want false", p)
+		}
+	}
+
+	if got := isPathInTemplatesDir(templateFile); !got {
+		t.Errorf("isPathInTemplatesDir(%q) = false, want true (template file)", templateFile)
+	}
+
+	// 通过符号链接指向模板目录外的敏感文件时应被拒绝
+	link := filepath.Join(templatesDir, "sub", "leak.md")
+	if err := os.Symlink(confFile, link); err != nil {
+		t.Skipf("symlink not supported on this platform: %v", err)
+	}
+	if got := isPathInTemplatesDir(link); got {
+		t.Errorf("isPathInTemplatesDir(symlink -> conf.json) = true, want false")
+	}
+}
+
+func TestDocSaveAsTemplateDatabaseMode(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	tests := []struct {
+		name         string
+		databaseMode any
+		includeMode  bool
+		wantCode     int
+	}{
+		{name: "legacy default", wantCode: 0},
+		{name: "copy", databaseMode: "copy", includeMode: true, wantCode: 0},
+		{name: "reference", databaseMode: "reference", includeMode: true, wantCode: 0},
+		{name: "unknown", databaseMode: "unknown", includeMode: true, wantCode: -1},
+		{name: "invalid type", databaseMode: true, includeMode: true, wantCode: -1},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			arg := map[string]any{
+				"id": "20260904000999-api0001", "name": "template", "overwrite": false,
+			}
+			if test.includeMode {
+				arg["databaseMode"] = test.databaseMode
+			}
+			body, err := json.Marshal(arg)
+			if nil != err {
+				t.Fatal(err)
+			}
+			recorder := httptest.NewRecorder()
+			context, _ := gin.CreateTestContext(recorder)
+			context.Request = httptest.NewRequest(http.MethodPost, "/api/template/docSaveAsTemplate", bytes.NewReader(body))
+			context.Request.Header.Set("Content-Type", "application/json")
+			docSaveAsTemplate(context)
+
+			response := &struct {
+				Code int `json:"code"`
+			}{}
+			if err = json.Unmarshal(recorder.Body.Bytes(), response); nil != err {
+				t.Fatal(err)
+			}
+			if test.wantCode != response.Code {
+				t.Fatalf("unexpected response code: got %d, want %d", response.Code, test.wantCode)
+			}
+		})
+	}
+}
+
+func TestTemplatePreviewSourceModeRestriction(t *testing.T) {
+	previousWorkspace, previousData := util.WorkspaceDir, util.DataDir
+	util.WorkspaceDir = t.TempDir()
+	util.DataDir = filepath.Join(util.WorkspaceDir, "data")
+	t.Cleanup(func() { util.WorkspaceDir, util.DataDir = previousWorkspace, previousData })
+	p := filepath.Join(util.DataDir, "templates", "preview.md")
+	if err := os.MkdirAll(filepath.Dir(p), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(p, []byte("original"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	for _, value := range []map[string]any{
+		{"mode": "editorInsert", "content": "draft"},
+		{"content": "draft"},
+		{"mode": "preview", "content": true},
+	} {
+		value["id"] = "20260904000999-api0001"
+		value["path"] = p
+		body, err := json.Marshal(value)
+		if err != nil {
+			t.Fatal(err)
+		}
+		recorder := httptest.NewRecorder()
+		context, _ := gin.CreateTestContext(recorder)
+		context.Request = httptest.NewRequest(http.MethodPost, "/api/template/render", bytes.NewReader(body))
+		context.Request.Header.Set("Content-Type", "application/json")
+		renderTemplate(context)
+		var response struct {
+			Code int `json:"code"`
+		}
+		if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+			t.Fatal(err)
+		}
+		if response.Code != -1 {
+			t.Fatalf("source accepted outside preview: %s", recorder.Body.String())
+		}
+	}
+	content, err := os.ReadFile(p)
+	if err != nil || string(content) != "original" {
+		t.Fatal("rejected preview changed template file")
+	}
+}

@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_page_setup,默认节页几何(缇→内容区),PageSetup(11906,16838,1800,1800,1440,1440)/PropertySet676,contentWidth/Height(缇),wc-05-06默认节,02_function_view_env;wr-04/05,libs/word-core,pass
+2,02_function_view_env,视图状态(宽高/模式/缩放),viewWidth/Height+mode+zoom,ViewEnv内容区换算+changeSize标志,01_function_page_setup,wr-04/05/07,libs/word-core,pass

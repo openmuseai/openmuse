@@ -1,0 +1,9 @@
+pub mod DigestError;
+pub mod DigestMD2;
+pub mod DigestMD5;
+pub mod DigestSHA1;
+pub mod DigestSHA512;
+pub mod IDigest;
+pub mod DigestSHA;
+pub mod DigestHMAC_SHA1;
+pub mod DigestHMAC_MD5;

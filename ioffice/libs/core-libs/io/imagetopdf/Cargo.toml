@@ -1,0 +1,10 @@
+﻿[package]
+name = "core_libs_imagetopdf"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+flate2 = "1"

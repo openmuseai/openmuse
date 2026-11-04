@@ -1,0 +1,321 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"bytes"
+	stdhtml "html"
+	"net/url"
+	"path"
+	"strings"
+
+	"github.com/88250/gulu"
+	"github.com/88250/lute/ast"
+	lutehtml "github.com/88250/lute/html"
+	"github.com/88250/lute/parse"
+	"github.com/siyuan-note/siyuan/kernel/av"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+type assetReferenceRewriteOptions struct {
+	pathMap         map[string]string
+	targetBoxID     string
+	bindTargetBox   bool
+	rewriteUnmapped bool
+}
+
+func canonicalAssetReferencePath(rawPath string) string {
+	rawPath = strings.TrimSpace(stdhtml.UnescapeString(rawPath))
+	if decoded, err := url.PathUnescape(rawPath); err == nil {
+		rawPath = decoded
+	}
+	rawPath = strings.TrimPrefix(path.Clean(rawPath), "/")
+	if rawPath == "." || !strings.HasPrefix(rawPath, "assets/") {
+		return ""
+	}
+	return rawPath
+}
+
+func splitAssetReference(rawReference string) (rawPath, rawQuery, fragment string) {
+	rawPath = strings.TrimSpace(rawReference)
+	if index := strings.Index(rawPath, "#"); index >= 0 {
+		fragment = rawPath[index:]
+		rawPath = rawPath[:index]
+	}
+	if index := strings.Index(rawPath, "?"); index >= 0 {
+		rawQuery = rawPath[index+1:]
+		rawPath = rawPath[:index]
+	}
+	return
+}
+
+func lookupRewrittenAssetPath(sourcePath string, options assetReferenceRewriteOptions) (targetPath string, found bool) {
+	if targetPath, found = options.pathMap[sourcePath]; found {
+		return
+	}
+
+	// PDF 标注引用形如 assets/document.pdf/<annotationID>，资源映射只记录 PDF 文件本身。
+	longestSourcePath := ""
+	for candidateSourcePath, candidateTargetPath := range options.pathMap {
+		if len(candidateSourcePath) <= len(longestSourcePath) ||
+			!strings.HasPrefix(sourcePath, candidateSourcePath+"/") {
+			continue
+		}
+		longestSourcePath = candidateSourcePath
+		targetPath = candidateTargetPath + strings.TrimPrefix(sourcePath, candidateSourcePath)
+		found = true
+	}
+	return
+}
+
+func rewriteAssetReference(rawReference string, options assetReferenceRewriteOptions) string {
+	rawPath, rawQuery, fragment := splitAssetReference(rawReference)
+	sourcePath := canonicalAssetReferencePath(rawPath)
+	if sourcePath == "" {
+		return rawReference
+	}
+
+	targetPath, found := lookupRewrittenAssetPath(sourcePath, options)
+	if !found {
+		if !options.rewriteUnmapped {
+			return rawReference
+		}
+		targetPath = sourcePath
+	}
+	if targetPath == sourcePath {
+		// 仅修改查询参数时保留原始路径编码。
+		targetPath = rawPath
+	}
+
+	queryValues, err := url.ParseQuery(stdhtml.UnescapeString(rawQuery))
+	if err != nil {
+		return rawReference
+	}
+	if options.bindTargetBox {
+		queryValues.Set("box", options.targetBoxID)
+	} else {
+		queryValues.Del("box")
+	}
+
+	ret := targetPath
+	if encodedQuery := queryValues.Encode(); encodedQuery != "" {
+		ret += "?" + encodedQuery
+	}
+	return ret + fragment
+}
+
+func rewriteHTMLAssetReferences(tokens []byte, options assetReferenceRewriteOptions) []byte {
+	nodes, err := lutehtml.ParseFragment(bytes.NewReader(tokens), &lutehtml.Node{Type: lutehtml.ElementNode})
+	if err != nil || len(nodes) == 0 {
+		return tokens
+	}
+
+	updated := false
+	var walk func(*lutehtml.Node)
+	walk = func(node *lutehtml.Node) {
+		for i := range node.Attr {
+			rewritten := rewriteAssetReference(node.Attr[i].Val, options)
+			if rewritten != node.Attr[i].Val {
+				node.Attr[i].Val = rewritten
+				updated = true
+			}
+		}
+		for child := node.FirstChild; child != nil; child = child.NextSibling {
+			walk(child)
+		}
+	}
+	for _, node := range nodes {
+		walk(node)
+	}
+	if !updated {
+		return tokens
+	}
+
+	buf := bytes.Buffer{}
+	for _, node := range nodes {
+		if err = lutehtml.Render(&buf, node); err != nil {
+			return tokens
+		}
+	}
+	return buf.Bytes()
+}
+
+func rewriteTreeAssetReferences(tree *parse.Tree, options assetReferenceRewriteOptions) {
+	if tree == nil || tree.Root == nil {
+		return
+	}
+
+	titleImgPath := treenode.GetDocTitleImgPath(tree.Root)
+	if rewritten := rewriteAssetReference(titleImgPath, options); titleImgPath != "" && rewritten != titleImgPath {
+		titleImg := stdhtml.UnescapeString(tree.Root.IALAttr("title-img"))
+		tree.Root.SetIALAttr("title-img", strings.Replace(titleImg, titleImgPath, rewritten, 1))
+	}
+
+	treenode.WalkWithInlineTitles(tree.Root, func(node *ast.Node, entering bool) ast.WalkStatus {
+		if !entering {
+			return ast.WalkContinue
+		}
+
+		if node.IsBlock() {
+			var assetAttrKeys []string
+			for _, kv := range node.KramdownIAL {
+				if strings.HasPrefix(kv[0], "custom-data-assets") || kv[0] == "data-assets" {
+					assetAttrKeys = append(assetAttrKeys, kv[0])
+				}
+			}
+			for _, key := range assetAttrKeys {
+				value := node.IALAttr(key)
+				if rewritten := rewriteAssetReference(value, options); rewritten != value {
+					node.SetIALAttr(key, rewritten)
+				}
+			}
+		}
+
+		switch node.Type {
+		case ast.NodeImage:
+			reference := treenode.ImageLivePhotoVideo(node)
+			if rewritten := rewriteAssetReference(reference, options); rewritten != reference {
+				treenode.SetImageLivePhotoVideo(node, rewritten)
+			}
+		case ast.NodeLinkDest:
+			reference := node.TokensStr()
+			if rewritten := rewriteAssetReference(reference, options); rewritten != reference {
+				node.Tokens = []byte(rewritten)
+			}
+		case ast.NodeTextMark:
+			if node.IsTextMarkType("a") {
+				node.TextMarkAHref = rewriteAssetReference(node.TextMarkAHref, options)
+			}
+			if node.IsTextMarkType("file-annotation-ref") {
+				node.TextMarkFileAnnotationRefID = rewriteAssetReference(node.TextMarkFileAnnotationRefID, options)
+			}
+		case ast.NodeHTMLBlock, ast.NodeInlineHTML, ast.NodeIFrame, ast.NodeWidget, ast.NodeAudio, ast.NodeVideo:
+			node.Tokens = rewriteHTMLAssetReferences(node.Tokens, options)
+		}
+		return ast.WalkContinue
+	})
+}
+
+func rewriteAttributeViewValueAssetReferences(value *av.Value, options assetReferenceRewriteOptions) (updated bool) {
+	if value == nil {
+		return
+	}
+	if value.URL != nil {
+		rewritten := rewriteAssetReference(value.URL.Content, options)
+		if rewritten != value.URL.Content {
+			value.URL.Content = rewritten
+			updated = true
+		}
+	}
+	for _, asset := range value.MAsset {
+		if asset == nil {
+			continue
+		}
+		rewritten := rewriteAssetReference(asset.Content, options)
+		if rewritten != asset.Content {
+			asset.Content = rewritten
+			updated = true
+		}
+	}
+	if rewriteAttributeViewRichAssetReferences(value, options) {
+		updated = true
+	}
+	return
+}
+
+func rewriteAttributeViewRichAssetReferences(value *av.Value, options assetReferenceRewriteOptions) (updated bool) {
+	if nil == value || nil == value.Text || nil == value.Text.Rich {
+		return
+	}
+	tree, err := av.ParseValueTextRich(value.Text.Rich)
+	if nil != err || nil == tree {
+		return
+	}
+	ast.Walk(tree.Root, func(node *ast.Node, entering bool) ast.WalkStatus {
+		if !entering {
+			return ast.WalkContinue
+		}
+		switch node.Type {
+		case ast.NodeImage:
+			reference := treenode.ImageLivePhotoVideo(node)
+			if rewritten := rewriteAssetReference(reference, options); rewritten != reference {
+				treenode.SetImageLivePhotoVideo(node, rewritten)
+				updated = true
+			}
+		case ast.NodeLinkDest:
+			reference := node.TokensStr()
+			if rewritten := rewriteAssetReference(reference, options); rewritten != reference {
+				node.Tokens = []byte(rewritten)
+				updated = true
+			}
+		case ast.NodeTextMark:
+			if node.IsTextMarkType("a") {
+				if rewritten := rewriteAssetReference(node.TextMarkAHref, options); rewritten != node.TextMarkAHref {
+					node.TextMarkAHref = rewritten
+					updated = true
+				}
+			}
+			if node.IsTextMarkType("file-annotation-ref") {
+				rewritten := rewriteAttributeViewFileAnnotationReference(node.TextMarkFileAnnotationRefID, options)
+				if rewritten != node.TextMarkFileAnnotationRefID {
+					node.TextMarkFileAnnotationRefID = rewritten
+					updated = true
+				}
+			}
+		case ast.NodeFileAnnotationRefID:
+			reference := node.TokensStr()
+			if rewritten := rewriteAttributeViewFileAnnotationReference(reference, options); rewritten != reference {
+				node.Tokens = []byte(rewritten)
+				updated = true
+			}
+		}
+		return ast.WalkContinue
+	})
+	if !updated {
+		return
+	}
+
+	oldRichContent, oldContent := value.Text.Rich.Content, value.Text.Content
+	richContent, err := av.RenderValueTextRich(tree)
+	if nil != err {
+		return false
+	}
+	value.Text.Rich.Content = richContent
+	if err = value.Text.NormalizeRichContent(); nil != err {
+		value.Text.Rich.Content, value.Text.Content = oldRichContent, oldContent
+		return false
+	}
+	return true
+}
+
+func rewriteAttributeViewFileAnnotationReference(reference string, options assetReferenceRewriteOptions) string {
+	options.bindTargetBox = false
+	return rewriteAssetReference(reference, options)
+}
+
+func rewriteAttributeViewAssetReferences(attrView *av.AttributeView, options assetReferenceRewriteOptions) (updated bool) {
+	if attrView == nil {
+		return
+	}
+	attrView.VisitPersistedValues(func(value *av.Value) {
+		updated = rewriteAttributeViewValueAssetReferences(value, options) || updated
+	})
+	return
+}
+
+func rewriteAttributeViewDataAssetReferences(data []byte, options assetReferenceRewriteOptions) ([]byte, error) {
+	attrView := &av.AttributeView{}
+	if err := gulu.JSON.UnmarshalJSON(data, attrView); err != nil {
+		return nil, err
+	}
+	if !rewriteAttributeViewAssetReferences(attrView, options) {
+		return data, nil
+	}
+	if util.UseSingleLineSave.Load() {
+		return gulu.JSON.MarshalJSON(attrView)
+	}
+	return gulu.JSON.MarshalIndentJSON(attrView, "", "\t")
+}

@@ -1,0 +1,220 @@
+# Copyright 2018 The PDFium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("../../pdfium.gni")
+import("../../testing/test.gni")
+
+source_set("fxcodec") {
+  sources = [
+    "basic/basicmodule.cpp",
+    "basic/basicmodule.h",
+    "data_and_bytes_consumed.cpp",
+    "data_and_bytes_consumed.h",
+    "fax/faxmodule.cpp",
+    "fax/faxmodule.h",
+    "flate/flatemodule.cpp",
+    "flate/flatemodule.h",
+    "fx_codec.cpp",
+    "fx_codec.h",
+    "fx_codec_def.h",
+    "icc/icc_transform.cpp",
+    "icc/icc_transform.h",
+    "jbig2/jbig2_arith_decoder.cpp",
+    "jbig2/jbig2_arith_decoder.h",
+    "jbig2/jbig2_arith_int_decoder.cpp",
+    "jbig2/jbig2_arith_int_decoder.h",
+    "jbig2/jbig2_bit_stream.cpp",
+    "jbig2/jbig2_bit_stream.h",
+    "jbig2/jbig2_context.cpp",
+    "jbig2/jbig2_context.h",
+    "jbig2/jbig2_decoder.cpp",
+    "jbig2/jbig2_decoder.h",
+    "jbig2/jbig2_define.h",
+    "jbig2/jbig2_document_context.cpp",
+    "jbig2/jbig2_document_context.h",
+    "jbig2/jbig2_grd_proc.cpp",
+    "jbig2/jbig2_grd_proc.h",
+    "jbig2/jbig2_grrd_proc.cpp",
+    "jbig2/jbig2_grrd_proc.h",
+    "jbig2/jbig2_htrd_proc.cpp",
+    "jbig2/jbig2_htrd_proc.h",
+    "jbig2/jbig2_huffman_decoder.cpp",
+    "jbig2/jbig2_huffman_decoder.h",
+    "jbig2/jbig2_huffman_table.cpp",
+    "jbig2/jbig2_huffman_table.h",
+    "jbig2/jbig2_image.cpp",
+    "jbig2/jbig2_image.h",
+    "jbig2/jbig2_page.h",
+    "jbig2/jbig2_pattern_dict.cpp",
+    "jbig2/jbig2_pattern_dict.h",
+    "jbig2/jbig2_pdd_proc.cpp",
+    "jbig2/jbig2_pdd_proc.h",
+    "jbig2/jbig2_sdd_proc.cpp",
+    "jbig2/jbig2_sdd_proc.h",
+    "jbig2/jbig2_segment.cpp",
+    "jbig2/jbig2_segment.h",
+    "jbig2/jbig2_symbol_dict.cpp",
+    "jbig2/jbig2_symbol_dict.h",
+    "jbig2/jbig2_trd_proc.cpp",
+    "jbig2/jbig2_trd_proc.h",
+    "jpeg/jpegmodule.cpp",
+    "jpeg/jpegmodule.h",
+    "jpx/cjpx_decoder.cpp",
+    "jpx/cjpx_decoder.h",
+    "jpx/jpx_decode_utils.cpp",
+    "jpx/jpx_decode_utils.h",
+    "scanlinedecoder.cpp",
+    "scanlinedecoder.h",
+  ]
+  configs += [
+    "../../:pdfium_strict_config",
+    "../../:pdfium_noshorten_config",
+  ]
+  public_deps = [ "../fxcrt" ]
+  deps = [
+    "../../third_party:lcms2",
+    "../../third_party:libopenjpeg2",
+    "../../third_party:zlib",
+    "../fxge",
+  ]
+  defines = []
+  if (pdf_enable_brotli) {
+    sources += [
+      "brotli/brotli_decoder.cpp",
+      "brotli/brotli_decoder.h",
+    ]
+    deps += [ "//third_party/brotli:dec" ]
+  }
+  if (pdf_enable_xfa) {
+    sources += [
+      "cfx_codec_memory.cpp",
+      "cfx_codec_memory.h",
+      "gif/cfx_gif.cpp",
+      "gif/cfx_gif.h",
+      "gif/cfx_gifcontext.cpp",
+      "gif/cfx_gifcontext.h",
+      "gif/lzw_decompressor.cpp",
+      "gif/lzw_decompressor.h",
+      "progressive_decoder.cpp",
+      "progressive_decoder.h",
+      "progressive_decoder_context.cpp",
+      "progressive_decoder_context.h",
+      "progressive_decoder_context_delegate.h",
+      "tiff/libtiff_tiff_context.cpp",
+      "tiff/libtiff_tiff_context.h",
+    ]
+    deps += [ "../../third_party:tiff" ]
+    if (pdf_enable_rust_bmp) {
+      sources += [
+        "bmp/skia_bmp_context.cpp",
+        "bmp/skia_bmp_context.h",
+      ]
+      deps += [ "//skia" ]
+    } else {
+      sources += [
+        "bmp/cfx_bmpcontext.cpp",
+        "bmp/cfx_bmpcontext.h",
+        "bmp/cfx_bmpdecompressor.cpp",
+        "bmp/cfx_bmpdecompressor.h",
+        "bmp/fx_bmp.h",
+      ]
+    }
+    if (pdf_enable_rust_jpeg) {
+      sources += [
+        "jpeg/skia_jpeg_context.cpp",
+        "jpeg/skia_jpeg_context.h",
+      ]
+      deps += [ "//skia" ]
+    } else {
+      sources += [
+        "jpeg/libjpeg_jpeg_context.cpp",
+        "jpeg/libjpeg_jpeg_context.h",
+      ]
+    }
+
+    # TODO(https://crbug.com/444045690): Remove `pdf_enable_rust_png` from the
+    # condition below once this build mode has been tested and stabilized.
+    # (Chromium already sets `pdf_use_skia_override = true` so having an extra
+    # condition avoids affecting the Chromium behavior.)
+    if (pdf_use_skia && pdf_enable_rust_png) {
+      sources += [
+        "png/skia_png_context.cpp",
+        "png/skia_png_context.h",
+      ]
+      deps += [ "//skia" ]
+    } else {
+      sources += [
+        "png/libpng_png_context.cpp",
+        "png/libpng_png_context.h",
+      ]
+      deps += [ "../../third_party:png" ]
+    }
+    if (pdf_use_skia) {
+      sources += [
+        "codec_memory_sk_stream.cpp",
+        "codec_memory_sk_stream.h",
+      ]
+    }
+  }
+
+  # Windows requires libjpeg for JpegModule::JpegEncode (used for EMF printing)
+  # regardless of whether Rust JPEG is enabled for decoding. Libjpeg is also
+  # used as fallback for CMYK / 4-component JPEG decoding in JpegModule.
+  sources += [
+    "jpeg/jpeg_common.c",
+    "jpeg/jpeg_common.h",
+    "jpeg/libjpeg_scanline_decoder.cpp",
+    "jpeg/libjpeg_scanline_decoder.h",
+  ]
+  deps += [ "//third_party:jpeg" ]
+
+  if (pdf_enable_rust_jpeg) {
+    sources += [
+      "jpeg/skia_scanline_decoder.cpp",
+      "jpeg/skia_scanline_decoder.h",
+    ]
+    deps += [ "//skia" ]
+  }
+  visibility = [ "../../*" ]
+}
+
+pdfium_unittest_source_set("unittests") {
+  sources = [
+    "basic/a85_unittest.cpp",
+    "basic/rle_unittest.cpp",
+    "flate/flatemodule_unittest.cpp",
+    "jbig2/jbig2_bit_stream_unittest.cpp",
+    "jbig2/jbig2_image_unittest.cpp",
+    "jpeg/jpegmodule_unittest.cpp",
+    "jpx/jpx_unittest.cpp",
+  ]
+  deps = [
+    ":fxcodec",
+    "../../third_party:libopenjpeg2",
+    "../fpdfapi/parser",
+  ]
+  pdfium_root_dir = "../../"
+
+  if (pdf_enable_xfa) {
+    sources += [
+      "gif/cfx_gifcontext_unittest.cpp",
+      "gif/lzw_decompressor_unittest.cpp",
+      "progressive_decoder_unittest.cpp",
+    ]
+    deps += [ "../fxge" ]
+    if (pdf_use_skia) {
+      sources += [ "codec_memory_sk_stream_unittest.cpp" ]
+      deps += [ "//skia" ]
+    }
+  }
+}
+
+pdfium_embeddertest_source_set("embeddertests") {
+  sources = [ "jbig2/jbig2_embeddertest.cpp" ]
+  pdfium_root_dir = "../../"
+  if (pdf_enable_brotli) {
+    sources += [ "brotli/brotli_embeddertest.cpp" ]
+    deps = [ "//third_party/brotli:dec" ]
+  }
+}

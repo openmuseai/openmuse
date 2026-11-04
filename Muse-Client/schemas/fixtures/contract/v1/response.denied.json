@@ -1,0 +1,28 @@
+{
+  "protocol": { "name": "openmuse.contract", "major": 1, "minor": 0 },
+  "kind": "response",
+  "requestId": "request.fixture.denied",
+  "actor": { "principalRef": "actor.fixture.user", "kind": "user" },
+  "caller": { "principalRef": "plugin.fixture.agent", "kind": "plugin" },
+  "scope": { "authorityRef": "authority.fixture.tenant", "workspaceRef": "workspace.fixture.primary" },
+  "generation": 3,
+  "deadlineAtMs": 1790640000000,
+  "cancellationRef": "cancellation.fixture.denied",
+  "outcome": {
+    "status": "error",
+    "receipt": {
+      "receiptRef": "receipt.fixture.denied",
+      "requestId": "request.fixture.denied",
+      "generation": 3,
+      "state": "rejected",
+      "issuedAtMs": 1790639999000,
+      "effects": []
+    },
+    "error": {
+      "code": "DENIED",
+      "message": "operation is outside the granted scope",
+      "retryable": false,
+      "details": { "decisionRef": "decision.fixture.denied" }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/util/util/src/cn/wps/collections/copyonwrite/CopyOnWriteIntSmallMap.java,cn/wps/collections/copyonwrite,too many dependencies,2026-05-22
+koffice/core-libs/util/util/src/cn/wps/collections/referencetable/IndexedReferenceTable.java,cn/wps/collections/referencetable,Template structural validation failed:,
+Missing trait block for interface 'Listener',2026-05-22,,
+koffice/core-libs/util/util/src/cn/wps/collections/referencetable/IndexedTextReference.java,cn/wps/collections/referencetable,too many dependencies,2026-05-22
+koffice/core-libs/util/util/src/cn/wps/graphics/bitmap/BitmapRef.java,cn/wps/graphics/bitmap,too many dependencies,2026-05-22
+koffice/core-libs/util/util/src/cn/wps/guava/collect/AbstractIndexedListIterator.java,cn/wps/guava/collect,too many dependencies,2026-05-22
+koffice/core-libs/util/util/src/cn/wps/guava/collect/ImmutableAsList.java,cn/wps/guava/collect,too many dependencies,2026-05-22
+koffice/core-libs/util/util/src/cn/wps/guava/collect/ImmutableMap.java,cn/wps/guava/collect,too many dependencies,2026-05-22
+koffice/core-libs/util/util/src/cn/wps/moffice/property/MutablePropertyMap.java,cn/wps/moffice/property,too many dependencies,2026-05-22
+koffice/core-libs/util/util/src/cn/wps/kfc/api/iterator/IDoubleIterator.java,cn/wps/kfc/api/iterator,too many dependencies,2026-05-22
+koffice/core-libs/util/util/src/cn/wps/kfc/api/list/IDoubleList.java,cn/wps/kfc/api/list,too many dependencies,2026-05-22
+koffice/core-libs/util/util/src/cn/wps/kfc/api/list/IFloatList.java,cn/wps/kfc/api/list,too many dependencies,2026-05-22
+koffice/core-libs/util/util/src/cn/wps/moffice/io/util/ICVReader.java,cn/wps/moffice/io/util,too many dependencies,2026-05-22

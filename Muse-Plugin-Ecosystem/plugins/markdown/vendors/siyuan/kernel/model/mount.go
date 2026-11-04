@@ -1,0 +1,709 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+	"sort"
+	"strings"
+	"sync"
+	"time"
+	"unicode/utf8"
+
+	"github.com/88250/gulu"
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/av"
+	"github.com/siyuan-note/siyuan/kernel/cache"
+	"github.com/siyuan-note/siyuan/kernel/documentaddressing"
+	"github.com/siyuan-note/siyuan/kernel/filesys"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/task"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func GetBoxByName(name string) (ret *Box) {
+	for _, box := range Conf.GetOpenedBoxes() {
+		if box.Name == name {
+			ret = box
+			return
+		}
+	}
+	return
+}
+
+func getOpenedBox(boxID string) (ret *Box, err error) {
+	if ret = Conf.Box(boxID); nil != ret {
+		return
+	}
+	if nil != Conf.GetBox(boxID) {
+		return nil, ErrBoxClosed
+	}
+	return nil, ErrBoxNotFound
+}
+
+func CreateBox(name string) (id string, err error) {
+	return createBox(name, true)
+}
+
+func createBox(name string, initializeBoxDoc bool) (id string, err error) {
+	confFileTreeSnapshot := Conf.LoadFileTree()
+
+	name = normalizeBoxName(name)
+	if 512 < utf8.RuneCountInString(name) {
+		// 限制笔记本名和文档名最大长度为 `512` https://github.com/siyuan-note/siyuan/issues/6299
+		err = errors.New(Conf.Language(106))
+		return
+	}
+	FlushTxQueue()
+
+	createDocLock.Lock()
+	defer createDocLock.Unlock()
+
+	boxes, _ := ListNotebooks()
+	for i, b := range boxes {
+		c := b.GetConf()
+		c.Sort = i + 1
+		b.Sort = c.Sort
+		if err := b.SaveConf(c); err != nil {
+			logging.LogErrorf("save box conf [%s] failed: %s", b.ID, err)
+		}
+	}
+
+	id = ast.NewNodeID()
+	boxLocalPath := filepath.Join(util.DataDir, id)
+	err = os.MkdirAll(boxLocalPath, 0755)
+	if err != nil {
+		return
+	}
+
+	box := &Box{ID: id, Name: name}
+	boxConf := box.GetConf()
+	boxConf.Name = name
+	boxConf.Sort = newBoxSort(boxes, nil != confFileTreeSnapshot.CreateDocAtTop && *confFileTreeSnapshot.CreateDocAtTop)
+	if err := box.SaveConf(boxConf); err != nil {
+		logging.LogErrorf("save box conf [%s] failed: %s", id, err)
+	}
+	if initializeBoxDoc {
+		_, err = ensureBoxDoc0(id)
+		if err == nil {
+			// 新笔记本的源摘要已补齐，后续挂载重建会在排队时撤销就绪状态。
+			err = treenode.SetDocumentMetadataState(id, "ready")
+		}
+		if err != nil {
+			treenode.RemoveBlockTreesByBoxID(id)
+			sql.DeleteBoxQueue(id)
+			if removeErr := filelock.Remove(boxLocalPath); nil != removeErr {
+				logging.LogErrorf("remove box [%s] after initializing box document failed: %s", id, removeErr)
+			}
+			return "", err
+		}
+	}
+	IncSync()
+	logging.LogInfof("created box [%s]", id)
+	return
+}
+
+func newBoxSort(boxes []*Box, atTop bool) int {
+	if 1 > len(boxes) {
+		return 0
+	}
+
+	minSort, maxSort := boxes[0].Sort, boxes[0].Sort
+	for _, box := range boxes[1:] {
+		if box.Sort < minSort {
+			minSort = box.Sort
+		}
+		if maxSort < box.Sort {
+			maxSort = box.Sort
+		}
+	}
+	if atTop {
+		return minSort - 1
+	}
+	return maxSort + 1
+}
+
+func RenameBox(boxID, name string) (err error) {
+	box := Conf.Box(boxID)
+	if nil == box {
+		return errors.New(Conf.Language(0))
+	}
+
+	name = normalizeBoxName(name)
+	if 512 < utf8.RuneCountInString(name) {
+		// 限制笔记本名和文档名最大长度为 `512` https://github.com/siyuan-note/siyuan/issues/6299
+		err = errors.New(Conf.Language(106))
+		return
+	}
+
+	boxConf := box.GetConf()
+	boxConf.Name = name
+	box.Name = name
+	if err = box.SaveConf(boxConf); err != nil {
+		logging.LogErrorf("save box conf [%s] failed: %s", boxID, err)
+		return
+	}
+	if err = renameBoxDoc(boxID, name); err != nil {
+		logging.LogErrorf("rename box document [box=%s] failed: %s", boxID, err)
+		return
+	}
+	IncSync()
+	logging.LogInfof("renamed box [%s] to [%s]", boxID, name)
+	return
+}
+
+func normalizeBoxName(name string) string {
+	name = normalizeDocTitle(name)
+	if "" == name {
+		name = normalizeDocTitle(Conf.language(105))
+	}
+	return name
+}
+
+var (
+	boxLock = sync.Map{}
+	// mountedEncryptedBoxes 只记录当前进程完成挂载的加密笔记本，不能从同步配置恢复。
+	mountedEncryptedBoxes = sync.Map{}
+)
+
+func isEncryptedBoxMounted(boxID string) bool {
+	_, mounted := mountedEncryptedBoxes.Load(boxID)
+	return mounted
+}
+
+// removeBoxDir 重试删除刚完成读写的笔记本目录，避免 Windows 延迟释放句柄导致瞬时失败。
+// Go 的 os.RemoveAll 在 Windows 上遇到"目录非空"（并发写入或句柄占用）不会重试，
+// 因此这里在每次重试前主动清空残留内容，并在最终失败时返回残留条目供定位。
+func removeBoxDir(p string) (err error) {
+	for i := range 5 {
+		err = filelock.RemoveWithoutFatal(p)
+		if nil == err {
+			return
+		}
+
+		// 目录确实已不存在才算删除成功；无法访问（权限、IO 错误）时不能误判为已删除，
+		// 否则调用方会继续清理数据库与运行态，留下"索引清空但目录还在"的笔记本。
+		if _, statErr := os.Stat(p); nil != statErr && os.IsNotExist(statErr) {
+			return nil
+		}
+
+		// 收集残留条目：具体信息可帮助用户定位是哪些文件被占用。
+		// 目录条目同样要收集——它们同样会让 "目录非空" 反复出现。
+		var residual []string
+		if walkErr := filepath.Walk(p, func(path string, info os.FileInfo, walkErr error) error {
+			if nil != walkErr {
+				return nil
+			}
+			if path != p {
+				if rel, relErr := filepath.Rel(p, path); nil == relErr {
+					residual = append(residual, rel)
+				}
+			}
+			return nil
+		}); nil != walkErr {
+			logging.LogWarnf("list residual entries of [%s] failed: %s", p, walkErr)
+		}
+		hasResidual := 0 < len(residual)
+
+		lastAttempt := 4 == i
+		// 先清空残留内容（深路径优先），下一轮重试再删除目录本身，避免 RemoveAll 再次卡在"目录非空"
+		sort.Sort(sort.Reverse(sort.StringSlice(residual)))
+		for _, rel := range residual {
+			if removeErr := filelock.RemoveWithoutFatal(filepath.Join(p, rel)); nil != removeErr {
+				logging.LogWarnf("remove residual entry [%s] failed: %s", rel, removeErr)
+			}
+		}
+
+		if lastAttempt {
+			if hasResidual {
+				err = fmt.Errorf(Conf.Language(387), p, strings.Join(describeResidualEntries(residual), ", "))
+			} else {
+				err = fmt.Errorf(Conf.Language(387), p, err.Error())
+			}
+			return
+		}
+
+		time.Sleep(100 * time.Millisecond)
+	}
+	return
+}
+
+// describeResidualEntries 返回仍然存在的残留条目描述（含目录），最多 3 项。
+func describeResidualEntries(entries []string) (ret []string) {
+	sort.Strings(entries)
+	for _, entry := range entries {
+		if 3 == len(ret) {
+			ret = append(ret, "...")
+			break
+		}
+		ret = append(ret, entry)
+	}
+	return
+}
+
+func collectBoxDeletedAttributeViewBlocks(boxID string) (ret map[string]map[string]struct{}, err error) {
+	rootIDs := treenode.GetRootBlockIDsByBoxID(boxID)
+	if 1 > len(rootIDs) {
+		return map[string]map[string]struct{}{}, nil
+	}
+	boundAVIDs, err := sql.QueryBoundBlockAVIDsInBox(nil, rootIDs, boxID)
+	if nil != err {
+		return nil, err
+	}
+	return groupDeletedAttributeViewBlocks(boundAVIDs), nil
+}
+
+func RemoveBox(boxID string) (err error) {
+	if !ast.IsNodeIDPattern(boxID) {
+		return errors.New("invalid notebook ID")
+	}
+	localPath := filepath.Join(util.DataDir, boxID)
+	_, statErr := os.Lstat(localPath)
+	localExists := !os.IsNotExist(statErr)
+	if statErr != nil && localExists {
+		return statErr
+	}
+	if _, loaded := boxLock.LoadOrStore(boxID, true); loaded {
+		err = errors.New(Conf.language(239))
+		return
+	}
+	defer boxLock.Delete(boxID)
+
+	if util.IsReservedFilename(boxID) {
+		return fmt.Errorf("can not remove [%s] caused by it is a reserved file", boxID)
+	}
+
+	FlushTxQueue()
+	sql.FlushQueue()
+	// 索引和笔记本目录删除后无法再读取 custom-avs，需提前收集；实际删除成功后再清理绑定行。
+	deletedAttrViewBlockIDs, err := collectBoxDeletedAttributeViewBlocks(boxID)
+	if nil != err {
+		return fmt.Errorf("query database-bound blocks in notebook [%s] failed: %w", boxID, err)
+	}
+	isUserGuide := IsUserGuide(boxID)
+	if !localExists {
+		removeHPathRefreshBox(boxID)
+		forgetRuntimeNormalBox(boxID)
+		removeMasterPasswordMigrationBox(boxID)
+		return
+	}
+	if !gulu.File.IsDir(localPath) {
+		return fmt.Errorf("can not remove [%s] caused by it is not a dir", boxID)
+	}
+
+	// 删目录前固定加密状态，确保后续历史、资源和索引清理始终使用同一个安全边界。
+	isEncrypted := IsEncryptedBox(boxID)
+	boundDeletion := &Transaction{}
+	defer func() { boundDeletion.finishAttributeViewMutation(err != nil) }()
+	var before, after map[string]*av.AttributeView
+	if !isEncrypted {
+		// 普通数据库跨笔记本共享，删除目录前校验全部关联，避免删除成功后留下失效绑定。
+		before, after, err = boundDeletion.prepareDeletedBoundAttributeViewBlocks(deletedAttrViewBlockIDs, "")
+		if err != nil {
+			return
+		}
+	}
+	if !isUserGuide {
+		if err = EnsureAssetPrefixLocal(localPath); err != nil {
+			return
+		}
+	}
+	if isEncrypted {
+		// 加密索引先持有生命周期租约再获取索引锁，因此删除也必须先结束生命周期，保持锁顺序一致。
+		unmount0(boxID)
+	}
+
+	databaseIndexDataLock.Lock()
+	defer databaseIndexDataLock.Unlock()
+	createDocLock.Lock()
+	defer createDocLock.Unlock()
+	if err = recoverSortConfAppend(filepath.Join(util.DataDir, boxID, ".siyuan", "sort.json")); err != nil {
+		return
+	}
+	if !isEncrypted {
+		unmount0(boxID)
+	}
+	ClearRichClipboardBox(boxID)
+	if !isEncrypted {
+		unindex(boxID)
+	}
+
+	if !isUserGuide {
+		var historyDir string
+		historyDir, err = getHistoryDir(HistoryOpDelete)
+		if err != nil {
+			logging.LogErrorf("get history dir failed: %s", err)
+			return
+		}
+		// 删除前备份到历史目录（密文原样拷贝，加密笔记本的整个目录保持密文）
+		p := strings.TrimPrefix(localPath, util.DataDir)
+		historyPath := filepath.Join(historyDir, p)
+		if err = filelock.Copy(localPath, historyPath); err != nil {
+			logging.LogErrorf("gen sync history failed: %s", err)
+			return
+		}
+		if !isEncrypted {
+			pages, walkErr := pagedPathsWithError(localPath, 32)
+			if walkErr != nil {
+				return walkErr
+			}
+			for _, paths := range pages {
+				for _, filename := range paths {
+					tree, loadErr := loadTree(filename, util.NewLute())
+					if errors.Is(loadErr, treenode.ErrSpecTooNew) || errors.Is(loadErr, documentaddressing.ErrInvalidTitle) {
+						if err = backupUnsupportedNotebookAttributeViews(historyDir); err != nil {
+							return err
+						}
+						continue
+					}
+					if loadErr != nil {
+						return loadErr
+					}
+					if err = backupBoundAttributeViewHistory(tree, historyDir); err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		// 加密笔记本的 assets 不提升到全局 data/assets，避免密文污染全局或被全局索引
+		if !isEncrypted {
+			if err = copyBoxAssetsToDataAssets(boxID); err != nil {
+				return
+			}
+		}
+	}
+
+	// 加密笔记本删除前先清理导出临时目录并撤销托管下载注册表。
+	// 必须在 filelock.Remove 之前执行：若 box 目录删除失败导致提前 return，导出清理仍已完成，
+	// 避免明文产物在 IsEncryptedBox 返回 false 后被 fail-open 下载
+	if isEncrypted {
+		if rmErr := os.RemoveAll(filepath.Join(util.TempDir, "export", boxID)); rmErr != nil {
+			logging.LogWarnf("remove export/[%s] dir failed: %s", boxID, rmErr)
+		}
+		RevokeManagedEncryptedExportsForBox(boxID)
+	}
+
+	if !isEncrypted {
+		if err = boundDeletion.saveAttributeViewFieldChanges(&attributeViewFieldsSnapshot{}, before, after); err != nil {
+			return
+		}
+	}
+	if err = removeBoxDir(localPath); err != nil {
+		return
+	}
+	boundDeletion.finishAttributeViewMutation(false)
+	removeHPathRefreshBox(boxID)
+	maintainPinnedDocs(nil, boxID, "")
+	// 加密笔记本删除时清理其独立加密 db 文件（含 WAL/SHM），避免残留
+	if isEncrypted {
+		sql.RemoveEncryptedDBFile(boxID)
+		treenode.RemoveEncryptedBlockTreeDBFile(boxID)
+		removeEncryptedBoxLifecycle(boxID)
+		forgetRuntimeEncryptedBox(boxID)
+	} else {
+		forgetRuntimeNormalBox(boxID)
+	}
+	removeMasterPasswordMigrationBox(boxID)
+
+	if isUserGuide {
+		if avFiles, readAvErr := getUserGuideAVJSONFiles(boxID); nil == readAvErr {
+			for _, avName := range avFiles {
+				avFilePath := filepath.Join(util.DataDir, "storage", "av", avName)
+				if removeErr := filelock.Remove(avFilePath); nil != removeErr {
+					logging.LogErrorf("remove av file [%s] failed: %s", avFilePath, removeErr)
+				} else {
+					logging.LogDebugf("removed av file [%s]", avFilePath)
+				}
+			}
+		}
+	}
+
+	IncSync()
+
+	logging.LogInfof("removed box [%s]", boxID)
+	return
+}
+
+func Unmount(boxID string) {
+	if !ast.IsNodeIDPattern(boxID) {
+		logging.LogWarnf("refuse to unmount notebook with invalid ID [%s]", boxID)
+		return
+	}
+	FlushTxQueue()
+
+	unmount0(boxID)
+
+	cmdName := "closeBox"
+	if IsUserGuide(boxID) {
+		if err := RemoveBox(boxID); err == nil {
+			cmdName = "removeBox"
+		} else {
+			logging.LogErrorf("close user guide box [%s] failed, fallback to unmount: %s", boxID, err)
+		}
+	}
+	evt := util.NewCmdResult(cmdName, 0, util.PushModeBroadcast)
+	evt.Data = map[string]any{
+		"box": boxID,
+	}
+	util.PushEvent(evt)
+	if cmdName == "removeBox" {
+		TriggerOnboardingIfEmpty()
+	}
+}
+
+// clearDEKIfUnlockedEncryptedBox 清除已解锁但未挂载的加密笔记本的 DEK。
+// unmount0 在 box 未挂载（Conf.Box 返回 nil）时调用，覆盖 unlockBox 解锁后未 mount 即 lock 的场景：
+// 此时 DEK 仍在内存，若不清除，锁定后认证 API 仍可读取明文。
+func clearDEKIfUnlockedEncryptedBox(boxID string) {
+	if IsEncryptedBox(boxID) && IsBoxUnlocked(boxID) {
+		ClearDEK(boxID)
+	}
+}
+
+func unmount0(boxID string) {
+	box := Conf.Box(boxID)
+	if nil == box {
+		// 笔记本未挂载（Closed）。若它是已解锁的加密笔记本（DEK 在内存），
+		// 仍需 ClearDEK 清除残留密钥材料，否则锁定后认证 API 仍可读取明文。
+		clearDEKIfUnlockedEncryptedBox(boxID)
+		return
+	}
+
+	if IsEncryptedBox(box.ID) {
+		// 先关闭生命周期准入并等待在途操作，再保存配置和历史，避免锁定准备期间继续产生明文响应或新写入。
+		lockBoxWithPreparation(boxID, func() {
+			boxConf := box.GetConf()
+			boxConf.Closed = true
+			if err := box.SaveConfAndSync(boxConf); err != nil {
+				logging.LogErrorf("save box conf [%s] failed: %s", box.ID, err)
+			}
+			GenerateFileHistoryForBox(box)
+		})
+		return
+	}
+
+	boxConf := box.GetConf()
+	boxConf.Closed = true
+	if err := box.SaveConfAndSync(boxConf); err != nil {
+		logging.LogErrorf("save box conf [%s] failed: %s", box.ID, err)
+	}
+	box.Unindex()
+}
+
+func Mount(boxID string) (alreadyMount bool, err error) {
+	if !ast.IsNodeIDPattern(boxID) {
+		return false, errors.New("invalid notebook ID")
+	}
+	if IsEncryptedBox(boxID) {
+		releaseTransition := holdEncryptedBoxTransition(boxID)
+		defer releaseTransition()
+	}
+	return mountBox(boxID)
+}
+
+func mountBox(boxID string) (alreadyMount bool, err error) {
+	if err = checkMountDocumentAddressing(boxID); err != nil {
+		return
+	}
+	confFileTreeSnapshot := Conf.LoadFileTree()
+
+	if _, loaded := boxLock.LoadOrStore(boxID, true); loaded {
+		err = errors.New(Conf.language(239))
+		return
+	}
+	defer boxLock.Delete(boxID)
+
+	FlushTxQueue()
+	isUserGuide := IsUserGuide(boxID)
+
+	localPath := filepath.Join(util.DataDir, boxID)
+	var reMountGuide bool
+	if isUserGuide {
+		databaseIndexDataLock.Lock()
+		defer databaseIndexDataLock.Unlock()
+
+		// 重新挂载帮助文档
+
+		guideBox := Conf.Box(boxID)
+		if nil != guideBox {
+			unmount0(guideBox.ID)
+			reMountGuide = true
+		}
+		unindex(boxID)
+
+		if err = removeBoxDir(localPath); err != nil {
+			return
+		}
+
+		boxes, _ := ListNotebooks()
+		sort := newBoxSort(boxes, nil != confFileTreeSnapshot.CreateDocAtTop && *confFileTreeSnapshot.CreateDocAtTop)
+
+		p := filepath.Join(util.WorkingDir, "guide", boxID)
+		if err = filelock.Copy(p, localPath); err != nil {
+			return
+		}
+		if err = filesys.CheckDocumentAddressing(boxID); err != nil {
+			return
+		}
+
+		// 清除所有缓存，确保重开用户指南时数据是最新的
+		cache.ClearTreeCache()
+		cache.ClearDocsIAL()
+		cache.ClearBlocksIAL()
+		cache.ClearAVCache()
+
+		avDirPath := filepath.Join(util.WorkingDir, "guide", boxID, "storage", "av")
+		if filelock.IsExist(avDirPath) {
+			if err = filelock.Copy(avDirPath, filepath.Join(util.DataDir, "storage", "av")); err != nil {
+				return
+			}
+		}
+
+		if box := Conf.Box(boxID); nil != box {
+			boxConf := box.GetConf()
+			boxConf.Closed = true
+			boxConf.Sort = sort
+			box.SaveConfAndSync(boxConf)
+		}
+
+		task.AppendAsyncTaskWithDelay(task.PushMsg, 3*time.Second, util.PushErrMsg, Conf.Language(244), 7000)
+		go func() {
+			// 每次打开帮助文档时自动检查版本更新并提醒 https://github.com/siyuan-note/siyuan/issues/5057
+			time.Sleep(time.Second * 10)
+			CheckUpdate(true)
+		}()
+	}
+
+	if !gulu.File.IsDir(localPath) {
+		return false, errors.New("can not open file, just support open folder only")
+	}
+
+	for _, box := range Conf.GetOpenedBoxes() {
+		if box.ID == boxID {
+			clearClosedBoxNotification(boxID)
+			return true, nil
+		}
+	}
+
+	// 加密笔记本必须先通过 UnlockBox 解出 DEK，否则拒绝挂载。Mount 本身不接收密码，
+	// 前端流程为：先调 /api/notebook/unlockBox 解锁，再调 openNotebook 挂载。
+	// 使用 IsEncryptedBox 统一判定（含 backup fallback，不依赖 conf 完整性）。
+	if IsEncryptedBox(boxID) && !IsBoxUnlocked(boxID) {
+		return false, errors.New("encrypted notebook locked, please unlock it first")
+	}
+
+	box := &Box{ID: boxID}
+	boxConf := box.GetConf()
+	boxConf.Closed = false
+	if err := box.SaveConfAndSync(boxConf); err != nil {
+		logging.LogErrorf("save box conf [%s] failed: %s", boxID, err)
+	}
+	if boxConf.Encrypted {
+		markRuntimeEncryptedBox(boxID)
+		mountedEncryptedBoxes.Store(boxID, true)
+	}
+	if _, ensureErr := EnsureBoxDoc(boxID); nil != ensureErr {
+		logging.LogErrorf("ensure box document [%s] failed: %s", boxID, ensureErr)
+	}
+
+	// 缓存根一级的文档树展开
+	ListDocTree(box.ID, "/", util.SortModeUnassigned, false, false, confFileTreeSnapshot.MaxListCount)
+	box = Conf.Box(boxID)
+	// 空笔记本也须完成索引初始化，否则结构化创建接口会一直等待元数据就绪。
+	if nil != box {
+		box.Index()
+	}
+	if Conf.Box(boxID) != nil {
+		clearClosedBoxNotification(boxID)
+	}
+
+	if reMountGuide {
+		return true, nil
+	}
+	return false, nil
+}
+
+var userGuideIDs = []string{"20210808180117-6v0mkxr", "20210808180117-czj9bvb", "20211226090932-5lcq56f", "20240530133126-axarxgx"}
+
+func checkMountDocumentAddressing(boxID string) error {
+	if err := filesys.CheckDocumentAddressing(boxID); err != nil {
+		return err
+	}
+	if IsUserGuide(boxID) {
+		source := filepath.Join(util.WorkingDir, "guide", boxID)
+		if _, err := os.Stat(source); err == nil {
+			return checkDocumentAddressingCopy(source, boxID)
+		} else if !os.IsNotExist(err) {
+			return err
+		}
+	}
+	return nil
+}
+
+func IsUserGuide(boxID string) bool {
+	return slices.Contains(userGuideIDs, boxID)
+}
+
+func getUserGuideAVJSONFiles(boxID string) (ret []string, err error) {
+	guideAVDirPath := filepath.Join(util.WorkingDir, "guide", boxID, "storage", "av")
+	avEntries, err := readUserGuideDirectory(guideAVDirPath)
+	if nil != err {
+		logging.LogErrorf("read guide av dir [%s] failed: %s", guideAVDirPath, err)
+		return
+	}
+
+	for _, avEntry := range avEntries {
+		avName := avEntry.Name()
+		if avEntry.IsDir() || !strings.HasSuffix(avName, ".json") || !ast.IsNodeIDPattern(strings.TrimSuffix(avName, ".json")) {
+			continue
+		}
+		ret = append(ret, avName)
+	}
+	return
+}
+
+func getAllUserGuideAVJSONFiles() (ret []string, err error) {
+	guideDirPath := filepath.Join(util.WorkingDir, "guide")
+	guideEntries, err := readUserGuideDirectory(guideDirPath)
+	if nil != err {
+		return
+	}
+
+	for _, guideEntry := range guideEntries {
+		boxID := guideEntry.Name()
+		if !guideEntry.IsDir() || !IsUserGuide(boxID) {
+			continue
+		}
+
+		avFiles, err := getUserGuideAVJSONFiles(boxID)
+		if nil != err {
+			return nil, err
+		}
+		ret = append(ret, avFiles...)
+	}
+	return
+}
+
+func readUserGuideDirectory(dir string) ([]os.DirEntry, error) {
+	info, err := os.Stat(dir)
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if !info.IsDir() {
+		return nil, fmt.Errorf("user guide path is not a directory: %s", dir)
+	}
+	return os.ReadDir(dir)
+}

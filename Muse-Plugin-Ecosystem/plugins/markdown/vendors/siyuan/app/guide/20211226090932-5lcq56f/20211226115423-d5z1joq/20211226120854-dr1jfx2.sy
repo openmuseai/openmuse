@@ -1,0 +1,521 @@
+{
+	"ID": "20211226120854-dr1jfx2",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"icon": "1f371",
+		"id": "20211226120854-dr1jfx2",
+		"title": "編輯器",
+		"type": "doc",
+		"updated": "20261024164212"
+	},
+	"Children": [
+		{
+			"ID": "20211226120929-w3xe2c2",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20211226120929-w3xe2c2",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"ID": "20211226120929-btprmx1",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226120929-btprmx1"
+					},
+					"Children": [
+						{
+							"ID": "20211226120929-cgh5ydf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226120929-cgh5ydf"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "基於內容區塊的編輯排版"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20211226120929-6aoskrv",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226120929-6aoskrv",
+						"updated": "20211228134934"
+					},
+					"Children": [
+						{
+							"ID": "20211226120929-t7gyqbj",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226120929-t7gyqbj",
+								"updated": "20211228134934"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "列表大綱，支援帶或不帶子層級縮進"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20211226120929-ix7bsgq",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226120929-ix7bsgq",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20211226120929-j8rvpt2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226120929-j8rvpt2",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "內容區塊聚焦，即將編輯器聚焦到單個內容區塊"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20211226120929-orei0b9",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226120929-orei0b9"
+					},
+					"Children": [
+						{
+							"ID": "20211226120929-x0hrp4q",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226120929-x0hrp4q"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "動態加載，解決大文檔卡頓"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20211226120929-ge34t9q",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20211226120929-ge34t9q"
+					},
+					"Children": [
+						{
+							"ID": "20211226120929-f00kf3z",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226120929-f00kf3z"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "通過拖拽區塊標進行橫向排版"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240508002750-y6o1hwr",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240508002750-y6o1hwr",
+				"updated": "20240508002750"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211226121319-emrk2yy",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "排版元素"
+				}
+			]
+		},
+		{
+			"ID": "20260830213256-xuht7ig",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830213256-xuht7ig",
+				"updated": "20260830213256"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260830213256-jbsiw4b",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "選取和操作內容區塊"
+				}
+			]
+		},
+		{
+			"ID": "20240508002750-etdih28",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240508002750-etdih28",
+				"updated": "20240508002750"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20220628204420-ui79vkt",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "最佳化排版"
+				}
+			]
+		},
+		{
+			"ID": "20240508002750-46n6fhm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240508002750-46n6fhm",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20221016213639-1nag9jj",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "標題與列表混合排版"
+				}
+			]
+		},
+		{
+			"ID": "20260920102915-zr83okq",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260920102915-zr83okq",
+				"updated": "20260920102915"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "拼寫檢查"
+				}
+			]
+		},
+		{
+			"ID": "20260920102915-kqmazhq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920102915-kqmazhq",
+				"updated": "20260920102915"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "編輯器"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "拼寫檢查"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中啟用此功能。拼寫錯誤會以波浪線標記。"
+				}
+			]
+		},
+		{
+			"ID": "20260920102915-2zycdok",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920102915-2zycdok",
+				"updated": "20260920102915"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "桌面端：在帶有波浪線的單字上按右鍵，於思源選單中選擇更正建議，也可將正確的單字加入詞典。桌面端請使用一般右鍵，無需按住 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				}
+			]
+		},
+		{
+			"ID": "20260920102915-yi3fmra",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920102915-yi3fmra",
+				"updated": "20260920102915"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "瀏覽器端：請在瀏覽器設定中啟用拼寫檢查並選擇檢查語言。在 Chrome 中，按住 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 並在帶有波浪線的單字上按右鍵，即可使用瀏覽器原生的更正選單。"
+				}
+			]
+		},
+		{
+			"ID": "20260920102915-3dmr3wm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920102915-3dmr3wm",
+				"updated": "20260920102915"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "拼寫檢查的觸發時機取決於執行環境。開啟文件後即使游標已恢復，也可能需要點選正文並稍候才會顯示波浪線。"
+				}
+			]
+		},
+		{
+			"ID": "20260928091724-sj0935a",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260928091724-sj0935a",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "斜線選單與工具列設定"
+				}
+			]
+		},
+		{
+			"ID": "20260927164841-m2ossua",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927164841-m2ossua",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在行動端開啟 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "外觀"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "選單和按鈕的顯隱與排序"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，編輯自訂方案並選擇斜線選單分類。行動端與桌面端共用方案中的總開關、候選顯隱和排序設定，預設值為桌面端開啟、行動端關閉。開啟總開關，確認儲存並啟用該方案後，輸入 / 可搜尋內容區塊，選擇候選項目後在原游標處插入。"
+				}
+			]
+		},
+		{
+			"ID": "20261024163013-4gm4g2v",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024163013-4gm4g2v",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "編輯與儲存方案"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20260927164841-7yj0cwc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927164841-7yj0cwc",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "編輯自訂方案時，可透過分類選擇框切換工具列與斜線選單。拖曳項目左側的六點把手調整順序，使用項目開關調整顯隱；拖至清單邊緣可捲動。排序前需清空搜尋，修改後確認儲存方案。內建方案唯讀，可複製後自訂，再啟用儲存的方案。方案儲存在本裝置，不跨裝置同步。基於簡潔或完整建立的新自訂方案，未修改過的入口顯隱會跟隨後續版本的預設值；手動切換過的入口保留使用者選擇。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-pfvthcv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-pfvthcv",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "舊方案保持原有顯隱行為，複製方案或基於目前方案建立時保留其繼承方式和明確選擇。基於簡潔或完整建立的新方案，其未自訂的層級排序會隨版本預設順序更新；基於目前方案建立或複製方案會保留既有自訂排序。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-wikmk7m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-wikmk7m",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "清空搜尋後，可點擊欄標題或停靠欄分組標題上的重設圖示重設該層級。重設全部排序時，桌面端可點擊「位置」欄標題右側的重新整理圖示，提示為「重設全部排序」；行動端可點擊底部的重設全部排序按鈕。確認後儲存，取消則放棄修改。重設排序會保留顯隱和停靠欄入口所在位置，重設後的層級持續跟隨後續版本的預設排序。"
+				}
+			]
+		},
+		{
+			"ID": "20261020212341-t4poa9r",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261020212341-t4poa9r",
+				"updated": "20261020212341"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "文件底部反向連結"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20261020212341-jm2bq0l",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261020212341-jm2bq0l",
+				"updated": "20261020212341"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "桌面端和行動端皆可在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "編輯器"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "雙向連結"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "在文件底部顯示反向連結面板"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中啟用此功能，在文件末尾查看反向連結和提及。面板在接近時載入，正文末尾載入完成後才會顯示，沒有結果時自動隱藏。"
+				}
+			]
+		}
+	]
+}

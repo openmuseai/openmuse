@@ -1,0 +1,21 @@
+[package]
+name = "rule"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+doctest = false
+
+[dependencies]
+allocative = { workspace = true }
+attr = { path = "../attr" }
+depset = { path = "../depset" }
+providers = { path = "../providers" }
+starlark = { workspace = true }
+starlark_derive = { workspace = true }
+strum = { workspace = true }
+thiserror = { workspace = true }
+types = { path = "../types" }
+
+[dev-dependencies]
+testutils = { path = "../testutils" }

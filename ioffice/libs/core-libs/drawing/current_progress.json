@@ -1,0 +1,306 @@
+{
+  "mainJavaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GraphicsCanvas.java",
+  "files": [
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\RectF.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\RectF.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\effects\\Glow.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\effects\\Glow.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\effects\\Reflection.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\effects\\Reflection.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\effects\\Shadow.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\effects\\Shadow.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\exception\\IGraphicsException.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\exception\\IGraphicsException.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\line\\LineProperty.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\line\\LineProperty.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\media\\IMediaLib.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\media\\IMediaLib.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\PointF.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\PointF.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\GRF.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\GRF.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\Shape.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\Shape.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\ShapeHelper.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\ShapeHelper.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\effects\\Object3D.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\effects\\Object3D.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GradFill.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GradFill.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GradStop.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GradStop.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GradStopList.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GradStopList.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GraphicsPath.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GraphicsPath.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\PathElem.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\PathElem.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\Picture.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\Picture.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\RenderModel.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\RenderModel.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\line\\Arrow.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\line\\Arrow.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\kfs\\kfs_app\\src\\cn\\wps\\moffice\\kfs\\File.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\kfs\\kfs_app\\src\\cn\\wps\\moffice\\kfs\\File.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\IGraphics.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\IGraphics.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\thirdparty\\picparser\\src\\cn\\wps\\base\\BufferOptions.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\thirdparty\\picparser\\src\\cn\\wps\\base\\BufferOptions.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\util\\adapter\\src\\cn\\wps\\core\\runtime\\Platform.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\util\\adapter\\src\\cn\\wps\\core\\runtime\\Platform.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\thirdparty\\picparser\\src\\cn\\wps\\graphics\\KBitmap.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\thirdparty\\picparser\\src\\cn\\wps\\graphics\\KBitmap.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\PictureInfo.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\PictureInfo.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\thirdparty\\picparser\\src\\cn\\wps\\graphics\\PictureParser.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\thirdparty\\picparser\\src\\cn\\wps\\graphics\\PictureParser.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\Size.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\Size.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\bitmap\\IPicture.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\bitmap\\IPicture.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\bitmap\\IPictureDrawer.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\bitmap\\IPictureDrawer.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\bitmap\\IPicturePool.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\util\\util\\src\\cn\\wps\\graphics\\bitmap\\IPicturePool.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\thirdparty\\picparser\\src\\cn\\wps\\graphics\\data\\emf\\EMFHeader.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\thirdparty\\picparser\\src\\cn\\wps\\graphics\\data\\emf\\EMFHeader.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\thirdparty\\picparser\\src\\cn\\wps\\graphics\\data\\emf\\EMFPictureInfo.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\thirdparty\\picparser\\src\\cn\\wps\\graphics\\data\\emf\\EMFPictureInfo.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\bitmap\\ColorMatrix.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\bitmap\\ColorMatrix.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\effects\\RectAlignmentType.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\effects\\RectAlignmentType.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\exception\\GBigBitmapException.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\exception\\GBigBitmapException.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\exception\\GOutOfMemoryException.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\exception\\GOutOfMemoryException.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\media\\MediaTypeEnum.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\media\\MediaTypeEnum.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\util\\CanvasUtil.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\util\\CanvasUtil.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\util\\util\\src\\cn\\wps\\moffice\\util\\ColorUtil.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\util\\util\\src\\cn\\wps\\moffice\\util\\ColorUtil.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\FillBase.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\FillBase.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\util\\util\\src\\cn\\wps\\base\\io\\MetricUtility.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\util\\util\\src\\cn\\wps\\base\\io\\MetricUtility.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\textbox\\Text.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\textbox\\Text.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\smartshape\\PathData.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\smartshape\\PathData.rs",
+      "currentStep": "cargo_test",
+      "status": "done"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\util\\ShapeUtil.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\util\\ShapeUtil.rs",
+      "currentStep": "gen_template",
+      "status": "pending"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\util\\ColorMatrixUtil.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\util\\ColorMatrixUtil.rs",
+      "currentStep": "gen_template",
+      "status": "pending"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\smartshape\\DataCal.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\smartshape\\DataCal.rs",
+      "currentStep": "gen_template",
+      "status": "blocked_deps"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GraphicsPathTool.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GraphicsPathTool.rs",
+      "currentStep": "gen_template",
+      "status": "blocked_deps"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GraphicsCanvas.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GraphicsCanvas.rs",
+      "currentStep": "gen_template",
+      "status": "blocked_deps"
+    },
+    {
+      "javaPath": "D:\\agentic\\src\\wordOffice\\koffice\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GraphicsFillTool.java",
+      "rustPath": "D:\\agentic\\src\\wordOffice\\libs\\core-libs\\drawing\\src\\cn\\wps\\moffice\\drawing\\graphics\\GraphicsFillTool.rs",
+      "currentStep": "gen_template",
+      "status": "blocked_deps"
+    }
+  ],
+  "timestamp": "2026-05-24T09:13:45.846Z"
+}

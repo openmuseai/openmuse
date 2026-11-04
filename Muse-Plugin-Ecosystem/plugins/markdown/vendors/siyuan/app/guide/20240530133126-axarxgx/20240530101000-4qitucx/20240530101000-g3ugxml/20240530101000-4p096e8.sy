@@ -1,0 +1,877 @@
+{
+	"ID": "20240530101000-4p096e8",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-zmcxbuw",
+		"id": "20240530101000-4p096e8",
+		"title": "ワークスペース",
+		"type": "doc",
+		"updated": "20261021005205"
+	},
+	"Children": [
+		{
+			"ID": "20240530101000-oh486c7",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-gqs8hs9",
+				"id": "20240530101000-oh486c7",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-y7usskn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-czd88sw",
+				"id": "20240530101000-y7usskn",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ワークスペースは、データ、履歴、設定、実行時に必要なファイルを保存するために使用されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-rywrm2a",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-llnnpyn",
+				"id": "20240530101000-rywrm2a",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-cep79gw",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-rnjcycl",
+						"id": "20240530101000-cep79gw",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-4bu8y2w",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-mobcj37",
+								"id": "20240530101000-4bu8y2w",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ワークスペースはファイルシステムのフォルダによって相互に分離されています"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-s39m1ht",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-j58qio1",
+						"id": "20240530101000-s39m1ht",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-f0wc8dv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-0cvaf4i",
+								"id": "20240530101000-f0wc8dv",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ひとつのワークスペースはひとつのカーネルプロセスによってのみ使用できます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-c9x0nlh",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-dy3las4",
+				"id": "20240530101000-c9x0nlh",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ワークスペースの切り替え"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-y2rv8ja",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-dhcolxj",
+				"id": "20240530101000-y2rv8ja",
+				"updated": "20261016112115"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-zwpmazv",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-req2wqr",
+						"id": "20240530101000-zwpmazv",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-jr5t0r5",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-329zfla",
+								"id": "20240530101000-jr5t0r5",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "デスクトップ版では画面左上にあるドロップダウンメニューから複数のワークスペースを開けます"
+								}
+							]
+						},
+						{
+							"ID": "20240530101000-bthacdl",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-bthacdl",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "複数のワークスペースを頻繁に起動する必要がある場合は、それぞれのワークスペースに対して異なる起動プログラムを作成し、起動パラメータ "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--workspace=&quot;ワークスペースの絶対パス&quot;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ (パスを囲むには"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "&quot;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​を使用してください)を指定することを検討してください。たとえば、Windows で SiYuan のショートカットをいくつか作成して、各ショートカットのプロパティを開き、\"ショートカット\" タブの \"リンク先\" の後に "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--workspace=&quot;F:\\SiYuan&quot;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ のようにワークスペースのパスを追記します。さらに、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--port=ポート番号"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を指定することでカーネルがリッスンするポートを指定できます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-26qtta1",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-x400lts",
+						"id": "20240530101000-26qtta1",
+						"updated": "20261016112115"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-owkbmon",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-i8yieo6",
+								"id": "20240530101000-owkbmon",
+								"updated": "20261016112115"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "モバイル版では "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "詳細"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "設定"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "アプリ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "ワークスペース"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " でワークスペースを切り替えられます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261021005120-tctin10",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20261021005120-tctin10",
+				"updated": "20261021005205"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ワークスペースの名前変更"
+				}
+			]
+		},
+		{
+			"ID": "20261021005120-1ivo4l4",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021005120-1ivo4l4",
+				"updated": "20261021005205"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "デスクトップ版では、ワークスペースの名前はフォルダ名と同じです。思源を終了してから、ファイルマネージャーで変更してください。ワークスペースのフォルダ全体の名前を変更するだけでよく、中身を空にしたり、データを移行したりする必要はありません。"
+				}
+			]
+		},
+		{
+			"ID": "20261021005120-ytt1xxx",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1,
+				"Tight": true,
+				"Start": 1,
+				"Delimiter": 46
+			},
+			"Properties": {
+				"id": "20261021005120-ytt1xxx",
+				"updated": "20261021005205"
+			},
+			"Children": [
+				{
+					"ID": "20261021005120-y6biwwg",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "MS4=",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20261021005120-y6biwwg",
+						"updated": "20261021005205"
+					},
+					"Children": [
+						{
+							"ID": "20261021005120-mwa0aki",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261021005120-mwa0aki",
+								"updated": "20261021005205"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "画面左上のメニューの "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "ワークスペース"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " で対象のワークスペースを見つけ、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "ファイルの場所を開く"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を選択してフォルダの場所を確認する"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261021005120-82t58c5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "Mi4=",
+						"Num": 2
+					},
+					"Properties": {
+						"id": "20261021005120-82t58c5",
+						"updated": "20261021005205"
+					},
+					"Children": [
+						{
+							"ID": "20261021005120-gwlbsnc",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261021005120-gwlbsnc",
+								"updated": "20261021005205"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "画面左上のメニューの "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "アプリケーションを終了"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " から思源を安全に終了し、対応するカーネルプロセスが終了するまで待つ"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261021005120-mnpv5fw",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "My4=",
+						"Num": 3
+					},
+					"Properties": {
+						"id": "20261021005120-mnpv5fw",
+						"updated": "20261021005205"
+					},
+					"Children": [
+						{
+							"ID": "20261021005120-tswu5ve",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261021005120-tswu5ve",
+								"updated": "20261021005205"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ファイルマネージャーでワークスペースのフォルダ名を変更し、中のファイルとサブフォルダはすべて保持する"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261021005120-hmojnda",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "NC4=",
+						"Num": 4
+					},
+					"Properties": {
+						"id": "20261021005120-hmojnda",
+						"updated": "20261021005205"
+					},
+					"Children": [
+						{
+							"ID": "20261021005120-8xrfoks",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261021005120-8xrfoks",
+								"updated": "20261021005205"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "思源を再起動し、ワークスペース選択ウィンドウで名前を変更したフォルダを選択する。別のワークスペースが開いている場合は、画面左上のメニューの "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "ワークスペース"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "新規作成 / 開く"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " からそのフォルダを選択する"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261021005120-4kuuf26",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021005120-4kuuf26",
+				"updated": "20261021005205"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ウィンドウを閉じたり、別のワークスペースを開いたりするだけでは、元のワークスペースが終了するとは限りません。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--workspace"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " パラメータでワークスペースを指定している場合は、再起動する前に起動コマンドやショートカットのパスも変更後のフォルダのパスに更新してください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-1mozynr",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-j4ly8y7",
+				"id": "20240530101000-1mozynr",
+				"updated": "20260918195936"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ファイルシステムの構造"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-kod57ax",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-2zrok2n",
+				"id": "20240530101000-kod57ax",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ワークスペース内の主なフォルダ (ディレクトリ):"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-otsvvk8",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-dqw8m0m",
+				"id": "20240530101000-otsvvk8",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-29di67m",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-2e6fnv0",
+						"id": "20240530101000-29di67m",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-1txgzrn",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-5u1d7rb",
+								"id": "20240530101000-1txgzrn",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "conf"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: ワークスペース設定の保存先"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-uyv7n8k",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-68ml6ao",
+						"id": "20240530101000-uyv7n8k",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-q8k0yuw",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-9bidklt",
+								"id": "20240530101000-q8k0yuw",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "corrupted"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: 破損したデータファイルの保存先"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-fbfk8hz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-gyd94m1",
+						"id": "20240530101000-fbfk8hz",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-4tsmf0j",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-28imle6",
+								"id": "20240530101000-4tsmf0j",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "data"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: データの保存先 (具体的な構造は"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20240530101000-1jtqnm2",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "こちら"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "をご覧ください)"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-loh75vf",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-6oxil91",
+						"id": "20240530101000-loh75vf",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-rygsara",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-vvm1ebs",
+								"id": "20240530101000-rygsara",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "history"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: ファイルの履歴の保存先"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-mio74b4",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-zzszvkp",
+						"id": "20240530101000-mio74b4",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-yjasv3d",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-ejdlot6",
+								"id": "20240530101000-yjasv3d",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "repo"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: データウェアハウスのデータの保存先"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-ovxkdju",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-4t7ka8a",
+						"id": "20240530101000-ovxkdju",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-i0ffqqh",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-4u8t4tf",
+								"id": "20240530101000-i0ffqqh",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "temp"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: 実行時に必要な一時ファイルの保存先"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-bsn7y3x",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-x965uz6",
+						"id": "20240530101000-bsn7y3x",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-xe1lfla",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-ats1qhs",
+								"id": "20240530101000-xe1lfla",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ".lock"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: カーネルプロセスが開始した後に作成され、ワークスペースをロックします"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260917190844-5om4pnd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260917190844-5om4pnd",
+				"updated": "20260918195936"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "サードパーティのテーマは data/themes/、アイコンパッケージは data/icons/ に保存され、データ同期とスナップショットの対象になります。各端末の外観の選択は引き続きローカルの conf/conf.json に保存されます。内蔵の外観リソースは同期されません。アップグレード時に元のディレクトリをデータディレクトリへ移行し、移行後に元のディレクトリを削除します。"
+				}
+			]
+		}
+	]
+}

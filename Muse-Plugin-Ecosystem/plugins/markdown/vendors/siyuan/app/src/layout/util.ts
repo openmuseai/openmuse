@@ -1,0 +1,1456 @@
+import {resetUILayout, saveUILayout} from "../config/util/resourceConfig";
+import {Layout} from "./index";
+import {openStandaloneDatabaseItemByURI} from "../protyle/render/av/openStandaloneDatabaseItem";
+import {withFetchTimeout} from "../util/fetchTimeout";
+import {Wnd} from "./Wnd";
+import {Tab} from "./Tab";
+import type {Model} from "./Model";
+import {Graph} from "./dock/Graph";
+import {Editor} from "../editor";
+import {Files} from "./dock/Files";
+import {Outline} from "./dock/Outline";
+import {Bookmark} from "./dock/Bookmark";
+import {Tag} from "./dock/Tag";
+import {getAllEditor, getAllModels, getAllTabs, getAllWnds} from "./getAll";
+import {Asset} from "../asset";
+import {Search} from "../search";
+import {Dock} from "./dock";
+import {focusByRange} from "../protyle/util/selectionOffsets";
+import {hideElements} from "../protyle/ui/hideElements";
+import {hasClosestByClassName} from "../protyle/util/hasClosest";
+import {Constants} from "../constants";
+import {saveScroll} from "../protyle/scroll/saveScroll";
+import {Backlink} from "./dock/Backlink";
+import {openFileById} from "../editor/util";
+import {isWindow} from "../util/functions";
+import {getSettingsWindowHost} from "../config/setting/windowContext";
+import {showMessage} from "../dialog/message";
+import {isEncryptedBox, parseUriInfo} from "../util/pathName";
+import {Custom} from "./dock/Custom";
+import {newCardModel} from "../card/newCardTab";
+import {newDatabaseRowModel} from "../editor/databaseRow";
+import {showDatabaseRowPreview} from "../protyle/render/av/openDatabaseRow";
+import type {App} from "../index";
+import {afterLayoutReady} from "../plugin/loader";
+import {newCenterEmptyTab, resizeTabs, setTabPosition} from "./tabUtil";
+import {
+    isDisabledFeature,
+    isPhablet,
+    isSensitiveLayoutData,
+    isSensitiveSearchConfig,
+    setStorageVal,
+} from "../protyle/util/compatibility";
+import {adjustDockPadding} from "./dock/util";
+import {setTitle} from "../util/processTitle";
+import {activateQueuedAVLocate, queueAVLocateRequest} from "../protyle/render/av/locate";
+import {applyDockEntryVisibility} from "../config/entryVisibility/runtime";
+import {MIN_HORIZONTAL_PANE_SIZE, MIN_VERTICAL_PANE_SIZE, panePercentages, resizePanePercentages} from "./resizePane";
+import {requestResponsiveDockLayout} from "./dock/responsive";
+import {stickyRow} from "../protyle/render/av/row";
+import {flushSettingSaves, settingSaveFailures} from "../config/setting/pending";
+
+const isBuiltInCustomModel = (type: string) => {
+    return type === "siyuan-card" || type === "siyuan-database-row";
+};
+
+export const isSensitiveTab = (tab: Tab) => {
+    if (tab.model instanceof Editor) {
+        return isEncryptedBox(tab.model.editor.protyle.notebookId) ||
+            isEncryptedBox(tab.model.databaseRow?.notebookID);
+    }
+    if (tab.model instanceof Search) {
+        return isSensitiveSearchConfig(tab.model.config);
+    }
+    if ((tab.model instanceof Backlink || tab.model instanceof Graph || tab.model instanceof Outline) &&
+        tab.model.type === "local") {
+        return !tab.model.notebookId || isEncryptedBox(tab.model.notebookId);
+    }
+    if (!tab.model && tab.headElement) {
+        return isSensitiveLayoutData(JSON.parse(tab.headElement.getAttribute("data-initdata") || "{}"));
+    }
+    return false;
+};
+
+export const setPanelFocus = (element: Element, isSaveLayout = true) => {
+    if (element.getAttribute("data-type") === "wnd") {
+        const tabHeader = element.querySelector('.layout-tab-bar .item--focus[data-type="tab-header"]');
+        const title = tabHeader?.querySelector(".item__text")?.textContent || "";
+        setTitle(title, !title, tabHeader?.querySelector(".item__icon"));
+    }
+    if (element.classList.contains("layout__tab--active") || element.classList.contains("layout__wnd--active")) {
+        return;
+    }
+    document.querySelectorAll(".layout__tab--active").forEach(item => {
+        item.classList.remove("layout__tab--active");
+    });
+    document.querySelectorAll(".dock__item--activefocus").forEach(item => {
+        item.classList.remove("dock__item--activefocus");
+    });
+    document.querySelectorAll(".layout__wnd--active").forEach(item => {
+        item.classList.remove("layout__wnd--active");
+    });
+    if (element.getAttribute("data-type") === "wnd") {
+        element.classList.add("layout__wnd--active");
+        element.querySelector(".layout-tab-bar .item--focus")?.setAttribute("data-activetime", (new Date()).getTime().toString());
+        if (isSaveLayout) {
+            saveLayout();
+        }
+    } else {
+        element.classList.add("layout__tab--active");
+        Array.from(element.classList).find(item => {
+            if (item.startsWith("sy__")) {
+                document.querySelector(`.dock__item[data-type="${item.substring(4)}"]`).classList.add("dock__item--activefocus");
+                return true;
+            }
+        });
+    }
+};
+
+export const getWndByLayout: (layout: Layout) => Wnd = (layout: Layout) => {
+    const wndsTemp: Wnd[] = [];
+    getAllWnds(layout, wndsTemp);
+    return wndsTemp.sort((a, b) => {
+        if (a.element.querySelector(".fn__flex .item--focus")?.getAttribute("data-activetime") > b.element.querySelector(".fn__flex .item--focus")?.getAttribute("data-activetime")) {
+            return -1;
+        }
+    })[0];
+};
+
+const dockToJSON = (dock: Dock) => {
+    const json = [];
+    const subDockToJSON = (index: number) => {
+        const data: Config.IUILayoutDockTab[] = [];
+        dock.elements[index].querySelectorAll(".dock__item").forEach(item => {
+            if (!item.getAttribute("data-type")) {
+                return;
+            }
+            data.push({
+                type: item.getAttribute("data-type"),
+                size: {
+                    height: parseInt(item.getAttribute("data-height")),
+                    width: parseInt(item.getAttribute("data-width")),
+                },
+                title: item.getAttribute("data-title"),
+                show: item.classList.contains("dock__item--active"),
+                icon: item.querySelector("use").getAttribute("xlink:href").substring(1),
+                hotkeyLangId: item.getAttribute("data-hotkeylangid") || ""
+            });
+        });
+        return data;
+    };
+    const data0 = subDockToJSON(0);
+    const data2 = subDockToJSON(1);
+    if (data0.length > 0 || data2.length > 0) {
+        // https://github.com/siyuan-note/siyuan/issues/5641
+        json.push(data0);
+    }
+    if (data2.length > 0) {
+        json.push(data2);
+    }
+    return {
+        pin: dock.pin,
+        data: json
+    };
+};
+
+let reloadingUI = false;
+
+// 重载由持有布局的窗口执行，子窗口不能将自己的重载回调传给宿主。
+export const reloadUI = async () => {
+    const host = getSettingsWindowHost();
+    if (reloadingUI) return;
+    reloadingUI = true;
+    let reloaded = false;
+    try {
+        const failures = settingSaveFailures();
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+        await flushSettingSaves(failures);
+        if (host) {
+            await host.reload();
+            return;
+        }
+        await exportLayout({errorExit: false, cb: () => {
+            reloaded = true;
+            window.location.reload();
+        }});
+    } catch (error) {
+        console.error("Could not reload the interface", error);
+        showMessage(window.siyuan.languages.settingsPendingSaveError, 6000, "error");
+    } finally {
+        if (!reloaded) reloadingUI = false;
+    }
+};
+
+export const resetLayout = async () => {
+    const host = getSettingsWindowHost();
+    if (reloadingUI) return;
+    if (!host && window.siyuan.config.readonly) {
+        window.location.reload();
+        return;
+    }
+    reloadingUI = true;
+    let resume: () => void;
+    try {
+        const failures = settingSaveFailures();
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+        await flushSettingSaves(failures);
+        if (host) {
+            try {
+                await host.resetLayout();
+            } finally {
+                reloadingUI = false;
+            }
+            return;
+        }
+        resume = await suspendLayoutSaving();
+        const response = await resetUILayout();
+        if (response.code !== 0) throw new Error(response.msg);
+        window.siyuan.storage[Constants.LOCAL_FILEPOSITION] = {};
+        window.siyuan.storage[Constants.LOCAL_DIALOGPOSITION] = {};
+        await Promise.all([
+            setStorageVal(Constants.LOCAL_FILEPOSITION, {}),
+            setStorageVal(Constants.LOCAL_DIALOGPOSITION, {}),
+        ]);
+        await flushSettingSaves(failures);
+        window.location.reload();
+    } catch (error) {
+        resume?.();
+        reloadingUI = false;
+        console.error("Could not reset the layout", error);
+        showMessage(window.siyuan.languages.settingsPendingSaveError, 6000, "error");
+    }
+};
+
+let saveCount = 0;
+let saveRetryTimeout = 0;
+let layoutSavingSuspended = false;
+const layoutSaveRequests = new Set<Promise<void>>();
+
+// 切换布局前停止自动保存并等待在途请求，成功后保持暂停直到页面刷新，失败时由调用方恢复。
+export const suspendLayoutSaving = async () => {
+    const host = getSettingsWindowHost();
+    if (host) return host.suspendLayoutSaving();
+    layoutSavingSuspended = true;
+    window.clearTimeout(saveRetryTimeout);
+    saveCount = 0;
+    await Promise.allSettled(layoutSaveRequests);
+    return () => {
+        layoutSavingSuspended = false;
+    };
+};
+
+export const saveLayout = () => {
+    if (layoutSavingSuspended || !window.siyuan.layout?.layout) {
+        return;
+    }
+    const breakObj = {};
+    let layoutJSON: any = {};
+    if (isWindow()) {
+        layoutJSON = {
+            layout: {},
+        };
+        layoutToJSON(window.siyuan.layout.layout, layoutJSON.layout, breakObj);
+    } else {
+        const useElement = document.querySelector("#barDock use");
+        if (useElement) {
+            layoutJSON = {
+                hideDock: useElement.getAttribute("xlink:href") === "#iconDock",
+                layout: {},
+                bottom: dockToJSON(window.siyuan.layout.bottomDock),
+                left: dockToJSON(window.siyuan.layout.leftDock),
+                right: dockToJSON(window.siyuan.layout.rightDock),
+            };
+            layoutToJSON(window.siyuan.layout.layout, layoutJSON.layout, breakObj);
+            window.siyuan.config.uiLayout = layoutJSON;
+        }
+    }
+    if (Object.keys(breakObj).length > 0 && saveCount < 10) {
+        saveCount++;
+        saveRetryTimeout = window.setTimeout(() => {
+            saveLayout();
+        }, Constants.TIMEOUT_LOAD * saveCount);
+    } else {
+        saveCount = 0;
+        if (isWindow()) {
+            sessionStorage.setItem("layout", JSON.stringify(layoutJSON));
+            window.dispatchEvent(new Event("siyuan-window-layout"));
+        } else {
+            if (!window.siyuan.config.readonly) {
+                const saving = saveUILayout(layoutJSON, false);
+                layoutSaveRequests.add(saving);
+                void saving.then(() => layoutSaveRequests.delete(saving), () => layoutSaveRequests.delete(saving));
+            }
+        }
+    }
+};
+
+export const exportLayout = async (options: {
+    cb: () => void,
+    errorExit: boolean
+}) => {
+    const host = getSettingsWindowHost();
+    if (host) {
+        await host.exportLayout(options);
+        return;
+    }
+    const editors = getAllEditor();
+    await withFetchTimeout(async (signal) => {
+        for (let i = 0; i < editors.length; i++) {
+            if (signal?.aborted) {
+                return;
+            }
+            await saveScroll(editors[i].protyle);
+        }
+    }, undefined, options.errorExit ? 30000 : 0).catch((error) => {
+        if (error?.name !== "TimeoutError") {
+            throw error;
+        }
+        // 关闭时滚动位置保存超时，继续保存布局并执行退出流程。
+        console.warn("Save scroll timed out before closing");
+    });
+    if (layoutSavingSuspended) {
+        options.cb();
+        return;
+    }
+    if (isWindow()) {
+        const layoutJSON: any = {
+            layout: {},
+        };
+        layoutToJSON(window.siyuan.layout.layout, layoutJSON.layout);
+        sessionStorage.setItem("layout", JSON.stringify(layoutJSON));
+        window.dispatchEvent(new Event("siyuan-window-layout"));
+        options.cb();
+        return;
+    }
+    const useElement = document.querySelector("#barDock use");
+    if (!useElement) {
+        options.cb();
+        return;
+    }
+    const layoutJSON: any = {
+        hideDock: useElement.getAttribute("xlink:href") === "#iconDock",
+        layout: {},
+        bottom: dockToJSON(window.siyuan.layout.bottomDock),
+        left: dockToJSON(window.siyuan.layout.leftDock),
+        right: dockToJSON(window.siyuan.layout.rightDock),
+    };
+    layoutToJSON(window.siyuan.layout.layout, layoutJSON.layout);
+    if (window.siyuan.config.readonly) {
+        options.cb();
+    } else {
+        await saveUILayout(layoutJSON, options.errorExit, (response) => {
+            if (response.code === 0) options.cb();
+        });
+    }
+};
+
+export const getAllLayout = () => {
+    const layoutJSON: any = {
+        hideDock: document.querySelector("#barDock use").getAttribute("xlink:href") === "#iconDock",
+        layout: {},
+        bottom: dockToJSON(window.siyuan.layout.bottomDock),
+        left: dockToJSON(window.siyuan.layout.leftDock),
+        right: dockToJSON(window.siyuan.layout.rightDock),
+    };
+    layoutToJSON(window.siyuan.layout.layout, layoutJSON.layout);
+    return layoutJSON;
+};
+
+const DOCK_KEYS = ["left", "right", "bottom"] as const;
+
+// agentChat 停靠按钮：已存在则去重，不存在则按默认布局补全
+const ensureAgentChatDock = (layout: Pick<Config.IUiLayout, "left" | "right" | "bottom">) => {
+    let hasAgentChat = false;
+    for (const key of DOCK_KEYS) {
+        const sections = layout[key]?.data;
+        if (!sections) {
+            continue;
+        }
+        for (const sub of sections) {
+            if (!sub) {
+                continue;
+            }
+            for (let i = 0; i < sub.length; i++) {
+                if (sub[i]?.type !== "agentChat") {
+                    continue;
+                }
+                if (hasAgentChat) {
+                    sub.splice(i, 1);
+                    i--;
+                } else {
+                    hasAgentChat = true;
+                }
+            }
+        }
+    }
+    if (!hasAgentChat) {
+        for (const key of DOCK_KEYS) {
+            const sections = Constants.SIYUAN_EMPTY_LAYOUT[key]?.data;
+            if (!sections) {
+                continue;
+            }
+            for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+                const sub = sections[sectionIndex];
+                if (!sub) {
+                    continue;
+                }
+                for (let itemIndex = 0; itemIndex < sub.length; itemIndex++) {
+                    const item = sub[itemIndex];
+                    if (item?.type === "agentChat") {
+                        const targetSections = layout[key]?.data;
+                        if (targetSections?.[sectionIndex]) {
+                            targetSections[sectionIndex].splice(itemIndex, 0, {...item});
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+    }
+};
+
+const initInternalDock = (dockItem: Config.IUILayoutDockTab[]) => {
+    for (let index = dockItem.length - 1; index >= 0; index--) {
+        const existSubItem = dockItem[index];
+        if ((window.siyuan.isPublish && (existSubItem.type === "inbox" || existSubItem.type === "agentChat")) ||
+            (isDisabledFeature("ai") && existSubItem.type === "agentChat")) {
+            dockItem.splice(index, 1);
+            continue;
+        }
+        if (existSubItem.hotkeyLangId) {
+            existSubItem.title = window.siyuan.languages[existSubItem.hotkeyLangId];
+        }
+    }
+};
+
+const JSONToDock = (json: any, app: App) => {
+    ensureAgentChatDock(json);
+    json.left.data.forEach((existItem: Config.IUILayoutDockTab[]) => {
+        initInternalDock(existItem);
+    });
+    json.right.data.forEach((existItem: Config.IUILayoutDockTab[]) => {
+        initInternalDock(existItem);
+    });
+    json.bottom.data.forEach((existItem: Config.IUILayoutDockTab[]) => {
+        initInternalDock(existItem);
+    });
+    window.siyuan.layout.centerLayout = window.siyuan.layout.layout.children[0].children[1] as Layout;
+    window.siyuan.layout.leftDock = new Dock({position: "Left", data: json.left, app});
+    window.siyuan.layout.rightDock = new Dock({position: "Right", data: json.right, app});
+    window.siyuan.layout.bottomDock = new Dock({position: "Bottom", data: json.bottom, app});
+    adjustDockPadding();
+    applyDockEntryVisibility();
+};
+
+const removedTabs: Tab[] = [];
+
+export const JSONToCenter = (
+    app: App,
+    json: Config.TPersistedUILayoutItem,
+    layout?: Layout | Wnd | Tab | Model,
+) => {
+    let child: Layout | Wnd | Tab | Model;
+    if (json.instance === "Layout") {
+        // TabA 向右分屏后向下分屏，依次关闭右侧、上侧分屏无法移除 layout 嵌套，故在此解决 https://github.com/siyuan-note/siyuan/issues/12196
+        while (Array.isArray(json.children) && json.children.length === 1 && json.children[0].instance === "Layout" &&
+        json.children[0].type === "normal" && Array.isArray(json.children[0].children) && json.children[0].children.length === 1) {
+            json.children = json.children[0].children;
+        }
+        if (!layout) {
+            window.siyuan.layout.layout = new Layout({
+                element: document.getElementById("layouts"),
+                direction: json.direction,
+                size: json.size,
+                type: json.type,
+                resize: json.resize
+            });
+        } else {
+            child = new Layout({
+                direction: json.direction,
+                size: json.size,
+                type: json.type,
+                resize: json.resize
+            });
+            (layout as Layout).addLayout(child);
+        }
+    } else if (json.instance === "Wnd") {
+        child = new Wnd(app, json.resize, (layout as Layout).type);
+        (layout as Layout).addWnd(child);
+        if (json.width) {
+            child.element.classList.remove("fn__flex-1");
+            child.element.style.width = json.width;
+        }
+        if (json.height) {
+            child.element.classList.remove("fn__flex-1");
+            child.element.style.height = json.height;
+        }
+    } else if (json.instance === "Tab") {
+        if (!json.title) {
+            child = newCenterEmptyTab(app);
+        } else {
+            let title = json.title;
+            if (json.lang) {
+                title = window.siyuan.languages[json.lang];
+            }
+            child = new Tab({
+                icon: json.icon,
+                docIcon: json.docIcon,
+                title
+            });
+        }
+        if (json.pin) {
+            child.headElement.classList.add("item--pin");
+            if (json.docIcon || json.icon) {
+                child.headElement.querySelector(".item__text").classList.add("fn__none");
+            }
+        }
+        if (json.active && child.headElement) {
+            child.headElement.setAttribute("data-init-active", "true");
+        }
+        (layout as Wnd).addTab(child, false, false, json.activeTime);
+    } else if (json.instance === "Editor" && json.blockId) {
+        if (isSensitiveLayoutData(json)) {
+            (layout as Tab).headElement.removeAttribute("data-init-active");
+            removedTabs.push(layout as Tab);
+            return;
+        }
+        if (window.siyuan.config.fileTree.openFilesUseCurrentTab) {
+            (layout as Tab).headElement.classList.add("item--unupdate");
+        }
+        (layout as Tab).headElement.setAttribute("data-initdata", JSON.stringify(json));
+    } else if (json.instance === "Asset") {
+        (layout as Tab).addModel(new Asset({
+            app,
+            tab: (layout as Tab),
+            path: json.path,
+            page: json.page,
+        }));
+    } else if (json.instance === "Backlink") {
+        if (isSensitiveLayoutData(json)) {
+            (layout as Tab).headElement.removeAttribute("data-init-active");
+            removedTabs.push(layout as Tab);
+            return;
+        }
+        (layout as Tab).addModel(new Backlink({
+            app,
+            tab: (layout as Tab),
+            blockId: json.blockId,
+            rootId: json.rootId,
+            notebookId: json.notebookId,
+            type: json.type as "pin" | "local",
+        }));
+    } else if (json.instance === "Bookmark") {
+        (layout as Tab).addModel(new Bookmark(app, (layout as Tab)));
+    } else if (json.instance === "Files") {
+        (layout as Tab).addModel(new Files({
+            app,
+            tab: (layout as Tab),
+        }));
+    } else if (json.instance === "Graph") {
+        if (isSensitiveLayoutData(json)) {
+            (layout as Tab).headElement.removeAttribute("data-init-active");
+            removedTabs.push(layout as Tab);
+            return;
+        }
+        (layout as Tab).addModel(new Graph({
+            app,
+            tab: (layout as Tab),
+            blockId: json.blockId,
+            rootId: json.rootId,
+            notebookId: json.notebookId,
+            type: json.type as "pin" | "local" | "global",
+        }));
+    } else if (json.instance === "Outline") {
+        if (isSensitiveLayoutData(json)) {
+            (layout as Tab).headElement.removeAttribute("data-init-active");
+            removedTabs.push(layout as Tab);
+            return;
+        }
+        (layout as Tab).addModel(new Outline({
+            app,
+            tab: (layout as Tab),
+            blockId: json.blockId,
+            notebookId: json.notebookId,
+            type: json.type as "pin" | "local",
+            isPreview: json.isPreview,
+        }));
+    } else if (json.instance === "Tag") {
+        (layout as Tab).addModel(new Tag(app, (layout as Tab)));
+    } else if (json.instance === "Search") {
+        if (isSensitiveLayoutData(json)) {
+            (layout as Tab).headElement.removeAttribute("data-init-active");
+            removedTabs.push(layout as Tab);
+            return;
+        }
+        (layout as Tab).addModel(new Search({
+            app,
+            tab: (layout as Tab),
+            config: json.config
+        }));
+    } else if (json.instance === "Custom") {
+        if (json.customModelType === "siyuan-database-row") {
+            const notebookId = json.customModelData?.notebookId;
+            const notebook = window.siyuan.notebooks.find((item) => item.id === notebookId);
+            if (notebook?.closed && isEncryptedBox(notebookId)) {
+                (layout as Tab).headElement.removeAttribute("data-init-active");
+                removedTabs.push(layout as Tab);
+                return;
+            }
+        }
+        if (window.siyuan.config.fileTree.openFilesUseCurrentTab) {
+            (layout as Tab).headElement.classList.add("item--unupdate");
+        }
+        (layout as Tab).headElement.setAttribute("data-initdata", JSON.stringify(json));
+    }
+    if ("children" in json) {
+        if (Array.isArray(json.children)) {
+            json.children.forEach((item: any) => {
+                JSONToCenter(app, item, layout ? child : window.siyuan.layout.layout);
+            });
+        } else if (json.children && Object.keys(json.children).length > 0) {
+            JSONToCenter(app, json.children, child);
+        } else if (child instanceof Tab) {
+            removedTabs.push(child);
+        }
+    }
+};
+
+export const JSONToLayout = (app: App, isStart: boolean) => {
+    JSONToCenter(app, window.siyuan.config.uiLayout.layout, undefined);
+    JSONToDock(window.siyuan.config.uiLayout, app);
+    const applyTabStartupMode = isStart || !sessionStorage.getItem(Constants.LOCAL_SESSION_FIRSTLOAD);
+    if (applyTabStartupMode) {
+        sessionStorage.setItem(Constants.LOCAL_SESSION_FIRSTLOAD, "true");
+    }
+    // 关闭已打开页签时保留钉住的页签
+    if (applyTabStartupMode && window.siyuan.config.fileTree.tabStartupMode === 2) {
+        getAllTabs().forEach(item => {
+            if (item.headElement && !item.headElement.classList.contains("item--pin")) {
+                item.parent.removeTab(item.id, false, false, false);
+            }
+        });
+    }
+    // 移除没有插件的 tab
+    document.querySelectorAll('li[data-type="tab-header"]').forEach((item: HTMLElement) => {
+        const initData = item.getAttribute("data-initdata");
+        if (initData) {
+            const initDataObj = JSON.parse(initData);
+            if (initDataObj.instance === "Custom" && !isBuiltInCustomModel(initDataObj.customModelType)) {
+                let hasPlugin = false;
+                app.plugins.find(plugin => {
+                    if (Object.keys(plugin.models).includes(initDataObj.customModelType)) {
+                        hasPlugin = true;
+                        return true;
+                    }
+                });
+                if (!hasPlugin) {
+                    const tabId = item.getAttribute("data-id");
+                    const tab = getInstanceById(tabId) as Tab;
+                    if (tab) {
+                        tab.parent.removeTab(tabId, false, false, false);
+                    }
+                }
+            }
+        }
+    });
+
+    const info = parseUriInfo();
+    if (info.id && openStandaloneDatabaseItemByURI(app, info)) {
+        // 独立条目链接不需要打开数据库所在文档。
+    } else if (info.id) {
+        if (info.avItemID) {
+            queueAVLocateRequest(info.id, {
+                itemID: info.avItemID,
+                viewID: info.avViewID,
+                groupID: info.avGroupID,
+            });
+        }
+        openFileById({
+            app,
+            id: info.id,
+            action: info.avItemID ? [Constants.CB_GET_CONTEXT, Constants.CB_GET_ROOTSCROLL] :
+                (info.focus ? [Constants.CB_GET_ALL, Constants.CB_GET_FOCUS] : [Constants.CB_GET_FOCUS, Constants.CB_GET_CONTEXT, Constants.CB_GET_ROOTSCROLL]),
+            zoomIn: info.avItemID ? false : info.focus,
+            afterOpen: (model) => {
+                const protyle = (model as { editor?: { protyle?: IProtyle } })?.editor?.protyle;
+                if (protyle) {
+                    activateQueuedAVLocate(protyle, info.id);
+                }
+            },
+            // 笔记本刚打开时块索引可能暂不可用，确保外部 URL 最终能打开目标块
+            retryOnUnavailable: 10,
+        });
+    } else {
+        if (applyTabStartupMode && window.siyuan.config.fileTree.tabStartupMode === 1) {
+            document.querySelectorAll('li[data-type="tab-header"][data-init-active="true"]').forEach((item) => {
+                item.removeAttribute("data-init-active");
+            });
+            const wnd = getWndByLayout(window.siyuan.layout.centerLayout);
+            if (wnd) {
+                let blankTab = wnd.children.find((item) => !item.headElement);
+                if (blankTab) {
+                    wnd.children.forEach((item) => {
+                        item.headElement?.classList.remove("item--focus");
+                        item.panelElement.classList.toggle("fn__none", item !== blankTab);
+                    });
+                    const removedIndex = removedTabs.indexOf(blankTab);
+                    if (removedIndex > -1) {
+                        removedTabs.splice(removedIndex, 1);
+                    }
+                } else {
+                    blankTab = newCenterEmptyTab(app);
+                    wnd.addTab(blankTab, false, false);
+                }
+            }
+        }
+        let latestTabHeaderElement: HTMLElement;
+        document.querySelectorAll('li[data-type="tab-header"][data-init-active="true"]').forEach((item: HTMLElement) => {
+            if (!latestTabHeaderElement) {
+                latestTabHeaderElement = item;
+            } else {
+                if (item.dataset.activetime > latestTabHeaderElement.dataset.activetime) {
+                    latestTabHeaderElement = item;
+                }
+            }
+            const tab = getInstanceById(item.getAttribute("data-id")) as Tab;
+            tab.parent.switchTab(item, false, false, true, false);
+            tab.parent.showHeading();
+        });
+        if (latestTabHeaderElement) {
+            setPanelFocus(latestTabHeaderElement.parentElement.parentElement.parentElement, false);
+        }
+        // 移除没有数据的页签 https://github.com/siyuan-note/siyuan/issues/13390
+        removedTabs.forEach(item => {
+            item.parent.removeTab(item.id, false, false, false);
+        });
+    }
+    // 需放在 tab.parent.switchTab 后，否则当前 tab 永远为最后一个
+    afterLayoutReady(app);
+    saveLayout();
+    // https://github.com/siyuan-note/siyuan/issues/17779
+    if (window.siyuan.layout.rightDock.layout.children[0].element.classList.contains("fn__none") &&
+        window.siyuan.layout.rightDock.layout.children[1].element.classList.contains("fn__none")) {
+        window.siyuan.layout.rightDock.layout.element.style.width = "0px";
+    }
+    if (window.siyuan.layout.leftDock.layout.children[0].element.classList.contains("fn__none") &&
+        window.siyuan.layout.leftDock.layout.children[1].element.classList.contains("fn__none")) {
+        window.siyuan.layout.leftDock.layout.element.style.width = "0px";
+    }
+    if (window.siyuan.layout.bottomDock.layout.children[0].element.classList.contains("fn__none") &&
+        window.siyuan.layout.bottomDock.layout.children[1].element.classList.contains("fn__none")) {
+        window.siyuan.layout.bottomDock.layout.element.style.height = "0px";
+    }
+};
+
+export const layoutToJSON = (layout: Layout | Wnd | Tab | Model, json: any, breakObj?: IObject) => {
+    if (layout instanceof Layout) {
+        json.direction = layout.direction;
+        if (layout.parent) {
+            if (layout.element.classList.contains("fn__flex-1")) {
+                json.size = "auto";
+            } else if (layout.parent.direction === "lr" && layout.element.style.width.endsWith("%")) {
+                json.size = layout.element.style.width;
+            } else if (layout.parent.direction === "tb" && layout.element.style.height.endsWith("%")) {
+                json.size = layout.element.style.height;
+            } else {
+                let collapsedDockSize: string | undefined;
+                if (layout.type === "left") {
+                    collapsedDockSize = window.siyuan.layout.leftDock?.getCollapsedPanelSize();
+                } else if (layout.type === "right") {
+                    collapsedDockSize = window.siyuan.layout.rightDock?.getCollapsedPanelSize();
+                } else if (layout.type === "bottom") {
+                    collapsedDockSize = window.siyuan.layout.bottomDock?.getCollapsedPanelSize();
+                }
+                if (collapsedDockSize) {
+                    json.size = collapsedDockSize;
+                } else if (layout.element.style.maxWidth && layout.parent.direction !== "tb") {
+                    json.size = layout.element.getAttribute(Constants.ATTRIBUTE_DOCK_WIDTH) + "px";
+                } else {
+                    json.size = (layout.parent.direction === "tb" ? layout.element.clientHeight : layout.element.clientWidth) + "px";
+                }
+            }
+        }
+        json.resize = layout.resize;
+        json.type = layout.type;
+        json.instance = "Layout";
+    } else if (layout instanceof Wnd) {
+        json.resize = layout.resize;
+        json.height = layout.element.style.height;
+        json.width = layout.element.style.width;
+        json.instance = "Wnd";
+    } else if (layout instanceof Tab) {
+        if (layout.headElement) {
+            json.title = layout.title;
+            json.icon = layout.icon;
+            json.docIcon = layout.docIcon;
+            json.pin = layout.headElement.classList.contains("item--pin");
+            if (layout.model instanceof Files) {
+                json.lang = "fileTree";
+            } else if (layout.model instanceof Backlink && layout.model.type === "pin") {
+                json.lang = "backlinks";
+            } else if (layout.model instanceof Bookmark) {
+                json.lang = "bookmark";
+            } else if (layout.model instanceof Graph && layout.model.type !== "local") {
+                json.lang = "graphView";
+            } else if (layout.model instanceof Outline && layout.model.type !== "local") {
+                json.lang = "outline";
+            } else if (layout.model instanceof Tag) {
+                json.lang = "tag";
+            }
+            if (layout.headElement.classList.contains("item--focus")) {
+                json.active = true;
+            }
+        }
+        json.instance = "Tab";
+        json.activeTime = layout.headElement?.getAttribute("data-activetime");
+    } else if (layout instanceof Editor) {
+        if ((!layout.editor.protyle.notebookId || !layout.editor.protyle.block.id || !layout.editor.protyle.block.rootID) && breakObj) {
+            breakObj.editor = "true";
+        }
+        json.notebookId = layout.editor.protyle.notebookId;
+        json.blockId = layout.editor.protyle.block.id;
+        json.rootId = layout.editor.protyle.block.rootID;
+        json.mode = layout.editor.protyle.preview.element.classList.contains("fn__none") ? "wysiwyg" : "preview";
+        json.action = (layout.editor.protyle.block.showAll && layout.editor.protyle.block.id !== layout.editor.protyle.block.rootID) ? Constants.CB_GET_ALL : Constants.CB_GET_SCROLL;
+        json.databaseRowId = layout.editor.protyle.element.dataset.databaseRowId;
+        json.databaseRow = layout.databaseRow;
+        json.instance = "Editor";
+        if (isWindow()) {
+            const scrollAttr = saveScroll(layout.editor.protyle, true);
+            if (scrollAttr && "rootId" in scrollAttr) {
+                json.scrollAttr = scrollAttr;
+                json.action = Constants.CB_GET_SCROLL;
+            }
+        }
+    } else if (layout instanceof Asset) {
+        json.path = layout.path;
+        if (layout.pdfObject) {
+            json.page = layout.pdfObject.page;
+        }
+        json.instance = "Asset";
+    } else if (layout instanceof Backlink) {
+        json.blockId = layout.blockId;
+        json.rootId = layout.rootId;
+        json.notebookId = layout.notebookId;
+        json.type = layout.type;
+        json.instance = "Backlink";
+    } else if (layout instanceof Bookmark) {
+        json.instance = "Bookmark";
+    } else if (layout instanceof Files) {
+        json.instance = "Files";
+    } else if (layout instanceof Graph) {
+        json.blockId = layout.blockId;
+        json.rootId = layout.rootId;
+        json.notebookId = layout.notebookId;
+        json.type = layout.type;
+        json.instance = "Graph";
+    } else if (layout instanceof Outline) {
+        json.blockId = layout.blockId;
+        json.notebookId = layout.notebookId;
+        json.type = layout.type;
+        json.isPreview = layout.isPreview;
+        json.instance = "Outline";
+    } else if (layout instanceof Tag) {
+        json.instance = "Tag";
+    } else if (layout instanceof Search) {
+        json.instance = "Search";
+        json.config = layout.config;
+    } else if (layout instanceof Custom) {
+        json.instance = "Custom";
+        json.customModelType = layout.type;
+        json.customModelData = Object.assign({}, layout.data);
+    }
+
+    if (layout instanceof Layout || layout instanceof Wnd) {
+        if (layout instanceof Layout &&
+            (layout.type === "bottom" || layout.type === "left" || layout.type === "right")) {
+            // 四周布局使用默认值，清空内容，重置时使用 dock 数据
+            if (layout.type === "bottom") {
+                json.children = [{
+                    "instance": "Wnd",
+                    "children": []
+                }, {
+                    "instance": "Wnd",
+                    "resize": "lr",
+                    "children": []
+                }];
+            } else {
+                json.children = [{
+                    "instance": "Wnd",
+                    "children": []
+                }, {
+                    "instance": "Wnd",
+                    "resize": "tb",
+                    "children": []
+                }];
+            }
+        } else {
+            json.children = [];
+            layout.children.forEach((item: Layout | Wnd | Tab) => {
+                if (item instanceof Tab) {
+                    if (isSensitiveTab(item)) {
+                        return;
+                    }
+                }
+                const itemJSON = {};
+                json.children.push(itemJSON);
+                layoutToJSON(item, itemJSON, breakObj);
+            });
+        }
+    } else if (layout instanceof Tab) {
+        if (layout.model) {
+            json.children = {};
+            layoutToJSON(layout.model, json.children, breakObj);
+        } else if (layout.headElement) {
+            // 当前页签没有激活时编辑器没有初始化
+            json.children = JSON.parse(layout.headElement.getAttribute("data-initdata") || "{}");
+        } else {
+            // 关闭所有页签
+            json.children = {};
+        }
+    }
+};
+
+export const resizeTopBar = () => {
+    const toolbarElement = document.querySelector("#toolbar");
+    if (!toolbarElement) {
+        return;
+    }
+    const dragElement = toolbarElement.querySelector("#drag") as HTMLElement;
+    if (!dragElement) {
+        return;
+    }
+    dragElement.style.padding = "";
+    const barMoreElement = toolbarElement.querySelector("#barMore");
+    barMoreElement.classList.remove("fn__none");
+    barMoreElement.removeAttribute("data-hideids");
+
+    Array.from(toolbarElement.querySelectorAll('[data-hide="true"]')).forEach((item) => {
+        item.classList.remove("fn__none");
+        item.removeAttribute("data-hide");
+    });
+
+    let afterDragElement = dragElement.nextElementSibling as HTMLElement;
+    const hideIds: string[] = [];
+    while (toolbarElement.scrollWidth > toolbarElement.clientWidth + 2 &&
+        afterDragElement && afterDragElement.id !== "barMore" && afterDragElement.id !== "windowControls") {
+        // 跳过默认即隐藏的元素，它们本就不占溢出空间，
+        // 若为其打上 data-hide，最大化后恢复阶段会误将其显示出来
+        if (!afterDragElement.classList.contains("fn__none") &&
+            afterDragElement.getAttribute("data-entry-hidden") !== "true" &&
+            afterDragElement.getAttribute("data-topbar-empty") !== "true") {
+            hideIds.push(afterDragElement.id);
+            afterDragElement.classList.add("fn__none");
+            afterDragElement.setAttribute("data-hide", "true");
+        }
+        afterDragElement = afterDragElement.nextElementSibling as HTMLElement;
+    }
+
+    let beforeDragElement = dragElement.previousElementSibling as HTMLElement;
+    while (toolbarElement.scrollWidth > toolbarElement.clientWidth + 2 &&
+        beforeDragElement && beforeDragElement.id !== "barWorkspace") {
+        if (!beforeDragElement.classList.contains("fn__none") &&
+            beforeDragElement.getAttribute("data-entry-hidden") !== "true" &&
+            beforeDragElement.getAttribute("data-topbar-empty") !== "true") {
+            hideIds.push(beforeDragElement.id);
+            beforeDragElement.classList.add("fn__none");
+            beforeDragElement.setAttribute("data-hide", "true");
+        }
+        beforeDragElement = beforeDragElement.previousElementSibling as HTMLElement;
+    }
+    if (hideIds.length > 0) {
+        barMoreElement.classList.remove("fn__none");
+    } else {
+        barMoreElement.classList.add("fn__none");
+    }
+    barMoreElement.setAttribute("data-hideids", hideIds.join(","));
+
+    if (!window.siyuan.config.appearance.hideToolbar) {
+        const width = dragElement.clientWidth;
+        const dragRect = dragElement.getBoundingClientRect();
+        const left = dragRect.left;
+        const right = window.innerWidth - dragRect.right;
+        if (left > right && left - right < width / 3) {
+            dragElement.style.paddingRight = (left - right) + "px";
+        } else if (left < right && right - left < width / 3) {
+            dragElement.style.paddingLeft = (right - left) + "px";
+        }
+    }
+
+};
+
+// TODO: 需支持所有页签类型，避免其他类型页签没有使用到而加载
+export const newModelByInitData = (app: App, tab: Tab, json: any, afterInitProtyle?: () => void) => {
+    let model: Model;
+    if (json.instance === "Custom") {
+        if (json.customModelType === "siyuan-card") {
+            model = newCardModel({
+                app,
+                tab: tab,
+                data: json.customModelData
+            });
+        } else if (json.customModelType === "siyuan-database-row") {
+            model = newDatabaseRowModel({
+                app,
+                tab,
+                data: json.customModelData,
+            });
+        } else {
+            app.plugins.find(item => {
+                if (item.models[json.customModelType]) {
+                    model = item.models[json.customModelType]({
+                        tab: tab,
+                        data: json.customModelData
+                    });
+                    return true;
+                }
+            });
+        }
+    } else if (json.instance === "Editor") {
+        if (json.rootId === json.blockId && json.action) {
+            if (typeof json.action === "string") {
+                json.action = json.action.replace(Constants.CB_GET_ALL, "");
+            } else if (typeof json.action === "object" && Array.isArray(json.action)) {
+                json.action = json.action.filter((item: string) => item !== Constants.CB_GET_ALL);
+            }
+        }
+        const action = Array.isArray(json.action) ? [...json.action] : (json.action ? [json.action] : []);
+        // 手机和平板恢复页签时只恢复浏览位置，避免自动聚焦弹出输入法。
+        if (!isPhablet()) {
+            action.push(Constants.CB_GET_FOCUS);
+        }
+        const editorModel = new Editor({
+            app,
+            tab,
+            rootId: json.rootId,
+            blockId: json.blockId,
+            notebookId: json.notebookId,
+            mode: json.mode,
+            scrollPosition: json.scrollPosition,
+            scrollAttr: json.scrollAttr,
+            action,
+            afterInitProtyle(editor) {
+                if (json.databaseRow?.navigation) {
+                    showDatabaseRowPreview(editorModel, json.databaseRow, editor.protyle);
+                } else if (json.databaseRowId) {
+                    editor.protyle.databaseAttributePanel?.expand();
+                    editor.protyle.contentElement.scrollTop = 0;
+                }
+                afterInitProtyle?.();
+            },
+        });
+        if (json.databaseRowId) {
+            editorModel.editor.protyle.element.dataset.databaseRowId = json.databaseRowId;
+        }
+        editorModel.databaseRow = json.databaseRow;
+        model = editorModel;
+    }
+    return model;
+};
+
+export const pdfIsLoading = (element: HTMLElement) => {
+    const isLoading = element.querySelector('.layout-tab-container > [data-loading="true"]') ? true : false;
+    if (isLoading) {
+        showMessage(window.siyuan.languages.pdfIsLoading);
+    }
+    return isLoading;
+};
+
+export const getInstanceById = (id: string, layout = window.siyuan.layout.centerLayout) => {
+    const _getInstanceById = (item: Layout | Wnd, id: string) => {
+        if (item.id === id) {
+            return item;
+        }
+        if (!item.children) {
+            return;
+        }
+        let ret: Tab | Layout | Wnd;
+        for (let i = 0; i < item.children.length; i++) {
+            ret = _getInstanceById(item.children[i] as Layout, id) as Tab;
+            if (ret) {
+                return ret;
+            }
+        }
+    };
+    return _getInstanceById(layout, id);
+};
+
+export const addResize = (obj: Layout | Wnd, after = true) => {
+    if (!obj.resize) {
+        return;
+    }
+
+    const getMinSize = (element: HTMLElement) => {
+        const dock = [window.siyuan.layout?.leftDock, window.siyuan.layout?.rightDock].find((item) =>
+            item?.layout.element === element);
+        if (dock) {
+            return dock.getResponsiveMinimumSize();
+        }
+        let minSize = 232;
+        Array.from(element.querySelectorAll(".file-tree")).find((item) => {
+            if (item.classList.contains("sy__backlink") || item.classList.contains("sy__graph")
+                || item.classList.contains("sy__globalGraph") || item.classList.contains("sy__inbox")) {
+                if (!item.classList.contains("fn__none") && !hasClosestByClassName(item, "fn__none")) {
+                    minSize = 320;
+                    return true;
+                }
+            }
+        });
+        return minSize;
+    };
+
+    const resizeWnd = (resizeElement: HTMLElement, direction: string) => {
+        const getPaneElements = () => Array.from(resizeElement.parentElement.children).filter((item: HTMLElement) =>
+            !item.classList.contains("layout__resize") && !item.classList.contains("layout__dockresize")) as HTMLElement[];
+
+        const setPanePercentages = (paneElements: HTMLElement[], percentages: number[]) => {
+            paneElements.forEach((item, index) => {
+                item.classList.remove("fn__flex-1");
+                item.style[direction === "lr" ? "width" : "height"] = percentages[index] + "%";
+            });
+        };
+
+        const setSize = (item: HTMLElement, direction: string) => {
+            if (item.classList.contains("fn__flex-1")) {
+                if (direction === "lr") {
+                    item.style.width = item.clientWidth + "px";
+                } else {
+                    item.style.height = item.clientHeight + "px";
+                }
+                item.classList.remove("fn__flex-1");
+            }
+        };
+
+        let range: Range;
+        resizeElement.addEventListener("mousedown", (event: MouseEvent) => {
+            event.preventDefault();
+            getAllModels().editor.forEach((item) => {
+                if (item.editor && item.editor.protyle && item.element.parentElement) {
+                    hideElements(["gutter"], item.editor.protyle);
+                }
+            });
+            if (getSelection().rangeCount > 0) {
+                range = getSelection().getRangeAt(0);
+            }
+            const documentSelf = document;
+            documentSelf.body.classList.add("fn__pointer-none");
+            const nextElement = resizeElement.nextElementSibling as HTMLElement;
+            const previousElement = resizeElement.previousElementSibling as HTMLElement;
+            const resizingProtyles = getAllEditor().map(editor => editor?.protyle).filter(protyle =>
+                protyle && (previousElement.contains(protyle.element) || nextElement.contains(protyle.element)));
+            const isCenterResize = !!resizeElement.parentElement.closest(".layout__center");
+            const responsiveDock = !isCenterResize && direction === "lr" ?
+                [window.siyuan.layout?.leftDock, window.siyuan.layout?.rightDock].find((dock) =>
+                    dock?.layout.element === previousElement || dock?.layout.element === nextElement) : undefined;
+            let responsiveResizePrepared = false;
+            const paneElements = isCenterResize ? getPaneElements() : [];
+            const paneSizes = paneElements.map((item) => direction === "lr" ? item.clientWidth : item.clientHeight);
+            const previousIndex = paneElements.indexOf(previousElement);
+            const nextIndex = paneElements.indexOf(nextElement);
+            nextElement.style.overflow = "auto"; // 拖动时 layout__resize 会出现 https://github.com/siyuan-note/siyuan/issues/6221
+            previousElement.style.overflow = "auto";
+            nextElement.style.transition = "none";
+            previousElement.style.transition = "none";
+            if (!isCenterResize) {
+                if (!nextElement.nextElementSibling || nextElement.nextElementSibling.classList.contains("layout__dockresize")) {
+                    setSize(nextElement, direction);
+                } else {
+                    setSize(previousElement, direction);
+                }
+            }
+            const x = event[direction === "lr" ? "clientX" : "clientY"];
+            const previousSize = direction === "lr" ? previousElement.clientWidth : previousElement.clientHeight;
+            const nextSize = direction === "lr" ? nextElement.clientWidth : nextElement.clientHeight;
+            const coordinate = direction === "lr" ? "clientX" : "clientY";
+            let resizeFrame = 0;
+            let pendingCoordinate: number | undefined;
+
+            documentSelf.ondragstart = () => {
+                // 文件树拖拽会产生透明效果
+                document.querySelectorAll(".sy__file .b3-list-item").forEach((item: HTMLElement) => {
+                    if (item.style.opacity === "0.38") {
+                        item.style.opacity = "";
+                    }
+                });
+                return false;
+            };
+
+            const applyResize = (currentCoordinate: number) => {
+                const delta = currentCoordinate - x;
+                const previousNowSize = previousSize + delta;
+                const nextNowSize = nextSize - delta;
+                if (!isCenterResize && (previousNowSize < 8 || nextNowSize < 8)) {
+                    return;
+                }
+                if (window.siyuan.layout.leftDock && window.siyuan.layout.leftDock.layout.element === previousElement &&
+                    previousNowSize < getMinSize(previousElement) &&
+                    // https://github.com/siyuan-note/siyuan/issues/10506
+                    previousNowSize < previousSize) {
+                    return;
+                }
+                if (window.siyuan.layout.rightDock && window.siyuan.layout.rightDock.layout.element === nextElement &&
+                    nextNowSize < getMinSize(nextElement) && nextNowSize < nextSize) {
+                    return;
+                }
+                if (window.siyuan.layout.bottomDock && window.siyuan.layout.bottomDock.layout.element === nextElement &&
+                    nextNowSize < 64 && nextNowSize < nextSize) {
+                    return;
+                }
+                if (nextElement.classList.contains("layout__center") && nextNowSize <= 148) {
+                    return;
+                }
+                if (responsiveDock && !responsiveResizePrepared &&
+                    (previousNowSize !== previousSize || nextNowSize !== nextSize)) {
+                    responsiveDock.prepareForManualResize();
+                    responsiveResizePrepared = true;
+                }
+                if (isCenterResize) {
+                    const percentages = resizePanePercentages(
+                        paneSizes,
+                        previousIndex,
+                        nextIndex,
+                        delta,
+                        direction === "tb" ? MIN_VERTICAL_PANE_SIZE : MIN_HORIZONTAL_PANE_SIZE,
+                    );
+                    if (percentages) {
+                        setPanePercentages(paneElements, percentages);
+                    }
+                } else {
+                    if (!previousElement.classList.contains("fn__flex-1")) {
+                        previousElement.style[direction === "lr" ? "width" : "height"] = previousNowSize + "px";
+                    }
+                    if (!nextElement.classList.contains("fn__flex-1")) {
+                        nextElement.style[direction === "lr" ? "width" : "height"] = nextNowSize + "px";
+                    }
+                }
+            };
+
+            const updateFixedRows = () => {
+                // 分屏拖动不一定改变文档内容尺寸，需在绘制前同步数据库固定栏的坐标和裁剪。
+                resizingProtyles.forEach(protyle => {
+                    hideElements(["gutterOnly"], protyle);
+                    protyle.wysiwyg.element.querySelectorAll<HTMLElement>(".av").forEach(item => {
+                        stickyRow(item, protyle.contentElement, "all");
+                    });
+                });
+            };
+
+            documentSelf.onmousemove = (moveEvent: MouseEvent) => {
+                moveEvent.preventDefault();
+                moveEvent.stopPropagation();
+                pendingCoordinate = moveEvent[coordinate];
+                if (!resizeFrame) {
+                    resizeFrame = requestAnimationFrame(() => {
+                        resizeFrame = 0;
+                        if (pendingCoordinate !== undefined) {
+                            applyResize(pendingCoordinate);
+                            updateFixedRows();
+                        }
+                        pendingCoordinate = undefined;
+                    });
+                }
+            };
+
+            documentSelf.onmouseup = () => {
+                if (resizeFrame) {
+                    cancelAnimationFrame(resizeFrame);
+                    resizeFrame = 0;
+                }
+                if (pendingCoordinate !== undefined) {
+                    applyResize(pendingCoordinate);
+                    updateFixedRows();
+                }
+                documentSelf.body.classList.remove("fn__pointer-none");
+                documentSelf.onmousemove = null;
+                documentSelf.onmouseup = null;
+                documentSelf.ondragstart = null;
+                documentSelf.onselectstart = null;
+                documentSelf.onselect = null;
+                adjustLayout(isWindow() ? window.siyuan.layout.centerLayout : undefined);
+                setTabPosition(true);
+                resizeTabs();
+                if (!isWindow()) {
+                    window.siyuan.layout.leftDock.setSize();
+                    window.siyuan.layout.bottomDock.setSize();
+                    window.siyuan.layout.rightDock.setSize();
+                }
+                if (range) {
+                    focusByRange(range);
+                }
+                nextElement.style.overflow = "";
+                previousElement.style.overflow = "";
+                nextElement.style.transition = "";
+                previousElement.style.transition = "";
+            };
+        });
+    };
+
+    const resizeElement = document.createElement("div");
+    if (obj.resize === "lr") {
+        resizeElement.classList.add("layout__resize--lr");
+    }
+    resizeElement.classList.add("layout__resize");
+    if (after) {
+        obj.element.insertAdjacentElement((obj.element.previousElementSibling && !obj.element.previousElementSibling.classList.contains("layout__resize")) ?
+            "beforebegin" : "afterend", resizeElement);
+    } else {
+        obj.element.insertAdjacentElement("afterend", resizeElement);
+    }
+    resizeWnd(resizeElement, obj.resize);
+
+    resizeElement.addEventListener("dblclick", () => {
+        const previousElement = resizeElement.previousElementSibling as HTMLElement;
+        const nextElement = resizeElement.nextElementSibling as HTMLElement;
+        if (previousElement && nextElement) {
+            const bigType = ["graph", "inbox", "globalGraph", "backlink"];
+            let size = 232;
+            nextElement.style.transition = "none";
+            previousElement.style.transition = "none";
+            if (resizeElement.classList.contains("layout__resize--lr")) {
+                if (previousElement.classList.contains("layout__dockl")) {
+                    window.siyuan.layout.leftDock.prepareForManualResize();
+                    document.querySelectorAll("#dockLeft .dock__item--active").forEach(item => {
+                        if (bigType.includes(item.getAttribute("data-type"))) {
+                            size = 320;
+                        }
+                    });
+                    previousElement.style.width = size + "px";
+                    window.siyuan.layout.leftDock.setSize();
+                } else if (nextElement.classList.contains("layout__dockr")) {
+                    window.siyuan.layout.rightDock.prepareForManualResize();
+                    document.querySelectorAll("#dockRight .dock__item--active").forEach(item => {
+                        if (bigType.includes(item.getAttribute("data-type"))) {
+                            size = 320;
+                        }
+                    });
+                    nextElement.style.width = size + "px";
+                    window.siyuan.layout.rightDock.setSize();
+                } else {
+                    previousElement.style.width = "";
+                    nextElement.style.width = "";
+                    previousElement.classList.add("fn__flex-1");
+                    nextElement.classList.add("fn__flex-1");
+                    if (resizeElement.parentElement.classList.contains("layout__dockb")) {
+                        window.siyuan.layout.bottomDock.setSize();
+                    }
+                }
+            } else {
+                if (nextElement.classList.contains("layout__dockb")) {
+                    nextElement.style.height = "232px";
+                    window.siyuan.layout.bottomDock.setSize();
+                } else {
+                    previousElement.style.height = "";
+                    nextElement.style.height = "";
+                    previousElement.classList.add("fn__flex-1");
+                    nextElement.classList.add("fn__flex-1");
+                    if (resizeElement.parentElement.classList.contains("layout__dockl")) {
+                        window.siyuan.layout.leftDock.setSize();
+                    } else if (resizeElement.parentElement.classList.contains("layout__dockr")) {
+                        window.siyuan.layout.rightDock.setSize();
+                    }
+                }
+            }
+            resizeTabs();
+            nextElement.style.transition = "";
+            previousElement.style.transition = "";
+        }
+    });
+};
+
+export const adjustLayout = (layout: Layout = window.siyuan.layout.centerLayout?.parent) => {
+    // 启动期间的窗口尺寸变化可能早于中央布局初始化。
+    if (!layout) {
+        return;
+    }
+    const sizeProperty = layout.direction === "lr" ? "width" : "height";
+    if (layout.element.closest(".layout__center") &&
+        layout.children.some((item) => item.element.style[sizeProperty].endsWith("px"))) {
+        const percentages = panePercentages(layout.children.map((item) =>
+            layout.direction === "lr" ? item.element.clientWidth : item.element.clientHeight));
+        if (percentages) {
+            layout.children.forEach((item, index) => {
+                item.element.classList.remove("fn__flex-1");
+                item.element.style[sizeProperty] = percentages[index] + "%";
+            });
+        }
+    }
+    layout.children.forEach((item: Layout | Wnd) => {
+        item.element.style.maxWidth = "";
+        item.element.removeAttribute(Constants.ATTRIBUTE_DOCK_WIDTH);
+        if ((!item.element.style.width || item.element.style.width.endsWith("%")) &&
+            !item.element.classList.contains("layout__center")) {
+            item.element.style.minWidth = "8px";
+        } else {
+            item.element.style.minWidth = "";
+        }
+
+        if ((!item.element.style.height || item.element.style.height.endsWith("%")) &&
+            !item.element.classList.contains("layout__center") &&
+            item.element.classList.contains("fn__flex-column")) {
+            item.element.style.minHeight = "8px";
+        } else {
+            item.element.style.minHeight = "";
+        }
+    });
+    if (layout.direction === "lr" && layout.element.scrollWidth > layout.element.clientWidth + 2) {
+        let index = Math.ceil(screen.width / 8);
+        while (index > 0) {
+            let width = layout.element.firstElementChild.classList.contains("layout__dockl") ? 8 : 0;
+            layout.children.find((item: Layout | Wnd) => {
+                if (item.element.style.width && item.element.style.width !== "0px") {
+                    if (!item.element.hasAttribute(Constants.ATTRIBUTE_DOCK_WIDTH)) {
+                        item.element.setAttribute(Constants.ATTRIBUTE_DOCK_WIDTH, item.element.clientWidth.toString());
+                    }
+                    item.element.style.maxWidth = Math.max(Math.min(item.element.clientWidth, window.innerWidth) - 8, 168) + "px";
+                }
+                width += item.element.clientWidth;
+            });
+            index--;
+            if (width <= layout.element.clientWidth) {
+                break;
+            }
+        }
+    }
+    layout.children.forEach((item: Layout | Wnd) => {
+        if (item instanceof Layout && item.size !== "0px") {
+            adjustLayout(item);
+        }
+    });
+    requestResponsiveDockLayout();
+};
+
+export const fixWndFlex1 = (layout: Layout) => {
+    if (layout.children.length < 2) {
+        return;
+    }
+    if (layout.children[layout.children.length - 2].element.classList.contains("fn__flex-1")) {
+        return;
+    }
+    layout.children.forEach((item, index) => {
+        if (index !== layout.children.length - 2) {
+            if (layout.direction === "lr") {
+                if (item.element.classList.contains("fn__flex-1")) {
+                    item.element.style.width = item.element.clientWidth + "px";
+                    item.element.classList.remove("fn__flex-1");
+                }
+            } else {
+                if (item.element.classList.contains("fn__flex-1")) {
+                    item.element.style.height = item.element.clientHeight + "px";
+                    item.element.classList.remove("fn__flex-1");
+                }
+            }
+        }
+    });
+    const flex1Element = layout.children[layout.children.length - 2].element;
+    if (layout.direction === "lr") {
+        if (flex1Element.style.width) {
+            flex1Element.style.width = "";
+            flex1Element.classList.add("fn__flex-1");
+        }
+    } else {
+        if (flex1Element.style.height) {
+            flex1Element.style.height = "";
+            flex1Element.classList.add("fn__flex-1");
+        }
+    }
+};

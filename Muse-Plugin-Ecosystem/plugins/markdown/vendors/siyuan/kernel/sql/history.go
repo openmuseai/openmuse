@@ -1,0 +1,172 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package sql
+
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/siyuan-note/eventbus"
+	"github.com/siyuan-note/logging"
+)
+
+type History struct {
+	ID      string
+	Type    int
+	Op      string
+	Title   string
+	Content string
+	Created string
+	Path    string
+}
+
+func QueryHistory(stmt string) (ret []map[string]any, err error) {
+	ret = []map[string]any{}
+	// 历史查询语句由调用方拼接，执行前必须校验为单条只读语句
+	// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-4hjx-84f6-gr7c
+	if err = CheckHistoryReadonlyStatement(stmt); nil != err {
+		logging.LogWarnf("sql query [%s] rejected as non-readonly: %s", stmt, err)
+		return
+	}
+	rows, err := queryHistory(stmt)
+	if err != nil {
+		logging.LogWarnf("sql query [%s] failed: %s", stmt, err)
+		return
+	}
+	defer rows.Close()
+
+	cols, _ := rows.Columns()
+	if nil == cols {
+		return
+	}
+
+	for rows.Next() {
+		columns := make([]any, len(cols))
+		columnPointers := make([]any, len(cols))
+		for i := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		if err = rows.Scan(columnPointers...); err != nil {
+			return
+		}
+
+		m := make(map[string]any)
+		for i, colName := range cols {
+			val := columnPointers[i].(*any)
+			m[colName] = *val
+		}
+		ret = append(ret, m)
+	}
+	return
+}
+
+func SelectHistoriesRawStmt(stmt string) (ret []*History) {
+	if nil == historyDB {
+		return
+	}
+	// 历史查询语句由调用方拼接，执行前必须校验为单条只读语句
+	// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-4hjx-84f6-gr7c
+	if err := CheckHistoryReadonlyStatement(stmt); nil != err {
+		logging.LogWarnf("sql query [%s] rejected as non-readonly: %s", stmt, err)
+		return
+	}
+	rows, err := historyDB.Query(stmt)
+	if err != nil {
+		logging.LogWarnf("sql query [%s] failed: %s", stmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if history := scanHistoryRows(rows); nil != history {
+			ret = append(ret, history)
+		}
+	}
+	return
+}
+
+func scanHistoryRows(rows *sql.Rows) (ret *History) {
+	var history History
+	if err := rows.Scan(&history.ID, &history.Type, &history.Op, &history.Title, &history.Content, &history.Path, &history.Created); err != nil {
+		logging.LogErrorf("query scan field failed: %s\n%s", err, logging.ShortStack())
+		return
+	}
+	ret = &history
+	return
+}
+
+func queryHistory(query string, args ...any) (*sql.Rows, error) {
+	query = strings.TrimSpace(query)
+	if "" == query {
+		return nil, errors.New("statement is empty")
+	}
+	if nil == historyDB {
+		return nil, errors.New("database is nil")
+	}
+	return historyDB.Query(query, args...)
+}
+
+func deleteOutdatedHistories(tx *sql.Tx, before int64) (err error) {
+	stmt := "DELETE FROM histories_fts_case_insensitive WHERE CAST(created AS INTEGER) < ?"
+	if err = execStmtTx(tx, stmt, before); err != nil {
+		return
+	}
+	return
+}
+
+const (
+	HistoriesFTSCaseInsensitiveInsert = "INSERT INTO histories_fts_case_insensitive (id, type, op, title, content, path, created) VALUES %s"
+	HistoriesPlaceholder              = "(?, ?, ?, ?, ?, ?, ?)"
+)
+
+func insertHistories(tx *sql.Tx, histories []*History, context map[string]any) (err error) {
+	if 1 > len(histories) {
+		return
+	}
+
+	var bulk []*History
+	for _, history := range histories {
+		bulk = append(bulk, history)
+		if 512 > len(bulk) {
+			continue
+		}
+
+		if err = insertHistories0(tx, bulk, context); err != nil {
+			return
+		}
+		bulk = []*History{}
+	}
+	if 0 < len(bulk) {
+		if err = insertHistories0(tx, bulk, context); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func insertHistories0(tx *sql.Tx, bulk []*History, context map[string]any) (err error) {
+	valueStrings := make([]string, 0, len(bulk))
+	valueArgs := make([]any, 0, len(bulk)*strings.Count(HistoriesPlaceholder, "?"))
+	for _, b := range bulk {
+		valueStrings = append(valueStrings, HistoriesPlaceholder)
+		valueArgs = append(valueArgs, b.ID)
+		valueArgs = append(valueArgs, b.Type)
+		valueArgs = append(valueArgs, b.Op)
+		valueArgs = append(valueArgs, b.Title)
+		valueArgs = append(valueArgs, b.Content)
+		valueArgs = append(valueArgs, b.Path)
+		valueArgs = append(valueArgs, b.Created)
+	}
+
+	stmt := fmt.Sprintf(HistoriesFTSCaseInsensitiveInsert, strings.Join(valueStrings, ","))
+	if err = prepareExecInsertTx(tx, stmt, valueArgs); err != nil {
+		return
+	}
+
+	eventbus.Publish(eventbus.EvtSQLInsertHistory, context)
+	return
+}

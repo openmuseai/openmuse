@@ -1,0 +1,140 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"reflect"
+	"testing"
+
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/siyuan/kernel/av"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+)
+
+func TestSortAttrViewBindingIDs(t *testing.T) {
+	tests := []struct {
+		name       string
+		avIDs      []string
+		avID       string
+		previousID string
+		expected   []string
+		hasErr     bool
+	}{
+		{name: "move to beginning", avIDs: []string{"a", "b", "c"}, avID: "c", expected: []string{"c", "a", "b"}},
+		{name: "move to middle", avIDs: []string{"a", "b", "c"}, avID: "c", previousID: "a", expected: []string{"a", "c", "b"}},
+		{name: "move to end", avIDs: []string{"a", "b", "c"}, avID: "a", previousID: "c", expected: []string{"b", "c", "a"}},
+		{name: "same position", avIDs: []string{"a", "b", "c"}, avID: "b", previousID: "a", expected: []string{"a", "b", "c"}},
+		{name: "same ID", avIDs: []string{"a", "b", "c"}, avID: "b", previousID: "b", expected: []string{"a", "b", "c"}},
+		{name: "missing binding", avIDs: []string{"a", "b", "c"}, avID: "d", hasErr: true},
+		{name: "missing previous binding", avIDs: []string{"a", "b", "c"}, avID: "b", previousID: "d", hasErr: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual, err := sortAttrViewBindingIDs(test.avIDs, test.avID, test.previousID)
+			if test.hasErr {
+				if nil == err {
+					t.Fatal("expected an error")
+				}
+				return
+			}
+			if nil != err {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			if !reflect.DeepEqual(test.expected, actual) {
+				t.Fatalf("expected %v, got %v", test.expected, actual)
+			}
+		})
+	}
+}
+
+func TestRemoveAttributeViewBoundBlocks(t *testing.T) {
+	deletedValue1 := &av.Value{Block: &av.ValueBlock{ID: "20260805000000-deleted1"}}
+	keptValue := &av.Value{Block: &av.ValueBlock{ID: "20260805000000-kept"}}
+	deletedValue2 := &av.Value{Block: &av.ValueBlock{ID: "20260805000000-deleted2"}}
+	nilBlockValue := &av.Value{}
+	attrView := &av.AttributeView{KeyValues: []*av.KeyValues{{
+		Key: &av.Key{Type: av.KeyTypeBlock},
+		Values: []*av.Value{
+			deletedValue1,
+			keptValue,
+			deletedValue2,
+			nil,
+			nilBlockValue,
+		},
+	}}}
+
+	changed := removeAttributeViewBoundBlocks(attrView, map[string]struct{}{
+		"20260805000000-deleted1": {},
+		"20260805000000-deleted2": {},
+	})
+
+	if !changed {
+		t.Fatal("expected bound blocks to be removed")
+	}
+	values := attrView.GetBlockKeyValues().Values
+	if 3 != len(values) || keptValue != values[0] || nil != values[1] || nilBlockValue != values[2] {
+		t.Fatalf("unexpected remaining values: %#v", values)
+	}
+	if removeAttributeViewBoundBlocks(attrView, map[string]struct{}{"20260805000000-missing": {}}) {
+		t.Fatal("an unrelated block ID should not change the attribute view")
+	}
+}
+
+func TestCollectDeletedAttributeViewBlocks(t *testing.T) {
+	avID1 := "20260805000000-av1"
+	avID2 := "20260805000000-av2"
+	root := treenode.NewParagraph(ast.NewNodeID())
+	root.SetIALAttr(av.NodeAttrNameAvs, avID1)
+	child := treenode.NewParagraph(ast.NewNodeID())
+	child.SetIALAttr(av.NodeAttrNameAvs, avID1+","+avID2)
+	root.AppendChild(child)
+
+	deletedAttrViewBlockIDs := map[string]map[string]struct{}{}
+	collectDeletedAttributeViewBlocks(root, true, deletedAttrViewBlockIDs)
+	if 2 != len(deletedAttrViewBlockIDs) {
+		t.Fatalf("expected 2 attribute views, got %d", len(deletedAttrViewBlockIDs))
+	}
+	if blockIDs, ok := deletedAttrViewBlockIDs[avID1]; !ok || 2 != len(blockIDs) {
+		t.Fatalf("expected 2 blocks bound to [%s], got %#v", avID1, blockIDs)
+	}
+	if blockIDs, ok := deletedAttrViewBlockIDs[avID2]; !ok || 1 != len(blockIDs) {
+		if _, ok := blockIDs[child.ID]; !ok {
+			t.Fatalf("expected child block bound to [%s], got %#v", avID2, blockIDs)
+		}
+	}
+
+	deletedAttrViewBlockIDs = map[string]map[string]struct{}{}
+	collectDeletedAttributeViewBlocks(root, false, deletedAttrViewBlockIDs)
+	if blockIDs, ok := deletedAttrViewBlockIDs[avID1]; !ok || 1 != len(blockIDs) {
+		if _, ok := blockIDs[root.ID]; !ok {
+			t.Fatalf("expected only root block bound to [%s], got %#v", avID1, blockIDs)
+		}
+	}
+	if _, ok := deletedAttrViewBlockIDs[avID2]; ok {
+		t.Fatal("child block should not be collected when delChildrenWhenDelParent is false")
+	}
+}
+
+func TestGroupDeletedAttributeViewBlocks(t *testing.T) {
+	deletedAttrViewBlockIDs := groupDeletedAttributeViewBlocks(map[string][]string{
+		"20260807000000-block1": {"20260807000000-av1", "20260807000000-av2", "20260807000000-av1"},
+		"20260807000000-block2": {"20260807000000-av1", ""},
+		"":                      {"20260807000000-av3"},
+	})
+
+	if 2 != len(deletedAttrViewBlockIDs) {
+		t.Fatalf("expected 2 attribute views, got %#v", deletedAttrViewBlockIDs)
+	}
+	if blockIDs := deletedAttrViewBlockIDs["20260807000000-av1"]; 2 != len(blockIDs) {
+		t.Fatalf("expected 2 blocks for av1, got %#v", blockIDs)
+	}
+	if blockIDs := deletedAttrViewBlockIDs["20260807000000-av2"]; 1 != len(blockIDs) {
+		t.Fatalf("expected 1 block for av2, got %#v", blockIDs)
+	}
+	if _, exists := deletedAttrViewBlockIDs["20260807000000-av3"]; exists {
+		t.Fatal("an empty block ID should be ignored")
+	}
+}

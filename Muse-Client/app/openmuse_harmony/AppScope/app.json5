@@ -1,0 +1,10 @@
+{
+  "app": {
+    "bundleName": "com.openmuseai.hm",
+    "vendor": "Dongguan Chengxuan Electronic Science & Technology Co., Ltd",
+    "versionCode": 1,
+    "versionName": "0.0.1",
+    "icon": "$media:app_icon",
+    "label": "$string:app_name"
+  }
+}

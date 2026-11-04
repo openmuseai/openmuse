@@ -1,0 +1,8 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/util/adapter/src/cn/wps/ole/BufferManager.java,cn/wps/ole,too many dependencies,2026-05-22
+koffice/core-libs/util/adapter/src/cn/wps/moffice/et/EtCell.java,cn/wps/moffice/et,too many dependencies,2026-05-22
+koffice/core-libs/util/adapter/src/cn/wps/moffice/io/DLThread.java,cn/wps/moffice/io,too many dependencies,2026-05-22
+koffice/core-libs/util/adapter/src/cn/wps/moffice/io/DocumentLoader.java,cn/wps/moffice/io,too many dependencies,2026-05-22
+koffice/core-libs/util/adapter/src/cn/wps/moffice/pdfExporter/IPdfExporter.java,cn/wps/moffice/pdfExporter,too many dependencies,2026-05-22
+koffice/core-libs/util/adapter/src/cn/wps/moffice/resume/Education.java,cn/wps/moffice/resume,too many dependencies,2026-05-22
+koffice/core-libs/util/adapter/src/cn/wps/moffice/text_extractor/TEThread.java,cn/wps/moffice/text_extractor,too many dependencies,2026-05-22

@@ -1,0 +1,1094 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:crypto/crypto.dart';
+import 'package:flutter/widgets.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:path/path.dart' as p;
+
+import 'resource_inspector.dart';
+import 'workspace_mount_store.dart';
+
+export 'workspace_mount_store.dart';
+
+enum WorkspaceTabKind { resource, diff }
+
+final class WorkspaceMount {
+  WorkspaceMount({required this.path})
+    : name = p.basename(path),
+      root = WorkspaceEntry.directory(path: path, depth: 0);
+
+  final String path;
+  final String name;
+  final WorkspaceEntry root;
+}
+
+final class WorkspaceEntry {
+  WorkspaceEntry({
+    required this.path,
+    required this.name,
+    required this.isDirectory,
+    required this.depth,
+  });
+
+  factory WorkspaceEntry.directory({
+    required String path,
+    required int depth,
+  }) => WorkspaceEntry(
+    path: path,
+    name: p.basename(path),
+    isDirectory: true,
+    depth: depth,
+  );
+
+  final String path;
+  String name;
+  final bool isDirectory;
+  final int depth;
+  bool expanded = false;
+  bool loading = false;
+  List<WorkspaceEntry> children = [];
+
+  OpenMuseResource get resource => OpenMuseResource(
+    uri: Uri.file(path),
+    displayName: name,
+    mediaType: _mediaTypeFor(name),
+  );
+}
+
+final class WorkspaceDiff {
+  const WorkspaceDiff({
+    required this.resource,
+    required this.snapshot,
+    required this.comparisonId,
+    required this.afterLabel,
+    required this.before,
+    required this.after,
+  });
+
+  final OpenMuseResource resource;
+  final LocalVersionSnapshot snapshot;
+  final String comparisonId;
+  final String afterLabel;
+  final String before;
+  final String after;
+}
+
+final class WorkspaceResourceSession {
+  WorkspaceResourceSession({
+    required this.session,
+    required this.builder,
+    required this.confirmClose,
+  });
+  final ResourceEditorSession session;
+  final WidgetBuilder builder;
+  final Future<bool> Function() confirmClose;
+  final closed = Completer<void>();
+  bool confirming = false;
+  void finish() {
+    if (!closed.isCompleted) closed.complete();
+  }
+}
+
+final class WorkspaceTab {
+  WorkspaceTab.resource(this.resource, {this.preferredEditorId})
+    : id = resource.uri.toString(),
+      title = resource.displayName,
+      kind = WorkspaceTabKind.resource,
+      diff = null;
+
+  WorkspaceTab.diff(WorkspaceDiff value)
+    : id = 'diff:${value.resource.uri}:${value.comparisonId}',
+      title =
+          '${value.resource.displayName}-${value.snapshot.shortId}↔${value.afterLabel}',
+      kind = WorkspaceTabKind.diff,
+      resource = value.resource,
+      diff = value;
+
+  WorkspaceResourceSession? resourceSession;
+  final String id;
+  final String title;
+  final WorkspaceTabKind kind;
+  OpenMuseResource resource;
+  final WorkspaceDiff? diff;
+  String? preferredEditorId;
+  bool pinned = false;
+  bool inspecting = false;
+  Future<void>? inspection;
+}
+
+/// Host-owned tab state for one editor surface. Workspace/resource authority
+/// remains in [LocalWorkspaceController]; groups only own presentation state.
+final class WorkspaceEditorGroup {
+  WorkspaceEditorGroup(this.id);
+
+  final String id;
+  final List<WorkspaceTab> _tabs = [];
+  WorkspaceTab? _activeTab;
+
+  List<WorkspaceTab> get tabs => List.unmodifiable(_tabs);
+  WorkspaceTab? get activeTab => _activeTab;
+}
+
+final class LocalVersionSnapshot {
+  const LocalVersionSnapshot({
+    required this.id,
+    required this.resourcePath,
+    required this.createdAt,
+    required this.byteLength,
+  });
+
+  factory LocalVersionSnapshot.fromJson(Map<String, Object?> value) =>
+      LocalVersionSnapshot(
+        id: value['id']! as String,
+        resourcePath: value['resourcePath']! as String,
+        createdAt: DateTime.parse(value['createdAt']! as String),
+        byteLength: value['byteLength']! as int,
+      );
+
+  final String id;
+  final String resourcePath;
+  final DateTime createdAt;
+  final int byteLength;
+  String get shortId => id.substring(0, 8);
+
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'resourcePath': resourcePath,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'byteLength': byteLength,
+  };
+}
+
+/// Content-addressed, append-only local version storage. Blobs are outside the
+/// user's workspace so versioning never mutates a project tree.
+final class LocalVersionStore {
+  LocalVersionStore(this.root);
+
+  final Directory root;
+  final Map<String, List<LocalVersionSnapshot>> _index = {};
+  bool _loaded = false;
+
+  Future<void> load() async {
+    if (_loaded) return;
+    _loaded = true;
+    final file = File(p.join(root.path, 'index.json'));
+    if (!await file.exists()) return;
+    final decoded = jsonDecode(await file.readAsString());
+    if (decoded is! Map<String, dynamic>) return;
+    for (final entry in decoded.entries) {
+      final values = entry.value;
+      if (values is! List) continue;
+      _index[entry.key] = values
+          .whereType<Map>()
+          .map((value) => LocalVersionSnapshot.fromJson(value.cast()))
+          .toList();
+    }
+  }
+
+  Future<LocalVersionSnapshot> capture(OpenMuseResource resource) async {
+    await load();
+    final path = resource.uri.toFilePath();
+    final bytes = await File(path).readAsBytes();
+    final id = sha256.convert(bytes).toString();
+    final snapshots = _index.putIfAbsent(path, () => []);
+    for (final snapshot in snapshots) {
+      if (snapshot.id == id) return snapshot;
+    }
+    await Directory(p.join(root.path, 'blobs')).create(recursive: true);
+    final blob = File(p.join(root.path, 'blobs', id));
+    if (!await blob.exists()) await blob.writeAsBytes(bytes, flush: true);
+    final snapshot = LocalVersionSnapshot(
+      id: id,
+      resourcePath: path,
+      createdAt: DateTime.now(),
+      byteLength: bytes.length,
+    );
+    snapshots.insert(0, snapshot);
+    await _save();
+    return snapshot;
+  }
+
+  Future<List<LocalVersionSnapshot>> list(OpenMuseResource resource) async {
+    await load();
+    return List.unmodifiable(_index[resource.uri.toFilePath()] ?? const []);
+  }
+
+  Future<String> read(LocalVersionSnapshot snapshot) =>
+      File(p.join(root.path, 'blobs', snapshot.id)).readAsString();
+
+  Future<void> _save() async {
+    await root.create(recursive: true);
+    final value = {
+      for (final entry in _index.entries)
+        entry.key: entry.value.map((snapshot) => snapshot.toJson()).toList(),
+    };
+    final target = File(p.join(root.path, 'index.json'));
+    final temporary = File('${target.path}.tmp');
+    await temporary.writeAsString(jsonEncode(value), flush: true);
+    if (await target.exists()) await target.delete();
+    await temporary.rename(target.path);
+  }
+}
+
+/// Host-owned Resource Authority. It owns mounts, tabs and filesystem safety;
+/// concrete editors/viewers/agents remain plugin responsibilities.
+final class LocalWorkspaceController extends ChangeNotifier {
+  static const primaryEditorGroupId = 'editor.primary';
+
+  LocalWorkspaceController({
+    required String rootPath,
+    required Iterable<OpenMuseResource> initialResources,
+    LocalVersionStore? versionStore,
+    WorkspaceMountStore? mountStore,
+    Iterable<String> additionalMountPaths = const [],
+    Future<OpenMuseResource> Function(OpenMuseResource)? resourceInspector,
+  }) : _versionStore =
+           versionStore ??
+           LocalVersionStore(
+             Directory(p.join(Directory.systemTemp.path, 'openmuse-versions')),
+           ),
+       _mountStore = _mountStoreValue(mountStore),
+       _resourceInspector = resourceInspector ?? inspectLocalResource {
+    final mount = WorkspaceMount(path: _canonicalMountPath(rootPath));
+    mount.root
+      ..expanded = true
+      ..children = initialResources
+          .map(
+            (resource) => WorkspaceEntry(
+              path: resource.uri.toFilePath(),
+              name: resource.displayName,
+              isDirectory: false,
+              depth: 1,
+            ),
+          )
+          .toList();
+    _mounts.add(mount);
+    for (final path in additionalMountPaths) {
+      final normalized = _canonicalMountPath(path);
+      if (normalized == mount.path) {
+        continue;
+      }
+      _mounts.add(WorkspaceMount(path: normalized)..root.expanded = true);
+    }
+    _editorGroups[primaryEditorGroupId] = WorkspaceEditorGroup(
+      primaryEditorGroupId,
+    );
+  }
+
+  LocalVersionStore _versionStore;
+  Future<void> Function(OpenMuseResource resource)? flushBeforeDiskRead;
+  WorkspaceMountStore? _mountStore;
+  final Future<OpenMuseResource> Function(OpenMuseResource) _resourceInspector;
+  final List<WorkspaceMount> _mounts = [];
+  final Map<String, WorkspaceEditorGroup> _editorGroups = {};
+  final Set<Uri> _favorites = <Uri>{};
+  final Map<String, StreamSubscription<FileSystemEvent>> _watchers = {};
+  Timer? _watchDebounce;
+  bool _disposed = false;
+  String _focusedEditorGroupId = primaryEditorGroupId;
+  bool _sidebarVisible = true;
+  bool _projectSectionExpanded = true;
+  String? _activeMountPath;
+
+  String get rootPath => _mounts.first.path;
+  List<WorkspaceMount> get mounts => List.unmodifiable(_mounts);
+  List<WorkspaceEditorGroup> get editorGroups =>
+      List.unmodifiable(_editorGroups.values);
+  String get focusedEditorGroupId => _focusedEditorGroupId;
+  List<WorkspaceTab> get tabs => tabsFor(_focusedEditorGroupId);
+  WorkspaceTab? get activeTab => activeTabFor(_focusedEditorGroupId);
+  OpenMuseResource? get selected => activeTab?.resource;
+  bool get sidebarVisible => _sidebarVisible;
+  bool get projectSectionExpanded => _projectSectionExpanded;
+  String get activeMountPath => _activeMountPath ?? rootPath;
+
+  List<OpenMuseResource> get resources => [
+    for (final mount in _mounts)
+      for (final entry in _walk(mount.root))
+        if (!entry.isDirectory) entry.resource,
+  ];
+
+  Future<void> initialize() async {
+    await Future.wait([
+      for (final mount in _mounts) refreshDirectory(mount.root),
+      _versionStore.load(),
+    ]);
+    for (final mount in _mounts) {
+      _watchMount(mount);
+    }
+  }
+
+  /// Replace every in-memory workspace reference before loading another account.
+  /// The caller must keep the workbench hidden until this future completes.
+  Future<void> switchStorage({
+    required String rootPath,
+    required LocalVersionStore versionStore,
+    required WorkspaceMountStore mountStore,
+  }) async {
+    _watchDebounce?.cancel();
+    final oldWatchers = _watchers.values.toList();
+    _watchers.clear();
+    _mounts.clear();
+    _editorGroups.clear();
+    _editorGroups[primaryEditorGroupId] = WorkspaceEditorGroup(
+      primaryEditorGroupId,
+    );
+    _favorites.clear();
+    _focusedEditorGroupId = primaryEditorGroupId;
+    _activeMountPath = null;
+    _versionStore = versionStore;
+    _mountStore = mountStore;
+    final root = WorkspaceMount(path: _canonicalMountPath(rootPath));
+    root.root.expanded = true;
+    _mounts.add(root);
+    notifyListeners();
+    await Future.wait([for (final watcher in oldWatchers) watcher.cancel()]);
+    await Directory(root.path).create(recursive: true);
+    for (final path in await mountStore.load()) {
+      final normalized = _canonicalMountPath(path);
+      if (normalized != root.path) {
+        _mounts.add(WorkspaceMount(path: normalized)..root.expanded = true);
+      }
+    }
+    await initialize();
+    notifyListeners();
+  }
+
+  bool isFavorite(OpenMuseResource resource) =>
+      _favorites.contains(resource.uri);
+
+  void select(OpenMuseResource resource) => openResource(resource);
+
+  List<WorkspaceTab> tabsFor(String groupId) =>
+      _requireEditorGroup(groupId).tabs;
+
+  WorkspaceTab? activeTabFor(String groupId) =>
+      _requireEditorGroup(groupId).activeTab;
+
+  WorkspaceEditorGroup createEditorGroup({String? groupId}) {
+    final id = groupId ?? _nextEditorGroupId();
+    if (_editorGroups.containsKey(id)) {
+      throw StateError('Editor group already exists: $id');
+    }
+    final group = WorkspaceEditorGroup(id);
+    _editorGroups[id] = group;
+    notifyListeners();
+    return group;
+  }
+
+  void removeEditorGroup(String groupId) {
+    if (groupId == primaryEditorGroupId || _editorGroups.length == 1) return;
+    if (_editorGroups.remove(groupId) == null) return;
+    if (_focusedEditorGroupId == groupId) {
+      _focusedEditorGroupId = primaryEditorGroupId;
+    }
+    notifyListeners();
+  }
+
+  void focusEditorGroup(String groupId) {
+    _requireEditorGroup(groupId);
+    if (_focusedEditorGroupId == groupId) return;
+    _focusedEditorGroupId = groupId;
+    notifyListeners();
+  }
+
+  void openResource(
+    OpenMuseResource resource, {
+    String? editorId,
+    String? groupId,
+  }) {
+    final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
+    final path = resource.uri.isScheme('file')
+        ? resource.uri.toFilePath()
+        : null;
+    for (final mount in _mounts) {
+      if (path != null &&
+          (mount.path == path || p.isWithin(mount.path, path))) {
+        _activeMountPath = mount.path;
+        break;
+      }
+    }
+    WorkspaceTab? existing;
+    for (final tab in group._tabs) {
+      if (tab.kind == WorkspaceTabKind.resource &&
+          tab.resource.uri == resource.uri) {
+        existing = tab;
+        break;
+      }
+    }
+    final tab =
+        existing ??
+        WorkspaceTab.resource(resource, preferredEditorId: editorId);
+    if (editorId != null) tab.preferredEditorId = editorId;
+    if (existing == null) {
+      group._tabs.add(tab);
+      _inspectTab(tab, group);
+    }
+    group._activeTab = tab;
+    _focusedEditorGroupId = group.id;
+    notifyListeners();
+  }
+
+  Future<void> openResourceSession(
+    OpenMuseResource resource,
+    WorkspaceResourceSession binding,
+  ) {
+    final group = _requireEditorGroup(_focusedEditorGroupId);
+    final existing = group._tabs
+        .where((t) => t.resource.uri == resource.uri)
+        .firstOrNull;
+    if (existing?.resourceSession != null) {
+      group._activeTab = existing;
+      notifyListeners();
+      return existing!.resourceSession!.closed.future;
+    }
+    final tab = WorkspaceTab.resource(resource)..resourceSession = binding;
+    group._tabs.add(tab);
+    group._activeTab = tab;
+    binding.session.addListener(notifyListeners);
+    unawaited(
+      binding.closed.future.then(
+        (_) => binding.session.removeListener(notifyListeners),
+      ),
+    );
+    notifyListeners();
+    return binding.closed.future;
+  }
+
+  Future<OpenMuseResource> inspectResource(OpenMuseResource resource) =>
+      _resourceInspector(resource);
+
+  void _inspectTab(WorkspaceTab tab, WorkspaceEditorGroup group) {
+    if (!tab.resource.uri.isScheme('file')) return;
+    tab.inspecting = true;
+    final pending = () async {
+      final inspected = await _resourceInspector(tab.resource);
+      if (_disposed || !group._tabs.contains(tab)) return;
+      tab.resource = inspected;
+      tab.inspecting = false;
+      notifyListeners();
+    }();
+    tab.inspection = pending;
+    unawaited(pending);
+  }
+
+  Future<void> _awaitInspectionsWithin(String path) async {
+    await Future.wait([
+      for (final group in _editorGroups.values)
+        for (final tab in group._tabs)
+          if (tab.resource.uri.isScheme('file') &&
+              (tab.resource.uri.toFilePath() == path ||
+                  p.isWithin(path, tab.resource.uri.toFilePath())))
+            ?tab.inspection,
+    ]);
+  }
+
+  void activateTab(WorkspaceTab tab, {String? groupId}) {
+    final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
+    if (!group._tabs.contains(tab)) return;
+    group._activeTab = tab;
+    _focusedEditorGroupId = group.id;
+    notifyListeners();
+  }
+
+  void closeTab(WorkspaceTab tab, {String? groupId}) {
+    if (tab.pinned) return;
+    final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
+    final binding = tab.resourceSession;
+    if (binding != null &&
+        binding.session.flushPendingChanges != null &&
+        !binding.session.closePrepared) {
+      if (binding.confirming) return;
+      binding.confirming = true;
+      unawaited(() async {
+        final saved = await binding.session.prepareToClose();
+        if (_disposed) return;
+        if (saved || await binding.confirmClose()) {
+          if (!saved) binding.session.discardChangesForClose();
+          binding.confirming = false;
+          if (!_disposed) closeTab(tab, groupId: group.id);
+        } else {
+          binding.confirming = false;
+        }
+      }());
+      return;
+    }
+    if (binding != null && binding.session.dirty) {
+      if (!binding.confirming) {
+        binding.confirming = true;
+        unawaited(
+          binding.confirmClose().then((discard) {
+            binding.confirming = false;
+            if (discard && !_disposed) {
+              binding.session.markDirty(false);
+              closeTab(tab, groupId: group.id);
+            }
+          }),
+        );
+      }
+      return;
+    }
+    final index = group._tabs.indexOf(tab);
+    if (index < 0) return;
+    group._tabs.removeAt(index);
+    binding?.finish();
+    if (identical(group._activeTab, tab)) {
+      group._activeTab = group._tabs.isEmpty
+          ? null
+          : group._tabs[index.clamp(0, group._tabs.length - 1)];
+    }
+    notifyListeners();
+  }
+
+  void closeOtherTabs(WorkspaceTab tab, {String? groupId}) {
+    final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
+    group._tabs.removeWhere((candidate) {
+      if (identical(candidate, tab) ||
+          candidate.pinned ||
+          candidate.resourceSession?.session.dirty == true) {
+        return false;
+      }
+      candidate.resourceSession?.finish();
+      return true;
+    });
+    group._activeTab = tab;
+    _focusedEditorGroupId = group.id;
+    notifyListeners();
+  }
+
+  void togglePinned(WorkspaceTab tab) {
+    tab.pinned = !tab.pinned;
+    notifyListeners();
+  }
+
+  /// Mounts the directory the plugin configured at install. The user's active
+  /// mount is left unchanged, and nothing is written into [path].
+  Future<String> ensurePluginWorkspace({
+    required String pluginId,
+    required String path,
+  }) async {
+    if (!_pluginWorkspaceId.hasMatch(pluginId)) {
+      throw FormatException('无效插件 ID', pluginId);
+    }
+    if (!p.isAbsolute(path)) throw FormatException('插件工作区必须是绝对路径', path);
+    final directory = Directory(path);
+    if (!await directory.exists()) {
+      throw FileSystemException('插件工作区不存在', path);
+    }
+    final canonical = await directory.resolveSymbolicLinks();
+    if (_mounts.any((mount) => mount.path == canonical)) return canonical;
+    final mount = WorkspaceMount(path: canonical)..root.expanded = true;
+    _mounts.add(mount);
+    await refreshDirectory(mount.root);
+    _watchMount(mount);
+    await _persistMounts();
+    return canonical;
+  }
+
+  /// Drops the plugin mount from the sidebar. Files stay on disk.
+  Future<void> releasePluginWorkspace(String path) async {
+    final canonical = _canonicalMountPath(path);
+    if (canonical == rootPath) return;
+    final matches = _mounts.where((mount) => mount.path == canonical);
+    if (matches.isEmpty) return;
+    await removeWorkspace(matches.single);
+  }
+
+  Future<void> addWorkspace(String path) async {
+    final directory = Directory(path);
+    if (!await directory.exists()) throw FileSystemException('目录不存在', path);
+    final canonical = await directory.resolveSymbolicLinks();
+    if (_mounts.any((mount) => mount.path == canonical)) return;
+    final mount = WorkspaceMount(path: canonical)..root.expanded = true;
+    _mounts.add(mount);
+    _activeMountPath = mount.path;
+    _projectSectionExpanded = true;
+    await refreshDirectory(mount.root);
+    _watchMount(mount);
+    await _persistMounts();
+    notifyListeners();
+  }
+
+  Future<void> removeWorkspace(WorkspaceMount mount) async {
+    if (_mounts.length == 1) return;
+    _mounts.remove(mount);
+    await _watchers.remove(mount.path)?.cancel();
+    _removeTabsWithin(mount.path);
+    if (_activeMountPath == mount.path) _activeMountPath = rootPath;
+    await _persistMounts();
+    notifyListeners();
+  }
+
+  Future<void> toggleDirectory(WorkspaceEntry entry) async {
+    if (!entry.isDirectory) return;
+    if (_mounts.any((mount) => identical(mount.root, entry))) {
+      _activeMountPath = entry.path;
+    }
+    entry.expanded = !entry.expanded;
+    notifyListeners();
+    if (entry.expanded) await refreshDirectory(entry);
+  }
+
+  Future<void> refreshDirectory(WorkspaceEntry entry) async {
+    if (!entry.isDirectory || entry.loading) return;
+    entry.loading = true;
+    notifyListeners();
+    try {
+      final children = <WorkspaceEntry>[];
+      final previous = {for (final child in entry.children) child.path: child};
+      await for (final entity in Directory(
+        entry.path,
+      ).list(followLinks: false)) {
+        final type = await FileSystemEntity.type(
+          entity.path,
+          followLinks: false,
+        );
+        if (type != FileSystemEntityType.file &&
+            type != FileSystemEntityType.directory) {
+          continue;
+        }
+        final path = p.normalize(p.absolute(entity.path));
+        final existing = previous[path];
+        children.add(
+          existing != null &&
+                  existing.isDirectory ==
+                      (type == FileSystemEntityType.directory)
+              ? (existing..name = p.basename(entity.path))
+              : WorkspaceEntry(
+                  path: path,
+                  name: p.basename(entity.path),
+                  isDirectory: type == FileSystemEntityType.directory,
+                  depth: entry.depth + 1,
+                ),
+        );
+      }
+      children.sort((a, b) {
+        if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+      entry.children = children;
+    } finally {
+      entry.loading = false;
+      notifyListeners();
+    }
+  }
+
+  void _watchMount(WorkspaceMount mount) {
+    if (_disposed || _watchers.containsKey(mount.path)) return;
+    try {
+      _watchers[mount.path] = Directory(mount.path)
+          .watch(recursive: true)
+          .listen(
+            (_) => _scheduleWatchRefresh(),
+            onError: (Object _) => _scheduleWatchRefresh(),
+          );
+    } on FileSystemException {
+      // Some network filesystems do not support recursive notifications.
+      // Manual refresh remains available in the Workspace context menu.
+    } on UnsupportedError {
+      // Keep the mounted directory usable even when watching is unavailable.
+    }
+  }
+
+  void _scheduleWatchRefresh() {
+    if (_disposed) return;
+    _watchDebounce?.cancel();
+    _watchDebounce = Timer(const Duration(milliseconds: 250), () async {
+      if (_disposed) return;
+      for (final mount in _mounts.toList()) {
+        final directories = <WorkspaceEntry>[
+          mount.root,
+          for (final entry in _walk(mount.root))
+            if (entry.isDirectory && entry.expanded) entry,
+        ];
+        for (final directory in directories) {
+          if (_disposed || !_mounts.contains(mount)) return;
+          try {
+            await refreshDirectory(directory);
+          } on FileSystemException {
+            // The directory may have been removed between the watch event and
+            // this refresh; its parent still reconciles on the next event.
+          }
+        }
+      }
+    });
+  }
+
+  List<WorkspaceEntry> visibleEntries(WorkspaceMount mount) {
+    final result = <WorkspaceEntry>[];
+    if (!mount.root.expanded) return result;
+    void append(WorkspaceEntry parent) {
+      for (final child in parent.children) {
+        result.add(child);
+        if (child.isDirectory && child.expanded) append(child);
+      }
+    }
+
+    append(mount.root);
+    return result;
+  }
+
+  Future<OpenMuseResource> createMarkdown(String requestedName) async {
+    final baseName = _safeBaseName(requestedName);
+    final directory = Directory(activeMountPath);
+    await directory.create(recursive: true);
+    var suffix = 1;
+    var file = File(p.join(directory.path, '$baseName.md'));
+    while (await file.exists()) {
+      suffix += 1;
+      file = File(p.join(directory.path, '$baseName $suffix.md'));
+    }
+    await file.writeAsString('# $baseName\n\n', flush: true);
+    final mount = _mounts.firstWhere((value) => value.path == directory.path);
+    await refreshDirectory(mount.root);
+    final resource = OpenMuseResource(
+      uri: file.uri,
+      displayName: p.basename(file.path),
+      mediaType: 'text/markdown',
+    );
+    openResource(resource);
+    return resource;
+  }
+
+  Future<WorkspaceEntry> createEntry(
+    WorkspaceEntry parent,
+    String requestedName, {
+    required bool directory,
+  }) async {
+    if (!parent.isDirectory || !_containsEntry(parent)) {
+      throw const FormatException('目标文件夹不在工作区内');
+    }
+    final name = _validatedName(requestedName);
+    final target = p.join(parent.path, name);
+    if (await FileSystemEntity.type(target, followLinks: false) !=
+        FileSystemEntityType.notFound) {
+      throw FileSystemException('目标已存在', target);
+    }
+    if (directory) {
+      await Directory(target).create();
+    } else {
+      await File(target).create();
+    }
+    parent.expanded = true;
+    await refreshDirectory(parent);
+    return parent.children.firstWhere((entry) => entry.path == target);
+  }
+
+  Future<void> renameEntry(WorkspaceEntry entry, String requestedName) async {
+    if (!_containsEntry(entry) ||
+        _mounts.any((m) => identical(m.root, entry))) {
+      throw const FormatException('不能重命名工作区根目录');
+    }
+    final name = _validatedName(requestedName);
+    final target = p.join(p.dirname(entry.path), name);
+    if (await FileSystemEntity.type(target, followLinks: false) !=
+        FileSystemEntityType.notFound) {
+      throw FileSystemException('目标已存在', target);
+    }
+    await _awaitInspectionsWithin(entry.path);
+    if (entry.isDirectory) {
+      await Directory(entry.path).rename(target);
+    } else {
+      await File(entry.path).rename(target);
+    }
+    _retargetTabs(entry.path, target);
+    await _refreshParent(entry.path);
+  }
+
+  Future<void> deleteEntry(WorkspaceEntry entry) async {
+    if (!_containsEntry(entry) ||
+        _mounts.any((m) => identical(m.root, entry))) {
+      throw const FormatException('不能删除工作区根目录');
+    }
+    await _awaitInspectionsWithin(entry.path);
+    if (entry.isDirectory) {
+      await Directory(entry.path).delete(recursive: true);
+    } else {
+      await File(entry.path).delete();
+    }
+    _removeTabsWithin(entry.path);
+    await _refreshParent(entry.path);
+  }
+
+  Future<LocalVersionSnapshot> captureVersion(OpenMuseResource resource) async {
+    await flushBeforeDiskRead?.call(resource);
+    final snapshot = await _versionStore.capture(resource);
+    notifyListeners();
+    return snapshot;
+  }
+
+  Future<List<LocalVersionSnapshot>> versions(OpenMuseResource resource) =>
+      _versionStore.list(resource);
+
+  Future<void> openDiff(
+    OpenMuseResource resource,
+    LocalVersionSnapshot snapshot, {
+    String? groupId,
+  }) => openVersionComparison(resource, snapshot, groupId: groupId);
+
+  Future<void> openVersionComparison(
+    OpenMuseResource resource,
+    LocalVersionSnapshot beforeVersion, {
+    LocalVersionSnapshot? afterVersion,
+    String? groupId,
+  }) async {
+    final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
+    if (afterVersion != null && beforeVersion.id == afterVersion.id) {
+      throw ArgumentError('不能把同一个版本与自己比较');
+    }
+    if (afterVersion == null) await flushBeforeDiskRead?.call(resource);
+    final after = afterVersion == null
+        ? await File.fromUri(resource.uri).readAsString()
+        : await _versionStore.read(afterVersion);
+    final afterIdentity =
+        afterVersion?.id ?? sha256.convert(utf8.encode(after)).toString();
+    final diff = WorkspaceDiff(
+      resource: resource,
+      snapshot: beforeVersion,
+      comparisonId: '${beforeVersion.id}:$afterIdentity',
+      afterLabel: afterVersion?.shortId ?? '当前',
+      before: await _versionStore.read(beforeVersion),
+      after: after,
+    );
+    WorkspaceTab? existing;
+    final id = 'diff:${resource.uri}:${diff.comparisonId}';
+    for (final candidate in group._tabs) {
+      if (candidate.id == id) {
+        existing = candidate;
+        break;
+      }
+    }
+    final tab = existing ?? WorkspaceTab.diff(diff);
+    if (existing == null) group._tabs.add(tab);
+    group._activeTab = tab;
+    _focusedEditorGroupId = group.id;
+    notifyListeners();
+  }
+
+  void toggleFavorite(OpenMuseResource resource) {
+    if (!_favorites.add(resource.uri)) _favorites.remove(resource.uri);
+    notifyListeners();
+  }
+
+  void toggleSidebar() {
+    _sidebarVisible = !_sidebarVisible;
+    notifyListeners();
+  }
+
+  void toggleProjectSection() {
+    _projectSectionExpanded = !_projectSectionExpanded;
+    notifyListeners();
+  }
+
+  void activateMount(WorkspaceMount mount) {
+    if (!_mounts.contains(mount)) return;
+    if (_activeMountPath == mount.path) return;
+    _activeMountPath = mount.path;
+    notifyListeners();
+  }
+
+  /// Resolve a sidecar request only inside a mounted, canonical local tree.
+  Future<OpenMuseResource> openHostResource({
+    required String requestedPath,
+    String? cwd,
+    String? editorId,
+  }) async {
+    if (requestedPath.isEmpty || requestedPath.length > 4096) {
+      throw const FormatException('无效资源路径');
+    }
+    final base = cwd == null || cwd.isEmpty ? activeMountPath : cwd;
+    final candidate = p.isAbsolute(requestedPath)
+        ? requestedPath
+        : p.join(base, requestedPath);
+    final canonical = await File(candidate).resolveSymbolicLinks();
+    if (!_mounts.any((mount) => p.isWithin(mount.path, canonical))) {
+      throw FileSystemException('资源不在已授权的工作区内', requestedPath);
+    }
+    if (await FileSystemEntity.type(canonical) != FileSystemEntityType.file) {
+      throw FileSystemException('资源不是文件', requestedPath);
+    }
+    final resource = OpenMuseResource(
+      uri: Uri.file(canonical),
+      displayName: p.basename(canonical),
+      mediaType: _mediaTypeFor(canonical),
+    );
+    openResource(resource, editorId: editorId);
+    return resource;
+  }
+
+  List<OpenMuseResource> search(String query) {
+    final normalized = query.trim().toLowerCase();
+    if (normalized.isEmpty) return resources;
+    return resources
+        .where(
+          (resource) => resource.displayName.toLowerCase().contains(normalized),
+        )
+        .toList(growable: false);
+  }
+
+  String relativePath(OpenMuseResource resource) {
+    final path = resource.uri.toFilePath();
+    for (final mount in _mounts) {
+      if (mount.path == path || p.isWithin(mount.path, path)) {
+        return p.relative(path, from: mount.path);
+      }
+    }
+    return path;
+  }
+
+  Future<void> _refreshParent(String childPath) async {
+    final parent = p.dirname(childPath);
+    for (final mount in _mounts) {
+      for (final entry in [mount.root, ..._walk(mount.root)]) {
+        if (entry.path == parent) {
+          await refreshDirectory(entry);
+          return;
+        }
+      }
+    }
+  }
+
+  Future<void> _persistMounts() =>
+      _mountStore?.save(_mounts.map((mount) => mount.path)) ??
+      Future<void>.value();
+
+  void _retargetTabs(String oldPath, String newPath) {
+    for (final group in _editorGroups.values) {
+      for (var index = 0; index < group._tabs.length; index++) {
+        final tab = group._tabs[index];
+        if (!tab.resource.uri.isScheme('file')) continue;
+        final path = tab.resource.uri.toFilePath();
+        if (path != oldPath && !p.isWithin(oldPath, path)) continue;
+        if (tab.kind == WorkspaceTabKind.diff) {
+          group._tabs.removeAt(index--);
+          if (identical(group._activeTab, tab)) group._activeTab = null;
+          continue;
+        }
+        final target = path == oldPath
+            ? newPath
+            : p.join(newPath, p.relative(path, from: oldPath));
+        final replacement = WorkspaceTab.resource(
+          OpenMuseResource(
+            uri: Uri.file(target),
+            displayName: p.basename(target),
+            mediaType: _mediaTypeFor(target),
+          ),
+          preferredEditorId: tab.preferredEditorId,
+        )..pinned = tab.pinned;
+        group._tabs[index] = replacement;
+        if (identical(group._activeTab, tab)) group._activeTab = replacement;
+        _inspectTab(replacement, group);
+      }
+      group._activeTab ??= group._tabs.lastOrNull;
+    }
+    notifyListeners();
+  }
+
+  void _removeTabsWithin(String path) {
+    for (final group in _editorGroups.values) {
+      group._tabs.removeWhere((tab) {
+        if (!tab.resource.uri.isScheme('file')) return false;
+        final resourcePath = tab.resource.uri.toFilePath();
+        return resourcePath == path || p.isWithin(path, resourcePath);
+      });
+      if (group._activeTab != null && !group._tabs.contains(group._activeTab)) {
+        group._activeTab = group._tabs.lastOrNull;
+      }
+    }
+    notifyListeners();
+  }
+
+  WorkspaceEditorGroup _requireEditorGroup(String groupId) {
+    final group = _editorGroups[groupId];
+    if (group == null) throw StateError('Unknown editor group: $groupId');
+    return group;
+  }
+
+  String _nextEditorGroupId() {
+    var index = 2;
+    while (_editorGroups.containsKey('editor.$index')) {
+      index++;
+    }
+    return 'editor.$index';
+  }
+
+  bool _containsEntry(WorkspaceEntry entry) => _mounts.any(
+    (mount) =>
+        identical(mount.root, entry) ||
+        _walk(mount.root).any((candidate) => identical(candidate, entry)),
+  );
+
+  static String _validatedName(String value) {
+    final name = value.trim();
+    if (name.isEmpty ||
+        name == '.' ||
+        name == '..' ||
+        p.basename(name) != name ||
+        name.contains('\\')) {
+      throw const FormatException('无效名称');
+    }
+    return name;
+  }
+
+  static Iterable<WorkspaceEntry> _walk(WorkspaceEntry entry) sync* {
+    for (final child in entry.children) {
+      yield child;
+      if (child.isDirectory) yield* _walk(child);
+    }
+  }
+
+  static String _safeBaseName(String value) {
+    var result = value.trim().replaceAll(
+      RegExp(r'\.md$', caseSensitive: false),
+      '',
+    );
+    result = result.replaceAll(RegExp(r'[\\/:*?"<>|]'), '-');
+    result = result.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return result.isEmpty ? '未命名文档' : result;
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _watchDebounce?.cancel();
+    for (final watcher in _watchers.values) {
+      unawaited(watcher.cancel());
+    }
+    _watchers.clear();
+    for (final group in _editorGroups.values) {
+      for (final tab in group._tabs) {
+        final binding = tab.resourceSession;
+        binding?.session.removeListener(notifyListeners);
+        binding?.finish();
+      }
+    }
+    super.dispose();
+  }
+}
+
+String? _mediaTypeFor(String name) => switch (p.extension(name).toLowerCase()) {
+  '.md' => 'text/markdown',
+  '.png' => 'image/png',
+  '.jpg' || '.jpeg' => 'image/jpeg',
+  '.pdf' => 'application/pdf',
+  '.mp4' || '.m4v' || '.mov' => 'video/mp4',
+  '.webm' => 'video/webm',
+  _ => null,
+};
+
+WorkspaceMountStore? _mountStoreValue(WorkspaceMountStore? value) => value;
+
+final _pluginWorkspaceId = RegExp(
+  r'^com\.openmuse\.[A-Za-z0-9][A-Za-z0-9._-]{0,100}$',
+);
+
+String _canonicalMountPath(String path) {
+  final absolute = p.normalize(p.absolute(path));
+  try {
+    return Directory(absolute).resolveSymbolicLinksSync();
+  } on FileSystemException {
+    return absolute;
+  }
+}

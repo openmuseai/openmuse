@@ -1,0 +1,78 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package search
+
+import (
+	"regexp"
+	"testing"
+
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func TestHanInsensitiveRegexp(t *testing.T) {
+	re, err := regexp.Compile("^" + hanInsensitiveRegexp("诗经") + "$")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, s := range []string{"诗经", "詩經", "诗經", "詩经"} {
+		if !re.MatchString(s) {
+			t.Errorf("hanInsensitiveRegexp(诗经) 应匹配 %q", s)
+		}
+	}
+	if re.MatchString("诗书") {
+		t.Errorf("hanInsensitiveRegexp(诗经) 不应匹配 诗书")
+	}
+
+	// 繁体关键字同样展开
+	re2 := regexp.MustCompile("^" + hanInsensitiveRegexp("髮") + "$")
+	for _, s := range []string{"髮", "发", "發"} {
+		if !re2.MatchString(s) {
+			t.Errorf("hanInsensitiveRegexp(髮) 应匹配 %q（发 的等价类）", s)
+		}
+	}
+
+	// 无繁简变体的字符保持原样
+	if got := hanInsensitiveRegexp("中a1"); "中a1" != got {
+		t.Errorf("hanInsensitiveRegexp(中a1) = %q，应为原样", got)
+	}
+}
+
+func TestNormalizeSearchText(t *testing.T) {
+	if result := NormalizeSearchText("詩經 ABC", true, true); "詩經 ABC" != result {
+		t.Fatalf("区分大小写和繁简时不应转换文本：%q", result)
+	}
+	if result := NormalizeSearchText("詩經 ABC", false, true); "詩經 abc" != result {
+		t.Fatalf("忽略大小写时转换错误：%q", result)
+	}
+	if result := NormalizeSearchText("詩經 ABC", true, false); "诗经 ABC" != result {
+		t.Fatalf("忽略繁简时转换错误：%q", result)
+	}
+	if result := NormalizeSearchText("詩經 ABC", false, false); "诗经 abc" != result {
+		t.Fatalf("同时忽略大小写和繁简时转换错误：%q", result)
+	}
+}
+
+func TestEncloseHighlightingHanInsensitive(t *testing.T) {
+	old := util.SearchHanSensitive.Load()
+	defer func() { util.SearchHanSensitive.Store(old) }()
+
+	util.SearchHanSensitive.Store(false)
+	got := EncloseHighlighting("詩經研究", []string{"诗经"}, "<mark>", "</mark>", false, false)
+	if want := "<mark>詩經</mark>研究"; want != got {
+		t.Errorf("繁简不敏感高亮 = %q, want %q", got, want)
+	}
+
+	// 大小写折叠与繁简折叠互不干扰
+	got = EncloseHighlighting("ABC 詩經", []string{"abc"}, "<mark>", "</mark>", false, false)
+	if want := "<mark>ABC</mark> 詩經"; want != got {
+		t.Errorf("大小写+繁简 = %q, want %q", got, want)
+	}
+
+	util.SearchHanSensitive.Store(true)
+	got = EncloseHighlighting("詩經研究", []string{"诗经"}, "<mark>", "</mark>", false, false)
+	if want := "詩經研究"; want != got {
+		t.Errorf("默认（区分繁简）不应高亮，got %q", got)
+	}
+}

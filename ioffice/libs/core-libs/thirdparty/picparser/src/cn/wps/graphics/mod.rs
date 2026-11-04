@@ -1,0 +1,15 @@
+﻿pub mod data;
+pub mod gdi;
+pub mod ReColorMap;
+pub mod tool;
+pub mod opt;
+pub mod IBitmapCreator;
+pub mod IMemoryHelper;
+pub mod bitmap;
+pub mod record;
+pub mod image;
+pub mod PictureParser;
+pub mod PptBitmapCreate;
+pub mod BitmapCreator;
+pub mod MetaFileDrawer;
+pub mod PicTypeParser;

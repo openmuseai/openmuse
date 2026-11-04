@@ -1,0 +1,16 @@
+name: spreadsheet_editor
+description: Shared Flutter spreadsheet surface backed by a Host-owned Rust session.
+version: 0.1.16
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  ffi: ^2.1.4
+  flutter:
+    sdk: flutter
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true

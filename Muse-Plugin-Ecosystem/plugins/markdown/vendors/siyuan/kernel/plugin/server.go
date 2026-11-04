@@ -1,0 +1,541 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package plugin
+
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/dop251/goja"
+	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/plugin/streams"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+const (
+	SseHeaderAcceptName  = "Accept"
+	SseHeaderAcceptValue = "text/event-stream"
+)
+
+type AccessScope string
+type SerializedType string
+type RequestType string
+
+const (
+	AccessScopePublic  AccessScope = "public"
+	AccessScopePrivate AccessScope = "private"
+
+	SerializedTypeJSON         SerializedType = "JSON"
+	SerializedTypeJSONP        SerializedType = "JSONP"
+	SerializedTypeAsciiJSON    SerializedType = "AsciiJSON"
+	SerializedTypeIndentedJSON SerializedType = "IndentedJSON"
+	SerializedTypePureJSON     SerializedType = "PureJSON"
+	SerializedTypeSecureJSON   SerializedType = "SecureJSON"
+
+	SerializedTypeXML      SerializedType = "XML"
+	SerializedTypeYAML     SerializedType = "YAML"
+	SerializedTypeTOML     SerializedType = "TOML"
+	SerializedTypeProtoBuf SerializedType = "ProtoBuf"
+
+	RequestTypeHTTP RequestType = "http"
+	RequestTypeWS   RequestType = "ws"
+	RequestTypeSSE  RequestType = "es"
+)
+
+type Request struct {
+	URL     RequestUrl     `json:"url"`
+	Request RequestContent `json:"request"`
+	Context RequestContext `json:"context"`
+	Port    *goja.Object   `json:"port"`
+}
+
+type RequestUrl struct {
+	User            *RequestUser `json:"user"`
+	Host            string       `json:"host"`     // e.g. 127.0.0.1:6806
+	Path            string       `json:"path"`     // e.g. /plugin/public/sample/api/hello/a space
+	EscapedPath     string       `json:"pathname"` // e.g. /plugin/public/sample/api/hello/a%20space
+	Fragment        string       `json:"fragment"` // e.g. "hash abc"
+	EscapedFragment string       `json:"hash"`     // e.g. "hash%20abc"
+	RawQuery        string       `json:"search"`   // e.g. a=1&b=2
+
+	Query map[string][]string `json:"query"` // e.g. {"a": ["1"], "b": ["2"]}
+}
+
+type RequestUser struct {
+	Username string `json:"username"` // e.g. "alice"
+	Password string `json:"password"` // e.g. "123456"
+}
+
+type RequestContent struct {
+	/* Request Line */
+	Method     string `json:"method"`     // e.g. "GET"
+	URI        string `json:"uri"`        // e.g. "/plugin/public/sample/api/hello?a=1&b=2"
+	Proto      string `json:"proto"`      // e.g. "HTTP/1.1"
+	ProtoMajor int    `json:"protoMajor"` // e.g. 1
+	ProtoMinor int    `json:"protoMinor"` // e.g. 1
+
+	/* Request Headers */
+	Headers map[string][]string `json:"headers"` // e.g. {"Content-Type": ["application/json"], "Accept": ["*/*"]}
+	Cookies map[string][]string `json:"cookies"` // e.g. {"siyuan": ["abc123"]}
+
+	ContentType   string `json:"contentType"`   // e.g. "application/json"
+	ContentLength int64  `json:"contentLength"` // e.g. 123
+	Referer       string `json:"referer"`       // e.g. "http://127.0.0.1:6806/stage/build/app/"
+	UserAgent     string `json:"userAgent"`     // e.g. "SiYuan/3.6.5 https://b3log.org/siyuan Electron Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) SiYuan/3.6.5 Chrome/144.0.7559.236 Electron/40.9.1 Safari/537.36"
+
+	/* Request Body */
+	Body RequestBody `json:"body"`
+}
+
+type RequestBody struct {
+	Form *RequestForm `json:"form"` // parsed form data if Content-Type is application/x-www-form-urlencoded or multipart/form-data
+	Data any          `json:"data"` // *[]byte | *goja.Object, content of all request body (if form != nil, it will be an empty byte array)
+}
+
+type RequestForm struct {
+	Value map[string][]string       `json:"values"` // e.g. {"field1": ["value1"], "field2": ["value2-1", "value2-2"]}
+	File  map[string][]*RequestFile `json:"files"`  // e.g. {"file1": [{"Filename": "hello.txt", "Headers": {"Content-Disposition": ["form-data; name=\"file1\"; filename=\"hello.txt\""], "Content-Type": ["text/plain"]}, "Size": 123, "Data": []byte{...}}]}
+}
+
+type RequestFile struct {
+	Filename string              `json:"filename"` // e.g. "hello.txt"
+	Headers  map[string][]string `json:"headers"`  // e.g. {"Content-Disposition": ["form-data; name=\"file1\"; filename=\"hello.txt\""], "Content-Type": ["text/plain"]}
+	Size     int64               `json:"size"`     // e.g. 123
+	Data     any                 `json:"data"`     // *[]byte | *goja.Object, content of the file
+}
+
+type RequestContext struct {
+	Path     string `json:"path"`     // e.g. "/api/hello"
+	FullPath string `json:"fullPath"` // e.g. "/plugin/public/:name/*path"
+
+	ClientIP   string `json:"clientIp"`   // e.g. "127.0.0.1"
+	RemoteIP   string `json:"remoteIp"`   // e.g. "127.0.0.1"
+	RemoteAddr string `json:"remoteAddr"` // e.g. "127.0.0.1:54321"
+
+	Params map[string][]string `json:"params"` // e.g. [{"Key": "name", "Value": "plugin-sample"}, {"Key": "path", "Value": "/api/hello"}]
+
+	IsWebsocket bool `json:"-"`
+	IsSse       bool `json:"-"`
+}
+
+type HttpResponse struct {
+	StatusCode int                 `json:"statusCode"` // e.g. 200
+	Headers    map[string][]string `json:"headers"`    // e.g. {"Content-Type": ["application/json"], "Set-Cookie": ["siyuan=abc123; Path=/; HttpOnly"]}
+	Cookies    []*http.Cookie      `json:"cookies"`    // e.g. [{"Name": "plugin-sample", "Value": "abc123", "Quoted": false, "Path": "/plugin/private/plugin-sample/", "Domain": "", "Expires": "0001-01-01T00:00:00Z", "RawExpires": "", "MaxAge": 0, "Secure": false, "HttpOnly": false, "SameSite": 0, "Partitioned": false, "Raw": "", "Unparsed": null}]
+	Body       *ResponseBody       `json:"body"`       // response body, can be either raw data or a file
+}
+
+type ResponseBody struct {
+	Data     *ResponseSerializedData `json:"data"`     // if the response is serialized data, Data will be non-nil.
+	File     *ResponseFile           `json:"file"`     // if the response is a file, File will be non-nil.
+	String   *ResponseString         `json:"string"`   // if the response is a formatted string, String will be non-nil.
+	Raw      *ResponseRawData        `json:"raw"`      // if the response is raw data, Raw will be non-nil.
+	Redirect *ResponseRedirect       `json:"redirect"` // if the response is a redirect, Redirect will be non-nil.
+	Proxy    *ResponseProxy          `json:"proxy"`    // if the response is a streaming proxy, Proxy will be non-nil.
+	Stream   *ResponseStream         `json:"stream"`   // if the response body is a ReadableStream, Stream will be non-nil.
+}
+
+type ResponseSerializedData struct {
+	Type SerializedType `json:"type"` // the serialization type, e.g. JSON, XML, etc.
+	Data any            `json:"data"` // the data to be serialized and sent in the response body
+}
+
+type ResponseFile struct {
+	Name string `json:"name"` // e.g. "index.html". If Name is not empty, the file will be sent with Content-Disposition header.
+	Path string `json:"path"` // e.g. "/data/plugins/<plugin-name>/app/index.html"; must resolve inside the workspace, otherwise the kernel answers 404
+}
+
+type ResponseString struct {
+	Format string `json:"format"` // string formatting template (Go string formatting style)
+	Values []any  `json:"values"` // the values to be formatted into the template
+}
+
+type ResponseRawData struct {
+	ContentType string `json:"contentType"` // e.g. "image/png"
+	Data        []byte `json:"data"`        // content of the response body
+}
+
+type ResponseRedirect struct {
+	Location string `json:"location"` // the URL to redirect to
+}
+
+type ResponseProxy struct {
+	URL     string              `json:"url"`     // target http/https URL
+	Method  string              `json:"method"`  // optional, defaults to the incoming request method, only GET/HEAD are supported
+	Headers map[string][]string `json:"headers"` // request headers forwarded to the target
+}
+
+// ResponseStream 对应插件处理函数返回的 response.body.stream：Stream 字段在 handleHttpRequest 里从脚本对象上
+// 单独取出赋值，不经过 JSON 编解码（ReadableStream 实例无法序列化），其余字段走正常的 JSON 转换。
+type ResponseStream struct {
+	ContentType string       `json:"contentType"` // e.g. "text/event-stream"
+	Stream      *goja.Object `json:"-"`           // the ReadableStream<Uint8Array | ArrayBuffer | string> providing the response body
+}
+
+// isSseRequest checks if the incoming HTTP request is a Server-Sent Events (SSE) request by inspecting the "Accept" header for the "text/event-stream" value.
+func isSseRequest(c *gin.Context) bool {
+	return c.GetHeader(SseHeaderAcceptName) == SseHeaderAcceptValue
+}
+
+func isHopByHopHeader(header string) bool {
+	switch strings.ToLower(header) {
+	case "connection", "keep-alive", "proxy-authenticate", "proxy-authorization", "proxy-connection", "te", "trailer", "transfer-encoding", "upgrade":
+		return true
+	default:
+		return false
+	}
+}
+
+func connectionHopByHopHeaders(header http.Header) map[string]bool {
+	result := map[string]bool{}
+	for _, value := range header.Values("Connection") {
+		for part := range strings.SplitSeq(value, ",") {
+			if name := strings.ToLower(strings.TrimSpace(part)); name != "" {
+				result[name] = true
+			}
+		}
+	}
+	return result
+}
+
+func shouldProxyHeader(name string, connectionHeaders map[string]bool) bool {
+	lower := strings.ToLower(name)
+	return lower != "set-cookie" && !isHopByHopHeader(lower) && !connectionHeaders[lower]
+}
+
+func copyProxyHeaders(dst http.Header, src http.Header) {
+	connectionHeaders := connectionHopByHopHeaders(src)
+	for key, values := range src {
+		if !shouldProxyHeader(key, connectionHeaders) {
+			continue
+		}
+		dst.Del(key)
+		for _, value := range values {
+			dst.Add(key, value)
+		}
+	}
+}
+
+func newProxyHTTPClient() *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			DialContext:        util.SSRFSafeDialer(30 * time.Second).DialContext,
+			DisableCompression: true,
+		},
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 10 {
+				return fmt.Errorf("stopped after 10 redirects")
+			}
+			req.Header.Del("Referer")
+			return nil
+		},
+		Timeout: 0,
+	}
+}
+
+func writeProxyResponse(c *gin.Context, proxy *ResponseProxy) {
+	if proxy.URL == "" {
+		c.String(http.StatusBadRequest, "missing proxy url")
+		return
+	}
+	targetURL, err := url.ParseRequestURI(proxy.URL)
+	if err != nil {
+		c.String(http.StatusBadRequest, "parse proxy url failed: %s", err.Error())
+		return
+	}
+	if targetURL.Scheme != "http" && targetURL.Scheme != "https" {
+		c.String(http.StatusBadRequest, "only http/https proxy url is allowed")
+		return
+	}
+
+	method := proxy.Method
+	if method == "" {
+		method = c.Request.Method
+	}
+	method = strings.ToUpper(method)
+	if method != http.MethodGet && method != http.MethodHead {
+		c.String(http.StatusBadRequest, "only GET/HEAD proxy method is allowed")
+		return
+	}
+	req, err := http.NewRequestWithContext(c.Request.Context(), method, targetURL.String(), nil)
+	if err != nil {
+		c.String(http.StatusBadRequest, "create proxy request failed: %s", err.Error())
+		return
+	}
+	requestConnectionHeaders := connectionHopByHopHeaders(http.Header(proxy.Headers))
+	for key, values := range proxy.Headers {
+		if !shouldProxyHeader(key, requestConnectionHeaders) {
+			continue
+		}
+		for _, value := range values {
+			req.Header.Add(key, value)
+		}
+	}
+
+	client := newProxyHTTPClient()
+	resp, err := client.Do(req)
+	if err != nil {
+		c.String(http.StatusBadGateway, "proxy request failed: %s", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	copyProxyHeaders(c.Writer.Header(), resp.Header)
+	c.Writer.WriteHeader(resp.StatusCode)
+	if method == http.MethodHead {
+		return
+	}
+	if _, err = io.Copy(c.Writer, resp.Body); err != nil {
+		logging.LogWarnf("plugin proxy copy response failed: %s", err.Error())
+	}
+}
+
+// streamChunk 是从拉取一块数据的 Go 回调传给响应写入循环的一条消息：done 为真时表示流已经结束（err 非 nil
+// 说明是异常结束），否则 data 是这一块要写入响应体的字节。
+type streamChunk struct {
+	data []byte
+	done bool
+	err  error
+}
+
+// writeStreamResponse 把插件处理函数返回的 response.body.stream 逐块写入 HTTP 响应，statusCode 是插件在
+// HttpResponse.statusCode 中指定的状态码（而不是固定 200）：写入循环每写完一块、Flush 之后才向事件循环请求
+// 下一块，不提前拉取——这是背压的关键，避免插件在没有人消费数据的情况下把响应体生产得远远超前；一块数据的
+// 请求与到达都经由 p.worker.Run 异步完成，不占用事件循环线程等待任何 I/O，不会因为写入循环暂时写不出数据
+// （例如客户端读取缓慢）而卡住插件的其他脚本任务。chunk 必须是 BufferSource（ArrayBuffer 或其视图，如
+// Uint8Array）或字符串（按 UTF-8 写入），和 siyuan.client.fetch 的 response.body 用同一套鸭子类型。客户端
+// 提前断开连接时取消 reader，不再继续向一个没有人读的响应体生产数据。
+func (p *KernelPlugin) writeStreamResponse(c *gin.Context, statusCode int, response *ResponseStream) {
+	c.Writer.WriteHeader(statusCode)
+	if response.ContentType != "" {
+		c.Header("Content-Type", response.ContentType)
+	}
+
+	chunks := make(chan streamChunk, 1)
+	var consumer *streams.StreamConsumer
+
+	// pullNext 在事件循环线程上请求下一块数据，调用方必须等上一次请求的结果（通过 chunks 收到）之后才能
+	// 再次调用，不能连续发起多次拉取。
+	pullNext := func() {
+		if runErr := p.worker.Run(func(rt *goja.Runtime) (_ any, _ error) {
+			consumer.PullOnVMThread(func(chunk goja.Value) error {
+				data, convertErr := streamChunkBytes(p, rt, chunk)
+				if convertErr != nil {
+					return convertErr
+				}
+				select {
+				case chunks <- streamChunk{data: data}:
+				case <-c.Request.Context().Done():
+				case <-p.context.Done():
+				}
+				return nil
+			}, func(doneErr error) {
+				select {
+				case chunks <- streamChunk{done: true, err: doneErr}:
+				case <-c.Request.Context().Done():
+				case <-p.context.Done():
+				}
+			})
+			return nil, nil
+		}, nil); runErr != nil {
+			select {
+			case chunks <- streamChunk{done: true, err: runErr}:
+			case <-c.Request.Context().Done():
+			case <-p.context.Done():
+			}
+		}
+	}
+
+	_, runErr := p.worker.RunSync(func(rt *goja.Runtime) (_ any, err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic while starting response stream: %v", r)
+			}
+		}()
+		consumer, err = p.streamsHost.OpenReadableStreamConsumer(response.Stream)
+		return
+	})
+	if runErr != nil {
+		logging.LogErrorf("[plugin:%s] start response stream: %v", p.Name, runErr)
+		return
+	}
+
+	// cancelConsumer 让 reader 取消，不必等它自然读完，避免插件继续为无人读取的响应体生产数据；
+	// 写入循环的每一条退出路径（流自然结束之外）都要走这里，不止客户端断开连接那一条。
+	cancelConsumer := func(reason string) {
+		p.worker.Run(func(rt *goja.Runtime) (_ any, _ error) {
+			consumer.CancelOnVMThread(rt.NewTypeError(reason))
+			return nil, nil
+		}, nil)
+	}
+
+	pullNext()
+	for {
+		select {
+		case chunk := <-chunks:
+			if chunk.done {
+				if chunk.err != nil {
+					logging.LogWarnf("[plugin:%s] response stream ended with an error: %s", p.Name, chunk.err)
+				}
+				return
+			}
+			if _, writeErr := c.Writer.Write(chunk.data); writeErr != nil {
+				logging.LogWarnf("[plugin:%s] write response stream chunk failed: %s", p.Name, writeErr)
+				cancelConsumer("failed to write the response stream chunk")
+				return
+			}
+			c.Writer.Flush()
+			pullNext()
+		case <-c.Request.Context().Done():
+			cancelConsumer("client disconnected")
+			return
+		case <-p.context.Done():
+			cancelConsumer("plugin stopped")
+			return
+		}
+	}
+}
+
+// streamChunkBytes 把 response.body.stream 的一个 chunk 转换为要写入响应体的字节：接受 ArrayBuffer、
+// ArrayBuffer 视图（如 Uint8Array）或字符串（按 UTF-8 编码），与 siyuan.client.fetch 的 response.body
+// 的 chunk 形态保持一致；返回的切片是独立拷贝，不与引擎内存共享。
+func streamChunkBytes(p *KernelPlugin, rt *goja.Runtime, chunk goja.Value) ([]byte, error) {
+	if object, ok := chunk.(*goja.Object); ok && p.formDataHost.IsBufferSource(chunk) {
+		return bytes.Clone(p.formDataHost.BufferSourceBytes(rt, object)), nil
+	}
+	if goja.IsString(chunk) {
+		return []byte(chunk.String()), nil
+	}
+	return nil, fmt.Errorf("stream chunk must be a BufferSource or a string, got %T", chunk.Export())
+}
+
+func parseRequest(c *gin.Context) (request *Request, err error) {
+	var form *RequestForm
+	var data *[]byte
+	// c.MultipartForm() will parse application/x-www-form-urlencoded and multipart/form-data
+	if multipartForm, formErr := c.MultipartForm(); formErr != nil {
+		// Not a form request, do nothing and leave form as nil
+	} else if multipartForm != nil {
+		// multipart/form-data
+		form = &RequestForm{
+			Value: multipartForm.Value,
+			File:  make(map[string][]*RequestFile),
+		}
+
+		for partName, fileHandlers := range multipartForm.File {
+			files := make([]*RequestFile, len(fileHandlers))
+			form.File[partName] = files
+			for i, handler := range fileHandlers {
+				files[i] = &RequestFile{
+					Filename: handler.Filename,
+					Headers:  handler.Header,
+					Size:     handler.Size,
+				}
+				file, openErr := handler.Open()
+				if openErr != nil {
+					err = fmt.Errorf("open form part [%s] file [%s] error: %s", partName, handler.Filename, openErr.Error())
+					return
+				}
+				content := make([]byte, handler.Size)
+				n, readErr := file.Read(content)
+				file.Close()
+				if readErr != nil {
+					err = fmt.Errorf("read form part [%s] file [%s] error: %s", partName, handler.Filename, readErr.Error())
+					return
+				}
+				fileData := content[:n]
+				files[i].Data = &fileData
+			}
+		}
+	} else if len(c.Request.PostForm) > 0 {
+		// application/x-www-form-urlencoded
+		form = &RequestForm{
+			Value: c.Request.PostForm,
+			File:  nil,
+		}
+	}
+
+	if form == nil {
+		// Not a form request, read raw body data
+		if rawData, readErr := c.GetRawData(); readErr != nil {
+			// request don't have body, do nothing
+		} else {
+			data = &rawData
+		}
+	}
+
+	var user *RequestUser
+	username, password, ok := c.Request.BasicAuth()
+	if ok {
+		user = &RequestUser{
+			Username: username,
+			Password: password,
+		}
+	}
+
+	headers := map[string][]string(c.Request.Header.Clone())
+	delete(headers, "Cookie")
+	delete(headers, "Authorization")
+
+	cookies := make(map[string][]string)
+	for _, cookie := range c.Request.Cookies() {
+		cookies[cookie.Name] = append(cookies[cookie.Name], cookie.Value)
+	}
+
+	params := make(map[string][]string)
+	for _, param := range c.Params {
+		params[param.Key] = append(params[param.Key], param.Value)
+	}
+
+	request = &Request{
+		URL: RequestUrl{
+			User:            user,
+			Host:            c.Request.Host,
+			Path:            c.Request.URL.Path,
+			EscapedPath:     c.Request.URL.EscapedPath(),
+			Fragment:        c.Request.URL.Fragment,
+			EscapedFragment: c.Request.URL.EscapedFragment(),
+			RawQuery:        c.Request.URL.RawQuery,
+			Query:           c.Request.URL.Query(),
+		},
+		Request: RequestContent{
+			Method:     c.Request.Method,
+			URI:        c.Request.RequestURI,
+			Proto:      c.Request.Proto,
+			ProtoMajor: c.Request.ProtoMajor,
+			ProtoMinor: c.Request.ProtoMinor,
+
+			Headers:       headers,
+			Cookies:       cookies,
+			ContentType:   c.ContentType(),
+			ContentLength: c.Request.ContentLength,
+			Referer:       c.Request.Referer(),
+			UserAgent:     c.Request.UserAgent(),
+
+			Body: RequestBody{
+				Form: form,
+				Data: data,
+			},
+		},
+		Context: RequestContext{
+			Path:       c.Param("path"),
+			FullPath:   c.FullPath(),
+			ClientIP:   c.ClientIP(),
+			RemoteIP:   c.RemoteIP(),
+			RemoteAddr: c.Request.RemoteAddr,
+			Params:     params,
+
+			IsWebsocket: c.IsWebsocket(),
+			IsSse:       isSseRequest(c),
+		},
+	}
+	return
+}

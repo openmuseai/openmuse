@@ -1,0 +1,10 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/io/uof-io/src/cn/wps/io/uof/crypt/UofCryptor.java,cn/wps/io/uof/crypt,too many dependencies,2026-05-22
+koffice/core-libs/io/uof-io/src/cn/wps/io/uof/crypt/UofPswDecryptor.java,cn/wps/io/uof/crypt,too many dependencies,2026-05-22
+koffice/core-libs/io/uof-io/src/cn/wps/io/uof/crypt/handler/SecurityHandlerBase.java,cn/wps/io/uof/crypt/handler,too many dependencies,2026-05-22
+koffice/core-libs/io/uof-io/src/cn/wps/io/uof/crypt/util/EncryptPkgUtils.java,cn/wps/io/uof/crypt/util,Plan too large: 98 entries (79 unresolved deps exceed limit 30). File deferred.,2026-05-22
+koffice/core-libs/io/uof-io/src/cn/wps/io/uof/reader/importer/IUosImporter.java,cn/wps/io/uof/reader/importer,too many dependencies,2026-05-22
+koffice/core-libs/io/uof-io/src/cn/wps/io/uof/reader/importer/UosContext.java,cn/wps/io/uof/reader/importer,too many dependencies,2026-05-22
+koffice/core-libs/io/uof-io/src/cn/wps/io/uof/crypt/handler/ds/SignaturePropertiesHandler.java,cn/wps/io/uof/crypt/handler/ds,too many dependencies,2026-05-22
+koffice/core-libs/io/uof-io/src/cn/wps/io/uof/crypt/handler/security/PasswordData_F818Handler.java,cn/wps/io/uof/crypt/handler/security,too many dependencies,2026-05-22
+koffice/core-libs/io/uof-io/src/cn/wps/io/uof/crypt/handler/xenc/AgreementMethodHandler.java,cn/wps/io/uof/crypt/handler/xenc,too many dependencies,2026-05-22

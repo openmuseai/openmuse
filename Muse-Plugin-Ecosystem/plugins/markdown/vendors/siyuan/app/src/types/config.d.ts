@@ -1,0 +1,3034 @@
+declare namespace Config {
+
+    /**
+     * Configuration object
+     */
+    export interface IConf {
+        /**
+         * Access authorization code
+         */
+        accessAuthCode: string;
+        oidc: IOIDC;
+        ai: IAI;
+        /**
+         * 当前设备的 OCR 设置；阈值只影响后续 PaddleOCR 识别，空值使用模型检测参数和 0.5 的识别阈值。
+         * provider 为 ai 时，手动和自动识别均使用独立的 aiModelId；失效时不回退到其他模型或提供商。
+         * 首次从本地提供商切换到 AI 时关闭自动识别，之后可以显式开启。
+         * reasoningEffort 独立控制手动和自动 AI OCR，空字符串沿用模型默认。
+         * showText、showEmpty、showError 独立控制图片悬浮提示，不受自动识别开关影响，也不改变搜索结果。
+         */
+        ocr: import("./api").SettingOCR;
+        api: IAPI;
+        appearance: IAppearance;
+        bazaar: IBazaar;
+        /**
+         * Cloud Service Provider Region
+         * - `0`: Chinese mainland (LianDi)
+         * - `1`: North America (LiuYun)
+         */
+        cloudRegion: number;
+        editor: IEditor;
+        export: IExport;
+        fileTree: IFileTree;
+        flashcard: IFlashCard;
+        graph: IGraph;
+        keymap: IKeymap;
+        /**
+         * User interface language
+         * Same as {@link IAppearance.lang}
+         */
+        lang: string;
+        /**
+         * List of supported languages
+         */
+        langs: ILang[];
+        /**
+         * A list of the kernel server addresses
+         */
+        serverAddrs: string[];
+        /**
+         * Log level
+         */
+        logLevel: string;
+        onboarding: {
+            state: string;
+            newUser: boolean;
+            dismissed: boolean;
+            notebookID: string;
+            documentID: string;
+        };
+        /**
+         * Publish service
+         * 发布服务
+         */
+        publish: IPublish;
+        /**
+         * Whether it is running in read-only mode
+         * 全局只读
+         */
+        readonly: boolean;
+        /**
+         * Encrypted notebook global settings
+         * 加密笔记本全局设置
+         */
+        notebookCrypto: INotebookCrypto;
+        repo: IRepo;
+        /**
+         * Global secrets store, referenced via {{secrets.NAME}} placeholders.
+         * 全局密钥库，通过 {{secrets.NAME}} 占位符引用
+         */
+        secrets: ISecrets;
+        search: ISearch;
+        /**
+         * Whether to display the changelog for this release version
+         */
+        showChangelog: boolean;
+        snippet: ISnippet;
+        stat: IStat;
+        sync: ISync;
+        system: ISystem;
+        tag: ITag;
+        uiLayout: IUiLayout;
+        /**
+         * Community user data (Encrypted)
+         */
+        userData: string;
+        /**
+         * Global variables store, referenced via {{vars.NAME}} placeholders.
+         * 全局变量库，通过 {{vars.NAME}} 占位符引用
+         */
+        variables: IVariables;
+    }
+
+    /**
+     * Access authorization code
+     */
+    export type TAccessAuthCode = "" | "*******";
+
+    export interface IOIDCClaimRule {
+        claim: string;
+        operator: string;
+        values: string[];
+    }
+
+    export interface IOIDC {
+        enabled: boolean;
+        provider: string;
+        issuerURL: string;
+        clientID: string;
+        clientSecret: string;
+        scopes: string[];
+        redirectURL: string;
+        allowAll: boolean;
+        claimRules: IOIDCClaimRule[];
+    }
+
+    /**
+     * Artificial Intelligence (AI) related configuration
+     */
+    export interface IAI {
+        web: IAIWeb;
+        providers: IProvider[];
+        editing: IEditing;
+        agent: IAgent;
+        imageGeneration: IImageGeneration;
+        mcp: IMCP;
+        embedding: IEmbedding;
+        rerank: IRerank;
+        decision: IDecision;
+    }
+
+    /** 网页服务独立于对话模型；省略配置时搜索使用 Exa、抓取使用直接请求。 */
+    export interface IAIWeb {
+        searchProvider: string;
+        fetchProvider: string;
+        /** DeepSeek Search 与 Fetch 共用的凭证，由内核加密保存。 */
+        apiKey: string;
+        /** DeepSeek 请求超时秒数，默认 30，范围 1–600。 */
+        timeout: number;
+    }
+
+    /**
+     * AI agent global settings
+     */
+    export interface IAgent {
+        /** 流式输出渲染 Markdown，默认关闭，重置普通设置时随 AI 配置保留 */
+        streamingMarkdown: boolean;
+        modelId: string;
+        sessionTimeout: number;
+        streamIdleTimeout: number;
+        /** 确认等待秒数；负数回退 600，0 保留无限等待语义 */
+        confirmTimeout: number;
+        maxRetries: number;
+        /** 有效范围为 0–2；越界值在配置规范化时回退 1 */
+        temperature: number;
+        /** 输出 token 上限；负数归零，0 表示使用模型默认值 */
+        maxCompletionTokens: number;
+        /** 工具调用轮数上限；负数归零，0 表示不限制轮数 */
+        maxToolCallRounds: number;
+        capabilityPolicy: ICapabilityPolicy;
+        skills: {
+            userEnabled: string[];
+            builtinDisabled: string[];
+        };
+        approvalPolicy: {
+            default: string;
+            overrides: Record<string, {
+                default: string;
+                actions: Record<string, string>;
+            }>;
+        };
+    }
+
+    export interface ICapabilityPolicy {
+        default: string;
+        overrides: Record<string, string>;
+    }
+
+    /**
+     * AI in-editor chat scenario behavior settings (mirrors IAgent)
+     */
+    export interface IEditing {
+        modelId: string;
+        maxHistoryMessages: number;
+        temperature: number;
+        maxCompletionTokens: number;
+    }
+
+    export interface IImageGeneration {
+        modelId: string;
+        requestTimeout: number;
+        size: string;
+        quality: string;
+        outputFormat: string;
+    }
+
+    /** 独立保存的决策服务凭证和参数。 */
+    export interface IDecisionProfile {
+        endpoint: string;
+        apiKey: string;
+        name: string;
+        timeout: number;
+    }
+
+    /** 当前决策服务及各供应商独立配置；平铺字段仅兼容 TypeSafe 客户端。 */
+    export interface IDecision extends IDecisionProfile {
+        enabled: boolean;
+        provider: string;
+        profiles: Record<string, IDecisionProfile>;
+    }
+
+    /**
+     * Embedding model configuration
+     */
+    export interface IEmbedding {
+        id: string;
+        enabled: boolean;
+        baseURL: string;
+        apiKey: string;
+        name: string;
+        timeout: number;
+        dimensions: number;
+        /** 嵌入索引并发请求数，默认 8，范围 1–64。 */
+        concurrency: number;
+        /** 每次嵌入索引请求的文本块数，默认 10，范围 1–128。 */
+        batchSize: number;
+    }
+
+    /**
+     * Rerank model configuration (semantic search result re-ranking)
+     */
+    export interface IRerank {
+        id: string;
+        enabled: boolean;
+        endpoint: string;
+        apiKey: string;
+        name: string;
+        requestFormat: string;
+        timeout: number;
+        candidateCount: number;
+    }
+
+    /**
+     * AI provider configuration
+     */
+    export interface IProvider {
+        /** 账户认证只保存本机账户引用；省略时使用 API Key */
+        authType?: string;
+        /** 本机按工作空间路径和服务商 ID 保存的账号绑定，不随 conf.json 或设置导出保存 */
+        accountID?: string;
+        headers?: Record<string, string>;
+        id: string;
+        enabled: boolean;
+        displayName?: string;
+        baseURL: string;
+        /**
+         * 生成协议：openai、openai-responses、anthropic-messages 或 gemini-interactions；省略时使用 openai
+         * Gemini Interactions 使用原生 /v1beta 或 /v1 基础地址，始终关闭服务端会话存储并由本地管理历史
+         */
+        protocol?: string;
+        apiKey: string;
+        requestTimeout: number;
+        models: IModel[];
+    }
+
+    /**
+     * AI model configuration. Behavior params (maxTokens/temperature/maxContexts)
+     * live on IEditing; Model holds identity and provider metadata.
+     */
+    export interface IModel {
+        id: string;
+        enabled: boolean;
+        name: string;
+        displayName?: string;
+        contextLength?: number;
+    }
+
+    /**
+     * MCP (Model Context Protocol) configuration
+     */
+    export interface IMCP {
+        servers: IMCPServer[];
+        exposurePolicy: ICapabilityPolicy;
+    }
+
+    export interface IMCPServer {
+        id: string;
+        enabled: boolean;
+        name: string;
+        url: string;
+        type: string;
+        command: string;
+        args?: string[];
+        inheritEnv?: string[];
+        env?: Record<string, string>;
+        headers?: Record<string, string>;
+        timeout: number;
+        disableStandaloneSSE: boolean;
+        trustToolAnnotations: boolean;
+    }
+
+    /**
+     * SiYuan API related configuration
+     */
+    export interface IAPI {
+        /**
+         * API Token
+         */
+        token: string;
+    }
+
+    /**
+     * SiYuan appearance related configuration
+     */
+    export interface IAppearance {
+        /** 使用当前工作空间的单张锁屏壁纸；图片独立存储，登录前可见，不参与同步或设置导出 */
+        lockScreenWallpaper: boolean;
+        /** 用户偏好保存在 conf.json；升级不读取旧 local.json 键，外观重置时恢复默认值 */
+        compactMode: boolean;
+        /** 默认关闭；新建空工作空间默认开启 */
+        menuMouseScroll: boolean;
+        pdfTheme: {light: string; dark: string; annoColor: string};
+        outlineKeepCurrentExpand: boolean;
+        /** 三项默认开启，侧栏滑动与按钮至少保留一种 */
+        mobileBars: {autoHide: boolean; sidebarSwipe: boolean; sidebarButtons: boolean};
+        /** 背景渐变，未配置时根据工作空间名称自动配色 */
+        bodyGradient?: {
+            mode: string;
+            light: {color: string; opacity: number};
+            dark: {color: string; opacity: number};
+        };
+        /** 全局默认字体，按优先级从高到低排列；动态文字图标使用此列表和首选字重，字体由客户端解析，日期类图标保留内置字体 */
+        globalFontFamilies: IEditor["fontFamilies"];
+        /**
+         * Close button behavior
+         * - `0`: Exit application
+         * - `1`: Minimize to pallets
+         * 仅接受 0、1，越界值在配置规范化时回退 0
+         */
+        closeButtonBehavior: number;
+        /**
+         * Dark code block theme
+         */
+        codeBlockThemeDark: string;
+        /**
+         * Light code block theme
+         */
+        codeBlockThemeLight: string;
+        /**
+         * Whether to hide toolbar
+         */
+        hideToolbar: boolean;
+        /**
+         * Whether to hide status bar
+         */
+        hideStatusBar: boolean;
+        /**
+         * The name of the icon currently in use
+         */
+        icon: string;
+        /**
+         * List of installed icon names
+         */
+        icons: { label: string; name: string }[];
+        /**
+         * The version number of the icon currently in use
+         */
+        iconVer: string;
+        /**
+         * The language used by the current user
+         */
+        lang: string;
+        /**
+         * List of installed light themes
+         */
+        lightThemes: IAppearanceTheme[];
+        /**
+         * List of installed dark themes
+         */
+        darkThemes: IAppearanceTheme[];
+        /**
+         * The current theme mode
+         * - `0`: Light theme
+         * - `1`: Dark theme
+         */
+        mode: number;
+        /**
+         * Whether the theme mode follows the system theme
+         */
+        modeOS: boolean;
+        /**
+         * The name of the dark theme currently in use
+         */
+        themeDark: string;
+        /**
+         * Whether the current theme has enabled theme JavaScript
+         */
+        themeJS: boolean;
+        /**
+         * The name of the light theme currently in use
+         */
+        themeLight: string;
+        /**
+         * The version number of the theme currently in use
+         */
+        themeVer: string;
+        statusBar: IAppearanceStatusBar;
+        notifications: IAppearanceNotifications;
+        entryVisibility: IEntryVisibility;
+    }
+
+    export interface IAppearanceTheme {
+        label: string;
+        name: string;
+        frontends?: string[];
+    }
+
+    export interface IEntryVisibilityProfile {
+        id: string;
+        name: string;
+        defaults?: "simple" | "full";
+        entries: Record<string, boolean>;
+        orders: Record<string, string[]>;
+    }
+
+    export interface IEntryVisibility {
+        version: number;
+        active: string;
+        profiles: IEntryVisibilityProfile[];
+    }
+
+    export interface IAppearanceStatusBar {
+        msgTaskDatabaseIndexCommitDisabled: boolean;
+        msgTaskHistoryDatabaseIndexCommitDisabled: boolean;
+        msgTaskAssetDatabaseIndexCommitDisabled: boolean;
+        msgTaskHistoryGenerateFileDisabled: boolean;
+        msgDataSyncDisabled: boolean;
+    }
+
+    /**
+     * 外观通知开关配置。Appearance.Notifications 为 undefined 时表示旧配置尚未迁移，整体按默认启用处理。
+     */
+    export interface IAppearanceNotifications {
+        docTreeMaxList: boolean;
+        tagMaxList: boolean;
+        workspaceNotSSD: boolean;
+        browserCompatibility: boolean;
+        selectAllTip?: boolean;
+        selectAllIncompleteTip?: boolean;
+        formatPainterTip?: boolean;
+    }
+
+    /**
+     * The language used by the current user
+     *
+     * User interface language
+     * Same as {@link IAppearance.lang}
+     */
+    export type TLang =
+        "en"
+        | "ar"
+        | "de"
+        | "es"
+        | "fr"
+        | "he"
+        | "hi"
+        | "id"
+        | "it"
+        | "ja"
+        | "ko"
+        | "pl"
+        | "pt-BR"
+        | "ru"
+        | "sk"
+        | "sr"
+        | "tr"
+        | "uk"
+        | "th"
+        | "nl"
+        | "zh-CN"
+        | "zh-TW";
+
+    /**
+     * SiYuan bazaar related configuration
+     */
+    export interface IBazaar {
+        /**
+         * Whether to disable all plug-ins
+         */
+        petalDisabled: boolean;
+        /**
+         * Whether to trust (enable) the resources for the bazaar
+         */
+        trust: boolean;
+    }
+
+    /**
+     * SiYuan editor markdown related configuration
+     */
+    interface IMarkdown {
+        /**
+         * Whether to enable the inline asterisk
+         */
+        inlineAsterisk: boolean;
+        /**
+         * Whether to enable the inline underscore
+         */
+        inlineUnderscore: boolean;
+        /**
+         * Whether to enable the inline superscript
+         */
+        inlineSup: boolean;
+        /**
+         * Whether to enable the inline subscript
+         */
+        inlineSub: boolean;
+        /**
+         * Whether to enable the inline tag
+         */
+        inlineTag: boolean;
+        /**
+         * Whether to enable the inline math
+         */
+        inlineMath: boolean;
+        /**
+         * Whether to enable the inline strikethrough
+         */
+        inlineStrikethrough: boolean;
+        /**
+         * Whether to enable the full-width inline strikethrough
+         */
+        inlineFullWidthStrikethrough: boolean;
+        /**
+         * Whether to enable the full-width task list shortcut
+         */
+        blockFullWidthTaskList: boolean;
+        /**
+         * Whether to enable the inline mark
+         */
+        inlineMark: boolean;
+        /**
+         * Whether to enable the middle dot code block shortcut
+         */
+        codeBlockMiddleDot: boolean;
+    }
+
+    export type TAssetOpenAction = "follow-tab" | "current" | "right" | "bottom" | "background" |
+        "new-window" | "app" | "folder";
+
+    export interface IAssetOpen {
+        click: TAssetOpenAction;
+        ctrlClick: TAssetOpenAction;
+        altClick: TAssetOpenAction;
+        shiftClick: TAssetOpenAction;
+    }
+
+    /**
+     * SiYuan editor related configuration
+     */
+    export interface IEditor {
+
+        /**
+         * Asset opening behavior
+         */
+        assetOpen: {[K in keyof IAssetOpen]: string};
+
+        /**
+         * Whether to allow to execute javascript in the SVG
+         */
+        allowSVGScript: boolean;
+
+        /**
+         * 是否允许在 HTML 内容中执行 JavaScript
+         */
+        allowHTMLBLockScript: boolean;
+
+        /**
+         * Markdown configuration
+         */
+        markdown: IMarkdown;
+
+        /**
+         * The default number of backlinks to expand
+         */
+        backlinkExpandCount: number;
+        /**
+         * The default number of backlinks to mention
+         */
+        backmentionExpandCount: number;
+        /**
+         * Backlink mention keyword exclusion list (separated by commas `,`)
+         */
+        backlinkMentionExclude: string;
+        /**
+         * Whether the backlink contains children
+         */
+        backlinkContainChildren: boolean;
+        /** 反链面板是否隐藏传递型纯引用块 */
+        backlinkHideReference: boolean;
+        /**
+         * Whether to show backlinks at the bottom of the document
+         */
+        backlinkShowBottom: boolean;
+        /**
+         * Backlink sort mode
+         */
+        backlinkSort: number;
+        /** 仅接受 0、1、2，越界值在配置规范化时回退 0 */
+        backlinkGlobalSort: number;
+        /** 仅接受 0、1、2，越界值在配置规范化时回退 0 */
+        backlinkBlockSort: number;
+        /**
+         * Backmention sort mode
+         */
+        backmentionSort: number;
+        /**
+         * The maximum length of the dynamic anchor text for block references
+         */
+        blockRefDynamicAnchorTextMaxLen: number;
+        /**
+         * Whether to check block references and database bindings before deleting or cutting
+         */
+        checkBlockRef: boolean;
+        /**
+         * Whether the code block has enabled ligatures
+         */
+        codeLigatures: boolean;
+        /**
+         * Whether the code block is automatically wrapped
+         */
+        codeLineWrap: boolean;
+        /**
+         * Whether the code block displays line numbers
+         */
+        codeSyntaxHighlightLineNum: boolean;
+        /**
+         * The number of spaces generated by the Tab key in the code block, configured as 0 means no
+         * conversion to spaces
+         * 仅接受 0、2、4、6、8，其他值回退 0；0 保留制表符
+         */
+        codeTabSpaces: number;
+        /**
+         * Whether to display the bookmark icon
+         */
+        displayBookmarkIcon: boolean;
+        /** 是否显示完整块标，默认 false */
+        blockGutterMode: boolean;
+        /**
+         * Whether to display the network image mark
+         */
+        displayNetImgMark: boolean;
+        /** 全局显示图片文件名，默认关闭，不写入文档属性 */
+        displayImgName: boolean;
+        /** 全局在图片标题下显示提示文本，默认关闭，不写入文档属性 */
+        displayImgAlt: boolean;
+        /**
+         * Whether to show database attributes at the top of the document
+         */
+        databaseAttrShow: boolean;
+        /**
+         * Behavior when clicking a database badge
+         * - `0`: Focus the block and expand the database panel
+         * - `1`: Open the block attribute panel
+         * 仅接受 0、1，越界值在配置规范化时回退 0
+         */
+        databaseAttrClickMode: number;
+        /**
+         * Default state of database attributes
+         * - `0`: Expanded
+         * - `1`: Collapsed
+         * 仅接受 0、1，越界值在配置规范化时回退 0
+         */
+        databaseAttrViewMode: number;
+        /**
+         * Whether to hide empty database attributes
+         */
+        databaseAttrHideEmpty: boolean;
+        /**
+         * Whether to use tabs for database attributes
+         */
+        databaseAttrUseTabs: boolean;
+        /** 数据库字段布局：0 单栏，1 双栏按行（默认），2 双栏按列，空间不足时使用单栏 */
+        databaseAttrLayout: number;
+        /**
+         * Whether to retain dynamically loaded content blocks
+         */
+        keepLoadedContent: boolean;
+        /** 是否显示翻屏按钮，默认关闭，不迁移旧的本地偏好 */
+        pageScrollButtons: boolean;
+        /**
+         * The number of blocks loaded each time they are dynamically loaded
+         */
+        dynamicLoadBlocks: number;
+        /**
+         * Whether the embedded block displays breadcrumbs
+         */
+        embedBlockBreadcrumb: boolean;
+        embedBlockBreadcrumbParentPath: boolean;
+        /**
+         * Whether to display automatic heading numbers
+         */
+        headingNumber: boolean;
+        /**
+         * The automatic heading numbering format preset
+         */
+        headingNumberFormat: string;
+        /**
+         * Heading embed mode for embedded blocks
+         * - `0`: Show title with blocks below (default)
+         * - `1`: Show only title
+         * - `2`: Show only blocks below title
+         * 仅接受 0、1、2，越界值在配置规范化时回退 0
+         */
+        headingEmbedMode: number;
+        /**
+         * Common emoji icons
+         */
+        emoji: string[];
+        /**
+         * The trigger mode of the preview window
+         * - `0`: Hover over the cursor
+         * - `1`: Hover over the cursor while holding down Ctrl
+         * - `2`: Do not trigger the floating window
+         * 仅接受 0、1、2，越界值在配置规范化时回退 0
+         */
+        floatWindowMode: number;
+        /**
+         * Hover delay of the floating window in milliseconds.
+         * Only takes effect when `floatWindowMode` is `0`.
+         */
+        floatWindowDelay: number;
+        /**
+         * 编辑器字体，按优先级从高到低排列
+         */
+        fontFamilies: Array<{
+            family: string;
+            weight: number;
+            displayName: string;
+        }>;
+        /**
+         * 编辑器等宽字体，按优先级从高到低排列
+         */
+        codeFontFamilies: Array<{
+            family: string;
+            weight: number;
+            displayName: string;
+        }>;
+        /**
+         * The font size used in the editor
+         */
+        fontSize: number;
+        /**
+         * 使用键盘纵向移动时光标周围至少保留的可见行数
+         */
+        cursorSurroundingLines: number;
+        /**
+         * Whether the editor uses maximum width
+         */
+        fullWidth: boolean;
+        /**
+         * The time interval for generating document history, set to 0 to disable document history
+         * (unit: minutes)
+         */
+        generateHistoryInterval: number;
+        /**
+         * History retention days
+         */
+        historyRetentionDays: number;
+        /**
+         * Whether to enable text justification
+         */
+        justify: boolean;
+        /**
+         * KeTex macro definition (JSON string)
+         */
+        katexMacros: string;
+        /**
+         * Whether to enable single-click list item mark focus
+         */
+        listItemDotNumberClickFocus: boolean;
+        /**
+         * Whether to enable the list logical reverse indentation scheme
+         */
+        listLogicalOutdent: boolean;
+        /**
+         * Whether to enable the `[[` symbol to search only for document blocks
+         */
+        onlySearchForDoc: boolean;
+        /**
+         * Whether typing `[[` auto-inserts `]]` and typing `]]` completes the block reference
+         */
+        autoCloseRefBrackets: boolean;
+        /**
+         * PlantUML rendering service address
+         */
+        plantUMLServePath: string;
+        /**
+         * Whether to auto-convert pasted URLs to links
+         */
+        pasteURLAutoConvert: boolean;
+        /** Recognize alternate LaTeX math delimiters in pasted and imported content; defaults to true */
+        mathDelimiterCompatibility: boolean;
+        /**
+         * Whether to embed dragged HTML files as IFrame blocks
+         */
+        dragHTMLFileToIframe: boolean;
+        /**
+         * Whether to enable read-only mode
+         */
+        readOnly: boolean;
+        /**
+         * Whether to enable RTL (left-to-right chirography) mode
+         */
+        rtl: boolean;
+        /** 默认关闭；自动判定段落和标题方向，各列表项独立调整标记和缩进，手动方向优先，表格列顺序不变 */
+        autoDirection: boolean;
+        /**
+         * Whether to enable spell checking
+         */
+        spellcheck: boolean;
+        /**
+         * Support spell check languages
+         */
+        spellcheckLanguages: string[];
+        /**
+         * Whether to search tags when typing `#`
+         */
+        hashTagSearch: boolean;
+        /**
+         * Whether to enable virtual references
+         */
+        virtualBlockRef: boolean;
+        /**
+         * Virtual reference keyword exclusion list (separated by commas `,`)
+         */
+        virtualBlockRefExclude: string;
+        /**
+         * Virtual reference keyword inclusion list (separated by commas `,`)
+         */
+        virtualBlockRefInclude: string;
+    }
+
+    /**
+     * SiYuan export related configuration
+     */
+    export interface IExport {
+        /**
+         * Add article title (insert the article title as a first-level title at the beginning of
+         * the document)
+         */
+        addTitle: boolean;
+        /**
+         * Embedded block export mode
+         * - `0`: Original block content
+         * - `1`: Quotation block
+         * 仅接受 0、1，越界值在配置规范化时回退 1
+         */
+        blockEmbedMode: number;
+        /**
+         * Content block reference export mode
+         * - `0`: Original text (deprecated)
+         * - `1`: Quotation block (deprecated)
+         * - `2`: Anchor text block link
+         * - `3`: Anchor text only
+         * - `4`: Footnote
+         * - `5`: Anchor hash
+         */
+        blockRefMode: number;
+        /**
+         * The symbol on the left side of the block reference anchor text during export
+         */
+        blockRefTextLeft: string;
+        /**
+         * The symbol on the right side of the block reference anchor text during export
+         */
+        blockRefTextRight: string;
+        /**
+         * File annotation reference export mode
+         * - `0`: File name - page number - anchor text
+         * - `1`: Anchor text only
+         * 仅接受 0、1，越界值在配置规范化时回退 0
+         */
+        fileAnnotationRefMode: number;
+        /**
+         * Custom watermark position, size, style, etc. when exporting to an image
+         */
+        imageWatermarkDesc: string;
+        /**
+         * The watermark text or watermark file path used when exporting to an image
+         */
+        imageWatermarkStr: string;
+        /**
+         * Whether to add YAML Front Matter when exporting to Markdown
+         */
+        markdownYFM: boolean;
+        /**
+         * Whether to remove the asset ID when exporting to Markdown
+         */
+        removeAssetsID: boolean;
+        /**
+         * Whether to export the inline memo
+         */
+        inlineMemo: boolean;
+        /**
+         * Whether to include sub-documents when exporting
+         */
+        includeSubDocs: boolean;
+        /**
+         * Whether to include related documents when exporting
+         */
+        includeRelatedDocs: boolean;
+        /**
+         * Pandoc executable file path
+         */
+        pandocBin: string;
+        /**
+         * Pandoc parameters
+         */
+        pandocParams: string;
+        /**
+         * Whether the beginning of the paragraph is empty two spaces.
+         * Insert two full-width spaces `U+3000` at the beginning of the paragraph.
+         */
+        paragraphBeginningSpace: boolean;
+        /**
+         * Custom footer content when exporting to PDF
+         */
+        pdfFooter: string;
+        /**
+         * Custom watermark position, size, style, etc. when exporting to PDF
+         */
+        pdfWatermarkDesc: string;
+        /**
+         * The watermark text or watermark file path used when exporting to PDF
+         */
+        pdfWatermarkStr: string;
+        /**
+         * Tag close marker symbol
+         */
+        tagCloseMarker: string;
+        /**
+         * Tag start marker symbol
+         */
+        tagOpenMarker: string;
+    }
+
+    /**
+     * Document tree related configuration
+     */
+    export interface IFileTree {
+        /** 默认 viewedAt，未知值回落默认值；文档树设置重置时恢复默认 */
+        recentDocsSort: string;
+        /**
+         * Whether to allow the creation of sub-documents deeper than 7 levels
+         */
+        allowCreateDeeper: boolean;
+        /**
+         * Don't automatically split the screen when opening search, PDF and other tabs
+         */
+        noSplitScreenWhenOpenTab: boolean;
+        /**
+         * Whether to automatically locate the currently open document in the document tree
+         */
+        alwaysSelectOpenedFile: boolean;
+        /**
+         * 桌面端单击文档图标的行为：0 修改图标，1 展开或折叠子文档；没有子文档时打开文档
+         * 桌面端笔记本图标始终用于修改图标；旧的布尔配置不迁移
+         */
+        docIconClickMode: number;
+        /**
+         * 点击父文档标题的行为：0 打开文档，1 立即展开或折叠子文档，2 单击展开或折叠、双击打开父文档
+         * 取 2 时单击等待约 300 毫秒；没有子文档时直接打开；旧的布尔配置不迁移
+         */
+        parentDocTitleClickMode: number;
+        /**
+         * Whether to enable top-level notebook documents
+         */
+        boxDocEnabled: boolean;
+        /**
+         * Whether to use SVG icons as the default icons for notebooks and documents
+         */
+        useSVGDefaultIcon: boolean;
+        /**
+         * Whether to close all tabs when starting
+         */
+        closeTabsOnStart: boolean;
+        tabStartupMode: number;
+        /**
+         * The storage path of the new document
+         */
+        docCreateSavePath: string;
+        /**
+         * The content template path of the new document
+         */
+        docCreateTemplatePath: string;
+        /**
+         * The maximum number of documents listed
+         * 有效范围为 1–10240；小于 1 回退 512，大于 10240 截断至 10240
+         */
+        maxListCount: number;
+        /**
+         * The maximum number of open tabs
+         */
+        maxOpenTabCount: number;
+        /**
+         * Whether to open the file in the current tab
+         */
+        openFilesUseCurrentTab: boolean;
+        /**
+         * Whether to close tabs by double-clicking
+         */
+        closeTabOnDoubleClick: boolean;
+        /**
+         * Close a detached desktop window after its last tab is closed or moved out.
+         * Defaults to true; does not affect the main window.
+         */
+        closeWindowOnLastTabClosed: boolean;
+        /**
+         * The storage path of the new document created using block references
+         */
+        refCreateSavePath: string;
+        refCreateSaveBox: string;
+        /**
+         * Shorthand save notebook
+         */
+        shorthandSaveBox: string;
+        /**
+         * Shorthand save path
+         */
+        shorthandSavePath: string;
+        docCreateSaveBox: string;
+        /**
+         * Close the secondary confirmation when deleting a document
+         */
+        removeDocWithoutConfirm: boolean;
+        /**
+         * Document sorting method
+         * - `0`: File name ascending
+         * - `1`: File name descending
+         * - `2`: File update time ascending
+         * - `3`: File update time descending
+         * - `4`: File name natural number ascending
+         * - `5`: File name natural number descending
+         * - `6`: Custom sorting
+         * - `7`: Reference count ascending
+         * - `8`: Reference count descending
+         * - `9`: File creation time ascending
+         * - `10`: File creation time descending
+         * - `11`: File size ascending
+         * - `12`: File size descending
+         * - `13`: Sub-document count ascending
+         * - `14`: Sub-document count descending
+         * - `15`: Use document tree sorting rules
+         * - `256`: Unspecified sorting rules, according to the notebook priority over the document
+         * tree to obtain sorting rules
+         */
+        sort: number;
+        /**
+         * Whether to save the content of the .sy file as a single-line JSON object
+         */
+        useSingleLineSave: boolean;
+        /**
+         * The .sy and database .json files larger than this value will prompt a warning (unit: MB)
+         * 有效范围为 2–10240 MB；小于 2 回退 8，大于 10240 截断至 10240
+         */
+        largeFileWarningSize: number;
+        /**
+         * Whether to create new documents at the top of the document tree
+         */
+        createDocAtTop: boolean;
+        /**
+         * The maximum number of recent documents listed
+         */
+        recentDocsMaxListCount: number;
+    }
+
+    /**
+     * Flashcard related configuration
+     */
+    export interface IFlashCard {
+        /**
+         * Whether to enable blockquote card making
+         */
+        blockquote: boolean;
+        /**
+         * Whether to enable callout card making
+         */
+        callout: boolean;
+        /**
+         * Whether to enable deck card making
+         */
+        deck: boolean;
+        /**
+         * Whether to enable heading block card making
+         */
+        heading: boolean;
+        /**
+         * Whether to enable list block card making
+         */
+        list: boolean;
+        /**
+         * Whether to enable mark element card making
+         */
+        mark: boolean;
+        /**
+         * Maximum interval days
+         */
+        maximumInterval: number;
+        /**
+         * New card limit
+         */
+        newCardLimit: number;
+        /**
+         * FSRS request retention parameter
+         */
+        requestRetention: number;
+        /**
+         * Review card limit
+         */
+        reviewCardLimit: number;
+        /**
+         * Review mode
+         * - `0`: New and old mixed
+         * - `1`: New card priority
+         * - `2`: Old card priority
+         * 仅接受 0、1、2，越界值在配置规范化时回退 0
+         */
+        reviewMode: number;
+        /**
+         * Whether to enable super block card making
+         */
+        superBlock: boolean;
+        /**
+         * FSRS weight parameter list
+         */
+        weights: string;
+    }
+
+    /**
+     * SiYuan graph related configuration
+     */
+    export interface IGraph {
+        global: IGraphGlobal;
+        local: IGraphLocal;
+        /**
+         * Maximum number of content blocks displayed
+         */
+        maxBlocks: number;
+    }
+
+    /**
+     * Global graph configuration
+     */
+    export interface IGraphGlobal {
+        d3: IGraphD3;
+        /**
+         * Whether to display nodes in daily notes
+         */
+        dailyNote: boolean;
+        /**
+         * The minimum number of references to the displayed node
+         */
+        minRefs: number;
+        type: IGraphType;
+    }
+
+    /**
+     * d3.js graph configuration
+     */
+    export interface IGraphD3 {
+        /**
+         * Whether to display the arrow
+         */
+        arrow: boolean;
+        /**
+         * Central gravity intensity
+         */
+        centerStrength: number;
+        /**
+         * Repulsion radius
+         */
+        collideRadius: number;
+        /**
+         * Repulsion intensity
+         */
+        collideStrength: number;
+        /**
+         * Line opacity
+         */
+        lineOpacity: number;
+        /**
+         * Link distance
+         */
+        linkDistance: number;
+        /**
+         * Line width
+         */
+        linkWidth: number;
+        /**
+         * Node size
+         */
+        nodeSize: number;
+    }
+
+    /**
+     * SiYuan node type filter
+     */
+    export interface IGraphType {
+        /**
+         * Display quote block
+         */
+        blockquote: boolean;
+        /**
+         * Display callout
+         */
+        callout: boolean;
+        /**
+         * Display code block
+         */
+        code: boolean;
+        /**
+         * Display heading block
+         */
+        heading: boolean;
+        /**
+         * Display list block
+         */
+        list: boolean;
+        /**
+         * Display list item
+         */
+        listItem: boolean;
+        /**
+         * Display formula block
+         */
+        math: boolean;
+        /**
+         * Display paragraph block
+         */
+        paragraph: boolean;
+        /**
+         * Display super block
+         */
+        super: boolean;
+        /**
+         * Display table block
+         */
+        table: boolean;
+        /**
+         * Display tag
+         */
+        tag: boolean;
+    }
+
+    /**
+     * Local graph configuration
+     */
+    export interface IGraphLocal {
+        d3: IGraphD3;
+        /**
+         * Whether to display nodes in daily notes
+         */
+        dailyNote: boolean;
+        type: IGraphType;
+    }
+
+    /**
+     * SiYuan keymap related configuration
+     */
+    export interface IKeymap {
+        editor?: IKeymapEditor;
+        general?: IKeymapGeneral;
+        plugin?: IKeymapPlugin;
+    }
+
+    /**
+     * SiYuan editor shortcut keys
+     */
+    export interface IKeymapEditor {
+        general?: IKeymapEditorGeneral;
+        heading?: IKeymapEditorHeading;
+        insert?: IKeymapEditorInsert;
+        list?: IKeymapEditorList;
+        table?: IKeymapEditorTable;
+    }
+
+    /**
+     * SiYuan editor general shortcut keys
+     */
+    export interface IKeymapEditorGeneral extends IKeys {
+        ai?: IKey;
+        alignCenter?: IKey;
+        alignLeft?: IKey;
+        alignRight?: IKey;
+        attr?: IKey;
+        backlinks?: IKey;
+        collapse?: IKey;
+        foldChildHeadings?: IKey;
+        foldSiblingHeadings?: IKey;
+        foldRecursive?: IKey;
+        copyBlockEmbed?: IKey;
+        copyBlockRef?: IKey;
+        copyHPath?: IKey;
+        copyID?: IKey;
+        copyPlainText?: IKey;
+        copyRichText?: IKey;
+        copyProtocol?: IKey;
+        copyProtocolInMd?: IKey;
+        copyText?: IKey;
+        duplicate?: IKey;
+        exitFocus?: IKey;
+        focusBreadcrumb?: IKey;
+        expand?: IKey;
+        expandDown?: IKey;
+        expandUp?: IKey;
+        fullscreen?: IKey;
+        graphView?: IKey;
+        hLayout?: IKey;
+        insertAfter?: IKey;
+        insertBefore?: IKey;
+        insertBottom?: IKey;
+        insertRight?: IKey;
+        insertSuperBlockLeft?: IKey;
+        insertSuperBlockRight?: IKey;
+        jumpToParentNext?: IKey;
+        moveToDown?: IKey;
+        moveToUp?: IKey;
+        netAssets2LocalAssets?: IKey;
+        netImg2LocalAsset?: IKey;
+        newContentFile?: IKey;
+        newNameFile?: IKey;
+        newNameSettingFile?: IKey;
+        openBy?: IKey;
+        optimizeTypography?: IKey;
+        outline?: IKey;
+        editMode?: IKey;
+        quickMakeCard?: IKey;
+        redo?: IKey;
+        refPopover?: IKey;
+        refresh?: IKey;
+        refTab?: IKey;
+        rename?: IKey;
+        scrollPageDownWithoutMovingCaret?: IKey;
+        scrollPageUpWithoutMovingCaret?: IKey;
+        selectToPageEnd?: IKey;
+        selectToPageStart?: IKey;
+        goToDocumentStart?: IKey;
+        goToDocumentEnd?: IKey;
+        showInFolder?: IKey;
+        spaceRepetition?: IKey;
+        switchReadonly?: IKey;
+        switchAdjust?: IKey;
+        undo?: IKey;
+        vLayout?: IKey;
+    }
+
+    /**
+     * SiYuan shortcut keys
+     */
+    export interface IKeys {
+        [key: string]: IKey;
+    }
+
+    /**
+     * SiYuan shortcut key
+     */
+    export interface IKey {
+        /** 多快捷键配置，custom 保留第一项以兼容单快捷键调用方。 */
+        bindings?: {
+            version?: import("./api").JSONValue;
+            keys?: import("./api").JSONValue;
+            defaults?: import("./api").JSONValue;
+            priority?: Record<string, number>;
+        };
+        /**
+         * Custom shortcut key
+         */
+        custom?: string;
+        /**
+         * Default shortcut key
+         */
+        default?: string;
+    }
+
+    /**
+     * SiYuan editor heading shortcut keys
+     */
+    export interface IKeymapEditorHeading extends IKeys {
+        heading1?: IKey;
+        heading2?: IKey;
+        heading3?: IKey;
+        heading4?: IKey;
+        heading5?: IKey;
+        heading6?: IKey;
+        paragraph?: IKey;
+    }
+
+    /**
+     * SiYuan editor insert shortcut keys
+     */
+    export interface IKeymapEditorInsert extends IKeys {
+        appearance?: IKey;
+        bold?: IKey;
+        check?: IKey;
+        clearInline?: IKey;
+        code?: IKey;
+        "inline-code": IKey;
+        "inline-math": IKey;
+        italic?: IKey;
+        kbd?: IKey;
+        lastUsed?: IKey;
+        link?: IKey;
+        mark?: IKey;
+        memo?: IKey;
+        /** 插入思维导图或将当前列表转换为思维导图，默认未绑定。 */
+        mindmap?: IKey;
+        ref?: IKey;
+        strike?: IKey;
+        sub?: IKey;
+        sup?: IKey;
+        table?: IKey;
+        tag?: IKey;
+        underline?: IKey;
+    }
+
+    /**
+     * SiYuan editor list shortcut keys
+     */
+    export interface IKeymapEditorList extends IKeys {
+        prependListItem?: IKey;
+        appendListItem?: IKey;
+        /** 在思维导图中添加同级节点，编辑时先保存当前内容。 */
+        mindmapAddSibling?: IKey;
+        /** 在思维导图中添加子节点，编辑时先保存当前内容。 */
+        mindmapAddChild?: IKey;
+        checkToggle?: IKey;
+        /** 切换任务完成状态，默认未绑定；待办和进行中变为完成，其他状态变为待办。 */
+        taskCompletionToggle?: IKey;
+        indent?: IKey;
+        outdent?: IKey;
+    }
+
+    /**
+     * SiYuan editor table shortcut keys
+     */
+    export interface IKeymapEditorTable extends IKeys {
+        "delete-column": IKey;
+        "delete-row": IKey;
+        insertColumnLeft?: IKey;
+        insertColumnRight?: IKey;
+        insertRowAbove?: IKey;
+        insertRowBelow?: IKey;
+        moveToDown?: IKey;
+        moveToLeft?: IKey;
+        moveToRight?: IKey;
+        moveToUp?: IKey;
+    }
+
+    /**
+     * SiYuan general shortcut keys
+     */
+    export interface IKeymapGeneral extends IKeys {
+        previousDatabaseRow?: IKey;
+        nextDatabaseRow?: IKey;
+        /** 打开当前焦点的上下文菜单，默认 ⌘/，支持多绑定和解绑。 */
+        openContextMenu?: IKey;
+        mainMenu?: IKey;
+        commandPanel?: IKey;
+        increaseEditorFontSize?: IKey;
+        decreaseEditorFontSize?: IKey;
+        resetEditorFontSize?: IKey;
+        editReadonly?: IKey;
+        syncNow?: IKey;
+        enterBack?: IKey;
+        enter?: IKey;
+        goForward?: IKey;
+        goBack?: IKey;
+        newFile?: IKey;
+        search?: IKey;
+        globalSearch?: IKey;
+        stickSearch?: IKey;
+        replace?: IKey;
+        closeTab?: IKey;
+        agentChat?: IKey;
+        agentSend?: IKey;
+        fileTree?: IKey;
+        outline?: IKey;
+        bookmark?: IKey;
+        tag?: IKey;
+        dailyNote?: IKey;
+        inbox?: IKey;
+        backlinks?: IKey;
+        graphView?: IKey;
+        globalGraph?: IKey;
+        riffCard?: IKey;
+        config?: IKey;
+        dataHistory?: IKey;
+        toggleWin?: IKey;
+        lockScreen?: IKey;
+        recentDocs?: IKey;
+        goToTab1?: IKey;
+        goToTab2?: IKey;
+        goToTab3?: IKey;
+        goToTab4?: IKey;
+        goToTab5?: IKey;
+        goToTab6?: IKey;
+        goToTab7?: IKey;
+        goToTab8?: IKey;
+        goToTab9?: IKey;
+        goToTabNext?: IKey;
+        goToTabPrev?: IKey;
+        switchTab?: IKey;
+        goToEditTabNext?: IKey;
+        goToEditTabPrev?: IKey;
+        recentClosed?: IKey;
+        move?: IKey;
+        selectOpen1?: IKey;
+        switchLeftDock?: IKey;
+        switchRightDock?: IKey;
+        switchBottomDock?: IKey;
+        toggleLeftDockPanel?: IKey;
+        toggleRightDockPanel?: IKey;
+        toggleBottomDockPanel?: IKey;
+        toggleDock?: IKey;
+        splitLR?: IKey;
+        splitMoveR?: IKey;
+        splitTB?: IKey;
+        splitMoveB?: IKey;
+        closeOthers?: IKey;
+        closeAll?: IKey;
+        closeUnmodified?: IKey;
+        closeLeft?: IKey;
+        closeRight?: IKey;
+        tabToWindow?: IKey;
+        addToDatabase?: IKey;
+        unsplit?: IKey;
+        unsplitAll?: IKey;
+    }
+
+    /**
+     * SiYuan plugin shortcut keys
+     */
+    export interface IKeymapPlugin {
+        [key: string]: IKeys;
+    }
+
+    /**
+     * Supported language
+     */
+    export interface ILang {
+        /**
+         * Language name
+         */
+        label: string;
+        /**
+         * Language identifier
+         */
+        name: string;
+    }
+
+    /**
+     * Log level
+     */
+    export type TLogLevel = "off" | "trace" | "debug" | "info" | "warn" | "error" | "fatal";
+
+    /**
+     * Publish service
+     */
+    export interface IPublish {
+        /**
+         * Whether to open the publish service
+         */
+        enable: boolean;
+        /**
+         * The basic authentication settings of publish service
+         */
+        auth: IPublishAuth;
+        /**
+         * Port on which the publish service listens
+         */
+        port: number;
+    }
+
+    /**
+     * Publish service authentication settings
+     */
+    export interface IPublishAuth {
+        /**
+         * Whether to enable basic authentication for publish services
+         */
+        enable: boolean;
+        /**
+         * List of basic verified accounts
+         */
+        accounts: IPublishAuthAccount[];
+    }
+
+    /**
+     * Basic authentication account
+     */
+    export interface IPublishAuthAccount {
+        /**
+         * Account username
+         */
+        username: string;
+        /**
+         * Account password
+         */
+        password: string;
+        /**
+         * The memo text of the account
+         */
+        memo: string;
+    }
+
+    /**
+     * Snapshot repository related configuration
+     */
+    export interface IRepo {
+        /**
+         * Snapshot encryption key (base64 encoded 256-bit key)
+         */
+        key: string;
+        /**
+         * Sync index timing, if it exceeds this time, the user is prompted that the index
+         * performance is degraded (unit: milliseconds)
+         */
+        syncIndexTiming: number;
+        /**
+         * Automatic purge for local data repo index retention days
+         */
+        indexRetentionDays: number;
+        /**
+         * Automatic purge for local data repo indexes retention daily
+         */
+        retentionIndexesDaily: number;
+    }
+
+    /**
+     * SiYuan search related configuration
+     */
+    export interface ISearch {
+        /**
+         * Whether to search in block aliases
+         */
+        alias: boolean;
+        /**
+         * Whether to search in audio blocks
+         */
+        audioBlock: boolean;
+        /**
+         * Extract backlink mention keywords from block aliases
+         */
+        backlinkMentionAlias: boolean;
+        /**
+         * Extract backlink mention keywords from block reference anchor text
+         */
+        backlinkMentionAnchor: boolean;
+        /**
+         * Extract backlink mention keywords from document names
+         */
+        backlinkMentionDoc: boolean;
+        /**
+         * Maximum number of backlink mention keywords
+         */
+        backlinkMentionKeywordsLimit: number;
+        /**
+         * Extract backlink mention keywords from block names
+         */
+        backlinkMentionName: boolean;
+        /**
+         * Whether to search quote blocks
+         */
+        blockquote: boolean;
+        /**
+         * Whether to search callout
+         */
+        callout: boolean;
+        tabs?: boolean;
+        tabItem?: boolean;
+        /** 思维导图搜索；缺省时默认开启，更新设置时省略则保留当前值 */
+        mindmap?: boolean;
+        /** 思维导图项搜索；缺省时默认关闭，更新设置时省略则保留当前值 */
+        mindmapItem?: boolean;
+        customBlock?: boolean;
+        /**
+         * Whether to distinguish between uppercase and lowercase letters when searching
+         */
+        caseSensitive: boolean;
+        /**
+         * Whether to search code blocks
+         */
+        codeBlock: boolean;
+        /**
+         * Whether to search database blocks
+         */
+        databaseBlock: boolean;
+        /**
+         * Whether to search document blocks
+         */
+        document: boolean;
+        /**
+         * Whether to search embedded blocks
+         */
+        embedBlock: boolean;
+        /**
+         * Whether to distinguish between Simplified and Traditional Chinese characters when searching
+         */
+        hanSensitive: boolean;
+        /**
+         * Whether to search heading blocks
+         */
+        heading: boolean;
+        /**
+         * Whether to search HTML blocks
+         */
+        htmlBlock: boolean;
+        /**
+         * Whether to search block attributes
+         */
+        ial: boolean;
+        /**
+         * Whether to search in iframe blocks
+         */
+        iframeBlock: boolean;
+        /**
+         * Whether to search resource file paths
+         */
+        indexAssetPath: boolean;
+        /**
+         * Number of search results displayed
+         * 有效范围为 32–10240；小于 1 回退 64，1–31 提升至 32，大于 10240 截断至 10240
+         */
+        limit: number;
+        /**
+         * Whether to search list blocks
+         */
+        list: boolean;
+        /**
+         * Whether to search list items
+         */
+        listItem: boolean;
+        /**
+         * Whether to search formula blocks
+         */
+        mathBlock: boolean;
+        /**
+         * Whether to search block notes
+         */
+        memo: boolean;
+        /**
+         * Whether to search block names
+         */
+        name: boolean;
+        /**
+         * Whether to search paragraph blocks
+         */
+        paragraph: boolean;
+        /**
+         * Whether to search super blocks
+         */
+        superBlock: boolean;
+        /**
+         * Whether to search table blocks
+         */
+        table: boolean;
+        /**
+         * Whether to search in video blocks
+         */
+        videoBlock: boolean;
+        /**
+         * Whether to get virtual reference keywords from block aliases
+         */
+        virtualRefAlias: boolean;
+        /**
+         * Whether to get virtual reference keywords from block reference anchor text
+         */
+        virtualRefAnchor: boolean;
+        /**
+         * Whether to get virtual reference keywords from document names
+         */
+        virtualRefDoc: boolean;
+        /**
+         * Whether to get virtual reference keywords from block names
+         */
+        virtualRefName: boolean;
+        /**
+         * Whether to search in widget blocks
+         */
+        widgetBlock: boolean;
+    }
+
+    /**
+     * SiYuan code snippets related configuration
+     */
+    export interface ISnippet {
+        /**
+         * Whether to enable CSS code snippets
+         */
+        enabledCSS: boolean;
+        /**
+         * Whether to enable JavaScript code snippets
+         */
+        enabledJS: boolean;
+    }
+
+    /**
+     * A named secret. The value is AES-encrypted at rest on the kernel side.
+     * The secret is only interpolated into HTTP outbound requests when the
+     * destination host is in the allowed hosts list; an empty list denies all
+     * HTTP requests. stdio MCP server environment variables are not restricted
+     * by this list.
+     */
+    export interface ISecret {
+        name: string;
+        value: string;
+        allowedHosts: string[];
+    }
+
+    /**
+     * Global secrets store. Referenced via {{secrets.NAME}} placeholders by the
+     * agent http_request tool and MCP server headers.
+     */
+    export interface ISecrets {
+        items: ISecret[];
+    }
+
+    /**
+     * A named variable. The value is stored in plain text (non-sensitive data).
+     */
+    export interface IVariable {
+        name: string;
+        value: string;
+    }
+
+    /**
+     * Global variables store. Referenced via {{vars.NAME}} placeholders by the
+     * agent http_request tool and MCP server headers.
+     */
+    /**
+     * Encrypted notebook global settings
+     * 加密笔记本全局设置
+     */
+    export interface INotebookCrypto {
+        /**
+         * Whether encrypted notebook feature is enabled
+         * 加密笔记本功能是否已启用
+         */
+        enabled: boolean;
+        /**
+         * Auto-lock after idle minutes, 0 = disabled
+         * 自动锁定闲置分钟数，0 表示禁用
+         */
+        autoLockMinutes: number;
+    }
+
+    export interface IVariables {
+        items: IVariable[];
+    }
+
+    /**
+     * SiYuan workspace content statistics
+     */
+    export interface IStat {
+        /**
+         * Asset file size (unit: bytes)
+         */
+        assetsSize: number;
+        /**
+         * Number of content blocks
+         */
+        blockCount: number;
+        /**
+         * Size of resource files after chunk encryption (unit: bytes)
+         */
+        cAssetsSize: number;
+        /**
+         * Number of content blocks after chunk encryption
+         */
+        cBlockCount: number;
+        /**
+         * Size of the data directory after chunk encryption (unit: bytes)
+         */
+        cDataSize: number;
+        /**
+         * Number of content block trees after chunk encryption (number of documents)
+         */
+        cTreeCount: number;
+        /**
+         * Data directory size (unit: bytes)
+         */
+        dataSize: number;
+        /**
+         * Number of content block trees (number of documents)
+         */
+        treeCount: number;
+    }
+
+    /**
+     * SiYuan synchronization related configuration
+     */
+    export interface ISync {
+        /**
+         * Cloud workspace name
+         */
+        cloudName: string;
+        /**
+         * Whether to enable synchronization
+         */
+        enabled: boolean;
+        /**
+         * Whether to create a conflict document when a conflict occurs during synchronization
+         */
+        generateConflictDoc: boolean;
+        /**
+         * 当前设备的资源下载模式，0：全部下载，1：按需下载。
+         * 仅接受 0、1；启动时越界值回退 0，写入 API 拒绝非法值并保留资源完整性检查
+         */
+        assetDownloadMode: number;
+        /**
+         * Synchronization mode
+         * - `0`: Not set
+         * - `1`: Automatic synchronization
+         * - `2`: Manual synchronization
+         * - `3`: Completely manual synchronization
+         */
+        mode: number;
+        /**
+         * Synchronization interval (unit: seconds)
+         */
+        interval: number;
+        /**
+         * Whether to enable synchronization perception
+         */
+        perception: boolean;
+        /**
+         * Cloud storage service provider
+         * - `0`: SiYuan official cloud storage service
+         * - `2`: Object storage service compatible with S3 protocol
+         * - `3`: Network storage service using WebDAV protocol
+         * - `4`: Local file system
+         */
+        provider: number;
+        s3: ISyncS3;
+        /**
+         * The prompt information of the last synchronization
+         */
+        stat: string;
+        /**
+         * The time of the last synchronization (Unix timestamp)
+         */
+        synced: number;
+        webdav: ISyncWebDAV;
+        local: ISyncLocal;
+        lan: ISyncLAN;
+    }
+
+    export interface ISyncLAN {
+        /**
+         * Whether to enable LAN sync acceleration
+         */
+        enabled: boolean;
+        /**
+         * Maximum number of concurrent peer requests
+         */
+        maxConcurrentReqs: number;
+    }
+
+    /**
+     * S3 compatible object storage related configuration
+     */
+    export interface ISyncS3 {
+        /**
+         * Access key
+         */
+        accessKey: string;
+        /**
+         * Bucket name
+         */
+        bucket: string;
+        /**
+         * Service endpoint address
+         */
+        endpoint: string;
+        /**
+         * Whether to use path-style URLs
+         */
+        pathStyle: boolean;
+        /**
+         * Storage region
+         */
+        region: string;
+        /**
+         * Security key
+         */
+        secretKey: string;
+        /**
+         * Whether to skip TLS verification
+         */
+        skipTlsVerify: boolean;
+        /**
+         * Timeout (unit: seconds)
+         */
+        timeout: number;
+        /**
+         * Concurrent requests.
+         */
+        concurrentReqs: number;
+    }
+
+    /**
+     * WebDAV related configuration
+     */
+    export interface ISyncWebDAV {
+        /**
+         * Service endpoint
+         */
+        endpoint: string;
+        /**
+         * Password
+         */
+        password: string;
+        /**
+         * Whether to skip TLS verification
+         */
+        skipTlsVerify: boolean;
+        /**
+         * Timeout (unit: seconds)
+         */
+        timeout: number;
+        /**
+         * Concurrent requests.
+         */
+        concurrentReqs: number;
+        /**
+         * Username
+         */
+        username: string;
+    }
+
+    /**
+     * Local file system related configuration
+     */
+    export interface ISyncLocal {
+        /**
+         * The full path of local directory
+         *
+         * Examples:
+         * - Windows: `"D:/path/to/repos/directory"`
+         * - Unix: `"/path/to/repos/directory"`
+         */
+        endpoint: string;
+        /**
+         * Timeout (unit: seconds)
+         */
+        timeout: number;
+        /**
+         * Concurrent requests.
+         */
+        concurrentReqs: number;
+    }
+
+    /**
+     * System related information
+     */
+    export interface ISystem {
+        /**
+         * The absolute path of the `resources` directory under the SiYuan installation directory
+         */
+        appDir: string;
+        /**
+         * Boot automatically
+         * - `0`: Do not boot automatically
+         * - `1`: Boot automatically
+         * - `2`: Boot automatically + Minimize UI
+         * 仅接受 0、1、2，越界值在配置规范化时回退 0
+         */
+        autoLaunch2: number;
+        /**
+         * The absolute path of the `conf` directory of the current workspace
+         */
+        confDir: string;
+        /**
+         * Kernel operating environment
+         * - `docker`: Docker container
+         * - `android`: Android device
+         * - `ios`: iOS device
+         * - `harmony`: HarmonyOS device
+         * - `std`: Desktop Electron environment
+         */
+        container: string;
+        /**
+         * The absolute path of the `data` directory of the current workspace
+         */
+        dataDir: string;
+        /**
+         * Whether to automatically download the installation package for the new version
+         */
+        downloadInstallPkg: boolean;
+        /**
+         * 更新通道
+         */
+        updateChannel?: string;
+        /**
+         * The absolute path of the user's home directory for the current operating system user
+         */
+        homeDir: string;
+        /**
+         * The UUID of the current session
+         */
+        id: string;
+        /**
+         * Whether the current version is a Microsoft Store version
+         */
+        isMicrosoftStore: boolean;
+        /**
+         * Kernel version number
+         */
+        kernelVersion: string;
+        /**
+         * Lock screen mode
+         * - `0`: Manual
+         * - `1`: Manual + Follow the operating system
+         * 仅接受 0、1，越界值在配置规范化时回退 0
+         */
+        lockScreenMode: number;
+        encryptedNotebookFollowSystemLock: boolean;
+        /**
+         * The name of the current device
+         */
+        name: string;
+        networkProxy: INetworkProxy;
+        /**
+         * Whether to enable network serve (whether to allow connections from other devices)
+         */
+        networkServe: boolean;
+        /**
+         * Whether to enable HTTPS for network serve (TLS encryption)
+         */
+        networkServeTLS: boolean;
+        /**
+         * The operating system name determined at compile time (obtained using the command `go tool
+         * dist list`)
+         * - `android`: Android
+         * - `darwin`: macOS
+         * - `ios`: iOS
+         * - `linux`: Linux
+         * - `windows`: Windows
+         */
+        os: string;
+        /**
+         * Operating system platform name
+         */
+        osPlatform: string;
+        /**
+         * Whether the current boot is in safe mode (disables code snippets, plugins, custom theme and icon)
+         */
+        safeMode: boolean;
+        /**
+         * 是否在独立窗口中打开设置界面，仅桌面 Electron 客户端生效，默认 false。
+         */
+        settingsWindow: boolean;
+        /**
+         * The absolute path of the workspace directory
+         */
+        workspaceDir: string;
+        /**
+         * Disabled features.
+         */
+        disabledFeatures: string[];
+    }
+
+    /**
+     * Kernel operating environment
+     * - `docker`: Docker container
+     * - `android`: Android device
+     * - `ios`: iOS device
+     * - `harmony`: HarmonyOS device
+     * - `std`: Desktop Electron environment
+     */
+    export type TSystemContainer = "docker" | "android" | "ios" | "harmony" | "std";
+
+    export type TUpdateChannel = "stable" | "beta" | "alpha";
+
+    /**
+     * SiYuan Network proxy configuration
+     */
+    export interface INetworkProxy {
+        /**
+         * Host name or host address
+         */
+        host: string;
+        /**
+         * Proxy server port number
+         */
+        port: string;
+        /**
+         * The protocol used by the proxy server
+         * - Empty String: Direct connection
+         * - `system`: Use the system proxy settings
+         * - `http`: HTTP
+         * - `https`: HTTPS
+         * - `socks5`: SOCKS5
+         */
+        scheme: string;
+    }
+
+    /**
+     * The protocol used by the proxy server
+     * - Empty String: Direct connection
+     * - `system`: Use the system proxy settings
+     * - `http`: HTTP
+     * - `https`: HTTPS
+     * - `socks5`: SOCKS5
+     */
+    export type TSystemNetworkProxyScheme = "" | "system" | "http" | "https" | "socks5";
+
+    /**
+     * The operating system name determined at compile time (obtained using the command `go tool
+     * dist list`)
+     * - `android`: Android
+     * - `darwin`: macOS
+     * - `ios`: iOS
+     * - `linux`: Linux
+     * - `windows`: Windows
+     */
+    export type TSystemOS = "android" | "darwin" | "ios" | "linux" | "windows";
+
+    /**
+     * SiYuan tag dock related configuration
+     */
+    export interface ITag {
+        /**
+         * Tag sorting scheme
+         * - `0`: Name alphabetically ascending
+         * - `1`: Name alphabetically descending
+         * - `4`: Name natural ascending
+         * - `5`: Name natural descending
+         * - `7`: Reference count ascending
+         * - `8`: Reference count descending
+         */
+        sort: number;
+    }
+
+    /**
+     * SiYuan UI layout related configuration
+     */
+    export interface IUiLayout {
+        bottom?: IUILayoutDock;
+        /**
+         * Whether to hide the sidebar
+         */
+        hideDock?: boolean;
+        layout?: TPersistedUILayoutItem;
+        left?: IUILayoutDock;
+        right?: IUILayoutDock;
+    }
+
+    /**
+     * SiYuan dock related configuration
+     */
+    export interface IUILayoutDock {
+        /**
+         * Dock area list
+         */
+        data?: Array<IUILayoutDockTab[]>;
+        /**
+         * Whether to pin the dock
+         */
+        pin?: boolean;
+    }
+
+    /**
+     * SiYuan dock tab data
+     */
+    export interface IUILayoutDockTab {
+        /**
+         * Hotkey description ID
+         */
+        hotkeyLangId?: string;
+        /**
+         * Tab icon ID
+         */
+        icon?: string;
+        /**
+         * Whether to display the tab
+         */
+        show?: boolean;
+        size?: IUILayoutDockPanelSize;
+        /**
+         * Tab title
+         */
+        title?: string;
+        /**
+         * Tab type
+         */
+        type?: TDock | string;
+    }
+
+    /**
+     * SiYuan dock tab size
+     */
+    export interface IUILayoutDockPanelSize {
+        /**
+         * Tab height (unit: px)
+         */
+        height?: number | null;
+        /**
+         * Tab width (unit: px)
+         */
+        width?: number | null;
+    }
+
+    /**
+     * SiYuan layout item
+     */
+    export type TPersistedUILayoutItem = (
+        ({instance?: "Layout"} & Partial<Pick<IUILayoutLayout, "direction" | "size" | "type" | "resize">>) |
+        ({instance: "Wnd"} & Partial<Pick<IUILayoutWnd, "resize" | "width" | "height">>) |
+        ({instance: "Tab"} & Partial<Pick<IUILayoutTab, "title" | "lang" | "icon" | "docIcon" | "pin" | "active" | "activeTime">>) |
+        ({instance: "Editor"} & Partial<Pick<IUILayoutTabEditor, "blockId" | "rootId" | "notebookId" | "scrollAttr">>) |
+        ({instance: "Asset"} & Partial<Pick<IUILayoutTabAsset, "path" | "page">>) |
+        ({instance: "Backlink"} & Partial<Pick<IUILayoutTabBacklink, "blockId" | "rootId" | "notebookId" | "type">>) |
+        ({instance: "Graph"} & Partial<Pick<IUILayoutTabGraph, "blockId" | "rootId" | "notebookId" | "type">>) |
+        ({instance: "Outline"} & Partial<Pick<IUILayoutTabOutline, "blockId" | "notebookId" | "type" | "isPreview">>) |
+        ({instance: "Search"} & Partial<Pick<IUILayoutTabSearch, "config">>) |
+        ({instance: "Custom"} & Partial<Pick<IUILayoutTabCustom, "customModelType" | "customModelData">>) |
+        {instance: "Bookmark" | "Files" | "Tag"}
+    ) & {children?: TPersistedUILayoutItem[] | TPersistedUILayoutItem};
+
+    export type TUILayoutItem = IUILayoutLayout
+        | IUILayoutWnd
+        | IUILayoutTab
+        | IUILayoutTabEditor
+        | IUILayoutTabAsset
+        | IUILayoutTabCustom
+        | IUILayoutTabBacklink
+        | IUILayoutTabBookmark
+        | IUILayoutTabFiles
+        | IUILayoutTabGraph
+        | IUILayoutTabOutline
+        | IUILayoutTabTag
+        | IUILayoutTabSearch;
+
+    /**
+     * SiYuan panel layout
+     */
+    export interface IUILayoutLayout {
+        /**
+         * Internal elements
+         */
+        children: (IUILayoutLayout | IUILayoutWnd)[];
+        /**
+         * Panel content layout direction
+         * - `tb`: Top and bottom layout
+         * - `lr`: Left and right layout
+         */
+        direction?: TUILayoutDirection;
+        /**
+         * Object name
+         */
+        instance: "Layout";
+        /**
+         * The direction in which the size can be adjusted
+         * - `tb`: Can adjust the size up and down
+         * - `lr`: Can adjust the size left and right
+         */
+        resize?: TUILayoutDirection;
+        /**
+         * Panel size
+         */
+        size?: string;
+        /**
+         * Layout type
+         * - `normal`: Normal panel
+         * - `center`: Center panel
+         * - `top`: Top panel
+         * - `bottom`: Bottom panel
+         * - `left`: Left panel
+         * - `right`: Right panel
+         */
+        type?: TUILayoutType;
+    }
+
+    /**
+     * SiYuan window layout
+     */
+    export interface IUILayoutWnd {
+        /**
+         * Internal elements
+         */
+        children: IUILayoutTab[];
+        /**
+         * Panel height
+         */
+        height?: string;
+        /**
+         * Object name
+         */
+        instance: "Wnd";
+        /**
+         * The direction in which the size can be adjusted
+         * - `tb`: Can adjust the size up and down
+         * - `lr`: Can adjust the size left and right
+         */
+        resize?: TUILayoutDirection;
+        /**
+         * Panel width
+         */
+        width?: string;
+    }
+
+
+    export interface IUILayoutTab {
+        /**
+         * Whether the tab is active
+         */
+        active?: boolean;
+        /**
+         * Tab content
+         */
+        children: (IUILayoutTabAsset | IUILayoutTabBacklink | IUILayoutTabCustom | IUILayoutTabEditor)[];
+        /**
+         * Tab icon
+         */
+        docIcon?: string;
+        /**
+         * Icon reference ID
+         */
+        icon?: string;
+        /**
+         * Object name
+         */
+        instance: "Tab";
+        /**
+         * Localization field key name
+         */
+        lang?: string;
+        /**
+         * Whether the tab is pinned
+         */
+        pin?: boolean;
+        /**
+         * Tab title
+         */
+        title?: string;
+        /**
+         * Tab recent view time
+         */
+        activeTime?: string;
+    }
+
+    /**
+     * Tab content
+     *
+     * SiYuan asset file tab
+     */
+    export interface IUILayoutTabAsset {
+        /**
+         * Object name
+         */
+        instance: "Asset";
+        /**
+         * (Asset) PDF file page number
+         */
+        page?: number;
+        /**
+         * (Asset) Asset reference path
+         */
+        path: string;
+    }
+
+
+    /**
+     * SiYuan back link tab
+     */
+    export interface IUILayoutTabBacklink {
+        /**
+         * (Backlink) Block ID
+         */
+        blockId: string;
+        /**
+         * Object name
+         */
+        instance: "Backlink";
+        /**
+         * (Backlink) Document block ID
+         */
+        rootId: string;
+        /**
+         * (Backlink) Notebook ID
+         */
+        notebookId?: string;
+        /**
+         * (Backlink) Tab type
+         * - `pin`: Pinned panel
+         * - `local`: The panel of the current document
+         */
+        type: TUILayoutTabBacklinkType;
+    }
+
+    /**
+     * (Backlink) Tab type
+     * - `pin`: Pinned panel
+     * - `local`: The panel of the current document
+     */
+    export type TUILayoutTabBacklinkType = "pin" | "local";
+
+    /**
+     * SiYuan bookmark tab
+     */
+    export interface IUILayoutTabBookmark {
+        /**
+         * Object name
+         */
+        instance: "Bookmark";
+    }
+
+    /**
+     * SiYuan custom tab
+     */
+    export interface IUILayoutTabCustom {
+        /**
+         * (Custom) Data of the custom tab
+         */
+        customModelData: any;
+        /**
+         * (Custom) Type of the custom tab
+         */
+        customModelType: string;
+        /**
+         * Object name
+         */
+        instance: "Custom";
+    }
+
+    /**
+     * SiYuan editor tab
+     */
+    export interface IUILayoutTabEditor {
+        /**
+         * (Editor) Actions to be performed after the tab is loaded
+         */
+        action: TProtyleAction;
+        /**
+         * (Editor) Block ID
+         */
+        blockId: string;
+        /**
+         * 数据库行预览块 ID
+         */
+        databaseRowId?: string;
+        databaseRow?: import("../protyle/render/av/openDatabaseRow").IDatabaseRowOpenData;
+        /**
+         * Object name
+         */
+        instance: "Editor";
+        /**
+         * (Editor) Editor mode
+         * - `wysiwyg`: WYSIWYG mode
+         * - `preview`: Export preview mode
+         */
+        mode: TEditorMode;
+        /**
+         * (Editor) Notebook ID
+         */
+        notebookId: string;
+        /**
+         * (Editor) Document block ID
+         */
+        rootId: string;
+        /**
+         * 窗口布局独立保存的阅读位置，优先于全局文档阅读位置
+         */
+        scrollAttr?: IScrollAttr;
+    }
+
+    /**
+     * SiYuan filetree tab
+     */
+    export interface IUILayoutTabFiles {
+        /**
+         * Object name
+         */
+        instance: "Files";
+    }
+
+
+    /**
+     * SiYuan graph tab
+     */
+    export interface IUILayoutTabGraph {
+        /**
+         * (Graph) Block ID
+         */
+        blockId: string;
+        /**
+         * (Graph) Notebook ID
+         */
+        notebookId?: string;
+        /**
+         * Object name
+         */
+        instance: "Graph";
+        /**
+         * (Graph) Document block ID
+         */
+        rootId: string;
+        /**
+         * (Graph) Tab type
+         * - `pin`: Pinned graph
+         * - `local`: Graph of the current editor
+         * - `global`: Global graph
+         */
+        type: TUILayoutTabGraphType;
+    }
+
+
+    /**
+     * (Graph) Tab type
+     * - `pin`: Pinned graph
+     * - `local`: Graph of the current editor
+     * - `global`: Global graph
+     */
+    export type TUILayoutTabGraphType = "pin" | "local" | "global";
+
+    /**
+     * SiYuan outline tab
+     */
+    export interface IUILayoutTabOutline {
+        /**
+         * (Outline) Block ID
+         */
+        blockId: string;
+        /**
+         * (Outline) Notebook ID
+         */
+        notebookId?: string;
+        /**
+         * Object name
+         */
+        instance: "Outline";
+        /**
+         * (Outline) Whether the associated editor is in preview mode
+         */
+        isPreview: boolean;
+        /**
+         * (Outline) Tab type
+         * - `pin`: Pinned outline panel
+         * - `local`: The outline panel of the current editor
+         */
+        type: TUILayoutTabOutlineType;
+    }
+
+
+    /**
+     * (Outline) Tab type
+     * - `pin`: Pinned outline panel
+     * - `local`: The outline panel of the current editor
+     */
+    export type TUILayoutTabOutlineType = "pin" | "local";
+
+    /**
+     * SiYuan tag tab
+     */
+    export interface IUILayoutTabTag {
+        /**
+         * Object name
+         */
+        instance: "Tag";
+    }
+
+    /**
+     * SiYuan search tab
+     */
+    export interface IUILayoutTabSearch {
+        config: IUILayoutTabSearchConfig;
+        /**
+         * Object name
+         */
+        instance: "Search";
+    }
+
+    /**
+     * SiYuan search tab configuration
+     */
+    export interface IUILayoutTabSearchConfig {
+        /**
+         * Whether the search contains encrypted notebook data that must not be persisted
+         */
+        sensitive?: boolean;
+        /**
+         * 搜索传入的查询内容
+         */
+        query?: string;
+        /**
+         * Grouping strategy
+         * - `0`: No grouping
+         * - `1`: Group by document
+         */
+        group?: number;
+        hasReplace?: boolean;
+        /**
+         * Readable path list
+         */
+        hPath?: string;
+        /**
+         * Search in the specified paths
+         */
+        idPath?: string[];
+        /**
+         * Search content
+         */
+        k?: string;
+        /**
+         * Search scheme
+         * - `0`: Keyword (default)
+         * - `1`: Query syntax
+         * - `2`: SQL
+         * - `3`: Regular expression
+         * - `4`: Fuzzy search
+         * @default 0
+         */
+        method?: number;
+        /**
+         * Custom name of the query condition group
+         */
+        name?: string;
+        /**
+         * Current page number
+         */
+        page?: number;
+        /**
+         * Replace content
+         */
+        r?: string;
+        /**
+         * Whether to clear the search box after removing the currently used query condition group
+         * 移除后需记录搜索内容 https://github.com/siyuan-note/siyuan/issues/7745
+         */
+        removed?: boolean;
+        replaceTypes?: IUILayoutTabSearchConfigReplaceTypes;
+        /**
+         * Search result sorting scheme
+         * - `0`: Block type (default)
+         * - `1`: Ascending by creation time
+         * - `2`: Descending by creation time
+         * - `3`: Ascending by update time
+         * - `4`: Descending by update time
+         * - `5`: By content order (only valid when grouping by document)
+         * - `6`: Ascending by relevance
+         * - `7`: Descending by relevance
+         * @default 0
+         */
+        sort?: number;
+        types?: IUILayoutTabSearchConfigTypes;
+        subTypes?: IUILayoutTabSearchConfigSubTypes;
+    }
+
+    /**
+     * 子类型按父类型独立筛选，组内全否表示不限制子类型。
+     */
+    export interface IUILayoutTabSearchConfigSubTypes {
+        heading: {h1: boolean, h2: boolean, h3: boolean, h4: boolean, h5: boolean, h6: boolean};
+        list: {o: boolean, u: boolean, t: boolean};
+        listItem: {o: boolean, u: boolean, t: boolean};
+    }
+
+    /**
+     * Replace type filtering
+     */
+    export interface IUILayoutTabSearchConfigReplaceTypes {
+        /**
+         * Replace hyperlinks
+         * @default false
+         */
+        aHref?: boolean;
+        /**
+         * Replace hyperlink anchor text
+         * @default true
+         */
+        aText?: boolean;
+        /**
+         * Replace hyperlink title
+         * @default true
+         */
+        aTitle?: boolean;
+        /**
+         * Replace inline code
+         * @default false
+         */
+        code?: boolean;
+        /**
+         * Replace code blocks
+         * @default false
+         */
+        codeBlock?: boolean;
+        /**
+         * Replace document title
+         * @default true
+         */
+        docTitle?: boolean;
+        /**
+         * Replace italic elements
+         * @default true
+         */
+        em?: boolean;
+        /**
+         * Replace HTML blocks
+         * @default false
+         */
+        htmlBlock?: boolean;
+        /**
+         * Replace image addresses
+         * @default false
+         */
+        imgSrc?: boolean;
+        /**
+         * Replace image anchor text
+         * @default true
+         */
+        imgText?: boolean;
+        /**
+         * Replace image titles
+         * @default true
+         */
+        imgTitle?: boolean;
+        /**
+         * Replace inline formulas
+         * @default false
+         */
+        inlineMath?: boolean;
+        /**
+         * Replace inline memos
+         * @default true
+         */
+        inlineMemo?: boolean;
+        /**
+         * Replace block refs
+         * @default false
+         */
+        blockRef?: boolean;
+        /**
+         * Replace file annotation refs
+         */
+        fileAnnotationRef?: boolean;
+        /**
+         * Replace kdb elements
+         * @default true
+         */
+        kbd?: boolean;
+        /**
+         * Replace mark elements
+         * @default true
+         */
+        mark?: boolean;
+        /**
+         * Replace formula blocks
+         * @default false
+         */
+        mathBlock?: boolean;
+        /**
+         * Replace delete elements
+         * @default true
+         */
+        s?: boolean;
+        /**
+         * Replace bold elements
+         * @default true
+         */
+        strong?: boolean;
+        /**
+         * Replace subscript elements
+         * @default true
+         */
+        sub?: boolean;
+        /**
+         * Replace superscript elements
+         * @default true
+         */
+        sup?: boolean;
+        /**
+         * Replace tag elements
+         * @default true
+         */
+        tag?: boolean;
+        /**
+         * Replace rich text elements
+         * @default true
+         */
+        text?: boolean;
+        /**
+         * Replace underline elements
+         * @default true
+         */
+        u?: boolean;
+    }
+
+    /**
+     * Search type filtering
+     */
+    export interface IUILayoutTabSearchConfigTypes {
+        /**
+         * Search results contain audio blocks
+         * @default false
+         */
+        audioBlock: boolean;
+        /**
+         * Search results contain blockquote blocks
+         * @default false
+         */
+        blockquote: boolean;
+        /**
+         * Search results contain callout blocks
+         * @default false
+         */
+        callout: boolean;
+        tabs?: boolean;
+        tabItem?: boolean;
+        /** 思维导图搜索；旧配置继承全局设置，初始默认开启 */
+        mindmap?: boolean;
+        /** 思维导图项搜索；旧配置继承全局设置，初始默认关闭 */
+        mindmapItem?: boolean;
+        customBlock?: boolean;
+        /**
+         * Search results contain code blocks
+         * @default false
+         */
+        codeBlock: boolean;
+        /**
+         * Search results contain database blocks
+         * @default false
+         */
+        databaseBlock: boolean;
+        /**
+         * Search results contain document blocks
+         * @default false
+         */
+        document: boolean;
+        /**
+         * Search results contain embed blocks
+         * @default false
+         */
+        embedBlock: boolean;
+        /**
+         * Search results contain heading blocks
+         * @default false
+         */
+        heading: boolean;
+        /**
+         * Search results contain html blocks
+         * @default false
+         */
+        htmlBlock: boolean;
+        /**
+         * Search results contain iframe blocks
+         * @default false
+         */
+        iframeBlock: boolean;
+        /**
+         * Search results contain list blocks
+         * @default false
+         */
+        list: boolean;
+        /**
+         * Search results contain list item blocks
+         * @default false
+         */
+        listItem: boolean;
+        /**
+         * Search results contain math blocks
+         * @default false
+         */
+        mathBlock: boolean;
+        /**
+         * Search results contain paragraph blocks
+         * @default false
+         */
+        paragraph: boolean;
+        /**
+         * Search results contain super blocks
+         * @default false
+         */
+        superBlock: boolean;
+        /**
+         * Search results contain table blocks
+         * @default false
+         */
+        table: boolean;
+        /**
+         * Search results contain video blocks
+         * @default false
+         */
+        videoBlock: boolean;
+        /**
+         * Search results contain widget blocks
+         * @default false
+         */
+        widgetBlock: boolean;
+    }
+
+
+    /**
+     * Panel content layout direction
+     * - `tb`: Top and bottom layout
+     * - `lr`: Left and right layout
+     *
+     * The direction in which the size can be adjusted
+     * - `tb`: Can adjust the size up and down
+     * - `lr`: Can adjust the size left and right
+     */
+    export type TUILayoutDirection = "tb" | "lr";
+
+    /**
+     * Layout type
+     * - `normal`: Normal panel
+     * - `center`: Center panel
+     * - `top`: Top panel
+     * - `bottom`: Bottom panel
+     * - `left`: Left panel
+     * - `right`: Right panel
+     */
+    export type TUILayoutType = "normal" | "center" | "top" | "bottom" | "left" | "right";
+
+}

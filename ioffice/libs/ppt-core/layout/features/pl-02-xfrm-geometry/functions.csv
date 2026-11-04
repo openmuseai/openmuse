@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_shape_absolute_rect,单 shape 绝对 EMU 框,KmoShowShape（Transform2D off/ext + rotation）,calcRelativeRect 语义 RectF,pl-01;pp-02（模型）;pp-10（xfrm 或 fixture）,02;pl-06;pr-02;pp-13:03,libs/ppt-core,pass
+2,02_function_group_child_rect,group 子级坐标映射,group + rcGroup + rcChild + childRotation（度）,calcChildRelativeRect 语义 rcChild（组局部渲染尺寸空间）,01;pp-02,01（递归）;pl-06;pr-02;pp-13:03,libs/ppt-core,pass

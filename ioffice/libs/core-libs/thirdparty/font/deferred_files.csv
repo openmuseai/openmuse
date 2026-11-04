@@ -1,0 +1,5 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/thirdparty/font/src/cn/wps/font/FontHost.java,cn/wps/font,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/font/src/cn/wps/font/emoji/EmojiServiceImpl.java,cn/wps/font/emoji,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/font/src/cn/wps/font/impl/AndroidTypeface.java,cn/wps/font/impl,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/font/src/cn/wps/font/impl/FontFamilyDealyAdapter.java,cn/wps/font/impl,too many dependencies,2026-05-22

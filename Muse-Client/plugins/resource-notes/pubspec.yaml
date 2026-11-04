@@ -1,0 +1,18 @@
+name: openmuse_resource_notes
+description: Cross-platform installed Notes resource handler and creator contributions.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+  openmuse_i18n:
+    path: ../../packages/openmuse_i18n
+  url_launcher: ^6.3.3
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

@@ -1,0 +1,6 @@
+# This directory should be owned by experts in bazel,
+# in addition to the regular GN owners.
+colefaust@google.com
+msta@google.com
+philwo@google.com
+richardwa@google.com

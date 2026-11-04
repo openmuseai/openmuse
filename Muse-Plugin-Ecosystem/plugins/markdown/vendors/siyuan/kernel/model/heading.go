@@ -1,0 +1,500 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"errors"
+	"path"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/88250/gulu"
+	"github.com/88250/lute/ast"
+	"github.com/88250/lute/parse"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/cache"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+// GetHeadingFoldTransaction 生成直接子标题或同级标题的批量折叠事务。
+func GetHeadingFoldTransaction(id, scope string) (transaction *Transaction, err error) {
+	tree, err := LoadTreeByBlockID(id)
+	if err != nil {
+		return
+	}
+
+	heading := treenode.GetNodeInTree(tree, id)
+	transaction = &Transaction{}
+	if nil == heading || ast.NodeHeading != heading.Type {
+		return
+	}
+
+	var headings []*ast.Node
+	switch scope {
+	case "children":
+		if treenode.IsSelfFolded(heading) {
+			headings = []*ast.Node{heading}
+		} else {
+			headings = treenode.HeadingDirectChildren(heading)
+		}
+	case "siblings":
+		headings = treenode.HeadingSiblings(heading)
+	default:
+		err = errors.New("invalid heading fold scope")
+		return
+	}
+	transaction = buildHeadingFoldTransaction(headings)
+	return
+}
+
+func buildHeadingFoldTransaction(headings []*ast.Node) (transaction *Transaction) {
+	transaction = &Transaction{}
+	foldAll := false
+	for _, heading := range headings {
+		if !treenode.IsSelfFolded(heading) {
+			foldAll = true
+			break
+		}
+	}
+
+	for i := len(headings) - 1; 0 <= i; i-- {
+		heading := headings[i]
+		if treenode.IsSelfFolded(heading) == foldAll {
+			continue
+		}
+
+		action, undoAction := "unfoldHeading", "foldHeading"
+		if foldAll {
+			action, undoAction = undoAction, action
+		}
+		transaction.DoOperations = append(transaction.DoOperations, &Operation{Action: action, ID: heading.ID})
+		transaction.UndoOperations = append(transaction.UndoOperations, &Operation{Action: undoAction, ID: heading.ID})
+	}
+	return
+}
+
+func (tx *Transaction) doFoldHeading(operation *Operation) (ret *TxErr) {
+	headingID := operation.ID
+	tree, err := tx.loadTree(headingID)
+	if err != nil {
+		return &TxErr{code: TxErrCodeBlockNotFound, id: headingID}
+	}
+
+	childrenIDs := []string{} // 这里不能用 nil，否则折叠下方没内容的标题时会内核中断 https://github.com/siyuan-note/siyuan/issues/3643
+	heading := treenode.GetNodeInTree(tree, headingID)
+	if nil == heading {
+		return &TxErr{code: TxErrCodeBlockNotFound, id: headingID}
+	}
+
+	children := treenode.HeadingChildren(heading)
+	for _, child := range children {
+		childrenIDs = append(childrenIDs, child.ID)
+	}
+	treenode.SetSelfFolded(heading, true)
+
+	tx.writeTree(tree)
+	IncSync()
+	cache.PutBlockIALInBox(headingID, tree.Box, parse.IAL2Map(heading.KramdownIAL))
+	sql.UpsertTreeQueue(tree)
+	operation.RetData = childrenIDs
+	return
+}
+
+func (tx *Transaction) doUnfoldHeading(operation *Operation) (ret *TxErr) {
+	headingID := operation.ID
+
+	tree, err := tx.loadTree(headingID)
+	if err != nil {
+		return &TxErr{code: TxErrCodeBlockNotFound, id: headingID}
+	}
+
+	heading := treenode.GetNodeInTree(tree, headingID)
+	if nil == heading {
+		return &TxErr{code: TxErrCodeBlockNotFound, id: headingID}
+	}
+
+	children := treenode.HeadingChildren(heading)
+	legacyNodes := map[string]*ast.Node{}
+	for _, child := range children {
+		ast.Walk(child, func(n *ast.Node, entering bool) ast.WalkStatus {
+			if !entering || !n.IsBlock() {
+				return ast.WalkContinue
+			}
+
+			if treenode.ClearLegacyHeadingFold(n) {
+				legacyNodes[n.ID] = n
+			}
+			return ast.WalkContinue
+		})
+	}
+	if "1" == heading.IALAttr("heading-fold") {
+		legacyNodes[heading.ID] = heading
+	}
+	treenode.SetSelfFolded(heading, false)
+
+	tx.writeTree(tree)
+	IncSync()
+
+	cache.PutBlockIALInBox(headingID, tree.Box, parse.IAL2Map(heading.KramdownIAL))
+	for _, node := range legacyNodes {
+		cache.PutBlockIALInBox(node.ID, tree.Box, parse.IAL2Map(node.KramdownIAL))
+	}
+	sql.UpsertTreeQueue(tree)
+
+	// 展开折叠的标题后显示块引用计数 Display reference counts after unfolding headings https://github.com/siyuan-note/siyuan/issues/13618
+	fillBlockRefCount(children, tree.Box)
+
+	operation.RetData = renderVisibleBlockDOMByNodes(children, NewLute())
+	if 0 < len(legacyNodes) {
+		go func() {
+			tx.WaitForCommit()
+			ReloadProtyle(tree.ID)
+		}()
+	}
+	return
+}
+
+func Doc2Heading(srcID, targetID string, after bool) (srcTreeBox, srcTreePath string, err error) {
+	if !ast.IsNodeIDPattern(srcID) || !ast.IsNodeIDPattern(targetID) {
+		return
+	}
+
+	FlushTxQueue()
+	flushLock.Lock()
+	defer flushLock.Unlock()
+
+	srcTree, sourceBefore, loadErr := loadBatchMutationTree(srcID)
+	if loadErr != nil {
+		return "", "", loadErr
+	}
+	if nil == srcTree {
+		err = ErrBlockNotFound
+		return
+	}
+	if IsBoxDoc(srcTree.Box, srcTree.ID) {
+		err = errors.New(Conf.Language(341))
+		return
+	}
+
+	subDir := filepath.Join(util.DataDir, srcTree.Box, strings.TrimSuffix(srcTree.Path, ".sy"))
+	if gulu.File.IsDir(subDir) {
+		if !util.IsEmptyDir(subDir) {
+			err = errors.New(Conf.Language(20))
+			return
+		}
+
+		if removeErr := util.RemoveEmptyDir(subDir); nil != removeErr { // 移除空文件夹不会有副作用
+			logging.LogWarnf("remove empty dir [%s] failed: %s", subDir, removeErr)
+		}
+	}
+
+	if nil == treenode.GetBlockTree(targetID) {
+		// 目标块不存在时忽略处理
+		return
+	}
+
+	targetTree, targetBefore, loadErr := loadBatchMutationTree(targetID)
+	if loadErr != nil {
+		return "", "", loadErr
+	}
+	if nil == targetTree {
+		// 目标块不存在时忽略处理
+		return
+	}
+
+	// 禁止跨加密边界：Doc2Heading 会合并 srcTree 和 targetTree 的内容，
+	// 不同加密笔记本各有独立 DEK，跨边界合并会导致密文用错 DEK 损坏数据
+	if !IsSameCryptoBoundary(srcTree.Box, targetTree.Box) {
+		err = errors.New(Conf.Language(391))
+		return
+	}
+
+	pivot := treenode.GetNodeInTree(targetTree, targetID)
+	if nil == pivot {
+		err = ErrBlockNotFound
+		return
+	}
+
+	// 生成文档历史 https://github.com/siyuan-note/siyuan/issues/14359
+	generateOpTypeHistory(srcTree, HistoryOpUpdate)
+
+	// 移动前先删除引用 https://github.com/siyuan-note/siyuan/issues/7819
+	sql.DeleteRefsTreeQueue(srcTree)
+	sql.DeleteRefsTreeQueue(targetTree)
+
+	if ast.NodeListItem == pivot.Type {
+		pivot = pivot.LastChild
+	}
+
+	pivotLevel := treenode.HeadingLevel(pivot)
+	deltaLevel := pivotLevel - treenode.TopHeadingLevel(srcTree) + 1
+	headingLevel := pivotLevel
+	if ast.NodeHeading == pivot.Type { // 平级插入
+		children := treenode.HeadingChildren(pivot)
+		if after {
+			if length := len(children); 0 < length {
+				pivot = children[length-1]
+			}
+		}
+	} else { // 子节点插入
+		headingLevel++
+		deltaLevel++
+	}
+	if 6 < headingLevel {
+		headingLevel = 6
+	}
+
+	srcTree.Root.RemoveIALAttr("scroll") // Remove `scroll` attribute when converting the document to a heading https://github.com/siyuan-note/siyuan/issues/9297
+	srcTree.Root.RemoveIALAttr("type")
+	tagIAL := srcTree.Root.IALAttr("tags")
+	tags := strings.Split(tagIAL, ",")
+	srcTree.Root.RemoveIALAttr("tags")
+	heading := &ast.Node{ID: srcTree.Root.ID, Type: ast.NodeHeading, HeadingLevel: headingLevel, KramdownIAL: srcTree.Root.KramdownIAL}
+	heading.SetIALAttr("updated", util.CurrentTimeSecondsStr())
+	heading.AppendChild(&ast.Node{Type: ast.NodeText, Tokens: []byte(treenode.ReadDocumentTitle(srcTree.Root).Text)})
+	heading.RemoveIALAttr("title")
+	heading.Box, heading.Path = targetTree.Box, targetTree.Path
+	if "" != tagIAL && 0 < len(tags) {
+		// 带标签的文档块转换为标题块时将标签移动到标题块下方 https://github.com/siyuan-note/siyuan/issues/6550
+
+		tagPara := treenode.NewParagraph("")
+		for i, tag := range tags {
+			if "" == tag {
+				continue
+			}
+
+			tagPara.AppendChild(&ast.Node{Type: ast.NodeTextMark, TextMarkType: "tag", TextMarkTextContent: tag})
+			if i < len(tags)-1 {
+				tagPara.AppendChild(&ast.Node{Type: ast.NodeText, Tokens: []byte(" ")})
+			}
+		}
+		if nil != tagPara.FirstChild {
+			srcTree.Root.PrependChild(tagPara)
+		}
+	}
+
+	var nodes []*ast.Node
+	if after {
+		for c := srcTree.Root.LastChild; nil != c; c = c.Previous {
+			nodes = append(nodes, c)
+		}
+	} else {
+		for c := srcTree.Root.FirstChild; nil != c; c = c.Next {
+			nodes = append(nodes, c)
+		}
+	}
+
+	if !after {
+		pivot.InsertBefore(heading)
+	}
+
+	for _, n := range nodes {
+		if ast.NodeHeading == n.Type {
+			n.HeadingLevel = min(6, n.HeadingLevel+deltaLevel)
+		}
+		n.Box = targetTree.Box
+		n.Path = targetTree.Path
+		if after {
+			pivot.InsertAfter(n)
+		} else {
+			pivot.InsertBefore(n)
+		}
+	}
+
+	if after {
+		pivot.InsertAfter(heading)
+	}
+
+	targetTree.Root.SetIALAttr("updated", util.CurrentTimeSecondsStr())
+	if err = commitDocumentConversion(srcTree, targetTree, sourceBefore, targetBefore, true, indexWriteTreeUpsertQueue); err != nil {
+		return "", "", err
+	}
+	box := Conf.Box(srcTree.Box)
+	box.removeSort([]string{srcTree.ID})
+	evt := util.NewCmdResult("removeDoc", 0, util.PushModeBroadcast)
+	evt.Data = map[string]any{
+		"ids": []string{srcTree.ID},
+	}
+	util.PushEvent(evt)
+
+	srcTreeBox, srcTreePath = srcTree.Box, srcTree.Path // 返回旧的文档块位置，前端后续会删除旧的文档块
+	IncSync()
+	go func() {
+		time.Sleep(util.SQLFlushInterval)
+		RefreshBacklink(srcTree.ID)
+		RefreshBacklink(targetTree.ID)
+		ResetVirtualBlockRefCache()
+	}()
+	return
+}
+
+func Heading2Doc(srcHeadingID, targetBoxID, targetPath, previousPath string, toTop bool) (srcRootBlockID, newTargetPath string, err error) {
+	targetPath = normalizeBoxDocTarget(targetBoxID, targetPath)
+	FlushTxQueue()
+	flushLock.Lock()
+	defer flushLock.Unlock()
+
+	srcTree, sourceBefore, loadErr := loadBatchMutationTree(srcHeadingID)
+	if loadErr != nil {
+		return "", "", loadErr
+	}
+	if nil == srcTree {
+		err = ErrBlockNotFound
+		return
+	}
+	srcRootBlockID = srcTree.Root.ID
+
+	headingBlock, err := getBlock(srcHeadingID, srcTree)
+	if err != nil {
+		return
+	}
+	if nil == headingBlock {
+		err = ErrBlockNotFound
+		return
+	}
+	headingNode := treenode.GetNodeInTree(srcTree, srcHeadingID)
+	if nil == headingNode {
+		err = ErrBlockNotFound
+		return
+	}
+
+	box := Conf.Box(targetBoxID)
+	headingText := getNodeRefText0(headingNode, Conf.Editor.Load().BlockRefDynamicAnchorTextMaxLen, true)
+	headingText = normalizeDocumentTitle(headingText)
+
+	moveToRoot := "/" == targetPath
+	toHP := "/" + headingText
+	toFolder := "/"
+	if "" != previousPath {
+		previousDoc := treenode.GetBlockTreeRootByPath(targetBoxID, previousPath)
+		if nil == previousDoc {
+			err = ErrBlockNotFound
+			return
+		}
+		parentPath := path.Dir(previousPath)
+		if "/" != parentPath {
+			parentPath = strings.TrimSuffix(parentPath, "/") + ".sy"
+			parentDoc := treenode.GetBlockTreeRootByPath(targetBoxID, parentPath)
+			if nil == parentDoc {
+				err = ErrBlockNotFound
+				return
+			}
+			toHP = parentDoc.HPath + "/" + headingText
+			toFolder = path.Join(path.Dir(parentPath), parentDoc.ID)
+		}
+	} else {
+		if !moveToRoot {
+			parentDoc := treenode.GetBlockTreeRootByPath(targetBoxID, targetPath)
+			if nil == parentDoc {
+				err = ErrBlockNotFound
+				return
+			}
+			toHP = parentDoc.HPath + "/" + headingText
+			toFolder = path.Join(path.Dir(targetPath), parentDoc.ID)
+		}
+	}
+
+	newTargetPath = path.Join(toFolder, srcHeadingID+".sy")
+	if !box.Exist(toFolder) {
+		if err = box.MkdirAll(toFolder); err != nil {
+			return
+		}
+	}
+
+	// 标题转换为文档时清理旧版标题折叠派生状态，并保留下方块各自的折叠状态。
+	children := treenode.HeadingChildren(headingNode)
+	for _, child := range children {
+		ast.Walk(child, func(n *ast.Node, entering bool) ast.WalkStatus {
+			if !entering || !n.IsBlock() {
+				return ast.WalkContinue
+			}
+
+			treenode.ClearLegacyHeadingFold(n)
+			return ast.WalkContinue
+		})
+	}
+	treenode.SetSelfFolded(headingNode, false)
+
+	luteEngine := util.NewLute()
+	newTree := &parse.Tree{Root: &ast.Node{Type: ast.NodeDocument, ID: srcHeadingID}, Context: &parse.Context{ParseOption: luteEngine.ParseOptions}}
+	if paragraph := headingDocParagraph(headingNode, headingText); nil != paragraph {
+		newTree.Root.AppendChild(paragraph)
+	}
+	for _, c := range children {
+		newTree.Root.AppendChild(c)
+	}
+	newTree.ID = srcHeadingID
+	newTree.Path = newTargetPath
+	newTree.HPath = toHP
+	headingNode.SetIALAttr("type", "doc")
+	headingNode.SetIALAttr("id", srcHeadingID)
+	headingNode.SetIALAttr("title", headingText)
+	headingNode.RemoveIALAttr(DocHiddenAttr)
+	newTree.Root.KramdownIAL = headingNode.KramdownIAL
+
+	topLevel := treenode.TopHeadingLevel(newTree)
+	for c := newTree.Root.FirstChild; nil != c; c = c.Next {
+		if ast.NodeHeading == c.Type {
+			c.HeadingLevel = min(6, c.HeadingLevel-topLevel+2)
+		}
+	}
+
+	headingNode.Unlink()
+	srcTree.Root.SetIALAttr("updated", util.CurrentTimeSecondsStr())
+	if nil == srcTree.Root.FirstChild {
+		srcTree.Root.AppendChild(treenode.NewParagraph(""))
+	}
+	newTree.Box, newTree.Path = targetBoxID, newTargetPath
+	newTree.Root.SetIALAttr("updated", util.CurrentTimeSecondsStr())
+	newTree.Root.Spec = treenode.BaseSpec
+	if err = commitDocumentConversion(srcTree, newTree, sourceBefore, nil, false, indexWriteTreeUpsertQueue); err != nil {
+		return "", "", err
+	}
+	if "" != previousPath {
+		box.addSort(previousPath, newTree.ID)
+	} else if toTop {
+		box.addMinSort(path.Dir(newTargetPath), newTree.ID)
+	} else {
+		box.setSortByConf(path.Dir(newTargetPath), newTree.ID)
+	}
+	IncSync()
+	go func() {
+		RefreshBacklink(srcTree.ID)
+		RefreshBacklink(newTree.ID)
+		ResetVirtualBlockRefCache()
+	}()
+	return
+}
+
+// headingDocParagraph 在文档名无法完整表达标题内容时，将原标题的行内节点移入新段落。
+func headingDocParagraph(heading *ast.Node, title string) *ast.Node {
+	var text strings.Builder
+	preserve := false
+	for c := heading.FirstChild; nil != c; c = c.Next {
+		if ast.NodeHeadingC8hMarker == c.Type || ast.NodeHeadingID == c.Type {
+			continue
+		}
+		if ast.NodeText != c.Type {
+			preserve = true
+		}
+		text.Write(c.Tokens)
+	}
+	if !preserve && util.EscapeHTML(util.UnescapeHTML(text.String())) == title {
+		return nil
+	}
+
+	paragraph := treenode.NewParagraph("")
+	for c := heading.FirstChild; nil != c; {
+		next := c.Next
+		if ast.NodeHeadingC8hMarker != c.Type && ast.NodeHeadingID != c.Type {
+			paragraph.AppendChild(c)
+		}
+		c = next
+	}
+	return paragraph
+}

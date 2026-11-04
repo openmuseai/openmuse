@@ -1,0 +1,2172 @@
+#![allow(dead_code, non_snake_case, unused_variables, unused_imports, unreachable_code, unused_mut)]
+
+// Java: import cn.wps.kso.kproto.KoAr
+use crate::kso::kproto::KoAr::KoAr;
+// Java: import cn.wps.kso.kproto.KoBin
+use crate::kso::kproto::KoBin::{KoBin as KoBinTrait, Decode, Encode, Factory, Null};
+// Java: import cn.wps.kso.kproto.KoClosable
+use crate::kso::kproto::KoClosable::KoClosable;
+// Java: import cn.wps.kso.kproto.KoZone
+use crate::kso::kproto::KoZone::KoZone;
+// Java: import cn.wps.kso.kproto.internal.KpBinBox
+use crate::kso::kproto::internal::KpBinBox::KpBinBox;
+// Java: import cn.wps.kso.kproto.internal.KpMap
+use crate::kso::kproto::internal::KpMap::KpMap;
+use super::Animate::Animate;
+use super::AnimateColorBehavior::AnimateColorBehavior;
+use super::AnimateEffect::AnimateEffect;
+use super::AnimateMotion::AnimateMotion;
+use super::AnimateRotation::AnimateRotation;
+use super::AnimateScale::AnimateScale;
+use super::Audio::Audio;
+use super::Command::Command;
+use super::CommonTimeNode::CommonTimeNode;
+use super::SequenceTimeNode::SequenceTimeNode;
+use super::SetTimeNodeBehavior::SetTimeNodeBehavior;
+use super::Video::Video;
+
+// Java: public class TimeNode implements KoAr, KoClosable
+pub struct TimeNode {
+    // Java field: KoZone zone
+    pub(crate) zone: &'static KoZone,
+    // Java field: Animate animate
+    pub(crate) animate: Option<Box<Animate>>,
+    // Java field: AnimateColorBehavior animateColorBehavior
+    pub(crate) animateColorBehavior: Option<Box<AnimateColorBehavior>>,
+    // Java field: AnimateEffect animateEffect
+    pub(crate) animateEffect: Option<Box<AnimateEffect>>,
+    // Java field: AnimateMotion animateMotion
+    pub(crate) animateMotion: Option<Box<AnimateMotion>>,
+    // Java field: AnimateRotation animateRotation
+    pub(crate) animateRotation: Option<Box<AnimateRotation>>,
+    // Java field: AnimateScale animateScale
+    pub(crate) animateScale: Option<Box<AnimateScale>>,
+    // Java field: Audio audio
+    pub(crate) audio: Option<Box<Audio>>,
+    // Java field: Command command
+    pub(crate) command: Option<Box<Command>>,
+    // Java field: CommonTimeNode exclusive
+    pub(crate) exclusive: Option<Box<CommonTimeNode>>,
+    // Java field: CommonTimeNode parallelTimeNode
+    pub(crate) parallelTimeNode: Option<Box<CommonTimeNode>>,
+    // Java field: SequenceTimeNode sequenceTimeNode
+    pub(crate) sequenceTimeNode: Option<Box<SequenceTimeNode>>,
+    // Java field: SetTimeNodeBehavior setTimeNodeBehavior
+    pub(crate) setTimeNodeBehavior: Option<Box<SetTimeNodeBehavior>>,
+    // Java field: Video video
+    pub(crate) video: Option<Box<Video>>,
+    // Java field: KpBinBox box
+    pub(crate) bin_box: KpBinBox,
+    // Java field: KpMap map
+    pub(crate) map: KpMap, // HashMap-equivalent kproto map type
+    // Java field: TimeNode parent
+    pub(crate) parent: Option<Box<TimeNode>>,
+}
+
+// Java: public class TimeNode implements KoAr, KoClosable
+impl TimeNode {
+    // Java: static protected static <Value1 extends TimeNode> Value1 initialize(Class<Value1> clazz, KoBin bin)
+    pub fn initialize(bin: &dyn KoBinTrait) -> Self {
+      // Java: KoZone zone = KoZone.enter();
+      let zone = KoZone::enter();
+      // Java: Value1 inst = (Value1)(zone.allocate(clazz));
+      let mut inst = TimeNode::new(zone);
+      // Java: inst.zone = zone;
+      // LLM Rust No Need: zone already set in new() constructor
+      // Java: inst.load(bin);
+      inst.load_bin(bin);
+      // Java: return inst;
+      inst
+    }
+
+    // Java: static TimeNode create()
+    pub fn create() -> Self {
+      // Java: return initialize(TimeNode.class, KoBin.Null.empty());
+      Self::initialize(Null::empty().as_ref())
+    }
+
+    // Java: static TimeNode open(KoBin bin)
+    pub fn open(bin: &dyn KoBinTrait) -> Self {
+      // Java: return initialize(TimeNode.class, bin);
+      Self::initialize(bin)
+    }
+
+    // Java: TimeNode()
+    pub fn new(zone: &'static KoZone) -> Self {
+      let mut inst = Self { zone, animate: None, animateColorBehavior: None, animateEffect: None, animateMotion: None, animateRotation: None, animateScale: None, audio: None, command: None, exclusive: None, parallelTimeNode: None, sequenceTimeNode: None, setTimeNodeBehavior: None, video: None, bin_box: KpBinBox::new(), map: KpMap::new(), parent: None };
+      // Java: this.box = new KpBinBox();
+      // LLM Rust No Need: bin_box already initialized in struct literal above
+      // Java: this.map = new KpMap();
+      // LLM Rust No Need: map already initialized in struct literal above
+      inst
+    }
+
+    // Java: TimeNode(KoBin bin)
+    pub fn new_from_bin(bin: &dyn KoBinTrait, zone: &'static KoZone) -> Self {
+      let mut inst = Self { zone, animate: None, animateColorBehavior: None, animateEffect: None, animateMotion: None, animateRotation: None, animateScale: None, audio: None, command: None, exclusive: None, parallelTimeNode: None, sequenceTimeNode: None, setTimeNodeBehavior: None, video: None, bin_box: KpBinBox::KpBinBox_from(Some(bin)), map: KpMap::KpMap_from(bin), parent: None };
+      // Java: this.box = new KpBinBox(bin);
+      // LLM Rust No Need: bin_box already initialized in struct literal above
+      // Java: this.map = new KpMap(bin);
+      // LLM Rust No Need: map already initialized in struct literal above
+      inst
+    }
+    pub fn TimeNode_from(bin: &dyn KoBinTrait) -> Self { Self::new_from_bin(bin, KoZone::defaultZone()) }
+
+    // Java: void loadBin(KoBin bin, KoZone zone)
+    pub fn loadBin(&mut self, bin: &dyn KoBinTrait, zone: &'static KoZone) {
+      // Java: this.cleanCache();
+      self.cleanCache();
+      // Java: this.cleanFollow();
+      self.cleanFollow();
+      // Java: this.box.set(bin);
+      self.bin_box.set(Some(bin));
+      // Java: this.map.load(this.box.get());
+      self.map.load(self.bin_box.get().as_ref());
+    }
+
+    // Java: void load(KoBin bin)
+    pub fn load_bin(&mut self, bin: &dyn KoBinTrait) {
+      // Java: this.loadBin(bin, this.zone);
+      let zone = self.zone;
+      self.loadBin(bin, zone);
+    }
+
+    // Java: void load(TimeNode value)
+    pub fn load_value(&mut self, value: Option<&TimeNode>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.loadBin(value.lastBin(this.zone), this.zone);
+         let bin = value.lastBin(self.zone);
+         let zone = self.zone;
+         self.loadBin(bin.as_ref(), zone);
+      }
+    }
+
+    // Java: KoBin saveBin(KoZone zone)
+    pub fn saveBin(&mut self, zone: &'static KoZone) -> Box<dyn KoBinTrait> {
+      // Java: if (this.animate != null && this.animate.dirty())
+        if self.animate.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(1, this.animate.saveBin(zone));
+         let bin = self.animate.as_mut().unwrap().saveBin(zone);
+         self.map.put(1, bin);
+      }
+      // Java: if (this.animateColorBehavior != null && this.animateColorBehavior.dirty())
+        if self.animateColorBehavior.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(2, this.animateColorBehavior.saveBin(zone));
+         let bin = self.animateColorBehavior.as_mut().unwrap().saveBin(zone);
+         self.map.put(2, bin);
+      }
+      // Java: if (this.animateEffect != null && this.animateEffect.dirty())
+        if self.animateEffect.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(3, this.animateEffect.saveBin(zone));
+         let bin = self.animateEffect.as_mut().unwrap().saveBin(zone);
+         self.map.put(3, bin);
+      }
+      // Java: if (this.animateMotion != null && this.animateMotion.dirty())
+        if self.animateMotion.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(4, this.animateMotion.saveBin(zone));
+         let bin = self.animateMotion.as_mut().unwrap().saveBin(zone);
+         self.map.put(4, bin);
+      }
+      // Java: if (this.animateRotation != null && this.animateRotation.dirty())
+        if self.animateRotation.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(5, this.animateRotation.saveBin(zone));
+         let bin = self.animateRotation.as_mut().unwrap().saveBin(zone);
+         self.map.put(5, bin);
+      }
+      // Java: if (this.animateScale != null && this.animateScale.dirty())
+        if self.animateScale.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(6, this.animateScale.saveBin(zone));
+         let bin = self.animateScale.as_mut().unwrap().saveBin(zone);
+         self.map.put(6, bin);
+      }
+      // Java: if (this.audio != null && this.audio.dirty())
+        if self.audio.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(7, this.audio.saveBin(zone));
+         let bin = self.audio.as_mut().unwrap().saveBin(zone);
+         self.map.put(7, bin);
+      }
+      // Java: if (this.command != null && this.command.dirty())
+        if self.command.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(8, this.command.saveBin(zone));
+         let bin = self.command.as_mut().unwrap().saveBin(zone);
+         self.map.put(8, bin);
+      }
+      // Java: if (this.exclusive != null && this.exclusive.dirty())
+        if self.exclusive.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(9, this.exclusive.saveBin(zone));
+         let bin = self.exclusive.as_mut().unwrap().saveBin(zone);
+         self.map.put(9, bin);
+      }
+      // Java: if (this.parallelTimeNode != null && this.parallelTimeNode.dirty())
+        if self.parallelTimeNode.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(10, this.parallelTimeNode.saveBin(zone));
+         let bin = self.parallelTimeNode.as_mut().unwrap().saveBin(zone);
+         self.map.put(10, bin);
+      }
+      // Java: if (this.sequenceTimeNode != null && this.sequenceTimeNode.dirty())
+        if self.sequenceTimeNode.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(11, this.sequenceTimeNode.saveBin(zone));
+         let bin = self.sequenceTimeNode.as_mut().unwrap().saveBin(zone);
+         self.map.put(11, bin);
+      }
+      // Java: if (this.setTimeNodeBehavior != null && this.setTimeNodeBehavior.dirty())
+        if self.setTimeNodeBehavior.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(12, this.setTimeNodeBehavior.saveBin(zone));
+         let bin = self.setTimeNodeBehavior.as_mut().unwrap().saveBin(zone);
+         self.map.put(12, bin);
+      }
+      // Java: if (this.video != null && this.video.dirty())
+        if self.video.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: this.map.put(13, this.video.saveBin(zone));
+         let bin = self.video.as_mut().unwrap().saveBin(zone);
+         self.map.put(13, bin);
+      }
+      // Java: return this.map.dirty() ? this.box.set(this.map.save(zone)) : this.box.get();
+      if self.map.dirty() { let saved = self.map.save(zone); self.bin_box.set(Some(saved.as_ref())); self.bin_box.get() } else { self.bin_box.get() }
+    }
+
+    // Java: boolean equalsLax(TimeNode o)
+    pub fn equalsLax(&self, o: &TimeNode) -> bool {
+      // Java: return this.equals(o, false);
+      self.equals_inner(o, false)
+    }
+
+    // Java: boolean equals(Object o)
+    pub fn equals(&self, o: &TimeNode) -> bool {
+      // Java: return this.equals(o, true);
+      self.equals_inner(o, true)
+    }
+
+    // Java: boolean equals(Object o, boolean isStrict)
+    pub fn equals_inner(&self, o: &TimeNode, isStrict: bool) -> bool {
+      // Java: if (null != o && o instanceof TimeNode)
+        if true
+      {
+         // Java: TimeNode dst = (TimeNode)o;
+         let dst = o;
+         // Java: if (this == dst)
+            if std::ptr::eq(self, dst)
+         {
+            // Java: return true;
+            return true;
+         }
+         // Java: else if ((this.hasAnimate() || !dst.hasAnimate()) && (!this.hasAnimate() || dst.hasAnimate()))
+            else if (self.hasAnimate() || !dst.hasAnimate()) && (!self.hasAnimate() || dst.hasAnimate())
+         {
+            // Java: if (this.hasAnimate() && dst.hasAnimate())
+                if self.hasAnimate() && dst.hasAnimate()
+            {
+               // Java: if (isStrict && !this.animate().equals(dst.animate()))
+                    if isStrict && !self.animate().equals(dst.animate())
+               {
+                  // Java: return false;
+                  return false;
+               }
+               // Java: if (!isStrict && !this.animate().equalsLax(dst.animate()))
+                    if !isStrict && !self.animate().equalsLax(dst.animate())
+               {
+                  // Java: return false;
+                  return false;
+               }
+            }
+            // Java: if ((this.hasAnimateColorBehavior() || !dst.hasAnimateColorBehavior()) && (!this.hasAnimateColorBehavior() || dst.hasAnimateColorBehavior()))
+                if (self.hasAnimateColorBehavior() || !dst.hasAnimateColorBehavior()) && (!self.hasAnimateColorBehavior() || dst.hasAnimateColorBehavior())
+            {
+               // Java: if (this.hasAnimateColorBehavior() && dst.hasAnimateColorBehavior())
+                    if self.hasAnimateColorBehavior() && dst.hasAnimateColorBehavior()
+               {
+                  // Java: if (isStrict && !this.animateColorBehavior().equals(dst.animateColorBehavior()))
+                        if isStrict && !self.animateColorBehavior().equals(dst.animateColorBehavior())
+                  {
+                     // Java: return false;
+                     return false;
+                  }
+                  // Java: if (!isStrict && !this.animateColorBehavior().equalsLax(dst.animateColorBehavior()))
+                        if !isStrict && !self.animateColorBehavior().equalsLax(dst.animateColorBehavior())
+                  {
+                     // Java: return false;
+                     return false;
+                  }
+               }
+               // Java: if ((this.hasAnimateEffect() || !dst.hasAnimateEffect()) && (!this.hasAnimateEffect() || dst.hasAnimateEffect()))
+                    if (self.hasAnimateEffect() || !dst.hasAnimateEffect()) && (!self.hasAnimateEffect() || dst.hasAnimateEffect())
+               {
+                  // Java: if (this.hasAnimateEffect() && dst.hasAnimateEffect())
+                        if self.hasAnimateEffect() && dst.hasAnimateEffect()
+                  {
+                     // Java: if (isStrict && !this.animateEffect().equals(dst.animateEffect()))
+                            if isStrict && !self.animateEffect().equals(dst.animateEffect())
+                     {
+                        // Java: return false;
+                        return false;
+                     }
+                     // Java: if (!isStrict && !this.animateEffect().equalsLax(dst.animateEffect()))
+                            if !isStrict && !self.animateEffect().equalsLax(dst.animateEffect())
+                     {
+                        // Java: return false;
+                        return false;
+                     }
+                  }
+                  // Java: if ((this.hasAnimateMotion() || !dst.hasAnimateMotion()) && (!this.hasAnimateMotion() || dst.hasAnimateMotion()))
+                        if (self.hasAnimateMotion() || !dst.hasAnimateMotion()) && (!self.hasAnimateMotion() || dst.hasAnimateMotion())
+                  {
+                     // Java: if (this.hasAnimateMotion() && dst.hasAnimateMotion())
+                            if self.hasAnimateMotion() && dst.hasAnimateMotion()
+                     {
+                        // Java: if (isStrict && !this.animateMotion().equals(dst.animateMotion()))
+                                if isStrict && !self.animateMotion().equals(dst.animateMotion())
+                        {
+                           // Java: return false;
+                           return false;
+                        }
+                        // Java: if (!isStrict && !this.animateMotion().equalsLax(dst.animateMotion()))
+                                if !isStrict && !self.animateMotion().equalsLax(dst.animateMotion())
+                        {
+                           // Java: return false;
+                           return false;
+                        }
+                     }
+                     // Java: if ((this.hasAnimateRotation() || !dst.hasAnimateRotation()) && (!this.hasAnimateRotation() || dst.hasAnimateRotation()))
+                            if (self.hasAnimateRotation() || !dst.hasAnimateRotation()) && (!self.hasAnimateRotation() || dst.hasAnimateRotation())
+                     {
+                        // Java: if (this.hasAnimateRotation() && dst.hasAnimateRotation())
+                                if self.hasAnimateRotation() && dst.hasAnimateRotation()
+                        {
+                           // Java: if (isStrict && !this.animateRotation().equals(dst.animateRotation()))
+                                    if isStrict && !self.animateRotation().equals(dst.animateRotation())
+                           {
+                              // Java: return false;
+                              return false;
+                           }
+                           // Java: if (!isStrict && !this.animateRotation().equalsLax(dst.animateRotation()))
+                                    if !isStrict && !self.animateRotation().equalsLax(dst.animateRotation())
+                           {
+                              // Java: return false;
+                              return false;
+                           }
+                        }
+                        // Java: if ((this.hasAnimateScale() || !dst.hasAnimateScale()) && (!this.hasAnimateScale() || dst.hasAnimateScale()))
+                                if (self.hasAnimateScale() || !dst.hasAnimateScale()) && (!self.hasAnimateScale() || dst.hasAnimateScale())
+                        {
+                           // Java: if (this.hasAnimateScale() && dst.hasAnimateScale())
+                                    if self.hasAnimateScale() && dst.hasAnimateScale()
+                           {
+                              // Java: if (isStrict && !this.animateScale().equals(dst.animateScale()))
+                                        if isStrict && !self.animateScale().equals(dst.animateScale())
+                              {
+                                 // Java: return false;
+                                 return false;
+                              }
+                              // Java: if (!isStrict && !this.animateScale().equalsLax(dst.animateScale()))
+                                        if !isStrict && !self.animateScale().equalsLax(dst.animateScale())
+                              {
+                                 // Java: return false;
+                                 return false;
+                              }
+                           }
+                           // Java: if ((this.hasAudio() || !dst.hasAudio()) && (!this.hasAudio() || dst.hasAudio()))
+                                    if (self.hasAudio() || !dst.hasAudio()) && (!self.hasAudio() || dst.hasAudio())
+                           {
+                              // Java: if (this.hasAudio() && dst.hasAudio())
+                                        if self.hasAudio() && dst.hasAudio()
+                              {
+                                 // Java: if (isStrict && !this.audio().equals(dst.audio()))
+                                            if isStrict && !self.audio().equals(dst.audio())
+                                 {
+                                    // Java: return false;
+                                    return false;
+                                 }
+                                 // Java: if (!isStrict && !this.audio().equalsLax(dst.audio()))
+                                            if !isStrict && !self.audio().equalsLax(dst.audio())
+                                 {
+                                    // Java: return false;
+                                    return false;
+                                 }
+                              }
+                              // Java: if ((this.hasCommand() || !dst.hasCommand()) && (!this.hasCommand() || dst.hasCommand()))
+                                        if (self.hasCommand() || !dst.hasCommand()) && (!self.hasCommand() || dst.hasCommand())
+                              {
+                                 // Java: if (this.hasCommand() && dst.hasCommand())
+                                            if self.hasCommand() && dst.hasCommand()
+                                 {
+                                    // Java: if (isStrict && !this.command().equals(dst.command()))
+                                                if isStrict && !self.command().equals(dst.command())
+                                    {
+                                       // Java: return false;
+                                       return false;
+                                    }
+                                    // Java: if (!isStrict && !this.command().equalsLax(dst.command()))
+                                                if !isStrict && !self.command().equalsLax(dst.command())
+                                    {
+                                       // Java: return false;
+                                       return false;
+                                    }
+                                 }
+                                 // Java: if ((this.hasExclusive() || !dst.hasExclusive()) && (!this.hasExclusive() || dst.hasExclusive()))
+                                            if (self.hasExclusive() || !dst.hasExclusive()) && (!self.hasExclusive() || dst.hasExclusive())
+                                 {
+                                    // Java: if (this.hasExclusive() && dst.hasExclusive())
+                                                if self.hasExclusive() && dst.hasExclusive()
+                                    {
+                                       // Java: if (isStrict && !this.exclusive().equals(dst.exclusive()))
+                                                    if isStrict && !self.exclusive().equals(dst.exclusive())
+                                       {
+                                          // Java: return false;
+                                          return false;
+                                       }
+                                       // Java: if (!isStrict && !this.exclusive().equalsLax(dst.exclusive()))
+                                                    if !isStrict && !self.exclusive().equalsLax(dst.exclusive())
+                                       {
+                                          // Java: return false;
+                                          return false;
+                                       }
+                                    }
+                                    // Java: if ((this.hasParallelTimeNode() || !dst.hasParallelTimeNode()) && (!this.hasParallelTimeNode() || dst.hasParallelTimeNode()))
+                                                if (self.hasParallelTimeNode() || !dst.hasParallelTimeNode()) && (!self.hasParallelTimeNode() || dst.hasParallelTimeNode())
+                                    {
+                                       // Java: if (this.hasParallelTimeNode() && dst.hasParallelTimeNode())
+                                                    if self.hasParallelTimeNode() && dst.hasParallelTimeNode()
+                                       {
+                                          // Java: if (isStrict && !this.parallelTimeNode().equals(dst.parallelTimeNode()))
+                                                        if isStrict && !self.parallelTimeNode().equals(dst.parallelTimeNode())
+                                          {
+                                             // Java: return false;
+                                             return false;
+                                          }
+                                          // Java: if (!isStrict && !this.parallelTimeNode().equalsLax(dst.parallelTimeNode()))
+                                                        if !isStrict && !self.parallelTimeNode().equalsLax(dst.parallelTimeNode())
+                                          {
+                                             // Java: return false;
+                                             return false;
+                                          }
+                                       }
+                                       // Java: if ((this.hasSequenceTimeNode() || !dst.hasSequenceTimeNode()) && (!this.hasSequenceTimeNode() || dst.hasSequenceTimeNode()))
+                                                    if (self.hasSequenceTimeNode() || !dst.hasSequenceTimeNode()) && (!self.hasSequenceTimeNode() || dst.hasSequenceTimeNode())
+                                       {
+                                          // Java: if (this.hasSequenceTimeNode() && dst.hasSequenceTimeNode())
+                                                        if self.hasSequenceTimeNode() && dst.hasSequenceTimeNode()
+                                          {
+                                             // Java: if (isStrict && !this.sequenceTimeNode().equals(dst.sequenceTimeNode()))
+                                                            if isStrict && !self.sequenceTimeNode().equals(dst.sequenceTimeNode())
+                                             {
+                                                // Java: return false;
+                                                return false;
+                                             }
+                                             // Java: if (!isStrict && !this.sequenceTimeNode().equalsLax(dst.sequenceTimeNode()))
+                                                            if !isStrict && !self.sequenceTimeNode().equalsLax(dst.sequenceTimeNode())
+                                             {
+                                                // Java: return false;
+                                                return false;
+                                             }
+                                          }
+                                          // Java: if ((this.hasSetTimeNodeBehavior() || !dst.hasSetTimeNodeBehavior()) && (!this.hasSetTimeNodeBehavior() || dst.hasSetTimeNodeBehavior()))
+                                                        if (self.hasSetTimeNodeBehavior() || !dst.hasSetTimeNodeBehavior()) && (!self.hasSetTimeNodeBehavior() || dst.hasSetTimeNodeBehavior())
+                                          {
+                                             // Java: if (this.hasSetTimeNodeBehavior() && dst.hasSetTimeNodeBehavior())
+                                                            if self.hasSetTimeNodeBehavior() && dst.hasSetTimeNodeBehavior()
+                                             {
+                                                // Java: if (isStrict && !this.setTimeNodeBehavior().equals(dst.setTimeNodeBehavior()))
+                                                                if isStrict && !self.setTimeNodeBehavior().equals(dst.setTimeNodeBehavior())
+                                                {
+                                                   // Java: return false;
+                                                   return false;
+                                                }
+                                                // Java: if (!isStrict && !this.setTimeNodeBehavior().equalsLax(dst.setTimeNodeBehavior()))
+                                                                if !isStrict && !self.setTimeNodeBehavior().equalsLax(dst.setTimeNodeBehavior())
+                                                {
+                                                   // Java: return false;
+                                                   return false;
+                                                }
+                                             }
+                                             // Java: if ((this.hasVideo() || !dst.hasVideo()) && (!this.hasVideo() || dst.hasVideo()))
+                                                            if (self.hasVideo() || !dst.hasVideo()) && (!self.hasVideo() || dst.hasVideo())
+                                             {
+                                                // Java: if (this.hasVideo() && dst.hasVideo())
+                                                                if self.hasVideo() && dst.hasVideo()
+                                                {
+                                                   // Java: if (isStrict && !this.video().equals(dst.video()))
+                                                                    if isStrict && !self.video().equals(dst.video())
+                                                   {
+                                                      // Java: return false;
+                                                      return false;
+                                                   }
+                                                   // Java: if (!isStrict && !this.video().equalsLax(dst.video()))
+                                                                    if !isStrict && !self.video().equalsLax(dst.video())
+                                                   {
+                                                      // Java: return false;
+                                                      return false;
+                                                   }
+                                                }
+                                                // Java: if ((this.hasType() || !dst.hasType()) && (!this.hasType() || dst.hasType()))
+                                                                if (self.hasType() || !dst.hasType()) && (!self.hasType() || dst.hasType())
+                                                {
+                                                   // Java: return !this.hasType() || !dst.hasType() || this.type() == dst.type();
+                                                   return !self.hasType() || !dst.hasType() || self.r#type() == dst.r#type();
+                                                }
+                                                // Java: else
+                                                                else
+                                                {
+                                                   // Java: return false;
+                                                   return false;
+                                                }
+                                             }
+                                             // Java: else
+                                                            else
+                                             {
+                                                // Java: return false;
+                                                return false;
+                                             }
+                                          }
+                                          // Java: else
+                                                        else
+                                          {
+                                             // Java: return false;
+                                             return false;
+                                          }
+                                       }
+                                       // Java: else
+                                                    else
+                                       {
+                                          // Java: return false;
+                                          return false;
+                                       }
+                                    }
+                                    // Java: else
+                                                else
+                                    {
+                                       // Java: return false;
+                                       return false;
+                                    }
+                                 }
+                                 // Java: else
+                                            else
+                                 {
+                                    // Java: return false;
+                                    return false;
+                                 }
+                              }
+                              // Java: else
+                                        else
+                              {
+                                 // Java: return false;
+                                 return false;
+                              }
+                           }
+                           // Java: else
+                                    else
+                           {
+                              // Java: return false;
+                              return false;
+                           }
+                        }
+                        // Java: else
+                                else
+                        {
+                           // Java: return false;
+                           return false;
+                        }
+                     }
+                     // Java: else
+                            else
+                     {
+                        // Java: return false;
+                        return false;
+                     }
+                  }
+                  // Java: else
+                        else
+                  {
+                     // Java: return false;
+                     return false;
+                  }
+               }
+               // Java: else
+                    else
+               {
+                  // Java: return false;
+                  return false;
+               }
+            }
+            // Java: else
+                else
+            {
+               // Java: return false;
+               return false;
+            }
+         }
+         // Java: else
+            else
+         {
+            // Java: return false;
+            return false;
+         }
+      }
+      // Java: else
+        else
+      {
+         // Java: return false;
+         return false;
+      }
+    }
+
+    // Java: int hashCode()
+    pub fn hashCode(&self) -> i32 {
+      // Java: int ret = 0;
+      let mut ret: i32 = 0;
+      // Java: if (this.hasAnimate())
+        if self.hasAnimate()
+      {
+         // Java: ret += this.animate().hashCode();
+         ret += self.animate().hashCode();
+      }
+      // Java: if (this.hasAnimateColorBehavior())
+        if self.hasAnimateColorBehavior()
+      {
+         // Java: ret += this.animateColorBehavior().hashCode();
+         ret += self.animateColorBehavior().hashCode();
+      }
+      // Java: if (this.hasAnimateEffect())
+        if self.hasAnimateEffect()
+      {
+         // Java: ret += this.animateEffect().hashCode();
+         ret += self.animateEffect().hashCode();
+      }
+      // Java: if (this.hasAnimateMotion())
+        if self.hasAnimateMotion()
+      {
+         // Java: ret += this.animateMotion().hashCode();
+         ret += self.animateMotion().hashCode();
+      }
+      // Java: if (this.hasAnimateRotation())
+        if self.hasAnimateRotation()
+      {
+         // Java: ret += this.animateRotation().hashCode();
+         ret += self.animateRotation().hashCode();
+      }
+      // Java: if (this.hasAnimateScale())
+        if self.hasAnimateScale()
+      {
+         // Java: ret += this.animateScale().hashCode();
+         ret += self.animateScale().hashCode();
+      }
+      // Java: if (this.hasAudio())
+        if self.hasAudio()
+      {
+         // Java: ret += this.audio().hashCode();
+         ret += self.audio().hashCode();
+      }
+      // Java: if (this.hasCommand())
+        if self.hasCommand()
+      {
+         // Java: ret += this.command().hashCode();
+         ret += self.command().hashCode();
+      }
+      // Java: if (this.hasExclusive())
+        if self.hasExclusive()
+      {
+         // Java: ret += this.exclusive().hashCode();
+         ret += self.exclusive().hashCode();
+      }
+      // Java: if (this.hasParallelTimeNode())
+        if self.hasParallelTimeNode()
+      {
+         // Java: ret += this.parallelTimeNode().hashCode();
+         ret += self.parallelTimeNode().hashCode();
+      }
+      // Java: if (this.hasSequenceTimeNode())
+        if self.hasSequenceTimeNode()
+      {
+         // Java: ret += this.sequenceTimeNode().hashCode();
+         ret += self.sequenceTimeNode().hashCode();
+      }
+      // Java: if (this.hasSetTimeNodeBehavior())
+        if self.hasSetTimeNodeBehavior()
+      {
+         // Java: ret += this.setTimeNodeBehavior().hashCode();
+         ret += self.setTimeNodeBehavior().hashCode();
+      }
+      // Java: if (this.hasVideo())
+        if self.hasVideo()
+      {
+         // Java: ret += this.video().hashCode();
+         ret += self.video().hashCode();
+      }
+      // Java: if (this.hasType())
+        if self.hasType()
+      {
+         // Java: ret += Integer.valueOf(this.type()).hashCode();
+         ret += self.r#type();
+      }
+      // Java: return ret;
+      ret
+    }
+
+    // Java: boolean dirty()
+    pub fn dirty(&self) -> bool {
+      // Java: if (this.animate != null && this.animate.dirty())
+        if self.animate.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else if (this.animateColorBehavior != null && this.animateColorBehavior.dirty())
+        else if self.animateColorBehavior.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else if (this.animateEffect != null && this.animateEffect.dirty())
+        else if self.animateEffect.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else if (this.animateMotion != null && this.animateMotion.dirty())
+        else if self.animateMotion.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else if (this.animateRotation != null && this.animateRotation.dirty())
+        else if self.animateRotation.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else if (this.animateScale != null && this.animateScale.dirty())
+        else if self.animateScale.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else if (this.audio != null && this.audio.dirty())
+        else if self.audio.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else if (this.command != null && this.command.dirty())
+        else if self.command.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else if (this.exclusive != null && this.exclusive.dirty())
+        else if self.exclusive.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else if (this.parallelTimeNode != null && this.parallelTimeNode.dirty())
+        else if self.parallelTimeNode.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else if (this.sequenceTimeNode != null && this.sequenceTimeNode.dirty())
+        else if self.sequenceTimeNode.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else if (this.setTimeNodeBehavior != null && this.setTimeNodeBehavior.dirty())
+        else if self.setTimeNodeBehavior.as_ref().map_or(false, |v| v.dirty())
+      {
+         // Java: return true;
+         return true;
+      }
+      // Java: else
+        else
+      {
+         // Java: return this.video != null && this.video.dirty() ? true : this.map.dirty();
+         if self.video.as_ref().map_or(false, |v| v.dirty()) { true } else { self.map.dirty() }
+      }
+    }
+
+    // Java: KoBin save()
+    pub fn save(&mut self) -> Box<dyn KoBinTrait> {
+      // Java: this.saveBin(this.zone);
+      let zone = self.zone;
+      self.saveBin(zone);
+      // Java: return this.box.get();
+      self.bin_box.get()
+    }
+
+    // Java: KoBin lastBin(KoZone zone)
+    pub fn lastBin(&self, zone: &'static KoZone) -> Box<dyn KoBinTrait> {
+      // Java: return KoBin.Factory.dup(this.box.get(), zone);
+      Factory::dup(self.bin_box.get().as_ref(), zone)
+    }
+
+    // Java: void discard(KoZone zone)
+    pub fn discard_with_zone(&mut self, zone: &'static KoZone) {
+      // Java: this.loadBin(this.box.get(), zone);
+      let bin = self.bin_box.get();
+      self.loadBin(bin.as_ref(), zone);
+    }
+
+    // Java: void close()
+    pub fn close(&mut self) {
+      // Java: this.cleanFollow();
+      self.cleanFollow();
+      // Java: this.cleanCache();
+      self.cleanCache();
+      // Java: this.cleanParent();
+      self.cleanParent();
+      // Java: this.map.load(KoBin.Null.value1());
+      self.map.load(Null::value1().as_ref());
+      // Java: this.box.clear();
+      self.bin_box.clear();
+      // Java: this.zone.leave();
+      self.zone.leave();
+      // Java: this.zone = KoZone.defaultZone();
+      self.zone = KoZone::defaultZone();
+    }
+
+    // Java: void cleanFollow()
+    pub fn cleanFollow(&mut self) {
+    }
+
+    // Java: void cleanCache()
+    pub fn cleanCache(&mut self) {
+      // Java: this.animate = null;
+      self.animate = None;
+      // Java: this.animateColorBehavior = null;
+      self.animateColorBehavior = None;
+      // Java: this.animateEffect = null;
+      self.animateEffect = None;
+      // Java: this.animateMotion = null;
+      self.animateMotion = None;
+      // Java: this.animateRotation = null;
+      self.animateRotation = None;
+      // Java: this.animateScale = null;
+      self.animateScale = None;
+      // Java: this.audio = null;
+      self.audio = None;
+      // Java: this.command = null;
+      self.command = None;
+      // Java: this.exclusive = null;
+      self.exclusive = None;
+      // Java: this.parallelTimeNode = null;
+      self.parallelTimeNode = None;
+      // Java: this.sequenceTimeNode = null;
+      self.sequenceTimeNode = None;
+      // Java: this.setTimeNodeBehavior = null;
+      self.setTimeNodeBehavior = None;
+      // Java: this.video = null;
+      self.video = None;
+    }
+
+    // Java: void follow(TimeNode parent)
+    pub fn follow(&mut self, parent: Option<Box<TimeNode>>) {
+      // Java: if (parent != null)
+        if let Some(mut parent) = parent
+      {
+         // Java: parent.discard();
+         parent.discard();
+         // Java: this.discard();
+         self.discard();
+         // Java: this.parent = parent;
+         self.parent = Some(parent);
+      }
+    }
+
+    // Java: void unFollow()
+    pub fn unFollow(&mut self) {
+      // Java: if (this.parent != null)
+        if self.parent.is_some()
+      {
+         // Java: this.discard();
+         self.discard();
+         // Java: this.parent.discard();
+         self.parent.as_mut().unwrap().discard();
+         // Java: this.cleanParent();
+         self.cleanParent();
+      }
+    }
+
+    // Java: boolean hasParent()
+    pub fn hasParent(&self) -> bool {
+      // Java: return this.parent != null;
+      self.parent.is_some()
+    }
+
+    // Java: TimeNode parent()
+    pub fn parent(&self) -> &TimeNode {
+      // Java: return this.parent;
+      self.parent.as_deref().unwrap()
+    }
+
+    // Java: void discard()
+    pub fn discard(&mut self) {
+      // Java: this.discard(this.zone);
+      let zone = self.zone;
+      self.discard_with_zone(zone);
+    }
+
+    // Java: void cleanParent()
+    pub fn cleanParent(&mut self) {
+      // Java: this.parent = null;
+      self.parent = None;
+    }
+
+    // Java: Animate animate()
+    pub fn animate(&self) -> &Animate {
+      // Java: if (this.animate == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.animate.is_none()
+      {
+         // Java: if (this.map.has(1))
+            if this.map.has(1)
+         {
+            // Java: KoBin bin = this.map.byKey(1);
+            let bin = this.map.byKey(1);
+            // Java: this.animate = (Animate)KoBin.Decode.toAny(Animate.class, bin, this.zone);
+            this.animate = Some(Box::new(Animate::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasAnimate())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasAnimate()
+         {
+            // Java: this.animate = this.parent.animate();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.animate().lastBin(this.zone);
+            this.animate = Some(Box::new(Animate::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.animate = (Animate)KoBin.Decode.toAny(Animate.class, bin, this.zone);
+            this.animate = Some(Box::new(Animate::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.animate;
+      this.animate.as_deref().unwrap()
+    }
+
+    // Java: boolean hasAnimate()
+    pub fn hasAnimate(&self) -> bool {
+      // Java: return this.map.has(1) || this.animate != null && this.animate.dirty() || this.parent != null && this.parent.hasAnimate();
+      self.map.has(1) || self.animate.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasAnimate())
+    }
+
+    // Java: void deleteAnimate()
+    pub fn deleteAnimate(&mut self) {
+      // Java: this.map.put(1, (KoBin)null);
+      self.map.clear_key(1);
+      // Java: if (this.animate != null)
+        if self.animate.is_some()
+      {
+         // Java: this.animate = null;
+         self.animate = None;
+      }
+    }
+
+    // Java: void writeAnimate(Animate value)
+    pub fn writeAnimate(&mut self, value: Option<&Animate>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(1, bin);
+            self.map.put(1, bin);
+            // Java: if (this.animate != null)
+                if self.animate.is_some()
+            {
+               // Java: this.animate = null;
+               self.animate = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteAnimate(Animate value)
+    pub fn forceWriteAnimate(&mut self, value: Option<&Animate>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(1, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(1, bin);
+         // Java: if (this.animate != null)
+            if self.animate.is_some()
+         {
+            // Java: this.animate = null;
+            self.animate = None;
+         }
+      }
+    }
+
+    // Java: AnimateColorBehavior animateColorBehavior()
+    pub fn animateColorBehavior(&self) -> &AnimateColorBehavior {
+      // Java: if (this.animateColorBehavior == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.animateColorBehavior.is_none()
+      {
+         // Java: if (this.map.has(2))
+            if this.map.has(2)
+         {
+            // Java: KoBin bin = this.map.byKey(2);
+            let bin = this.map.byKey(2);
+            // Java: this.animateColorBehavior = (AnimateColorBehavior)KoBin.Decode.toAny(AnimateColorBehavior.class, bin, this.zone);
+            this.animateColorBehavior = Some(Box::new(AnimateColorBehavior::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasAnimateColorBehavior())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasAnimateColorBehavior()
+         {
+            // Java: this.animateColorBehavior = this.parent.animateColorBehavior();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.animateColorBehavior().lastBin(this.zone);
+            this.animateColorBehavior = Some(Box::new(AnimateColorBehavior::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.animateColorBehavior = (AnimateColorBehavior)KoBin.Decode.toAny(AnimateColorBehavior.class, bin, this.zone);
+            this.animateColorBehavior = Some(Box::new(AnimateColorBehavior::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.animateColorBehavior;
+      this.animateColorBehavior.as_deref().unwrap()
+    }
+
+    // Java: boolean hasAnimateColorBehavior()
+    pub fn hasAnimateColorBehavior(&self) -> bool {
+      // Java: return this.map.has(2) || this.animateColorBehavior != null && this.animateColorBehavior.dirty() || this.parent != null && this.parent.hasAnimateColorBehavior();
+      self.map.has(2) || self.animateColorBehavior.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasAnimateColorBehavior())
+    }
+
+    // Java: void deleteAnimateColorBehavior()
+    pub fn deleteAnimateColorBehavior(&mut self) {
+      // Java: this.map.put(2, (KoBin)null);
+      self.map.clear_key(2);
+      // Java: if (this.animateColorBehavior != null)
+        if self.animateColorBehavior.is_some()
+      {
+         // Java: this.animateColorBehavior = null;
+         self.animateColorBehavior = None;
+      }
+    }
+
+    // Java: void writeAnimateColorBehavior(AnimateColorBehavior value)
+    pub fn writeAnimateColorBehavior(&mut self, value: Option<&AnimateColorBehavior>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(2, bin);
+            self.map.put(2, bin);
+            // Java: if (this.animateColorBehavior != null)
+                if self.animateColorBehavior.is_some()
+            {
+               // Java: this.animateColorBehavior = null;
+               self.animateColorBehavior = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteAnimateColorBehavior(AnimateColorBehavior value)
+    pub fn forceWriteAnimateColorBehavior(&mut self, value: Option<&AnimateColorBehavior>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(2, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(2, bin);
+         // Java: if (this.animateColorBehavior != null)
+            if self.animateColorBehavior.is_some()
+         {
+            // Java: this.animateColorBehavior = null;
+            self.animateColorBehavior = None;
+         }
+      }
+    }
+
+    // Java: AnimateEffect animateEffect()
+    pub fn animateEffect(&self) -> &AnimateEffect {
+      // Java: if (this.animateEffect == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.animateEffect.is_none()
+      {
+         // Java: if (this.map.has(3))
+            if this.map.has(3)
+         {
+            // Java: KoBin bin = this.map.byKey(3);
+            let bin = this.map.byKey(3);
+            // Java: this.animateEffect = (AnimateEffect)KoBin.Decode.toAny(AnimateEffect.class, bin, this.zone);
+            this.animateEffect = Some(Box::new(AnimateEffect::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasAnimateEffect())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasAnimateEffect()
+         {
+            // Java: this.animateEffect = this.parent.animateEffect();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.animateEffect().lastBin(this.zone);
+            this.animateEffect = Some(Box::new(AnimateEffect::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.animateEffect = (AnimateEffect)KoBin.Decode.toAny(AnimateEffect.class, bin, this.zone);
+            this.animateEffect = Some(Box::new(AnimateEffect::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.animateEffect;
+      this.animateEffect.as_deref().unwrap()
+    }
+
+    // Java: boolean hasAnimateEffect()
+    pub fn hasAnimateEffect(&self) -> bool {
+      // Java: return this.map.has(3) || this.animateEffect != null && this.animateEffect.dirty() || this.parent != null && this.parent.hasAnimateEffect();
+      self.map.has(3) || self.animateEffect.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasAnimateEffect())
+    }
+
+    // Java: void deleteAnimateEffect()
+    pub fn deleteAnimateEffect(&mut self) {
+      // Java: this.map.put(3, (KoBin)null);
+      self.map.clear_key(3);
+      // Java: if (this.animateEffect != null)
+        if self.animateEffect.is_some()
+      {
+         // Java: this.animateEffect = null;
+         self.animateEffect = None;
+      }
+    }
+
+    // Java: void writeAnimateEffect(AnimateEffect value)
+    pub fn writeAnimateEffect(&mut self, value: Option<&AnimateEffect>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(3, bin);
+            self.map.put(3, bin);
+            // Java: if (this.animateEffect != null)
+                if self.animateEffect.is_some()
+            {
+               // Java: this.animateEffect = null;
+               self.animateEffect = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteAnimateEffect(AnimateEffect value)
+    pub fn forceWriteAnimateEffect(&mut self, value: Option<&AnimateEffect>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(3, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(3, bin);
+         // Java: if (this.animateEffect != null)
+            if self.animateEffect.is_some()
+         {
+            // Java: this.animateEffect = null;
+            self.animateEffect = None;
+         }
+      }
+    }
+
+    // Java: AnimateMotion animateMotion()
+    pub fn animateMotion(&self) -> &AnimateMotion {
+      // Java: if (this.animateMotion == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.animateMotion.is_none()
+      {
+         // Java: if (this.map.has(4))
+            if this.map.has(4)
+         {
+            // Java: KoBin bin = this.map.byKey(4);
+            let bin = this.map.byKey(4);
+            // Java: this.animateMotion = (AnimateMotion)KoBin.Decode.toAny(AnimateMotion.class, bin, this.zone);
+            this.animateMotion = Some(Box::new(AnimateMotion::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasAnimateMotion())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasAnimateMotion()
+         {
+            // Java: this.animateMotion = this.parent.animateMotion();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.animateMotion().lastBin(this.zone);
+            this.animateMotion = Some(Box::new(AnimateMotion::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.animateMotion = (AnimateMotion)KoBin.Decode.toAny(AnimateMotion.class, bin, this.zone);
+            this.animateMotion = Some(Box::new(AnimateMotion::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.animateMotion;
+      this.animateMotion.as_deref().unwrap()
+    }
+
+    // Java: boolean hasAnimateMotion()
+    pub fn hasAnimateMotion(&self) -> bool {
+      // Java: return this.map.has(4) || this.animateMotion != null && this.animateMotion.dirty() || this.parent != null && this.parent.hasAnimateMotion();
+      self.map.has(4) || self.animateMotion.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasAnimateMotion())
+    }
+
+    // Java: void deleteAnimateMotion()
+    pub fn deleteAnimateMotion(&mut self) {
+      // Java: this.map.put(4, (KoBin)null);
+      self.map.clear_key(4);
+      // Java: if (this.animateMotion != null)
+        if self.animateMotion.is_some()
+      {
+         // Java: this.animateMotion = null;
+         self.animateMotion = None;
+      }
+    }
+
+    // Java: void writeAnimateMotion(AnimateMotion value)
+    pub fn writeAnimateMotion(&mut self, value: Option<&AnimateMotion>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(4, bin);
+            self.map.put(4, bin);
+            // Java: if (this.animateMotion != null)
+                if self.animateMotion.is_some()
+            {
+               // Java: this.animateMotion = null;
+               self.animateMotion = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteAnimateMotion(AnimateMotion value)
+    pub fn forceWriteAnimateMotion(&mut self, value: Option<&AnimateMotion>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(4, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(4, bin);
+         // Java: if (this.animateMotion != null)
+            if self.animateMotion.is_some()
+         {
+            // Java: this.animateMotion = null;
+            self.animateMotion = None;
+         }
+      }
+    }
+
+    // Java: AnimateRotation animateRotation()
+    pub fn animateRotation(&self) -> &AnimateRotation {
+      // Java: if (this.animateRotation == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.animateRotation.is_none()
+      {
+         // Java: if (this.map.has(5))
+            if this.map.has(5)
+         {
+            // Java: KoBin bin = this.map.byKey(5);
+            let bin = this.map.byKey(5);
+            // Java: this.animateRotation = (AnimateRotation)KoBin.Decode.toAny(AnimateRotation.class, bin, this.zone);
+            this.animateRotation = Some(Box::new(AnimateRotation::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasAnimateRotation())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasAnimateRotation()
+         {
+            // Java: this.animateRotation = this.parent.animateRotation();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.animateRotation().lastBin(this.zone);
+            this.animateRotation = Some(Box::new(AnimateRotation::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.animateRotation = (AnimateRotation)KoBin.Decode.toAny(AnimateRotation.class, bin, this.zone);
+            this.animateRotation = Some(Box::new(AnimateRotation::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.animateRotation;
+      this.animateRotation.as_deref().unwrap()
+    }
+
+    // Java: boolean hasAnimateRotation()
+    pub fn hasAnimateRotation(&self) -> bool {
+      // Java: return this.map.has(5) || this.animateRotation != null && this.animateRotation.dirty() || this.parent != null && this.parent.hasAnimateRotation();
+      self.map.has(5) || self.animateRotation.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasAnimateRotation())
+    }
+
+    // Java: void deleteAnimateRotation()
+    pub fn deleteAnimateRotation(&mut self) {
+      // Java: this.map.put(5, (KoBin)null);
+      self.map.clear_key(5);
+      // Java: if (this.animateRotation != null)
+        if self.animateRotation.is_some()
+      {
+         // Java: this.animateRotation = null;
+         self.animateRotation = None;
+      }
+    }
+
+    // Java: void writeAnimateRotation(AnimateRotation value)
+    pub fn writeAnimateRotation(&mut self, value: Option<&AnimateRotation>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(5, bin);
+            self.map.put(5, bin);
+            // Java: if (this.animateRotation != null)
+                if self.animateRotation.is_some()
+            {
+               // Java: this.animateRotation = null;
+               self.animateRotation = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteAnimateRotation(AnimateRotation value)
+    pub fn forceWriteAnimateRotation(&mut self, value: Option<&AnimateRotation>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(5, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(5, bin);
+         // Java: if (this.animateRotation != null)
+            if self.animateRotation.is_some()
+         {
+            // Java: this.animateRotation = null;
+            self.animateRotation = None;
+         }
+      }
+    }
+
+    // Java: AnimateScale animateScale()
+    pub fn animateScale(&self) -> &AnimateScale {
+      // Java: if (this.animateScale == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.animateScale.is_none()
+      {
+         // Java: if (this.map.has(6))
+            if this.map.has(6)
+         {
+            // Java: KoBin bin = this.map.byKey(6);
+            let bin = this.map.byKey(6);
+            // Java: this.animateScale = (AnimateScale)KoBin.Decode.toAny(AnimateScale.class, bin, this.zone);
+            this.animateScale = Some(Box::new(AnimateScale::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasAnimateScale())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasAnimateScale()
+         {
+            // Java: this.animateScale = this.parent.animateScale();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.animateScale().lastBin(this.zone);
+            this.animateScale = Some(Box::new(AnimateScale::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.animateScale = (AnimateScale)KoBin.Decode.toAny(AnimateScale.class, bin, this.zone);
+            this.animateScale = Some(Box::new(AnimateScale::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.animateScale;
+      this.animateScale.as_deref().unwrap()
+    }
+
+    // Java: boolean hasAnimateScale()
+    pub fn hasAnimateScale(&self) -> bool {
+      // Java: return this.map.has(6) || this.animateScale != null && this.animateScale.dirty() || this.parent != null && this.parent.hasAnimateScale();
+      self.map.has(6) || self.animateScale.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasAnimateScale())
+    }
+
+    // Java: void deleteAnimateScale()
+    pub fn deleteAnimateScale(&mut self) {
+      // Java: this.map.put(6, (KoBin)null);
+      self.map.clear_key(6);
+      // Java: if (this.animateScale != null)
+        if self.animateScale.is_some()
+      {
+         // Java: this.animateScale = null;
+         self.animateScale = None;
+      }
+    }
+
+    // Java: void writeAnimateScale(AnimateScale value)
+    pub fn writeAnimateScale(&mut self, value: Option<&AnimateScale>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(6, bin);
+            self.map.put(6, bin);
+            // Java: if (this.animateScale != null)
+                if self.animateScale.is_some()
+            {
+               // Java: this.animateScale = null;
+               self.animateScale = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteAnimateScale(AnimateScale value)
+    pub fn forceWriteAnimateScale(&mut self, value: Option<&AnimateScale>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(6, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(6, bin);
+         // Java: if (this.animateScale != null)
+            if self.animateScale.is_some()
+         {
+            // Java: this.animateScale = null;
+            self.animateScale = None;
+         }
+      }
+    }
+
+    // Java: Audio audio()
+    pub fn audio(&self) -> &Audio {
+      // Java: if (this.audio == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.audio.is_none()
+      {
+         // Java: if (this.map.has(7))
+            if this.map.has(7)
+         {
+            // Java: KoBin bin = this.map.byKey(7);
+            let bin = this.map.byKey(7);
+            // Java: this.audio = (Audio)KoBin.Decode.toAny(Audio.class, bin, this.zone);
+            this.audio = Some(Box::new(Audio::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasAudio())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasAudio()
+         {
+            // Java: this.audio = this.parent.audio();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.audio().lastBin(this.zone);
+            this.audio = Some(Box::new(Audio::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.audio = (Audio)KoBin.Decode.toAny(Audio.class, bin, this.zone);
+            this.audio = Some(Box::new(Audio::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.audio;
+      this.audio.as_deref().unwrap()
+    }
+
+    // Java: boolean hasAudio()
+    pub fn hasAudio(&self) -> bool {
+      // Java: return this.map.has(7) || this.audio != null && this.audio.dirty() || this.parent != null && this.parent.hasAudio();
+      self.map.has(7) || self.audio.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasAudio())
+    }
+
+    // Java: void deleteAudio()
+    pub fn deleteAudio(&mut self) {
+      // Java: this.map.put(7, (KoBin)null);
+      self.map.clear_key(7);
+      // Java: if (this.audio != null)
+        if self.audio.is_some()
+      {
+         // Java: this.audio = null;
+         self.audio = None;
+      }
+    }
+
+    // Java: void writeAudio(Audio value)
+    pub fn writeAudio(&mut self, value: Option<&Audio>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(7, bin);
+            self.map.put(7, bin);
+            // Java: if (this.audio != null)
+                if self.audio.is_some()
+            {
+               // Java: this.audio = null;
+               self.audio = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteAudio(Audio value)
+    pub fn forceWriteAudio(&mut self, value: Option<&Audio>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(7, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(7, bin);
+         // Java: if (this.audio != null)
+            if self.audio.is_some()
+         {
+            // Java: this.audio = null;
+            self.audio = None;
+         }
+      }
+    }
+
+    // Java: Command command()
+    pub fn command(&self) -> &Command {
+      // Java: if (this.command == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.command.is_none()
+      {
+         // Java: if (this.map.has(8))
+            if this.map.has(8)
+         {
+            // Java: KoBin bin = this.map.byKey(8);
+            let bin = this.map.byKey(8);
+            // Java: this.command = (Command)KoBin.Decode.toAny(Command.class, bin, this.zone);
+            this.command = Some(Box::new(Command::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasCommand())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasCommand()
+         {
+            // Java: this.command = this.parent.command();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.command().lastBin(this.zone);
+            this.command = Some(Box::new(Command::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.command = (Command)KoBin.Decode.toAny(Command.class, bin, this.zone);
+            this.command = Some(Box::new(Command::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.command;
+      this.command.as_deref().unwrap()
+    }
+
+    // Java: boolean hasCommand()
+    pub fn hasCommand(&self) -> bool {
+      // Java: return this.map.has(8) || this.command != null && this.command.dirty() || this.parent != null && this.parent.hasCommand();
+      self.map.has(8) || self.command.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasCommand())
+    }
+
+    // Java: void deleteCommand()
+    pub fn deleteCommand(&mut self) {
+      // Java: this.map.put(8, (KoBin)null);
+      self.map.clear_key(8);
+      // Java: if (this.command != null)
+        if self.command.is_some()
+      {
+         // Java: this.command = null;
+         self.command = None;
+      }
+    }
+
+    // Java: void writeCommand(Command value)
+    pub fn writeCommand(&mut self, value: Option<&Command>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(8, bin);
+            self.map.put(8, bin);
+            // Java: if (this.command != null)
+                if self.command.is_some()
+            {
+               // Java: this.command = null;
+               self.command = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteCommand(Command value)
+    pub fn forceWriteCommand(&mut self, value: Option<&Command>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(8, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(8, bin);
+         // Java: if (this.command != null)
+            if self.command.is_some()
+         {
+            // Java: this.command = null;
+            self.command = None;
+         }
+      }
+    }
+
+    // Java: CommonTimeNode exclusive()
+    pub fn exclusive(&self) -> &CommonTimeNode {
+      // Java: if (this.exclusive == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.exclusive.is_none()
+      {
+         // Java: if (this.map.has(9))
+            if this.map.has(9)
+         {
+            // Java: KoBin bin = this.map.byKey(9);
+            let bin = this.map.byKey(9);
+            // Java: this.exclusive = (CommonTimeNode)KoBin.Decode.toAny(CommonTimeNode.class, bin, this.zone);
+            this.exclusive = Some(Box::new(CommonTimeNode::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasExclusive())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasExclusive()
+         {
+            // Java: this.exclusive = this.parent.exclusive();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.exclusive().lastBin(this.zone);
+            this.exclusive = Some(Box::new(CommonTimeNode::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.exclusive = (CommonTimeNode)KoBin.Decode.toAny(CommonTimeNode.class, bin, this.zone);
+            this.exclusive = Some(Box::new(CommonTimeNode::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.exclusive;
+      this.exclusive.as_deref().unwrap()
+    }
+
+    // Java: boolean hasExclusive()
+    pub fn hasExclusive(&self) -> bool {
+      // Java: return this.map.has(9) || this.exclusive != null && this.exclusive.dirty() || this.parent != null && this.parent.hasExclusive();
+      self.map.has(9) || self.exclusive.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasExclusive())
+    }
+
+    // Java: void deleteExclusive()
+    pub fn deleteExclusive(&mut self) {
+      // Java: this.map.put(9, (KoBin)null);
+      self.map.clear_key(9);
+      // Java: if (this.exclusive != null)
+        if self.exclusive.is_some()
+      {
+         // Java: this.exclusive = null;
+         self.exclusive = None;
+      }
+    }
+
+    // Java: void writeExclusive(CommonTimeNode value)
+    pub fn writeExclusive(&mut self, value: Option<&CommonTimeNode>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(9, bin);
+            self.map.put(9, bin);
+            // Java: if (this.exclusive != null)
+                if self.exclusive.is_some()
+            {
+               // Java: this.exclusive = null;
+               self.exclusive = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteExclusive(CommonTimeNode value)
+    pub fn forceWriteExclusive(&mut self, value: Option<&CommonTimeNode>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(9, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(9, bin);
+         // Java: if (this.exclusive != null)
+            if self.exclusive.is_some()
+         {
+            // Java: this.exclusive = null;
+            self.exclusive = None;
+         }
+      }
+    }
+
+    // Java: CommonTimeNode parallelTimeNode()
+    pub fn parallelTimeNode(&self) -> &CommonTimeNode {
+      // Java: if (this.parallelTimeNode == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.parallelTimeNode.is_none()
+      {
+         // Java: if (this.map.has(10))
+            if this.map.has(10)
+         {
+            // Java: KoBin bin = this.map.byKey(10);
+            let bin = this.map.byKey(10);
+            // Java: this.parallelTimeNode = (CommonTimeNode)KoBin.Decode.toAny(CommonTimeNode.class, bin, this.zone);
+            this.parallelTimeNode = Some(Box::new(CommonTimeNode::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasParallelTimeNode())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasParallelTimeNode()
+         {
+            // Java: this.parallelTimeNode = this.parent.parallelTimeNode();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.parallelTimeNode().lastBin(this.zone);
+            this.parallelTimeNode = Some(Box::new(CommonTimeNode::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.parallelTimeNode = (CommonTimeNode)KoBin.Decode.toAny(CommonTimeNode.class, bin, this.zone);
+            this.parallelTimeNode = Some(Box::new(CommonTimeNode::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.parallelTimeNode;
+      this.parallelTimeNode.as_deref().unwrap()
+    }
+
+    // Java: boolean hasParallelTimeNode()
+    pub fn hasParallelTimeNode(&self) -> bool {
+      // Java: return this.map.has(10) || this.parallelTimeNode != null && this.parallelTimeNode.dirty() || this.parent != null && this.parent.hasParallelTimeNode();
+      self.map.has(10) || self.parallelTimeNode.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasParallelTimeNode())
+    }
+
+    // Java: void deleteParallelTimeNode()
+    pub fn deleteParallelTimeNode(&mut self) {
+      // Java: this.map.put(10, (KoBin)null);
+      self.map.clear_key(10);
+      // Java: if (this.parallelTimeNode != null)
+        if self.parallelTimeNode.is_some()
+      {
+         // Java: this.parallelTimeNode = null;
+         self.parallelTimeNode = None;
+      }
+    }
+
+    // Java: void writeParallelTimeNode(CommonTimeNode value)
+    pub fn writeParallelTimeNode(&mut self, value: Option<&CommonTimeNode>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(10, bin);
+            self.map.put(10, bin);
+            // Java: if (this.parallelTimeNode != null)
+                if self.parallelTimeNode.is_some()
+            {
+               // Java: this.parallelTimeNode = null;
+               self.parallelTimeNode = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteParallelTimeNode(CommonTimeNode value)
+    pub fn forceWriteParallelTimeNode(&mut self, value: Option<&CommonTimeNode>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(10, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(10, bin);
+         // Java: if (this.parallelTimeNode != null)
+            if self.parallelTimeNode.is_some()
+         {
+            // Java: this.parallelTimeNode = null;
+            self.parallelTimeNode = None;
+         }
+      }
+    }
+
+    // Java: SequenceTimeNode sequenceTimeNode()
+    pub fn sequenceTimeNode(&self) -> &SequenceTimeNode {
+      // Java: if (this.sequenceTimeNode == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.sequenceTimeNode.is_none()
+      {
+         // Java: if (this.map.has(11))
+            if this.map.has(11)
+         {
+            // Java: KoBin bin = this.map.byKey(11);
+            let bin = this.map.byKey(11);
+            // Java: this.sequenceTimeNode = (SequenceTimeNode)KoBin.Decode.toAny(SequenceTimeNode.class, bin, this.zone);
+            this.sequenceTimeNode = Some(Box::new(SequenceTimeNode::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasSequenceTimeNode())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasSequenceTimeNode()
+         {
+            // Java: this.sequenceTimeNode = this.parent.sequenceTimeNode();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.sequenceTimeNode().lastBin(this.zone);
+            this.sequenceTimeNode = Some(Box::new(SequenceTimeNode::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.sequenceTimeNode = (SequenceTimeNode)KoBin.Decode.toAny(SequenceTimeNode.class, bin, this.zone);
+            this.sequenceTimeNode = Some(Box::new(SequenceTimeNode::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.sequenceTimeNode;
+      this.sequenceTimeNode.as_deref().unwrap()
+    }
+
+    // Java: boolean hasSequenceTimeNode()
+    pub fn hasSequenceTimeNode(&self) -> bool {
+      // Java: return this.map.has(11) || this.sequenceTimeNode != null && this.sequenceTimeNode.dirty() || this.parent != null && this.parent.hasSequenceTimeNode();
+      self.map.has(11) || self.sequenceTimeNode.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasSequenceTimeNode())
+    }
+
+    // Java: void deleteSequenceTimeNode()
+    pub fn deleteSequenceTimeNode(&mut self) {
+      // Java: this.map.put(11, (KoBin)null);
+      self.map.clear_key(11);
+      // Java: if (this.sequenceTimeNode != null)
+        if self.sequenceTimeNode.is_some()
+      {
+         // Java: this.sequenceTimeNode = null;
+         self.sequenceTimeNode = None;
+      }
+    }
+
+    // Java: void writeSequenceTimeNode(SequenceTimeNode value)
+    pub fn writeSequenceTimeNode(&mut self, value: Option<&SequenceTimeNode>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(11, bin);
+            self.map.put(11, bin);
+            // Java: if (this.sequenceTimeNode != null)
+                if self.sequenceTimeNode.is_some()
+            {
+               // Java: this.sequenceTimeNode = null;
+               self.sequenceTimeNode = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteSequenceTimeNode(SequenceTimeNode value)
+    pub fn forceWriteSequenceTimeNode(&mut self, value: Option<&SequenceTimeNode>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(11, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(11, bin);
+         // Java: if (this.sequenceTimeNode != null)
+            if self.sequenceTimeNode.is_some()
+         {
+            // Java: this.sequenceTimeNode = null;
+            self.sequenceTimeNode = None;
+         }
+      }
+    }
+
+    // Java: SetTimeNodeBehavior setTimeNodeBehavior()
+    pub fn setTimeNodeBehavior(&self) -> &SetTimeNodeBehavior {
+      // Java: if (this.setTimeNodeBehavior == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.setTimeNodeBehavior.is_none()
+      {
+         // Java: if (this.map.has(12))
+            if this.map.has(12)
+         {
+            // Java: KoBin bin = this.map.byKey(12);
+            let bin = this.map.byKey(12);
+            // Java: this.setTimeNodeBehavior = (SetTimeNodeBehavior)KoBin.Decode.toAny(SetTimeNodeBehavior.class, bin, this.zone);
+            this.setTimeNodeBehavior = Some(Box::new(SetTimeNodeBehavior::new_from(bin.as_ref())));
+         }
+         // Java: else if (this.parent != null && this.parent.hasSetTimeNodeBehavior())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasSetTimeNodeBehavior()
+         {
+            // Java: this.setTimeNodeBehavior = this.parent.setTimeNodeBehavior();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.setTimeNodeBehavior().lastBin(this.zone);
+            this.setTimeNodeBehavior = Some(Box::new(SetTimeNodeBehavior::new_from(bin.as_ref())));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.setTimeNodeBehavior = (SetTimeNodeBehavior)KoBin.Decode.toAny(SetTimeNodeBehavior.class, bin, this.zone);
+            this.setTimeNodeBehavior = Some(Box::new(SetTimeNodeBehavior::new_from(bin.as_ref())));
+         }
+      }
+      // Java: return this.setTimeNodeBehavior;
+      this.setTimeNodeBehavior.as_deref().unwrap()
+    }
+
+    // Java: boolean hasSetTimeNodeBehavior()
+    pub fn hasSetTimeNodeBehavior(&self) -> bool {
+      // Java: return this.map.has(12) || this.setTimeNodeBehavior != null && this.setTimeNodeBehavior.dirty() || this.parent != null && this.parent.hasSetTimeNodeBehavior();
+      self.map.has(12) || self.setTimeNodeBehavior.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasSetTimeNodeBehavior())
+    }
+
+    // Java: void deleteSetTimeNodeBehavior()
+    pub fn deleteSetTimeNodeBehavior(&mut self) {
+      // Java: this.map.put(12, (KoBin)null);
+      self.map.clear_key(12);
+      // Java: if (this.setTimeNodeBehavior != null)
+        if self.setTimeNodeBehavior.is_some()
+      {
+         // Java: this.setTimeNodeBehavior = null;
+         self.setTimeNodeBehavior = None;
+      }
+    }
+
+    // Java: void writeSetTimeNodeBehavior(SetTimeNodeBehavior value)
+    pub fn writeSetTimeNodeBehavior(&mut self, value: Option<&SetTimeNodeBehavior>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(12, bin);
+            self.map.put(12, bin);
+            // Java: if (this.setTimeNodeBehavior != null)
+                if self.setTimeNodeBehavior.is_some()
+            {
+               // Java: this.setTimeNodeBehavior = null;
+               self.setTimeNodeBehavior = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteSetTimeNodeBehavior(SetTimeNodeBehavior value)
+    pub fn forceWriteSetTimeNodeBehavior(&mut self, value: Option<&SetTimeNodeBehavior>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(12, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(12, bin);
+         // Java: if (this.setTimeNodeBehavior != null)
+            if self.setTimeNodeBehavior.is_some()
+         {
+            // Java: this.setTimeNodeBehavior = null;
+            self.setTimeNodeBehavior = None;
+         }
+      }
+    }
+
+    // Java: Video video()
+    pub fn video(&self) -> &Video {
+      // Java: if (this.video == null)
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+        if this.video.is_none()
+      {
+         // Java: if (this.map.has(13))
+            if this.map.has(13)
+         {
+            // Java: KoBin bin = this.map.byKey(13);
+            let bin = this.map.byKey(13);
+            // Java: this.video = (Video)KoBin.Decode.toAny(Video.class, bin, this.zone);
+            this.video = Some(Box::new(Video::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else if (this.parent != null && this.parent.hasVideo())
+            else if this.parent.is_some() && this.parent.as_ref().unwrap().hasVideo()
+         {
+            // Java: this.video = this.parent.video();
+            let parent = this.parent.as_ref().unwrap();
+            let bin = parent.video().lastBin(this.zone);
+            this.video = Some(Box::new(Video::new_from_bin(bin.as_ref(), this.zone)));
+         }
+         // Java: else
+            else
+         {
+            // Java: KoBin bin = KoBin.Null.value1();
+            let bin = Null::value1();
+            // Java: this.video = (Video)KoBin.Decode.toAny(Video.class, bin, this.zone);
+            this.video = Some(Box::new(Video::new_from_bin(bin.as_ref(), this.zone)));
+         }
+      }
+      // Java: return this.video;
+      this.video.as_deref().unwrap()
+    }
+
+    // Java: boolean hasVideo()
+    pub fn hasVideo(&self) -> bool {
+      // Java: return this.map.has(13) || this.video != null && this.video.dirty() || this.parent != null && this.parent.hasVideo();
+      self.map.has(13) || self.video.as_ref().map_or(false, |v| v.dirty()) || self.parent.as_ref().map_or(false, |p| p.hasVideo())
+    }
+
+    // Java: void deleteVideo()
+    pub fn deleteVideo(&mut self) {
+      // Java: this.map.put(13, (KoBin)null);
+      self.map.clear_key(13);
+      // Java: if (this.video != null)
+        if self.video.is_some()
+      {
+         // Java: this.video = null;
+         self.video = None;
+      }
+    }
+
+    // Java: void writeVideo(Video value)
+    pub fn writeVideo(&mut self, value: Option<&Video>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: KoBin bin = value.lastBin(this.zone);
+         let bin = value.lastBin(self.zone);
+         // Java: if (KoBin.Null.notEmpty(bin))
+            if Null::notEmpty(Some(bin.as_ref()))
+         {
+            // Java: this.map.put(13, bin);
+            self.map.put(13, bin);
+            // Java: if (this.video != null)
+                if self.video.is_some()
+            {
+               // Java: this.video = null;
+               self.video = None;
+            }
+         }
+      }
+    }
+
+    // Java: void forceWriteVideo(Video value)
+    pub fn forceWriteVideo(&mut self, value: Option<&Video>) {
+      // Java: if (value != null)
+        if let Some(value) = value
+      {
+         // Java: this.map.put(13, value.lastBin(this.zone));
+         let bin = value.lastBin(self.zone);
+         self.map.put(13, bin);
+         // Java: if (this.video != null)
+            if self.video.is_some()
+         {
+            // Java: this.video = null;
+            self.video = None;
+         }
+      }
+    }
+
+    // Java: int type()
+    pub fn r#type(&self) -> i32 {
+      // Java: if (!this.map.has(14))
+        if !self.map.has(14)
+      {
+         // Java: return this.parent == null ? 9 : this.parent.type();
+         return if self.parent.is_none() { 9 } else { self.parent.as_ref().unwrap().r#type() };
+      }
+      // Java: else
+        else
+      {
+         // Java: KoBin bin = this.map.byKey(14);
+         let bin = self.map.byKey(14);
+         // Java: return KoBin.Decode.toInt(bin);
+         return Decode::toInt(bin.as_ref());
+      }
+    }
+
+    // Java: boolean hasType()
+    pub fn hasType(&self) -> bool {
+      // Java: return this.map.has(14) || this.parent != null && this.parent.hasType();
+      self.map.has(14) || self.parent.as_ref().map_or(false, |p| p.hasType())
+    }
+
+    // Java: void deleteType()
+    pub fn deleteType(&mut self) {
+      // Java: this.map.put(14, (KoBin)null);
+      self.map.clear_key(14);
+    }
+
+    // Java: void putType(int value)
+    pub fn putType(&mut self, value: i32) {
+      // Java: this.map.put(14, KoBin.Encode.from(value, this.zone));
+      self.map.put(14, Encode::from_int(value, self.zone));
+    }
+
+}
+
+impl KoAr for TimeNode {
+    fn loadBin(&mut self, var1: &dyn KoBinTrait, var2: &KoZone) { TimeNode::loadBin(self, var1, unsafe { &*(var2 as *const KoZone) }); }
+    fn saveBin(&self, var1: &KoZone) -> Box<dyn KoBinTrait> { let this = unsafe { &mut *(self as *const Self as *mut Self) }; this.saveBin(unsafe { &*(var1 as *const KoZone) }) }
+    fn dirty(&self) -> bool { TimeNode::dirty(self) }
+    fn discard(&mut self, var1: &KoZone) { self.discard_with_zone(unsafe { &*(var1 as *const KoZone) }); }
+    fn lastBin(&self, var1: &KoZone) -> Box<dyn KoBinTrait> { TimeNode::lastBin(self, unsafe { &*(var1 as *const KoZone) }) }
+}
+
+impl KoClosable for TimeNode {
+    fn close(&mut self) { TimeNode::close(self); }
+}

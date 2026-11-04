@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_grp_choff_chext,解析组 chOff/chExt,grpSpPr xfrm XML,child_off+child_ext,pp-13:02,02,libs/ppt-core,pass
+2,02_function_child_abs_rect,子级 slide 绝对框写回,group+children,子 transform2D* 绝对 EMU,01;pl-02:02;pl-07,03;pr-06,libs/ppt-core,pass
+3,03_function_film_group_children,film 组内子 shape,KmoShapeTree,LayerItem 按子级,02,pr-06;pp-18,libs/ppt-core,pass

@@ -1,0 +1,24 @@
+// Rust stub for DocumentEnv (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/DocumentEnv.java
+use crate::*;
+
+pub struct DocumentEnv {
+    // TODO: fields
+}
+
+impl DocumentEnv {
+    pub fn new() -> Self { todo!() }
+    pub fn getCardPaper(&self) -> CardPaper { todo!() }
+    pub fn collectCardInfo(&self) -> CardPaper { todo!() }
+    pub fn setCardPaperDirty(&self, isDirty: bool) { todo!() }
+    pub fn getPhoneViewFitInfo(&self) -> PhoneViewFitInfo { todo!() }
+    pub fn clearFitInfo(&self) { todo!() }
+    pub fn getClone(&self) -> DocumentEnv { todo!() }
+    pub fn reuseClean(&self) -> bool { todo!() }
+    pub fn reuseInit(&self) { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn update(&self) { todo!() }
+    pub fn init(&self) { todo!() }
+    pub fn getEmojiService(&self) -> Box<dyn IEmojiService> { todo!() }
+    pub fn updateTypoDocument(&self, document: TypoDocument) { todo!() }
+}

@@ -1,0 +1,1624 @@
+{
+	"ID": "20230429115711-ejbts4s",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"icon": "1f5c2",
+		"id": "20230429115711-ejbts4s",
+		"title": "Glossary",
+		"type": "doc",
+		"updated": "20261024163828"
+	},
+	"Children": [
+		{
+			"ID": "20230429115740-9l80any",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230429115740-9l80any",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Overview"
+				}
+			]
+		},
+		{
+			"ID": "20230429115740-yhr68al",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115740-yhr68al",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "This glossary explains terms used throughout the guide and their specific meaning in SiYuan."
+				}
+			]
+		},
+		{
+			"ID": "20230429115740-1d51yn2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115740-1d51yn2",
+				"updated": "20230429120317"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, when it comes to specific functions, the following content is mainly introduced on the desktop."
+				}
+			]
+		},
+		{
+			"ID": "20230429115740-s72e6yy",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230429115740-s72e6yy",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Editor"
+				}
+			]
+		},
+		{
+			"ID": "20230429115740-jegf4ou",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115740-jegf4ou",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Breadcrumb"
+				}
+			]
+		},
+		{
+			"ID": "20230429115740-fnmy34z",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20230429115740-fnmy34z",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20230429115740-21j01p3",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20230429115740-21j01p3",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "Breadcrumbs show your current position and its parent structure, letting you navigate back to a parent."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230429115740-u7ka7oi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115740-u7ka7oi",
+				"updated": "20230429120405"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In SiYuan, breadcrumbs refer to the block paths connected by right arrows at the top of the editor, which are used to navigate in the block structure. Each layer starts with a block icon, and the preview floating window can be opened by hovering the mouse."
+				}
+			]
+		},
+		{
+			"ID": "20230429115740-nprcl4k",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115740-nprcl4k",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Anchor text"
+				}
+			]
+		},
+		{
+			"ID": "20230429115740-ewj59ik",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20230429115740-ewj59ik",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20230429115740-id1s5ff",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20230429115740-id1s5ff",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "Anchor text is the visible text of a link, describing the content it points to."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230429115740-5mp1ell",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115740-5mp1ell",
+				"updated": "20230429120228"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In SiYuan, we have extended anchor text in the usual sense from hyperlink elements to block quotes and PDF annotation reference elements. In particular, the anchor text of the block quote element is divided into static anchor text and dynamic anchor text. For details, please refer to the "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20220623201008-is3nn7u",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "Reference Content Block Anchor Text"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " section."
+				}
+			]
+		},
+		{
+			"ID": "20230429115912-b97gvan",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115912-b97gvan",
+				"updated": "20260614111229"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Editor Mode"
+				}
+			]
+		},
+		{
+			"ID": "20230429115912-x1a373p",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230429115912-x1a373p",
+				"updated": "20230429115912"
+			},
+			"Children": [
+				{
+					"ID": "20230429115912-8o8vxx5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230429115912-8o8vxx5",
+						"updated": "20230429115912"
+					},
+					"Children": [
+						{
+							"ID": "20230429115912-91dt06z",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230429115912-91dt06z",
+								"updated": "20230429115912"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "What you see is what you get: the editor interface under normal circumstances"
+								}
+							]
+						},
+						{
+							"ID": "20230429115912-qa1d2gj",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20230429115912-qa1d2gj",
+								"updated": "20230429115912"
+							},
+							"Children": [
+								{
+									"ID": "20230429115912-wls4t5m",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20230429115912-wls4t5m",
+										"updated": "20230429115912"
+									},
+									"Children": [
+										{
+											"ID": "20230429115912-wsv8fch",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20230429115912-wsv8fch",
+												"updated": "20230429115912"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Editable: support modifying content"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20230429115912-3ge90ax",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20230429115912-3ge90ax",
+										"updated": "20230429115912"
+									},
+									"Children": [
+										{
+											"ID": "20230429115912-ilnm57r",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20230429115912-ilnm57r",
+												"updated": "20230429115912"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "Only read-only: only supports viewing content, does not support modification"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230429115912-evfoi3b",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230429115912-evfoi3b",
+						"updated": "20230429115912"
+					},
+					"Children": [
+						{
+							"ID": "20230429115912-rr9nv27",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230429115912-rr9nv27",
+								"updated": "20230429115912"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Export preview: preview after conversion to standard Markdown"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230429115912-zd5p7jl",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115912-zd5p7jl",
+				"updated": "20250115163213"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "WYSIWYG and export preview mode switches are located in the "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "︙"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ menu in the upper right corner of the editor; WYSIWYG editing and read-only mode switches are located in the upper right corner of the top bar."
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-to99h4r",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111229-to99h4r",
+				"updated": "20260614111229"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Block Reference"
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-2ogahww",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111229-2ogahww",
+				"updated": "20260614111229"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111229-vob22z9",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111229-vob22z9",
+						"updated": "20260614111229"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "A reference is a link pointing to another piece of content, allowing the reader to jump to the referenced location."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-pgtjgxi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111229-pgtjgxi",
+				"updated": "20260614111229"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In SiYuan, a block reference is a link triggered by "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "(("
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ that points to another content block. It supports both static anchor text and dynamic anchor text. Clicking a block reference navigates to the referenced block; hovering shows a preview."
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-mp4whcc",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111229-mp4whcc",
+				"updated": "20260614111229"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Backlink"
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-9spl9ve",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111229-9spl9ve",
+				"updated": "20260614111229"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111229-98p3e3u",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111229-98p3e3u",
+						"updated": "20260614111229"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "A backlink is a link from another page pointing to the current page, an essential component of a bidirectional linking system."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-7mco34k",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111229-7mco34k",
+				"updated": "20260614111229"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In SiYuan, the backlink panel displays all blocks that reference the current block. Backlinks are divided into two parts: links (directly connected via block references) and mentions (potential connections matched by text)."
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-to1iuj1",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111229-to1iuj1",
+				"updated": "20260614111229"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Mention"
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-sfctxyi",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111229-sfctxyi",
+				"updated": "20260614111229"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111229-qsw7m2s",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111229-qsw7m2s",
+						"updated": "20260614111229"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "A mention is a keyword match found in text, used to discover potential connections."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-71ipyls",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111229-71ipyls",
+				"updated": "20260614111229"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In SiYuan, mentions are similar to the links part of backlinks, but instead of being established through block references, they are automatically matched text content found by searching content block names, aliases, and reference anchor text. Mentions can be converted to block references with one click."
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-xhhdmql",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111229-xhhdmql",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Virtual Reference"
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-4gfb4hy",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111229-4gfb4hy",
+				"updated": "20260614111229"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111229-pg7ejry",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111229-pg7ejry",
+						"updated": "20260614111229"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "A virtual reference is a technique for automatically discovering potential reference relationships, identifying content blocks that may be related without manual creation."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111229-2a1poix",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111229-2a1poix",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In SiYuan, virtual references automatically detect potential connections based on content block names, aliases, and anchor text, displayed with dashed underlines in the editor. Hovering shows a preview of the corresponding content block; clicking converts it to a formal block reference. Can be toggled in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Bidirectional Links"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Virtual Reference"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20230429115927-coz742f",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230429115927-coz742f",
+				"updated": "20230429115933"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Data repository"
+				}
+			]
+		},
+		{
+			"ID": "20230429115927-bjmnazr",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115927-bjmnazr",
+				"updated": "20230429115945"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Key"
+				}
+			]
+		},
+		{
+			"ID": "20230429115927-qaqpi8z",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115927-qaqpi8z",
+				"updated": "20230429120019"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The key is used to encrypt data snapshots, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20220722002536-oh6do47",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "there are three ways to generate"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ". It is recommended that ordinary users use passphrase generation. The same passphrase can generate the same key on other devices to facilitate initial data synchronization."
+				}
+			]
+		},
+		{
+			"ID": "20230429115927-rkshv1l",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115927-rkshv1l",
+				"updated": "20230429120027"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Local snapshot"
+				}
+			]
+		},
+		{
+			"ID": "20230429115927-s5dasq2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115927-s5dasq2",
+				"updated": "20230429115927"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Data snapshots saved locally on the device."
+				}
+			]
+		},
+		{
+			"ID": "20230429115927-vgz5oj0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115927-vgz5oj0",
+				"updated": "20230429120030"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Locally tagged snapshot"
+				}
+			]
+		},
+		{
+			"ID": "20230429115927-lhfhnvb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115927-lhfhnvb",
+				"updated": "20230429115927"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Manually tagged snapshots in local snapshots. The purpose of tagging is to facilitate searching, and a meaningful tag name can serve as a sufficient reminder when rolling back a snapshot."
+				}
+			]
+		},
+		{
+			"ID": "20230429115927-4vr87gi",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115927-4vr87gi",
+				"updated": "20230429115927"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Cloud snapshot"
+				}
+			]
+		},
+		{
+			"ID": "20230429115927-bb5x5s1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115927-bb5x5s1",
+				"updated": "20230429115927"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Data snapshots saved on cloud storage."
+				}
+			]
+		},
+		{
+			"ID": "20230429115927-3oc93qe",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429115927-3oc93qe",
+				"updated": "20230429120032"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Cloud tagged snapshot"
+				}
+			]
+		},
+		{
+			"ID": "20230429115927-2wm6pxd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429115927-2wm6pxd",
+				"updated": "20230429115927"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The data snapshot after the locally tagged snapshot is uploaded to the cloud."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-5xk88t9",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230429120050-5xk88t9",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Interface"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-scwpy3r",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429120050-scwpy3r",
+				"updated": "20230429120050"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Dock"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-le0yzzw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-le0yzzw",
+				"updated": "20230429120050"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The sidebars on the left, right and bottom of the main interface are used to store the panel entry buttons."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-09mig9d",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429120050-09mig9d",
+				"updated": "20260426180041"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Panel"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-c9xun18",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-c9xun18",
+				"updated": "20260426180041"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Panels refer to functional areas opened from the dock, such as the document panel, outline, and backlinks."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-3mfr5fb",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429120050-3mfr5fb",
+				"updated": "20230429120110"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Tab"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-r9j15xs",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-r9j15xs",
+				"updated": "20230429120050"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Tabs are similar to tabs on a browser, and different types of tabs have different functions."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-r51s7t7",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"id": "20230429120050-r51s7t7",
+				"updated": "20230429120125"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Editor tab"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-mpeypp0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-mpeypp0",
+				"updated": "20230429120050"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Used to load the docs editor."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-5ehc5zq",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"id": "20230429120050-5ehc5zq",
+				"updated": "20230429120123"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PDF tab"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-gvsgq2n",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-gvsgq2n",
+				"updated": "20230429120050"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Used to load PDFs."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-x2yrwdq",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"id": "20230429120050-x2yrwdq",
+				"updated": "20230429120050"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Search tab"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-v2u9dy4",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-v2u9dy4",
+				"updated": "20230429120050"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Open the search interface in a tab, so that users can use other tabs at the same time without being blocked by the search window for other work."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-vzjnkvv",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"id": "20230429120050-vzjnkvv",
+				"updated": "20230429120130"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Spaced Repeatition tab"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-9az1982",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-9az1982",
+				"updated": "20230429120050"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Open the spaced repetition interface in a tab."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-mgddw1u",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429120050-mgddw1u",
+				"updated": "20260930224728"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Window"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-klzguje",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-klzguje",
+				"updated": "20230429120050"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Tabs can be converted into windows independent of the main interface, and windows can be dragged outside the main interface to avoid overcrowding in the main interface."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-zo5u4jx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-zo5u4jx",
+				"updated": "20260930224728"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "By keeping the window on top, the window can also be placed on top of all applications so that the user can make better use of the limited screen space."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-36xz5r4",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429120050-36xz5r4",
+				"updated": "20230429120050"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Layout"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-vx2ae03",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-vx2ae03",
+				"updated": "20230429120050"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The status of the dock bar, tabs, and panels of the current main interface constitutes the layout, and the layout can be saved and switched in the workspace menu in the upper left corner."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-i338ss7",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429120050-i338ss7",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Block icon"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-9yrwodu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-9yrwodu",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Icons appearing in front of blocks, and block labels appearing in the panel support opening the floating preview window by hovering the mouse in most cases, such as the block labels in the outline panel and backlink panel."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-7kwyta0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-7kwyta0",
+				"updated": "20261024163828"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In addition to the floating preview, the block label also supports "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Ctrl"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Click"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ to open in the tab, which is especially useful in scenarios such as backlink panels that require context jumping."
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-do79b2w",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111245-do79b2w",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Bazaar"
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-ne03z3w",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111245-ne03z3w",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111245-4exrwcd",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111245-4exrwcd",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "The marketplace is a central place to browse and manage community extensions."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-ts4nqpv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111245-ts4nqpv",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In SiYuan, the Bazaar is the entry point for browsing and installing community extensions, including plugins, themes, icons, templates, and widgets. You can search, install, and update them directly in the application."
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-dorazkv",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111245-dorazkv",
+				"updated": "20260614111245"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Inbox"
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-mn05zjr",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111245-mn05zjr",
+				"updated": "20260614111245"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111245-c72qm7a",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111245-c72qm7a",
+						"updated": "20260614111245"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "An inbox is a container for temporarily storing information to be processed."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-qeay9ky",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111245-qeay9ky",
+				"updated": "20260614111245"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In SiYuan, the Inbox is a cloud-based quick capture feature. Text is temporarily stored in the cloud via WeChat or API calls, and can later be moved into documents from the Inbox panel. This feature requires a subscription."
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-qxb6qzw",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111245-qxb6qzw",
+				"updated": "20260614111245"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Flashcard"
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-2h7wety",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111245-2h7wety",
+				"updated": "20260614111245"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111245-rq2epc7",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111245-rq2epc7",
+						"updated": "20260614111245"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "A flashcard is a card used for memory training, with a question on the front and an answer on the back, scheduled for review using spaced repetition algorithms."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-z9ld0j1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111245-z9ld0j1",
+				"updated": "20260614111245"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In SiYuan, flashcards are a spaced repetition review feature based on content blocks. Content blocks can be made into flashcards, and the system automatically schedules the next review based on performance."
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-ejrp4c3",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111245-ejrp4c3",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Command Palette"
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-fe0kgoy",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111245-fe0kgoy",
+				"updated": "20260614111245"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111245-8z5dsoc",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111245-8z5dsoc",
+						"updated": "20260614111245"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "A command palette is a keyboard-driven entry point for quickly accessing application features, where users type keywords to search and execute commands."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111245-8viirmm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111245-8viirmm",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Open the command palette with "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Alt"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "P"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Option"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "P"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " on macOS), then search for and run a command. Available commands depend on the current interface and focus."
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-b0r6bh0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230429120050-b0r6bh0",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Other"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-s4dqqa7",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230429120050-s4dqqa7",
+				"updated": "20260614111257"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Serving"
+				}
+			]
+		},
+		{
+			"ID": "20230429120050-xn4ri9u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230429120050-xn4ri9u",
+				"updated": "20230429120213"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Through the service capabilities provided by the SiYuan kernel "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20201004194026-s8h2cog",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "Use on browser"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20260614111257-gh2a33v",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111257-gh2a33v",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Kernel"
+				}
+			]
+		},
+		{
+			"ID": "20260614111257-erncw1g",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111257-erncw1g",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111257-uo9f96w",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111257-uo9f96w",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "In this guide, “kernel” means SiYuan’s backend program that processes data."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111257-fuv5t0k",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111257-fuv5t0k",
+				"updated": "20260614111257"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In SiYuan, the kernel refers to the backend service process that runs after startup, responsible for core functions such as data read/write, index search, and sync backup. The frontend communicates with the kernel via HTTP/WebSocket. The desktop and mobile apps have built-in kernels; Docker deployments run the kernel separately."
+				}
+			]
+		},
+		{
+			"ID": "20260614111257-dk8jq1u",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111257-dk8jq1u",
+				"updated": "20260614111257"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Workspace"
+				}
+			]
+		},
+		{
+			"ID": "20260614111257-eik5zme",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111257-eik5zme",
+				"updated": "20260614111257"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111257-rt41e11",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111257-rt41e11",
+						"updated": "20260614111257"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "A workspace is the data environment for users to work in, similar to a user directory in an operating system."
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111257-xrvsdv3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111257-xrvsdv3",
+				"updated": "20260614111257"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In SiYuan, a workspace is a folder that stores all data, including notebooks, documents, asset files, configurations, and history. Different workspaces are isolated through file system folders, and one workspace can only be served by one kernel process."
+				}
+			]
+		}
+	]
+}

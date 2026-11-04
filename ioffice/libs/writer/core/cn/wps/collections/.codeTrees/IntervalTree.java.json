@@ -1,0 +1,1043 @@
+{
+  "filePath": "/Users/mac/src/ioffice/koffice/writer/core/cn/wps/collections/IntervalTree.java",
+  "createdAt": "2026-06-24T02:06:18.628Z",
+  "version": 1,
+  "packageName": "cn.wps.collections",
+  "lines": [
+    {
+      "id": "jl:0",
+      "ln": 0,
+      "text": "package cn.wps.collections;",
+      "type": "package"
+    },
+    {
+      "id": "jl:1",
+      "ln": 1,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:2",
+      "ln": 2,
+      "text": "public class IntervalTree extends PositionTree {",
+      "type": "class_decl"
+    },
+    {
+      "id": "jl:3",
+      "ln": 3,
+      "text": "   public IntervalTree(IntervalNode head) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:4",
+      "ln": 4,
+      "text": "      super(head);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:5",
+      "ln": 5,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:6",
+      "ln": 6,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:7",
+      "ln": 7,
+      "text": "   int getEndPosition() {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:8",
+      "ln": 8,
+      "text": "      if (this.isEmpty()) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:9",
+      "ln": 9,
+      "text": "         throw new RuntimeException(\"No interval in the tree\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:10",
+      "ln": 10,
+      "text": "      } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:11",
+      "ln": 11,
+      "text": "         IntervalNode node = (IntervalNode)this.rightmost();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:12",
+      "ln": 12,
+      "text": "         return node.position() + node.getLength();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:13",
+      "ln": 13,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:14",
+      "ln": 14,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:15",
+      "ln": 15,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:16",
+      "ln": 16,
+      "text": "   public InsertSpace findForInsertSpace(int cp) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:17",
+      "ln": 17,
+      "text": "      IntervalNode p = (IntervalNode)this.lowerBound(cp);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:18",
+      "ln": 18,
+      "text": "      if (p == this.mHead) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:19",
+      "ln": 19,
+      "text": "         IntervalNode pprev = (IntervalNode)p.getPrev();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:20",
+      "ln": 20,
+      "text": "         if (pprev == this.mHead) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:21",
+      "ln": 21,
+      "text": "            return new InsertSpace(p, true, 0);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:22",
+      "ln": 22,
+      "text": "         } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:23",
+      "ln": 23,
+      "text": "            int pprev_pos = this.position(pprev);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:24",
+      "ln": 24,
+      "text": "            return cp < pprev_pos + pprev.getLength() ? new InsertSpace(pprev, false, cp - pprev_pos) : new InsertSpace(p, true, 0);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:25",
+      "ln": 25,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:26",
+      "ln": 26,
+      "text": "      } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:27",
+      "ln": 27,
+      "text": "         int p_pos = this.position(p);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:28",
+      "ln": 28,
+      "text": "         if (p_pos == cp) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:29",
+      "ln": 29,
+      "text": "            return new InsertSpace(p, true, 0);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:30",
+      "ln": 30,
+      "text": "         } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:31",
+      "ln": 31,
+      "text": "            IntervalNode pprev = (IntervalNode)p.getPrev();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:32",
+      "ln": 32,
+      "text": "            if (pprev == this.mHead) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:33",
+      "ln": 33,
+      "text": "               return new InsertSpace(p, true, 0);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:34",
+      "ln": 34,
+      "text": "            } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:35",
+      "ln": 35,
+      "text": "               int pprev_pos = this.position(pprev);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:36",
+      "ln": 36,
+      "text": "               return cp >= pprev_pos + pprev.getLength() ? new InsertSpace(p, true, 0) : new InsertSpace(pprev, false, cp - pprev_pos);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:37",
+      "ln": 37,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:38",
+      "ln": 38,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:39",
+      "ln": 39,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:40",
+      "ln": 40,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:41",
+      "ln": 41,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:42",
+      "ln": 42,
+      "text": "   public IntervalNode find(int pos, int[] off) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:43",
+      "ln": 43,
+      "text": "      IntervalNode node = (IntervalNode)this.getRoot();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:44",
+      "ln": 44,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:45",
+      "ln": 45,
+      "text": "      while(node != null) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:46",
+      "ln": 46,
+      "text": "         if (pos < node.offset) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:47",
+      "ln": 47,
+      "text": "            node = (IntervalNode)node.left;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:48",
+      "ln": 48,
+      "text": "         } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:49",
+      "ln": 49,
+      "text": "            if (pos < node.offset + node.getLength()) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:50",
+      "ln": 50,
+      "text": "               if (off != null) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:51",
+      "ln": 51,
+      "text": "                  off[0] = pos - node.offset;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:52",
+      "ln": 52,
+      "text": "               }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:53",
+      "ln": 53,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:54",
+      "ln": 54,
+      "text": "               return node;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:55",
+      "ln": 55,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:56",
+      "ln": 56,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:57",
+      "ln": 57,
+      "text": "            pos -= node.offset;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:58",
+      "ln": 58,
+      "text": "            node = (IntervalNode)node.right;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:59",
+      "ln": 59,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:60",
+      "ln": 60,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:61",
+      "ln": 61,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:62",
+      "ln": 62,
+      "text": "      return null;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:63",
+      "ln": 63,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:64",
+      "ln": 64,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:65",
+      "ln": 65,
+      "text": "   public static class InsertSpace {",
+      "type": "class_decl"
+    },
+    {
+      "id": "jl:66",
+      "ln": 66,
+      "text": "      IntervalNode node;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:67",
+      "ln": 67,
+      "text": "      boolean left;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:68",
+      "ln": 68,
+      "text": "      int pos;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:69",
+      "ln": 69,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:70",
+      "ln": 70,
+      "text": "      public InsertSpace(IntervalNode node, boolean left, int pos) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:71",
+      "ln": 71,
+      "text": "         this.node = node;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:72",
+      "ln": 72,
+      "text": "         this.left = left;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:73",
+      "ln": 73,
+      "text": "         this.pos = pos;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:74",
+      "ln": 74,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:75",
+      "ln": 75,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:76",
+      "ln": 76,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:77",
+      "ln": 77,
+      "text": "",
+      "type": "empty"
+    }
+  ],
+  "imports": [
+    {
+      "id": "ji:syn:0",
+      "qualifiedName": "cn.wps.collections.PositionTree",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:0"
+      ]
+    },
+    {
+      "id": "ji:syn:1",
+      "qualifiedName": "cn.wps.collections.IntervalNode",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:1"
+      ]
+    },
+    {
+      "id": "ji:syn:2",
+      "qualifiedName": "java.lang.RuntimeException",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:2"
+      ]
+    }
+  ],
+  "classes": [
+    {
+      "id": "jc:IntervalTree",
+      "className": "IntervalTree",
+      "classKind": "class",
+      "extendsClass": "PositionTree",
+      "implementsInterfaces": [],
+      "lineIndices": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ],
+      "methods": [
+        {
+          "id": "jm:IntervalTree:IntervalTree",
+          "methodName": "IntervalTree",
+          "params": [
+            "IntervalNode head"
+          ],
+          "returnType": "",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": true,
+          "overloadIndex": 0,
+          "lineIndices": [
+            3,
+            4,
+            5
+          ],
+          "block": {
+            "id": "jb:jm:IntervalTree:IntervalTree:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:4"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalTree:getEndPosition",
+          "methodName": "getEndPosition",
+          "params": [],
+          "returnType": "int",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14
+          ],
+          "block": {
+            "id": "jb:jm:IntervalTree:getEndPosition:block",
+            "elements": [
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalTree:getEndPosition:block:0",
+                  "headerLineId": "jl:8",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:9"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalTree:getEndPosition:block:1",
+                  "headerLineId": "jl:10",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:11"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:12"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalTree:findForInsertSpace",
+          "methodName": "findForInsertSpace",
+          "params": [
+            "int cp"
+          ],
+          "returnType": "InsertSpace",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40
+          ],
+          "block": {
+            "id": "jb:jm:IntervalTree:findForInsertSpace:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:17"
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalTree:findForInsertSpace:block:0",
+                  "headerLineId": "jl:18",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:19"
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalTree:findForInsertSpace:block:0:0",
+                        "headerLineId": "jl:20",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:21"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalTree:findForInsertSpace:block:0:1",
+                        "headerLineId": "jl:22",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:23"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:24"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalTree:findForInsertSpace:block:1",
+                  "headerLineId": "jl:26",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:27"
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalTree:findForInsertSpace:block:1:0",
+                        "headerLineId": "jl:28",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:29"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalTree:findForInsertSpace:block:1:1",
+                        "headerLineId": "jl:30",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:31"
+                          },
+                          {
+                            "kind": "block",
+                            "block": {
+                              "id": "jb:jm:IntervalTree:findForInsertSpace:block:1:1:0",
+                              "headerLineId": "jl:32",
+                              "elements": [
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:33"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "block",
+                            "block": {
+                              "id": "jb:jm:IntervalTree:findForInsertSpace:block:1:1:1",
+                              "headerLineId": "jl:34",
+                              "elements": [
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:35"
+                                },
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:36"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalTree:find",
+          "methodName": "find",
+          "params": [
+            "int pos",
+            "int[] off"
+          ],
+          "returnType": "IntervalNode",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63
+          ],
+          "block": {
+            "id": "jb:jm:IntervalTree:find:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:43"
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalTree:find:block:0",
+                  "headerLineId": "jl:45",
+                  "elements": [
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalTree:find:block:0:0",
+                        "headerLineId": "jl:46",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:47"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalTree:find:block:0:1",
+                        "headerLineId": "jl:48",
+                        "elements": [
+                          {
+                            "kind": "block",
+                            "block": {
+                              "id": "jb:jm:IntervalTree:find:block:0:1:0",
+                              "headerLineId": "jl:49",
+                              "elements": [
+                                {
+                                  "kind": "block",
+                                  "block": {
+                                    "id": "jb:jm:IntervalTree:find:block:0:1:0:0",
+                                    "headerLineId": "jl:50",
+                                    "elements": [
+                                      {
+                                        "kind": "line",
+                                        "lineId": "jl:51"
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:54"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:57"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:58"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:62"
+              }
+            ]
+          }
+        }
+      ],
+      "fields": [
+        {
+          "id": "jf:super:IntervalTree",
+          "fieldName": "super_",
+          "fieldType": "PositionTree",
+          "isStatic": false,
+          "isFinal": false
+        }
+      ],
+      "innerClasses": [
+        {
+          "id": "jc:IntervalTree$$InsertSpace",
+          "className": "InsertSpace",
+          "classKind": "class",
+          "implementsInterfaces": [],
+          "lineIndices": [
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            71,
+            72,
+            73,
+            74,
+            75
+          ],
+          "methods": [
+            {
+              "id": "jm:InsertSpace:InsertSpace",
+              "methodName": "InsertSpace",
+              "params": [
+                "IntervalNode node",
+                "boolean left",
+                "int pos"
+              ],
+              "returnType": "",
+              "isStatic": false,
+              "isAbstract": false,
+              "isConstructor": true,
+              "overloadIndex": 0,
+              "lineIndices": [
+                70,
+                71,
+                72,
+                73,
+                74
+              ],
+              "block": {
+                "id": "jb:jm:InsertSpace:InsertSpace:block",
+                "elements": [
+                  {
+                    "kind": "line",
+                    "lineId": "jl:71"
+                  },
+                  {
+                    "kind": "line",
+                    "lineId": "jl:72"
+                  },
+                  {
+                    "kind": "line",
+                    "lineId": "jl:73"
+                  }
+                ]
+              }
+            }
+          ],
+          "fields": [
+            {
+              "id": "jf:InsertSpace:node",
+              "fieldName": "node",
+              "fieldType": "IntervalNode",
+              "isStatic": false,
+              "isFinal": false
+            },
+            {
+              "id": "jf:InsertSpace:left",
+              "fieldName": "left",
+              "fieldType": "boolean",
+              "isStatic": false,
+              "isFinal": false
+            },
+            {
+              "id": "jf:InsertSpace:pos",
+              "fieldName": "pos",
+              "fieldType": "int",
+              "isStatic": false,
+              "isFinal": false
+            }
+          ],
+          "innerClasses": []
+        }
+      ]
+    }
+  ]
+}

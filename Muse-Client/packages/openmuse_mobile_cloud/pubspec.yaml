@@ -1,0 +1,11 @@
+name: openmuse_mobile_cloud
+description: HTTPS adapter for OpenMuse Mobile Cloud Workspace contracts.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  openmuse_mobile_core:
+    path: ../openmuse_mobile_core
+dev_dependencies:
+  test: ^1.26.0

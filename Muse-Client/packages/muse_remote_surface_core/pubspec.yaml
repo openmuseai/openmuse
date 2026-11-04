@@ -1,0 +1,17 @@
+name: muse_remote_surface_core
+description: In-memory remote surface host, session recovery, and workbench client.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  crypto: ^3.0.6
+  muse_remote_surface_contract:
+    path: ../muse_remote_surface_contract
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

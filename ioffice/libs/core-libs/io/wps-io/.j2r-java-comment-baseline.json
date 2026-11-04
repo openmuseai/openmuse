@@ -1,0 +1,13 @@
+{
+  "total": 101,
+  "files": [
+    {
+      "file": "/Users/mac/src/ioffice/libs/core-libs/io/wps-io/src/cn/wps/io/xwpf/util/ZipInputStreamZipEntrySource.rs",
+      "count": 86
+    },
+    {
+      "file": "/Users/mac/src/ioffice/libs/core-libs/io/wps-io/src/cn/wps/io/xwpf/util/ZipEntrySource.rs",
+      "count": 15
+    }
+  ]
+}

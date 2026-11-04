@@ -1,0 +1,660 @@
+[package]
+name = "ppt-core"
+version = "0.1.0"
+edition = "2021"
+description = """
+Cross-platform presentation engine: parse, layout, cache, and render-command generation.
+
+Rust port of koffice/presentation/core — designed to produce output identical to the
+original Java implementation while enabling three-platform unification
+(Web, Desktop, Mobile) via the ioffice Flutter+Rust architecture.
+"""
+
+[features]
+default = []
+uniffi = ["dep:uniffi"]
+full = ["dep:picparser"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+quick-xml = { version = "0.36", features = ["serialize"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
+uniffi = { version = "0.28", optional = true }
+
+# Workspace internal crates (aliased to match generated import paths)
+util = { package = "core_libs_util", path = "../core-libs/util/util" }
+util_adapter = { path = "../core-libs/util/adapter" }
+drawing = { package = "core_libs_drawing", path = "../core-libs/drawing" }
+kfc = { package = "core_libs_kfc_main", path = "../core-libs/kfc/kfc" }
+kfc_kfc_alpha = { package = "core_libs_kfc", path = "../core-libs/kfc/kfc_alpha" }
+kfs_kfs_app = { package = "core_libs_kfs_app", path = "../core-libs/kfs/kfs_app" }
+thirdparty_jaxen = { package = "core_libs_jaxen", path = "../core-libs/thirdparty/jaxen" }
+io_wps_io = { package = "core_libs_io", path = "../core-libs/io/wps-io" }
+io_poi_compact = { package = "core_libs_poi_compact", path = "../core-libs/io/poi-compact" }
+picparser = { package = "core_libs_picparser", path = "../core-libs/thirdparty/picparser", optional = true }
+wpslayout = { package = "core_libs_wpslayout", path = "../core-libs/wpslayout" }
+core_libs_font = { path = "../core-libs/thirdparty/font" }
+stubs = { path = "../core-libs/stubs" }
+thirdparty_kInk = { package = "core_libs_kink", path = "../core-libs/thirdparty/kInk" }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+zip = { version = "2", features = ["lzma", "zstd", "bzip2"] }
+
+[dev-dependencies]
+pretty_assertions = "1"
+drawing = { package = "core_libs_drawing", path = "../core-libs/drawing" }
+
+[[test]]
+name = "01_function_sw_reader_map"
+path = "tests/cn/wps/show/pptxr/util/SWReaderMap.rs"
+
+[[test]]
+name = "02_function_handler_callback"
+path = "tests/cn/wps/drawing/dmlr/model/HandlerCallback.rs"
+
+[[test]]
+name = "01_function_nonvisual_shape_props"
+path = "tests/cn/wps/show/pptxr/handler/shape/SwNvPrHandler.rs"
+
+[[test]]
+name = "03_function_sw_nvpr"
+path = "tests/cn/wps/show/pptxr/handler/shape/SwNvPrHandler.rs"
+
+[[test]]
+name = "02_function_auto_shape"
+path = "tests/cn/wps/show/pptxr/handler/shape/SwShapeHandler.rs"
+
+[[test]]
+name = "03_function_picture_shape"
+path = "tests/cn/wps/show/pptxr/handler/shape/SwPictureHandler.rs"
+
+[[test]]
+name = "04_function_connector_shape"
+path = "tests/cn/wps/show/pptxr/handler/shape/SwConnectorShapeHandler.rs"
+
+[[test]]
+name = "05_function_shape_tree_dispatch"
+path = "tests/cn/wps/show/pptxr/handler/shape/SwGroupShapeHandler.rs"
+
+[[test]]
+name = "04_function_common_slide_data"
+path = "tests/cn/wps/show/pptxr/handler/slides/CommonSlideDataHandler.rs"
+
+[[test]]
+name = "05_function_slide_handler"
+path = "tests/cn/wps/show/pptxr/handler/slides/SlideHandler.rs"
+
+[[test]]
+name = "06_function_slide_layout"
+path = "tests/cn/wps/show/pptxr/handler/slidelayouts/SlideLayoutHandler.rs"
+
+[[test]]
+name = "07_function_slide_bg_clrmap"
+path = "tests/cn/wps/show/pptxr/handler/slides/BackgroundHandler.rs"
+
+[[test]]
+name = "07_function_slide_master"
+path = "tests/cn/wps/show/pptxr/handler/slidemasters/SlideMasterHandler.rs"
+
+[[test]]
+name = "01_function_emu_convert"
+path = "tests/cn/wps/base/converter/UnitsConverter.rs"
+
+[[test]]
+name = "02_function_slide_viewport"
+path = "tests/cn/wps/show/layout/slide_viewport.rs"
+
+[[test]]
+name = "01_function_shape_absolute_rect"
+path = "tests/cn/wps/show/util/ShapeUtil.rs"
+
+[[test]]
+name = "02_function_group_child_rect"
+path = "tests/cn/wps/show/util/ShapeUtil_group.rs"
+
+[[test]]
+name = "01_function_ph_merge_transform"
+path = "tests/cn/wps/show/layout/PlaceHolderMerger.rs"
+
+[[test]]
+name = "02_function_ph_merge_style"
+path = "tests/cn/wps/show/layout/PlaceHolderMerger_style.rs"
+
+[[test]]
+name = "01_function_shape_to_textbox"
+path = "tests/cn/wps/show/layout/dataaction/ShapeDataTransform.rs"
+
+[[test]]
+name = "02_function_textbox_props"
+path = "tests/cn/wps/show/layout/dataaction/textbox_props.rs"
+
+[[test]]
+name = "02_function_text_box_geometry"
+path = "tests/cn/wps/show/layout/typo/TextBoxGeometry.rs"
+
+[[test]]
+name = "01_function_greedy_wrap"
+path = "tests/cn/wps/show/layout/typo/GreedyWrap.rs"
+
+[[test]]
+name = "01_function_typo_shape_snapshot"
+path = "tests/cn/wps/show/render/ShowTypoShape.rs"
+
+[[test]]
+name = "02_function_child_walk"
+path = "tests/cn/wps/show/render/ShowTypoShape_child.rs"
+
+[[test]]
+name = "01_function_layer_order"
+path = "tests/cn/wps/show/render/SlideRender.rs"
+
+[[test]]
+name = "02_function_begin_filter"
+path = "tests/cn/wps/show/render/ShapeRender.rs"
+
+[[test]]
+name = "01_function_shape_geometry_command"
+path = "tests/cn/wps/show/render/rendercommand_geometry.rs"
+
+[[test]]
+name = "02_function_fill_line_command"
+path = "tests/cn/wps/show/render/rendercommand_fill.rs"
+
+[[test]]
+name = "01_function_text_line_command"
+path = "tests/cn/wps/show/render/rendercommand_text.rs"
+
+[[test]]
+name = "02_function_run_style_command"
+path = "tests/cn/wps/show/render/rendercommand_style.rs"
+
+[[test]]
+name = "01_function_command_json"
+path = "tests/cn/wps/show/render/rendercommand_json.rs"
+
+[[test]]
+name = "03_function_mvp_hello_slide"
+path = "tests/cn/wps/show/render/mvp_pipeline.rs"
+
+[[test]]
+name = "01_function_shape_properties"
+path = "tests/cn/wps/drawing/dmlr/handler/shape/sppr/ShapePropertiesHandler.rs"
+
+[[test]]
+name = "02_function_fill"
+path = "tests/cn/wps/drawing/dmlr/handler/shape/sppr/fill/FillPropertiesHandler.rs"
+
+[[test]]
+name = "03_function_outline"
+path = "tests/cn/wps/drawing/dmlr/handler/shape/sppr/outline/OutlineHandler.rs"
+
+[[test]]
+name = "04_function_geometry"
+path = "tests/cn/wps/drawing/dmlr/handler/shape/sppr/geometry/PresetGeometryHandler.rs"
+
+[[test]]
+name = "01_function_color_map"
+path = "tests/cn/wps/drawing/dmlr/handler/style/ColorMapHandler.rs"
+
+[[test]]
+name = "02_function_text_list_style"
+path = "tests/cn/wps/drawing/dmlr/handler/shape/textshape/text/TextListStyleHandler.rs"
+
+[[test]]
+name = "01_function_theme_handler"
+path = "tests/cn/wps/drawing/dmlr/handler/style/ThemeHandler.rs"
+
+[[test]]
+name = "02_function_pptx_theme_open"
+path = "tests/cn/wps/show/pptxr/ppt/theme/PptxrTheme.rs"
+
+[[test]]
+name = "03_function_themes_cache"
+path = "tests/cn/wps/show/pptxr/ppt/theme/PptxrThemes.rs"
+
+[[test]]
+name = "03_function_blip_image"
+path = "tests/cn/wps/show/moffice/drawing/render/GemoRender.rs"
+
+[[test]]
+name = "03_function_scheme_color"
+path = "tests/cn/wps/drawing/dmlr/handler/color/SchemeColorHandler.rs"
+
+[[test]]
+name = "04_function_pptx_reader"
+path = "tests/cn/wps/show/pptxr/PptxReader.rs"
+
+[[test]]
+name = "01_function_package_open"
+path = "tests/cn/wps/kfc/ooxfr/OxfrPackage.rs"
+
+[[test]]
+name = "02_function_pres_part_locate"
+path = "tests/cn/wps/show/pptxr/opc/pres_part.rs"
+
+[[test]]
+name = "03_function_part_stream"
+path = "tests/cn/wps/kfc/ooxfr/OxfrPackage_part_stream.rs"
+
+[[test]]
+name = "01_function_slide_id_map"
+path = "tests/cn/wps/show/pptxr/ppt/slides/PptxrSlides.rs"
+
+[[test]]
+name = "02_function_on_ids"
+path = "tests/cn/wps/show/pptxr/ppt/slides/PptxrSlides_on_ids.rs"
+
+[[test]]
+name = "03_function_unread_walk"
+path = "tests/cn/wps/show/pptxr/ppt/slides/PptxrSlides_unread_walk.rs"
+
+[[test]]
+name = "04_function_change_layout"
+path = "tests/cn/wps/show/pptxr/ppt/slides/PptxrSlides_change_layout.rs"
+
+[[test]]
+name = "01_function_presentation_attrs"
+path = "tests/cn/wps/show/pptxr/handler/PresentationHandler.rs"
+
+[[test]]
+name = "02_function_id_lists"
+path = "tests/cn/wps/show/pptxr/handler/PresentationHandler_id_lists.rs"
+
+[[test]]
+name = "03_function_slide_notes_size"
+path = "tests/cn/wps/show/pptxr/handler/PresentationHandler_slide_notes_size.rs"
+
+[[test]]
+name = "04_function_photo_kinsoku_custshow"
+path = "tests/cn/wps/show/pptxr/handler/PresentationHandler_photo_kinsoku_custshow.rs"
+
+[[test]]
+name = "01_function_unified_xml_reader"
+path = "tests/cn/wps/show/pptxr/util/UnifiedXmlReader.rs"
+
+[[test]]
+name = "02_function_handler_callback_impl"
+path = "tests/cn/wps/show/pptxr/ppt/slides/HandlerCallbackImpl.rs"
+
+[[test]]
+name = "03_function_pptx_slide_open"
+path = "tests/cn/wps/show/pptxr/ppt/slides/PptxrSlide.rs"
+
+[[test]]
+name = "04_function_pptx_layout_open"
+path = "tests/cn/wps/show/pptxr/ppt/slidelayouts/PptxrLayout.rs"
+
+[[test]]
+name = "05_function_pptx_master_open"
+path = "tests/cn/wps/show/pptxr/ppt/slidemasters/PptxrMaster.rs"
+
+[[test]]
+name = "01_function_doc_props"
+path = "tests/cn/wps/show/pptxr/docprops/PptxrDocProps.rs"
+
+[[test]]
+name = "02_function_pres_open_global"
+path = "tests/cn/wps/show/pptxr/ppt/PptxrPresentation.rs"
+
+[[test]]
+name = "03_function_pres_open"
+path = "tests/cn/wps/show/pptxr/ppt/PptxrPresentation_open.rs"
+
+[[test]]
+name = "01_function_text_body"
+path = "tests/cn/wps/drawing/dmlr/handler/shape/textshape/text/01_function_text_body.rs"
+
+[[test]]
+name = "02_function_text_body_props"
+path = "tests/cn/wps/drawing/dmlr/handler/shape/textshape/text/02_function_text_body_props.rs"
+
+[[test]]
+name = "03_function_page_inheritance_geometry"
+path = "tests/cn/wps/show/layout/page_inheritance.rs"
+
+[[test]]
+name = "02_function_slide_graph_assembly"
+path = "tests/cn/wps/show/pptxr/02_function_slide_graph_assembly.rs"
+
+[[test]]
+name = "04_function_document_handoff"
+path = "tests/cn/wps/show/pptxr/04_function_document_handoff.rs"
+
+[[test]]
+name = "01_function_transition"
+path = "tests/cn/wps/show/pptxr/handler/transition/TransitionHandler.rs"
+
+[[test]]
+name = "02_function_timing_lists"
+path = "tests/cn/wps/show/pptxr/handler/timing/TimingHandler.rs"
+
+[[test]]
+name = "03_function_time_node_list"
+path = "tests/cn/wps/show/pptxr/handler/timing/TimeNodeListHandler.rs"
+
+[[test]]
+name = "01_function_slide_layout_rel"
+path = "tests/cn/wps/show/pptxr/01_function_slide_layout_rel.rs"
+
+[[test]]
+name = "02_function_layout_master_graphs"
+path = "tests/cn/wps/show/pptxr/02_function_layout_master_graphs.rs"
+
+[[test]]
+name = "03_function_nvpr_ph_bind"
+path = "tests/cn/wps/show/pptxr/03_function_nvpr_ph_bind.rs"
+
+[[test]]
+name = "04_function_bind_resolve_pages"
+path = "tests/cn/wps/show/pptxr/04_function_bind_resolve_pages.rs"
+
+[[test]]
+name = "01_function_theme_scheme_table"
+path = "tests/cn/wps/drawing/dmlr/handler/style/01_function_theme_scheme_table.rs"
+
+[[test]]
+name = "02_function_shape_fill_argb"
+path = "tests/cn/wps/drawing/dmlr/handler/style/02_function_shape_fill_argb.rs"
+
+[[test]]
+name = "03_function_run_fill_argb"
+path = "tests/cn/wps/drawing/dmlr/handler/style/03_function_run_fill_argb.rs"
+
+[[test]]
+name = "01_function_pic_blip_embed"
+path = "tests/cn/wps/show/pptxr/01_function_pic_blip_embed.rs"
+
+[[test]]
+name = "02_function_slide_image_rel"
+path = "tests/cn/wps/show/pptxr/02_function_slide_image_rel.rs"
+
+[[test]]
+name = "03_function_media_bytes_bind"
+path = "tests/cn/wps/show/pptxr/03_function_media_bytes_bind.rs"
+
+[[test]]
+name = "01_function_apply_merged_shape_pr"
+path = "tests/cn/wps/show/layout/01_function_apply_merged_shape_pr.rs"
+
+[[test]]
+name = "02_function_ph_text_inherit"
+path = "tests/cn/wps/show/layout/02_function_ph_text_inherit.rs"
+
+[[test]]
+name = "01_function_emit_draw_image"
+path = "tests/cn/wps/show/render/01_function_emit_draw_image.rs"
+
+[[test]]
+name = "02_function_emit_solid_fill"
+path = "tests/cn/wps/show/render/02_function_emit_solid_fill.rs"
+
+[[test]]
+name = "01_function_bg_pr_solid"
+path = "tests/cn/wps/show/pptxr/01_function_bg_pr_solid.rs"
+
+[[test]]
+name = "02_function_bg_ref"
+path = "tests/cn/wps/show/pptxr/02_function_bg_ref.rs"
+
+[[test]]
+name = "03_function_background_layer"
+path = "tests/cn/wps/show/render/03_function_background_layer.rs"
+
+[[test]]
+name = "01_function_sp_blip_embed"
+path = "tests/cn/wps/show/pptxr/01_function_sp_blip_embed.rs"
+
+[[test]]
+name = "02_function_sp_blip_drawimage"
+path = "tests/cn/wps/show/render/02_function_sp_blip_drawimage.rs"
+
+[[test]]
+name = "01_function_grp_choff_chext"
+path = "tests/cn/wps/show/pptxr/01_function_grp_choff_chext.rs"
+
+[[test]]
+name = "02_function_child_abs_rect"
+path = "tests/cn/wps/show/layout/02_function_child_abs_rect.rs"
+
+[[test]]
+name = "03_function_film_group_children"
+path = "tests/cn/wps/show/render/03_function_film_group_children.rs"
+
+[[test]]
+name = "01_function_prst_bind"
+path = "tests/cn/wps/show/pptxr/01_function_prst_bind.rs"
+
+[[test]]
+name = "02_function_prst_path"
+path = "tests/cn/wps/show/render/02_function_prst_path.rs"
+
+[[test]]
+name = "03_function_skip_text_wireframe"
+path = "tests/cn/wps/show/render/03_function_skip_text_wireframe.rs"
+
+[[test]]
+name = "01_function_clip_slide_bounds"
+path = "tests/cn/wps/show/render/01_function_clip_slide_bounds.rs"
+
+[[test]]
+name = "02_function_bodypr_vert"
+path = "tests/cn/wps/show/pptxr/02_function_bodypr_vert.rs"
+
+[[test]]
+name = "01_function_getshape_cache"
+path = "tests/cn/wps/show/render/01_function_getshape_cache.rs"
+
+[[test]]
+name = "02_function_type_dispatch"
+path = "tests/cn/wps/show/convert/02_function_type_dispatch.rs"
+
+[[test]]
+name = "03_function_xfrm_pos"
+path = "tests/cn/wps/show/convert/03_function_xfrm_pos.rs"
+
+[[test]]
+name = "04_function_geom_path"
+path = "tests/cn/wps/show/convert/04_function_geom_path.rs"
+
+[[test]]
+name = "05_function_fill_base"
+path = "tests/cn/wps/show/convert/05_function_fill_base.rs"
+
+[[test]]
+name = "06_function_line_property"
+path = "tests/cn/wps/show/convert/06_function_line_property.rs"
+
+[[test]]
+name = "07_function_shape_text_bind"
+path = "tests/cn/wps/show/render/07_function_shape_text_bind.rs"
+
+# R15 等价性门禁（PLAN §23.9）：冻结产物 B（MVP 渲染命令面）对 C1 的逐页输出。
+# 它是"换数据源不改行为"的唯一客观判据，也是 §27 第 2B 段（sppr 属性落点去影子）的安全网。
+[[test]]
+name = "06_function_render_equivalence"
+path = "tests/cn/wps/show/render/06_function_render_equivalence.rs"
+
+# M-PPT-KMOSLIDE 终局判据（PLAN §26 判据 4 / §36.7）：真树的**结构 + 属性**双绿。
+# 结构与 R15/A13 互补；**属性**是本 target 的新增价值 —— 证明 `p:spPr` 的四个槽位
+# （xfrm/prstGeom/fill/ln）落在**真实 KProto 树**上，而不是影子 `layout_shape::*Obj`。
+[[test]]
+name = "08_function_real_tree_attributes"
+path = "tests/cn/wps/show/render/08_function_real_tree_attributes.rs"
+
+[[test]]
+name = "01_function_spid_identity"
+path = "tests/cn/wps/drawing/app/01_function_spid_identity.rs"
+
+[[test]]
+name = "01_function_atom_base"
+path = "tests/cn/wps/show/app/slide/01_function_atom_base.rs"
+
+[[test]]
+name = "01_function_kmoslide_body"
+path = "tests/cn/wps/show/app/slide/01_function_kmoslide_body.rs"
+
+[[test]]
+name = "02_function_showshape_tree"
+path = "tests/cn/wps/show/app/shape/02_function_showshape_tree.rs"
+
+[[test]]
+name = "03_function_dgstore_update"
+path = "tests/cn/wps/drawing/app/03_function_dgstore_update.rs"
+
+[[test]]
+name = "04_function_graphic_store"
+path = "tests/cn/wps/drawing/app/04_function_graphic_store.rs"
+
+[[test]]
+name = "04_function_sw_end_commit"
+path = "tests/cn/wps/show/pptxr/handler/shape/04_function_sw_end_commit.rs"
+
+[[test]]
+name = "05_function_sppr_data_shapepr"
+path = "tests/cn/wps/drawing/dmlr/handler/shape/sppr/05_function_sppr_data_shapepr.rs"
+
+[[test]]
+name = "06_function_txbody_data_textbody"
+path = "tests/cn/wps/drawing/dmlr/handler/shape/textshape/text/06_function_txbody_data_textbody.rs"
+
+[[test]]
+name = "07_function_convert_read_kmo"
+path = "tests/cn/wps/show/convert/07_function_convert_read_kmo.rs"
+
+
+[[test]]
+name = "01_function_sw_group_on_mod"
+path = "tests/cn/wps/show/pptxr/handler/shape/01_function_sw_group_on_mod.rs"
+
+[[test]]
+name = "02_function_open_tree_is_app_kmo"
+path = "tests/cn/wps/show/pptxr/02_function_open_tree_is_app_kmo.rs"
+
+[[test]]
+name = "03_function_open_ln_survives"
+path = "tests/cn/wps/show/pptxr/03_function_open_ln_survives.rs"
+
+[[test]]
+name = "04_function_typo_host_app_kmo"
+path = "tests/cn/wps/show/render/04_function_typo_host_app_kmo.rs"
+
+[[test]]
+name = "01_function_path_from_getshape"
+path = "tests/cn/wps/show/render/01_function_path_from_getshape.rs"
+
+[[test]]
+name = "02_function_fill_from_fillbase"
+path = "tests/cn/wps/show/render/02_function_fill_from_fillbase.rs"
+
+[[test]]
+name = "03_function_line_from_lineproperty"
+path = "tests/cn/wps/show/render/03_function_line_from_lineproperty.rs"
+
+[[test]]
+name = "04_function_no_layout_geom_in_render_slide"
+path = "tests/cn/wps/show/render/04_function_no_layout_geom_in_render_slide.rs"
+
+[[test]]
+name = "01_function_hidden_skipped"
+path = "tests/cn/wps/show/render/01_function_hidden_skipped.rs"
+
+[[test]]
+name = "02_function_ph_hint_flag"
+path = "tests/cn/wps/show/render/02_function_ph_hint_flag.rs"
+
+[[test]]
+name = "03_function_not_draw_background"
+path = "tests/cn/wps/show/render/03_function_not_draw_background.rs"
+
+[[test]]
+name = "01_function_anchor_1_2"
+path = "tests/cn/wps/show/layout/typo/01_function_anchor_1_2.rs"
+
+[[test]]
+name = "02_function_ph_type_default"
+path = "tests/cn/wps/show/layout/02_function_ph_type_default.rs"
+
+[[test]]
+name = "03_function_neg_emu_round"
+path = "tests/cn/wps/base/converter/03_function_neg_emu_round.rs"
+
+[[test]]
+name = "04_function_canrotate_group"
+path = "tests/cn/wps/show/app/shape/04_function_canrotate_group.rs"
+
+[[test]]
+name = "01_function_follow_fill"
+path = "tests/cn/wps/drawing/data/shape/01_function_follow_fill.rs"
+
+[[test]]
+name = "02_function_follow_xfrm"
+path = "tests/cn/wps/drawing/data/shape/02_function_follow_xfrm.rs"
+
+[[test]]
+name = "03_function_local_overrides"
+path = "tests/cn/wps/drawing/data/shape/03_function_local_overrides.rs"
+
+[[test]]
+name = "01_function_parse_show_master_sp"
+path = "tests/cn/wps/show/pptxr/01_function_parse_show_master_sp.rs"
+
+[[test]]
+name = "02_function_film_master_then_layout"
+path = "tests/cn/wps/show/render/02_function_film_master_then_layout.rs"
+
+[[test]]
+name = "03_function_false_skips_master"
+path = "tests/cn/wps/show/render/03_function_false_skips_master.rs"
+
+[[test]]
+name = "01_function_para_direction"
+path = "tests/cn/wps/show/layout/dataaction/01_function_para_direction.rs"
+
+[[test]]
+name = "02_function_text_spacing"
+path = "tests/cn/wps/show/layout/dataaction/02_function_text_spacing.rs"
+
+[[test]]
+name = "03_function_convert_bullet"
+path = "tests/cn/wps/show/layout/dataaction/03_function_convert_bullet.rs"
+
+[[test]]
+name = "01_function_line_drawtext"
+path = "tests/cn/wps/show/render/01_function_line_drawtext.rs"
+
+[[test]]
+name = "02_function_multi_run_style"
+path = "tests/cn/wps/show/render/02_function_multi_run_style.rs"
+
+[[test]]
+name = "03_function_textrect_inset"
+path = "tests/cn/wps/show/render/03_function_textrect_inset.rs"
+
+[[test]]
+name = "01_function_stroke_width_px"
+path = "tests/cn/wps/show/render/01_function_stroke_width_px.rs"
+
+[[test]]
+name = "02_function_stroke_color"
+path = "tests/cn/wps/show/render/02_function_stroke_color.rs"
+
+[[test]]
+name = "03_function_noline"
+path = "tests/cn/wps/show/render/03_function_noline.rs"
+
+[[test]]
+name = "01_function_raster_size"
+path = "tests/cn/wps/show/layout/01_function_raster_size.rs"
+
+[[test]]
+name = "02_function_slide_solid_rmse"
+path = "tests/cn/wps/show/render/02_function_slide_solid_rmse.rs"
+
+[[test]]
+name = "03_function_sample_slide_n"
+path = "tests/cn/wps/show/render/03_function_sample_slide_n.rs"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [] }

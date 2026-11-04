@@ -1,0 +1,1156 @@
+import {isTableLikeView} from "./viewType";
+import {Menu} from "../../../plugin/Menu";
+import {hasClosestByAttribute, hasClosestByClassName, hasTopClosestByClassName} from "../../util/hasClosest";
+import {UDLRHint} from "../../../util/upDownHint";
+import {fetchPost, fetchSyncPost} from "../../../util/fetch";
+import type {AVRelationItemPreview, AVRelationItemCellInput} from "../../../types/api";
+import {escapeAttr, escapeHtml, escapeLessThans, escapeHtmlTextAndAttr} from "../../../util/escape";
+import {transaction} from "../../wysiwyg/transaction";
+import {genCellValueByElement, getCellValueText, renderCell, updateCellsValue} from "./cell";
+import {updateAttrViewCellAnimation} from "./action";
+import {focusBlock} from "../../util/selection";
+import {setPosition} from "../../../util/setPosition";
+import dayjs from "dayjs";
+import {getFieldsByData, getViewName} from "./view";
+import {getColIconByType, getColId} from "./col";
+import {getFieldIdByCellElement} from "./row";
+import {isMobile} from "../../../util/functions";
+import {showMessage} from "../../../dialog/message";
+import {writeText} from "../../util/compatibility";
+import {Constants} from "../../../constants";
+import {openDatabaseRowByData} from "./openDatabaseRow";
+import {getAVColumnTextMeasurer, getAVRelationColumnWidth, getAVTableFitWidths} from "./columnWidth";
+import {getSearchAVFocus} from "./searchAVFocus";
+import {getAVTemplateHTML} from "./attributeValue";
+import {hasAVRenderTemplateResult} from "./cellValue";
+import {renderAVRichTextElements} from "./richText";
+import {getAVBlockIconHTML} from "./blockIcon";
+import {unicode2Emoji} from "../../../emoji";
+import {bindRelationLayout} from "./relationLayout";
+import {getRelationKeyboardTarget} from "./relationKeyboard";
+import {getTopBarHeight} from "../../../layout/getTopBarHeight";
+
+interface IAVItem {
+    avID: string;
+    avName: string;
+    blockID: string;
+    hPath: string;
+    matched?: boolean;
+    viewName: string;
+    viewID: string;
+    viewLayout: string;
+}
+
+type TSearchAVPurpose = "addToDatabase" | "selectRelation";
+
+interface IOpenSearchAVOptions {
+    avID: string;
+    target: HTMLElement;
+    position?: IPosition;
+    callback?: (element: HTMLElement) => void;
+    purpose: TSearchAVPurpose;
+    blockID?: string;
+}
+
+const RELATION_PAGE_SIZE = 16;
+const relationItemPreviews = new WeakMap<HTMLElement, {keyword: string, preview: AVRelationItemPreview}>();
+
+const SEARCH_AV_LOADING_HTML = '<div class="fn__flex" style="height:64px;align-items:center;justify-content:center"><span class="b3-loading" aria-hidden="true"></span></div>';
+
+const genSearchList = (element: Element, keyword: string, options: IOpenSearchAVOptions, signal: AbortSignal,
+                       cb?: () => void) => {
+    const showViews = options.purpose === "addToDatabase";
+    fetchPost("/api/av/searchAttributeView", {
+        keyword,
+        avID: options.avID,
+        blockID: options.blockID,
+        excludes: (showViews && options.avID) ? [options.avID] : undefined,
+        includeViewMatches: showViews,
+    }, (response) => {
+        let html = "";
+        const results = response.data.results as Array<IAVItem & { children: IAVItem[] }>;
+        const focus = getSearchAVFocus(results, keyword);
+        results.forEach((item, index) => {
+            const hasChildren = item.children && item.children.length > 0 && showViews;
+            const expandChildren = hasChildren && item.children.some((subItem) => subItem.matched);
+            const focusParent = focus?.resultIndex === index && focus.viewIndex === undefined;
+            html += `<div class="b3-list-item b3-list-item--narrow${focusParent ? " b3-list-item--focus" : ""}" data-av-id="${item.avID}" data-block-id="${item.blockID}">
+    <span class="b3-list-item__toggle b3-list-item__toggle--hl${showViews ? "" : " fn__none"}" style="height:auto;align-self: stretch;margin: 4px 0;">
+        <svg class="b3-list-item__arrow${expandChildren ? " b3-list-item__arrow--open" : ""}">${hasChildren ? '<use xlink:href="#iconRight"></use>' : ""}</svg>
+    </span>
+    <span class="fn__space--small"></span>
+    <div class="b3-list-item--two fn__flex-1">
+        <div class="b3-list-item__first">
+            <span class="b3-list-item__text">${escapeHtml(item.avName || window.siyuan.languages._kernel[267])}</span>
+        </div>
+        <div class="b3-list-item__meta b3-list-item__showall">${escapeLessThans(item.hPath)}</div>
+    </div>
+    <svg aria-label="${window.siyuan.languages.thisDatabase}" style="margin: 0 0 0 4px" class="b3-list-item__hinticon ariaLabel${item.avID === options.avID ? "" : " fn__none"}"><use xlink:href="#iconInfo"></use></svg>
+</div>`;
+            if (hasChildren) {
+                html += `<div class="${expandChildren ? "" : "fn__none"}">`;
+                item.children.forEach((subItem, viewIndex) => {
+                    const viewDefaultName = getViewName(subItem.viewLayout);
+                    const focusView = focus?.resultIndex === index && focus.viewIndex === viewIndex;
+                    html += `<div style="padding-left: 48px;" class="b3-list-item b3-list-item--narrow${focusView ? " b3-list-item--focus" : ""}" data-av-id="${subItem.avID}" data-view-id="${subItem.viewID}" data-block-id="${subItem.blockID}">
+<span class="b3-list-item__text">${escapeHtml(subItem.viewName)}</span> 
+<span class="b3-list-item__meta">${viewDefaultName}</span>
+</div>`;
+                });
+                html += "</div>";
+            }
+        });
+        if (results.length === 0) {
+            const emptyText = showViews && keyword.trim() === "" ?
+                window.siyuan.languages.noAvailableDatabase : window.siyuan.languages.emptyContent;
+            html = `<div class="b3-list--empty">${emptyText}</div>`;
+        }
+        element.innerHTML = html;
+        if (cb) {
+            cb();
+        }
+    }, undefined, undefined, signal);
+};
+
+const setDatabase = (avId: string, element: HTMLElement, item: HTMLElement) => {
+    element.dataset.avId = item.dataset.avId;
+    element.dataset.blockId = item.dataset.blockId;
+    element.querySelector(".b3-menu__accelerator").textContent = item.querySelector(".b3-list-item__hinticon").classList.contains("fn__none") ? item.querySelector(".b3-list-item__text").textContent : window.siyuan.languages.thisDatabase;
+    const menuElement = hasClosestByClassName(element, "b3-menu__items");
+    if (menuElement) {
+        toggleUpdateRelationBtn(menuElement, avId, true);
+    }
+};
+
+export const openSearchAV = (options: IOpenSearchAVOptions) => {
+    window.siyuan.menus.menu.remove();
+    let cancelSearch: () => void;
+    const menu = new Menu(undefined, () => cancelSearch?.());
+    menu.addItem({
+        iconHTML: "",
+        type: "empty",
+        label: `<div class="fn__flex-column b3-menu__filter"${isMobile() ? "" : ' style="width: 50vw"'} >
+    <input spellcheck="false" class="b3-text-field fn__flex-shrink" placeholder="${window.siyuan.languages.searchPlaceholder}"/>
+    <div class="fn__hr"></div>
+    <div class="b3-list fn__flex-1 b3-list--background">
+        ${SEARCH_AV_LOADING_HTML}
+    </div>
+</div>`,
+        bind(element) {
+            const listElement = element.querySelector(".b3-list") as HTMLElement;
+            const inputElement = element.querySelector("input") as HTMLInputElement;
+            let searchTimer = 0;
+            let requestSequence = 0;
+            let controller: AbortController;
+            let closed = false;
+            cancelSearch = () => {
+                closed = true;
+                clearTimeout(searchTimer);
+                requestSequence++;
+                controller?.abort();
+            };
+            // 列表内容变化后重新适配菜单位置和面板高度。
+            const updateMenuPosition = () => {
+                window.siyuan.menus.menu.resetPosition();
+            };
+            const loadList = (keyword: string, cb?: () => void) => {
+                if (closed) {
+                    return;
+                }
+                controller?.abort();
+                controller = new AbortController();
+                const currentSequence = ++requestSequence;
+                genSearchList(listElement, keyword, options, controller.signal, () => {
+                    if (closed || currentSequence !== requestSequence) {
+                        return;
+                    }
+                    cb?.();
+                    updateMenuPosition();
+                });
+            };
+            const search = () => {
+                if (closed) {
+                    return;
+                }
+                controller?.abort();
+                requestSequence++;
+                clearTimeout(searchTimer);
+                listElement.innerHTML = SEARCH_AV_LOADING_HTML;
+                searchTimer = window.setTimeout(() => {
+                    loadList(inputElement.value);
+                }, Constants.TIMEOUT_INPUT);
+            };
+            const selectItem = (listItemElement?: HTMLElement) => {
+                if (!listItemElement) {
+                    return;
+                }
+                clearTimeout(searchTimer);
+                controller?.abort();
+                if (options.callback) {
+                    options.callback(listItemElement);
+                } else {
+                    setDatabase(options.avID, options.target, listItemElement);
+                }
+                window.siyuan.menus.menu.remove();
+            };
+            inputElement.addEventListener("keydown", (event: KeyboardEvent) => {
+                if (event.isComposing) {
+                    return;
+                }
+                UDLRHint(listElement, event);
+                if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+                    updateMenuPosition();
+                }
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const listItemElement = listElement.querySelector(".b3-list-item--focus") as HTMLElement;
+                    selectItem(listItemElement);
+                }
+            });
+            inputElement.addEventListener("input", (event: InputEvent) => {
+                event.stopPropagation();
+                if (event.isComposing) {
+                    return;
+                }
+                search();
+            });
+            inputElement.addEventListener("compositionend", () => {
+                search();
+            });
+            element.lastElementChild.addEventListener("click", (event) => {
+                let clickTarget = event.target as HTMLElement;
+                while (clickTarget && !clickTarget.classList.contains("b3-list")) {
+                    if (clickTarget.classList.contains("b3-list-item__toggle")) {
+                        if (clickTarget.firstElementChild.classList.contains("b3-list-item__arrow--open")) {
+                            clickTarget.firstElementChild.classList.remove("b3-list-item__arrow--open");
+                            clickTarget.parentElement.nextElementSibling.classList.add("fn__none");
+                        } else {
+                            clickTarget.firstElementChild.classList.add("b3-list-item__arrow--open");
+                            clickTarget.parentElement.nextElementSibling.classList.remove("fn__none");
+                        }
+                        event.preventDefault();
+                        event.stopPropagation();
+                        // 展开或收起视图后重新适配菜单位置和面板高度。
+                        updateMenuPosition();
+                        break;
+                    } else if (clickTarget.classList.contains("b3-list-item")) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        selectItem(clickTarget);
+                        break;
+                    }
+                    clickTarget = clickTarget.parentElement;
+                }
+            });
+            loadList("", () => {
+                const rect = options.target.getBoundingClientRect();
+                menu.open(options.position || {
+                    x: rect.left,
+                    y: rect.bottom,
+                    h: rect.height,
+                });
+                element.querySelector("input").focus();
+            });
+        }
+    });
+    if (isMobile()) {
+        // 移动端底部面板按内容收缩，避免列表下方留白
+        menu.element.classList.add("b3-menu--fit");
+    }
+    const popoverElement = hasTopClosestByClassName(options.target, "block__popover", true);
+    menu.element.setAttribute("data-from", popoverElement ? popoverElement.dataset.level + "popover" : "app");
+};
+
+export const updateRelation = (options: {
+    protyle: IProtyle,
+    avID: string,
+    avElement: Element,
+    colsData: IAVColumn[],
+    blockElement: Element,
+    callback?: () => void,
+}) => {
+    const inputElement = options.avElement.querySelector('input[data-type="colName"]') as HTMLInputElement;
+    const goSearchAVElement = options.avElement.querySelector('.b3-menu__item[data-type="goSearchAV"]') as HTMLElement;
+    const newAVId = goSearchAVElement.getAttribute("data-av-id");
+    const colId = options.avElement.querySelector(".b3-menu__item").getAttribute("data-col-id");
+    let colData: IAVColumn;
+    options.colsData.find(item => {
+        if (item.id === colId) {
+            if (!item.relation) {
+                item.relation = {};
+            }
+            colData = item;
+            return true;
+        }
+    });
+    const colNewName = (options.avElement.querySelector('[data-type="name"]') as HTMLInputElement).value;
+    const blockID = options.blockElement.getAttribute("data-node-id");
+    const targetAVID = newAVId || colData.relation.avID;
+    const oldCandidateFilters = JSON.parse(JSON.stringify(colData.relation.candidateFilters || []));
+    const newCandidateFilters = targetAVID === colData.relation.avID ? oldCandidateFilters : [];
+    const targetChanged = targetAVID !== colData.relation.avID;
+    const dependentRollups = options.colsData.filter((item) => {
+        return item.type === "rollup" && item.rollup?.relationKeyID === colId;
+    });
+    const doOperations: IOperation[] = [{
+        action: "updateAttrViewColRelation",
+        avID: options.avID,
+        keyID: colId,
+        id: targetAVID,
+        backRelationKeyID: colData.relation.avID === newAVId ? (colData.relation.backKeyID || Lute.NewNodeID()) : Lute.NewNodeID(),
+        isTwoWay: (options.avElement.querySelector(".b3-switch") as HTMLInputElement).checked,
+        name: inputElement.value,
+        format: colNewName
+    }, {
+        action: "setAttrViewColRelationFilters",
+        avID: options.avID,
+        keyID: colId,
+        blockID,
+        data: newCandidateFilters,
+    }];
+    if (targetChanged) {
+        dependentRollups.forEach((item) => {
+            doOperations.push({
+                action: "setAttrViewColRollupFilters",
+                avID: options.avID,
+                keyID: item.id,
+                blockID,
+                data: [],
+            });
+        });
+    }
+    doOperations.push({
+        action: "doUpdateUpdated",
+        id: blockID,
+        data: dayjs().format("YYYYMMDDHHmmss"),
+    });
+    const undoOperations: IOperation[] = [{
+        action: "updateAttrViewColRelation",
+        avID: options.avID,
+        keyID: colId,
+        id: colData.relation.avID || newAVId,
+        backRelationKeyID: colData.relation.backKeyID,
+        isTwoWay: colData.relation.isTwoWay,
+        name: inputElement.dataset.oldValue,
+        format: colData.name
+    }];
+    if (colData.relation.avID) {
+        undoOperations.push({
+            action: "setAttrViewColRelationFilters",
+            avID: options.avID,
+            keyID: colId,
+            blockID,
+            data: oldCandidateFilters,
+        });
+        if (targetChanged) {
+            dependentRollups.forEach((item) => {
+                undoOperations.push({
+                    action: "setAttrViewColRollupFilters",
+                    avID: options.avID,
+                    keyID: item.id,
+                    blockID,
+                    data: JSON.parse(JSON.stringify(item.rollup?.filters || [])),
+                });
+            });
+        }
+    }
+    transaction(options.protyle, doOperations, undoOperations, {callback: options.callback});
+    options.avElement.remove();
+    updateAttrViewCellAnimation(options.blockElement.querySelector(`.av__row--header .av__cell[data-col-id="${colId}"]`), undefined, {name: colNewName});
+    focusBlock(options.blockElement);
+};
+
+export const toggleUpdateRelationBtn = (menuItemsElement: HTMLElement, avId: string, resetData = false) => {
+    const searchElement = menuItemsElement.querySelector('.b3-menu__item[data-type="goSearchAV"]') as HTMLElement;
+    const filterElement = menuItemsElement.querySelector(
+        '[data-type="goAttrViewColFilters"][data-filter-type="relation"]') as HTMLElement;
+    filterElement?.classList.toggle("b3-menu__item--disabled", !searchElement?.dataset.avId);
+    const switchElement = menuItemsElement.querySelector('input[data-type="backRelation"]') as HTMLInputElement;
+    const inputElement = menuItemsElement.querySelector('input[data-type="colName"]') as HTMLInputElement;
+    const inputItemElement = inputElement?.closest(".b3-menu__item") as HTMLElement;
+    const updateButtonElement = menuItemsElement.querySelector('[data-type="updateRelation"]') as HTMLElement;
+    const btnElement = updateButtonElement?.closest(".b3-menu__item") as HTMLElement;
+    if (!searchElement || !switchElement || !inputElement || !inputItemElement || !btnElement) {
+        return;
+    }
+    const oldValue = JSON.parse(searchElement.dataset.oldValue) as IAVColumnRelation;
+    if (oldValue.avID) {
+        if (resetData) {
+            if (searchElement.dataset.avId !== oldValue.avID) {
+                inputElement.value = "";
+                switchElement.checked = false;
+            } else {
+                inputElement.value = inputElement.dataset.oldValue;
+                switchElement.checked = oldValue.isTwoWay;
+            }
+        }
+        if (switchElement.checked) {
+            inputItemElement.classList.remove("fn__none");
+        } else {
+            inputItemElement.classList.add("fn__none");
+        }
+        if ((searchElement.dataset.avId && oldValue.avID !== searchElement.dataset.avId) || oldValue.isTwoWay !== switchElement.checked || inputElement.dataset.oldValue !== inputElement.value) {
+            btnElement.classList.remove("fn__none");
+        } else {
+            btnElement.classList.add("fn__none");
+        }
+    } else if (searchElement.dataset.avId) {
+        if (switchElement.checked) {
+            inputItemElement.classList.remove("fn__none");
+        } else {
+            inputItemElement.classList.add("fn__none");
+        }
+        btnElement.classList.remove("fn__none");
+    }
+};
+
+const updateCopyRelatedItems = (menuElement: Element) => {
+    const inputElement = menuElement.querySelector(".b3-form__icona .b3-text-field") as HTMLInputElement;
+    if (menuElement.querySelector('[data-relation-type="selected"]')) {
+        inputElement.nextElementSibling.classList.remove("fn__none");
+        inputElement.style.paddingRight = "26px";
+    } else {
+        inputElement.nextElementSibling.classList.add("fn__none");
+        inputElement.style.paddingRight = "";
+    }
+};
+
+const getRelationGridTemplate = (columns: IAVColumn[], rows: IAVRow[],
+                                 measureText: (value: string) => number) => {
+    const widths = getAVTableFitWidths({
+        columns,
+        rows,
+        groups: [],
+        rowCount: rows.length,
+    } as IAVTable, getCellValueText, measureText);
+    return `32px ${columns.map((column, index) => {
+        const width = widths[column.id] || "64px";
+        return getAVRelationColumnWidth(width, column.type, index === 0, measureText(column.name));
+    }).join(" ")}`;
+};
+
+const getRelationPrimaryCell = (row: IAVRow) => {
+    return row.cells.find((cell) => cell.value?.type === "block");
+};
+
+const genRelationHeaderHTML = (columns: IAVColumn[], gridTemplate: string, sort?: {column: string, order: "ASC" | "DESC"}) => {
+    let html = `<div class="av__relation-table-header" data-relation-type="header" style="grid-template-columns:${gridTemplate}">
+<span class="av__relation-table-check"></span>`;
+    columns.forEach((column, index) => {
+        const sorted = sort?.column === column.id;
+        html += `<span data-relation-column="${escapeAttr(column.id)}" role="columnheader" tabindex="0" aria-sort="${sorted ? sort.order === "ASC" ? "ascending" : "descending" : "none"}" class="av__relation-table-cell fn__pointer${index === 0 ? " av__relation-table-primary" : ""}">
+    ${column.icon ? unicode2Emoji(column.icon, "av__relation-header-icon", true) :
+        `<svg><use xlink:href="#${getColIconByType(column.type)}"></use></svg>`}
+    <span class="fn__ellipsis">${escapeHtml(column.name)}</span>
+    <svg class="av__relation-sort${sorted ? "" : " fn__hidden"}" aria-hidden="true"><use xlink:href="#${sort?.order === "DESC" ? "iconDown" : "iconUp"}"></use></svg>
+    <span class="av__widthdrag"></span>
+</span>`;
+    });
+    return html + "</div>";
+};
+
+const genRelationRowHTML = (row: IAVRow, columns: IAVColumn[], type: "selected" | "candidate", gridTemplate: string) => {
+    const primaryCell = getRelationPrimaryCell(row);
+    if (!primaryCell?.value) {
+        return "";
+    }
+    const primaryValue = primaryCell.value;
+    const selected = type === "selected";
+    let html = `<div data-row-id="${escapeAttr(row.id)}" data-position="west" data-type="setRelationCell"
+data-relation-type="${type}" class="b3-menu__item av__relation-table-row" ${selected ? 'draggable="true"' : ""}
+style="grid-template-columns:${gridTemplate}">
+<span class="av__relation-table-check"><svg><use xlink:href="#icon${selected ? "Check" : "Uncheck"}"></use></svg></span>`;
+    columns.forEach((column, index) => {
+        const cell = row.cells.find((item) => item.value?.keyID === column.id) || row.cells[index];
+        if (index === 0) {
+            const isDetached = primaryValue.isDetached;
+            const useRenderedContent = hasAVRenderTemplateResult(primaryValue, column.renderTemplate);
+            const content = useRenderedContent ? getAVTemplateHTML(primaryValue.renderedContent || "") :
+                escapeHtmlTextAndAttr(primaryValue.block?.content || window.siyuan.languages.untitled);
+            html += `<span data-relation-column="${escapeAttr(column.id)}" class="av__relation-table-cell av__relation-table-primary" data-row-id="${escapeAttr(row.id)}"
+data-value-id="${escapeAttr(primaryCell.id || "")}"
+style="${primaryCell.bgColor ? `background-color:${primaryCell.bgColor};` : ""}${primaryCell.color ? `color:${primaryCell.color};` : ""}">
+    ${selected ? '<svg class="b3-menu__icon fn__grab"><use xlink:href="#iconDrag"></use></svg>' : ""}
+    <span class="av__relation-row-icon">${getAVBlockIconHTML(primaryValue)}</span>
+    <span class="b3-menu__label fn__ellipsis${isDetached ? "" : " popover__block"}${useRenderedContent ? " av__celltext--template" : ""}"
+        data-icon="${escapeAttr(primaryValue.block?.icon || "")}"
+        data-id="${escapeAttr(primaryValue.block?.id || "")}" data-content="${escapeAttr(primaryValue.block?.content || "")}">${isDetached ? content : `<span class="av__celltext--ref">${content}</span>`}</span>
+    ${primaryCell.id ? `<button type="button" class="av__relation-row-open ariaLabel" data-type="openRelationRow" draggable="false"
+        data-position="north" aria-label="${window.siyuan.languages.openBy}"><svg><use xlink:href="#iconOpen"></use></svg></button>` : ""}
+</span>`;
+        } else {
+            const text = cell?.value ? getCellValueText(cell.value, column) : "";
+            html += `<div data-relation-column="${escapeAttr(column.id)}" data-dtype="${column.type}" data-wrap="false" title="${escapeAttr(text)}" class="av__relation-table-cell"
+style="${cell?.bgColor ? `background-color:${cell.bgColor};` : ""}${cell?.color ? `color:${cell.color};` : ""}">${cell?.value ?
+                column.type === "text" ? `<span class="av__celltext">${escapeHtmlTextAndAttr(text)}</span>` :
+                    renderCell(cell.value, 0, true, "table", column.options, column.dateFormat, column.renderTemplate, false) : ""}</div>`;
+        }
+    });
+    return html + "</div>";
+};
+
+const genRelationRowsHTML = (rows: IAVRow[], columns: IAVColumn[], type: "selected" | "candidate",
+                             gridTemplate: string, excludedIDs = new Set<string>()) => {
+    let html = "";
+    rows.forEach((row) => {
+        if (!excludedIDs.has(row.id)) {
+            html += genRelationRowHTML(row, columns, type, gridTemplate);
+            excludedIDs.add(row.id);
+        }
+    });
+    return html;
+};
+
+const genRelationFooterHTML = (menuElement: HTMLElement, keyword: string) => {
+    const preview = relationItemPreviews.get(menuElement)?.preview;
+    const creating = menuElement.querySelector<HTMLElement>(".av__relation")?.dataset.creating === "true";
+    const content = preview ? preview.primaryKey : keyword;
+    const refElement = menuElement.querySelector(".popover__block");
+    const databaseName = `<span style="color: var(--b3-protyle-inline-blockref-color);" class="popover__block"
+data-id="${escapeAttr(refElement?.getAttribute("data-id") || "")}">${escapeHtml(refElement?.textContent || "")}</span>`;
+    const inputName = preview?.inputPrimaryKey ?? keyword.trim();
+    const hasNameChoice = preview?.hasPrimaryKeyTemplate && keyword.trim() && inputName !== content;
+    const genButton = (label: string, name: string, useInputName = false) => `<button class="b3-menu__item av__relation-table-footer" data-type="setRelationCell" data-relation-type="create" data-use-input-name="${useInputName}"
+${!preview || preview.error || creating ? "disabled" : ""} title="${escapeAttr(preview?.error || "")}">
+    <span class="b3-menu__label fn__ellipsis">${label.replace("${x}", databaseName).
+        replace("${y}", escapeHtmlTextAndAttr(name || window.siyuan.languages.untitled))}</span>
+</button>`;
+    if (hasNameChoice) {
+        return genButton(window.siyuan.languages.newRelationItemWithTemplate, content) +
+            genButton(window.siyuan.languages.newRelationItemWithInputName, inputName, true);
+    }
+    return genButton(window.siyuan.languages.newRowInRelation, content);
+};
+
+const genRelationLoaderHTML = (loading: boolean, visible = loading) => {
+    return `<div data-relation-type="loader" class="fn__flex${loading ? "" : " fn__none"}" style="${visible ? "" : "visibility: hidden;"}height:64px;align-items:center;justify-content:center"><span class="b3-loading" aria-hidden="true"></span></div>`;
+};
+
+export const bindRelationEvent = (options: {
+    menuElement: HTMLElement,
+    protyle: IProtyle,
+    blockElement: Element,
+    cellElements: HTMLElement[]
+}) => {
+    const inputElement = options.menuElement.querySelector("input");
+    const listElement = options.menuElement.querySelector(".b3-menu__items") as HTMLElement;
+    // 移动端菜单顶部会插入抓手标题，关联面板根节点按类名定位
+    const relationElement = options.menuElement.querySelector(".av__relation") as HTMLElement;
+    const measureText = getAVColumnTextMeasurer(options.blockElement as HTMLElement);
+    const state = {
+        page: 0,
+        total: 0,
+        keyword: "",
+        loading: false,
+        loaderVisible: false,
+        columns: [] as IAVColumn[],
+        gridTemplate: "",
+        sort: undefined as {column: string, order: "ASC" | "DESC"} | undefined,
+        controller: undefined as AbortController | undefined,
+    };
+    let searchTimer: number;
+    let loaderTimer: number | undefined;
+    let initialLoad = true;
+    let listNaturalMaxHeight = 0;
+    let positionInitialized = false;
+
+    const resetPosition = () => {
+        options.menuElement.removeAttribute("data-position-top");
+        options.menuElement.removeAttribute("data-position-bottom");
+        options.menuElement.removeAttribute("data-position-x");
+    };
+    const updateListMaxHeight = () => {
+        if (listNaturalMaxHeight < 1) {
+            return false;
+        }
+        const menuStyle = getComputedStyle(options.menuElement);
+        const maxMenuHeight = Math.min(parseFloat(menuStyle.maxHeight) || window.innerHeight - 32,
+            window.innerHeight - getTopBarHeight() - 8);
+        const headerHeight = listElement.previousElementSibling?.getBoundingClientRect().height || 0;
+        const chromeHeight = headerHeight + parseFloat(menuStyle.paddingTop) + parseFloat(menuStyle.paddingBottom) +
+            parseFloat(menuStyle.borderTopWidth) + parseFloat(menuStyle.borderBottomWidth);
+        const maxHeight = Math.max(30, Math.min(listNaturalMaxHeight, maxMenuHeight - chromeHeight));
+        const maxHeightValue = maxHeight + "px";
+        if (listElement.style.maxHeight === maxHeightValue) {
+            return false;
+        }
+        listElement.style.maxHeight = maxHeightValue;
+        return true;
+    };
+    const updateListNaturalMaxHeight = (allowInitialize = true) => {
+        const naturalHeight = listElement.scrollHeight;
+        if (naturalHeight <= listNaturalMaxHeight || (listNaturalMaxHeight < 1 && !allowInitialize)) {
+            return false;
+        }
+        listNaturalMaxHeight = naturalHeight;
+        return updateListMaxHeight();
+    };
+    let anchorElement = options.cellElements[options.cellElements.length - 1];
+    let anchorRect = anchorElement.getBoundingClientRect();
+    const anchorRow = anchorElement.closest<HTMLElement>(".av__row, .av__gallery-item, .av__calendar-item");
+    const anchorColumnAttribute = anchorElement.dataset.colId ? "data-col-id" : "data-field-id";
+    const anchorColumnID = anchorElement.getAttribute(anchorColumnAttribute);
+    const anchorRowID = anchorRow?.dataset.id || anchorElement.dataset.rowId;
+    const anchorRowClass = ["av__row", "av__gallery-item", "av__calendar-item"].find(name => anchorRow?.classList.contains(name));
+    const anchorSelector = anchorRow ?
+        `.${anchorRowClass}[data-id="${CSS.escape(anchorRowID)}"] [${anchorColumnAttribute}="${CSS.escape(anchorColumnID)}"]` :
+        anchorRowID ? `[data-row-id="${CSS.escape(anchorRowID)}"][${anchorColumnAttribute}="${CSS.escape(anchorColumnID)}"]` :
+            `.fn__flex-1[${anchorColumnAttribute}="${CSS.escape(anchorColumnID)}"]`;
+    const positionMenu = (reset = false) => {
+        if (reset) {
+            resetPosition();
+        }
+        // 数据库刷新会替换单元格，重新查找锚点；条目不可见时沿用最后的有效位置。
+        if (!anchorElement?.isConnected) {
+            anchorElement = options.blockElement.querySelector<HTMLElement>(anchorSelector);
+        }
+        if (anchorElement?.isConnected) {
+            const rect = anchorElement.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                anchorRect = rect;
+            }
+        }
+        setPosition(options.menuElement, anchorRect.left, anchorRect.bottom, anchorRect.height, 0, true);
+        positionInitialized = true;
+    };
+    const resize = () => {
+        updateListMaxHeight();
+        positionMenu(true);
+    };
+    const resizeList = () => {
+        const listHeightChanged = updateListNaturalMaxHeight();
+        if (listHeightChanged) {
+            resetPosition();
+        }
+        positionMenu();
+    };
+
+    const clearLoaderTimer = () => {
+        if (typeof loaderTimer !== "undefined") {
+            clearTimeout(loaderTimer);
+            loaderTimer = undefined;
+        }
+    };
+    const setLoading = (loading: boolean, delayed = false, controller?: AbortController) => {
+        clearLoaderTimer();
+        state.loaderVisible = loading && !delayed;
+        const loaderElement = listElement.querySelector('[data-relation-type="loader"]') as HTMLElement;
+        loaderElement?.classList.toggle("fn__none", !loading);
+        if (loaderElement) {
+            loaderElement.style.visibility = state.loaderVisible ? "" : "hidden";
+        }
+        if (loading && delayed) {
+            loaderTimer = window.setTimeout(() => {
+                if (!state.loading || state.controller !== controller) {
+                    return;
+                }
+                state.loaderVisible = true;
+                const currentLoaderElement = listElement.querySelector('[data-relation-type="loader"]') as HTMLElement;
+                currentLoaderElement?.style.removeProperty("visibility");
+            }, Constants.TIMEOUT_LOAD);
+        }
+    };
+    const hasMore = () => state.page * RELATION_PAGE_SIZE < state.total;
+    const ensureListFilled = () => {
+        requestAnimationFrame(() => {
+            if (!listElement.isConnected || state.loading || !hasMore()) {
+                return;
+            }
+            if (listElement.scrollHeight <= listElement.clientHeight + 30) {
+                loadPage(false);
+            }
+        });
+    };
+    const getSelectedItems = () => {
+        const selectedRows = listElement.querySelectorAll('[data-relation-type="selected"]');
+        if (selectedRows.length > 0 || listElement.querySelector('[data-relation-type="header"]')) {
+            return Array.from(selectedRows).map((item: HTMLElement) => {
+                const blockElement = item.querySelector(".b3-menu__label") as HTMLElement;
+                return {
+                    id: item.dataset.rowId,
+                    blockID: blockElement.dataset.id,
+                    icon: blockElement.dataset.icon || "",
+                    content: blockElement.dataset.content ?? blockElement.textContent,
+                    isDetached: !blockElement.classList.contains("popover__block"),
+                };
+            });
+        }
+        const relation = genCellValueByElement("relation", options.cellElements[0]).relation;
+        return (relation?.blockIDs || []).map((id, index) => {
+            const value = relation.contents?.[index];
+            return {
+                id,
+                blockID: value?.block?.id,
+                icon: value?.block?.icon || "",
+                content: value?.block?.content || "",
+                isDetached: value?.isDetached === true || !value?.block?.id,
+            };
+        });
+    };
+    const renderFooter = () => {
+        listElement.querySelectorAll('[data-relation-type="create"], [data-relation-type="empty"]').forEach(element => element.remove());
+        const more = hasMore();
+        listElement.dataset.hasMore = more.toString();
+        const footerHTML = genRelationFooterHTML(options.menuElement, state.keyword);
+        if (footerHTML) {
+            listElement.querySelector('[data-relation-type="loader"]').insertAdjacentHTML("beforebegin", footerHTML);
+        }
+    };
+    const updateLayout = bindRelationLayout(relationElement, relationElement.dataset.avId, resize);
+    const renderPage = (data: {
+        columns: IAVColumn[],
+        selectedRows: IAVRow[],
+        rows: IAVRow[]
+    }, reset: boolean) => {
+        const focusedColumn = listElement.querySelector<HTMLElement>('[role="columnheader"]:focus')?.dataset.relationColumn;
+        state.columns = data.columns || state.columns;
+        if (reset || !state.gridTemplate) {
+            state.gridTemplate = getRelationGridTemplate(state.columns,
+                [...(data.selectedRows || []), ...(data.rows || [])], measureText);
+        }
+        const gridTemplate = state.gridTemplate;
+        const excludedIDs = new Set(Array.from(listElement.querySelectorAll(
+            '[data-relation-type="selected"], [data-relation-type="candidate"]'
+        )).map((item: HTMLElement) => item.dataset.rowId));
+        let candidateHTML = "";
+        if (reset) {
+            excludedIDs.clear();
+            const selectedHTML = genRelationRowsHTML(data.selectedRows || [], state.columns, "selected",
+                gridTemplate, excludedIDs);
+            candidateHTML = genRelationRowsHTML(data.rows || [], state.columns, "candidate", gridTemplate, excludedIDs);
+            listElement.innerHTML = `${genRelationHeaderHTML(state.columns, gridTemplate, state.sort)}
+<div class="av__relation-table-selected" data-relation-type="selectedRows">${selectedHTML}</div>
+<div class="b3-menu__separator" data-relation-type="separator"></div>
+<div class="av__relation-table-candidates" data-relation-type="candidateRows">${candidateHTML}</div>
+${genRelationLoaderHTML(false)}`;
+        } else {
+            candidateHTML = genRelationRowsHTML(data.rows || [], state.columns, "candidate", gridTemplate, excludedIDs);
+            if (candidateHTML) {
+                listElement.querySelector('[data-relation-type="candidateRows"]').insertAdjacentHTML("beforeend", candidateHTML);
+            }
+        }
+        renderAVRichTextElements(listElement);
+        updateLayout(state.columns, gridTemplate);
+        if (focusedColumn) {
+            Array.from(listElement.querySelectorAll<HTMLElement>('[role="columnheader"]'))
+                .find(header => header.dataset.relationColumn === focusedColumn)?.focus();
+        }
+        renderFooter();
+        getRelationKeyboardTarget(listElement, state.keyword.trim() !== "");
+        updateCopyRelatedItems(options.menuElement);
+    };
+    const loadPage = (reset: boolean) => {
+        if (state.loading && !reset) {
+            return;
+        }
+        if (reset) {
+            state.controller?.abort();
+            state.page = 0;
+            state.total = 0;
+        } else if (!hasMore()) {
+            return;
+        }
+        const page = reset ? 1 : state.page + 1;
+        const keyword = state.keyword;
+        const controller = new AbortController();
+        const selectedItems = getSelectedItems();
+        state.controller = controller;
+        state.loading = true;
+        // 已有条目刷新时保留列表尺寸，首次加载和追加分页显示底部加载提示。
+        setLoading(initialLoad || !reset, initialLoad && reset, controller);
+        let succeeded = false;
+        fetchPost("/api/av/getAttributeViewRelationCandidates", {
+            includeNewItemPreview: true,
+            blockID: options.blockElement.getAttribute("data-node-id"),
+            avID: relationElement.getAttribute("data-source-av-id"),
+            keyID: relationElement.getAttribute("data-key-id"),
+            keyword,
+            page,
+            pageSize: RELATION_PAGE_SIZE,
+            selectedBlockIDs: selectedItems.map((item) => item.id),
+            sort: state.sort,
+        }, response => {
+            if (controller.signal.aborted || keyword !== state.keyword) {
+                return;
+            }
+            const rows = response.data.rows as IAVRow[] || [];
+            state.page = page;
+            state.total = typeof response.data.total === "number" ? response.data.total :
+                (page - 1) * RELATION_PAGE_SIZE + rows.length + (rows.length === RELATION_PAGE_SIZE ? 1 : 0);
+            const databaseName = inputElement.parentElement.parentElement.querySelector(".popover__block");
+            databaseName.textContent = response.data.name;
+            databaseName.setAttribute("data-id", response.data.blockIDs?.[0] || "");
+            relationElement.dataset.databaseBlockId = response.data.blockIDs?.[0] || "";
+            relationElement.dataset.notebookId = response.data.notebookID || "";
+            if (response.data.newItemPreview) {
+                relationItemPreviews.set(options.menuElement, {keyword, preview: response.data.newItemPreview});
+            } else {
+                relationItemPreviews.delete(options.menuElement);
+            }
+            const columns = response.data.columns as IAVColumn[] || [];
+            const selectedRowsByID = new Map<string, IAVRow>((response.data.selectedRows as IAVRow[] || []).
+                map((row) => [row.id, row]));
+            const selectedRows: IAVRow[] = selectedItems.map((item) => {
+                return selectedRowsByID.get(item.id) || {
+                    id: item.id,
+                    cells: [{
+                        id: "",
+                        color: "",
+                        bgColor: "",
+                        valueType: "block",
+                        value: {
+                            keyID: columns[0]?.id,
+                            blockID: item.id,
+                            type: "block",
+                            isDetached: item.isDetached,
+                            block: {
+                                id: item.blockID,
+                                icon: item.icon,
+                                content: item.content,
+                            }
+                        }
+                    }]
+                } as IAVRow;
+            });
+            initialLoad = false;
+            renderPage({
+                columns,
+                selectedRows,
+                rows,
+            }, reset);
+            setLoading(false);
+            const listHeightChanged = updateListNaturalMaxHeight(keyword === "" || rows.length === RELATION_PAGE_SIZE);
+            if (!positionInitialized || listHeightChanged) {
+                resetPosition();
+            }
+            positionMenu();
+            succeeded = true;
+        }, undefined, undefined, controller.signal).finally(() => {
+            if (state.controller !== controller) {
+                return;
+            }
+            state.loading = false;
+            setLoading(false);
+            if (succeeded) {
+                ensureListFilled();
+            }
+        });
+    };
+    listElement.addEventListener("mousedown", event => {
+        const target = event.target as HTMLElement;
+        if (target.closest('[role="columnheader"]') && !target.closest(".av__widthdrag")) {
+            event.preventDefault();
+        }
+    });
+    listElement.addEventListener("click", event => {
+        const target = event.target as HTMLElement;
+        if (target.closest(".av__widthdrag")) {
+            return;
+        }
+        const header = target.closest<HTMLElement>('[role="columnheader"]');
+        if (!header) {
+            return;
+        }
+        event.stopPropagation();
+        const column = header.dataset.relationColumn;
+        state.sort = {column, order: state.sort?.column === column && state.sort.order === "ASC" ? "DESC" : "ASC"};
+        listElement.scrollTop = 0;
+        loadPage(true);
+    });
+    listElement.addEventListener("keydown", event => {
+        const header = (event.target as HTMLElement).closest<HTMLElement>('[role="columnheader"]');
+        if (header && (event.key === "Enter" || event.key === " ")) {
+            event.preventDefault();
+            event.stopPropagation();
+            header.click();
+        }
+    });
+    const search = () => {
+        state.keyword = inputElement.value;
+        listElement.querySelectorAll(".b3-menu__item--current").forEach(item => item.classList.remove("b3-menu__item--current"));
+        relationItemPreviews.delete(options.menuElement);
+        renderFooter();
+        state.controller?.abort();
+        state.controller = undefined;
+        state.loading = false;
+        setLoading(false);
+        if (searchTimer) {
+            clearTimeout(searchTimer);
+        }
+        searchTimer = window.setTimeout(() => {
+            searchTimer = undefined;
+            loadPage(true);
+        }, Constants.TIMEOUT_INPUT);
+    };
+
+    inputElement.addEventListener("keydown", (event) => {
+        if (event.isComposing || !["Enter", "ArrowDown", "ArrowUp"].includes(event.key)) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        // 搜索防抖或首页请求完成前，不允许键盘操作旧候选项。
+        if (searchTimer || state.page === 0 || inputElement.value !== state.keyword) {
+            return;
+        }
+        const currentElement = getRelationKeyboardTarget(listElement, state.keyword.trim() !== "", event.key);
+        if (event.key === "Enter" && currentElement) {
+            setRelationCell(options.protyle, options.blockElement as HTMLElement, currentElement, options.cellElements);
+        }
+    });
+    inputElement.addEventListener("input", (event: InputEvent) => {
+        if (event.isComposing) {
+            return;
+        }
+        search();
+        event.stopPropagation();
+    });
+    inputElement.addEventListener("compositionend", (event) => {
+        event.stopPropagation();
+        search();
+    });
+    listElement.addEventListener("click", (event) => {
+        const openElement = hasClosestByAttribute(event.target as HTMLElement, "data-type", "openRelationRow");
+        if (!openElement || !listElement.contains(openElement)) {
+            return;
+        }
+        const rowElement = hasClosestByClassName(openElement, "av__relation-table-row") as HTMLElement;
+        const primaryElement = rowElement?.querySelector(".av__relation-table-primary") as HTMLElement;
+        const blockElement = primaryElement?.querySelector(".b3-menu__label") as HTMLElement;
+        if (!rowElement || !primaryElement || !blockElement || !relationElement.dataset.databaseBlockId) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        openDatabaseRowByData(options.protyle, {
+            avID: relationElement.dataset.avId,
+            databaseBlockID: relationElement.dataset.databaseBlockId,
+            notebookID: relationElement.dataset.notebookId,
+            itemID: rowElement.dataset.rowId,
+            valueID: primaryElement.dataset.valueId,
+            title: blockElement.textContent,
+            boundBlockID: blockElement.dataset.id,
+            isDetached: !blockElement.classList.contains("popover__block"),
+        }, {
+            keepAVPanel: true,
+        });
+    });
+    listElement.addEventListener("scroll", () => {
+        if (!state.loading && hasMore() && listElement.scrollHeight - listElement.scrollTop - listElement.clientHeight <= 30) {
+            loadPage(false);
+        }
+    });
+    const refresh = () => {
+        loadPage(true);
+    };
+    options.menuElement.addEventListener("relationrefresh", refresh);
+    options.menuElement.addEventListener("relationresize", resizeList);
+    options.menuElement.querySelector('[data-type="copyRelatedItems"]').addEventListener("click", () => {
+        let copyText = "";
+        const selectedElements = options.menuElement.querySelectorAll('.b3-menu__item[draggable="true"]');
+        selectedElements.forEach((item: HTMLElement) => {
+            if (selectedElements.length > 1) {
+                copyText += "- ";
+            }
+            const textElement = item.querySelector(".b3-menu__label") as HTMLElement;
+            if (!textElement.dataset.id || textElement.dataset.id === "undefined") {
+                copyText += textElement.textContent + "\n";
+            } else {
+                copyText += `((${textElement.dataset.id} "${textElement.textContent}"))\n`;
+            }
+        });
+        if (copyText) {
+            writeText(copyText.trimEnd());
+            showMessage(window.siyuan.languages.copied);
+        }
+    });
+    window.addEventListener("resize", resize);
+    loadPage(true);
+    return () => {
+        updateLayout.close();
+        state.controller?.abort();
+        window.removeEventListener("resize", resize);
+        options.menuElement.removeEventListener("relationrefresh", refresh);
+        options.menuElement.removeEventListener("relationresize", resizeList);
+        clearLoaderTimer();
+        if (searchTimer) {
+            clearTimeout(searchTimer);
+        }
+    };
+};
+
+export const getRelationHTML = (data: IAV, cellElements?: HTMLElement[]) => {
+    let colRelationData: IAVColumnRelation;
+    let colId = "";
+    getFieldsByData(data).find(item => {
+        if (item.id === getColId(cellElements[0], data.viewType)) {
+            colRelationData = item.relation;
+            colId = item.id;
+            return true;
+        }
+    });
+    if (colRelationData && colRelationData.avID) {
+        return `<div data-av-id="${colRelationData.avID}" data-source-av-id="${data.id}" data-key-id="${colId}" class="fn__flex-column av__relation">
+<div>
+<div class="b3-menu__item" data-type="nobg">
+    <div class="b3-form__icona fn__flex-1" style="overflow: visible">
+        <input spellcheck="false" class="b3-text-field fn__block" style="min-width: 190px"/>
+        <svg class="b3-form__icona-icon ariaLabel fn__none" data-position="north" data-type="copyRelatedItems" aria-label="${window.siyuan.languages.copy} ${window.siyuan.languages.relatedItems}"><use xlink:href="#iconCopy"></use></svg>
+    </div>
+    <span class="fn__space"></span>
+    <span style="color: var(--b3-protyle-inline-blockref-color);max-width: 200px" data-id="" class="popover__block fn__pointer fn__ellipsis"></span>
+    <span class="fn__space"></span>
+    <svg class="b3-menu__action b3-menu__action--show ariaLabel" data-type="relationFields" data-position="north" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" aria-label="${window.siyuan.languages.more}"><use xlink:href="#iconMore"></use></svg>
+</div>
+</div>
+<div class="b3-menu__items av__relation-table">
+    ${genRelationLoaderHTML(true, false)}
+</div>`;
+    } else {
+        return "";
+    }
+};
+
+const getRelationValue = (menuElement: HTMLElement) => {
+    const value: IAVCellRelationValue = {blockIDs: [], contents: []};
+    menuElement.querySelectorAll('[data-relation-type="selected"]').forEach((item: HTMLElement) => {
+        const blockElement = item.querySelector(".b3-menu__label") as HTMLElement;
+        value.blockIDs.push(item.dataset.rowId);
+        value.contents.push({
+            type: "block",
+            block: {
+                id: blockElement.dataset.id,
+                icon: blockElement.dataset.icon || "",
+                content: blockElement.dataset.content ?? blockElement.textContent
+            },
+            isDetached: !blockElement.classList.contains("popover__block")
+        });
+    });
+    return value;
+};
+
+const genCreatedRelationRowHTML = (menuElement: HTMLElement, rowID: string, content: string, blockID = "", isDetached = true) => {
+    const headerElement = menuElement.querySelector('[data-relation-type="header"]') as HTMLElement;
+    const columns = headerElement?.querySelectorAll<HTMLElement>(".av__relation-table-cell");
+    let cellsHTML = `<span data-relation-column="${escapeAttr(columns?.[0]?.dataset.relationColumn || "")}" class="av__relation-table-cell av__relation-table-primary" data-row-id="${rowID}">
+    <svg class="b3-menu__icon fn__grab"><use xlink:href="#iconDrag"></use></svg>
+    <span class="av__relation-row-icon">${getAVBlockIconHTML({isDetached})}</span>
+    <span class="b3-menu__label fn__ellipsis${isDetached ? "" : " popover__block"}" data-id="${escapeAttr(isDetached ? "" : blockID)}">${escapeHtmlTextAndAttr(content)}</span>
+</span>`;
+    for (let i = 1; i < (columns?.length || 1); i++) {
+        cellsHTML += `<span data-relation-column="${escapeAttr(columns[i].dataset.relationColumn)}" class="av__relation-table-cell${columns[i].classList.contains("fn__none") ? " fn__none" : ""}"></span>`;
+    }
+    return `<div data-row-id="${rowID}" data-position="west" data-type="setRelationCell"
+data-relation-type="selected" class="b3-menu__item av__relation-table-row" draggable="true"
+style="grid-template-columns:${headerElement?.style.gridTemplateColumns || "32px 240px"}">
+<span class="av__relation-table-check"><svg><use xlink:href="#iconCheck"></use></svg></span>${cellsHTML}</div>`;
+};
+
+export const setRelationCell = async (protyle: IProtyle, nodeElement: HTMLElement, target: HTMLElement, cellElements: HTMLElement[]) => {
+    const menuElement = hasClosestByClassName(target, "b3-menu");
+    if (!menuElement) {
+        return;
+    }
+    if (menuElement.querySelector(".dragover__bottom, .dragover__top")) {
+        return;
+    }
+    // 移动端菜单顶部会插入抓手标题，关联面板根节点按类名定位
+    const relationElement = menuElement.querySelector(".av__relation") as HTMLElement;
+
+    if (!nodeElement.contains(cellElements[0])) {
+        const viewType = nodeElement.getAttribute("data-av-type") as TAVView;
+        const rowID = getFieldIdByCellElement(cellElements[0], viewType);
+        if (isTableLikeView(viewType)) {
+            cellElements[0] = (nodeElement.querySelector(`.av__row[data-id="${rowID}"] .av__cell[data-col-id="${cellElements[0].dataset.colId}"]`) ||
+                nodeElement.querySelector(`.fn__flex-1[data-col-id="${cellElements[0].dataset.colId}"]`)) as HTMLElement;
+        } else {
+            cellElements[0] = (nodeElement.querySelector(`.av__gallery-item[data-id="${rowID}"] .av__cell[data-field-id="${cellElements[0].dataset.fieldId}"]`)) as HTMLElement;
+        }
+    }
+
+    if (target.classList.contains("b3-menu__item")) {
+        const rowId = target.getAttribute("data-row-id");
+        if (target.dataset.relationType === "selected") {
+            target.dataset.relationType = "candidate";
+            target.removeAttribute("draggable");
+            target.querySelector(".av__relation-table-check use").setAttribute("xlink:href", "#iconUncheck");
+            target.querySelector(".av__relation-table-primary > .fn__grab")?.remove();
+            menuElement.querySelector('[data-relation-type="candidateRows"]').prepend(target);
+            updateCellsValue(protyle, nodeElement, getRelationValue(menuElement), cellElements);
+            menuElement.dispatchEvent(new CustomEvent("relationrefresh"));
+        } else if (rowId) {
+            target.dataset.relationType = "selected";
+            target.setAttribute("draggable", "true");
+            target.querySelector(".av__relation-table-check use").setAttribute("xlink:href", "#iconCheck");
+            const primaryElement = target.querySelector(".av__relation-table-primary");
+            primaryElement.insertAdjacentHTML("afterbegin",
+                '<svg class="b3-menu__icon fn__grab"><use xlink:href="#iconDrag"></use></svg>');
+            menuElement.querySelector('[data-relation-type="selectedRows"]').append(target);
+            updateCellsValue(protyle, nodeElement, getRelationValue(menuElement), cellElements);
+            menuElement.dispatchEvent(new CustomEvent("relationrefresh"));
+        } else {
+            const entry = relationItemPreviews.get(menuElement);
+            if (target.hasAttribute("disabled") || relationElement.dataset.creating === "true" ||
+                !entry || entry.preview.error || entry.keyword !== menuElement.querySelector("input").value) {
+                return;
+            }
+            relationElement.dataset.creating = "true";
+            const useInputName = target.dataset.useInputName === "true";
+            target.setAttribute("disabled", "");
+            try {
+                // 用临时 ID 计算批量关系合并结果，仅成功创建后更新面板。
+                const pendingID = Lute.NewNodeID();
+                const value = getRelationValue(menuElement);
+                value.blockIDs.push(pendingID);
+                value.contents.push({type: "block", block: {content: useInputName ?
+                    (entry.preview.inputPrimaryKey ?? entry.keyword.trim()) : entry.preview.primaryKey}, isDetached: true});
+                const operations = await updateCellsValue(protyle, nodeElement, value, cellElements,
+                    null, null, true, false, false, undefined, false);
+                const cells: AVRelationItemCellInput[] = [];
+                operations.doOperations.forEach(operation => {
+                    if (operation.action === "updateAttrViewCell" && operation.data.relation) {
+                        cells.push({itemID: operation.rowID,
+                            relatedItemIDs: operation.data.relation.blockIDs.filter(id => id !== pendingID)});
+                    }
+                });
+                if (!cells.length) {
+                    return;
+                }
+                const response = await fetchSyncPost("/api/av/createAttributeViewRelationItem", {
+                    avID: nodeElement.dataset.avId,
+                    blockID: nodeElement.dataset.nodeId,
+                    keyID: relationElement.dataset.keyId,
+                    keyword: entry.keyword,
+                    useInputName,
+                    cells,
+                    preview: entry.preview,
+                    app: protyle.app.appId,
+                    session: protyle.id,
+                });
+                if (response.code !== 0 || !response.data || !("itemID" in response.data)) {
+                    if (response.code === 1 && response.data && "unavailableNotebook" in response.data && response.data.unavailableNotebook) {
+                        showMessage(window.siyuan.languages.newItemTemplateUnavailableNotebookTip, 6000, "error");
+                    }
+                    return;
+                }
+                if (response.data.warnings?.length) {
+                    showMessage(response.data.warnings.map(item => escapeHtml(item)).join("<br>"));
+                }
+                if (menuElement.isConnected && !menuElement.querySelector(`[data-relation-type="selected"][data-row-id="${response.data.itemID}"]`)) {
+                    menuElement.querySelector('[data-relation-type="selectedRows"]').insertAdjacentHTML("beforeend",
+                        genCreatedRelationRowHTML(menuElement, response.data.itemID, response.data.content,
+                            response.data.blockID, response.data.isDetached));
+                }
+            } catch (error) {
+                showMessage(escapeHtml(error.message), 6000, "error");
+            } finally {
+                delete relationElement.dataset.creating;
+                target.removeAttribute("disabled");
+                menuElement.dispatchEvent(new CustomEvent("relationrefresh"));
+            }
+        }
+    }
+    updateCopyRelatedItems(menuElement);
+    menuElement.dispatchEvent(new CustomEvent("relationresize"));
+};

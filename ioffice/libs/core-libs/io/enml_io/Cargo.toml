@@ -1,0 +1,12 @@
+﻿[package]
+name = "core_libs_enml_io"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+util = { package = "core_libs_util", path = "../../util/util" }
+adapter = { package = "util_adapter", path = "../../util/adapter" }
+kfs = { package = "core_libs_kfs_app", path = "../../kfs/kfs_app" }

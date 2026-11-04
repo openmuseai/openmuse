@@ -1,0 +1,1687 @@
+{
+	"ID": "20200924095938-a9p5450",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20200924095938-a9p5450",
+		"title": "Theme",
+		"type": "doc",
+		"updated": "20261024163429"
+	},
+	"Children": [
+		{
+			"ID": "20230418092908-veis529",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230418092908-veis529",
+				"updated": "20230418092916"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Overview"
+				}
+			]
+		},
+		{
+			"ID": "20230418093102-2g28qyx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230418093102-2g28qyx",
+				"updated": "20230418093102"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "There are two ways to customize the theme:"
+				}
+			]
+		},
+		{
+			"ID": "20230418093102-xdcepe2",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230418093102-xdcepe2",
+				"updated": "20230418093111"
+			},
+			"Children": [
+				{
+					"ID": "20230418093102-n9gnhlu",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230418093102-n9gnhlu",
+						"updated": "20230418093111"
+					},
+					"Children": [
+						{
+							"ID": "20230418093102-50qtvw2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230418093102-50qtvw2",
+								"updated": "20230418093111"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Code snippet"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230418093102-ytnrq7i",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230418093102-ytnrq7i",
+						"updated": "20230418093102"
+					},
+					"Children": [
+						{
+							"ID": "20230418093102-ch71mab",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230418093102-ch71mab",
+								"updated": "20230418093102"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Theme pack"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20220806105232-qhlgs5w",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20220806105232-qhlgs5w",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Code snippet"
+				}
+			]
+		},
+		{
+			"ID": "20261024162311-ndvdww9",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024162311-ndvdww9",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Types and management"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20260614110310-z99s6hu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614110310-z99s6hu",
+				"updated": "20260614110310"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Code snippets support two types: CSS and JS:"
+				}
+			]
+		},
+		{
+			"ID": "20260614110310-tlla101",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614110310-tlla101",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"ID": "20260614110310-8eyjob0",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614110310-8eyjob0",
+						"updated": "20260614110310"
+					},
+					"Children": [
+						{
+							"ID": "20260614110310-clh5kgd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614110310-clh5kgd",
+								"updated": "20260614110310"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "CSS Snippets"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Used to override theme styles, such as modifying color variables, adjusting layout spacing, etc. Refer to the CSS variables in the theme and theme.css when writing"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614110310-jz6pydt",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614110310-jz6pydt",
+						"updated": "20261024163429"
+					},
+					"Children": [
+						{
+							"ID": "20260614110310-h57tmai",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614110310-h57tmai",
+								"updated": "20261024163429"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "JS Snippets"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Used to extend or modify application behavior. The code executes when the app starts, such as customizing shortcuts, modifying UI elements, adding features, etc"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614110310-u0yvn5j",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614110310-u0yvn5j",
+				"updated": "20260614110310"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Snippet Management:"
+				}
+			]
+		},
+		{
+			"ID": "20260614110310-sq8k5yq",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614110310-sq8k5yq",
+				"updated": "20260614110310"
+			},
+			"Children": [
+				{
+					"ID": "20260614110310-5wfoxyf",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614110310-5wfoxyf",
+						"updated": "20260614110310"
+					},
+					"Children": [
+						{
+							"ID": "20260614110310-13k52h3",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614110310-13k52h3",
+								"updated": "20260614110310"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Add Snippet"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Click the plus button in the corresponding tab to add a new snippet"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614110310-lzkqfz7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614110310-lzkqfz7",
+						"updated": "20260614110310"
+					},
+					"Children": [
+						{
+							"ID": "20260614110310-jv7x6f0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614110310-jv7x6f0",
+								"updated": "20260614110310"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Edit/Delete"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Edit content directly or delete the entire snippet in the snippet panel"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614110310-9l11u08",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614110310-9l11u08",
+						"updated": "20260614110310"
+					},
+					"Children": [
+						{
+							"ID": "20260614110310-3nxv6x9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614110310-3nxv6x9",
+								"updated": "20260614110310"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Individual Toggle"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Each snippet can be enabled or disabled individually"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614110310-8zdp3ui",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614110310-8zdp3ui",
+						"updated": "20260614110310"
+					},
+					"Children": [
+						{
+							"ID": "20260614110310-ol2tita",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614110310-ol2tita",
+								"updated": "20260614110310"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Global Toggle"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": There are global CSS and JS toggles at the top of the tabs. When disabled, all snippets of that type will not take effect"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614110310-yw69pyw",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614110310-yw69pyw",
+						"updated": "20260614110310"
+					},
+					"Children": [
+						{
+							"ID": "20260614110310-i3i7ced",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614110310-i3i7ced",
+								"updated": "20260614110310"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Search"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Supports searching by snippet name or content"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20201225174048-t626xpi",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20201225174048-t626xpi",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Theme pack"
+				}
+			]
+		},
+		{
+			"ID": "20261024162311-8h1mpff",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024162311-8h1mpff",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Disabling a CSS snippet removes its styles. Disabling a JS snippet does not undo actions it has already performed; disable it and reload the interface to clear its runtime effects."
+				},
+				{
+					"Type": "NodeText",
+					"Data": " Data already written by a snippet must be restored separately."
+				}
+			]
+		},
+		{
+			"ID": "20261024162311-496y6gy",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261024162311-496y6gy",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Write a CSS snippet"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20230417141558-see765c",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1
+			},
+			"Properties": {
+				"id": "20230417141558-see765c",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"ID": "20230417141558-d8vl4m7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "MS4=",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20230417141558-d8vl4m7",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20230417141558-f6keda3",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230417141558-f6keda3",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Open "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Appearance"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Code Snippet"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " and select the CSS tab"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230417141705-gm3l4qc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "Mi4=",
+						"Num": 2
+					},
+					"Properties": {
+						"id": "20230417141705-gm3l4qc",
+						"updated": "20230417141708"
+					},
+					"Children": [
+						{
+							"ID": "20230417141705-u38pf60",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230417141705-u38pf60",
+								"updated": "20230417141708"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Input title"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230417141558-bmkmmsg",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "My4=",
+						"Num": 3
+					},
+					"Properties": {
+						"id": "20230417141558-bmkmmsg",
+						"updated": "20261024160716"
+					},
+					"Children": [
+						{
+							"ID": "20230417141558-727zvva",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230417141558-727zvva",
+								"updated": "20230417141811"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "According to the theme and the variables in theme.css, refer to the following writing method to encode and fill in the code snippet"
+								}
+							]
+						},
+						{
+							"ID": "20230417141558-79fewv8",
+							"Type": "NodeCodeBlock",
+							"IsFencedCodeBlock": true,
+							"Properties": {
+								"id": "20230417141558-79fewv8",
+								"updated": "20261024160716"
+							},
+							"Children": [
+								{
+									"Type": "NodeCodeBlockFenceOpenMarker",
+									"Data": "```"
+								},
+								{
+									"Type": "NodeCodeBlockFenceInfoMarker",
+									"CodeBlockInfo": "Y3Nz"
+								},
+								{
+									"Type": "NodeCodeBlockCode",
+									"Data": "html[data-light-theme=\"daylight\"][data-theme-mode=\"light\"] {\n    --b3-theme-primary: red;\n}\n\nhtml[data-dark-theme=\"midnight\"][data-theme-mode=\"dark\"] {\n    --b3-theme-primary: blue;\n}\n"
+								},
+								{
+									"Type": "NodeCodeBlockFenceCloseMarker",
+									"Data": "```"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230417141558-fr8x3k5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "NC4=",
+						"Num": 4
+					},
+					"Properties": {
+						"id": "20230417141558-fr8x3k5",
+						"updated": "20230417141722"
+					},
+					"Children": [
+						{
+							"ID": "20230417141558-4qxft8w",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230417141558-4qxft8w",
+								"updated": "20230417141722"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Enable this code snippet"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230417141558-dr3lydv",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "NS4=",
+						"Num": 5
+					},
+					"Properties": {
+						"id": "20230417141558-dr3lydv",
+						"updated": "20230417141747"
+					},
+					"Children": [
+						{
+							"ID": "20230417141558-x0xfwm6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230417141558-x0xfwm6",
+								"updated": "20230417141747"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Click the Confirm button"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230418093432-pr8dn8u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230418093432-pr8dn8u",
+				"updated": "20230418093502"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Theme packs can be downloaded from the community marketplace or installed manually."
+				}
+			]
+		},
+		{
+			"ID": "20201225221416-enetgqg",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20201225221416-enetgqg",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Community Marketplace"
+				}
+			]
+		},
+		{
+			"ID": "20201225221416-chyd31p",
+			"Type": "NodeList",
+			"ListData": {
+				"Tight": true,
+				"BulletChar": 42,
+				"Padding": 2,
+				"Marker": "Kg==",
+				"Num": -1
+			},
+			"Properties": {
+				"id": "20201225221416-chyd31p",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"ID": "20201225221416-fwq6l32",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"id": "20201225221416-fwq6l32",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20210131162108-dtskbvb",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210131162108-dtskbvb",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Browse themes contributed by community developers in "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Marketplace"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Theme"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ""
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225221416-6qqqwni",
+					"Type": "NodeListItem",
+					"Data": "*",
+					"ListData": {
+						"Tight": true,
+						"BulletChar": 42,
+						"Padding": 2,
+						"Marker": "Kg==",
+						"Num": -1
+					},
+					"Properties": {
+						"id": "20201225221416-6qqqwni"
+					},
+					"Children": [
+						{
+							"ID": "20210131162108-2wwmc9r",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210131162108-2wwmc9r"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Choose the required theme to install or update online"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20201225221416-aotw0re",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20201225221416-aotw0re",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Manual installation"
+				}
+			]
+		},
+		{
+			"ID": "20201225221416-5jel77s",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1,
+				"Tight": true,
+				"Start": 1,
+				"Delimiter": 46,
+				"Padding": 3,
+				"Marker": "MQ==",
+				"Num": 1
+			},
+			"Properties": {
+				"id": "20201225221416-5jel77s",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"ID": "20201225221416-n3vvygb",
+					"Type": "NodeListItem",
+					"Data": "1",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "MQ==",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20201225221416-n3vvygb"
+					},
+					"Children": [
+						{
+							"ID": "20210131162108-02326cx",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210131162108-02326cx"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Get the theme from somewhere and unzip it"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225221416-o84sp4q",
+					"Type": "NodeListItem",
+					"Data": "2",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 2,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "Mg==",
+						"Num": 2
+					},
+					"Properties": {
+						"id": "20201225221416-o84sp4q"
+					},
+					"Children": [
+						{
+							"ID": "20210131162108-k4h81si",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210131162108-k4h81si",
+								"updated": "20210512161438"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Appearance"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Theme"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Open the theme folder"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225221416-oefusle",
+					"Type": "NodeListItem",
+					"Data": "3",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 3,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "Mw==",
+						"Num": 3
+					},
+					"Properties": {
+						"id": "20201225221416-oefusle"
+					},
+					"Children": [
+						{
+							"ID": "20210131162108-v756fef",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210131162108-v756fef"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Copy the theme to this folder"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225221416-i8ic233",
+					"Type": "NodeListItem",
+					"Data": "4",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 4,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "NA==",
+						"Num": 4
+					},
+					"Properties": {
+						"id": "20201225221416-i8ic233",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20210131162108-133g70d",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210131162108-133g70d",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "After restarting, select the desired theme in "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Appearance"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Theme"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20201225174048-i781zxp",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20201225174048-i781zxp",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Development"
+				}
+			]
+		},
+		{
+			"ID": "20201225174048-3qumvw6",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20201225174048-3qumvw6",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "### "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "Step"
+				}
+			]
+		},
+		{
+			"ID": "20201225174048-zqtzaox",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1,
+				"Start": 1,
+				"Delimiter": 46,
+				"Padding": 3,
+				"Marker": "MQ==",
+				"Num": 1
+			},
+			"Properties": {
+				"id": "20201225174048-zqtzaox",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"ID": "20201225174048-axf0aph",
+					"Type": "NodeListItem",
+					"Data": "1",
+					"ListData": {
+						"Typ": 1,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "MQ==",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20201225174048-axf0aph"
+					},
+					"Children": [
+						{
+							"ID": "20201225174048-dw4dke4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20201225174048-dw4dke4"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Give your subject a nice name, such as "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "alice"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225174048-zfkshfl",
+					"Type": "NodeListItem",
+					"Data": "2",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 2,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "Mg==",
+						"Num": 2
+					},
+					"Properties": {
+						"id": "20201225174048-zfkshfl"
+					},
+					"Children": [
+						{
+							"ID": "20201225174048-1dt9umq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20201225174048-1dt9umq",
+								"updated": "20210512161558"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Appearance"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Theme"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Open theme folder"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225174048-92haint",
+					"Type": "NodeListItem",
+					"Data": "3",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 3,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "Mw==",
+						"Num": 3
+					},
+					"Properties": {
+						"id": "20201225174048-92haint",
+						"updated": "20260804235500"
+					},
+					"Children": [
+						{
+							"ID": "20201225174048-fh16r64",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20201225174048-fh16r64",
+								"updated": "20260804235500"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Create a new folder "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "alice"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ in the opened folder, and create new "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "theme.css"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ and "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "theme.json"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ files in "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "alice"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​, for specific examples, please refer to GitHub repo: siyuan-note/theme-sample\n"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225174048-e4e9234",
+					"Type": "NodeListItem",
+					"Data": "4",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 4,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "NA==",
+						"Num": 4
+					},
+					"Properties": {
+						"id": "20201225174048-e4e9234"
+					},
+					"Children": [
+						{
+							"ID": "20201225174048-2937fh2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20201225174048-2937fh2"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Open the "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "theme.css"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " file to start your coding journey"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225174048-sw6gvxg",
+					"Type": "NodeListItem",
+					"Data": "5",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 5,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "NQ==",
+						"Num": 5
+					},
+					"Properties": {
+						"id": "20201225174048-sw6gvxg",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20201225174048-xii3128",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20201225174048-xii3128",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "After restarting, select the installed theme in "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Appearance"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Theme"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20201225174048-5e5cg0p",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20201225174048-5e5cg0p",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "### "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "Encoding"
+				}
+			]
+		},
+		{
+			"ID": "20201225174048-g8oxi84",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20201225174048-g8oxi84",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"ID": "20201225174048-tt2mbf7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20201225174048-tt2mbf7"
+					},
+					"Children": [
+						{
+							"ID": "20210131162108-saji8q4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210131162108-saji8q4"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Familiar with "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://developer.mozilla.org/en-US/docs/Web/CSS",
+									"TextMarkTextContent": "CSS"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " basic knowledge"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225174048-1ocyqbk",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20201225174048-1ocyqbk",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20210131162108-nh3eyq7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210131162108-nh3eyq7",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Custom themes inherit variables from the built-in themes. Override only the variables you need, and review renamed or removed variables when SiYuan is updated"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225174048-c3hch71",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20201225174048-c3hch71",
+						"updated": "20260810230450"
+					},
+					"Children": [
+						{
+							"ID": "20210131162108-0cl55js",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210131162108-0cl55js",
+								"updated": "20260810230450"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Use the developer tools to locate and adjust styles: open the developer tools, enable the element picker, click the UI element to modify, inspect the corresponding "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "HTML"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " in the "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "Elements"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " panel, and adjust its styles in the "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "Styles"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " panel"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225174048-9mhz3ye",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20201225174048-9mhz3ye"
+					},
+					"Children": [
+						{
+							"ID": "20210131162108-pz4fy37",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210131162108-pz4fy37"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Copy and paste the modified content into "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "theme.css"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " and save"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260810212846-c2or5gq",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260810212846-c2or5gq",
+						"updated": "20260810215424"
+					},
+					"Children": [
+						{
+							"ID": "20260810212846-7znazcw",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260810212846-7znazcw",
+								"updated": "20260810215424"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "In the developer tools, open the "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "Network"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " tab and enable "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "Disable cache"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20201225174048-k5l65hd",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20201225174048-k5l65hd",
+						"updated": "20260810215424"
+					},
+					"Children": [
+						{
+							"ID": "20210131162108-ibds25b",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20210131162108-ibds25b",
+								"updated": "20260810215424"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Changes to theme.css are normally detected and refreshed automatically. If they are not, use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "App"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Maintenance"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Refresh UI"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20201225222754-u4sica8",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20201225222754-u4sica8",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Push to theme marketplace"
+				}
+			]
+		},
+		{
+			"ID": "20221114173346-65wavr3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20221114173346-65wavr3",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please refer to "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://github.com/siyuan-note/bazaar",
+					"TextMarkTextContent": "Community marketplace repo"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		}
+	]
+}

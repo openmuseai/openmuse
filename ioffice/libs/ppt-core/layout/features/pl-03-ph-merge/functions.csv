@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_ph_merge_transform,ph 位置继承（xfrm 合并）,KmoShowShape phShape（ph idx/type + 三层可达）,合并后的 Transform2D（或自身兜底）,pp-02-shape-tree-parse;pl-02-xfrm-geometry,02;pl-06-typo-shape;pp-13:03,libs/ppt-core,pass
+2,02_function_ph_merge_style,ph 样式继承（ShapePr 合并）,KmoShowShape phShape（isPlaceHolder + layout/master 可达）,合并后的 ShapePr（follow 链 own→layout→master）,01;pp-10-dml-sppr（spPr fill/ln）,pl-06-typo-shape;pr-02-shape-command;pp-13:03,libs/ppt-core,pass

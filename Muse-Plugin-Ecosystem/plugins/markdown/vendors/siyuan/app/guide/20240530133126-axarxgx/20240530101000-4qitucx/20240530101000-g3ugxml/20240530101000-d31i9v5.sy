@@ -1,0 +1,943 @@
+{
+	"ID": "20240530101000-d31i9v5",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-m4u57dt",
+		"id": "20240530101000-d31i9v5",
+		"title": "インポートとエクスポート",
+		"type": "doc",
+		"updated": "20261024164212"
+	},
+	"Children": [
+		{
+			"ID": "20240530101000-ouqp9ym",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-058gztf",
+				"id": "20240530101000-ouqp9ym",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "インポート"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-3sblps4",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-yv1nqub",
+				"id": "20240530101000-3sblps4",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Markdown"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-gtpeavm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-ol3e31k",
+				"id": "20240530101000-gtpeavm",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Markdown のファイルやフォルダをインポートできます。他のアプリから移行する場合は、Markdown でエクスポートするか、対応する専用インポーターを使ってください。事前にアセットのパスと拡張構文を確認してください。"
+				}
+			]
+		},
+		{
+			"ID": "20261002211013-0k8wpj6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261002211013-0k8wpj6",
+				"updated": "20261002211013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Markdown をインポートすると、[^note]: 形式の脚注定義は独立した番号付きリスト項目に、本文中の [^note] は上付きのブロック参照に変換されます。参照をクリックすると定義を開くことができ、定義のバックリンクから参照元のブロックに戻れます。脚注内の複数の段落は同じリスト項目内に保持されます。定義のない脚注はブロック参照に変換されません。コード例とエスケープされた脚注構文は、そのままのテキストとして保持されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-u9v0mpo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-wuqy5yq",
+				"id": "20240530101000-u9v0mpo",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "インポート時に "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "![foo](images/bar.png)"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ のような画像構文 (ローカルの相対パス) が検出されると、SiYuan は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "images/bar.png"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ を"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240530101000-1m5un7l",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "アセット"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "に変換します。ただし、パスが "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".images/bar.png"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ の場合は変換されません。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "."
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ で始まるパスは隠しファイルと判断され、SiYuan では処理されないためです。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-prvfsde",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-l9j58c3",
+				"id": "20240530101000-prvfsde",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "上付き文字 ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "^foo^"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​)、下付き文字 ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "~foo~"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​)、タグ ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "#foo#"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​)、数式 ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "$foo$"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​) の拡張構文を認識する場合は、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エディタ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " の関連する Markdown 構文の項目を有効にしてください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ya71y3y",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-m3iop7z",
+				"id": "20240530101000-ya71y3y",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データ"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-742re4h",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-jmu8i9e",
+				"id": "20240530101000-742re4h",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "デスクトップとモバイルのどちらでも、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "アプリ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " からデータをインポートおよびエクスポートできます。このエクスポートでは、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "ワークスペース/data/"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " フォルダー全体がコピーされ、ZIP アーカイブとして作成されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-57k5fbq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-leapim6",
+				"id": "20240530101000-57k5fbq",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "インポート Data"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 機能は、上記の方法でエクスポートされたアーカイブの処理のみをサポートします。インポートされたデータは、アーカイブ内のファイルパスに従って現在の "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "workspace/data/"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ フォルダにコピーされます:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-s0mdp8w",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-2vri4lt",
+				"id": "20240530101000-s0mdp8w",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-dwv6ha9",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-0y6ukfz",
+						"id": "20240530101000-dwv6ha9",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-46xxb2q",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-5wsahq0",
+								"id": "20240530101000-46xxb2q",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "重複するファイルは上書きされる"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-vn363ju",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-cpew0h0",
+						"id": "20240530101000-vn363ju",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-4up1jts",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-4g6bdkj",
+								"id": "20240530101000-4up1jts",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "存在しないファイルは追加される"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-54kmig0",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-7tqruw2",
+						"id": "20240530101000-54kmig0",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-myse8ej",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-6tgro8h",
+								"id": "20240530101000-myse8ej",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "既存のファイルは何も処理しない"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-3x80zxy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240530101000-3x80zxy",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​: 既存のデータが上書きされて復元できなくなる可能性があるため、インポートの実行は十分注意して行ってください。"
+				}
+			]
+		},
+		{
+			"ID": "20261020220502-x9fsafc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261020220502-x9fsafc",
+				"updated": "20261020225315"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Data.zip は別のワークスペースを作成せずに、現在のワークスペースを更新できます。インポート前にアーカイブを解析し、暗号化ノートブックが競合する場合は、初期選択の「競合をスキップ」、「競合を上書き」、またはキャンセルを選べます。画面の再読み込み前に、スキップしたノートブックの ID が結果に表示されます。実行前はキャンセルできます。処理中はキャンセルやダイアログの終了はできません。"
+				}
+			]
+		},
+		{
+			"ID": "20261020220502-196kynq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261020220502-196kynq",
+				"updated": "20261020220502"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "暗号化された内容のインポートには、互換性のあるマスターパスワードが必要です。パスワード変更前のバックアップは、互換性のある履歴キーを使用して読み取ることができ、現在のパスワードは元に戻りません。暗号化状態やデータキーが異なるノートブックは直接結合できません。上書きは同じパスのファイルを置き換え、取り込み先だけにあるファイルを保持し、削除を伝播しません。取り込まれた暗号化ノートブックはロックされたままなので、再度ロックを解除してください。"
+				}
+			]
+		},
+		{
+			"ID": "20261020220502-c9dn1ha",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261020220502-c9dn1ha",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "選択した内容を検証してからデータを書き込み、失敗や中断が発生した場合はロールバックできます。元のアーカイブ、上書き前のファイル、キー情報はワークスペースの conf/data-imports/ ディレクトリに保持されます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-9etzjlm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-9etzjlm",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "取り込まれた内容と必要な履歴を確認するまでは、これらの復旧ファイルを保持してください。復旧に失敗した場合は、復旧が成功するまで書き込みと同期を停止します。未実行の事前解析は 30 分で期限切れになり、起動時または次のインポート時に削除されます。期限切れ後もキャンセルでき、実行済みの復旧ファイルは保持されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260614201218-j16bj6l",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614201218-j16bj6l",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": ".sy.zip"
+				}
+			]
+		},
+		{
+			"ID": "20260614201218-7jwr68y",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614201218-7jwr68y",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".sy.zip"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " は SiYuan のネイティブドキュメント形式です。ドキュメントツリーで対象のノートブックまたはドキュメントを選択し、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "インポート"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "SiYuan .sy.zip"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " からアーカイブを選択します。インポート後のドキュメントには、コンテンツ、設定で含めるよう指定したサブドキュメント、アセット、ブロック属性が保持されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-jiji166",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-muh0lww",
+				"id": "20240530101000-jiji166",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エクスポート"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-76aygoj",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-j0qj7jj",
+				"id": "20240530101000-76aygoj",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "編集内容のコピー"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-9rwwmuv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240530101000-9rwwmuv",
+				"updated": "20250115150934"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "コンテンツを選択してショートカット "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Ctrl"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "C"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ を使用すると、クリップボードに標準的な Markdown テキストがコピーされます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-lft59vs",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-v8rvgoz",
+				"id": "20240530101000-lft59vs",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "HTML コンテンツをコピーする必要がある場合は、エディタ右上の "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "︙"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ メニューから "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "編集モードの切り替え"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "プレビュー"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 選んでからコピーしてください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-4nyaeqm",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-wqqvu5b",
+				"id": "20240530101000-4nyaeqm",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "全文エクスポート"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-g7coui7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-cldbpl3",
+				"id": "20240530101000-g7coui7",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ドキュメントツリーでドキュメントを右クリックして "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エクスポート"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ を選択するか、ファイル名の右にある "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "︙"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ メニューの "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エクスポート"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ から出力フォーマットを選びます:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-krjdyfw",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20240530101000-krjdyfw",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-rorhd9l",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240530101000-rorhd9l",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-23vowg5",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-23vowg5",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Markdown"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-styeilp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240530101000-styeilp",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-pep8adg",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-pep8adg",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "PDF"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-tcf9jwd",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240530101000-tcf9jwd",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-jmyjo59",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-jmyjo59",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "HTML"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-vo7peie",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240530101000-vo7peie",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-vkd0k2d",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-vkd0k2d",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Word .docx"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614201224-obr35iz",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614201224-obr35iz",
+						"updated": "20260614201224"
+					},
+					"Children": [
+						{
+							"ID": "20260614201224-9o67vwy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614201224-9o67vwy",
+								"updated": "20260614201224"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": ".sy.zip"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614201227-7ux3rmo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614201227-7ux3rmo",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ".sy.zip"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 形式では、ドキュメントのコンテンツ、アセット、ブロック属性が保持されます。サブドキュメントと関連ドキュメントを含めるかどうかは、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エクスポート"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " の各オプションによって決まります。"
+				}
+			]
+		},
+		{
+			"ID": "20261015174914-g5qqzk2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261015174914-g5qqzk2",
+				"updated": "20261015174914"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「画像としてエクスポート」ダイアログで「題頭画像をエクスポート」をオフにすると、本文の画像を保持したまま題頭画像を除外できます。このスイッチは初期状態でオンになっており、「ドキュメントのタイトルを追加」とは独立しています。選択は保存され、プレビュー、エクスポートファイル、ダイアログ内の「PNG としてコピー」に適用されます。元のドキュメントは変更されません。"
+				}
+			]
+		},
+		{
+			"ID": "20261016200946-7tpddii",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016200946-7tpddii",
+				"updated": "20261016200946"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PDF のエクスポートにも独立した「題頭画像をエクスポート」スイッチがあります。初期状態ではオンで、画像のエクスポートとは別に選択が保存されます。ドキュメントのタイトルや本文の画像には影響しません。デスクトップでは PDF のプレビューウィンドウで設定し、エクスポート時に保存されます。モバイルでは印刷設定ダイアログで設定し、確認時に保存されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-9c8j2me",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-xxaupif",
+				"id": "20240530101000-9c8j2me",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": ""
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エクスポート"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " には、エクスポート処理を行うためのオプションがいくつか用意されています。詳細は画面上の案内をご覧ください。"
+				}
+			]
+		}
+	]
+}

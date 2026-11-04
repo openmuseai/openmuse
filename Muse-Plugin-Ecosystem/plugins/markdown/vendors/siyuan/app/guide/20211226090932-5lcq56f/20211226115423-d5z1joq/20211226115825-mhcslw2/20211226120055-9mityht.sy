@@ -1,0 +1,460 @@
+{
+	"ID": "20211226120055-9mityht",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20211226120055-9mityht",
+		"title": "什麼是內容區塊",
+		"type": "doc",
+		"updated": "20261024160716"
+	},
+	"Children": [
+		{
+			"ID": "20211226120120-jm4t451",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211226120120-jm4t451",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "內容區塊定義"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-83k0bgj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226120120-83k0bgj",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "內容區塊是思源中可獨立編輯、引用和組織的內容單元。每個內容區塊都有程式自動產生的全域唯一 ID，例如 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "20200825000000-a1b2c3d"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。ID 由 14 位時間戳記（"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "YYYYMMDDHHMMSS"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "）、連字號和 7 位隨機小寫英文字母或數字組成。"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-es5r7jz",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211226120120-es5r7jz",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "內容區塊類型"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-mabxgr7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226120120-mabxgr7",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "最常見的內容區塊是段落，用於撰寫正文。每個段落都是獨立的內容區塊，可以單獨移動、設定屬性或被其他內容引用。"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-o6vc62t",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226120120-o6vc62t",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "標題、列表、表格和引述區塊等類型用於表達不同的內容結構。標題劃分章節，無序列表組織並列項目，有序列表表示步驟或順序。選擇合適的類型，既能改善排版，也能讓內容的層次更清楚。"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-8gxppvd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226120120-8gxppvd",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各類型的特點和包含規則請參閱 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211226120147-ib6yy3i",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "內容區塊類型"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-dpno0zb",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211226120120-dpno0zb",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "組合內容區塊"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-z442iy4",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226120120-z442iy4",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "一篇文檔由多個內容區塊組成。能包含其他內容區塊的類型稱為容器區塊，例如列表和引述區塊。"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-l22275a",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226120120-l22275a",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "文檔本身也是內容區塊。無論是整篇文檔還是其中的段落，都可以透過 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211226120247-63nd8y5",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "區塊引用"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 建立聯繫，不必為了引用一段內容而將它拆成獨立文檔。"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-a9g5s86",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20211226120120-a9g5s86",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "命名、別名和備註"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-ez8kp2p",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226120120-ez8kp2p",
+				"memo": "備註通常是一句簡短的話",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可以為內容區塊設定命名、別名和備註。命名和別名用於 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211226120415-kqk522d",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "反向連結提及"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 搜尋；備註用於記錄不需要出現在正文中的補充資訊。"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-tk670g9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226120120-tk670g9",
+				"updated": "20261016013311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "啟用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "編輯器"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "行為"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "內容區塊角標"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 後，可在編輯器中顯示命名、別名和備註。文檔區塊設定命名或備註後，將滑鼠懸浮在文檔樹中的文檔上可檢視這些資訊。"
+				}
+			]
+		},
+		{
+			"ID": "20211226120120-mik443d",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226120120-mik443d",
+				"updated": "20260730184353"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可使用"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211226120508-yzh70eh",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "嵌入內容區塊"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "對命名和備註進行搜索匯總，比如列出備註中包含 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "簡短"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 關鍵字的內容區塊："
+				}
+			]
+		},
+		{
+			"ID": "20211226152553-bvudiv9",
+			"Type": "NodeBlockQueryEmbed",
+			"Properties": {
+				"id": "20211226152553-bvudiv9",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeBlockQueryEmbedScript",
+					"Data": "SELECT * FROM blocks WHERE memo LIKE '%簡短%'"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				}
+			]
+		},
+		{
+			"ID": "20230419153659-0rxrgc6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230419153659-0rxrgc6",
+				"updated": "20230419153659"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​："
+				}
+			]
+		},
+		{
+			"ID": "20230419153659-uh8hdye",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230419153659-uh8hdye",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"ID": "20230419153659-w5q9kdh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230419153659-w5q9kdh",
+						"updated": "20261024160716"
+					},
+					"Children": [
+						{
+							"ID": "20230419153659-egnlgvq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230419153659-egnlgvq",
+								"updated": "20261024160716"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "一個內容區塊只能設定一個命名；不同內容區塊可以使用相同的命名"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230419153659-xp3eeou",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230419153659-xp3eeou",
+						"updated": "20230419153659"
+					},
+					"Children": [
+						{
+							"ID": "20230419153659-z4eqmz0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230419153659-z4eqmz0",
+								"updated": "20230419153659"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "別名可以設置多個，通過英文狀態下的逗號（"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ","
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​）分隔"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230419153659-xjdb4u5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230419153659-xjdb4u5",
+						"updated": "20230630091613"
+					},
+					"Children": [
+						{
+							"ID": "20230419153659-0whksmd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230419153659-0whksmd",
+								"updated": "20230630091613"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "備註僅支持純文字"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

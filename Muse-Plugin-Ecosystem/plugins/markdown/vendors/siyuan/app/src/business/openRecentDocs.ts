@@ -1,0 +1,191 @@
+import {fileConfigApi} from "../config/tabs/fileRuntime";
+import {fetchPost, fetchSyncPost} from "../util/fetch";
+import {getFileTreeIconHTML} from "../emoji/fileTreeIcon";
+import {Constants} from "../constants";
+import {escapeHtml} from "../util/escape";
+import {isWindow} from "../util/functions";
+import {updateHotkeyTip} from "../protyle/util/compatibility";
+import {getAllDocks} from "../layout/getAll";
+import {getDockHotkey} from "../layout/dock/hotkey";
+import {Dialog} from "../dialog";
+import {hasClosestByClassName} from "../protyle/util/hasClosest";
+import {hideElements} from "../protyle/ui/hideElements";
+import {destroyDialogBlockPanels} from "../block/panelOwnership";
+import {bindClearRecentDocs, clearRecentDocsTextButtonHTML} from "./clearRecentDocs";
+
+const recentDocsRenderVersions = new WeakMap<Element, number>();
+const RECENT_DOCS_LIST = "recentDocsList";
+
+const renderRecentDocsContent = async (data: {
+    rootID: string,
+    icon?: string,
+    title?: string,
+    viewedAt?: number,
+    closedAt?: number,
+    openAt?: number,
+}[], element: Element, key?: string) => {
+    const version = (recentDocsRenderVersions.get(element) || 0) + 1;
+    recentDocsRenderVersions.set(element, version);
+    let tabHtml = "";
+    let index = 0;
+    let firstRootID: string;
+    data.forEach((item) => {
+        if (!key || (item.title || "").toLowerCase().includes(key.toLowerCase())) {
+            firstRootID = firstRootID || item.rootID;
+            tabHtml += `<li data-index="${index}" data-node-id="${item.rootID}" class="b3-list-item${index === 0 ? " b3-list-item--focus" : ""}">
+    ${getFileTreeIconHTML(item.icon, "file", "b3-list-item__graphic", true)}
+    <span class="b3-list-item__text">${escapeHtml(item.title || "")}</span>
+</li>`;
+            index++;
+        }
+    });
+    let switchPath = "";
+    if (tabHtml) {
+        const pathResponse = await fetchSyncPost("/api/filetree/getFullHPathByID", {
+            id: firstRootID
+        });
+        if (pathResponse.code === 0 && typeof pathResponse.data === "string") {
+            switchPath = escapeHtml(pathResponse.data);
+        }
+    }
+    let dockHtml = "";
+    if (!isWindow()) {
+        let docIndex = 0;
+        if (!key || window.siyuan.languages.riffCard.toLowerCase().includes(key.toLowerCase())) {
+            dockHtml += `<li data-type="riffCard" data-index="0" class="b3-list-item${!switchPath ? " b3-list-item--focus" : ""}">
+    <svg class="b3-list-item__graphic"><use xlink:href="#iconRiffCard"></use></svg>
+    <span class="b3-list-item__text">${window.siyuan.languages.riffCard}</span>
+    <span class="b3-list-item__meta">${updateHotkeyTip(window.siyuan.config.keymap.general.riffCard.custom)}</span>
+</li>`;
+            docIndex++;
+            if (!switchPath) {
+                switchPath = window.siyuan.languages.riffCard;
+            }
+        }
+        getAllDocks().forEach((item) => {
+            if (!key || item.title.toLowerCase().includes(key.toLowerCase())) {
+                dockHtml += `<li data-type="${item.type}" data-index="${docIndex}" class="b3-list-item${!switchPath ? " b3-list-item--focus" : ""}">
+    <svg class="b3-list-item__graphic"><use xlink:href="#${item.icon}"></use></svg>
+    <span class="b3-list-item__text">${item.title}</span>
+    <span class="b3-list-item__meta">${updateHotkeyTip(getDockHotkey(item))}</span>
+</li>`;
+                if (!switchPath) {
+                    switchPath = item.title;
+                }
+                docIndex++;
+            }
+        });
+        dockHtml = '<ul class="b3-list b3-list--background" style="overflow: auto;width: 200px;">' + dockHtml + "</ul>";
+    }
+
+    if (!element.isConnected || element.hasAttribute("data-dialog-closing") ||
+        recentDocsRenderVersions.get(element) !== version) {
+        return;
+    }
+    destroyDialogBlockPanels(element as HTMLElement);
+    element.querySelector(".switch-doc__path").innerHTML = switchPath;
+    element.querySelector(`[data-type="${RECENT_DOCS_LIST}"]`).innerHTML = `<div class="fn__flex fn__flex-1" style="overflow: auto;">
+    ${dockHtml}
+    <ul style="${isWindow() ? "border-left: 0;" : ""}min-width: 360px;" class="b3-list b3-list--background fn__flex-1">${tabHtml}</ul>
+</div>`;
+    element.querySelectorAll<HTMLElement>("li[data-node-id] > .b3-list-item__graphic").forEach(icon => {
+        icon.classList.add("popover__block");
+        icon.dataset.id = icon.parentElement.dataset.nodeId;
+    });
+};
+
+export const openRecentDocs = (openOnly = false) => {
+    const openRecentDocsDialog = window.siyuan.dialogs.find(item => {
+        if (item.element.getAttribute("data-key") === Constants.DIALOG_RECENTDOCS) {
+            return true;
+        }
+    });
+    if (openRecentDocsDialog) {
+        if (!openOnly) {
+            hideElements(["dialog"]);
+        }
+        return;
+    }
+    const sortBy = window.siyuan.config.fileTree.recentDocsSort as TRecentDocsSort;
+    fetchPost("/api/storage/getRecentDocs", {sortBy}, (response) => {
+        const dialog = new Dialog({
+            positionId: Constants.DIALOG_RECENTDOCS,
+            title: `<div class="switch-doc__header">
+<div class="switch-doc__title">${window.siyuan.languages.recentDocs}</div>
+<input spellcheck="false" placeholder="${window.siyuan.languages.searchPlaceholder}" class="b3-text-field switch-doc__search">
+<div class="switch-doc__actions">
+    <select class="b3-select" id="recentDocsSort">
+        <option value="viewedAt">${window.siyuan.languages.recentViewed}</option>
+        <option value="created">${window.siyuan.languages.recentCreated}</option>
+        <option value="updated">${window.siyuan.languages.recentModified}</option>
+        <option value="openAt">${window.siyuan.languages.recentOpened}</option>
+        <option value="closedAt">${window.siyuan.languages.recentClosed}</option>
+    </select>
+</div>
+</div>`,
+            content: `<div class="fn__flex-column switch-doc">
+    <div class="fn__flex fn__flex-1" data-type="${RECENT_DOCS_LIST}" style="overflow: auto;"></div>
+    <div class="switch-doc__footer">
+        <div class="switch-doc__path"></div>
+        ${clearRecentDocsTextButtonHTML()}
+    </div>
+</div>`,
+            height: "80vh",
+        });
+        const sortSelect = dialog.element.querySelector("#recentDocsSort") as HTMLSelectElement;
+        sortSelect.value = sortBy;
+        const searchElement = dialog.element.querySelector("input");
+        searchElement.focus();
+        searchElement.addEventListener("compositionend", () => {
+            renderRecentDocsContent(response.data, dialog.element, searchElement.value);
+        });
+        searchElement.addEventListener("input", (event: InputEvent) => {
+            if (event.isComposing) {
+                return;
+            }
+            renderRecentDocsContent(response.data, dialog.element, searchElement.value);
+        });
+        dialog.element.setAttribute("data-key", Constants.DIALOG_RECENTDOCS);
+        dialog.element.addEventListener("click", (event) => {
+            const liElement = hasClosestByClassName(event.target as HTMLElement, "b3-list-item");
+            if (liElement) {
+                dialog.element.querySelector(".b3-list-item--focus").classList.remove("b3-list-item--focus");
+                liElement.classList.add("b3-list-item--focus");
+                liElement.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", bubbles: true}));
+                event.stopPropagation();
+                event.preventDefault();
+            }
+        });
+
+        const isActive = () => dialog.element.isConnected && !dialog.element.hasAttribute("data-dialog-closing");
+        let sortRequestId = 0;
+        const loadRecentDocs = () => {
+            const requestId = ++sortRequestId;
+            fetchPost("/api/storage/getRecentDocs", {sortBy: sortSelect.value}, (newResponse) => {
+                if (requestId !== sortRequestId || !isActive()) {
+                    return;
+                }
+                response = newResponse;
+                renderRecentDocsContent(newResponse.data, dialog.element, searchElement.value);
+            });
+        };
+        const updateClearButton = bindClearRecentDocs(dialog.element.querySelector('[data-action="clear-recent-docs"]'),
+            () => sortSelect.value, isActive, () => {
+                recentDocsRenderVersions.set(dialog.element, (recentDocsRenderVersions.get(dialog.element) || 0) + 1);
+                if (!["created", "updated"].includes(sortSelect.value)) {
+                    response.data = [];
+                    void renderRecentDocsContent([], dialog.element, searchElement.value);
+                }
+                loadRecentDocs();
+            });
+        sortSelect.addEventListener("change", () => {
+            updateClearButton();
+            loadRecentDocs();
+            if (!window.siyuan.config.readonly && !window.siyuan.isPublish) {
+                void fileConfigApi.patch("recentDocsSort", sortSelect.value);
+            }
+        });
+
+        renderRecentDocsContent(response.data, dialog.element);
+    });
+};

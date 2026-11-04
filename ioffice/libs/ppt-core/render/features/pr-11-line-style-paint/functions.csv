@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_stroke_width_px,线宽 EMU→px,ln w=25400（2pt）；min 12700,指令/ painter 宽度 = fromEmu；低于 min 提到 12700,pr-08:03,03,libs/ppt-core,spec
+2,02_function_stroke_color,线色 scheme/srgb,schemeClr / srgbClr ln,painter/指令色解析后 ARGB,01;pp-16,—,libs/ppt-core,spec
+3,03_function_noline,noFill 线无 stroke,a:ln/a:noFill,无 stroke；回归 pr-07 空样式,01;pr-07,—,libs/ppt-core,spec

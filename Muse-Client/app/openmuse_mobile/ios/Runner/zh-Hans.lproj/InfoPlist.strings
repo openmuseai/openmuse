@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "OpenMuse 使用麦克风将语音转换为可编辑文字。语音识别在此设备上运行。";
+"NSLocalNetworkUsageDescription" = "OpenMuse 连接你已配对的电脑，以访问获得授权的工作区和资源。";

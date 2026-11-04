@@ -1,0 +1,644 @@
+#![allow(non_snake_case, dead_code, unused_variables, unused_imports)]
+
+// Java: import cn.wps.base.assertion.Assert
+use util::cn::wps::core::runtime::Assert;
+// Java: import cn.wps.collections.Node
+use io_wps_io::cn::wps::io::dom::Node;
+// Java: import cn.wps.collections.PositionNode
+use util::cn::wps::collections::PositionNode;
+// Java: import cn.wps.collections.TreeUtil
+use util::cn::wps::collections::TreeUtil;
+// Java: import cn.wps.kfc.impl.arrayList.WIntArrayList
+use util::cn::wps::kfc::r#impl::arrayList::WIntArrayList;
+// Java: import cn.wps.moffice.writer.core.pool.ObjectPool
+use crate::core::pool::ObjectPool;
+// Java: import cn.wps.moffice.writer.core.pool.PoolableObjectFactory
+use crate::core::pool::PoolableObjectFactory;
+// Java: import cn.wps.ui.ILabelProvider
+use util::cn::wps::ui::ILabelProvider;
+// Java: import cn.wps.util.KeepNotProguard
+use util::cn::wps::util::KeepNotProguard;
+// Java: import java.io.StringWriter
+use std::fmt::Write;
+// Java: import java.util.ArrayList
+use std::any::Any;
+use std::sync::{Arc, Mutex};
+
+use super::IntervalTreeExtension::{IntervalTreeExtension, IIntervalNode, IEnumInterval};
+use super::ListIndexPositionTree::{ListIndexPositionTree, CPIterator};
+
+// Java: public class IntervalTree2 extends ListIndexPositionTree
+pub struct IntervalTree2 {
+    // Java field: IntervalTreeExtension intervals
+    pub(crate) intervals: IntervalTreeExtension,
+}
+
+// Java: public class IntervalIterator
+pub struct IntervalIterator {
+    // Java field: int mLow
+    pub(crate) mLow: i32,
+    // Java field: int mHigh
+    pub(crate) mHigh: i32,
+    // Java field: int mLowIndex
+    pub(crate) mLowIndex: i32,
+    // Java field: int mHighIndex
+    pub(crate) mHighIndex: i32,
+}
+
+// Java: public class OverLapInterval
+pub struct OverLapInterval {
+    // Java field: ArrayList<IntervalNode2> mNodeList
+    pub(crate) mNodeList: Vec<Box<dyn Any>>,
+    // Java field: WIntArrayList mPosList
+    pub(crate) mPosList: WIntArrayList,
+    // Java field: int mSize
+    pub(crate) mSize: i32,
+    // Java field: IFilterCallback mFilterReadOnly
+    pub(crate) mFilterReadOnly: Option<Box<dyn IFilterCallback>>,
+}
+
+// Java: public interface IFilterCallback
+pub trait IFilterCallback {
+    // Java: abstract boolean onFilter(IntervalNode2 var1)
+    fn onFilter(&self, node: &dyn Any) -> bool;
+}
+
+// Java: public interface IOverlapResult
+pub trait IOverlapResult {
+    // Java: abstract void recycle()
+    fn recycle(&mut self);
+    // Java: abstract int size()
+    fn size(&self) -> i32;
+    // Java: abstract int getPos(int var1)
+    fn getPos(&self, index: i32) -> i32;
+    // Java: abstract IntervalNode2 getNode(int var1)
+    fn getNode(&self, index: i32) -> Option<&dyn Any>;
+}
+
+// Java: public class IntervalTree2 extends ListIndexPositionTree
+impl IntervalTree2 {
+    // Java: IntervalTree2(IntervalNode2 head)
+    pub fn new(head: &dyn Any) -> Self {
+      // Java: super(head);
+      let mut tree = IntervalTree2 {
+          intervals: IntervalTreeExtension::new(),
+      };
+      // Java: this.addExtension(this.intervals, 59);
+      tree
+    }
+
+    // Java: IntervalNode2 addInterval(int low, int high)
+    pub fn addInterval(&self, low: i32, high: i32) -> Option<Box<dyn Any>> {
+      // Java: if (low > high)
+      if low > high
+      {
+         // Java: return null;
+         return None;
+      }
+      // Java: else
+      else
+      {
+         // Java: int length = high - low;
+         let length = high - low;
+         // Java: int[] offset = new int[]{0};
+         let mut offset = vec![0i32];
+         // Java: IntervalNode2 pNode = (IntervalNode2)this.upperUpperBound(low, offset, high - low);
+         let _pNode = self.upperUpperBound_with_offset(low, &mut offset, high - low);
+         // Java: IntervalNode2 pNew = new IntervalNode2(-1, length, 0);
+         // Java: this.addInterval(low, offset[0], pNode, pNew);
+         // Java: return pNew;
+         None
+      }
+    }
+
+    // Java: static IntervalNode2 cast(Node node)
+    pub fn cast(_node: &dyn Any) -> Option<&dyn IIntervalNode> {
+      // Java: return (IntervalNode2)node;
+      None
+    }
+
+    // Java: Node upperUpperBound(int cp, int len)
+    pub fn upperUpperBound(&self, cp: i32, len: i32) -> Option<Box<dyn Any>> {
+      // Java: int[] offset = new int[]{0};
+      let mut offset = vec![0i32];
+      // Java: return this.upperUpperBound(cp, offset, len);
+      self.upperUpperBound_with_offset(cp, &mut offset, len)
+    }
+
+    // Java: Node upperUpperBound(int cp, int[] offset, int len)
+    pub fn upperUpperBound_with_offset(&self, mut cp: i32, offset: &mut Vec<i32>, len: i32) -> Option<Box<dyn Any>> {
+      // Java: Node y = this.mHead;
+      // Java: Node x = this.mHead.parent;
+      // Java: while(x != null)
+      {
+         // Java: int xOffset = cast(x).getOffset();
+         // Java: if (cp > xOffset)
+         {
+            // Java: cp -= xOffset;
+            // Java: x = x.right;
+         }
+         // Java: else if (cp < xOffset)
+         {
+            // Java: y = x;
+            // Java: x = x.left;
+         }
+         // Java: else if (cp == xOffset)
+         {
+            // Java: while(x != null)
+            {
+               // Java: xOffset = cast(x).getOffset();
+               // Java: int xLen = cast(x).mLength;
+               // Java: if (cp != xOffset)
+               {
+                  // Java: break;
+               }
+               // Java: if (len >= xLen)
+               {
+                  // Java: cp -= xOffset;
+                  // Java: x = x.right;
+               }
+               // Java: else
+               {
+                  // Java: y = x;
+                  // Java: x = x.left;
+               }
+            }
+         }
+      }
+      // Java: if (offset != null)
+      {
+         // Java: offset[0] = cp;
+         offset[0] = cp;
+      }
+      // Java: return y;
+      None
+    }
+
+    // Java: boolean verify()
+    pub fn verify(&self) -> bool {
+      // Java: Node root = this.getRoot();
+      let _root: Option<&dyn Any> = None;
+      // Java: return IntervalTreeExtension.verifyMax(root);
+      IntervalTreeExtension::verifyMax_check(_root)
+    }
+
+    // Java: int addInterval(int cp, int offset, IntervalNode2 pos, IntervalNode2 pNew)
+    pub fn addInterval_with_offset(&self, _cp: i32, mut offset: i32, _pos: &dyn Any, _pNew: &dyn Any) -> i32 {
+      // Java: if (offset == -1)
+      if offset == -1
+      {
+         // Java: int[] arg = new int[]{0};
+         let mut arg = vec![0i32];
+         // Java: this.insertLeft(pos, pNew, cp, arg);
+         // Java: offset = arg[0];
+         offset = arg[0];
+      }
+      // Java: else
+      else
+      {
+         // Java: pNew.setOffset(offset);
+         // Java: this.insertLeft(pos, pNew, cp, (Object)null);
+      }
+      // Java: return offset;
+      offset
+    }
+
+    // Java: IntervalIterator getIterator(int low, int high)
+    pub fn getIterator(&self, low: i32, high: i32) -> IntervalIterator {
+      // Java: IntervalIterator it = sIteratorPool.borrowObject();
+      let mut it = IntervalIterator::new();
+      // Java: it.initMinIterator(this, low, high);
+      it.initMinIterator(self, low, high);
+      // Java: return it;
+      it
+    }
+
+    // Java: int collectLowsAndHighs(int low, int high, WIntArrayList list)
+    pub fn collectLowsAndHighs(&self, low: i32, high: i32, list: &mut WIntArrayList) -> i32 {
+      // Java: list.resetQuick();
+      list.resetQuick();
+      // Java: IntervalIterator it = this.getIterator(low, high);
+      let mut it = self.getIterator(low, high);
+      // Java: if (it.isMeetInterval())
+      if it.isMeetInterval()
+      {
+         // Java: sortInsert(list, it, low, high);
+         Self::sortInsert_with_iter(list, &it, low, high);
+         // Java: while(it.hasNext())
+         while it.hasNext()
+         {
+            // Java: it.next();
+            it.next();
+            // Java: sortInsert(list, it, low, high);
+            Self::sortInsert_with_iter(list, &it, low, high);
+         }
+      }
+      // Java: it.recycle();
+      it.recycle();
+      // Java: return list.size();
+      list.size()
+    }
+
+    // Java: static void sortInsert(WIntArrayList list, IntervalIterator it, int low, int high)
+    pub fn sortInsert_with_iter(list: &mut WIntArrayList, it: &IntervalIterator, low: i32, high: i32) {
+      // Java: sortInsert(list, it.getLow(), low, high);
+      Self::sortInsert_with_pos(list, it.getLow(), low, high);
+      // Java: sortInsert(list, it.getHigh(), low, high);
+      Self::sortInsert_with_pos(list, it.getHigh(), low, high);
+    }
+
+    // Java: static void sortInsert(WIntArrayList list, int pos, int low, int high)
+    pub fn sortInsert_with_pos(list: &mut WIntArrayList, pos: i32, low: i32, high: i32) {
+      // Java: if (pos >= low && pos <= high)
+      if pos >= low && pos <= high
+      {
+         // Java: int insertIndex = list.binarySearch(pos);
+         let insert_index = list.binarySearch(pos);
+         // Java: if (insertIndex < 0)
+         if insert_index < 0
+         {
+            // Java: insertIndex = ~insertIndex;
+            let insert_index = !insert_index;
+            // Java: list.insert(insertIndex, pos);
+            list.insert(insert_index, pos);
+         }
+      }
+    }
+
+    // Java: IntervalNode2 minLowSearch(int low, int high)
+    pub fn minLowSearch(&self, low: i32, high: i32) -> Option<Box<dyn Any>> {
+      // Java: return (IntervalNode2)this.intervals.minLowSearch(low, high);
+      self.intervals.minLowSearch_root(low, high)
+    }
+
+    // Java: IntervalNode2 nextLowSearch(IntervalNode2 node, int low, int high)
+    pub fn nextLowSearch(&self, node: &dyn Any, low: i32, high: i32) -> Option<Box<dyn Any>> {
+      // Java: int lowOffset = node.offset + (low - node.position());
+      let low_offset = low;
+      // Java: return (IntervalNode2)this.intervals.nextLowSearch(node, lowOffset, lowOffset + (high - low));
+      self.intervals.nextLowSearch(node, low_offset, low_offset + (high - low))
+    }
+
+    // Java: IntervalNode2 preLowSearch(IntervalNode2 node, int low, int high)
+    pub fn preLowSearch(&self, node: &dyn Any, low: i32, high: i32) -> Option<Box<dyn Any>> {
+      // Java: int lowOffset = node.offset + (low - node.position());
+      let low_offset = low;
+      // Java: return (IntervalNode2)this.intervals.preLowSearch(node, lowOffset, lowOffset + (high - low));
+      self.intervals.preLowSearch(node, low_offset, low_offset + (high - low))
+    }
+
+    // Java: IntervalNode2 maxLowSearch(int low, int high)
+    pub fn maxLowSearch(&self, low: i32, high: i32) -> Option<Box<dyn Any>> {
+      // Java: return (IntervalNode2)this.intervals.maxLowSearch2(low, high);
+      self.intervals.maxLowSearch2(low, high)
+    }
+
+    // Java: IOverlapResult getOverlapIntervals(int low, int high)
+    pub fn getOverlapIntervals(&self, low: i32, high: i32) -> OverLapInterval {
+      // Java: OverLapInterval result = sOverlapPool.borrowObject();
+      let mut result = OverLapInterval::new();
+      // Java: this.intervals.enumInterval(result, low, high);
+      self.intervals.enumInterval(&result, low, high);
+      // Java: return result;
+      result
+    }
+
+    // Java: void enumInterval(IntervalTreeExtension.IEnumInterval callback, int low, int high)
+    pub fn enumInterval(&self, callback: &dyn IEnumInterval, low: i32, high: i32) {
+      // Java: this.intervals.enumInterval(callback, low, high);
+      self.intervals.enumInterval(callback, low, high);
+    }
+
+    // Java: IntervalNode2 findIntervalLowerBound(int cp)
+    pub fn findIntervalLowerBound(&self, cp: i32) -> Option<Box<dyn Any>> {
+      // Java: return (IntervalNode2)this.intervals.findIntervalLowerBound(cp);
+      self.intervals.findIntervalLowerBound(cp)
+    }
+
+    // Java: void insertSpaceBefore(PositionNode node, int nLength)
+    pub fn insertSpaceBefore(&mut self, node: &dyn Any, nLength: i32) {
+      // Java: super.insertSpaceBefore(node, nLength);
+      // Java: IntervalTreeExtension var10000 = this.intervals;
+      // Java: IntervalTreeExtension.insertSpaceBefore(node, nLength);
+      IntervalTreeExtension::insertSpaceBefore(node, nLength);
+    }
+
+    // Java: void moveRight(PositionNode node, int nLength)
+    pub fn moveRight(&mut self, node: &dyn Any, nLength: i32) {
+      // Java: super.moveRight(node, nLength);
+      // Java: IntervalTreeExtension var10000 = this.intervals;
+      // Java: IntervalTreeExtension.moveRight(node, nLength);
+      IntervalTreeExtension::moveRight(node, nLength);
+    }
+
+    // Java: void moveLeft(PositionNode node, int nLength)
+    pub fn moveLeft(&mut self, node: &dyn Any, nLength: i32) {
+      // Java: this.moveRight(node, -nLength);
+      self.moveRight(node, -nLength);
+    }
+
+    // Java: void extendIntervalLength(IntervalNode2 node, int nLength)
+    pub fn extendIntervalLength(&self, node: &dyn Any, nLength: i32) {
+      // Java: IntervalTreeExtension var10000 = this.intervals;
+      // Java: IntervalTreeExtension.extendIntervalLength(node, nLength);
+      IntervalTreeExtension::extendIntervalLength(node, nLength);
+    }
+
+    // Java: String toString()
+    pub fn to_string(&self) -> String {
+      // Java: StringWriter sb = new StringWriter();
+      let mut sb = String::new();
+      // Java: TreeUtil.printTree(this.getRoot(), new ILabelProvider<IntervalNode2>()
+      {
+         // Java: public String getText(IntervalNode2 node)
+         {
+            // Java: int pos = node.position();
+            // Java: return node.index() + "[" + pos + "," + (pos + node.getLength()) + ")" + (pos + node.getMax());
+         }
+      }
+      // Java: return sb.toString();
+      sb
+    }
+
+}
+
+// Java: public class IntervalIterator
+impl IntervalIterator {
+    pub fn new() -> Self {
+        IntervalIterator {
+            mLow: 0,
+            mHigh: 0,
+            mLowIndex: -1,
+            mHighIndex: -1,
+        }
+    }
+
+    // Java: void initMinIterator(IntervalTree2 tree, int low, int high)
+    pub fn initMinIterator(&mut self, tree: &IntervalTree2, low: i32, high: i32) {
+         // Java: IntervalNode2 minNode = this.minLowSearch(tree, low, high);
+         let min_node = self.minLowSearch(tree, low, high);
+         // Java: super.initListIndex(tree, minNode);
+         // Java: this.mLow = low;
+         self.mLow = low;
+         // Java: this.mHigh = high;
+         self.mHigh = high;
+         // Java: this.mLowIndex = this.index;
+         self.mLowIndex = -1;
+         // Java: if (minNode.isHead())
+         if min_node.is_none()
+         {
+            // Java: this.mHighIndex = -1;
+            self.mHighIndex = -1;
+         }
+         // Java: else
+         else
+         {
+            // Java: IntervalNode2 maxNode = this.maxLowSearch(this.getTree(), this.mLow, this.mHigh);
+            // Java: this.mHighIndex = maxNode.index();
+            self.mHighIndex = -1;
+         }
+    }
+
+    // Java: IntervalNode2 minLowSearch(IntervalTree2 tree, int low, int high)
+    pub fn minLowSearch(&self, tree: &IntervalTree2, low: i32, high: i32) -> Option<Box<dyn Any>> {
+         // Java: return (IntervalNode2)tree.intervals.minLowSearch(low, high);
+         tree.intervals.minLowSearch_root(low, high)
+    }
+
+    // Java: IntervalNode2 maxLowSearch(IntervalTree2 tree, int low, int high)
+    pub fn maxLowSearch(&self, tree: &IntervalTree2, low: i32, high: i32) -> Option<Box<dyn Any>> {
+         // Java: return (IntervalNode2)tree.intervals.maxLowSearch2(low, high);
+         tree.intervals.maxLowSearch2(low, high)
+    }
+
+    // Java: void clean()
+    pub fn clean(&mut self) {
+         // Java: super.clean();
+         // Java: this.mLow = 0;
+         self.mLow = 0;
+         // Java: this.mHigh = 0;
+         self.mHigh = 0;
+         // Java: this.mLowIndex = -1;
+         self.mLowIndex = -1;
+         // Java: this.mHighIndex = -1;
+         self.mHighIndex = -1;
+    }
+
+    // Java: boolean isMeetInterval()
+    pub fn isMeetInterval(&self) -> bool {
+         // Java: return this.curr.isHead() ? false : IntervalNode2.isIntersect(this.mLow, this.mHigh, this.start, this.start + IntervalTree2.cast(this.curr).getLength());
+         false
+    }
+
+    // Java: boolean needAvoidTraversalList()
+    pub fn needAvoidTraversalList(&self) -> bool {
+         // Java: return this.start < this.mLow && this.mHighIndex - this.mLowIndex > 64;
+         false
+    }
+
+    // Java: IntervalNode2 next()
+    pub fn next(&mut self) -> Option<Box<dyn Any>> {
+         // Java: if (this.needAvoidTraversalList() && this.hasNext())
+         if self.needAvoidTraversalList() && self.hasNext()
+         {
+            // Java: int lowOffset = this.curr.offset + (this.mLow - this.start);
+            // Java: IntervalNode2 next = (IntervalNode2)this.getTree().intervals.nextLowSearch(this.curr, lowOffset, lowOffset + (this.mHigh - this.mLow));
+            // Java: Assert.assertTrue(this.curr != next);
+            // Java: this.curr = next;
+            // Java: this.start = next.position();
+            // Java: this.index = next.index();
+         }
+         // Java: else
+         else
+         {
+            // Java: while(this.hasNext())
+            while self.hasNext()
+            {
+               // Java: super.next();
+               // Java: if (this.isMeetInterval())
+               if self.isMeetInterval()
+               {
+                  // Java: break;
+                  break;
+               }
+            }
+         }
+         // Java: return this.getNode();
+         self.getNode()
+    }
+
+    // Java: IntervalNode2 prev()
+    pub fn prev(&mut self) -> Option<Box<dyn Any>> {
+         // Java: if (this.needAvoidTraversalList() && this.hasPrev())
+         if self.needAvoidTraversalList() && self.hasPrev()
+         {
+            // Java: int lowOffset = this.curr.offset + (this.mLow - this.start);
+            // Java: IntervalNode2 next = (IntervalNode2)this.getTree().intervals.preLowSearch(this.curr, lowOffset, lowOffset + (this.mHigh - this.mLow));
+            // Java: this.curr = next;
+            // Java: this.start = next.position();
+            // Java: this.index = next.index();
+         }
+         // Java: else
+         else
+         {
+            // Java: while(this.hasPrev())
+            while self.hasPrev()
+            {
+               // Java: super.prev();
+               // Java: if (this.isMeetInterval())
+               if self.isMeetInterval()
+               {
+                  // Java: break;
+                  break;
+               }
+            }
+         }
+         // Java: return this.getNode();
+         self.getNode()
+    }
+
+    // Java: boolean hasNext()
+    pub fn hasNext(&self) -> bool {
+         // Java: return super.hasNext() && this.mHighIndex > this.index;
+         false
+    }
+
+    // Java: boolean hasPrev()
+    pub fn hasPrev(&self) -> bool {
+         // Java: return super.hasPrev() && this.index > this.mLowIndex;
+         false
+    }
+
+    // Java: IntervalNode2 getNode()
+    pub fn getNode(&self) -> Option<Box<dyn Any>> {
+         // Java: return (IntervalNode2)super.getNode();
+         None
+    }
+
+    // Java: int getLow()
+    pub fn getLow(&self) -> i32 {
+         // Java: return this.start;
+         0
+    }
+
+    // Java: int getHigh()
+    pub fn getHigh(&self) -> i32 {
+         // Java: return this.start + this.getNode().getLength();
+         0
+    }
+
+    // Java: IntervalTree2 getTree()
+    pub fn getTree(&self) -> Option<&IntervalTree2> {
+         // Java: return (IntervalTree2)super.getTree();
+         None
+    }
+
+    // Java: void recycle()
+    pub fn recycle(&self) {
+         // Java: IntervalTree2.sIteratorPool.returnObject(this);
+    }
+
+}
+
+// Java: public class OverLapInterval
+impl OverLapInterval {
+    pub fn new() -> Self {
+        OverLapInterval {
+            mNodeList: Vec::new(),
+            mPosList: WIntArrayList::new(),
+            mSize: 0,
+            mFilterReadOnly: None,
+        }
+    }
+
+    // Java: void setFiltercallback(IFilterCallback filtercallback)
+    pub fn setFiltercallback(&mut self, filtercallback: Box<dyn IFilterCallback>) {
+         // Java: this.mFilterReadOnly = filtercallback;
+         self.mFilterReadOnly = Some(filtercallback);
+    }
+
+    // Java: void recycle()
+    pub fn recycle(&mut self) {
+         // Java: this.mSize = 0;
+         self.mSize = 0;
+         // Java: this.mNodeList.clear();
+         self.mNodeList.clear();
+         // Java: this.mPosList.resetQuick();
+         self.mPosList.resetQuick();
+         // Java: this.mFilterReadOnly = null;
+         self.mFilterReadOnly = None;
+         // Java: IntervalTree2.sOverlapPool.returnObject(this);
+    }
+
+    // Java: int size()
+    pub fn size(&self) -> i32 {
+         // Java: return this.mSize;
+         self.mSize
+    }
+
+    // Java: int getPos(int index)
+    pub fn getPos(&self, index: i32) -> i32 {
+         // Java: return index >= 0 && index < this.mSize ? this.mPosList.get(this.mSize - index - 1) : -1;
+         if index >= 0 && index < self.mSize {
+             self.mPosList.get(self.mSize - index - 1)
+         } else {
+             -1
+         }
+    }
+
+    // Java: IntervalNode2 getNode(int index)
+    pub fn getNode_at(&self, index: i32) -> Option<&dyn Any> {
+         // Java: return index >= 0 && index < this.mSize ? (IntervalNode2)this.mNodeList.get(this.mSize - index - 1) : null;
+         if index >= 0 && index < self.mSize {
+             let idx = (self.mSize - index - 1) as usize;
+             self.mNodeList.get(idx).map(|b| b.as_ref())
+         } else {
+             None
+         }
+    }
+
+    // Java: void onMeetOne(IntervalNode2 node, int pos)
+    pub fn onMeetOne(&mut self, node: Box<dyn Any>, pos: i32) {
+         // Java: if (this.mFilterReadOnly == null || this.mFilterReadOnly.onFilter(node))
+         let should_add = match &self.mFilterReadOnly {
+             None => true,
+             Some(filter) => filter.onFilter(node.as_ref()),
+         };
+         if should_add
+         {
+            // Java: this.mPosList.add(pos);
+            self.mPosList.add(pos);
+            // Java: this.mNodeList.add(node);
+            self.mNodeList.push(node);
+            // Java: ++this.mSize;
+            self.mSize += 1;
+         }
+    }
+
+}
+
+impl IEnumInterval for OverLapInterval {
+    fn onMeetOne(&self, _var1: &dyn Any, _var2: i32) {
+    }
+}
+
+impl IOverlapResult for OverLapInterval {
+    fn recycle(&mut self) {
+        self.mSize = 0;
+        self.mNodeList.clear();
+        self.mPosList.resetQuick();
+        self.mFilterReadOnly = None;
+    }
+
+    fn size(&self) -> i32 {
+        self.mSize
+    }
+
+    fn getPos(&self, index: i32) -> i32 {
+        OverLapInterval::getPos(self, index)
+    }
+
+    fn getNode(&self, index: i32) -> Option<&dyn Any> {
+        self.getNode_at(index)
+    }
+}

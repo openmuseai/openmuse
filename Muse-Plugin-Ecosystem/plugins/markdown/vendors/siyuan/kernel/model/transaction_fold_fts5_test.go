@@ -1,0 +1,612 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+//go:build fts5
+
+package model
+
+import (
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+	"testing"
+
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/filesys"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func TestCompleteContainerDOMUpdatePreservesFoldedContentOnce(t *testing.T) {
+	fixture := setupStructureTransactionTest(t)
+	setupFoldTransactionDatabase(t, fixture)
+	tree, err := LoadTreeByBlockID(fixture.sourceID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for tree.Root.FirstChild != nil {
+		tree.Root.FirstChild.Unlink()
+	}
+	quote := &ast.Node{Type: ast.NodeBlockquote, ID: ast.NewNodeID()}
+	quote.SetIALAttr("id", quote.ID)
+	heading := newHeadingLevelTestNode(ast.NewNodeID(), 1)
+	heading.SetIALAttr("id", heading.ID)
+	treenode.SetSelfFolded(heading, true)
+	paragraph := treenode.NewParagraph(ast.NewNodeID())
+	paragraph.AppendChild(&ast.Node{Type: ast.NodeText, Tokens: []byte("hidden original")})
+	quote.AppendChild(heading)
+	quote.AppendChild(paragraph)
+	tree.Root.AppendChild(quote)
+	if _, err = filesys.WriteTree(tree); err != nil {
+		t.Fatal(err)
+	}
+	treenode.UpsertBlockTree(tree)
+	sql.IndexTreeQueue(tree)
+	sql.FlushQueue()
+	dom := strings.ReplaceAll(GetBlockDOM(quote.ID), "hidden original", "hidden edited")
+	if !strings.Contains(dom, "hidden edited") {
+		t.Fatal("complete DOM omitted hidden content")
+	}
+	if _, _, err = PerformBlockUpdates([]BlockUpdateInput{{ID: quote.ID, DataType: "dom", Data: dom}}); err != nil {
+		t.Fatal(err)
+	}
+	actual, err := filesys.LoadTree(tree.Box, tree.Path, util.NewLute())
+	if err != nil {
+		t.Fatal(err)
+	}
+	counts := map[string]int{}
+	ast.Walk(actual.Root, func(n *ast.Node, entering bool) ast.WalkStatus {
+		if entering && n.IsBlock() && n.Type != ast.NodeKramdownBlockIAL {
+			counts[n.ID]++
+		}
+		return ast.WalkContinue
+	})
+	for _, id := range []string{quote.ID, heading.ID, paragraph.ID} {
+		if counts[id] != 1 {
+			t.Fatalf("block %s persisted %d times", id, counts[id])
+		}
+	}
+	node := treenode.GetNodeInTree(actual, paragraph.ID)
+	if node == nil || node.FirstChild == nil || string(node.FirstChild.Tokens) != "hidden edited" {
+		t.Fatal("incoming hidden content was overwritten")
+	}
+}
+
+func TestCancelFoldedHeadingSuperBlockKeepsUndoBoundary(t *testing.T) {
+	const (
+		superBlockID = "20260817000000-sblock1"
+		headingID    = "20260817000001-heading"
+		paragraphID  = "20260817000002-para001"
+		outsideID    = "20260817000003-outside"
+	)
+	fixture := setupStructureTransactionTest(t)
+	setupFoldTransactionDatabase(t, fixture)
+	tree, err := LoadTreeByBlockID(fixture.sourceID)
+	if nil != err {
+		t.Fatalf("load test tree failed: %s", err)
+	}
+	for child := tree.Root.FirstChild; nil != child; {
+		next := child.Next
+		child.Unlink()
+		child = next
+	}
+
+	superBlock := &ast.Node{Type: ast.NodeSuperBlock, ID: superBlockID}
+	superBlock.SetIALAttr("id", superBlockID)
+	superBlock.AppendChild(&ast.Node{Type: ast.NodeSuperBlockOpenMarker, Tokens: []byte("{{{")})
+	superBlock.AppendChild(&ast.Node{Type: ast.NodeSuperBlockLayoutMarker, Tokens: []byte("row")})
+	heading := &ast.Node{Type: ast.NodeHeading, ID: headingID, HeadingLevel: 1}
+	heading.SetIALAttr("id", headingID)
+	heading.SetIALAttr("fold", "1")
+	heading.AppendChild(&ast.Node{Type: ast.NodeText, Tokens: []byte("Heading")})
+	paragraph := treenode.NewParagraph(paragraphID)
+	paragraph.AppendChild(&ast.Node{Type: ast.NodeText, Tokens: []byte("Paragraph")})
+	superBlock.AppendChild(heading)
+	superBlock.AppendChild(paragraph)
+	superBlock.AppendChild(&ast.Node{Type: ast.NodeSuperBlockCloseMarker, Tokens: []byte("}}}")})
+	outside := treenode.NewParagraph(outsideID)
+	outside.AppendChild(&ast.Node{Type: ast.NodeText, Tokens: []byte("Outside")})
+	tree.Root.AppendChild(superBlock)
+	tree.Root.AppendChild(outside)
+	if _, err = filesys.WriteTree(tree); nil != err {
+		t.Fatalf("write test tree failed: %s", err)
+	}
+	treenode.UpsertBlockTree(tree)
+	sql.IndexTreeQueue(tree)
+	sql.FlushQueue()
+	treenode.RemoveBlockTree(tree.Box, superBlockID)
+	superBlockDOM := GetBlockDOM(superBlockID)
+	for _, id := range []string{superBlockID, headingID, paragraphID} {
+		if !strings.Contains(superBlockDOM, `data-node-id="`+id+`"`) {
+			t.Fatalf("rendered super block DOM should contain block [%s]", id)
+		}
+	}
+
+	doOperations := []*Operation{
+		{Action: "unfoldHeading", ID: headingID},
+		{Action: "move", ID: headingID, ParentID: fixture.sourceID},
+		{Action: "move", ID: paragraphID, PreviousID: headingID, ParentID: fixture.sourceID},
+		{Action: "delete", ID: superBlockID},
+		{Action: "foldHeading", ID: headingID},
+	}
+	undoOperations := []*Operation{
+		{Action: "unfoldHeading", ID: headingID},
+		{
+			Action: "insert",
+			ID:     superBlockID,
+			Data: `<div data-node-id="` + superBlockID + `" data-type="NodeSuperBlock" class="sb" ` +
+				`data-sb-layout="row"><div class="protyle-attr" contenteditable="false"></div></div>`,
+			ParentID: fixture.sourceID,
+		},
+		{Action: "move", ID: headingID, ParentID: superBlockID},
+		{Action: "move", ID: paragraphID, PreviousID: headingID, ParentID: superBlockID},
+		{Action: "foldHeading", ID: headingID},
+	}
+
+	if err = PerformTxSync(&Transaction{DoOperations: doOperations}); nil != err {
+		t.Fatalf("cancel folded heading super block failed: %s", err)
+	}
+	assertCancelledFoldedSuperBlock(t, fixture.sourceID, superBlockID, headingID, paragraphID, outsideID)
+
+	if err = PerformTxSync(&Transaction{DoOperations: undoOperations}); nil != err {
+		t.Fatalf("undo folded heading super block cancellation failed: %s", err)
+	}
+	assertRestoredFoldedSuperBlock(t, fixture.sourceID, superBlockID, headingID, paragraphID, outsideID)
+
+	if err = PerformTxSync(&Transaction{DoOperations: doOperations}); nil != err {
+		t.Fatalf("redo folded heading super block cancellation failed: %s", err)
+	}
+	assertCancelledFoldedSuperBlock(t, fixture.sourceID, superBlockID, headingID, paragraphID, outsideID)
+}
+
+func TestDocHeadingBatchPreservesFoldedParentOnUndoRedo(t *testing.T) {
+	fixture := setupStructureTransactionTest(t)
+	setupFoldTransactionDatabase(t, fixture)
+	tree, err := LoadTreeByBlockID(fixture.sourceID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for tree.Root.FirstChild != nil {
+		tree.Root.FirstChild.Unlink()
+	}
+	parent := newHeadingLevelTestNode("20260905000001-parent0", 4)
+	child := newHeadingLevelTestNode("20260905000002-child00", 3)
+	other := newHeadingLevelTestNode("20260905000003-other00", 3)
+	for _, node := range []*ast.Node{parent, child, other} {
+		node.SetIALAttr("id", node.ID)
+		node.SetIALAttr("custom-test", "preserved")
+		tree.Root.AppendChild(node)
+	}
+	treenode.SetSelfFolded(parent, true)
+	treenode.SetSelfFolded(child, true)
+	treenode.SetSelfFolded(other, true)
+	if _, err = filesys.WriteTree(tree); err != nil {
+		t.Fatal(err)
+	}
+	treenode.UpsertBlockTree(tree)
+	sql.IndexTreeQueue(tree)
+	sql.FlushQueue()
+
+	result, err := GetDocHeadingLevelTransaction(tree.Root.ID, tree.Box, 3, 5, false)
+	if err != nil || result.Counts[2] != 2 || result.Transaction == nil {
+		t.Fatalf("prepare conversion: result %v, error %v", result, err)
+	}
+	tx := result.Transaction
+	for i, operations := range [][]*Operation{tx.DoOperations, tx.UndoOperations, tx.DoOperations} {
+		if err = PerformTxSync(&Transaction{DoOperations: cloneOperations(operations)}); err != nil {
+			t.Fatal(err)
+		}
+		actual, loadErr := LoadTreeByBlockID(tree.Root.ID)
+		if loadErr != nil {
+			t.Fatal(loadErr)
+		}
+		level := 5
+		if i == 1 {
+			level = 3
+		}
+		for _, id := range []string{child.ID, other.ID} {
+			node := treenode.GetNodeInTree(actual, id)
+			if node == nil || node.HeadingLevel != level || !treenode.IsSelfFolded(node) || node.IALAttr("custom-test") != "preserved" {
+				t.Fatalf("step %d did not preserve heading %s", i, id)
+			}
+		}
+		actualParent := treenode.GetNodeInTree(actual, parent.ID)
+		if actualParent.HeadingLevel != 4 || !treenode.IsSelfFolded(actualParent) {
+			t.Fatal("nonmatching parent headings must retain their level and fold state")
+		}
+	}
+	for _, levels := range [][2]int{{5, 5}, {6, 1}, {0, 0}, {1, 7}} {
+		noOp, err := GetDocHeadingLevelTransaction(tree.Root.ID, tree.Box, levels[0], levels[1], false)
+		if err != nil || noOp.Transaction != nil {
+			t.Fatalf("expected no transaction for levels %v, got %v", levels, err)
+		}
+	}
+}
+
+func TestDocHeadingBatchWithSubheadingsDeduplicatesAndClamps(t *testing.T) {
+	fixture := setupStructureTransactionTest(t)
+	setupFoldTransactionDatabase(t, fixture)
+	tree, err := LoadTreeByBlockID(fixture.sourceID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for tree.Root.FirstChild != nil {
+		tree.Root.FirstChild.Unlink()
+	}
+	ids := []string{"20260905000101-heading", "20260905000102-heading", "20260905000103-heading",
+		"20260905000104-heading", "20260905000105-heading", "20260905000106-heading", "20260905000107-heading"}
+	levels := []int{1, 2, 1, 5, 6, 1, 2}
+	quote := &ast.Node{Type: ast.NodeBlockquote, ID: "20260905000108-quote00"}
+	quote.SetIALAttr("id", quote.ID)
+	for i, id := range ids {
+		node := newHeadingLevelTestNode(id, levels[i])
+		node.SetIALAttr("id", id)
+		node.SetIALAttr("custom-test", "preserved")
+		treenode.SetSelfFolded(node, true)
+		if i >= 2 && i <= 4 {
+			if i == 2 {
+				tree.Root.AppendChild(quote)
+			}
+			quote.AppendChild(node)
+		} else {
+			tree.Root.AppendChild(node)
+		}
+	}
+	if _, err = filesys.WriteTree(tree); err != nil {
+		t.Fatal(err)
+	}
+	treenode.UpsertBlockTree(tree)
+	sql.IndexTreeQueue(tree)
+	sql.FlushQueue()
+	result, err := GetDocHeadingLevelTransaction(tree.Root.ID, tree.Box, 1, 2, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Counts[0] != 3 || result.WithSubheadingCounts[0] != 7 || result.Transaction == nil {
+		t.Fatalf("unexpected batch preview: %+v", result)
+	}
+	tx := result.Transaction
+	if len(tx.DoOperations) != len(ids) || len(tx.UndoOperations) != len(ids) {
+		t.Fatal("overlapping heading ranges must update each heading exactly once")
+	}
+	for i, operations := range [][]*Operation{tx.DoOperations, tx.UndoOperations, tx.DoOperations} {
+		if err = PerformTxSync(&Transaction{DoOperations: cloneOperations(operations)}); err != nil {
+			t.Fatal(err)
+		}
+		actual, err := LoadTreeByBlockID(tree.Root.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for j, id := range ids {
+			wantLevel := min(6, levels[j]+1)
+			if i == 1 {
+				wantLevel = levels[j]
+			}
+			node := treenode.GetNodeInTree(actual, id)
+			if node == nil || node.HeadingLevel != wantLevel || !treenode.IsSelfFolded(node) || node.IALAttr("custom-test") != "preserved" {
+				t.Fatalf("step %d did not preserve heading %s at level %d", i, id, wantLevel)
+			}
+			if j >= 2 && j <= 4 && node.Parent.ID != quote.ID {
+				t.Fatal("nested headings must remain in their container")
+			}
+		}
+	}
+}
+
+func TestReplayFoldedHeadingMoveUsesOriginalChildren(t *testing.T) {
+	const (
+		anchorID    = "20260819000000-anchor0"
+		listID      = "20260819000001-list001"
+		itemID      = "20260819000002-item001"
+		itemBlockID = "20260819000003-itemblk"
+		headingID   = "20260819000004-heading"
+		firstID     = "20260819000005-first00"
+		secondID    = "20260819000006-second0"
+	)
+	fixture := setupStructureTransactionTest(t)
+	setupFoldTransactionDatabase(t, fixture)
+	anchor := treenode.NewParagraph(anchorID)
+	list := &ast.Node{Type: ast.NodeList, ID: listID, ListData: &ast.ListData{Typ: 1}}
+	list.SetIALAttr("id", listID)
+	item := &ast.Node{Type: ast.NodeListItem, ID: itemID, ListData: &ast.ListData{Typ: 1}}
+	item.SetIALAttr("id", itemID)
+	item.AppendChild(treenode.NewParagraph(itemBlockID))
+	list.AppendChild(item)
+	heading := newFoldMoveTestHeading(headingID, 2)
+	writeFoldMoveTestTree(t, fixture.sourceID, anchor, list, heading, treenode.NewParagraph(firstID),
+		treenode.NewParagraph(secondID))
+
+	moveGroupID := "fold-heading-list"
+	forward := &Transaction{
+		DoOperations: []*Operation{{
+			Action:     "move",
+			ID:         headingID,
+			PreviousID: anchorID,
+			ParentID:   fixture.sourceID,
+			Context:    map[string]any{moveGroupIDContextKey: moveGroupID},
+		}},
+		UndoOperations: []*Operation{{
+			Action:     "move",
+			ID:         headingID,
+			PreviousID: listID,
+			ParentID:   fixture.sourceID,
+			Context:    map[string]any{moveGroupIDContextKey: moveGroupID},
+		}},
+	}
+	if err := PerformTxSync(forward); nil != err {
+		t.Fatalf("move folded heading before list failed: %s", err)
+	}
+	wantGroup := []string{firstID, secondID}
+	if !slices.Equal(forward.DoOperations[0].BlockIDs, wantGroup) ||
+		!slices.Equal(forward.UndoOperations[0].BlockIDs, wantGroup) {
+		t.Fatalf("folded heading move group was not stored in both directions: do=%v undo=%v",
+			forward.DoOperations[0].BlockIDs, forward.UndoOperations[0].BlockIDs)
+	}
+	assertFoldMoveState(t, fixture.sourceID, []string{anchorID, headingID, firstID, secondID, listID}, headingID, true)
+
+	undo := &Transaction{DoOperations: cloneOperations(forward.UndoOperations)}
+	undo.MarkReplay()
+	if err := PerformTxSync(undo); nil != err {
+		t.Fatalf("undo folded heading list move failed: %s", err)
+	}
+	assertFoldMoveState(t, fixture.sourceID, []string{anchorID, listID, headingID, firstID, secondID}, headingID, true)
+
+	redo := &Transaction{DoOperations: cloneOperations(forward.DoOperations)}
+	redo.MarkReplay()
+	if err := PerformTxSync(redo); nil != err {
+		t.Fatalf("redo folded heading list move failed: %s", err)
+	}
+	assertFoldMoveState(t, fixture.sourceID, []string{anchorID, headingID, firstID, secondID, listID}, headingID, true)
+}
+
+func TestReplayUnfoldedHeadingMoveUsesStoredChildren(t *testing.T) {
+	const (
+		paragraphID = "20260819000100-paragr0"
+		headingID   = "20260819000101-heading"
+		childID     = "20260819000102-child00"
+	)
+	fixture := setupStructureTransactionTest(t)
+	setupFoldTransactionDatabase(t, fixture)
+	writeFoldMoveTestTree(t, fixture.sourceID, treenode.NewParagraph(paragraphID),
+		newFoldMoveTestHeading(headingID, 2), treenode.NewParagraph(childID))
+
+	moveGroupID := "fold-heading-paragraph"
+	forward := &Transaction{
+		DoOperations: []*Operation{
+			{
+				Action:   "move",
+				ID:       headingID,
+				ParentID: fixture.sourceID,
+				Context:  map[string]any{moveGroupIDContextKey: moveGroupID},
+			},
+			{Action: "unfoldHeading", ID: headingID},
+		},
+		UndoOperations: []*Operation{
+			{
+				Action:     "move",
+				ID:         headingID,
+				PreviousID: paragraphID,
+				ParentID:   fixture.sourceID,
+				Context:    map[string]any{moveGroupIDContextKey: moveGroupID},
+			},
+			{Action: "foldHeading", ID: headingID},
+		},
+	}
+	if err := PerformTxSync(forward); nil != err {
+		t.Fatalf("move and unfold heading failed: %s", err)
+	}
+	assertFoldMoveState(t, fixture.sourceID, []string{headingID, childID, paragraphID}, headingID, false)
+
+	undo := &Transaction{DoOperations: cloneOperations(forward.UndoOperations)}
+	undo.MarkReplay()
+	if err := PerformTxSync(undo); nil != err {
+		t.Fatalf("undo unfolded heading move failed: %s", err)
+	}
+	assertFoldMoveState(t, fixture.sourceID, []string{paragraphID, headingID, childID}, headingID, true)
+
+	redo := &Transaction{DoOperations: cloneOperations(forward.DoOperations)}
+	redo.MarkReplay()
+	if err := PerformTxSync(redo); nil != err {
+		t.Fatalf("redo unfolded heading move failed: %s", err)
+	}
+	assertFoldMoveState(t, fixture.sourceID, []string{headingID, childID, paragraphID}, headingID, false)
+}
+
+func TestReplayEmptyFoldedHeadingMoveGroup(t *testing.T) {
+	const (
+		anchorID   = "20260819000200-anchor0"
+		headingID  = "20260819000201-heading"
+		boundaryID = "20260819000202-boundry"
+	)
+	fixture := setupStructureTransactionTest(t)
+	setupFoldTransactionDatabase(t, fixture)
+	writeFoldMoveTestTree(t, fixture.sourceID, treenode.NewParagraph(anchorID),
+		newFoldMoveTestHeading(headingID, 2), newFoldMoveTestHeading(boundaryID, 2))
+
+	moveGroupID := "empty-fold-heading"
+	forward := &Transaction{
+		DoOperations: []*Operation{{
+			Action:   "move",
+			ID:       headingID,
+			ParentID: fixture.sourceID,
+			Context:  map[string]any{moveGroupIDContextKey: moveGroupID},
+		}},
+		UndoOperations: []*Operation{{
+			Action:     "move",
+			ID:         headingID,
+			PreviousID: anchorID,
+			ParentID:   fixture.sourceID,
+			Context:    map[string]any{moveGroupIDContextKey: moveGroupID},
+		}},
+	}
+	if err := PerformTxSync(forward); nil != err {
+		t.Fatalf("move empty folded heading failed: %s", err)
+	}
+	if nil == forward.DoOperations[0].BlockIDs || 0 != len(forward.DoOperations[0].BlockIDs) ||
+		nil == forward.UndoOperations[0].BlockIDs {
+		t.Fatal("an empty folded heading move group should be stored as an explicit empty slice")
+	}
+
+	undo := &Transaction{DoOperations: cloneOperations(forward.UndoOperations)}
+	undo.MarkReplay()
+	if err := PerformTxSync(undo); nil != err {
+		t.Fatalf("undo empty folded heading move failed: %s", err)
+	}
+	assertFoldMoveState(t, fixture.sourceID, []string{anchorID, headingID, boundaryID}, headingID, true)
+}
+
+func newFoldMoveTestHeading(id string, level int) *ast.Node {
+	heading := &ast.Node{Type: ast.NodeHeading, ID: id, HeadingLevel: level}
+	heading.SetIALAttr("id", id)
+	heading.SetIALAttr("fold", "1")
+	heading.AppendChild(&ast.Node{Type: ast.NodeText, Tokens: []byte("Heading")})
+	return heading
+}
+
+func writeFoldMoveTestTree(t *testing.T, rootID string, nodes ...*ast.Node) {
+	t.Helper()
+	tree, err := LoadTreeByBlockID(rootID)
+	if nil != err {
+		t.Fatalf("load folded heading move tree failed: %s", err)
+	}
+	for child := tree.Root.FirstChild; nil != child; {
+		next := child.Next
+		child.Unlink()
+		child = next
+	}
+	for _, node := range nodes {
+		tree.Root.AppendChild(node)
+	}
+	if _, err = filesys.WriteTree(tree); nil != err {
+		t.Fatalf("write folded heading move tree failed: %s", err)
+	}
+	treenode.UpsertBlockTree(tree)
+	sql.IndexTreeQueue(tree)
+	sql.FlushQueue()
+}
+
+func assertFoldMoveState(t *testing.T, rootID string, wantIDs []string, headingID string, folded bool) {
+	t.Helper()
+	tree, err := LoadTreeByBlockID(rootID)
+	if nil != err {
+		t.Fatalf("load folded heading move state failed: %s", err)
+	}
+	var gotIDs []string
+	for child := tree.Root.FirstChild; nil != child; child = child.Next {
+		if child.IsBlock() && ast.NodeKramdownBlockIAL != child.Type {
+			gotIDs = append(gotIDs, child.ID)
+		}
+	}
+	if !slices.Equal(gotIDs, wantIDs) {
+		t.Fatalf("unexpected top-level block order: got %v, want %v", gotIDs, wantIDs)
+	}
+	heading := treenode.GetNodeInTree(tree, headingID)
+	if nil == heading || treenode.IsSelfFolded(heading) != folded {
+		t.Fatalf("unexpected heading fold state: got %v, want %v", nil != heading && treenode.IsSelfFolded(heading), folded)
+	}
+}
+
+func setupFoldTransactionDatabase(t *testing.T, fixture *fileOperationTestFixture) {
+	t.Helper()
+	Conf.Editor.Store(conf.NewEditor())
+	Conf.Export.Store(conf.NewExport())
+	originalTempDir := util.TempDir
+	originalQueueDir := util.QueueDir
+	originalConfDir := util.ConfDir
+	originalDBPath := util.DBPath
+	originalHistoryDBPath := util.HistoryDBPath
+	originalAssetContentDBPath := util.AssetContentDBPath
+	util.TempDir = t.TempDir()
+	util.QueueDir = filepath.Join(util.TempDir, "queue")
+	util.ConfDir = filepath.Join(util.TempDir, "conf")
+	util.DBPath = filepath.Join(util.TempDir, util.DBName)
+	util.HistoryDBPath = filepath.Join(util.TempDir, "history.db")
+	util.AssetContentDBPath = filepath.Join(util.TempDir, "asset_content.db")
+	for _, dir := range []string{util.QueueDir, util.ConfDir} {
+		if err := os.MkdirAll(dir, 0755); nil != err {
+			t.Fatalf("create test directory [%s] failed: %v", dir, err)
+		}
+	}
+	sql.InitDatabase(true)
+	sql.InitHistoryDatabase(true)
+	sql.InitAssetContentDatabase(true)
+	for _, path := range []string{fixture.sourcePath, fixture.targetPath} {
+		tree, err := filesys.LoadTree(fixture.box.ID, path, util.NewLute())
+		if nil != err {
+			t.Fatalf("reload fixture document [%s] failed: %v", path, err)
+		}
+		treenode.UpsertBlockTree(tree)
+	}
+	t.Cleanup(func() {
+		closeModelTestDatabases()
+		util.TempDir = originalTempDir
+		util.QueueDir = originalQueueDir
+		util.ConfDir = originalConfDir
+		util.DBPath = originalDBPath
+		util.HistoryDBPath = originalHistoryDBPath
+		util.AssetContentDBPath = originalAssetContentDBPath
+	})
+}
+
+func assertCancelledFoldedSuperBlock(t *testing.T, rootID, superBlockID, headingID, paragraphID, outsideID string) {
+	t.Helper()
+	tree, err := LoadTreeByBlockID(rootID)
+	if nil != err {
+		t.Fatalf("load cancelled tree failed: %s", err)
+	}
+	if nil != treenode.GetNodeInTree(tree, superBlockID) {
+		t.Fatal("cancelled super block should be removed")
+	}
+	heading := treenode.GetNodeInTree(tree, headingID)
+	paragraph := treenode.GetNodeInTree(tree, paragraphID)
+	outside := treenode.GetNodeInTree(tree, outsideID)
+	if heading.Parent != tree.Root || paragraph.Parent != tree.Root || outside.Parent != tree.Root {
+		t.Fatal("cancelled super block children and outside block should remain at the document root")
+	}
+	if !treenode.IsSelfFolded(heading) {
+		t.Fatal("cancelled heading should preserve its folded state")
+	}
+	if ids := contentBlockIDs(treenode.HeadingChildren(heading)); !slices.Equal(ids, []string{paragraphID, outsideID}) {
+		t.Fatalf("cancelled heading should use its new document scope, got %v", ids)
+	}
+}
+
+func assertRestoredFoldedSuperBlock(t *testing.T, rootID, superBlockID, headingID, paragraphID, outsideID string) {
+	t.Helper()
+	tree, err := LoadTreeByBlockID(rootID)
+	if nil != err {
+		t.Fatalf("load restored tree failed: %s", err)
+	}
+	superBlock := treenode.GetNodeInTree(tree, superBlockID)
+	heading := treenode.GetNodeInTree(tree, headingID)
+	paragraph := treenode.GetNodeInTree(tree, paragraphID)
+	outside := treenode.GetNodeInTree(tree, outsideID)
+	if nil == superBlock || heading.Parent != superBlock || paragraph.Parent != superBlock {
+		t.Fatal("undo should restore the original super block children")
+	}
+	if outside.Parent != tree.Root {
+		t.Fatal("undo should keep the outside block out of the super block")
+	}
+	if nil == superBlock.ChildByType(ast.NodeSuperBlockCloseMarker) {
+		t.Fatal("undo should restore the super block close marker")
+	}
+	if !treenode.IsSelfFolded(heading) {
+		t.Fatal("undo should restore the heading fold")
+	}
+	if ids := contentBlockIDs(treenode.HeadingChildren(heading)); !slices.Equal(ids, []string{paragraphID}) {
+		t.Fatalf("restored heading should stop at the super block boundary, got %v", ids)
+	}
+}
+
+func contentBlockIDs(nodes []*ast.Node) (ret []string) {
+	for _, node := range nodes {
+		if node.IsBlock() && ast.NodeKramdownBlockIAL != node.Type {
+			ret = append(ret, node.ID)
+		}
+	}
+	return
+}

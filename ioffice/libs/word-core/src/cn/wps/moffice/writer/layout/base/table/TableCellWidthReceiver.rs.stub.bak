@@ -1,0 +1,30 @@
+// Rust stub for TableCellWidthReceiver (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/table/TableCellWidthReceiver.java
+use crate::*;
+
+pub struct TableCellWidthReceiver {
+    // TODO: fields
+}
+
+impl TableCellWidthReceiver {
+    pub fn new() -> Self { todo!() }
+    pub fn getFitState() -> FitState { todo!() }
+    pub fn init(&self, env: TableCellLayoutState, mainState: MainState) -> bool { todo!() }
+    pub fn isComplete(&self) -> bool { todo!() }
+    pub fn finish(&self) -> bool { todo!() }
+    pub fn commitWrapObject(&self) { todo!() }
+    pub fn clear(&self) { todo!() }
+    pub fn getCell(&self) -> CellInfo { todo!() }
+    pub fn submitInfo(&self, info: Box<dyn IWidthInfo>) { todo!() }
+    pub fn isIgnoreGraphParse(&self) -> bool { todo!() }
+    pub fn isTextDirNormal(&self) -> bool { todo!() }
+    pub fn isInTableHeader(&self) -> bool { todo!() }
+    pub fn isAutoWidth(&self) -> bool { todo!() }
+    pub fn isAloneCache(&self) -> bool { todo!() }
+    pub fn isFitText(&self) -> bool { todo!() }
+    pub fn commitForFitText(&self) { todo!() }
+    pub fn reSet(&self, active: bool, endRowIndex: i32, hasChange: bool) { todo!() }
+    pub fn isActive(&self) -> bool { todo!() }
+    pub fn alloc(&self) -> TableCellWidthReceiver { todo!() }
+    pub fn init_1(&self, node: TableCellWidthReceiver) { todo!() }
+}

@@ -1,0 +1,185 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package av
+
+import (
+	"github.com/88250/lute/ast"
+)
+
+// TableColumnAlign 描述了表格列内容的对齐方式。
+type TableColumnAlign string
+
+const (
+	TableColumnAlignDefault TableColumnAlign = ""
+	TableColumnAlignLeft    TableColumnAlign = "left"
+	TableColumnAlignCenter  TableColumnAlign = "center"
+	TableColumnAlignRight   TableColumnAlign = "right"
+)
+
+// IsValid 判断表格列内容的对齐方式是否合法。
+func (align TableColumnAlign) IsValid() bool {
+	return TableColumnAlignDefault == align || TableColumnAlignLeft == align || TableColumnAlignCenter == align ||
+		TableColumnAlignRight == align
+}
+
+// LayoutTable 描述了表格布局的结构。
+type LayoutTable struct {
+	*BaseLayout
+
+	Columns []*ViewTableColumn `json:"columns"` // 表格列
+
+	// Deprecated: 仅用于读取和升级旧版布局，行顺序由 View.ItemIDs 维护。
+	RowIDs []string `json:"rowIds,omitempty"` // 行 ID，用于自定义排序
+}
+
+func NewLayoutTable() *LayoutTable {
+	return &LayoutTable{
+		BaseLayout: &BaseLayout{
+			Spec:     0,
+			ID:       ast.NewNodeID(),
+			ShowIcon: true,
+		},
+	}
+}
+
+// ViewTableColumn 描述了表格列的结构。
+type ViewTableColumn struct {
+	*BaseField
+
+	Pin   bool             `json:"pin"`             // 是否为冻结边界
+	Width string           `json:"width"`           // 列宽度
+	Align TableColumnAlign `json:"align,omitempty"` // 内容对齐方式
+	Calc  *FieldCalc       `json:"calc,omitempty"`  // 计算规则
+}
+
+// Table 描述了表格视图实例的结构。
+type Table struct {
+	*BaseInstance
+
+	Calendar           *CalendarSettings `json:"calendar,omitempty"`
+	CalendarRange      *CalendarRange    `json:"calendarRange,omitempty"`
+	CalendarTargetDate *int64            `json:"calendarTargetDate,omitempty"`
+	Columns            []*TableColumn    `json:"columns"`  // 表格列
+	Rows               []*TableRow       `json:"rows"`     // 表格行
+	RowCount           int               `json:"rowCount"` // 表格总行数
+}
+
+// TableColumn 描述了表格实例列的结构。
+type TableColumn struct {
+	*BaseInstanceField
+
+	Pin   bool             `json:"pin"`   // 是否为冻结边界
+	Width string           `json:"width"` // 列宽度
+	Align TableColumnAlign `json:"align"` // 内容对齐方式
+}
+
+// TableRow 描述了表格实例行的结构。
+type TableRow struct {
+	ConditionalColors *ItemConditionalColors `json:"conditionalColors,omitempty"`
+	ID                string                 `json:"id"`    // 行 ID
+	Cells             []*TableCell           `json:"cells"` // 行单元格
+}
+
+// TableCell 描述了表格实例单元格的结构。
+type TableCell struct {
+	*BaseValue
+
+	Color   string `json:"color"`   // 单元格颜色
+	BgColor string `json:"bgColor"` // 单元格背景颜色
+}
+
+func (table *Table) GetColumn(id string) *TableColumn {
+	for _, column := range table.Columns {
+		if column.ID == id {
+			return column
+		}
+	}
+	return nil
+}
+
+func (row *TableRow) GetID() string {
+	return row.ID
+}
+
+func (row *TableRow) GetBlockValue() (ret *Value) {
+	for _, cell := range row.Cells {
+		if KeyTypeBlock == cell.ValueType {
+			ret = cell.Value
+			break
+		}
+	}
+	return
+}
+
+func (row *TableRow) GetValues() (ret []*Value) {
+	ret = []*Value{}
+	for _, cell := range row.Cells {
+		if nil != cell.Value {
+			ret = append(ret, cell.Value)
+		}
+	}
+	return
+}
+
+func (row *TableRow) GetValue(keyID string) (ret *Value) {
+	for _, cell := range row.Cells {
+		if nil != cell.Value && keyID == cell.Value.KeyID {
+			ret = cell.Value
+			break
+		}
+	}
+	return
+}
+
+func (table *Table) GetItems() (ret []Item) {
+	ret = []Item{}
+	for _, row := range table.Rows {
+		if nil != row {
+			ret = append(ret, row)
+		}
+	}
+	return
+}
+
+func (table *Table) SetItems(items []Item) {
+	table.Rows = []*TableRow{}
+	for _, item := range items {
+		table.Rows = append(table.Rows, item.(*TableRow))
+	}
+}
+
+func (table *Table) CountItems() int {
+	return len(table.Rows)
+}
+
+func (table *Table) GetFields() (ret []Field) {
+	ret = []Field{}
+	for _, column := range table.Columns {
+		ret = append(ret, column)
+	}
+	return ret
+}
+
+func (table *Table) GetField(id string) (ret Field, fieldIndex int) {
+	for i, column := range table.Columns {
+		if column.ID == id {
+			return column, i
+		}
+	}
+	return nil, -1
+}
+
+func (table *Table) GetValue(itemID, keyID string) (ret *Value) {
+	for _, row := range table.Rows {
+		if row.ID == itemID {
+			return row.GetValue(keyID)
+		}
+	}
+	return nil
+}
+
+func (*Table) GetType() LayoutType {
+	return LayoutTypeTable
+}

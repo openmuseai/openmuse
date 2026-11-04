@@ -1,0 +1,26 @@
+// Rust stub for TableCellLayoutState (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/TableCellLayoutState.java
+use crate::*;
+
+pub struct TableCellLayoutState {
+    // TODO: fields
+}
+
+impl TableCellLayoutState {
+    pub fn new() -> Self { todo!() }
+    pub fn setCellnfo(&self, cellnfo: CellInfo) { todo!() }
+    pub fn getCellInfo(&self) -> CellInfo { todo!() }
+    pub fn tryInnerCellInfoInit(&self) { todo!() }
+    pub fn getRgdxaCenterLeft(&self) -> i32 { todo!() }
+    pub fn getRgdxaCenterRight(&self) -> i32 { todo!() }
+    pub fn getSHD(&self) -> SHD { todo!() }
+    pub fn getBrcLeft(&self) -> BRC { todo!() }
+    pub fn getBrcTop(&self) -> BRC { todo!() }
+    pub fn getBrcRight(&self) -> BRC { todo!() }
+    pub fn getBrcBottom(&self) -> BRC { todo!() }
+    pub fn getMergedCellRgdxaRight(cellInfo: CellInfo) -> i32 { todo!() }
+    pub fn getMergedCellSHD(cellInfo: CellInfo) -> SHD { todo!() }
+    pub fn getEnvoy(&self) -> TableCellStateEnvoy { todo!() }
+    pub fn alloc(&self) -> TableCellLayoutState { todo!() }
+    pub fn init(&self, env: LayoutState) { todo!() }
+}

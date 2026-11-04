@@ -1,0 +1,8 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_paragraph_context,段会话三字段,cp0/已有PAPX Entry,ParagraphContext(mPositionInserted/mParaId/mEntry),(none),03_function_paragraph_end;04_function_table_cell,libs/word-core,pass
+2,02_function_run_text,run文本落rope+CHPX,text/buffer+runProps,rope append+CHPX@append前length,wave0-property_set;wc-01 CoreHelper,03_function_paragraph_end;feature-output,libs/word-core,pass
+3,03_function_paragraph_end,Start+End段落生命周期,paraId+ParagraphSimple+layerTable,endMark+PAPX@段首cp0+paraId(282)+\f,01_function_paragraph_context;wc-01 CoreHelper;wc-03 correctProp,04_function_table_cell;06_function_maindoc_guard;feature-output,libs/word-core,pass
+4,04_function_table_cell,表格cell/row落库,layerTable+cellMark+tableProps+runProp+rowMark,PAPX 223/224/226+cellMark,03_function_paragraph_end;wc-01 CoreHelper,feature-output,libs/word-core,pass
+5,05_function_field_control,域控制字符与写锁,fieldChar(13/14/15)+cp+lock,PLCField节点+appendText+未闭合域计数,02_function_run_text;PLCField,06_function_maindoc_guard,libs/word-core,pass
+6,06_function_maindoc_guard,主文档guard+节CP记忆,IDLProvider+paragraph+length,ForceQuit/ReadingLimit异常+lock/unlock+mCpLastSectionEnd,03_function_paragraph_end;05_function_field_control,07_function_section_add,libs/word-core,pass
+7,07_function_section_add,sectPr建节,sectionProps+6个header/footer节点,PLCSection.SectionNode+sepx,06_function_maindoc_guard;wc-01 PLCSection,feature-output,libs/word-core,pass

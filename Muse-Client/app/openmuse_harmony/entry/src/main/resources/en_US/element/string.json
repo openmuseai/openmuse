@@ -1,0 +1,72 @@
+{
+  "string": [
+    {
+      "name": "legal_title",
+      "value": "Welcome to OpenMuse"
+    },
+    {
+      "name": "legal_intro",
+      "value": "Before you begin"
+    },
+    {
+      "name": "legal_description",
+      "value": "Read our terms and how we handle your account, documents and connected devices before you continue."
+    },
+    {
+      "name": "legal_terms",
+      "value": "Terms of Service"
+    },
+    {
+      "name": "legal_terms_detail",
+      "value": "Your rights and responsibilities"
+    },
+    {
+      "name": "legal_privacy",
+      "value": "Privacy Policy"
+    },
+    {
+      "name": "legal_privacy_detail",
+      "value": "Your information and your choices"
+    },
+    {
+      "name": "legal_agree",
+      "value": "I agree to the Terms of Service and acknowledge the Privacy Policy."
+    },
+    {
+      "name": "legal_accept",
+      "value": "Agree and continue"
+    },
+    {
+      "name": "legal_decline",
+      "value": "Not now"
+    },
+    {
+      "name": "legal_decision",
+      "value": "OpenMuse starts only after you agree."
+    },
+    {
+      "name": "legal_busy",
+      "value": "Continuing\u2026"
+    },
+    {
+      "name": "legal_error",
+      "value": "Unable to continue. Check the documents or local storage and try again."
+    },
+    {
+      "name": "legal_region",
+      "value": "Service region"
+    },
+    {
+      "name": "legal_region_name",
+      "value": "Mainland China"
+    },
+    {
+      "name": "legal_workspace",
+      "value": "Notes, slides and connected work."
+    },
+    {
+      "name": "legal_open",
+      "value": "Open document"
+    }
+  ]
+}

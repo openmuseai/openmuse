@@ -1,0 +1,182 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package av
+
+import (
+	"strings"
+	"testing"
+
+	"github.com/88250/lute/ast"
+)
+
+func TestTableCellRichCodeSettings(t *testing.T) {
+	for _, attribute := range []string{"linewrap", "linenumber", "ligatures", "custom-sy-code-tab-spaces"} {
+		values := []string{"true", "false"}
+		if attribute == "custom-sy-code-tab-spaces" {
+			values = []string{"0", "2", "4", "6", "8"}
+		}
+		for _, value := range values {
+			t.Run(attribute+"/"+value, func(t *testing.T) {
+				source := "before\n\n```go\na | b\n```\n{: id=\"20260921000000-code001\" " + attribute + "=\"" + value + "\"}\n\nafter"
+				rich := &ast.TableCellRich{Spec: 1, Format: "kramdown", Content: source}
+				for pass := range 3 {
+					tree, err := ParseTableCellRich(rich)
+					if err != nil {
+						t.Fatal(err)
+					}
+					codes := tree.Root.ChildrenByType(ast.NodeCodeBlock)
+					if len(codes) != 1 || codes[0].IALAttr(attribute) != value || codes[0].ChildByType(ast.NodeCodeBlockCode).TokensStr() != "a | b\n" {
+						t.Fatalf("code setting or content changed: %s", rich.Content)
+					}
+					content, err := RenderTableCellRich(tree)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if !strings.Contains(content, "before") || !strings.Contains(content, "after") || pass > 0 && content != rich.Content {
+						t.Fatalf("table source is not stable: %q != %q", content, rich.Content)
+					}
+					rich.Content = content
+				}
+				if _, err := ParseValueTextRich(&ValueTextRich{Spec: ValueTextRichSpec, Format: ValueTextRichFormatKramdown, Content: source}); err == nil {
+					t.Fatal("table code settings must not expand the database rich text whitelist")
+				}
+			})
+		}
+	}
+}
+
+func TestTableCellRichRejectsInvalidCodeSettings(t *testing.T) {
+	sources := []string{
+		"```go\ncode\n```\n{: id=\"20260921000000-code001\" linewrap=\"invalid\"}",
+		"```go\ncode\n```\n{: id=\"20260921000000-code001\" ligatures=\"TRUE\"}",
+		"```go\ncode\n```\n{: id=\"20260921000000-code001\" linenumber=\"1\"}",
+		"```go\ncode\n```\n{: id=\"20260921000000-code001\" linewrap=\"true\" custom-other=\"value\"}",
+		"paragraph\n{: id=\"20260921000000-code001\" linewrap=\"true\"}",
+		"# heading\n{: id=\"20260921000000-code001\" linenumber=\"false\"}",
+		"```mermaid\ngraph TD\n```\n{: id=\"20260921000000-code001\" linewrap=\"true\"}",
+		"paragraph\n{: id=\"20260921000000-code001\" custom-sy-code-tab-spaces=\"2\"}",
+	}
+	for _, value := range []string{"", "3", "-2", "10", "02", "2.0", "true"} {
+		sources = append(sources, "```go\ncode\n```\n{: id=\"20260921000000-code001\" custom-sy-code-tab-spaces=\""+value+"\"}")
+	}
+	for _, source := range sources {
+		rich := &ast.TableCellRich{Spec: 1, Format: "kramdown", Content: source}
+		if _, err := ParseTableCellRich(rich); err == nil {
+			t.Fatalf("accepted unsupported code attributes: %s", source)
+		}
+		if rich.Content != source {
+			t.Fatal("rejected source must remain unchanged")
+		}
+	}
+}
+
+func TestTableCellRichCustomInlineStyle(t *testing.T) {
+	for _, style := range []string{
+		"--custom-symble-strong: rgb(0 166 240 / 1);",
+		"--custom-symble-strong: var(--b3-font-color12);",
+	} {
+		source := `before <span data-type="custom_symble_strong_CJK_rectangle_yin" style="` + style + `">after</span>`
+		rich := &ast.TableCellRich{Spec: 1, Format: "kramdown", Content: source}
+		for pass := range 3 {
+			tree, err := ParseTableCellRich(rich)
+			if err != nil {
+				t.Fatal(err)
+			}
+			content, err := RenderTableCellRich(tree)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(content, style) || !strings.Contains(content, "before") ||
+				!strings.Contains(content, "after") || pass > 0 && content != rich.Content {
+				t.Fatalf("table custom inline source changed: %q != %q", content, rich.Content)
+			}
+			rich.Content = content
+		}
+		if _, err := ParseValueTextRich(&ValueTextRich{Spec: ValueTextRichSpec,
+			Format: ValueTextRichFormatKramdown, Content: source}); err == nil {
+			t.Fatal("table custom inline must not expand the database rich text whitelist")
+		}
+	}
+}
+
+func TestTableCellRichRejectsUnsafeCustomInlineStyle(t *testing.T) {
+	for _, style := range []string{
+		"--custom-symble-strong: url(javascript:alert(1));",
+		"--custom-symble-strong: var(--theme-color);",
+		"--custom-symble-strong: var(--b3-font-color14);",
+		"--custom-symble-strong: rgb(256 0 0 / 1);",
+		"--custom-symble-strong: #abc; background-image: url(javascript:alert(1));",
+	} {
+		source := `<span data-type="custom_symble_strong_CJK_rectangle_yin" style="` + style + `">unsafe</span>`
+		rich := &ast.TableCellRich{Spec: 1, Format: "kramdown", Content: source}
+		if _, err := ParseTableCellRich(rich); nil == err {
+			t.Fatalf("accepted unsafe table custom inline style: %q", style)
+		}
+		if rich.Content != source {
+			t.Fatal("rejected source must remain unchanged")
+		}
+	}
+}
+
+func TestTableCellRichLocalLinks(t *testing.T) {
+	for _, target := range []string{
+		`D:\基线测试\测试文档1.docx`, `D:/基线测试/测试文档1.docx`, `D:\目录\`,
+		`file:///D:\基线测试\测试文档1.docx`, `file:///D:/基线测试/测试文档1.docx`,
+		`file:///tmp/test%20document.txt`, `file://server/share/document.txt`, `\\server\share\document.txt`,
+	} {
+		t.Run(target, func(t *testing.T) {
+			source := `<span data-type="a strong" data-href="` + target + `" data-title="title">anchor</span>`
+			rich := &ast.TableCellRich{Spec: 1, Format: "kramdown", Content: source}
+			for pass := range 3 {
+				tree, err := ParseTableCellRich(rich)
+				if err != nil {
+					t.Fatal(err)
+				}
+				links := tree.Root.ChildrenByType(ast.NodeTextMark)
+				if len(links) != 1 || links[0].TextMarkAHref != target || links[0].TextMarkATitle != "title" ||
+					links[0].TextMarkTextContent != "anchor" || !links[0].IsTextMarkType("strong") {
+					t.Fatalf("local link changed: %s", rich.Content)
+				}
+				content, err := RenderTableCellRich(tree)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if pass > 0 && content != rich.Content {
+					t.Fatalf("table source is not stable: %q != %q", content, rich.Content)
+				}
+				rich.Content = content
+			}
+			if _, err := ParseValueTextRich(&ValueTextRich{Spec: ValueTextRichSpec,
+				Format: ValueTextRichFormatKramdown, Content: source}); err == nil {
+				t.Fatal("table local links must not expand the database rich text whitelist")
+			}
+		})
+	}
+}
+
+func TestTableCellRichRejectsUnsafeLocalLinksAndImages(t *testing.T) {
+	for _, target := range []string{
+		`javascript:alert(1)`, `javascript&colon;alert(1)`, `java%73cript:alert(1)`,
+		`data:text/html,payload`, `vbscript:payload`, `file:relative.txt`, `file://`,
+		`file://user@server/share/document.txt`, `file://server:123/share/document.txt`,
+		`D:relative.txt`, `D:\file%0a.txt`, `file:///tmp/file%00.txt`, "D:\\file\u200B.txt",
+		`https:\\example.com\document.txt`, `\\server`, "D:\\invalid\xff.txt", `D:\invalid%FF.txt`,
+	} {
+		source := `<span data-type="a" data-href="` + target + `">anchor</span>`
+		rich := &ast.TableCellRich{Spec: 1, Format: "kramdown", Content: source}
+		if _, err := ParseTableCellRich(rich); err == nil {
+			t.Fatalf("accepted unsafe table link: %q", target)
+		}
+		if rich.Content != source {
+			t.Fatal("rejected source must remain unchanged")
+		}
+	}
+	for _, target := range []string{`file:///tmp/image.png`, `D:/baseline/image.png`, `\\server\share\image.png`} {
+		rich := &ast.TableCellRich{Spec: 1, Format: "kramdown", Content: `![image](` + target + `)`}
+		if _, err := ParseTableCellRich(rich); err == nil {
+			t.Fatalf("local link policy must not expand image sources: %q", target)
+		}
+	}
+}

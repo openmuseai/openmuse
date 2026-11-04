@@ -1,0 +1,20 @@
+pub mod DumpInfo;
+pub mod KFillFormat;
+pub mod KGroup;
+pub mod KInlineShapes;
+pub mod KLineFormat;
+pub mod KPictureFormat;
+pub mod KShape;
+pub mod KShapeAdjust;
+pub mod KShapeRange;
+pub mod KShapeScale;
+pub mod KShapes;
+pub mod KWrapSwitch;
+pub mod PictureDumpMap;
+pub mod PictureLoader;
+pub mod ShapeMetrics;
+pub mod ShapeTool;
+pub mod WrapType;
+pub mod command;
+pub mod internal;
+// pub mod InkFilter; // CARGO_BLOCKER: spanset wiring + IFilter signature repair deferred

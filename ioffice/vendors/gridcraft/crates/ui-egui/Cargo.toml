@@ -1,0 +1,43 @@
+[package]
+name = "gridcraft-ui-egui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "GridCraft egui frontend (Excel-style UI); swappable — nothing below depends on it"
+
+[lints]
+workspace = true
+
+[dependencies]
+craft-ui = { git = "https://github.com/storytold/craft-libs", rev = "d27646a5f7c8b4fc85d9dd3213b8c88b58e0088d" }
+gridcraft-engine = { workspace = true }
+gridcraft-chart = { workspace = true }
+egui = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+image = { workspace = true }
+skrifa = { workspace = true }
+
+# Linux only, where winit reports no system theme: the desktop portal's light/dark answer (see
+# `desktop_theme.rs`). Already in the tree, with these features, through egui's own
+# accessibility bus; pinned to one version so nothing is built twice.
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = "=5.19.0"
+
+[dev-dependencies]
+egui_kittest = { workspace = true, features = ["wgpu", "snapshot"] }
+epaint_default_fonts = { workspace = true }
+gridcraft-xlsx = { workspace = true, features = ["test-support"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# The desktop's preferred language for the first-run interface language.
+sys-locale = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+# Read the browser's preferred language for the first-run web interface language.
+web-sys = { version = "0.3", features = ["Window", "Navigator"] }
+
+[build-dependencies]
+serde_json = { workspace = true }
+toml = "1"

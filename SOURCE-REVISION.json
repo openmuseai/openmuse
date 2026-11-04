@@ -1,0 +1,7 @@
+{
+  "clientBuildCommit": "a67d276f1a9724f1a5b8b334b9ed24a9b93beb91",
+  "clientDirectory": "Muse-Client",
+  "fileCount": 33694,
+  "sourcePublication": "Git source branch; no separately uploaded source ZIP",
+  "provenance": "Client source files map to the clean isolated build commit. External source file hashes are pinned by SOURCE-SHA256.json. Signing credentials and generated build caches are excluded."
+}

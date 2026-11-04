@@ -1,0 +1,57 @@
+# Binaries for programs and plugins
+*.exe
+!app/elevator/elevator-*.exe
+*.dll
+!app/nsis-resources/x86-unicode/nsProcess.dll
+*.so
+*.dylib
+*.aar
+*.jar
+*.syso
+/kernel/harmony/libkernel.h
+.DS_Store
+.eslintcache
+app/node_modules
+app/stage/build
+app/build
+app/src/types/dist
+app/kernel*
+app/SiYuan-Kernel
+app/pandoc/bin/
+app/pandoc/share/
+app/pandoc/COPYING.rtf
+app/pandoc/COPYRIGHT.txt
+app/pandoc/MANUAL.html
+ios
+pprof
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+electron/dist
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+.zcode/
+
+# Log
+logs
+*.log*
+
+# NPM Package
+package-lock.json
+yarn.lock
+
+# musl toolchain
+muslbin/
+
+# Workflows
+**/__pycache__
+# OCR 模型和运行时由固定版本、校验摘要的发布准备脚本生成
+/.cache/ocr/
+/app/stage/ocr/models/
+/app/stage/ocr/runtime/

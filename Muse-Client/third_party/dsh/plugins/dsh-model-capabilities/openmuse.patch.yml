@@ -1,0 +1,5 @@
+- insert:
+    - id: model-capabilities
+      name: ./lib/index.js
+    - id: openmuse-host-bridge
+      name: ../openmuse-dsh-bridge/lib/index.js

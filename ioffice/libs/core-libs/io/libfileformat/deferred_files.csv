@@ -1,0 +1,2 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/io/libfileformat/src/cn/wps/io/file/Tools.java,cn/wps/io/file,Plan too large: 476 entries (291 unresolved deps exceed limit 30). File deferred.,2026-05-22

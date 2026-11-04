@@ -1,0 +1,18 @@
+name: appflowy_editor_native_plugin
+description: Native Flutter Markdown editor surface for the AppFlowy Editor plugin.
+version: 0.1.5
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  appflowy_editor:
+    path: ../vendor/appflowy_editor
+  path_provider: ^2.1.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

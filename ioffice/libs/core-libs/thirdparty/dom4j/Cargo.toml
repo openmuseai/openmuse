@@ -1,0 +1,11 @@
+﻿[package]
+name = "core_libs_dom4j"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+core_libs_jaxen = { path = "../jaxen" }
+util = { package = "core_libs_util", path = "../../util/util" }

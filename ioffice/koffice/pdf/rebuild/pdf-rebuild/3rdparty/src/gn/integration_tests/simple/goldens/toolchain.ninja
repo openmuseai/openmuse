@@ -1,0 +1,33 @@
+rule alink
+  command = alink ${out} INPUTS ${in}
+  description = AR ${target_output_name}${output_extension}
+rule cc
+  command = cc --depfile=${out}.d DEFINES ${defines} INCLUDE_DIRS ${include_dirs} CFLAGS ${cflags} CFLAGS_CC ${cflags_c} SOURCE ${in} OUTPUT ${out}
+  description = CC ${out}
+  depfile = ${out}.d
+  deps = gcc
+rule copy
+  command = copy ${in} ${out}
+  description = COPY ${in} ${out}
+rule cxx
+  command = cxx --depfile=${out}.d DEFINES ${defines} INCLUDE_DIRS ${include_dirs} CFLAGS ${cflags} CFLAGS_CC ${cflags_c} SOURCE ${in} OUTPUT ${out}
+  description = CXX ${out}
+  depfile = ${out}.d
+  deps = gcc
+rule link
+  command = link ${target_output_name}${output_extension} @${target_output_name}${output_extension}.rsp ${solibs} ${libs}
+  description = LINK ${target_output_name}${output_extension}
+  rspfile = ${target_output_name}${output_extension}.rsp
+  rspfile_content = ${in}
+rule solink
+  command = solink ${output_dir}/${target_output_name}${output_extension} @${target_output_name}${output_extension}.rsp
+  description = SOLINK ${target_output_name}${output_extension}
+  rspfile = ${target_output_name}${output_extension}.rsp
+  rspfile_content = ${in} ${solibs} ${libs}
+rule stamp
+  command = stamp ${out}
+  description = STAMP ${out}
+
+subninja obj/hello.ninja
+subninja obj/hello_shared.ninja
+subninja obj/hello_static.ninja

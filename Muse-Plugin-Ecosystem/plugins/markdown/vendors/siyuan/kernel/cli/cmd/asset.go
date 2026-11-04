@@ -1,0 +1,221 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package cmd
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"text/tabwriter"
+
+	"github.com/siyuan-note/siyuan/kernel/model"
+
+	"github.com/spf13/cobra"
+)
+
+var assetCmd = &cobra.Command{
+	Use:   "asset",
+	Short: "Manage assets",
+}
+
+type assetUploadCommandOutput struct {
+	Status    string                     `json:"status"`
+	Succeeded []model.AssetUploadSuccess `json:"succeeded"`
+	Failed    []model.AssetUploadFailure `json:"failed"`
+}
+
+func newAssetUploadCommandOutput(succeeded []model.AssetUploadSuccess,
+	failed []model.AssetUploadFailure) assetUploadCommandOutput {
+	status := "success"
+	if 0 < len(failed) {
+		status = "failed"
+		if 0 < len(succeeded) {
+			status = "partial"
+		}
+	}
+	return assetUploadCommandOutput{Status: status, Succeeded: succeeded, Failed: failed}
+}
+
+func printAssetUploadCommandOutput(result assetUploadCommandOutput) {
+	if outputFormat == "json" {
+		data, _ := json.MarshalIndent(result, "", "  ")
+		fmt.Println(string(data))
+		return
+	}
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "STATUS\tFILE\tASSET_PATH\tERROR")
+	for _, item := range result.Succeeded {
+		fmt.Fprintf(w, "success\t%s\t%s\t\n", item.Name, item.Path)
+	}
+	for _, item := range result.Failed {
+		fmt.Fprintf(w, "failed\t%s\t\t%s\n", item.Name, item.Error)
+	}
+	w.Flush()
+}
+
+var assetUploadCmd = &cobra.Command{
+	Use:   "upload --id <id> --file <path>",
+	Short: "Upload files to workspace assets",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		id, _ := cmd.Flags().GetString("id")
+		if id == "" {
+			return fmt.Errorf("--id is required")
+		}
+
+		files, _ := cmd.Flags().GetStringArray("file")
+		if len(files) == 0 {
+			return fmt.Errorf("--file is required")
+		}
+
+		for i, f := range files {
+			abs, err := filepath.Abs(f)
+			if err != nil {
+				return err
+			}
+			files[i] = abs
+		}
+
+		if dryRun {
+			fmt.Printf("[dry-run] Would upload %d file(s) to document %s\n", len(files), id)
+			return nil
+		}
+
+		_, succFiles, failedFiles, err := model.InsertLocalAssets(id, files, true)
+		if err != nil {
+			return err
+		}
+		result := newAssetUploadCommandOutput(succFiles, failedFiles)
+		printAssetUploadCommandOutput(result)
+		if 0 < len(failedFiles) {
+			return fmt.Errorf("%d asset upload(s) failed", len(failedFiles))
+		}
+		return nil
+	},
+}
+
+var assetUnusedCmd = &cobra.Command{
+	Use:   "unused",
+	Short: "List unused assets",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		items, err := model.UnusedAssets(true)
+		if err != nil {
+			return err
+		}
+		switch outputFormat {
+		case "json":
+			data, _ := json.MarshalIndent(items, "", "  ")
+			fmt.Println(string(data))
+		default:
+			if len(items) == 0 {
+				fmt.Println("No unused assets found.")
+				return nil
+			}
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+			fmt.Fprintln(w, "PATH\tNAME")
+			for _, item := range items {
+				fmt.Fprintf(w, "%s\t%s\n", item.Item, item.Name)
+			}
+			w.Flush()
+			fmt.Printf("\n%d unused asset(s)\n", len(items))
+		}
+		return nil
+	},
+}
+
+var assetCleanCmd = &cobra.Command{
+	Use:   "clean",
+	Short: "Clean unused assets",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		singlePath, _ := cmd.Flags().GetString("path")
+		if cmd.Flags().Changed("path") {
+			if singlePath == "" {
+				return fmt.Errorf("--path must not be empty")
+			}
+			if dryRun {
+				relativePath, _, err := model.ResolveUnusedDataAssetPath(singlePath)
+				if err != nil {
+					return err
+				}
+				fmt.Printf("[dry-run] Would remove unused asset: %s\n", relativePath)
+				return nil
+			}
+			ret, err := model.RemoveUnusedAsset(singlePath)
+			if err != nil {
+				return err
+			}
+			fmt.Println(ret)
+			return nil
+		}
+
+		if dryRun {
+			fmt.Println("[dry-run] Would clean unused assets")
+			return nil
+		}
+
+		removed, err := model.RemoveUnusedAssets()
+		if err != nil {
+			return err
+		}
+		if len(removed) == 0 {
+			fmt.Println("No unused assets to clean.")
+			return nil
+		}
+		for _, p := range removed {
+			fmt.Println(p)
+		}
+		fmt.Printf("\n%d asset(s) removed\n", len(removed))
+		return nil
+	},
+}
+
+var assetStatCmd = &cobra.Command{
+	Use:   "stat --path <path>",
+	Short: "Show asset file info",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		p, _ := cmd.Flags().GetString("path")
+		if p == "" {
+			return fmt.Errorf("--path is required")
+		}
+		relativePath, abs, err := model.ResolveDataAssetPath(p)
+		if err != nil {
+			return err
+		}
+		info, err := os.Stat(abs)
+		if err != nil {
+			return err
+		}
+		switch outputFormat {
+		case "json":
+			data, _ := json.MarshalIndent(map[string]any{
+				"path":    relativePath,
+				"size":    info.Size(),
+				"isDir":   info.IsDir(),
+				"modTime": info.ModTime().Format("2006-01-02 15:04:05"),
+			}, "", "  ")
+			fmt.Println(string(data))
+		default:
+			fmt.Printf("Path:    %s\n", relativePath)
+			fmt.Printf("Size:    %d\n", info.Size())
+			fmt.Printf("IsDir:   %v\n", info.IsDir())
+			fmt.Printf("ModTime: %s\n", info.ModTime().Format("2006-01-02 15:04:05"))
+		}
+		return nil
+	},
+}
+
+func init() {
+	assetUploadCmd.Flags().String("id", "", "target document block ID")
+	assetUploadCmd.Flags().StringArray("file", nil, "local file path (repeatable)")
+
+	assetCleanCmd.Flags().String("path", "", "single unused asset path to remove")
+	assetStatCmd.Flags().String("path", "", "asset path relative to data dir, e.g. assets/image/xxx.png")
+
+	rootCmd.AddCommand(assetCmd)
+	assetCmd.AddCommand(assetUploadCmd)
+	assetCmd.AddCommand(assetUnusedCmd)
+	assetCmd.AddCommand(assetCleanCmd)
+	assetCmd.AddCommand(assetStatCmd)
+}

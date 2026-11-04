@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "locale": "zh-Hans",
+  "namespace": "cli",
+  "sourceRevision": 2,
+  "messages": {
+    "cli.terminal": "终端",
+    "cli.closeTerminal": "关闭终端",
+    "cli.newTerminal": "新建终端",
+    "cli.minimizeTerminal": "最小化终端"
+  }
+}

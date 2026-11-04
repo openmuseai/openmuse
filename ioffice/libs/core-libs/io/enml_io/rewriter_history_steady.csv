@@ -1,0 +1,3 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id,tags
+66,koffice/core-libs/io/enml_io/src/cn/wps/enml/io/xmlbeans/XmlEnum.java,XmlEnum,steady,,main,,libs/core-libs/io/enml_io/src/cn/wps/enml/io/xmlbeans/XmlEnum.rs,Assert;Attribute,,0524_rust_stub
+66,koffice/core-libs/io/enml_io/src/cn/wps/enml/io/xmlbeans/XmlObject.java,XmlObject,steady,,main,,libs/core-libs/io/enml_io/src/cn/wps/enml/io/xmlbeans/XmlObject.rs,Assert;Element,,0524_rust_stub

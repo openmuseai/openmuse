@@ -1,0 +1,50 @@
+// Rust stub for StateSnapshot (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/StateSnapshot.java
+use crate::*;
+
+pub struct StateSnapshot {
+    // TODO: fields
+}
+
+impl StateSnapshot {
+    pub fn new() -> Self { todo!() }
+    pub fn reuseRangeInstance(&self, range: i64) -> Box<dyn Range> { todo!() }
+    pub fn forEachValue(&self, procedure: StateEnumProcedure) -> bool { todo!() }
+    pub fn forEachValue_1(&self, procedure: StateEnumProcedure, keyMin: i32, keyMax: i32) -> bool { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn createSnapshotFromTypoMem(pList: i32, snapshot: TypoSnapshot, pools: Pools) -> StateSnapshot { todo!() }
+    pub fn createSnapshotFromTypoMem_1(loadOffset: i32, pList: i32, snapshot: TypoSnapshot, pools: Pools) -> StateSnapshot { todo!() }
+    pub fn loadFromTypoMem(&self, pList: i32, snapshot: TypoSnapshot, pools: Pools) { todo!() }
+    pub fn hasCellListFromTypoMem(pList: i32, snapshot: TypoSnapshot) -> bool { todo!() }
+    pub fn getStartCP(pList: i32, snapshot: TypoSnapshot) -> i32 { todo!() }
+    pub fn isStartAtCP0(pList: i32, snapshot: TypoSnapshot) -> bool { todo!() }
+    pub fn loadFromTypoMem_1(&self, pList: i32, loadOffset: i32, snapshot: TypoSnapshot, pools: Pools) { todo!() }
+    pub fn saveToTypoMem(&self, snapshot: TypoSnapshot) -> i32 { todo!() }
+    pub fn appendToTypoMem(&self, saveOffset: i32, pList: i32, snapshot: TypoSnapshot) -> i32 { todo!() }
+    pub fn appendCPList(&self, array: Box<dyn IIntList>, subDocType: i32, saveOffset: i32, list: i32, snapshot: TypoSnapshot) -> i32 { todo!() }
+    pub fn appendCellStates(&self, saveOffset: i32, list: i32, snapshot: TypoSnapshot) -> i32 { todo!() }
+    pub fn createRangeFromTypoMem(&self, loadOffset: i32, pList: i32, snapshot: TypoSnapshot) -> Box<dyn Range> { todo!() }
+    pub fn createCPArrayFromTypoMem(&self, loadOffset: i32, pList: i32, snapshot: TypoSnapshot) -> Box<dyn IIntList> { todo!() }
+    pub fn clear(&self, pools: Pools) { todo!() }
+    pub fn contains(&self, key: i32) -> bool { todo!() }
+    pub fn count(&self) -> i32 { todo!() }
+    pub fn getInt(&self, key: i32, defValue: i32) -> i32 { todo!() }
+    pub fn putInt(&self, key: i32, value: i32) { todo!() }
+    pub fn getObject(&self, key: i32) -> Box<dyn std::any::Any + Send + Sync> { todo!() }
+    pub fn putObject(&self, key: i32, obj: Box<dyn std::any::Any + Send + Sync>) { todo!() }
+    pub fn getBool(&self, key: i32, defValue: bool) -> bool { todo!() }
+    pub fn putBool(&self, key: i32, value: bool) { todo!() }
+    pub fn getStartCp(&self) -> i32 { todo!() }
+    pub fn setStartCp(&self, startCp: i32) { todo!() }
+    pub fn getFirstMergeCell(&self) -> StateSnapshot { todo!() }
+    pub fn setFirstMergeCell(&self, firstMergeCellState: StateSnapshot) { todo!() }
+    pub fn getCellStates(&self) -> KList { todo!() }
+    pub fn equalsCellState(cell0: StateSnapshot, cell1: StateSnapshot) -> bool { todo!() }
+    pub fn equalsPageState(stateSnapshot0: StateSnapshot, stateSnapshot1: StateSnapshot) -> bool { todo!() }
+    pub fn equalsStateSnapshot(stateSnapshot0: StateSnapshot, stateSnapshot1: StateSnapshot) -> bool { todo!() }
+    pub fn alloc(&self) -> StateSnapshot { todo!() }
+    pub fn init(&self, state: StateSnapshot) { todo!() }
+    pub fn forEachValue_2(&self, procedure: StateEnumProcedure, keyMin: i32, keyMax: i32) -> bool { todo!() }
+}
+
+pub trait StateEnumProcedure {}

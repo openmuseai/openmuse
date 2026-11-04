@@ -1,0 +1,6 @@
+{
+  "projectRoot": "../../../..",
+  "javaBase": "koffice/core-libs/kfs/kfs_app/src",
+  "javaDepBase": "koffice/core-libs",
+  "rustDepRoot": "libs/core-libs"
+}

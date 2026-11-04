@@ -1,0 +1,14 @@
+name: muse_resource_center
+description: Shared cross-end resource identity, provider, version, reference and lifecycle contracts.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  crypto: ^3.0.6
+  muse_resource_contract:
+    path: ../muse_resource_contract
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

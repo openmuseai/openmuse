@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_line_drawtext,一行一字 → 1 条 DrawText,GreedyWrap 一行 + 单 run,1 条 DrawText，原点=文本区+行偏移,pl-12;pl-05;pl-09:07,02,libs/ppt-core,spec
+2,02_function_multi_run_style,同行多 run 分色,同行红+黑两 run,两条 DrawText 颜色不同,01,—,libs/ppt-core,spec
+3,03_function_textrect_inset,bodyPr inset 后文本原点,bodyPr lIns/tIns,文本 x/y ≠ 形状外框；默认 inset Java 91440/45720 EMU,01;pl-04,—,libs/ppt-core,spec

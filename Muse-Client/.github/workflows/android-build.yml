@@ -1,0 +1,128 @@
+name: Android build
+
+# Thin caller: the build itself is scripts/ci/build-android.sh, which delegates
+# to scripts/build_android_alpha.sh (Rust mobile artifacts, signed arm64 release
+# APK, signature/symbol/runtime verification) and stages dist/. This file
+# prepares the Android, Rust and Flutter toolchains and uploads the artifact.
+#
+# Signing: the gate signs with a keystore it generates on the runner, so the APK
+# is an internal distribution artifact. A Play Store release needs the real
+# upload keystore supplied through repository secrets.
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: Ignore every cache and rebuild the mobile outputs from scratch
+        type: boolean
+        default: false
+      retention_days:
+        description: Artifact retention in days
+        type: string
+        default: "14"
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: "3.44.2"
+  CARGO_NDK_VERSION: "4.1.2"
+  PYTHONUTF8: "1"
+
+jobs:
+  android:
+    name: Android arm64 release
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      # build_office_docx_mobile_artifacts.sh drives cargo ndk, which reads the
+      # NDK path from ANDROID_NDK_HOME. The runner image ships several NDKs and
+      # pre-accepts the SDK licences.
+      - name: Android NDK
+        run: |
+          sdk="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          ndk="$(find "$sdk/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          test -n "$ndk"
+          echo "ANDROID_NDK_HOME=$ndk" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          echo "using NDK $ndk"
+
+      - name: Cache cargo-ndk
+        id: cache-cargo-ndk
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-ndk
+          key: cargo-ndk-${{ env.CARGO_NDK_VERSION }}-${{ runner.os }}
+
+      - name: cargo-ndk
+        if: steps.cache-cargo-ndk.outputs.cache-hit != 'true'
+        run: cargo install cargo-ndk --version "$CARGO_NDK_VERSION"
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Build
+        run: |
+          args=()
+          if [ "${{ inputs.force_rebuild || false }}" = "true" ] || [ "${{ github.ref_type }}" = "tag" ]; then
+            args+=(--force-rebuild)
+          fi
+          ./scripts/ci/build-android.sh "${args[@]}"
+
+      - name: Upload archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenMuse-android-${{ github.sha }}
+          path: |
+            dist/OpenMuse-Android-arm64.apk
+            dist/SHA256SUMS.txt
+            dist/build-info.txt
+            dist/android-apksigner-report.txt
+          if-no-files-found: error
+          retention-days: ${{ fromJSON(inputs.retention_days || '14') }}
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Android build"
+            echo
+            if [ -f dist/build-info.txt ]; then
+              grep -E '^(commit|domains|androidSdk):' dist/build-info.txt | while IFS= read -r line; do
+                echo "\`${line}\`"
+              done
+              echo
+            fi
+            if [ -f dist/OpenMuse-Android-arm64.apk ]; then
+              echo "| artifact | size |"
+              echo "| --- | --- |"
+              mb="$(python3 -c 'import os,sys; print("%.1f" % (os.path.getsize(sys.argv[1]) / 1048576))' dist/OpenMuse-Android-arm64.apk)"
+              echo "| OpenMuse-Android-arm64.apk | ${mb} MB |"
+            else
+              echo "No artifacts were produced under \`dist/\`."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

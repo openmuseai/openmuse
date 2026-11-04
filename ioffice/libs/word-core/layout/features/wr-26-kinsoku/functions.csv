@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_kinsoku_flag,PAPX201禁则开关,PropertySet201,paraEnv.kinsoku,wr-21,02,libs/word-core,pass
+2,02_function_kinsoku_rollback,行尾禁则回退,graphs+kinsoku,rollback pos,01,wr-12,libs/word-core,pass

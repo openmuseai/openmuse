@@ -1,0 +1,91 @@
+export type AIProviderCategory = "official" | "aggregator" | "local" | "custom";
+export type AIResponsesSupport = "supported" | "experimental" | "unsupported";
+
+export interface IProviderPreset {
+    id: string;
+    name: string;
+    baseURL: string;
+    protocolBaseURLs?: Record<string, string>;
+    category: AIProviderCategory;
+    responsesSupport: AIResponsesSupport;
+    region?: "china" | "international";
+    icon?: string;
+    authType?: "chatgpt";
+}
+
+export const PROVIDER_PRESETS: IProviderPreset[] = [
+    {id: "openai", name: "OpenAI", baseURL: "https://api.openai.com/v1", category: "official", responsesSupport: "supported", icon: "/stage/images/ai-providers/openai.svg"},
+    {id: "chatgpt", name: "ChatGPT", baseURL: "https://api.openai.com/v1", authType: "chatgpt", category: "official", responsesSupport: "supported", icon: "/stage/images/ai-providers/openai.svg"},
+    {id: "anthropic", name: "Anthropic", baseURL: "https://api.anthropic.com/v1", category: "official", responsesSupport: "unsupported", icon: "/stage/images/ai-providers/anthropic.svg"},
+    {
+        id: "deepseek", name: "DeepSeek", baseURL: "https://api.deepseek.com", category: "official", responsesSupport: "supported",
+        icon: "/stage/images/ai-providers/deepseek.svg",
+        protocolBaseURLs: {
+            "openai": "https://api.deepseek.com",
+            "openai-responses": "https://api.deepseek.com",
+            "anthropic-messages": "https://api.deepseek.com/anthropic",
+        },
+    },
+    {
+        id: "moonshot", name: "Moonshot AI", baseURL: "https://api.moonshot.cn/v1", category: "official", responsesSupport: "experimental", icon: "/stage/images/ai-providers/moonshot.svg",
+        protocolBaseURLs: {"anthropic-messages": "https://api.moonshot.cn/anthropic"},
+    },
+    {
+        id: "minimax", name: "MiniMax", baseURL: "https://api.minimax.io/v1", category: "official", responsesSupport: "experimental", region: "international", icon: "/stage/images/ai-providers/minimax.svg",
+        protocolBaseURLs: {"anthropic-messages": "https://api.minimax.io/anthropic"},
+    },
+    {
+        id: "minimax-cn", name: "MiniMax", baseURL: "https://api.minimax.cn/v1", category: "official", responsesSupport: "experimental", region: "china", icon: "/stage/images/ai-providers/minimax.svg",
+        protocolBaseURLs: {"anthropic-messages": "https://api.minimax.cn/anthropic"},
+    },
+    {
+        id: "aliyun", name: "Alibaba Model Studio", baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1", category: "official", responsesSupport: "supported", region: "china", icon: "/stage/images/ai-providers/aliyun.svg",
+        protocolBaseURLs: {"anthropic-messages": "https://dashscope.aliyuncs.com/apps/anthropic"},
+    },
+    {
+        id: "aliyun-intl", name: "Alibaba Model Studio", baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", category: "official", responsesSupport: "supported", region: "international", icon: "/stage/images/ai-providers/aliyun.svg",
+        protocolBaseURLs: {"anthropic-messages": "https://dashscope-intl.aliyuncs.com/apps/anthropic"},
+    },
+    {id: "volcengine", name: "Volcengine Ark", baseURL: "https://ark.cn-beijing.volces.com/api/v3", category: "official", responsesSupport: "experimental", icon: "/stage/images/ai-providers/volcengine.svg"},
+    {id: "zhipu", name: "Zhipu AI", baseURL: "https://open.bigmodel.cn/api/paas/v4", category: "official", responsesSupport: "unsupported", icon: "/stage/images/ai-providers/zhipu.svg"},
+    {
+        id: "gemini", name: "Gemini", baseURL: "https://generativelanguage.googleapis.com/v1beta/openai", category: "official", responsesSupport: "unsupported", icon: "/stage/images/ai-providers/gemini.svg",
+        protocolBaseURLs: {"gemini-interactions": "https://generativelanguage.googleapis.com/v1beta"},
+    },
+    {id: "mistral", name: "Mistral AI", baseURL: "https://api.mistral.ai/v1", category: "official", responsesSupport: "unsupported", icon: "/stage/images/ai-providers/mistral.svg"},
+    {
+        id: "xiaomi-mimo", name: "Xiaomi MiMo", baseURL: "https://api.xiaomimimo.com/v1", category: "official", responsesSupport: "supported", icon: "/stage/images/ai-providers/xiaomi-mimo.png",
+        protocolBaseURLs: {"anthropic-messages": "https://api.xiaomimimo.com/anthropic"},
+    },
+    {id: "siliconflow", name: "SiliconFlow", baseURL: "https://api.siliconflow.cn/v1", category: "aggregator", responsesSupport: "unsupported", icon: "/stage/images/ai-providers/siliconflow.svg"},
+    {id: "openrouter", name: "OpenRouter", baseURL: "https://openrouter.ai/api/v1", category: "aggregator", responsesSupport: "supported", icon: "/stage/images/ai-providers/openrouter.svg"},
+    {id: "groq", name: "Groq", baseURL: "https://api.groq.com/openai/v1", category: "aggregator", responsesSupport: "experimental", icon: "/stage/images/ai-providers/groq.svg"},
+    {id: "ollama", name: "Ollama", baseURL: "http://localhost:11434/v1", category: "local", responsesSupport: "supported", icon: "/stage/images/ai-providers/ollama.svg"},
+    {id: "lmstudio", name: "LM Studio", baseURL: "http://localhost:1234/v1", category: "local", responsesSupport: "supported", icon: "/stage/images/ai-providers/lmstudio.svg"},
+    {id: "custom", name: "", baseURL: "", category: "custom", responsesSupport: "experimental"},
+];
+
+export const normalizeProviderBaseURL = (value: string) => value.trim().replace(/\/+$/, "").toLowerCase();
+
+const normalizePresetBaseURL = (value: string) => normalizeProviderBaseURL(value).replace(/\/v1$/, "");
+
+export const findProviderPreset = (baseURL: string) =>
+    PROVIDER_PRESETS.find((preset) => preset.baseURL &&
+        [preset.baseURL, ...Object.values(preset.protocolBaseURLs || {})].some((value) =>
+            normalizePresetBaseURL(value) === normalizePresetBaseURL(baseURL)));
+
+// 只切换预设的标准地址，保留用户自行配置的网关和查询参数。
+export const getProviderProtocolBaseURL = (baseURL: string, protocol: string): string => {
+    const preset = findProviderPreset(baseURL);
+    if (!preset?.protocolBaseURLs) {
+        return baseURL;
+    }
+    return preset.protocolBaseURLs[protocol] ||
+        (["openai", "openai-responses"].includes(protocol) ? preset.baseURL : baseURL);
+};
+
+export const getResponsesSupport = (baseURL: string): AIResponsesSupport =>
+    findProviderPreset(baseURL)?.responsesSupport || "experimental";
+
+export const getDefaultProviderProtocol = (presetId: string) =>
+    presetId === "anthropic" ? "anthropic-messages" : ["openai", "chatgpt"].includes(presetId) ? "openai-responses" : "openai";

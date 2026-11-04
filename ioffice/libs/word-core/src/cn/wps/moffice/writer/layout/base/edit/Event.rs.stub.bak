@@ -1,0 +1,27 @@
+// Rust stub for Event (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/edit/Event.java
+use crate::*;
+
+pub struct Event {
+    // TODO: fields
+}
+
+impl Event {
+    pub fn new() -> Self { todo!() }
+    pub fn isShapeNeedReflow(&self) -> bool { todo!() }
+    pub fn setShapeNeedReflow(&self, val: bool) { todo!() }
+    pub fn isQuickFlowableDrawing(&self) -> bool { todo!() }
+    pub fn setQuickFlowableDrawing(&self, val: bool) { todo!() }
+    pub fn setEditDrawingRangeFormat(&self, val: bool) { todo!() }
+    pub fn isEditDrawingRangeFormat(&self) -> bool { todo!() }
+    pub fn setShapeRotating(&self, val: bool) { todo!() }
+    pub fn isShapeRotating(&self) -> bool { todo!() }
+    pub fn setShapeCliping(&self, val: bool) { todo!() }
+    pub fn isShapeCliping(&self) -> bool { todo!() }
+    pub fn getAnchorChpxEventCount(&self) -> i32 { todo!() }
+    pub fn setAnchorChpxEventCount(&self, val: i32) { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn toString_function toString() { [native code] }(&self) -> String { todo!() }
+    pub fn alloc(&self) -> Event { todo!() }
+    pub fn init(&self, event: Event) { todo!() }
+}

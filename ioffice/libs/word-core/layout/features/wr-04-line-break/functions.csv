@@ -1,0 +1,6 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_run_width_cache,run度量缓存(CP→宽),run文本+fontId,run→宽度缓存表,wr-03-01/02,02_function_wrap;03;04,libs/word-core,pass
+2,02_function_wrap,行内换行(0/1/N+超宽),段落run流+contentWidth,折行序列(每行run子区间),01_function_run_width_cache,03_function_alignment;04;wr-05,libs/word-core,pass
+3,03_function_alignment,对齐(左/中/右),折行+jc,行内x偏移,02_function_wrap,wr-07,libs/word-core,pass
+4,04_function_line_height,行高/段前段后换算,字号/行格+pPr(191/236),lineHeight/top,02_function_wrap;wc-04 PAPX,wr-05/07,libs/word-core,pass
+5,01_function_run_width,逐run宽度批测,run文本列表,widths[],wr-03,02_function_wrap,libs/word-core,pass

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "namespace": "cli",
+  "sourceRevision": 2,
+  "messages": {
+    "cli.terminal": "TERMINAL",
+    "cli.closeTerminal": "Close Terminal",
+    "cli.newTerminal": "New Terminal",
+    "cli.minimizeTerminal": "Minimize Terminal"
+  }
+}

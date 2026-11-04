@@ -1,0 +1,186 @@
+import {TOOLBAR_ENTRY_ROOT_PATH} from "../../protyle/toolbar/defaults";
+import {getLegacyMobileToolbarEntryPath, isMobileToolbarContextPath} from "./mobileToolbarContext";
+
+export const getProfileEntryVisibility = (profile: Pick<Config.IEntryVisibilityProfile, "entries"> | undefined,
+                                           path: string, defaultVisible = true) => {
+    if (typeof profile?.entries[path] === "boolean") {
+        return profile.entries[path];
+    }
+    const legacyPath = getLegacyMobileToolbarEntryPath(path);
+    return legacyPath && typeof profile?.entries[legacyPath] === "boolean" ? profile.entries[legacyPath] : defaultVisible;
+};
+
+export const getSavedEntryOrder = (profile: Pick<Config.IEntryVisibilityProfile, "orders"> | undefined,
+                                   path: string, defaultOrder: string[]) => {
+    if (profile?.orders?.[path] || !isMobileToolbarContextPath(path)) {
+        return profile?.orders?.[path];
+    }
+    // 新上下文沿用已有顺序，同时保留暂未加载的插件位置。
+    return profile?.orders?.[TOOLBAR_ENTRY_ROOT_PATH]?.filter(key => defaultOrder.includes(key) ||
+        key.startsWith("plugin:") || key.startsWith("plugin-separator:"));
+};
+
+export const getBuiltinProfileEntryVisibility = (
+    profile: "simple" | "full",
+    simple: boolean,
+    defaultVisible = true,
+    simpleDefaultVisible?: boolean,
+) => profile === "full"
+    ? defaultVisible
+    : (simpleDefaultVisible ?? defaultVisible) && simple;
+
+export const resetEntryProfileOrder = (profile: Pick<Config.IEntryVisibilityProfile, "orders">, parentPath?: string) => {
+    if (parentPath) {
+        if (isMobileToolbarContextPath(parentPath)) {
+            profile.orders[parentPath] = [];
+        } else {
+            delete profile.orders[parentPath];
+        }
+    } else {
+        profile.orders = {};
+    }
+};
+
+export type TEntryVisibilityImportProfile = {
+    name?: unknown;
+    base?: unknown;
+    defaults?: unknown;
+    entries?: unknown;
+    orders?: unknown;
+};
+
+export const isEntryVisibilityImportVersionSupported = (version: number, currentVersion: number) =>
+    Number.isInteger(version) && version >= 1 && version <= currentVersion;
+
+// 将图表高度配置合并到公共高度入口，保留已有公共配置及插件顺序。
+export const migrateChartHeightMenu = (profile: Pick<Config.IEntryVisibilityProfile, "entries" | "orders">) => {
+    const legacy = "gutter.single.chart.height";
+    const target = "gutter.single.height";
+    if (legacy in profile.entries) {
+        if (!(target in profile.entries)) {
+            profile.entries[target] = profile.entries[legacy] && profile.entries["gutter.single.chart"] !== false;
+        }
+        delete profile.entries[legacy];
+    }
+    const order = profile.orders["gutter.single.chart"];
+    if (order?.includes("height")) {
+        profile.orders["gutter.single.chart"] = order.filter(key => key !== "height");
+    }
+};
+
+// 展开任务状态子菜单，合并重复入口的可见性，并在原菜单位置保留子项顺序及插件位置。
+export const migrateTaskStatusMenu = (profile: Pick<Config.IEntryVisibilityProfile, "entries" | "orders">) => {
+    const parent = "gutter.single.listBlock";
+    const legacy = `${parent}.taskStatus`;
+    const defaults = ["taskStatusTodo", "taskStatusInProgress", "taskStatusDone", "taskStatusCanceled", "customTaskStatus"];
+    const {entries, orders} = profile;
+    const nestedPaths = Object.keys(entries).filter(path => path.startsWith(`${legacy}.`));
+    const saved = orders[parent] || [];
+    if (!(legacy in entries) && !(legacy in orders) && nestedPaths.length === 0 && !saved.includes("taskStatus")) {
+        return;
+    }
+    const parentVisible = entries[legacy] !== false;
+    const customVisible = entries[`${parent}.customTaskStatus`] !== false ||
+        (parentVisible && entries[`${legacy}.customTaskStatus`] !== false);
+    defaults.forEach(key => {
+        entries[`${parent}.${key}`] = key === "customTaskStatus" ? customVisible :
+            parentVisible && entries[`${legacy}.${key}`] !== false;
+    });
+    nestedPaths.forEach(path => {
+        const target = `${parent}${path.substring(legacy.length)}`;
+        if (!(target in entries)) {
+            entries[target] = parentVisible && entries[path];
+        }
+        delete entries[path];
+    });
+    delete entries[legacy];
+    const children = [...new Set([...(orders[legacy] || []), ...defaults])]
+        .filter(key => key !== "taskStatus" && key !== "separator_taskStatus");
+    const anchor = saved.includes("taskStatus") ? "taskStatus" : "customTaskStatus";
+    const expanded: string[] = [];
+    const appendChildren = () => expanded.push(...children, "separator_taskStatus");
+    if (!saved.includes(anchor)) {
+        appendChildren();
+    }
+    saved.forEach(key => {
+        if (key === anchor) {
+            appendChildren();
+        } else if (key !== "taskStatus" && key !== "customTaskStatus" && key !== "separator_taskStatus") {
+            expanded.push(key);
+        }
+    });
+    orders[parent] = [...new Set(expanded)];
+    delete orders[legacy];
+};
+
+export const normalizeEntryVisibilityImportProfile = (
+    profile: TEntryVisibilityImportProfile,
+    version: number,
+    defaultOrders: Record<string, string[]>,
+): Pick<Config.IEntryVisibilityProfile, "name" | "defaults" | "entries" | "orders"> | undefined => {
+    if (!profile || typeof profile.name !== "string" || !profile.name.trim() || !profile.entries ||
+        typeof profile.entries !== "object" || Array.isArray(profile.entries) ||
+        (version < 3 && profile.base !== "simple" && profile.base !== "full") ||
+        (version >= 7 && profile.defaults !== undefined && profile.defaults !== "simple" && profile.defaults !== "full")) {
+        return;
+    }
+    const entries = Object.entries(profile.entries)
+        .reduce<Record<string, boolean>>((result, [path, visible]) => {
+            if (typeof visible === "boolean") {
+                result[path] = visible;
+            }
+            return result;
+        }, {});
+    const orders = profile.orders && typeof profile.orders === "object" && !Array.isArray(profile.orders)
+        ? Object.entries(profile.orders).reduce<Record<string, string[]>>((result, [path, order]) => {
+            if (Array.isArray(order)) {
+                result[path] = order.filter((key): key is string => typeof key === "string");
+            }
+            return result;
+        }, {})
+        : Object.fromEntries(Object.entries(defaultOrders).map(([path, order]) => [path, [...order]]));
+    if (version < 4) {
+        if (entries["document.more.editMode.wysiwyg"] === false &&
+            entries["document.more.editMode.preview"] === false) {
+            entries["document.more.editMode"] = false;
+        }
+        delete entries["document.more.editMode.wysiwyg"];
+        delete entries["document.more.editMode.preview"];
+        delete orders["document.more.editMode"];
+    }
+    if (version < 5) {
+        const parent = "gutter.single";
+        const children = ["exportCSV", "showDatabaseInFolder"];
+        children.forEach((key) => {
+            if (typeof entries[`${parent}.${key}`] === "boolean") {
+                entries[`${parent}.database.${key}`] = entries[`${parent}.${key}`];
+                delete entries[`${parent}.${key}`];
+            }
+        });
+        const order = orders[parent];
+        if (order?.some(key => children.includes(key))) {
+            orders[`${parent}.database`] = order.filter(key => children.includes(key));
+            let inserted = false;
+            orders[parent] = order.flatMap((key) => {
+                if (!children.includes(key)) {
+                    return key === "database" ? [] : [key];
+                }
+                if (inserted) {
+                    return [];
+                }
+                inserted = true;
+                return ["database"];
+            });
+        }
+    }
+    if (version < 6) {
+        migrateTaskStatusMenu({entries, orders});
+    }
+    migrateChartHeightMenu({entries, orders});
+    const defaults = version >= 7 && (profile.defaults === "simple" || profile.defaults === "full")
+        ? profile.defaults : undefined;
+    if (!defaults) {
+        entries["editor.slash.menu.frequent"] ??= true;
+    }
+    return {name: profile.name, ...(defaults ? {defaults} : {}), entries, orders};
+};

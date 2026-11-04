@@ -1,0 +1,6 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/drawing/src/cn/wps/moffice/util/BitmapUtils.java,cn/wps/moffice/util,too many dependencies,2026-05-23
+koffice/core-libs/drawing/src/cn/wps/moffice/drawing/chart/CTHostApp.java,cn/wps/moffice/drawing/chart,too many dependencies,2026-05-23
+koffice/core-libs/drawing/src/cn/wps/moffice/drawing/color/ColorTransform.java,cn/wps/moffice/drawing/color,too many dependencies,2026-05-23
+koffice/core-libs/drawing/src/cn/wps/moffice/drawing/diagram/config/color/CoreColor.java,cn/wps/moffice/drawing/diagram/config/color,Template structural validation failed:
+Missing impl block for class 'ColorElementType',2026-05-23

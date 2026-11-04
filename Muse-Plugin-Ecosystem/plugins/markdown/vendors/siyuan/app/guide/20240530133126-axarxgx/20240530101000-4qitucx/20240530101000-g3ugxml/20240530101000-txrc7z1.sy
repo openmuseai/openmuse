@@ -1,0 +1,2706 @@
+{
+	"ID": "20240530101000-txrc7z1",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-4kfan0n",
+		"id": "20240530101000-txrc7z1",
+		"title": "データ履歴",
+		"type": "doc",
+		"updated": "20261024203645"
+	},
+	"Children": [
+		{
+			"ID": "20240530101000-qdecm05",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-16efyoz",
+				"id": "20240530101000-qdecm05",
+				"updated": "20261016111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-hif4aev",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-g168owl",
+				"id": "20240530101000-hif4aev",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データ履歴は主にデータの安全性を確保するために使用され、誤操作があった場合でも履歴から元のデータをロールバックできます。データ履歴は以下の 2 つの機能に分かれています:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-2reo45z",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-09lekbe",
+				"id": "20240530101000-2reo45z",
+				"updated": "20261016111431"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-5nbln2t",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-dxkkhb0",
+						"id": "20240530101000-5nbln2t",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-coale9x",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-knzqn61",
+								"id": "20240530101000-coale9x",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ファイル履歴"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：元のファイルのバイト列を "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace/history/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ フォルダーに保存します。通常のノートブックの履歴は平文で、暗号化ノートブックの履歴は暗号文のまま保持されます。SiYuan 内での復元を優先し、以下のノートブックとキーの要件を確認してください"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-wk1uvg3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-oxkn352",
+						"id": "20240530101000-wk1uvg3",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-yhh8gyh",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-p97fur5",
+								"id": "20240530101000-yhh8gyh",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "データスナップショット"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：ファイルをチャンクに分割し、暗号化・圧縮して "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace/repo/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ フォルダーに保存します。リポジトリの個別ファイルを data にコピーするのではなく、SiYuan から復元してください"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-9i4whon",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-hidglsa",
+				"id": "20240530101000-9i4whon",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データスナップショットはローカルのデータ履歴に加えて、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240530101000-wo49zvq",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "クラウドデータの同期"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "にも使用されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ueeidu9",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-oseszzo",
+				"id": "20240530101000-ueeidu9",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ファイル履歴"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-6rh5qwn",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-cx6826g",
+				"id": "20240530101000-6rh5qwn",
+				"updated": "20261016112108"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ファイル履歴の生成ルール"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-hah36a4",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-yv055fx",
+				"id": "20240530101000-hah36a4",
+				"updated": "20261016112108"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-squ7kgm",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-hddauoc",
+						"id": "20240530101000-squ7kgm",
+						"updated": "20261016112108"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-52ypkox",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-9j8nj4v",
+								"id": "20240530101000-52ypkox",
+								"updated": "20261016112108"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "10 分ごとに、その間に更新されたドキュメントとファイルのファイル履歴が生成されます。間隔は "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "設定"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "ドキュメント"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "ファイル管理"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "履歴の生成間隔"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " で変更でき、履歴フォルダーには -update サフィックスが付きます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-dbpoc1i",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-lnt1dg9",
+						"id": "20240530101000-dbpoc1i",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-vmnbjc0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-xc4bp5l",
+								"id": "20240530101000-vmnbjc0",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "クラウドで同期する際は、クラウドデータによって上書きされるローカルデータの履歴が生成されます。履歴フォルダのサフィックスは "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "-sync"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ です"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-rmrvqaj",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-8x2w1tz",
+						"id": "20240530101000-rmrvqaj",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-ootp0fd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-140fldu",
+								"id": "20240530101000-ootp0fd",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ノートブック、ドキュメント、アセットファイルを手動で削除すると履歴が生成されます。履歴フォルダのサフィックスは "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "-delete"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ です"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-nsw3qba",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-n2v3prc",
+						"id": "20240530101000-nsw3qba",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-o3enksr",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-ocqqrbu",
+								"id": "20240530101000-o3enksr",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20240530101000-m2u22gy",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "参照されていないアセットをクリーンアップ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "すると履歴が生成されます。履歴フォルダのサフィックスは "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "-clean"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ です"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-1ilq2f4",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-hw1cswg",
+						"id": "20240530101000-1ilq2f4",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-b5sm2br",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-urodb5x",
+								"id": "20240530101000-b5sm2br",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20240530101000-3ourzoa",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "タイポグラフィを最適化"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "すると履歴が生成されます。履歴フォルダのサフィックスは "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "-format"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ です"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-f5ezqvt",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-kfdpb03",
+						"id": "20240530101000-f5ezqvt",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-a27s3r5",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-8vx346d",
+								"id": "20240530101000-a27s3r5",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "置換を行うと履歴が生成されます。履歴フォルダのサフィックスは "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "-replace"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ です"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-ergb52v",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-aeqi0mc",
+						"id": "20240530101000-ergb52v",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-m92pc2u",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-xd0rclr",
+								"id": "20240530101000-m92pc2u",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "アウトラインパネルで項目をドラッグすると履歴が生成されます。履歴フォルダのサフィックスは "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "-outline"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ です"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-rwtz5xw",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-e1mgcdp",
+				"id": "20240530101000-rwtz5xw",
+				"updated": "20261024163429"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ファイル履歴の閲覧"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-g4c7s4a",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-qlt85ct",
+				"id": "20240530101000-g4c7s4a",
+				"updated": "20261016111431"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-ty8dsb2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-ma22ziz",
+						"id": "20240530101000-ty8dsb2",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-jxujzyn",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-jxujzyn",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "メインメニューから "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "履歴"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を選択するか、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Alt"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "H"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を押してデータ履歴画面を開き、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "ファイル履歴"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ タブに切り替えます。履歴データが表示されない場合は、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "履歴インデックスを再構築"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ ボタンをクリックしてください"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-8vx9nbh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-6tw8gl5",
+						"id": "20240530101000-8vx9nbh",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-wpr5ktu",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-lcoojkb",
+								"id": "20240530101000-wpr5ktu",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "システムの "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace/history/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ フォルダを直接開くことでも閲覧できます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-tqz9ub5",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-az1k146",
+				"id": "20240530101000-tqz9ub5",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ファイル履歴によるロールバック"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-kk9cx1j",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-zgekzjr",
+				"id": "20240530101000-kk9cx1j",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "履歴レコードの右側にあるロールバックボタンを押して確定すると、既存ファイルが履歴で上書きされます。プレビュー可能な記録は先に確認してください。暗号化ドキュメントの閲覧やロールバックには、元の暗号化ノートブックが存在し、ロック解除されている必要があります。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-f1ultjh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-f1ultjh",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "削除済み暗号化ノートブックの復元は別の操作で、対応するノートブック用およびグローバルのキーバックアップとマスターパスワードも必要です。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkTextContent": "マスターパスワードとキーバックアップ",
+					"TextMarkBlockRefID": "20260907120000-ja00031",
+					"TextMarkBlockRefSubtype": "s"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "を参照してください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-0xe3rc9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-tlvdauq",
+				"id": "20240530101000-0xe3rc9",
+				"updated": "20261016111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan 内での復元を優先してください。手動コピーで一括復元する場合は、コピー元とコピー先を確認し、暗号化ノートブックの元の ID、ディレクトリ構造、対応するキー情報を保持してください。暗号文を通常のノートブックへコピーしないでください。履歴ディレクトリは対応する data のパス構造を保持しており、例えば次のようになります："
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-siuf129",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-s9sesjm",
+				"id": "20240530101000-siuf129",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-pe1a79u",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-rcq8fw8",
+						"id": "20240530101000-pe1a79u",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-ss4fx7o",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-e6n4nwn",
+								"id": "20240530101000-ss4fx7o",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ノートブックの削除"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "履歴生成日時-{操作内容}/{ノートブックID}/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ という形式で表されます (例: "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "2022-05-01-091021-delete/20210808180117-czj9bvb/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​)"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-cxq520e",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-n2ynrrg",
+						"id": "20240530101000-cxq520e",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-ynq56nm",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-aw1jeh8",
+								"id": "20240530101000-ynq56nm",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "ドキュメントの削除"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "履歴生成日時-{操作内容}/{ノートブックID}/{ドキュメントパス}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ という形式で表されます (例: "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "2022-05-01-091209-delete/20210808180117-czj9bvb/20200812220555-lj3enxa.sy"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​)"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-omxh76g",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-7jwdfgj",
+						"id": "20240530101000-omxh76g",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-f2biu9k",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-i6phqjt",
+								"id": "20240530101000-f2biu9k",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "アセットファイルのクリーンアップ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "履歴生成日時-{操作内容}/assets/{アセットファイル名}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ という形式で表されます (例: "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "2022-05-01-095621-clean/assets/image-20220501091157-qccp87e.png"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​)"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-a8fgdx4",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-kx3ps82",
+				"id": "20240530101000-a8fgdx4",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "手動ロールバックの手順:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-gjej5tc",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1
+			},
+			"Properties": {
+				"ID": "20240530101000-pxbcnqa",
+				"id": "20240530101000-gjej5tc",
+				"updated": "20261016111431"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-livdtkp",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "MS4=",
+						"Num": 1
+					},
+					"Properties": {
+						"ID": "20240530101000-3vctfoo",
+						"id": "20240530101000-livdtkp",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-9ery58e",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-2f2ptnh",
+								"id": "20240530101000-9ery58e",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "必要時にダウンロードするモードの場合、先に"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkTextContent": "リソースファイルのダウンロード",
+									"TextMarkBlockRefID": "20260905184908-ntlbfyd",
+									"TextMarkBlockRefSubtype": "s"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "で "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "すべてダウンロード"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を選んでダウンロードを完了します。その後 SiYuan を通常の方法で終了し、設定、履歴、リポジトリ、暗号化ノートブックのキーバックアップを含むワークスペース全体をバックアップしてから上書きします"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-e739rbd",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "Mi4=",
+						"Num": 2
+					},
+					"Properties": {
+						"ID": "20240530101000-nzuee96",
+						"id": "20240530101000-e739rbd",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-si2t7rw",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-e056agn",
+								"id": "20240530101000-si2t7rw",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace/history/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 内の "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "履歴生成日時-{操作内容}"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ から必要なファイルだけを data の対応するパスへコピーします。ノートブック ID、ファイル名、ディレクトリ構造を維持し、暗号化履歴には対応するノートブックとキー情報を保持してください"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-m9p6v7o",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "My4=",
+						"Num": 3
+					},
+					"Properties": {
+						"ID": "20240530101000-zu8kf6d",
+						"id": "20240530101000-m9p6v7o",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-xmpk5iw",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-qxdrd99",
+								"id": "20240530101000-xmpk5iw",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "SiYuan を起動し、復元した暗号化ノートブックをロック解除してインデックスを再構築し、復元したドキュメントとリソースファイルを確認します"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-h1ro8qa",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-y6b68v9",
+				"id": "20240530101000-h1ro8qa",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ファイル履歴のクリーンアップ"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-i09igkk",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-g1p6rwa",
+				"id": "20240530101000-i09igkk",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ファイル履歴は既定で 30 日間保持されます。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "ドキュメント"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "ファイル管理"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "履歴の保存日数"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で変更できます。期限を超えた履歴は自動的に削除されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-dbujj1h",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-sclv8jy",
+				"id": "20240530101000-dbujj1h",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "すべてのファイル履歴を削除するには、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "ドキュメント"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "ファイル管理"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "すべての履歴を削除"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " の "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "消去"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " ボタンを押します。または SiYuan を終了してから ​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "workspace/history/"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ を手動で削除し、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "ファイル履歴"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ で履歴インデックスを再構築します。暗号化ノートブックの復元に必要な履歴は削除しないでください。"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​​​​"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-sy5cmkg",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-b78egg3",
+				"id": "20240530101000-sy5cmkg",
+				"updated": "20261024203645"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データスナップショット"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-0fn4grk",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-yai7awk",
+				"id": "20240530101000-0fn4grk",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "キーの初期化"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-v6lz6cb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-9vfdxxy",
+				"id": "20240530101000-v6lz6cb",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "初めてスナップショットを利用する前に、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "アカウントと同期"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "データリポジトリキー"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ を初期化します。このリポジトリキーは安全に保管してください。暗号化ノートブックのマスターパスワードやキーバックアップとは別のものです。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-yf14kh0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-99zkmv1",
+				"id": "20240530101000-yf14kh0",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "キーを初期化するには以下の 3 つの方法があります:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-gohibke",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-vj3vv3w",
+				"id": "20240530101000-gohibke",
+				"updated": "20261016111431"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-b3p7k5c",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-ayygazx",
+						"id": "20240530101000-b3p7k5c",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-kr0aaxr",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-hrvjvex",
+								"id": "20240530101000-kr0aaxr",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "キーのインポート"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: 他のデバイスからキー文字列を貼り付けてインポートします"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-38mznxv",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-u5kpk5a",
+						"id": "20240530101000-38mznxv",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-k6eqd7k",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-2670e6t",
+								"id": "20240530101000-k6eqd7k",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "キーの自動生成"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: 乱数を基にキーを生成します。この方法は 1 台のデバイスで 1 度だけ実行する必要があり、その他のデバイスは "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "キーのインポート"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を使用します"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-xx9uh19",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-dbymsn1",
+						"id": "20240530101000-xx9uh19",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-hyatn42",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-rdvwxsy",
+								"id": "20240530101000-hyatn42",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "パスワードからキーを生成"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: 入力されたパスワードを基にキーを生成します。この方法はすべてのデバイスで同じパスワードを使用する必要があります"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-wuu2hjy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-rq56ys1",
+				"id": "20240530101000-wuu2hjy",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "いずれの場合も、すべてのデバイスで同じキーを使用することが重要です。そうしないと、クラウドを介してデータスナップショットを同期するなど、デバイス間でデータスナップショットを利用できなくなります。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-16a1pk9",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-bah2zqg",
+				"id": "20240530101000-16a1pk9",
+				"updated": "20261024203645"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データスナップショットの作成"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-9jkq6qc",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1
+			},
+			"Properties": {
+				"ID": "20240530101000-dla9hqa",
+				"id": "20240530101000-9jkq6qc",
+				"updated": "20261016111431"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-0hg24mh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "MS4=",
+						"Num": 1
+					},
+					"Properties": {
+						"ID": "20240530101000-bqv9lib",
+						"id": "20240530101000-0hg24mh",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-z7obb6j",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-z7obb6j",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "メインメニューの "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "履歴"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を選択するか "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Alt"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "H"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を押してデータ履歴画面を開きます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-jr37vi0",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "Mi4=",
+						"Num": 2
+					},
+					"Properties": {
+						"ID": "20240530101000-chofj36",
+						"id": "20240530101000-jr37vi0",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-07vkkdb",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-iqeiomg",
+								"id": "20240530101000-07vkkdb",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "データスナップショット"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ タブに切り替えます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-hld8t5g",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "My4=",
+						"Num": 3
+					},
+					"Properties": {
+						"ID": "20240530101000-haztig0",
+						"id": "20240530101000-hld8t5g",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-vk9llu5",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-hpfbnh0",
+								"id": "20240530101000-vk9llu5",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "スナップショットの作成"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ をクリックし、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "スナップショットのメモ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を入力して確認します"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-hz493jy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-nugxbmj",
+				"id": "20240530101000-hz493jy",
+				"updated": "20261016111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "後でスナップショットを識別しやすいように詳しいメモを記入してください。ただし、メモはクリーンアップを防ぎません。長期保存が必要なスナップショットにはタグを付け、別途独立したバックアップも保持してください。"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20261024203645-xznpz7s",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024203645-xznpz7s",
+				"updated": "20261024203645"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "外部プログラムがファイルサイズと更新日時を保持したまま内容を変更した場合は、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "データ履歴"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "データスナップショット"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "内容の完全チェック"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " でメモを入力して確定してください。スナップショットの対象となるローカル保存済みの全ファイルを読み取り、変更が見つかればスナップショットを作成します。未ダウンロードのリソースは既存のバージョンを保持し、チェックのためにダウンロードすることはありません。大きなワークスペースでは時間がかかる場合があります。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-bhs49zm",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-yn8i3sj",
+				"id": "20240530101000-bhs49zm",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データスナップショットの閲覧"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-j43nth8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-vrpczsk",
+				"id": "20240530101000-j43nth8",
+				"updated": "20260914101605"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "履歴"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "データスナップショット"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " では、幅の広いウィンドウにローカルとクラウドの一覧が左右に表示され、それぞれ個別にページを切り替えられます。幅の狭いウィンドウやモバイルでは、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "ローカルスナップショット"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " と "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "クラウドスナップショット"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で表示を切り替えます。上部の "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "データスナップショット"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " と "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "タグ付きスナップショット"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で種類を切り替えられます。各項目には作成日時、メモ、タグが表示されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260914101605-gwkgtpj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260914101605-gwkgtpj",
+				"updated": "20260914101605"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ローカルスナップショットはファイル名で検索できます。検索中はファイル一覧とプレビューの表示領域が確保されます。一括管理中でなければ、ローカルのスナップショットを 2 つ選択して比較したり、各項目のタグ付け、アップロード、ダウンロード、ロールバックなどの操作を利用したりできます。"
+				}
+			]
+		},
+		{
+			"ID": "20260927191121-kt5hlo6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260927191121-kt5hlo6",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "検索欄にファイル名またはスナップショット ID を直接入力して、ローカルスナップショットを検索できます。7～40 桁の 16 進数を入力すると、大文字と小文字を区別せずにスナップショット ID の先頭部分と照合します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-5mckgv8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-5mckgv8",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "複数のスナップショットが一致する場合は、作成日時の新しい順にすべて表示されます。一致する ID がない場合は、同じ文字列でファイル名を検索します。結果ではロールバックなどの通常の操作を利用できます。検索文字列を消すと一覧に戻ります。"
+				}
+			]
+		},
+		{
+			"ID": "20260914101605-9l0hxqv",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260914101605-9l0hxqv",
+				"updated": "20260914102430"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "タグ付きスナップショットの一括管理"
+				}
+			]
+		},
+		{
+			"ID": "20260914101605-ks5qp80",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1
+			},
+			"Properties": {
+				"id": "20260914101605-ks5qp80",
+				"updated": "20260914101605"
+			},
+			"Children": [
+				{
+					"ID": "20260914101605-67khd7m",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "MS4=",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20260914101605-67khd7m",
+						"updated": "20260914101605"
+					},
+					"Children": [
+						{
+							"ID": "20260914101605-vxxgt5s",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260914101605-vxxgt5s",
+								"updated": "20260914101605"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "タグ付きスナップショット"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " に切り替えて "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "一括管理"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " をクリックすると、チェックボックスが表示されます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260914101605-dcof0xi",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "Mi4=",
+						"Num": 2
+					},
+					"Properties": {
+						"id": "20260914101605-dcof0xi",
+						"updated": "20260914101605"
+					},
+					"Children": [
+						{
+							"ID": "20260914101605-c6njrmc",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260914101605-c6njrmc",
+								"updated": "20260914101605"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "削除するローカルとクラウドのタグを選択します。各欄の "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "すべて選択"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " はその欄の現在の一覧だけを選択し、下部にはそれぞれの選択数が表示されます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260914101605-lgitpso",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "My4=",
+						"Num": 3
+					},
+					"Properties": {
+						"id": "20260914101605-lgitpso",
+						"updated": "20260914101605"
+					},
+					"Children": [
+						{
+							"ID": "20260914101605-hmc1zc8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260914101605-hmc1zc8",
+								"updated": "20260914101605"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "選択したタグを削除"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " をクリックし、ローカルとクラウドのタグ名と件数を確認して確定します。明示的に選択したタグだけが削除され、もう一方の同名タグは自動的には削除されません"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260914101605-frw218a",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "NC4=",
+						"Num": 4
+					},
+					"Properties": {
+						"id": "20260914101605-frw218a",
+						"updated": "20260914101605"
+					},
+					"Children": [
+						{
+							"ID": "20260914101605-6qkmvg3",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260914101605-6qkmvg3",
+								"updated": "20260914101605"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "結果を確認してください。失敗した項目や結果を確認できなかった項目は選択されたままなので、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "選択したタグを削除"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " で再試行できます。"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "選択を解除"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " は選択を解除し、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "管理を終了"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " は一括管理を終了します"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260914101605-vpeopah",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260914101605-vpeopah",
+				"updated": "20260914102430"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "タグを削除してもスナップショットのデータはすぐには削除されず、リポジトリのクリーンアップも自動では実行されません。容量を解放するにはローカルのデータリポジトリを別途クリーンアップできます。クラウドの手動クリーンアップは、S3、WebDAV、ローカルファイルシステムの同期ストレージでのみ利用できます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-stu3s9h",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-isxtz3n",
+				"id": "20240530101000-stu3s9h",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データスナップショットのロールバック"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-5m4sukw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-cy7y5x8",
+				"id": "20240530101000-5m4sukw",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "スナップショットの項目の右側にロールバックボタンがあります。クリックすると確認ダイアログが表示され、確定すると既存のデータがスナップショットデータで完全に置き換えられます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-s265xty",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-aprvh1j",
+				"id": "20240530101000-s265xty",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データスナップショットのクリーンアップ"
+				}
+			]
+		},
+		{
+			"ID": "20261016111431-by0317h",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016111431-by0317h",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ローカルスナップショットは "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "アカウントと同期"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "ローカルデータリポジトリのクリーンアップ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " の設定に従って自動的にクリーンアップされます。既定値は保持日数 180 日、1 日あたり 2 件です。保持期間内の過去の日付のスナップショットは 1 日あたりの件数に絞られ、当日分とタグなどの参照が指すスナップショットは自動削除から保護されます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-giijo23",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-giijo23",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "すべてのスナップショットを 180 日間保持する保証ではなく、クラウドバックアップの保持方針とも異なります。以下の手動クリーンアップでは、この保持期間にかかわらず参照されていないスナップショットがすべて削除されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-bbjxq5g",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-vbtv1hd",
+				"id": "20240530101000-bbjxq5g",
+				"updated": "20261016111431"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-vs81otl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-mjgjc3f",
+						"id": "20240530101000-vs81otl",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-gxszmrm",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-a89jrx4",
+								"id": "20240530101000-gxszmrm",
+								"updated": "20261011203418"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "履歴"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "データスナップショット"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " のローカル欄で "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "ローカルデータリポジトリのクリーンアップ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " をクリックするか、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "設定"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "アカウントと同期"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "ローカルデータリポジトリのクリーンアップ"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を開いて確定すると、ローカルの参照されていないスナップショットと関連するデータオブジェクトがすべて削除されます。参照されているスナップショットとは、repo/refs/ 配下の参照が指すものです："
+								}
+							]
+						},
+						{
+							"ID": "20240530101000-m6fk5hj",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"ID": "20240530101000-dkjantl",
+								"id": "20240530101000-m6fk5hj",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"ID": "20240530101000-ta2vblj",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"ID": "20240530101000-3b19hdr",
+										"id": "20240530101000-ta2vblj",
+										"updated": "20261016111431"
+									},
+									"Children": [
+										{
+											"ID": "20240530101000-1oyecpk",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"ID": "20240530101000-4nngh3f",
+												"id": "20240530101000-1oyecpk",
+												"updated": "20261016111431"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "​"
+												},
+												{
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "latest"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "​: これは常に最新のスナップショットを指しており、データの復元などに必要となるため消去されません"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20240530101000-cxqp7yv",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"ID": "20240530101000-ojyy9un",
+										"id": "20240530101000-cxqp7yv",
+										"updated": "20261016111431"
+									},
+									"Children": [
+										{
+											"ID": "20240530101000-klhluqj",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"ID": "20240530101000-m844yqy",
+												"id": "20240530101000-klhluqj",
+												"updated": "20261016111431"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "​"
+												},
+												{
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "tags/*"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "​: これは手動でタグ付けされたスナップショットを指します。タグ付けされたスナップショットは、ユーザーが意図的に保存しておきたいデータであると考えられるため消去されません"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260914101605-v28phut",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260914101605-v28phut",
+						"updated": "20260914102430"
+					},
+					"Children": [
+						{
+							"ID": "20260914101605-iflvng3",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260914101605-iflvng3",
+								"updated": "20260914102430"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "同期ストレージに S3、WebDAV、またはローカルファイルシステムを使用する場合、クラウド欄の "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "クラウドストレージを消去"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " は、クラウドの参照されていないスナップショットと関連するデータオブジェクトだけを削除します。実行前にほかのデバイスの同期を一時停止し、安定したネットワーク接続を確保してください。SiYuan 公式クラウドはこの手動クリーンアップに対応していないため、ボタンは表示されません"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-3smvnos",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-kambsd9",
+						"id": "20240530101000-3smvnos",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-i5ib164",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-a3163w0",
+								"id": "20240530101000-i5ib164",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "リポジトリをリセットする場合は、リソースのダウンロード完了を確認する "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "設定"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "アカウントと同期"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "データリポジトリのリセット"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を優先してください。先に"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkTextContent": "リソースファイルのダウンロード",
+									"TextMarkBlockRefID": "20260905184908-ntlbfyd",
+									"TextMarkBlockRefSubtype": "s"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "で "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "すべてダウンロード"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " を選んで完了させ、リポジトリキーを保存し、ワークスペース全体をバックアップします。​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace/repo/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ の手動削除は確認処理を迂回し、タグ付きも含めローカルの全スナップショットを削除します。これらの準備を済ませ、SiYuan を通常の方法で終了した後に限って検討してください"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-nvr8ti7",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-vlp9z19",
+				"id": "20240530101000-nvr8ti7",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ファイルを無視する"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-2ekt5fx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-8mf8vzx",
+				"id": "20240530101000-2ekt5fx",
+				"updated": "20260809160000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "スナップショット作成時に特定のファイルやフォルダを無視したい場合は、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "workspace/data/.siyuan/syncignore"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ というテキストファイルを作成し、無視したいファイルやフォルダごとに data フォルダからの相対パスを 1 行ずつ記述してください (ワイルドカードに対応)。以下に例を示します:"
+				}
+			]
+		},
+		{
+			"ID": "20260809160000-28adb0e",
+			"Type": "NodeCodeBlock",
+			"IsFencedCodeBlock": true,
+			"Properties": {
+				"id": "20260809160000-28adb0e",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeCodeBlockFenceOpenMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				},
+				{
+					"Type": "NodeCodeBlockFenceInfoMarker"
+				},
+				{
+					"Type": "NodeCodeBlockCode",
+					"Data": "20210808180117-6v0mkxr/**/*\nassets/*.pdf"
+				},
+				{
+					"Type": "NodeCodeBlockFenceCloseMarker",
+					"Data": "```",
+					"CodeBlockFenceLen": 3
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-f3ocj3b",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-338dfuc",
+				"id": "20240530101000-f3ocj3b",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-taasqm6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-04maouq",
+						"id": "20240530101000-taasqm6",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-7zpqpgs",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-7zpqpgs",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "20210808180117-6v0mkxr/**/*"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "data/20210808180117-6v0mkxr"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ ノートブックを無視"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-35sotsk",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-71gb8lm",
+						"id": "20240530101000-35sotsk",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-th9zxhl",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-cgb2ma0",
+								"id": "20240530101000-th9zxhl",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "assets/*.pdf"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​: "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "data/assets/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 下の PDF ファイルを無視"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-kckjaww",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-f281q60",
+				"id": "20240530101000-kckjaww",
+				"updated": "20261016111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-iy5aest",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-mx6tgoi",
+				"id": "20240530101000-iy5aest",
+				"updated": "20261016111431"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-70wr5wo",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-n26pjl0",
+						"id": "20240530101000-70wr5wo",
+						"updated": "20261016111431"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-o6d5fs4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-d5542l0",
+								"id": "20240530101000-o6d5fs4",
+								"updated": "20261016111431"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "シンボリックリンクと隠しファイルはスナップショットに含まれません"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-o2p50rl",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-4xw39w3",
+				"id": "20240530101000-o2p50rl"
+			}
+		}
+	]
+}

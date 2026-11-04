@@ -1,0 +1,72 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package tools
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+var WorkspaceTool = &Tool{
+	Name:        "workspace",
+	Description: "Workspace management. Actions: list(), info() (path, version, valid).",
+	InputSchema: ToolSchema{
+		Type: "object",
+		Properties: map[string]Property{
+			"action": {Type: "string", Description: "Operation", Enum: []string{"list", "info"}},
+		},
+		Required: []string{"action"},
+	},
+	Handler: workspaceHandler,
+}
+
+func init() {
+	register(WorkspaceTool)
+}
+
+func workspaceHandler(args map[string]any) (CallToolResult, error) {
+	action, _ := args["action"].(string)
+	switch action {
+	case "list":
+		return workspaceList(args)
+	case "info":
+		return workspaceInfo(args)
+	}
+	return CallToolResult{
+		Content: []ContentItem{{Type: "text", Text: "unknown action '" + action + "', expected one of: [list, info]"}},
+		IsError: true,
+	}, nil
+}
+
+func workspaceList(_ map[string]any) (CallToolResult, error) {
+	paths, err := util.ReadWorkspacePaths()
+	if err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "list workspaces failed: " + err.Error()}}, IsError: true}, nil
+	}
+
+	var sb strings.Builder
+	seen := map[string]bool{}
+	fmt.Fprintf(&sb, "Registered workspaces (%d):\n\n", len(paths))
+	for _, p := range paths {
+		key := strings.ToLower(p)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		fmt.Fprintf(&sb, "- %s\n", p)
+	}
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: sb.String()}}}, nil
+}
+
+func workspaceInfo(_ map[string]any) (CallToolResult, error) {
+	dir := util.WorkspaceDir
+	sb := strings.Builder{}
+	fmt.Fprintf(&sb, "Path:    %s\n", dir)
+	fmt.Fprintf(&sb, "Version: %s\n", util.Ver)
+	fmt.Fprintf(&sb, "Valid:   %v\n", util.IsWorkspaceDir(dir))
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: sb.String()}}}, nil
+}

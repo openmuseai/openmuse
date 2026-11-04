@@ -1,0 +1,1083 @@
+import {createRangeByOffsets, focusByRange, getSelectionOffset, setLastNodeRange} from "./selectionOffsets";
+import {isHiddenTabContent} from "../render/tabsVisibility";
+import {
+    getContenteditableElement,
+    getNextBlock,
+    getPreviousBlock,
+    hasPreviousSibling,
+    isContainerBlock,
+    isEndOfBlock,
+    isNotEditBlock
+} from "../wysiwyg/getBlock";
+import {
+    hasClosestBlock,
+    hasClosestByAttribute,
+    hasClosestByClassName,
+    hasClosestByTag,
+    isInEmbedBlock
+} from "./hasClosest";
+import {getAtomicVerticalNavigationOwner} from "../wysiwyg/verticalNavigationState";
+import {countBlockWord, countSelectWord} from "../../layout/status";
+import {hideElements} from "../ui/hideElements";
+import {genRenderFrame} from "../render/util";
+import {genEmbedRenderFrame} from "../wysiwyg/embedToolbarVisibility";
+import {Constants} from "../../constants";
+import {getUndoFocusElement} from "./selectionFocus";
+import {getBlockRangeSelectElements as getBlockRangeSelectElementsByDOM} from "./blockRangeSelect";
+import {getSemanticMarkerPrefixLengthForNode} from "./inlineElementMarker";
+import {getSelectAllBlockAction, setBlockSelectionModeElement} from "../wysiwyg/blockSelection";
+import {restoreListMindmapFocus} from "../render/listMindmap/render";
+
+// table 选中处理
+export const fixTableRange = (range: Range) => {
+    const tableElement = hasClosestByAttribute(range.startContainer, "data-type", "NodeTable");
+    if (range.toString() !== "" && tableElement && range.commonAncestorContainer.nodeType !== 3) {
+        const parentTag = (range.commonAncestorContainer as Element).tagName;
+        if (parentTag !== "TH" && parentTag !== "TD") {
+            const startCellElement = hasClosestByTag(range.startContainer, "TD") || hasClosestByTag(range.startContainer, "TH");
+            const endCellElement = hasClosestByTag(range.endContainer, "TD") || hasClosestByTag(range.endContainer, "TH");
+            if (!startCellElement && !endCellElement) {
+                const cellElement = tableElement.querySelector("th") || tableElement.querySelector("td");
+                range.setStart(cellElement.firstChild, 0);
+                range.setEnd(cellElement.lastChild, cellElement.lastChild.textContent.length);
+            } else if (startCellElement &&
+                // 不能包含自身元素，否则对 cell 中的部分文字两次高亮后就会选中整个 cell。 https://github.com/siyuan-note/siyuan/issues/3649 第二点
+                !startCellElement.contains(range.endContainer)) {
+                setLastNodeRange(startCellElement, range, false);
+            }
+        }
+    }
+};
+
+export const selectAll = (protyle: IProtyle, nodeElement: Element, range: Range, allowBlockSelection = true): boolean => {
+    if (!allowBlockSelection) {
+        hideElements(["select"], protyle);
+    }
+    const blockSelectionAction = getSelectAllBlockAction(protyle.wysiwyg.element);
+    if (blockSelectionAction !== "none") {
+        range.collapse(true);
+        hideElements(["toolbar"], protyle);
+        if (blockSelectionAction === "keep") {
+            return false;
+        }
+    }
+    const editElement = blockSelectionAction === "none" ? getContenteditableElement(nodeElement) : undefined;
+    if (editElement) {
+        let position;
+        if (editElement.tagName === "TABLE") {
+            const cellElement = hasClosestByTag(range.startContainer, "TD") || hasClosestByTag(range.startContainer, "TH");
+            if (cellElement) {
+                position = getSelectionOffset(cellElement, nodeElement, range);
+                const contentLength = cellElement.textContent.length + cellElement.querySelectorAll("br, .emoji").length;
+                if (position.start !== 0 || position.end !== contentLength) {
+                    range.selectNodeContents(cellElement);
+                    protyle.toolbar.render(protyle, range);
+                    countSelectWord(range, protyle);
+                    return true;
+                }
+            }
+        } else {
+            position = getSelectionOffset(editElement, nodeElement, range);
+            const contentLength = editElement.textContent.length + editElement.querySelectorAll("br, .emoji").length;
+            if (position.start !== 0 || position.end !== contentLength) {
+                // 全选后 rang 不对 https://ld246.com/article/1654848722251
+                let firstChild = editElement.firstChild;
+                while (firstChild) {
+                    if (firstChild.nodeType === 3) {
+                        if (firstChild.textContent !== "") {
+                            range.setStart(firstChild, 0);
+                            break;
+                        }
+                        firstChild = firstChild.nextSibling;
+                    } else {
+                        if ((firstChild as HTMLElement).classList.contains("render-node") ||
+                            (firstChild as HTMLElement).classList.contains("emoji") ||
+                            (firstChild as HTMLElement).classList.contains("img")) {
+                            range.setStartBefore(firstChild);
+                            break;
+                        }
+                        firstChild = firstChild.firstChild;
+                    }
+                }
+                let lastChild = editElement.lastChild as HTMLElement;
+                while (lastChild) {
+                    if (lastChild.nodeType === 3) {
+                        if (lastChild.textContent !== "") {
+                            range.setEnd(lastChild, lastChild.textContent.length);
+                            break;
+                        }
+                        lastChild = lastChild.previousSibling as HTMLElement;
+                    } else {
+                        if (lastChild.classList.contains("render-node") ||
+                            lastChild.classList.contains("emoji") ||
+                            lastChild.classList.contains("img") ||
+                            lastChild.tagName === "BR") {
+                            range.setEndAfter(lastChild);
+                            break;
+                        }
+                        lastChild = lastChild.lastChild as HTMLElement;
+                    }
+                }
+                // 列表回车后，左键全选无法选中
+                focusByRange(range);
+                protyle.toolbar.render(protyle, range);
+                countSelectWord(range, protyle);
+                return true;
+            }
+        }
+    }
+    if (!allowBlockSelection) {
+        // 没有块菜单的编辑器保留文字选区，供工具栏继续操作。
+        return !range.collapsed;
+    }
+    range.collapse(true);
+    hideElements(["select", "toolbar"], protyle);
+    const ids: string[] = [];
+    Array.from(protyle.wysiwyg.element.children).forEach(item => {
+        const nodeId = item.getAttribute("data-node-id");
+        if (nodeId) {
+            item.classList.add("protyle-wysiwyg--select");
+            ids.push(nodeId);
+        }
+    });
+    countBlockWord(ids, protyle);
+    return false;
+};
+
+export const getBlockRangeSelectElements = (rangeStartElement: HTMLElement, rangeEndElement: HTMLElement) =>
+    getBlockRangeSelectElementsByDOM(rangeStartElement, rangeEndElement, hasClosestBlock);
+
+export const getBlockElementsByRange = (range: Range) => {
+    const startBlockElement = hasClosestBlock(range.startContainer);
+    const endBlockElement = hasClosestBlock(range.endContainer);
+    if (!startBlockElement || !endBlockElement) {
+        return [];
+    }
+    const startElement = (isInEmbedBlock(startBlockElement) || startBlockElement) as HTMLElement;
+    const endElement = (isInEmbedBlock(endBlockElement) || endBlockElement) as HTMLElement;
+    return startElement === endElement ? [startElement] :
+        getBlockRangeSelectElements(startElement, endElement).selectElements;
+};
+
+export const selectBlocksByRange = (protyle: IProtyle, range: Range) => {
+    const selectElements = getBlockElementsByRange(range);
+    if (selectElements.length === 0) {
+        return;
+    }
+    selectElements.forEach(selectElement => {
+        selectElement.classList.add("protyle-wysiwyg--select");
+        selectElement.querySelectorAll(".protyle-wysiwyg--select").forEach(item => {
+            item.classList.remove("protyle-wysiwyg--select");
+        });
+    });
+    // 将选区末端所属的已选块设为当前块，使转换后的选择支持块模式按键。
+    const currentElement = selectElements.find(item => item.contains(range.endContainer)) ||
+        selectElements[selectElements.length - 1];
+    setBlockSelectionModeElement(protyle.wysiwyg.element, currentElement);
+    range.collapse(false);
+    countBlockWord(selectElements.map(item => item.getAttribute("data-node-id")), protyle);
+};
+
+// https://github.com/siyuan-note/siyuan/issues/8196
+export const getRangeByPoint = (x: number, y: number) => {
+    const range = document.caretRangeFromPoint(x, y);
+    const imgElement = hasClosestByAttribute(range.startContainer, "data-type", "img");
+    if (imgElement) {
+        range.setStart(imgElement.nextSibling, 0);
+        range.collapse();
+    }
+    // 列表标记不承载编辑内容，拖放命中时将插入点定位到列表项正文开头。
+    const actionElement = hasClosestByClassName(range.startContainer, "protyle-action");
+    const blockElement = actionElement && hasClosestBlock(actionElement);
+    const editableElement = blockElement && getContenteditableElement(blockElement);
+    if (editableElement) {
+        range.selectNodeContents(editableElement);
+        range.collapse(true);
+    }
+    return range;
+};
+
+export const getEditorRange = (element: Element): Range => {
+    let range: Range;
+    if (getSelection().rangeCount > 0) {
+        range = getSelection().getRangeAt(0);
+        if (element === range.startContainer || element.contains(range.startContainer)) {
+            // 纵向导航建立的原子 Range 已是合法位置，读取选区时不能再次聚焦其正文。
+            const atomicOwner = getAtomicVerticalNavigationOwner(range);
+            if (atomicOwner) {
+                if (range.startContainer === atomicOwner) {
+                    return range;
+                }
+                // 对调用方保持块所有者坐标，不改写浏览器中稳定的外侧选区。
+                const ownerRange = document.createRange();
+                ownerRange.setStart(atomicOwner, 0);
+                ownerRange.collapse(true);
+                return ownerRange;
+            }
+            if (range.toString() === "" && range.startContainer.nodeType === 1) {
+                // 有时候点击编辑器头部需要矫正到第一个块中
+                if (range.startOffset === 0 && (range.startContainer as HTMLElement).classList.contains("protyle-wysiwyg")) {
+                    const focusRange = focusBlock(range.startContainer.firstChild as Element);
+                    if (focusRange) {
+                        return focusRange;
+                    }
+                }
+                // 移动端获取有偏差 https://github.com/siyuan-note/siyuan/issues/15998
+                if ((range.startContainer as Element).getAttribute("contenteditable") !== "true" &&
+                    getContenteditableElement(range.startContainer as Element)) {
+                    const blockElement = hasClosestBlock(range.startContainer);
+                    if (blockElement) {
+                        const focusRange = focusBlock(blockElement);
+                        if (focusRange) {
+                            return focusRange;
+                        }
+                    }
+                }
+            }
+            return range;
+        }
+    }
+
+    if (element.classList.contains("li") || element.classList.contains("list")) {
+        const childElement = element.querySelector("[data-node-id]");
+        if (childElement) {
+            return getEditorRange(childElement);
+        }
+    }
+
+    // 代码块过长，在代码块的下一个块前删除，代码块会滚动到顶部，因粗需要 preventScroll
+    (element as HTMLElement).focus({preventScroll: true});
+    if (!range) {
+        range = document.createRange();
+    }
+
+    let targetElement;
+    if (element.classList.contains("table")) {
+        // 当光标不在表格区域中时表格无法被复制 https://ld246.com/article/1650510736504
+        targetElement = element.querySelector("th") || element.querySelector("td");
+    } else {
+        targetElement = getContenteditableElement(element);
+        if (!targetElement) {
+            const type = element.getAttribute("data-type");
+            if (type === "NodeThematicBreak") {
+                targetElement = element.firstElementChild;
+            } else if (type === "NodeBlockQueryEmbed") {
+                targetElement = element.querySelector(".protyle-cursor")?.firstChild;
+            } else if (["NodeMathBlock", "NodeHTMLBlock"].includes(type)) {
+                targetElement = element.lastElementChild.previousElementSibling?.lastElementChild?.firstChild;
+            } else if (type === "NodeVideo") {
+                targetElement = element.firstElementChild.firstChild;
+            } else if (type === "NodeAudio") {
+                targetElement = element.firstElementChild.lastChild;
+            }
+        } else if (targetElement.tagName === "TABLE") {
+            // 文档中开头为表格，获取错误 https://ld246.com/article/1663408335459?r=88250
+            targetElement = targetElement.querySelector("th") || element.querySelector("td");
+        }
+    }
+    range.setStart(targetElement || element, 0);
+    range.collapse(true);
+    return range;
+};
+
+interface IClosestSelectionRect {
+    rect: DOMRect;
+    rectIndex: number;
+    left: number;
+    verticalDistance: number;
+    horizontalDistance: number;
+}
+
+const getDistanceToInterval = (value: number, start: number, end: number) => {
+    if (value < start) {
+        return start - value;
+    }
+    if (value > end) {
+        return value - end;
+    }
+    return 0;
+};
+
+const getClosestSelectionRect = (rects: DOMRectList, position: IPosition) => {
+    const rectArray = Array.from(rects);
+    const hasTextRect = rectArray.some(rect => rect.width > 0.5 && rect.height > 0.5);
+    let closest: IClosestSelectionRect | undefined;
+    rectArray.forEach((rect, rectIndex) => {
+        if (hasTextRect && (rect.width <= 0.5 || rect.height <= 0.5)) {
+            return;
+        }
+        const verticalDistance = getDistanceToInterval(position.y, rect.top, rect.bottom);
+        const horizontalDistance = getDistanceToInterval(position.x, rect.left, rect.right);
+        // 文本按行排列，优先比较垂直距离，避免较长的其他行因水平距离较近而被选中
+        if (!closest ||
+            verticalDistance < closest.verticalDistance - 0.5 ||
+            (Math.abs(verticalDistance - closest.verticalDistance) <= 0.5 &&
+                horizontalDistance < closest.horizontalDistance)) {
+            closest = {
+                rect,
+                rectIndex,
+                left: Math.max(rect.left, Math.min(position.x, rect.right)),
+                verticalDistance,
+                horizontalDistance,
+            };
+        }
+    });
+    return closest;
+};
+
+export const getSelectionPosition = (nodeElement: Element, range?: Range, useDirect = false,
+                                     position?: IPosition) => {
+    if (!range) {
+        range = getEditorRange(nodeElement);
+    }
+    if (!nodeElement.contains(range.startContainer)) {
+        return {
+            left: 0,
+            top: 0,
+        };
+    }
+    let cursorRect;
+    if (range.getClientRects().length === 0) {
+        if (range.startContainer.nodeType === 3) {
+            // 空行时，会出现没有 br 的情况，需要根据父元素 <p> 获取位置信息
+            const parentRects = range.startContainer.parentElement?.getClientRects();
+            // 连续粘贴图片时
+            const previousRects = (range.startContainer as Element).previousElementSibling?.getClientRects();
+            if (parentRects.length > 0 || previousRects.length > 0) {
+                if (parentRects.length === 0 || (previousRects &&
+                    previousRects.length > 0 && parentRects[0].top < previousRects[previousRects.length - 1].bottom)) {
+                    cursorRect = {
+                        left: previousRects[previousRects.length - 1].left,
+                        top: previousRects[previousRects.length - 1].bottom,
+                    };
+                } else {
+                    cursorRect = parentRects[0];
+                }
+            } else {
+                return {
+                    left: 0,
+                    top: 0,
+                };
+            }
+        } else {
+            const children = (range.startContainer as Element).children;
+            if (children[range.startOffset] &&
+                children[range.startOffset].getClientRects().length > 0) {
+                // markdown 模式回车
+                cursorRect = children[range.startOffset].getClientRects()[0];
+            } else if (range.startContainer.childNodes.length > 0) {
+                // in table or code block
+                const cloneRange = range.cloneRange();
+                if (range.startOffset === 0) {
+                    let firstNode = range.startContainer.childNodes[range.startOffset] || range.startContainer.firstChild;
+                    while (firstNode) {
+                        if (firstNode.textContent === "" && firstNode.nodeType === 3) {
+                            if (!firstNode.previousSibling) {
+                                break;
+                            }
+                            firstNode = firstNode.previousSibling;
+                        } else {
+                            break;
+                        }
+                    }
+                    range.selectNodeContents(firstNode);
+                    range.collapse(true);
+                } else {
+                    let lastNode = range.startContainer.childNodes[range.startOffset] || range.startContainer.lastChild;
+                    while (lastNode) {
+                        if (lastNode.textContent === "" && lastNode.nodeType === 3) {
+                            if (!lastNode.previousSibling) {
+                                break;
+                            }
+                            lastNode = lastNode.previousSibling;
+                        } else {
+                            break;
+                        }
+                    }
+                    range.selectNodeContents(lastNode);
+                    range.collapse(false);
+                }
+                cursorRect = range.getClientRects()[0];
+                range.setEnd(cloneRange.endContainer, cloneRange.endOffset);
+                range.setStart(cloneRange.startContainer, cloneRange.startOffset);
+            } else {
+                cursorRect = (range.startContainer as HTMLElement).getClientRects()[0];
+            }
+            if (!cursorRect) {
+                let parentElement = range.startContainer.childNodes[range.startOffset] as HTMLElement;
+                if (!parentElement) {
+                    parentElement = range.startContainer.childNodes[range.startOffset - 1] as HTMLElement;
+                }
+                if (!parentElement) {
+                    cursorRect = range.getBoundingClientRect();
+                } else {
+                    while (!parentElement.getClientRects || (parentElement.getClientRects && parentElement.getClientRects().length === 0)) {
+                        parentElement = parentElement.parentElement;
+                    }
+                    cursorRect = parentElement.getClientRects()[0];
+                }
+            }
+        }
+    } else {
+        const rects = range.getClientRects(); // 由于长度过长折行，光标在行首时有多个 rects https://github.com/siyuan-note/siyuan/issues/6156
+        if (range.toString()) {
+            if (useDirect) {
+                if (position) {
+                    const closest = getClosestSelectionRect(rects, position);
+                    if (closest) {
+                        const textRects = Array.from(rects).filter(rect => rect.width > 0.5 && rect.height > 0.5);
+                        const compareRects = textRects.length > 0 ? textRects : Array.from(rects);
+                        const maxTop = Math.max(...compareRects.map(rect => rect.top));
+                        const minBottom = Math.min(...compareRects.map(rect => rect.bottom));
+                        const isSingleLine = maxTop <= minBottom + 0.5;
+                        let isBottom = false;
+                        if (!isSingleLine) {
+                            const centers = compareRects.map(rect => (rect.top + rect.bottom) / 2);
+                            const closestCenter = (closest.rect.top + closest.rect.bottom) / 2;
+                            isBottom = Math.abs(Math.max(...centers) - closestCenter) <
+                                Math.abs(closestCenter - Math.min(...centers));
+                        }
+                        return {
+                            left: closest.left,
+                            top: isBottom ? closest.rect.bottom : closest.rect.top,
+                            isBottom,
+                            rectIndex: closest.rectIndex,
+                        };
+                    }
+                }
+                const selection = window.getSelection() as Selection & {
+                    direction: "forward" | "backward" | "none"
+                };
+                // 判断选择方向
+                const isBackward = (selection && "direction" in selection && selection.direction !== "none") ?
+                    selection.direction === "backward"
+                    : range.startContainer === selection?.focusNode && range.startOffset === selection?.focusOffset;
+                const isBottom = !isBackward && rects[0].top !== rects[rects.length - 1].top;
+                return {
+                    // 向左选择：使用第一个矩形的左边界；向右选择：使用最后一个矩形的右边界
+                    left: isBackward ? rects[0].left : rects[rects.length - 1].right,
+                    // 如果向右选择时有多个垂直位置不同的矩形：使用最后一个矩形的下边界；否则使用第一个矩形的上边界
+                    top: isBottom ? rects[rects.length - 1].bottom : rects[0].top,
+                    isBottom,
+                    rectIndex: isBottom ? rects.length - 1 : 0,
+                };
+            } else {
+                return {    // 选中多行不应遮挡第一行 https://github.com/siyuan-note/siyuan/issues/7541
+                    left: rects[rects.length - 1].left,
+                    top: rects[0].top
+                };
+            }
+        } else {
+            return {    // 代码块首 https://github.com/siyuan-note/siyuan/issues/13113
+                left: rects[rects.length - 1].left,
+                top: rects[rects.length - 1].top
+            };
+        }
+    }
+
+    return {
+        left: cursorRect.left,
+        top: cursorRect.top,
+    };
+};
+
+export interface IBlockRange {
+    blockElement: HTMLElement;
+    editableElement: Element;
+    range: Range;
+    start: number;
+    end: number;
+}
+
+export const getBlockRanges = (editorElement: Element, selectedRange: Range, excludeTypes: string[] = []) => {
+    const ranges: IBlockRange[] = [];
+    if (!editorElement.contains(selectedRange.startContainer) || !editorElement.contains(selectedRange.endContainer)) {
+        return ranges;
+    }
+    const startElement = hasClosestBlock(selectedRange.startContainer);
+    const endElement = hasClosestBlock(selectedRange.endContainer);
+    const blockWalker = document.createTreeWalker(editorElement, NodeFilter.SHOW_ELEMENT, {
+        acceptNode(node) {
+            const element = node as HTMLElement;
+            if (element.getAttribute("data-type") === "NodeBlockQueryEmbed" || isHiddenTabContent(element)) {
+                return NodeFilter.FILTER_REJECT;
+            }
+            return element.hasAttribute("data-node-id") ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+        }
+    });
+    let item = startElement as HTMLElement;
+    if (item) {
+        blockWalker.currentNode = item;
+    } else {
+        item = blockWalker.nextNode() as HTMLElement;
+    }
+    let rangeStarted = false;
+    while (item) {
+        const rangeTarget = item === startElement ? selectedRange.startContainer :
+            (item === endElement ? selectedRange.endContainer : undefined);
+        const editableElement = getContenteditableElement(item, rangeTarget);
+        const isEditableBlock = editableElement && hasClosestBlock(editableElement) === item;
+        const intersects = isEditableBlock && selectedRange.intersectsNode(editableElement);
+        if (intersects) {
+            rangeStarted = true;
+        } else if (rangeStarted && isEditableBlock) {
+            break;
+        }
+        if (!intersects || excludeTypes.includes(item.getAttribute("data-type")) || isInEmbedBlock(item)) {
+            item = blockWalker.nextNode() as HTMLElement;
+            continue;
+        }
+        if (item.getAttribute("data-type") === "NodeTable") {
+            editableElement.querySelectorAll("th, td").forEach(cellElement => {
+                if (!selectedRange.intersectsNode(cellElement)) {
+                    return;
+                }
+                const cellRange = document.createRange();
+                cellRange.selectNodeContents(cellElement);
+                if (cellElement.contains(selectedRange.startContainer)) {
+                    cellRange.setStart(selectedRange.startContainer, selectedRange.startOffset);
+                }
+                if (cellElement.contains(selectedRange.endContainer)) {
+                    cellRange.setEnd(selectedRange.endContainer, selectedRange.endOffset);
+                }
+                if (!cellRange.collapsed) {
+                    const position = getSelectionOffset(cellElement, undefined, cellRange);
+                    ranges.push({
+                        blockElement: item,
+                        editableElement: cellElement,
+                        range: cellRange,
+                        start: position.start,
+                        end: position.end,
+                    });
+                }
+            });
+        } else {
+            const blockRange = document.createRange();
+            blockRange.selectNodeContents(editableElement);
+            if (item === startElement && editableElement.contains(selectedRange.startContainer)) {
+                blockRange.setStart(selectedRange.startContainer, selectedRange.startOffset);
+            }
+            if (item === endElement && editableElement.contains(selectedRange.endContainer)) {
+                blockRange.setEnd(selectedRange.endContainer, selectedRange.endOffset);
+            }
+            if (!blockRange.collapsed) {
+                const position = getSelectionOffset(editableElement, undefined, blockRange);
+                ranges.push({
+                    blockElement: item,
+                    editableElement,
+                    range: blockRange,
+                    start: position.start,
+                    end: position.end,
+                });
+            }
+        }
+        item = blockWalker.nextNode() as HTMLElement;
+    }
+    return ranges;
+};
+
+// 记录选区位置，供撤销或重做回放完成后恢复。
+export const getUndoFocusContext = (editorElement: Element, range?: Range, ignoreZWSP = false):
+Record<string, string> | undefined => {
+    if (!range || !editorElement.contains(range.startContainer) || !editorElement.contains(range.endContainer)) {
+        return undefined;
+    }
+    const startBlockElement = hasClosestBlock(range.startContainer);
+    const endBlockElement = hasClosestBlock(range.endContainer);
+    if (!startBlockElement || !endBlockElement || (!ignoreZWSP && startBlockElement !== endBlockElement)) {
+        return undefined;
+    }
+    const startEditableElement = getContenteditableElement(startBlockElement, range.startContainer) || startBlockElement;
+    const endEditableElement = getContenteditableElement(endBlockElement, range.endContainer) || endBlockElement;
+    if (!startEditableElement.contains(range.startContainer) || !endEditableElement.contains(range.endContainer)) {
+        return undefined;
+    }
+    const startBlockElements = Array.from(editorElement.querySelectorAll(
+        `[data-node-id="${startBlockElement.getAttribute("data-node-id")}"]`
+    ));
+    const endBlockElements = startBlockElement === endBlockElement ? startBlockElements : Array.from(
+        editorElement.querySelectorAll(`[data-node-id="${endBlockElement.getAttribute("data-node-id")}"]`)
+    );
+    const startRange = range.cloneRange();
+    startRange.collapse(true);
+    const endRange = range.cloneRange();
+    endRange.collapse(false);
+    const start = getSelectionOffset(startEditableElement, undefined, startRange, ignoreZWSP).start;
+    const end = getSelectionOffset(endEditableElement, undefined, endRange, ignoreZWSP).end;
+    const context: Record<string, string> = {
+        undoFocusId: startBlockElement.getAttribute("data-node-id"),
+        undoFocusIndex: startBlockElements.indexOf(startBlockElement).toString(),
+        undoFocusStart: start.toString(),
+        undoFocusStartAtEnd: isEndOfBlock(startRange).toString(),
+        undoFocusEndId: endBlockElement.getAttribute("data-node-id"),
+        undoFocusEndIndex: endBlockElements.indexOf(endBlockElement).toString(),
+        undoFocusEnd: end.toString(),
+        undoFocusIgnoreZWSP: ignoreZWSP.toString(),
+    };
+    if (startBlockElement === endBlockElement && startBlockElement.getAttribute("data-type") === "NodeTable") {
+        const cell = hasClosestByTag(range.startContainer, "TH") || hasClosestByTag(range.startContainer, "TD");
+        if (cell && cell.contains(range.endContainer)) {
+            context.undoFocusTableCell = Array.from(startBlockElement.querySelectorAll("th, td")).indexOf(cell).toString();
+            const offset = getSelectionOffset(cell, undefined, range, ignoreZWSP);
+            context.undoFocusStart = offset.start.toString();
+            context.undoFocusEnd = offset.end.toString();
+        }
+    }
+    if (startEditableElement.classList.contains("callout-title") &&
+        endEditableElement.classList.contains("callout-title")) {
+        context.undoFocusCalloutTitle = "true";
+    }
+    const startEmbedElement = isInEmbedBlock(startBlockElement, false);
+    if (startEmbedElement && startEmbedElement === isInEmbedBlock(endBlockElement, false)) {
+        context.undoFocusEmbedId = startEmbedElement.getAttribute("data-node-id");
+    }
+    return context;
+};
+
+export const restoreFocusContext = (protyle: IProtyle, context: Pick<IOperation["context"],
+    "undoFocusStart" | "undoFocusEnd" | "undoFocusId" | "undoFocusIndex" | "undoFocusEndId" |
+    "undoFocusEndIndex" | "undoFocusEmbedId" | "undoFocusTableCell" | "undoFocusTableSelection" |
+    "undoFocusCalloutTitle" | "undoFocusIgnoreZWSP" | "undoFocusCollapseToEnd" | "undoFocusStartAtEnd">) => {
+    const start = Number(context.undoFocusStart);
+    const end = Number(context.undoFocusEnd);
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < 0) {
+        return false;
+    }
+    // 副本序号以整个编辑器为参照保存；恢复时保留同一候选顺序，再校验嵌入作用域。
+    const startBlockElements = Array.from(protyle.wysiwyg.element.querySelectorAll(
+        `[data-node-id="${context.undoFocusId}"]`
+    ));
+    const startBlockElement = getUndoFocusElement(
+        startBlockElements,
+        context.undoFocusIndex,
+        item => !isInEmbedBlock(item, false),
+    );
+    const endBlockElements = context.undoFocusEndId === context.undoFocusId ?
+        startBlockElements : Array.from(protyle.wysiwyg.element.querySelectorAll(
+            `[data-node-id="${context.undoFocusEndId || context.undoFocusId}"]`
+        ));
+    const endBlockElement = getUndoFocusElement(
+        endBlockElements,
+        context.undoFocusEndIndex,
+        item => !isInEmbedBlock(item, false),
+    );
+    if (!startBlockElement || !endBlockElement) {
+        return false;
+    }
+    // 持久 ID 可对应多个嵌入副本；作用域由已定位的端点所属显示实例确定。
+    const startEmbed = isInEmbedBlock(startBlockElement, false);
+    const endEmbed = isInEmbedBlock(endBlockElement, false);
+    if (startEmbed !== endEmbed || (context.undoFocusEmbedId &&
+        (!startEmbed || startEmbed.getAttribute("data-node-id") !== context.undoFocusEmbedId))) {
+        return false;
+    }
+    if (startBlockElement === endBlockElement && restoreListMindmapFocus(protyle.wysiwyg.element, startBlockElement, context)) {
+        return true;
+    }
+    if (context.undoFocusTableCell !== undefined && startBlockElement.getAttribute("data-type") === "NodeTable") {
+        const index = Number(context.undoFocusTableCell);
+        const cell = Number.isInteger(index) && index >= 0 ?
+            startBlockElement.querySelectorAll<HTMLTableCellElement>("th, td")[index] : undefined;
+        if (!cell || cell.classList.contains("fn__none")) {
+            return false;
+        }
+        const cellRange = context.undoFocusTableSelection === undefined ?
+            focusByOffset(cell, context.undoFocusCollapseToEnd === "true" ? end : start, end, false,
+                context.undoFocusIgnoreZWSP === "true") : undefined;
+        if (cellRange && cell.getAttribute("contenteditable") !== "false") {
+            // 按单元格定位，避免空单元格与前一单元格末尾的文本偏移相同。
+            focusByRange(cellRange);
+            return true;
+        }
+        try {
+            const saved = context.undoFocusTableSelection === undefined ? undefined : JSON.parse(context.undoFocusTableSelection);
+            if (context.undoFocusTableSelection !== undefined && (!saved ||
+                ![saved.startIndex, saved.endIndex, saved.start, saved.end].every(value =>
+                    Number.isInteger(value) && value >= 0) || typeof saved.backward !== "boolean")) {
+                return false;
+            }
+            // 单元格内部块没有持久 ID，使用单元格序号和片段内选区恢复编辑位置。
+            const range = cellRange || document.createRange();
+            if (!cellRange) {
+                range.selectNodeContents(cell);
+                range.collapse(true);
+            }
+            cell.tabIndex = -1;
+            cell.focus({preventScroll: true});
+            focusByRange(range);
+            void import("../render/tableCellRichEditor").then(async module => {
+                if (cell.isConnected && cell.contains(getSelection().focusNode)) {
+                    await module.openTableCellRichEditor(protyle, cell, undefined, undefined, saved);
+                    if (getSelection().rangeCount) {
+                        protyle.toolbar.range = getSelection().getRangeAt(0);
+                    }
+                }
+            });
+            return true;
+        } catch (_error) {
+            return false;
+        }
+    }
+    const startFocusElement = context.undoFocusCalloutTitle === "true" ?
+        startBlockElement.querySelector(".callout-title") : startBlockElement;
+    const endFocusElement = context.undoFocusCalloutTitle === "true" ?
+        endBlockElement.querySelector(".callout-title") : endBlockElement;
+    if (!startFocusElement || !endFocusElement) {
+        return false;
+    }
+    const ignoreZWSP = context.undoFocusIgnoreZWSP === "true";
+    if (context.undoFocusCollapseToEnd === "true") {
+        return !!focusByOffset(endFocusElement, end, end, true, ignoreZWSP);
+    }
+    if (startBlockElement === endBlockElement) {
+        return !!focusByOffset(startFocusElement, start, end, true, ignoreZWSP);
+    }
+    let startRange: Range;
+    if (context.undoFocusStartAtEnd === "true") {
+        startRange = document.createRange();
+        setLastNodeRange(getContenteditableElement(startFocusElement) || startFocusElement, startRange);
+        startRange.collapse(true);
+    } else {
+        startRange = focusByOffset(startFocusElement, start, start, false, ignoreZWSP) as Range;
+    }
+    let endRange: Range;
+    if (ignoreZWSP && end === 0) {
+        endRange = document.createRange();
+        endRange.setStart(getContenteditableElement(endFocusElement) || endFocusElement, 0);
+        endRange.collapse(true);
+    } else {
+        endRange = focusByOffset(endFocusElement, 0, end, false, ignoreZWSP) as Range;
+    }
+    if (!startRange || !endRange) {
+        return false;
+    }
+    const range = document.createRange();
+    range.setStart(startRange.startContainer, startRange.startOffset);
+    range.setEnd(endRange.endContainer, endRange.endOffset);
+    if (range.endContainer.nodeType === Node.TEXT_NODE) {
+        let endOffset = range.endOffset;
+        while (endOffset > 0 && range.endContainer.textContent[endOffset - 1] === Constants.ZWSP) {
+            endOffset--;
+        }
+        range.setEnd(range.endContainer, endOffset);
+    }
+    focusByRange(range);
+    return true;
+};
+
+// 在撤销或重做操作全部应用后，根据保存的位置重建选区。
+export const restoreUndoFocus = (protyle: IProtyle, operations: IOperation[]) => {
+    const operation = operations.find(item => item.context?.undoFocusId);
+    return operation ? restoreFocusContext(protyle, operation.context) : false;
+};
+
+export const setFirstNodeRange = (editElement: Element, range: Range) => {
+    if (!editElement) {
+        return range;
+    }
+    let firstChild = editElement.firstChild as HTMLElement;
+    while (firstChild && firstChild.nodeType !== 3 && !firstChild.classList.contains("render-node")) {
+        if (firstChild.classList.contains("img")) { // https://ld246.com/article/1665360254842
+            range.setStartBefore(firstChild);
+            return range;
+        }
+        firstChild = firstChild.firstChild as HTMLElement;
+    }
+    if (!firstChild) {
+        range.selectNodeContents(editElement);
+        return range;
+    }
+    if (firstChild.nodeType !== 3 && firstChild.classList.contains("render-node")) {
+        range.setStartBefore(firstChild);
+    } else {
+        range.setStart(firstChild, 0);
+    }
+    return range;
+};
+
+export const focusByOffset = (container: Element, start: number, end: number, isFocus = true, ignoreZWSP = false) => {
+    if (!container) {
+        return false;
+    }
+    // 空块无法 focus
+    const editElement = getContenteditableElement(container);
+    if (editElement) {
+        container = editElement;
+    } else if (isFocus && (isNotEditBlock(container) || container.classList.contains("av"))) {
+        return focusBlock(container);
+    }
+    const range = createRangeByOffsets(container, start, end, ignoreZWSP, getContenteditableElement(container) || null);
+    if (isFocus && range) {
+        focusByRange(range);
+    }
+    return range;
+};
+
+export const setInsertWbrHTML = (nodeElement: HTMLElement, range: Range, protyle: IProtyle) => {
+    const editElement = getContenteditableElement(nodeElement, range.startContainer);
+    if (!editElement) {
+        return;
+    }
+    if (nodeElement.classList.contains("table")) {
+        const cellElement = hasClosestByTag(range.startContainer, "TH") || hasClosestByTag(range.startContainer, "TD");
+        if (cellElement) {
+            const offset = getSelectionOffset(cellElement, nodeElement, range);
+            const cloneNode = nodeElement.cloneNode(true) as HTMLElement;
+            // 通过单元格在行内的索引在克隆树中定位对应单元格，避免在原 DOM 上增删 class 残留 class="" https://github.com/siyuan-note/siyuan/issues/18084
+            const cellIndex = Array.from(cellElement.parentElement.children).indexOf(cellElement);
+            const rowIndex = Array.from(nodeElement.querySelector("table").rows).indexOf(cellElement.parentElement as HTMLTableRowElement);
+            const cloneCellElement = cloneNode.querySelector("table").rows[rowIndex].cells[cellIndex];
+            const cloneRange = focusByOffset(cloneCellElement, offset.end, offset.end, false);
+            if (cloneRange) {
+                cloneRange.insertNode(document.createElement("wbr"));
+            }
+            protyle.wysiwyg.lastHTMLs[nodeElement.getAttribute("data-node-id")] = cloneNode.outerHTML;
+        }
+    } else {
+        const offset = getSelectionOffset(editElement, nodeElement, range);
+        const cloneNode = nodeElement.cloneNode(true) as HTMLElement;
+        const cloneEditElement = editElement.classList.contains("callout-title") ?
+            cloneNode.querySelector(".callout-title") : cloneNode;
+        const cloneRange = focusByOffset(cloneEditElement, offset.end, offset.end, false);
+        if (cloneRange) {
+            cloneRange.insertNode(document.createElement("wbr"));
+        }
+        protyle.wysiwyg.lastHTMLs[nodeElement.getAttribute("data-node-id")] = cloneNode.outerHTML;
+    }
+};
+
+export const focusByWbr = (element: Element, range: Range, preserveWbr = false) => {
+    const wbrElements = element.querySelectorAll("wbr");
+    if (wbrElements.length === 0) {
+        return;
+    }
+    // 没找到 wbr 产生多个的地方，先顶顶
+    wbrElements.forEach((item, index) => {
+        if (index !== 0) {
+            item.remove();
+        }
+    });
+    const wbrElement = wbrElements[0];
+    if (!wbrElement.previousElementSibling) {
+        if (wbrElement.previousSibling) {
+            // text<wbr>
+            range.setStart(wbrElement.previousSibling, wbrElement.previousSibling.textContent.length);
+        } else if (wbrElement.nextSibling) {
+            if (wbrElement.nextSibling.nodeType === 3) {
+                const semanticPrefixLength = getSemanticMarkerPrefixLengthForNode(wbrElement.nextSibling);
+                if (semanticPrefixLength > 0) {
+                    range.setStart(wbrElement.nextSibling, semanticPrefixLength);
+                } else if (wbrElement.nextSibling.textContent === Constants.ZWSP) {
+                    // <wbr>零宽空格text
+                    range.setStart(wbrElement.nextSibling, 1);
+                } else {
+                    // <wbr>text
+                    range.setStart(wbrElement.nextSibling, 0);
+                }
+            } else {
+                // <wbr><span>a</span>
+                range.setStartAfter(wbrElement);
+            }
+        } else {
+            // 内容为空
+            range.setStart(wbrElement.parentElement, 0);
+        }
+    } else {
+        const wbrPreviousSibling = hasPreviousSibling(wbrElement);
+        if (wbrPreviousSibling && wbrElement.previousElementSibling === wbrPreviousSibling) {
+            if (wbrElement.previousElementSibling.lastChild?.nodeType === 3) {
+                // <em>text</em><wbr> 需把光标放在里面，因为 chrome 点击后也是默认在里面
+                range.setStart(wbrElement.previousElementSibling.lastChild, wbrElement.previousElementSibling.lastChild.textContent.length);
+            } else if (wbrPreviousSibling.nodeType !== 3 && (wbrPreviousSibling as HTMLElement).classList.contains("img")) {
+                // <img><wbr>, 删除图片后的唯一的一个字符
+                range.setStartAfter(wbrPreviousSibling);
+            } else {
+                // <span class="hljs-function"><span class="hljs-keyword">fun</span></span>
+                range.setStartBefore(wbrElement);
+            }
+        } else {
+            // <em>text</em>text<wbr>
+            range.setStart(wbrElement.previousSibling, wbrElement.previousSibling.textContent.length);
+        }
+    }
+    range.collapse(true);
+    if (!preserveWbr) {
+        wbrElement.remove();
+    }
+    focusByRange(range);
+    return range;
+};
+
+export const focusBlock = (element: Element, parentElement?: HTMLElement, toStart = true,
+                           focusAVTitle = false): false | Range => {
+    if (!element) {
+        return false;
+    }
+
+    // hr、嵌入块、数学公式、iframe、音频、视频、图表渲染块等，删除段落块后，光标位置矫正 https://github.com/siyuan-note/siyuan/issues/4143
+    if (element.classList.contains("render-node") || element.classList.contains("iframe") ||
+        element.classList.contains("hr") || element.classList.contains("av") ||
+        element.classList.contains("custom-block")) {
+        const range = document.createRange();
+        const type = element.getAttribute("data-type");
+        let setRange = false;
+        if (type === "NodeThematicBreak") {
+            range.selectNodeContents(element.firstElementChild);
+            setRange = true;
+        } else if (type === "NodeBlockQueryEmbed") {
+            genEmbedRenderFrame(element);
+            range.setStart(element.querySelector(".protyle-cursor").firstChild, 0);
+            range.collapse(true);
+            setRange = true;
+        } else if (type === "NodeMathBlock") {
+            genRenderFrame(element);
+            range.setStart(element.firstElementChild.lastElementChild.firstChild, 0);
+            setRange = true;
+        } else if (type === "NodeHTMLBlock") {
+            range.setStart(element.lastElementChild.previousElementSibling.lastElementChild.firstChild, 0);
+            range.collapse(true);
+            setRange = true;
+        } else if (type === "NodeIFrame" || type === "NodeWidget" || type === "NodeCustomBlock") {
+            range.setStart(element, 0);
+            setRange = true;
+        } else if (type === "NodeVideo") {
+            range.setStart(element.firstElementChild.firstChild, 0);
+            setRange = true;
+        } else if (type === "NodeAudio") {
+            range.setStart(element.firstElementChild.lastChild, 0);
+            setRange = true;
+        } else if (type === "NodeCodeBlock") {
+            range.selectNodeContents(element);
+            range.collapse(true);
+            setRange = true;
+        } else if (type === "NodeAttributeView") {
+            /// #if !MOBILE
+            const titleElement = focusAVTitle && element.querySelector(".av__title:not(.fn__none)");
+            if (titleElement) {
+                range.selectNodeContents(titleElement);
+                range.collapse(toStart);
+                setRange = true;
+            } else {
+                const cursorElement = element.querySelector(".av__cursor");
+                if (cursorElement) {
+                    range.setStart(cursorElement.firstChild, 0);
+                    setRange = true;
+                } else {
+                    element.setAttribute("data-need-focus", focusAVTitle ? "zoom" : "true");
+                    return false;
+                }
+            }
+            /// #else
+            return false;
+            /// #endif
+        }
+        if (setRange) {
+            focusByRange(range);
+            return range;
+        } else {
+            focusSideBlock(element);
+            return false;
+        }
+    }
+    let cursorElement;
+    if (toStart) {
+        cursorElement = getContenteditableElement(element);
+    } else {
+        Array.from(element.querySelectorAll('[contenteditable="true"]')).reverse().find(item => {
+            if (!isHiddenTabContent(item) && item.getBoundingClientRect().width > 0) {
+                cursorElement = item;
+                return true;
+            }
+        });
+    }
+    if (cursorElement) {
+        if (cursorElement.getAttribute("contenteditable") === "false") {
+            return false;
+        }
+        if (cursorElement.tagName === "TABLE") {
+            if (toStart) {
+                cursorElement = cursorElement.querySelector("th, td");
+            } else {
+                const cellElements = cursorElement.querySelectorAll("th, td");
+                cursorElement = cellElements[cellElements.length - 1];
+            }
+        }
+        let range;
+        if (toStart) {
+            // 需要定位到第一个 child https://github.com/siyuan-note/siyuan/issues/5930
+            range = setFirstNodeRange(cursorElement, getEditorRange(cursorElement));
+            range.collapse(true);
+        } else {
+            let focusHljs = false;
+            // 定位到末尾 https://github.com/siyuan-note/siyuan/issues/5982
+            if (element.getAttribute("data-type") === "NodeCodeBlock") {
+                // 代码块末尾定位需在 /n 之前 https://github.com/siyuan-note/siyuan/issues/9141，https://github.com/siyuan-note/siyuan/issues/9189
+                let lastNode = cursorElement.lastChild;
+                if (!lastNode) {
+                    // 粘贴 ``` 报错
+                    cursorElement.innerHTML = "\n";
+                    lastNode = cursorElement.lastChild;
+                }
+                if (lastNode.textContent === "" && lastNode.nodeType === 3) {
+                    lastNode = hasPreviousSibling(cursorElement.lastChild) as HTMLElement;
+                }
+                if (lastNode && lastNode.textContent.endsWith("\n")) {
+                    // https://github.com/siyuan-note/siyuan/issues/11362
+                    if (lastNode.nodeType === 1) {
+                        lastNode = lastNode.lastChild;
+                        while (lastNode && lastNode.textContent.indexOf("\n") === -1) {
+                            lastNode = lastNode.previousSibling;
+                        }
+                    }
+                    range = getEditorRange(cursorElement);
+                    range.setStart(lastNode, lastNode.textContent.length - 1);
+                    focusHljs = true;
+                }
+            }
+            if (!focusHljs) {
+                range = setLastNodeRange(cursorElement, getEditorRange(cursorElement));
+            }
+            range.collapse(false);
+        }
+        focusByRange(range);
+        return range;
+    } else if (parentElement) {
+        parentElement.focus();
+    } else {
+        // li 下面为 hr、嵌入块、数学公式、iframe、音频、视频、图表渲染块等时递归处理
+        if (isContainerBlock(element)) {
+            return focusBlock(element.querySelector("[data-node-id]"), parentElement, toStart);
+        }
+    }
+    return false;
+};
+
+export const focusSideBlock = (updateElement: Element) => {
+    if (updateElement.getAttribute("data-node-id")) {
+        let sideBlockElement;
+        let collapse;
+        if (updateElement.nextElementSibling &&
+            !updateElement.nextElementSibling.classList.contains("protyle-attr") // 用例 https://ld246.com/article/1661928364696
+        ) {
+            collapse = true;
+            sideBlockElement = getNextBlock(updateElement) as HTMLElement;
+        } else if (updateElement.previousElementSibling) {
+            collapse = false;
+            sideBlockElement = getPreviousBlock(updateElement) as HTMLElement;
+        }
+        if (!sideBlockElement) {
+            sideBlockElement = updateElement;
+        }
+        focusBlock(sideBlockElement, undefined, collapse);
+        return;
+    }
+    const range = getEditorRange(updateElement);
+    if (updateElement.nextSibling) {
+        range.selectNodeContents(updateElement.nextSibling);
+        range.collapse(true);
+    } else if (updateElement.previousSibling) {
+        range.selectNodeContents(updateElement.previousSibling);
+        range.collapse(false);
+    }
+    focusByRange(range);
+};

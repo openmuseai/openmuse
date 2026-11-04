@@ -1,0 +1,13 @@
+name: openmuse_registry_provider
+description: User-selected standard MCP Registry providers for OpenMuse market plugins.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+

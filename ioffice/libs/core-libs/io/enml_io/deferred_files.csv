@@ -1,0 +1,2 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/io/enml_io/src/cn/wps/enml/io/ENMLDocument.java,cn/wps/enml/io,Plan too large: 64 entries (48 unresolved deps exceed limit 30). File deferred.,2026-05-22

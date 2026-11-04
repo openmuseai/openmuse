@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_png_paints_pixels,PNG 画出非灰块,1×1 PNG bytes_b64,中心像素不是占位灰 0xFFCCCCCC,pp-18;pr-05,02,samples/libs/ppt/ppt_render,spec
+2,02_function_jpeg_paints,JPEG 画出,最小 JPEG b64,非占位灰,01,—,samples/libs/ppt/ppt_render,spec
+3,03_function_missing_b64_placeholder,无字节占位不 crash,DrawImage 无 bytes_b64,灰框描边，不 crash,01,—,samples/libs/ppt/ppt_render,spec

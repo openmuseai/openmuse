@@ -1,0 +1,759 @@
+const assert = require("node:assert/strict");
+const {readFileSync, mkdtempSync, rmSync} = require("node:fs");
+const path = require("node:path");
+const os = require("node:os");
+
+const rendererSource = () => {
+    const ts = require("typescript");
+    const read = name => readFileSync(path.join(__dirname, "../src/protyle", `${name}.ts`), "utf8");
+    const extract = (file, names) => {
+        const source = ts.createSourceFile(file, read(file), ts.ScriptTarget.Latest, true);
+        const statements = source.statements.filter(statement => ts.isVariableStatement(statement) &&
+            statement.declarationList.declarations.some(declaration => names.includes(declaration.name.getText(source))));
+        assert.equal(statements.length, names.length, file);
+        return statements.map(statement => statement.getText(source)).join("\n");
+    };
+    const wysiwyg = ts.createSourceFile("index.ts", read("wysiwyg/index"), ts.ScriptTarget.Latest, true);
+    const handlers = {};
+    const inputMethods = [];
+    let isAfterInlineMath;
+    let persistComposition;
+    const visit = node => {
+        if (ts.isCallExpression(node) && node.expression.getText(wysiwyg) === "this.element.addEventListener" &&
+            ["compositionstart", "compositionend", "input", "focusout", "keyup"].includes(node.arguments[0]?.text)) {
+            handlers[node.arguments[0].text] = node.arguments[1].getText(wysiwyg);
+        }
+        if (ts.isMethodDeclaration(node) && ["scheduleInput", "runInput", "flushPendingInput", "destroy"].includes(node.name.getText(wysiwyg))) {
+            inputMethods.push(node.getText(wysiwyg));
+        }
+        if (ts.isVariableDeclaration(node) && node.name.getText(wysiwyg) === "isAfterInlineMath") {
+            isAfterInlineMath = node.initializer.getText(wysiwyg);
+        }
+        if (ts.isBinaryExpression(node) && node.left.getText(wysiwyg) === "this.persistComposition") {
+            if (ts.isArrowFunction(node.right)) {
+                persistComposition = node.right.getText(wysiwyg);
+            }
+        }
+        ts.forEachChild(node, visit);
+    };
+    visit(wysiwyg);
+    assert.deepEqual(Object.keys(handlers).sort(), ["compositionend", "compositionstart", "focusout", "input", "keyup"]);
+    assert.ok(isAfterInlineMath);
+    assert.ok(persistComposition);
+    const mobile = ts.createSourceFile("keyboardToolbar.ts", read("../mobile/util/keyboardToolbar"), ts.ScriptTarget.Latest, true);
+    let mobileInput;
+    let mobileSelectionChange;
+    const visitMobile = node => {
+        if (ts.isCallExpression(node) && node.expression.getText(mobile) === "document.addEventListener" &&
+            node.arguments[0]?.text === "input" && node.arguments[1].getText(mobile).includes("isCommittedTextInput")) {
+            mobileInput = node.arguments[1].getText(mobile);
+        }
+        if (ts.isCallExpression(node) && node.expression.getText(mobile) === "document.addEventListener" &&
+            node.arguments[0]?.text === "selectionchange" && node.arguments[1].getText(mobile).includes("rememberAndroidTableCellSelectAll")) {
+            mobileSelectionChange = node.arguments[1].getText(mobile);
+        }
+        ts.forEachChild(node, visitMobile);
+    };
+    visitMobile(mobile);
+    assert.ok(mobileInput);
+    assert.ok(mobileSelectionChange);
+    // 使用实际事件入口、平台检测、选区恢复和事务生成，只替代网络及无关渲染。
+    const source = `
+        const Constants = {ZWSP: "\\u200b", ATTRIBUTE_EDITING: "data-editing"};
+        const dayjs = () => ({format: () => "20260923000000"});
+        const getAVTemplateInteractiveElement = () => false;
+        const getBlockSelectionModeElement = () => undefined;
+        const revealTabsForTarget = () => {};
+        const getAtomicVerticalNavigationOwner = () => undefined;
+        const getSemanticMarkerPrefixLengthForNode = () => 0;
+        const normalizeInlineElementBoundaries = () => {};
+        const renderLongTextRuns = () => {};
+        const bindVerticalNavigationReset = () => {};
+        let editorRangeReads = 0;
+        export const getEditorRangeReads = () => editorRangeReads;
+        class InputQueue {
+            pendingInputTimeouts = new Map();
+            runningInputTasks = new Set();
+            ${inputMethods.join("\n")}
+        }
+        const cleanListMindmapHTML = html => html, cleanHeadingNumberHTML = html => html;
+        const cleanTableCellRichHTML = html => html, cleanBlockSelectionModeHTML = html => html;
+        const transaction = (protyle, doOperations, undoOperations) => {
+            protyle.transactions.push({doOperations, undoOperations});
+        };
+        const input = (...args) => {
+            const [protyle, block] = args;
+            protyle.inputs++;
+            if (protyle.nativeInput) {
+                return inputBlock(...args);
+            }
+            const id = block.getAttribute("data-node-id");
+            updateTransaction(protyle, block, protyle.wysiwyg.lastHTMLs[id]);
+            protyle.wysiwyg.lastHTMLs[id] = block.outerHTML;
+        };
+        const hideElements = () => {}, isMobile = () => false, fixAdjacentTags = () => {};
+        const normalizeSemanticInlineElements = () => {}, removeEmptySemanticInlineElement = () => {};
+        const normalizeInlineFontFamilyStyle = value => value, restoreInlineElementBoundaryHTML = value => value;
+        const turnIntoTaskList = () => false, headingTurnIntoList = () => false;
+        const getBlockquoteContext = () => undefined, isProtyleListItemFirstParagraph = () => false;
+        const mathRender = () => {};
+    ` + read("wysiwyg/compositionCaret") + read("wysiwyg/compositionInput") + read("util/browserCompatibility") +
+        extract("util/compatibility", ["isIOSDevice", "isMac"]) +
+        extract("util/hasClosest", ["hasClosestBlock", "hasClosestByAttribute", "hasClosestByClassName",
+            "hasClosestByTag", "isBlockElement"]) +
+        extract("wysiwyg/getBlock", ["getContenteditableElement", "isContainerBlock", "isNotEditBlock", "hasPreviousSibling", "hasNextSibling"]) +
+        (extract("util/selectionOffsets", ["focusByRange", "getSelectionOffset", "selectIsEditor", "searchNode", "setLastNodeRange", "createRangeByOffsets", "getDOMOffset"]) +
+        extract("util/selection", ["getEditorRange", "focusByOffset", "setInsertWbrHTML", "focusByWbr"]))
+            .replace("export const getEditorRange =", "const readEditorRange =") +
+        "const getEditorRange = (element) => { editorRangeReads++; return readEditorRange(element); };" +
+        extract("wysiwyg/keydown", ["keydown"]) +
+        extract("util/tableVirtualizationDOM", ["TABLE_VIRTUAL_ID"]) +
+        extract("wysiwyg/transaction", ["updateTransaction"]) +
+        extract("wysiwyg/input", ["inputBlock", "normalizeInlineFontFamilyStyles", "updateInput", "updateGutterAfterInput"]) + `
+        export function checkMobileInput(event, editor) {
+            let composing = true;
+            const scrollRequests = [];
+            const getCurrentEditor = () => editor;
+            const scrollKeyboardSelectionIntoView = force => scrollRequests.push(force);
+            (${mobileInput})(event);
+            return {composing, scrollRequests};
+        }
+        export function checkMobileSelection(composing) {
+            const calls = [];
+            const rememberAndroidTableCellSelectAll = () => calls.push("remember");
+            const preserveAndroidBoundedSelection = () => {calls.push("preserve"); return false;};
+            const getCurrentEditor = () => undefined;
+            const renderKeyboardToolbar = () => calls.push("render");
+            const preventRender = false;
+            (${mobileSelectionChange})();
+            return calls;
+        }
+        export function bind(protyle) {
+            let isComposition = false, beforeInputCompositionHandled = false;
+            let recoveredComposition = false, compositionSnapshot;
+            let lineBreakUndoContext, forwardDeleteUndoContext;
+            let compositionRange, crossBlockComposition;
+            let compositionInputText = "";
+            const isAfterInlineMath = ${isAfterInlineMath};
+            const pending = [];
+            Object.assign(protyle.wysiwyg, new InputQueue());
+            for (const name of ["scheduleInput", "runInput", "flushPendingInput", "destroy"]) {
+                protyle.wysiwyg[name] = InputQueue.prototype[name];
+            }
+            protyle.toolbar = {};
+            protyle.hint = {handleRefBracketInput: () => false};
+            const handlers = (function () {
+                this.persistComposition = ${persistComposition};
+                return {start: ${handlers.compositionstart}, end: ${handlers.compositionend},
+                    input: ${handlers.input}, focusout: ${handlers.focusout}, keyup: ${handlers.keyup}};
+            }).call(protyle.wysiwyg);
+            protyle.wysiwyg.element.addEventListener("compositionstart", handlers.start);
+            protyle.wysiwyg.element.addEventListener("compositionend", event => pending.push(handlers.end(event)));
+            protyle.wysiwyg.element.addEventListener("input", handlers.input);
+            protyle.wysiwyg.element.addEventListener("focusout", handlers.focusout);
+            protyle.wysiwyg.element.addEventListener("keyup", handlers.keyup);
+            keydown(protyle, protyle.wysiwyg.element);
+            return () => Promise.all(pending.splice(0));
+        }
+    `;
+    return ts.transpileModule(source, {compilerOptions: {
+        target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS,
+    }}).outputText;
+};
+
+const runCases = async () => {
+    const assert = require("node:assert/strict");
+    const errors = [];
+    const onError = event => errors.push(event.message || String(event.reason));
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onError);
+    const {bind, focusByRange, focusByWbr, setInsertWbrHTML, captureCompositionText} = window.compositionCaret;
+    const profiles = [
+        {name: "iPhone", platform: "iPhone", userAgent: "iPhone", maxTouchPoints: 5, ios: true},
+        {name: "iPad", platform: "iPad", userAgent: "iPad", maxTouchPoints: 5, ios: true},
+        {name: "iPad desktop UA", platform: "MacIntel", userAgent: "Macintosh", maxTouchPoints: 5, ios: true},
+        {name: "macOS", platform: "MacIntel", userAgent: "Macintosh", maxTouchPoints: 0, ios: false},
+        {name: "Windows", platform: "Win32", userAgent: "Windows", maxTouchPoints: 0, ios: false},
+        {name: "Android", platform: "Linux armv8l", userAgent: "Android", maxTouchPoints: 5, ios: false},
+    ];
+    const setPlatform = profile => {
+        for (const key of ["platform", "userAgent", "maxTouchPoints"]) {
+            Object.defineProperty(navigator, key, {configurable: true, value: profile[key]});
+        }
+    };
+    const paragraph = content => '<div class="p" data-node-id="p" data-type="NodeParagraph">' +
+        `<div contenteditable="true">${content}</div><div contenteditable="false" class="protyle-attr"></div></div>`;
+    const table = content => '<div class="table" data-node-id="table" data-type="NodeTable">' +
+        `<table contenteditable="true"><tbody><tr><td>${content}</td><td>other</td></tr></tbody></table></div>`;
+    const setup = (html, profile = profiles[2]) => {
+        setPlatform(profile);
+        document.body.innerHTML = `<div class="protyle-wysiwyg" contenteditable="true">${html}</div>`;
+        const element = document.body.firstElementChild;
+        const protyle = {wysiwyg: {element, lastHTMLs: {}, escapeInline() {},
+            runInput(callback) { return Promise.resolve(callback()); }}, transactions: [], inputs: 0};
+        const flush = bind(protyle);
+        const setRange = (node, start, end = start) => {
+            const range = document.createRange();
+            range.setStart(node, start);
+            range.setEnd(node, end);
+            focusByRange(range);
+            return range;
+        };
+        const start = (node, offset, end = offset) => {
+            const range = setRange(node, offset, end);
+            const block = (node.nodeType === 1 ? node : node.parentElement).closest("[data-node-id]");
+            setInsertWbrHTML(block, range, protyle);
+            element.dispatchEvent(new CompositionEvent("compositionstart", {bubbles: true}));
+        };
+        const finish = async (data = "") => {
+            element.dispatchEvent(new CompositionEvent("compositionend", {bubbles: true, data}));
+            await flush();
+        };
+        const assertCaret = (node, offset) => {
+            assert.equal(getSelection().rangeCount, 1);
+            const range = getSelection().getRangeAt(0);
+            assert.equal(range.collapsed, true);
+            assert.equal(range.startContainer, node);
+            assert.equal(range.startOffset, offset);
+        };
+        return {element, protyle, start, finish, flush, setRange, assertCaret};
+    };
+    let cases = 0;
+    for (const profile of profiles) {
+        for (const trigger of ["、", "：", ":", "【", "（", "/"]) {
+            const f = setup(paragraph("base"), profile);
+            f.protyle.hint.enableExtend = false;
+            const node = f.element.querySelector('[contenteditable="true"]').firstChild;
+            f.start(node, node.length);
+            node.appendData(trigger);
+            getSelection().removeAllRanges();
+            const reads = window.compositionCaret.getEditorRangeReads();
+            f.element.dispatchEvent(new InputEvent("input", {
+                bubbles: true, inputType: "insertCompositionText", data: trigger, isComposing: true,
+            }));
+            assert.equal(f.protyle.hint.enableExtend, trigger !== "：", profile.name + trigger);
+            assert.equal(window.compositionCaret.getEditorRangeReads(), reads, profile.name);
+            assert.equal(getSelection().rangeCount, 0);
+            assert.equal(f.protyle.inputs, 0);
+            f.setRange(node, node.length);
+            await f.finish(trigger);
+            assert.equal(f.protyle.inputs, 1);
+            assert.equal(f.protyle.hint.enableExtend, trigger !== "：");
+            cases++;
+        }
+    }
+    for (const profile of profiles) {
+        const f = setup(paragraph('<span data-type="inline-math" contenteditable="false">x</span>base'), profile);
+        const node = f.element.querySelector('[contenteditable="true"]').lastChild;
+        f.start(node, node.length);
+        node.appendData("candidate");
+        const reads = window.compositionCaret.getEditorRangeReads();
+        // 模拟 Android 输入法更新候选区时短暂暴露的根节点选区和空选区。
+        for (const empty of [false, true]) {
+            if (empty) {
+                getSelection().removeAllRanges();
+            } else {
+                getSelection().collapse(f.element, 0);
+            }
+            f.element.dispatchEvent(new InputEvent("input", {
+                bubbles: true, inputType: "insertCompositionText", data: "candidate", isComposing: true,
+            }));
+            f.element.dispatchEvent(new KeyboardEvent("keydown", {bubbles: true, key: "Process", isComposing: true}));
+            f.element.dispatchEvent(new KeyboardEvent("keyup", {bubbles: true, key: "Process", isComposing: true}));
+            assert.equal(window.compositionCaret.getEditorRangeReads(), reads, profile.name);
+            assert.equal(getSelection().rangeCount, empty ? 0 : 1);
+            if (!empty) {
+                assert.equal(getSelection().anchorNode, f.element);
+                assert.equal(getSelection().anchorOffset, 0);
+            }
+        }
+        f.setRange(node, node.length);
+        await f.finish("candidate");
+        assert.equal(f.protyle.inputs, 1);
+        assert.match(f.protyle.transactions[0].doOperations[0].data, /basecandidate/);
+        cases++;
+    }
+    for (const action of ["flush", "focusout", "destroy"]) {
+        const f = setup(paragraph('<span data-type="inline-math" contenteditable="false">x</span>base'));
+        const node = f.element.querySelector('[contenteditable="true"]').lastChild;
+        f.element.focus();
+        f.start(node, node.length);
+        node.appendData("pending");
+        f.setRange(node, node.length);
+        const html = f.element.innerHTML;
+        if (action === "flush") {
+            await f.protyle.wysiwyg.flushPendingInput();
+            f.assertCaret(node, node.length);
+        } else if (action === "focusout") {
+            const outside = document.createElement("button");
+            document.body.append(outside);
+            outside.focus();
+            f.element.dispatchEvent(new FocusEvent("focusout", {bubbles: true, relatedTarget: outside}));
+            await Promise.resolve();
+            assert.equal(document.activeElement, outside);
+        } else {
+            f.protyle.wysiwyg.destroy();
+        }
+        assert.equal(f.protyle.transactions.length, 1, action);
+        assert.equal(f.element.innerHTML, html, "saving must not rewrite the IME's live DOM");
+        const saved = f.protyle.transactions[0];
+        assert.match(saved.doOperations[0].data, /basepending/);
+        assert.match(saved.undoOperations[0].data, /base<wbr>/);
+        assert.equal(f.protyle.inputs, 0, "saving candidates must not trigger parsing or rendering");
+        await f.protyle.wysiwyg.flushPendingInput();
+        assert.equal(f.protyle.transactions.length, 1, "unchanged candidates must not submit twice");
+        if (action !== "destroy") {
+            // 候选取消仍需写回原文，不能让提前保存的候选留在磁盘中。
+            node.data = "base";
+            f.setRange(node, node.length);
+            await f.finish("");
+            assert.equal(f.protyle.transactions.length, 2);
+            assert.doesNotMatch(f.protyle.transactions[1].doOperations[0].data, /pending/);
+            assert.match(f.protyle.transactions[1].undoOperations[0].data, /basepending/);
+        }
+        cases++;
+    }
+    {
+        const f = setup(paragraph("base"), profiles[3]);
+        const node = f.element.querySelector('[contenteditable="true"]').firstChild;
+        f.setRange(node, node.length);
+        f.element.dispatchEvent(new CompositionEvent("compositionstart", {bubbles: true}));
+        node.appendData("pending");
+        f.setRange(node, node.length);
+        await f.protyle.wysiwyg.flushPendingInput();
+        assert.equal(f.protyle.transactions.length, 1, "missing keydown snapshots must not lose text");
+        assert.match(f.protyle.transactions[0].undoOperations[0].data, />base</);
+        await f.finish("pending");
+        assert.equal(f.protyle.transactions.length, 1, "normal completion must not duplicate a checkpoint");
+        node.appendData("next");
+        f.setRange(node, node.length);
+        f.element.dispatchEvent(new InputEvent("input", {bubbles: true, inputType: "insertText", data: "next"}));
+        await f.protyle.wysiwyg.flushPendingInput();
+        assert.equal(f.protyle.transactions.length, 2);
+        assert.match(f.protyle.transactions[1].doOperations[0].data, /basependingnext/);
+        cases++;
+    }
+    {
+        const f = setup(paragraph("first") + paragraph("second").replace('data-node-id="p"', 'data-node-id="other"'));
+        const first = f.element.firstElementChild.querySelector('[contenteditable="true"]').firstChild;
+        const second = f.element.lastElementChild.querySelector('[contenteditable="true"]').firstChild;
+        f.start(first, first.length);
+        first.appendData("pending");
+        f.start(second, second.length);
+        assert.equal(f.protyle.transactions.length, 1, "a new composition must preserve the interrupted one");
+        assert.match(f.protyle.transactions[0].doOperations[0].data, /firstpending/);
+        second.appendData("next");
+        f.setRange(second, second.length);
+        await f.finish("next");
+        assert.equal(f.protyle.transactions.length, 2);
+        assert.match(f.protyle.transactions[1].doOperations[0].data, /secondnext/);
+        cases++;
+    }
+    {
+        const {checkMobileInput} = window.compositionCaret;
+        assert.deepEqual(checkMobileInput({isComposing: false, inputType: "insertText"}),
+            {composing: false, scrollRequests: []});
+        assert.deepEqual(checkMobileInput({isComposing: true, inputType: "insertText"}),
+            {composing: true, scrollRequests: []});
+        assert.deepEqual(checkMobileInput({isComposing: false, inputType: "insertCompositionText"}),
+            {composing: true, scrollRequests: []});
+        const element = document.createElement("div");
+        const target = element.appendChild(document.createElement("span"));
+        const editor = {protyle: {wysiwyg: {element}}};
+        assert.deepEqual(checkMobileInput({isComposing: false, inputType: "insertText", target}, editor),
+            {composing: false, scrollRequests: [true]});
+        assert.deepEqual(checkMobileInput({isComposing: false, inputType: "insertText", target: document.body}, editor),
+            {composing: false, scrollRequests: []});
+        assert.deepEqual(window.compositionCaret.checkMobileSelection(true), []);
+        assert.deepEqual(window.compositionCaret.checkMobileSelection(false), ["remember", "preserve", "render"]);
+        cases++;
+    }
+    {
+        const f = setup(paragraph("first") + paragraph("second").replace('data-node-id="p"', 'data-node-id="other"'));
+        const first = f.element.firstElementChild.querySelector('[contenteditable="true"]').firstChild;
+        const second = f.element.lastElementChild.querySelector('[contenteditable="true"]').firstChild;
+        f.start(first, first.length);
+        first.appendData("pending");
+        f.setRange(second, second.length);
+        setInsertWbrHTML(f.element.lastElementChild, getSelection().getRangeAt(0), f.protyle);
+        second.appendData("next");
+        f.setRange(second, second.length);
+        f.element.dispatchEvent(new InputEvent("input", {bubbles: true, inputType: "insertText", data: "next", isComposing: false}));
+        await f.protyle.wysiwyg.flushPendingInput();
+        assert.equal(f.protyle.transactions.length, 2);
+        assert.match(f.protyle.transactions[0].doOperations[0].data, /firstpending/);
+        assert.match(f.protyle.transactions[0].undoOperations[0].data, /first<wbr>/);
+        assert.match(f.protyle.transactions[1].doOperations[0].data, /secondnext/);
+        assert.match(f.protyle.transactions[1].undoOperations[0].data, /second<wbr>/);
+        await f.finish("");
+        assert.equal(f.protyle.transactions.length, 2);
+        f.assertCaret(second, second.length);
+        cases++;
+    }
+    for (const profile of profiles) {
+        for (const inputType of ["insertText", "insertReplacementText", "insertFromComposition"]) {
+            const f = setup(paragraph("base"), profile);
+            const node = f.element.querySelector('[contenteditable="true"]').firstChild;
+            const type = (text, type, isComposing) => {
+                node.appendData(text);
+                f.setRange(node, node.length);
+                const event = new InputEvent("input", {bubbles: true, data: text, inputType: type, isComposing});
+                // Chromium 会清空其不支持的输入类型，这里保留其他浏览器提交事件的类型。
+                if (event.inputType !== type) {
+                    Object.defineProperty(event, "inputType", {value: type});
+                }
+                f.element.dispatchEvent(event);
+            };
+            f.start(node, node.length);
+            type("a", "insertCompositionText", true);
+            type("b", "insertCompositionText", false);
+            type("c", "insertText", true);
+            await new Promise(resolve => setTimeout(resolve, 0));
+            assert.equal(f.protyle.inputs, 0, "candidate updates must not be committed");
+            f.element.dispatchEvent(new FocusEvent("focusout", {bubbles: true}));
+            // 模拟普通按键覆盖撤销快照，恢复时仍需保留组合输入开始前的内容。
+            setInsertWbrHTML(f.element.firstElementChild, getSelection().getRangeAt(0), f.protyle);
+            type("d", inputType, false);
+            await f.protyle.wysiwyg.flushPendingInput();
+            assert.equal(f.protyle.inputs, 1, `${profile.name}: ${inputType}`);
+            assert.equal(f.protyle.transactions.length, 1);
+            const saved = f.protyle.transactions[0];
+            assert.match(saved.doOperations[0].data, /baseabcd/);
+            assert.match(saved.undoOperations[0].data, /base<wbr>/);
+            assert.doesNotMatch(saved.undoOperations[0].data, /basea/);
+            await f.finish("");
+            await f.finish("abcd");
+            assert.equal(f.protyle.inputs, 1, "late end must not submit twice");
+            assert.equal(f.protyle.transactions.length, 1);
+            f.assertCaret(node, node.length);
+            type("e", "insertText", false);
+            await f.protyle.wysiwyg.flushPendingInput();
+            assert.equal(f.protyle.inputs, 2);
+            assert.match(f.protyle.transactions[1].doOperations[0].data, /baseabcde/);
+            f.start(node, node.length);
+            type("f", "insertCompositionText", true);
+            await f.finish("f");
+            await f.protyle.wysiwyg.flushPendingInput();
+            assert.equal(f.protyle.inputs, 3, "next composition must finish normally");
+            f.element.firstElementChild.outerHTML = saved.undoOperations[0].data;
+            focusByWbr(f.element, document.createRange());
+            assert.equal(f.element.textContent, "base");
+            f.element.firstElementChild.outerHTML = saved.doOperations[0].data;
+            assert.equal(f.element.textContent, "baseabcd");
+            cases++;
+        }
+    }
+    for (const profile of profiles) {
+        const f = setup(paragraph("前后"), profile);
+        const node = f.element.querySelector('[contenteditable="true"]').firstChild;
+        f.start(node, 1);
+        node.insertData(1, "你好");
+        f.setRange(node, 3);
+        await f.finish();
+        f.assertCaret(node, profile.ios ? 3 : 1);
+        assert.equal(node.data, "前你好后", profile.name);
+        assert.equal(f.protyle.transactions.length, 1);
+        const saved = f.protyle.transactions[0];
+        assert.match(saved.doOperations[0].data, /前你好后/);
+        assert.match(saved.undoOperations[0].data, /前<wbr>后/);
+        f.element.firstElementChild.outerHTML = saved.undoOperations[0].data;
+        focusByWbr(f.element, document.createRange());
+        assert.equal(f.element.textContent, "前后");
+        f.assertCaret(f.element.querySelector('[contenteditable="true"]').firstChild, 1);
+        f.element.firstElementChild.outerHTML = saved.doOperations[0].data;
+        assert.equal(f.element.textContent, "前你好后");
+        assert.equal(f.element.querySelectorAll("wbr").length, 0);
+        cases++;
+    }
+    for (const selected of [false, true]) {
+        const f = setup(paragraph("前选中后"));
+        const node = f.element.querySelector('[contenteditable="true"]').firstChild;
+        f.start(node, 1, selected ? 3 : 1);
+        if (selected) {
+            node.deleteData(1, 2);
+        }
+        node.insertData(1, "ni");
+        node.deleteData(1, 2);
+        f.setRange(node, node.length);
+        await f.finish();
+        f.assertCaret(node, 1);
+        assert.equal(node.data, selected ? "前后" : "前选中后");
+        assert.equal(f.protyle.transactions.length, selected ? 1 : 0);
+        if (selected) {
+            f.element.firstElementChild.outerHTML = f.protyle.transactions[0].undoOperations[0].data;
+            focusByWbr(f.element, document.createRange());
+            assert.equal(f.element.textContent, "前选中后");
+        }
+        cases++;
+    }
+    for (const retained of [false, true]) {
+        const f = setup(table("前后"));
+        const cells = f.element.querySelectorAll("td");
+        const node = cells[0].firstChild;
+        f.start(node, 1);
+        cells[1].textContent = "changed elsewhere";
+        if (retained) {
+            node.insertData(1, "你好");
+            f.setRange(node, 3);
+        } else {
+            f.setRange(cells[1].firstChild, 0);
+        }
+        await f.finish();
+        f.assertCaret(node, retained ? 3 : 1);
+        cases++;
+    }
+    for (const retained of [false, true]) {
+        const f = setup(paragraph('<span contenteditable="false" data-type="inline-math"></span>\u200b后'));
+        const editable = f.element.querySelector('[contenteditable="true"]');
+        const node = editable.lastChild;
+        f.start(node, 1);
+        editable.firstChild.innerHTML = '<span class="katex">newly rendered formula</span>';
+        f.element.querySelector(".protyle-attr").textContent = "new attribute";
+        if (retained) {
+            node.insertData(1, "你好");
+        }
+        f.setRange(node, retained ? 3 : node.length);
+        await f.finish();
+        f.assertCaret(node, retained ? 3 : 1);
+        cases++;
+    }
+    for (const retained of [false, true]) {
+        const f = setup(paragraph(""));
+        const editable = f.element.querySelector('[contenteditable="true"]');
+        f.start(editable, 0);
+        editable.append(document.createTextNode(retained ? "你好" : "\u200b"));
+        f.setRange(editable.firstChild, editable.firstChild.length);
+        await f.finish();
+        f.assertCaret(retained ? editable.firstChild : editable, retained ? 2 : 0);
+        cases++;
+    }
+    {
+        const f = setup(paragraph("前选中后"));
+        const node = f.element.querySelector('[contenteditable="true"]').firstChild;
+        f.start(node, 1, 3);
+        node.replaceData(1, 2, "你好");
+        f.setRange(node, 3);
+        await f.finish();
+        f.assertCaret(node, 3);
+        assert.match(f.protyle.transactions[0].undoOperations[0].data, /前选中<wbr>后/);
+        cases++;
+    }
+    {
+        const f = setup(paragraph('前<span style="font-weight: bold">后</span>'));
+        const editable = f.element.querySelector('[contenteditable="true"]');
+        f.start(editable, 1);
+        const text = document.createTextNode("你好");
+        editable.insertBefore(text, editable.lastChild);
+        f.setRange(text, 2);
+        await f.finish();
+        f.assertCaret(text, 2);
+        cases++;
+    }
+    {
+        const f = setup(paragraph("前后"));
+        const node = f.element.querySelector('[contenteditable="true"]').firstChild;
+        const range = f.setRange(node, 1);
+        const hasRetainedText = captureCompositionText(node.parentElement, range);
+        node.insertData(1, "你好");
+        assert.equal(hasRetainedText(f.setRange(node, 0)), false);
+        assert.equal(hasRetainedText(f.setRange(node, 1, 3)), false);
+        assert.equal(hasRetainedText(f.setRange(node, 3)), true);
+        node.parentElement.remove();
+        assert.equal(hasRetainedText(range), false);
+        cases++;
+    }
+    {
+        const f = setup(table("前后"));
+        const cells = f.element.querySelectorAll("td");
+        const range = f.setRange(cells[0].firstChild, 1);
+        range.setEnd(cells[1].firstChild, 2);
+        assert.equal(captureCompositionText(cells[0], range), undefined);
+        cases++;
+    }
+    {
+        const f = setup(paragraph("前后"));
+        const node = f.element.querySelector('[contenteditable="true"]').firstChild;
+        f.start(node, 1);
+        node.insertData(1, "你好");
+        f.setRange(node, 3);
+        await f.finish("你好");
+        f.assertCaret(node, 3);
+        assert.equal(f.protyle.inputs, 1);
+        cases++;
+    }
+    // 回放 Windows 原生建议先删除前缀、再连续提交组合事件的顺序，使用实际解析和光标恢复。
+    window.siyuan = {config: {editor: {markdown: {}}}, storage: {}};
+    const lute = window.Lute.New();
+    ["SetTextMark", "SetHTMLTag2TextMark", "SetBlockRef", "SetSpin", "SetProtyleWYSIWYG", "SetKramdownIAL"]
+        .forEach(method => lute[method](true));
+    const nativeFixture = markdown => {
+        const f = setup(lute.Md2BlockDOM(markdown), profiles[4]);
+        f.protyle.lute = lute;
+        f.protyle.nativeInput = true;
+        f.protyle.hint.render = () => {};
+        return f;
+    };
+    const deletePrefix = f => {
+        const block = f.element.firstElementChild;
+        const editable = block.querySelector('[contenteditable="true"]');
+        const node = editable.querySelector('[data-type="strong"]')?.firstChild || editable.firstChild;
+        const range = f.setRange(node, node.length - 2, node.length);
+        setInsertWbrHTML(block, range, f.protyle);
+        range.deleteContents();
+        f.element.dispatchEvent(new InputEvent("input", {
+            bubbles: true, inputType: "deleteContentBackward", data: null, isComposing: false,
+        }));
+        return node;
+    };
+    const beginCandidate = (f, node) => {
+        f.element.dispatchEvent(new CompositionEvent("compositionstart", {bubbles: true, data: ""}));
+        const offset = node.length;
+        for (let update = 0; update < 2; update++) {
+            if (update > 0) {
+                f.setRange(node, offset, node.length);
+            }
+            node.replaceData(offset, node.length - offset, "test ");
+            f.setRange(node, node.length);
+            f.element.dispatchEvent(new InputEvent("input", {
+                bubbles: true, inputType: "insertCompositionText", data: "test ", isComposing: true,
+            }));
+        }
+    };
+    const assertText = (f, expected) => {
+        assert.equal(f.element.firstElementChild.querySelector('[contenteditable="true"]').textContent, expected);
+    };
+    const assertCaretPrefix = (f, expected) => {
+        const caret = getSelection().getRangeAt(0);
+        assert.equal(caret.collapsed, true);
+        const beforeCaret = caret.cloneRange();
+        beforeCaret.selectNodeContents(f.element.firstElementChild.querySelector('[contenteditable="true"]'));
+        beforeCaret.setEnd(caret.startContainer, caret.startOffset);
+        assert.equal(beforeCaret.toString(), expected);
+    };
+    for (const markdown of ["this is a te", "# this is a te", "this is a **te**"]) {
+        for (const delayed of [false, true]) {
+            const f = nativeFixture(markdown);
+            const node = deletePrefix(f);
+            beginCandidate(f, node);
+            if (delayed) {
+                const html = f.element.innerHTML;
+                await new Promise(resolve => setTimeout(resolve, 10));
+                assert.equal(f.protyle.inputs, 0, "pending deletion must not parse live candidates");
+                assert.equal(f.element.innerHTML, html);
+            }
+            await f.finish("test ");
+            await f.protyle.wysiwyg.flushPendingInput();
+            await new Promise(resolve => setTimeout(resolve, 10));
+            assertCaretPrefix(f, "this is a test ");
+            assert.equal(f.protyle.inputs, 1, "completion must parse only once");
+            assert.equal(f.protyle.transactions.length, 1);
+            assertText(f, "this is a test ");
+            const saved = f.protyle.transactions[0];
+            f.element.innerHTML = saved.undoOperations[0].data;
+            focusByWbr(f.element, document.createRange());
+            assertText(f, "this is a te");
+            assertCaretPrefix(f, "this is a te");
+            if (markdown.includes("**")) {
+                assert.equal(f.element.querySelector('[data-type="strong"]').textContent, "te");
+            }
+            f.element.innerHTML = saved.doOperations[0].data;
+            focusByWbr(f.element, document.createRange());
+            assertText(f, "this is a test ");
+            assertCaretPrefix(f, "this is a test ");
+            if (markdown.includes("**")) {
+                assert.equal(f.element.querySelector('[data-type="strong"]').textContent, "test ");
+            }
+            cases++;
+        }
+    }
+    for (const checkpoint of [false, true]) {
+        const f = nativeFixture("this is a te");
+        const node = deletePrefix(f);
+        beginCandidate(f, node);
+        if (checkpoint) {
+            const html = f.element.innerHTML;
+            await f.protyle.wysiwyg.flushPendingInput();
+            assert.equal(f.protyle.inputs, 0, "saving a candidate must not run the deleted input task");
+            assert.equal(f.element.innerHTML, html);
+        }
+        node.deleteData(10, 5);
+        f.setRange(node, 10);
+        await f.finish("");
+        await f.protyle.wysiwyg.flushPendingInput();
+        await new Promise(resolve => setTimeout(resolve, 10));
+        assertText(f, "this is a ");
+        f.assertCaret(node, 10);
+        for (const saved of [...f.protyle.transactions].reverse()) {
+            f.element.innerHTML = saved.undoOperations[0].data;
+        }
+        focusByWbr(f.element, document.createRange());
+        assertText(f, "this is a te");
+        cases++;
+    }
+    {
+        const f = nativeFixture("this is a te\n\nother");
+        deletePrefix(f);
+        const second = f.element.lastElementChild.querySelector('[contenteditable="true"]').firstChild;
+        f.start(second, second.length);
+        await f.finish("");
+        await f.protyle.wysiwyg.flushPendingInput();
+        assert.equal(f.protyle.inputs, 1, "another block's deletion must still be parsed");
+        assertText(f, "this is a ");
+        assert.equal(f.element.lastElementChild.querySelector('[contenteditable="true"]').textContent, "other");
+        assert.ok(f.protyle.transactions.some(saved => saved.doOperations[0].data.includes("this is a")));
+        cases++;
+    }
+    await new Promise(resolve => setTimeout(resolve, 0));
+    window.removeEventListener("error", onError);
+    window.removeEventListener("unhandledrejection", onError);
+    assert.deepEqual(errors, [], "event handlers must not throw");
+    return cases;
+};
+
+const runElectron = async () => {
+    const {app, BrowserWindow} = require("electron");
+    app.setPath("userData", process.argv[2]);
+    app.commandLine.appendSwitch("disable-gpu");
+    await app.whenReady();
+    const win = new BrowserWindow({show: false, webPreferences: {nodeIntegration: true, contextIsolation: false}});
+    let exitCode = 0;
+    try {
+        await win.loadURL("data:text/html,<html><body></body></html>");
+        await win.webContents.executeJavaScript(readFileSync(path.join(__dirname, "../stage/protyle/js/lute/lute.min.js"), "utf8"));
+        await win.webContents.executeJavaScript(`window.compositionCaret = {};
+            new Function("exports", ${JSON.stringify(rendererSource())})(window.compositionCaret);`);
+        const cases = await win.webContents.executeJavaScript(`(${runCases.toString()})()`);
+        console.log(`Composition caret: ${cases} Electron cases passed`);
+    } catch (error) {
+        console.error(error);
+        exitCode = 1;
+    } finally {
+        win.destroy();
+        app.exit(exitCode);
+    }
+};
+
+if (process.versions.electron && process.type === "browser") {
+    runElectron().catch(error => {
+        console.error(error);
+        require("electron").app.exit(1);
+    });
+} else {
+    require("node:test").it("preserves composition carets, native text suggestions, cancellation and undo", {
+        skip: process.platform === "linux" && !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY,
+        timeout: 45000,
+    }, async () => {
+        const env = {...process.env};
+        delete env.ELECTRON_RUN_AS_NODE;
+        const profile = mkdtempSync(path.join(os.tmpdir(), "siyuan-composition-caret-"));
+        try {
+            const {stdout} = await require("node:util").promisify(require("node:child_process").execFile)(
+                require("electron"), [__filename, profile], {env, windowsHide: true, timeout: 40000});
+            assert.match(stdout, /Composition caret: 95 Electron cases passed/);
+        } finally {
+            assert.equal(path.dirname(path.resolve(profile)), path.resolve(os.tmpdir()));
+            assert.ok(path.basename(profile).startsWith("siyuan-composition-caret-"));
+            rmSync(profile, {recursive: true, force: true, maxRetries: 5, retryDelay: 100});
+        }
+    });
+}

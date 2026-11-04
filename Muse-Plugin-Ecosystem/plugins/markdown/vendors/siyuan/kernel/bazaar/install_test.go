@@ -1,0 +1,287 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package bazaar
+
+import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+)
+
+func TestIncPackageDownloadsIncludesPackageName(t *testing.T) {
+	oldServer := bazaarDownloadCloudServer
+	t.Cleanup(func() { bazaarDownloadCloudServer = oldServer })
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if "/apis/siyuan/bazaar/addBazaarPackageDownloadCount" != request.URL.Path {
+			t.Fatalf("unexpected download statistics path: %s", request.URL.Path)
+		}
+		body := map[string]any{}
+		if err := json.NewDecoder(request.Body).Decode(&body); nil != err {
+			t.Fatal(err)
+		}
+		if "system" != body["systemID"] || "owner/repo" != body["repo"] || "sample" != body["packageName"] {
+			t.Fatalf("unexpected download statistics body: %+v", body)
+		}
+		writer.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+	bazaarDownloadCloudServer = func() string { return server.URL }
+
+	incPackageDownloads("https://github.com/owner/repo", "sample", "system")
+}
+
+// TestInstallPackageNameMismatch 校验下载包声明的名称与请求安装的包名不一致时拒绝安装
+// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-rpx2-p6hp-x5gj
+func TestInstallPackageNameMismatch(t *testing.T) {
+	useInstallTempDir(t)
+	installPath := filepath.Join(t.TempDir(), "plugins", "trusted-plugin")
+	if err := os.MkdirAll(installPath, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(installPath, "index.js"), []byte("original"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 请求安装 trusted-plugin，但下载内容是另一个包（attacker-plugin）
+	data := buildInstallPackageArchive(t, map[string]string{
+		"plugin.json": `{"name":"attacker-plugin","version":"1.0.0"}`,
+		"index.js":    "malicious",
+	})
+	if err := installPackage(data, installPath, "plugins", "trusted-plugin", true); err == nil {
+		t.Fatal("expected name mismatch to be rejected")
+	}
+	content, err := os.ReadFile(filepath.Join(installPath, "index.js"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(content) != "original" {
+		t.Fatalf("existing package files were overwritten: %q", content)
+	}
+}
+
+// TestInstallPackageRefusesOverwriteWithoutUpdate 校验非更新安装时拒绝覆盖非空目标目录
+// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-rpx2-p6hp-x5gj
+func TestInstallPackageRefusesOverwriteWithoutUpdate(t *testing.T) {
+	useInstallTempDir(t)
+	installPath := filepath.Join(t.TempDir(), "plugins", "sample")
+	if err := os.MkdirAll(installPath, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(installPath, "index.js"), []byte("original"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	data := buildInstallPackageArchive(t, map[string]string{
+		"plugin.json": `{"name":"sample","version":"2.0.0"}`,
+		"index.js":    "new",
+	})
+	if err := installPackage(data, installPath, "plugins", "sample", false); err == nil {
+		t.Fatal("expected overwriting non-empty directory without update to be rejected")
+	}
+	content, err := os.ReadFile(filepath.Join(installPath, "index.js"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(content) != "original" {
+		t.Fatalf("existing package files were overwritten: %q", content)
+	}
+}
+
+// TestInstallPackageUpdateReplacesDirectory 校验在线更新会整目录替换，新版本已删除的文件不会残留
+// https://github.com/siyuan-note/siyuan/issues/18933
+func TestInstallPackageUpdateReplacesDirectory(t *testing.T) {
+	useInstallTempDir(t)
+	installPath := filepath.Join(t.TempDir(), "plugins", "sample")
+	if err := os.MkdirAll(installPath, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(installPath, "stale.js"), []byte("stale"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(installPath, "plugin.json"), []byte(`{"name":"sample","version":"1.0.0"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	data := buildInstallPackageArchive(t, map[string]string{
+		"plugin.json": `{"name":"sample","version":"2.0.0"}`,
+		"new.js":      "new",
+	})
+	if err := installPackage(data, installPath, "plugins", "sample", true); err != nil {
+		t.Fatalf("expected update install to succeed: %s", err)
+	}
+	if _, err := os.Stat(filepath.Join(installPath, "new.js")); err != nil {
+		t.Fatalf("new package file is missing: %s", err)
+	}
+	if _, err := os.Stat(filepath.Join(installPath, "stale.js")); !os.IsNotExist(err) {
+		t.Fatalf("stale package file was not removed: %v", err)
+	}
+	entries, err := os.ReadDir(filepath.Dir(installPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 || entries[0].Name() != "sample" {
+		t.Fatalf("temporary installation directory was not cleaned up: %#v", entries)
+	}
+}
+
+// TestInstallPackageUpdateOverwrites 校验对同名已安装包的更新安装正常覆盖
+func TestInstallPackageUpdateOverwrites(t *testing.T) {
+	useInstallTempDir(t)
+	installPath := filepath.Join(t.TempDir(), "plugins", "sample")
+	if err := os.MkdirAll(installPath, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	data := buildInstallPackageArchive(t, map[string]string{
+		"plugin.json": `{"name":"sample","version":"2.0.0"}`,
+		"index.js":    "new",
+	})
+	if err := installPackage(data, installPath, "plugins", "sample", true); err != nil {
+		t.Fatalf("expected update install to succeed: %s", err)
+	}
+	content, err := os.ReadFile(filepath.Join(installPath, "index.js"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(content) != "new" {
+		t.Fatalf("expected updated content, got %q", content)
+	}
+}
+
+// TestInstallPackageFreshInstall 校验新安装写入目标目录
+func TestInstallPackageFreshInstall(t *testing.T) {
+	useInstallTempDir(t)
+	installPath := filepath.Join(t.TempDir(), "plugins", "sample")
+	data := buildInstallPackageArchive(t, map[string]string{
+		"plugin.json": `{"name":"sample","version":"1.0.0"}`,
+		"index.js":    "new",
+	})
+	if err := installPackage(data, installPath, "plugins", "sample", false); err != nil {
+		t.Fatalf("expected fresh install to succeed: %s", err)
+	}
+	if _, err := os.Stat(filepath.Join(installPath, "index.js")); err != nil {
+		t.Fatalf("installed file is missing: %s", err)
+	}
+}
+
+// TestInstallPackageFreshInstallReplacesEmptyDirectoryTree 校验新安装可以替换仅包含空目录的目标目录
+func TestInstallPackageFreshInstallReplacesEmptyDirectoryTree(t *testing.T) {
+	useInstallTempDir(t)
+	installPath := filepath.Join(t.TempDir(), "plugins", "sample")
+	if err := os.MkdirAll(filepath.Join(installPath, "i18n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	data := buildInstallPackageArchive(t, map[string]string{
+		"plugin.json": `{"name":"sample","version":"1.0.0"}`,
+		"index.js":    "new",
+	})
+	if err := installPackage(data, installPath, "plugins", "sample", false); err != nil {
+		t.Fatalf("expected fresh install into empty directory tree to succeed: %s", err)
+	}
+	if _, err := os.Stat(filepath.Join(installPath, "index.js")); err != nil {
+		t.Fatalf("installed file is missing: %s", err)
+	}
+}
+
+// TestReplacePackageDirectoryRechecksNonEmptyTarget 校验目录交换前会重新拒绝覆盖非空目标目录
+func TestReplacePackageDirectoryRechecksNonEmptyTarget(t *testing.T) {
+	root := t.TempDir()
+	sourcePath := filepath.Join(root, "source")
+	installPath := filepath.Join(root, "plugins", "sample")
+	if err := os.MkdirAll(sourcePath, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(installPath, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(sourcePath, "new.js"), []byte("new"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(installPath, "original.js"), []byte("original"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := replacePackageDirectory(sourcePath, installPath, false); err == nil {
+		t.Fatal("expected replacing a non-empty target without update to be rejected")
+	}
+	content, err := os.ReadFile(filepath.Join(installPath, "original.js"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(content) != "original" {
+		t.Fatalf("existing package file was changed: %q", content)
+	}
+	if _, err = os.Stat(filepath.Join(installPath, "new.js")); !os.IsNotExist(err) {
+		t.Fatalf("new package file was written unexpectedly: %v", err)
+	}
+}
+
+func TestReplacePackageDirectoryRefreshesFileTimes(t *testing.T) {
+	root := t.TempDir()
+	sourcePath := filepath.Join(root, "source")
+	installPath := filepath.Join(root, "plugins", "sample")
+	relativePath := filepath.Join("nested", "index.js")
+	sourceFile := filepath.Join(sourcePath, relativePath)
+	if err := os.MkdirAll(filepath.Dir(sourceFile), 0755); err != nil {
+		t.Fatal(err)
+	}
+	archiveTime := time.Date(1980, 1, 1, 0, 0, 0, 0, time.UTC)
+	for _, content := range []string{"first version", "updated version"} {
+		if err := os.WriteFile(sourceFile, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chtimes(sourceFile, archiveTime, archiveTime); err != nil {
+			t.Fatal(err)
+		}
+		before := time.Now().Add(-time.Second)
+		if err := replacePackageDirectory(sourcePath, installPath, content == "updated version"); err != nil {
+			t.Fatal(err)
+		}
+		installedFile := filepath.Join(installPath, relativePath)
+		info, err := os.Stat(installedFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if info.ModTime().Before(before) || info.ModTime().After(time.Now()) {
+			t.Fatalf("installed file retained archive time: %s", info.ModTime())
+		}
+		data, err := os.ReadFile(installedFile)
+		if err != nil || string(data) != content {
+			t.Fatalf("unexpected installed content: %q, %v", data, err)
+		}
+		info, err = os.Stat(sourceFile)
+		if err != nil || !info.ModTime().Equal(archiveTime) {
+			t.Fatalf("source file timestamp changed: %v, %v", info, err)
+		}
+	}
+}
+
+// TestInstallPackageMissingManifest 校验下载包缺少清单文件时拒绝安装
+func TestInstallPackageMissingManifest(t *testing.T) {
+	useInstallTempDir(t)
+	installPath := filepath.Join(t.TempDir(), "plugins", "sample")
+	data := buildInstallPackageArchive(t, map[string]string{
+		"index.js": "new",
+	})
+	if err := installPackage(data, installPath, "plugins", "sample", false); err == nil {
+		t.Fatal("expected missing manifest to be rejected")
+	}
+}
+
+// buildInstallPackageArchive 构建内存中的集市包 zip 压缩数据
+func buildInstallPackageArchive(t *testing.T, files map[string]string) []byte {
+	t.Helper()
+	archivePath := filepath.Join(t.TempDir(), "package.zip")
+	writeLocalPackageArchive(t, archivePath, files)
+	data, err := os.ReadFile(archivePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return data
+}

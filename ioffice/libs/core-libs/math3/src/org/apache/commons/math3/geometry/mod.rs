@@ -1,0 +1,11 @@
+#[path = "package-info.rs"]
+pub mod package_info;
+pub mod Point;
+pub mod Space;
+pub mod Vector;
+pub mod VectorFormat;
+pub mod enclosing;
+pub mod partitioning;
+pub mod hull;
+pub mod euclidean;
+pub mod spherical;

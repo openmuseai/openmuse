@@ -1,0 +1,478 @@
+import type {FileTreeGetDocRequestInput} from "../types/api";
+import {hasClosestBlock, isInEmbedBlock} from "../protyle/util/hasClosest";
+import {getContenteditableElement} from "../protyle/wysiwyg/getBlock";
+import {focusByOffset} from "../protyle/util/selection";
+import {focusByRange, getSelectionOffset} from "../protyle/util/selectionOffsets";
+import {hideElements} from "../protyle/ui/hideElements";
+import {fetchPost, fetchSyncPost} from "./fetch";
+import {Constants} from "../constants";
+import {Wnd} from "../layout/Wnd";
+import {getInstanceById, getWndByLayout} from "../layout/util";
+import {Tab} from "../layout/Tab";
+import {Editor} from "../editor";
+import {scrollCenter} from "./highlightById";
+import {zoomOut} from "../menus/protyle";
+import {showMessage} from "../dialog/message";
+import {getDocByScroll, saveScroll} from "../protyle/scroll/saveScroll";
+import {isPhablet} from "../protyle/util/compatibility";
+import {getAllModels} from "../layout/getAll";
+import type {App} from "../index";
+import {onGet} from "../protyle/util/onGet";
+import {resolveVisibleListMindmapBlock} from "../protyle/render/listMindmap/render";
+import {isEncryptedBox} from "./pathName";
+
+let forwardStack: IBackStack[] = [];
+let previousIsBack = false;
+const readingPositions = new WeakMap<IBackStack, IScrollAttr>();
+
+const focusHistoryBlock = (block: HTMLElement, position: {start: number, end: number}) => {
+    const visible = resolveVisibleListMindmapBlock(block);
+    if (visible !== undefined) {
+        visible?.focus();
+        visible?.reveal();
+        return;
+    }
+    focusByOffset(getContenteditableElement(block), position.start, position.end);
+};
+
+export const saveBackScroll = (protyle?: IProtyle) => {
+    if (!isPhablet()) {
+        return;
+    }
+    const stack = previousIsBack ? forwardStack[forwardStack.length - 1] :
+        window.siyuan.backStack[window.siyuan.backStack.length - 1];
+    if (!stack || (protyle && stack.protyle !== protyle) ||
+        stack.protyle.element.getBoundingClientRect().height === 0) {
+        return;
+    }
+    const position = saveScroll(stack.protyle, true) as IScrollAttr;
+    if (position) {
+        // 可见编辑器的零滚动位置有效，不使用隐藏页签留下的滚动缓存。
+        position.scrollTop = stack.protyle.contentElement.scrollTop;
+        readingPositions.set(stack, position);
+    }
+};
+
+const focusStack = async (app: App, stack: IBackStack) => {
+    hideElements(["gutter", "toolbar", "hint", "util", "dialog"], stack.protyle);
+    const readingPosition = isPhablet() ? readingPositions.get(stack) : undefined;
+    let blockElement: HTMLElement;
+    if (!document.contains(stack.protyle.element)) {
+        const response = await fetchSyncPost("/api/block/checkBlockExist", {id: stack.protyle.block.rootID});
+        if (response.code !== 0 || !response.data) {
+            // 页签删除
+            return false;
+        }
+        let wnd: Wnd;
+        // 获取光标所在 tab
+        const element = document.querySelector(".layout__wnd--active");
+        if (element) {
+            wnd = getInstanceById(element.getAttribute("data-id")) as Wnd;
+        }
+        if (!wnd) {
+            // 中心 tab
+            wnd = getWndByLayout(window.siyuan.layout.centerLayout);
+        }
+        if (wnd) {
+            const blockInfoParam: {id: string; notebook?: string} = {id: stack.id};
+            if (isEncryptedBox(stack.protyle.notebookId)) {
+                blockInfoParam.notebook = stack.protyle.notebookId;
+            }
+            const info = await fetchSyncPost("/api/block/getBlockInfo", blockInfoParam);
+            if (info.code === 3) {
+                showMessage(info.msg);
+                return;
+            }
+            if (info.code !== 0) {
+                return;
+            }
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+            const tab = new Tab({
+                title: info.data.rootTitle,
+                docIcon: info.data.rootIcon,
+                callback(tab) {
+                    const scrollAttr = {...(readingPosition || saveScroll(stack.protyle, true) || {})} as IScrollAttr;
+                    scrollAttr.rootId = stack.protyle.block.rootID;
+                    scrollAttr.focusId = stack.id;
+                    scrollAttr.focusStart = stack.position.start;
+                    scrollAttr.focusEnd = stack.position.end;
+                    if (!isEncryptedBox(stack.protyle.notebookId)) {
+                        window.siyuan.storage[Constants.LOCAL_FILEPOSITION][stack.protyle.block.rootID] = scrollAttr;
+                    }
+                    const editor = new Editor({
+                        app: app,
+                        tab,
+                        blockId: stack.zoomId || stack.id || stack.protyle.block.rootID,
+                        rootId: stack.protyle.block.rootID,
+                        notebookId: stack.protyle.notebookId,
+                        scrollAttr,
+                        action: stack.zoomId ? [Constants.CB_GET_SCROLL, Constants.CB_GET_ALL, Constants.CB_GET_UNUNDO] :
+                            [Constants.CB_GET_SCROLL, Constants.CB_GET_UNUNDO],
+                        afterInitProtyle(editor) {
+                            const protyle = editor.protyle;
+                            if (!document.contains(protyle.element) || !tab.headElement.classList.contains("item--focus")) {
+                                return;
+                            }
+                            if (readingPosition) {
+                                return;
+                            }
+                            if (info.data.rootID === stack.id) {
+                                if (!protyle.disabled && !isPhablet()) {
+                                    focusByOffset(protyle.title.editElement, stack.position.start, stack.position.end);
+                                }
+                            } else {
+                                const blockElement = Array.from(protyle.wysiwyg.element.querySelectorAll<HTMLElement>(`[data-node-id="${stack.id}"]`)).find(item =>
+                                    !isInEmbedBlock(item));
+                                if (blockElement) {
+                                    if (!protyle.disabled && !isPhablet()) {
+                                        focusHistoryBlock(blockElement, stack.position);
+                                    }
+                                    scrollCenter(protyle, blockElement, "start");
+                                }
+                            }
+                        }
+                    });
+                    tab.addModel(editor);
+                }
+            });
+            if (window.siyuan.config.fileTree.openFilesUseCurrentTab) {
+                let unUpdateTab: Tab;
+                // 优先替换当前预览页签，保留其他已打开的预览页签。
+                wnd.children.find((item) => {
+                    if (item.headElement && item.headElement.classList.contains("item--unupdate") && !item.headElement.classList.contains("item--pin")) {
+                        unUpdateTab = item;
+                        if (item.headElement.classList.contains("item--focus")) {
+                            return true;
+                        }
+                    }
+                });
+                wnd.addTab(tab);
+                if (unUpdateTab) {
+                    wnd.removeTab(unUpdateTab.id, false, false);
+                }
+            } else {
+                wnd.addTab(tab);
+            }
+            wnd.showHeading();
+            // 替换被关闭的 protyle
+            const protyle = (tab.model as Editor).editor.protyle;
+            stack.protyle = protyle;
+            forwardStack.forEach(item => {
+                if (!document.contains(item.protyle.element) && item.protyle.block.rootID === info.data.rootID) {
+                    item.protyle = protyle;
+                }
+            });
+            window.siyuan.backStack.forEach(item => {
+                if (!document.contains(item.protyle.element) && item.protyle.block.rootID === info.data.rootID) {
+                    item.protyle = protyle;
+                }
+            });
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    const currentZoomId = stack.protyle.block.showAll ? stack.protyle.block.id : undefined;
+    if (readingPosition) {
+        // 阅读位置独立于旧光标，显示页签后按离开时的加载范围和滚动值恢复。
+        stack.protyle.model.parent.parent.switchTab(stack.protyle.model.parent.headElement);
+        const first = stack.protyle.wysiwyg.element.firstElementChild?.getAttribute("data-node-id");
+        const last = stack.protyle.wysiwyg.element.lastElementChild?.getAttribute("data-node-id");
+        if (currentZoomId === stack.zoomId && first === readingPosition.startId && last === readingPosition.endId) {
+            stack.protyle.contentElement.scrollTop = readingPosition.scrollTop;
+            return true;
+        }
+        return new Promise<boolean>(resolve => {
+            getDocByScroll({
+                protyle: stack.protyle,
+                scrollAttr: readingPosition,
+                focus: false,
+                cb: () => resolve(true),
+                fail: () => resolve(false),
+            });
+        });
+    }
+    const focusTitle = () => {
+        if (stack.protyle.title.editElement.getBoundingClientRect().height === 0) {
+            // 切换 tab
+            stack.protyle.model.parent.parent.switchTab(stack.protyle.model.parent.headElement,
+                false, true, true, true, false);
+            stack.protyle.toolbar.range = undefined;
+        }
+        if (!stack.protyle.disabled && !isPhablet()) {
+            focusByOffset(stack.protyle.title.editElement, stack.position.start, stack.position.end);
+        }
+    };
+    if (stack.protyle.block.rootID === stack.id) {
+        if (currentZoomId !== stack.zoomId) {
+            zoomOut({
+                protyle: stack.protyle,
+                id: stack.zoomId || stack.protyle.block.rootID,
+                isPushBack: false,
+                suppressFocus: stack.protyle.disabled || isPhablet(),
+                callback: focusTitle,
+            });
+        } else {
+            focusTitle();
+        }
+        return true;
+    }
+    Array.from(stack.protyle.wysiwyg.element.querySelectorAll(`[data-node-id="${stack.id}"]`)).find((item: HTMLElement) => {
+        if (!isInEmbedBlock(item)) {
+            blockElement = item;
+            return true;
+        }
+    });
+    if (blockElement &&
+        // 即使块存在，折叠的情况需要也需要 zoomOut，否则折叠块内的光标无法定位
+        currentZoomId === stack.zoomId
+    ) {
+        if (blockElement.getBoundingClientRect().height === 0) {
+            // 切换 tab
+            stack.protyle.model.parent.parent.switchTab(stack.protyle.model.parent.headElement,
+                false, true, true, true, false);
+        }
+        if (!stack.protyle.disabled && !isPhablet()) {
+            focusHistoryBlock(blockElement, stack.position);
+        }
+        scrollCenter(stack.protyle, blockElement, "start");
+        getAllModels().outline.forEach(item => {
+            if (item.blockId === stack.protyle.block.rootID) {
+                item.setCurrent(blockElement);
+            }
+        });
+        return true;
+    }
+    if (stack.protyle.element.parentElement) {
+        const response = await fetchSyncPost("/api/block/checkBlockExist", {id: stack.id});
+        if (response.code !== 0 || !response.data) {
+            // 块被删除
+            if (getSelection().rangeCount > 0) {
+                focusByRange(getSelection().getRangeAt(0));
+            }
+            return false;
+        }
+        // 动态加载导致内容移除 https://github.com/siyuan-note/siyuan/issues/10692
+        if (!blockElement && !stack.zoomId && !stack.protyle.scroll.element.classList.contains("fn__none")) {
+            const getDocParam: FileTreeGetDocRequestInput = {
+                id: stack.id,
+                mode: 3,
+                size: window.siyuan.config.editor.dynamicLoadBlocks,
+            };
+            if (isEncryptedBox(stack.protyle.notebookId)) {
+                getDocParam.notebook = stack.protyle.notebookId;
+            }
+            fetchPost("/api/filetree/getDoc", getDocParam, getResponse => {
+                onGet({
+                    data: getResponse,
+                    protyle: stack.protyle,
+                    action: [Constants.CB_GET_UNUNDO],
+                    afterCB() {
+                        Array.from(stack.protyle.wysiwyg.element.querySelectorAll(`[data-node-id="${stack.id}"]`)).find((item: HTMLElement) => {
+                            if (!isInEmbedBlock(item)) {
+                                blockElement = item;
+                                return true;
+                            }
+                        });
+                        if (!blockElement) {
+                            return;
+                        }
+                        getAllModels().outline.forEach(item => {
+                            if (item.blockId === stack.protyle.block.rootID) {
+                                item.setCurrent(blockElement);
+                            }
+                        });
+                        if (!stack.protyle.disabled && !isPhablet()) {
+                            focusHistoryBlock(blockElement, stack.position);
+                        }
+                        scrollCenter(stack.protyle, blockElement, "start");
+                    }
+                });
+            });
+            return true;
+        }
+
+        // 缩放
+        zoomOut({
+            protyle: stack.protyle,
+            id: stack.zoomId || stack.protyle.block.rootID,
+            isPushBack: false,
+            suppressFocus: stack.protyle.disabled || isPhablet(),
+            callback: () => {
+                Array.from(stack.protyle.wysiwyg.element.querySelectorAll(`[data-node-id="${stack.id}"]`)).find((item: HTMLElement) => {
+                    if (!isInEmbedBlock(item)) {
+                        blockElement = item;
+                        return true;
+                    }
+                });
+                if (!blockElement) {
+                    return;
+                }
+                getAllModels().outline.forEach(item => {
+                    if (item.blockId === stack.protyle.block.rootID) {
+                        item.setCurrent(blockElement);
+                    }
+                });
+                if (!stack.protyle.disabled && !isPhablet()) {
+                    focusHistoryBlock(blockElement, stack.position);
+                }
+                scrollCenter(stack.protyle, blockElement, "start");
+            }
+        });
+        return true;
+    }
+};
+
+export const hasBackHistory = () => {
+    const stacks = window.siyuan.backStack;
+    const last = stacks[stacks.length - 1];
+    // 后退后当前记录位于前进栈；未后退时，已关闭的当前页签也可作为返回目标。
+    return Boolean(last && (previousIsBack || stacks.length > 1 || !document.contains(last.protyle.element)));
+};
+
+export const goBack = async (app: App) => {
+    const current = previousIsBack ? forwardStack[forwardStack.length - 1] :
+        window.siyuan.backStack[window.siyuan.backStack.length - 1];
+    const target = window.siyuan.backStack[window.siyuan.backStack.length - (previousIsBack ? 1 : 2)];
+    if (target && current?.protyle !== target.protyle) {
+        saveBackScroll();
+    }
+    if (window.siyuan.backStack.length === 0) {
+        if (forwardStack.length > 0) {
+            await focusStack(app, forwardStack[forwardStack.length - 1]);
+        }
+        return;
+    }
+    document.querySelector("#barForward")?.classList.remove("toolbar__item--disabled");
+    if (!previousIsBack &&
+        // 页签被关闭时应优先打开该页签，页签存在时即可返回上一步，不用再重置光标到该页签上
+        document.contains(window.siyuan.backStack[window.siyuan.backStack.length - 1].protyle.element)) {
+        forwardStack.push(window.siyuan.backStack.pop());
+    }
+    let stack = window.siyuan.backStack.pop();
+    while (stack) {
+        const isFocus = await focusStack(app, stack);
+        if (isFocus) {
+            forwardStack.push(stack);
+            break;
+        } else {
+            stack = window.siyuan.backStack.pop();
+        }
+    }
+    previousIsBack = true;
+    if (window.siyuan.backStack.length === 0) {
+        document.querySelector("#barBack")?.classList.add("toolbar__item--disabled");
+    }
+};
+
+export const goForward = async (app: App) => {
+    const current = previousIsBack ? forwardStack[forwardStack.length - 1] :
+        window.siyuan.backStack[window.siyuan.backStack.length - 1];
+    const target = forwardStack[forwardStack.length - (previousIsBack ? 2 : 1)];
+    if (target && current?.protyle !== target.protyle) {
+        saveBackScroll();
+    }
+    if (forwardStack.length === 0) {
+        if (window.siyuan.backStack.length > 0) {
+            await focusStack(app, window.siyuan.backStack[window.siyuan.backStack.length - 1]);
+        }
+        return;
+    }
+    document.querySelector("#barBack")?.classList.remove("toolbar__item--disabled");
+    if (previousIsBack) {
+        window.siyuan.backStack.push(forwardStack.pop());
+    }
+
+    let stack = forwardStack.pop();
+    while (stack) {
+        const isFocus = await focusStack(app, stack);
+        if (isFocus) {
+            window.siyuan.backStack.push(stack);
+            break;
+        } else {
+            stack = forwardStack.pop();
+        }
+    }
+    previousIsBack = false;
+    if (forwardStack.length === 0) {
+        document.querySelector("#barForward")?.classList.add("toolbar__item--disabled");
+    }
+};
+
+export const pushBackByClick = (protyle: IProtyle, target: HTMLElement, point?: {x: number, y: number}) => {
+    const blockElement = hasClosestBlock(target);
+    if (!blockElement || !protyle.wysiwyg.element.contains(blockElement) || isInEmbedBlock(blockElement)) {
+        return;
+    }
+    const editElement = getContenteditableElement(blockElement);
+    if (!editElement) {
+        return;
+    }
+    const selection = editElement.ownerDocument.getSelection();
+    let range = selection?.rangeCount ? selection.getRangeAt(0) : undefined;
+    // 触摸结束时选区可能仍在旧位置，按触摸坐标记录文字偏移，且不改变浏览器选区。
+    if (point) {
+        const pointRange = editElement.ownerDocument.caretRangeFromPoint?.(point.x, point.y);
+        if (pointRange && editElement.contains(pointRange.startContainer) && editElement.contains(pointRange.endContainer)) {
+            range = pointRange;
+        }
+    }
+    if (!range || !editElement.contains(range.startContainer) || !editElement.contains(range.endContainer)) {
+        range = editElement.ownerDocument.createRange();
+        range.selectNodeContents(editElement);
+        range.collapse(true);
+    }
+    pushBack(protyle, range, blockElement);
+};
+
+export const pushBack = (protyle: IProtyle, range?: Range, blockElement?: Element) => {
+    if (!protyle.model) {
+        return;
+    }
+    if (!blockElement && range) {
+        blockElement = hasClosestBlock(range.startContainer) as Element;
+    }
+    if (!blockElement) {
+        return;
+    }
+    let editElement;
+    if (blockElement.classList.contains("protyle-title__input")) {
+        editElement = blockElement;
+    } else {
+        editElement = getContenteditableElement(blockElement);
+    }
+    if (editElement) {
+        const position = getSelectionOffset(editElement, undefined, range);
+        const id = blockElement.getAttribute("data-node-id") || protyle.block.rootID;
+        // 后退后先将当前记录归还后退栈，再去重，确保新导航能够替换前进分支。
+        if (previousIsBack && forwardStack.length > 0) {
+            window.siyuan.backStack.push(forwardStack.pop());
+        }
+        forwardStack = [];
+        previousIsBack = false;
+        document.querySelector("#barForward")?.classList.add("toolbar__item--disabled");
+        const lastStack = window.siyuan.backStack[window.siyuan.backStack.length - 1];
+        if (lastStack && lastStack.protyle === protyle && lastStack.id === id && (
+            (protyle.block.showAll && lastStack.zoomId === protyle.block.id) || (!lastStack.zoomId && !protyle.block.showAll)
+        )) {
+            lastStack.position = position;
+            readingPositions.delete(lastStack);
+        } else {
+            window.siyuan.backStack.push({
+                position,
+                id,
+                protyle,
+                zoomId: protyle.block.showAll ? protyle.block.id : undefined,
+            });
+            if (window.siyuan.backStack.length > Constants.SIZE_UNDO) {
+                window.siyuan.backStack.shift();
+            }
+        }
+        if (window.siyuan.backStack.length > 1) {
+            document.querySelector("#barBack")?.classList.remove("toolbar__item--disabled");
+        }
+    }
+};

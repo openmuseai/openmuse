@@ -1,0 +1,115 @@
+import {Wnd} from "./Wnd";
+import {genUUID} from "../util/genID";
+import {addResize, fixWndFlex1} from "./util";
+import {resizeTabs} from "./tabUtil";
+import {splitPanePercentages} from "./resizePane";
+/// #if MOBILE
+// 检测移动端是否引入了桌面端的代码
+console.error("Need remove unused code");
+/// #endif
+
+export class Layout {
+    public element: HTMLElement;
+    public children?: Array<Layout | Wnd>;
+    public parent?: Layout;
+    public direction: Config.TUILayoutDirection;
+    public type?: Config.TUILayoutType;
+    public id?: string;
+    public resize?: Config.TUILayoutDirection;
+    public size?: string;
+
+    constructor(options?: ILayoutOptions) {
+        const mergedOptions: ILayoutOptions = Object.assign({
+            direction: "tb",
+            size: "auto",
+            type: "normal"
+        }, options);
+
+        this.id = genUUID();
+        this.direction = mergedOptions.direction;
+        this.type = mergedOptions.type;
+        this.size = mergedOptions.size;
+        this.resize = options.resize;
+        this.children = [];
+
+        this.element = options.element || document.createElement("div");
+        if (this.type === "center") {
+            this.element.classList.add("layout__center");
+        }
+        if (mergedOptions.direction === "tb") {
+            this.element.classList.add("fn__flex-column");
+        } else {
+            this.element.classList.add("fn__flex");
+        }
+    }
+
+    addLayout(child: Layout, id?: string, after = true) {
+        if (!id) {
+            this.children.splice(this.children.length, 0, child);
+            if (this) {
+                this.element.append(child.element);
+            }
+        } else {
+            this.children.find((item, index) => {
+                if (item.id === id) {
+                    this.children.splice(after ? index + 1 : index, 0, child);
+                    if (after) {
+                        item.element.after(child.element);
+                    } else {
+                        item.element.before(child.element);
+                    }
+                    return true;
+                }
+            });
+        }
+        if (child.size === "auto") {
+            child.element.classList.add("fn__flex-1");
+        } else {
+            child.element.style[(this && this.direction === "lr") ? "width" : "height"] = child.size;
+        }
+        addResize(child, after);
+        child.parent = this;
+    }
+
+    addWnd(child: Wnd, id?: string, after = true) {
+        const isCenterSplit = !!id && !!this.element.closest(".layout__center");
+        const splitDirection = this.direction === "lr" ? "width" : "height";
+        const splitSizes = isCenterSplit ? this.children.map((item) =>
+            this.direction === "lr" ? item.element.clientWidth : item.element.clientHeight) : [];
+        const splitIndex = isCenterSplit ? this.children.findIndex((item) => item.id === id) : -1;
+        const splitPercentages = splitPanePercentages(splitSizes, splitIndex, after);
+        if (!id) {
+            this.children.splice(this.children.length, 0, child);
+            this.element.append(child.element);
+        } else {
+            this.children.find((item, index) => {
+                if (item.id === id) {
+                    if (after) {
+                        this.children.splice(index + 1, 0, child);
+                    } else {
+                        this.children.splice(index, 0, child);
+                    }
+                    if (after) {
+                        item.element.after(child.element);
+                    } else {
+                        item.element.before(child.element);
+                    }
+                    return true;
+                }
+            });
+        }
+        if (id) {
+            if (splitPercentages && splitIndex > -1) {
+                this.children.forEach((item, index) => {
+                    item.element.classList.remove("fn__flex-1");
+                    item.element.style[splitDirection] = splitPercentages[index] + "%";
+                });
+            } else {
+                fixWndFlex1(this);
+            }
+        }
+        addResize(child, after);
+        resizeTabs(false);
+        child.parent = this;
+    }
+}

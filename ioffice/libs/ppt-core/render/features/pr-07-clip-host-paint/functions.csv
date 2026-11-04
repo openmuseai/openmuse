@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_clip_slide_bounds,指令裁剪到slide,cmds+size,可视在画布内,pr-06,03,libs/ppt-core,pass
+2,02_function_bodypr_vert,bodyPr vert竖排,vert+txBody,竖排DrawText,pp-11,03,libs/ppt-core,pass
+3,03_function_flutter_no_default_stroke,空样式不默认黑描边,DrawRect无fill,不画框,pr-05:03,host,samples/libs/ppt/ppt_render,pass

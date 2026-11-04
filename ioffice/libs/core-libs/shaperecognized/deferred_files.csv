@@ -1,0 +1,2 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/shaperecognized/src/cn/wps/shaperecognize/ShapeConfig.java,cn/wps/shaperecognize,too many dependencies,2026-05-22

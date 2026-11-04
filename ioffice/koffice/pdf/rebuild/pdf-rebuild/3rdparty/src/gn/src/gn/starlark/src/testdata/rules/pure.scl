@@ -1,0 +1,25 @@
+ParentInfo = provider(fields = ["parent"])
+ChildInfo = provider(fields = ["child"])
+
+def _parent_impl(ctx):
+  return [ParentInfo(parent = ctx.attr.parent_only)]
+
+parent_rule = rule(
+  implementation = _parent_impl,
+  attrs = {
+    "parent_only": attr.string(mandatory = True),
+    "override": attr.label(default = "//:parent"),
+  }
+)
+
+def _child_impl(ctx):
+  return ctx.super() + [ChildInfo(child = ctx.attr.child_only)]
+
+child_rule = rule(
+  implementation = _child_impl,
+  parent = parent_rule,
+  attrs = {
+    "child_only": attr.string(mandatory = True),
+    "override": attr.label(default = "//:child"),
+  }
+)

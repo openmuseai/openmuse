@@ -1,0 +1,90 @@
+import {getEnglishCommandLabel} from "./english";
+import {
+    getNativeCommandByLegacyId,
+    isNativeCommandSupported,
+    orderNativeCommands,
+    type INativeCommandCatalogItem,
+} from "./nativeCatalog";
+import {getCommandRegistry} from "./service";
+import type {ICommandContextSnapshot, ICommandDefinition} from "./types";
+import {DATABASE_ROW_COMMANDS, getDatabaseRowNavigationButton} from "./databaseRowNavigation";
+
+export type TNativeCommandExecutor = (
+    command: string,
+    context: ICommandContextSnapshot,
+) => unknown | Promise<unknown>;
+
+const initializedApps = new WeakSet<object>();
+
+const getHotkey = (item: INativeCommandCatalogItem) => {
+    if (item.keymapPath[0] === "general") {
+        return window.siyuan.config.keymap.general[item.keymapPath[1]]?.custom || "";
+    }
+    return window.siyuan.config.keymap.editor[item.keymapPath[1]][item.keymapPath[2]]?.custom || "";
+};
+
+const publishUnavailableCommands = new Set([
+    "addToDatabase", "closeUnmodified", "editReadonly", "switchReadonly", "replace",
+    "move", "newFile", "dailyNote", "syncNow", "dataHistory",
+]);
+
+const matchesContext = (item: INativeCommandCatalogItem, context: ICommandContextSnapshot) => {
+    if (DATABASE_ROW_COMMANDS.some(command => command === item.legacyId)) {
+        const button = getDatabaseRowNavigationButton(context, item.legacyId);
+        return !!button && !button.disabled;
+    }
+    // 命令面板和快捷键共用只读限制，文档树操作仍按文档树上下文处理。
+    if (context.focus !== "fileTree" && context.protyle?.disabled &&
+        ["move", "addToDatabase"].includes(item.legacyId)) {
+        return false;
+    }
+    if (item.requirement === "editor") {
+        return Boolean(context.protyle);
+    }
+    if (item.requirement === "editorOrFileTree") {
+        return Boolean(context.protyle || context.fileTree?.elements.length);
+    }
+    return true;
+};
+
+const createNativeCommand = (
+    item: INativeCommandCatalogItem,
+    order: number,
+    execute: TNativeCommandExecutor,
+): ICommandDefinition => ({
+    id: item.id,
+    category: "core",
+    label: () => window.siyuan.languages[item.legacyId] || item.legacyId,
+    englishLabel: () => getEnglishCommandLabel(item.legacyId),
+    keywords: () => [item.legacyId, ...item.keymapPath],
+    keymapPath: item.keymapPath,
+    hotkey: () => getHotkey(item),
+    order,
+    platform: environment => isNativeCommandSupported(item, environment),
+    when: () => !window.siyuan.isPublish || !publishUnavailableCommands.has(item.legacyId),
+    enabled: context => matchesContext(item, context),
+    execute: context => execute(item.legacyId, context),
+});
+
+export const ensureNativeCommands = (app: object, execute: TNativeCommandExecutor) => {
+    if (initializedApps.has(app)) {
+        return;
+    }
+    const registry = getCommandRegistry(app);
+    const items = orderNativeCommands(
+        Object.keys(window.siyuan.config.keymap.general),
+        Object.keys(window.siyuan.config.keymap.editor.general),
+    );
+    const owner = {};
+    const disposers: Array<() => boolean> = [];
+    try {
+        items.forEach((item, order) =>
+            disposers.push(registry.register(createNativeCommand(item, order, execute), owner)));
+        initializedApps.add(app);
+    } catch (error) {
+        disposers.reverse().forEach(dispose => dispose());
+        throw error;
+    }
+};
+
+export const getNativeCommandId = (legacyId: string) => getNativeCommandByLegacyId(legacyId)?.id;

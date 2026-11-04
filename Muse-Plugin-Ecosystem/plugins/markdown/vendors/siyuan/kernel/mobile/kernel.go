@@ -1,0 +1,435 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package mobile
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/88250/gulu"
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/cache"
+	"github.com/siyuan-note/siyuan/kernel/job"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/plugin"
+	"github.com/siyuan-note/siyuan/kernel/server"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/util"
+	_ "golang.org/x/mobile/bind"
+)
+
+// AcquireExportFile 获取移动端导出租约，返回 JSON 格式的路径、名称和租约 ID。
+func AcquireExportFile(exportPath string) string {
+	lease, err := model.AcquireMobileExportLease(exportPath)
+	if err != nil {
+		logging.LogErrorf("acquire export file [%s] failed: %s", exportPath, err)
+		return ""
+	}
+	data, err := json.Marshal(lease)
+	if err != nil {
+		model.ReleaseMobileExportLease(lease.ID)
+		return ""
+	}
+	return string(data)
+}
+
+// ReleaseExportFile 释放 AcquireExportFile 返回的租约。
+func ReleaseExportFile(leaseID string) {
+	model.ReleaseMobileExportLease(leaseID)
+}
+
+// LANSyncDiscoveryInfo 返回原生 Bonjour 发现需要发布的服务信息。
+func LANSyncDiscoveryInfo() string {
+	info := model.GetLANSyncDiscoveryInfo()
+	if nil == info {
+		return ""
+	}
+	data, err := json.Marshal(info)
+	if nil != err {
+		return ""
+	}
+	return string(data)
+}
+
+// AddLANSyncPeer 将原生 Bonjour 发现的设备交给内核验证。
+func AddLANSyncPeer(instance, address string, port int, txtJSON string) bool {
+	txt := map[string]string{}
+	if err := json.Unmarshal([]byte(txtJSON), &txt); nil != err {
+		return false
+	}
+	return model.AddLANSyncPeer(instance, address, port, txt)
+}
+
+// RemoveLANSyncPeer 将原生 Bonjour 移除的设备从内核中删除。
+func RemoveLANSyncPeer(instance string) bool {
+	return model.RemoveLANSyncPeer(instance)
+}
+
+// LANSyncActive 返回局域网同步服务是否正在运行。
+func LANSyncActive() bool {
+	return model.LANSyncActive()
+}
+
+// UpdateLocalIPs 更新原生容器提供的局域网地址并刷新局域网同步服务。
+func UpdateLocalIPs(localIPs string) {
+	util.SetLocalIPs(strings.Split(localIPs, ","))
+	serverAddrs := util.GetServerAddrs()
+	if model.UpdateServerAddrs(serverAddrs) {
+		util.BroadcastByType("main", "setServerAddrs", 0, "", serverAddrs)
+	}
+	model.RefreshLANSyncNetwork()
+}
+
+// GetExportFileName 返回普通导出的资源名称；加密导出应读取 AcquireExportFile 返回的 Name。
+func GetExportFileName(exportPath string) string {
+	return model.GetMobileExportName(exportPath)
+}
+
+// VerifyAppStoreTransaction 用于验证苹果 App Store 交易。
+//
+// accountToken UUID:
+//
+//	6ba7b810-9dad-11d1-0001-377616491562
+//	6ba7b810-9dad-11d1-{Cloud Region}00{User ID}，中间的 00 为保留位
+//
+// 返回码：
+//
+// 0：验证通过
+// -1：云端区域无效
+// -2：服务器通讯失败，需要重试
+// -3：非 iOS 设备
+// -4：账号未登录
+// -5：账号状态异常
+// -6：参数错误
+// -7：校验 accountToken 失败
+// -8：校验 transaction 失败
+// -9：未知的商品
+func VerifyAppStoreTransaction(accountToken, transactionID string) (retCode int) {
+	retCode = -2
+	retMsg := "unknown error"
+
+	accountToken = strings.TrimSpace(accountToken)
+	transactionID = strings.TrimSpace(transactionID)
+	if "" == accountToken || "" == transactionID {
+		retCode = -6
+		retMsg = "invalid parameters"
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+
+	if 36 != len(accountToken) {
+		retCode = -6
+		retMsg = fmt.Sprintf("invalid accountToken [%s]", accountToken)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+
+	if util.ContainerIOS != util.Container {
+		retCode = -3
+		retMsg = fmt.Sprintf("invalid container [%s]", util.Container)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+
+	user := model.Conf.GetUser()
+	if nil == user || "" == user.UserToken {
+		retCode = -4
+		retMsg = "account not logged in"
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+
+	cloudRegionArg := accountToken[19:20]
+	if "0" != cloudRegionArg && "1" != cloudRegionArg {
+		retCode = -1
+		retMsg = fmt.Sprintf("invalid cloud region [%s]", cloudRegionArg)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+
+	cloudRegion, _ := strconv.Atoi(cloudRegionArg)
+	if util.CurrentCloudRegion != cloudRegion {
+		retCode = -1
+		retMsg = fmt.Sprintf("invalid cloud region [cloudRegionArg=%s, currentRegion=%d]", cloudRegionArg, util.CurrentCloudRegion)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+
+	userID := strings.ReplaceAll(accountToken[22:], "-", "")
+	if user.UserId != userID {
+		retCode = -5
+		retMsg = fmt.Sprintf("invalid user [userID=%s, accountToken=%s]", user.UserId, accountToken)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+
+	verifyURL := util.GetCloudServer() + "/apis/siyuan/verifyAppStoreTransaction"
+	result := gulu.Ret.NewResult()
+	request := httpclient.NewCloudRequest30s()
+	resp, reqErr := request.SetSuccessResult(result).SetCookies(&http.Cookie{Name: "symphony", Value: user.UserToken}).
+		SetBody(map[string]string{"transactionId": transactionID, "accountToken": accountToken, "userId": userID}).Post(verifyURL)
+	if nil != reqErr {
+		retCode = -2
+		retMsg = fmt.Sprintf("verify app store transaction failed: %s", reqErr)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+	if http.StatusUnauthorized == resp.StatusCode || http.StatusForbidden == resp.StatusCode {
+		retCode = -4
+		retMsg = fmt.Sprintf("verify app store transaction failed [sc=%d]", resp.StatusCode)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+	if http.StatusOK != resp.StatusCode {
+		retCode = -2
+		retMsg = fmt.Sprintf("verify app store transaction failed [sc=%d]", resp.StatusCode)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+
+	if -1 == result.Code {
+		retCode = -5
+		retMsg = fmt.Sprintf("verify app store transaction failed [code=%d, msg=%s]", result.Code, result.Msg)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+	if -3 == result.Code {
+		retCode = -6
+		retMsg = fmt.Sprintf("verify app store transaction failed [code=%d, msg=%s]", result.Code, result.Msg)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+	if -2 == result.Code {
+		retCode = -8
+		retMsg = fmt.Sprintf("verify app store transaction failed [code=%d, msg=%s]", result.Code, result.Msg)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+	if -4 == result.Code {
+		retCode = -8
+		retMsg = fmt.Sprintf("verify app store transaction failed [code=%d, msg=%s]", result.Code, result.Msg)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+	if -5 == result.Code {
+		retCode = -7
+		retMsg = fmt.Sprintf("verify app store transaction failed [code=%d, msg=%s]", result.Code, result.Msg)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+	if -6 == result.Code {
+		retCode = -9
+		retMsg = fmt.Sprintf("verify app store transaction failed [code=%d, msg=%s]", result.Code, result.Msg)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+	if -64 == result.Code {
+		retCode = -2
+		retMsg = fmt.Sprintf("verify app store transaction failed [code=%d, msg=%s]", result.Code, result.Msg)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+	if 0 != result.Code {
+		retCode = -2
+		retMsg = fmt.Sprintf("verify app store transaction failed [code=%d, msg=%s]", result.Code, result.Msg)
+		logging.LogErrorf("%s", retMsg)
+		return
+	}
+
+	retCode = 0
+	retMsg = fmt.Sprintf("verify app store transaction [%s] success", transactionID)
+	logging.LogInfof("%s", retMsg)
+	return
+}
+
+func StartKernelFast(container, appDir, workspaceBaseDir, localIPs string) {
+	model.InitJwtKey()
+	go server.Serve(true, model.Conf.CookieKey)
+}
+
+func finishMobileStartup(container string, bootSync, finishLocalBoot, waitForUI func()) {
+	if util.ContainerIOS != container {
+		bootSync()
+		finishLocalBoot()
+		return
+	}
+
+	finishLocalBoot()
+	go func() {
+		// 等待前端连接后再同步，确保同步状态能送达已打开的本地界面。
+		waitForUI()
+		bootSync()
+	}()
+}
+
+func StartKernel(container, appDir, workspaceBaseDir, timezoneID, localIPs, lang, osVer string) {
+	model.InitJwtKey()
+	SetTimezone(container, appDir, timezoneID)
+	util.Mode = "prod"
+	util.MobileOSVer = osVer
+	util.SetLocalIPs(strings.Split(localIPs, ","))
+	util.BootMobile(container, appDir, workspaceBaseDir, lang)
+
+	model.InitConf()
+	go server.Serve(false, model.Conf.CookieKey)
+	go func() {
+		model.InitAppearance()
+		sql.InitDatabase(false)
+		sql.InitHistoryDatabase(false)
+		sql.InitAssetContentDatabase(false)
+		// 数据库打开后重新应用搜索配置，使 PRAGMA case_sensitive_like 对新连接生效
+		model.ApplySearchRuntime()
+
+		finishMobileStartup(util.Container, model.BootSyncData, func() {
+			model.CleanupEmptyPluginStorageDirs()
+			model.InitBoxes()
+			model.LoadFlashcards()
+			util.LoadAssetsTexts()
+
+			util.SetBooted()
+			util.PushClearAllMsg()
+
+			job.StartCron()
+			go model.AutoGenerateFileHistory()
+			go cache.LoadAssets()
+			go plugin.InitManager()
+			go model.StartEmbeddingIndexer()
+		}, util.WaitForUILoaded)
+	}()
+}
+
+func Language(num int) string {
+	return model.Conf.Language(num)
+}
+
+func ShowMsg(msg string, timeout int) {
+	util.PushMsg(msg, timeout)
+}
+
+func IsHttpServing() bool {
+	return util.HttpServing
+}
+
+func GetCurrentWorkspacePath() string {
+	return util.WorkspaceDir
+}
+
+func GetAssetAbsPath(asset string) (ret string) {
+	ret, err := model.GetAssetAbsPath(asset)
+	if err == nil {
+		err = model.EnsureAssetLocal(ret)
+	}
+	if err != nil {
+		logging.LogErrorf("get asset [%s] abs path failed: %s", asset, err)
+		ret = asset
+	}
+	return
+}
+
+func GetMimeTypeByExt(ext string) string {
+	return util.GetMimeTypeByExt(ext)
+}
+
+func SetTimezone(container, appDir, timezoneID string) {
+	if "ios" == container {
+		os.Setenv("ZONEINFO", filepath.Join(appDir, "app", "zoneinfo.zip"))
+	}
+	z, err := time.LoadLocation(strings.TrimSpace(timezoneID))
+	if err != nil {
+		fmt.Printf("load location failed: %s\n", err)
+		time.Local = time.FixedZone("CST", 8*3600)
+		return
+	}
+	time.Local = z
+}
+
+func DisableFeature(feature string) {
+	util.DisableFeature(feature)
+}
+
+func FilepathBase(path string) string {
+	return filepath.Base(path)
+}
+
+func FilterUploadFileName(name string) string {
+	return util.FilterUploadFileName(name)
+}
+
+func AssetName(name string) string {
+	return util.AssetName(name, ast.NewNodeID())
+}
+
+func HTML2Markdown(html string) string {
+	return util.NewLute().HTML2Md(html)
+}
+
+func Unzip(zipFilePath, destination string) {
+	if err := gulu.Zip.Unzip(zipFilePath, destination); nil != err {
+		logging.LogErrorf("unzip [%s] failed: %s", zipFilePath, err)
+		panic(err)
+	}
+}
+
+// GetExportFilePath 解析导出文件绝对路径，绕过 HTTP 层以避免锁屏密码拦截。
+// exportPath 格式为 "/export/xxx.zip" 或 "assets/xxx"。
+// 返回文件在磁盘上的绝对路径，以便原生端分块拷贝，避免大文件内存溢出。
+// 解析失败返回空字符串。
+func GetExportFilePath(exportPath string) (ret string) {
+	var absPath string
+	if after, ok := strings.CutPrefix(exportPath, "/export/"); ok {
+		fileName := after
+		if decoded, err := url.PathUnescape(fileName); err == nil {
+			fileName = decoded
+		}
+		fileName = filepath.Clean(fileName)
+		if strings.HasPrefix(fileName, "..") {
+			logging.LogWarnf("get export file path [%s] blocked: path traversal attempt [%s]", exportPath, fileName)
+			return
+		}
+		// 加密导出需要持有覆盖原生复制过程的租约，旧路径解析接口不再返回其明文地址。
+		if model.IsManagedEncryptedExportPath(fileName) {
+			logging.LogWarnf("get export file path [%s] blocked: use AcquireExportFile for encrypted exports", exportPath)
+			return
+		}
+		absPath = filepath.Join(util.TempDir, "export", fileName)
+		exportBaseDir := filepath.Join(util.TempDir, "export")
+		if !gulu.File.IsSubPath(exportBaseDir, absPath) {
+			logging.LogWarnf("get export file path [%s] blocked: path [%s] is outside export base dir [%s]", exportPath, absPath, exportBaseDir)
+			return
+		}
+	} else if strings.HasPrefix(exportPath, "assets/") {
+		var err error
+		absPath, err = model.GetAssetAbsPath(exportPath)
+		if err == nil {
+			err = model.EnsureAssetLocal(absPath)
+		}
+		if nil != err {
+			logging.LogErrorf("get asset abs path [%s] failed: %s", exportPath, err)
+			return
+		}
+	} else {
+		logging.LogWarnf("get export file path [%s] failed: unsupported path prefix", exportPath)
+		return
+	}
+
+	if "" == absPath {
+		logging.LogWarnf("get export file path [%s] failed: resolved to empty abs path", exportPath)
+		return
+	}
+	return absPath
+}
+
+func Exit() {
+	os.Exit(logging.ExitCodeOk)
+}

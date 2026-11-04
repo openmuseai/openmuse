@@ -1,0 +1,392 @@
+import {config as configApi} from "../config/util/configApi";
+import {isPaidUser, needSubscribe} from "../util/needSubscribe";
+import {showMessage} from "../dialog/message";
+import {fetchPost} from "../util/fetch";
+import {Dialog} from "../dialog";
+import {openInputDialog} from "../dialog/inputDialog";
+import {confirmDialog} from "../dialog/confirmDialog";
+import {isMobile} from "../util/functions";
+import {processSync} from "../dialog/processSystem";
+import {openSyncCheckoutProgress} from "./checkoutProgress";
+/// #if !MOBILE
+import {openSetting} from "../config";
+/// #endif
+import type {App} from "../index";
+import {Constants} from "../constants";
+import {getCloudURL} from "../config/util/about";
+import {sanitizeKernelHTML} from "../util/hostCapabilities";
+import {escapeHtml} from "../util/escape";
+
+const openSyncSetting = (app?: App) => {
+    if (!app) {
+        return;
+    }
+    /// #if MOBILE
+    void import("../mobile/menu").then(({openMobileSetting}) => openMobileSetting(app, "sync"));
+    /// #else
+    openSetting(app, "sync");
+    /// #endif
+};
+
+export const addCloudName = (cloudListElement: Element) => {
+    const dialog = openInputDialog({
+        title: window.siyuan.languages.cloudSyncDir,
+        value: "main",
+        description: window.siyuan.languages.reposTip,
+        onConfirm: (value, dialog) => {
+            cloudListElement.innerHTML = '<div class="fn__flex" style="height:100%;align-items:center;justify-content:center"><span class="b3-loading" aria-hidden="true"></span></div>';
+            fetchPost("/api/sync/createCloudSyncDir", {name: value}, () => {
+                dialog.destroy();
+                renderSyncCloudList(cloudListElement, true);
+            });
+        },
+    });
+    dialog.element.setAttribute("data-key", Constants.DIALOG_SYNCADDCLOUDDIR);
+};
+
+export const bindSyncCloudListEvent = (cloudListElement: Element, cb?: (ready: boolean) => void) => {
+    cloudListElement.addEventListener("click", (event) => {
+        if (window.siyuan.config.sync.provider === 2) {
+            return;
+        }
+        let target = event.target as HTMLElement;
+        while (target && !target.isEqualNode(cloudListElement)) {
+            const type = target.getAttribute("data-type");
+            if (type) {
+                switch (type) {
+                    case "addCloud":
+                        addCloudName(cloudListElement);
+                        break;
+                    case "removeCloud":
+                        confirmDialog(window.siyuan.languages.deleteOpConfirm, `${window.siyuan.languages.confirmDeleteCloudDir} <i>${target.parentElement.getAttribute("data-name")}</i>`, () => {
+                            cloudListElement.innerHTML = '<div class="fn__flex" style="height:100%;align-items:center;justify-content:center"><span class="b3-loading" aria-hidden="true"></span></div>';
+                            fetchPost("/api/sync/removeCloudSyncDir", {name: target.parentElement.getAttribute("data-name")}, (response) => {
+                                window.siyuan.config.sync.cloudName = response.data;
+                                renderSyncCloudList(cloudListElement, true, cb);
+                            });
+                        }, undefined, true);
+                        break;
+                    case "selectCloud":
+                        cloudListElement.innerHTML = '<div class="fn__flex" style="height:100%;align-items:center;justify-content:center"><span class="b3-loading" aria-hidden="true"></span></div>';
+                        configApi.set("sync.cloudName", target.getAttribute("data-name"), () => {
+                            window.siyuan.config.sync.cloudName = target.getAttribute("data-name");
+                            renderSyncCloudList(cloudListElement, true, cb);
+                        });
+                        break;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                break;
+            }
+            target = target.parentElement;
+        }
+    });
+};
+
+export const renderSyncCloudList = (cloudListElement: Element, reload = false, cb?: (ready: boolean) => void) => {
+    const provider = window.siyuan.config.sync.provider;
+    if (provider === 2) {
+        // S3 使用配置的存储桶，不依赖列出所有存储桶的权限；实际访问错误由同步请求报告。
+        const s3 = window.siyuan.config.sync.s3;
+        const ready = !!s3 && [s3.endpoint, s3.accessKey, s3.secretKey, s3.bucket, s3.region]
+            .every(value => !!value?.trim());
+        // S3 不使用云端同步目录，仅为与其他提供商保持一致的列表样式而显示唯一的固定项
+        cloudListElement.innerHTML = ready ? `<div class="fn__hr"></div><ul class="b3-list b3-list--background" style="overflow: auto;">
+    <li class="b3-list-item b3-list-item--narrow b3-list-item--hide-action">
+        <input type="radio" name="cloudName" checked/><span class="fn__space"></span><span>${escapeHtml(s3.bucket)}</span>
+    </li>
+</ul>` : `<ul><li class="b3-list--empty">${window.siyuan.languages.cloudConfigTip}</li></ul>`;
+        cb?.(ready);
+        return;
+    }
+    if (!reload && cloudListElement.firstElementChild && cloudListElement.firstElementChild.tagName !== "IMG") {
+        return;
+    }
+    const canManage = provider === 0 || provider === 4;
+    cb?.(false);
+    cloudListElement.innerHTML = '<div class="fn__flex" style="height:100%;align-items:center;justify-content:center"><span class="b3-loading" aria-hidden="true"></span></div>';
+    fetchPost("/api/sync/listCloudSyncDir", {}, (response) => {
+        if (provider !== window.siyuan.config.sync.provider) {
+            return;
+        }
+        let syncListHTML: string;
+        let ready = false;
+        if (response.code === 1) {
+            syncListHTML = `<ul>
+    <li class="b3-list--empty ft__error">
+        ${sanitizeKernelHTML(response.msg)}
+    </li>
+    <li class="b3-list--empty">
+        ${window.siyuan.languages.cloudConfigTip}
+    </li>
+</ul>`;
+        } else {
+            const syncListParts: string[] = ["<div class=\"fn__hr\"></div><ul class=\"b3-list b3-list--background\" style=\"overflow: auto;\">"];
+            if (response.data.syncDirs.length === 0) {
+                syncListParts.push(`<li class="b3-list--empty">${window.siyuan.languages.emptyContent}</li>`);
+            }
+            response.data.syncDirs.forEach((item: { hSize: string, cloudName: string, updated: string }) => {
+                const checked = item.cloudName === response.data.checkedSyncDir;
+                ready = ready || checked;
+                const rowAttributes = ` data-type="selectCloud" data-name="${item.cloudName}"`;
+                const radioHTML = `<input type="radio" name="cloudName"${checked ? " checked" : ""}/><span class="fn__space"></span>`;
+                /// #if MOBILE
+                syncListParts.push(`<li${rowAttributes} class="b3-list-item b3-list-item--two">
+    <div class="b3-list-item__first" data-name="${item.cloudName}">
+        ${radioHTML}
+        <span>${item.cloudName}</span>
+        <span class="fn__flex-1 fn__space"></span>
+        ${canManage ? `<span data-type="removeCloud" class="b3-list-item__action">
+            <svg><use xlink:href="#iconTrashcan"></use></svg>
+        </span>` : ""}
+    </div>
+    <div class="b3-list-item__meta fn__flex">
+        <span class="fn__space"></span>
+        <span class="fn__space"></span>
+        <span class="fn__space"></span>
+        <span>${item.hSize}</span>
+        <span class="fn__space"></span>
+        <span>${item.updated}</span>
+    </div>
+</li>`);
+                /// #else
+                syncListParts.push(`<li${rowAttributes} class="b3-list-item b3-list-item--narrow b3-list-item--hide-action">
+${radioHTML}
+<span>${item.cloudName}</span>
+<span class="fn__space"></span>
+<span class="ft__on-surface">${item.hSize}</span>
+<span class="b3-list-item__meta">${item.updated}</span>
+<span class="fn__flex-1 fn__space"></span>
+${canManage ? `<span data-type="removeCloud" class="b3-tooltips b3-tooltips__w b3-list-item__action" aria-label="${window.siyuan.languages.delete}">
+    <svg><use xlink:href="#iconTrashcan"></use></svg>
+</span>` : ""}</li>`);
+                /// #endif
+            });
+            syncListParts.push("</ul>");
+            if (canManage) {
+                syncListParts.push(`<div class="fn__hr"></div>
+<div class="fn__flex">
+    <button class="b3-button b3-button--outline" data-type="addCloud"><svg><use xlink:href="#iconAdd"></use></svg>${window.siyuan.languages.addAttr}</button>
+    <div class="fn__flex-1"></div>
+</div>`);
+            }
+            syncListHTML = syncListParts.join("");
+        }
+        cloudListElement.innerHTML = syncListHTML;
+        cb?.(ready);
+    });
+};
+
+/** S3 直接展示配置的存储桶，其他提供者通过“配置”按钮展开目录列表 */
+export const refreshSyncCloudDirBlock = (root: Element) => {
+    const blockElement = root.querySelector("#syncCloudDirBlock");
+    const listElement = root.querySelector("#syncCloudList");
+    if (!blockElement || !listElement) {
+        return;
+    }
+    const isS3 = window.siyuan.config.sync.provider === 2;
+    blockElement.querySelector('[data-action="config"]')?.classList.toggle("fn__none", isS3);
+    listElement.innerHTML = "";
+    listElement.classList.toggle("fn__none", !isS3);
+    if (isS3) {
+        renderSyncCloudList(listElement, true);
+    }
+};
+
+export const syncGuide = (app?: App) => {
+    if (openSyncCheckoutProgress()) return;
+    if (window.siyuan.config.readonly) {
+        return;
+    }
+    if (app && document.querySelector("#barSync")?.classList.contains("toolbar__item--active")) {
+        return;
+    }
+    if (window.siyuan.config.sync.provider === 0 && needSubscribe()) {
+        openSyncSetting(app);
+        showMessage(window.siyuan.languages._kernel[29].replaceAll("${accountServer}", getCloudURL("")));
+        return;
+    } else if (!isPaidUser()) {
+        openSyncSetting(app);
+        showMessage(window.siyuan.languages._kernel[214].replaceAll("${accountServer}", getCloudURL("")));
+        return;
+    }
+    if (!window.siyuan.config.sync.enabled && window.siyuan.config.sync.provider !== 0) {
+        openSyncSetting(app);
+        return;
+    }
+    if (!window.siyuan.config.repo.key) {
+        setKey(true);
+        return;
+    }
+    if (!window.siyuan.config.sync.enabled) {
+        setSync();
+        return;
+    }
+    syncNow();
+};
+
+const syncNow = () => {
+    if (window.siyuan.config.sync.mode !== 3) {
+        fetchPost("/api/sync/performSync", {});
+        return;
+    }
+    const manualDialog = new Dialog({
+        title: window.siyuan.languages.chooseSyncDirection,
+        content: `<div class="b3-dialog__content">
+    <label class="fn__flex b3-label">
+        <input type="radio" name="upload" value="true">
+        <span class="fn__space"></span>
+        <div>
+            ${window.siyuan.languages.uploadData2Cloud}
+            <div class="b3-label__text">${window.siyuan.languages.uploadData2CloudTip}</div>
+        </div>
+    </label>
+    <label class="fn__flex b3-label">
+        <input type="radio" name="upload" value="false">
+        <span class="fn__space"></span>
+        <div>
+            ${window.siyuan.languages.downloadDataFromCloud}
+            <div class="b3-label__text">${window.siyuan.languages.downloadDataFromCloudTip}</div>
+        </div>
+    </label>
+</div>
+<div class="b3-dialog__action">
+    <button class="b3-button b3-button--cancel">${window.siyuan.languages.cancel}</button><div class="fn__space"></div>
+    <button class="b3-button b3-button--text">${window.siyuan.languages.confirm}</button>
+</div>`,
+        width: isMobile() ? "92vw" : "520px",
+    });
+    manualDialog.element.setAttribute("data-key", Constants.DIALOG_SYNCCHOOSEDIRECTION);
+    const btnsElement = manualDialog.element.querySelectorAll(".b3-button");
+    btnsElement[0].addEventListener("click", () => {
+        manualDialog.destroy();
+    });
+    btnsElement[1].addEventListener("click", () => {
+        const uploadElement = manualDialog.element.querySelector("input[name=upload]:checked") as HTMLInputElement;
+        if (!uploadElement) {
+            showMessage(window.siyuan.languages.plsChoose);
+            return;
+        }
+        fetchPost("/api/sync/performSync", {upload: uploadElement.value === "true"});
+        manualDialog.destroy();
+    });
+};
+
+const setSync = (key?: string, dialog?: Dialog) => {
+    if (key) {
+        window.siyuan.config.repo.key = key;
+    }
+    if (!window.siyuan.config.sync.enabled) {
+        const listHTML = `<div class="b3-dialog__content">
+    <div class="ft__on-surface">${window.siyuan.languages.syncConfGuide3}</div>
+    <div style="display: flex;flex-direction: column;height: 40vh;">
+        <div class="fn__flex" style="height:100%;align-items:center;justify-content:center"><span class="b3-loading" aria-hidden="true"></span></div>
+    </div>
+</div>
+<div class="b3-dialog__action">
+    <button class="b3-button" disabled>${window.siyuan.languages.openSyncTip1}</button>
+</div>`;
+        if (dialog) {
+            dialog.element.querySelector(".b3-dialog__header").innerHTML = "🗂️ " + window.siyuan.languages.cloudSyncDir;
+            dialog.element.querySelector(".b3-dialog__body").innerHTML = listHTML;
+        } else {
+            dialog = new Dialog({
+                title: "🗂️ " + window.siyuan.languages.cloudSyncDir,
+                content: listHTML,
+                width: isMobile() ? "92vw" : "520px",
+            });
+        }
+        dialog.element.setAttribute("data-key", Constants.DIALOG_SYNCCHOOSEDIR);
+        const contentElement = dialog.element.querySelector(".b3-dialog__content").lastElementChild;
+        const btnElement = dialog.element.querySelector(".b3-button") as HTMLButtonElement;
+        const updateOpenSyncBtn = (ready: boolean) => {
+            btnElement.disabled = !ready;
+        };
+        bindSyncCloudListEvent(contentElement, updateOpenSyncBtn);
+        renderSyncCloudList(contentElement, false, updateOpenSyncBtn);
+        btnElement.addEventListener("click", () => {
+            dialog.destroy();
+            configApi.set("sync.enabled", true, () => {
+                window.siyuan.config.sync.enabled = true;
+                processSync();
+                confirmDialog("🔄 " + window.siyuan.languages.syncConfGuide4, window.siyuan.languages.syncConfGuide5, () => {
+                    syncNow();
+                });
+            });
+        });
+    } else {
+        if (dialog) {
+            dialog.destroy();
+        }
+        confirmDialog("🔄 " + window.siyuan.languages.syncConfGuide4, window.siyuan.languages.syncConfGuide5, () => {
+            syncNow();
+        });
+    }
+};
+
+export const setKey = (isSync: boolean, cb?: () => void) => {
+    const dialog = new Dialog({
+        title: "🔑 " + window.siyuan.languages.syncConfGuide1,
+        content: `<div class="b3-dialog__content ft__center">
+    <img style="width: 260px" src="/stage/images/sync-guide.svg"/>
+    <div class="fn__hr--b"></div>
+    <div class="ft__on-surface">${window.siyuan.languages.syncConfGuide2}</div>
+    <div class="fn__hr--b"></div>
+    <input class="b3-text-field fn__block ft__center" placeholder="${window.siyuan.languages.passphrase}">
+    <div class="fn__hr"></div>
+    <input class="b3-text-field fn__block ft__center" placeholder="${window.siyuan.languages.reEnterPassphrase}">
+</div>
+<div class="b3-dialog__action">
+    <label style="display: inline-flex; align-items: center; cursor: pointer;">
+        <input type="checkbox" id="confirmPassword">
+        <span class="fn__space"></span>
+        ${window.siyuan.languages.confirmPassword}
+    </label>
+    <span class="fn__flex-1"></span>
+    <button class="b3-button b3-button--cancel">${window.siyuan.languages.cancel}</button>
+    <span class="fn__space"></span>
+    <button class="b3-button b3-button--text" id="initKeyByPW" disabled>
+        ${window.siyuan.languages.confirm}
+    </button>
+</div>`,
+        width: isMobile() ? "92vw" : "520px",
+    });
+    dialog.element.setAttribute("data-key", Constants.DIALOG_SETPASSWORD);
+    dialog.element.querySelector(".b3-button--cancel").addEventListener("click", () => {
+        dialog.destroy();
+    });
+    const genBtnElement = dialog.element.querySelector("#initKeyByPW");
+    dialog.element.querySelector("#confirmPassword").addEventListener("change", function () {
+        if (this.checked) {
+            genBtnElement.removeAttribute("disabled");
+        } else {
+            genBtnElement.setAttribute("disabled", "disabled");
+        }
+    });
+    const inputElements = dialog.element.querySelectorAll(".b3-text-field") as NodeListOf<HTMLInputElement>;
+    genBtnElement.addEventListener("click", () => {
+        if (!inputElements[0].value || !inputElements[1].value) {
+            showMessage(window.siyuan.languages._kernel[142]);
+            return;
+        }
+        if (inputElements[0].value !== inputElements[1].value) {
+            showMessage(window.siyuan.languages.passwordNoMatch);
+            return;
+        }
+        confirmDialog("🔑 " + window.siyuan.languages.genKeyByPW, window.siyuan.languages.initRepoKeyTip, () => {
+            if (!isSync) {
+                dialog.destroy();
+            }
+            fetchPost("/api/repo/initRepoKeyFromPassphrase", {pass: inputElements[0].value}, (response) => {
+                window.siyuan.config.repo.key = response.data.key;
+                if (cb) {
+                    cb();
+                }
+                if (isSync) {
+                    setSync(response.data.key, dialog);
+                }
+            });
+        });
+    });
+    inputElements[0].focus();
+};

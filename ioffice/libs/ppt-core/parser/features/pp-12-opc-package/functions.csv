@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_package_open,OPC 包打开与 rel 定位,path 或 RAF,OxfrPackage（officeDocument/app/core/custom rel 定位 + close）,wave0 07_function_opc_package（core-libs/io）,02;03;pp-09-pptx-open,libs/ppt-core,pass
+2,02_function_pres_part_locate,pres part 定位与后缀校验,&OxfrPackage,Result<PackagePart, FileDamaged("Not OOXML file")|SuffixError("Not pptx file")>,01,pp-09-pptx-open,libs/ppt-core,pass
+3,03_function_part_stream,part → 字节流,part（或 partName）+ isOriginInput,zip entry 解压流,01;02,pp-07-part-open;pp-09-pptx-open,libs/ppt-core,pass

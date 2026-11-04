@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "regions": {
+    "cn": {
+      "market": "china",
+      "releaseFile": "packages/openmuse_runtime_config/assets/releases/china.json",
+      "origin": "https://app.openmuseai.com",
+      "baseHref": "/",
+      "serviceOrigins": [
+        "https://cn.openmuseai.com"
+      ]
+    },
+    "us": {
+      "market": "overseas",
+      "releaseFile": "packages/openmuse_runtime_config/assets/releases/overseas.json",
+      "origin": "https://us.openmuseai.com",
+      "baseHref": "/app/",
+      "serviceOrigins": [
+        "https://us.openmuseai.com"
+      ]
+    }
+  }
+}

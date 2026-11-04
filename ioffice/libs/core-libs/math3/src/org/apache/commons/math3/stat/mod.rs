@@ -1,0 +1,10 @@
+pub mod descriptive;
+pub mod Frequency;
+#[path = "package-info.rs"] pub mod package_info;
+pub mod ranking;
+pub mod StatUtils;
+pub mod correlation;
+pub mod clustering;
+pub mod regression;
+pub mod inference;
+pub mod interval;

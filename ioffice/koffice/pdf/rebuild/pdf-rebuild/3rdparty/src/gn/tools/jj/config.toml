@@ -1,0 +1,85 @@
+# Jujutsu configuration for repository-specific jj features.
+# Schema: https://docs.jj-vcs.dev/latest/config-schema.json
+#
+# To enable this configuration, symlink it to your local repo config:
+# `ln -sf $(pwd)/tools/jj/config.toml $(jj config path --repo)`
+
+[revset-aliases]
+"trunk()" = "main@origin"
+"before" = "trunk()"
+
+# For users of jj-on-piper, this is enabled by default for *all* repos.
+# We want GN's formatters, not google3's.
+[fix.tools.google3format]
+enabled = false
+# If you're not using the google-internal jj, this will complain that
+# google3format is an invalid fix tool because it has no command/patterns
+command = ["/dev/null"]
+patterns = ["null"]
+
+[aliases]
+compare-internal = [
+  "run",
+  "--revision=before=before",
+  "--revision=after=@",
+  # Allow running on immutable commits
+  "--ignore-changes",
+]
+
+compare = [
+  "compare-internal",
+  "-j2",
+  "--",
+  "bash",
+  "-c",
+]
+
+compare-serial = [
+  "compare-internal",
+  "-j1",
+  "--passthrough",
+  "--",
+  "bash",
+  "-c",
+]
+
+# Runs ninja on /tmp/before and /tmp/after
+before-after = [
+  "compare",
+  "python3 build/gen.py --out-path=/tmp/$JJ_LABEL ${GN_OPTS:-} && ninja -C /tmp/$JJ_LABEL ${NINJA_TARGETS:-gn}",
+]
+
+before-after-serial = [
+  "compare-serial",
+  "python3 build/gen.py --out-path=/tmp/$JJ_LABEL ${GN_OPTS:-} && ninja -C /tmp/$JJ_LABEL ${NINJA_TARGETS:-gn}",
+]
+
+compare-perf = [
+  "util",
+  "exec",
+  "--",
+  "bash",
+  "-c",
+  """
+  # We need to use serial because we can't run two performance benchmarks at the same time.
+  GN_OPTS="--gen=${SRC:-$HOME/chromium/src}=${OUT_DIR:-out/\\$JJ_LABEL}" \
+  NINJA_TARGETS=gen_bench \
+  jj --config "revset-aliases.before=\\"${BEFORE:-trunk()}\\"" before-after-serial && \
+  python3 "$JJ_WORKSPACE_ROOT/tools/compare_traces.py" \
+    --before /tmp/before/gen_bench_[0-9]*.trace \
+    --after  /tmp/after/gen_bench_[0-9]*.trace
+  """,
+]
+
+[fix.tools.clang-format]
+command = ["clang/bin/clang-format", "--assume-filename=$path"]
+patterns = [
+  "glob:'src/**/*.cc' ~ (glob:'**/third_party/**' | glob:'**/vendor/**')",
+  "glob:'src/**/*.h' ~ (glob:'**/third_party/**' | glob:'**/vendor/**')",
+]
+
+[fix.tools.rustfmt]
+command = ["bash", "tools/jj/rustfmt.sh"]
+patterns = [
+  "glob:'src/gn/starlark/**/*.rs' ~ (glob:'**/third_party/**' | glob:'**/vendor/**')",
+]

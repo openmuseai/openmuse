@@ -1,0 +1,11 @@
+feature_id,title,description,seeds_count,depends_on_feature,status,docs_path
+wave0-ooxml-standards,OOXML/DOCX standards glossary,前置术语与 XWPF 对照；无改写 seeds。,0,,ready,features/wave0-ooxml-standards/docs
+wc-01-storage-write,Storage write path (Papx/PLC/CoreHelper),Finish parse-01 must remaining: factories + Papx + PLC + CPieceTable + CoreHelper so append* works.,7,wave0-ooxml-standards,ready,features/wc-01-storage-write/docs
+wc-02-document-model,Document model (TextDocument/SubDocument/Styles),Own storage structures; StyleId2Sti / KStyles for importers.,11,wc-01-storage-write,ready,features/wc-02-document-model/docs
+wc-03-property-convert,OOXML attrs → PropertySet converters,ImporterBase + ConvertHelper + Run/ParaPropsConverterSimple.,4,wc-02-document-model,ready,features/wc-03-property-convert/docs
+wc-04-paragraph-import,Paragraph import state machine,ParagraphContext + SubDocumentImporter + MainDocumentImporter hot path.,3,wc-03-property-convert,ready,features/wc-04-paragraph-import/docs
+wc-05-orchestration,DocxReader / DocumentImporter orchestration,Wire XWPF callbacks into word-core; styles + finish work.,5,wc-04-paragraph-import,ready,features/wc-05-orchestration/docs
+wc-06-stage1-live,Live Stage1 dump vs Java,Real docx rope+PAPX/CHPX vs Java Stage1 JSON (L2 geometry keys).,0,wc-05-orchestration,spec,features/wc-06-stage1-live
+wc-07-papx-geometry,Geometry PAPX sprms,ind 208-213 / spacing 214/217/220 + content width minus left/right indent.,0,wc-03-property-convert;wc-06-stage1-live,spec,features/wc-07-papx-geometry
+wc-08-numbering-apply,Numbering string + hanging,numbering.xml → auto-num run + hanging indent for layout.,0,wc-02-document-model,pass,features/wc-08-numbering-apply
+wc-09-hdrftr-story,Header/footer stories,Fill header/footer SubDocuments from sectPr rIds.,0,wc-05-orchestration,pass,features/wc-09-hdrftr-story

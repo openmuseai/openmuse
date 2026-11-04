@@ -1,0 +1,14 @@
+// Rust stub for BRCBorderTool (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/tools/BRCBorderTool.java
+use crate::*;
+
+pub struct BRCBorderTool {
+    // TODO: fields
+}
+
+impl BRCBorderTool {
+    pub fn new() -> Self { todo!() }
+    pub fn getActualStrokeWidth(brcType: i32, strokeWidth: f32) -> f32 { todo!() }
+    pub fn getActualRatio(brcType: i32) -> f32 { todo!() }
+    pub fn getVaildBrc(brc: BRC) -> BRC { todo!() }
+}

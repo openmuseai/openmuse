@@ -1,0 +1,71 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package job
+
+import (
+	"time"
+
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/task"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func StartCron() {
+	go every(100*time.Millisecond, task.ExecTaskJob)
+	go every(100*time.Millisecond, task.ExecAsyncTaskJob)
+	go every(7*time.Second, task.StatusJob)
+	go every(5*time.Second, model.SyncDataJob)
+	go every(2*time.Hour, model.StatJob)
+	go every(6*time.Hour, util.RefreshRhyResultJob, "RefreshRhyResultJob")
+	go every(2*time.Hour, model.RefreshCheckJob2H)
+	go every(6*time.Hour, model.RefreshCheckJob6H)
+	go every(3*time.Second, model.FlushUpdateRefTextRenameDocJob)
+	go every(100*time.Millisecond, model.RefreshHPathsJob)
+	go every(util.SQLFlushInterval, sql.FlushTxJob)
+	go every(util.SQLFlushInterval, sql.FlushHistoryTxJob)
+	go every(util.SQLFlushInterval, sql.FlushAssetContentTxJob)
+	go every(10*time.Minute, model.IndexEmbedBlockJob)
+	go every(10*time.Minute, model.CacheVirtualBlockRefJob)
+	go every(30*time.Second, model.OCRAssetsJob)
+	go every(30*time.Second, model.FlushAssetsTextsJob)
+	go every(30*time.Second, model.HookDesktopUIProcJob)
+	go every(24*time.Hour, model.AutoPurgeRepoJob)
+	go every(1*time.Minute, model.AutoFixIndex)
+	go every(30*time.Minute, model.AutoCheckMicrosoftDefenderJob)
+	go every(24*time.Hour, model.ClearOutdatedHistoryDirJob)
+	go every(1*time.Minute, model.AutoLockIdleEncryptedBoxesJob)
+	if util.IsMobileContainer() {
+		go every(3*time.Second, model.AutoConsumeShorthandsJob)
+	}
+
+	model.StartPushQueueConsumer()
+}
+
+func every(interval time.Duration, f func(), name ...string) {
+	util.RandomSleep(50, 200)
+
+	// 启动后立即执行一次
+	func() {
+		defer logging.Recover()
+		f()
+		if 0 < len(name) {
+			logging.LogInfof("cron job [%s] executed", name)
+		}
+	}()
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for range ticker.C {
+		func() {
+			defer logging.Recover()
+			f()
+			if 0 < len(name) {
+				logging.LogInfof("cron job [%s] executed", name)
+			}
+		}()
+	}
+}

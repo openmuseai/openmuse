@@ -1,0 +1,17 @@
+{
+  "total": 168,
+  "files": [
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/pptxr/handler/slides/CommonSlideDataHandler.rs",
+      "count": 50
+    },
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/pptxr/handler/slides/BackgroundHandler.rs",
+      "count": 52
+    },
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/pptxr/handler/slides/ControlListHandler.rs",
+      "count": 66
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+// Rust stub for TBD (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/TBD.java
+use crate::*;
+
+pub struct TBD {
+    // TODO: fields
+}
+
+impl TBD {
+    pub fn new() -> Self { todo!() }
+    pub fn alloc(&self) -> TBD { todo!() }
+    pub fn init(&self, tbd: TBD) { todo!() }
+}

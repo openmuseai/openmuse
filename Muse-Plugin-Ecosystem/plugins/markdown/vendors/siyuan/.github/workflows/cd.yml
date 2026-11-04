@@ -1,0 +1,978 @@
+name: CD For SiYuan
+
+on:
+  push:
+    tags:
+      - '*-alpha*'
+      - '*-beta*'
+      - '*-rc*'
+  workflow_dispatch:
+
+env:
+  package_json: "app/package.json"
+  GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-24.04
+    outputs:
+      release_title: ${{ steps.release_info.outputs.release_title }}
+      version: ${{ steps.version.outputs.value }}
+      android_ref: ${{ steps.android_version.outputs.ref }}
+      testing_ref: ${{ steps.testing_ref.outputs.sha }}
+      packageManager: ${{ steps.packageManager.outputs.value }}
+      release_body: ${{ steps.release_info.outputs.release_body }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Resolve editor testing revision
+        id: testing_ref
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA=$(gh api repos/siyuan-note/siyuan-testing/commits/main --jq .sha)
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: pip install PyGithub
+
+      - id: thisLatestRelease
+        run: |
+          LATEST=$(gh api "repos/${{ github.repository }}/releases/latest" --jq '.tag_name' 2>/dev/null || echo "")
+          echo "release=$LATEST" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from package.json
+        id: version
+        run: |
+          echo "value=$(jq .version ${{ env.package_json }} -r)" >> $GITHUB_OUTPUT
+
+      - name: Checkout siyuan-android
+        uses: actions/checkout@v7
+        with:
+          repository: siyuan-note/siyuan-android
+          ref: main
+          path: ${{ github.workspace }}/siyuan-android
+
+      - name: Verify siyuan-android version
+        id: android_version
+        # Android 的 siyuanVersionName 必须与 package.json 版本一致，否则在打包前终止整个流程。
+        run: |
+          ANDROID_VERSION=$(sed -nE 's/^[[:space:]]*siyuanVersionName[[:space:]]*=[[:space:]]*"([^"]+)"[[:space:]]*$/\1/p' build.gradle)
+          VERSION="${{ steps.version.outputs.value }}"
+          if [ -z "$ANDROID_VERSION" ]; then
+            echo "Unable to read siyuanVersionName from siyuan-android/build.gradle, stopping"
+            exit 1
+          fi
+          if [ "$ANDROID_VERSION" != "$VERSION" ]; then
+            echo "siyuan-android version ($ANDROID_VERSION) does not match package.json version ($VERSION), stopping"
+            exit 1
+          fi
+          echo "siyuan-android version matches: $ANDROID_VERSION"
+          echo "ref=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        working-directory: ${{ github.workspace }}/siyuan-android
+
+      - name: Verify tag matches package.json version
+        # 仅 tag 推送触发时校验：去掉 tag 前导 v 后与 package.json 中的版本号比对，
+        # 不一致说明开发者推 tag 前忘记同步版本号，直接终止整个流程。
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION="${{ steps.version.outputs.value }}"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "Tag (v$TAG) does not match version in package.json ($VERSION), stopping"
+            exit 1
+          fi
+          echo "Tag matches version: $TAG"
+
+      - name: Extract electronVersion from package.json
+        id: electronVersion
+        run: |
+          echo "value=$(jq .devDependencies.electron ${{ env.package_json }} -r)" >> $GITHUB_OUTPUT
+
+      - name: Extract packageManager from package.json
+        id: packageManager
+        run: |
+          echo "value=$(jq .packageManager ${{ env.package_json }} -r)" >> $GITHUB_OUTPUT
+
+      - name: Gather Release Information
+        id: release_info
+        run: |
+          echo "release_title=v${{ steps.version.outputs.value }}" >> $GITHUB_OUTPUT
+          changelog_header=$(python scripts/parse-changelog-HEAD.py -t ${{ github.ref }} -b ${{ steps.thisLatestRelease.outputs.release }} -e ${{ steps.electronVersion.outputs.value }} ${{ github.repository }})
+          changelog=$(python scripts/parse-changelog.py -t ${{ github.ref }} ${{ github.repository }})
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "release_body<<$EOF" >> $GITHUB_OUTPUT
+          echo "$changelog_header" >> $GITHUB_OUTPUT
+          echo "$changelog" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report non-blocking step outcomes
+        if: always()
+        env:
+          WORKFLOW_STEPS: ${{ toJSON(steps) }}
+        run: node scripts/report-workflow-outcomes.mjs
+
+  languages:
+    name: Language validation
+    needs: prepare
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+      - name: Test language validation
+        id: test_language_validation
+        # 测试失败只记录结果，不阻塞后续发布构建。
+        continue-on-error: true
+        run: python -m unittest discover -s scripts -p "test_check_lang_keys.py"
+      - name: Check language keys and kernel placeholders
+        run: python scripts/check-lang-keys.py
+      - name: Test editor workflow safeguards
+        id: test_editor_workflow_safeguards
+        continue-on-error: true
+        run: python -m unittest discover -s scripts -p "test_editor_e2e_workflow.py"
+      - name: Test workflow outcome reporting
+        id: workflow_report_tests
+        continue-on-error: true
+        run: node --test scripts/test-report-workflow-outcomes.mjs scripts/go-cache.test.mjs
+
+      - name: Report non-blocking step outcomes
+        if: always()
+        env:
+          WORKFLOW_STEPS: ${{ toJSON(steps) }}
+        run: node scripts/report-workflow-outcomes.mjs
+
+  headers:
+    name: Source file headers
+    needs: prepare
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Check project source file headers
+        id: check_source_file_headers
+        # 文件头只是格式约定，偏离不阻塞发布，按其他非阻塞检查的方式记录结果。
+        continue-on-error: true
+        run: node scripts/check-license-headers.mjs
+
+      - name: Report non-blocking step outcomes
+        if: always()
+        env:
+          WORKFLOW_STEPS: ${{ toJSON(steps) }}
+        run: node scripts/report-workflow-outcomes.mjs
+
+  contracts:
+    name: API contracts and types
+    needs: prepare
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: kernel/go.mod
+          cache: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Prepare Go cache
+        id: go-cache
+        run: node scripts/go-cache.mjs
+      - name: Restore Go cache
+        id: restore-go-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ${{ steps.go-cache.outputs.modules }}
+            ${{ steps.go-cache.outputs.build }}
+          key: ${{ steps.go-cache.outputs.key }}
+
+      - name: Install repository pnpm version
+        run: npm install --global --allow-scripts=pnpm ${{ needs.prepare.outputs.packageManager }}
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: app
+      - name: Check generated contracts and route coverage
+        run: pnpm run api:check
+        working-directory: app
+      - name: Check application and strict contract types
+        run: pnpm run typecheck
+        working-directory: app
+
+  kernel-tests-linux:
+    name: Linux kernel tests
+    # 完整内核检查与构建并行，发布汇总仍等待检查及其硬失败结果。
+    needs: prepare
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: kernel/go.mod
+          cache: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Prepare Go cache
+        id: go-cache
+        run: node scripts/go-cache.mjs
+      - name: Restore Go cache
+        id: restore-go-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ${{ steps.go-cache.outputs.modules }}
+            ${{ steps.go-cache.outputs.build }}
+          key: ${{ steps.go-cache.outputs.key }}
+
+      - name: Install filesystem fault injection dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y strace
+      - name: Prepare native OCR verification resources
+        run: python3 scripts/prepare-ocr.py --runtime linux-amd64 --build-worker
+      - name: Test kernel test runner
+        run: node --test scripts/test-kernel.test.mjs
+      - name: Test all kernel packages
+        id: test_all_kernel_packages
+        # 测试失败只记录结果，不阻塞后续发布构建。
+        continue-on-error: true
+        run: node ../scripts/test-kernel.mjs --shards 4 --output "${{ runner.temp }}/kernel-test-results"
+        working-directory: kernel
+        env:
+          SIYUAN_OCR_TEST_ASSETS: ${{ github.workspace }}/app/stage/ocr/models
+          SIYUAN_OCR_TEST_LIBRARY: ${{ github.workspace }}/app/stage/ocr/runtime/linux-amd64/libonnxruntime.so
+      - name: Test default structured title migration
+        id: test_default_structured_title_migration
+        continue-on-error: true
+        run: go test -tags "fts5 sqlcipher" ./documentaddressing ./filesys ./model ./api ./cli/cmd -run '^TestStructuredTitles' -count=1
+        working-directory: kernel
+      - name: Test path fixtures with custom temporary directories
+        id: test_path_fixtures_with_custom_temporary_directories
+        # 测试失败只记录结果，不阻塞后续发布构建。
+        continue-on-error: true
+        run: go test -tags "fts5 sqlcipher" ./internal/testutil ./util ./model ./server -run 'Test(PublicDataDir|IsSensitivePath|.*Obsidian|RegisterStaticFileHandlers|StaticFile|WidgetResponseCacheControl|TemplatesAndExportRequireAdministrator|SnippetPublishAccess|PluginPublish|PublishFile)' -count=1
+        working-directory: kernel
+        env:
+          TMPDIR: /tmp
+          GOTMPDIR: ${{ runner.temp }}
+
+      - name: Upload kernel test logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: kernel-tests-linux
+          path: ${{ runner.temp }}/kernel-test-results
+          if-no-files-found: ignore
+
+      # 同一平台只有指定作业保存缓存，其他并行作业只恢复。
+      - name: Save Go cache
+        if: ${{ steps.restore-go-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ${{ steps.go-cache.outputs.modules }}
+            ${{ steps.go-cache.outputs.build }}
+          key: ${{ steps.go-cache.outputs.key }}
+
+      - name: Report non-blocking step outcomes
+        if: always()
+        env:
+          WORKFLOW_STEPS: ${{ toJSON(steps) }}
+        run: node scripts/report-workflow-outcomes.mjs
+
+  kernel-tests-windows:
+    name: Windows kernel tests
+    # 独立运行内核检查，前端测试不再等待其完成。
+    needs: prepare
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: kernel/go.mod
+          cache: false
+      - name: Prepare Go cache
+        id: go-cache
+        run: node scripts/go-cache.mjs
+      - name: Restore Go cache
+        id: restore-go-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ${{ steps.go-cache.outputs.modules }}
+            ${{ steps.go-cache.outputs.build }}
+          key: ${{ steps.go-cache.outputs.key }}
+
+      - name: Set up Windows kernel test compiler
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          path-type: inherit
+          install: mingw-w64-ucrt-x86_64-gcc
+      - name: Test kernel test runner
+        run: node --test scripts/test-kernel.test.mjs
+      - name: Test all Windows kernel packages
+        id: test_windows_kernel_packages
+        # 测试失败只记录结果，不阻塞后续发布构建。
+        continue-on-error: true
+        shell: msys2 {0}
+        run: node ../scripts/test-kernel.mjs --shards 4 --output "${{ runner.temp }}/kernel-test-results"
+        working-directory: kernel
+        env:
+          CGO_ENABLED: 1
+          CC: gcc
+
+      - name: Test Windows default structured title migration
+        id: test_windows_default_structured_title_migration
+        continue-on-error: true
+        shell: msys2 {0}
+        run: go test -tags "fts5 sqlcipher" ./documentaddressing ./filesys ./model ./api ./cli/cmd -run '^TestStructuredTitles' -count=1
+        working-directory: kernel
+        env:
+          CGO_ENABLED: 1
+          CC: gcc
+
+      - name: Upload kernel test logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: kernel-tests-windows
+          path: ${{ runner.temp }}/kernel-test-results
+          if-no-files-found: ignore
+
+      # 同一平台只有指定作业保存缓存，其他并行作业只恢复。
+      - name: Save Go cache
+        if: ${{ steps.restore-go-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ${{ steps.go-cache.outputs.modules }}
+            ${{ steps.go-cache.outputs.build }}
+          key: ${{ steps.go-cache.outputs.key }}
+
+      - name: Report non-blocking step outcomes
+        if: always()
+        env:
+          WORKFLOW_STEPS: ${{ toJSON(steps) }}
+        run: node scripts/report-workflow-outcomes.mjs
+
+  frontend-tests:
+    name: Frontend, Electron and packaging tests
+    needs: prepare
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Install repository pnpm version
+        run: npm install --global --allow-scripts=pnpm ${{ needs.prepare.outputs.packageManager }}
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: app
+      - name: Check shared menu ownership
+        run: pnpm run menu:check
+        working-directory: app
+      - name: Test frontend, Electron and packaging scripts
+        id: test_frontend_electron_and_packaging_scripts
+        # 测试失败只记录结果，不阻塞后续发布构建。
+        continue-on-error: true
+        run: pnpm test
+        working-directory: app
+      - name: Test OCR build and resource scripts
+        run: python -m unittest discover -s scripts -p "test_*ocr*.py"
+      - name: Test editor group selection
+        id: test_editor_group_selection
+        continue-on-error: true
+        run: node --test scripts/test-prepare-editor-e2e-groups.mjs
+
+      - name: Report non-blocking step outcomes
+        if: always()
+        env:
+          WORKFLOW_STEPS: ${{ toJSON(steps) }}
+        run: node scripts/report-workflow-outcomes.mjs
+
+  build:
+    name: ${{ matrix.config.name }}
+    # 前端测试与构建并行，发布汇总仍等待前端检查完成。
+    needs: [prepare, languages, contracts]
+    strategy:
+      matrix:
+        config:
+          - os: ubuntu-24.04
+            name: ubuntu build linux
+            kernel_path: "../app/kernel-linux/SiYuan-Kernel"
+            build_args_prefix: "-s -w -X"
+            build_args_suffix: "Mode=prod"
+            electron_args: "dist-linux"
+            goos: "linux"
+            goarch: "amd64"
+            suffix: "linux"
+            e2e_shards: ""
+          - os: macos-latest
+            name: macos build mac.dmg
+            kernel_path: "../app/kernel-darwin/SiYuan-Kernel"
+            build_args_prefix: "-s -w -X"
+            build_args_suffix: "Mode=prod"
+            electron_args: "dist-darwin"
+            goos: "darwin"
+            goarch: "amd64"
+            suffix: "mac.dmg"
+            e2e_shards: "main:6806"
+          - os: windows-latest
+            name: windows build win.exe
+            kernel_path: "../app/kernel/SiYuan-Kernel.exe"
+            build_args_prefix: "-s -w -X"
+            build_args_suffix: "Mode=prod"
+            electron_args: "dist"
+            goos: "windows"
+            gobin: "bin"
+            goarch: "amd64"
+            suffix: "win.exe"
+            e2e_shards: "attribute-view:6808"
+
+    uses: ./.github/workflows/desktop-build.yml
+    with:
+      config: ${{ toJSON(matrix.config) }}
+      packageManager: ${{ needs.prepare.outputs.packageManager }}
+
+  build_macos_arm64:
+    name: macos build mac-arm64.dmg
+    # ARM 独立完成构建和打包后启动 editor，避免等待其他桌面平台的整个矩阵。
+    needs: [prepare, languages, contracts]
+    uses: ./.github/workflows/desktop-build.yml
+    with:
+      config: >-
+        {"os":"macos-latest","name":"macos build mac-arm64.dmg","kernel_path":"../app/kernel-darwin-arm64/SiYuan-Kernel","build_args_prefix":"-s -w -X","build_args_suffix":"Mode=prod","electron_args":"dist-darwin-arm64","goos":"darwin","goarch":"arm64","suffix":"mac-arm64.dmg","e2e_shards":""}
+      packageManager: ${{ needs.prepare.outputs.packageManager }}
+      testing_ref: ${{ needs.prepare.outputs.testing_ref }}
+
+  editor_e2e:
+    name: macos ARM editor group ${{ matrix.group }}
+    # 两组使用独立 runner 和工作空间，测试结果不回写发布产物。
+    needs: [prepare, build_macos_arm64]
+    runs-on: macos-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2]
+    env:
+      SIYUAN_E2E_SHARD: editor
+      SIYUAN_BASE_URL: http://127.0.0.1:6807
+      SIYUAN_TEST_RESULTS_DIR: test-results-editor-${{ matrix.group }}
+      PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report-editor-${{ matrix.group }}
+      PLAYWRIGHT_JSON_OUTPUT_FILE: editor-results-${{ matrix.group }}.json
+    steps:
+      - name: Checkout test orchestration
+        uses: actions/checkout@v7
+        with:
+          path: source
+
+      - name: Verify pinned revisions
+        id: revisions
+        shell: bash
+        env:
+          TESTING_REF: ${{ needs.prepare.outputs.testing_ref }}
+        run: |
+          [[ "$TESTING_REF" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git -C source rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = arm64
+
+      - name: Checkout pinned siyuan-testing
+        uses: actions/checkout@v7
+        with:
+          repository: siyuan-note/siyuan-testing
+          ref: ${{ needs.prepare.outputs.testing_ref }}
+          path: siyuan-testing
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install test dependencies
+        id: dependencies
+        run: |
+          npm install --global --allow-scripts=pnpm ${{ needs.prepare.outputs.packageManager }}
+          pnpm install --frozen-lockfile
+        working-directory: siyuan-testing
+
+      - name: Download raw ARM editor runtime
+        id: download
+        uses: actions/download-artifact@v8
+        with:
+          name: editor-runtime-macos-arm64
+          path: editor-runtime
+
+      - name: Verify and restore editor runtime
+        id: restore
+        shell: bash
+        env:
+          TESTING_REF: ${{ needs.prepare.outputs.testing_ref }}
+        run: |
+          (cd editor-runtime && shasum -a 256 --check SHA256SUMS)
+          node -e 'const r = require("./editor-runtime/revisions.json"); if (r.productSHA !== process.env.GITHUB_SHA || r.testingSHA !== process.env.TESTING_REF) throw new Error("Runtime revision mismatch");'
+          test "$(git -C siyuan-testing rev-parse HEAD)" = "$TESTING_REF"
+          mkdir runtime
+          tar -xzf editor-runtime/runtime.tar.gz -C runtime
+          test -x runtime/app/kernel-darwin-arm64/SiYuan-Kernel
+          test -s runtime/app/stage/build/desktop/index.html
+          test -d runtime/app/node_modules
+
+      - name: Validate editor groups and test coverage
+        id: coverage
+        shell: bash
+        run: |
+          pnpm run typecheck
+          # 先检查现有三大分组，再校验 editor 两组的实际用例并集。
+          unset SIYUAN_E2E_SHARDS
+          pnpm run test:shards
+          node ../source/scripts/prepare-editor-e2e-groups.mjs "$PWD"
+        working-directory: siyuan-testing
+
+      - name: Start and wait for editor kernel
+        id: kernel
+        shell: bash
+        run: |
+          mkdir -p "$HOME/SiYuan-Testing"
+          "$GITHUB_WORKSPACE/runtime/app/kernel-darwin-arm64/SiYuan-Kernel" \
+            --workspace="$HOME/SiYuan-Testing" serve --wd="$GITHUB_WORKSPACE/runtime/app" --port=6807 \
+            > "$RUNNER_TEMP/editor-kernel-console.log" 2>&1 &
+          pid=$!
+          echo "$pid" > "$RUNNER_TEMP/editor-kernel.pid"
+          for attempt in {1..60}; do
+            if curl --fail --silent --output "$RUNNER_TEMP/editor-boot.json" --request POST \
+              http://127.0.0.1:6807/api/system/bootProgress && \
+              node -e 'try { const d = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")); process.exit(d.data?.progress >= 100 ? 0 : 1); } catch { process.exit(1); }' "$RUNNER_TEMP/editor-boot.json"; then
+              exit 0
+            fi
+            if ! kill -0 "$pid" 2>/dev/null; then
+              cat "$RUNNER_TEMP/editor-kernel-console.log"
+              exit 1
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/editor-kernel-console.log"
+          cat "$RUNNER_TEMP/editor-boot.json" 2>/dev/null || true
+          exit 1
+
+      - name: Run editor group
+        id: tests
+        timeout-minutes: 50
+        run: >-
+          pnpm exec playwright test --config=config/playwright.editor-group-${{ matrix.group }}.config.ts
+          --global-timeout=2700000 --workers=1 --reporter=line,html,json
+          --output=test-results-editor-${{ matrix.group }}
+        working-directory: siyuan-testing
+
+      - name: Stop editor kernel
+        id: stop_editor_kernel
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [ ! -f "$RUNNER_TEMP/editor-kernel.pid" ]; then exit 0; fi
+          pid=$(cat "$RUNNER_TEMP/editor-kernel.pid")
+          if ! kill -0 "$pid" 2>/dev/null; then exit 0; fi
+          kill -TERM "$pid"
+          for attempt in {1..30}; do
+            if ! kill -0 "$pid" 2>/dev/null; then exit 0; fi
+            sleep 1
+          done
+          kill -KILL "$pid"
+
+      - name: Record editor outcome and collect logs
+        if: always()
+        shell: bash
+        env:
+          GROUP: ${{ matrix.group }}
+          TESTING_REF: ${{ needs.prepare.outputs.testing_ref }}
+          TEST_OUTCOME: ${{ steps.tests.outcome }}
+          DOWNLOAD_OUTCOME: ${{ steps.download.outcome }}
+          RESTORE_OUTCOME: ${{ steps.restore.outcome }}
+          COVERAGE_OUTCOME: ${{ steps.coverage.outcome }}
+          KERNEL_OUTCOME: ${{ steps.kernel.outcome }}
+        run: |
+          mkdir -p siyuan-testing/kernel-logs
+          cp "$RUNNER_TEMP"/editor-kernel-console.log "$RUNNER_TEMP"/editor-boot.json siyuan-testing/kernel-logs/ 2>/dev/null || true
+          cp "$HOME/SiYuan-Testing/temp/siyuan.log" siyuan-testing/kernel-logs/ 2>/dev/null || true
+          cp editor-runtime/revisions.json siyuan-testing/kernel-logs/ 2>/dev/null || true
+          if [ "$TEST_OUTCOME" = skipped ] || [ -z "$TEST_OUTCOME" ]; then
+            status="NOT RUN (test prerequisites did not complete)"
+            echo "::error title=Editor tests not run::Group $GROUP: download=$DOWNLOAD_OUTCOME restore=$RESTORE_OUTCOME coverage=$COVERAGE_OUTCOME kernel=$KERNEL_OUTCOME"
+          else
+            status="$TEST_OUTCOME (Playwright step outcome)"
+          fi
+          {
+            echo "Editor group $GROUP: $status"
+            echo "Product SHA: $GITHUB_SHA"
+            echo "Testing SHA: $TESTING_REF"
+            echo "Download: $DOWNLOAD_OUTCOME; restore: $RESTORE_OUTCOME; coverage: $COVERAGE_OUTCOME; kernel: $KERNEL_OUTCOME"
+          } | tee siyuan-testing/kernel-logs/outcome.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload editor reports and logs
+        id: upload_editor_reports_and_logs
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: siyuan-e2e-editor-${{ matrix.group }}
+          path: |
+            siyuan-testing/playwright-report-editor-*
+            siyuan-testing/test-results-editor-*
+            siyuan-testing/editor-results-*.json
+            siyuan-testing/editor-e2e-groups.json
+            siyuan-testing/kernel-logs
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Report non-blocking step outcomes
+        if: always()
+        env:
+          WORKFLOW_STEPS: ${{ toJSON(steps) }}
+        run: node source/scripts/report-workflow-outcomes.mjs
+
+  build_android:
+    runs-on: ubuntu-24.04
+    name: ubuntu build android.apk
+    env:
+      GOPATH: ${{ github.workspace }}/go
+    # Android 与桌面构建并行，前端检查由发布汇总等待。
+    needs: [prepare, languages, contracts]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/kernel/go.mod
+          cache: false
+      - run: go version
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Prepare Go cache
+        id: go-cache
+        run: node scripts/go-cache.mjs
+        working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
+      - name: Restore Go cache
+        id: restore-go-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ${{ steps.go-cache.outputs.modules }}
+            ${{ steps.go-cache.outputs.build }}
+          key: ${{ steps.go-cache.outputs.key }}
+
+      - name: Install Node pnpm
+        run: npm install --global --allow-scripts=pnpm ${{ needs.prepare.outputs.packageManager }}
+        working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/app
+
+      - name: Get pnpm store path
+        id: pnpm-store
+        shell: bash
+        run: |
+          STORE_PATH=$(pnpm store path --silent)
+          echo "path=$STORE_PATH" >> "$GITHUB_OUTPUT"
+        working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/app
+
+      - name: Restore pnpm store
+        id: restore-pnpm-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-v2-${{ runner.os }}-${{ runner.arch }}-${{ needs.prepare.outputs.packageManager }}-${{ hashFiles(format('go/src/github.com/{0}/app/pnpm-lock.yaml', github.repository)) }}
+          restore-keys: pnpm-v2-${{ runner.os }}-${{ runner.arch }}-${{ needs.prepare.outputs.packageManager }}-
+
+      - name: Install Node Dependencies
+        run: pnpm install --no-frozen-lockfile
+        working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/app
+
+      - name: Building UI
+        run: pnpm run build
+        working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/app
+
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android NDK
+        # 锁定 NDK r28b(与本地开发环境同版本)。sdkmanager 不在 PATH 上
+        # (actions/runner-images#13674),用全路径调用;同时预接受 SDK 许可,
+        # 避免 NDK 安装卡在交互式许可确认。
+        run: |
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
+          fi
+          if [ -z "$SDKMANAGER" ]; then
+            echo "ERROR: sdkmanager not found under $ANDROID_HOME/cmdline-tools/"
+            exit 1
+          fi
+          echo "Using sdkmanager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" "ndk;28.2.13676358" > /dev/null
+          NDK_DIR="$ANDROID_HOME/ndk/28.2.13676358"
+          echo "ANDROID_NDK_HOME=$NDK_DIR" >> $GITHUB_ENV
+          echo "ANDROID_NDK_ROOT=$NDK_DIR" >> $GITHUB_ENV
+          echo "Installed NDK r28b at $NDK_DIR"
+
+      - name: Set up gomobile
+        # 锁定到 kernel/go.mod 中 x/mobile 模块的同一版本,避免工具与库版本漂移。
+        # GOPATH 被显式指向 workspace 下,go install 的产物在 $GOPATH/bin,
+        # 该目录不在默认 PATH 上,需用全路径调用并写入 $GITHUB_PATH 供后续步骤使用。
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@2553ed8ce294
+          echo "$GOPATH/bin" >> $GITHUB_PATH
+          "$GOPATH/bin/gomobile" init
+
+      - name: Building Android Kernel
+        run: gomobile bind -tags "fts5 sqlcipher" -ldflags "-s -w" -v -o kernel.aar -target android/arm64 -androidapi 26 ./mobile/
+        working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/kernel
+        env:
+          CGO_ENABLED: 1
+          JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+
+      - name: Checkout siyuan-android
+        uses: actions/checkout@v7
+        with:
+          repository: siyuan-note/siyuan-android
+          ref: ${{ needs.prepare.outputs.android_ref }}
+          path: ${{ github.workspace }}/siyuan-android
+
+      - name: Patch siyuan-android Repositories
+        # siyuan-android 默认把阿里云镜像排在最前,某些依赖(如 org.apache:apache:31)
+        # 在阿里云镜像缺失会导致解析失败。CI 在海外,直接走 google()/mavenCentral()
+        # 更稳;sed 删除所有 maven.aliyun.com 行,保留官方仓库。
+        run: |
+          sed -i '/maven.aliyun.com/d' build.gradle
+          echo "=== Patched build.gradle repositories ==="
+          grep -A 6 "repositories" build.gradle | head -20
+        working-directory: ${{ github.workspace }}/siyuan-android
+
+      - name: Prepare siyuan-android Build Inputs
+        run: |
+          mkdir -p ${{ github.workspace }}/siyuan-android/app/libs
+          cp ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/kernel/kernel.aar \
+             ${{ github.workspace }}/siyuan-android/app/libs/kernel.aar
+          cd ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/app
+          node scripts/trimChangelogs.js
+          python3 ../scripts/prepare-ocr.py
+          zip -r app.zip appearance guide stage $([ -d changelogs ] && echo changelogs) -x 'stage/ocr/runtime/*'
+          zip -j app.zip ../LICENSE ../THIRD_PARTY_NOTICES.md
+          mkdir -p ${{ github.workspace }}/siyuan-android/app/src/main/assets
+          cp app.zip ${{ github.workspace }}/siyuan-android/app/src/main/assets/app.zip
+
+      - name: Inject Signing Config
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > ${{ github.workspace }}/siyuan-android/app/siyuan-android.jks
+          cat > ${{ github.workspace }}/siyuan-android/signings.gradle <<EOF
+          android {
+            signingConfigs {
+              siyuanConfig {
+                storeFile file("siyuan-android.jks")
+                storePassword "$ANDROID_KEYSTORE_PASSWORD"
+                keyAlias "$ANDROID_KEY_ALIAS"
+                keyPassword "$ANDROID_KEY_PASSWORD"
+              }
+            }
+          }
+          EOF
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Building Android App
+        # local.properties 被 siyuan-android 的 .gitignore 忽略,CI 里需现场生成,
+        # 否则 Gradle 报 "SDK location not found";gradlew 也需显式加可执行权限。
+        # 产物重命名为带版本号的固定名,确保下载文件名正确(GitHub Release 的下载名
+        # 取决于上传时的本地文件名,# 语法只改显示标签)。
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          chmod +x ./gradlew
+          # 新版 Android 工程验证所有渠道；固定到旧提交的构建仍可使用原有流程。
+          if [ -f scripts/verify-build.gradle ]; then
+            ./gradlew --init-script scripts/verify-build.gradle :app:verifyBuildConfiguration
+          fi
+          ./gradlew assembleOfficialRelease
+          cd app/build/outputs/apk/official/release
+          mv siyuan-*-official-release.apk siyuan-${{ needs.prepare.outputs.version }}.apk
+        working-directory: ${{ github.workspace }}/siyuan-android
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: siyuan-android
+          path: ${{ github.workspace }}/siyuan-android/app/build/outputs/apk/official/release/siyuan-${{ needs.prepare.outputs.version }}.apk
+
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-24.04
+    needs: [prepare, kernel-tests-linux, kernel-tests-windows, frontend-tests, build, build_macos_arm64, build_android, editor_e2e]
+    # 等待全部内核、前端检查和两组编辑器测试结束；测试步骤的软失败不阻塞发布。
+    # 检查的硬失败、构建失败或取消仍会阻止发布，编辑器测试失败只记录结果。
+    if: >-
+      ${{ always() && !cancelled() && needs.prepare.result == 'success' &&
+          needs.kernel-tests-linux.result == 'success' && needs.kernel-tests-windows.result == 'success' &&
+          needs.frontend-tests.result == 'success' &&
+          needs.build.result == 'success' && needs.build_macos_arm64.result == 'success' &&
+          needs.build_android.result == 'success' && needs.editor_e2e.result != 'cancelled' }}
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: siyuan-*
+
+      - name: Prepare Release Assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.prepare.outputs.version }}"
+          mkdir -p release-assets
+          cp "siyuan-linux/siyuan-${VERSION}-linux.AppImage" release-assets/
+          cp "siyuan-linux/siyuan-${VERSION}-linux.tar.gz" release-assets/
+          cp "siyuan-linux/siyuan-${VERSION}-linux.deb" release-assets/
+          cp "siyuan-linux/siyuan-${VERSION}-linux.rpm" release-assets/
+          cp "siyuan-mac.dmg/siyuan-${VERSION}-mac.dmg" release-assets/
+          cp "siyuan-mac-arm64.dmg/siyuan-${VERSION}-mac-arm64.dmg" release-assets/
+          cp "siyuan-win.exe/siyuan-${VERSION}-win.exe" release-assets/
+          cp "siyuan-android/siyuan-${VERSION}.apk" release-assets/
+
+          EXPECTED_ASSETS=(
+            "siyuan-${VERSION}-linux.AppImage"
+            "siyuan-${VERSION}-linux.tar.gz"
+            "siyuan-${VERSION}-linux.deb"
+            "siyuan-${VERSION}-linux.rpm"
+            "siyuan-${VERSION}-mac.dmg"
+            "siyuan-${VERSION}-mac-arm64.dmg"
+            "siyuan-${VERSION}-win.exe"
+            "siyuan-${VERSION}.apk"
+          )
+          for asset in "${EXPECTED_ASSETS[@]}"; do
+            test -s "release-assets/${asset}"
+          done
+          (
+            cd release-assets
+            sha256sum "${EXPECTED_ASSETS[@]}" > SHA256SUMS.txt
+            sha256sum --check SHA256SUMS.txt
+          )
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{ needs.prepare.outputs.release_title }}
+          tag: ${{ github.ref_name }}
+          body: ${{ needs.prepare.outputs.release_body }}
+          draft: true
+          prerelease: true
+          allowUpdates: true
+          omitDraftDuringUpdate: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Release Is Draft
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          test "$(gh release view "${{ github.ref_name }}" --json isDraft --jq '.isDraft')" = "true"
+
+      - name: Upload Release Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release upload "${{ github.ref_name }}" release-assets/* --clobber
+
+      - name: Validate and Publish Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.prepare.outputs.version }}"
+          TAG="${{ github.ref_name }}"
+          RELEASE_ID="$(gh release view "${TAG}" --json databaseId --jq '.databaseId')"
+          EXPECTED_ASSETS=(
+            "siyuan-${VERSION}-linux.AppImage"
+            "siyuan-${VERSION}-linux.tar.gz"
+            "siyuan-${VERSION}-linux.deb"
+            "siyuan-${VERSION}-linux.rpm"
+            "siyuan-${VERSION}-mac.dmg"
+            "siyuan-${VERSION}-mac-arm64.dmg"
+            "siyuan-${VERSION}-win.exe"
+            "siyuan-${VERSION}.apk"
+            "SHA256SUMS.txt"
+          )
+          declare -A EXPECTED_DIGESTS
+          for asset in "${EXPECTED_ASSETS[@]}"; do
+            EXPECTED_DIGESTS["${asset}"]="sha256:$(sha256sum "release-assets/${asset}" | awk '{print $1}')"
+          done
+
+          for attempt in {1..12}; do
+            ASSETS="$(gh api -H "X-GitHub-Api-Version: 2022-11-28" \
+              "repos/${GH_REPO}/releases/${RELEASE_ID}/assets?per_page=100")"
+            READY=true
+            for asset in "${EXPECTED_ASSETS[@]}"; do
+              REMOTE_DIGEST="$(jq -r --arg name "${asset}" \
+                '.[] | select(.name == $name and .state == "uploaded") | .digest // empty' <<< "${ASSETS}")"
+              if [ "${REMOTE_DIGEST}" != "${EXPECTED_DIGESTS[$asset]}" ]; then
+                READY=false
+                break
+              fi
+            done
+            if [ "${READY}" = true ]; then
+              gh release edit "${TAG}" --draft=false --prerelease
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "Release assets or SHA-256 digests are incomplete"
+          exit 1

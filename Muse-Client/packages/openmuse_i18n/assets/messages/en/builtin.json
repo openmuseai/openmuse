@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "namespace": "builtin",
+  "sourceRevision": 2,
+  "messages": {
+    "builtin.auth": "Account",
+    "builtin.cloud": "Cloud workspaces",
+    "builtin.paired": "Desktop connection",
+    "builtin.remote": "Remote workbench",
+    "builtin.scheduled": "Scheduled tasks",
+    "builtin.files": "Workspace files",
+    "builtin.agent": "Assistant",
+    "builtin.speech": "Speech input",
+    "builtin.market": "Plugin store"
+  }
+}

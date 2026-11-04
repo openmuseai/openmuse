@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_style_runs,样式run合并,styledFragments,styledRuns,wr-10;wr-11;wr-14,02,libs/word-core,pass
+2,02_function_style_commands,行DrawText,styledLine,RenderCommand[],01,03,libs/word-core,pass
+3,03_function_page_commands,页命令编排,styledPages,CommandDocument,02,painter,libs/word-core,pass

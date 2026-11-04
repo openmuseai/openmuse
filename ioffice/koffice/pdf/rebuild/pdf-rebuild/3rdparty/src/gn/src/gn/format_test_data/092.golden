@@ -1,0 +1,6 @@
+executable("foo") {
+  sources = [ "foo.cc" ]  # This is a very very very very very very very very
+                          # very very very very very very very very very very
+                          # very very very very very very very long trailing
+                          # comment with extra spaces.
+}

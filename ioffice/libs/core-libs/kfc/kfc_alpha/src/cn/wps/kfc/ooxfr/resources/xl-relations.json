@@ -1,0 +1,367 @@
+{
+  "WORKBOOK": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+    "/xl/workbook.xml"
+  ],
+  "MACROS_WORKBOOK": [
+    "application/vnd.ms-excel.sheet.macroEnabled.main+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+    "/xl/workbook.xml"
+  ],
+  "TEMPLATE_WORKBOOK": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+    "/xl/workbook.xml"
+  ],
+  "MACRO_TEMPLATE_WORKBOOK": [
+    "application/vnd.ms-excel.template.macroEnabled.main+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+    "/xl/workbook.xml"
+  ],
+  "MACRO_ADDIN_WORKBOOK": [
+    "application/vnd.ms-excel.addin.macroEnabled.main+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+    "/xl/workbook.xml"
+  ],
+  "WORKSHEET": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet",
+    "/xl/worksheets/sheet#.xml"
+  ],
+  "MACROSHEET": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.macrosheet+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/macrosheet",
+    "/xl/chartsheets/sheet#.xml"
+  ],
+  "DIALOGSHEET": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/dialogsheet",
+    "/xl/chartsheets/sheet#.xml"
+  ],
+  "CHARTSHEET": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chartsheet",
+    "/xl/chartsheets/sheet#.xml"
+  ],
+  "CHART": [
+    "application/vnd.openxmlformats-officedocument.drawingml.chart+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
+    "/xl/charts/chart#.xml"
+  ],
+  "DIAGRAMSQUICKSTYLE": [
+    "application/vnd.openxmlformats-officedocument.drawingml.diagramStyle+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramQuickStyle",
+    "/xl/diagrams/quickStyle#.xml"
+  ],
+  "DIAGRAMSLAYOUT": [
+    "application/vnd.openxmlformats-officedocument.drawingml.diagramLayout+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramLayout",
+    "/xl/diagrams/layout#.xml"
+  ],
+  "DIAGRAMSDATA": [
+    "application/vnd.openxmlformats-officedocument.drawingml.diagramData+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramData",
+    "/xl/diagrams/data#.xml"
+  ],
+  "DIAGRAMSDRAWING": [
+    "application/vnd.ms-office.drawingml.diagramDrawing+xml",
+    "http://schemas.microsoft.com/office/2007/relationships/diagramDrawing",
+    "/xl/diagrams/drawing#.xml"
+  ],
+  "DIAGRAMSCOLORS": [
+    "application/vnd.openxmlformats-officedocument.drawingml.diagramColors+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramColors",
+    "/xl/diagrams/colors#.xml"
+  ],
+  "SHARED_STRINGS": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings",
+    "/xl/sharedStrings.xml"
+  ],
+  "STYLES": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles",
+    "/xl/styles.xml"
+  ],
+  "CELL_IMAGES": [
+    "application/vnd.wps-officedocument.cellimage+xml",
+    "http://www.wps.cn/officeDocument/2020/cellImage",
+    "/xl/cellimages.xml"
+  ],
+  "DRAWINGS": [
+    "application/vnd.openxmlformats-officedocument.drawing+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing",
+    "/xl/drawings/drawing#.xml"
+  ],
+  "VML_DRAWINGS": [
+    "application/vnd.openxmlformats-officedocument.vmlDrawing",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing",
+    "/xl/drawings/vmlDrawing#.vml"
+  ],
+  "CUSTOM_XML_MAPPINGS": [
+    "application/xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/xmlMaps",
+    "/xl/xmlMaps.xml"
+  ],
+  "SINGLE_XML_CELLS": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.tableSingleCells+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/tableSingleCells",
+    "/tables/tableSingleCells#.xml"
+  ],
+  "TABLE": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table",
+    "/xl/tables/table#.xml"
+  ],
+  "IMAGES": [
+    null,
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    null
+  ],
+  "IMAGE_EMF": [
+    "image/x-emf",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/xl/media/image#.emf"
+  ],
+  "IMAGE_WMF": [
+    "image/x-wmf",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/xl/media/image#.wmf"
+  ],
+  "IMAGE_PICT": [
+    "image/pict",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/xl/media/image#.pict"
+  ],
+  "IMAGE_JPEG": [
+    "image/jpeg",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/xl/media/image#.jpeg"
+  ],
+  "IMAGE_PNG": [
+    "image/png",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/xl/media/image#.png"
+  ],
+  "IMAGE_DIB": [
+    "image/dib",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/xl/media/image#.dib"
+  ],
+  "IMAGE_GIF": [
+    "image/gif",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/xl/media/image#.gif"
+  ],
+  "IMAGE_BMP": [
+    "image/bmp",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/xl/media/image#.bmp"
+  ],
+  "HDPHOTO": [
+    "hdphoto/wdp",
+    "http://schemas.microsoft.com/office/2007/relationships/hdphoto",
+    "/xl/media/hdphoto#.wdp"
+  ],
+  "SHEET_COMMENTS": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments",
+    "/xl/comments#.xml"
+  ],
+  "SHEET_HYPERLINKS": [
+    null,
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+    null
+  ],
+  "VBA_MACROS": [
+    "application/vnd.ms-office.vbaProject",
+    "http://schemas.microsoft.com/office/2006/relationships/vbaProject",
+    "/xl/vbaProject.bin"
+  ],
+  "ACTIVEX_CONTROLS": [
+    "application/vnd.ms-office.activeX+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/control",
+    "/xl/activeX/activeX#.xml"
+  ],
+  "ACTIVEX_BINS": [
+    "application/vnd.ms-office.activeX",
+    "http://schemas.microsoft.com/office/2006/relationships/activeXControlBinary",
+    "/xl/activeX/activeX#.bin"
+  ],
+  "THEME": [
+    "application/vnd.openxmlformats-officedocument.theme+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
+    "/xl/theme/theme#.xml"
+  ],
+  "THEMEOVERRIDE": [
+    "application/vnd.openxmlformats-officedocument.themeOverride+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/themeOverride",
+    "/xl/theme/themeOverride#.xml"
+  ],
+  "CALC_CHAIN": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain",
+    "/xl/calcChain.xml"
+  ],
+  "EXTERNAL_LINK": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLink",
+    "/xl/externalLinks/externalLink#.xml"
+  ],
+  "EXTERNAL_LINK_PATH": [
+    null,
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLinkPath",
+    null
+  ],
+  "HYPERLINK": [
+    null,
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+    null
+  ],
+  "INK": [
+    "application/inkml+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml",
+    "/xl/ink/ink#.xml"
+  ],
+  "PICTURE_XML": [
+    "application/vnd.ms-office.DrsPicture+xml",
+    "http://schemas.microsoft.com/office/2006/relationships/pictureXml",
+    "/drs/picturexml.xml"
+  ],
+  "INK_XML": [
+    "application/inkml+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml",
+    "/drs/ink/ink#.xml"
+  ],
+  "DOWNREV_XML": [
+    "application/vnd.ms-office.DrsDownRev+xml",
+    "http://schemas.microsoft.com/office/2006/relationships/downRev",
+    "/drs/downrev.xml"
+  ],
+  "SHAPE_XML": [
+    "application/vnd.ms-office.DrsShape+xml",
+    "http://schemas.microsoft.com/office/2006/relationships/shapeXml",
+    "/drs/shapexml.xml"
+  ],
+  "ITEM": [
+    "application/vnd.openxmlformats-officedocument.customXml+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml",
+    "/customXml/item#.xml"
+  ],
+  "ITEMPROPS": [
+    "application/vnd.openxmlformats-officedocument.customXmlProperties+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXmlProps",
+    "/customXml/itemProps#.xml"
+  ],
+  "WEBEXTENSION": [
+    "application/vnd.wps-officedocument.webExtension+xml",
+    "http://www.wps.cn/officeDocument/2018/webExtension",
+    "/xl/webExtensions/webExtension#.xml"
+  ],
+  "CHART_COLOR": [
+    "application/vnd.ms-office.chartcolorstyle+xml",
+    "http://schemas.microsoft.com/office/2011/relationships/chartColorStyle",
+    "/xl/charts/colors#.xml"
+  ],
+  "CHART_STYLE": [
+    "application/vnd.ms-office.chartstyle+xml",
+    "http://schemas.microsoft.com/office/2011/relationships/chartStyle",
+    "/xl/charts/style#.xml"
+  ],
+  "BIN_SRC": [
+    "application/vnd.openxmlformats-officedocument.oleObject",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject",
+    "/xl/embeddings/oleObject#.bin"
+  ],
+  "DOCX_SRC": [
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "/xl/embeddings/Microsoft_Word_Document#.docx"
+  ],
+  "DOCM_SRC": [
+    "application/vnd.ms-word.document.macroEnabled.12",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "/xl/embeddings/Microsoft_Word_Macro-Enabled_Document#.docm"
+  ],
+  "DOC_SRC": [
+    "application/msword",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject",
+    "/xl/embeddings/Microsoft_Word_97_-_2003_Document#.doc"
+  ],
+  "SLIDEX_SRC": [
+    "application/vnd.openxmlformats-officedocument.presentationml.slide",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "/xl/embeddings/Microsoft_PowerPoint_Slide#.sldx"
+  ],
+  "PPTX_SRC": [
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "/xl/embeddings/Microsoft_PowerPoint_Presentation#.pptx"
+  ],
+  "SLDM_SRC": [
+    "application/vnd.ms-powerpoint.slide.macroEnabled.12",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "/xl/embeddings/Microsoft_PowerPoint_Macro-Enabled_Slide#.sldm"
+  ],
+  "PPTM_SRC": [
+    "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "/xl/embeddings/Microsoft_PowerPoint_Macro-Enabled_Presentation#.pptm"
+  ],
+  "PPT_SRC": [
+    "application/vnd.ms-powerpoint",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject",
+    "/xl/embeddings/Microsoft_PowerPoint_97-2003_Presentation#.ppt"
+  ],
+  "XLSM_SRC": [
+    "application/vnd.ms-excel.sheet.macroEnabled.12",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "/xl/embeddings/Microsoft_Excel_Macro-Enabled_Worksheet#.xlsm"
+  ],
+  "XLSX_SRC": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "/xl/embeddings/Microsoft_Excel_Worksheet#.xlsx"
+  ],
+  "XLSB_SRC": [
+    "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "/xl/embeddings/Microsoft_Excel_Binary_Worksheet#.xlsb"
+  ],
+  "XLS_SRC": [
+    "application/vnd.ms-excel",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject",
+    "/xl/embeddings/Microsoft_Excel_97-2003_Worksheet#.xls"
+  ],
+  "TIMINGINFO": [
+    "application/vnd.openxmlformats-officedocument.presentationml.timingInfo+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/timingInfo",
+    "/drs/timingInfo.xml"
+  ],
+  "EXTERNALPATH": [
+    null,
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject",
+    null
+  ],
+  "CONNECTIONS": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.connections+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/connections",
+    "/xl/connections.xml"
+  ],
+  "PIVOT_TABLE": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotTable",
+    "/xl/pivotTables/pivotTable#.xml"
+  ],
+  "PIVOT_CACHE_DEFINITION": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheDefinition+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheDefinition",
+    "/xl/pivotCache/pivotCacheDefinition#.xml"
+  ],
+  "PIVOT_CACHE_RECORDS": [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheRecords+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheRecords",
+    "/xl/pivotCache/pivotCacheRecords#.xml"
+  ]
+}

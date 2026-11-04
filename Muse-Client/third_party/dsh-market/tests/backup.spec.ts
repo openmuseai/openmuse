@@ -1,0 +1,353 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { EventEmitter } from 'node:events'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { Readable } from 'node:stream'
+
+const network = vi.hoisted(() => ({
+  lookup: vi.fn(),
+  request: vi.fn(),
+}))
+
+vi.mock('node:dns/promises', () => ({ lookup: network.lookup }))
+vi.mock('node:https', () => ({ request: network.request }))
+
+import {
+  createProfileBackup, downloadWebdav, isPublicTarget, restoreProfileBackup, unportableDeps, uploadWebdav,
+} from '../src/backup.ts'
+import { profileDir } from '../src/profile.ts'
+import { canCreateSymlink } from './symlink-support.ts'
+
+function respondWith(body: string, statusCode: number, headers: Record<string, string> = {}): void {
+  network.request.mockImplementationOnce((_options, callback) => {
+    const response = Readable.from(body === '' ? [] : [Buffer.from(body)])
+    Object.assign(response, { statusCode, headers: { 'content-length': String(Buffer.byteLength(body)), ...headers } })
+    const request = Object.assign(new EventEmitter(), { end: vi.fn() })
+    queueMicrotask(() => callback(response))
+    return request
+  })
+}
+
+/**
+ * Windows without Developer Mode / elevated privileges rejects symlinkSync
+ * with EPERM (an environment limitation unrelated to issue #98). The shared
+ * probe below creates a directory link, which is what the test at :128 needs;
+ * when unavailable that test is skipped so the suite stays green on locked-down
+ * machines. File-symlink tests cannot fall back to a junction and probe
+ * separately — see tests/symlink-support.ts.
+ */
+const symlinksAvailable = canCreateSymlink('dir')
+
+let home: string
+beforeEach(() => {
+  home = mkdtempSync(join(tmpdir(), 'dshm-backup-'))
+  process.env.DSH_HOME = home
+  network.lookup.mockReset()
+  network.request.mockReset()
+  network.lookup.mockResolvedValue([{ address: '93.184.216.34', family: 4 }])
+})
+afterEach(() => {
+  vi.unstubAllGlobals()
+  delete process.env.DSH_HOME
+  rmSync(home, { recursive: true, force: true })
+})
+
+describe('profile backup and restore', () => {
+  it('round-trips config files and excludes installed/cache data', () => {
+    const dir = profileDir('web')
+    mkdirSync(join(dir, 'node_modules', 'plugin'), { recursive: true })
+    mkdirSync(join(dir, 'plugin-config'), { recursive: true })
+    mkdirSync(join(dir, '.dsh-market'), { recursive: true })
+    writeFileSync(join(dir, 'package.json'), '{"dependencies":{"plugin":"^1.0.0"}}')
+    writeFileSync(join(dir, 'cordis.patch.yml'), '- config: true')
+    writeFileSync(join(dir, 'plugin-config', 'settings.json'), '{"enabled":true}')
+    writeFileSync(join(dir, 'pnpm-lock.yaml'), 'lockfileVersion: 9')
+    writeFileSync(join(dir, 'node_modules', 'plugin', 'large.bin'), 'not included')
+    writeFileSync(join(dir, '.dsh-market', 'state.json'), '{}')
+
+    const backup = createProfileBackup('web')
+    expect(backup.files.map(file => file.path)).toEqual(['cordis.patch.yml', 'package.json', 'plugin-config/settings.json'])
+    expect(backup.version).toBe(0.2)
+    expect(backup.files.find(file => file.path === 'cordis.patch.yml')).toEqual({ path: 'cordis.patch.yml', lines: ['- config: true'] })
+    expect(backup.files.find(file => file.path === 'package.json')).toEqual({ path: 'package.json', json: { dependencies: { plugin: '^1.0.0' } } })
+
+    writeFileSync(join(dir, 'package.json'), '{"dependencies":{}}')
+    rmSync(join(dir, 'plugin-config', 'settings.json'))
+    restoreProfileBackup('web', backup)
+    expect(readFileSync(join(dir, 'package.json'), 'utf8')).toContain('plugin')
+    expect(readFileSync(join(dir, 'plugin-config', 'settings.json'), 'utf8')).toBe('{"enabled":true}')
+    expect(existsSync(join(dir, 'node_modules', 'plugin', 'large.bin'))).toBe(true)
+  })
+
+  it('excludes every .bak shape, not just the numeric suffix this repo writes (#205)', () => {
+    // A restore that carried these put the wreckage back: the reporter's
+    // profile came back with the very leftovers that made it need repairing.
+    // The shapes are real — recovery and the host's own repair paths write
+    // `.bak-asm` and `.rp-merged.bak`, neither of which the old
+    // `/\.bak-\d+$/` filter matched.
+    const dir = profileDir('web')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, 'package.json'), '{"dependencies":{}}')
+    writeFileSync(join(dir, 'package.json.bak-1234'), '{"old":true}')
+    writeFileSync(join(dir, 'package.json.bak-asm'), '{"old":true}')
+    writeFileSync(join(dir, 'cordis.patch.yml.rp-merged.bak'), '- stale: true')
+    // ...while a file that merely CONTAINS "bak" is ordinary config and
+    // must survive: over-filtering silently drops a user's real settings.
+    writeFileSync(join(dir, 'bakery.yml'), 'keep: me')
+    writeFileSync(join(dir, 'my.backup.yml'), 'keep: me too')
+
+    const paths = createProfileBackup('web').files.map(file => file.path)
+    expect(paths).toEqual(['bakery.yml', 'my.backup.yml', 'package.json'])
+  })
+
+  it('rejects traversal paths without touching the profile', () => {
+    const dir = profileDir('web')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, 'package.json'), '{}')
+    const backup = createProfileBackup('web')
+    backup.files.push({ path: '../outside', lines: ['bad'] })
+    expect(() => restoreProfileBackup('web', backup)).toThrow(/unsafe backup path/)
+    expect(existsSync(join(home, 'profiles', 'outside'))).toBe(false)
+  })
+
+  it.skipIf(!symlinksAvailable)('rejects an existing symlink in a restored path parent', () => {
+    const dir = profileDir('web')
+    const outside = join(home, 'outside')
+    mkdirSync(dir, { recursive: true })
+    mkdirSync(outside)
+    writeFileSync(join(dir, 'package.json'), '{}')
+    symlinkSync(outside, join(dir, 'escape'))
+    const backup = createProfileBackup('web')
+    backup.files.push({ path: 'escape/probe.txt', lines: ['must stay inside the profile'] })
+
+    expect(() => restoreProfileBackup('web', backup)).toThrow(/unsafe backup path/)
+    expect(existsSync(join(outside, 'probe.txt'))).toBe(false)
+  })
+
+  it('uses an explicit Desktop-owned profile directory', () => {
+    const explicitDir = join(home, 'desktop-profile')
+    mkdirSync(explicitDir)
+    writeFileSync(join(explicitDir, 'package.json'), '{"dependencies":{"desktop-only":"1.0.0"}}')
+    const backup = createProfileBackup('工作 profile', explicitDir)
+
+    writeFileSync(join(explicitDir, 'package.json'), '{}')
+    restoreProfileBackup('工作 profile', backup, explicitDir)
+    expect(readFileSync(join(explicitDir, 'package.json'), 'utf8')).toContain('desktop-only')
+  })
+
+  it('blocks direct and DNS-resolved private WebDAV targets', async () => {
+    const dir = profileDir('web')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, 'package.json'), '{}')
+    const backup = createProfileBackup('web')
+
+    for (const host of ['127.0.0.1', '169.254.169.254', '10.0.0.1', '172.17.0.1', '192.168.1.1', '[::1]', '[fc00::1]']) {
+      expect(isPublicTarget(host), host).toBe(false)
+      await expect(uploadWebdav(`https://${host}/backup.json`, '', '', backup)).rejects.toThrow(/invalid WebDAV URL/)
+    }
+    network.lookup.mockResolvedValueOnce([
+      { address: '93.184.216.34', family: 4 },
+      { address: '127.0.0.1', family: 4 },
+    ])
+    await expect(uploadWebdav('https://rebinding.example/backup.json', '', '', backup)).rejects.toThrow(/invalid WebDAV URL/)
+    expect(network.request).not.toHaveBeenCalled()
+  })
+
+  it('uploads and downloads the same backup through WebDAV', async () => {
+    const dir = profileDir('web')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, 'package.json'), '{}')
+    const backup = createProfileBackup('web')
+    respondWith('', 201)
+    respondWith(JSON.stringify(backup), 200)
+
+    await uploadWebdav('https://dav.example/backup.json', 'user', 'secret', backup)
+    expect(network.request.mock.calls[0][0]).toMatchObject({
+      hostname: '93.184.216.34', method: 'PUT', servername: 'dav.example',
+      headers: { host: 'dav.example', authorization: expect.stringMatching(/^Basic /) },
+    })
+    expect(await downloadWebdav('https://dav.example/backup.json', 'user', 'secret')).toEqual(backup)
+    expect(network.request.mock.calls[1][0]).toMatchObject({
+      hostname: '93.184.216.34', method: 'GET', servername: 'dav.example',
+    })
+  })
+})
+
+describe('WebDAV download redirects (#480)', () => {
+  const backup = { format: 'dsh-profile-backup', version: 0.2, profile: 'web', createdAt: 'x', files: [{ path: 'package.json', json: { dependencies: {} } }] }
+  const backupJson = JSON.stringify(backup)
+
+  it('follows a 302 to a signed link, and does not forward Basic auth across origins', async () => {
+    // 123pan answers every WebDAV GET with 302 to a time-limited CDN link
+    // while accepting PUT directly — so upload worked and restore failed.
+    respondWith('', 302, { location: 'https://cdn.example/signed/backup.json?sig=abc' })
+    respondWith(backupJson, 200)
+
+    expect(await downloadWebdav('https://dav.example/backup.json', 'user', 'secret')).toEqual(backup)
+    const first = network.request.mock.calls[0]![0] as { headers: Record<string, string> }
+    const second = network.request.mock.calls[1]![0] as { headers: Record<string, string>; path: string }
+    expect(first.headers.authorization).toBeDefined()
+    // The signed link authorizes itself; forwarding the user's WebDAV
+    // password to whatever host the server named would leak it on the
+    // server's say-so.
+    expect(second.headers.authorization).toBeUndefined()
+    expect(second.path).toBe('/signed/backup.json?sig=abc')
+  })
+
+  it('keeps auth on a same-origin redirect and resolves a relative Location', async () => {
+    respondWith('', 301, { location: '/moved/backup.json' })
+    respondWith(backupJson, 200)
+
+    expect(await downloadWebdav('https://dav.example/backup.json', 'user', 'secret')).toEqual(backup)
+    const second = network.request.mock.calls[1]![0] as { headers: Record<string, string>; path: string }
+    expect(second.headers.authorization).toBeDefined()
+    expect(second.path).toBe('/moved/backup.json')
+  })
+
+  it('re-runs the SSRF gate on every hop', async () => {
+    // A redirect is the server choosing the next target. Trusting it more
+    // than the user's own input would invert the threat model, so each hop
+    // passes the same https-only + public-address checks as the first.
+    respondWith('', 302, { location: 'http://dav.example/plain' })
+    await expect(downloadWebdav('https://dav.example/backup.json', 'u', 'p'))
+      .rejects.toThrow(/https/)
+
+    network.request.mockReset()
+    network.lookup.mockResolvedValueOnce([{ address: '93.184.216.34', family: 4 }])
+    network.lookup.mockResolvedValueOnce([{ address: '169.254.169.254', family: 4 }])
+    respondWith('', 302, { location: 'https://metadata.internal.example/latest' })
+    await expect(downloadWebdav('https://dav.example/backup.json', 'u', 'p'))
+      .rejects.toThrow(/invalid WebDAV URL/)
+  })
+
+  it('gives up after the hop limit instead of ping-ponging forever', async () => {
+    for (let i = 0; i < 6; i += 1) respondWith('', 302, { location: 'https://dav.example/again' })
+    await expect(downloadWebdav('https://dav.example/backup.json', 'u', 'p'))
+      .rejects.toThrow(/HTTP 302/)
+    expect(network.request).toHaveBeenCalledTimes(6)
+  })
+})
+
+describe('WebDAV parent collections (#102)', () => {
+  it('creates missing folders before the upload, and explains a surviving 404', async () => {
+    const dir = profileDir('web')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, 'package.json'), '{}')
+    const backup = createProfileBackup('web')
+    // Jianguoyun: PUT into a folder that does not exist answers 404, and files
+    // are not allowed at the root at all.
+    respondWith('', 405) // MKCOL /dav/ — already exists
+    respondWith('', 201) // MKCOL /dav/dsh/ — created
+    respondWith('', 201) // PUT the backup
+    await uploadWebdav('https://dav.jianguoyun.com/dav/dsh/backup.json', 'u', 'p', backup)
+    expect(network.request.mock.calls.map(call => call[0].method)).toEqual(['MKCOL', 'MKCOL', 'PUT'])
+    expect(network.request.mock.calls[1][0]).toMatchObject({ path: '/dav/dsh/', method: 'MKCOL' })
+
+    // A root-level file has no folder to create — Jianguoyun's 404 there now
+    // names the actual remedy (put it inside a folder) instead of the code.
+    network.request.mockReset()
+    respondWith('', 404)
+    await expect(uploadWebdav('https://dav.jianguoyun.com/backup.json', 'u', 'p', backup))
+      .rejects.toThrow(/does not exist and could not be created/)
+    expect(network.request.mock.calls.map(call => call[0].method)).toEqual(['PUT'])
+  })
+
+  it('lists ancestor collections outermost first, excluding the server root', async () => {
+    const { webdavParentCollections } = await import('../src/backup.ts')
+    // Jianguoyun's shape: the file must live inside a folder, and the folder
+    // has to be created explicitly or the PUT answers 404.
+    expect(webdavParentCollections('https://dav.jianguoyun.com/dav/dsh/backup.json'))
+      .toEqual(['https://dav.jianguoyun.com/dav/', 'https://dav.jianguoyun.com/dav/dsh/'])
+    // A file at the root has no collection to create.
+    expect(webdavParentCollections('https://dav.example.com/backup.json')).toEqual([])
+    expect(webdavParentCollections('not a url')).toEqual([])
+  })
+})
+
+/**
+ * Range boundaries of the private-network guard. The suite blocked the
+ * obvious RFC1918 addresses but never the carrier-NAT (100.64/10) or
+ * benchmark (198.18/15) ranges, and never an address just OUTSIDE a blocked
+ * range — so an off-by-one in any bound went unnoticed. A mutation audit
+ * found it: flipping those comparisons broke nothing.
+ *
+ * Each range is asserted from both sides on purpose. "Blocked" alone passes
+ * for a guard that rejects everything; the neighbouring public address is
+ * what proves the bound sits where it should.
+ */
+describe('private-network guard boundaries', () => {
+  const blocked = [
+    ['0.0.0.0', 'this network'],
+    ['10.255.255.255', 'RFC1918 top'],
+    ['100.64.0.0', 'carrier NAT, first'],
+    ['100.127.255.255', 'carrier NAT, last'],
+    ['127.0.0.1', 'loopback'],
+    ['169.254.169.254', 'link-local metadata'],
+    ['172.16.0.0', 'RFC1918 first'],
+    ['172.31.255.255', 'RFC1918 last'],
+    ['192.168.0.1', 'RFC1918'],
+    ['198.18.0.0', 'benchmark, first'],
+    ['198.19.255.255', 'benchmark, last'],
+    ['224.0.0.1', 'multicast'],
+    ['255.255.255.255', 'broadcast'],
+  ] as const
+
+  const allowed = [
+    ['9.255.255.255', 'just below 10/8'],
+    ['11.0.0.1', 'just above 10/8'],
+    ['100.63.255.255', 'just below carrier NAT'],
+    ['100.128.0.0', 'just above carrier NAT'],
+    ['172.15.255.255', 'just below RFC1918'],
+    ['172.32.0.1', 'just above RFC1918'],
+    ['198.17.255.255', 'just below benchmark'],
+    ['198.20.0.1', 'just above benchmark'],
+    ['223.255.255.255', 'just below multicast'],
+    ['93.184.216.34', 'ordinary public host'],
+  ] as const
+
+  it('refuses every reserved range, at both of its edges', () => {
+    for (const [ip, why] of blocked) expect(isPublicTarget(ip), `${ip} (${why})`).toBe(false)
+  })
+
+  it('still allows the addresses immediately outside those ranges', () => {
+    for (const [ip, why] of allowed) expect(isPublicTarget(ip), `${ip} (${why})`).toBe(true)
+  })
+})
+
+describe('unportableDeps (#205)', () => {
+  it('names link:/file: specs pointing outside this machine\'s profile', () => {
+    expect(unportableDeps({
+      'dev-plugin': 'link:/Users/rudy/dev/dev-plugin',
+      'tarball-plugin': 'file:/home/rudy/pkgs/x.tgz',
+      'win-plugin': 'link:C:\\dev\\win-plugin',
+      'unc-plugin': 'file:\\\\\\\\server\\\\share\\\\p',
+    }).map(dep => dep.name).sort()).toEqual(['dev-plugin', 'tarball-plugin', 'unc-plugin', 'win-plugin'])
+  })
+
+  it('leaves portable specs alone, including RELATIVE local paths', () => {
+    // A relative file:/link: resolves against the profile directory, which
+    // the restore recreates — those travel fine and flagging them would be
+    // a false alarm on a working setup.
+    expect(unportableDeps({
+      'ranged': '^1.2.3',
+      'exact': '1.2.3',
+      'from-git': 'github:owner/repo',
+      'relative-link': 'link:./vendor/plugin',
+      'relative-file': 'file:../sibling',
+      'tagged': 'latest',
+    })).toEqual([])
+  })
+
+  it('is defensive about shapes a hand-edited manifest can produce', () => {
+    expect(unportableDeps(undefined)).toEqual([])
+    expect(unportableDeps(null)).toEqual([])
+    expect(unportableDeps([])).toEqual([])
+    expect(unportableDeps({ weird: 42 })).toEqual([])
+  })
+
+  it('carries the offending spec, so the message can name what to repoint', () => {
+    expect(unportableDeps({ 'dev-plugin': 'link:/Users/rudy/dev/dev-plugin' }))
+      .toEqual([{ name: 'dev-plugin', spec: 'link:/Users/rudy/dev/dev-plugin' }])
+  })
+})

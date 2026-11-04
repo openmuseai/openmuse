@@ -1,0 +1,848 @@
+{
+  "filePath": "/Users/mac/src/ioffice/libs/writer/core/cn/wps/collections/IntervalNode.rs",
+  "javaFilePath": "/Users/mac/src/ioffice/koffice/writer/core/cn/wps/collections/IntervalNode.java",
+  "createdAt": "2026-06-24T02:06:18.624Z",
+  "lastModified": "2026-06-24T02:06:18.627Z",
+  "version": 1,
+  "lines": [
+    {
+      "id": "rl:out:0",
+      "ln": 0,
+      "text": "// Java: import cn.wps.collections.PositionNode",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:1",
+      "ln": 1,
+      "text": "use stubs::cn::wps::collections::PositionNode::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:2",
+      "ln": 2,
+      "text": "// Java: import java.lang.StringBuilder",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:3",
+      "ln": 3,
+      "text": "use stubs::java::lang::StringBuilder::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:4",
+      "ln": 4,
+      "text": "// Java: import cn.wps.collections.RBBalancer",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:5",
+      "ln": 5,
+      "text": "use stubs::cn::wps::collections::RBBalancer::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:6",
+      "ln": 6,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:7",
+      "ln": 7,
+      "text": "// Java: public abstract class IntervalNode extends PositionNode ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:8",
+      "ln": 8,
+      "text": "#[derive(Default)]\npub struct IntervalNode {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:9",
+      "ln": 9,
+      "text": "    // Java field: PositionNode super_;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:10",
+      "ln": 10,
+      "text": "    pub super_: PositionNode,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:11",
+      "ln": 11,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:12",
+      "ln": 12,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:13",
+      "ln": 13,
+      "text": "// Java: public abstract class IntervalNode extends PositionNode ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:14",
+      "ln": 14,
+      "text": "impl IntervalNode {",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:15",
+      "ln": 15,
+      "text": "    // Java: public abstract int getLength();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:16",
+      "ln": 16,
+      "text": "    pub fn getLength(&mut self) -> i32 {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:17",
+      "ln": 17,
+      "text": "        panic!(\"IntervalNode::getLength not implemented\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:18",
+      "ln": 18,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:19",
+      "ln": 19,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:20",
+      "ln": 20,
+      "text": "    // Java: public abstract void setLength(int var1);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:21",
+      "ln": 21,
+      "text": "    pub fn setLength(&mut self, var1: i32) {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:22",
+      "ln": 22,
+      "text": "        panic!(\"IntervalNode::setLength not implemented\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:23",
+      "ln": 23,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:24",
+      "ln": 24,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:25",
+      "ln": 25,
+      "text": "    // Java: public String toString() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:26",
+      "ln": 26,
+      "text": "    pub fn toString(&mut self) -> String {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:27",
+      "ln": 27,
+      "text": "      // Java: StringBuilder sb = new StringBuilder();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:28",
+      "ln": 28,
+      "text": "      let sb: String = StringBuilder::new();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:29",
+      "ln": 29,
+      "text": "      // Java: sb.append(this.getClass().getSimpleName());",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:30",
+      "ln": 30,
+      "text": "      sb.append(self.getClass().getSimpleName());",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:31",
+      "ln": 31,
+      "text": "      // Java: if (this.isHead())",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:32",
+      "ln": 32,
+      "text": "      if self.isHead() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:33",
+      "ln": 33,
+      "text": "         // Java: sb.append(\"(head)\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:34",
+      "ln": 34,
+      "text": "         sb.append(\"(head)\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:35",
+      "ln": 35,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:36",
+      "ln": 36,
+      "text": "      // Java: if (this.isRoot())",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:37",
+      "ln": 37,
+      "text": "      if self.isRoot() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:38",
+      "ln": 38,
+      "text": "         // Java: sb.append(\"(root)\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:39",
+      "ln": 39,
+      "text": "         sb.append(\"(root)\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:40",
+      "ln": 40,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:41",
+      "ln": 41,
+      "text": "      // Java: if (RBBalancer.isRed(this))",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:42",
+      "ln": 42,
+      "text": "      if RBBalancer::isRed(self) {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:43",
+      "ln": 43,
+      "text": "         // Java: sb.append(\"\\ncolor = red\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:44",
+      "ln": 44,
+      "text": "         sb.append(\"\\ncolor = red\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:45",
+      "ln": 45,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:46",
+      "ln": 46,
+      "text": "      // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:47",
+      "ln": 47,
+      "text": "      else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:48",
+      "ln": 48,
+      "text": "         // Java: sb.append(\"\\ncolor = black\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:49",
+      "ln": 49,
+      "text": "         sb.append(\"\\ncolor = black\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:50",
+      "ln": 50,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:51",
+      "ln": 51,
+      "text": "      // Java: if (!this.isHead())",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:52",
+      "ln": 52,
+      "text": "      if !self.super_.isHead() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:53",
+      "ln": 53,
+      "text": "         // Java: sb.append(\"\\nposition = \" + this.position());",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:54",
+      "ln": 54,
+      "text": "         sb.append(\"\\nposition = \" + self.super_.position());",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:55",
+      "ln": 55,
+      "text": "         // Java: sb.append(\"\\nlength = \" + this.getLength());",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:56",
+      "ln": 56,
+      "text": "         sb.append(\"\\nlength = \" + self.getLength());",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:57",
+      "ln": 57,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:58",
+      "ln": 58,
+      "text": "      // Java: sb.append(\"\\nchildren = (\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:59",
+      "ln": 59,
+      "text": "      sb.append(\"\\nchildren = (\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:60",
+      "ln": 60,
+      "text": "      // Java: if (this.left != null)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:61",
+      "ln": 61,
+      "text": "      if self.left.is_some() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:62",
+      "ln": 62,
+      "text": "         // Java: sb.append(\"\" + ((IntervalNode)this.left).position());",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:63",
+      "ln": 63,
+      "text": "         sb.append(\"\" + (self.left).downcast_ref::<IntervalNode>().unwrap().position());",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:64",
+      "ln": 64,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:65",
+      "ln": 65,
+      "text": "      // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:66",
+      "ln": 66,
+      "text": "      else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:67",
+      "ln": 67,
+      "text": "         // Java: sb.append(\"null\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:68",
+      "ln": 68,
+      "text": "         sb.append(\"null\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:69",
+      "ln": 69,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:70",
+      "ln": 70,
+      "text": "      // Java: sb.append(\" ,\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:71",
+      "ln": 71,
+      "text": "      sb.append(\" ,\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:72",
+      "ln": 72,
+      "text": "      // Java: if (this.right != null)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:73",
+      "ln": 73,
+      "text": "      if self.right.is_some() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:74",
+      "ln": 74,
+      "text": "         // Java: sb.append(\"\" + ((IntervalNode)this.right).position());",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:75",
+      "ln": 75,
+      "text": "         sb.append(\"\" + (self.right).downcast_ref::<IntervalNode>().unwrap().position());",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:76",
+      "ln": 76,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:77",
+      "ln": 77,
+      "text": "      // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:78",
+      "ln": 78,
+      "text": "      else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:79",
+      "ln": 79,
+      "text": "         // Java: sb.append(\"null\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:80",
+      "ln": 80,
+      "text": "         sb.append(\"null\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:81",
+      "ln": 81,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:82",
+      "ln": 82,
+      "text": "      // Java: sb.append(\")\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:83",
+      "ln": 83,
+      "text": "      sb.append(\")\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:84",
+      "ln": 84,
+      "text": "      // Java: sb.append(\"\\n\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:85",
+      "ln": 85,
+      "text": "      sb.append(\"\\n\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:86",
+      "ln": 86,
+      "text": "      // Java: return sb.toString();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:87",
+      "ln": 87,
+      "text": "      return sb.toString();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:88",
+      "ln": 88,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:89",
+      "ln": 89,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:90",
+      "ln": 90,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:91",
+      "ln": 91,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:92",
+      "ln": 92,
+      "text": "impl std::ops::Deref for IntervalNode {\n    type Target = PositionNode;\n\n    fn deref(&self) -> &Self::Target {\n        &self.super_\n    }\n}",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:93",
+      "ln": 93,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:94",
+      "ln": 94,
+      "text": "impl std::ops::DerefMut for IntervalNode {\n    fn deref_mut(&mut self) -> &mut Self::Target {\n        &mut self.super_\n    }\n}",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:95",
+      "ln": 95,
+      "text": "",
+      "type": "empty"
+    }
+  ],
+  "imports": [
+    {
+      "id": "ri:ji:syn:0",
+      "javaCodeId": "ji:syn:0",
+      "usePath": "use stubs::cn::wps::collections::PositionNode::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:0",
+          "ln": -1,
+          "text": "// Java: import cn.wps.collections.PositionNode",
+          "type": "java_comment",
+          "jcid": "ji:syn:0"
+        },
+        {
+          "id": "rl:ji:syn:0",
+          "ln": -1,
+          "text": "use stubs::cn::wps::collections::PositionNode::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:0"
+        }
+      ]
+    },
+    {
+      "id": "ri:ji:syn:1",
+      "javaCodeId": "ji:syn:1",
+      "usePath": "use stubs::java::lang::StringBuilder::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:1",
+          "ln": -1,
+          "text": "// Java: import java.lang.StringBuilder",
+          "type": "java_comment",
+          "jcid": "ji:syn:1"
+        },
+        {
+          "id": "rl:ji:syn:1",
+          "ln": -1,
+          "text": "use stubs::java::lang::StringBuilder::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:1"
+        }
+      ]
+    },
+    {
+      "id": "ri:ji:syn:2",
+      "javaCodeId": "ji:syn:2",
+      "usePath": "use stubs::cn::wps::collections::RBBalancer::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:2",
+          "ln": -1,
+          "text": "// Java: import cn.wps.collections.RBBalancer",
+          "type": "java_comment",
+          "jcid": "ji:syn:2"
+        },
+        {
+          "id": "rl:ji:syn:2",
+          "ln": -1,
+          "text": "use stubs::cn::wps::collections::RBBalancer::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:2"
+        }
+      ]
+    }
+  ],
+  "statics": [],
+  "structs": [
+    {
+      "id": "rs:IntervalNode",
+      "javaCodeId": "jc:IntervalNode",
+      "structName": "IntervalNode",
+      "javaSignature": "// Java: public abstract class IntervalNode extends PositionNode ",
+      "fields": [
+        {
+          "id": "rf:jf:super:IntervalNode",
+          "javaCodeId": "jf:super:IntervalNode",
+          "javaFieldName": "super_",
+          "javaFieldType": "PositionNode",
+          "rustText": "",
+          "rewriteState": "pending"
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    }
+  ],
+  "impls": [
+    {
+      "id": "ri:impl:IntervalNode",
+      "javaCodeId": "jc:IntervalNode",
+      "structName": "IntervalNode",
+      "javaSignature": "// Java: public abstract class IntervalNode extends PositionNode ",
+      "methods": [
+        {
+          "id": "rm:IntervalNode:getLength",
+          "javaCodeId": "jm:IntervalNode:getLength",
+          "methodName": "getLength",
+          "javaSignature": "// Java: public abstract int getLength();",
+          "params": [],
+          "returnType": "int",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.624Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalNode:setLength",
+          "javaCodeId": "jm:IntervalNode:setLength",
+          "methodName": "setLength",
+          "javaSignature": "// Java: public abstract void setLength(int var1);",
+          "params": [
+            "int var1"
+          ],
+          "returnType": "void",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.624Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalNode:toString",
+          "javaCodeId": "jm:IntervalNode:toString",
+          "methodName": "toString",
+          "javaSignature": "// Java: public String toString() ",
+          "params": [],
+          "returnType": "String",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.624Z",
+              "action": "template_gen"
+            }
+          ]
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "ri:deref:IntervalNode",
+      "javaCodeId": "jc:IntervalNode",
+      "structName": "IntervalNode",
+      "methods": [],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "ri:deref_mut:IntervalNode",
+      "javaCodeId": "jc:IntervalNode",
+      "structName": "IntervalNode",
+      "methods": [],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    }
+  ],
+  "traits": [],
+  "fileLineMap": {
+    "ri:ji:syn:0": {
+      "start": 0,
+      "end": 2
+    },
+    "ri:ji:syn:1": {
+      "start": 2,
+      "end": 4
+    },
+    "ri:ji:syn:2": {
+      "start": 4,
+      "end": 6
+    },
+    "rf:jf:super:IntervalNode": {
+      "start": 9,
+      "end": 11
+    },
+    "rs:IntervalNode": {
+      "start": 7,
+      "end": 13
+    },
+    "rb:abstract:jm:IntervalNode:getLength": {
+      "start": 17,
+      "end": 18
+    },
+    "rm:IntervalNode:getLength": {
+      "start": 15,
+      "end": 20
+    },
+    "rb:abstract:jm:IntervalNode:setLength": {
+      "start": 22,
+      "end": 23
+    },
+    "rm:IntervalNode:setLength": {
+      "start": 20,
+      "end": 25
+    },
+    "rb:jb:jm:IntervalNode:toString:block:0": {
+      "start": 31,
+      "end": 36
+    },
+    "rb:jb:jm:IntervalNode:toString:block:1": {
+      "start": 36,
+      "end": 41
+    },
+    "rb:jb:jm:IntervalNode:toString:block:2": {
+      "start": 41,
+      "end": 46
+    },
+    "rb:jb:jm:IntervalNode:toString:block:3": {
+      "start": 46,
+      "end": 51
+    },
+    "rb:jb:jm:IntervalNode:toString:block:4": {
+      "start": 51,
+      "end": 58
+    },
+    "rb:jb:jm:IntervalNode:toString:block:5": {
+      "start": 60,
+      "end": 65
+    },
+    "rb:jb:jm:IntervalNode:toString:block:6": {
+      "start": 65,
+      "end": 70
+    },
+    "rb:jb:jm:IntervalNode:toString:block:7": {
+      "start": 72,
+      "end": 77
+    },
+    "rb:jb:jm:IntervalNode:toString:block:8": {
+      "start": 77,
+      "end": 82
+    },
+    "rb:jb:jm:IntervalNode:toString:block": {
+      "start": 27,
+      "end": 88
+    },
+    "rm:IntervalNode:toString": {
+      "start": 25,
+      "end": 90
+    },
+    "ri:impl:IntervalNode": {
+      "start": 13,
+      "end": 92
+    },
+    "ri:deref:IntervalNode": {
+      "start": 92,
+      "end": 94
+    },
+    "ri:deref_mut:IntervalNode": {
+      "start": 94,
+      "end": 96
+    }
+  }
+}

@@ -1,0 +1,78 @@
+import {getInstanceById} from "../layout/util";
+import {Tab} from "../layout/Tab";
+import {lockScreen} from "../dialog/processSystem";
+import {clearTabDragPreview} from "../layout/tabDrag";
+import {getAllEditor} from "../layout/getAll";
+import {ipcRenderer} from "electron";
+import {Constants} from "../constants";
+import {flushWindowWorkspace} from "./workspace";
+import {hasNativeSettingTasks, setNativeSettingTask} from "../config/setting/taskBlocker";
+import {sendGlobalShortcut, sendUnregisterGlobalShortcut} from "../boot/globalEvent/globalShortcut";
+import {receiveTabInMainWindow} from "./moveTabToMainWindow";
+
+const closeTab = (ipcData: IWebSocketData) => {
+    const tab = getInstanceById(ipcData.data);
+    if (tab && tab instanceof Tab) {
+        tab.parent.removeTab(ipcData.data);
+    }
+};
+export const onWindowsMsg = (ipcData: IWebSocketData) => {
+    switch (ipcData.cmd) {
+        case "prepareSettingTask":
+            setNativeSettingTask(ipcData.data, true);
+            sendUnregisterGlobalShortcut(window.siyuan.ws.app);
+            void Promise.all(getAllEditor().filter(editor => editor?.protyle?.wysiwyg)
+                .map(editor => editor.flushPendingTransactions())).then(() => {
+                ipcRenderer.send("siyuan-settings-task-ready", {id: ipcData.data, saved: true});
+            }).catch(() => ipcRenderer.send("siyuan-settings-task-ready", {id: ipcData.data, saved: false}));
+            break;
+        case "endSettingTask":
+            setNativeSettingTask(ipcData.data, false);
+            if (!hasNativeSettingTasks()) sendGlobalShortcut(window.siyuan.ws.app);
+            break;
+        case Constants.SIYUAN_WINDOW_WORKSPACE_FLUSH:
+            void flushWindowWorkspace().then(saved => {
+                ipcRenderer.send(Constants.SIYUAN_WINDOW_WORKSPACE_SAVED, {id: ipcData.data, saved});
+            }).catch(() => {
+                ipcRenderer.send(Constants.SIYUAN_WINDOW_WORKSPACE_SAVED, {id: ipcData.data, saved: false});
+            });
+            break;
+        case "prepareNotebookSystemLock":
+            void Promise.all(getAllEditor().filter(editor => editor?.protyle?.wysiwyg)
+                .map(editor => editor.flushPendingTransactions())).then(() => {
+                ipcRenderer.send("siyuan-notebook-system-lock-ready", ipcData.data);
+            }).catch(error => console.error(error));
+            break;
+        case "closetab":
+            closeTab(ipcData);
+            break;
+        case "moveTabToMainWindow":
+            void receiveTabInMainWindow(ipcData.data).catch(error => console.error(error));
+            break;
+        case "setTabDragData":
+            window.siyuan.dragTab = ipcData.data as ITabDragData;
+            break;
+        case "resetTabsStyle":
+            // data: addRegionStyle, rmDragStyle, rmDragStyleRegionStyle
+            if (ipcData.data === "rmDragStyle") {
+                clearTabDragPreview();
+                window.siyuan.dragTab = undefined;
+            } else {
+                document.querySelectorAll(".layout-tab-bar--readonly .fn__flex-1").forEach((item: HTMLElement) => {
+                    if (item.getBoundingClientRect().top <= 6) {
+                        if (ipcData.data === "addRegionStyle") {
+                            (item.style as CSSStyleDeclarationElectron).WebkitAppRegion = "drag";
+                        } else if (ipcData.data === "removeRegionStyle") {
+                            (item.style as CSSStyleDeclarationElectron).WebkitAppRegion = "";
+                        }
+                    }
+                });
+            }
+            break;
+        case "lockscreenByMode":
+            if (window.siyuan.config.system.lockScreenMode === 1) {
+                lockScreen();
+            }
+            break;
+    }
+};

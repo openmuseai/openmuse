@@ -1,0 +1,471 @@
+{
+	"ID": "20200813004931-q4cu8na",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20200813004931-q4cu8na",
+		"title": "什么是内容块",
+		"type": "doc",
+		"updated": "20261024160716"
+	},
+	"Children": [
+		{
+			"ID": "20210118100623-i00rgj0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210118100623-i00rgj0",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "## "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "内容块定义"
+				}
+			]
+		},
+		{
+			"ID": "20210118100631-nhy9fe2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210118100631-nhy9fe2",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "内容块是思源中可独立编辑、引用和组织的内容单元。每个内容块都有程序自动生成的全局唯一 ID，例如 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "20200825000000-a1b2c3d"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。ID 由 14 位时间戳（"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "YYYYMMDDHHMMSS"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "）、连字符和 7 位随机小写英文字母或数字组成。"
+				}
+			]
+		},
+		{
+			"ID": "20210104090752-2n7t087",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104090752-2n7t087",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "## "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "内容块类型"
+				}
+			]
+		},
+		{
+			"ID": "20210104090752-98ivtnt",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104090752-98ivtnt",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "最常见的内容块是段落，用于书写正文。每个段落都是独立的内容块，可以单独移动、设置属性或被其他内容引用。"
+				}
+			]
+		},
+		{
+			"ID": "20210104090752-7efgvis",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104090752-7efgvis",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "标题、列表、表格和块引用等类型用于表达不同的内容结构。标题划分章节，无序列表组织并列项目，有序列表表示步骤或顺序。选择合适的类型，既能改善排版，也能让内容的层次更清楚。"
+				}
+			]
+		},
+		{
+			"ID": "20210104090752-c49qfvi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104090752-c49qfvi",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各类型的特点和包含规则请参阅 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200905090211-2vixtlf",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "内容块类型"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
+				}
+			]
+		},
+		{
+			"ID": "20210104090752-qxk7yz6",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210104090752-qxk7yz6",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "## "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "组合内容块"
+				}
+			]
+		},
+		{
+			"ID": "20210104090752-cg21nhc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104090752-cg21nhc",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "一篇文档由多个内容块组成。能包含其他内容块的类型称为容器块，例如列表和块引用。"
+				}
+			]
+		},
+		{
+			"ID": "20210104090752-hjcn822",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104090752-hjcn822",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "文档本身也是内容块。无论是整篇文档还是其中的段落，都可以通过 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200813013559-sgbzl5k",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "内容块引用"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 建立联系，不必为了引用一段内容而将它拆成独立文档。"
+				}
+			]
+		},
+		{
+			"ID": "20210118101911-tbt6kkp",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20210118101911-tbt6kkp",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "命名、别名和备注"
+				}
+			]
+		},
+		{
+			"ID": "20210118101917-4n4ygss",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210118101917-4n4ygss",
+				"memo": "备注通常是一句简短的话。",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可以为内容块设置命名、别名和备注。命名和别名用于 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20210106201736-oyu11fw",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "反链提及"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 搜索；备注用于记录不需要出现在正文中的补充信息。"
+				}
+			]
+		},
+		{
+			"ID": "20210118102327-mybetkv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210118102327-mybetkv",
+				"updated": "20261016013311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "启用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "编辑器"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "行为"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "内容块角标"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 后，可在编辑器中显示命名、别名和备注。文档块设置命名或备注后，将鼠标悬浮在文档树中的文档上可查看这些信息。"
+				}
+			]
+		},
+		{
+			"ID": "20210118103020-bjtu89u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210118103020-bjtu89u",
+				"updated": "20210512154754"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可使用"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20201117101902-2ewjjum",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "嵌入内容块"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "对命名和备注进行搜索汇总，比如列出备注中包含 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "简短"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 关键字的内容块："
+				}
+			]
+		},
+		{
+			"ID": "20210118103059-q92s3lt",
+			"Type": "NodeBlockQueryEmbed",
+			"Data": "{{SELECT * FROM blocks WHERE memo LIKE '%简短%'}}\n",
+			"Properties": {
+				"id": "20210118103059-q92s3lt"
+			},
+			"Children": [
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeOpenBrace"
+				},
+				{
+					"Type": "NodeBlockQueryEmbedScript",
+					"Data": "SELECT * FROM blocks WHERE memo LIKE '%简短%'"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				},
+				{
+					"Type": "NodeCloseBrace"
+				}
+			]
+		},
+		{
+			"ID": "20210127204409-yjgww90",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210127204409-yjgww90",
+				"updated": "20230419153442"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​："
+				}
+			]
+		},
+		{
+			"ID": "20230419153207-l40wjv2",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230419153207-l40wjv2",
+				"updated": "20261024160716"
+			},
+			"Children": [
+				{
+					"ID": "20230419153259-2do0vsl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230419153259-2do0vsl",
+						"updated": "20261024160716"
+					},
+					"Children": [
+						{
+							"ID": "20230419153259-02ihc3r",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230419153259-02ihc3r",
+								"updated": "20261024160716"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "一个内容块只能设置一个命名；不同内容块可以使用相同的命名"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230419153308-89l1o1c",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230419153308-89l1o1c"
+					},
+					"Children": [
+						{
+							"ID": "20230419153308-60o6t5t",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230419153308-60o6t5t",
+								"updated": "20230419153317"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "别名可以设置多个，通过英文状态下的逗号（"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ","
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​）分隔"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230419153321-lxs2x7d",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230419153321-lxs2x7d",
+						"updated": "20230419153534"
+					},
+					"Children": [
+						{
+							"ID": "20230419153321-56fxsqz",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230419153321-56fxsqz",
+								"updated": "20230419153534"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "备注仅支持纯文本"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

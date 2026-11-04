@@ -1,0 +1,7 @@
+order,module_path,category,file_count,rust_file_count,depends_on,state,description,session_id
+0,org/mozilla/universalchardet,universalchardet,3,3,,done,,
+1,org/mozilla/universalchardet/prober,prober,14,14,,done,,
+2,org/mozilla/universalchardet/prober/contextanalysis,contextanalysis,3,3,,done,,
+3,org/mozilla/universalchardet/prober/distributionanalysis,distributionanalysis,8,8,,done,,
+4,org/mozilla/universalchardet/prober/sequence,sequence,15,15,,done,,
+5,org/mozilla/universalchardet/prober/statemachine,statemachine,15,15,,done,,

@@ -1,0 +1,171 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"bytes"
+	"testing"
+
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func TestGetMaskedConfHidesCookieKeyAndPreservesOIDCSecret(t *testing.T) {
+	const cookieKey = "session-cookie-signing-key"
+
+	originalConf := Conf
+	defer func() {
+		Conf = originalConf
+	}()
+
+	Conf = NewAppConf()
+	Conf.CookieKey = cookieKey
+	Conf.OIDC.ClientSecret = "oidc-client-secret"
+
+	maskedConf, err := GetMaskedConf()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if "" != maskedConf.CookieKey {
+		t.Fatalf("cookie key was not hidden: %q", maskedConf.CookieKey)
+	}
+	if cookieKey != Conf.CookieKey {
+		t.Fatalf("cookie key in the runtime configuration was changed: %q", Conf.CookieKey)
+	}
+	if maskedConf.OIDC.ClientSecret != "oidc-client-secret" {
+		t.Fatalf("OIDC client secret was not preserved: %#v", maskedConf.OIDC)
+	}
+	if Conf.OIDC.ClientSecret != "oidc-client-secret" {
+		t.Fatalf("OIDC client secret in runtime configuration was changed: %q", Conf.OIDC.ClientSecret)
+	}
+}
+
+func TestHideConfSecretPreservesNotebookCryptoSettings(t *testing.T) {
+	appConf := NewAppConf()
+	appConf.CookieKey = "session-cookie-signing-key"
+	appConf.System.Store(&conf.System{})
+	kek := bytes.Repeat([]byte{1}, 32)
+	verifier, err := util.EncryptWithAAD(kek, kekVerifierMagic, []byte("siyuan:kek-verifier"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	nonce, err := util.EncryptionNonce(verifier)
+	if err != nil {
+		t.Fatal(err)
+	}
+	appConf.NotebookCrypto = conf.NewNotebookCrypto()
+	appConf.NotebookCrypto.Enabled = true
+	appConf.NotebookCrypto.MasterSalt = bytes.Repeat([]byte{2}, 16)
+	appConf.NotebookCrypto.KEKVerifier = verifier
+	appConf.NotebookCrypto.VerifierNonce = nonce
+	appConf.NotebookCrypto.AutoLockMinutes = 17
+	appConf.NotebookCrypto.HistoryKEKs = [][]byte{bytes.Repeat([]byte{3}, 64)}
+	prepareBackupForWrite(appConf.NotebookCrypto)
+	appConf.NotebookCrypto.KEKMAC = computeKEKMAC(appConf.NotebookCrypto, kek)
+
+	HideConfSecret(appConf)
+
+	if "" != appConf.CookieKey {
+		t.Fatalf("cookie key was not hidden: %q", appConf.CookieKey)
+	}
+	notebookCrypto := appConf.NotebookCrypto
+	if nil == notebookCrypto {
+		t.Fatal("notebook crypto settings should be preserved")
+	}
+	if !notebookCrypto.Enabled || 17 != notebookCrypto.AutoLockMinutes {
+		t.Fatalf("functional notebook crypto settings were changed: %#v", notebookCrypto)
+	}
+	if 0 < len(notebookCrypto.MasterSalt) ||
+		(util.Argon2Params{} != notebookCrypto.KDFParams) ||
+		0 < len(notebookCrypto.KEKVerifier) ||
+		0 < len(notebookCrypto.VerifierNonce) ||
+		0 != notebookCrypto.Spec ||
+		"" != notebookCrypto.BackupID ||
+		0 != notebookCrypto.CreatedAt ||
+		"" != notebookCrypto.Checksum ||
+		0 < len(notebookCrypto.KEKMAC) ||
+		0 < len(notebookCrypto.HistoryKEKs) {
+		t.Fatalf("notebook crypto key material was not hidden: %#v", notebookCrypto)
+	}
+}
+
+func TestHideConfSecretMasksIncompleteNotebookCryptoAsDisabled(t *testing.T) {
+	appConf := NewAppConf()
+	appConf.System.Store(&conf.System{})
+	appConf.NotebookCrypto = conf.NewNotebookCrypto()
+	appConf.NotebookCrypto.Enabled = true
+
+	HideConfSecret(appConf)
+
+	if appConf.NotebookCrypto.Enabled {
+		t.Fatal("incomplete notebook crypto configuration should not be exposed as enabled")
+	}
+}
+
+func TestHideConfSecretHidesAbsolutePaths(t *testing.T) {
+	appConf := NewAppConf()
+	appConf.Export.Store(&conf.Export{
+		AddTitle:  true,
+		PandocBin: `C:\Users\alice\SiYuan\temp\pandoc\bin\pandoc.exe`,
+	})
+	appConf.System.Store(&conf.System{
+		KernelVersion: "3.3.0",
+		HomeDir:       `C:\Users\alice`,
+		WorkspaceDir:  `C:\Users\alice\SiYuan`,
+		AppDir:        `C:\Program Files\SiYuan`,
+		ConfDir:       `C:\Users\alice\SiYuan\conf`,
+		DataDir:       `C:\Users\alice\SiYuan\data`,
+	})
+
+	HideConfSecret(appConf)
+
+	if "" != appConf.Export.Load().PandocBin {
+		t.Fatalf("pandoc path was not hidden: %q", appConf.Export.Load().PandocBin)
+	}
+	if !appConf.Export.Load().AddTitle {
+		t.Fatal("functional export settings should be preserved")
+	}
+	if "" != appConf.System.Load().HomeDir ||
+		"" != appConf.System.Load().WorkspaceDir ||
+		"" != appConf.System.Load().AppDir ||
+		"" != appConf.System.Load().ConfDir ||
+		"" != appConf.System.Load().DataDir {
+		t.Fatalf("system paths were not hidden: %#v", appConf.System.Load())
+	}
+	if "3.3.0" != appConf.System.Load().KernelVersion {
+		t.Fatalf("functional system settings were changed: %#v", appConf.System.Load())
+	}
+}
+
+func TestHideBoxConfSecretPreservesNotebookSettings(t *testing.T) {
+	boxConf := &conf.BoxConf{
+		Name:      "Encrypted notebook",
+		Sort:      7,
+		Icon:      "1f512",
+		Closed:    true,
+		SortMode:  util.SortModeCustom,
+		Encrypted: true,
+		BoxCrypt: &conf.BoxEncryption{
+			Spec:       1,
+			WrappedDEK: []byte("wrapped-dek"),
+			WrapNonce:  []byte("wrap-nonce"),
+			CreatedAt:  123,
+		},
+	}
+
+	HideBoxConfSecret(boxConf)
+
+	if nil != boxConf.BoxCrypt {
+		t.Fatalf("wrapped notebook key was not hidden: %#v", boxConf.BoxCrypt)
+	}
+	if "Encrypted notebook" != boxConf.Name ||
+		7 != boxConf.Sort ||
+		"1f512" != boxConf.Icon ||
+		!boxConf.Closed ||
+		util.SortModeCustom != boxConf.SortMode ||
+		!boxConf.Encrypted {
+		t.Fatalf("functional notebook settings were changed: %#v", boxConf)
+	}
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.0+9",
+  "regions": [
+    "cn",
+    "us"
+  ],
+  "bundledMobile": [
+    "com.openmuse.auth.gotrue",
+    "com.openmuse.workspace.cloud",
+    "com.openmuse.workspace.paired.mobile",
+    "com.openmuse.remote-workbench",
+    "com.openmuse.mobile.scheduled-tasks",
+    "com.openmuse.mobile.workspace-files",
+    "com.openmuse.dsh-mobile-agent",
+    "com.openmuse.speech.input",
+    "com.openmuse.mobile-plugin-market",
+    "io.openmuse.siyuan",
+    "com.openmuse.resource-notes"
+  ],
+  "officialMcp": [
+    {
+      "name": "io.openmuse/genoffice-pptx",
+      "version": "0.8.2",
+      "sha256": "71ce1fb3ee0e8687db58603ae125e8100fa89d26ab42d9ba577f2485b3c49789",
+      "acceptanceRequired": true,
+      "targetPlatforms": [
+        "android",
+        "ios",
+        "desktop",
+        "web"
+      ],
+      "acceptedPlatforms": [
+        "android"
+      ],
+      "mobilePackagePolicy": "exact bundled name, version and SHA-256; no remote MCP endpoint"
+    }
+  ],
+  "nativeOfficeKernels": [],
+  "developmentMobileExamplesPublished": false,
+  "thirdPartySources": "not-enabled-in-mobile-launch",
+  "productionCatalogApplied": true,
+  "productNames": {
+    "io.openmuse/genoffice-pptx": "OpenMuse Slides",
+    "io.openmuse.siyuan": "OpenMuse Notes"
+  },
+  "downloadedMobileCode": "disabled; existing artifacts retained without activation"
+}

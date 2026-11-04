@@ -1,0 +1,207 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	gosql "database/sql"
+	"reflect"
+	"strings"
+	"testing"
+
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+)
+
+func TestLinkTagSpansPreservesGraph(t *testing.T) {
+	blocks := []*Block{{ID: "b1", RootID: "r1"}, {ID: "b2", RootID: "r1"}, {ID: "b3", RootID: "r2"}}
+	spans := []*sql.Span{
+		{Content: "a", Type: "tag strong", BlockID: "b1", RootID: "r1"},
+		{Content: "a", Type: "tag", BlockID: "b1", RootID: "r1"},
+		{Content: "a/b/c", Type: "tag", BlockID: "b2", RootID: "r1"},
+		{Content: "b", Type: "tag", BlockID: "b3", RootID: "r2"},
+		{Content: "orphan", Type: "tag", BlockID: "missing", RootID: "missing"},
+	}
+	for _, global := range []bool{false, true} {
+		nodes := []*GraphNode{{ID: "existing"}}
+		links := []*GraphLink{{From: "existing", To: "existing"}}
+		linkTagSpans(blocks, &nodes, &links, spans, global, 12)
+		wantNodes := []*GraphNode{{ID: "existing"},
+			{ID: "a", Label: "a", Type: "tag strong", Size: 12},
+			{ID: "a/b/c", Label: "a/b/c", Type: "tag", Size: 12},
+			{ID: "b", Label: "b", Type: "tag", Size: 12},
+			{ID: "orphan", Label: "orphan", Type: "tag", Size: 12}}
+		wantLinks := []*GraphLink{{From: "existing", To: "existing"},
+			{From: "a", To: "b1"}, {From: "a", To: "b1"}, {From: "a/b/c", To: "b2"}, {From: "b", To: "b3"},
+			{From: "a/b/c", To: "a"}, {From: "a/b/c", To: "b"}}
+		if global {
+			wantLinks = []*GraphLink{{From: "existing", To: "existing"},
+				{From: "a", To: "r1"}, {From: "a", To: "r1"}, {From: "a/b/c", To: "r1"},
+				{From: "a", To: "r1"}, {From: "a", To: "r1"}, {From: "a/b/c", To: "r1"}, {From: "b", To: "r2"},
+				{From: "a/b/c", To: "a"}, {From: "a/b/c", To: "b"}}
+		}
+		if !reflect.DeepEqual(nodes, wantNodes) || !reflect.DeepEqual(links, wantLinks) {
+			t.Fatalf("global=%v: nodes=%+v links=%+v", global, nodes, links)
+		}
+	}
+	var nodes []*GraphNode
+	var links []*GraphLink
+	linkTagSpans(nil, &nodes, &links, nil, false, 12)
+	if len(nodes) != 0 || len(links) != 0 {
+		t.Fatal("empty graph gained nodes or links")
+	}
+}
+
+func TestGraphSearchLiteralWildcards(t *testing.T) {
+	previous := Conf
+	Conf = &AppConf{Search: NewConfSection(conf.NewSearch())}
+	Conf.Search.Load().Name, Conf.Search.Load().Alias, Conf.Search.Load().Memo = true, true, true
+	t.Cleanup(func() { Conf = previous })
+	db, err := gosql.Open("sqlite3_extended", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	for _, keyword := range []string{"%", "_", "a_b", "a%b", `a\b`, "a'b", "#a_b#", "#a%b#"} {
+		for _, field := range []string{"content", "name", "alias", "memo"} {
+			if strings.HasPrefix(keyword, "#") && field != "content" {
+				continue
+			}
+			for _, value := range []string{keyword, "unrelated axb"} {
+				fields := map[string]string{"content": "", "name": "", "alias": "", "memo": ""}
+				fields[field] = value
+				var matched bool
+				query := "SELECT " + query2Stmt(keyword) + " FROM (SELECT ? AS content, ? AS name, ? AS alias, ? AS memo, '' AS ial)"
+				if err = db.QueryRow(query, fields["content"], fields["name"], fields["alias"], fields["memo"]).Scan(&matched); err != nil {
+					t.Fatalf("%s: %v", query, err)
+				}
+				if matched != (value == keyword) {
+					t.Fatalf("keyword %q field %s value %q: matched=%v", keyword, field, value, matched)
+				}
+			}
+		}
+	}
+}
+
+func TestGraphSearchTagAttributes(t *testing.T) {
+	previous := Conf
+	Conf = &AppConf{Search: NewConfSection(conf.NewSearch())}
+	t.Cleanup(func() { Conf = previous })
+	db, err := gosql.Open("sqlite3_extended", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	for _, tag := range []string{"foo", "a_b", "a%b", `a\b`, "a'b"} {
+		query := "SELECT " + query2Stmt(`<span data-type="tag">`+tag+`</span>`) +
+			" FROM (SELECT ? AS content, '' AS name, '' AS alias, '' AS memo, ? AS ial)"
+		for _, test := range []struct {
+			name, content, ial string
+			want               bool
+		}{
+			{"attribute-tag", "plain text", `{: tags="` + tag + `"}`, true},
+			{"other-tag", "plain text", `{: tags="unrelated axb"}`, false},
+			{"other-attribute", "plain text", `{: name="` + tag + `"}`, false},
+			{"inline-tag", "#" + tag + "#", `{: name="other"}`, true},
+			{"empty-attributes", "plain text", "", false},
+			{"inline-tag-empty-attributes", "#" + tag + "#", "", true},
+		} {
+			t.Run(tag+"/"+test.name, func(t *testing.T) {
+				var matched bool
+				if err := db.QueryRow(query, test.content, test.ial).Scan(&matched); err != nil {
+					t.Fatalf("%s: %v", query, err)
+				}
+				if matched != test.want {
+					t.Fatalf("content %q ial %q: matched=%v, want %v", test.content, test.ial, matched, test.want)
+				}
+			})
+		}
+	}
+}
+
+func TestMarkLinkedNodesWithSize(t *testing.T) {
+	nodes := []*GraphNode{
+		{ID: "a", Size: 10},
+		{ID: "b", Size: 10},
+		{ID: "c", Size: 10},
+	}
+	links := []*GraphLink{
+		{From: "a", To: "b"},
+		{From: "c", To: "b", Ref: true},
+		{From: "missing", To: "b", Ref: true},
+		{From: "a", To: "a", Ref: true},
+	}
+	markLinkedNodesWithSize(&nodes, &links, 10)
+	if len(links) != 2 {
+		t.Fatalf("unexpected links: %+v", links)
+	}
+	if nodes[0].Refs != 1 || nodes[1].Defs != 1 || nodes[2].Refs != 1 {
+		t.Fatalf("unexpected node counts: %+v", nodes)
+	}
+	if nodes[1].Size != 10 {
+		t.Fatalf("unexpected target size: %v", nodes[1].Size)
+	}
+}
+
+func TestPruneUnrefWithLimits(t *testing.T) {
+	nodes := []*GraphNode{
+		{ID: "a", Refs: 2},
+		{ID: "b", Defs: 2},
+		{ID: "c", Refs: 1},
+		{ID: "d", Refs: 3},
+	}
+	links := []*GraphLink{
+		{From: "a", To: "b"},
+		{From: "b", To: "c"},
+		{From: "a", To: "d"},
+	}
+	pruneUnrefWithLimits(&nodes, &links, 2, 2)
+	if len(nodes) != 2 || nodes[0].ID != "a" || nodes[1].ID != "b" {
+		t.Fatalf("unexpected nodes: %+v", nodes)
+	}
+	if len(links) != 1 || links[0].From != "a" || links[0].To != "b" {
+		t.Fatalf("unexpected links: %+v", links)
+	}
+}
+
+func TestGrowLinkedNodesUsesIndexesAndStopsCycles(t *testing.T) {
+	a := &Block{ID: "a", Type: "NodeDocument"}
+	b := &Block{ID: "b", Type: "NodeDocument"}
+	c := &Block{ID: "c", Type: "NodeDocument"}
+	a.Defs = []*Block{b}
+	b.Defs = []*Block{a, c}
+	c.Defs = []*Block{b}
+	forwardlinks := []*Block{a, b, c}
+	backlinks := []*Block{}
+	nodes := []*GraphNode{{ID: "a", Size: 10}}
+	visitedIDs := graphNodeIDs(nodes)
+	forwardDepth, backDepth := 0, 0
+	growLinkedNodes(&forwardlinks, &backlinks, &nodes, visitedIDs, 10, &forwardDepth, &backDepth)
+	if len(nodes) != 3 || nodes[0].ID != "a" || nodes[1].ID != "b" || nodes[2].ID != "c" {
+		t.Fatalf("unexpected grown nodes: %+v", nodes)
+	}
+}
+
+// TestQuery2StmtEscapesTagQuote 验证行级标签文本中的单引号在拼接 SQL 前被转义，
+// 防止标签内容闭合字符串字面量注入查询 https://github.com/siyuan-note/siyuan/security/advisories/GHSA-5rwv-4j4c-f954
+func TestQuery2StmtEscapesTagQuote(t *testing.T) {
+	oldConf := Conf
+	Conf = &AppConf{Search: NewConfSection(conf.NewSearch())}
+	t.Cleanup(func() {
+		Conf = oldConf
+	})
+
+	stmt := query2Stmt(`<span data-type="tag">z') UNION SELECT null-- </span>`)
+	if strings.Contains(stmt, `z')`) {
+		t.Fatalf("tag content quote not escaped: %s", stmt)
+	}
+	if !strings.Contains(stmt, `z'')`) {
+		t.Fatalf("escaped tag content not found: %s", stmt)
+	}
+
+	stmt = query2Stmt(`#a' OR '1'='1#`)
+	if strings.Contains(stmt, `' OR '`) {
+		t.Fatalf("shorthand tag content quote not escaped: %s", stmt)
+	}
+}

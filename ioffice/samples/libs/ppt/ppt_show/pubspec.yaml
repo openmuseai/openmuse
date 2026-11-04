@@ -1,0 +1,17 @@
+name: ppt_show
+description: PowerPoint-like slide shell on top of ppt_render.
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  ppt_render:
+    path: ../ppt_render
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

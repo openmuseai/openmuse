@@ -1,0 +1,2175 @@
+{
+	"ID": "20240530101000-1m5un7l",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-uyuv0yt",
+		"id": "20240530101000-1m5un7l",
+		"title": "アセット",
+		"type": "doc",
+		"updated": "20261024164212"
+	},
+	"Children": [
+		{
+			"ID": "20240530101000-penh301",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-you29ty",
+				"id": "20240530101000-penh301",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-um3rv5x",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-ennlr9t",
+				"id": "20240530101000-um3rv5x",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エディタから挿入された添付ファイルはアセットファイルとみなされ、デフォルトで "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "workspace/data/assets/"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ フォルダに配置されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260820101323-b5x9rtd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260820101323-b5x9rtd",
+				"updated": "20260820133158"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "デスクトップでは、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エディタ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "動作"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "リソースの開き方"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で、クリック、Ctrl+クリック / ⌘クリック、Alt+クリック、Shift+クリック時のリソースの開き方を設定できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261016111305-bmxf6if",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261016111305-bmxf6if",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ファイルの内容や OCR テキストの検索については、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240530101000-5k5d5i3",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "アセットの内容検索"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "を参照してください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-m11xu1w",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-o6et1uc",
+				"id": "20240530101000-m11xu1w",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画像やファイルの挿入"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-rwdk1i4",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-4itxibn",
+				"id": "20240530101000-rwdk1i4",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画像やファイルは、コピーしてエディタに直接貼り付けるか (Linux ではサポートされていません)、エディタにドラッグ＆ドロップすることで挿入できます。挿入時には 2 つのオプションがあります:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-5cag8jh",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-d60jz2e",
+				"id": "20240530101000-5cag8jh",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-fizmlwu",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-mdon5fr",
+						"id": "20240530101000-fizmlwu",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-9muhrpx",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-9muhrpx",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "アセットとして挿入: 画像やファイルをリソースファイルとして挿入します。ショートカットキーは "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "V"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ です"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-1783z3v",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-gmhitsq",
+						"id": "20240530101000-1783z3v",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-g0g7vya",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-g0g7vya",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "絶対パス ("
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "file://"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​) によるリンク: 画像やファイルをローカルの絶対パスとしてハイパーリンクに挿入します。ショートカットキーは "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Shift"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "V"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ です。または、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Alt"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ キーを押しながらドラッグ＆ドロップします"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-7gcm5fs",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-ytxdf4a",
+				"id": "20240530101000-7gcm5fs",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画像のタイトルが指定されていると、タイトルがキャプションとして画像の下に表示されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ev9oag3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-v13sz9b",
+				"id": "20240530101000-ev9oag3",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeImage",
+					"Data": "span",
+					"Children": [
+						{
+							"Type": "NodeBang"
+						},
+						{
+							"Type": "NodeOpenBracket"
+						},
+						{
+							"Type": "NodeLinkText",
+							"Data": "siyuan-128.png"
+						},
+						{
+							"Type": "NodeCloseBracket"
+						},
+						{
+							"Type": "NodeOpenParen"
+						},
+						{
+							"Type": "NodeLinkDest",
+							"Data": "assets/siyuan-128-20210604092437-7iqzf90.png"
+						},
+						{
+							"Type": "NodeLinkSpace"
+						},
+						{
+							"Type": "NodeLinkTitle",
+							"Data": "水を飲むとき、その水がどこから来たのかを忘れてはいけません。"
+						},
+						{
+							"Type": "NodeCloseParen"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-9ovewni",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-s3hfflb",
+				"id": "20240530101000-9ovewni",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​: 挿入された画像やファイルの圧縮処理は行われず、すべて元のデータのまま保存されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260930085927-1t89t26",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930085927-1t89t26",
+				"updated": "20260930085927"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "既存のアセットを挿入するときは、画像のタイトル、ツールチップのテキスト、既存の OCR テキストでも検索できます。同じ画像にドキュメントごとに異なるタイトルや説明が付いている場合、いずれかの参照が一致すればアセットを検索できます。このグローバル検索には暗号化ノートブックのアセットは含まれません。"
+				}
+			]
+		},
+		{
+			"ID": "20260930092043-zd8vt2u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930092043-zd8vt2u",
+				"updated": "20261016013311"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エディタ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "画像"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "画像のファイル名を表示"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を有効にすると、ローカル画像の上にパスと生成 ID を除いたファイル名が拡張子付きで表示されます。名前をクリックすると名前変更ダイアログが開きます。変更を確定すると、このアセットを参照するすべてのリンクが更新され、キャンセルすると元の名前が保持されます。読み取り専用表示と暗号化ノートブックでは、画像のファイル名から名前を変更できません。"
+				}
+			]
+		},
+		{
+			"ID": "20260930092955-e9bzngv",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930092955-e9bzngv",
+				"updated": "20261016013311"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エディタ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "画像"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "画像のツールチップのテキストを表示"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を有効にすると、画像の説明がタイトルの下に表示されます。この設定が無効でも、画像にマウスを合わせるとタイトルとツールチップテキストの両方が表示されます。説明には既存の代替テキストを使用し、アセットの挿入時に検索できます。"
+				}
+			]
+		},
+		{
+			"ID": "20260930093600-nnyntle",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930093600-nnyntle",
+				"updated": "20260930093600"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画像にマウスを合わせると、タイトルがなくてもファイル名、形式、読み込み済み画像の元のサイズ、タイトル、ツールチップテキストを確認できます。ローカルワークスペースの画像では、取得できる場合にファイルサイズも表示されます。ネットワーク画像と暗号化ノートブックの画像ではファイルサイズは表示されません。"
+				}
+			]
+		},
+		{
+			"ID": "20261021003402-btwcz9x",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261021003402-btwcz9x",
+				"updated": "20261021003402"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "TIFF 画像"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261021003402-shhaheh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021003402-shhaheh",
+				"updated": "20261021003402"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "アセットとして挿入した TIFF 画像（.tif/.tiff）は最初のフレームを表示します。元のファイルはそのままダウンロードでき、フレームの切り替えには現在対応していません。16 ビットのグレースケール画像は、有効な ImageJ 表示範囲を優先してプレビューの明るさを調整します。表示範囲がない場合は、最初のフレームの実際の階調範囲を使用します。"
+				}
+			]
+		},
+		{
+			"ID": "20261021003402-ot30fxh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021003402-ot30fxh",
+				"updated": "20261021003402"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "プレビューできるファイルは 64 MiB 以下で、1 フレームの上限はデスクトップで 5,000 万画素、モバイルで 1,250 万画素です。BigTIFF、浮動小数点、CMYK、JPEG 圧縮の TIFF 画像には対応していません。プレビューできないファイルもダウンロードして外部アプリで開けます。"
+				}
+			]
+		},
+		{
+			"ID": "20261018221152-s6uge4s",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261018221152-s6uge4s",
+				"updated": "20261018221152"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Live Photos"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261018221152-6f3mr7h",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261018221152-6f3mr7h",
+				"updated": "20261018221152"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "iOS クライアントでは、エディターの "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "画像を挿入"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を使用して写真ライブラリから Live Photos を選択できます。元の写真とペアの動画、および元のメタデータが保持されます。"
+				}
+			]
+		},
+		{
+			"ID": "20261018221152-g7c8fdh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261018221152-g7c8fdh",
+				"updated": "20261018221152"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "各クライアントで画像プレビューを開き、Live Photo ボタンを押すと再生できます。元の動画を直接再生できない場合は、必要に応じて互換プレビューが生成されます。初回は時間がかかることがありますが、以降はローカルキャッシュが再利用されます。キャッシュは同期されません。互換プレビューは非可逆変換ですが、元のファイルは変更されません。"
+				}
+			]
+		},
+		{
+			"ID": "20261018221152-pjjd5rh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261018221152-pjjd5rh",
+				"updated": "20261018221152"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "HDR や一部の特殊なエンコード形式は、現在、互換プレビューに変換できません。静止画像と元のファイルは保持されます。Android のモーションフォトの読み込み、および書き出したファイルからシステムの Live Photo を復元する機能は、まだサポートされていません。"
+				}
+			]
+		},
+		{
+			"ID": "20261010134815-h903uwh",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261010134815-h903uwh",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画像のタイトル"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261010134815-pbj3gz0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261010134815-pbj3gz0",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画像の下にあるタイトルをクリックまたはタップすると、フローティング入力欄で編集できます。編集中は画面全体を覆うマスクが表示され、本文のレイアウトは変わりません。タイトルにフォーカスがあるときは "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Enter"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " または "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Space"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で編集を開始します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-j312gbb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-j312gbb",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "編集中は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Enter"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " または "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Tab"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で保存、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Esc"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " でキャンセルできます。入力欄の外側をクリックするか、フォーカスを移しても保存されます。モバイルで戻る操作を行うと、まず保存して入力欄を閉じます。変更は現在の画像参照にのみ適用され、アセットファイル名は変更されません。読み取り専用ドキュメントでは編集できません。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-m2u22gy",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-ta4h1wk",
+				"id": "20240530101000-m2u22gy",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "参照されていないアセットのクリーンアップ"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-hx9syvd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-hpz8nlf",
+				"id": "20240530101000-hx9syvd",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "「参照」とは、ハイパーリンク、挿入された画像、または HTML タグの "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "src"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 属性 ("
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&lt;img&gt;"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&lt;iframe&gt;"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ など) を介したアセットファイルへのリンクを指します。ここで考慮すべきケースが 2 つあります:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-koz90j5",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1,
+				"Tight": true,
+				"Start": 1,
+				"Delimiter": 46,
+				"Padding": 3,
+				"Marker": "MQ==",
+				"Num": 1
+			},
+			"Properties": {
+				"ID": "20240530101000-stcite3",
+				"id": "20240530101000-koz90j5",
+				"updated": "20241027164357"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-5sfnnrd",
+					"Type": "NodeListItem",
+					"Data": "1",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 1,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "MQ==",
+						"Num": 1
+					},
+					"Properties": {
+						"ID": "20240530101000-lnwfvgb",
+						"id": "20240530101000-5sfnnrd",
+						"updated": "20241027164353"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-54snji6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-54snji6",
+								"updated": "20241027164353"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "画像やファイルなどの特定のリソース ファイルを参照する"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-81nggm6",
+					"Type": "NodeListItem",
+					"Data": "2",
+					"ListData": {
+						"Typ": 1,
+						"Tight": true,
+						"Start": 2,
+						"Delimiter": 46,
+						"Padding": 3,
+						"Marker": "Mg==",
+						"Num": 2
+					},
+					"Properties": {
+						"ID": "20240530101000-5l8f1rb",
+						"id": "20240530101000-81nggm6",
+						"updated": "20241027164357"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-0sjc1uk",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-0sjc1uk",
+								"updated": "20241027164357"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "アセットフォルダ ("
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "assets"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ フォルダ内のサブフォルダ) への参照は末尾に "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を付ける必要があります (例: "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "foo: assets/bar/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​)。参照されているアセットフォルダ内のすべてのアセットファイルは、個別に参照されているかどうかに関わらず参照済みとみなされます"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-vt936mb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240530101000-vt936mb",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": ""
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "アセット"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " から未参照のアセットファイルを一括削除できます。誤って削除したファイルを復元するには"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240530101000-tqz9ub5",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "ロールバック"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "機能を利用してください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-5nk5a0q",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-wxknyuf",
+				"id": "20240530101000-5nk5a0q",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​: 絶対パス (ローカルパスまたはネットワークパス) によって参照されているものはクリーンアップの対象外です。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-dl9pwqt",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-9ybzlvk",
+				"id": "20240530101000-dl9pwqt",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "不足しているアセットの一覧表示"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-1h6xzu1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-132d6d5",
+				"id": "20240530101000-1h6xzu1",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": ""
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "アセット"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " から不足しているアセットを確認でき、パスをコピーしてグローバル検索から参照箇所を見つけられます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-z96h4jo",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-xy6c9gw",
+				"id": "20240530101000-z96h4jo",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​: アセットファイルのパスを検索するには、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "検索"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "インデックス"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "アセットパス"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " が有効である必要があります。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-e91yggl",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-nmkttsp",
+				"id": "20240530101000-e91yggl",
+				"updated": "20241024163314"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ノートブックレベルのアセット"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-pfa7l4e",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-2ccszjl",
+				"id": "20240530101000-pfa7l4e",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "挿入したアセットをドキュメントと同じ階層に配置したい場合は事前に "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "assets"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ という名前のフォルダを手動で作成しておくと、そのフォルダが優先的にアセットファイルの保存先として使用されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-4ujfpwl",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-0bwee2e",
+				"id": "20240530101000-4ujfpwl",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "以下のような副作用が伴うため、可能な限りノートブックレベルのアセットファイルを使用しないことをお勧めします:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-pcecoaa",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-ycli2ph",
+				"id": "20240530101000-pcecoaa",
+				"updated": "20241024163314"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-of4sc87",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-x0auq2n",
+						"id": "20240530101000-of4sc87",
+						"updated": "20241024163314"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-pu6ton7",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240530101000-pu6ton7",
+								"updated": "20241024163314"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "ノートが削除されると、ノートブック間のリソース ファイル参照が適切に機能するように、ノートによって参照されるリソース ファイルがバッチでグローバル アセットにコピーされます"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-6k3lt2d",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-9efpsam",
+						"id": "20240530101000-6k3lt2d",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-tcrufk2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-lr8psbh",
+								"id": "20240530101000-tcrufk2",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "データ履歴からアセット履歴を表示できません"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-j1h2rly",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-sk8dz7b",
+						"id": "20240530101000-j1h2rly",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-09hwokm",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-0mg7gpd",
+								"id": "20240530101000-09hwokm",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/アセット"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ による検索ができません"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-14wl3ht",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-l5ptpe6",
+						"id": "20240530101000-14wl3ht",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-e9odedp",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-1vllmb2",
+								"id": "20240530101000-e9odedp",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "名前の変更ができません"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-9evyuhr",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-5bix8t1",
+				"id": "20240530101000-9evyuhr",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画像 OCR によるテキスト抽出"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-t4ud4y2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-fl1bsnw",
+				"id": "20240530101000-t4ud4y2",
+				"updated": "20261005192208"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で Tesseract、PaddleOCR、AI のいずれかを選択し、自動認識を設定します。ローカルプロバイダーはカーネルでオフライン実行され、画面を開く必要はありません。Tesseract はデスクトップに別途インストールしてください。"
+				}
+			]
+		},
+		{
+			"ID": "20261001000112-ooz689o",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261001000112-ooz689o",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PaddleOCR には PP-OCRv6 Tiny のみが内蔵され、ダウンロードせずにオフラインで使用できます。デスクトップとモバイルの両方で Tiny がデフォルトです。Small、Medium などの互換 PP-OCRv6 モデルは、検出と認識の ONNX ファイルと各 inference.yml を選択してインポートできます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-up5r0u1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-up5r0u1",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "インポートしたモデルはワークスペースと同期され、プロバイダーと使用モデルの選択は端末ごとに保存されます。新規ユーザーはデフォルトで PaddleOCR を使用し、自動 OCR は無効です。既存のプロバイダー、自動 OCR、しきい値の設定は保持されます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-58iyxs9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-58iyxs9",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "旧内蔵モデル Small の選択は Tiny に移行し、インポートしたモデルには影響しません。OCR プロバイダー設定のないバージョンからの更新では Tesseract を引き続き使用します。"
+				}
+			]
+		},
+		{
+			"ID": "20261003073646-o8u40dy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261003073646-o8u40dy",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PaddleOCR を選択すると、認識のしきい値グループで検出、テキスト領域の信頼度、認識の信頼度のしきい値を直接編集できます。入力の編集を終えると自動保存されます。検出とテキスト領域のしきい値は 0 より大きく 1 未満、認識しきい値は 0 以上 1 以下です。空欄では現在のモデルの検出パラメーター、またはデフォルトの認識しきい値 0.5 を使用します。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-syy1ne9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-syy1ne9",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "無効な入力は編集できる状態で残り、保存されません。値を上げるとアイコンの誤認識を減らせますが、ぼやけた文字や薄い文字を見落とす場合があります。しきい値は端末ごとに保存され、手動認識と自動認識に適用されます。既存の結果は変更されません。必要に応じて画像メニューから再認識してください。"
+				}
+			]
+		},
+		{
+			"ID": "20261001000112-87qzkfr",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261001000112-87qzkfr",
+				"updated": "20261001000112"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "手動認識と自動認識は選択したプロバイダーを使用します。切り替えても既存の結果は保持され、画像メニューから明示的に再認識できます。失敗した場合は前回の結果を保持し、プロバイダーを自動切り替えしません。テキストは画像の文字検索と結果の編集に引き続き使用されます。暗号化ノートブックは OCR の対象外です。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-2lypv95",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-an3j85d",
+				"id": "20240530101000-2lypv95",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-qmvr8rd",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-mbaa8ar",
+				"id": "20240530101000-qmvr8rd",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-vuyib46",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-lw8ri1k",
+						"id": "20240530101000-vuyib46",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-ciyew7k",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-9ucri2d",
+								"id": "20240530101000-ciyew7k",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Tesseract OCR をインストールする際は、インストールした Tesseract-OCR のパスを環境変数 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "PATH"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ に追加してください。これにより、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "tesseract"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ コマンドを呼び出して画像から OCR でテキストを抽出できるようになります。正常にインストールされた場合は、カーネルの起動ログで "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "tesseract-ocr enabled"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ と表示されます。Tesseract を無効にしたい場合は、環境変数に "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "SIYUAN_TESSERACT_ENABLED=false"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を設定してください"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-yp8d881",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-xjhk4ih",
+						"id": "20240530101000-yp8d881",
+						"updated": "20261016202856"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-juctxsf",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-04xwhm0",
+								"id": "20240530101000-juctxsf",
+								"updated": "20261016202856"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "SiYuan はインストールされたすべての言語パックを有効にするわけではありません。言語パックが多すぎると、OCR が遅くなったり、タイムアウトしたり、システムリソースを過剰に消費する可能性があるためです。そのため、デフォルトでは、最大で "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "eng"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "chi*"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "fra"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "spa"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "deu"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "rus"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​、"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "osd"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ のみが有効になります。より正確な言語サポートが必要な場合は、環境変数 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "SIYUAN_TESSERACT_LANGS"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ で言語パックを指定します (例: "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "SIYUAN_TESSERACT_LANGS=chi_sim+eng"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​)"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-8vlvsns",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-prezj3g",
+						"id": "20240530101000-8vlvsns",
+						"updated": "20261012014859"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-ack0scp",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-9as1nfh",
+								"id": "20240530101000-ack0scp",
+								"updated": "20261012014859"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Tesseract と PaddleOCR は PNG、JPEG、TIFF、BMP、GIF、WebP 画像をサポートし、Tesseract は PBM、PGM、PPM、PNM もサポートします"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-5mse6p6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-w91nsfc",
+						"id": "20240530101000-5mse6p6",
+						"updated": "20261001013550"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-vsrr7lg",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-oiv9z77",
+								"id": "20240530101000-vsrr7lg",
+								"updated": "20261001013550"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Tesseract は、デフォルトでは 2MB 以下の画像のみが処理されます。変更する場合は環境変数 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "SIYUAN_TESSERACT_MAX_SIZE"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ で設定します。値の単位はバイトです (例: "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "SIYUAN_TESSERACT_MAX_SIZE=4000000"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ は上限を 4MB に変更します)。PaddleOCR は 32 MiB 以下、2400 万画素以下の画像をサポートします"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-hvmv9gg",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-bhe8w6i",
+				"id": "20240530101000-hvmv9gg",
+				"updated": "20261001000112"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "自動 OCR を有効にすると、カーネルは OCR 結果のない画像を処理します。抽出したテキストは検索に使用され、文字のキーワードで画像を見つけられます。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014537-ms18ll3",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261012014537-ms18ll3",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "AI OCR"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20261003224949-qenn1ez",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261003224949-qenn1ez",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画像メニューで "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "AI で OCR を実行"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " を選択すると、ローカル画像を独立して選択した OCR AI モデルに送信して文字を認識します。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で AI とモデルを選択してください。AI 機能が有効で、有効なプロバイダーとモデルがある場合に AI が表示されます。モデルは画像入力に対応している必要がありますが、この能力は自動検証されません。手動認識と自動認識はこのモデルを使用します。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-0p7a8dy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-0p7a8dy",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ローカルプロバイダーから AI に切り替えると自動認識は無効になります。明示的に有効にすると、未認識の非暗号化ノートブック画像をバックグラウンドでプロバイダーに送信し、料金が発生する場合があります。選択したモデルを無効化または削除しても、別のモデルやプロバイダーに自動切り替えしません。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-u7w3cqu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-u7w3cqu",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ローカルプロバイダーを選択し、独立した AI モデルを設定していない場合、個別の手動 AI 項目は互換性のためエージェントモデルを使用します。結果は既存の OCR テキスト、編集、コピー、検索インデックスを利用し、失敗時は元の結果を保持します。暗号化ノートブックの画像には対応していません。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-zygbw3w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-zygbw3w",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PNG、JPEG、GIF、WebP に対応しています。BMP と TIFF は PNG に、HEIC/HEIF は JPEG に変換し、元の解像度を保持します。元画像と変換後の画像はそれぞれ 20 MiB 以下、変換後の画像は 4,000 万画素以下である必要があります。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-4lr9aiy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-4lr9aiy",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ネットワーク画像では認識項目を、暗号化ノートブックの画像では OCR メニューを非表示にします。AVIF、SVG、ICO などの未対応形式では AI OCR 項目を表示しません。"
+				}
+			]
+		},
+		{
+			"ID": "20261012014737-ejf7gge",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261012014737-ejf7gge",
+				"updated": "20261012014859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "手動認識と自動認識の AI OCR は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "思考の強さ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で独立して設定できます。デフォルトはモデルの動作に従います。「なし」は思考を無効化または最小化しますが、対応状況はプロバイダーとモデルによって異なります。未対応の場合はエラーを返し、以前の OCR 結果を保持します。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-cpod2qy",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-aefldsk",
+				"id": "20240530101000-cpod2qy",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "OCR 結果の手動調整"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-2if1a62",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-de3amor",
+				"id": "20240530101000-2if1a62",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "OCR 結果は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "workspace/data/assets/ocr-texts.json"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ に保存されており、以下のような方法で OCR 結果を調整できます:"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-7cs29rr",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-e5pzck1",
+				"id": "20240530101000-7cs29rr",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-cvu21dl",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-cfyuird",
+						"id": "20240530101000-cvu21dl",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-xzn950m",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-vne36ao",
+								"id": "20240530101000-xzn950m",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "SiYuan を終了してファイルシステム上のファイル直接修正する"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-ffcjusv",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-zab4ovs",
+						"id": "20240530101000-ffcjusv",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-jv77vpt",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-oxcvji0",
+								"id": "20240530101000-jv77vpt",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "エディタの画像要素メニューから "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "OCR"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ を選択する"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-rq0etyj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-ys1z20f",
+				"id": "20240530101000-rq0etyj",
+				"updated": "20261016202856"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画像の結果編集画面で保存すると検索インデックスが自動更新されます。SiYuan の外部で JSON ファイルを編集した場合は、アセットコンテンツインデックスを手動で再構築してください。"
+				}
+			]
+		},
+		{
+			"ID": "20261014150710-r6p45ak",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261014150710-r6p45ak",
+				"updated": "20261014150710"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "画像メニュー"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR テキストを消去"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で、アセットの OCR テキストをワンクリックで消去できます。同じアセットを参照するすべての画像に反映され、検索インデックスも更新されます。空の結果が保持されるため、自動 OCR はそのアセットをスキップします。テキストを復元するには、画像メニューから手動で OCR を再実行してください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-52fjbe1",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-8x52yt3",
+				"id": "20240530101000-52fjbe1"
+			}
+		},
+		{
+			"ID": "20260930090802-fdfc9yh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930090802-fdfc9yh",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "画像の OCR アイコンをクリックすると認識テキストをコピーでき、ダブルクリックすると元画像とテキストを並べた移動可能な編集ウィンドウが開きます。画像メニューからも OCR テキストのコピーや結果の編集ができます。保存で変更を確定し、キャンセルで破棄します。ウィンドウの外側をクリックしても閉じません。"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 画像の OCR ボタンは、OCR テキストがあり、外観プロファイルで表示が許可されている場合にのみ表示されます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-bimg5ud",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-bimg5ud",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "シンプルプロファイルでは非表示です。カスタム外観プロファイルの "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エディタ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "画像"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR テキスト"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で表示を切り替えられます。画像メニューからも OCR テキストのコピーと編集ができます。"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " ローカル画像にマウスを合わせると、設定に応じて OCR テキストや認識の通知を確認できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-5qggkl3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-5qggkl3",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "文字認識アイコンは OCR 操作を示し、画像アイコンは OCR テキストの有無にかかわらず画像を PNG としてコピーします。カスタム外観プロファイルでは "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エディター"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "画像"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "PNG としてコピー"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で画像コピーボタンの表示を切り替えられます。"
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-q57d5jy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-q57d5jy",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "シンプルプロファイルでは既定で非表示です。"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " OCR のホバープレビューは最大 200 文字、6 行まで表示され、長いテキストは末尾の 3 つのドットで省略を示します。OCR アイコンをダブルクリックすると全文を確認できます。"
+				}
+			]
+		},
+		{
+			"ID": "20261014140201-14ga6f6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261014140201-14ga6f6",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "OCR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "画像のツールチップ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " で、保存済みの OCR テキスト、OCR テキストがない場合の通知、認識に失敗した場合の通知をそれぞれ設定できます。テキストのプレビューはデフォルトで有効、ほかの 2 項目は無効です。設定は端末ごとに保存され、自動 OCR とは独立しています。"
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-nbz9z79",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-nbz9z79",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "通知を非表示にしても、テキストは削除されず、検索結果も変わりません。OCR テキストがないことは、必ずしも認識の失敗を意味しません。失敗の通知は今回の実行中に発生した認識の失敗を示し、認識の成功またはテキストの保存で解除され、カーネルの再起動後には保持されません。モバイルでは、このようなホバーツールチップは表示されません。"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,21 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/clipr/ArtTablerPackage.java,cn/wps/kfc/clipr,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/clipr/ClipRelationsBase.java,cn/wps/kfc/clipr,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/clipr/PptClipRelationsImpl.java,cn/wps/kfc/clipr,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/clipr/XlsClipRelationsImpl.java,cn/wps/kfc/clipr,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/clipw/ArtTablewPackage.java,cn/wps/kfc/clipw,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/ooxfw/OxfwPackage.java,cn/wps/kfc/ooxfw,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/test/K.java,cn/wps/kfc/test,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/util/KcArrayRing.java,cn/wps/kfc/util,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/util/KcLazy.java,cn/wps/kfc/util,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/html/writer/BufferedRandomAccessFile.java,cn/wps/kfc/html/writer,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/html/writer/CommentWriter.java,cn/wps/kfc/html/writer,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/html/writer/CssTextWriter.java,cn/wps/kfc/html/writer,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/html/writer/XHtmlTextWriter.java,cn/wps/kfc/html/writer,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/xpxml/compactxml/CompactXmlReader.java,cn/wps/kfc/xpxml/compactxml,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/xpxml/reader/ElementAttr.java,cn/wps/kfc/xpxml/reader,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/html/reader/arrange/CommonStateGuider.java,cn/wps/kfc/html/reader/arrange,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/html/reader/helper/Helper.java,cn/wps/kfc/html/reader/helper,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/html/reader/lexical/Tokeniser.java,cn/wps/kfc/html/reader/lexical,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/xpxml/hlxml/traversal/HLTBackwardByte.java,cn/wps/kfc/xpxml/hlxml/traversal,too many dependencies,2026-05-22
+koffice/core-libs/kfc/kfc_alpha/src/cn/wps/kfc/html/reader/lexical/token/AttributesPool.java,cn/wps/kfc/html/reader/lexical/token,too many dependencies,2026-05-22

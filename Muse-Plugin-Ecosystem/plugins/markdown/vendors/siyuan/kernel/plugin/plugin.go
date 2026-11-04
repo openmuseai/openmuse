@@ -1,0 +1,1583 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package plugin
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"sync"
+	"sync/atomic"
+
+	"github.com/asaskevich/EventBus"
+	"github.com/dop251/goja"
+	"github.com/dop251/goja_nodejs/eventloop"
+	"github.com/fsnotify/fsnotify"
+	"github.com/gin-contrib/sse"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/lxzan/gws"
+	"github.com/samber/lo"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/apicontract"
+	"github.com/siyuan-note/siyuan/kernel/mcp/tools"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/plugin/formdata"
+	"github.com/siyuan-note/siyuan/kernel/plugin/gojaext"
+	"github.com/siyuan-note/siyuan/kernel/plugin/streams"
+	"github.com/siyuan-note/siyuan/kernel/util"
+	"github.com/smallnest/chanx"
+)
+
+type PluginState int64
+
+type RpcMethod struct {
+	Name         string
+	Descriptions []string
+	Method       goja.Callable
+}
+
+type RpcMethodInfo struct {
+	Name         string   `json:"name"`
+	Descriptions []string `json:"descriptions"`
+}
+
+type R map[string]any
+
+const (
+	EventBusTopicPlugin  = "plugin"  // Topic to kernel plugin
+	EventBusTopicRuntime = "runtime" // Topic to javascript runtime
+)
+
+const (
+	PluginStateReady PluginState = iota
+	PluginStateLoading
+	PluginStateRunning
+	PluginStateStopping
+	PluginStateStopped
+	PluginStateError
+)
+
+func (s PluginState) String() string {
+	switch s {
+	case PluginStateReady:
+		return "ready"
+	case PluginStateLoading:
+		return "loading"
+	case PluginStateRunning:
+		return "running"
+	case PluginStateStopping:
+		return "stopping"
+	case PluginStateStopped:
+		return "stopped"
+	case PluginStateError:
+		return "error"
+	default:
+		return "unknown"
+	}
+}
+
+// KernelPlugin represents a single kernel-side plugin instance.
+type KernelPlugin struct {
+	*model.Petal
+	token string // JWT for this plugin
+	file  string // kernel.js file path named in js runtime (e.g. "plugin-name/kernel.js")
+
+	pluginDir  string // Base directory for this plugin (e.g. /path/to/workspace/data/plugins/plugin-name)
+	storageDir string // Base directory for this plugin's storage (e.g. /path/to/workspace/data/storage/petal/plugin-name)
+
+	worker  Worker               // Worker for serializing plugin js-call-go (e.g. logger) and go-call-js (e.g. RPC calls) tasks on a single goroutine
+	runtime *eventloop.EventLoop // goja event loop runtime for this plugin
+
+	formDataHost *formdata.Host // 当前 runtime 中 Blob、File 与 FormData 的宿主状态，由 EnableExtendModules 设置
+	streamsHost  *streams.Host  // 当前 runtime 中 ReadableStream/WritableStream/TransformStream 的宿主状态，由 EnableExtendModules 设置
+
+	watcherMu   sync.Mutex
+	watcher     *fsnotify.Watcher // watcher for kernel plugin storage file changes
+	watcherDone chan struct{}
+
+	storageWritesMu     sync.Mutex
+	storageWrites       sync.WaitGroup
+	storageWritesClosed bool
+
+	state atomic.Int64 //  PluginState
+
+	context context.Context    // Context for managing plugin lifecycle and cancellation
+	cancel  context.CancelFunc // Cancel function for managing plugin lifecycle and cancellation
+
+	bus EventBus.Bus // Event bus for plugin events and RPC request/response dispatch
+
+	rpcMethods        sync.Map // string -> *RpcMethod, registered JSON-RPC methods
+	rpcWriteLeases    sync.Map // *rpcWriteLease -> struct{}, pending RPC executions
+	agentCapabilities sync.Map // string -> *tools.Tool, Agent capabilities registered by this plugin
+
+	socketsMu sync.RWMutex       // mutex for gwsSockets map
+	sockets   map[*gws.Conn]bool // tracked gws WebSocket connections (true: RPC server, false: regular)
+}
+
+func NewKernelPlugin(ctx context.Context, petal *model.Petal) *KernelPlugin {
+	token, err := model.CreatePluginJWT(petal.Name)
+	if err != nil {
+		logging.LogErrorf("Failed to create plugin JWT for [%s]: %v", petal.Name, err)
+	}
+
+	context, cancel := context.WithCancel(ctx)
+
+	plugin := &KernelPlugin{
+		Petal: petal,
+		token: token,
+		file:  fmt.Sprintf("%s/kernel.js", petal.Name),
+
+		pluginDir:  filepath.Join(util.DataDir, "plugins", petal.Name),
+		storageDir: filepath.Join(util.DataDir, "storage", "petal", petal.Name),
+
+		context: context,
+		cancel:  cancel,
+
+		bus: EventBus.New(),
+
+		sockets: make(map[*gws.Conn]bool),
+	}
+
+	plugin.updateState(PluginStateReady)
+	return plugin
+}
+
+// createEventMessage creates a standardized event message with a unique ID, type, and detail payload.
+func createEventMessage(eventType string, detail any) R {
+	return R{
+		"id":     uuid.NewString(),
+		"type":   eventType,
+		"detail": detail,
+	}
+}
+
+// State returns the current plugin state (safe for concurrent reads).
+func (p *KernelPlugin) State() PluginState {
+	return PluginState(p.state.Load())
+}
+
+// Clear 移除插件注册的所有 Agent 能力和 RPC 方法，避免插件停止后在全局注册表中残留。
+func (p *KernelPlugin) Clear() {
+	p.rpcMethods.Clear()
+
+	p.agentCapabilities.Range(func(_, value any) bool {
+		if tool, ok := value.(*tools.Tool); ok {
+			tools.RemoveToolIf(tool.Name, tool)
+		}
+		return true
+	})
+	p.agentCapabilities.Clear()
+}
+
+// updateState updates the plugin state atomically and pushes the new state to the frontend via util.PushKernelPluginState.
+func (p *KernelPlugin) updateState(state PluginState) {
+	p.state.Store(int64(state))
+	util.PushKernelPluginState(p.Name, int(state))
+}
+
+// InitRuntime initializes the goja runtime and evaluates kernel.js.
+func (p *KernelPlugin) InitRuntime() (err error) {
+	p.runtime = eventloop.NewEventLoop(eventloop.EnableConsole(true))
+	p.worker.Start(p.runtime)
+
+	p.runtime.Run(func(rt *goja.Runtime) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("goja panic during event loop run: %v", r)
+			}
+		}()
+
+		// Use JSON struct tags for field name mapping, with fallback to original names if "json" tag is absent.
+		rt.SetFieldNameMapper(goja.TagFieldNameMapper("json", true))
+
+		if enableErr := EnableExtendModules(p, rt); enableErr != nil {
+			err = fmt.Errorf("EnableExtendModules: %v", enableErr)
+			return
+		}
+
+		if enableErr := EnableSiyuanModule(p, rt); enableErr != nil {
+			err = fmt.Errorf("EnableSiyuanModule: %v", enableErr)
+			return
+		}
+
+		if _, runErr := rt.RunScript(p.file, p.Kernel.JS); runErr != nil {
+			err = fmt.Errorf("RunScript: %v", runErr)
+			return
+		}
+	})
+	p.runtime.Start()
+	return
+}
+
+// Eval evaluates JavaScript code in the plugin's goja runtime, returning the result or error.
+func (p *KernelPlugin) Eval(rt *goja.Runtime, code string) (goja.Value, error) {
+	return rt.RunScript(p.file, code)
+}
+
+// close interrupts the goja runtime and clears the pointer.
+func (p *KernelPlugin) close() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("goja panic during close runtime: %v", r)
+		}
+	}()
+
+	p.storageWritesMu.Lock()
+	p.storageWritesClosed = true
+	p.storageWritesMu.Unlock()
+
+	runtime := p.runtime
+	p.runtime = nil
+	if runtime != nil {
+		runtime.Stop() // Stops the event loop and waits for it to finish.
+		// p.runtime.Terminate() // Interrupts the runtime and causes all executing code to throw an exception.
+	}
+	// Detached file I/O can continue after the event loop stops. Keep the stop
+	// boundary (and pending RPC leases) until every admitted mutation has ended.
+	p.storageWrites.Wait()
+	// Promise 可能永不完成；运行时停止后已无法继续写入，释放其剩余租约。
+	p.releaseRPCWrites()
+	return
+}
+
+func (p *KernelPlugin) beginStorageWrite() (func(), error) {
+	p.storageWritesMu.Lock()
+	defer p.storageWritesMu.Unlock()
+	if p.storageWritesClosed || (p.context != nil && p.context.Err() != nil) {
+		return nil, fmt.Errorf("plugin storage is stopping")
+	}
+	p.storageWrites.Add(1)
+	return p.storageWrites.Done, nil
+}
+
+// error sets the plugin state to errored and frees the goja runtime.
+func (p *KernelPlugin) error() {
+	if p.cancel != nil {
+		p.cancel()
+	}
+	p.closeStorageWatcher()
+	p.Clear()
+
+	if err := p.close(); err != nil {
+		logging.LogErrorf("[plugin:%s] failed to close runtime during error handling: %v", p.Name, err)
+	}
+
+	p.updateState(PluginStateError)
+}
+
+// start creates the goja runtime, injects sandbox globals, and evaluates kernel.js.
+func (p *KernelPlugin) start() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("goja panic during start: %v", r)
+		}
+		if err != nil {
+			p.error()
+		}
+	}()
+
+	p.updateState(PluginStateLoading)
+
+	baseDir := filepath.Join(util.DataDir, "storage", "petal", p.Name)
+	if err := os.MkdirAll(baseDir, 0755); err != nil {
+		return fmt.Errorf("create plugin dir [%s] failed: %s", baseDir, err)
+	}
+
+	if runtimeErr := p.InitRuntime(); runtimeErr != nil {
+		return fmt.Errorf("start runtime: %v", runtimeErr)
+	}
+
+	if subscribeErr := p.subscribeEventHandlers(); subscribeErr != nil {
+		return fmt.Errorf("subscribe plugin events: %v", subscribeErr)
+	}
+
+	p.onLoad()
+	p.updateState(PluginStateRunning)
+	p.onRunning()
+
+	p.bus.Publish(EventBusTopicRuntime, createEventMessage("start", nil))
+
+	logging.LogDebugf("[plugin:%s] started", p.Name)
+	return
+}
+
+// stop cleanly shuts down the plugin: closes sockets, frees goja runtime.
+func (p *KernelPlugin) stop() (ok bool, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			p.error()
+			ok = false
+			err = fmt.Errorf("panic during plugin stop: %v", r)
+		}
+	}()
+
+	if p.State() != PluginStateRunning {
+		ok = false
+		return
+	}
+
+	p.bus.Publish(EventBusTopicRuntime, createEventMessage("stop", nil))
+
+	p.updateState(PluginStateStopping)
+
+	p.onUnload()
+
+	p.Clear()
+
+	p.cancel()
+	p.closeStorageWatcher()
+
+	p.socketsMu.Lock()
+	for c := range p.sockets {
+		delete(p.sockets, c)
+	}
+	p.socketsMu.Unlock()
+
+	p.unsubscribeEventHandlers()
+
+	p.close()
+	p.updateState(PluginStateStopped)
+
+	logging.LogDebugf("[plugin:%s] stopped", p.Name)
+
+	ok = true
+	return
+}
+
+// onLoad is called before plugin loaded.
+func (p *KernelPlugin) onLoad() {
+	if p.State() == PluginStateLoading {
+		p.invokeHook("onload")
+	}
+}
+
+// onRunning is called after plugin running.
+func (p *KernelPlugin) onRunning() {
+	if p.State() == PluginStateRunning {
+		p.invokeHook("onrunning")
+	}
+}
+
+// onUnload is called before plugin stop.
+func (p *KernelPlugin) onUnload() {
+	if p.State() == PluginStateStopping {
+		p.invokeHook("onunload")
+	}
+}
+
+// bindRpcMethod add or updates a JS function as a named RPC method.
+func (p *KernelPlugin) bindRpcMethod(name string, method goja.Callable, descriptions ...string) error {
+	p.rpcMethods.Store(name, &RpcMethod{
+		Name:         name,
+		Descriptions: descriptions,
+		Method:       method,
+	})
+	return nil
+}
+
+// unbindRpcMethod removes a registered RPC method
+func (p *KernelPlugin) unbindRpcMethod(name string) error {
+	_, ok := p.rpcMethods.LoadAndDelete(name)
+	if !ok {
+		return nil
+	}
+	return nil
+}
+
+// registerAgentCapability 在共享注册表中注册能力，并跟踪该能力以便插件停止时清理。
+func (p *KernelPlugin) registerAgentCapability(name string, tool *tools.Tool) error {
+	if err := tools.SetTool(tool.Name, tool); err != nil {
+		return err
+	}
+	p.agentCapabilities.Store(name, tool)
+	return nil
+}
+
+// unregisterAgentCapability 从共享注册表和插件跟踪表中移除能力。
+func (p *KernelPlugin) unregisterAgentCapability(name string) error {
+	if value, loaded := p.agentCapabilities.LoadAndDelete(name); loaded {
+		if tool, ok := value.(*tools.Tool); ok {
+			tools.RemoveToolIf(tool.Name, tool)
+		}
+	}
+	return nil
+}
+
+// invokeAgentCapability 调用通过 siyuan.agent.registerCapability 注册的 JS 处理函数并返回结果。
+func (p *KernelPlugin) invokeAgentCapability(handler goja.Callable, args map[string]any) (tools.CallToolResult, error) {
+	if p.State() != PluginStateRunning {
+		return tools.CallToolResult{
+			IsError: true,
+			Content: []tools.ContentItem{{Type: "text", Text: fmt.Sprintf("plugin [%s] is not running (state: %s)", p.Name, p.State().String())}},
+		}, nil
+	}
+
+	done := make(chan *TaskResult, 1)
+
+	runErr := p.worker.Run(func(rt *goja.Runtime) (_ any, _ error) {
+		jsArgs := rt.ToValue(args)
+		invokeFunction(func(_ *goja.Runtime, result *CallResult) {
+			done <- result.TaskResult()
+		}, rt, true, handler, rt.GlobalObject(), jsArgs)
+		return
+	}, nil)
+	if runErr != nil {
+		return tools.CallToolResult{
+			IsError: true,
+			Content: []tools.ContentItem{{Type: "text", Text: fmt.Sprintf("error running plugin runtime worker: %v", runErr)}},
+		}, nil
+	}
+
+	select {
+	case taskResult := <-done:
+		if taskResult.err != nil {
+			return tools.CallToolResult{
+				IsError: true,
+				Content: []tools.ContentItem{{Type: "text", Text: fmt.Sprintf("error invoking Agent capability handler: %v", taskResult.err)}},
+			}, nil
+		}
+
+		if taskResult.value == nil {
+			return tools.CallToolResult{
+				Content:              []tools.ContentItem{{Type: "text", Text: "null"}},
+				StructuredContentSet: true,
+			}, nil
+		}
+
+		jsonBytes, marshalErr := json.Marshal(taskResult.value)
+		if marshalErr != nil {
+			return tools.CallToolResult{
+				IsError: true,
+				Content: []tools.ContentItem{{Type: "text", Text: fmt.Sprintf("error marshaling Agent capability result: %v", marshalErr)}},
+			}, nil
+		}
+
+		return tools.CallToolResult{
+			Content:              []tools.ContentItem{{Type: "text", Text: string(jsonBytes)}},
+			StructuredContent:    taskResult.value,
+			StructuredContentSet: true,
+		}, nil
+
+	case <-p.context.Done():
+		return tools.CallToolResult{
+			IsError: true,
+			Content: []tools.ContentItem{{Type: "text", Text: "plugin stopped while invoking Agent capability handler"}},
+		}, nil
+	}
+}
+
+// runtimeEventHandler dispatches an event to the plugin's goja runtime
+func (p *KernelPlugin) runtimeEventHandler(event any) {
+	p.worker.Run(func(rt *goja.Runtime) (result any, err error) {
+		return dispatchEvent(p, rt, event)
+	}, nil)
+}
+
+// pluginEventHandler handles events sent to the plugin
+func (p *KernelPlugin) pluginEventHandler(event any) {
+	logging.LogDebugf("[plugin:%s] receive event: %#v", p.Name, event)
+}
+
+// subscribeEventHandlers subscribes to plugin lifecycle and RPC events, dispatching them to the plugin's JS runtime.
+func (p *KernelPlugin) subscribeEventHandlers() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			if recoveredErr, ok := r.(error); ok {
+				err = recoveredErr
+			} else {
+				err = fmt.Errorf("%v", r)
+			}
+		}
+	}()
+
+	lo.Must0(p.bus.Subscribe(EventBusTopicRuntime, p.runtimeEventHandler))
+	lo.Must0(p.bus.Subscribe(EventBusTopicPlugin, p.pluginEventHandler))
+	return
+}
+
+// unsubscribeEventHandlers unsubscribes from plugin events.
+func (p *KernelPlugin) unsubscribeEventHandlers() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			if recoveredErr, ok := r.(error); ok {
+				err = recoveredErr
+			} else {
+				err = fmt.Errorf("%v", r)
+			}
+		}
+	}()
+
+	lo.Must0(p.bus.Unsubscribe(EventBusTopicRuntime, p.runtimeEventHandler))
+	lo.Must0(p.bus.Unsubscribe(EventBusTopicPlugin, p.pluginEventHandler))
+	return
+}
+
+// GetRpcMethodsInfo returns a list of registered RPC methods with their descriptions.
+func (p *KernelPlugin) GetRpcMethodsInfo() (methods []*RpcMethodInfo) {
+	p.rpcMethods.Range(func(name any, value any) bool {
+		if method, ok := value.(*RpcMethod); ok {
+			methods = append(methods, &RpcMethodInfo{
+				Name:         method.Name,
+				Descriptions: method.Descriptions,
+			})
+		}
+		return true
+	})
+	return
+}
+
+// BroadcastNotification sends a JSON-RPC 2.0 notification to all inbound RPC WebSocket clients.
+func (p *KernelPlugin) BroadcastNotification(method string, params util.Optional[any]) {
+	notification, err := pluginRPCNotification(method, params)
+	if err != nil {
+		logging.LogWarnf("[plugin:%s] broadcast marshal: %s", p.Name, err)
+		return
+	}
+	data, err := json.Marshal(apicontract.RPCNotificationMessage(notification))
+	if err != nil {
+		logging.LogWarnf("[plugin:%s] broadcast marshal: %s", p.Name, err)
+		return
+	}
+
+	p.socketsMu.RLock()
+	conns := make([]*gws.Conn, 0, len(p.sockets))
+	for conn, isRpcConnection := range p.sockets {
+		if isRpcConnection {
+			conns = append(conns, conn)
+		}
+	}
+	p.socketsMu.RUnlock()
+
+	var wg sync.WaitGroup
+	for _, conn := range conns {
+		wg.Add(1)
+		c := conn
+		payload := make([]byte, len(data))
+		copy(payload, data) // each conn needs its own copy; WriteAsync is async and all conns share the same source slice
+		c.WriteAsync(gws.OpcodeText, payload, func(writeErr error) {
+			defer wg.Done()
+			if writeErr != nil {
+				logging.LogWarnf("[plugin:%s] RPC WebSocket notification write failed: %s", p.Name, writeErr)
+			}
+		})
+	}
+	wg.Wait()
+}
+
+// dispatchRpcRequests dispatches multiple JSON-RPC requests concurrently.
+// Returns responses in the same order as requests. Nil responses indicate notifications.
+func (p *KernelPlugin) dispatchRpcRequests(ctx context.Context, requests []*JsonRpcProcessingRequest) []*JsonRpcProcessingResponse {
+	responses := make([]*JsonRpcProcessingResponse, len(requests))
+	var wg sync.WaitGroup
+
+	for i, request := range requests {
+		// For requests that failed JSON parsing or validation, return the error immediately without dispatching.
+		if request.Error != nil {
+			responses[i] = &JsonRpcProcessingResponse{Error: request.Error}
+			continue
+		}
+
+		// For notifications, dispatch without waiting for a response.
+		if request.Request.IsNotification() {
+			go func(request *JsonRpcRequest) {
+				p.dispatchRpcRequest(p.context, request)
+			}(request.Request)
+			responses[i] = nil
+			continue
+		}
+
+		if request.Request == nil {
+			responses[i] = nil
+			continue
+		}
+
+		// For normal requests, dispatch concurrently and collect responses.
+		wg.Add(1)
+		go func(index int, request *JsonRpcRequest) {
+			defer wg.Done()
+			responses[index] = p.dispatchRpcRequest(ctx, request)
+		}(i, request.Request)
+	}
+
+	wg.Wait()
+	return responses
+}
+
+// dispatchRpcRequest routes a single JSON-RPC request to the plugin's registered JS method.
+// Returns nil for notifications (no ID field).
+func (p *KernelPlugin) dispatchRpcRequest(ctx context.Context, request *JsonRpcRequest) *JsonRpcProcessingResponse {
+	// Validate request structure
+	if rpcError := request.Validate(); rpcError != nil {
+		// For notifications, return nil (no response).
+		if request.IsNotification() {
+			return nil
+		}
+
+		// For invalid requests, return error response.
+		return &JsonRpcProcessingResponse{
+			Error: &JsonRpcErrorResponse{
+				JsonRpc: JsonRpcVersion,
+				Error:   rpcError,
+				ID:      request.ID,
+			},
+		}
+	}
+
+	// For notifications, call the method without waiting for a response and return nil.
+	if request.IsNotification() {
+		// 通知由插件生命周期管理，HTTP 返回后仍可继续执行。
+		go p.callRpcMethod(p.context, request.Method, request.Params.Value)
+		return nil
+	}
+
+	// For normal requests, call the method and return response or error.
+	rpcResult, rpcError := p.callRpcMethod(ctx, request.Method, request.Params.Value)
+	if rpcError == nil {
+		return &JsonRpcProcessingResponse{
+			Response: &JsonRpcRequestResponse{
+				JsonRpc: JsonRpcVersion,
+				Result:  rpcResult,
+				ID:      request.ID,
+			},
+		}
+	} else {
+		return &JsonRpcProcessingResponse{
+			Error: &JsonRpcErrorResponse{
+				JsonRpc: JsonRpcVersion,
+				Error:   rpcError,
+				ID:      request.ID,
+			},
+		}
+	}
+}
+
+// callRpcMethod 在事件循环中调用 RPC 方法，等待结果、请求取消或插件停止。
+func (p *KernelPlugin) callRpcMethod(ctx context.Context, method string, params any) (rpcResult any, rpcError *JsonRpcError) {
+	defer func() {
+		if r := recover(); r != nil {
+			logging.LogDebugf("[plugin:%s] panic in RPC method [%s]: %v", p.Name, method, r)
+			rpcError = &JsonRpcError{
+				Code:    JsonRpcErrorCodeInternalError,
+				Message: JsonRpcErrorInternalError.Message,
+				Data:    fmt.Sprintf("goja panic in RPC method [%s]: %v", method, r),
+			}
+		}
+	}()
+
+	if p.State() != PluginStateRunning {
+		rpcError = &JsonRpcError{
+			Code:    JsonRpcErrorCodeInternalError,
+			Message: JsonRpcErrorInternalError.Message,
+			Data:    fmt.Sprintf("plugin [%s] not running (state: [%s])", p.Name, p.State()),
+		}
+		return
+	}
+
+	value, ok := p.rpcMethods.Load(method)
+	if !ok {
+		rpcError = &JsonRpcError{
+			Code:    JsonRpcErrorCodeMethodNotFound,
+			Message: JsonRpcErrorMethodNotFound.Message,
+			Data:    fmt.Sprintf("method [%s] not found in plugin [%s]", method, p.Name),
+		}
+		return
+	}
+
+	rpcMethod, ok := value.(*RpcMethod)
+	if !ok {
+		rpcError = &JsonRpcError{
+			Code:    JsonRpcErrorCodeInternalError,
+			Message: JsonRpcErrorInternalError.Message,
+			Data:    fmt.Sprintf("invalid method type for [%s]", method),
+		}
+		return
+	}
+
+	done := make(chan *TaskResult, 1)
+	var lease *rpcWriteLease
+	var completeOnce sync.Once
+	complete := func(result *TaskResult) {
+		// 仅接收首次结果，等待者退出后的回调也不会阻塞事件循环。
+		completeOnce.Do(func() {
+			if lease != nil {
+				lease.release()
+			}
+			done <- result
+		})
+	}
+
+	runErr := p.worker.Run(func(rt *goja.Runtime) (result any, err error) {
+		// 排队期间取消的调用不再进入脚本，已执行的脚本不会被强制中断。
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-p.context.Done():
+			return nil, p.context.Err()
+		default:
+		}
+		var admissionErr error
+		lease, admissionErr = p.acquireRPCWrite()
+		if admissionErr != nil {
+			return nil, admissionErr
+		}
+
+		rpcParams := []goja.Value{}
+		jsParams := rt.ToValue(params)
+		if gojaext.IsArray(rt, jsParams) {
+			// If params is an array, convert to []goja.Value for variadic JS function calls.
+			rt.ForOf(jsParams, func(cur goja.Value) bool {
+				rpcParams = append(rpcParams, cur)
+				return true
+			})
+		} else if !goja.IsUndefined(jsParams) && !goja.IsNull(jsParams) {
+			// If params is not an array but is defined, pass as single argument.
+			rpcParams = append(rpcParams, jsParams)
+		} else {
+			// If params is undefined or null, pass no arguments.
+		}
+
+		invokeFunction(func(_ *goja.Runtime, result *CallResult) {
+			complete(result.TaskResult())
+		}, rt, true, rpcMethod.Method, rt.GlobalObject(), rpcParams...)
+		return
+	}, func(_ *goja.Runtime, _ any, err error) {
+		if err != nil {
+			complete(&TaskResult{err: err})
+		}
+	})
+	if runErr != nil {
+		complete(&TaskResult{err: runErr})
+	}
+
+	var result *TaskResult
+	select {
+	case result = <-done:
+	case <-ctx.Done():
+		result = &TaskResult{err: ctx.Err()}
+	case <-p.context.Done():
+		result = &TaskResult{err: p.context.Err()}
+	}
+	if result.err != nil {
+		rpcError = &JsonRpcError{
+			Code:    JsonRpcErrorCodeInternalError,
+			Message: JsonRpcErrorInternalError.Message,
+			Data:    fmt.Sprintf("error invoking method %q: %v", method, result.err),
+		}
+		return
+	}
+
+	rpcResult = result.value
+	return
+}
+
+// TrackRpcSocket adds a RPC WebSocket connection to the plugin's tracked list.
+func (p *KernelPlugin) TrackRpcSocket(conn *gws.Conn) {
+	if conn == nil {
+		return
+	}
+	p.socketsMu.Lock()
+	defer p.socketsMu.Unlock()
+	p.sockets[conn] = true
+}
+
+// UntrackRpcSocket removes a gws WebSocket connection from the plugin's tracked list.
+func (p *KernelPlugin) UntrackRpcSocket(conn *gws.Conn) {
+	if conn == nil {
+		return
+	}
+	p.socketsMu.Lock()
+	defer p.socketsMu.Unlock()
+	delete(p.sockets, conn)
+}
+
+// startStorageWatch starts a goroutine to watch for file changes in the plugin's storage directory and dispatches events to the plugin.
+func (p *KernelPlugin) startStorageWatch(watcher *fsnotify.Watcher, done chan struct{}) {
+	defer p.finishStorageWatcher(watcher, done)
+
+	for {
+		select {
+		case <-p.context.Done():
+			return
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+
+			for _, operation := range storageWatchOperations(event) {
+				path, relErr := filepath.Rel(p.storageDir, event.Name)
+				if relErr != nil {
+					logging.LogErrorf("[plugin:%s] failed to get relative storage path for [%s]: %v", p.Name, event.Name, relErr)
+					return
+				}
+				p.bus.Publish(EventBusTopicRuntime, createEventMessage("fs-notify", R{
+					"operation": operation,
+					"path":      path,
+				}))
+			}
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			logging.LogErrorf("[plugin:%s] storage watcher error: %s", p.Name, err)
+		}
+	}
+}
+
+// addStorageWatch adds a path to the fsnotify watcher to watch for storage file/directory changes.
+func (p *KernelPlugin) addStorageWatch(path string) (err error) {
+	if !isPluginFileWatchSupported() {
+		return errPluginFileWatchUnsupported
+	}
+
+	p.watcherMu.Lock()
+	defer p.watcherMu.Unlock()
+
+	if contextErr := p.context.Err(); contextErr != nil {
+		return fmt.Errorf("plugin stopped: %w", contextErr)
+	}
+	if p.watcher == nil {
+		p.watcher, err = fsnotify.NewWatcher()
+		if err != nil {
+			return fmt.Errorf("initialize fsnotify watcher: %w", err)
+		}
+		p.watcherDone = make(chan struct{})
+		go p.startStorageWatch(p.watcher, p.watcherDone)
+	}
+
+	err = p.watcher.Add(path)
+	return
+}
+
+// removeStorageWatch removes a path from the fsnotify watcher to stop watching for storage file/directory changes.
+func (p *KernelPlugin) removeStorageWatch(path string) (err error) {
+	if !isPluginFileWatchSupported() {
+		return errPluginFileWatchUnsupported
+	}
+
+	p.watcherMu.Lock()
+	defer p.watcherMu.Unlock()
+
+	if p.watcher == nil {
+		err = fmt.Errorf("fsnotify watcher not initialized")
+		return
+	}
+
+	err = p.watcher.Remove(path)
+	return
+}
+
+func (p *KernelPlugin) closeStorageWatcher() {
+	p.watcherMu.Lock()
+	watcher := p.watcher
+	done := p.watcherDone
+	p.watcher = nil
+	p.watcherDone = nil
+	p.watcherMu.Unlock()
+
+	if watcher != nil {
+		watcher.Close()
+	}
+	if done != nil {
+		<-done
+	}
+}
+
+func (p *KernelPlugin) finishStorageWatcher(watcher *fsnotify.Watcher, done chan struct{}) {
+	watcher.Close()
+
+	p.watcherMu.Lock()
+	if p.watcher == watcher {
+		p.watcher = nil
+		p.watcherDone = nil
+	}
+	p.watcherMu.Unlock()
+	close(done)
+}
+
+func storageWatchOperations(event fsnotify.Event) (ret []string) {
+	for _, operation := range []fsnotify.Op{fsnotify.Create, fsnotify.Write, fsnotify.Rename, fsnotify.Remove} {
+		if event.Has(operation) {
+			ret = append(ret, operation.String())
+		}
+	}
+	return
+}
+
+// invokeHook 调用已绑定的生命周期钩子，等待其返回的 Promise；未实现的可选钩子直接跳过。
+func (p *KernelPlugin) invokeHook(name string) {
+	var err error
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic during lifecycle hook invocation: %v", r)
+		}
+
+		if err != nil {
+			logging.LogErrorf("[plugin:%s] lifecycle hook [%q] error: %v", p.Name, name, err)
+		}
+	}()
+
+	done := make(chan TaskResult, 1)
+
+	runErr := p.worker.Run(func(rt *goja.Runtime) (_ any, err error) {
+		lifecycle, err := getJsContextValue(rt, []any{"siyuan", "plugin", "lifecycle"})
+		if err != nil {
+			return
+		}
+		if lifecycle == nil {
+			err = fmt.Errorf("globalThis.siyuan.plugin.lifecycle not found")
+			return
+		}
+
+		pluginObj := lifecycle.ToObject(rt)
+		if pluginObj == nil {
+			err = fmt.Errorf("globalThis.siyuan.plugin.lifecycle is not an object")
+			return
+		}
+
+		hookValue := pluginObj.Get(name)
+		if hookValue == nil || goja.IsNull(hookValue) || goja.IsUndefined(hookValue) {
+			done <- TaskResult{}
+			return
+		}
+		hook, ok := goja.AssertFunction(hookValue)
+		if !ok {
+			err = fmt.Errorf("globalThis.siyuan.plugin.lifecycle.%s not bound to a function", name)
+			return
+		}
+
+		invokeFunction(func(_ *goja.Runtime, result *CallResult) {
+			done <- *result.TaskResult()
+		}, rt, true, hook, lifecycle)
+		return
+	}, func(_ *goja.Runtime, _ any, err error) {
+		if err != nil {
+			done <- TaskResult{err: err}
+		}
+	})
+	if runErr != nil {
+		done <- TaskResult{err: runErr}
+	}
+
+	result := <-done
+	if result.err != nil {
+		err = result.err
+	}
+}
+
+// handleHttpRequest dispatches an HTTP request to the plugin's JS handler and returns the response.
+func (p *KernelPlugin) handleHttpRequest(c *gin.Context, request *Request, scope AccessScope) (response *HttpResponse, err error) {
+	type handleResult FunctionResult[*HttpResponse]
+	done := make(chan *handleResult, 1)
+
+	runErr := p.worker.Run(func(rt *goja.Runtime) (_ any, err error) {
+		handler, handlerObj, getHandlerErr := getRequestHandler(rt, scope, RequestTypeHTTP)
+		if getHandlerErr != nil {
+			err = getHandlerErr
+			return
+		}
+
+		jsRequest, convertErr := requestGoToJs(p, rt, request)
+		if convertErr != nil {
+			err = convertErr
+			return
+		}
+
+		invokeFunction(func(rt *goja.Runtime, result *CallResult) {
+			if result.Error != nil {
+				done <- &handleResult{Error: result.Error}
+				return
+			}
+
+			responseObj := result.Value.ToObject(rt)
+			if responseObj == nil {
+				done <- &handleResult{Error: fmt.Errorf("handler did not return an object")}
+				return
+			}
+
+			// convert response.body?.raw?.data from (string | Buffer | ArrayBuffer) to []byte, and pull out
+			// response.body?.stream?.stream (a ReadableStream instance) before the JSON round trip below:
+			// 两者都不能走 JSON 编解码，前者要转换成 []byte，后者是活的流对象，序列化不出有意义的结果。
+			var raw *[]byte
+			var stream *goja.Object
+			if bodyValue := responseObj.Get("body"); gojaext.IsValueNotNull(bodyValue) {
+				// response.body
+				if bodyObj := bodyValue.ToObject(rt); bodyObj != nil {
+					if rawValue := bodyObj.Get("raw"); gojaext.IsValueNotNull(rawValue) {
+						// response.body.raw
+						if rawObj := rawValue.ToObject(rt); rawObj != nil {
+							if dataValue := rawObj.Get("data"); gojaext.IsValueNotNull(dataValue) {
+								// response.body.raw.data
+								dataBytes, convertErr := jsValueToBytes(rt, dataValue)
+								if convertErr == nil {
+									raw = &dataBytes
+									rawObj.Set("data", goja.Null())
+								}
+							}
+						}
+					}
+					if streamValue := bodyObj.Get("stream"); gojaext.IsValueNotNull(streamValue) {
+						// response.body.stream
+						if streamObj := streamValue.ToObject(rt); streamObj != nil {
+							if innerValue := streamObj.Get("stream"); gojaext.IsValueNotNull(innerValue) {
+								// response.body.stream.stream
+								if innerObj := innerValue.ToObject(rt); innerObj != nil && p.streamsHost.IsReadableStream(innerObj) {
+									stream = innerObj
+									streamObj.Set("stream", goja.Null())
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// ❌ panic: invalid memory address or nil pointer dereference
+			// response := HttpResponse{}
+			// if err := rt.ExportTo(responseObj, &response); err != nil {
+			// 	done <- &ServerHandlerResult{Error: fmt.Errorf("invalid response format: %v", err)}
+			// 	return
+			// }
+
+			resultJson, marshalErr := responseObj.MarshalJSON()
+			if marshalErr != nil {
+				done <- &handleResult{Error: marshalErr}
+				return
+			}
+
+			response := HttpResponse{}
+			if unmarshalErr := json.Unmarshal(resultJson, &response); unmarshalErr != nil {
+				done <- &handleResult{Error: fmt.Errorf("invalid response format: %v", unmarshalErr)}
+				return
+			}
+
+			if raw != nil && response.Body != nil && response.Body.Raw != nil {
+				response.Body.Raw.Data = *raw
+			}
+			if stream != nil && response.Body != nil && response.Body.Stream != nil {
+				response.Body.Stream.Stream = stream
+			}
+
+			done <- &handleResult{Value: &response}
+		}, rt, true, handler, handlerObj, jsRequest)
+		return
+	}, func(_ *goja.Runtime, _ any, err error) {
+		if err != nil {
+			done <- &handleResult{Error: err}
+		}
+	})
+	if runErr != nil {
+		done <- &handleResult{Error: runErr}
+	}
+
+	select {
+	case result := <-done:
+		if result.Error != nil {
+			err = result.Error
+		} else {
+			response = result.Value
+		}
+	case <-c.Request.Context().Done():
+		// err = c.Request.Context().Err()
+	}
+	return
+}
+
+func (p *KernelPlugin) handleWebSocketRequest(c *gin.Context, request *Request, scope AccessScope) (err error) {
+	done := make(chan error, 1)
+	h := &WsEventHandler{p: p}
+	upgrader := gws.NewUpgrader(h, &gws.ServerOption{
+		// 校验 Origin，防止跨站 WebSocket 劫持（CSWSH） https://github.com/siyuan-note/siyuan/security/advisories/GHSA-3cc2-h3v6-rqpq
+		Authorize: func(r *http.Request, _ gws.SessionStorage) bool {
+			return util.IsSessionOriginAllowedRequest(r)
+		},
+	})
+
+	socket, upgradeErr := upgrader.Upgrade(c.Writer, c.Request)
+	if upgradeErr != nil {
+		err = upgradeErr
+		return
+	}
+
+	ctx, cancel := context.WithCancel(p.context)
+
+	var openOnce sync.Once
+	var closeOnce sync.Once
+
+	doOpen := func() {
+		go openOnce.Do(func() {
+			socket.ReadLoop()
+			cancel()
+		})
+	}
+
+	doClose := func() {
+		closeOnce.Do(func() {
+			socket.NetConn().Close()
+			cancel()
+		})
+	}
+	defer doClose()
+
+	var readyState atomic.Int64
+	var bufferedAmount atomic.Int64
+	readyState.Store(int64(WebSocketReadyStateConnecting))
+
+	runErr := p.worker.Run(func(rt *goja.Runtime) (_ any, err error) {
+		handler, handlerObj, getHandlerErr := getRequestHandler(rt, scope, RequestTypeWS)
+		if getHandlerErr != nil {
+			err = getHandlerErr
+			return
+		}
+
+		jsRequest, convertErr := requestGoToJs(p, rt, request)
+		if convertErr != nil {
+			err = convertErr
+			return
+		}
+
+		jsRequestObj := jsRequest.ToObject(rt)
+		if jsRequestObj == nil {
+			err = fmt.Errorf("failed to convert request value to object")
+			return
+		}
+
+		port := rt.NewObject()
+
+		invokePortHook := func(_ *goja.Runtime, name string, args ...goja.Value) {
+			hook := port.Get(name)
+			if fn, ok := goja.AssertFunction(hook); ok {
+				if _, callErr := fn(port, args...); callErr != nil {
+					logging.LogErrorf("[plugin:%s] ws server port hook %q: %v", p.Name, name, callErr)
+				}
+			}
+		}
+
+		setProtocol := func(rt *goja.Runtime, protocol string) {
+			port.Set("protocol", rt.ToValue(protocol))
+		}
+
+		setPortReadyState := func(rt *goja.Runtime, state WebSocketState) {
+			readyState.Store(int64(state))
+			port.Set("readyState", rt.ToValue(state))
+		}
+
+		updatePortBufferedAmount := func(rt *goja.Runtime, delta int) {
+			bufferedAmount.Add(int64(delta))
+			port.Set("bufferedAmount", rt.ToValue(bufferedAmount.Load()))
+		}
+
+		manager := &WsManager{
+			BufferedAmount: &bufferedAmount,
+
+			InvokeHook:    invokePortHook,
+			SetProtocol:   setProtocol,
+			SetReadyState: setPortReadyState,
+		}
+
+		h.BindOnOpen(manager)
+		h.BindOnClose(manager)
+		h.BindOnPing(manager)
+		h.BindOnPong(manager)
+		h.BindOnMessage(manager)
+
+		port_open := rt.ToValue(func(openCall goja.FunctionCall, rt *goja.Runtime) goja.Value {
+			openPromise, openResolve, openReject := rt.NewPromise()
+
+			openRunErr := p.worker.Run(func(rt *goja.Runtime) (_ any, _ error) {
+				doOpen()
+				return
+			}, func(rt *goja.Runtime, result any, err error) {
+				if lo.IsNil(err) {
+					if resolveErr := openResolve(result); resolveErr != nil {
+						logging.LogErrorf("[plugin:%s] ws server port.open resolve: %v", p.Name, resolveErr)
+					}
+				} else {
+					if rejectErr := openReject(rt.NewGoError(err)); rejectErr != nil {
+						logging.LogErrorf("[plugin:%s] ws server port.open reject: %v", p.Name, rejectErr)
+					}
+				}
+			})
+			if openRunErr != nil {
+				logging.LogErrorf("[plugin:%s] ws server port.open worker run: %v", p.Name, openRunErr)
+			}
+
+			return rt.ToValue(openPromise)
+		})
+
+		port_send := rt.ToValue(func(sendCall goja.FunctionCall, rt *goja.Runtime) goja.Value {
+			sendPromise, sendResolve, sendReject := rt.NewPromise()
+
+			sendRunErr := p.worker.Run(func(rt *goja.Runtime) (_ any, err error) {
+				var messageData []byte
+				var opcode gws.Opcode
+				if len(sendCall.Arguments) >= 1 {
+					data := sendCall.Argument(0)
+					if arrayBuffer, ok := data.Export().(goja.ArrayBuffer); ok {
+						opcode = gws.OpcodeBinary
+						b := arrayBuffer.Bytes()
+						messageData = make([]byte, len(b))
+						copy(messageData, b) // ArrayBuffer.Bytes() points into JS engine memory; copy before async send
+					} else {
+						opcode = gws.OpcodeText
+						messageData = []byte(data.String())
+					}
+				}
+
+				state := WebSocketState(readyState.Load())
+				if state == WebSocketReadyStateClosing || state == WebSocketReadyStateClosed {
+					err = fmt.Errorf("WebSocket is not open (state: %d)", state)
+					return
+				}
+
+				updatePortBufferedAmount(rt, len(messageData))
+				socket.WriteAsync(opcode, messageData, func(writeErr error) {
+					p.worker.Run(func(rt *goja.Runtime) (_ any, err error) {
+						if writeErr == nil {
+							updatePortBufferedAmount(rt, -len(messageData))
+						} else {
+							err = writeErr
+						}
+						return
+					}, func(rt *goja.Runtime, result any, err error) {
+						if lo.IsNil(err) {
+							if resolveErr := sendResolve(result); resolveErr != nil {
+								logging.LogErrorf("[plugin:%s] ws server port.send resolve: %v", p.Name, resolveErr)
+							}
+						} else {
+							if rejectErr := sendReject(rt.NewGoError(err)); rejectErr != nil {
+								logging.LogErrorf("[plugin:%s] ws server port.send reject: %v", p.Name, rejectErr)
+							}
+						}
+					})
+				})
+				return
+			}, func(rt *goja.Runtime, _ any, err error) {
+				if !lo.IsNil(err) {
+					if rejectErr := sendReject(rt.NewGoError(err)); rejectErr != nil {
+						logging.LogErrorf("[plugin:%s] ws server port.send reject: %v", p.Name, rejectErr)
+					}
+				}
+			})
+			if sendRunErr != nil {
+				logging.LogErrorf("[plugin:%s] ws server port.send worker run: %v", p.Name, sendRunErr)
+			}
+
+			return rt.ToValue(sendPromise)
+		})
+
+		port_ping := rt.ToValue(func(pingCall goja.FunctionCall, rt *goja.Runtime) goja.Value {
+			pingPromise, pingResolve, pingReject := rt.NewPromise()
+
+			pingRunErr := p.worker.Run(func(rt *goja.Runtime) (result any, err error) {
+				var pingData string
+				if len(pingCall.Arguments) > 0 && !goja.IsUndefined(pingCall.Argument(0)) {
+					pingData = pingCall.Argument(0).String()
+				}
+				err = socket.WritePing([]byte(pingData))
+				return
+			}, func(rt *goja.Runtime, result any, err error) {
+				if lo.IsNil(err) {
+					if resolveErr := pingResolve(result); resolveErr != nil {
+						logging.LogErrorf("[plugin:%s] ws server port.ping resolve: %v", p.Name, resolveErr)
+					}
+				} else {
+					if rejectErr := pingReject(rt.NewGoError(err)); rejectErr != nil {
+						logging.LogErrorf("[plugin:%s] ws server port.ping reject: %v", p.Name, rejectErr)
+					}
+				}
+			})
+			if pingRunErr != nil {
+				logging.LogErrorf("[plugin:%s] ws server port.ping worker run: %v", p.Name, pingRunErr)
+			}
+
+			return rt.ToValue(pingPromise)
+		})
+
+		port_pong := rt.ToValue(func(pongCall goja.FunctionCall, rt *goja.Runtime) goja.Value {
+			pongPromise, pongResolve, pongReject := rt.NewPromise()
+
+			pongRunErr := p.worker.Run(func(rt *goja.Runtime) (result any, err error) {
+				var pongData string
+				if len(pongCall.Arguments) > 0 && !goja.IsUndefined(pongCall.Argument(0)) {
+					pongData = pongCall.Argument(0).String()
+				}
+				err = socket.WritePong([]byte(pongData))
+				return
+			}, func(rt *goja.Runtime, result any, err error) {
+				if lo.IsNil(err) {
+					if resolveErr := pongResolve(result); resolveErr != nil {
+						logging.LogErrorf("[plugin:%s] ws server port.pong resolve: %v", p.Name, resolveErr)
+					}
+				} else {
+					if rejectErr := pongReject(rt.NewGoError(err)); rejectErr != nil {
+						logging.LogErrorf("[plugin:%s] ws server port.pong reject: %v", p.Name, rejectErr)
+					}
+				}
+			})
+			if pongRunErr != nil {
+				logging.LogErrorf("[plugin:%s] ws server port.pong worker run: %v", p.Name, pongRunErr)
+			}
+
+			return rt.ToValue(pongPromise)
+		})
+
+		port_close := rt.ToValue(func(closeCall goja.FunctionCall, rt *goja.Runtime) goja.Value {
+			closePromise, closeResolve, closeReject := rt.NewPromise()
+
+			closeRunErr := p.worker.Run(func(rt *goja.Runtime) (result any, err error) {
+				code := uint16(1000)
+				var reason []byte
+				if gojaext.IsValueNotNull(closeCall.Argument(0)) {
+					code = uint16(closeCall.Argument(0).ToInteger())
+				}
+				if gojaext.IsValueNotNull(closeCall.Argument(1)) {
+					reason = []byte(closeCall.Argument(1).String())
+				}
+				setPortReadyState(rt, WebSocketReadyStateClosing)
+				err = socket.WriteClose(code, reason)
+				return
+			}, func(rt *goja.Runtime, result any, err error) {
+				if lo.IsNil(err) {
+					if resolveErr := closeResolve(result); resolveErr != nil {
+						logging.LogErrorf("[plugin:%s] ws server port.close resolve: %v", p.Name, resolveErr)
+					}
+				} else {
+					if rejectErr := closeReject(rt.NewGoError(err)); rejectErr != nil {
+						logging.LogErrorf("[plugin:%s] ws server port.close reject: %v", p.Name, rejectErr)
+					}
+				}
+			})
+			if closeRunErr != nil {
+				logging.LogErrorf("[plugin:%s] ws server port.close worker run: %v", p.Name, closeRunErr)
+			}
+
+			return rt.ToValue(closePromise)
+		})
+
+		lo.Must0(port.Set("binaryType", rt.ToValue("arraybuffer")))
+		lo.Must0(port.Set("bufferedAmount", rt.ToValue(bufferedAmount.Load())))
+		lo.Must0(port.Set("protocol", rt.ToValue("")))
+		lo.Must0(port.Set("readyState", rt.ToValue(readyState.Load())))
+
+		lo.Must0(port.Set("onopen", goja.Null()))
+		lo.Must0(port.Set("onmessage", goja.Null()))
+		lo.Must0(port.Set("onping", goja.Null()))
+		lo.Must0(port.Set("onpong", goja.Null()))
+		lo.Must0(port.Set("onclose", goja.Null()))
+		lo.Must0(port.Set("onerror", goja.Null()))
+
+		lo.Must0(port.Set("open", port_open))
+		lo.Must0(port.Set("send", port_send))
+		lo.Must0(port.Set("ping", port_ping))
+		lo.Must0(port.Set("pong", port_pong))
+		lo.Must0(port.Set("close", port_close))
+
+		lo.Must0(ObjectSeal(rt, port))
+		lo.Must0(jsRequestObj.Set("port", port))
+
+		invokeFunction(func(_ *goja.Runtime, result *CallResult) {
+			if result.Error != nil {
+				// If the handler throws an error, close the connection and return the error.
+				select {
+				case done <- result.Error:
+				case <-ctx.Done():
+				}
+				return
+			}
+			// Auto-open if the handler did not call port.open() explicitly.
+			doOpen()
+		}, rt, true, handler, handlerObj, jsRequest)
+
+		return
+	}, func(_ *goja.Runtime, _ any, err error) {
+		if err != nil {
+			// If there is an error during the worker run (e.g. runtime panic), close the connection and return the error.
+			select {
+			case done <- err:
+			case <-ctx.Done():
+			}
+		}
+	})
+	if runErr != nil {
+		select {
+		case done <- runErr:
+		case <-ctx.Done():
+		}
+	}
+
+	select {
+	case err = <-done:
+	case <-ctx.Done():
+	}
+	return
+}
+
+// handleServerSentEventRequest dispatches an SSE request to the plugin's JS handler and streams events until completion or client disconnect.
+func (p *KernelPlugin) handleServerSentEventRequest(c *gin.Context, request *Request, scope AccessScope) (err error) {
+	ctx, cancel := context.WithCancel(p.context)
+
+	var closeOnce sync.Once
+	doClose := func() {
+		closeOnce.Do(func() {
+			cancel()
+		})
+	}
+	defer doClose()
+
+	events := chanx.NewUnboundedChan[sse.Event](ctx, 16)
+	done := make(chan error, 1) // using to receive handler error or close signal
+
+	runErr := p.worker.Run(func(rt *goja.Runtime) (_ any, err error) {
+		handler, handlerObj, getHandlerErr := getRequestHandler(rt, scope, RequestTypeSSE)
+		if getHandlerErr != nil {
+			err = getHandlerErr
+			return
+		}
+
+		jsRequest, convertErr := requestGoToJs(p, rt, request)
+		if convertErr != nil {
+			err = convertErr
+			return
+		}
+
+		jsRequestObj := jsRequest.ToObject(rt)
+		if jsRequestObj == nil {
+			err = fmt.Errorf("failed to convert request value to object")
+			return
+		}
+
+		port := rt.NewObject()
+
+		invokePortHook := func(name string, args ...goja.Value) {
+			hook := port.Get(name)
+			if fn, ok := goja.AssertFunction(hook); ok {
+				if _, callErr := fn(port, args...); callErr != nil {
+					logging.LogErrorf("[plugin:%s] sse server port hook %q: %v", p.Name, name, callErr)
+				}
+			}
+		}
+
+		port_send := rt.ToValue(func(call goja.FunctionCall, rt *goja.Runtime) goja.Value {
+			if eventJs := call.Argument(0); gojaext.IsValueNotNull(eventJs) {
+				if eventObj := eventJs.ToObject(rt); eventObj != nil {
+					e := sse.Event{}
+
+					if data := eventObj.Get("data"); gojaext.IsValueNotUndefined(data) {
+						e.Data = data.Export()
+					} else {
+						panic(rt.NewGoError(fmt.Errorf("event.data is required")))
+					}
+
+					if event := eventObj.Get("event"); goja.IsString(event) {
+						e.Event = event.String()
+					}
+
+					if id := eventObj.Get("id"); goja.IsString(id) {
+						e.Id = id.String()
+					}
+
+					if retry := eventObj.Get("retry"); goja.IsNumber(retry) {
+						e.Retry = uint(retry.ToInteger())
+					}
+
+					select {
+					case events.In <- e:
+					case <-ctx.Done():
+					}
+					return goja.Undefined()
+				}
+			}
+			panic(rt.NewGoError(fmt.Errorf("invalid event object")))
+		})
+
+		port_close := rt.ToValue(func(call goja.FunctionCall, rt *goja.Runtime) goja.Value {
+			doClose()
+			return goja.Undefined()
+		})
+
+		lo.Must0(port.Set("onopen", goja.Null()))
+		lo.Must0(port.Set("onclose", goja.Null()))
+
+		lo.Must0(port.Set("send", port_send))
+		lo.Must0(port.Set("close", port_close))
+
+		lo.Must0(ObjectSeal(rt, port))
+
+		lo.Must0(jsRequestObj.Set("port", port))
+
+		invokeFunction(func(_ *goja.Runtime, result *CallResult) {
+			if result.Error != nil {
+				select {
+				case done <- result.Error:
+				case <-ctx.Done():
+				}
+				return
+			}
+			// Only start the onclose goroutine when the handler succeeds, so that
+			// onclose is never dispatched without a prior onopen.
+			go func() {
+				<-ctx.Done()
+				p.worker.Run(func(rt *goja.Runtime) (_ any, _ error) {
+					event := rt.NewObject()
+					event.Set("type", rt.ToValue("close"))
+					invokePortHook("onclose", event)
+					return
+				}, nil)
+			}()
+
+			// Fire onopen first; signal done only after onopen has executed so that
+			// any port.send() calls inside onopen are enqueued before streaming begins.
+			p.worker.Run(func(rt *goja.Runtime) (_ any, _ error) {
+				event := rt.NewObject()
+				event.Set("type", rt.ToValue("open"))
+				invokePortHook("onopen", event)
+				return
+			}, func(_ *goja.Runtime, _ any, err error) {
+				select {
+				case done <- err:
+				case <-ctx.Done():
+				}
+			})
+		}, rt, true, handler, handlerObj, jsRequest)
+
+		return
+	}, func(_ *goja.Runtime, _ any, err error) {
+		if err != nil {
+			select {
+			case done <- err:
+			case <-ctx.Done():
+			}
+		}
+	})
+	if runErr != nil {
+		select {
+		case done <- runErr:
+		case <-ctx.Done():
+		}
+	}
+
+	for {
+		select {
+		case e := <-events.Out:
+			// c.SSEvent(e.Event, e.Data)
+			c.Render(-1, e)
+			c.Writer.Flush()
+		case <-ctx.Done():
+			return
+		case <-c.Request.Context().Done():
+			// err = c.Request.Context().Err()
+			return
+		case handlerErr := <-done:
+			if handlerErr != nil {
+				err = handlerErr
+				return
+			}
+			// Handler completed successfully; keep streaming until port.close() or client disconnect.
+		}
+	}
+}

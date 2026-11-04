@@ -1,0 +1,24 @@
+// Rust stub for AutoNumLayouter (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/line/AutoNumLayouter.java
+use crate::*;
+
+pub struct AutoNumLayouter {
+    // TODO: fields
+}
+
+impl AutoNumLayouter {
+    pub fn new() -> Self { todo!() }
+    pub fn verifyData(&self, state: IStateEnvoy) { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn calAutoNumString(&self, propEnv: ParaPropEnv, state: IStateEnvoy) { todo!() }
+    pub fn initEmptyAutoNum(&self, propEnv: ParaPropEnv, state: IStateEnvoy) { todo!() }
+    pub fn getFollowStr(&self, lvlfData: LvlfData) -> String { todo!() }
+    pub fn getAutoNumStrRunProperty(&self, propEnv: ParaPropEnv, lvlf: LvlfData, state: IStateEnvoy) -> PropertySet { todo!() }
+    pub fn getResult(&self, autoNum: AutoNumCount::AutoNum, tool: LstLfoTool, lvlfData: LvlfData) -> String { todo!() }
+    pub fn getBulletChar(&self, lvlfData: LvlfData, fontName: String) -> String { todo!() }
+    pub fn getConvertFont(&self, string: String) -> Box<dyn ISymbolConvert> { todo!() }
+    pub fn getBulletPicIndex(iPicBullet: i32, document: Box<dyn Document>) -> i32 { todo!() }
+    pub fn symbol2char(&self, fontName: String, key: u16) -> u16 { todo!() }
+}
+
+pub trait IStateEnvoy {}

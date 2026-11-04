@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "java2rust-pipeline": {
+      "command": "java2rust",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

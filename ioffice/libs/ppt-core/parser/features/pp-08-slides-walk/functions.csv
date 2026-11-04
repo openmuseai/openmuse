@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_slide_id_map,slideId map+target basename,fileName+OpcrRelationship,mSlideIdMap+basename,none,02;pp-06,libs/ppt-core,pass
+2,02_function_on_ids,onSlideIds/onSlideMasterIds,rId lists+rels,KmoSlide/Master shells,01,03,libs/ppt-core,pass
+3,03_function_unread_walk,PptxrSlides.open 顺序,UnReadSlides+readers,master/layout/slide order+delayCreate,02;pp-07,pp-09-pptx-open;pp-13:02,libs/ppt-core,pass
+4,04_function_change_layout,空 slide 套 layout,empty slide+layout phs,copied placeholders,pp-02,03 empty-doc path,libs/ppt-core,pass

@@ -1,0 +1,13 @@
+name: openmuse_market_ui
+description: Shared visual system for OpenMuse plugin marketplaces.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+flutter:
+  assets:
+    - assets/task-board-editorial.png
+    - assets/archify-editorial.png

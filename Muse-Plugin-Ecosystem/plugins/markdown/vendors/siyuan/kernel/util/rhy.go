@@ -1,0 +1,118 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package util
+
+import (
+	"context"
+	"fmt"
+	"sync"
+	"time"
+
+	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
+	"golang.org/x/sync/singleflight"
+)
+
+var (
+	RhyCacheDuration = int64(3600 * 6)
+
+	cachedRhyResult    = map[string]any{}
+	rhyResultCacheTime int64
+	rhyResultLock      = sync.RWMutex{}
+	rhyResultFlight    singleflight.Group
+
+	rhyBazaarHash     string
+	rhyBazaarHashLock sync.RWMutex
+)
+
+func RefreshRhyResultJob() {
+	_, err := GetRhyResult(context.TODO(), true)
+	if nil != err {
+		// 系统唤醒后可能还没有网络连接，这里等待后再重试
+		go func() {
+			time.Sleep(7 * time.Second)
+			GetRhyResult(context.TODO(), true)
+		}()
+	}
+}
+
+func GetRhyResult(ctx context.Context, force bool) (map[string]any, error) {
+	cacheDuration := RhyCacheDuration
+	if ContainerDocker == Container {
+		cacheDuration = int64(3600 * 24)
+	}
+
+	rhyResultLock.RLock()
+	cached := cachedRhyResult
+	valid := cacheDuration >= time.Now().Unix()-rhyResultCacheTime && len(cached) > 0
+	rhyResultLock.RUnlock()
+	if !force && valid {
+		return cached, nil
+	}
+
+	// 并发调用只执行一次实际请求
+	v, err, _ := rhyResultFlight.Do("rhyResult", func() (any, error) {
+		return getRhyResult0(ctx, GetCloudServer())
+	})
+	if err != nil {
+		return nil, err
+	}
+	ret := v.(map[string]any)
+	syncRhyBazaarHashFromResult(ret)
+	return ret, nil
+}
+
+func getRhyResult0(ctx context.Context, serverURL string) (map[string]any, error) {
+	// 响应使用独立对象解析，已发布的缓存只读，刷新不会改写调用方正在使用的结果。
+	var result map[string]any
+	request := httpclient.NewCloudRequest30s()
+	resp, err := request.SetContext(ctx).SetSuccessResult(&result).Get(serverURL + "/apis/siyuan/version?ver=" + Ver)
+	if err != nil {
+		logging.LogErrorf("get version info failed: %s", err)
+		return nil, err
+	}
+	if 200 != resp.StatusCode {
+		logging.LogErrorf("get rhy result failed: %d", resp.StatusCode)
+		return nil, fmt.Errorf("get rhy result failed: %d", resp.StatusCode)
+	}
+	rhyResultLock.Lock()
+	cachedRhyResult = result
+	rhyResultCacheTime = time.Now().Unix()
+	rhyResultLock.Unlock()
+	return result, nil
+}
+
+func syncRhyBazaarHashFromResult(m map[string]any) {
+	rhyBazaarHashLock.Lock()
+	defer rhyBazaarHashLock.Unlock()
+	if nil == m {
+		rhyBazaarHash = ""
+		return
+	}
+	v, ok := m["bazaar"]
+	if !ok || nil == v {
+		rhyBazaarHash = ""
+		return
+	}
+	s, ok := v.(string)
+	if !ok || "" == s {
+		rhyBazaarHash = ""
+		return
+	}
+	rhyBazaarHash = s
+}
+
+func GetRhyBazaarHash(ctx context.Context) string {
+	rhyBazaarHashLock.RLock()
+	h := rhyBazaarHash
+	rhyBazaarHashLock.RUnlock()
+	if "" != h {
+		return h
+	}
+	_, _ = GetRhyResult(ctx, false)
+	rhyBazaarHashLock.RLock()
+	defer rhyBazaarHashLock.RUnlock()
+	return rhyBazaarHash
+}

@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_presentation_attrs,p:presentation 根属性,presentation attrs+end,Presentation flags+protocol save,pp-01:01,02;pp-09-pptx-open,libs/ppt-core,pass
+2,02_function_id_lists,sldIdLst/sldMasterIdLst,list item rId attrs,onSlideIds/onSlideMasterIds lists,01,pp-08-slides-walk;pp-13:01,libs/ppt-core,pass
+3,03_function_slide_notes_size,sldSz/notesSz,sldSz attrs+notesSz child,SlideSize+notesSize,pp-01:01,pp-09-pptx-open,libs/ppt-core,pass
+4,04_function_photo_kinsoku_custshow,photoAlbum/kinsoku/custShow,photo/kinsoku attrs+custShow rIds,photoAlbum+kinsoku+onCustomShow,pp-01:01,pp-08-slides-walk,libs/ppt-core,pass

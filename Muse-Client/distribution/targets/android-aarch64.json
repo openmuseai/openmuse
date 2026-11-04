@@ -1,0 +1,7 @@
+{
+  "profile": "android",
+  "target": { "os": "android", "arch": "aarch64", "libc": "bionic" },
+  "allowedArtifactKinds": ["host-bundle", "web-bundle"],
+  "allowedPlugins": [],
+  "requiredPlugins": []
+}

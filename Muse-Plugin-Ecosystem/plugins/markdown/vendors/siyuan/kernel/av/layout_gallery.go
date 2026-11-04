@@ -1,0 +1,226 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package av
+
+import (
+	"github.com/88250/lute/ast"
+)
+
+// LayoutGallery 描述了卡片布局的结构。
+type LayoutGallery struct {
+	*BaseLayout
+	CardSettings
+
+	CardFields []*ViewGalleryCardField `json:"fields"` // 卡片字段
+
+	// Deprecated: 仅用于读取和升级旧版布局，卡片顺序由 View.ItemIDs 维护。
+	CardIDs []string `json:"cardIds,omitempty"` // 卡片 ID，用于自定义排序
+}
+
+func NewLayoutGallery() *LayoutGallery {
+	return &LayoutGallery{
+		BaseLayout: &BaseLayout{
+			Spec:     0,
+			ID:       ast.NewNodeID(),
+			ShowIcon: true,
+		},
+		CardSettings: NewCardSettings(),
+	}
+}
+
+type CardAspectRatio int
+
+const (
+	CardAspectRatio16_9 CardAspectRatio = iota // 16:9
+	CardAspectRatio9_16                        // 9:16
+	CardAspectRatio4_3                         // 4:3
+	CardAspectRatio3_4                         // 3:4
+	CardAspectRatio3_2                         // 3:2
+	CardAspectRatio2_3                         // 2:3
+	CardAspectRatio1_1                         // 1:1
+)
+
+type CardSize int
+
+const (
+	CardSizeSmall  CardSize = iota // 小卡片
+	CardSizeMedium                 // 中卡片
+	CardSizeLarge                  // 大卡片
+)
+
+const (
+	CardWidthMin            = 140
+	CardWidthMax            = 600
+	CardAspectRatioValueMin = 0.25
+	CardAspectRatioValueMax = 2.5
+)
+
+func CardWidthBySize(size CardSize) int {
+	switch size {
+	case CardSizeSmall:
+		return 180
+	case CardSizeLarge:
+		return 320
+	default:
+		return 260
+	}
+}
+
+func CardAspectRatioValueByPreset(ratio CardAspectRatio) float64 {
+	switch ratio {
+	case CardAspectRatio9_16:
+		return 9.0 / 16.0
+	case CardAspectRatio4_3:
+		return 4.0 / 3.0
+	case CardAspectRatio3_4:
+		return 3.0 / 4.0
+	case CardAspectRatio3_2:
+		return 3.0 / 2.0
+	case CardAspectRatio2_3:
+		return 2.0 / 3.0
+	case CardAspectRatio1_1:
+		return 1
+	default:
+		return 16.0 / 9.0
+	}
+}
+
+// CoverFrom 描述了卡片封面来源的枚举类型。
+type CoverFrom int
+
+const (
+	CoverFromNone         CoverFrom = iota // 无封面
+	CoverFromContentImage                  // 内容图
+	CoverFromAssetField                    // 资源字段
+	CoverFromContentBlock                  // 内容块
+)
+
+// ViewGalleryCardField 描述了卡片字段的结构。
+type ViewGalleryCardField struct {
+	*BaseField
+	FullRow bool `json:"fullRow"` // 是否独占整行
+}
+
+// Gallery 描述了卡片视图实例的结构。
+type Gallery struct {
+	*BaseInstance
+
+	CoverFrom            CoverFrom       `json:"coverFrom"`                     // 封面来源
+	CoverFromAssetKeyID  string          `json:"coverFromAssetKeyID,omitempty"` // 资源字段 ID，CoverFrom 为 CoverFromAssetField 时有效
+	CardAspectRatio      CardAspectRatio `json:"cardAspectRatio"`               // 卡片宽高比
+	CardAspectRatioValue float64         `json:"cardAspectRatioValue"`          // 卡片宽高比实际值，宽除以高
+	CardSize             CardSize        `json:"cardSize"`                      // 卡片大小
+	CardWidth            int             `json:"cardWidth"`                     // 卡片宽度，单位为像素
+	CardLayout           CardLayout      `json:"cardLayout"`                    // 卡片字段布局
+	FitImage             bool            `json:"fitImage"`                      // 是否适应封面图片大小
+	DisplayFieldName     bool            `json:"displayFieldName"`              // 是否显示字段名称
+	DisplayEmptyFields   bool            `json:"displayEmptyFields"`            // 是否显示空字段
+	Fields               []*GalleryField `json:"fields"`                        // 卡片字段
+	Cards                []*GalleryCard  `json:"cards"`                         // 卡片
+	CardCount            int             `json:"cardCount"`                     // 总卡片数
+}
+
+// GalleryCard 描述了卡片实例的结构。
+type GalleryCard struct {
+	ConditionalColors *ItemConditionalColors `json:"conditionalColors,omitempty"`
+	ID                string                 `json:"id"`     // 卡片 ID
+	Values            []*GalleryFieldValue   `json:"values"` // 卡片字段值
+
+	CoverURL      string             `json:"coverURL"`                // 卡片封面超链接
+	CoverContent  string             `json:"coverContent"`            // 卡片封面文本内容
+	CoverPosition *CardCoverPosition `json:"coverPosition,omitempty"` // 卡片封面位置
+}
+
+// GalleryField 描述了卡片实例字段的结构。
+type GalleryField struct {
+	*BaseInstanceField
+	FullRow bool `json:"fullRow"` // 是否独占整行
+}
+
+// GalleryFieldValue 描述了卡片字段实例值的结构。
+type GalleryFieldValue struct {
+	*BaseValue
+}
+
+func (card *GalleryCard) GetID() string {
+	return card.ID
+}
+
+func (card *GalleryCard) GetBlockValue() (ret *Value) {
+	for _, v := range card.Values {
+		if KeyTypeBlock == v.ValueType {
+			ret = v.Value
+			break
+		}
+	}
+	return
+}
+
+func (card *GalleryCard) GetValues() (ret []*Value) {
+	ret = []*Value{}
+	for _, v := range card.Values {
+		ret = append(ret, v.Value)
+	}
+	return
+}
+
+func (card *GalleryCard) GetValue(keyID string) (ret *Value) {
+	for _, value := range card.Values {
+		if nil != value.Value && keyID == value.Value.KeyID {
+			ret = value.Value
+			break
+		}
+	}
+	return
+}
+
+func (gallery *Gallery) GetItems() (ret []Item) {
+	ret = []Item{}
+	for _, card := range gallery.Cards {
+		ret = append(ret, card)
+	}
+	return
+}
+
+func (gallery *Gallery) SetItems(items []Item) {
+	gallery.Cards = []*GalleryCard{}
+	for _, item := range items {
+		gallery.Cards = append(gallery.Cards, item.(*GalleryCard))
+	}
+}
+
+func (gallery *Gallery) CountItems() int {
+	return len(gallery.Cards)
+}
+
+func (gallery *Gallery) GetFields() (ret []Field) {
+	ret = []Field{}
+	for _, field := range gallery.Fields {
+		ret = append(ret, field)
+	}
+	return ret
+}
+
+func (gallery *Gallery) GetField(id string) (ret Field, fieldIndex int) {
+	for i, field := range gallery.Fields {
+		if field.ID == id {
+			return field, i
+		}
+	}
+	return nil, -1
+}
+
+func (gallery *Gallery) GetValue(itemID, keyID string) (ret *Value) {
+	for _, card := range gallery.Cards {
+		if card.ID == itemID {
+			return card.GetValue(keyID)
+		}
+	}
+	return nil
+}
+
+func (gallery *Gallery) GetType() LayoutType {
+	return LayoutTypeGallery
+}

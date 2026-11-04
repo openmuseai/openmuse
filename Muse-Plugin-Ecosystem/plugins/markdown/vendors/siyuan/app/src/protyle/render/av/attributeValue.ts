@@ -1,0 +1,275 @@
+import {hasAVAttributePlaceholder, isAVLinkType, isAVTimestampType, usesAVRollupCellRenderer} from "./capabilities";
+import {escapeAriaLabel, escapeAttr, escapeHtml, escapeHtmlTextAndAttr} from "../../../util/escape";
+import {unicode2Emoji} from "../../../emoji";
+import {renderAVBlockIcon} from "./blockIcon";
+import {getCompressURL} from "../../../util/image";
+import {isBrowserRenderableImagePath} from "../../../util/imageURL";
+import {formatDateDisplay, formatDateValue} from "./dateFormat";
+import {
+    cloneAVCellValueSnapshot,
+    getAVBlockRefSubtype,
+    hasAVRenderTemplateResult,
+} from "./cellValue";
+import {getAVColorStyle} from "./color";
+import {getHostCapabilities} from "../../../util/hostCapabilities";
+import {getAVRichTextPreviewHTML, getAVTextSource} from "./richText";
+import {getAVLocationDisplayText} from "./locationValue";
+
+export {createEmptyAVValue} from "./cellValue";
+
+export const getAVTemplateHTML = (content: string) => {
+    if (!getHostCapabilities().remoteKernel && window.siyuan.config.editor.allowHTMLBLockScript) {
+        return content;
+    }
+    // 默认过滤危险标签和事件属性，避免数据库模板字段中的代码直接执行
+    return window.DOMPurify.sanitize(content);
+};
+
+export const genAVRelationHTML = (item: IAVCellValue, rowID: string, showIcon = true) => {
+    if (!item?.block) {
+        return "";
+    }
+    const useTemplate = hasAVRenderTemplateResult(item);
+    const content = useTemplate ? getAVTemplateHTML(item.renderedContent || "") :
+        escapeHtmlTextAndAttr(item.block.content || window.siyuan.languages.untitled);
+    const templateClass = useTemplate ? " av__celltext--template" : "";
+    const storedValue = escapeAttr(encodeURIComponent(JSON.stringify(cloneAVCellValueSnapshot(item))));
+    const attributes = `data-row-id="${escapeAttr(rowID)}" data-relation-value="${storedValue}" class="av__cell--relation"`;
+    if (item.isDetached) {
+        return `<span ${attributes}>${renderAVBlockIcon(item, showIcon)}<span class="av__celltext${templateClass}">${content}</span></span>`;
+    }
+    return `<span ${attributes} data-block-id="${item.block.id}">${renderAVBlockIcon(item, showIcon)}<span data-type="block-ref" data-id="${item.block.id}" data-subtype="${getAVBlockRefSubtype(item)}" class="av__celltext av__celltext--ref${templateClass}">${content}</span></span>`;
+};
+
+const AV_TEMPLATE_INTERACTIVE_SELECTOR = [
+    "a[href]",
+    "button",
+    "input",
+    "select",
+    "textarea",
+    "label",
+    "summary",
+    "audio[controls]",
+    "video[controls]",
+    '[contenteditable=""]',
+    '[contenteditable="true"]',
+    '[contenteditable="plaintext-only"]',
+    "[onclick]",
+    '[role="button"]',
+    '[role="link"]',
+    "[data-av-interactive]",
+    '[data-type~="a"][data-href]',
+].join(",");
+
+export const getAVTemplateInteractiveElement = (target: EventTarget | null) => {
+    if (!(target instanceof Element)) {
+        return;
+    }
+    const templateElement = target.closest(".av__celltext--template");
+    if (!templateElement) {
+        return;
+    }
+    const interactiveElement = target.closest<HTMLElement>(AV_TEMPLATE_INTERACTIVE_SELECTOR);
+    if (interactiveElement && templateElement.contains(interactiveElement)) {
+        return interactiveElement;
+    }
+};
+
+export const isAVTemplateLink = (element: Element) => {
+    return element.matches('a[href], [data-type~="a"][data-href]');
+};
+
+const genAVRollupHTML = (value: IAVCellValue) => {
+    let html = "";
+    const dataValue: IAVCellDateValue = value[value.type as "date"];
+    switch (value.type) {
+        case "block":
+            if (value?.isDetached) {
+                html = `<span>${escapeHtml(value.block?.content || window.siyuan.languages.untitled)}</span>`;
+            } else {
+                html = `<span data-type="block-ref" data-id="${value.block.id}" data-subtype="${getAVBlockRefSubtype(value)}" class="av__celltext--ref">${escapeHtml(value.block?.content || window.siyuan.languages.untitled)}</span>`;
+            }
+            break;
+        case "text":
+            html = escapeHtml(value.text.content);
+            break;
+        case "location":
+            html = escapeHtml(getAVLocationDisplayText(value.location));
+            break;
+        case "number":
+            html = value.number.formattedContent || value.number.content.toString();
+            break;
+        case "date":
+        case "updated":
+        case "created":
+            if (dataValue.formattedContent) {
+                html = dataValue.formattedContent;
+            } else {
+                if (dataValue && dataValue.isNotEmpty) {
+                    html = formatDateDisplay(dataValue.content, "", dataValue.isNotTime);
+                }
+                if (dataValue && dataValue.hasEndDate && dataValue.isNotEmpty && dataValue.isNotEmpty2) {
+                    html = `<svg class="av__cellicon"><use xlink:href="#iconForward"></use></svg>${formatDateDisplay(dataValue.content2, "", dataValue.isNotTime)}`;
+                }
+            }
+            if (html) {
+                html = `<span class="av__celltext">${html}</span>`;
+            }
+            break;
+        case "url":
+            html = value.url.content ? `<a class="fn__a" href="${escapeAttr(value.url.content)}" target="_blank">${escapeHtml(value.url.content)}</a>` : "";
+            break;
+        case "phone":
+            html = value.phone.content ? `<a class="fn__a" href="tel:${escapeAttr(value.phone.content)}" target="_blank">${escapeHtml(value.phone.content)}</a>` : "";
+            break;
+        case "email":
+            html = value.email.content ? `<a class="fn__a" href="mailto:${escapeAttr(value.email.content)}" target="_blank">${escapeHtml(value.email.content)}</a>` : "";
+            break;
+    }
+    return html;
+};
+
+export const genAVValueHTML = (value: IAVCellValue, dateFormat: TAVDateFormat = "", renderTemplate?: string) => {
+    if (hasAVRenderTemplateResult(value, renderTemplate)) {
+        const storedValue = cloneAVCellValueSnapshot(value);
+        return `${value.type === "block" ? renderAVBlockIcon(value) : ""}<div class="fn__flex-1 av__celltext--template" data-cell-value="${escapeAttr(encodeURIComponent(JSON.stringify(storedValue)))}" placeholder="${window.siyuan.languages.empty}">${getAVTemplateHTML(value.renderedContent || "")}</div>`;
+    }
+    let html = "";
+    switch (value.type) {
+        case "block":
+            html = `${renderAVBlockIcon(value)}<input data-id="${value.block.id || ""}" value="${escapeAttr(value.block.content)}" type="text" class="b3-text-field b3-text-field--text fn__flex-1" placeholder="${window.siyuan.languages.empty}">
+<button type="button" data-type="av-bind-document" class="block__icon block__icon--show fn__flex-center ariaLabel" aria-label="${value.isDetached || !value.block.id ? window.siyuan.languages.bind : window.siyuan.languages.rebind}"><svg><use xlink:href="#iconLink"></use></svg></button>`;
+            break;
+        case "text": {
+            const source = getAVTextSource(value);
+            if (source.kind === "rich") {
+                html = `<div class="av__celltext av__celltext--rich b3-typography fn__flex-1" data-protyle-lite-render="safe" placeholder="${window.siyuan.languages.empty}">${getAVRichTextPreviewHTML(source.content)}</div>`;
+            } else {
+                html = `<div class="av__celltext av__celltext--plain fn__flex-1" placeholder="${window.siyuan.languages.empty}">${escapeHtml(source.content)}</div>`;
+            }
+            break;
+        }
+        case "location":
+            html = `<div class="av__celltext fn__flex-1" data-cell-value="${escapeAttr(encodeURIComponent(JSON.stringify(cloneAVCellValueSnapshot(value))))}" placeholder="${window.siyuan.languages.empty}">${escapeHtml(getAVLocationDisplayText(value.location))}</div>`;
+            break;
+        case "number":
+            html = `<span class="av__celltext" data-content="${value.number.isNotEmpty ? value.number.content : ""}" placeholder="${window.siyuan.languages.empty}">${value.number.formattedContent || (value.number.isNotEmpty ? value.number.content : "")}</span>`;
+            break;
+        case "mSelect":
+        case "select":
+            value.mSelect?.forEach((item, index) => {
+                if (value.type === "select" && index > 0) {
+                    return;
+                }
+                html += `<span class="b3-chip b3-chip--middle" data-color="${escapeAttr(item.color)}" style="${getAVColorStyle(item)}">${escapeHtml(item.content)}</span>`;
+            });
+            break;
+        case "mAsset":
+            value.mAsset?.forEach(item => {
+                if (item.type === "image" && isBrowserRenderableImagePath(item.content)) {
+                    html += `<img loading="lazy" class="av__cellassetimg ariaLabel" aria-label="${escapeAriaLabel(item.content)}" src="${getCompressURL(item.content)}">`;
+                } else {
+                    html += `<span class="b3-chip b3-chip--middle av__celltext--url ariaLabel" aria-label="${escapeAriaLabel(item.content)}" data-name="${escapeAttr(item.name)}" data-url="${escapeAttr(item.content)}">${escapeHtml(item.name || item.content)}</span>`;
+                }
+            });
+            break;
+        case "date":
+            html = `<span class="av__celltext" data-value='${JSON.stringify(value[value.type])}' placeholder="${window.siyuan.languages.empty}">`;
+            if (value[value.type] && value[value.type].isNotEmpty) {
+                html += escapeHtml(formatDateDisplay(value[value.type].content, dateFormat, value[value.type].isNotTime));
+            }
+            if (value[value.type] && value[value.type].hasEndDate && value[value.type].isNotEmpty && value[value.type].isNotEmpty2) {
+                html += `<svg class="av__cellicon"><use xlink:href="#iconForward"></use></svg>${escapeHtml(formatDateDisplay(value[value.type].content2, dateFormat, value[value.type].isNotTime))}`;
+            }
+            html += "</span>";
+            break;
+        case "created":
+        case "updated":
+            if (value[value.type].isNotEmpty) {
+                html = `<span data-content="${value[value.type].content}">${escapeHtml(value[value.type].formattedContent ||
+                    formatDateValue(value[value.type], dateFormat))}</span>`;
+            }
+            break;
+        case "url":
+            html = `<input spellcheck="false" value="${escapeAttr(value.url.content)}" class="b3-text-field b3-text-field--text fn__flex-1" placeholder="${window.siyuan.languages.empty}">
+<span class="fn__space"></span>
+<a ${value.url.content ? `href="${escapeAttr(value.url.content)}"` : ""} target="_blank" aria-label="${window.siyuan.languages.openBy}" class="block__icon block__icon--show fn__flex-center b3-tooltips__w b3-tooltips"><svg><use xlink:href="#iconLink"></use></svg></a>`;
+            break;
+        case "phone":
+            html = `<input value="${escapeAttr(value.phone.content)}" class="b3-text-field b3-text-field--text fn__flex-1" placeholder="${window.siyuan.languages.empty}">
+<span class="fn__space"></span>
+<a ${value.phone.content ? `href="tel:${escapeAttr(value.phone.content)}"` : ""} target="_blank" aria-label="${window.siyuan.languages.openBy}" class="block__icon block__icon--show fn__flex-center b3-tooltips__w b3-tooltips"><svg><use xlink:href="#iconPhone"></use></svg></a>`;
+            break;
+        case "checkbox":
+            html = `<svg class="av__checkbox"><use xlink:href="#icon${value.checkbox.checked ? "Check" : "Uncheck"}"></use></svg>`;
+            break;
+        case "template":
+            html = `<div class="fn__flex-1 av__celltext--template" placeholder="${window.siyuan.languages.empty}">${getAVTemplateHTML(value.template.content)}</div>`;
+            break;
+        case "email":
+            html = `<input spellcheck="false" value="${escapeAttr(value.email.content)}" class="b3-text-field b3-text-field--text fn__flex-1" placeholder="${window.siyuan.languages.empty}">
+<span class="fn__space"></span>
+<a ${value.email.content ? `href="mailto:${escapeAttr(value.email.content)}"` : ""} target="_blank" aria-label="${window.siyuan.languages.openBy}" class="block__icon block__icon--show fn__flex-center b3-tooltips__w b3-tooltips"><svg><use xlink:href="#iconEmail"></use></svg></a>`;
+            break;
+        case "relation":
+            value?.relation?.contents?.forEach((item, index) => {
+                html += genAVRelationHTML(item, value.relation.blockIDs[index]);
+            });
+            if (html && html.endsWith(", ")) {
+                html = html.substring(0, html.length - 2);
+            }
+            break;
+        case "rollup":
+            value?.rollup?.contents?.forEach((item) => {
+                const rollupText = (usesAVRollupCellRenderer(item.type) || item.type === "checkbox") ?
+                    genAVValueHTML(item) : genAVRollupHTML(item);
+                if (rollupText) {
+                    html += rollupText.replace("fn__flex-1", "") + ",&nbsp;";
+                }
+            });
+            if (html && html.endsWith(",&nbsp;")) {
+                html = html.substring(0, html.length - 7);
+            }
+            break;
+    }
+    return html;
+};
+
+export const genAVAttributeRowHTML = (options: {
+    nodeID: string,
+    avID: string,
+    keyID: string,
+    type: TAVCol,
+    name: string,
+    desc?: string,
+    icon?: string,
+    typeIcon: string,
+    selectOptions?: {
+        name: string,
+        color: string
+    }[],
+    dateFormat?: TAVDateFormat,
+    renderTemplate?: string,
+    value: IAVCellValue,
+    empty: boolean,
+    attributePanelVisibility?: IAVColumn["attributePanelVisibility"],
+}) => {
+    const value = options.value;
+    const storedValue = cloneAVCellValueSnapshot(value);
+    const textInputType = isAVLinkType(value.type);
+    const hasOwnPlaceholder = hasAVAttributePlaceholder(value.type);
+    const checkClass = value.type === "checkbox" ? (value.checkbox.checked ? " av__cell-check" : " av__cell-uncheck") : "";
+    return `<div class="block__icons av__row" data-id="${options.nodeID}" data-col-id="${options.keyID}" data-empty="${options.empty}" data-panel-visibility="${escapeAttr(options.attributePanelVisibility || "")}"${options.type === "block" ? ' data-primary="true"' : ""}>
+    <div class="block__icon" draggable="true"><svg><use xlink:href="#iconDrag"></use></svg></div>
+    <div class="block__logo block__logo--icon ariaLabel fn__pointer" data-type="editCol" data-position="parentW" aria-label="${escapeAriaLabel(options.name)}<div class='ft__on-surface'>${escapeAriaLabel(options.desc || "")}</div>">
+        ${options.icon ? unicode2Emoji(options.icon, "block__logoicon", true) : `<svg class="block__logoicon"><use xlink:href="#${options.typeIcon}"></use></svg>`}
+        <span>${escapeHtml(options.name)}</span>
+    </div>
+    <div data-av-id="${options.avID}" data-col-id="${value.keyID}" data-row-id="${value.blockID}"${value.id ? ` data-id="${value.id}"` : ""} data-cell-value="${encodeURIComponent(JSON.stringify(storedValue))}" data-type="${value.type}"${value.isDetached ? ' data-detached="true"' : ""}
+data-options="${options.selectOptions ? escapeAttr(JSON.stringify(options.selectOptions)) : "[]"}"
+data-date-format="${options.dateFormat || ""}"
+${options.renderTemplate?.trim() ? 'data-render-template="true"' : ""}
+${hasOwnPlaceholder ? "" : `placeholder="${window.siyuan.languages.empty}"`}
+class="fn__flex-1 fn__flex${textInputType ? "" : " custom-attr__avvalue"}${isAVTimestampType(value.type) ? " custom-attr__avvalue--readonly" : ""}${checkClass}">${genAVValueHTML(value, options.dateFormat, options.renderTemplate)}</div>
+</div>`;
+};

@@ -1,0 +1,25 @@
+// Rust stub for LineBreakAnalyzer (auto-generated)
+// Original: cn/wps/moffice/writer/layout/phoneview/LineBreakAnalyzer.java
+use crate::*;
+
+pub struct LineBreakAnalyzer {
+    // TODO: fields
+}
+
+impl LineBreakAnalyzer {
+    pub fn new() -> Self { todo!() }
+    pub fn setLayouterWhileLoading(&self, loading: Box<dyn ILayouterWhileLoading>) { todo!() }
+    pub fn getFitInfo(&self) -> PhoneViewFitInfo { todo!() }
+    pub fn getLineBreakAnalyzer(&self) -> LineBreakAnalyzer { todo!() }
+    pub fn isInAnalyzer(&self) -> bool { todo!() }
+    pub fn analyzeOption(&self, hostState: LayoutState, layoutWidth: i32) -> bool { todo!() }
+    pub fn analyzeSignable(&self, hostState: LayoutState, layoutWidth: i32) -> bool { todo!() }
+    pub fn hasNormalCP(&self, curCP: i32, maxCP: i32) -> bool { todo!() }
+    pub fn isCanSkipChar(&self, c: u16) -> bool { todo!() }
+    pub fn initGraphBuff(&self, layoutState: LayoutState) { todo!() }
+    pub fn createLayoutState(&self) -> LayoutState { todo!() }
+    pub fn initEnv(&self) { todo!() }
+    pub fn closeEnv(&self) { todo!() }
+    pub fn cleanForkSnapshot(&self, typoDocument: TypoDocument) -> TypoSnapshot { todo!() }
+    pub fn dispose(&self) { todo!() }
+}

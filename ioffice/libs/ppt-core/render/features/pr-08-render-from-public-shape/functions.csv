@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_path_from_getshape,path 来自公开 Shape,type1 + prst rect/ellipse 的 typo,DrawPath/Rect 顶点与 getShape() GraphicsPath 一致,pp-20:04;pl-09:04,02;04,libs/ppt-core,spec
+2,02_function_fill_from_fillbase,fill 来自 FillBase,SolidFill / noFill 公开 Shape,DrawRect/Path.fill 色 = FillBase；noFill 不产 fill,01;pl-09:05,04,libs/ppt-core,spec
+3,03_function_line_from_lineproperty,stroke 来自 LineProperty,ln w EMU + getfLine,有线：色来自 LineProperty；`getfLine()==false` 无 stroke；宽 min 12700 留给 pr-11,01;pl-09:06,pr-11,libs/ppt-core,spec
+4,04_function_no_layout_geom_in_render_slide,render_slide 热路径不读 layout geom,render_slide 源,不读 KmoShowShape.sp_pr.geom_obj（grep 门闩）,01;02;03,pr-09,libs/ppt-core,spec

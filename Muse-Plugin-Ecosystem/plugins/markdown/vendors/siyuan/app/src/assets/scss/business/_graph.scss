@@ -1,0 +1,75 @@
+@use "../util/mixin";
+
+.graph {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden !important;
+
+  &__panel {
+    transition: var(--b3-transition);
+    width: 200px;
+    padding: 0 16px 8px;
+    background-color: var(--b3-theme-background);
+    position: absolute;
+    top: var(--b3-ui-panel-height, 42px);
+    right: -200px;
+    bottom: 0;
+    overflow: auto;
+    box-sizing: border-box;
+    z-index: 1;
+    opacity: .9;
+    border-left: 1px solid var(--b3-border-color);
+
+    label {
+      display: flex;
+      margin-top: 8px;
+      align-items: center;
+      cursor: pointer;
+
+      span {
+        flex: 1;
+        white-space: nowrap;
+      }
+
+      .b3-slider {
+        width: 68px;
+      }
+    }
+  }
+
+  &__svg {
+    position: relative;
+    overflow: hidden !important;
+    touch-action: none;
+    user-select: none;
+
+    .graph__canvas,
+    .graph__labels {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .graph__labels {
+      pointer-events: none;
+    }
+
+    .graph__tooltip {
+      z-index: 1;
+      pointer-events: none;
+      position: absolute;
+      border: 1px solid var(--b3-theme-surface-lighter);
+      border-radius: var(--b3-border-radius);
+      box-shadow: var(--b3-dialog-shadow);
+      background-color: var(--b3-theme-surface);
+      padding: 4px 8px;
+      color: var(--b3-theme-on-surface);
+      max-width: min(320px, 50vw);
+      white-space: break-spaces;
+      @include mixin.text-clamp(3);
+    }
+  }
+}

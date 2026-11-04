@@ -1,0 +1,296 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package av
+
+import (
+	"slices"
+	"testing"
+	"time"
+)
+
+type dateSortTestValue struct {
+	start       int64
+	end         int64
+	hasEndDate  bool
+	isNotTime   bool
+	endNotEmpty bool
+}
+
+func TestDateEndpointSort(t *testing.T) {
+	values := map[string]dateSortTestValue{
+		"a": {start: 100, end: 400, hasEndDate: true, endNotEmpty: true},
+		"b": {start: 200, end: 300, hasEndDate: true, endNotEmpty: true},
+	}
+	tests := []struct {
+		name         string
+		dateEndpoint DateEndpoint
+		want         []string
+	}{
+		{name: "default start endpoint", want: []string{"a", "b"}},
+		{name: "explicit start endpoint", dateEndpoint: DateEndpointStart, want: []string{"a", "b"}},
+		{name: "end endpoint", dateEndpoint: DateEndpointEnd, want: []string{"b", "a"}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			table := newDateSortTestTable(values, SortOrderAsc, test.dateEndpoint)
+			Sort(table, &AttributeView{})
+			assertDateSortRowIDs(t, table, test.want)
+		})
+	}
+}
+
+func TestDateEndpointSortFallbackAndEmpty(t *testing.T) {
+	t.Run("fallback to start endpoint", func(t *testing.T) {
+		table := newDateSortTestTable(map[string]dateSortTestValue{
+			"a": {start: 100},
+			"b": {start: 200, end: 50, hasEndDate: true, endNotEmpty: true},
+		}, SortOrderAsc, DateEndpointEnd)
+		Sort(table, &AttributeView{})
+		assertDateSortRowIDs(t, table, []string{"b", "a"})
+	})
+
+	for _, order := range []SortOrder{SortOrderAsc, SortOrderDesc} {
+		t.Run("empty end endpoint "+string(order), func(t *testing.T) {
+			table := newDateSortTestTable(map[string]dateSortTestValue{
+				"a": {start: 100, hasEndDate: true},
+				"b": {start: 200, end: 50, hasEndDate: true, endNotEmpty: true},
+			}, order, DateEndpointEnd)
+			Sort(table, &AttributeView{})
+			assertDateSortRowIDs(t, table, []string{"b", "a"})
+		})
+	}
+}
+
+func TestDateEndpointSortWithoutTime(t *testing.T) {
+	start := time.Date(2026, 7, 27, 0, 0, 0, 0, time.Local).UnixMilli()
+	table := newDateSortTestTable(map[string]dateSortTestValue{
+		"a": {
+			start:       start,
+			end:         time.Date(2026, 7, 28, 23, 0, 0, 0, time.Local).UnixMilli(),
+			hasEndDate:  true,
+			isNotTime:   true,
+			endNotEmpty: true,
+		},
+		"b": {
+			start:       start,
+			end:         time.Date(2026, 7, 28, 1, 0, 0, 0, time.Local).UnixMilli(),
+			hasEndDate:  true,
+			isNotTime:   true,
+			endNotEmpty: true,
+		},
+	}, SortOrderAsc, DateEndpointEnd)
+
+	Sort(table, &AttributeView{})
+	assertDateSortRowIDs(t, table, []string{"a", "b"})
+}
+
+func TestSortByRenderedValue(t *testing.T) {
+	newTable := func(source ValueSource) *Table {
+		rows := []*TableRow{}
+		for _, item := range []struct {
+			id       string
+			stored   string
+			rendered string
+		}{
+			{id: "a", stored: "z", rendered: "A"},
+			{id: "b", stored: "a", rendered: "Z"},
+		} {
+			rows = append(rows, &TableRow{
+				ID: item.id,
+				Cells: []*TableCell{
+					{BaseValue: &BaseValue{ValueType: KeyTypeBlock, Value: &Value{
+						Type: KeyTypeBlock, Block: &ValueBlock{Content: item.id},
+					}}},
+					{BaseValue: &BaseValue{ValueType: KeyTypeText, Value: &Value{
+						Type: KeyTypeText, Text: &ValueText{Content: item.stored}, RenderedContent: item.rendered,
+					}}},
+				},
+			})
+		}
+		return &Table{
+			BaseInstance: &BaseInstance{Sorts: []*ViewSort{{Column: "text", ValueSource: source, Order: SortOrderAsc}}},
+			Columns: []*TableColumn{
+				{BaseInstanceField: &BaseInstanceField{ID: "block", Type: KeyTypeBlock}},
+				{BaseInstanceField: &BaseInstanceField{ID: "text", Type: KeyTypeText}},
+			},
+			Rows: rows,
+		}
+	}
+
+	stored := newTable(ValueSourceStored)
+	Sort(stored, &AttributeView{})
+	assertDateSortRowIDs(t, stored, []string{"b", "a"})
+
+	rendered := newTable(ValueSourceRendered)
+	Sort(rendered, &AttributeView{})
+	assertDateSortRowIDs(t, rendered, []string{"a", "b"})
+}
+
+func TestSortByRenderedValueWithEmptyStoredValue(t *testing.T) {
+	const createdAt = 1800000000000
+	rows := []*TableRow{}
+	for _, item := range []struct {
+		id       string
+		rendered string
+	}{
+		{id: "a", rendered: "Z"},
+		{id: "b", rendered: "A"},
+	} {
+		rows = append(rows, &TableRow{
+			ID: item.id,
+			Cells: []*TableCell{
+				{BaseValue: &BaseValue{ValueType: KeyTypeBlock, Value: &Value{
+					Type: KeyTypeBlock, Block: &ValueBlock{Content: item.id}, CreatedAt: createdAt, UpdatedAt: createdAt,
+				}}},
+				{BaseValue: &BaseValue{ValueType: KeyTypeText, Value: &Value{
+					Type: KeyTypeText, Text: &ValueText{}, RenderedContent: item.rendered, CreatedAt: createdAt,
+					UpdatedAt: createdAt,
+				}}},
+			},
+		})
+	}
+	table := &Table{
+		BaseInstance: &BaseInstance{Sorts: []*ViewSort{{
+			Column: "text", ValueSource: ValueSourceRendered, Order: SortOrderAsc,
+		}}},
+		Columns: []*TableColumn{
+			{BaseInstanceField: &BaseInstanceField{ID: "block", Type: KeyTypeBlock}},
+			{BaseInstanceField: &BaseInstanceField{ID: "text", Type: KeyTypeText}},
+		},
+		Rows: rows,
+	}
+
+	Sort(table, &AttributeView{})
+	assertDateSortRowIDs(t, table, []string{"b", "a"})
+}
+
+func newDateSortTestTable(values map[string]dateSortTestValue, order SortOrder, dateEndpoint DateEndpoint) *Table {
+	const (
+		blockColumnID = "block"
+		dateColumnID  = "date"
+	)
+	rows := make([]*TableRow, 0, len(values))
+	for _, id := range []string{"a", "b"} {
+		value := values[id]
+		createdAt := int64(1)
+		if "b" == id {
+			createdAt = 2
+		}
+		rows = append(rows, &TableRow{
+			ID: id,
+			Cells: []*TableCell{
+				{
+					BaseValue: &BaseValue{
+						ValueType: KeyTypeBlock,
+						Value: &Value{
+							Type:      KeyTypeBlock,
+							CreatedAt: createdAt,
+							Block:     &ValueBlock{Content: id},
+						},
+					},
+				},
+				{
+					BaseValue: &BaseValue{
+						ValueType: KeyTypeDate,
+						Value: &Value{
+							Type:      KeyTypeDate,
+							CreatedAt: 1709740800000,
+							Date: &ValueDate{
+								Content:     value.start,
+								IsNotEmpty:  true,
+								Content2:    value.end,
+								IsNotEmpty2: value.endNotEmpty,
+								HasEndDate:  value.hasEndDate,
+								IsNotTime:   value.isNotTime,
+							},
+						},
+					},
+				},
+			},
+		})
+	}
+
+	return &Table{
+		BaseInstance: &BaseInstance{
+			ID: "table",
+			Sorts: []*ViewSort{{
+				Column:       dateColumnID,
+				Order:        order,
+				DateEndpoint: dateEndpoint,
+			}},
+		},
+		Columns: []*TableColumn{
+			{BaseInstanceField: &BaseInstanceField{ID: blockColumnID, Type: KeyTypeBlock}},
+			{BaseInstanceField: &BaseInstanceField{ID: dateColumnID, Type: KeyTypeDate}},
+		},
+		Rows: rows,
+	}
+}
+
+func assertDateSortRowIDs(t *testing.T, table *Table, want []string) {
+	t.Helper()
+	got := make([]string, 0, len(table.Rows))
+	for _, row := range table.Rows {
+		got = append(got, row.ID)
+	}
+	if !slices.Equal(got, want) {
+		t.Fatalf("unexpected row order: got %v, want %v", got, want)
+	}
+}
+
+func TestSortPreservesManualOrderForEqualValues(t *testing.T) {
+	for _, order := range []SortOrder{SortOrderAsc, SortOrderDesc} {
+		t.Run(string(order), func(t *testing.T) {
+			table := newDateSortTestTable(map[string]dateSortTestValue{"a": {start: 100}, "b": {start: 100}}, order, DateEndpointStart)
+			table.Rows[0], table.Rows[1] = table.Rows[1], table.Rows[0]
+			Sort(table, &AttributeView{})
+			assertDateSortRowIDs(t, table, []string{"b", "a"})
+			Sort(table, &AttributeView{})
+			assertDateSortRowIDs(t, table, []string{"b", "a"})
+			// 后续规则仍然优先于手动顺序。
+			table.Sorts = append(table.Sorts, &ViewSort{Column: "block", Order: SortOrderAsc})
+			Sort(table, &AttributeView{})
+			assertDateSortRowIDs(t, table, []string{"a", "b"})
+		})
+	}
+}
+
+func TestSortKeepsEmptyAndUneditedRowsLast(t *testing.T) {
+	const createdAt = 1800000000000
+	for _, order := range []SortOrder{SortOrderAsc, SortOrderDesc} {
+		t.Run(string(order), func(t *testing.T) {
+			table := &Table{
+				BaseInstance: &BaseInstance{Sorts: []*ViewSort{{Column: "text", Order: order}}},
+				Columns: []*TableColumn{
+					{BaseInstanceField: &BaseInstanceField{ID: "block", Type: KeyTypeBlock}},
+					{BaseInstanceField: &BaseInstanceField{ID: "text", Type: KeyTypeText}},
+				},
+			}
+			for _, item := range []struct {
+				id, text string
+				edited   bool
+			}{
+				{id: "new-b"}, {id: "empty-b", edited: true}, {id: "filled", text: "value", edited: true},
+				{id: "new-a"}, {id: "empty-a", edited: true},
+			} {
+				updatedAt := int64(createdAt)
+				if item.edited {
+					updatedAt++
+				}
+				table.Rows = append(table.Rows, &TableRow{ID: item.id, Cells: []*TableCell{
+					{BaseValue: &BaseValue{ValueType: KeyTypeBlock, Value: &Value{
+						Type: KeyTypeBlock, CreatedAt: createdAt, UpdatedAt: createdAt, Block: &ValueBlock{Content: item.id},
+					}}},
+					{BaseValue: &BaseValue{ValueType: KeyTypeText, Value: &Value{
+						Type: KeyTypeText, CreatedAt: createdAt, UpdatedAt: updatedAt, Text: &ValueText{Content: item.text},
+					}}},
+				}})
+			}
+			Sort(table, &AttributeView{})
+			assertDateSortRowIDs(t, table, []string{"filled", "empty-b", "empty-a", "new-b", "new-a"})
+		})
+	}
+}

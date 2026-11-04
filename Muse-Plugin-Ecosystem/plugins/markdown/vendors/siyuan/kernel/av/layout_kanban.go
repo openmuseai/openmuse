@@ -1,0 +1,159 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package av
+
+import (
+	"github.com/88250/lute/ast"
+)
+
+// LayoutKanban 描述了看板视图的结构。
+type LayoutKanban struct {
+	*BaseLayout
+	CardSettings
+
+	FillColBackgroundColor bool `json:"fillColBackgroundColor"` // 是否填充列背景颜色
+
+	Fields []*ViewKanbanField `json:"fields"` // 字段
+}
+
+func NewLayoutKanban() *LayoutKanban {
+	return &LayoutKanban{
+		BaseLayout: &BaseLayout{
+			Spec:     0,
+			ID:       ast.NewNodeID(),
+			ShowIcon: true,
+		},
+		CardSettings: NewCardSettings(),
+	}
+}
+
+// ViewKanbanField 描述了看板字段的结构。
+type ViewKanbanField struct {
+	*BaseField
+	FullRow bool `json:"fullRow"` // 是否独占整行
+}
+
+// Kanban 描述了看板视图实例的结构。
+type Kanban struct {
+	*BaseInstance
+
+	CoverFrom              CoverFrom       `json:"coverFrom"`                     // 封面来源
+	CoverFromAssetKeyID    string          `json:"coverFromAssetKeyID,omitempty"` // 资源字段 ID，CoverFrom 为 CoverFromAssetField 时有效
+	CardAspectRatio        CardAspectRatio `json:"cardAspectRatio"`               // 卡片宽高比
+	CardAspectRatioValue   float64         `json:"cardAspectRatioValue"`          // 卡片宽高比实际值，宽除以高
+	CardSize               CardSize        `json:"cardSize"`                      // 卡片大小
+	CardWidth              int             `json:"cardWidth"`                     // 卡片宽度，单位为像素
+	CardLayout             CardLayout      `json:"cardLayout"`                    // 卡片字段布局
+	FitImage               bool            `json:"fitImage"`                      // 是否适应封面图片大小
+	DisplayFieldName       bool            `json:"displayFieldName"`              // 是否显示字段名称
+	DisplayEmptyFields     bool            `json:"displayEmptyFields"`            // 是否显示空字段
+	FillColBackgroundColor bool            `json:"fillColBackgroundColor"`        // 是否填充列背景颜色
+	Fields                 []*KanbanField  `json:"fields"`                        // 卡片字段
+	Cards                  []*KanbanCard   `json:"cards"`                         // 卡片
+	CardCount              int             `json:"cardCount"`                     // 总卡片数
+}
+
+// KanbanCard 描述了看板实例卡片的结构。
+type KanbanCard struct {
+	ConditionalColors *ItemConditionalColors `json:"conditionalColors,omitempty"`
+	ID                string                 `json:"id"`     // 卡片 ID
+	Values            []*KanbanFieldValue    `json:"values"` // 卡片字段值
+
+	CoverURL      string             `json:"coverURL"`                // 卡片封面超链接
+	CoverContent  string             `json:"coverContent"`            // 卡片封面文本内容
+	CoverPosition *CardCoverPosition `json:"coverPosition,omitempty"` // 卡片封面位置
+}
+
+// KanbanField 描述了看板实例字段的结构。
+type KanbanField struct {
+	*BaseInstanceField
+	FullRow bool `json:"fullRow"` // 是否独占整行
+}
+
+// KanbanFieldValue 描述了卡片字段实例值的结构。
+type KanbanFieldValue struct {
+	*BaseValue
+}
+
+func (card *KanbanCard) GetID() string {
+	return card.ID
+}
+
+func (card *KanbanCard) GetBlockValue() (ret *Value) {
+	for _, v := range card.Values {
+		if KeyTypeBlock == v.ValueType {
+			ret = v.Value
+			break
+		}
+	}
+	return
+}
+
+func (card *KanbanCard) GetValues() (ret []*Value) {
+	ret = []*Value{}
+	for _, v := range card.Values {
+		ret = append(ret, v.Value)
+	}
+	return
+}
+
+func (card *KanbanCard) GetValue(keyID string) (ret *Value) {
+	for _, value := range card.Values {
+		if nil != value.Value && keyID == value.Value.KeyID {
+			ret = value.Value
+			break
+		}
+	}
+	return
+}
+
+func (kanban *Kanban) GetItems() (ret []Item) {
+	ret = []Item{}
+	for _, card := range kanban.Cards {
+		ret = append(ret, card)
+	}
+	return
+}
+
+func (kanban *Kanban) SetItems(items []Item) {
+	kanban.Cards = []*KanbanCard{}
+	for _, item := range items {
+		kanban.Cards = append(kanban.Cards, item.(*KanbanCard))
+	}
+}
+
+func (kanban *Kanban) CountItems() int {
+	return len(kanban.Cards)
+}
+
+func (kanban *Kanban) GetFields() (ret []Field) {
+	ret = []Field{}
+	for _, field := range kanban.Fields {
+		ret = append(ret, field)
+	}
+	return ret
+}
+
+func (kanban *Kanban) GetField(id string) (ret Field, fieldIndex int) {
+	for i, field := range kanban.Fields {
+		if field.ID == id {
+			return field, i
+		}
+	}
+	return nil, -1
+}
+
+func (kanban *Kanban) GetValue(itemID, keyID string) (ret *Value) {
+	for _, card := range kanban.Cards {
+		if card.ID == itemID {
+			return card.GetValue(keyID)
+		}
+	}
+	return nil
+}
+
+func (kanban *Kanban) GetType() LayoutType {
+	return LayoutTypeKanban
+}

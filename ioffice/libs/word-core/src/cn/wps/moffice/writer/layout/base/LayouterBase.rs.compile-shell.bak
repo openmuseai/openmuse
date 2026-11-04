@@ -1,0 +1,21 @@
+// Rust stub for LayouterBase (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/LayouterBase.java
+use crate::*;
+
+pub struct LayouterBase {
+    // TODO: fields
+}
+
+impl LayouterBase {
+    pub fn new() -> Self { todo!() }
+    pub fn verifyEnvoy(&self, stateEnvoy: E) { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn start(&self, stateEnvoy: E) { todo!() }
+    pub fn end(&self, stateEnvoy: E) { todo!() }
+    pub fn hasStart(&self) -> bool { todo!() }
+    pub fn reset(&self) { todo!() }
+    pub fn onStart(&self, var1: E) { todo!() }
+    pub fn onEnd(&self, var1: E) { todo!() }
+}
+
+pub trait IStateEnvoy {}

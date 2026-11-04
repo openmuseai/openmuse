@@ -1,0 +1,12 @@
+[package]
+name = "openmuse-plugin-protocol"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+openmuse-contract = { path = "../openmuse-contract" }
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true

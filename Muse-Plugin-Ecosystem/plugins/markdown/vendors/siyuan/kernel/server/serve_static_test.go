@@ -1,0 +1,532 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package server
+
+import (
+	"bytes"
+	"compress/gzip"
+	"io"
+	"math/rand"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/internal/testutil"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func TestCleanStaticRelativePath(t *testing.T) {
+	if relativePath, ok := cleanStaticRelativePath("/package/index.js"); !ok ||
+		filepath.ToSlash(relativePath) != "package/index.js" {
+		t.Fatalf("unexpected clean path [%s], ok=%v", relativePath, ok)
+	}
+	for _, requestPath := range []string{"/../secret", "../secret", "/package/../../secret"} {
+		if _, ok := cleanStaticRelativePath(requestPath); ok {
+			t.Fatalf("path traversal should be rejected [%s]", requestPath)
+		}
+	}
+}
+
+func TestRegisterStaticFileHandlers(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	root := testutil.PublicDataDir(t)
+	if err := os.MkdirAll(filepath.Join(root, "package"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "package", "index.html"), []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	engine := gin.New()
+	group := engine.Group("/files/")
+	registerStaticFileHandlers(group, root, true, func(_ *gin.Context, relativePath string) bool {
+		return filepath.ToSlash(relativePath) == "package"
+	})
+
+	recorder := httptest.NewRecorder()
+	engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/files/package/", nil))
+	if recorder.Code != http.StatusOK || recorder.Body.String() != "content" {
+		t.Fatalf("unexpected allowed response: status=%d body=%q", recorder.Code, recorder.Body.String())
+	}
+
+	recorder = httptest.NewRecorder()
+	engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/files/package/index.html", nil))
+	if recorder.Code != http.StatusForbidden {
+		t.Fatalf("access callback should deny the request, got %d", recorder.Code)
+	}
+}
+
+func TestGzipMiddlewareServesPrecompressedStaticFile(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	source := make([]byte, 128*1024)
+	if _, err := rand.New(rand.NewSource(1)).Read(source); err != nil {
+		t.Fatal(err)
+	}
+
+	var compressed bytes.Buffer
+	writer := gzip.NewWriter(&compressed)
+	if _, err := writer.Write(source); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if compressed.Len() <= 32*1024 {
+		t.Fatalf("compressed test file is too small: %d", compressed.Len())
+	}
+
+	filePath := filepath.Join(t.TempDir(), "data.gz")
+	if err := os.WriteFile(filePath, compressed.Bytes(), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	engine := gin.New()
+	engine.Use(gzipMiddleware())
+	for _, requestPath := range []string{"/data.gz", "/data.dump"} {
+		engine.GET(requestPath, func(c *gin.Context) {
+			http.ServeFile(c.Writer, c.Request, filePath)
+		})
+	}
+
+	for _, requestPath := range []string{"/data.gz", "/data.dump"} {
+		t.Run(requestPath, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, requestPath, nil)
+			request.Header.Set("Accept-Encoding", "gzip")
+			recorder := httptest.NewRecorder()
+			engine.ServeHTTP(recorder, request)
+			if recorder.Code != http.StatusOK {
+				t.Fatalf("unexpected status: %d", recorder.Code)
+			}
+
+			body := recorder.Body.Bytes()
+			if recorder.Header().Get("Content-Encoding") == "gzip" {
+				reader, err := gzip.NewReader(bytes.NewReader(body))
+				if err != nil {
+					t.Fatal(err)
+				}
+				body, err = io.ReadAll(reader)
+				if err != nil {
+					_ = reader.Close()
+					t.Fatal(err)
+				}
+				if err = reader.Close(); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if !bytes.Equal(body, compressed.Bytes()) {
+				t.Fatalf("response differs from the static file: got %d bytes, want %d", len(body), compressed.Len())
+			}
+		})
+	}
+}
+
+func TestGzipMiddlewareImages(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	for _, extension := range []string{"png", "gif", "jpeg", "jpg", "webp", "avif", "HEIC", "heif", "svg"} {
+		t.Run(extension, func(t *testing.T) {
+			engine := gin.New()
+			engine.Use(gzipMiddleware())
+			content := strings.Repeat("image data", 1024)
+			engine.GET("/image."+extension, func(c *gin.Context) {
+				c.String(http.StatusOK, "%s", content)
+			})
+			request := httptest.NewRequest(http.MethodGet, "/image."+extension+"?style=thumb", nil)
+			request.Header.Set("Accept-Encoding", "gzip")
+			recorder := httptest.NewRecorder()
+			engine.ServeHTTP(recorder, request)
+			if extension == "svg" {
+				if recorder.Header().Get("Content-Encoding") != "gzip" {
+					t.Fatal("SVG should remain compressible")
+				}
+			} else if recorder.Header().Get("Content-Encoding") != "" || recorder.Body.String() != content {
+				t.Fatal("precompressed image should be served unchanged")
+			}
+		})
+	}
+}
+
+func TestStaticFileNestedSymlinkEscape(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	root, outside := testutil.PublicDataDir(t), testutil.PublicDataDir(t)
+	packagePath := filepath.Join(root, "package")
+	if err := os.MkdirAll(packagePath, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(outside, "secret.txt"), []byte("secret"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(packagePath, "escape")); err != nil {
+		t.Skipf("create directory symlink failed: %s", err)
+	}
+
+	engine := gin.New()
+	group := engine.Group("/files/")
+	registerStaticFileHandlers(group, root, true, func(_ *gin.Context, _ string) bool {
+		return true
+	})
+
+	recorder := httptest.NewRecorder()
+	engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/files/package/escape/secret.txt", nil))
+	if recorder.Code != http.StatusForbidden {
+		t.Fatalf("nested symlink escape should be forbidden, got %d", recorder.Code)
+	}
+}
+
+// TestStaticFileSymlinkWorkspace 验证工作空间父目录符号链接不影响资源访问及敏感路径拦截。
+func TestStaticFileSymlinkWorkspace(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	realHome, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	linkedHome := filepath.Join(t.TempDir(), "home")
+	if err = os.Symlink(realHome, linkedHome); err != nil {
+		t.Skipf("create directory symlink failed: %s", err)
+	}
+	originalWorkspace := util.WorkspaceDir
+	util.WorkspaceDir = filepath.Join(linkedHome, ".var", "app", "org.b3log.siyuan", "SiYuan")
+	t.Cleanup(func() { util.WorkspaceDir = originalWorkspace })
+	for _, rel := range []string{
+		"data/emojis/fontawesome-free-solid/robot.svg",
+		"data/widgets/listChildDocs/index.html",
+		"data/widgets/listChildDocs/app.js",
+		"data/widgets/listChildDocs/credentials.json",
+		"conf/conf.json",
+		"temp/private.txt",
+	} {
+		p := filepath.Join(util.WorkspaceDir, filepath.FromSlash(rel))
+		if err = os.MkdirAll(filepath.Dir(p), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err = os.WriteFile(p, []byte("content"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	widgets := filepath.Join(util.WorkspaceDir, "data", "widgets")
+	for _, dir := range []string{"conf", "temp"} {
+		if err = os.Symlink(filepath.Join(util.WorkspaceDir, dir), filepath.Join(widgets, dir)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err = os.Symlink(filepath.Join(util.WorkspaceDir, "conf"), filepath.Join(widgets, "listChildDocs", "escape")); err != nil {
+		t.Fatal(err)
+	}
+	engine := gin.New()
+	registerStaticFileHandlers(engine.Group("/emojis"), filepath.Join(util.WorkspaceDir, "data", "emojis"), false, nil)
+	registerStaticFileHandlers(engine.Group("/widgets"), widgets, true, nil)
+	for _, test := range []struct {
+		path   string
+		status int
+	}{
+		{"/emojis/fontawesome-free-solid/robot.svg", http.StatusOK},
+		{"/widgets/listChildDocs/", http.StatusOK},
+		{"/widgets/listChildDocs/app.js", http.StatusOK},
+		{"/widgets/listChildDocs/credentials.json", http.StatusForbidden},
+		{"/widgets/conf/conf.json", http.StatusForbidden},
+		{"/widgets/temp/private.txt", http.StatusForbidden},
+		{"/widgets/listChildDocs/escape/conf.json", http.StatusForbidden},
+	} {
+		for _, method := range []string{http.MethodGet, http.MethodHead} {
+			t.Run(method+" "+test.path, func(t *testing.T) {
+				recorder := httptest.NewRecorder()
+				engine.ServeHTTP(recorder, httptest.NewRequest(method, test.path, nil))
+				if recorder.Code != test.status {
+					t.Fatalf("status = %d, want %d", recorder.Code, test.status)
+				}
+				if method == http.MethodGet && test.status == http.StatusOK && recorder.Body.String() != "content" {
+					t.Fatalf("unexpected response body: %q", recorder.Body.String())
+				}
+			})
+		}
+	}
+}
+
+func TestWidgetResponseCacheControl(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	originalDataDir, originalConf := util.DataDir, model.Conf
+	util.DataDir = testutil.PublicDataDir(t)
+	model.Conf = model.NewAppConf()
+	t.Cleanup(func() {
+		util.DataDir = originalDataDir
+		model.Conf = originalConf
+	})
+
+	widgetDir := filepath.Join(util.DataDir, "widgets", "example")
+	if err := os.MkdirAll(widgetDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	for fileName, content := range map[string]string{
+		"index.html": "html",
+		"page.html":  "html",
+		"page.htm":   "htm",
+		"app.js":     "javascript",
+	} {
+		if err := os.WriteFile(filepath.Join(widgetDir, fileName), []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	engine := gin.New()
+	engine.Use(func(c *gin.Context) {
+		c.Set(model.RoleContextKey, model.RoleAdministrator)
+		c.Next()
+	})
+	serveWidgets(engine)
+
+	for _, test := range []struct {
+		method       string
+		requestPath  string
+		status       int
+		body         string
+		cacheControl string
+	}{
+		{http.MethodGet, "/widgets/example/", http.StatusOK, "html", "private, no-store"},
+		{http.MethodGet, "/widgets/example/index.html", http.StatusMovedPermanently, "", "private, no-store"},
+		{http.MethodGet, "/widgets/example/page.html", http.StatusOK, "html", "private, no-store"},
+		{http.MethodGet, "/widgets/example/page.htm", http.StatusOK, "htm", "private, no-store"},
+		{http.MethodGet, "/widgets/example/app.js", http.StatusOK, "javascript", "private"},
+		{http.MethodHead, "/widgets/example/app.js", http.StatusOK, "", "private"},
+	} {
+		t.Run(test.method+" "+test.requestPath, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			engine.ServeHTTP(recorder, httptest.NewRequest(test.method, test.requestPath, nil))
+			if recorder.Code != test.status || recorder.Body.String() != test.body {
+				t.Fatalf("unexpected widget response: status=%d body=%q", recorder.Code, recorder.Body.String())
+			}
+			if cacheControl := recorder.Header().Get("Cache-Control"); cacheControl != test.cacheControl {
+				t.Fatalf("unexpected widget cache control [%s]", cacheControl)
+			}
+		})
+	}
+}
+
+func TestLanguageResponseDisablesCache(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	originalAppearancePath, originalMode := util.AppearancePath, util.Mode
+	util.AppearancePath, util.Mode = t.TempDir(), "prod"
+	t.Cleanup(func() {
+		util.AppearancePath, util.Mode = originalAppearancePath, originalMode
+	})
+
+	langDir := filepath.Join(util.AppearancePath, "langs")
+	if err := os.MkdirAll(langDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(langDir, "zh-CN.json"), []byte(`{"label":"value"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	engine := gin.New()
+	engine.Use(func(c *gin.Context) {
+		c.Set(model.RoleContextKey, model.RoleAdministrator)
+		c.Next()
+	})
+	serveAppearance(engine)
+	recorder := httptest.NewRecorder()
+	engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/appearance/langs/zh-CN.json?v=old", nil))
+	if recorder.Code != http.StatusOK || strings.TrimSpace(recorder.Body.String()) != `{"label":"value"}` {
+		t.Fatalf("unexpected language response: status=%d body=%q", recorder.Code, recorder.Body.String())
+	}
+	if cacheControl := recorder.Header().Get("Cache-Control"); cacheControl != "private, no-store" {
+		t.Fatalf("unexpected language cache control [%s]", cacheControl)
+	}
+}
+
+func TestThemeResponseDisablesCache(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	originalAppearancePath, originalMode := util.AppearancePath, util.Mode
+	originalThemesPath := util.ThemesPath
+	util.AppearancePath, util.Mode = t.TempDir(), "prod"
+	util.ThemesPath = filepath.Join(t.TempDir(), "themes")
+	t.Cleanup(func() {
+		util.AppearancePath, util.Mode = originalAppearancePath, originalMode
+		util.ThemesPath = originalThemesPath
+	})
+
+	themeDir := filepath.Join(util.ThemesPath, "example", "style", "module")
+	if err := os.MkdirAll(themeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(themeDir, "color.css"), []byte("body {}"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	engine := gin.New()
+	engine.Use(func(c *gin.Context) {
+		c.Set(model.RoleContextKey, model.RoleAdministrator)
+		c.Next()
+	})
+	serveAppearance(engine)
+	recorder := httptest.NewRecorder()
+	engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet,
+		"/appearance/themes/example/style/module/color.css", nil))
+	if recorder.Code != http.StatusOK || strings.TrimSpace(recorder.Body.String()) != "body {}" {
+		t.Fatalf("unexpected theme response: status=%d body=%q", recorder.Code, recorder.Body.String())
+	}
+	if cacheControl := recorder.Header().Get("Cache-Control"); cacheControl != "private, no-store" {
+		t.Fatalf("unexpected theme cache control [%s]", cacheControl)
+	}
+}
+
+func TestTemplatesAndExportRequireAdministrator(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	originalDataDir, originalTempDir := util.DataDir, util.TempDir
+	util.DataDir, util.TempDir = testutil.PublicDataDir(t), testutil.PublicDataDir(t)
+	t.Cleanup(func() {
+		util.DataDir, util.TempDir = originalDataDir, originalTempDir
+	})
+
+	templatePath := filepath.Join(util.DataDir, "templates", "private.md")
+	exportPath := filepath.Join(util.TempDir, "export", "private.txt")
+	for path, content := range map[string]string{templatePath: "template", exportPath: "export"} {
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	request := func(role model.Role, register func(*gin.Engine), requestPath string) *httptest.ResponseRecorder {
+		engine := gin.New()
+		engine.Use(func(c *gin.Context) {
+			c.Set(model.RoleContextKey, role)
+			c.Next()
+		})
+		register(engine)
+		recorder := httptest.NewRecorder()
+		engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, requestPath, nil))
+		return recorder
+	}
+	for _, test := range []struct {
+		register    func(*gin.Engine)
+		requestPath string
+		content     string
+	}{
+		{serveTemplates, "/templates/private.md", "template"},
+		{serveExport, "/export/private.txt", "export"},
+	} {
+		if recorder := request(model.RoleReader, test.register, test.requestPath); recorder.Code != http.StatusForbidden {
+			t.Fatalf("reader request [%s] should be forbidden, got %d", test.requestPath, recorder.Code)
+		}
+		recorder := request(model.RoleAdministrator, test.register, test.requestPath)
+		if recorder.Code != http.StatusOK || recorder.Body.String() != test.content {
+			t.Fatalf("unexpected administrator response [%s]: status=%d body=%q",
+				test.requestPath, recorder.Code, recorder.Body.String())
+		}
+	}
+}
+
+func TestSnippetPublishAccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	originalSnippetsPath := util.SnippetsPath
+	util.SnippetsPath = testutil.PublicDataDir(t)
+	t.Cleanup(func() {
+		util.SnippetsPath = originalSnippetsPath
+	})
+
+	if err := model.SetSnippet([]*conf.Snippet{
+		{Name: "allowed", Type: "css", Content: "allowed"},
+		{Name: "disabled", Type: "js", Content: "disabled", DisabledInPublish: true},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(util.SnippetsPath, "fallback.css"), []byte("fallback"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	request := func(role model.Role, requestPath string) *httptest.ResponseRecorder {
+		engine := gin.New()
+		engine.Use(func(c *gin.Context) {
+			c.Set(model.RoleContextKey, role)
+			c.Next()
+		})
+		serveSnippets(engine)
+		recorder := httptest.NewRecorder()
+		engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, requestPath, nil))
+		return recorder
+	}
+	if recorder := request(model.RoleReader, "/snippets/allowed.css"); recorder.Code != http.StatusOK ||
+		strings.TrimSpace(recorder.Body.String()) != "allowed" {
+		t.Fatalf("unexpected publish-enabled snippet response: status=%d body=%q", recorder.Code, recorder.Body.String())
+	}
+	if recorder := request(model.RoleReader, "/snippets/disabled.js"); recorder.Code != http.StatusForbidden {
+		t.Fatalf("publish-disabled snippet should be forbidden, got %d", recorder.Code)
+	}
+	if recorder := request(model.RoleReader, "/snippets/fallback.css"); recorder.Code != http.StatusNotFound {
+		t.Fatalf("filesystem fallback should be hidden from readers, got %d", recorder.Code)
+	}
+	if recorder := request(model.RoleAdministrator, "/snippets/fallback.css"); recorder.Code != http.StatusOK ||
+		recorder.Body.String() != "fallback" {
+		t.Fatalf("unexpected administrator fallback response: status=%d body=%q", recorder.Code, recorder.Body.String())
+	}
+}
+
+func TestPluginPublishAccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	originalDataDir := util.DataDir
+	originalConf := model.Conf
+	util.DataDir = testutil.PublicDataDir(t)
+	model.Conf = model.NewAppConf()
+	model.Conf.Bazaar.Store(&conf.Bazaar{Trust: true})
+	model.Conf.Sync.Store(conf.NewSync())
+	t.Cleanup(func() {
+		util.DataDir = originalDataDir
+		model.Conf = originalConf
+	})
+
+	writePlugin := func(name string) {
+		pluginDir := filepath.Join(util.DataDir, "plugins", name)
+		if err := os.MkdirAll(pluginDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		manifest := []byte(`{"name":"` + name + `","version":"1.0.0","minAppVersion":"0.0.1"}`)
+		for fileName, content := range map[string][]byte{
+			"plugin.json": manifest,
+			"index.js":    []byte(name),
+		} {
+			if err := os.WriteFile(filepath.Join(pluginDir, fileName), content, 0644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if _, err := model.SetPetalEnabled(name, true); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writePlugin("allowed")
+	writePlugin("user-disabled")
+	if _, err := model.SetPetalPublishEnabled("user-disabled", false); err != nil {
+		t.Fatal(err)
+	}
+
+	request := func(role model.Role, requestPath string) *httptest.ResponseRecorder {
+		engine := gin.New()
+		engine.Use(func(c *gin.Context) {
+			c.Set(model.RoleContextKey, role)
+			c.Next()
+		})
+		servePlugins(engine)
+		recorder := httptest.NewRecorder()
+		engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, requestPath, nil))
+		return recorder
+	}
+	if recorder := request(model.RoleReader, "/plugins/allowed/index.js"); recorder.Code != http.StatusOK ||
+		recorder.Body.String() != "allowed" {
+		t.Fatalf("unexpected publish-enabled plugin response: status=%d body=%q", recorder.Code, recorder.Body.String())
+	}
+	if recorder := request(model.RoleReader, "/plugins/user-disabled/index.js"); recorder.Code != http.StatusForbidden {
+		t.Fatalf("user-disabled plugin should be forbidden in publish, got %d", recorder.Code)
+	}
+	if recorder := request(model.RoleAdministrator, "/plugins/user-disabled/index.js"); recorder.Code != http.StatusOK ||
+		recorder.Body.String() != "user-disabled" {
+		t.Fatalf("unexpected administrator plugin response: status=%d body=%q", recorder.Code, recorder.Body.String())
+	}
+}

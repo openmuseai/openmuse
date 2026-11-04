@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_cp_text,按cp取rope文本,Document+[start,end),String(含\r\f),wc-02,04_function_run_stream,libs/word-core,pass
+2,02_function_chpx_runs,CHPX切开run,IChpxTable+[start,end),ChpxSpan[],wc-02,04_function_run_stream,libs/word-core,pass
+3,03_function_papx_paras,PAPX切段,IPapxTable+[start,end),PapxSpan[],wc-02,04_function_run_stream,libs/word-core,pass
+4,04_function_run_stream,主故事LayoutSourceRun流,Document主故事,LayoutSourceRun[],01;02;03,wr-10,libs/word-core,pass

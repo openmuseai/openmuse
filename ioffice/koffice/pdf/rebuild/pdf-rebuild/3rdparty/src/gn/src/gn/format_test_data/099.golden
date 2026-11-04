@@ -1,0 +1,8 @@
+if (is_android) {
+  if (true) {
+    # lorem_ips is a dolor of amet_ that are being elit_ipsum by almost every
+    # tempor and library in Chromium, adding new amet modules here means that
+    # all elit_amet will be impacted (eg: This could have severe consequences as
+    # Nullam can't depend on Ipsum / AndroidX).
+  }
+}

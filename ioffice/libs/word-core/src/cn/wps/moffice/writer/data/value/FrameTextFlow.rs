@@ -1,0 +1,3 @@
+// Compile-surface shell. Full template stays off-surface.
+#[derive(Default, Clone, Debug)]
+pub struct FrameTextFlow;

@@ -1,0 +1,25 @@
+name: openmuse_speech_input
+description: Built-in OpenMuse speech recognition service with replaceable audio sources and engines.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  muse_speech_contract:
+    path: ../../packages/muse_speech_contract
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+  record: ^7.1.1
+  sherpa_onnx: 1.13.8
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

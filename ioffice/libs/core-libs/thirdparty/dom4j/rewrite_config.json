@@ -1,0 +1,6 @@
+{
+  "projectRoot": "../../../..",
+  "javaBase": "koffice/core-libs/thirdparty/dom4j/src",
+  "javaDepBase": "koffice/core-libs",
+  "rustDepRoot": "libs/core-libs"
+}

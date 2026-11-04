@@ -1,0 +1,2 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends
+48,koffice/core-libs/io/poi-compact/src/org/apache/poi/poifs/filesystem/EntryNode.java,EntryNode,steady,,poi-compact,,libs/core-libs/io/poi-compact/src/org/apache/poi/poifs/filesystem/EntryNode.rs,Property;Entry;DirectoryNode

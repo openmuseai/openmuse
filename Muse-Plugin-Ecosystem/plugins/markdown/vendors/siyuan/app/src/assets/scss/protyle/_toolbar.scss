@@ -1,0 +1,183 @@
+@use "../util/mixin" as *;
+
+.protyle {
+  &-toolbar {
+    @include protyle-toolbar-surface;
+    // 需高于 .layout__resize
+    z-index: 7;
+    position: fixed;
+
+    &__item {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--b3-theme-on-background);
+      border: 0;
+      background-color: transparent;
+      height: 29px;
+      box-sizing: border-box;
+      font-size: 10px;
+      white-space: nowrap;
+      padding: 1px 6px;
+
+      &:focus {
+        outline: none;
+      }
+
+      svg {
+        fill: currentColor;
+        display: inline-block;
+        stroke-width: 0;
+        stroke: currentColor;
+        width: 16px;
+        height: 16px;
+      }
+
+      &[data-type="format-painter"] svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      &--current {
+        color: var(--b3-theme-primary);
+      }
+
+      &:disabled {
+        opacity: .38;
+        cursor: not-allowed;
+      }
+
+      &:hover:not(:disabled) {
+        background-color: var(--b3-list-hover);
+      }
+
+      &:first-child {
+        border-radius: var(--b3-border-radius) 0 0 var(--b3-border-radius);
+      }
+
+      &:last-child {
+        border-radius: 0 var(--b3-border-radius) var(--b3-border-radius) 0;
+      }
+    }
+
+    &__divider {
+      border-left: 1px solid var(--b3-theme-surface-lighter);
+      margin: 6px 4px;
+    }
+
+    &__font,
+    &__select {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      gap: 6px;
+      font-size: 12px;
+      max-width: 96px;
+
+      &[data-type="font-family"] {
+        max-width: 120px;
+      }
+
+      &-label {
+        flex: 0 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+      }
+
+      svg {
+        flex-shrink: 0;
+        width: 8px;
+        height: 8px;
+      }
+    }
+
+  }
+
+  &-font-size {
+    padding: 8px;
+    width: 220px;
+
+    input[type="number"] {
+      min-width: 0;
+      width: 120px;
+    }
+  }
+
+  &-hint {
+    position: fixed;
+    border-radius: var(--b3-border-radius-b);
+    box-shadow: var(--b3-dialog-shadow);
+    border: 1px solid var(--b3-theme-surface-lighter);
+    background-color: var(--b3-menu-background);
+    z-index: 7;
+    overflow: auto;
+    max-height: min(402px, 40vh);
+    // 不能使用，否则 hint emoji 出现双滚动条 box-sizing: border-box;
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 320px;
+    max-width: 50vw;
+  }
+
+  &-util {
+    font-size: var(--b3-font-size);
+    position: fixed;
+    border-radius: var(--b3-border-radius-b);
+    box-shadow: var(--b3-dialog-shadow);
+    border: 1px solid var(--b3-theme-surface-lighter);
+    background-color: var(--b3-menu-background);
+    padding: 8px 0;
+    max-height: 80vh;
+    z-index: 4;
+    box-sizing: border-box;
+
+    &--mobile {
+      top: 0;
+      left: 0;
+      width: 100vw;
+    }
+
+    // 行号栏与文本域共同的滚动容器，二者同高，由父层统一滚动，避免 JS 同步滚动
+    &__scroll {
+      overflow: auto;
+      width: 100%;
+      border-radius: 0 0 var(--b3-border-radius-b) var(--b3-border-radius-b);
+    }
+
+    .protyle-linenumber__rows {
+      line-height: 20px;
+      padding: 4px 8px;
+      position: static;
+    }
+  }
+
+  &-font {
+    font-size: 12px;
+    padding: 4px 8px;
+    max-width: 248px;
+    overflow: auto;
+    max-height: calc(80vh - 24px);
+
+    &__style {
+      background-color: var(--b3-theme-background);
+      margin: 4px;
+      transition: var(--b3-transition);
+      padding: 0 8px;
+      border-radius: var(--b3-border-radius);
+      color: var(--b3-theme-on-background);
+      white-space: nowrap;
+      font-size: 16px;
+      box-shadow: 0 0 0 1px var(--b3-theme-surface-lighter) inset;
+      border-width: 0;
+      line-height: 26px;
+
+      &:hover {
+        box-shadow: 0 0 0 1px var(--b3-theme-surface-lighter) inset, 0 0 0 4px var(--b3-theme-background);
+      }
+    }
+  }
+}

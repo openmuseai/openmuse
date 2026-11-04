@@ -1,0 +1,108 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package api
+
+import (
+	"testing"
+
+	"github.com/siyuan-note/siyuan/kernel/model"
+)
+
+func TestHashBacklinkRevision(t *testing.T) {
+	value := struct {
+		ID   string
+		Name string
+	}{"20260725000000-test", "foo"}
+	first := hashBacklinkRevision("bl1:", value)
+	second := hashBacklinkRevision("bl1:", value)
+	if first != second {
+		t.Fatalf("expected stable revision, got %q and %q", first, second)
+	}
+
+	value.Name = "bar"
+	changed := hashBacklinkRevision("bl1:", value)
+	if first == changed {
+		t.Fatalf("expected changed revision, got %q", changed)
+	}
+}
+
+func TestCanonicalBacklinkKeywords(t *testing.T) {
+	keywords := []string{"beta", "alphabet", "alpha"}
+	canonical := canonicalBacklinkKeywords(keywords)
+	if canonical[0] != "alphabet" || canonical[1] != "alpha" || canonical[2] != "beta" {
+		t.Fatalf("unexpected canonical keywords: %#v", canonical)
+	}
+	if keywords[0] != "beta" {
+		t.Fatalf("expected source keywords to remain unchanged: %#v", keywords)
+	}
+}
+
+func TestBacklinkContextRevisionIncludesAttributeViewTargets(t *testing.T) {
+	context := &model.Backlink{ID: "database", DOM: "unchanged"}
+	before := newBacklinkContextResponses([]*model.Backlink{context})[0].Revision
+	context.AttributeViewTargets = []*model.BacklinkAttributeViewTarget{{BlockID: "database", Matches: []*model.BacklinkAttributeViewMatch{
+		{ItemID: "row", KeyID: "field", ValueID: "cell", DefIDs: []string{"definition"}},
+	}}}
+	response := newBacklinkContextResponses([]*model.Backlink{context})[0]
+	if response.Revision == before || len(response.AttributeViewTargets) != 1 {
+		t.Fatal("target metadata must be returned and invalidate the context revision")
+	}
+	context.AttributeViewTargets[0].Matches[0].ItemID = "another-row"
+	if response.Revision == newBacklinkContextResponses([]*model.Backlink{context})[0].Revision {
+		t.Fatal("a changed target row must invalidate the context revision")
+	}
+}
+
+func TestNewBacklinkResponses(t *testing.T) {
+	paths := []*model.Path{{ID: "20260725000000-source", Name: "Source", Count: 2}}
+	pathResponses := newBacklinkPathResponses(paths)
+	if len(pathResponses) != 1 || pathResponses[0].Revision == "" {
+		t.Fatalf("expected path revision, got %#v", pathResponses)
+	}
+	paths[0].Updated = "20260725235959"
+	updatedPathResponses := newBacklinkPathResponses(paths)
+	if pathResponses[0].Revision != updatedPathResponses[0].Revision {
+		t.Fatal("expected a timestamp-only change to preserve the visible item revision")
+	}
+	paths[0].Name = "Changed"
+	changedPathResponses := newBacklinkPathResponses(paths)
+	if pathResponses[0].Revision == changedPathResponses[0].Revision {
+		t.Fatal("expected a visible path change to update the item revision")
+	}
+
+	contexts := []*model.Backlink{{
+		ID:     "20260725000000-ref",
+		DOM:    `<div data-node-id="20260725000000-ref"></div>`,
+		Expand: true,
+	}}
+	contextResponses := newBacklinkContextResponses(contexts)
+	if len(contextResponses) != 1 || contextResponses[0].ID != contexts[0].ID || contextResponses[0].Revision == "" {
+		t.Fatalf("expected context ID and revision, got %#v", contextResponses)
+	}
+}
+
+func TestBacklinkContextRevisionIncludesReferenceBlock(t *testing.T) {
+	context := &model.Backlink{ID: "parent", DOM: "unchanged"}
+	before := newBacklinkContextResponses([]*model.Backlink{context})[0].Revision
+	context.ReferenceBlockID = "reference"
+	response := newBacklinkContextResponses([]*model.Backlink{context})[0]
+	if response.ReferenceBlockID != context.ReferenceBlockID || response.Revision == before {
+		t.Fatal("reference metadata must be returned and invalidate the context revision")
+	}
+	context.ReferenceBlockID = ""
+	if newBacklinkContextResponses([]*model.Backlink{context})[0].Revision != before {
+		t.Fatal("removing the hidden reference must restore the original revision")
+	}
+}
+
+func TestBacklinkContextRevisionIncludesBlockType(t *testing.T) {
+	context := &model.Backlink{ID: "source", DOM: "unchanged", Type: "NodeParagraph"}
+	before := newBacklinkContextResponses([]*model.Backlink{context})[0].Revision
+	context.Type = "NodeAttributeView"
+	response := newBacklinkContextResponses([]*model.Backlink{context})[0]
+	if response.Type != context.Type || response.Revision == before {
+		t.Fatal("block type must be returned and invalidate the context revision")
+	}
+}

@@ -1,0 +1,7 @@
+name: openmuse_i18n_migrate
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  analyzer: ^8.4.1
+  crypto: ^3.0.6

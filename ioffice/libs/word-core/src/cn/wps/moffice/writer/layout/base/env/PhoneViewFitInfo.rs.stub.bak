@@ -1,0 +1,19 @@
+// Rust stub for PhoneViewFitInfo (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/PhoneViewFitInfo.java
+use crate::*;
+
+pub struct PhoneViewFitInfo {
+    // TODO: fields
+}
+
+impl PhoneViewFitInfo {
+    pub fn new() -> Self { todo!() }
+    pub fn clear(&self) { todo!() }
+    pub fn indexForCP(&self, cp: i32) -> i32 { todo!() }
+    pub fn getItemByStartCp(&self, startCp: i32) -> RangeInfo { todo!() }
+    pub fn getItemByStartCp_1(&self, startCp: i32, tClass: Box<dyn std::any::Any + Send + Sync>) ->  { todo!() }
+    pub fn getItemOrNeighbour(&self, startCp: i32, endCp: i32, tClass: Box<dyn std::any::Any + Send + Sync>) ->  { todo!() }
+    pub fn insertItem(&self, info: RangeInfo) -> bool { todo!() }
+    pub fn merge(&self, var1: RangeInfo) -> bool { todo!() }
+    pub fn indentPos(&self) -> i32 { todo!() }
+}

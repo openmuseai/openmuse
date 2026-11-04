@@ -1,0 +1,9 @@
+//! Native tests may call the original private methods without adding a product facade.
+use super::*;
+use serde_json::{json,Value};
+#[test]
+fn original_android_reference_boxes_versions_external_and_overflow(){
+    let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR"));let p=root.join("rewrite-review/milestones/m4-edit-save/evidence/dependencies-r0b31");let java:Value=serde_json::from_slice(&std::fs::read(p.join("java.json")).unwrap()).unwrap();let api=crate::cn::wps::moss::app::KmoBookApi::KmoBookApi::KmoBookApi();assert_eq!(api.open(root.join("rewrite-review/milestones/m1-xlsx-grid-read/fixtures/sparse-multisheet.xlsx").to_str().unwrap(),None,true),1);std::thread::sleep(std::time::Duration::from_millis(1000));let book=api.book();let sheet=book.sheetAt(0);let s=sheet.borrow();let manager=s.getExpFmlManager().borrow();let mut out=vec![];
+    for (i,expected)in java["boxes"].as_array().unwrap().iter().enumerate(){let input=&expected["input"];let version=if input["version"]==97{SpreadsheetVersion::EXCEL97}else{SpreadsheetVersion::EXCEL2007};book.setSpreadsheetVersion(version);let text=input["hex"].as_str().unwrap();let bytes:Vec<_>=(0..text.len()).step_by(2).map(|i|u8::from_str_radix(&text[i..i+2],16).unwrap()).collect();let ptg=Ptg::readTokens__stream(bytes.len()as i32,&bytes,input["external"].as_bool().unwrap(),version);let span:Vec<_>=input["span"].as_array().unwrap().iter().map(|v|v.as_i64().unwrap()as i32).collect();let mut rect=KmoRect::KmoRect();if input["kind"]=="ref"{manager.getRefBox(&ptg[0],span[0],span[1],span[2],span[3],&mut rect);}else{manager.getAreaRefBox(&ptg[0],span[0],span[1],span[2],span[3],&mut rect);}let row=json!({"input":input,"box":[rect.tl.row,rect.br.row,rect.tl.col,rect.br.col]});assert_eq!(row,*expected,"case {i}");out.push(row);
+    }book.setSpreadsheetVersion(SpreadsheetVersion::EXCEL2007);std::fs::write(p.join("rust-boxes.json"),serde_json::to_vec_pretty(&out).unwrap()).unwrap();
+}

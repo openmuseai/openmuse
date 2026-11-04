@@ -1,0 +1,23 @@
+file_path,module_path,reason,deferred_at
+koffice/et/core/cn/wps/moss/engine/eval/CalculationChain.java,engine/eval,too many dependencies,2026-05-23
+koffice/et/core/cn/wps/moss/engine/eval/EvaluationArrayFormula.java,engine/eval,too many dependencies,2026-05-23
+koffice/et/core/cn/wps/moss/engine/areaevent/IAreaChangeListener.java,engine/areaevent,too many dependencies,2026-05-23
+koffice/et/core/cn/wps/moss/core/drawing/tools/MediaLibCache.java,core/drawing/tools,too many dependencies,2026-05-23
+koffice/et/core/cn/wps/moss/app/BookMetaData.java,app,Template structural validation failed:,
+Missing trait block for interface 'FileSaveCallback',,,
+Missing trait block for interface 'ICoreUnitsConverter',,,
+Missing trait block for interface 'IImportExportTableCallback',2026-05-23,,
+koffice/et/core/cn/wps/moss/app/xf/KmoCellXF.java,app/xf,too many dependencies,2026-05-23
+koffice/et/core/cn/wps/moss/util/binarytree/node/BinarySearchTreeNode.java,util/binarytree/node,[class] [line-undefined] Missing class annotation: "// Java: public interface BinaryTreeNode"
+
+[method] [line-undefined] Missing method annotation: "// Java: abstract BinaryTreeNode getParent()"
+
+[method] [line-undefined] Missing method annotation: "// Java: abstract void setParent(BinaryTreeNode var1)"
+
+[method] [line-undefined] Missing method annotation: "// Java: abstract BinaryTreeNode getLeftChild()"
+
+[method] [line-undefined] Missing method annotation: "// Java: abstract void setLeftChild(BinaryTreeNode var1)"
+
+[method] [line-undefined] Missing method annotation: "// Java: abstract BinaryTreeNode getRightChild()"
+
+[method] [line-undefined] Missing method annotation: "// Java: abstract void setRightChild(BinaryTreeNode var1)",2026-06-02

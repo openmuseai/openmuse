@@ -1,0 +1,134 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package tools
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+var AttrTool = &Tool{
+	Name:        "attr",
+	Description: "Block custom-attribute operations. Actions: get(id), set(id, attrs object), batch-get(ids comma-separated).",
+	InputSchema: ToolSchema{
+		Type: "object",
+		Properties: map[string]Property{
+			"action": {Type: "string", Description: "Operation", Enum: []string{"get", "set", "batch-get"}},
+			"id":     {Type: "string", Description: "Block ID"},
+			"ids":    {Type: "string", Description: "Comma-separated block IDs (for batch-get)"},
+			"attrs":  {Type: "object", Description: "Attribute key-value pairs (for set). Values must be strings or null; null and empty strings delete attributes.\nCommon attributes:\n- icon: emoji hex codepoint like \"1f4ca\", emoji character like \"📊\", custom image path like \"1/b3log.png\", network image URL like \"https://example.com/icon.png\", or dynamic icon URL like \"api/icon/getDynamicIcon?type=8&color=%23d23f31&content=SiYuan&id=xxx\"\n- title-img: CSS format like 'background-image:url(\"assets/example.jpg\")', NOT a bare asset path\n- tags: comma-separated tag names"},
+		},
+		Required: []string{"action"},
+	},
+	Handler: attrHandler,
+}
+
+func init() {
+	register(AttrTool)
+}
+
+func attrHandler(args map[string]any) (CallToolResult, error) {
+	action, _ := args["action"].(string)
+	switch action {
+	case "get":
+		return attrGet(args)
+	case "set":
+		return attrSet(args)
+	case "batch-get":
+		return attrBatchGet(args)
+	}
+	return CallToolResult{
+		Content: []ContentItem{{Type: "text", Text: "unknown action '" + action + "', expected one of: [get, set, batch-get]"}},
+		IsError: true,
+	}, nil
+}
+
+func attrGet(args map[string]any) (CallToolResult, error) {
+	id, _ := args["id"].(string)
+	if id == "" {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "id is required"}}, IsError: true}, nil
+	}
+
+	attrs := sql.GetBlockAttrs(id)
+	if len(attrs) == 0 {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "no custom attributes"}}}, nil
+	}
+
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "Attributes for %s:\n\n", id)
+	for k, v := range attrs {
+		fmt.Fprintf(&sb, "- %s: %s\n", k, v)
+	}
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: sb.String()}}}, nil
+}
+
+func attrSet(args map[string]any) (CallToolResult, error) {
+	id, _ := args["id"].(string)
+	if id == "" {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "id is required"}}, IsError: true}, nil
+	}
+
+	attrsArg, ok := args["attrs"].(map[string]any)
+	if !ok || len(attrsArg) == 0 {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "attrs (key-value object) is required"}}, IsError: true}, nil
+	}
+
+	nameValues, err := parseAttrValues(attrsArg)
+	if err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: err.Error()}}, IsError: true}, nil
+	}
+
+	if err := model.SetBlockAttrs(id, nameValues); err != nil {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "set attrs failed: " + err.Error()}}, IsError: true}, nil
+	}
+
+	util.PushReloadFiletree()
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: "attributes set for: " + id}}}, nil
+}
+
+func parseAttrValues(attrs map[string]any) (map[string]string, error) {
+	nameValues := make(map[string]string, len(attrs))
+	for name, value := range attrs {
+		switch typed := value.(type) {
+		case nil:
+			nameValues[name] = ""
+		case string:
+			nameValues[name] = typed
+		default:
+			return nil, fmt.Errorf("attr %q must be a string or null (got %T)", name, value)
+		}
+	}
+	return nameValues, nil
+}
+
+func attrBatchGet(args map[string]any) (CallToolResult, error) {
+	idsStr, _ := args["ids"].(string)
+	if idsStr == "" {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "ids (comma-separated) is required"}}, IsError: true}, nil
+	}
+	idList := strings.Split(idsStr, ",")
+	for i := range idList {
+		idList[i] = strings.TrimSpace(idList[i])
+	}
+
+	attrs := sql.BatchGetBlockAttrs(idList)
+	if len(attrs) == 0 {
+		return CallToolResult{Content: []ContentItem{{Type: "text", Text: "no attributes found"}}}, nil
+	}
+
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "Batch attributes (%d blocks):\n\n", len(attrs))
+	for id, kv := range attrs {
+		fmt.Fprintf(&sb, "--- %s ---\n", id)
+		for k, v := range kv {
+			fmt.Fprintf(&sb, "- %s: %s\n", k, v)
+		}
+	}
+	return CallToolResult{Content: []ContentItem{{Type: "text", Text: sb.String()}}}, nil
+}

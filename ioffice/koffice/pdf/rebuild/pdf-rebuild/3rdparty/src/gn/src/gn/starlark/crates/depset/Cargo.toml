@@ -1,0 +1,20 @@
+[package]
+name = "depset"
+version = "0.1.0"
+edition = "2021"
+
+[lints]
+workspace = true
+
+[lib]
+doctest = false
+
+[dependencies]
+types = { path = "../types" }
+starlark = { workspace = true }
+starlark_derive = { workspace = true }
+thiserror = { workspace = true }
+allocative = { workspace = true }
+
+[dev-dependencies]
+testutils = { path = "../testutils" }

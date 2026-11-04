@@ -1,0 +1,197 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package apicontract
+
+import (
+	"encoding/json"
+	"errors"
+	"io"
+	"mime/multipart"
+	"reflect"
+)
+
+type AssetPathRequest struct {
+	Path string `json:"path"`
+}
+
+type UnusedAssetsRequest struct {
+	Keyword string `json:"keyword" api:"optional,nullable"`
+	All     bool   `json:"all" api:"optional,nullable"`
+}
+
+// EncryptedBoxAssetsRequest 只接受当前已解锁的加密笔记本，不回退到全局资源。
+type EncryptedBoxAssetsRequest struct {
+	Notebook string `json:"notebook"`
+}
+
+// RemoveEncryptedBoxAssetsRequest 仅删除用户确认的 assets 相对路径，空列表不删除任何资源。
+// 删除前完整重新扫描；新增引用或任意读取、认证、解析错误均中止整批操作。
+type RemoveEncryptedBoxAssetsRequest struct {
+	Notebook string   `json:"notebook"`
+	Paths    []string `json:"paths"`
+}
+
+type AssetOCRTextRequest struct {
+	Path *string `json:"path" api:"optional"`
+}
+
+type SetAssetOCRTextRequest struct {
+	Path string `json:"path"`
+	Text string `json:"text"`
+}
+
+// RenameAssetRequest 重命名普通笔记本资源，并同步字面量及百分号编码的文档、数据库引用。
+// 引用及成功返回的 newPath 保留查询参数和片段；源资源解析失败返回 -1 和 5000 毫秒错误提示。
+// 加密笔记本资源仍拒绝重命名；空名称或与原文件名相同的名称保留成功但 newPath 为空的响应。
+type RenameAssetRequest struct {
+	OldPath string `json:"oldPath"`
+	NewName string `json:"newName"`
+}
+
+type AssetDocumentRequest struct {
+	ID string `json:"id"`
+}
+
+type AssetDocumentAssetsRequest struct {
+	ID             string `json:"id"`
+	RetainQueryStr *bool  `json:"retainQueryStr" api:"optional"`
+}
+
+type SetAssetAnnotationRequest struct {
+	Path     string  `json:"path"`
+	Data     string  `json:"data"`
+	BaseData *string `json:"baseData,omitempty" api:"optional"`
+}
+
+type AssetCloudUploadRequest struct {
+	IgnorePushMsg bool   `json:"ignorePushMsg" api:"optional,nullable"`
+	ID            string `json:"id"`
+}
+
+type AssetPathsCloudUploadRequest struct {
+	Paths         []string `json:"paths"`
+	IgnorePushMsg bool     `json:"ignorePushMsg" api:"optional,nullable"`
+}
+
+// InsertLocalAssetsRequest 在 fromHTMLPaste 为 true 时上传剪贴板引用的本地资源。
+// 允许系统临时目录及用户文档中的普通文件，仍拒绝凭据、工作空间私有路径及加密笔记本原始文件。
+// 单个文件失败通过 failedFiles 返回，其他文件的成功结果保留在 succFiles 中。
+type InsertLocalAssetsRequest struct {
+	AssetPaths    []string `json:"assetPaths"`
+	IsUpload      *bool    `json:"isUpload" api:"optional"`
+	ID            string   `json:"id" api:"optional,nullable,ignoretype"`
+	FromHTMLPaste bool     `json:"fromHTMLPaste" api:"optional,nullable"`
+}
+
+type InsertCoverRequest struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+}
+
+type UploadAssetRequest struct {
+	ID            *string                 `json:"id" api:"optional,nonnullable"`
+	AssetsDirPath *string                 `json:"assetsDirPath" api:"optional,nonnullable"`
+	Files         []*multipart.FileHeader `json:"file[]" api:"optional"`
+}
+
+type AssetStatData struct {
+	Size       int64  `json:"size"`
+	HSize      string `json:"hSize"`
+	Created    int64  `json:"created"`
+	HCreated   string `json:"hCreated"`
+	Updated    int64  `json:"updated"`
+	HUpdated   string `json:"hUpdated"`
+	Downloaded *bool  `json:"downloaded,omitempty" api:"const=false"`
+}
+
+type AssetTextData struct {
+	Text string `json:"text"`
+}
+
+type ImageOCRTextData struct {
+	Text   string `json:"text"`
+	Failed bool   `json:"failed"`
+}
+
+// AssetOCRData 的列名沿用 Tesseract TSV 表头，所有提供商的单元格均为文本。
+// AI 提供商仅返回原样 text，ocrJSON 为空数组，不生成坐标或置信度。
+type AssetOCRData struct {
+	Text    string              `json:"text"`
+	OCRJSON []map[string]string `json:"ocrJSON"`
+}
+
+type AssetRenameData struct {
+	NewPath string `json:"newPath"`
+}
+
+type AssetAnnotationData struct {
+	Data string `json:"data"`
+}
+
+type AssetPathData struct {
+	Path string `json:"path"`
+}
+
+type AssetPathsData struct {
+	Paths []string `json:"paths"`
+}
+
+type AssetUnusedItem struct {
+	Item     string   `json:"item"`
+	Name     string   `json:"name"`
+	Path     string   `json:"path,omitempty"`
+	BlockIDs []string `json:"blockIDs,omitempty"`
+}
+
+type AssetUploadSuccess struct {
+	Index int    `json:"index"`
+	Name  string `json:"name"`
+	Path  string `json:"path"`
+}
+
+type AssetUploadFailure struct {
+	Index int    `json:"index"`
+	Name  string `json:"name"`
+	Error string `json:"error"`
+}
+
+type AssetUploadData struct {
+	ErrFiles    []string             `json:"errFiles"`
+	FailedFiles []AssetUploadFailure `json:"failedFiles"`
+	SuccFiles   []AssetUploadSuccess `json:"succFiles"`
+	SuccMap     map[string]string    `json:"succMap"`
+}
+
+type AssetInsertCoverData struct {
+	SuccFiles []AssetUploadSuccess `json:"succFiles"`
+	SuccMap   map[string]string    `json:"succMap"`
+}
+
+func init() {
+	InsertLocalAssets.decodeRequest = func(reader io.Reader) (request InsertLocalAssetsRequest, err error) {
+		fields, err := blockRequestFields(reader, "/api/asset/insertLocalAssets")
+		if err != nil {
+			return request, err
+		}
+		fromHTMLPaste := fields["fromHTMLPaste"]
+		delete(fields, "fromHTMLPaste")
+		if err = decodeRequestFields(reflect.ValueOf(&request).Elem(), fields); err != nil {
+			return request, err
+		}
+		_ = json.Unmarshal(fromHTMLPaste, &request.FromHTMLPaste)
+		return request, nil
+	}
+	AssetUploadCloudByAssetsPaths.decodeRequest = func(reader io.Reader) (request AssetPathsCloudUploadRequest, err error) {
+		fields, err := blockRequestFields(reader, "/api/asset/uploadCloudByAssetsPaths")
+		if err != nil {
+			return request, err
+		}
+		if len(fields["paths"]) == 0 || string(fields["paths"]) == "null" {
+			return request, errors.New("[paths] is required")
+		}
+		err = decodeRequestFields(reflect.ValueOf(&request).Elem(), fields)
+		return request, err
+	}
+}

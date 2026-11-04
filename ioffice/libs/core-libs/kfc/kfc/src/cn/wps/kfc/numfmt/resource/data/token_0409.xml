@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resouce>
+<token-decimal type="string">.</token-decimal>
+<token-thous type="string">,</token-thous>
+<token-general type="string-array" size="3">
+<item>g</item>
+<item>General</item>
+<item>true</item>
+</token-general>
+<token-a type="string-array" size="3">
+<item>a</item>
+<item>a/p</item>
+<item>am/pm</item>
+</token-a>
+<token-bracket type="string-array" size="8">
+<item>[</item>
+<item name="ncl"></item>
+<item name="color"></item>
+<item name="dbnum"></item>
+<item name="condition"></item>
+<item name="helapsed"></item>
+<item name="melapsed"></item>
+<item name="selapsed"></item>
+</token-bracket>
+</resouce>

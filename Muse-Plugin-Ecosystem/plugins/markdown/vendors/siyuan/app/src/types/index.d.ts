@@ -1,0 +1,1712 @@
+type TPluginDockPosition = "LeftTop" | "LeftBottom" | "RightTop" | "RightBottom" | "BottomLeft" | "BottomRight"
+type TDockPosition = "Left" | "Right" | "Bottom"
+type TWS = "main" | "filetree" | "protyle" | "backlink" | "bookmark" | "graph" | "outline" | "tag" | "agentChat"
+type TDock = "file" | "outline" | "inbox" | "bookmark" | "tag" | "graph" | "globalGraph" | "backlink" | "agentChat"
+type TTab = "Outline" | "Graph" | "Backlink" | "Asset" | "Editor" | "Search" | "siyuan-card"
+type TOperation = IOperation["action"];
+type TBazaarType = "templates" | "icons" | "widgets" | "themes" | "plugins"
+type TBazaarPackageInvalidReason = "missing-manifest" | "invalid-manifest" | "name-mismatch"
+type TCardType = "doc" | "notebook" | "all"
+type TEventBus = "ws-main" | "sync-start" | "sync-end" | "sync-fail" |
+    "click-blockicon" | "click-editorcontent" | "click-pdf" | "click-editortitleicon" | "click-flashcard-action" |
+    "open-noneditableblock" |
+    "open-menu-blockref" | "open-menu-fileannotationref" | "open-menu-tag" | "open-menu-link" | "open-menu-image" |
+    "open-menu-av" | "open-menu-content" | "open-menu-breadcrumbmore" | "open-menu-doctree" | "open-menu-inbox" |
+    "open-siyuan-url-plugin" | "open-siyuan-url-block" | "open-asset" | "open-link" | "opened-notebook" |
+    "closed-notebook" |
+    "paste" | "before-upload-assets" | "before-search-results-render" |
+    "input-search" |
+    "loaded-protyle-dynamic" | "loaded-protyle-static" |
+    "switch-protyle" | "switch-protyle-mode" |
+    "destroy-protyle" |
+    "lock-screen" |
+    "mobile-keyboard-show" | "mobile-keyboard-hide" |
+    "code-language-update" | "code-language-change" |
+    "kernel-plugin-state-change" |
+    "before-show-tooltip" | "before-hide-tooltip" |
+    "common-menu-open" | "common-menu-closed"
+type TAVView = "table" | "list" | "gallery" | "kanban" | "calendar";
+type TAVAlign = "" | "left" | "center" | "right"
+type TAVDateFormat = "" | "full" | "month-day-year" | "day-month-year" | "year-month-day" | "lunar"
+type TAVCol = import("./av").AVKeyType;
+type TAVFilterOperator = import("./av").AVFilterOperator;
+
+type TRecentDocsSort = "viewedAt" | "closedAt" | "openAt" | "created" | "updated"
+type TPublishAccessLevel = "public" | "protected" | "hidden" | "private" | "forbidden";
+
+/**
+ * 内核插件状态
+ * - `-1`: inactive 内核插件未安装或不可用
+ * - `0`: ready 内核插件已安装但未启动
+ * - `1`: loading 内核插件正在启动
+ * - `2`: running 内核插件正在运行, 可正常使用
+ * - `3`: stopping 内核插件正在停止
+ * - `4`: stopped 内核插件已停止
+ * - `5`: error 内核插件出现不可恢复的错误
+ */
+type TKernelPluginState = -1 | 0 | 1 | 2 | 3 | 4 | 5
+
+type TJsonRpcId = string | number;
+type TJsonRpcMethod = string;
+type TJsonRpcPositionalParams = any[];
+type TJsonRpcNamedParams = Record<string, any>;
+type TJsonRpcParams = TJsonRpcPositionalParams | TJsonRpcNamedParams | undefined;
+type TJsonRpcMethodParams = TJsonRpcPositionalParams | [TJsonRpcNamedParams] | [];
+type TJsonRpcHandler<T = any> = (...args: TJsonRpcMethodParams) => Promise<T> | T;
+
+declare module "blueimp-md5"
+
+interface CSSStyleDeclarationElectron extends CSSStyleDeclaration {
+    WebkitAppRegion: string;
+}
+
+interface Window {
+    handleOIDCCallback?: (callbackURL: string) => void;
+    handleOIDCAuthError?: (message: string) => void;
+    DOMPurify: {
+        sanitize(dirty: string, options?: any): string;
+    };
+    echarts: {
+        init(element: Element, theme?: string, options?: {
+            width: number
+        }): {
+            setOption(option: any): void;
+            getZr(): any;
+            on(name: string, event: (e: any) => void): any;
+            containPixel(name: string, position: number[]): any;
+            resize(): void;
+        };
+        dispose(element: Element): void;
+        getInstanceById(id: string): {
+            setTheme: (theme: string) => void
+            resize: () => void
+            clear: () => void
+            getOption: () => { series: { type: string }[] }
+        };
+    };
+    ABCJS: {
+        renderAbc(element: Element, text: string, options: {
+            responsive: string
+        }): void;
+    };
+    MathJax: {
+        loader?: {
+            paths: {[key: string]: string}
+        }
+        output?: {
+            font: string
+            fontPath: string
+            linebreaks?: {
+                inline: boolean
+            }
+        }
+        options?: {
+            enableMenu: boolean
+            enableEnrichment: boolean
+            enableSpeech: boolean
+            enableBraille: boolean
+            enableExplorer: boolean
+            menuOptions?: {
+                settings: {
+                    enrich: boolean
+                    speech: boolean
+                    braille: boolean
+                }
+            }
+        }
+        svg: {
+            fontCache: string
+        }
+        startup?: {
+            promise?: Promise<void>
+            typeset?: boolean
+        }
+        tex2svg?(math: string, options: { display: boolean }): HTMLElement
+        tex2svgPromise?(math: string, options: { display: boolean }): Promise<HTMLElement>
+    };
+    hljs: {
+        listLanguages(): string[];
+        highlight(text: string, options: {
+            language?: string,
+            ignoreIllegals: boolean
+        }): {
+            value: string
+        };
+        getLanguage(text: string): {
+            name: string
+        };
+    };
+    katex: {
+        renderToString(math: string, option: {
+            displayMode: boolean;
+            output: string;
+            macros: IObject;
+            trust: boolean | ((context: {command: string; url?: string; protocol?: string}) => boolean);
+            strict: (errorCode: string) => "ignore" | "warn";
+        }): string;
+    };
+    zenuml: object,
+    mermaidTidyTree: object[],
+    mermaid: {
+        initialize(options: any): void,
+        render(id: string, text: string, container?: HTMLElement): Promise<{ svg: string }>,
+        registerExternalDiagrams(ex: object[]): Promise<void>,
+        registerLayoutLoaders(layouts: object[]): void,
+        registerIconPacks(options: {
+            name: string,
+            loader(): Promise<Response>
+        }[]): void
+    };
+    plantumlEncoder: {
+        encode(options: string): string,
+    };
+    pdfjsLib: any;
+    webkit: {
+        nativeCallbacks: { [key: string]: (id: number) => void },
+        messageHandlers: {
+            finishKeyboardComposition?: { postMessage: (data: string) => Promise<boolean> }
+            showTextMenu?: { postMessage: (data: string) => Promise<boolean> }
+            pickPhotos?: { postMessage: (data: string) => Promise<Array<{
+                name: string, mimeType: string, data: string, pair: string, kind: "photo" | "video"
+            }>> }
+            saveExportFile: { postMessage: (url: string) => void }
+            saveExportFileV2?: { postMessage: (data: {uri: string, requestID: string}) => void }
+            openLink: { postMessage: (url: string) => void }
+            openAuthURL: { postMessage: (url: string) => void }
+            startKernelFast: { postMessage: (url: string) => void }
+            changeStatusBar: { postMessage: (url: string) => void }
+            setClipboard: { postMessage: (url: string) => void }
+            purchase: { postMessage: (url: string) => void }
+            print: { postMessage: (html: string) => void }
+            exit: { postMessage: (text: string) => void }
+            sendNotification: {
+                postMessage: (options: {
+                    title: string,
+                    body: string,
+                    delay: number,
+                    callback: string
+                }) => number
+            }
+            cancelNotification: { postMessage: (id: number) => void }
+            vibrate?: { postMessage: (text: string) => void }
+        }
+    };
+    htmlToImage: {
+        getFontEmbedCSS: (element: Element, options?: IHtmlToImageOptions) => Promise<string>
+        toCanvas: (element: Element, options?: IHtmlToImageOptions) => Promise<HTMLCanvasElement>
+        toBlob: (element: Element, options?: IHtmlToImageOptions) => Promise<Blob>
+    };
+    modernScreenshot: {
+        domToBlob: (element: Element, options?: IModernScreenshotOptions) => Promise<Blob>
+    };
+    siyuan: ISiyuan;
+    JSAndroid: {
+        openAuthURL(url: string): void
+        returnDesktop(): void
+        openExternal(url: string): void
+        exportByDefault(url: string): void
+        saveExportFile(url: string): void
+        saveExportFileV2?(url: string, requestID: string): void
+        changeStatusBarColor(color: string, mode: number): void
+        writeClipboard(text: string): void
+        writeHTMLClipboard(text: string, html: string): void
+        writeSiYuanHTMLClipboard(text: string, html: string, siyuanHTML: string): void
+        writeImageClipboard(uri: string): void
+        readClipboard(): string
+        readHTMLClipboard(): string
+        readSiYuanHTMLClipboard(): string
+        getBlockURL(): string
+        hideKeyboard(): void
+        showKeyboard(): void
+        print(title: string, html: string): void
+        getScreenWidthPx(): number
+        exit(): void
+        setWebViewFocusable(enable: boolean): void
+        getWordSelection?(text: string, start: number, end: number): string
+        prepareWordSelection?(word: string, startAdjust: number, endAdjust: number): boolean
+        sendNotification(channel: string, title: string, body: string, delayInSeconds: number): number
+        cancelNotification(id: number): void
+        logInputEvent?(details: string): void
+    };
+    JSHarmony: {
+        getSystemFonts?(): Promise<string>
+        openAuthURL(url: string): void
+        showKeyboard(): void
+        hideKeyboard(): void
+        openExternal(url: string): void
+        exportByDefault(url: string): void
+        saveExportFile(url: string): void
+        saveExportFileV2?(url: string, requestID: string): void
+        changeStatusBarColor(color: string, mode: number): void
+        writeClipboard(text: string): boolean | void
+        writeHTMLClipboard(text: string, html: string): boolean | void
+        writeSiYuanHTMLClipboard(text: string, html: string, siyuanHTML: string): boolean | void
+        readClipboard(): string
+        readHTMLClipboard(): string
+        readSiYuanHTMLClipboard(): string
+        returnDesktop(): void
+        print(title: string, html: string): void
+        getScreenWidthPx(): number
+        exit(): void
+        setWebViewFocusable(enable: boolean): void
+        setNativeTextSelectionMenuDisabled(disabled: boolean): void
+        sendNotification(channel: string, title: string, body: string, delayInSeconds: number): number
+        cancelNotification(id: number): void
+    };
+    handleSaveExportFileResult(requestID: string, resultJSON: string): void
+
+    Protyle: import("../protyle/method").default;
+
+    lockscreenByMode(): void;
+
+    goBack(): void;
+
+    showMessage(message: string, timeout: number, type: string, messageId?: string): void;
+
+    reconnectWebSocket(): void;
+
+    showKeyboardToolbar(): void;
+
+    processIOSPurchaseResponse(code: number): void;
+
+    hideKeyboardToolbar(): void;
+
+    openFileByURL(URL: string): boolean;
+
+    destroyTheme(): Promise<void>;
+}
+
+interface ILocalFiles {
+    path: string,
+    size: number | null,
+    isDir?: boolean
+}
+
+type TAssetUploadSource = "paste" | "drop" | "file-picker" | "programmatic"
+type TAssetUploadTarget = "editor" | "av-cell" | "background" | "pdf-annotation"
+type TAssetUploadStatus = "success" | "partial" | "failed" | "canceled"
+type TAssetUploadRejectionReason = "name-empty" | "size-limit" | "type-not-accepted"
+
+interface IAssetUploadPosition {
+    x: number,
+    y: number
+}
+
+type IAssetUploadInput = {
+    kind: "files",
+    files: File[]
+} | {
+    kind: "local-files",
+    files: ILocalFiles[]
+}
+
+type IAssetUploadDecision = {
+    action: "replace",
+    /** 必须保持各项的逻辑顺序；需要逐项回填的上传会按下标关联原资源。 */
+    input: IAssetUploadInput
+} | {
+    /** 取消当前资源写入；未取得全部资源路径时，HTML 粘贴将停止正文提交。 */
+    action: "cancel"
+}
+
+interface IAssetUploadRejection {
+    index: number,
+    name: string,
+    reasons: TAssetUploadRejectionReason[]
+}
+
+interface IAssetUploadSuccess {
+    index: number,
+    name: string,
+    path: string
+}
+
+interface IAssetUploadFailure {
+    index: number,
+    name: string,
+    error: string
+}
+
+interface IAssetUploadResult {
+    requestId: string,
+    status: TAssetUploadStatus,
+    /** 插件链处理结束后的完整输入。 */
+    input: IAssetUploadInput,
+    /** 通过前端校验并实际提交上传的输入。 */
+    acceptedInput?: IAssetUploadInput,
+    /** 被前端校验拒绝的文件及其在完整输入中的位置。 */
+    rejected?: IAssetUploadRejection[],
+    /** 按 acceptedInput 中的索引记录明确报告成功的结果，可区分同名文件；需要逐项确认时以该字段为准。 */
+    succFiles?: IAssetUploadSuccess[],
+    /** 按 acceptedInput 中的索引记录明确报告失败的结果；可能不包含未尝试或未逐项报告的项。 */
+    failedFiles?: IAssetUploadFailure[],
+    succMap?: Record<string, string>,
+    errFiles?: string[],
+    error?: string
+}
+
+/** 不得在该事件上调用 `preventDefault()`，取消上传应使用 `respondWith({action: "cancel"})`；未取得全部资源路径时，HTML 粘贴将停止正文提交。 */
+interface IBeforeUploadAssetsDetail {
+    requestId: string,
+    /** PDF 标注等无编辑器上传场景不提供该字段。 */
+    protyle?: IProtyle,
+    source: TAssetUploadSource,
+    target: TAssetUploadTarget,
+    position?: IAssetUploadPosition,
+    /** 替换输入必须保持的精确文件数量；各项还须与原输入按下标一一对应。 */
+    requiredFileCount?: number,
+    /** 当前目标支持的输入类型；未提供时支持 files 和 local-files。 */
+    allowedInputKinds?: Array<IAssetUploadInput["kind"]>,
+    input: IAssetUploadInput,
+    /**
+     * 插件处理阶段的取消信号；自定义 upload.handler 执行期间也会在编辑器销毁或超时时触发。
+     * 标准传输开始后不再因编辑器销毁触发。
+     */
+    signal: AbortSignal,
+    /** 必须同步调用且每次事件只允许调用一次；替换项须保持逻辑顺序，异步处理应传入 Promise，每个插件默认 120 秒超时。 */
+    respondWith(response: IAssetUploadDecision | PromiseLike<IAssetUploadDecision>): void,
+    /**
+     * 必须同步注册，经思源前端上传协调层发起的资源写入成功、失败或取消时执行一次。
+     * 注册该回调的插件卸载后不再执行。
+     * 回调结果不表示父级正文或属性视图已完成写入，也不覆盖 HTTP API、CLI、MCP、同步、导入、历史恢复等内核写入。
+     */
+    onComplete(callback: (result: IAssetUploadResult) => void): void
+}
+
+interface IClipboardData {
+    textHTML?: string,
+    textPlain?: string,
+    siyuanHTML?: string,
+    files?: FileList | DataTransferItemList | File[],
+    localFiles?: ILocalFiles[],
+    preserveSourceFormat?: boolean,
+}
+
+interface IRefDefs {
+    refID: string,
+    defIDs?: string[],
+    avItemID?: string,
+    avViewID?: string,
+    avGroupID?: string,
+}
+
+interface IFilesPath {
+    notebookId: string,
+    openPaths: string[]
+}
+
+interface IPosition {
+    x: number,
+    y: number,
+    w?: number,
+    h?: number,
+    isLeft?: boolean,
+    target?: HTMLElement
+}
+
+interface ISaveLayout {
+    name: string,
+    layout: IObject
+    time: number
+    filesPaths: IFilesPath[]
+}
+
+interface IWorkspace {
+    path: string;
+    closed: boolean;
+}
+
+interface ICardPackage {
+    id: string;
+    updated: string;
+    name: string;
+    size: number;
+}
+
+interface ICard {
+    deckID: string;
+    cardID: string;
+    blockID: string;
+    nextDues: Record<string, string>;
+    lapses: number;  // 遗忘次数
+    lastReview: number;  // 最后复习时间
+    reps: number;  // 复习次数
+    state: number;   // 卡片状态 0：新卡
+}
+
+interface ICardData {
+    cards: ICard[],
+    unreviewedCount: number
+    unreviewedNewCardCount: number
+    unreviewedOldCardCount: number
+}
+
+interface IPluginSettingOption {
+    title: string;
+    description?: string;
+    actionElement?: HTMLElement;
+    direction?: "column" | "row";
+
+    createActionElement?(): HTMLElement;
+}
+
+interface ISearchAssetOption {
+    keys: string[],
+    col: string,
+    row: string,
+    layout: number,
+    method: number,
+    types: {
+        ".txt": boolean,
+        ".md": boolean,
+        ".docx": boolean,
+        ".xlsx": boolean,
+        ".pptx": boolean,
+    },
+    sort: number,
+    k: string,
+}
+
+interface ITextOption {
+    color?: string,
+    type: string
+}
+
+interface ISnippet {
+    id?: string;
+    name: string;
+    type: string;
+    enabled: boolean;
+    content: string;
+    disabledInPublish: boolean;
+}
+
+interface IInbox {
+    oId: string;
+    shorthandContent: string;
+    shorthandMd: string;
+    shorthandDesc: string;
+    shorthandFrom: number;
+    shorthandTitle: string;
+    shorthandURL: string;
+    hCreated: string;
+}
+
+interface IPdfAnno {
+    pages?: {
+        index: number
+        positions: number[][]
+    }[]
+    index?: number,
+    color: string,
+    type: string,   // border, text
+    content: string,    // rect, text
+    mode: string,
+    id?: string,
+    coords?: number[][]
+    ids?: string[]
+}
+
+interface IBackStack {
+    id: string,
+    // 仅移动端
+    data?: {
+        startId: string,
+        endId: string
+        path: string
+        notebookId: string
+        rootID: string
+    },
+    scrollTop?: number,
+    callback?: TProtyleAction[],
+    position?: {
+        start: number,
+        end: number
+    }
+    // 仅桌面端
+    protyle?: IProtyle,
+    zoomId?: string
+}
+
+interface IEmojiItem {
+    unicode: string,
+    description: string,
+    description_zh_cn: string,
+    description_ja_jp: string,
+    keywords: string
+}
+
+interface IEmoji {
+    id: string,
+    title: string,
+    title_zh_cn: string,
+    title_ja_jp: string,
+    items: IEmojiItem[]
+}
+
+interface INotebook {
+    name: string;
+    id: string;
+    closed: boolean;
+    icon: string;
+    sort: number;
+    subFileCount: number;
+    dueFlashcardCount?: number;
+    newFlashcardCount?: number;
+    flashcardCount?: number;
+    sortMode: number;
+    encrypted?: boolean;
+    unlocked?: boolean;
+    state?: "Locked" | "Unlocking" | "Unlocked" | "Locking" | "Error";
+}
+
+interface ISiyuan {
+    /** 当前内核的只读文档标题能力，普通构建默认为 2，不持久化为用户设置。 */
+    zIndex: number
+    isReady?: boolean
+    storage?: {
+        [key: string]: any
+    },
+    closedTabs?: ILayoutJSON[]
+    reqIds: {
+        [key: string]: number
+    },
+    editorIsFullscreen?: boolean,
+    hideBreadcrumb?: boolean,
+    notebooks?: INotebook[],
+    emojis?: IEmoji[],
+    backStack?: IBackStack[],
+    mobile?: {
+        touchRange?: Range
+        size: {
+            isLandscape?: boolean,
+            landscape?: {
+                height1: number,
+                height2: number,    // 键盘弹起时的高度
+            }, // 横屏
+            portrait?: {
+                height1: number,
+                height2: number,
+            }
+        }
+        editor?: import("../protyle").Protyle
+        popEditor?: import("../protyle").Protyle
+        tabs?: import("../mobile/tabs/MobileTabs").MobileTabs
+        agentChat?: import("../layout/dock/agent/AgentChat").AgentChat
+        agentChatController?: {
+            handleBack: () => boolean
+            refreshStatus: () => void
+        }
+        docks?: {
+            outline: import("../mobile/dock/MobileOutline").MobileOutline | null,
+            file: import("../mobile/dock/MobileFiles").MobileFiles | null,
+            bookmark: import("../mobile/dock/MobileBookmarks").MobileBookmarks | null,
+            tag: import("../mobile/dock/MobileTags").MobileTags | null,
+            backlink: import("../mobile/dock/MobileBacklinks").MobileBacklinks | null,
+            inbox: import("../layout/dock/Inbox").Inbox | null,
+        } & { [key: string]: import("../layout/Model").Model | any };
+    },
+    user?: {
+        userId: string
+        userName: string
+        userAvatarURL: string
+        userHomeBImgURL: string
+        userIntro: string
+        userNickname: string
+        /**
+         * 功能特性付费状态
+         * 0 未付费，1 已付费
+         */
+        userSiYuanOneTimePayStatus: number
+        /**
+         * 会员过期时间
+         * -1 终身会员；0 未订阅或订阅已过期；>0 订阅到期时间（时间戳，毫秒）
+         */
+        userSiYuanProExpireTime: number
+        /**
+         * 订阅计划类型
+         * 0 年付订阅/终生；1 教育优惠；2 订阅试用
+         */
+        userSiYuanSubscriptionPlan: number
+        /**
+         * 订阅类型
+         * 0 年付；1 终生；2 月付
+         */
+        userSiYuanSubscriptionType: number
+        /**
+         * 订阅状态
+         * -1 未订阅，0 订阅可用，1 订阅封禁，2 订阅过期（包括付费订阅过期和试用订阅过期）
+         */
+        userSiYuanSubscriptionStatus: number
+        userToken: string
+        userTitles: {
+            name: string,
+            icon: string,
+            desc: string
+        }[]
+    },
+    dragElement?: HTMLElement,
+    dragTitle?: string,
+    dragTab?: ITabDragData,
+    currentDragOverTabHeadersElement?: HTMLElement
+    touchDragActive?: boolean,
+    touchDragGhost?: HTMLElement | null,
+    layout?: {
+        layout?: import("../layout").Layout,
+        centerLayout?: import("../layout").Layout,
+        leftDock?: import("../layout/dock").Dock,
+        rightDock?: import("../layout/dock").Dock,
+        bottomDock?: import("../layout/dock").Dock,
+    }
+    config?: Config.IConf;
+    ws: import("../layout/Model").Model,
+    ctrlIsPressed?: boolean,
+    altIsPressed?: boolean,
+    shiftIsPressed?: boolean,
+    coordinates?: {
+        pageX: number,
+        pageY: number,
+        clientX: number,
+        clientY: number,
+        screenX: number,
+        screenY: number,
+    },
+    menus?: import("../menus").Menus
+    languages?: {
+        [key: string]: any;
+    }
+    bookmarkLabel?: string[]
+    blockPanels: import("../block/Panel").BlockPanel[],
+    dialogs: import("../dialog").Dialog[],
+    viewer?: Viewer,
+    /**
+     * 是否在发布服务下访问
+     */
+    isPublish?: boolean;
+}
+
+/**
+ * convertList 必须通过 /api/transactions 作为单笔、单操作事务提交，blockIDs 为选中的列表、列表项或文本块。
+ * data.type 为 heading、paragraph 或 remove；heading 的 level 为 1 至 6，其他类型忽略 level。
+ * data.recursively 仅展开同类型子列表；列表项绑定迁移到首块并保留行身份和字段，歧义绑定整批拒绝。
+ * 成功后 retData 返回 rootIDs、removedIDs 和 focusID；撤销状态由内核管理，无需提交 undoOperations。
+ */
+type IOperation = Exclude<import("./api").TransactionOperationRequest, {action: import("./api").UnknownTransactionAction}>;
+
+interface IAVFilterOperation {
+    action: "setAttrViewColRelationFilters" | "setAttrViewColRollupFilters";
+    keyID: string;
+}
+
+interface IOperationSrcs {
+    itemID: string,
+    id: string,
+    content?: string,
+    isDetached: boolean
+}
+
+interface IInsertAttrViewBlockRetData {
+    insertedItemIDs: string[];
+    existingItemIDs: string[];
+}
+
+interface IObject {
+    [key: string]: string | number | boolean;
+}
+
+interface IHtmlToImageOptions {
+    [key: string]: unknown;
+    imagePlaceholder?: string;
+    onImageErrorHandler?: (event: Event) => void;
+}
+
+interface IModernScreenshotOptions {
+    [key: string]: unknown;
+    type?: string;
+    scale?: number;
+    maximumCanvasSize?: number;
+    fetch?: {
+        placeholderImage?: string;
+    };
+}
+
+interface ILayoutJSON extends ILayoutOptions {
+    scrollAttr?: IScrollAttr,
+    instance?: string,
+    width?: string,
+    height?: string,
+    title?: string,
+    lang?: string
+    docIcon?: string
+    page?: string
+    path?: string
+    blockId?: string
+    notebookId?: string
+    mode?: TEditorMode
+    action?: TProtyleAction
+    icon?: string
+    rootId?: string
+    databaseRowId?: string
+    databaseRow?: import("../protyle/render/av/openDatabaseRow").IDatabaseRowOpenData
+    active?: boolean
+    pin?: boolean
+    isPreview?: boolean
+    customModelData?: any
+    customModelType?: string
+    config?: Config.IUILayoutTabSearchConfig
+    children?: ILayoutJSON[] | ILayoutJSON
+}
+
+interface ICommandContext {
+    source: "commandPanel" | "shortcut" | "editorShortcut" | "fileTreeShortcut" | "dockShortcut" |
+        "globalShortcut" | "keymap" | "menu" | "api",
+    focus: "global" | "editor" | "fileTree" | "dock",
+    protyle?: IProtyle,
+    range?: Range,
+    fileTree?: import("../layout/dock/Files").Files,
+    dock?: HTMLElement,
+}
+
+interface ICommand {
+    langKey: string, // 用于区分不同快捷键的 key, 同时作为 i18n 的字段名
+    langText?: string, // 显示的文本, 指定后不再使用 langKey 对应的 i18n 文本
+    hotkey?: string, // 快捷键，默认为空字符串
+    customHotkey?: string,
+    hotkeys?: string[], // 默认快捷键列表，优先于 hotkey
+    when?: (context: ICommandContext) => boolean,
+    enabled?: (context: ICommandContext) => boolean,
+    execute?: (context: ICommandContext) => void | Promise<void>
+    callback?: (context?: ICommandContext) => void   // 其余回调存在时将不会触发
+    globalCallback?: (context?: ICommandContext) => void // 焦点不在应用内时执行的回调
+    fileTreeCallback?: (
+        file: import("../layout/dock/Files").Files,
+        context?: ICommandContext
+    ) => void // 焦点在文档树上时执行的回调
+    editorCallback?: (protyle: IProtyle, context?: ICommandContext) => void // 焦点在编辑器上时执行的回调
+    dockCallback?: (element: HTMLElement, context?: ICommandContext) => void // 焦点在 dock 上时执行的回调
+}
+
+interface IPluginData {
+    /** 内核已验证 plugin.json 的设置窗口运行声明；省略时不在设置窗口加载 */
+    settingsWindow?: boolean,
+    displayName: string,
+    name: string,
+    js: string,
+    css: string,
+    i18n: Record<string, import("./api").JSONValue>
+}
+
+interface IPluginDockTab {
+    position: TPluginDockPosition,
+    size: Config.IUILayoutDockPanelSize,
+    icon: string,
+    hotkey?: string,
+    title: string,
+    index?: number
+    show?: boolean
+}
+
+interface IExportOptions {
+    type: string,
+    id: string,
+}
+
+interface IOpenFileOptions {
+    app: import("../index").App,
+    searchData?: Config.IUILayoutTabSearchConfig, // 搜索必填
+    // card 和自定义页签 必填
+    custom?: {
+        title: string,
+        icon: string,
+        data?: any
+        id: string,
+        fn?: (options: {
+            tab: import("../layout/Tab").Tab,
+            data: any,
+        }) => import("../layout/Model").Model,   // plugin 0.8.3 历史兼容
+    }
+    scrollPosition?: ScrollLogicalPosition,
+    assetPath?: string, // asset 必填
+    fileName?: string, // file 必填
+    rootTitleEmpty?: boolean,
+    rootIcon?: string, // 文档图标
+    id?: string,  // file 必填
+    rootID?: string, // file 必填
+    notebookId?: string,
+    position?: string, // file 或者 asset，打开位置
+    page?: number | string, // asset
+    mode?: TEditorMode // file
+    action?: TProtyleAction[]
+    keepCursor?: boolean // file 或 asset，是否跳转到新 tab 上
+    zoomIn?: boolean // 是否缩放
+    removeCurrentTab?: boolean // 在当前页签打开时需移除原有页签
+    openNewTab?: boolean // 使用新页签打开
+    forceCurrentWindow?: boolean // 仅在当前桌面窗口中打开
+    keepAVPanel?: boolean // 打开时保留数据库面板
+    afterOpen?: (model?: import("../layout/Model").Model) => void // 打开后回调
+}
+
+interface ILayoutOptions {
+    direction?: Config.TUILayoutDirection;
+    size?: string;
+    resize?: Config.TUILayoutDirection;
+    type?: Config.TUILayoutType;
+    element?: HTMLElement;
+}
+
+interface ITab {
+    icon?: string;
+    docIcon?: string;
+    title?: string;
+    panel?: string;
+    callback?: (tab: import("../layout/Tab").Tab) => void;
+}
+
+interface ITabDragData {
+    title?: string;
+    icon?: string;
+    docIcon?: string;
+    pin: boolean;
+    focus: boolean;
+    unupdate: boolean;
+}
+
+interface IWebSocketData {
+    cmd?: string;
+    callback?: string;
+    data?: any;
+    msg: string;
+    code: number;
+    sid?: string;
+    context?: any;
+}
+
+interface IGraphCommon {
+    d3: {
+        centerStrength: number
+        collideRadius: number
+        collideStrength: number
+        lineOpacity: number
+        linkDistance: number
+        linkWidth: number
+        nodeSize: number
+        arrow: boolean
+    };
+    type: {
+        blockquote: boolean
+        callout: boolean
+        code: boolean
+        heading: boolean
+        list: boolean
+        listItem: boolean
+        math: boolean
+        paragraph: boolean
+        super: boolean
+        table: boolean
+        tag: boolean
+    };
+}
+
+interface IKeymapItem {
+    bindings?: Config.IKey["bindings"],
+    default: string,
+    custom: string
+}
+
+interface IFile {
+    icon: string;
+    name1: string;
+    alias: string;
+    memo: string;
+    bookmark: string;
+    path: string;
+    name: string;
+    titleEmpty?: boolean;
+    hMtime: string;
+    hCtime: string;
+    hSize: string;
+    dueFlashcardCount?: number;
+    newFlashcardCount?: number;
+    flashcardCount?: number;
+    id: string;
+    count: number;
+    subFileCount: number;
+    childrenSortMode?: number | null;
+}
+
+interface IFileTreeList {
+    files: IFile[];
+    box: string;
+    path: string;
+    effectiveSortMode?: number;
+}
+
+interface IBlockTree {
+    box?: string,
+    revision?: string,
+    number?: string,
+    nodeType?: string,
+    hPath?: string,
+    subType?: string,
+    name: string,
+    nameIsHTML?: boolean,
+    type: string,
+    depth: number,
+    url?: string,
+    label?: string,
+    id?: string,
+    blocks?: IBlock[],
+    count: number,
+    children?: IBlockTree[]
+}
+
+interface IBlock {
+    riffCard?: IRiffCard,
+    depth?: number,
+    box?: string;
+    path?: string;
+    hPath?: string;
+    id?: string;
+    rootID?: string;
+    type?: string;
+    content?: string;
+    number?: string;
+    def?: IBlock;
+    defID?: string
+    defPath?: string
+    refText?: string;
+    name?: string;
+    memo?: string;
+    alias?: string;
+    tag?: string;
+    refs?: IBlock[];
+    children?: IBlock[]
+    length?: number
+    ial: Record<string, string>
+    refCount?: number
+}
+
+interface IRiffCard {
+    due?: string;
+    reps?: number; // 闪卡复习次数
+}
+
+interface IModels {
+    editor: import("../editor").Editor[],
+    graph: import("../layout/dock/Graph").Graph[],
+    outline: import("../layout/dock/Outline").Outline[]
+    backlink: import("../layout/dock/Backlink").Backlink[]
+    inbox: import("../layout/dock/Inbox").Inbox[]
+    files: import("../layout/dock/Files").Files[]
+    bookmark: import("../layout/dock/Bookmark").Bookmark[]
+    tag: import("../layout/dock/Tag").Tag[]
+    asset: import("../asset").Asset[]
+    search: import("../search").Search[]
+    custom: import("../layout/dock/Custom").Custom[]
+}
+
+interface IMenu {
+    checked?: boolean,
+    iconClass?: string,
+    label?: string,
+    click?: (element: HTMLElement, event: MouseEvent) => boolean | void | Promise<boolean | void>
+    type?: "separator" | "submenu" | "readonly" | "empty",
+    accelerator?: string,
+    action?: string,
+    actionLabel?: string,
+    id?: string,
+    submenu?: IMenu[]
+    loadSubmenu?: () => Promise<IMenu[]>
+    disabled?: boolean
+    icon?: string
+    iconHTML?: string
+    current?: boolean
+    bind?: (element: HTMLElement) => void
+    index?: number
+    element?: HTMLElement
+    ignore?: boolean
+    warning?: boolean
+}
+
+interface IBazaarFundingLink {
+    label: string;
+    url: string;
+}
+
+interface IBazaarFunding {
+    openCollective?: string;
+    patreon?: string;
+    github?: string;
+    custom?: string[];
+    links?: IBazaarFundingLink[];
+}
+
+type TBazaarRatingDistribution = [number, number, number, number, number];
+
+interface IBazaarRating {
+    average: number;
+    count: number;
+    distribution: TBazaarRatingDistribution;
+}
+
+interface IBazaarPackageChoice {
+    packageType: string;
+    name: string;
+}
+
+interface IBazaarItem {
+    preferredName: string;
+    minAppVersion: string;
+    disabledInPublish: boolean;
+    kernels: string[];
+    backends: string[];
+    frontends: string[];
+    bootAppearances?: string[];
+    keywords: string[];
+    preferredDesc: string;
+    preferredReadme: string;
+    deprecated?: boolean;
+    deprecatedReason?: Record<string, string>;
+    preferredDeprecatedReason?: string;
+    choices?: IBazaarPackageChoice[];
+    iconURL: string;
+    stars: number;
+    author: string;
+    updated: string;
+    downloads: number;
+    ratingAvailable?: boolean;
+    rating?: IBazaarRating;
+    disallowInstall: boolean;
+    current: boolean;
+    installed: boolean;
+    outdated: boolean;
+    name: string;
+    previewURL: string;
+    repoHash: string;
+    repoRef?: string;
+    repoURL: string;
+    url: string;
+    openIssues: number;
+    version: string;
+    hSize: string;
+    hInstallSize: string;
+    installTime: number;
+    updateTime: number;
+    hInstallDate: string;
+    hUpdated: string;
+    funding?: IBazaarFunding;
+    preferredFunding: string;
+    disallowUpdate: boolean;
+    updateRequiredMinAppVer?: string;
+    invalidReason?: TBazaarPackageInvalidReason;
+    installedIncompatible?: boolean; // 仅插件/主题
+    bazaarIncompatible?: boolean; // 仅插件/主题
+    enabled?: boolean; // 仅 plugin
+    userDisabledInPublish?: boolean; // 仅 plugin
+    hasStorageData?: boolean; // 仅插件
+    modes?: string[]; // 仅 theme
+}
+
+interface IUpdatedBazaarItem {
+    installed: IBazaarItem;
+    available: IBazaarItem;
+}
+
+interface IBazaarPackageDetail {
+    installed?: IBazaarItem;
+    available?: IBazaarItem;
+}
+
+interface IAVColorTheme {
+    color: string;
+    backgroundColor: string;
+}
+
+interface IAVColor {
+    light: IAVColorTheme;
+    dark: IAVColorTheme;
+}
+
+interface IAVCustomColor extends IAVColor {
+    index: number;
+    hidden?: boolean;
+}
+
+interface IAV {
+    id: string;
+    name: string;
+    view: IAVTable | IAVGallery;
+    viewID: string;
+    viewType: TAVView;
+    views: IAVView[];
+    isMirror?: boolean;
+    newItemTemplates?: IAVNewItemTemplate[];
+    /** 关联选择面板新建也使用此默认模板；名称不同时可选择模板名称或输入名称，其他模板配置均保留。 */
+    defaultTemplateID?: string;
+    customColors?: IAVCustomColor[];
+    colorOrder?: string[];
+    usedCustomColorIndexes?: number[];
+    contextFilter?: IAVContextFilter | null;
+    contextFilterFields?: IAVContextFilterField[];
+    target?: IAVRenderTarget;
+}
+
+interface IAVContextFilter {
+    spec: 1;
+    /** 直接关联或目标为关联且显示原值/唯一值的汇总字段；汇总仅用于筛选，不回填新增条目 */
+    keyID: string;
+}
+
+interface IAVContextFilterField {
+    id: string;
+    name: string;
+    icon: string;
+    /** 最终关联目标数据库的 ID；汇总字段返回关联目标，而非中间数据库 */
+    targetAvID: string;
+}
+
+interface IAVRenderTarget {
+    status: "visible" | "filtered" | "itemNotFound" | "groupHidden";
+    itemID: string;
+    groupID?: string;
+    index: number;
+    offset: number;
+    pageSize: number;
+}
+
+type TAVNewItemTarget = "detached" | "document";
+type TAVNewItemFieldValueMode = "static" | "currentTime";
+
+interface IAVNewItemSaveLocation {
+    boxID?: string;
+    pathTemplate: string;
+}
+
+interface IAVNewItemFieldValue {
+    mode: TAVNewItemFieldValueMode;
+    value?: IAVCellValue;
+}
+
+interface IAVNewItemTemplate {
+    id: string;
+    name: string;
+    /** 游离条目和文档条目均支持预设图标。 */
+    icon?: string;
+    targetType: TAVNewItemTarget;
+    primaryKeyTemplate?: string;
+    fieldValues?: Record<string, IAVNewItemFieldValue>;
+    saveLocation?: IAVNewItemSaveLocation;
+    contentTemplatePath?: string;
+    hideInFileTree?: boolean;
+    /** 创建后分屏打开条目；省略时保留旧行为（仅日历自动打开），false 表示不打开。 */
+    openAfterCreate?: boolean;
+}
+
+/** 单字段条件颜色规则按顺序匹配，默认背景同样占据优先级。 */
+interface IAVConditionalColorRule {
+    id: string;
+    filter: IAVFilter;
+    target: "item" | "property";
+    color: IAVCellSelectValue | null;
+    matchOption: boolean;
+}
+
+/** 渲染结果附在条目上，不写回字段值；前面的属性色优先于后面的整条目色。 */
+interface IAVItemConditionalColors {
+    background?: IAVCellSelectValue;
+    properties?: {[key: string]: IAVCellSelectValue};
+}
+
+interface IAVView {
+    conditionalColors?: IAVConditionalColorRule[];
+    name?: string;
+    desc?: string;
+    id?: string;
+    type?: TAVView;
+    icon?: string;
+    hideAttrViewName?: boolean;
+    pageSize?: number;
+    showIcon?: boolean;
+    wrapField?: boolean;
+    groupHidden?: number,  // 0：显示，1：空白隐藏，2：手动隐藏
+    groupFolded?: boolean,
+    filters?: IAVFilter[],
+    sorts?: IAVSort[],
+    groups?: IAVView[]
+    group?: IAVGroup
+    groupKey?: IAVColumn
+    groupValue?: IAVCellValue
+}
+
+interface IAVFieldView {
+    id: string;
+    name: string;
+    icon: string;
+    type: TAVView;
+    hidden: boolean;
+}
+
+/**
+ * 日历的持久化设置，也是 setAttrViewCalendar 事务的完整 data。
+ * 月周模式和当前浏览日期由各编辑器独立维护，不写入共享设置。
+ * 切换布局保留其他布局及分组设置；日历渲染不应用分组。
+ */
+interface IAVCalendarSettings {
+    /**
+     * 绑定一个 date、created 或 updated 字段；系统时间不支持通过日历拖动修改。
+     * date 字段设置显示模板时按模板结果排布，原始日期保持不变。
+     * 支持 YYYY-MM-DD、字段 dateFormat 指定的数字日期格式，以及当前语言的本地日期格式。
+     * 可附加 HH:mm[:ss]（以空格或 T 分隔），按日历请求时区解析，忽略首尾空白；斜杠日期不猜测日月顺序。
+     * 空值或无效结果不显示，也不进入待安排列表；计算日期不支持拖动、清空或按日期新建。
+     * 空字符串表示未绑定；字段缺失或类型变化时保留绑定，日历返回空行，不自动改绑或回填日期。
+     * createAttributeViewItem 的可选 calendarDate 是毫秒时间戳，仅支持绑定普通 date 字段的日历。
+     * 指定时按全天日期覆盖模板中该字段的值，与模板其他字段及条目创建共用一个可撤销事务。
+     * 系统时间源或带显示模板的日期字段拒绝指定 calendarDate；省略或传 null 时沿用常规创建流程。
+     */
+    dateKeyID: string;
+    /** 可选单选字段，使用已有选项颜色；空字符串表示不使用字段颜色。 */
+    colorKeyID: string;
+    /** 一周起始日，0 为星期日，1 为星期一，依次至 6 为星期六。 */
+    weekStart: number;
+    /** 月视图折叠前的条目行数：3、5、10 或 -1（全部）；省略或 0 使用 3，周视图显示全部，不影响查询范围。 */
+    rowLimit?: number;
+    /** 在日历条目中显示非主键字段的名称，默认关闭；按视图保存，支持撤销和重做。 */
+    displayFieldName?: boolean;
+}
+
+/**
+ * renderAttributeView、renderHistoryAttributeView 和 renderSnapshotAttributeView 的可选 calendarRange。
+ * 范围为毫秒时间戳的半开区间 [start, end)，必须满足 start < end，跨度不超过 63 * 24 小时。
+ * 仅作用于本次日历渲染，不写入共享视图、历史或快照；无效区间返回错误。
+ * 省略或传 null 时不限制日期范围，保留完整渲染及导出的调用兼容性。
+ * 日历在筛选和排序后按区间交集取行，不应用行分页；定位目标可额外包含区间外的匹配条目。
+ * 全天结束日期包含当天，带时间的结束端点不包含在区间内；缺少一个端点时按单点处理。
+ * 反向区间按开始端点显示，原值保持不变；无日期条目不显示。
+ * 发布读取继续过滤不可访问条目，日期范围和定位参数不扩大访问权限。
+ */
+interface IAVCalendarRange {
+    /** 范围起点，单位为毫秒，包含该时刻。 */
+    start: number;
+    /** 范围终点，单位为毫秒，不包含该时刻。 */
+    end: number;
+    /** 有效的客户端 IANA 时区，用于解释本地日期及夏令时。 */
+    timeZone: string;
+}
+
+// 表格、列表和日历共用行列结构，布局由 viewType 区分。
+interface IAVTable extends IAVView {
+    /** 仅日历布局返回的持久化字段设置。 */
+    calendar?: IAVCalendarSettings;
+    /** 回显本次请求的日期范围，省略范围的请求不返回此字段。 */
+    calendarRange?: IAVCalendarRange;
+    /**
+     * 可访问且通过筛选的定位条目的开始时间，单位为毫秒；无有效定位日期时省略。
+     * 发布读取先过滤不可访问条目，再重新计算此日期、定位行索引及 rowCount。
+     */
+    calendarTargetDate?: number;
+    columns: IAVColumn[],
+    rows: IAVRow[],
+    rowCount: number,
+}
+
+interface IAVVirtualData {
+    renderedStart: number;
+    renderedEnd: number;
+    topSpacerHeight: number;
+    rowOffset?: number;
+    locate?: boolean;
+}
+
+interface IAVGallery extends IAVView {
+    coverFrom: number;    // 0：无，1：内容图，2：资源字段，3：内容块
+    coverFromAssetKeyID?: string;
+    cardSize: number;   // 0：小卡片，1：中卡片，2：大卡片
+    cardWidth: number;
+    cardLayout: number;   // 0：列表，1：紧凑
+    cardAspectRatio: number;
+    cardAspectRatioValue: number;
+    displayFieldName: boolean;
+    displayEmptyFields: boolean;
+    fitImage: boolean;
+    cards: IAVGalleryItem[],
+    desc?: string
+    fields: IAVColumn[]
+    cardCount: number,
+}
+
+interface IAVKanban extends IAVView {
+    coverFrom: number;    // 0：无，1：内容图，2：资源字段，3：内容块
+    coverFromAssetKeyID?: string;
+    cardSize: number;   // 0：小卡片，1：中卡片，2：大卡片
+    cardWidth: number;
+    cardLayout: number;   // 0：列表，1：紧凑
+    cardAspectRatio: number;
+    cardAspectRatioValue: number;
+    displayFieldName: boolean;
+    displayEmptyFields: boolean;
+    fitImage: boolean;
+    cards: IAVGalleryItem[],
+    desc?: string
+    fields: IAVColumn[]
+    cardCount: number,
+    fillColBackgroundColor: boolean
+}
+
+interface IAVFilter {
+    column?: string,                                  // 叶子节点：字段（列）ID
+    valueSource?: "stored" | "rendered",             // 叶子节点：值来源，默认为存储值
+    operator?: TAVFilterOperator | "",                     // 叶子节点：操作符
+    quantifier?: string,                              // 叶子节点：量词
+    value?: IAVCellValue,                             // 叶子节点：过滤值
+    relativeDate?: IAVRelativeDate,                   // 叶子节点：相对时间
+    relativeDate2?: IAVRelativeDate,                  // 叶子节点：第二个相对时间
+    dateEndpoint?: "start" | "end",                   // 叶子节点：日期端点，默认为开始时间
+    combination?: "and" | "or",                       // 分组节点：子条件组合方式
+    filters?: IAVFilter[],                            // 分组节点：子节点（递归）
+}
+
+interface IAVRelativeDate {
+    count: number;   // 数量
+    unit: number;    // 单位：0: 天、1: 周、2: 月、3: 年
+    direction: number;   // 方向：-1: 前、0: 现在、1: 后
+}
+
+interface IAVGroup {
+    field: string,
+    valueSource?: "stored" | "rendered",             // 值来源，默认为存储值
+    method?: number //  0: 按值分组、1: 按数字范围分组、2: 按相对日期分组、3: 按天日期分组、4: 按周日期分组、5: 按月日期分组、6: 按年日期分组
+    range?: {
+        numStart: number // 数字范围起始值 0
+        numEnd: number   // 数字范围结束值 1000
+        numStep: number  // 数字范围步长 100
+    }
+    hideEmpty?: boolean
+    order?: number  // 升序: 0(默认), 降序: 1, 手动排序: 2, 按选项排序: 3
+}
+
+interface IAVSort {
+    column: string,
+    valueSource?: "stored" | "rendered",             // 值来源，默认为存储值
+    order: "ASC" | "DESC" | "",
+    dateEndpoint?: "start" | "end"
+}
+
+interface IAVColumn {
+    attributePanelVisibility?: "" | "always" | "hide-empty" | "hide",
+    width?: string,
+    align?: TAVAlign,
+    icon?: string,
+    id?: string,
+    name?: string,
+    desc?: string,
+    wrap?: boolean,
+    pin?: boolean,
+    hidden?: boolean,
+    fullRow?: boolean,
+    type?: TAVCol,
+    numberFormat?: string,
+    dateFormat?: TAVDateFormat,
+    template?: string,
+    renderTemplate?: string,
+    calc?: IAVCalc,
+    updated?: {
+        includeTime: boolean
+    }
+    created?: {
+        includeTime: boolean
+    }
+    date?: {
+        autoFillNow: boolean,
+        fillSpecificTime: boolean,
+    }
+    // 选项列表
+    options?: {
+        name: string,
+        color: string,
+        resolvedColor?: IAVColor,
+        desc?: string,
+    }[],
+    relation?: IAVColumnRelation,
+    rollup?: IAVCellRollupValue
+}
+
+interface IAVRow {
+    conditionalColors?: IAVItemConditionalColors;
+    id: string,
+    cells: IAVCell[]
+}
+
+interface IAVGalleryItem {
+    conditionalColors?: IAVItemConditionalColors;
+    coverURL?: string;
+    coverContent?: string;
+    coverPosition?: IAVCardCoverPosition;
+    id: string;
+    values: IAVCell[];
+}
+
+interface IAVCardCoverPosition {
+    image: string;
+    x: number;
+    y: number;
+}
+
+interface IAVCell {
+    id?: string,
+    color?: string,
+    bgColor?: string,
+    value?: IAVCellValue,
+    valueType?: TAVCol,
+}
+
+interface IAVCellValue {
+    keyID?: string,
+    id?: string,
+    blockID?: string // 为 row id
+    type?: TAVCol,
+    renderedContent?: string,
+    hasRenderTemplate?: boolean,
+    isDetached?: boolean,
+    text?: {
+        content: string,
+        rich?: {
+            spec: 1,
+            format: "kramdown",
+            content: string
+        } | null
+    },
+    number?: {
+        content?: number,
+        isNotEmpty: boolean,
+        format?: string,
+        formattedContent?: string
+    },
+    mSelect?: IAVCellSelectValue[]
+    mAsset?: IAVCellAssetValue[]
+    block?: {
+        content: string,
+        id?: string,
+        /** 游离条目可独立设置图标；绑定条目与目标块共享图标，无图标的普通块在绑定时继承条目图标。 */
+        icon?: string,
+        refSubtype?: "s" | "d"
+    }
+    url?: {
+        content: string
+    }
+    phone?: {
+        content: string
+    }
+    location?: IAVCellLocationValue
+    email?: {
+        content: string
+    }
+    template?: {
+        content: string
+    },
+    checkbox?: {
+        checked: boolean,
+        content?: string, // gallery 中显示 https://github.com/siyuan-note/siyuan/issues/15389
+    }
+    relation?: IAVCellRelationValue
+    rollup?: {
+        contents?: IAVCellValue[]
+    }
+    date?: IAVCellDateValue
+    created?: IAVCellDateValue
+    updated?: IAVCellDateValue
+}
+
+/**
+ * 坐标统一使用 WGS84，不自动转换；界面按经度、纬度显示，规范复制与导出文本按纬度、经度排列。
+ * 位置字段的文本筛选条件使用 IAVCellValue.text.content，不把查询词解析成坐标。
+ */
+interface IAVCellLocationValue {
+    name?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    /** 原始坐标输入仅作为来源信息，不参与判空、筛选和排序。 */
+    originalInput?: string;
+}
+
+interface IAVCellRelationValue {
+    blockIDs: string[];
+    contents?: IAVCellValue[];
+}
+
+interface IAVCellDateValue {
+    content?: number,
+    isNotEmpty?: boolean
+    content2?: number,
+    isNotEmpty2?: boolean
+    hasEndDate?: boolean
+    formattedContent?: string,
+    isNotTime?: boolean // 默认 true
+}
+
+interface IAVCellSelectValue {
+    content: string,
+    color: string,
+    resolvedColor?: IAVColor
+}
+
+interface IAVCellAssetValue {
+    content: string,
+    name: string,
+    type: "file" | "image"
+}
+
+interface IAVColumnRelation {
+    avID?: string;
+    backKeyID?: string;
+    isTwoWay?: boolean;
+    candidateFilters?: IAVFilter[];
+}
+
+interface IAVCellRollupValue {
+    relationKeyID?: string;  // 关联列 ID
+    keyID?: string;
+    calc?: IAVCalc;
+    filters?: IAVFilter[];
+}
+
+interface IAVCalc {
+    operator?: string,
+    template?: string,
+    result?: IAVCellValue
+}
+
+interface IPublishAccessItem {
+    id: string,
+    visible: boolean,
+    password: string,
+    disable: boolean
+    iconHTML?: string
+}
+
+interface IKernelPlugin {
+    /**
+     * 内核插件的状态管理接口
+     */
+    state: IKernelPluginState;
+
+    /**
+     * 内核插件的 JSON-RPC 调用接口
+     */
+    rpc: IKernelPluginRpc;
+}
+
+interface IKernelPluginState {
+    /**
+     * 内核插件的当前状态
+     */
+    code: TKernelPluginState;
+
+    /**
+     * 内核插件状态的描述信息
+     */
+    description: string;
+}
+
+interface IKernelPluginRpcCall {
+    /**
+     * JSON-RPC 2.0 中 method 必须是 string，且插件开发者需要保证传入的方法名与内核插件绑定的方法名一致，否则可能会导致调用失败
+     */
+    method: TJsonRpcMethod;
+
+    /**
+     * JSON-RPC 2.0 中 id 可以是 string、number 或 null，但为了兼容性和实用性，插件系统中不允许使用 null 作为 id
+     *
+     * 不设置时且 notification 不为 true 时会自动生成一个唯一的 id，设置时必须保证 id 的唯一性，否则可能会导致响应错误或混乱
+     */
+    id?: TJsonRpcId;
+
+    /**
+     * JSON-RPC 2.0 中 params 可以是 array 或 object，插件开发者需要自行保证传入参数与内核插件绑定的方法参数一致
+     */
+    params?: any[] | Record<string, any>;
+
+    /**
+     * 是否为通知，通知不会有响应，且不应传入 id
+     * @defaultValue false
+     */
+    notification?: boolean;
+}
+
+interface IKernelPluginRpcRequest extends IKernelPluginRpcCall {
+    jsonrpc: "2.0";
+}
+
+interface IKernelPluginRpcBaseResponse {
+    jsonrpc: "2.0";
+}
+
+interface IKernelPluginRpcResultResponse extends IKernelPluginRpcBaseResponse {
+    id: TJsonRpcId;
+    result?: any;
+}
+
+interface IKernelPluginRpcErrorResponse extends IKernelPluginRpcBaseResponse {
+    id: TJsonRpcId | null;
+    error?: any;
+}
+
+interface IKernelPluginRpcError {
+    code: number;
+    message: string;
+    data?: any;
+}
+
+interface IKernelPluginRpc {
+    /**
+     * 通过 {@link Proxy} 实现的动态方法调用，插件开发者可以直接调用 `call.方法名(params)` 来调用内核插件暴露的方法，无需关心 JSON-RPC 的细节
+     */
+    call: Record<TJsonRpcMethod, (...args: TJsonRpcMethodParams) => Promise<any>>;
+
+    /**
+     * 通过 {@link Proxy} 实现的动态方法调用，插件开发者可以直接调用 `notify.方法名(...args)` 来发送通知给内核插件，无需关心 JSON-RPC 的细节
+     */
+    notify: Record<TJsonRpcMethod, (...args: TJsonRpcMethodParams) => void>;
+
+    /**
+     * 批量调用方法，接受一个方法调用数组，返回一个结果数组，结果数组中的每一项对应方法调用数组中非通知的每一项，包含成功的结果或错误信息
+     */
+    batch: (...calls: IKernelPluginRpcCall[]) => Promise<IKernelPluginRpcError | (IKernelPluginRpcResultResponse | IKernelPluginRpcErrorResponse)[]>;
+
+    /**
+     * 绑定内核插件调用时的事件处理函数，插件开发者可以通过 `bind("方法名", handler)` 来监听内核插件通过 JSON-RPC 推送到客户端插件的通知
+     */
+    bind: (method: TJsonRpcMethod, handler: TJsonRpcHandler<void>) => void;
+
+    /**
+     * 解绑事件处理函数，插件开发者可以通过 `unbind("方法名", handler)` 来停止监听内核插件通过 JSON-RPC 推送到客户端插件的通知
+     */
+    unbind: (method: TJsonRpcMethod, handler: TJsonRpcHandler<void>) => void;
+}
+
+/**
+ * SiYuan URI 块信息接口，用于描述通过 SiYuan URI 协议传递的块信息
+ */
+interface ISiYuanUriBlockInfo {
+    /**
+     * 块 ID
+     */
+    id: string;
+
+    /**
+     * 是否聚焦该块
+     *
+     * @defaultValue false
+     */
+    focus: boolean;
+
+    /**
+     * 是否全屏显示该块
+     *
+     * @defaultValue false
+     */
+    fullscreen: boolean;
+    avItemID?: string;
+    avViewID?: string;
+    avGroupID?: string;
+    avStandalone?: boolean;
+}

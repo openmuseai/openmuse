@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_session_open,堆上打开会话,.docx bytes,DocumentSession (Box TextDocument),wc-05;DocumentOpen,02_function_session_append;04_function_session_relayout,libs/word-core,pass
+2,02_function_session_append,末尾插入段,session+text,main_length delta,01_function_session_open;CoreHelper,04_function_session_relayout,libs/word-core,pass
+3,03_function_caret_hit,Frame点到cp,LayoutFrame+(page x y),Option cp,wr-17;04_function_session_relayout,cursor,libs/word-core,pass
+4,04_function_session_relayout,改后全量重排,session+fonts+view,LayoutFrame,01_function_session_open;02_function_session_append;wr-09..15,painter,libs/word-core,pass

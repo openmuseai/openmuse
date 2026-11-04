@@ -1,0 +1,397 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"sync"
+
+	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/bazaar"
+	"github.com/siyuan-note/siyuan/kernel/util"
+	"golang.org/x/sync/errgroup"
+)
+
+var (
+	bazaarRatingCloudServer           = util.GetCloudServer
+	bazaarRatingValidatePackage       = validateBazaarPackageRatingRequest0
+	bazaarRatingUserToken             = getBazaarRatingUserToken
+	bazaarRatingInstalledPackageInfos = GetInstalledPackageInfos
+	bazaarRatingExistingPackageNames  = bazaar.GetExistingBazaarPackageNames
+	bazaarRatingPublicPackageRatings  = bazaar.GetBazaarPackageRatings
+	bazaarRatingAfterUpdate           = bazaar.GetBazaarPackageRatingAfterUpdate
+	bazaarRatingSetMu                 sync.Mutex
+)
+
+const (
+	bazaarPackageRatingBatchSize       = 1024
+	bazaarPackageUserRatingConcurrency = 8
+)
+
+type bazaarRatingCloudResult[T any] struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data T      `json:"data"`
+}
+
+type bazaarPackageUserRatingData struct {
+	Rating int `json:"rating"`
+}
+
+type bazaarPackageSetRatingData struct {
+	Rating          int                   `json:"rating"`
+	RatingAvailable *bool                 `json:"ratingAvailable"`
+	PublicRating    *bazaar.PackageRating `json:"publicRating"`
+	Distribution    []int64               `json:"distribution"`
+}
+
+// ErrBazaarRatingRateLimited 表示评分请求受到云端频率限制。
+var ErrBazaarRatingRateLimited = errors.New("bazaar rating rate limited")
+
+// ErrBazaarPackagePending 表示云端尚未同步包信息。
+var ErrBazaarPackagePending = errors.New("bazaar package information has not synced yet")
+
+// GetInstalledBazaarPackageRatings 获取指定已安装包的公开评分。
+func GetInstalledBazaarPackageRatings(ctx context.Context, pkgType string,
+	packageNames []string) (ratings map[string]*bazaar.PackageRating, eligiblePackageNames []string, err error) {
+	eligiblePackageNames, err = getInstalledOfficialBazaarPackageNames(ctx, pkgType, packageNames)
+	if nil != err {
+		return nil, nil, err
+	}
+	if 0 == len(eligiblePackageNames) {
+		return map[string]*bazaar.PackageRating{}, []string{}, nil
+	}
+	ratings, available := bazaarRatingPublicPackageRatings(ctx, eligiblePackageNames)
+	if !available {
+		return nil, nil, errors.New("marketplace package ratings are unavailable")
+	}
+	return ratings, eligiblePackageNames, nil
+}
+
+// GetInstalledBazaarPackageUserRatings 获取指定已安装官方包的当前用户评分。
+func GetInstalledBazaarPackageUserRatings(ctx context.Context, pkgType string,
+	packageNames []string) (userRatings map[string]int, eligiblePackageNames []string, err error) {
+	if !isValidBazaarPackageType(pkgType) {
+		return nil, nil, errors.New("invalid package type")
+	}
+	if bazaarPackageRatingBatchSize < len(packageNames) {
+		return nil, nil, errors.New("too many package names")
+	}
+	token, err := bazaarRatingUserToken()
+	if nil != err {
+		return nil, nil, err
+	}
+	eligiblePackageNames, err = getInstalledOfficialBazaarPackageNames(ctx, pkgType, packageNames)
+	if nil != err {
+		return nil, nil, err
+	}
+	if 0 == len(eligiblePackageNames) {
+		return map[string]int{}, []string{}, nil
+	}
+
+	userRatings, err = requestBazaarPackageUserRatings(ctx, token, eligiblePackageNames)
+	if nil != err {
+		return nil, nil, err
+	}
+	// 仅返回查询成功的包，失败项保持未加载状态，允许后续重新查询。
+	loadedPackageNames := make([]string, 0, len(userRatings))
+	for _, packageName := range eligiblePackageNames {
+		if _, loaded := userRatings[packageName]; loaded {
+			loadedPackageNames = append(loadedPackageNames, packageName)
+		}
+	}
+	eligiblePackageNames = loadedPackageNames
+	return userRatings, eligiblePackageNames, nil
+}
+
+// GetBazaarPackageRating 获取已安装官方包的公开评分和当前用户评分。
+func GetBazaarPackageRating(ctx context.Context, pkgType, packageName string) (rating *bazaar.PackageRating,
+	ratingAvailable bool, userRating int, err error) {
+	token, err := bazaarRatingValidatePackage(ctx, pkgType, packageName)
+	if nil != err {
+		return nil, false, 0, err
+	}
+
+	data := bazaarPackageUserRatingData{}
+	err = requestBazaarPackageRating(ctx, "/apis/siyuan/bazaar/getBazaarPackageRating", map[string]any{
+		"token":       token,
+		"packageName": packageName,
+	}, &data)
+	if nil != err {
+		return nil, false, 0, err
+	}
+	if 0 > data.Rating || 5 < data.Rating {
+		return nil, false, 0, errors.New("invalid user rating returned by cloud server")
+	}
+
+	rating, ratingAvailable = bazaar.GetBazaarPackageRating(ctx, packageName)
+	return rating, ratingAvailable, data.Rating, nil
+}
+
+// SetBazaarPackageRating 设置或取消已安装官方包的当前用户评分。
+func SetBazaarPackageRating(ctx context.Context, pkgType, packageName string, userRating int) (rating *bazaar.PackageRating,
+	ratingAvailable bool, retUserRating int, err error) {
+	if 0 > userRating || 5 < userRating {
+		return nil, false, 0, errors.New("rating must be an integer from 0 to 5")
+	}
+	bazaarRatingSetMu.Lock()
+	defer bazaarRatingSetMu.Unlock()
+
+	token, err := bazaarRatingValidatePackage(ctx, pkgType, packageName)
+	if nil != err {
+		return nil, false, 0, err
+	}
+
+	region := util.CurrentCloudRegion
+	data := bazaarPackageSetRatingData{}
+	err = requestBazaarPackageRating(ctx, "/apis/siyuan/bazaar/setBazaarPackageRating", map[string]any{
+		"token":       token,
+		"packageName": packageName,
+		"rating":      userRating,
+	}, &data)
+	if nil != err {
+		return nil, false, 0, err
+	}
+	if data.Rating != userRating {
+		return nil, false, 0, errors.New("invalid user rating returned by cloud server")
+	}
+	if nil != data.RatingAvailable {
+		if !*data.RatingAvailable {
+			if nil != data.PublicRating {
+				return nil, false, 0, errors.New("invalid public rating returned by cloud server")
+			}
+			if 0 == len(data.Distribution) {
+				return nil, false, data.Rating, nil
+			}
+		} else {
+			if nil == data.PublicRating {
+				if 0 != data.Rating || !bazaar.ClearBazaarPackageRating(packageName) {
+					return nil, false, 0, errors.New("invalid public rating returned by cloud server")
+				}
+				rating, ratingAvailable = bazaar.GetCachedBazaarPackageRating(packageName)
+				if !ratingAvailable || nil != rating {
+					return nil, false, 0, errors.New("invalid public rating returned by cloud server")
+				}
+				return nil, true, data.Rating, nil
+			}
+			if 0 < data.Rating && 1 > data.PublicRating.Distribution[data.Rating-1] {
+				return nil, false, 0, errors.New("invalid public rating returned by cloud server")
+			}
+			if !bazaar.ApplyBazaarPackageRating(packageName, data.PublicRating) {
+				return nil, false, 0, errors.New("invalid public rating returned by cloud server")
+			}
+			rating, ratingAvailable = bazaar.GetCachedBazaarPackageRating(packageName)
+			if !ratingAvailable || nil == rating {
+				return nil, false, 0, errors.New("invalid public rating returned by cloud server")
+			}
+			return rating, true, data.Rating, nil
+		}
+	} else if nil != data.PublicRating {
+		return nil, false, 0, errors.New("invalid public rating returned by cloud server")
+	}
+	if 5 != len(data.Distribution) {
+		return nil, false, 0, errors.New("invalid rating distribution returned by cloud server")
+	}
+	distribution := [5]int64(data.Distribution)
+	if 0 < data.Rating && 1 > distribution[data.Rating-1] {
+		return nil, false, 0, errors.New("invalid rating distribution returned by cloud server")
+	}
+	if !bazaar.ApplyBazaarPackageRatingDistribution(region, packageName, distribution) {
+		return nil, false, 0, errors.New("invalid rating distribution returned by cloud server")
+	}
+
+	rating, ratingAvailable = bazaarRatingAfterUpdate(ctx, region, packageName, distribution)
+	return rating, ratingAvailable, data.Rating, nil
+}
+
+func validateBazaarPackageRatingRequest0(ctx context.Context, pkgType, packageName string) (token string, err error) {
+	if !isValidBazaarPackageType(pkgType) {
+		return "", errors.New("invalid package type")
+	}
+	if !bazaar.IsValidPackageName(packageName) {
+		return "", errors.New("invalid package name")
+	}
+	token, err = bazaarRatingUserToken()
+	if nil != err {
+		return "", err
+	}
+
+	installedInfos, _, _, err := GetInstalledPackageInfos(pkgType)
+	if nil != err {
+		return "", err
+	}
+	installed := false
+	for _, info := range installedInfos {
+		if "" == info.Pkg.InvalidReason && packageName == info.Pkg.Name {
+			installed = true
+			break
+		}
+	}
+	if !installed {
+		return "", errors.New("marketplace package is not installed")
+	}
+
+	exists, err := bazaar.HasBazaarPackage(ctx, pkgType, packageName)
+	if nil != err {
+		return "", err
+	}
+	if !exists {
+		return "", errors.New("official marketplace package not found")
+	}
+	return token, nil
+}
+
+func getBazaarRatingUserToken() (string, error) {
+	user := Conf.GetUser()
+	if nil == user || "" == user.UserToken {
+		return "", errors.New(Conf.Language(31))
+	}
+	return user.UserToken, nil
+}
+
+func getInstalledOfficialBazaarPackageNames(ctx context.Context, pkgType string,
+	packageNames []string) ([]string, error) {
+	if !isValidBazaarPackageType(pkgType) {
+		return nil, errors.New("invalid package type")
+	}
+	installedInfos, _, _, err := bazaarRatingInstalledPackageInfos(pkgType)
+	if nil != err {
+		return nil, err
+	}
+	installed := make(map[string]bool, len(installedInfos))
+	for _, info := range installedInfos {
+		if "" == info.Pkg.InvalidReason {
+			installed[info.Pkg.Name] = true
+		}
+	}
+
+	names := make([]string, 0, len(packageNames))
+	seen := make(map[string]bool, len(packageNames))
+	for _, packageName := range packageNames {
+		if !bazaar.IsValidPackageName(packageName) {
+			return nil, fmt.Errorf("invalid package name: %s", packageName)
+		}
+		if !installed[packageName] || seen[packageName] {
+			continue
+		}
+		seen[packageName] = true
+		names = append(names, packageName)
+	}
+	if 0 == len(names) {
+		return []string{}, nil
+	}
+	return bazaarRatingExistingPackageNames(ctx, pkgType, names)
+}
+
+// requestBazaarPackageUserRatings 使用有限并发聚合单包查询，避免大量已安装包同时占用云端连接。
+func requestBazaarPackageUserRatings(ctx context.Context, token string, packageNames []string) (map[string]int, error) {
+	userRatings := make(map[string]int, len(packageNames))
+	jobs := make(chan string, len(packageNames))
+	for _, packageName := range packageNames {
+		jobs <- packageName
+	}
+	close(jobs)
+
+	var group errgroup.Group
+	var firstErr error
+	workerCount := min(bazaarPackageUserRatingConcurrency, len(packageNames))
+	var resultMu sync.Mutex
+	for range workerCount {
+		group.Go(func() error {
+			for {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case packageName, ok := <-jobs:
+					if !ok {
+						return nil
+					}
+					data := bazaarPackageUserRatingData{}
+					err := requestBazaarPackageRating(ctx, "/apis/siyuan/bazaar/getBazaarPackageRating", map[string]any{
+						"token":       token,
+						"packageName": packageName,
+					}, &data)
+					if nil == err && (0 > data.Rating || 5 < data.Rating) {
+						err = errors.New("invalid user rating returned by cloud server")
+					}
+					resultMu.Lock()
+					if nil == err {
+						userRatings[packageName] = data.Rating
+					} else if nil == firstErr {
+						firstErr = err
+					}
+					resultMu.Unlock()
+				}
+			}
+		})
+	}
+	if err := group.Wait(); nil != err {
+		return nil, err
+	}
+	if err := ctx.Err(); nil != err {
+		return nil, err
+	}
+	if 0 == len(userRatings) && nil != firstErr {
+		return nil, firstErr
+	}
+	return userRatings, nil
+}
+
+func requestBazaarPackageRating[T any](ctx context.Context, endpoint string, body map[string]any, data *T) error {
+	token, _ := body["token"].(string)
+	invalidUser := cloudAccountAuthFailureHandler(token)
+	result := bazaarRatingCloudResult[T]{}
+	errorResult := bazaarRatingCloudResult[struct {
+		ErrorCode string `json:"errorCode"`
+	}]{}
+	resp, err := httpclient.NewCloudRequest30s().SetContext(ctx).SetSuccessResult(&result).SetBody(body).
+		Post(bazaarRatingCloudServer() + endpoint)
+	if nil != err {
+		if nil != ctx.Err() {
+			return ctx.Err()
+		}
+		logging.LogWarnf("request bazaar package rating failed: %s", err)
+		return ErrFailedToConnectCloudServer
+	}
+	if http.StatusUnauthorized == resp.StatusCode {
+		invalidUser()
+		return errors.New(Conf.Language(31))
+	}
+	if http.StatusTooManyRequests == resp.StatusCode {
+		return ErrBazaarRatingRateLimited
+	}
+	if http.StatusOK != resp.StatusCode {
+		if body, readErr := resp.ToBytes(); nil == readErr {
+			_ = json.Unmarshal(body, &errorResult)
+		}
+		if http.StatusServiceUnavailable == resp.StatusCode && "bazaarPackagePending" == errorResult.Data.ErrorCode {
+			return ErrBazaarPackagePending
+		}
+		logging.LogWarnf("request bazaar package rating [%s] failed: HTTP %d", body["packageName"], resp.StatusCode)
+		return fmt.Errorf("request bazaar package rating failed: HTTP %d (%s)", resp.StatusCode, http.StatusText(resp.StatusCode))
+	}
+	if 0 != result.Code {
+		if "" != result.Msg {
+			return errors.New(result.Msg)
+		}
+		return errors.New("request bazaar package rating failed")
+	}
+	*data = result.Data
+	return nil
+}
+
+func isValidBazaarPackageType(pkgType string) bool {
+	switch pkgType {
+	case "plugins", "widgets", "icons", "templates", "themes":
+		return true
+	default:
+		return false
+	}
+}

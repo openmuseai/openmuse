@@ -1,0 +1,642 @@
+{
+  "filePath": "/Users/mac/src/ioffice/koffice/writer/core/cn/wps/collections/IntervalNode.java",
+  "createdAt": "2026-06-24T02:06:18.623Z",
+  "version": 1,
+  "packageName": "cn.wps.collections",
+  "lines": [
+    {
+      "id": "jl:0",
+      "ln": 0,
+      "text": "package cn.wps.collections;",
+      "type": "package"
+    },
+    {
+      "id": "jl:1",
+      "ln": 1,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:2",
+      "ln": 2,
+      "text": "public abstract class IntervalNode extends PositionNode {",
+      "type": "class_decl"
+    },
+    {
+      "id": "jl:3",
+      "ln": 3,
+      "text": "   public abstract int getLength();",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:4",
+      "ln": 4,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:5",
+      "ln": 5,
+      "text": "   public abstract void setLength(int var1);",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:6",
+      "ln": 6,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:7",
+      "ln": 7,
+      "text": "   public String toString() {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:8",
+      "ln": 8,
+      "text": "      StringBuilder sb = new StringBuilder();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:9",
+      "ln": 9,
+      "text": "      sb.append(this.getClass().getSimpleName());",
+      "type": "statement"
+    },
+    {
+      "id": "jl:10",
+      "ln": 10,
+      "text": "      if (this.isHead()) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:11",
+      "ln": 11,
+      "text": "         sb.append(\"(head)\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:12",
+      "ln": 12,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:13",
+      "ln": 13,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:14",
+      "ln": 14,
+      "text": "      if (this.isRoot()) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:15",
+      "ln": 15,
+      "text": "         sb.append(\"(root)\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:16",
+      "ln": 16,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:17",
+      "ln": 17,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:18",
+      "ln": 18,
+      "text": "      if (RBBalancer.isRed(this)) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:19",
+      "ln": 19,
+      "text": "         sb.append(\"\\ncolor = red\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:20",
+      "ln": 20,
+      "text": "      } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:21",
+      "ln": 21,
+      "text": "         sb.append(\"\\ncolor = black\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:22",
+      "ln": 22,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:23",
+      "ln": 23,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:24",
+      "ln": 24,
+      "text": "      if (!this.isHead()) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:25",
+      "ln": 25,
+      "text": "         sb.append(\"\\nposition = \" + this.position());",
+      "type": "statement"
+    },
+    {
+      "id": "jl:26",
+      "ln": 26,
+      "text": "         sb.append(\"\\nlength = \" + this.getLength());",
+      "type": "statement"
+    },
+    {
+      "id": "jl:27",
+      "ln": 27,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:28",
+      "ln": 28,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:29",
+      "ln": 29,
+      "text": "      sb.append(\"\\nchildren = (\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:30",
+      "ln": 30,
+      "text": "      if (this.left != null) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:31",
+      "ln": 31,
+      "text": "         sb.append(\"\" + ((IntervalNode)this.left).position());",
+      "type": "statement"
+    },
+    {
+      "id": "jl:32",
+      "ln": 32,
+      "text": "      } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:33",
+      "ln": 33,
+      "text": "         sb.append(\"null\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:34",
+      "ln": 34,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:35",
+      "ln": 35,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:36",
+      "ln": 36,
+      "text": "      sb.append(\" ,\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:37",
+      "ln": 37,
+      "text": "      if (this.right != null) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:38",
+      "ln": 38,
+      "text": "         sb.append(\"\" + ((IntervalNode)this.right).position());",
+      "type": "statement"
+    },
+    {
+      "id": "jl:39",
+      "ln": 39,
+      "text": "      } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:40",
+      "ln": 40,
+      "text": "         sb.append(\"null\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:41",
+      "ln": 41,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:42",
+      "ln": 42,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:43",
+      "ln": 43,
+      "text": "      sb.append(\")\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:44",
+      "ln": 44,
+      "text": "      sb.append(\"\\n\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:45",
+      "ln": 45,
+      "text": "      return sb.toString();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:46",
+      "ln": 46,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:47",
+      "ln": 47,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:48",
+      "ln": 48,
+      "text": "",
+      "type": "empty"
+    }
+  ],
+  "imports": [
+    {
+      "id": "ji:syn:0",
+      "qualifiedName": "cn.wps.collections.PositionNode",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:0"
+      ]
+    },
+    {
+      "id": "ji:syn:1",
+      "qualifiedName": "java.lang.StringBuilder",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:1"
+      ]
+    },
+    {
+      "id": "ji:syn:2",
+      "qualifiedName": "cn.wps.collections.RBBalancer",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:2"
+      ]
+    }
+  ],
+  "classes": [
+    {
+      "id": "jc:IntervalNode",
+      "className": "IntervalNode",
+      "classKind": "class",
+      "extendsClass": "PositionNode",
+      "implementsInterfaces": [],
+      "lineIndices": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47
+      ],
+      "methods": [
+        {
+          "id": "jm:IntervalNode:getLength",
+          "methodName": "getLength",
+          "params": [],
+          "returnType": "int",
+          "isStatic": false,
+          "isAbstract": true,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            3
+          ],
+          "block": {
+            "id": "jm:IntervalNode:getLength:block",
+            "elements": []
+          }
+        },
+        {
+          "id": "jm:IntervalNode:setLength",
+          "methodName": "setLength",
+          "params": [
+            "int var1"
+          ],
+          "returnType": "void",
+          "isStatic": false,
+          "isAbstract": true,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            5
+          ],
+          "block": {
+            "id": "jm:IntervalNode:setLength:block",
+            "elements": []
+          }
+        },
+        {
+          "id": "jm:IntervalNode:toString",
+          "methodName": "toString",
+          "params": [],
+          "returnType": "String",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46
+          ],
+          "block": {
+            "id": "jb:jm:IntervalNode:toString:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:8"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:9"
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalNode:toString:block:0",
+                  "headerLineId": "jl:10",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:11"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalNode:toString:block:1",
+                  "headerLineId": "jl:14",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:15"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalNode:toString:block:2",
+                  "headerLineId": "jl:18",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:19"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalNode:toString:block:3",
+                  "headerLineId": "jl:20",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:21"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalNode:toString:block:4",
+                  "headerLineId": "jl:24",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:25"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:26"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:29"
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalNode:toString:block:5",
+                  "headerLineId": "jl:30",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:31"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalNode:toString:block:6",
+                  "headerLineId": "jl:32",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:33"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:36"
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalNode:toString:block:7",
+                  "headerLineId": "jl:37",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:38"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalNode:toString:block:8",
+                  "headerLineId": "jl:39",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:40"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:43"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:44"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:45"
+              }
+            ]
+          }
+        }
+      ],
+      "fields": [
+        {
+          "id": "jf:super:IntervalNode",
+          "fieldName": "super_",
+          "fieldType": "PositionNode",
+          "isStatic": false,
+          "isFinal": false
+        }
+      ],
+      "innerClasses": []
+    }
+  ]
+}

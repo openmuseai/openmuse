@@ -1,0 +1,28 @@
+name: openmuse_mobile_plugin_runtime
+description: OpenMuse Mobile A2UI and QuickJS plugin runtime.
+publish_to: none
+version: 0.1.0
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  genui: 0.10.4
+  a2ui_core: 0.1.1
+  fjs: 3.3.2
+  crypto: ^3.0.6
+  cryptography: ^2.7.0
+  webview_flutter: ^4.13.1
+  path: ^1.9.1
+  openmuse_plugin_sdk:
+    path: ../openmuse_plugin_sdk
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+flutter:
+  assets:
+    - assets/official-market.json
+    - assets/market.json
+    - assets/task-board.json
+    - assets/usage-budget.json
+    - assets/pptx-mobile.json

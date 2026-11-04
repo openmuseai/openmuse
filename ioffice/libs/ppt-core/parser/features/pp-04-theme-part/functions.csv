@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_theme_handler,a:theme XML 分发,theme events+KmoTheme,theme model+child handlers,pp-01:02;pp-03-dml-style,02,libs/ppt-core,pass
+2,02_function_pptx_theme_open,theme part 读入,OpcrPackagePart stream+callback,rid2MediaIds or null,01,03;pp-07-part-open,libs/ppt-core,pass
+3,03_function_themes_cache,theme rel 缓存,themeRels+pres+medias,cached KmoTheme,02,pp-07-part-open;pp-09-pptx-open,libs/ppt-core,pass

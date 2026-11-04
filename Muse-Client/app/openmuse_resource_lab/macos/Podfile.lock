@@ -1,0 +1,28 @@
+PODS:
+  - FlutterMacOS (1.0.0)
+  - openmuse_dsh_plugin (0.1.0):
+    - FlutterMacOS
+  - openmuse_resource_clipboard (0.1.0):
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - openmuse_dsh_plugin (from `Flutter/ephemeral/.symlinks/plugins/openmuse_dsh_plugin/macos`)
+  - openmuse_resource_clipboard (from `Flutter/ephemeral/.symlinks/plugins/openmuse_resource_clipboard/macos`)
+
+EXTERNAL SOURCES:
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  openmuse_dsh_plugin:
+    :path: Flutter/ephemeral/.symlinks/plugins/openmuse_dsh_plugin/macos
+  openmuse_resource_clipboard:
+    :path: Flutter/ephemeral/.symlinks/plugins/openmuse_resource_clipboard/macos
+
+SPEC CHECKSUMS:
+  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  openmuse_dsh_plugin: 5f8716962236c0ca7f90a80f5f5074ec9cd692cb
+  openmuse_resource_clipboard: 80e1d6088b689813eb05211dd8da54d6ae212971
+
+PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
+
+COCOAPODS: 1.16.2

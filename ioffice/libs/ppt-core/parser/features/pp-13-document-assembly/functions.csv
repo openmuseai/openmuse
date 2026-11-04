@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_presentation_page_order,presentation 页序,presentation.xml+presentation.xml.rels,ordered slide part names,pp-12:01;pp-06:02,02,libs/ppt-core,pass
+2,02_function_slide_graph_assembly,slide 结构图装配,ordered slide parts,Vec<KmoSlide> ordered shape trees,01;pp-07:03;pp-02:05,03,libs/ppt-core,pass
+3,03_function_page_inheritance_geometry,页面继承与几何接线,slide+layout+master graphs,resolved page skeletons,02;pl-02;pl-03,04,libs/ppt-core,pass
+4,04_function_document_handoff,整份文档交付,dimensions+ordered resolved pages,PptxDocument,01;02;03,pr-04:03,libs/ppt-core,pass

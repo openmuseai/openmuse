@@ -1,0 +1,16 @@
+// Rust stub for PropertyToolFactory (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/PropertyToolFactory.java
+use crate::*;
+
+pub struct PropertyToolFactory {
+    // TODO: fields
+}
+
+impl PropertyToolFactory {
+    pub fn new() -> Self { todo!() }
+    pub fn create(&self, document: Box<dyn Document>) -> Box<dyn IPropertyTool> { todo!() }
+    pub fn reuseClean(&self) -> bool { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn clearMergedStylePropCache(&self, doc: Box<dyn Document>, fontStyleFactory: FontStyleCacheFactory) { todo!() }
+    pub fn clear(&self) { todo!() }
+}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "namespace": "files",
+  "sourceRevision": 2,
+  "messages": {
+    "files.count": "{count, plural, =0 {No files} one {# file} other {# files}}"
+  }
+}

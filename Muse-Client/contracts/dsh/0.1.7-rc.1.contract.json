@@ -1,0 +1,43 @@
+{
+  "schema": "openmuse.dsh-provider-contract@1",
+  "dshVersion": "0.1.7-rc.1",
+  "profileRows": {
+    "subprocess": "@deepseek-ai/dsh-subprocess-local",
+    "sandbox": "@deepseek-ai/dsh-sandbox-local",
+    "sandbox-policy": "@deepseek-ai/dsh-sandbox-policy",
+    "bash-sandbox": "@deepseek-ai/dsh-bash-sandbox",
+    "fs-sandbox": "@deepseek-ai/dsh-fs-sandbox",
+    "jobs": "@deepseek-ai/dsh-jobs-local"
+  },
+  "requiredPackages": [
+    "@deepseek-ai/cordis",
+    "@deepseek-ai/dsh-base",
+    "@deepseek-ai/dsh-fs",
+    "@deepseek-ai/dsh-fs-local",
+    "@deepseek-ai/dsh-fs-sandbox",
+    "@deepseek-ai/dsh-subprocess",
+    "@deepseek-ai/dsh-subprocess-local",
+    "@deepseek-ai/dsh-shell",
+    "@deepseek-ai/dsh-bash-local",
+    "@deepseek-ai/dsh-bash-sandbox",
+    "@deepseek-ai/dsh-sandbox",
+    "@deepseek-ai/dsh-sandbox-local",
+    "@deepseek-ai/dsh-sandbox-policy",
+    "@deepseek-ai/dsh-jobs",
+    "@deepseek-ai/dsh-jobs-local"
+  ],
+  "forbiddenProductionPackages": [
+    "@deepseek-ai/dsh-e2b",
+    "@deepseek-ai/dsh-fs-e2b",
+    "@deepseek-ai/dsh-subprocess-e2b"
+  ],
+  "capabilities": {
+    "filesystem": true,
+    "shell": true,
+    "subprocess": true,
+    "terminal": true,
+    "jobs": true,
+    "lspTransport": true,
+    "lspAdapterInProductClosure": false
+  }
+}

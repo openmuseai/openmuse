@@ -1,0 +1,140 @@
+{
+  "filePath": "/Users/mac/src/ioffice/koffice/writer/core/cn/wps/collections/IntervalMapNode.java",
+  "createdAt": "2026-06-24T02:06:18.622Z",
+  "version": 1,
+  "packageName": "cn.wps.collections",
+  "lines": [
+    {
+      "id": "jl:0",
+      "ln": 0,
+      "text": "package cn.wps.collections;",
+      "type": "package"
+    },
+    {
+      "id": "jl:1",
+      "ln": 1,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:2",
+      "ln": 2,
+      "text": "public abstract class IntervalMapNode extends IntervalNode {",
+      "type": "class_decl"
+    },
+    {
+      "id": "jl:3",
+      "ln": 3,
+      "text": "   IntervalMapNode peer;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:4",
+      "ln": 4,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:5",
+      "ln": 5,
+      "text": "   public final IntervalMapNode getPeer() {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:6",
+      "ln": 6,
+      "text": "      return this.peer;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:7",
+      "ln": 7,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:8",
+      "ln": 8,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:9",
+      "ln": 9,
+      "text": "",
+      "type": "empty"
+    }
+  ],
+  "imports": [
+    {
+      "id": "ji:syn:0",
+      "qualifiedName": "cn.wps.collections.IntervalNode",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:0"
+      ]
+    }
+  ],
+  "classes": [
+    {
+      "id": "jc:IntervalMapNode",
+      "className": "IntervalMapNode",
+      "classKind": "class",
+      "extendsClass": "IntervalNode",
+      "implementsInterfaces": [],
+      "lineIndices": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "methods": [
+        {
+          "id": "jm:IntervalMapNode:getPeer",
+          "methodName": "getPeer",
+          "params": [],
+          "returnType": "IntervalMapNode",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            5,
+            6,
+            7
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMapNode:getPeer:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:6"
+              }
+            ]
+          }
+        }
+      ],
+      "fields": [
+        {
+          "id": "jf:super:IntervalMapNode",
+          "fieldName": "super_",
+          "fieldType": "IntervalNode",
+          "isStatic": false,
+          "isFinal": false
+        },
+        {
+          "id": "jf:IntervalMapNode:peer",
+          "fieldName": "peer",
+          "fieldType": "IntervalMapNode",
+          "isStatic": false,
+          "isFinal": false
+        }
+      ],
+      "innerClasses": []
+    }
+  ]
+}

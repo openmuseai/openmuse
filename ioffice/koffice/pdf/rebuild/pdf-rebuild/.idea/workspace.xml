@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="96829914-054f-492f-822c-85b8bcb996ff" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/android/graphics/Point.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/android/os/Parcel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/android/os/Parcelable.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/android/util/Log.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/java/io/BufferedWriter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/java/io/ByteArrayOutputStream.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/java/io/IOException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/java/util/ArrayList.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/java/util/HashMap.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/java/util/Iterator.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/java/util/Locale.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../core-libs/stubs/src/java/util/Map.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../ModuleLifecycle/maven_upload.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../ModuleLifecycle/maven_upload.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../codestyle/codestyle.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../codestyle/codestyle.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../core-libs/kfc/kfc/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../core-libs/kfc/kfc/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../../gradle.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../gradlew" beforeDir="false" afterPath="$PROJECT_DIR$/../../gradlew" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../oversealanguage/base/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../oversealanguage/base/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pdf-sdk/src/cn/wps/core/runtime/Platform.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pdf-sdk/src/cn/wps/moffice/pdf/core/io/PDFSaverImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../pdf-sdk/src/cn/wps/moffice/pdf/core/io/PDFSaverImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../settings.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../wpsx-base/wps-support-base/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../wpsx-base/wps-support-base/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../wpsx-base/wps-support-base/src/main/java/cn/wps/moffice/define/UILanguage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../writer/core/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../writer/core/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../writer/core/cn/wps/moffice/writer/layout/base/LayoutTraceCollector.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../writer/core/cn/wps/moffice/writer/layout/base/LayoutTraceCollector.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../writer/core/cn/wps/moffice/writer/layout/base/TextLayouter.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../writer/core/cn/wps/moffice/writer/layout/base/TextLayouter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../writer/writer-demo/src/main/java/cn/wps/moffice/writer/capture/PageCaptureReceiver.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../writer/writer-demo/src/main/java/cn/wps/moffice/writer/capture/PageCaptureReceiver.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 5,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3IatkgiVqB4oJBHsjl1uDJKAEHC" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "master__core__unified__0429",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/mac/src/ioffice/koffice/pdf/pdf-rebuild"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="96829914-054f-492f-822c-85b8bcb996ff" name="Changes" comment="" />
+      <created>1788014652442</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1788014652442</updated>
+    </task>
+    <servers />
+  </component>
+</project>

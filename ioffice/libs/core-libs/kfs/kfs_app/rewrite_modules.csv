@@ -1,0 +1,11 @@
+order,module_path,category,file_count,rust_file_count,depends_on,state,description,session_id
+0,cn/wps/moffice/kfs,kfs,14,14,,done,,
+1,cn/wps/moffice/util,util,3,3,,done,,
+2,cn/wps/moffice/kfs/cfs,cfs,8,8,,done,,
+3,cn/wps/moffice/kfs/ifs,ifs,3,3,,done,,
+4,cn/wps/moffice/kfs/log,log,2,2,,done,,
+5,cn/wps/moffice/kfs/mfs,mfs,12,12,,done,,
+6,cn/wps/moffice/kfs/raw,raw,5,5,,done,,
+7,cn/wps/moffice/kfs/tools,tools,4,4,,done,,
+8,cn/wps/moffice/kfs/zip,zip,11,11,,done,,
+9,cn/wps/moffice/kfs/mfs/core/iface,iface,3,3,,done,,

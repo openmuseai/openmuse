@@ -1,0 +1,6 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_unified_xml_reader,UnifiedXmlReader.read,stream/path+ElementHandler,HLXmlReader.parser once,MapManager,03;04;05;pp-04;pp-06;pp-09,libs/ppt-core,pass
+2,02_function_handler_callback_impl,HandlerCallbackImpl.load,rels+media+mode,media/blip/chart maps,pp-01:02,03;04;05,libs/ppt-core,pass
+3,03_function_pptx_slide_open,PptxrSlide.open,KmoSlide+part,slide protocol+load,01;02;pp-01:05,pp-08-slides-walk;pp-13:02,libs/ppt-core,pass
+4,04_function_pptx_layout_open,PptxrLayout.open,KmoSlideLayout+part,layout protocol+bOpen,01;02;pp-01:06,pp-08-slides-walk,libs/ppt-core,pass
+5,05_function_pptx_master_open,PptxrMaster.open,KmoSlideMaster+part,master+layouts map,01;02;pp-01:07;pp-04,pp-08-slides-walk,libs/ppt-core,pass

@@ -1,0 +1,111 @@
+[package]
+name = "gn_starlark"
+version = "0.1.0"
+edition = "2021"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["staticlib"]
+test = false
+
+[dependencies]
+ffi = { path = "crates/ffi" }
+
+[workspace]
+members = [
+    ".",
+    "crates/args",
+    "crates/attr",
+    "crates/depset",
+    "crates/ffi",
+    "crates/loader",
+    "crates/providers",
+    "crates/rule",
+    "crates/testutils",
+    "crates/types",
+]
+
+[workspace.dependencies]
+allocative = "0.3"
+anyhow = "1.0"
+# cxx's C++ version must be <= GN's C++ version. This does not need to be kept
+# in sync unless you're trying to use new C++ features in the bridge.
+cxx = { version = "1.0", features = ["c++20"] }
+either = "1.16"
+starlark = "0.14"
+starlark_derive = "0.14"
+thiserror = "2.0"
+strum = { version = "0.26", features = ["derive"] }
+
+# A short-lived fork until my PR gets merged.
+# Basically all it does is make some pub(crate) things public, so that we can
+# create records directly in rust (could only create them by running in starlark
+# previously).
+[patch.crates-io]
+cxx = { git = "https://github.com/matts1/cxx.git", branch = "gn" }
+cxxbridge-macro = { git = "https://github.com/matts1/cxx.git", branch = "gn" }
+starlark = { git = "https://github.com/matts1/starlark-rust.git", branch = "gn_starlark" }
+starlark_derive = { git = "https://github.com/matts1/starlark-rust.git", branch = "gn_starlark" }
+starlark_map = { git = "https://github.com/matts1/starlark-rust.git", branch = "gn_starlark" }
+starlark_syntax = { git = "https://github.com/matts1/starlark-rust.git", branch = "gn_starlark" }
+allocative = { git = "https://github.com/matts1/starlark-rust.git", branch = "gn_starlark" }
+allocative_derive = { git = "https://github.com/matts1/starlark-rust.git", branch = "gn_starlark" }
+pagable = { git = "https://github.com/matts1/starlark-rust.git", branch = "gn_starlark" }
+pagable_derive = { git = "https://github.com/matts1/starlark-rust.git", branch = "gn_starlark" }
+
+# In debug mode, we still optimize our dependencies.
+# Otherwise our static library for this package is
+# ~400MB and our link times go through the roof.
+# This significantly improves link performance.
+[profile.dev.package."*"]
+opt-level = 3
+debug = false
+
+# Always build the code generator in release mode.
+[profile.dev.build-override]
+opt-level = 3
+
+[workspace.lints.clippy]
+borrow_as_ptr = "warn"
+cast_lossless = "warn"
+cloned_instead_of_copied = "warn"
+# Several starlark macros expand to things that break this lint.
+# It's a pretty minor thing with no real consequences, so we just allow it.
+elidable_lifetime_names = "allow"
+explicit_into_iter_loop = "warn"
+explicit_iter_loop = "warn"
+flat_map_option = "warn"
+format_collect = "warn"
+format_push_string = "warn"
+implicit_clone = "warn"
+manual_let_else = "warn"
+needless_for_each = "warn"
+# If we dereference C++ pointers but wrap it in safety, we should not be
+# required to mark the function as unsafe.
+not_unsafe_ptr_arg_deref = "allow"
+ptr_as_ptr = "warn"
+ptr_cast_constness = "warn"
+ref_as_ptr = "warn"
+ref_option = "warn"
+semicolon_if_nothing_returned = "warn"
+single_char_pattern = "warn"
+stable_sort_primitive = "warn"
+# This just isn't a particularly useful lint. We should let users be the judge.
+too_many_arguments = "allow"
+uninlined_format_args = "warn"
+unnecessary_literal_bound = "warn"
+unnecessary_semicolon = "warn"
+unnested_or_patterns = "warn"
+unused_trait_names = "warn"
+use_self = "warn"
+useless_conversion = "warn"
+while_let_loop = "warn"
+
+[workspace.lints.rust]
+let_underscore_drop = "warn"
+redundant_imports = "warn"
+# &str is not a proper C type.
+# However, rust::Str is defined in cxx.h and wraps it safely.
+improper_ctypes = "allow"

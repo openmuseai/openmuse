@@ -1,0 +1,110 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package util
+
+import (
+	"os"
+	"sync"
+	"testing"
+	"testing/synctest"
+	"time"
+
+	"github.com/olahol/melody"
+)
+
+func TestUILoadedWaitsForMainSession(t *testing.T) {
+	previous := IsUILoaded.Swap(false)
+	t.Cleanup(func() { IsUILoaded.Store(previous) })
+	synctest.Test(t, func(t *testing.T) {
+		defer IsUILoaded.Store(true)
+		go HookUILoaded()
+		done := make(chan struct{})
+		go func() {
+			WaitForUILoaded()
+			close(done)
+		}()
+		synctest.Wait()
+		select {
+		case <-done:
+			t.Fatal("UI wait completed without a main session")
+		default:
+		}
+
+		const appID = "test-ui-loaded"
+		appSessions := &sync.Map{}
+		session := &melody.Session{}
+		session.Set("type", "main")
+		appSessions.Store("main", session)
+		sessions.Store(appID, appSessions)
+		defer sessions.Delete(appID)
+		time.Sleep(400 * time.Millisecond)
+		synctest.Wait()
+		select {
+		case <-done:
+		default:
+			t.Fatal("UI wait did not complete after the main session connected")
+		}
+		if !IsUILoaded.Load() {
+			t.Fatal("main session did not mark the UI as loaded")
+		}
+	})
+}
+
+func TestSetNetworkProxy(t *testing.T) {
+	for _, name := range networkProxyEnvironmentNames {
+		t.Setenv(name, os.Getenv(name))
+	}
+	original := systemNetworkProxyEnvironment
+	systemNetworkProxyEnvironment = map[string]networkProxyEnvironmentValue{
+		"HTTP_PROXY":  {value: "http://environment-http", set: true},
+		"HTTPS_PROXY": {value: "http://environment-https", set: true},
+		"http_proxy":  {value: "http://environment-http", set: true},
+		"https_proxy": {value: "http://environment-https", set: true},
+		"NO_PROXY":    {value: "environment.local", set: true},
+		"no_proxy":    {value: "environment.local", set: true},
+	}
+	originalLoader := loadSystemNetworkProxy
+	loadSystemNetworkProxy = func() (*systemNetworkProxyConfig, error) {
+		return &systemNetworkProxyConfig{
+			HTTPProxy:  "http://system-http",
+			HTTPSProxy: "http://system-https",
+			NoProxy:    "localhost,10.0.0.0/8",
+		}, nil
+	}
+	t.Cleanup(func() {
+		systemNetworkProxyEnvironment = original
+		loadSystemNetworkProxy = originalLoader
+	})
+
+	SetNetworkProxy("http://configured", false)
+	for _, name := range append(networkProxyHTTPEnvironmentNames, networkProxyHTTPSEnvironmentNames...) {
+		if got := os.Getenv(name); got != "http://configured" {
+			t.Fatalf("%s = %q, want configured proxy", name, got)
+		}
+	}
+	for _, name := range networkProxyBypassEnvironmentNames {
+		if got := os.Getenv(name); got != "environment.local" {
+			t.Fatalf("%s = %q, want original bypass", name, got)
+		}
+	}
+
+	SetNetworkProxy("", false)
+	for _, name := range append(networkProxyHTTPEnvironmentNames, networkProxyHTTPSEnvironmentNames...) {
+		if got := os.Getenv(name); got != "" {
+			t.Fatalf("%s = %q, want direct connection", name, got)
+		}
+	}
+
+	SetNetworkProxy("", true)
+	if got := os.Getenv("HTTP_PROXY"); got != "http://system-http" {
+		t.Fatalf("HTTP_PROXY = %q, want system proxy", got)
+	}
+	if got := os.Getenv("HTTPS_PROXY"); got != "http://system-https" {
+		t.Fatalf("HTTPS_PROXY = %q, want system proxy", got)
+	}
+	if got := os.Getenv("NO_PROXY"); got != "localhost,10.0.0.0/8" {
+		t.Fatalf("NO_PROXY = %q, want system bypass", got)
+	}
+}

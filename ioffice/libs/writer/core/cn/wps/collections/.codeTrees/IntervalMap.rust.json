@@ -1,0 +1,4379 @@
+{
+  "filePath": "/Users/mac/src/ioffice/libs/writer/core/cn/wps/collections/IntervalMap.rs",
+  "javaFilePath": "/Users/mac/src/ioffice/koffice/writer/core/cn/wps/collections/IntervalMap.java",
+  "createdAt": "2026-06-24T02:06:18.599Z",
+  "lastModified": "2026-06-24T02:06:18.621Z",
+  "version": 1,
+  "lines": [
+    {
+      "id": "rl:out:0",
+      "ln": 0,
+      "text": "// Java: import java.util.ArrayList",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:1",
+      "ln": 1,
+      "text": "// Java: import java.lang.StringBuilder",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:2",
+      "ln": 2,
+      "text": "use stubs::java::lang::StringBuilder::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:3",
+      "ln": 3,
+      "text": "// Java: import cn.wps.collections.IntervalTree",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:4",
+      "ln": 4,
+      "text": "use stubs::cn::wps::collections::IntervalTree::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:5",
+      "ln": 5,
+      "text": "// Java: import cn.wps.io.dom.Node",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:6",
+      "ln": 6,
+      "text": "use stubs::cn::wps::io::dom::Node::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:7",
+      "ln": 7,
+      "text": "// Java: import cn.wps.collections.IntervalMapNode",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:8",
+      "ln": 8,
+      "text": "use stubs::cn::wps::collections::IntervalMapNode::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:9",
+      "ln": 9,
+      "text": "// Java: import java.lang.RuntimeException",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:10",
+      "ln": 10,
+      "text": "use stubs::java::lang::RuntimeException::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:11",
+      "ln": 11,
+      "text": "// Java: import ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:12",
+      "ln": 12,
+      "text": "// Java: import java.lang.InsertSpace",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:13",
+      "ln": 13,
+      "text": "use stubs::java::lang::InsertSpace::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:14",
+      "ln": 14,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:15",
+      "ln": 15,
+      "text": "// Java: public class IntervalMap ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:16",
+      "ln": 16,
+      "text": "#[derive(Default)]\npub struct IntervalMap {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:17",
+      "ln": 17,
+      "text": "    // Java field:    IntervalMapTree tree1 = new IntervalMapTree(this.createNode1());",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:18",
+      "ln": 18,
+      "text": "    pub tree1: IntervalMapTree,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:19",
+      "ln": 19,
+      "text": "    // Java field:    IntervalMapTree tree2 = new IntervalMapTree(this.createNode2());",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:20",
+      "ln": 20,
+      "text": "    pub tree2: IntervalMapTree,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:21",
+      "ln": 21,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:22",
+      "ln": 22,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:23",
+      "ln": 23,
+      "text": "// Java: public static class IntervalMapNode1 extends IntervalMapNode ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:24",
+      "ln": 24,
+      "text": "#[derive(Default)]\npub struct IntervalMapNode1 {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:25",
+      "ln": 25,
+      "text": "    // Java field:       private int mLength;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:26",
+      "ln": 26,
+      "text": "    mLength: i32,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:27",
+      "ln": 27,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:28",
+      "ln": 28,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:29",
+      "ln": 29,
+      "text": "// Java: public static class IntervalMapNode2 extends IntervalMapNode ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:30",
+      "ln": 30,
+      "text": "#[derive(Default)]\npub struct IntervalMapNode2 {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:31",
+      "ln": 31,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:32",
+      "ln": 32,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:33",
+      "ln": 33,
+      "text": "// Java: public static class IntervalMapTree extends IntervalTree ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:34",
+      "ln": 34,
+      "text": "#[derive(Default)]\npub struct IntervalMapTree {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:35",
+      "ln": 35,
+      "text": "    // Java field:       IntervalMapTree peer;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:36",
+      "ln": 36,
+      "text": "    pub peer: IntervalMapTree,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:37",
+      "ln": 37,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:38",
+      "ln": 38,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:39",
+      "ln": 39,
+      "text": "// Java: public static class Segment ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:40",
+      "ln": 40,
+      "text": "#[derive(Default)]\npub struct Segment {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:41",
+      "ln": 41,
+      "text": "    // Java field:       public int position1;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:42",
+      "ln": 42,
+      "text": "    pub position1: i32,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:43",
+      "ln": 43,
+      "text": "    // Java field:       public int position2;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:44",
+      "ln": 44,
+      "text": "    pub position2: i32,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:45",
+      "ln": 45,
+      "text": "    // Java field:       public int length;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:46",
+      "ln": 46,
+      "text": "    pub length: i32,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:47",
+      "ln": 47,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:48",
+      "ln": 48,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:49",
+      "ln": 49,
+      "text": "// Java: public class IntervalMap ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:50",
+      "ln": 50,
+      "text": "impl IntervalMap {",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:51",
+      "ln": 51,
+      "text": "    // Java: public IntervalMap() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:52",
+      "ln": 52,
+      "text": "    pub fn new() -> IntervalMap {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:53",
+      "ln": 53,
+      "text": "      Self { tree1: Default::default(), tree2: Default::default() }",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:54",
+      "ln": 54,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:55",
+      "ln": 55,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:56",
+      "ln": 56,
+      "text": "    // Java: public final IntervalTree getTree1() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:57",
+      "ln": 57,
+      "text": "    pub fn getTree1(&mut self) -> &IntervalTree {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:58",
+      "ln": 58,
+      "text": "      // Java: return this.tree1;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:59",
+      "ln": 59,
+      "text": "      return self.tree1;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:60",
+      "ln": 60,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:61",
+      "ln": 61,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:62",
+      "ln": 62,
+      "text": "    // Java: public final IntervalTree getTree2() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:63",
+      "ln": 63,
+      "text": "    pub fn getTree2(&mut self) -> &IntervalTree {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:64",
+      "ln": 64,
+      "text": "      // Java: return this.tree2;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:65",
+      "ln": 65,
+      "text": "      return self.tree2;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:66",
+      "ln": 66,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:67",
+      "ln": 67,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:68",
+      "ln": 68,
+      "text": "    // Java: protected IntervalMapNode1 createNode1() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:69",
+      "ln": 69,
+      "text": "    pub fn createNode1(&mut self) -> &IntervalMapNode1 {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:70",
+      "ln": 70,
+      "text": "      // Java: return new IntervalMapNode1();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:71",
+      "ln": 71,
+      "text": "      return IntervalMapNode1::new();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:72",
+      "ln": 72,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:73",
+      "ln": 73,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:74",
+      "ln": 74,
+      "text": "    // Java: protected IntervalMapNode2 createNode2() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:75",
+      "ln": 75,
+      "text": "    pub fn createNode2(&mut self) -> &IntervalMapNode2 {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:76",
+      "ln": 76,
+      "text": "      // Java: return new IntervalMapNode2();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:77",
+      "ln": 77,
+      "text": "      return IntervalMapNode2::new();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:78",
+      "ln": 78,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:79",
+      "ln": 79,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:80",
+      "ln": 80,
+      "text": "    // Java: private static final IntervalMapNode cast(Node node) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:81",
+      "ln": 81,
+      "text": "    pub fn cast(node: Box<dyn Node>) -> IntervalMapNode {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:82",
+      "ln": 82,
+      "text": "      // Java: return (IntervalMapNode)node;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:83",
+      "ln": 83,
+      "text": "      return (node).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:84",
+      "ln": 84,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:85",
+      "ln": 85,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:86",
+      "ln": 86,
+      "text": "    // Java: public int forwardMapping(int start1, int def) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:87",
+      "ln": 87,
+      "text": "    pub fn forwardMapping(&mut self, start1: i32, def: i32) -> i32 {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:88",
+      "ln": 88,
+      "text": "      // Java: return mapping(this.tree1, start1, def);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:89",
+      "ln": 89,
+      "text": "      return Self::mapping(self.tree1, start1, def);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:90",
+      "ln": 90,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:91",
+      "ln": 91,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:92",
+      "ln": 92,
+      "text": "    // Java: public int backwardMapping(int start2, int def) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:93",
+      "ln": 93,
+      "text": "    pub fn backwardMapping(&mut self, start2: i32, def: i32) -> i32 {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:94",
+      "ln": 94,
+      "text": "      // Java: return mapping(this.tree2, start2, def);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:95",
+      "ln": 95,
+      "text": "      return Self::mapping(self.tree2, start2, def);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:96",
+      "ln": 96,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:97",
+      "ln": 97,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:98",
+      "ln": 98,
+      "text": "    // Java: private static int mapping(IntervalMapTree tree, int start, int def) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:99",
+      "ln": 99,
+      "text": "    pub fn mapping(tree: IntervalMapTree, start: i32, def: i32) -> i32 {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:100",
+      "ln": 100,
+      "text": "      // Java: if (tree.size() == 1)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:101",
+      "ln": 101,
+      "text": "      if tree.size() == 1 {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:102",
+      "ln": 102,
+      "text": "         // Java: IntervalMapNode root = (IntervalMapNode)tree.getRoot();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:103",
+      "ln": 103,
+      "text": "         let root: IntervalMapNode = (tree.getRoot()).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:104",
+      "ln": 104,
+      "text": "         // Java: int len = root.getLength();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:105",
+      "ln": 105,
+      "text": "         let len: i32 = root.getLength();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:106",
+      "ln": 106,
+      "text": "         // Java: int pos1 = root.offset;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:107",
+      "ln": 107,
+      "text": "         let pos1: i32 = root.offset;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:108",
+      "ln": 108,
+      "text": "         // Java: int pos2 = root.getPeer().offset;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:109",
+      "ln": 109,
+      "text": "         let pos2: i32 = root.getPeer().offset;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:110",
+      "ln": 110,
+      "text": "         // Java: return start >= pos1 && start < pos1 + len ? start - pos1 + pos2 : def;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:111",
+      "ln": 111,
+      "text": "         return (if start >= pos1 && start < pos1 + len { start - pos1 + pos2 } else { def });",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:112",
+      "ln": 112,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:113",
+      "ln": 113,
+      "text": "      // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:114",
+      "ln": 114,
+      "text": "      else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:115",
+      "ln": 115,
+      "text": "         // Java: int pos = start;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:116",
+      "ln": 116,
+      "text": "         let pos: i32 = start;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:117",
+      "ln": 117,
+      "text": "         // Java: int off = 0;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:118",
+      "ln": 118,
+      "text": "         let off: i32 = 0;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:119",
+      "ln": 119,
+      "text": "         // Java: IntervalMapNode p1 = null;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:120",
+      "ln": 120,
+      "text": "         let mut p1: IntervalMapNode = IntervalMapNode::default();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:121",
+      "ln": 121,
+      "text": "         // Java: IntervalMapNode node = (IntervalMapNode)tree.getRoot();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:122",
+      "ln": 122,
+      "text": "         let node: IntervalMapNode = (tree.getRoot()).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:123",
+      "ln": 123,
+      "text": "         // Java: while(node != null)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:124",
+      "ln": 124,
+      "text": "         while node.is_some() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:125",
+      "ln": 125,
+      "text": "            // Java: if (pos < node.offset)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:126",
+      "ln": 126,
+      "text": "            if pos < node.offset {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:127",
+      "ln": 127,
+      "text": "               // Java: node = (IntervalMapNode)node.left;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:128",
+      "ln": 128,
+      "text": "               node = (node.left).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:129",
+      "ln": 129,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:130",
+      "ln": 130,
+      "text": "            // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:131",
+      "ln": 131,
+      "text": "            else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:132",
+      "ln": 132,
+      "text": "               // Java: if (pos < node.offset + node.getLength())",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:133",
+      "ln": 133,
+      "text": "               if pos < node.offset + node.getLength() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:134",
+      "ln": 134,
+      "text": "                  // Java: off = pos - node.offset;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:135",
+      "ln": 135,
+      "text": "                  off = pos - node.offset;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:136",
+      "ln": 136,
+      "text": "                  // Java: p1 = node;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:137",
+      "ln": 137,
+      "text": "                  p1 = node;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:138",
+      "ln": 138,
+      "text": "                  // Java: break;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:139",
+      "ln": 139,
+      "text": "                  break;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:140",
+      "ln": 140,
+      "text": "               }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:141",
+      "ln": 141,
+      "text": "               // Java: pos -= node.offset;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:142",
+      "ln": 142,
+      "text": "               pos = pos - node.offset;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:143",
+      "ln": 143,
+      "text": "               // Java: node = (IntervalMapNode)node.right;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:144",
+      "ln": 144,
+      "text": "               node = (node.right).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:145",
+      "ln": 145,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:146",
+      "ln": 146,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:147",
+      "ln": 147,
+      "text": "         // Java: return p1 != null ? tree.peer.position(p1.peer) + off : def;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:148",
+      "ln": 148,
+      "text": "         return (if p1.is_some() { tree.peer.position(p1.peer) + off } else { def });",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:149",
+      "ln": 149,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:150",
+      "ln": 150,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:151",
+      "ln": 151,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:152",
+      "ln": 152,
+      "text": "    // Java: public IntervalMapNode addMapping1(int start1, int start2, int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:153",
+      "ln": 153,
+      "text": "    pub fn addMapping1(&mut self, start1: i32, start2: i32, length: i32) -> &IntervalMapNode {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:154",
+      "ln": 154,
+      "text": "      // Java: if (!this.tree1.isEmpty())",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:155",
+      "ln": 155,
+      "text": "      if !self.tree1.isEmpty() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:156",
+      "ln": 156,
+      "text": "         // Java: if (this.tree2.isEmpty())",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:157",
+      "ln": 157,
+      "text": "         if self.tree2.isEmpty() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:158",
+      "ln": 158,
+      "text": "            // Java: throw new RuntimeException(\"The IntervalMap is in an insane state!\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:159",
+      "ln": 159,
+      "text": "            panic!(\"{}\", RuntimeException::new(\"The IntervalMap is in an insane state!\"));",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:160",
+      "ln": 160,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:161",
+      "ln": 161,
+      "text": "         // Java: IntervalMapNode1 node1 = (IntervalMapNode1)this.tree1.rightmost();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:162",
+      "ln": 162,
+      "text": "         let node1: IntervalMapNode1 = (self.tree1.rightmost()).downcast_ref::<IntervalMapNode1>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:163",
+      "ln": 163,
+      "text": "         // Java: IntervalMapNode2 node2 = (IntervalMapNode2)this.tree2.rightmost();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:164",
+      "ln": 164,
+      "text": "         let node2: IntervalMapNode2 = (self.tree2.rightmost()).downcast_ref::<IntervalMapNode2>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:165",
+      "ln": 165,
+      "text": "         // Java: if (node1.peer == node2)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:166",
+      "ln": 166,
+      "text": "         if node1.peer == node2 {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:167",
+      "ln": 167,
+      "text": "            // Java: int node1_pos = node1.position();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:168",
+      "ln": 168,
+      "text": "            let node1_pos: i32 = node1.position();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:169",
+      "ln": 169,
+      "text": "            // Java: int node2_pos = node2.position();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:170",
+      "ln": 170,
+      "text": "            let node2_pos: i32 = node2.position();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:171",
+      "ln": 171,
+      "text": "            // Java: int node_len = node1.mLength;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:172",
+      "ln": 172,
+      "text": "            let node_len: i32 = node1.mLength;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:173",
+      "ln": 173,
+      "text": "            // Java: if (node1_pos + node_len == start1 && node2_pos + node_len == start2)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:174",
+      "ln": 174,
+      "text": "            if node1_pos + node_len == start1 && node2_pos + node_len == start2 {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:175",
+      "ln": 175,
+      "text": "               // Java: node1.mLength += length;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:176",
+      "ln": 176,
+      "text": "               node1.mLength = node1.mLength + length;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:177",
+      "ln": 177,
+      "text": "               // Java: return node1;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:178",
+      "ln": 178,
+      "text": "               return node1;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:179",
+      "ln": 179,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:180",
+      "ln": 180,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:181",
+      "ln": 181,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:182",
+      "ln": 182,
+      "text": "      // Java: IntervalMapNode p1 = (IntervalMapNode)this.tree1.lowerBound(start1);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:183",
+      "ln": 183,
+      "text": "      let p1: IntervalMapNode = (self.tree1.lowerBound(start1)).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:184",
+      "ln": 184,
+      "text": "      // Java: IntervalMapNode p2 = (IntervalMapNode)this.tree2.lowerBound(start2);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:185",
+      "ln": 185,
+      "text": "      let p2: IntervalMapNode = (self.tree2.lowerBound(start2)).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:186",
+      "ln": 186,
+      "text": "      // Java: if (p1 != this.tree1.mHead && p2 != this.tree2.mHead && p1.peer == p2 && start1 + length == this.tree1.position(p1) && start2 + length == this.tree2.position(p2))",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:187",
+      "ln": 187,
+      "text": "      if p1 != self.tree1.mHead && p2 != self.tree2.mHead && p1.peer == p2 && start1 + length == self.tree1.position(p1) && start2 + length == self.tree2.position(p2) {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:188",
+      "ln": 188,
+      "text": "         // Java: p1.moveLeft(length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:189",
+      "ln": 189,
+      "text": "         p1.moveLeft(length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:190",
+      "ln": 190,
+      "text": "         // Java: p1.setLength(p1.getLength() + length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:191",
+      "ln": 191,
+      "text": "         p1.setLength(p1.getLength() + length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:192",
+      "ln": 192,
+      "text": "         // Java: p2.moveLeft(length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:193",
+      "ln": 193,
+      "text": "         p2.moveLeft(length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:194",
+      "ln": 194,
+      "text": "         // Java: return p1;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:195",
+      "ln": 195,
+      "text": "         return p1;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:196",
+      "ln": 196,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:197",
+      "ln": 197,
+      "text": "      // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:198",
+      "ln": 198,
+      "text": "      else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:199",
+      "ln": 199,
+      "text": "         // Java: IntervalMapNode p1_prev = (IntervalMapNode)p1.getPrev();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:200",
+      "ln": 200,
+      "text": "         let p1_prev: IntervalMapNode = (p1.getPrev()).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:201",
+      "ln": 201,
+      "text": "         // Java: IntervalMapNode p2_prev = (IntervalMapNode)p2.getPrev();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:202",
+      "ln": 202,
+      "text": "         let p2_prev: IntervalMapNode = (p2.getPrev()).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:203",
+      "ln": 203,
+      "text": "         // Java: int p1_prev_pos = this.tree1.position(p1_prev);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:204",
+      "ln": 204,
+      "text": "         let p1_prev_pos: i32 = self.tree1.position(p1_prev);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:205",
+      "ln": 205,
+      "text": "         // Java: int p2_prev_pos = this.tree2.position(p2_prev);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:206",
+      "ln": 206,
+      "text": "         let p2_prev_pos: i32 = self.tree2.position(p2_prev);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:207",
+      "ln": 207,
+      "text": "         // Java: if (p1_prev != this.tree1.mHead && p2_prev != this.tree2.mHead && p1_prev.peer == p2_prev && p1_prev_pos + p1_prev.getLength() == start1 && p2_prev_pos + p2_prev.getLength() == start2)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:208",
+      "ln": 208,
+      "text": "         if p1_prev != self.tree1.mHead && p2_prev != self.tree2.mHead && p1_prev.peer == p2_prev && p1_prev_pos + p1_prev.getLength() == start1 && p2_prev_pos + p2_prev.getLength() == start2 {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:209",
+      "ln": 209,
+      "text": "            // Java: p1_prev.setLength(p1_prev.getLength() + length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:210",
+      "ln": 210,
+      "text": "            p1_prev.setLength(p1_prev.getLength() + length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:211",
+      "ln": 211,
+      "text": "            // Java: return p1_prev;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:212",
+      "ln": 212,
+      "text": "            return p1_prev;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:213",
+      "ln": 213,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:214",
+      "ln": 214,
+      "text": "         // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:215",
+      "ln": 215,
+      "text": "         else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:216",
+      "ln": 216,
+      "text": "            // Java: IntervalMapNode n1 = this.createNode1();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:217",
+      "ln": 217,
+      "text": "            let n1: IntervalMapNode = self.createNode1();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:218",
+      "ln": 218,
+      "text": "            // Java: IntervalMapNode n2 = this.createNode2();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:219",
+      "ln": 219,
+      "text": "            let n2: IntervalMapNode = self.createNode2();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:220",
+      "ln": 220,
+      "text": "            // Java: n1.peer = n2;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:221",
+      "ln": 221,
+      "text": "            n1.peer = n2;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:222",
+      "ln": 222,
+      "text": "            // Java: n2.peer = n1;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:223",
+      "ln": 223,
+      "text": "            n2.peer = n1;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:224",
+      "ln": 224,
+      "text": "            // Java: n1.setLength(length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:225",
+      "ln": 225,
+      "text": "            n1.setLength(length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:226",
+      "ln": 226,
+      "text": "            // Java: n1.offset = start1 - p1_prev_pos;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:227",
+      "ln": 227,
+      "text": "            n1.offset = start1 - p1_prev_pos;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:228",
+      "ln": 228,
+      "text": "            // Java: n2.offset = start2 - p2_prev_pos;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:229",
+      "ln": 229,
+      "text": "            n2.offset = start2 - p2_prev_pos;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:230",
+      "ln": 230,
+      "text": "            // Java: this.tree1.insertRight(p1_prev, n1);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:231",
+      "ln": 231,
+      "text": "            self.tree1.insertRight(p1_prev, n1);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:232",
+      "ln": 232,
+      "text": "            // Java: this.tree2.insertRight(p2_prev, n2);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:233",
+      "ln": 233,
+      "text": "            self.tree2.insertRight(p2_prev, n2);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:234",
+      "ln": 234,
+      "text": "            // Java: return n1;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:235",
+      "ln": 235,
+      "text": "            return n1;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:236",
+      "ln": 236,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:237",
+      "ln": 237,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:238",
+      "ln": 238,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:239",
+      "ln": 239,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:240",
+      "ln": 240,
+      "text": "    // Java: public void eraseMapping1(int start1, int length, ArrayList<Segment> segments) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:241",
+      "ln": 241,
+      "text": "    pub fn eraseMapping1(&mut self, start1: i32, length: i32, segments: Vec<Segment>) {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:242",
+      "ln": 242,
+      "text": "      // Java: int end1 = start1 + length;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:243",
+      "ln": 243,
+      "text": "      let end1: i32 = start1 + length;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:244",
+      "ln": 244,
+      "text": "      // Java: IntervalTree.InsertSpace pHit = this.tree1.findForInsertSpace(start1);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:245",
+      "ln": 245,
+      "text": "      let pHit: InsertSpace = self.tree1.findForInsertSpace(start1);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:246",
+      "ln": 246,
+      "text": "      // Java: if (pHit.node != this.tree1.mHead)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:247",
+      "ln": 247,
+      "text": "      if pHit.node != self.tree1.mHead {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:248",
+      "ln": 248,
+      "text": "         // Java: IntervalMapNode s;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:249",
+      "ln": 249,
+      "text": "         let s: IntervalMapNode = IntervalMapNode::default();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:250",
+      "ln": 250,
+      "text": "         // Java: if (pHit.left)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:251",
+      "ln": 251,
+      "text": "         if pHit.left {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:252",
+      "ln": 252,
+      "text": "            // Java: s = (IntervalMapNode)pHit.node;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:253",
+      "ln": 253,
+      "text": "            s = (pHit.node).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:254",
+      "ln": 254,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:255",
+      "ln": 255,
+      "text": "         // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:256",
+      "ln": 256,
+      "text": "         else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:257",
+      "ln": 257,
+      "text": "            // Java: if (pHit.pos + length < pHit.node.getLength())",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:258",
+      "ln": 258,
+      "text": "            if pHit.pos + length < pHit.node.getLength() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:259",
+      "ln": 259,
+      "text": "               // Java: if (segments != null)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:260",
+      "ln": 260,
+      "text": "               if segments.is_some() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:261",
+      "ln": 261,
+      "text": "                  // Java: segments.add(new Segment(start1, this.tree2.position(cast(pHit.node).peer) + pHit.pos, length));",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:262",
+      "ln": 262,
+      "text": "                  segments.add(Segment::new(start1, self.tree2.position(Self::cast(pHit.node).peer) + pHit.pos, length));",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:263",
+      "ln": 263,
+      "text": "               }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:264",
+      "ln": 264,
+      "text": "               // Java: this.split1((IntervalMapNode)pHit.node, pHit.pos + length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:265",
+      "ln": 265,
+      "text": "               self.split1((pHit.node).downcast_ref::<IntervalMapNode>().unwrap(), pHit.pos + length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:266",
+      "ln": 266,
+      "text": "               // Java: pHit.node.setLength(pHit.pos);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:267",
+      "ln": 267,
+      "text": "               pHit.node.setLength(pHit.pos);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:268",
+      "ln": 268,
+      "text": "               // Java: return;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:269",
+      "ln": 269,
+      "text": "               return;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:270",
+      "ln": 270,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:271",
+      "ln": 271,
+      "text": "            // Java: if (segments != null)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:272",
+      "ln": 272,
+      "text": "            if segments.is_some() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:273",
+      "ln": 273,
+      "text": "               // Java: Segment segment = new Segment(start1, this.tree2.position(cast(pHit.node).peer) + pHit.pos, pHit.node.getLength() - pHit.pos);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:274",
+      "ln": 274,
+      "text": "               let segment: Segment = Segment::new(start1, self.tree2.position(Self::cast(pHit.node).peer) + pHit.pos, pHit.node.getLength() - pHit.pos);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:275",
+      "ln": 275,
+      "text": "               // Java: segments.add(segment);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:276",
+      "ln": 276,
+      "text": "               segments.add(segment);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:277",
+      "ln": 277,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:278",
+      "ln": 278,
+      "text": "            // Java: pHit.node.setLength(pHit.pos);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:279",
+      "ln": 279,
+      "text": "            pHit.node.setLength(pHit.pos);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:280",
+      "ln": 280,
+      "text": "            // Java: s = (IntervalMapNode)pHit.node.getNext();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:281",
+      "ln": 281,
+      "text": "            s = (pHit.node.getNext()).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:282",
+      "ln": 282,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:283",
+      "ln": 283,
+      "text": "         // Java: Segment pLastSegment = null;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:284",
+      "ln": 284,
+      "text": "         let mut pLastSegment: Segment = Segment::default();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:285",
+      "ln": 285,
+      "text": "         // Java: pHit = this.tree1.findForInsertSpace(end1);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:286",
+      "ln": 286,
+      "text": "         pHit = self.tree1.findForInsertSpace(end1);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:287",
+      "ln": 287,
+      "text": "         // Java: IntervalMapNode e = (IntervalMapNode)pHit.node;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:288",
+      "ln": 288,
+      "text": "         let e: IntervalMapNode = (pHit.node).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:289",
+      "ln": 289,
+      "text": "         // Java: if (e != this.tree1.mHead && !pHit.left)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:290",
+      "ln": 290,
+      "text": "         if e != self.tree1.mHead && !pHit.left {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:291",
+      "ln": 291,
+      "text": "            // Java: if (segments != null)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:292",
+      "ln": 292,
+      "text": "            if segments.is_some() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:293",
+      "ln": 293,
+      "text": "               // Java: pLastSegment = new Segment(end1 - pHit.pos, this.tree2.position(cast(pHit.node).peer), pHit.pos);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:294",
+      "ln": 294,
+      "text": "               pLastSegment = Segment::new(end1 - pHit.pos, self.tree2.position(Self::cast(pHit.node).peer), pHit.pos);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:295",
+      "ln": 295,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:296",
+      "ln": 296,
+      "text": "            // Java: e.moveRight(pHit.pos);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:297",
+      "ln": 297,
+      "text": "            e.moveRight(pHit.pos);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:298",
+      "ln": 298,
+      "text": "            // Java: e.setLength(e.getLength() - pHit.pos);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:299",
+      "ln": 299,
+      "text": "            e.setLength(e.getLength() - pHit.pos);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:300",
+      "ln": 300,
+      "text": "            // Java: e.peer.moveRight(pHit.pos);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:301",
+      "ln": 301,
+      "text": "            e.peer.moveRight(pHit.pos);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:302",
+      "ln": 302,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:303",
+      "ln": 303,
+      "text": "         // Java: while(s != e)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:304",
+      "ln": 304,
+      "text": "         while s != e {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:305",
+      "ln": 305,
+      "text": "            // Java: if (segments != null)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:306",
+      "ln": 306,
+      "text": "            if segments.is_some() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:307",
+      "ln": 307,
+      "text": "               // Java: segments.add(new Segment(this.tree1.position(s), this.tree2.position(s.peer), s.getLength()));",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:308",
+      "ln": 308,
+      "text": "               segments.add(Segment::new(self.tree1.position(s), self.tree2.position(s.peer), s.getLength()));",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:309",
+      "ln": 309,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:310",
+      "ln": 310,
+      "text": "            // Java: IntervalMapNode s_next = (IntervalMapNode)s.getNext();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:311",
+      "ln": 311,
+      "text": "            let s_next: IntervalMapNode = (s.getNext()).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:312",
+      "ln": 312,
+      "text": "            // Java: this.tree1.erase(s);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:313",
+      "ln": 313,
+      "text": "            self.tree1.erase(s);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:314",
+      "ln": 314,
+      "text": "            // Java: this.tree2.erase(s.peer);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:315",
+      "ln": 315,
+      "text": "            self.tree2.erase(s.peer);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:316",
+      "ln": 316,
+      "text": "            // Java: s = s_next;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:317",
+      "ln": 317,
+      "text": "            s = s_next;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:318",
+      "ln": 318,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:319",
+      "ln": 319,
+      "text": "         // Java: if (segments != null && pLastSegment != null)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:320",
+      "ln": 320,
+      "text": "         if segments.is_some() && pLastSegment.is_some() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:321",
+      "ln": 321,
+      "text": "            // Java: segments.add(pLastSegment);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:322",
+      "ln": 322,
+      "text": "            segments.add(pLastSegment);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:323",
+      "ln": 323,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:324",
+      "ln": 324,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:325",
+      "ln": 325,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:326",
+      "ln": 326,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:327",
+      "ln": 327,
+      "text": "    // Java: public void insertSpace1(int start1, int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:328",
+      "ln": 328,
+      "text": "    pub fn insertSpace1(&mut self, start1: i32, length: i32) {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:329",
+      "ln": 329,
+      "text": "      // Java: this.insertSpace(this.tree1, start1, length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:330",
+      "ln": 330,
+      "text": "      self.insertSpace(self.tree1, start1, length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:331",
+      "ln": 331,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:332",
+      "ln": 332,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:333",
+      "ln": 333,
+      "text": "    // Java: public void insertSpace2(int start2, int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:334",
+      "ln": 334,
+      "text": "    pub fn insertSpace2(&mut self, start2: i32, length: i32) {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:335",
+      "ln": 335,
+      "text": "      // Java: this.insertSpace(this.tree2, start2, length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:336",
+      "ln": 336,
+      "text": "      self.insertSpace(self.tree2, start2, length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:337",
+      "ln": 337,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:338",
+      "ln": 338,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:339",
+      "ln": 339,
+      "text": "    // Java: private void insertSpace(IntervalMapTree tree, int start, int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:340",
+      "ln": 340,
+      "text": "    pub fn insertSpace(&mut self, tree: IntervalMapTree, start: i32, length: i32) {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:341",
+      "ln": 341,
+      "text": "      // Java: if (!tree.isEmpty() && start < tree.getEndPosition())",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:342",
+      "ln": 342,
+      "text": "      if !tree.isEmpty() && start < tree.getEndPosition() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:343",
+      "ln": 343,
+      "text": "         // Java: IntervalTree.InsertSpace pInsertSpace = tree.findForInsertSpace(start);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:344",
+      "ln": 344,
+      "text": "         let pInsertSpace: InsertSpace = tree.findForInsertSpace(start);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:345",
+      "ln": 345,
+      "text": "         // Java: if (pInsertSpace.left)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:346",
+      "ln": 346,
+      "text": "         if pInsertSpace.left {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:347",
+      "ln": 347,
+      "text": "            // Java: tree.insertSpaceBefore(pInsertSpace.node, length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:348",
+      "ln": 348,
+      "text": "            tree.insertSpaceBefore(pInsertSpace.node, length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:349",
+      "ln": 349,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:350",
+      "ln": 350,
+      "text": "         // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:351",
+      "ln": 351,
+      "text": "         else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:352",
+      "ln": 352,
+      "text": "            // Java: IntervalMapNode pNew = this.split(tree, (IntervalMapNode)pInsertSpace.node, pInsertSpace.pos);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:353",
+      "ln": 353,
+      "text": "            let pNew: IntervalMapNode = self.split(tree, (pInsertSpace.node).downcast_ref::<IntervalMapNode>().unwrap(), pInsertSpace.pos);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:354",
+      "ln": 354,
+      "text": "            // Java: tree.insertSpaceBefore(pNew, length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:355",
+      "ln": 355,
+      "text": "            tree.insertSpaceBefore(pNew, length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:356",
+      "ln": 356,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:357",
+      "ln": 357,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:358",
+      "ln": 358,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:359",
+      "ln": 359,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:360",
+      "ln": 360,
+      "text": "    // Java: private IntervalMapNode split1(IntervalMapNode node1, int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:361",
+      "ln": 361,
+      "text": "    pub fn split1(&mut self, node1: IntervalMapNode, length: i32) -> &IntervalMapNode {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:362",
+      "ln": 362,
+      "text": "      // Java: return this.split(this.tree1, node1, length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:363",
+      "ln": 363,
+      "text": "      return self.split(self.tree1, node1, length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:364",
+      "ln": 364,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:365",
+      "ln": 365,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:366",
+      "ln": 366,
+      "text": "    // Java: private IntervalMapNode split(IntervalMapTree tree, IntervalMapNode node, int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:367",
+      "ln": 367,
+      "text": "    pub fn split(&mut self, tree: IntervalMapTree, node: IntervalMapNode, length: i32) -> &IntervalMapNode {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:368",
+      "ln": 368,
+      "text": "      // Java: IntervalMapNode node_peer = node.peer;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:369",
+      "ln": 369,
+      "text": "      let node_peer: IntervalMapNode = node.peer;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:370",
+      "ln": 370,
+      "text": "      // Java: int nNewNodeLength = node.getLength() - length;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:371",
+      "ln": 371,
+      "text": "      let nNewNodeLength: i32 = node.getLength() - length;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:372",
+      "ln": 372,
+      "text": "      // Java: IntervalMapNode new1 = this.createNode1();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:373",
+      "ln": 373,
+      "text": "      let new1: IntervalMapNode = self.createNode1();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:374",
+      "ln": 374,
+      "text": "      // Java: IntervalMapNode new2 = this.createNode2();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:375",
+      "ln": 375,
+      "text": "      let new2: IntervalMapNode = self.createNode2();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:376",
+      "ln": 376,
+      "text": "      // Java: new1.peer = new2;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:377",
+      "ln": 377,
+      "text": "      new1.peer = new2;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:378",
+      "ln": 378,
+      "text": "      // Java: new2.peer = new1;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:379",
+      "ln": 379,
+      "text": "      new2.peer = new1;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:380",
+      "ln": 380,
+      "text": "      // Java: new1.setLength(nNewNodeLength);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:381",
+      "ln": 381,
+      "text": "      new1.setLength(nNewNodeLength);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:382",
+      "ln": 382,
+      "text": "      // Java: node.setLength(length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:383",
+      "ln": 383,
+      "text": "      node.setLength(length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:384",
+      "ln": 384,
+      "text": "      // Java: tree.insertRight(node, new1, tree.position(node) + length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:385",
+      "ln": 385,
+      "text": "      tree.insertRight(node, new1, tree.position(node) + length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:386",
+      "ln": 386,
+      "text": "      // Java: tree.peer.insertRight(node_peer, new2, tree.peer.position(node_peer) + length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:387",
+      "ln": 387,
+      "text": "      tree.peer.insertRight(node_peer, new2, tree.peer.position(node_peer) + length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:388",
+      "ln": 388,
+      "text": "      // Java: return new1;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:389",
+      "ln": 389,
+      "text": "      return new1;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:390",
+      "ln": 390,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:391",
+      "ln": 391,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:392",
+      "ln": 392,
+      "text": "    // Java: public final void eraseSpace1(int start1, int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:393",
+      "ln": 393,
+      "text": "    pub fn eraseSpace1(&mut self, start1: i32, length: i32) {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:394",
+      "ln": 394,
+      "text": "      // Java: eraseSpace(this.tree1, start1, length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:395",
+      "ln": 395,
+      "text": "      Self::eraseSpace(self.tree1, start1, length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:396",
+      "ln": 396,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:397",
+      "ln": 397,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:398",
+      "ln": 398,
+      "text": "    // Java: public final void eraseSpace2(int start2, int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:399",
+      "ln": 399,
+      "text": "    pub fn eraseSpace2(&mut self, start2: i32, length: i32) {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:400",
+      "ln": 400,
+      "text": "      // Java: eraseSpace(this.tree2, start2, length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:401",
+      "ln": 401,
+      "text": "      Self::eraseSpace(self.tree2, start2, length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:402",
+      "ln": 402,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:403",
+      "ln": 403,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:404",
+      "ln": 404,
+      "text": "    // Java: private static void eraseSpace(IntervalMapTree tree, int start, int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:405",
+      "ln": 405,
+      "text": "    pub fn eraseSpace(tree: IntervalMapTree, start: i32, length: i32) {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:406",
+      "ln": 406,
+      "text": "      // Java: IntervalMapNode n1 = (IntervalMapNode)tree.lowerBound(start);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:407",
+      "ln": 407,
+      "text": "      let n1: IntervalMapNode = (tree.lowerBound(start)).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:408",
+      "ln": 408,
+      "text": "      // Java: tree.eraseSpaceBefore(n1, length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:409",
+      "ln": 409,
+      "text": "      tree.eraseSpaceBefore(n1, length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:410",
+      "ln": 410,
+      "text": "      // Java: if (n1 != tree.mHead)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:411",
+      "ln": 411,
+      "text": "      if n1 != tree.mHead {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:412",
+      "ln": 412,
+      "text": "         // Java: IntervalMapNode n1_prev = (IntervalMapNode)n1.getPrev();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:413",
+      "ln": 413,
+      "text": "         let n1_prev: IntervalMapNode = (n1.getPrev()).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:414",
+      "ln": 414,
+      "text": "         // Java: if (n1_prev != tree.mHead)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:415",
+      "ln": 415,
+      "text": "         if n1_prev != tree.mHead {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:416",
+      "ln": 416,
+      "text": "            // Java: IntervalMapNode n2 = n1.peer;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:417",
+      "ln": 417,
+      "text": "            let n2: IntervalMapNode = n1.peer;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:418",
+      "ln": 418,
+      "text": "            // Java: IntervalMapNode n2_prev = (IntervalMapNode)n2.getPrev();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:419",
+      "ln": 419,
+      "text": "            let n2_prev: IntervalMapNode = (n2.getPrev()).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:420",
+      "ln": 420,
+      "text": "            // Java: if (n1_prev.peer == n2_prev && tree.position(n1_prev) + n1_prev.getLength() == tree.position(n1) && tree.peer.position(n2_prev) + n2_prev.getLength() == tree.peer.position(n2))",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:421",
+      "ln": 421,
+      "text": "            if n1_prev.peer == n2_prev && tree.position(n1_prev) + n1_prev.getLength() == tree.position(n1) && tree.peer.position(n2_prev) + n2_prev.getLength() == tree.peer.position(n2) {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:422",
+      "ln": 422,
+      "text": "               // Java: n1_prev.setLength(n1_prev.getLength() + n1.getLength());",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:423",
+      "ln": 423,
+      "text": "               n1_prev.setLength(n1_prev.getLength() + n1.getLength());",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:424",
+      "ln": 424,
+      "text": "               // Java: tree.erase(n1);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:425",
+      "ln": 425,
+      "text": "               tree.erase(n1);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:426",
+      "ln": 426,
+      "text": "               // Java: tree.peer.erase(n2);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:427",
+      "ln": 427,
+      "text": "               tree.peer.erase(n2);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:428",
+      "ln": 428,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:429",
+      "ln": 429,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:430",
+      "ln": 430,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:431",
+      "ln": 431,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:432",
+      "ln": 432,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:433",
+      "ln": 433,
+      "text": "    // Java: public String toString() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:434",
+      "ln": 434,
+      "text": "    pub fn toString(&mut self) -> String {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:435",
+      "ln": 435,
+      "text": "      // Java: StringBuilder sb = new StringBuilder();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:436",
+      "ln": 436,
+      "text": "      let sb: String = StringBuilder::new();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:437",
+      "ln": 437,
+      "text": "      // Java: sb.append(this.getClass().getSimpleName());",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:438",
+      "ln": 438,
+      "text": "      sb.append(self.getClass().getSimpleName());",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:439",
+      "ln": 439,
+      "text": "      // Java: sb.append(\"\\ncontent = {\\n\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:440",
+      "ln": 440,
+      "text": "      sb.append(\"\\ncontent = {\\n\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:441",
+      "ln": 441,
+      "text": "      let mut node: IntervalMapNode = (self.tree1.leftmost()).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:442",
+      "ln": 442,
+      "text": "      // Java: for(IntervalMapNode node = (IntervalMapNode)this.tree1.leftmost(); !node.isHead(); node = (IntervalMapNode)node.getNext())",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:443",
+      "ln": 443,
+      "text": "      while !node.isHead() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:444",
+      "ln": 444,
+      "text": "         // Java: int cp = node.position();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:445",
+      "ln": 445,
+      "text": "         let cp: i32 = node.position();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:446",
+      "ln": 446,
+      "text": "         // Java: int fc = node.peer.position();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:447",
+      "ln": 447,
+      "text": "         let fc: i32 = node.peer.position();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:448",
+      "ln": 448,
+      "text": "         // Java: int len = node.getLength();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:449",
+      "ln": 449,
+      "text": "         let len: i32 = node.getLength();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:450",
+      "ln": 450,
+      "text": "         // Java: sb.append(String.format(\"[%d, %d)\\t<=>\\t[%d, %d),\\n\", cp, cp + len, fc, fc + len));",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:451",
+      "ln": 451,
+      "text": "         sb.append(String::format(\"[%d, %d)\\t<=>\\t[%d, %d),\\n\", cp, cp + len, fc, fc + len));",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:452",
+      "ln": 452,
+      "text": "         node = (node.getNext()).downcast_ref::<IntervalMapNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:453",
+      "ln": 453,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:454",
+      "ln": 454,
+      "text": "      // Java: sb.append(\"}\\n\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:455",
+      "ln": 455,
+      "text": "      sb.append(\"}\\n\");",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:456",
+      "ln": 456,
+      "text": "      // Java: return sb.toString();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:457",
+      "ln": 457,
+      "text": "      return sb.toString();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:458",
+      "ln": 458,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:459",
+      "ln": 459,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:460",
+      "ln": 460,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:461",
+      "ln": 461,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:462",
+      "ln": 462,
+      "text": "// Java: public static class IntervalMapNode1 extends IntervalMapNode ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:463",
+      "ln": 463,
+      "text": "impl IntervalMapNode1 {",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:464",
+      "ln": 464,
+      "text": "    // Java: public int getLength() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:465",
+      "ln": 465,
+      "text": "    pub fn getLength(&mut self) -> i32 {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:466",
+      "ln": 466,
+      "text": "         // Java: return this.mLength;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:467",
+      "ln": 467,
+      "text": "         return self.mLength;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:468",
+      "ln": 468,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:469",
+      "ln": 469,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:470",
+      "ln": 470,
+      "text": "    // Java: public void setLength(int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:471",
+      "ln": 471,
+      "text": "    pub fn setLength(&mut self, length: i32) {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:472",
+      "ln": 472,
+      "text": "         // Java: this.mLength = length;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:473",
+      "ln": 473,
+      "text": "         self.mLength = length;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:474",
+      "ln": 474,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:475",
+      "ln": 475,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:476",
+      "ln": 476,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:477",
+      "ln": 477,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:478",
+      "ln": 478,
+      "text": "// Java: public static class IntervalMapNode2 extends IntervalMapNode ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:479",
+      "ln": 479,
+      "text": "impl IntervalMapNode2 {",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:480",
+      "ln": 480,
+      "text": "    // Java: public int getLength() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:481",
+      "ln": 481,
+      "text": "    pub fn getLength(&mut self) -> i32 {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:482",
+      "ln": 482,
+      "text": "         // Java: return this.peer.getLength();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:483",
+      "ln": 483,
+      "text": "         return self.peer.getLength();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:484",
+      "ln": 484,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:485",
+      "ln": 485,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:486",
+      "ln": 486,
+      "text": "    // Java: public void setLength(int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:487",
+      "ln": 487,
+      "text": "    pub fn setLength(&mut self, length: i32) {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:488",
+      "ln": 488,
+      "text": "         // Java: this.peer.setLength(length);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:489",
+      "ln": 489,
+      "text": "         self.peer.setLength(length);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:490",
+      "ln": 490,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:491",
+      "ln": 491,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:492",
+      "ln": 492,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:493",
+      "ln": 493,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:494",
+      "ln": 494,
+      "text": "// Java: public static class IntervalMapTree extends IntervalTree ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:495",
+      "ln": 495,
+      "text": "impl IntervalMapTree {",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:496",
+      "ln": 496,
+      "text": "    // Java: public IntervalMapTree(IntervalMapNode head) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:497",
+      "ln": 497,
+      "text": "    pub fn new(head: IntervalMapNode) -> IntervalMapTree {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:498",
+      "ln": 498,
+      "text": "      Self { peer: Default::default() }",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:499",
+      "ln": 499,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:500",
+      "ln": 500,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:501",
+      "ln": 501,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:502",
+      "ln": 502,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:503",
+      "ln": 503,
+      "text": "// Java: public static class Segment ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:504",
+      "ln": 504,
+      "text": "impl Segment {",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:505",
+      "ln": 505,
+      "text": "    // Java: public Segment(int position1, int position2, int length) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:506",
+      "ln": 506,
+      "text": "    pub fn new(position1: i32, position2: i32, length: i32) -> Segment {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:507",
+      "ln": 507,
+      "text": "      Self { position1: position1, position2: position2, length: length }",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:508",
+      "ln": 508,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:509",
+      "ln": 509,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:510",
+      "ln": 510,
+      "text": "    // Java: public String toString() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:511",
+      "ln": 511,
+      "text": "    pub fn toString(&mut self) -> String {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:512",
+      "ln": 512,
+      "text": "         // Java: return \"Segment: [\" + this.position1 + \" <=> \" + this.position2 + \", \" + this.length + \"]\";",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:513",
+      "ln": 513,
+      "text": "         return \"Segment: [\" + self.position1 + \" <=> \" + self.position2 + \", \" + self.len() + \"]\";",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:514",
+      "ln": 514,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:515",
+      "ln": 515,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:516",
+      "ln": 516,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:517",
+      "ln": 517,
+      "text": "",
+      "type": "empty"
+    }
+  ],
+  "imports": [
+    {
+      "id": "ri:ji:0",
+      "javaCodeId": "ji:0",
+      "usePath": "",
+      "lines": [
+        {
+          "id": "rl:jc:ji:0",
+          "ln": -1,
+          "text": "// Java: import java.util.ArrayList",
+          "type": "java_comment",
+          "jcid": "ji:0"
+        }
+      ]
+    },
+    {
+      "id": "ri:ji:syn:1",
+      "javaCodeId": "ji:syn:1",
+      "usePath": "use stubs::java::lang::StringBuilder::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:1",
+          "ln": -1,
+          "text": "// Java: import java.lang.StringBuilder",
+          "type": "java_comment",
+          "jcid": "ji:syn:1"
+        },
+        {
+          "id": "rl:ji:syn:1",
+          "ln": -1,
+          "text": "use stubs::java::lang::StringBuilder::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:1"
+        }
+      ]
+    },
+    {
+      "id": "ri:ji:syn:2",
+      "javaCodeId": "ji:syn:2",
+      "usePath": "use stubs::cn::wps::collections::IntervalTree::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:2",
+          "ln": -1,
+          "text": "// Java: import cn.wps.collections.IntervalTree",
+          "type": "java_comment",
+          "jcid": "ji:syn:2"
+        },
+        {
+          "id": "rl:ji:syn:2",
+          "ln": -1,
+          "text": "use stubs::cn::wps::collections::IntervalTree::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:2"
+        }
+      ]
+    },
+    {
+      "id": "ri:ji:syn:3",
+      "javaCodeId": "ji:syn:3",
+      "usePath": "use stubs::cn::wps::io::dom::Node::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:3",
+          "ln": -1,
+          "text": "// Java: import cn.wps.io.dom.Node",
+          "type": "java_comment",
+          "jcid": "ji:syn:3"
+        },
+        {
+          "id": "rl:ji:syn:3",
+          "ln": -1,
+          "text": "use stubs::cn::wps::io::dom::Node::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:3"
+        }
+      ]
+    },
+    {
+      "id": "ri:ji:syn:4",
+      "javaCodeId": "ji:syn:4",
+      "usePath": "use stubs::cn::wps::collections::IntervalMapNode::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:4",
+          "ln": -1,
+          "text": "// Java: import cn.wps.collections.IntervalMapNode",
+          "type": "java_comment",
+          "jcid": "ji:syn:4"
+        },
+        {
+          "id": "rl:ji:syn:4",
+          "ln": -1,
+          "text": "use stubs::cn::wps::collections::IntervalMapNode::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:4"
+        }
+      ]
+    },
+    {
+      "id": "ri:ji:syn:5",
+      "javaCodeId": "ji:syn:5",
+      "usePath": "use stubs::java::lang::RuntimeException::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:5",
+          "ln": -1,
+          "text": "// Java: import java.lang.RuntimeException",
+          "type": "java_comment",
+          "jcid": "ji:syn:5"
+        },
+        {
+          "id": "rl:ji:syn:5",
+          "ln": -1,
+          "text": "use stubs::java::lang::RuntimeException::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:5"
+        }
+      ]
+    },
+    {
+      "id": "ri:ji:syn:6",
+      "javaCodeId": "ji:syn:6",
+      "usePath": "",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:6",
+          "ln": -1,
+          "text": "// Java: import ",
+          "type": "java_comment",
+          "jcid": "ji:syn:6"
+        }
+      ]
+    },
+    {
+      "id": "ri:ji:syn:7",
+      "javaCodeId": "ji:syn:7",
+      "usePath": "use stubs::java::lang::InsertSpace::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:7",
+          "ln": -1,
+          "text": "// Java: import java.lang.InsertSpace",
+          "type": "java_comment",
+          "jcid": "ji:syn:7"
+        },
+        {
+          "id": "rl:ji:syn:7",
+          "ln": -1,
+          "text": "use stubs::java::lang::InsertSpace::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:7"
+        }
+      ]
+    }
+  ],
+  "statics": [],
+  "structs": [
+    {
+      "id": "rs:IntervalMap",
+      "javaCodeId": "jc:IntervalMap",
+      "structName": "IntervalMap",
+      "javaSignature": "// Java: public class IntervalMap ",
+      "fields": [
+        {
+          "id": "rf:jf:IntervalMap:tree1",
+          "javaCodeId": "jf:IntervalMap:tree1",
+          "javaFieldName": "tree1",
+          "javaFieldType": "IntervalMapTree",
+          "rustText": "",
+          "rewriteState": "pending"
+        },
+        {
+          "id": "rf:jf:IntervalMap:tree2",
+          "javaCodeId": "jf:IntervalMap:tree2",
+          "javaFieldName": "tree2",
+          "javaFieldType": "IntervalMapTree",
+          "rustText": "",
+          "rewriteState": "pending"
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "rs:IntervalMapNode1",
+      "javaCodeId": "jc:IntervalMap$$IntervalMapNode1",
+      "structName": "IntervalMapNode1",
+      "javaSignature": "// Java: public static class IntervalMapNode1 extends IntervalMapNode ",
+      "fields": [
+        {
+          "id": "rf:jf:IntervalMapNode1:mLength",
+          "javaCodeId": "jf:IntervalMapNode1:mLength",
+          "javaFieldName": "mLength",
+          "javaFieldType": "int",
+          "rustText": "",
+          "rewriteState": "pending"
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "rs:IntervalMapNode2",
+      "javaCodeId": "jc:IntervalMap$$IntervalMapNode2",
+      "structName": "IntervalMapNode2",
+      "javaSignature": "// Java: public static class IntervalMapNode2 extends IntervalMapNode ",
+      "fields": [],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "rs:IntervalMapTree",
+      "javaCodeId": "jc:IntervalMap$$IntervalMapTree",
+      "structName": "IntervalMapTree",
+      "javaSignature": "// Java: public static class IntervalMapTree extends IntervalTree ",
+      "fields": [
+        {
+          "id": "rf:jf:IntervalMapTree:peer",
+          "javaCodeId": "jf:IntervalMapTree:peer",
+          "javaFieldName": "peer",
+          "javaFieldType": "IntervalMapTree",
+          "rustText": "",
+          "rewriteState": "pending"
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "rs:Segment",
+      "javaCodeId": "jc:IntervalMap$$Segment",
+      "structName": "Segment",
+      "javaSignature": "// Java: public static class Segment ",
+      "fields": [
+        {
+          "id": "rf:jf:Segment:position1",
+          "javaCodeId": "jf:Segment:position1",
+          "javaFieldName": "position1",
+          "javaFieldType": "int",
+          "rustText": "",
+          "rewriteState": "pending"
+        },
+        {
+          "id": "rf:jf:Segment:position2",
+          "javaCodeId": "jf:Segment:position2",
+          "javaFieldName": "position2",
+          "javaFieldType": "int",
+          "rustText": "",
+          "rewriteState": "pending"
+        },
+        {
+          "id": "rf:jf:Segment:length",
+          "javaCodeId": "jf:Segment:length",
+          "javaFieldName": "length",
+          "javaFieldType": "int",
+          "rustText": "",
+          "rewriteState": "pending"
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    }
+  ],
+  "impls": [
+    {
+      "id": "ri:impl:IntervalMap",
+      "javaCodeId": "jc:IntervalMap",
+      "structName": "IntervalMap",
+      "javaSignature": "// Java: public class IntervalMap ",
+      "methods": [
+        {
+          "id": "rm:IntervalMap:IntervalMap",
+          "javaCodeId": "jm:IntervalMap:IntervalMap",
+          "methodName": "new",
+          "javaSignature": "// Java: public IntervalMap() ",
+          "params": [],
+          "returnType": "",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.603Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:getTree1",
+          "javaCodeId": "jm:IntervalMap:getTree1",
+          "methodName": "getTree1",
+          "javaSignature": "// Java: public final IntervalTree getTree1() ",
+          "params": [],
+          "returnType": "IntervalTree",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.604Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:getTree2",
+          "javaCodeId": "jm:IntervalMap:getTree2",
+          "methodName": "getTree2",
+          "javaSignature": "// Java: public final IntervalTree getTree2() ",
+          "params": [],
+          "returnType": "IntervalTree",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.604Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:createNode1",
+          "javaCodeId": "jm:IntervalMap:createNode1",
+          "methodName": "createNode1",
+          "javaSignature": "// Java: protected IntervalMapNode1 createNode1() ",
+          "params": [],
+          "returnType": "IntervalMapNode1",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.604Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:createNode2",
+          "javaCodeId": "jm:IntervalMap:createNode2",
+          "methodName": "createNode2",
+          "javaSignature": "// Java: protected IntervalMapNode2 createNode2() ",
+          "params": [],
+          "returnType": "IntervalMapNode2",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.604Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:cast",
+          "javaCodeId": "jm:IntervalMap:cast",
+          "methodName": "cast",
+          "javaSignature": "// Java: private static final IntervalMapNode cast(Node node) ",
+          "params": [
+            "Node node"
+          ],
+          "returnType": "IntervalMapNode",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.605Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:forwardMapping",
+          "javaCodeId": "jm:IntervalMap:forwardMapping",
+          "methodName": "forwardMapping",
+          "javaSignature": "// Java: public int forwardMapping(int start1, int def) ",
+          "params": [
+            "int start1",
+            "int def"
+          ],
+          "returnType": "int",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.605Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:backwardMapping",
+          "javaCodeId": "jm:IntervalMap:backwardMapping",
+          "methodName": "backwardMapping",
+          "javaSignature": "// Java: public int backwardMapping(int start2, int def) ",
+          "params": [
+            "int start2",
+            "int def"
+          ],
+          "returnType": "int",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.606Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:mapping",
+          "javaCodeId": "jm:IntervalMap:mapping",
+          "methodName": "mapping",
+          "javaSignature": "// Java: private static int mapping(IntervalMapTree tree, int start, int def) ",
+          "params": [
+            "IntervalMapTree tree",
+            "int start",
+            "int def"
+          ],
+          "returnType": "int",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.606Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:addMapping1",
+          "javaCodeId": "jm:IntervalMap:addMapping1",
+          "methodName": "addMapping1",
+          "javaSignature": "// Java: public IntervalMapNode addMapping1(int start1, int start2, int length) ",
+          "params": [
+            "int start1",
+            "int start2",
+            "int length"
+          ],
+          "returnType": "IntervalMapNode",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.608Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:eraseMapping1",
+          "javaCodeId": "jm:IntervalMap:eraseMapping1",
+          "methodName": "eraseMapping1",
+          "javaSignature": "// Java: public void eraseMapping1(int start1, int length, ArrayList<Segment> segments) ",
+          "params": [
+            "int start1",
+            "int length",
+            "ArrayList<Segment> segments"
+          ],
+          "returnType": "void",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.610Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:insertSpace1",
+          "javaCodeId": "jm:IntervalMap:insertSpace1",
+          "methodName": "insertSpace1",
+          "javaSignature": "// Java: public void insertSpace1(int start1, int length) ",
+          "params": [
+            "int start1",
+            "int length"
+          ],
+          "returnType": "void",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.613Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:insertSpace2",
+          "javaCodeId": "jm:IntervalMap:insertSpace2",
+          "methodName": "insertSpace2",
+          "javaSignature": "// Java: public void insertSpace2(int start2, int length) ",
+          "params": [
+            "int start2",
+            "int length"
+          ],
+          "returnType": "void",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.613Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:insertSpace",
+          "javaCodeId": "jm:IntervalMap:insertSpace",
+          "methodName": "insertSpace",
+          "javaSignature": "// Java: private void insertSpace(IntervalMapTree tree, int start, int length) ",
+          "params": [
+            "IntervalMapTree tree",
+            "int start",
+            "int length"
+          ],
+          "returnType": "void",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.613Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:split1",
+          "javaCodeId": "jm:IntervalMap:split1",
+          "methodName": "split1",
+          "javaSignature": "// Java: private IntervalMapNode split1(IntervalMapNode node1, int length) ",
+          "params": [
+            "IntervalMapNode node1",
+            "int length"
+          ],
+          "returnType": "IntervalMapNode",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.613Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:split",
+          "javaCodeId": "jm:IntervalMap:split",
+          "methodName": "split",
+          "javaSignature": "// Java: private IntervalMapNode split(IntervalMapTree tree, IntervalMapNode node, int length) ",
+          "params": [
+            "IntervalMapTree tree",
+            "IntervalMapNode node",
+            "int length"
+          ],
+          "returnType": "IntervalMapNode",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.613Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:eraseSpace1",
+          "javaCodeId": "jm:IntervalMap:eraseSpace1",
+          "methodName": "eraseSpace1",
+          "javaSignature": "// Java: public final void eraseSpace1(int start1, int length) ",
+          "params": [
+            "int start1",
+            "int length"
+          ],
+          "returnType": "void",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.614Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:eraseSpace2",
+          "javaCodeId": "jm:IntervalMap:eraseSpace2",
+          "methodName": "eraseSpace2",
+          "javaSignature": "// Java: public final void eraseSpace2(int start2, int length) ",
+          "params": [
+            "int start2",
+            "int length"
+          ],
+          "returnType": "void",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.614Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:eraseSpace",
+          "javaCodeId": "jm:IntervalMap:eraseSpace",
+          "methodName": "eraseSpace",
+          "javaSignature": "// Java: private static void eraseSpace(IntervalMapTree tree, int start, int length) ",
+          "params": [
+            "IntervalMapTree tree",
+            "int start",
+            "int length"
+          ],
+          "returnType": "void",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.615Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMap:toString",
+          "javaCodeId": "jm:IntervalMap:toString",
+          "methodName": "toString",
+          "javaSignature": "// Java: public String toString() ",
+          "params": [],
+          "returnType": "String",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.615Z",
+              "action": "template_gen"
+            }
+          ]
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "ri:impl:IntervalMapNode1",
+      "javaCodeId": "jc:IntervalMap$$IntervalMapNode1",
+      "structName": "IntervalMapNode1",
+      "javaSignature": "// Java: public static class IntervalMapNode1 extends IntervalMapNode ",
+      "methods": [
+        {
+          "id": "rm:IntervalMapNode1:getLength",
+          "javaCodeId": "jm:IntervalMapNode1:getLength",
+          "methodName": "getLength",
+          "javaSignature": "// Java: public int getLength() ",
+          "params": [],
+          "returnType": "int",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.617Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMapNode1:setLength",
+          "javaCodeId": "jm:IntervalMapNode1:setLength",
+          "methodName": "setLength",
+          "javaSignature": "// Java: public void setLength(int length) ",
+          "params": [
+            "int length"
+          ],
+          "returnType": "void",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.617Z",
+              "action": "template_gen"
+            }
+          ]
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "ri:impl:IntervalMapNode2",
+      "javaCodeId": "jc:IntervalMap$$IntervalMapNode2",
+      "structName": "IntervalMapNode2",
+      "javaSignature": "// Java: public static class IntervalMapNode2 extends IntervalMapNode ",
+      "methods": [
+        {
+          "id": "rm:IntervalMapNode2:getLength",
+          "javaCodeId": "jm:IntervalMapNode2:getLength",
+          "methodName": "getLength",
+          "javaSignature": "// Java: public int getLength() ",
+          "params": [],
+          "returnType": "int",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.617Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalMapNode2:setLength",
+          "javaCodeId": "jm:IntervalMapNode2:setLength",
+          "methodName": "setLength",
+          "javaSignature": "// Java: public void setLength(int length) ",
+          "params": [
+            "int length"
+          ],
+          "returnType": "void",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.617Z",
+              "action": "template_gen"
+            }
+          ]
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "ri:impl:IntervalMapTree",
+      "javaCodeId": "jc:IntervalMap$$IntervalMapTree",
+      "structName": "IntervalMapTree",
+      "javaSignature": "// Java: public static class IntervalMapTree extends IntervalTree ",
+      "methods": [
+        {
+          "id": "rm:IntervalMapTree:IntervalMapTree",
+          "javaCodeId": "jm:IntervalMapTree:IntervalMapTree",
+          "methodName": "new",
+          "javaSignature": "// Java: public IntervalMapTree(IntervalMapNode head) ",
+          "params": [
+            "IntervalMapNode head"
+          ],
+          "returnType": "",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.617Z",
+              "action": "template_gen"
+            }
+          ]
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "ri:impl:Segment",
+      "javaCodeId": "jc:IntervalMap$$Segment",
+      "structName": "Segment",
+      "javaSignature": "// Java: public static class Segment ",
+      "methods": [
+        {
+          "id": "rm:Segment:Segment",
+          "javaCodeId": "jm:Segment:Segment",
+          "methodName": "new",
+          "javaSignature": "// Java: public Segment(int position1, int position2, int length) ",
+          "params": [
+            "int position1",
+            "int position2",
+            "int length"
+          ],
+          "returnType": "",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.617Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:Segment:toString",
+          "javaCodeId": "jm:Segment:toString",
+          "methodName": "toString",
+          "javaSignature": "// Java: public String toString() ",
+          "params": [],
+          "returnType": "String",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.617Z",
+              "action": "template_gen"
+            }
+          ]
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    }
+  ],
+  "traits": [],
+  "fileLineMap": {
+    "ri:ji:0": {
+      "start": 0,
+      "end": 1
+    },
+    "ri:ji:syn:1": {
+      "start": 1,
+      "end": 3
+    },
+    "ri:ji:syn:2": {
+      "start": 3,
+      "end": 5
+    },
+    "ri:ji:syn:3": {
+      "start": 5,
+      "end": 7
+    },
+    "ri:ji:syn:4": {
+      "start": 7,
+      "end": 9
+    },
+    "ri:ji:syn:5": {
+      "start": 9,
+      "end": 11
+    },
+    "ri:ji:syn:6": {
+      "start": 11,
+      "end": 12
+    },
+    "ri:ji:syn:7": {
+      "start": 12,
+      "end": 14
+    },
+    "rf:jf:IntervalMap:tree1": {
+      "start": 17,
+      "end": 19
+    },
+    "rf:jf:IntervalMap:tree2": {
+      "start": 19,
+      "end": 21
+    },
+    "rs:IntervalMap": {
+      "start": 15,
+      "end": 23
+    },
+    "rf:jf:IntervalMapNode1:mLength": {
+      "start": 25,
+      "end": 27
+    },
+    "rs:IntervalMapNode1": {
+      "start": 23,
+      "end": 29
+    },
+    "rs:IntervalMapNode2": {
+      "start": 29,
+      "end": 33
+    },
+    "rf:jf:IntervalMapTree:peer": {
+      "start": 35,
+      "end": 37
+    },
+    "rs:IntervalMapTree": {
+      "start": 33,
+      "end": 39
+    },
+    "rf:jf:Segment:position1": {
+      "start": 41,
+      "end": 43
+    },
+    "rf:jf:Segment:position2": {
+      "start": 43,
+      "end": 45
+    },
+    "rf:jf:Segment:length": {
+      "start": 45,
+      "end": 47
+    },
+    "rs:Segment": {
+      "start": 39,
+      "end": 49
+    },
+    "rb:ctor:jm:IntervalMap:IntervalMap": {
+      "start": 53,
+      "end": 54
+    },
+    "rm:IntervalMap:IntervalMap": {
+      "start": 51,
+      "end": 56
+    },
+    "rb:jb:jm:IntervalMap:getTree1:block": {
+      "start": 58,
+      "end": 60
+    },
+    "rm:IntervalMap:getTree1": {
+      "start": 56,
+      "end": 62
+    },
+    "rb:jb:jm:IntervalMap:getTree2:block": {
+      "start": 64,
+      "end": 66
+    },
+    "rm:IntervalMap:getTree2": {
+      "start": 62,
+      "end": 68
+    },
+    "rb:jb:jm:IntervalMap:createNode1:block": {
+      "start": 70,
+      "end": 72
+    },
+    "rm:IntervalMap:createNode1": {
+      "start": 68,
+      "end": 74
+    },
+    "rb:jb:jm:IntervalMap:createNode2:block": {
+      "start": 76,
+      "end": 78
+    },
+    "rm:IntervalMap:createNode2": {
+      "start": 74,
+      "end": 80
+    },
+    "rb:jb:jm:IntervalMap:cast:block": {
+      "start": 82,
+      "end": 84
+    },
+    "rm:IntervalMap:cast": {
+      "start": 80,
+      "end": 86
+    },
+    "rb:jb:jm:IntervalMap:forwardMapping:block": {
+      "start": 88,
+      "end": 90
+    },
+    "rm:IntervalMap:forwardMapping": {
+      "start": 86,
+      "end": 92
+    },
+    "rb:jb:jm:IntervalMap:backwardMapping:block": {
+      "start": 94,
+      "end": 96
+    },
+    "rm:IntervalMap:backwardMapping": {
+      "start": 92,
+      "end": 98
+    },
+    "rb:jb:jm:IntervalMap:mapping:block:0": {
+      "start": 100,
+      "end": 113
+    },
+    "rb:jb:jm:IntervalMap:mapping:block:1:0:0": {
+      "start": 125,
+      "end": 130
+    },
+    "rb:jb:jm:IntervalMap:mapping:block:1:0:1:0": {
+      "start": 132,
+      "end": 141
+    },
+    "rb:jb:jm:IntervalMap:mapping:block:1:0:1": {
+      "start": 130,
+      "end": 146
+    },
+    "rb:jb:jm:IntervalMap:mapping:block:1:0": {
+      "start": 123,
+      "end": 147
+    },
+    "rb:jb:jm:IntervalMap:mapping:block:1": {
+      "start": 113,
+      "end": 150
+    },
+    "rb:jb:jm:IntervalMap:mapping:block": {
+      "start": 100,
+      "end": 150
+    },
+    "rm:IntervalMap:mapping": {
+      "start": 98,
+      "end": 152
+    },
+    "rb:jb:jm:IntervalMap:addMapping1:block:0:0": {
+      "start": 156,
+      "end": 161
+    },
+    "rb:jb:jm:IntervalMap:addMapping1:block:0:1:0": {
+      "start": 173,
+      "end": 180
+    },
+    "rb:jb:jm:IntervalMap:addMapping1:block:0:1": {
+      "start": 165,
+      "end": 181
+    },
+    "rb:jb:jm:IntervalMap:addMapping1:block:0": {
+      "start": 154,
+      "end": 182
+    },
+    "rb:jb:jm:IntervalMap:addMapping1:block:1": {
+      "start": 186,
+      "end": 197
+    },
+    "rb:jb:jm:IntervalMap:addMapping1:block:2:0": {
+      "start": 207,
+      "end": 214
+    },
+    "rb:jb:jm:IntervalMap:addMapping1:block:2:1": {
+      "start": 214,
+      "end": 237
+    },
+    "rb:jb:jm:IntervalMap:addMapping1:block:2": {
+      "start": 197,
+      "end": 238
+    },
+    "rb:jb:jm:IntervalMap:addMapping1:block": {
+      "start": 154,
+      "end": 238
+    },
+    "rm:IntervalMap:addMapping1": {
+      "start": 152,
+      "end": 240
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block:0:0": {
+      "start": 250,
+      "end": 255
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block:0:1:0:0": {
+      "start": 259,
+      "end": 264
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block:0:1:0": {
+      "start": 257,
+      "end": 271
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block:0:1:1": {
+      "start": 271,
+      "end": 278
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block:0:1": {
+      "start": 255,
+      "end": 283
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block:0:2:0": {
+      "start": 291,
+      "end": 296
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block:0:2": {
+      "start": 289,
+      "end": 303
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block:0:3:0": {
+      "start": 305,
+      "end": 310
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block:0:3": {
+      "start": 303,
+      "end": 319
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block:0:4": {
+      "start": 319,
+      "end": 324
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block:0": {
+      "start": 246,
+      "end": 325
+    },
+    "rb:jb:jm:IntervalMap:eraseMapping1:block": {
+      "start": 242,
+      "end": 325
+    },
+    "rm:IntervalMap:eraseMapping1": {
+      "start": 240,
+      "end": 327
+    },
+    "rb:jb:jm:IntervalMap:insertSpace1:block": {
+      "start": 329,
+      "end": 331
+    },
+    "rm:IntervalMap:insertSpace1": {
+      "start": 327,
+      "end": 333
+    },
+    "rb:jb:jm:IntervalMap:insertSpace2:block": {
+      "start": 335,
+      "end": 337
+    },
+    "rm:IntervalMap:insertSpace2": {
+      "start": 333,
+      "end": 339
+    },
+    "rb:jb:jm:IntervalMap:insertSpace:block:0:0": {
+      "start": 345,
+      "end": 350
+    },
+    "rb:jb:jm:IntervalMap:insertSpace:block:0:1": {
+      "start": 350,
+      "end": 357
+    },
+    "rb:jb:jm:IntervalMap:insertSpace:block:0": {
+      "start": 341,
+      "end": 358
+    },
+    "rb:jb:jm:IntervalMap:insertSpace:block": {
+      "start": 341,
+      "end": 358
+    },
+    "rm:IntervalMap:insertSpace": {
+      "start": 339,
+      "end": 360
+    },
+    "rb:jb:jm:IntervalMap:split1:block": {
+      "start": 362,
+      "end": 364
+    },
+    "rm:IntervalMap:split1": {
+      "start": 360,
+      "end": 366
+    },
+    "rb:jb:jm:IntervalMap:split:block": {
+      "start": 368,
+      "end": 390
+    },
+    "rm:IntervalMap:split": {
+      "start": 366,
+      "end": 392
+    },
+    "rb:jb:jm:IntervalMap:eraseSpace1:block": {
+      "start": 394,
+      "end": 396
+    },
+    "rm:IntervalMap:eraseSpace1": {
+      "start": 392,
+      "end": 398
+    },
+    "rb:jb:jm:IntervalMap:eraseSpace2:block": {
+      "start": 400,
+      "end": 402
+    },
+    "rm:IntervalMap:eraseSpace2": {
+      "start": 398,
+      "end": 404
+    },
+    "rb:jb:jm:IntervalMap:eraseSpace:block:0:0:0": {
+      "start": 420,
+      "end": 429
+    },
+    "rb:jb:jm:IntervalMap:eraseSpace:block:0:0": {
+      "start": 414,
+      "end": 430
+    },
+    "rb:jb:jm:IntervalMap:eraseSpace:block:0": {
+      "start": 410,
+      "end": 431
+    },
+    "rb:jb:jm:IntervalMap:eraseSpace:block": {
+      "start": 406,
+      "end": 431
+    },
+    "rm:IntervalMap:eraseSpace": {
+      "start": 404,
+      "end": 433
+    },
+    "rb:jb:jm:IntervalMap:toString:block:0": {
+      "start": 441,
+      "end": 454
+    },
+    "rb:jb:jm:IntervalMap:toString:block": {
+      "start": 435,
+      "end": 458
+    },
+    "rm:IntervalMap:toString": {
+      "start": 433,
+      "end": 460
+    },
+    "ri:impl:IntervalMap": {
+      "start": 49,
+      "end": 462
+    },
+    "rb:jb:jm:IntervalMapNode1:getLength:block": {
+      "start": 466,
+      "end": 468
+    },
+    "rm:IntervalMapNode1:getLength": {
+      "start": 464,
+      "end": 470
+    },
+    "rb:jb:jm:IntervalMapNode1:setLength:block": {
+      "start": 472,
+      "end": 474
+    },
+    "rm:IntervalMapNode1:setLength": {
+      "start": 470,
+      "end": 476
+    },
+    "ri:impl:IntervalMapNode1": {
+      "start": 462,
+      "end": 478
+    },
+    "rb:jb:jm:IntervalMapNode2:getLength:block": {
+      "start": 482,
+      "end": 484
+    },
+    "rm:IntervalMapNode2:getLength": {
+      "start": 480,
+      "end": 486
+    },
+    "rb:jb:jm:IntervalMapNode2:setLength:block": {
+      "start": 488,
+      "end": 490
+    },
+    "rm:IntervalMapNode2:setLength": {
+      "start": 486,
+      "end": 492
+    },
+    "ri:impl:IntervalMapNode2": {
+      "start": 478,
+      "end": 494
+    },
+    "rb:ctor:jm:IntervalMapTree:IntervalMapTree": {
+      "start": 498,
+      "end": 499
+    },
+    "rm:IntervalMapTree:IntervalMapTree": {
+      "start": 496,
+      "end": 501
+    },
+    "ri:impl:IntervalMapTree": {
+      "start": 494,
+      "end": 503
+    },
+    "rb:ctor:jm:Segment:Segment": {
+      "start": 507,
+      "end": 508
+    },
+    "rm:Segment:Segment": {
+      "start": 505,
+      "end": 510
+    },
+    "rb:jb:jm:Segment:toString:block": {
+      "start": 512,
+      "end": 514
+    },
+    "rm:Segment:toString": {
+      "start": 510,
+      "end": 516
+    },
+    "ri:impl:Segment": {
+      "start": 503,
+      "end": 518
+    }
+  }
+}

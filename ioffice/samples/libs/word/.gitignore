@@ -1,0 +1,13 @@
+# Dart / Flutter
+.dart_tool/
+build/
+.flutter-plugins*
+.idea/
+*.iml
+
+# 本仓库只提交「预编译产物」（word_render/native/<platform>/ 下已入库文件）；
+# native 构建目录不入库
+**/target/
+
+# OS
+.DS_Store

@@ -1,0 +1,135 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package util
+
+import (
+	"strings"
+	"testing"
+)
+
+func TestSanitizeSVGRemovesActiveContent(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{"script", `<svg><script>alert(1)</script></svg>`},
+		{"style parser difference", `<svg><desc><style><script>alert(1)</script></style></desc></svg>`},
+		{"xmp parser difference", `<svg><title><xmp><script>alert(1)</script></xmp></title></svg>`},
+		{"noscript parser difference", `<svg><desc><noscript><script>alert(1)</script></noscript></desc></svg>`},
+		{"prefixed script", `<svg xmlns:s="urn:test"><s:script>alert(1)</s:script></svg>`},
+		{"foreign object", `<svg><foreignObject><div><script>alert(1)</script></div></foreignObject></svg>`},
+		{"animation", `<svg><animate attributeName="href" values="javascript:alert(1)"></animate></svg>`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			output, err := SanitizeSVG(test.input)
+			if err != nil {
+				t.Fatalf("sanitize failed: %v", err)
+			}
+			lower := strings.ToLower(output)
+			for _, unsafe := range []string{"<script", ":script", "<foreignobject", "<animate", "javascript:"} {
+				if strings.Contains(lower, unsafe) {
+					t.Fatalf("unsafe content %q remains in %q", unsafe, output)
+				}
+			}
+		})
+	}
+}
+
+func TestSanitizeSVGFiltersUnsafeAttributes(t *testing.T) {
+	input := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="alert(1)">` +
+		`<a href="java&#x0A;script:alert(1)" xlink:href="vbscript:alert(1)" style="background:url(javascript:alert(1))">` +
+		`<image href="data:image/png;base64,AA=="></image></a></svg>`
+	output, err := SanitizeSVG(input)
+	if err != nil {
+		t.Fatalf("sanitize failed: %v", err)
+	}
+	lower := strings.ToLower(output)
+	for _, unsafe := range []string{"onload=", "javascript:", "vbscript:"} {
+		if strings.Contains(lower, unsafe) {
+			t.Fatalf("unsafe attribute %q remains in %q", unsafe, output)
+		}
+	}
+	if !strings.Contains(output, `href="data:image/png;base64,AA=="`) {
+		t.Fatalf("safe bitmap data URL was removed from %q", output)
+	}
+}
+
+func TestSanitizeSVGPreservesStaticSVG(t *testing.T) {
+	input := `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 10 10">` +
+		`<defs><linearGradient id="g"><stop offset="0%" stop-color="#fff"></stop></linearGradient></defs>` +
+		`<path d="M0 0h10v10z" fill="url(#g)"></path><use xlink:href="#shape"></use></svg>`
+	output, err := SanitizeSVG(input)
+	if err != nil {
+		t.Fatalf("sanitize failed: %v", err)
+	}
+	for _, expected := range []string{`xmlns="http://www.w3.org/2000/svg"`, `xmlns:xlink="http://www.w3.org/1999/xlink"`,
+		`<linearGradient`, `<path`, `xlink:href="#shape"`} {
+		if !strings.Contains(output, expected) {
+			t.Fatalf("static SVG content %q is missing from %q", expected, output)
+		}
+	}
+}
+
+func TestSanitizeSVGAllowsUTF8BOM(t *testing.T) {
+	input := "\ufeff" + `<?xml version="1.0" encoding="utf-8"?><svg xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10"/></svg>`
+	output, err := SanitizeSVG(input)
+	if err != nil {
+		t.Fatalf("sanitize failed: %v", err)
+	}
+	if strings.Contains(output, "\ufeff") || !strings.Contains(output, "<rect") {
+		t.Fatalf("static SVG was not preserved: %q", output)
+	}
+	output, err = SanitizeSVG("\ufeff" + `<svg><script>alert(1)</script></svg>`)
+	if err != nil {
+		t.Fatalf("sanitize failed: %v", err)
+	}
+	if strings.Contains(output, "script") {
+		t.Fatalf("active content remains in %q", output)
+	}
+}
+
+func TestSanitizeSVGAllowsBenignDoctype(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{"drawio style", `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">` +
+			`<svg xmlns="http://www.w3.org/2000/svg"></svg>`},
+		{"short", `<!DOCTYPE svg><svg xmlns="http://www.w3.org/2000/svg"></svg>`},
+		{"system id", `<!DOCTYPE svg SYSTEM "svg.dtd"><svg xmlns="http://www.w3.org/2000/svg"></svg>`},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			output, err := SanitizeSVG(test.input)
+			if err != nil {
+				t.Fatalf("sanitize failed: %v", err)
+			}
+			if strings.Contains(strings.ToLower(output), "<!doctype") {
+				t.Fatalf("doctype was not dropped from %q", output)
+			}
+		})
+	}
+}
+
+func TestSanitizeSVGRejectsInvalidInput(t *testing.T) {
+	tests := []string{
+		`<html></html>`,
+		`<svg><path></svg>`,
+		`<svg><script><path></script></path></svg>`,
+		`<svg></svg><svg></svg>`,
+		`text<svg></svg>`,
+		`<!DOCTYPE svg [ <!ENTITY x "y"> ]><svg></svg>`,
+		`<!ENTITY x "y"><svg></svg>`,
+		`<!DOCTYPE html><svg></svg>`,
+	}
+	for _, input := range tests {
+		if output, err := SanitizeSVG(input); err == nil {
+			t.Fatalf("invalid input %q produced %q", input, output)
+		}
+	}
+}

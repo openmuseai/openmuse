@@ -1,0 +1,1098 @@
+{
+	"ID": "20221223215557-o6gfsoy",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"icon": "1f4f8",
+		"id": "20221223215557-o6gfsoy",
+		"title": "闪卡",
+		"type": "doc",
+		"updated": "20261024163013"
+	},
+	"Children": [
+		{
+			"ID": "20260614194151-5atwbsj",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614194151-5atwbsj",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-4z6xzmg",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614194151-4z6xzmg",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "将内容块制作为闪卡后，思源使用间隔重复算法 FSRS，根据每次复习的评分安排下次复习时间。可以直接复用笔记中的内容，无需另写一份卡片。"
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-667efp1",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614194151-667efp1",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用方式"
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-l3dy84x",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614194151-l3dy84x",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "制卡"
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-qe42jhc",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614194151-qe42jhc",
+				"updated": "20260614194151"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在开始正式制卡之前，我们先介绍一些制卡的基本规则："
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-47wr1nh",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614194151-47wr1nh",
+				"updated": "20261009153000"
+			},
+			"Children": [
+				{
+					"ID": "20260614194151-8kgj4q2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-8kgj4q2",
+						"updated": "20260614194227"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-olglljg",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-olglljg",
+								"updated": "20260614194227"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "内容块中的 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "mark",
+									"TextMarkTextContent": "标记"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 元素会被视作挖空的答案"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614194151-9qsh604",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-9qsh604",
+						"updated": "20260614194151"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-ivr9ux2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-ivr9ux2",
+								"updated": "20260614194151"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "如果将超级块设置为闪卡，则该超级块的第一个子块会被视作问题，其余子块会被视作答案"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614194151-bw05va6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-bw05va6",
+						"updated": "20261009153000"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-vlk79x9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-vlk79x9",
+								"updated": "20261009153000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "如果将列表或者列表项设置为闪卡，则非子列表会被视为问题，子列表会被视作答案"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261009153000-hrs7o2y",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20261009153000-hrs7o2y",
+						"updated": "20261009153000"
+					},
+					"Children": [
+						{
+							"ID": "20261009153000-rzzq07r",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261009153000-rzzq07r",
+								"updated": "20261009153000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "如果将引述块设置为闪卡，则该引述块的第一个子块会被视作问题，其余子块会被视作答案"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20261009153000-0g6dvb7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20261009153000-0g6dvb7",
+						"updated": "20261009153000"
+					},
+					"Children": [
+						{
+							"ID": "20261009153000-d9i7qnu",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20261009153000-d9i7qnu",
+								"updated": "20261009153000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "如果将提示块设置为闪卡，则提示块的标题会被视作问题，内容会被视作答案"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614194151-8oxtj1r",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-8oxtj1r",
+						"updated": "20260614194151"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-ucm181i",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-ucm181i",
+								"updated": "20260614194151"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "如果将标题块设置为闪卡，则该标题块会被视作问题，其下方块会被视作答案"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-of1pv7p",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614194151-of1pv7p",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "以上规则可以在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "闪卡"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中调整。"
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-4iprfuw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614194151-4iprfuw",
+				"updated": "20260614194151"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "完成制卡：在块标菜单中选择「快速制卡」。"
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-6msabwl",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614194151-6msabwl",
+				"updated": "20260804230000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "复习"
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-zhpqa2m",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614194151-zhpqa2m",
+				"updated": "20260614194151"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "有以下入口可以进入复习，各自的复习范围不同："
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-qzcaakn",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614194151-qzcaakn",
+				"updated": "20260614194151"
+			},
+			"Children": [
+				{
+					"ID": "20260614194151-grylxai",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-grylxai",
+						"updated": "20260614194151"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-lwuasre",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-lwuasre",
+								"updated": "20260614194151"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "在文档面板中右击文档选择「闪卡 - 间隔重复」，复习范围为该文档及其子文档中的卡片"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614194151-y6ncse4",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-y6ncse4",
+						"updated": "20260614194151"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-hqoayny",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-hqoayny",
+								"updated": "20260614194151"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "在编辑器中点击文档块标上的「闪卡 - 间隔重复」，复习范围为当前文档及其子文档中的卡片"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614194151-2l8ryll",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-2l8ryll",
+						"updated": "20260614194151"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-mfd6bot",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-mfd6bot",
+								"updated": "20260614194151"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "右击笔记本选择「闪卡 - 间隔重复」，复习范围为该笔记本中所有文档的卡片"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614194151-l95tga8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-l95tga8",
+						"updated": "20260614194151"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-2ts49c1",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-2ts49c1",
+								"updated": "20260614194151"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "点击顶部主菜单中的「闪卡」，复习范围涵盖所有笔记本中到期的卡片"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-0bh9rx5",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614194151-0bh9rx5",
+				"updated": "20260804230000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "进入复习后，界面会逐张展示待复习的卡片。每张卡片先展示问题面，点击「显示答案」或按 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "空格"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " / "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "回车"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 展示答案面，然后根据自己的掌握程度选择评级："
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-820ok8j",
+			"Type": "NodeTable",
+			"TableAligns": [
+				0,
+				0,
+				0
+			],
+			"Properties": {
+				"colgroup": "||",
+				"id": "20260614194151-820ok8j",
+				"updated": "20260614194151"
+			},
+			"Children": [
+				{
+					"Type": "NodeTableHead",
+					"Data": "thead",
+					"Children": [
+						{
+							"Type": "NodeTableRow",
+							"Data": "tr",
+							"Children": [
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "评级"
+										}
+									]
+								},
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "快捷键"
+										}
+									]
+								},
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "说明"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "重来"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "1"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "j"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "a"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "完全忘记，需要重新学习"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "困难"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "2"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "k"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "s"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "回忆起来了但很吃力"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "良好"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "3"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "l"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "d"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "能够正确回忆"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "简单"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "4"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ";"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "f"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "非常轻松就能回忆"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-gu6khf3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614194151-gu6khf3",
+				"updated": "20260804230000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "展示答案后，"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "空格"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 和 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "回车"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 也可直接触发「良好」评级。评级直接影响卡片的复习间隔——高评级延长下次复习时间，低评级缩短下次复习时间。系统使用 FSRS 算法根据历史评级数据自动优化每个人的复习安排。"
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-4s6qhj0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614194151-4s6qhj0",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "设置"
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-ic45461",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614194151-ic45461",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "闪卡"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中可以调整闪卡相关的全局配置，其中"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "strong",
+					"TextMarkTextContent": "新卡上限"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "和"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "strong",
+					"TextMarkTextContent": "旧卡上限"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "可以使用文档块自定义属性进行覆盖："
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-6q5amus",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614194151-6q5amus",
+				"updated": "20260614194151"
+			},
+			"Children": [
+				{
+					"ID": "20260614194151-06pfy1v",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-06pfy1v",
+						"updated": "20260614194151"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-6iwqskb",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-6iwqskb",
+								"updated": "20260614194151"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "riff-new-card-limit"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614194151-k8e4kvv",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-k8e4kvv",
+						"updated": "20260614194151"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-svumj86",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-svumj86",
+								"updated": "20260614194151"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "riff-review-card-limit"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-ff1fphj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614194151-ff1fphj",
+				"updated": "20260614194151"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "不同文档上单独配置，相互独立不影响，比如父文档上配置为 5，子文档为 10，那么从父文档复习的时候就是 5，不会叠加子文档的配置。"
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-3taecul",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260614194151-3taecul",
+				"updated": "20260614194151"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20260614194151-fselect",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260614194151-fselect",
+				"updated": "20260614194151"
+			},
+			"Children": [
+				{
+					"ID": "20260614194151-dxd2jf6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-dxd2jf6",
+						"updated": "20260614194151"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-7umq8t4",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-7umq8t4",
+								"updated": "20260614194151"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "内容块被删除（或者 ID 改变）后对应的闪卡会失效"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260614194151-ytt1nq8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260614194151-ytt1nq8",
+						"updated": "20260614194151"
+					},
+					"Children": [
+						{
+							"ID": "20260614194151-h2ysu9d",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260614194151-h2ysu9d",
+								"updated": "20260614194151"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "不建议启用卡包，该方式已经弃用，继续使用可能会遇到无法解决的问题"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

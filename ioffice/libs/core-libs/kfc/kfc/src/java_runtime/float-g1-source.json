@@ -1,0 +1,9 @@
+{
+  "originalSource": "/Users/mac/Library/Android/sdk/sources/android-36/jdk/internal/math/MathUtils.java",
+  "sha256": "bdc4f9def2088610109f74a01ce79c21202f824b059bea0d213ed94000bbff2c",
+  "table": "g1(k), high 63 bits of the unchanged MathUtils g array",
+  "kMin": -45,
+  "kMax": 31,
+  "count": 77,
+  "binarySha256": "c645cd3c03b67d99ac85d2d025a303267a972394cc78fb9c74b9d40afccb03c4"
+}

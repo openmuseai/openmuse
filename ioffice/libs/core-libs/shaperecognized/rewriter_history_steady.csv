@@ -1,0 +1,3 @@
+order,file_path,class_name,state,review,lib_name,batch_id,rust_path,depends,session_id,tags
+0,koffice/core-libs/shaperecognized/src/cn/wps/shaperecognize/shape/Point.java,Point,steady,,main,,libs/core-libs/shaperecognized/src/cn/wps/shaperecognize/shape/Point.rs,,,0524_rust_stub
+13,koffice/core-libs/shaperecognized/src/com/example/shaperecognized/BuildConfig.java,BuildConfig,steady,,main,,libs/core-libs/shaperecognized/src/com/example/shaperecognized/BuildConfig.rs,,,0524_rust_stub

@@ -1,0 +1,86 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+{{object 2 0}} <<
+  /Type /Pages
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+{{object 3 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 4 0 R
+  /MediaBox [0 0 200 200]
+  /Resources <<
+    /ProcSet [/PDF /Text]
+    /Font <<
+      /F1 5 0 R
+    >>
+  >>
+>>
+endobj
+{{object 4 0}} <<
+  {{streamlen}}
+>>
+stream
+BT
+/F1 12 Tf
+150 160 Td
+[<01>2<02>2<03>-4<02>2<04>5<05>]TJ
+ET
+
+BT
+0 100 Td
+-1 0 0 1 50 40 Tm
+[<01>5<05>]TJ
+ET
+endstream
+endobj
+{{object 5 0}} <<
+  /Type /Font
+  /Subtype /TrueType
+  /BaseFont /BAAAAA+NotoSansHebrew-Regular
+  /FirstChar 0
+  /FontDescriptor 6 0 R
+  /LastChar 5
+  /ToUnicode 8 0 R
+  /Widths [600 294 235 645 397 542]
+>>
+endobj
+{{object 6 0}} <<
+  /Type /FontDescriptor
+  /Ascent 1069
+  /CapHeight 869
+  /Descent -293
+  /Flags 4
+  /FontBBox [-210 -252 716 869]
+  /FontFile2 7 0 R
+  /FontName /BAAAAA+NotoSansHebrew-Regular
+  /ItalicAngle 0
+  /StemV 80
+>>
+endobj
+{{object 7 0}} <<
+  /Filter [/ASCII85Decode /FlateDecode]
+  {{streamlen}}
+  /Length1 6721
+>>
+stream
+{{include hebrew_truetype_font.fragment}}
+endstream
+endobj
+{{object 8 0}} <<
+  {{streamlen}}
+>>
+stream
+{{include hebrew_cmap.fragment}}
+endstream
+endobj
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF

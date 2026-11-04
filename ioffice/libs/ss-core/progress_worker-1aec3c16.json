@@ -1,0 +1,31 @@
+{
+  "mainJavaPath": "d:\\agentic\\src\\wordOffice\\koffice\\et\\core\\cn\\wps\\et\\ss\\statemachine\\StateMachine.java",
+  "mode": "rewrite",
+  "files": [
+    {
+      "javaPath": "d:\\agentic\\src\\wordOffice\\koffice\\core-libs\\kfc\\kfc\\src\\cn\\wps\\kfc\\numfmt\\util\\DateUtil.java",
+      "rustPath": "d:\\agentic\\src\\wordOffice\\libs\\core-libs\\kfc\\kfc\\src\\cn\\wps\\kfc\\numfmt\\util\\DateUtil.rs",
+      "currentStep": "cargo_test",
+      "status": "done",
+      "retryCount": 0,
+      "errorCnt": 0
+    },
+    {
+      "javaPath": "d:\\agentic\\src\\wordOffice\\koffice\\core-libs\\util\\util\\src\\org\\apache\\poi\\util\\LanguageType.java",
+      "rustPath": "d:\\agentic\\src\\wordOffice\\libs\\core-libs\\util\\util\\src\\org\\apache\\poi\\util\\LanguageType.rs",
+      "currentStep": "cargo_test",
+      "status": "done",
+      "retryCount": 0,
+      "errorCnt": 0
+    },
+    {
+      "javaPath": "d:\\agentic\\src\\wordOffice\\koffice\\et\\core\\cn\\wps\\et\\ss\\statemachine\\StateMachine.java",
+      "rustPath": "d:\\agentic\\src\\wordOffice\\libs\\ss-core\\src\\cn\\wps\\et\\ss\\statemachine\\StateMachine.rs",
+      "currentStep": "gen_template",
+      "status": "pending",
+      "retryCount": 0,
+      "errorCnt": 0
+    }
+  ],
+  "timestamp": "2026-06-06T13:18:36.820Z"
+}

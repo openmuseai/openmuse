@@ -1,0 +1,466 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"errors"
+	"fmt"
+	"io/fs"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/88250/lute"
+	"github.com/88250/lute/ast"
+	"github.com/88250/lute/parse"
+	"github.com/siyuan-note/dataparser"
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/av"
+	"github.com/siyuan-note/siyuan/kernel/filesys"
+	"github.com/siyuan-note/siyuan/kernel/search"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/task"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+	"golang.org/x/time/rate"
+)
+
+func resetTree(tree *parse.Tree, titleSuffix string, removeAvBinding bool) {
+	resetTreeData(tree, titleSuffix, removeAvBinding)
+	ast.Walk(tree.Root, func(n *ast.Node, entering bool) ast.WalkStatus {
+		if entering && n.Type == ast.NodeAttributeView {
+			av.UpsertBlockRel(n.AttributeViewID, n.ID)
+		}
+		return ast.WalkContinue
+	})
+}
+
+// resetTreeData prepares identities without publishing database mirror side effects.
+func resetTreeData(tree *parse.Tree, titleSuffix string, removeAvBinding bool) {
+	oldRootID := tree.Root.ID
+	tree.ID = ast.NewNodeID()
+	tree.Root.ID = tree.ID
+	title := treenode.ReadDocumentTitle(tree.Root).Text
+	if "" != titleSuffix {
+		if t, parseErr := time.Parse("20060102150405", util.TimeFromID(tree.ID)); nil == parseErr {
+			titleSuffix += " " + t.Format("2006-01-02 15:04:05")
+		} else {
+			titleSuffix = "Duplicated " + time.Now().Format("2006-01-02 15:04:05")
+		}
+		titleSuffix = "(" + titleSuffix + ")"
+		titleSuffix = " " + titleSuffix
+		if Conf.language(16) == title {
+			titleSuffix = ""
+		}
+	}
+	tree.Root.SetIALAttr("id", tree.ID)
+	tree.Root.SetIALAttr("title", title+titleSuffix)
+	tree.Root.RemoveIALAttr("scroll")
+	p := path.Join(path.Dir(tree.Path), tree.ID) + ".sy"
+	tree.Path = p
+	tree.HPath = tree.HPath + titleSuffix
+
+	// 重置块 ID
+	blockIDs := map[string]string{oldRootID: tree.ID}
+	ast.Walk(tree.Root, func(n *ast.Node, entering bool) ast.WalkStatus {
+		if !entering || ast.NodeDocument == n.Type {
+			return ast.WalkContinue
+		}
+		if n.IsBlock() && "" != n.ID {
+			newID := ast.NewNodeID()
+			blockIDs[n.ID] = newID
+			n.ID = newID
+			n.SetIALAttr("id", n.ID)
+		}
+		return ast.WalkContinue
+	})
+
+	remapDuplicateDocTreeReferences(tree.Root, blockIDs)
+
+	if removeAvBinding {
+		// 清空文档绑定的数据库
+		tree.Root.RemoveIALAttr(av.NodeAttrNameAvs)
+	}
+}
+
+func pagedPaths(localPath string, pageSize int) (ret map[int][]string) {
+	ret, _ = pagedPathsWithWalker(localPath, pageSize, false, filelock.Walk)
+	return
+}
+
+func pagedPathsWithError(localPath string, pageSize int) (ret map[int][]string, err error) {
+	return pagedPathsWithWalker(localPath, pageSize, true, filelock.Walk)
+}
+
+func pagedPathsWithWalker(localPath string, pageSize int, strict bool, walk func(string, fs.WalkDirFunc) error) (ret map[int][]string, err error) {
+	ret = map[int][]string{}
+	page := 1
+	err = walk(localPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			if strict {
+				return err
+			}
+			return nil
+		}
+		if d == nil {
+			return nil
+		}
+
+		if d.IsDir() {
+			if strings.HasPrefix(d.Name(), ".") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		if !strings.HasSuffix(d.Name(), ".sy") {
+			return nil
+		}
+
+		ret[page] = append(ret[page], path)
+		if pageSize <= len(ret[page]) {
+			page++
+		}
+		return nil
+	})
+	return
+}
+
+func loadTree(localPath string, luteEngine *lute.Lute) (ret *parse.Tree, err error) {
+	data, err := filelock.ReadFile(localPath)
+	if err != nil {
+		logging.LogErrorf("get data [path=%s] failed: %s", localPath, err)
+		return
+	}
+
+	return loadTreeByData(localPath, data, luteEngine)
+}
+
+func loadTreeByData(localPath string, data []byte, luteEngine *lute.Lute) (ret *parse.Tree, err error) {
+	// 加密笔记本的 .sy 是密文，需先解密。从路径反推 boxID，已解锁的加密笔记本用 fileKey 解密；
+	// 加密笔记本未解锁时返回错误（fail-closed）；非加密笔记本原样 data。
+	if boxID := util.BoxIDFromDataPath(localPath); boxID != "" && IsEncryptedBox(boxID) {
+		HoldBoxReadLock(boxID)
+		defer ReleaseBoxReadLock(boxID)
+		dek, dekErr := GetDEKIfUnlocked(boxID)
+		if dekErr != nil {
+			err = dekErr
+			return
+		}
+		// 从绝对路径推导 box 内相对路径作为 AAD
+		relPath := filepath.ToSlash(strings.TrimPrefix(localPath, filepath.Join(util.DataDir, boxID)+string(os.PathSeparator)))
+		if data, err = DecryptFile(boxID, relPath, dek, data); err != nil {
+			logging.LogErrorf("decrypt tree [path=%s] failed: %s", localPath, err)
+			return
+		}
+	}
+
+	if err = treenode.CheckSpecJSON(data); nil != err {
+		return
+	}
+	ret, err = dataparser.ParseJSONWithoutFix(data, luteEngine.ParseOptions)
+	if err != nil {
+		logging.LogErrorf("parse json to tree [%s] failed: %s", localPath, err)
+		return
+	}
+	return
+}
+
+var (
+	ErrBoxNotFound   = errors.New("notebook not found")
+	ErrBoxClosed     = errors.New("notebook closed")
+	ErrBlockNotFound = errors.New("block not found")
+	ErrTreeNotFound  = errors.New("tree not found")
+	ErrIndexing      = errors.New("indexing")
+	ErrBoxUnindexed  = errors.New("notebook unindexed")
+	ErrInvalidID     = errors.New("invalid id")
+)
+
+func LoadTreeByBlockIDWithReindex(id string) (ret *parse.Tree, err error) {
+	return LoadTreeByBlockIDWithReindexInBox(id, "")
+}
+
+// LoadTreeByBlockIDWithReindexInBox 与 LoadTreeByBlockIDWithReindex 一致，但按 boxID 路由 blocktree 查询。
+func LoadTreeByBlockIDWithReindexInBox(id, boxID string) (ret *parse.Tree, err error) {
+	if "" == id {
+		logging.LogWarnf("block id is empty")
+		return nil, ErrTreeNotFound
+	}
+
+	bt := treenode.GetBlockTreeInBox(id, boxID)
+	if nil == bt && "" == boxID {
+		// boxID 未知时（如通用打开入口），遍历所有已打开的加密笔记本查找
+		for _, encBoxID := range treenode.GetOpenedEncryptedBoxIDs() {
+			if encBT := treenode.GetBlockTreeInBox(id, encBoxID); nil != encBT {
+				bt = encBT
+				break
+			}
+		}
+	}
+	if nil == bt {
+		if task.ContainIndexTask() {
+			err = ErrIndexing
+			return
+		}
+
+		// 尝试从文件系统加载并建立索引
+		err = indexTreeInFilesystem(id)
+		bt = treenode.GetBlockTreeInBox(id, boxID)
+		if nil == bt {
+			if "dev" == util.Mode {
+				logging.LogWarnf("block tree not found [id=%s], stack: [%s]", id, logging.ShortStack())
+			}
+			return
+		}
+	}
+
+	luteEngine := util.NewLute()
+	ret, err = filesys.LoadTree(bt.BoxID, bt.Path, luteEngine)
+	return
+}
+
+func LoadTreeByBlockID(id string) (ret *parse.Tree, err error) {
+	return loadTreeByBlockIDInBox(id, "")
+}
+
+// LoadTreeByBlockIDInExactBox 只在指定笔记本边界内加载块所在文档，boxID 为空时不遍历加密笔记本。
+func LoadTreeByBlockIDInExactBox(id, boxID string) (ret *parse.Tree, err error) {
+	if !ast.IsNodeIDPattern(id) {
+		return nil, ErrTreeNotFound
+	}
+	bt := treenode.GetBlockTreeInExactBox(id, boxID)
+	if bt == nil {
+		return nil, ErrTreeNotFound
+	}
+	return loadTreeByBlockTree(bt)
+}
+
+func loadTreeByBlockIDWithoutNotFoundLog(id string) (ret *parse.Tree, err error) {
+	return loadTreeByBlockIDInBox0(id, "", false)
+}
+
+func loadTreeByBlockTree(bt *treenode.BlockTree) (ret *parse.Tree, err error) {
+	if nil == bt {
+		return nil, ErrTreeNotFound
+	}
+	luteEngine := util.NewLute()
+	ret, needFix, err := filesys.LoadTreeWithFix(bt.BoxID, bt.Path, luteEngine)
+	if nil != err {
+		return
+	}
+	if needFix {
+		treenode.UpsertBlockTree(ret)
+		sql.IndexTreeQueue(ret)
+	}
+	return
+}
+
+// loadTreeByBlockIDInBox 与 LoadTreeByBlockID 一致，但按 boxID 路由 blocktree 查询到加密 db 或全局 db。
+func loadTreeByBlockIDInBox(id, boxID string) (ret *parse.Tree, err error) {
+	return loadTreeByBlockIDInBox0(id, boxID, true)
+}
+
+func loadTreeByBlockIDInBox0(id, boxID string, logNotFound bool) (ret *parse.Tree, err error) {
+	bt, err := lookupBlockTreeInBox(id, boxID, logNotFound)
+	if err != nil {
+		return nil, err
+	}
+	return loadTreeByBlockTree(bt)
+}
+
+func lookupBlockTreeInBox(id, boxID string, logNotFound bool) (ret *treenode.BlockTree, err error) {
+	if !ast.IsNodeIDPattern(id) {
+		stack := logging.ShortStack()
+		logging.LogErrorf("block id is invalid [id=%s], stack: [%s]", id, stack)
+		return nil, ErrTreeNotFound
+	}
+
+	bt := treenode.GetBlockTreeInBox(id, boxID)
+	if nil == bt && "" == boxID {
+		// boxID 未知时（如通用打开入口），遍历所有已打开的加密笔记本查找
+		for _, encBoxID := range treenode.GetOpenedEncryptedBoxIDs() {
+			if encBT := treenode.GetBlockTreeInBox(id, encBoxID); nil != encBT {
+				bt = encBT
+				break
+			}
+		}
+	}
+	if nil == bt {
+		if task.ContainIndexTask() {
+			err = ErrIndexing
+			return
+		}
+
+		if logNotFound && "dev" == util.Mode {
+			stack := logging.ShortStack()
+			if !strings.Contains(stack, "BuildBlockBreadcrumb") {
+				logging.LogWarnf("block tree not found [id=%s], stack: [%s]", id, stack)
+			}
+		}
+		return nil, ErrTreeNotFound
+	}
+
+	return bt, nil
+}
+
+var searchTreeLimiter = rate.NewLimiter(rate.Every(3*time.Second), 1)
+
+// 关闭笔记本的提示按工作区和笔记本去重，重新打开后允许再次提示。
+var closedBoxNotifications sync.Map
+
+func markClosedBoxNotification(boxID string) bool {
+	_, loaded := closedBoxNotifications.LoadOrStore(filepath.Join(util.DataDir, boxID), struct{}{})
+	return !loaded
+}
+
+func clearClosedBoxNotification(boxID string) {
+	closedBoxNotifications.Delete(filepath.Join(util.DataDir, boxID))
+}
+
+func indexTreeInFilesystem(blockID string) error {
+	return indexTreeInFilesystem0(blockID, false)
+}
+
+// ReindexMissingNormalBlock 在请求取得加密笔记本租约前，仅恢复普通笔记本中缺失的块索引。
+func ReindexMissingNormalBlock(blockID string) error {
+	if !ast.IsNodeIDPattern(blockID) {
+		return ErrInvalidID
+	}
+	if task.ContainIndexTask() {
+		return ErrIndexing
+	}
+	return indexTreeInFilesystem0(blockID, true)
+}
+
+func indexTreeInFilesystem0(blockID string, normalOnly bool) error {
+	if !searchTreeLimiter.Allow() {
+		return ErrIndexing
+	}
+
+	msdID := util.PushMsg(Conf.language(45), 7000)
+	defer util.PushClearMsg(msdID)
+
+	logging.LogWarnf("searching tree on filesystem [id=%s]", blockID)
+
+	unindexedTreePath := findUnindexedTreePath(blockID, normalOnly)
+	if "" == unindexedTreePath {
+		logging.LogInfof("tree not found on filesystem [id=%s]", blockID)
+		return ErrTreeNotFound
+	}
+
+	boxID := strings.TrimPrefix(unindexedTreePath, util.DataDir)
+	boxID = boxID[1:]
+	boxID = boxID[:strings.Index(boxID, string(os.PathSeparator))]
+	unindexedTreePath = strings.TrimPrefix(unindexedTreePath, util.DataDir)
+	unindexedTreePath = strings.TrimPrefix(unindexedTreePath, string(os.PathSeparator))
+	unindexedTreePath = strings.TrimPrefix(unindexedTreePath, boxID)
+	unindexedTreePath = filepath.ToSlash(unindexedTreePath)
+	if nil == Conf.Box(boxID) {
+		for _, b := range Conf.GetClosedBoxes() {
+			if b.ID == boxID {
+				logging.LogInfof("box [%s] is closed", boxID)
+				if markClosedBoxNotification(boxID) {
+					util.PushErrMsg(fmt.Sprintf(Conf.language(197), b.Name), 7000)
+				}
+				return ErrBoxUnindexed
+			}
+		}
+
+		logging.LogInfof("box [%s] not found", boxID)
+		// 如果笔记本不存在则不处理 https://github.com/siyuan-note/siyuan/issues/11149
+		return ErrTreeNotFound
+	}
+
+	tree, err := filesys.LoadTree(boxID, unindexedTreePath, util.NewLute())
+	if err != nil {
+		logging.LogErrorf("load tree [%s] failed: %s", unindexedTreePath, err)
+		return err
+	}
+
+	treenode.UpsertBlockTree(tree)
+	sql.IndexTreeQueue(tree)
+	logging.LogInfof("reindexed tree by filesystem [blockID=%s]", blockID)
+	return nil
+}
+
+func loadParentTree(tree *parse.Tree) (ret *parse.Tree) {
+	if nil == tree {
+		return
+	}
+
+	boxDir := filepath.Join(util.DataDir, tree.Box)
+	parentDir := path.Dir(tree.Path)
+	if parentDir == boxDir || parentDir == "/" {
+		return
+	}
+
+	luteEngine := lute.New()
+	parentPath := parentDir + ".sy"
+	ret, _ = filesys.LoadTree(tree.Box, parentPath, luteEngine)
+	return
+}
+
+func findUnindexedTreePathInAllBoxes(id string) (ret string) {
+	return findUnindexedTreePath(id, false)
+}
+
+func findUnindexedTreePath(id string, normalOnly bool) (ret string) {
+	boxes := Conf.GetBoxes()
+	luteEngine := util.NewLute()
+	for _, box := range boxes {
+		if normalOnly && IsEncryptedBox(box.ID) {
+			continue
+		}
+		root := filepath.Join(util.DataDir, box.ID)
+		paths := search.FindAllMatchedPaths(root, []string{id})
+		rootIDPaths := map[string]string{}
+		for _, p := range paths {
+			base := filepath.ToSlash(p)
+			if !strings.HasSuffix(base, ".sy") {
+				continue
+			}
+			if strings.Contains(base, "/.siyuan/") {
+				continue
+			}
+			rootID := util.GetTreeID(p)
+			if !ast.IsNodeIDPattern(rootID) {
+				continue
+			}
+			rootIDPaths[rootID] = p
+		}
+		// 文档摘要已经提交不代表正文块索引完整；仍需验证匹配文件中的实际块身份。
+		for _, matchedPath := range rootIDPaths {
+			relPath, relErr := filepath.Rel(root, matchedPath)
+			if nil != relErr {
+				return matchedPath
+			}
+			// 全文匹配只用于筛选候选文件，解析树后再确认是否存在真实块 ID。
+			treePath := "/" + filepath.ToSlash(relPath)
+			tree, loadErr := filesys.LoadTree(box.ID, treePath, luteEngine)
+			if nil != loadErr || treeContainsBlockID(tree, id) {
+				return matchedPath
+			}
+		}
+	}
+	return
+}
+
+func treeContainsBlockID(tree *parse.Tree, id string) (ret bool) {
+	if nil == tree || nil == tree.Root || "" == id {
+		return
+	}
+	ast.Walk(tree.Root, func(n *ast.Node, entering bool) ast.WalkStatus {
+		if entering && n.IsBlock() && n.ID == id {
+			ret = true
+			return ast.WalkStop
+		}
+		return ast.WalkContinue
+	})
+	return
+}

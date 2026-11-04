@@ -1,0 +1,95 @@
+name: 🐛 缺陷报告
+description: 报告缺陷以帮助我们改进
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!WARNING]
+        > 请勿公开报告安全漏洞，请改为创建[私密安全公告](https://github.com/siyuan-note/siyuan/security/advisories/new)。
+  - type: checkboxes
+    attributes:
+      label: 是否存在已有相关 issue？
+      description: |
+        请搜索查看是否已存在与您遇到的缺陷相关的 issue。
+      options:
+        - label: |
+            我已搜索现有 issue
+          required: true
+  - type: checkboxes
+    attributes:
+      label: 是否能在默认主题（日间/夜间）下重现该问题？
+      description: |
+        请确认该问题能在默认主题下重现。
+      options:
+        - label: |
+            我能在默认主题下重现该问题
+          required: true
+  - type: checkboxes
+    attributes:
+      label: 问题是否可能是由扩展引起的？
+      description: |
+        请注意，代码片段、插件、主题、挂件或其他扩展可能会引发问题。
+      options:
+        - label: |
+            我已排除扩展导致问题的可能性。
+          required: true
+  - type: textarea
+    attributes:
+      label: 问题描述
+      description: |
+        请尽可能清晰地描述您遇到的问题。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 重现步骤
+      description: |
+        请提供重现该问题所需的确切步骤，最好同时提供最小可重现示例。
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 预期结果
+      description: |
+        请尽可能清晰准确地描述您期望的结果。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 截图或屏幕录制展示
+      description: |
+        请尝试附加截图或视频来描述您遇到的问题。
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: 运行信息
+      description: |
+        请打开“设置 - 关于 - 运行信息”，在弹窗中点击“复制”，将内容粘贴到此处。如果使用的旧版本没有该按钮，或无法启动思源，请手动填写版本、操作系统和浏览器（如使用）。
+      placeholder: |
+        请粘贴运行信息，或手动填写：
+        - 版本：
+        - 操作系统：
+        - 浏览器（如果使用了）：
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 日志文件
+      description: |
+        请在“设置 - 应用 - 维护 - 系统日志”中导出日志，将导出的 ZIP 文件附加到此处。如果思源无法启动或没有导出入口，也可以手动获取 `工作空间/temp/siyuan.log`。上传前请检查日志并移除隐私信息；如果没有相关日志，可以留空。
+      placeholder: |
+        请在此处附加日志文件，或粘贴相关日志内容。
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: 更多信息
+      description: |
+        请提供其他附加信息以帮助我们诊断问题。
+    validations:
+      required: false

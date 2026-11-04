@@ -1,0 +1,21 @@
+// Rust stub for CardPaper (auto-generated)
+// Original: cn/wps/moffice/writer/function/card/CardPaper.java
+use crate::*;
+
+pub struct CardPaper {
+    // TODO: fields
+}
+
+impl CardPaper {
+    pub fn new() -> Self { todo!() }
+    pub fn seekCardInfo(&self, cp: i32) -> CardInfo { todo!() }
+    pub fn collect(&self) -> bool { todo!() }
+    pub fn isUiCardInfo(&self, cardInfo: CardInfo) -> bool { todo!() }
+    pub fn isPaper(document: Box<dyn Document>) -> bool { todo!() }
+    pub fn addCardInfo(&self, cardInfo: CardInfo) { todo!() }
+    pub fn test(&self) { todo!() }
+    pub fn identifyTitle(cardInfo: CardInfo) -> bool { todo!() }
+    pub fn size(&self) -> i32 { todo!() }
+    pub fn get(&self, index: i32) -> CardInfo { todo!() }
+    pub fn dispose(&self) { todo!() }
+}

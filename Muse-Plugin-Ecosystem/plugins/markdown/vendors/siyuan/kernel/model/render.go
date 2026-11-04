@@ -1,0 +1,588 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"bytes"
+	"maps"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/88250/gulu"
+	"github.com/88250/lute"
+	"github.com/88250/lute/ast"
+	"github.com/88250/lute/editor"
+	"github.com/88250/lute/html"
+	"github.com/88250/lute/parse"
+	"github.com/88250/lute/render"
+	"github.com/siyuan-note/siyuan/kernel/av"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+var outlineFontSizePattern = regexp.MustCompile("font-size:.*?;")
+
+func renderOutline(heading *ast.Node, luteEngine *lute.Lute) (ret string) {
+	if nil == heading {
+		return ""
+	}
+
+	if ast.NodeDocument == heading.Type {
+		return treenode.ReadDocumentTitle(heading).Text
+	}
+
+	buf := bytes.Buffer{}
+	buf.Grow(4096)
+	ast.Walk(heading, func(n *ast.Node, entering bool) ast.WalkStatus {
+		if !entering {
+			switch n.Type {
+			case ast.NodeHeading:
+				// Show heading block appearance style in the Outline Panel https://github.com/siyuan-note/siyuan/issues/7872
+				if style := n.IALAttr("style"); "" != style {
+					buf.WriteString("</span>")
+				}
+			}
+			return ast.WalkContinue
+		}
+
+		if style := n.IALAttr("style"); "" != style {
+			if strings.Contains(style, "font-size") { // 大纲字号不应该跟随字体设置 https://github.com/siyuan-note/siyuan/issues/7202
+				style = outlineFontSizePattern.ReplaceAllString(style, "font-size: inherit;")
+				n.SetIALAttr("style", style)
+			}
+		}
+
+		switch n.Type {
+		case ast.NodeHeading:
+			// Show heading block appearance style in the Outline Panel https://github.com/siyuan-note/siyuan/issues/7872
+			if style := n.IALAttr("style"); "" != style {
+				// 样式值按属性值转义后再拼接，否则其中的引号会闭合 style 属性注入标签；
+				// 转义后的实体在解析属性值时会被还原，不影响样式展示
+				// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-928g-4hfq-qwvx
+				buf.WriteString("<span style=\"")
+				buf.WriteString(util.EscapeHTML(style))
+				buf.WriteString("\">")
+			}
+		case ast.NodeText, ast.NodeLinkText, ast.NodeCodeBlockCode, ast.NodeMathBlockContent:
+			tokens := html.EscapeHTML(n.Tokens)
+			tokens = bytes.ReplaceAll(tokens, []byte(" "), []byte("&nbsp;")) // 大纲面板条目中无法显示多个空格 https://github.com/siyuan-note/siyuan/issues/4370
+			buf.Write(tokens)
+		case ast.NodeBackslashContent:
+			buf.Write(html.EscapeHTML(n.Tokens))
+		case ast.NodeTextMark:
+			dom := luteEngine.RenderNodeBlockDOM(n)
+			buf.WriteString(dom)
+			return ast.WalkSkipChildren
+		case ast.NodeEmoji:
+			dom := luteEngine.RenderNodeBlockDOM(n)
+			buf.WriteString(dom)
+			return ast.WalkSkipChildren
+		case ast.NodeImage:
+			if title := n.ChildByType(ast.NodeLinkTitle); nil != title {
+				// 标题后直接跟图片时图片的提示文本不再渲染到大纲中 https://github.com/siyuan-note/siyuan/issues/6278
+				title.Unlink()
+			}
+			dom := luteEngine.RenderNodeBlockDOM(n)
+			buf.WriteString(dom)
+			return ast.WalkSkipChildren
+		}
+		return ast.WalkContinue
+	})
+
+	ret = strings.TrimSpace(buf.String())
+	ret = strings.ReplaceAll(ret, "\n", "")
+	return
+}
+
+func renderBlockText(node *ast.Node, excludeTypes []string, removeLineBreak bool) (ret string) {
+	if nil == node {
+		return
+	}
+
+	ret = sql.NodeStaticContent(node, excludeTypes, false, false, false)
+	ret = strings.TrimSpace(ret)
+	if removeLineBreak {
+		ret = strings.ReplaceAll(ret, "\n", "")
+	}
+	ret = util.UnescapeHTML(ret)
+	ret = util.EscapeHTML(ret)
+	ret = strings.TrimSpace(ret)
+	if "" == ret {
+		// 复制内容为空的块作为块引用时粘贴无效 https://github.com/siyuan-note/siyuan/issues/4962
+		buf := bytes.Buffer{}
+		ast.Walk(node, func(n *ast.Node, entering bool) ast.WalkStatus {
+			if !entering {
+				return ast.WalkContinue
+			}
+
+			if ast.NodeImage == n.Type {
+				title := n.ChildByType(ast.NodeLinkTitle)
+				if nil == title {
+					alt := n.ChildByType(ast.NodeLinkText)
+					if nil != alt && 0 < len(alt.Tokens) {
+						buf.Write(alt.Tokens)
+					} else {
+						buf.WriteString("image")
+					}
+				} else {
+					buf.Write(title.Tokens)
+				}
+			}
+			return ast.WalkContinue
+		})
+		ret = buf.String()
+	}
+	return
+}
+
+func fillBlockRefCount(nodes []*ast.Node, boxID string) {
+	var defIDs []string
+	for _, n := range nodes {
+		ast.Walk(n, func(n *ast.Node, entering bool) ast.WalkStatus {
+			if !entering {
+				return ast.WalkContinue
+			}
+
+			if n.IsBlock() {
+				defIDs = append(defIDs, n.ID)
+			}
+			return ast.WalkContinue
+		})
+	}
+	defIDs = gulu.Str.RemoveDuplicatedElem(defIDs)
+	refCount := sql.QueryRefCountInBox(defIDs, boxID)
+	for _, n := range nodes {
+		ast.Walk(n, func(n *ast.Node, entering bool) ast.WalkStatus {
+			if !entering || !n.IsBlock() {
+				return ast.WalkContinue
+			}
+
+			if cnt := refCount[n.ID]; 0 < cnt {
+				n.SetIALAttr("refcount", strconv.Itoa(cnt))
+			}
+			return ast.WalkContinue
+		})
+	}
+}
+
+func cloneRenderNode(node *ast.Node) *ast.Node {
+	if nil == node {
+		return nil
+	}
+
+	cloned := *node
+	cloned.Parent = nil
+	cloned.Previous = nil
+	cloned.Next = nil
+	cloned.FirstChild = nil
+	cloned.LastChild = nil
+	cloned.Children = nil
+	cloned.Tokens = bytes.Clone(node.Tokens)
+	if nil != node.KramdownIAL {
+		cloned.KramdownIAL = make([][]string, 0, len(node.KramdownIAL))
+		for _, attr := range node.KramdownIAL {
+			cloned.KramdownIAL = append(cloned.KramdownIAL, append([]string{}, attr...))
+		}
+	}
+	if nil != node.Properties {
+		cloned.Properties = make(map[string]string, len(node.Properties))
+		maps.Copy(cloned.Properties, node.Properties)
+	}
+
+	for child := node.FirstChild; nil != child; child = child.Next {
+		cloned.AppendChild(cloneRenderNode(child))
+	}
+	return &cloned
+}
+
+func cleanRenderNodes(nodes []*ast.Node, visibleOnly bool) (ret []*ast.Node) {
+	root := &ast.Node{Type: ast.NodeDocument}
+	for _, node := range nodes {
+		if cloned := cloneRenderNode(node); nil != cloned {
+			root.AppendChild(cloned)
+		}
+	}
+
+	ast.Walk(root, func(node *ast.Node, entering bool) ast.WalkStatus {
+		if entering && node.IsBlock() {
+			treenode.ClearLegacyHeadingFold(node)
+		}
+		return ast.WalkContinue
+	})
+	if visibleOnly {
+		for _, node := range treenode.CollectFoldHiddenNodes(root) {
+			node.Unlink()
+		}
+	}
+
+	for node := root.FirstChild; nil != node; node = node.Next {
+		ret = append(ret, node)
+	}
+	return
+}
+
+func cleanRenderNode(node *ast.Node, visibleOnly bool) *ast.Node {
+	nodes := cleanRenderNodes([]*ast.Node{node}, visibleOnly)
+	if 0 == len(nodes) {
+		return nil
+	}
+	return nodes[0]
+}
+
+func renderVisibleBlockDOMByNodes(nodes []*ast.Node, luteEngine *lute.Lute) string {
+	return renderBlockDOMByNodes(cleanRenderNodes(nodes, true), luteEngine)
+}
+
+func renderBlockDOMByNodes(nodes []*ast.Node, luteEngine *lute.Lute) string {
+	tree := &parse.Tree{Root: &ast.Node{Type: ast.NodeDocument}, Context: &parse.Context{ParseOption: luteEngine.ParseOptions}}
+	blockRenderer := render.NewProtyleRenderer(tree, luteEngine.RenderOptions, luteEngine.ParseOptions)
+	for _, node := range nodes {
+		ast.Walk(node, func(n *ast.Node, entering bool) ast.WalkStatus {
+			if entering {
+				if n.IsBlock() {
+					if avs := n.IALAttr(av.NodeAttrNameAvs); "" != avs {
+						// 填充属性视图角标 Display the database title on the block superscript https://github.com/siyuan-note/siyuan/issues/10545
+						avNames := getAvNames(n.IALAttr(av.NodeAttrNameAvs))
+						if "" != avNames {
+							n.SetIALAttr(av.NodeAttrViewNames, avNames)
+						}
+					}
+				}
+			}
+
+			rendererFunc := blockRenderer.RendererFuncs[n.Type]
+			return rendererFunc(n, entering)
+		})
+	}
+	h := strings.TrimSpace(blockRenderer.Writer.String())
+	if strings.HasPrefix(h, "<li") {
+		h = "<ul>" + h + "</ul>"
+	}
+	return h
+}
+
+func renderBlockContentByNodes(nodes []*ast.Node) string {
+	var subNodes []*ast.Node
+	for _, n := range nodes {
+		if ast.NodeDocument == n.Type {
+			for c := n.FirstChild; nil != c; c = c.Next {
+				subNodes = append(subNodes, c)
+			}
+		} else {
+			subNodes = append(subNodes, n)
+		}
+	}
+
+	buf := bytes.Buffer{}
+	for _, n := range subNodes {
+		buf.WriteString(sql.NodeStaticContent(n, nil, false, false, false))
+	}
+	return buf.String()
+}
+
+func resolveEmbedR(n *ast.Node, blockEmbedMode int, luteEngine *lute.Lute, resolved *[]string, depth *int, accessChecker ...EmbedBlockAccessChecker) {
+	var children []*ast.Node
+	if ast.NodeHeading == n.Type {
+		children = append(children, n)
+		children = append(children, treenode.HeadingChildren(n)...)
+	} else if ast.NodeDocument == n.Type {
+		for c := n.FirstChild; nil != c; c = c.Next {
+			children = append(children, c)
+		}
+	} else {
+		children = append(children, n)
+	}
+
+	*depth++
+	if 7 < *depth {
+		return
+	}
+
+	for _, child := range children {
+		var unlinks []*ast.Node
+
+		parentHeadingLevel := 1
+		for prev := child; nil != prev; prev = prev.Previous {
+			if ast.NodeHeading == prev.Type {
+				parentHeadingLevel = prev.HeadingLevel
+				break
+			}
+		}
+
+		ast.Walk(child, func(n *ast.Node, entering bool) ast.WalkStatus {
+			if !entering || !n.IsBlock() {
+				return ast.WalkContinue
+			}
+
+			if ast.NodeBlockQueryEmbed != n.Type {
+				return ast.WalkContinue
+			}
+
+			if gulu.Str.Contains(n.ID, *resolved) {
+				return ast.WalkContinue
+			}
+			*resolved = append(*resolved, n.ID)
+
+			stmt := n.ChildByType(ast.NodeBlockQueryEmbedScript).TokensStr()
+			stmt = html.UnescapeString(stmt)
+			stmt = strings.ReplaceAll(stmt, editor.IALValEscNewLine, "\n")
+			sqlBlocks := sql.SelectBlocksRawStmt(stmt, 1, Conf.Search.Load().Limit)
+			var embedAccessChecker EmbedBlockAccessChecker
+			if 0 < len(accessChecker) {
+				embedAccessChecker = accessChecker[0]
+			}
+			sqlBlocks = filterEmbedBlocksByAccess(sqlBlocks, embedAccessChecker)
+			for _, sqlBlock := range sqlBlocks {
+				if "query_embed" == sqlBlock.Type {
+					continue
+				}
+
+				subTree, _ := LoadTreeByBlockID(sqlBlock.ID)
+				if nil == subTree {
+					continue
+				}
+
+				var md string
+				if "d" == sqlBlock.Type {
+					if 0 == blockEmbedMode {
+						// 嵌入块中出现了大于等于上方非嵌入块的标题时需要降低嵌入块中的标题级别
+						// Improve export of heading levels in embedded blocks
+						// https://github.com/siyuan-note/siyuan/issues/12233
+						// https://github.com/siyuan-note/siyuan/issues/12741
+						// https://github.com/siyuan-note/siyuan/issues/17629
+						embedTopLevel := 0
+						embedFirstHeading := subTree.Root.ChildByType(ast.NodeHeading)
+						if nil != embedFirstHeading {
+							embedTopLevel = embedFirstHeading.HeadingLevel
+						}
+						ast.Walk(subTree.Root, func(n *ast.Node, entering bool) ast.WalkStatus {
+							if !entering || ast.NodeHeading != n.Type {
+								return ast.WalkContinue
+							}
+
+							n.HeadingLevel += parentHeadingLevel - embedTopLevel + 1
+							if 2 > n.HeadingLevel {
+								n.HeadingLevel = 2
+							} else if 6 < n.HeadingLevel {
+								n.HeadingLevel = 6
+							}
+							return ast.WalkContinue
+						})
+					}
+
+					md, _ = lute.FormatNodeSync(subTree.Root, luteEngine.ParseOptions, luteEngine.RenderOptions)
+				} else if "h" == sqlBlock.Type {
+					h := treenode.GetNodeInTree(subTree, sqlBlock.ID)
+					var hChildren []*ast.Node
+
+					// 从嵌入块的 IAL 属性中解析 custom-heading-mode，使用全局配置作为默认值
+					blockHeadingMode := Conf.Editor.Load().HeadingEmbedMode
+					if customHeadingMode := n.IALAttr(embedHeadingModeAttr); "" != customHeadingMode {
+						if mode, err := strconv.Atoi(customHeadingMode); nil == err && (mode == 0 || mode == 1 || mode == 2) {
+							blockHeadingMode = mode
+						}
+					}
+
+					// 根据 blockHeadingMode 处理标题块的显示
+					// blockHeadingMode: 0=显示标题与下方的块，1=仅显示标题，2=仅显示标题下方的块
+					if 1 == blockHeadingMode {
+						// 仅显示标题
+						hChildren = append(hChildren, h)
+					} else if 2 == blockHeadingMode {
+						// 仅显示标题下方的块（默认行为）
+						if !treenode.IsSelfFolded(h) {
+							hChildren = append(hChildren, treenode.HeadingChildren(h)...)
+						}
+					} else {
+						// 0: 显示标题与下方的块
+						hChildren = append(hChildren, h)
+						hChildren = append(hChildren, treenode.HeadingChildren(h)...)
+					}
+					hChildren = cleanRenderNodes(hChildren, true)
+					if level := explicitEmbedHeadingLevel(n, sqlBlock.ID); level != 0 {
+						adjustEmbedHeadingLevels(hChildren, level)
+					} else if 0 == blockEmbedMode && treenode.GetEmbedBlockRef(n) != sqlBlock.ID {
+						embedTopLevel := 0
+						for _, hChild := range hChildren {
+							if ast.NodeHeading == hChild.Type {
+								embedTopLevel = hChild.HeadingLevel
+								break
+							}
+						}
+
+						for _, hChild := range hChildren {
+							if ast.NodeHeading == hChild.Type {
+								hChild.HeadingLevel += parentHeadingLevel - embedTopLevel + 1
+								if 2 > hChild.HeadingLevel {
+									hChild.HeadingLevel = 2
+								} else if 6 < hChild.HeadingLevel {
+									hChild.HeadingLevel = 6
+								}
+							}
+						}
+					}
+
+					mdBuf := &bytes.Buffer{}
+					for _, hChild := range hChildren {
+						md, _ = lute.FormatNodeSync(hChild, luteEngine.ParseOptions, luteEngine.RenderOptions)
+						mdBuf.WriteString(md)
+						mdBuf.WriteString("\n\n")
+					}
+					md = mdBuf.String()
+				} else {
+					node := treenode.GetNodeInTree(subTree, sqlBlock.ID)
+					md, _ = lute.FormatNodeSync(node, luteEngine.ParseOptions, luteEngine.RenderOptions)
+				}
+
+				buf := &bytes.Buffer{}
+				lines := strings.Split(md, "\n")
+				for i, line := range lines {
+					if 0 == blockEmbedMode { // 使用原始文本
+						buf.WriteString(line)
+					} else { // 使用引述块
+						buf.WriteString("> ")
+						buf.WriteString(line)
+					}
+					if i < len(lines)-1 {
+						buf.WriteString("\n")
+					}
+				}
+				buf.WriteString("\n\n")
+
+				subTree = parse.Parse("", buf.Bytes(), luteEngine.ParseOptions)
+				var inserts []*ast.Node
+				for subNode := subTree.Root.FirstChild; nil != subNode; subNode = subNode.Next {
+					if ast.NodeKramdownBlockIAL != subNode.Type {
+						inserts = append(inserts, subNode)
+					}
+				}
+				if 2 < len(n.KramdownIAL) && 0 < len(inserts) {
+					if bookmark := n.IALAttr("bookmark"); "" != bookmark {
+						inserts[0].SetIALAttr("bookmark", bookmark)
+					}
+					if name := n.IALAttr("name"); "" != name {
+						inserts[0].SetIALAttr("name", name)
+					}
+					if alias := n.IALAttr("alias"); "" != alias {
+						inserts[0].SetIALAttr("alias", alias)
+					}
+					if memo := n.IALAttr("memo"); "" != memo {
+						inserts[0].SetIALAttr("memo", memo)
+					}
+				}
+				for _, insert := range inserts {
+					n.InsertBefore(insert)
+
+					if gulu.Str.Contains(sqlBlock.ID, *resolved) {
+						return ast.WalkContinue
+					}
+
+					resolveEmbedR(insert, blockEmbedMode, luteEngine, resolved, depth, accessChecker...)
+					*depth--
+				}
+			}
+			unlinks = append(unlinks, n)
+			return ast.WalkSkipChildren
+		})
+
+		for _, unlink := range unlinks {
+			unlink.Unlink()
+		}
+	}
+}
+
+func renderBlockMarkdownR(id string, rendered *[]string, boxIDs ...string) (ret []*ast.Node) {
+	boxID := ""
+	if len(boxIDs) > 0 {
+		boxID = boxIDs[0]
+	}
+	renderedID := id
+	if boxID != "" {
+		renderedID = boxID + "\x00" + id
+	}
+	if gulu.Str.Contains(renderedID, *rendered) {
+		return
+	}
+	*rendered = append(*rendered, renderedID)
+
+	b := treenode.GetBlockTreeInBox(id, boxID)
+	if nil == b {
+		return
+	}
+
+	var err error
+	var t *parse.Tree
+	if boxID == "" {
+		t, err = LoadTreeByBlockID(b.ID)
+	} else {
+		t, err = LoadTreeByBlockIDInExactBox(b.ID, boxID)
+	}
+	if err != nil {
+		return
+	}
+	node := treenode.GetNodeInTree(t, b.ID)
+	if nil == node {
+		return
+	}
+
+	var children []*ast.Node
+	if ast.NodeHeading == node.Type {
+		children = append(children, node)
+		children = append(children, treenode.HeadingChildren(node)...)
+	} else if ast.NodeDocument == node.Type {
+		for c := node.FirstChild; nil != c; c = c.Next {
+			children = append(children, c)
+		}
+	} else {
+		children = append(children, node)
+	}
+
+	for _, child := range children {
+		var unlinks, inserts []*ast.Node
+		ast.Walk(child, func(n *ast.Node, entering bool) ast.WalkStatus {
+			confSearchSnapshot := Conf.LoadSearch()
+
+			if !entering || !n.IsBlock() {
+				return ast.WalkContinue
+			}
+
+			if ast.NodeBlockQueryEmbed == n.Type {
+				stmt := n.ChildByType(ast.NodeBlockQueryEmbedScript).TokensStr()
+				stmt = html.UnescapeString(stmt)
+				stmt = strings.ReplaceAll(stmt, editor.IALValEscNewLine, "\n")
+				var sqlBlocks []*sql.Block
+				if boxID != "" && IsEncryptedBox(boxID) {
+					sqlBlocks = sql.SelectBlocksRawStmtInBox(stmt, 1, confSearchSnapshot.Limit, boxID)
+				} else {
+					sqlBlocks = sql.SelectBlocksRawStmt(stmt, 1, confSearchSnapshot.Limit)
+				}
+				for _, sqlBlock := range sqlBlocks {
+					subNodes := renderBlockMarkdownR(sqlBlock.ID, rendered, boxID)
+					for _, subNode := range subNodes {
+						inserts = append(inserts, subNode)
+					}
+				}
+				unlinks = append(unlinks, n)
+				return ast.WalkSkipChildren
+			}
+			return ast.WalkContinue
+		})
+		for _, n := range unlinks {
+			n.Unlink()
+		}
+
+		if ast.NodeBlockQueryEmbed != child.Type {
+			ret = append(ret, child)
+		} else {
+			for _, n := range inserts {
+				ret = append(ret, n)
+			}
+		}
+
+	}
+	return
+}

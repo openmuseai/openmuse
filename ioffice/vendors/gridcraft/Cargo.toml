@@ -1,0 +1,77 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "apps/*", "xtask"]
+default-members = ["crates/*", "apps/gridcraft", "apps/gridcraft-cli", "xtask"]
+
+[workspace.package]
+version = "0.9.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.90"
+repository = "https://github.com/storytold/gridcraft"
+
+[workspace.dependencies]
+# internal
+gridcraft-core = { path = "crates/core" }
+gridcraft-numfmt = { path = "crates/numfmt" }
+gridcraft-formula = { path = "crates/formula" }
+gridcraft-functions = { path = "crates/functions" }
+gridcraft-model = { path = "crates/model" }
+gridcraft-calc = { path = "crates/calc" }
+gridcraft-xlsx = { path = "crates/xlsx" }
+gridcraft-chart = { path = "crates/chart" }
+gridcraft-engine = { path = "crates/engine" }
+gridcraft-ui-egui = { path = "crates/ui-egui" }
+gridcraft-mcp = { path = "crates/mcp" }
+gridcraft-pdf = { path = "crates/pdf" }
+
+# foundation
+thiserror = "2"
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+log = "0.4"
+rayon = "1"
+regex = { version = "1", default-features = false, features = ["std", "unicode", "perf"] }
+quick-xml = "0.41"
+zip = { version = "3", default-features = false, features = ["deflate"] }
+sha2 = { version = "0.11", default-features = false }
+# Decrypting password-protected workbooks ([MS-OFFCRYPTO]): AES and SHA-1, pure Rust (wasm-safe).
+aes = { version = "0.9", default-features = false }
+sha1 = { version = "0.11", default-features = false }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+
+# ui
+egui = "0.36"
+egui_extras = { version = "0.36", default-features = false }
+eframe = { version = "0.36", default-features = false }
+egui_kittest = "0.36"
+rfd = "0.17"
+arboard = { version = "3.6", default-features = false }
+# The desktop's preferred language, for the first-run interface language (native only).
+sys-locale = "0.3"
+# Font parser egui's epaint uses; the UI validates system font files with it before handing them
+# to egui, which panics on a file it can't parse. Same version as epaint's, so no second copy.
+skrifa = { version = "0.44", default-features = false, features = ["std"] }
+# Real font bytes for tests (Ubuntu Light, compiled into epaint).
+epaint_default_fonts = "0.36"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+type_complexity = "allow"
+
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 16
+debug = 0

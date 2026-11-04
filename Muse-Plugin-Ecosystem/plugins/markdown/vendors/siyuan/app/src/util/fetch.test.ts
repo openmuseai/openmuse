@@ -1,0 +1,194 @@
+import {it} from "node:test";
+import * as assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {join} from "node:path";
+import {runInNewContext} from "node:vm";
+import * as ts from "typescript";
+import {withFetchTimeout} from "./fetchTimeout";
+import {flushSettingSaves, settingSaveFailures, trackSettingRequest} from "../config/setting/pending";
+import {trackEditorSaveRequest} from "../protyle/util/editorSave";
+
+const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() => {}),
+                       processResponse: (response: IWebSocketData) => boolean = () => true) => {
+    const sends: unknown[][] = [];
+    const timeouts: number[] = [];
+    const notifications: unknown[][] = [];
+    let kernelChecks = 0;
+    const exports: {
+        fetchPost?: (...args: any[]) => Promise<void>;
+        fetchSyncPost?: (...args: any[]) => Promise<IWebSocketData>;
+    } = {};
+    const source = ts.transpileModule(readFileSync(join(__dirname, "fetch.ts"), "utf8"), {
+        compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020},
+    }).outputText;
+    runInNewContext(source, {
+        exports,
+        require: (name: string) => {
+            switch (name) {
+                case "./fetchWithAppId": return {fetchWithAppId: fetchImplementation};
+                case "../constants": return {Constants: {SIYUAN_QUIT: "quit"}};
+                case "electron": return {ipcRenderer: {send: (...args: unknown[]) => sends.push(args)}};
+                case "./processMessage": return {processMessage: processResponse};
+                case "./kernelFault": return {kernelError: () => { kernelChecks++; }};
+                case "../dialog/message": return {showMessage: (...args: unknown[]) => notifications.push(args)};
+                case "../config/setting/pending": return {trackSettingRequest};
+                case "../protyle/util/editorSave": return {trackEditorSaveRequest};
+                case "./fetchTimeout": return {
+                    withFetchTimeout: (request: (signal?: AbortSignal) => Promise<unknown>, signal: AbortSignal, timeout: number) => {
+                        timeouts.push(timeout);
+                        return withFetchTimeout(request, signal, timeout > 0 ? 10 : 0);
+                    },
+                };
+                default: throw new Error(name);
+            }
+        },
+        fetch: fetchImplementation,
+        FormData,
+        location: {port: "6806"},
+        console: {warn: () => {}},
+        window: {siyuan: {languages: {transactionSaveUnconfirmed: "Save unconfirmed"}}},
+    });
+    return {fetchPost: exports.fetchPost, fetchSyncPost: exports.fetchSyncPost, sends, timeouts, notifications,
+        kernelChecks: () => kernelChecks};
+};
+
+it("invokes the failure callback once when a request stalls", async () => {
+    const {fetchPost, sends} = loadFetchPost();
+    let failures = 0;
+    await fetchPost("/api/bazaar/getInstalledPlugin", {}, () => assert.fail("unexpected success"),
+        undefined, (response: {code: number}) => {
+            failures++;
+            assert.equal(response.code, 400);
+        }, undefined, 30000);
+    assert.equal(failures, 1);
+    assert.equal(sends.length, 0);
+});
+
+it("keeps positive business errors in the callback and filters negative errors", async () => {
+    for (const code of [-1, 0, 3]) {
+        const payload = {code, msg: "message", data: code === 0 ? {rootID: "id"} : "indexing"};
+        const {fetchPost} = loadFetchPost(async () => new Response(JSON.stringify(payload), {
+            headers: {"Content-Type": "application/json"},
+        }), response => response.code >= 0);
+        const received: IWebSocketData[] = [];
+        await fetchPost("/api/block/getBlockInfo", {id: "id"}, (response: IWebSocketData) => received.push(response));
+        assert.deepEqual(received, code < 0 ? [] : [payload]);
+    }
+});
+
+it("keeps asynchronous error responses and the process option", async () => {
+    const payload = {code: -1, msg: "readonly", data: {closeTimeout: 5000}};
+    let processed = 0;
+    const {fetchSyncPost} = loadFetchPost(async () => new Response(JSON.stringify(payload)), () => {
+        processed++;
+        return false;
+    });
+    assert.deepEqual(await fetchSyncPost("/api/attr/setBlockAttrs", {id: "id", attrs: {}}), payload);
+    assert.equal(processed, 1);
+    assert.deepEqual(await fetchSyncPost("/api/attr/setBlockAttrs", {id: "id", attrs: {}}, undefined, false), payload);
+    assert.equal(processed, 1);
+});
+
+it("preserves notification-only RPC responses as empty callback text", async () => {
+    const {fetchPost} = loadFetchPost(async () => new Response(null, {status: 204}));
+    let received: unknown;
+    await fetchPost("/api/plugin/rpc", {jsonrpc: "2.0", method: "notify"}, (response: unknown) => received = response);
+    assert.equal(received, "");
+});
+
+it("preserves raw file text and routes HTTP 202 file errors to the failure callback", async () => {
+    const text = "file content";
+    const raw = loadFetchPost(async () => new Response(text, {headers: {"Content-Type": "text/plain"}}));
+    let received: unknown;
+    await raw.fetchPost("/api/file/getFile", {path: "file.txt"}, (response: unknown) => received = response);
+    assert.equal(received, text);
+
+    const failure: IWebSocketData = {code: -1, msg: "missing file", data: null};
+    const missing = loadFetchPost(async () => new Response(JSON.stringify(failure), {
+        status: 202,
+        headers: {"Content-Type": "application/json"},
+    }));
+    await missing.fetchPost("/api/file/getFile", {path: "missing"}, () => assert.fail("unexpected success"), undefined,
+        (response: unknown) => received = response);
+    assert.deepEqual(received, failure);
+});
+
+it("preserves FormData request bodies for upload endpoints", async () => {
+    const body = new FormData();
+    body.append("path", "file.txt");
+    const {fetchPost} = loadFetchPost(async (_url, options) => {
+        assert.equal(options.body, body);
+        return new Response(JSON.stringify({code: 0, msg: "", data: null}), {headers: {"Content-Type": "application/json"}});
+    });
+    await fetchPost("/api/file/putFile", body);
+});
+
+it("keeps the desktop alive when an exit request stalls", async () => {
+    const {fetchPost, sends} = loadFetchPost();
+    await fetchPost("/api/system/exit", {}, () => assert.fail("unexpected success"));
+    assert.deepEqual(sends, []);
+});
+
+it("retains the existing fallback for closing layout and workspace requests", async () => {
+    for (const url of ["/api/system/setUILayout", "/api/system/setWorkspaceDir"]) {
+        const {fetchPost, sends, timeouts} = loadFetchPost();
+        await fetchPost(url, {errorExit: true}, () => assert.fail("unexpected success"));
+        assert.deepEqual(timeouts, [30000]);
+        assert.deepEqual(sends, [["quit", "6806"]]);
+    }
+});
+
+it("reports consumed settings errors to reset without changing fetch callbacks", async () => {
+    for (const response of ["business", "network"]) {
+        const before = settingSaveFailures();
+        const {fetchPost} = loadFetchPost(async () => {
+            if (response === "network") throw new Error("offline");
+            return new Response(JSON.stringify({code: -1, msg: "failed", data: null}), {
+                headers: {"Content-Type": "application/json"},
+            });
+        }, () => false);
+        await fetchPost("/api/setting/patch", {});
+        await assert.rejects(flushSettingSaves(before));
+    }
+});
+
+it("lost transaction responses warn without replaying writes or reporting success", async () => {
+    for (const method of ["fetchPost", "fetchSyncPost"] as const) {
+        for (const action of ["update", "insert", "create"]) {
+            let applied = 0;
+            const state = loadFetchPost(async () => {
+                applied++;
+                throw new TypeError("Failed to fetch");
+            });
+            const request = {session: "editor", transactions: [{doOperations: [{action, id: "block"}]}]};
+            if (method === "fetchSyncPost") {
+                await assert.rejects(state.fetchSyncPost("/api/transactions", request), /Failed to fetch/);
+            } else {
+                let failed = 0;
+                await state.fetchPost("/api/transactions", request, () => assert.fail("unexpected success"), undefined,
+                    () => { failed++; });
+                assert.equal(failed, 1);
+            }
+            assert.equal(applied, 1, `${method}: ${action}`);
+            assert.deepEqual(state.notifications, [["Save unconfirmed", 0, "error", "transaction-save-unconfirmed"]]);
+            assert.equal(state.kernelChecks(), 1);
+        }
+    }
+});
+
+it("truncated transaction responses are visible while cancellation and callback errors do not diagnose the kernel", async () => {
+    const truncated = loadFetchPost(async () => new Response("{", {headers: {"Content-Type": "application/json"}}));
+    await truncated.fetchPost("/api/transactions", {});
+    assert.equal(truncated.notifications.length, 1);
+    assert.equal(truncated.kernelChecks(), 1);
+    const cancelled = loadFetchPost(async () => { throw new DOMException("Cancelled", "AbortError"); });
+    await cancelled.fetchPost("/api/transactions", {});
+    assert.equal(cancelled.notifications.length, 0);
+    assert.equal(cancelled.kernelChecks(), 0);
+    const callback = loadFetchPost(async () => new Response('{"code":0,"data":[]}', {
+        headers: {"Content-Type": "application/json"},
+    }));
+    await callback.fetchPost("/api/transactions", {}, () => { throw new TypeError("Failed to fetch"); });
+    assert.equal(callback.notifications.length, 0);
+    assert.equal(callback.kernelChecks(), 0);
+});

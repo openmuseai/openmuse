@@ -1,0 +1,46 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"github.com/siyuan-note/siyuan/kernel/av"
+	"github.com/siyuan-note/siyuan/kernel/filesys"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+// init 把加密相关的回调注入各底层包，让它们能查询 box 的 DEK / 加密状态。
+// filesys / av / sql / treenode 不能直接 import model（循环依赖），故通过回调注入。
+// sql / treenode 的路由函数据此 fail-closed：加密笔记本未解锁时绝不回退全局库。
+func init() {
+	filesys.DEKProvider = GetDEKIfUnlocked
+	filesys.DEKLockAcquire = HoldBoxReadLock
+	filesys.DEKLockRelease = ReleaseBoxReadLock
+	av.AVDEKProvider = GetDEKIfUnlocked
+	av.AVLockAcquire = HoldBoxReadLock
+	av.AVLockRelease = ReleaseBoxReadLock
+	av.AVEncryptedBoxIDs = treenode.GetOpenedEncryptedBoxIDs
+	av.AVIsEncryptedBox = IsEncryptedBox
+	av.AVIsBoxUnlocked = isBoxUnlockedForAccess
+	av.AVGetBlockBoxID = func(blockID string) string {
+		bt := treenode.GetBlockTree(blockID)
+		if nil == bt {
+			return ""
+		}
+		return bt.BoxID
+	}
+	av.AttributeViewSaved = queueAttributeViewRefIndex
+	sql.IsEncryptedBoxFn = IsEncryptedBox
+	sql.IsBoxUnlockedFn = isBoxUnlockedForAccess
+	treenode.IsEncryptedBoxFn = IsEncryptedBox
+	util.ReloadDocInfoGuard = func(boxID string) bool {
+		// 加密笔记本锁定后丢弃延迟 reloadDocInfo 广播，防止明文元数据泄漏
+		if !IsEncryptedBox(boxID) {
+			return true
+		}
+		return isBoxUnlockedForAccess(boxID)
+	}
+}

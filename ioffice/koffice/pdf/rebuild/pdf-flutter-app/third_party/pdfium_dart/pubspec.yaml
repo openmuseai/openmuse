@@ -1,0 +1,11 @@
+name: pdfium_dart
+description: PDFium Dart FFI bindings adapted to the rebuild product binary.
+version: 0.2.5
+environment:
+  sdk: ^3.10.0
+dependencies:
+  archive: ^4.2.0
+  code_assets: ^1.2.1
+  ffi: ^2.2.0
+  hooks: ^2.0.2
+  http: ^1.6.0

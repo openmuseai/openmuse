@@ -1,0 +1,720 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"io"
+	"mime/multipart"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+
+	"github.com/88250/gulu"
+	"github.com/88250/lute/ast"
+	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/cache"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+// InsertAssetBytes 将内存中的资源直接写入目标文档资源目录，避免生成内容经过明文临时文件。
+func InsertAssetBytes(id, fileName string, data []byte) (assetPath string, created bool, err error) {
+	bt := treenode.GetBlockTree(id)
+	if bt == nil {
+		return "", false, errors.New(Conf.Language(71))
+	}
+	if len(data) == 0 {
+		return "", false, errors.New("asset data is empty")
+	}
+
+	baseName := filepath.Base(fileName)
+	fName := util.FilterUploadFileName(baseName)
+	ext := strings.ToLower(filepath.Ext(fName))
+	fName = strings.TrimSuffix(fName, filepath.Ext(fName)) + ext
+	if fName == "" || fName == "." || ext == "" {
+		return "", false, errors.New("invalid asset filename")
+	}
+
+	docDirLocalPath := filepath.Join(util.DataDir, bt.BoxID, path.Dir(bt.Path))
+	assetsDirPath := getAssetsDir(filepath.Join(util.DataDir, bt.BoxID), docDirLocalPath)
+	if err = os.MkdirAll(assetsDirPath, 0755); err != nil {
+		return "", false, err
+	}
+
+	reader := bytes.NewReader(data)
+	hash, err := util.GetEtagByHandle(reader, int64(len(data)))
+	if err != nil {
+		return "", false, err
+	}
+	if existAssetPath := GetAssetPathByHash(hash, bt.BoxID); existAssetPath != "" {
+		originalName := assetNameWithoutID(filepath.Base(existAssetPath))
+		if strings.EqualFold(assetNameWithoutID(fName), originalName) {
+			return strings.TrimPrefix(existAssetPath, "/"), false, nil
+		}
+		hash = "random_2_" + gulu.Rand.String(12)
+	}
+
+	if IsEncryptedBox(bt.BoxID) {
+		fName = encryptedAssetName(util.Ext(fName), ast.NewNodeID())
+	} else {
+		fName = newAssetFileName(fName)
+	}
+	writePath := filepath.Join(assetsDirPath, fName)
+	if err = writeAssetFile(writePath, bytes.NewReader(data), bt.BoxID, baseName); err != nil {
+		return "", false, err
+	}
+
+	assetPath = "assets/" + fName
+	if IsEncryptedBox(bt.BoxID) {
+		assetPath += "?box=" + bt.BoxID
+	} else {
+		cache.SetAssetHash(hash, assetPath)
+	}
+	IncSync()
+	return assetPath, true, nil
+}
+
+// AssetUploadSuccess 记录单个输入文件的成功上传结果。
+type AssetUploadSuccess struct {
+	Index int    `json:"index"`
+	Name  string `json:"name"`
+	Path  string `json:"path"`
+}
+
+// AssetUploadFailure 记录单个输入文件的上传失败结果。
+type AssetUploadFailure struct {
+	Index int    `json:"index"`
+	Name  string `json:"name"`
+	Error string `json:"error"`
+}
+
+func recordAssetUploadSuccess(succMap map[string]string, succFiles *[]AssetUploadSuccess, index int, name, assetPath string) {
+	succMap[name] = assetPath
+	*succFiles = append(*succFiles, AssetUploadSuccess{Index: index, Name: name, Path: assetPath})
+}
+
+func recordAssetUploadFailure(failedFiles *[]AssetUploadFailure, index int, name string, err error) {
+	*failedFiles = append(*failedFiles, AssetUploadFailure{Index: index, Name: name, Error: err.Error()})
+}
+
+// assetNameWithoutID 移除外部文件名携带的资源 ID，并为仅由 ID 组成的名称补充可读前缀。
+func assetNameWithoutID(name string) string {
+	ext := util.Ext(name)
+	base := strings.TrimSuffix(name, ext)
+	_, id := util.LastID(name)
+	if ast.IsNodeIDPattern(id) {
+		base = strings.TrimSuffix(base[:len(base)-len(id)], "-")
+	}
+	if base == "" || ast.IsNodeIDPattern(base) {
+		base = "asset"
+	}
+	return base + ext
+}
+
+// newAssetFileName 为新增资源生成新的资源 ID，避免外部文件名指定已有资源的写入路径。
+func newAssetFileName(name string) string {
+	name = assetNameWithoutID(name)
+	ext := util.Ext(name)
+	return strings.TrimSuffix(name, ext) + "-" + ast.NewNodeID() + ext
+}
+
+func readRTFDDir(dir string) ([]os.DirEntry, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		logging.LogErrorf("read dir [%s] failed: %s", dir, err)
+	}
+	return entries, err
+}
+
+func copyRTFDEntries(entries []os.DirEntry, srcDir, destDir string, copyFile func(string, string) error) error {
+	for _, entry := range entries {
+		from := filepath.Join(srcDir, entry.Name())
+		to := filepath.Join(destDir, entry.Name())
+		if err := copyFile(from, to); err != nil {
+			if removeErr := os.RemoveAll(destDir); removeErr != nil {
+				logging.LogErrorf("remove partial RTFD directory [%s] failed: %s", destDir, removeErr)
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+func InsertLocalAssets(id string, assetAbsPaths []string, isUpload bool) (succMap map[string]string,
+	succFiles []AssetUploadSuccess, failedFiles []AssetUploadFailure, err error) {
+	return insertLocalAssets(id, assetAbsPaths, isUpload, false)
+}
+
+func InsertHTMLLocalAssets(id string, assetAbsPaths []string) (succMap map[string]string,
+	succFiles []AssetUploadSuccess, failedFiles []AssetUploadFailure, err error) {
+	return insertLocalAssets(id, assetAbsPaths, true, true)
+}
+
+func insertLocalAssets(id string, assetAbsPaths []string, isUpload, validateHTMLPath bool) (succMap map[string]string,
+	succFiles []AssetUploadSuccess, failedFiles []AssetUploadFailure, err error) {
+	succMap = map[string]string{}
+	succFiles = make([]AssetUploadSuccess, 0, len(assetAbsPaths))
+	failedFiles = make([]AssetUploadFailure, 0)
+
+	boxID := ""
+	assetsDirPath := filepath.Join(util.DataDir, "assets")
+	if id != "" {
+		bt := treenode.GetBlockTree(id)
+		if nil == bt {
+			err = errors.New(Conf.Language(71))
+			return
+		}
+		boxID = bt.BoxID
+		docDirLocalPath := filepath.Join(util.DataDir, boxID, path.Dir(bt.Path))
+		assetsDirPath = getAssetsDir(filepath.Join(util.DataDir, boxID), docDirLocalPath)
+	}
+	if !gulu.File.IsExist(assetsDirPath) {
+		if err = os.MkdirAll(assetsDirPath, 0755); err != nil {
+			return
+		}
+	}
+
+	for index, assetAbsPath := range assetAbsPaths {
+		if strings.HasPrefix(strings.ToLower(assetAbsPath), "file://") {
+			assetAbsPath = util.FileURLToLocalPath(assetAbsPath)
+		}
+		baseName := filepath.Base(assetAbsPath)
+		if validateHTMLPath && (util.IsSensitiveHTMLAssetPath(assetAbsPath) || EncryptedRawPathBoxID(assetAbsPath) != "") {
+			logging.LogWarnf("HTML paste local asset path is not allowed [%s]", assetAbsPath)
+			recordAssetUploadFailure(&failedFiles, index, baseName, errors.New("local asset path is not allowed"))
+			continue
+		}
+		fName := baseName
+		fName = util.FilterUploadFileName(fName)
+		ext := filepath.Ext(fName)
+		fName = strings.TrimSuffix(fName, ext)
+		ext = strings.ToLower(ext)
+		fName += ext
+		if gulu.File.IsDir(assetAbsPath) || !isUpload {
+			if !strings.HasPrefix(assetAbsPath, "\\\\") {
+				assetAbsPath = "file://" + assetAbsPath
+			}
+			recordAssetUploadSuccess(succMap, &succFiles, index, baseName, assetAbsPath)
+			continue
+		}
+
+		fi, statErr := os.Stat(assetAbsPath)
+		if nil != statErr {
+			recordAssetUploadFailure(&failedFiles, index, baseName, statErr)
+			continue
+		}
+		if gulu.File.IsSubPath(assetsDirPath, assetAbsPath) {
+			// 已经位于 assets 目录下的资源文件不处理
+			// Dragging a file from the assets folder into the editor causes the kernel to exit https://github.com/siyuan-note/siyuan/issues/15355
+			rel, relErr := filepath.Rel(assetsDirPath, assetAbsPath)
+			if relErr != nil {
+				recordAssetUploadFailure(&failedFiles, index, baseName, relErr)
+				continue
+			}
+			p := path.Join("assets", filepath.ToSlash(rel))
+			if IsEncryptedBox(boxID) {
+				p += "?box=" + boxID
+			}
+			recordAssetUploadSuccess(succMap, &succFiles, index, baseName, p)
+			continue
+		}
+
+		f, openErr := os.Open(assetAbsPath)
+		if nil != openErr {
+			recordAssetUploadFailure(&failedFiles, index, baseName, openErr)
+			continue
+		}
+
+		hash, hashErr := util.GetEtagByHandle(f, fi.Size())
+		if nil != hashErr {
+			f.Close()
+			recordAssetUploadFailure(&failedFiles, index, baseName, hashErr)
+			continue
+		}
+
+		if 1 > fi.Size() {
+			hash = "random_1_" + gulu.Rand.String(12)
+		}
+
+		existAssetPath := GetAssetPathByHash(hash, boxID)
+		if "" != existAssetPath {
+			originalName := assetNameWithoutID(filepath.Base(existAssetPath))
+			if !strings.EqualFold(assetNameWithoutID(fName), originalName) {
+				hash = "random_2_" + gulu.Rand.String(12)
+			}
+		}
+
+		if "" != existAssetPath && !strings.HasPrefix(hash, "random_") {
+			recordAssetUploadSuccess(succMap, &succFiles, index, baseName, strings.TrimPrefix(existAssetPath, "/"))
+			f.Close()
+		} else {
+			if IsEncryptedBox(boxID) {
+				// 加密 box：磁盘文件名脱敏为 uuid-blockID.ext，原始名存加密映射
+				fName = encryptedAssetName(util.Ext(fName), ast.NewNodeID())
+			} else {
+				fName = newAssetFileName(fName)
+			}
+			writePath := filepath.Join(assetsDirPath, fName)
+			if _, seekErr := f.Seek(0, io.SeekStart); seekErr != nil {
+				f.Close()
+				recordAssetUploadFailure(&failedFiles, index, baseName, seekErr)
+				continue
+			}
+			if writeErr := writeAssetFile(writePath, f, boxID, baseName); writeErr != nil {
+				f.Close()
+				recordAssetUploadFailure(&failedFiles, index, baseName, writeErr)
+				continue
+			}
+			f.Close()
+
+			p := "assets/" + fName
+			if IsEncryptedBox(boxID) {
+				p += "?box=" + boxID
+			}
+			recordAssetUploadSuccess(succMap, &succFiles, index, baseName, p)
+			if !IsEncryptedBox(boxID) {
+				cache.SetAssetHash(hash, p) // 加密笔记本不写全局 cache，避免跨边界去重污染
+			}
+		}
+	}
+	IncSync()
+	return
+}
+
+func Upload(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(200, ret)
+	form, err := c.MultipartForm()
+	if err != nil {
+		logging.LogErrorf("insert asset failed: %s", err)
+		ret.Code = -1
+		ret.Msg = err.Error()
+		return
+	}
+	request := AssetUploadRequest{Files: form.File["file[]"]}
+	if values := form.Value["id"]; values != nil {
+		request.ID = &values[0]
+	}
+	if values := form.Value["assetsDirPath"]; values != nil {
+		request.AssetsDirPath = &values[0]
+	}
+	result, message, err := UploadAssets(request)
+	ret.Msg = message
+	if err != nil {
+		ret.Code = -1
+		ret.Msg = err.Error()
+		return
+	}
+	ret.Data = result
+}
+
+// AssetUploadRequest 保留目标字段的缺省状态，并按输入顺序接收全部文件。
+type AssetUploadRequest struct {
+	ID            *string
+	AssetsDirPath *string
+	Files         []*multipart.FileHeader
+}
+type AssetUploadResult struct {
+	ErrFiles    []string             `json:"errFiles"`
+	FailedFiles []AssetUploadFailure `json:"failedFiles"`
+	SuccFiles   []AssetUploadSuccess `json:"succFiles"`
+	SuccMap     map[string]string    `json:"succMap"`
+}
+
+// UploadAssets 将附件写入目标资源目录，保留逐文件结果、加密写入和首条失败提示。
+func UploadAssets(request AssetUploadRequest) (result *AssetUploadResult, message string, err error) {
+
+	assetsDirPath := filepath.Join(util.DataDir, "assets")
+	var uploadBoxID string // 记录上传目标 boxID，供 writeAssetFile 判断是否需加密
+	if request.ID != nil {
+		id := *request.ID
+		bt := treenode.GetBlockTree(id)
+		if nil == bt {
+			// 全局 blocktree 找不到时，遍历已打开的加密笔记本查找
+			for _, encBoxID := range treenode.GetOpenedEncryptedBoxIDs() {
+				if encBT := treenode.GetBlockTreeInBox(id, encBoxID); nil != encBT {
+					bt = encBT
+					break
+				}
+			}
+		}
+		if nil == bt {
+			err = errors.New(Conf.Language(71))
+			return
+		}
+		uploadBoxID = bt.BoxID
+		docDirLocalPath := filepath.Join(util.DataDir, bt.BoxID, path.Dir(bt.Path))
+		assetsDirPath = getAssetsDir(filepath.Join(util.DataDir, bt.BoxID), docDirLocalPath)
+	}
+
+	relAssetsDirPath := "assets"
+	if request.AssetsDirPath != nil {
+		relAssetsDirPath = *request.AssetsDirPath
+		assetsDirPath = filepath.Join(util.DataDir, relAssetsDirPath)
+		if !util.IsAbsPathInWorkspace(assetsDirPath) {
+			err = errors.New("Path [" + assetsDirPath + "] is not in workspace")
+			return
+		}
+		// assetsDirPath 可能指向加密 box（调用方未传 id），反查 boxID 让文件名脱敏和内容加密生效
+		if pathBox := util.BoxIDFromDataPath(assetsDirPath); pathBox != "" && IsEncryptedBox(pathBox) {
+			uploadBoxID = pathBox
+			boxAssetsDir := filepath.Join(util.DataDir, pathBox, "assets")
+			if rel, relErr := filepath.Rel(boxAssetsDir, assetsDirPath); relErr == nil && rel != ".." &&
+				!strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+				// 加密资源通过 box 查询参数定位，响应转换为 box 内的标准 assets 相对路径。
+				relAssetsDirPath = path.Join("assets", filepath.ToSlash(rel))
+			}
+		}
+	}
+	if !gulu.File.IsExist(assetsDirPath) {
+		if err = os.MkdirAll(assetsDirPath, 0755); err != nil {
+			return
+		}
+	}
+
+	var errFiles []string
+	succMap := map[string]string{}
+	files := request.Files
+	succFiles := make([]AssetUploadSuccess, 0, len(files))
+	failedFiles := make([]AssetUploadFailure, 0)
+	recordFailure := func(index int, inputName, errorName string, uploadErr error) {
+		errFiles = append(errFiles, errorName)
+		recordAssetUploadFailure(&failedFiles, index, inputName, uploadErr)
+		if message == "" {
+			message = uploadErr.Error()
+		}
+	}
+
+	for index, file := range files {
+		baseName := file.Filename
+		_, lastID := util.LastID(baseName)
+		if !ast.IsNodeIDPattern(lastID) {
+			lastID = ""
+		}
+
+		needUnzip2Dir := false
+		if gulu.OS.IsDarwin() {
+			if strings.HasSuffix(baseName, ".rtfd.zip") {
+				needUnzip2Dir = true
+			}
+		}
+
+		fName := baseName
+		fName = util.FilterUploadFileName(fName)
+		ext := filepath.Ext(fName)
+		fName = strings.TrimSuffix(fName, ext)
+		ext = strings.ToLower(ext)
+		fName += ext
+		f, openErr := file.Open()
+		if nil != openErr {
+			recordFailure(index, file.Filename, fName, openErr)
+			continue
+		}
+		if needUnzip2Dir && IsEncryptedBox(uploadBoxID) {
+			unsupportedErr := errors.New("directory assets are not supported in encrypted notebooks")
+			recordFailure(index, file.Filename, fName, unsupportedErr)
+			f.Close()
+			continue
+		}
+
+		hash, hashErr := util.GetEtagByHandle(f, file.Size)
+		if nil != hashErr {
+			recordFailure(index, file.Filename, fName, hashErr)
+			f.Close()
+			continue
+		}
+
+		if 1 > file.Size {
+			hash = "random_1_" + gulu.Rand.String(12)
+		}
+
+		existAssetPath := GetAssetPathByHash(hash, uploadBoxID)
+		if "" != existAssetPath {
+			originalName := assetNameWithoutID(filepath.Base(existAssetPath))
+			if !strings.EqualFold(assetNameWithoutID(fName), originalName) {
+				hash = "random_2_" + gulu.Rand.String(12)
+			}
+		}
+
+		if "" != existAssetPath && !strings.HasPrefix(hash, "random_") {
+			recordAssetUploadSuccess(succMap, &succFiles, index, baseName, strings.TrimPrefix(existAssetPath, "/"))
+			f.Close()
+		} else {
+			if IsEncryptedBox(uploadBoxID) {
+				if "" == lastID {
+					lastID = ast.NewNodeID()
+				}
+				// 加密 box：磁盘文件名脱敏为 uuid-blockID.ext，原始名存加密映射
+				fName = encryptedAssetName(util.Ext(fName), lastID)
+			} else {
+				fName = newAssetFileName(fName)
+			}
+			writePath := filepath.Join(assetsDirPath, fName)
+			tmpDir := filepath.Join(util.TempDir, "convert", "zip", gulu.Rand.String(7))
+			if needUnzip2Dir {
+				if err = os.MkdirAll(tmpDir, 0755); err != nil {
+					recordFailure(index, file.Filename, fName, err)
+					f.Close()
+					_ = os.RemoveAll(tmpDir)
+					continue
+				}
+				writePath = filepath.Join(tmpDir, fName)
+			}
+
+			if _, err = f.Seek(0, io.SeekStart); err != nil {
+				logging.LogErrorf("seek failed: %s", err)
+				recordFailure(index, file.Filename, fName, err)
+				f.Close()
+				if needUnzip2Dir {
+					_ = os.RemoveAll(tmpDir)
+				}
+				continue
+			}
+			if err = writeAssetFile(writePath, f, uploadBoxID, baseName); err != nil {
+				logging.LogErrorf("write file failed: %s", err)
+				recordFailure(index, file.Filename, fName, err)
+				f.Close()
+				if needUnzip2Dir {
+					_ = os.RemoveAll(tmpDir)
+				}
+				continue
+			}
+			f.Close()
+
+			if needUnzip2Dir {
+				baseName = strings.TrimSuffix(file.Filename, ".rtfd.zip") + ".rtfd"
+				fName = baseName
+				fName = util.FilterUploadFileName(fName)
+				ext = filepath.Ext(fName)
+				fName = strings.TrimSuffix(fName, ext)
+				ext = strings.ToLower(ext)
+				fName += ext
+				fName = newAssetFileName(fName)
+				tmpDir2 := filepath.Join(util.TempDir, "convert", "zip", gulu.Rand.String(7))
+				if err = gulu.Zip.Unzip(writePath, tmpDir2); err != nil {
+					recordFailure(index, file.Filename, fName, err)
+					_ = os.RemoveAll(tmpDir)
+					_ = os.RemoveAll(tmpDir2)
+					continue
+				}
+
+				entries, readErr := readRTFDDir(tmpDir2)
+				if nil != readErr {
+					recordFailure(index, file.Filename, fName, readErr)
+					_ = os.RemoveAll(tmpDir)
+					_ = os.RemoveAll(tmpDir2)
+					continue
+				}
+				if 1 > len(entries) {
+					logging.LogErrorf("read dir [%s] failed: no entry", tmpDir2)
+					noEntryErr := errors.New("no entry")
+					recordFailure(index, file.Filename, fName, noEntryErr)
+					_ = os.RemoveAll(tmpDir)
+					_ = os.RemoveAll(tmpDir2)
+					continue
+				}
+				dirName := entries[0].Name()
+				srcDir := filepath.Join(tmpDir2, dirName)
+				entries, readErr = readRTFDDir(srcDir)
+				if nil != readErr {
+					recordFailure(index, file.Filename, fName, readErr)
+					_ = os.RemoveAll(tmpDir)
+					_ = os.RemoveAll(tmpDir2)
+					continue
+				}
+				destDir := filepath.Join(assetsDirPath, fName)
+				if copyErr := copyRTFDEntries(entries, srcDir, destDir, gulu.File.Copy); nil != copyErr {
+					logging.LogErrorf("copy RTFD directory [%s] failed: %s", srcDir, copyErr)
+					recordFailure(index, file.Filename, fName, copyErr)
+					_ = os.RemoveAll(tmpDir)
+					_ = os.RemoveAll(tmpDir2)
+					continue
+				}
+				_ = os.RemoveAll(tmpDir)
+				_ = os.RemoveAll(tmpDir2)
+			}
+
+			p := strings.TrimPrefix(path.Join(relAssetsDirPath, fName), "/")
+			if uploadBoxID != "" && IsEncryptedBox(uploadBoxID) {
+				p += "?box=" + uploadBoxID
+			}
+			recordAssetUploadSuccess(succMap, &succFiles, index, baseName, p)
+			if uploadBoxID == "" || !IsEncryptedBox(uploadBoxID) {
+				cache.SetAssetHash(hash, p) // 加密笔记本不写全局 cache
+			}
+		}
+	}
+
+	result = &AssetUploadResult{ErrFiles: errFiles, FailedFiles: failedFiles, SuccFiles: succFiles, SuccMap: succMap}
+
+	IncSync()
+
+	return result, message, nil
+}
+
+func getAssetsDir(boxLocalPath, docDirLocalPath string) (assets string) {
+	assets = filepath.Join(docDirLocalPath, "assets")
+	if !filelock.IsExist(assets) {
+		assets = filepath.Join(boxLocalPath, "assets")
+		if !filelock.IsExist(assets) {
+			// 加密笔记本禁用全局 data/assets 回退，强制使用笔记本级 assets，避免明文资源泄漏到全局
+			boxID := filepath.Base(boxLocalPath)
+			if IsEncryptedBox(boxID) {
+				_ = os.MkdirAll(assets, 0755)
+				return
+			}
+			assets = filepath.Join(util.DataDir, "assets")
+		}
+	}
+	return
+}
+
+// writeAssetFile 把 src 的内容写入 writePath。从 writePath 反查真实 boxID 决定是否加密——
+// 不轻信传入的 boxID（调用方可能未传，或 assetsDirPath 指向加密笔记本但 id 为空）。
+// 加密笔记本必须已解锁（DEK 在内存）才写入；加密但未解锁返回错误（fail-closed，避免明文落盘）。
+// 非加密笔记本按 reader 直接写（走 filelock.WriteFileByReader 原路径，保留锁语义）。
+func writeAssetFile(writePath string, src io.Reader, boxID, originalName string) (err error) {
+	// 从 writePath 反查真实 boxID，与传入 boxID 交叉校验
+	pathBoxID := util.BoxIDFromDataPath(writePath)
+	// 传入 boxID 与路径 box 都非空但不一致：路径指向另一个 box，拒绝（防跨 box 写入）
+	if boxID != "" && pathBoxID != "" && boxID != pathBoxID {
+		return fmt.Errorf("boxID mismatch: param=%s, path=%s", boxID, pathBoxID)
+	}
+	// 路径不在 box 下但传入的是加密 box：加密内容只能写 box 内，拒绝写全局 assets
+	if pathBoxID == "" && boxID != "" && IsEncryptedBox(boxID) {
+		return fmt.Errorf("encrypted box asset must be written inside the box directory, got global path: %s", writePath)
+	}
+	actualBoxID := pathBoxID
+	if actualBoxID == "" {
+		actualBoxID = boxID // 路径不在 box 下（如全局 assets），回退传入值
+	}
+	if actualBoxID != "" && IsEncryptedBox(actualBoxID) {
+		HoldBoxReadLock(actualBoxID)
+		defer ReleaseBoxReadLock(actualBoxID)
+		dek, dekErr := GetDEKIfUnlocked(actualBoxID)
+		if dekErr != nil {
+			// 加密笔记本未解锁：拒绝写入，避免明文落盘（深度防御，见 issue #18034）
+			return dekErr
+		}
+		// 已解锁的加密 box：全读 → 加密 → 落盘
+		raw, readErr := io.ReadAll(src)
+		if readErr != nil {
+			return readErr
+		}
+		enc, encErr := EncryptAsset(actualBoxID, filepath.Base(writePath), originalName, dek, raw)
+		if encErr != nil {
+			return encErr
+		}
+		return filelock.WriteFile(writePath, enc)
+	}
+	return filelock.WriteFileByReader(writePath, src)
+}
+
+// StoreAssetForBox 统一资产写入入口：根据 boxID 决定加密/明文写入，返回磁盘文件名（不含路径前缀）。
+// 加密 box：生成脱敏名，把原始名称和内容写入单文件加密容器，再通过 filelock.WriteFile 落盘。
+// 普通 box：util.AssetName 生成名 → filelock.WriteFile 明文写入
+// boxID 为空时按普通 box 处理（写入全局 assets）。
+func StoreAssetForBox(boxID, assetDirPath, originalName string, data []byte) (diskName string, err error) {
+	return storeAssetForBox(boxID, assetDirPath, originalName, data)
+}
+
+// storeAssetForBox 统一资产写入入口：根据 boxID 决定加密/明文写入，返回磁盘文件名（不含路径前缀）。
+// 加密 box：生成脱敏名，把原始名称和内容写入单文件加密容器，再通过 filelock.WriteFile 落盘。
+// 普通 box：util.AssetName 生成名 → filelock.WriteFile 明文写入
+// boxID 为空时按普通 box 处理（写入全局 assets）。
+func storeAssetForBox(boxID, assetDirPath, originalName string, data []byte) (diskName string, err error) {
+	if IsEncryptedBox(boxID) {
+		HoldBoxReadLock(boxID)
+		defer ReleaseBoxReadLock(boxID)
+
+		ext := filepath.Ext(originalName)
+		blockID := ast.NewNodeID()
+		diskName = encryptedAssetName(ext, blockID)
+
+		dek, dekErr := GetDEKIfUnlocked(boxID)
+		if dekErr != nil {
+			return "", dekErr
+		}
+		enc, encErr := EncryptAsset(boxID, diskName, originalName, dek, data)
+		if encErr != nil {
+			return "", encErr
+		}
+		writePath := filepath.Join(assetDirPath, diskName)
+		if err = filelock.WriteFile(writePath, enc); err != nil {
+			return "", err
+		}
+		return diskName, nil
+	}
+
+	// 普通 box：生成带 ID 的文件名，明文写入
+	diskName = util.AssetName(originalName, ast.NewNodeID())
+	writePath := filepath.Join(assetDirPath, diskName)
+	if existing, readErr := filelock.ReadFile(writePath); readErr == nil {
+		if bytes.Equal(existing, data) {
+			return diskName, nil
+		}
+
+		// 导入带有既有 NodeID 的文件时不能覆盖全局同名资源，冲突后强制生成新的资源 ID。
+		cleanName := util.RemoveID(originalName)
+		ext := filepath.Ext(cleanName)
+		name := strings.TrimSuffix(cleanName, ext)
+		if name == "" || ast.IsNodeIDPattern(name) {
+			name = "asset"
+		}
+		for {
+			diskName = newAssetFileName(name + ext)
+			writePath = filepath.Join(assetDirPath, diskName)
+			if !filelock.IsExist(writePath) {
+				break
+			}
+		}
+	} else if !os.IsNotExist(readErr) {
+		return "", readErr
+	}
+	if err = filelock.WriteFile(writePath, data); err != nil {
+		return "", err
+	}
+	return diskName, nil
+}
+
+// encryptedAssetName 生成加密笔记本专用的无语义资源文件名：uuid-blockID.ext。
+// 原始语义文件名（如"合同.pdf"）加密存入资源容器，磁盘上只保留随机名。
+func encryptedAssetName(ext, blockID string) string {
+	return gulu.Rand.String(16) + "-" + blockID + ext
+}
+
+// LookupAssetOriginalName 查询加密笔记本资源的原始文件名（供下载 Content-Disposition 等展示用）。
+// 未找到时返回空串。
+func LookupAssetOriginalName(boxID, diskName string) string {
+	if boxID == "" || !IsEncryptedBox(boxID) {
+		return ""
+	}
+	HoldBoxReadLock(boxID)
+	defer ReleaseBoxReadLock(boxID)
+	return LookupAssetOriginalNameLocked(boxID, diskName)
+}
+
+// LookupAssetOriginalNameLocked 在调用方已持有 box 读锁时查询原始资源名。
+func LookupAssetOriginalNameLocked(boxID, diskName string) string {
+	assetPath := filepath.Join(util.DataDir, boxID, "assets", diskName)
+	if assetFile, err := filelock.OpenFile(assetPath, os.O_RDONLY, 0); err == nil {
+		defer filelock.CloseFile(assetFile)
+		if dek, dekErr := GetDEK(boxID); dekErr == nil && dek != nil {
+			originalName, nameErr := DecryptAssetNameFromReader(boxID, diskName, dek, assetFile)
+			if nameErr != nil {
+				logging.LogErrorf("decrypt asset name [%s] failed: %s", diskName, nameErr)
+				return ""
+			}
+			return originalName
+		}
+	}
+	return ""
+}

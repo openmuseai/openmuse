@@ -1,0 +1,303 @@
+// Copyright (c) 2013 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "gn/err.h"
+
+#include <stddef.h>
+
+#include <atomic>
+#include <mutex>
+#include <string_view>
+
+#include "base/command_line.h"
+#include "base/strings/string_number_conversions.h"
+#include "base/strings/string_util.h"
+#include "gn/filesystem_utils.h"
+#include "gn/input_file.h"
+#include "gn/parse_tree.h"
+#include "gn/standard_out.h"
+#include "gn/switches.h"
+#include "gn/tokenizer.h"
+#include "gn/value.h"
+
+namespace {
+
+std::atomic<int> g_num_errors_printed{0};
+
+int GetErrorLimit() {
+  static int g_error_limit = 10;
+  static std::once_flag flag;
+  std::call_once(flag, []() {
+    if (base::CommandLine::InitializedForCurrentProcess()) {
+      const base::CommandLine* cmdline = base::CommandLine::ForCurrentProcess();
+      if (cmdline && cmdline->HasSwitch(switches::kErrorLimit)) {
+        std::string limit_str =
+            cmdline->GetSwitchValueString(switches::kErrorLimit);
+        int parsed_limit;
+        if (base::StringToInt(limit_str, &parsed_limit)) {
+          g_error_limit = parsed_limit;
+        }
+      }
+    }
+  });
+  return g_error_limit;
+}
+
+std::string GetNthLine(std::string_view data, int n) {
+  size_t line_off = Tokenizer::ByteOffsetOfNthLine(data, n);
+  size_t end = line_off + 1;
+  while (end < data.size() && !Tokenizer::IsNewline(data, end))
+    end++;
+  return std::string(data.substr(line_off, end - line_off));
+}
+
+void FillRangeOnLine(const LocationRange& range,
+                     int line_number,
+                     std::string* line) {
+  // Only bother if the range's begin or end overlaps the line. If the entire
+  // line is highlighted as a result of this range, it's not very helpful.
+  if (range.begin().line_number() != line_number &&
+      range.end().line_number() != line_number)
+    return;
+
+  // Watch out, the char offsets in the location are 1-based, so we have to
+  // subtract 1.
+  int begin_char;
+  if (range.begin().line_number() < line_number)
+    begin_char = 0;
+  else
+    begin_char = range.begin().column_number() - 1;
+
+  int end_char;
+  if (range.end().line_number() > line_number)
+    end_char = static_cast<int>(line->size());  // Ending is non-inclusive.
+  else
+    end_char = range.end().column_number() - 1;
+
+  CHECK(end_char >= begin_char);
+  CHECK(begin_char >= 0 && begin_char <= static_cast<int>(line->size()));
+  CHECK(end_char >= 0 && end_char <= static_cast<int>(line->size()));
+  for (int i = begin_char; i < end_char; i++)
+    line->at(i) = '-';
+}
+
+void OutputErrString(bool is_fatal,
+                     std::string_view output,
+                     TextDecoration dec = DECORATION_NONE) {
+  if (is_fatal) {
+    OutputString(output, dec);
+  } else {
+    OutputLogString(output, dec);
+  }
+}
+
+}  // namespace
+
+struct ErrOutput {
+  virtual ~ErrOutput() = default;
+  virtual void Write(std::string_view text,
+                     TextDecoration dec = DECORATION_NONE) = 0;
+};
+
+namespace {
+
+struct StdoutErrOutput : public ErrOutput {
+  StdoutErrOutput(bool is_fatal) : is_fatal(is_fatal) {}
+  void Write(std::string_view text, TextDecoration dec) override {
+    OutputErrString(is_fatal, text, dec);
+  }
+  bool is_fatal;
+};
+
+struct StringErrOutput : public ErrOutput {
+  void Write(std::string_view text, TextDecoration dec) override {
+    out.append(text);
+  }
+  std::string out;
+};
+
+// The line length is used to clip the maximum length of the markers we'll
+// make if the error spans more than one line (like unterminated literals).
+void OutputHighlightedPosition(const Location& location,
+                               const Err::RangeList& ranges,
+                               size_t line_length,
+                               ErrOutput& output) {
+  // Make a buffer of the line in spaces.
+  std::string highlight;
+  highlight.resize(line_length);
+  for (size_t i = 0; i < line_length; i++)
+    highlight[i] = ' ';
+
+  // Highlight all the ranges on the line.
+  for (const auto& range : ranges)
+    FillRangeOnLine(range, location.line_number(), &highlight);
+
+  // Allow the marker to be one past the end of the line for marking the end.
+  highlight.push_back(' ');
+  CHECK(location.column_number() - 1 >= 0 &&
+        location.column_number() - 1 < static_cast<int>(highlight.size()));
+  highlight[location.column_number() - 1] = '^';
+
+  // Trim unused spaces from end of line.
+  while (!highlight.empty() && highlight[highlight.size() - 1] == ' ')
+    highlight.resize(highlight.size() - 1);
+
+  highlight += "\n";
+  output.Write(highlight, DECORATION_BLUE);
+}
+
+}  // namespace
+
+Err::Err(const Err& other) {
+  if (other.info_)
+    info_ = std::make_unique<ErrInfo>(*other.info_);
+}
+
+Err::Err(const Location& location,
+         const std::string& msg,
+         const std::string& help)
+    : info_(std::make_unique<ErrInfo>(location, msg, help)) {}
+
+Err::Err(const LocationRange& range,
+         const std::string& msg,
+         const std::string& help)
+    : info_(std::make_unique<ErrInfo>(range.begin(), msg, help)) {
+  info_->ranges.push_back(range);
+}
+
+Err::Err(const Token& token, const std::string& msg, const std::string& help)
+    : info_(std::make_unique<ErrInfo>(token.location(), msg, help)) {
+  info_->ranges.push_back(token.range());
+}
+
+Err::Err(const ParseNode* node,
+         const std::string& msg,
+         const std::string& help_text)
+    : info_(std::make_unique<ErrInfo>(Location(), msg, help_text)) {
+  // Node will be null in certain tests.
+  if (node) {
+    LocationRange range = node->GetRange();
+    info_->location = range.begin();
+    info_->ranges.push_back(range);
+  }
+}
+
+Err::Err(const Value& value,
+         const std::string& msg,
+         const std::string& help_text)
+    : info_(std::make_unique<ErrInfo>(Location(), msg, help_text)) {
+  if (value.origin()) {
+    LocationRange range = value.origin()->GetRange();
+    info_->location = range.begin();
+    info_->ranges.push_back(range);
+  }
+}
+
+Err& Err::operator=(const Err& other) {
+  if (other.info_) {
+    info_ = std::make_unique<ErrInfo>(*other.info_);
+  } else {
+    info_.reset();
+  }
+  return *this;
+}
+
+bool Err::PrintToStdout() const {
+  FlushBufferedLogOutput();
+  return InternalPrintToStdout(false, true);
+}
+
+bool Err::PrintNonfatalToStdout() const {
+  return InternalPrintToStdout(false, false);
+}
+
+void Err::AppendSubErr(const Err& err) {
+  info_->sub_errs.push_back(err);
+}
+
+bool Err::InternalPrintToStdout(bool is_sub_err, bool is_fatal) const {
+  DCHECK(info_);
+
+  if (!is_sub_err) {
+    int limit = GetErrorLimit();
+    if (limit >= 0) {
+      int printed = ++g_num_errors_printed;
+      if (printed > limit) {
+        if (printed == limit + 1) {
+          OutputErrString(
+              is_fatal,
+              "Too many errors/warnings. Suppressing further messages.\n"
+              "You can change the limit by passing --error-limit=<number>.\n",
+              DECORATION_RED);
+        }
+        return false;
+      }
+    }
+  }
+
+  StdoutErrOutput output(is_fatal);
+  InternalFormat(output, is_sub_err, is_fatal);
+  return true;
+}
+
+void Err::InternalFormat(ErrOutput& output,
+                         bool is_sub_err,
+                         bool is_fatal) const {
+  DCHECK(info_);
+
+  if (!is_sub_err) {
+    if (is_fatal)
+      output.Write("ERROR ", DECORATION_RED);
+    else
+      output.Write("WARNING ", DECORATION_MAGENTA);
+  }
+
+  // File name and location.
+  const InputFile* input_file = info_->location.file();
+  std::string loc_str = info_->location.Describe(true);
+  if (!loc_str.empty()) {
+    if (is_sub_err)
+      loc_str.insert(0, "See ");
+    else
+      loc_str.insert(0, "at ");
+    if (!info_->toolchain_label.is_null())
+      loc_str += " ";
+  }
+  std::string toolchain_str;
+  if (!info_->toolchain_label.is_null()) {
+    toolchain_str +=
+        "(" + info_->toolchain_label.GetUserVisibleName(false) + ")";
+  }
+  std::string colon;
+  if (!loc_str.empty() || !toolchain_str.empty())
+    colon = ": ";
+  output.Write(loc_str + toolchain_str + colon + info_->message + "\n");
+
+  // Quoted line.
+  if (input_file) {
+    std::string line =
+        GetNthLine(input_file->contents(), info_->location.line_number());
+    if (!base::ContainsOnlyChars(line, base::kWhitespaceASCII)) {
+      output.Write(line + "\n", DECORATION_DIM);
+      OutputHighlightedPosition(info_->location, info_->ranges, line.size(),
+                                output);
+    }
+  }
+
+  // Optional help text.
+  if (!info_->help_text.empty())
+    output.Write(info_->help_text + "\n");
+
+  // Sub errors.
+  for (const auto& sub_err : info_->sub_errs)
+    sub_err.InternalFormat(output, true, is_fatal);
+}
+
+std::string Err::to_string() const {
+  if (!has_error())
+    return std::string();
+  StringErrOutput output;
+  InternalFormat(output, false, true);
+  return std::move(output.out);
+}

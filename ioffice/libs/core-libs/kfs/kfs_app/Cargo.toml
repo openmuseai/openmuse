@@ -1,0 +1,28 @@
+[package]
+name = "core_libs_kfs_app"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+log = "0.4"
+flate2 = "1"
+stubs = { path = "../../stubs" }
+core_libs_util = { path = "../../util/util" }
+chrono = "0.4"
+
+# 函数级/对齐回归测试：镜像 src/<relpath>/<Type>.rs 的路径。
+# See .cursor/rules/java2rust-pipeline.md
+[[test]]
+name = "ZipInputStream"
+path = "tests/cn/wps/moffice/kfs/zip/ZipInputStream.rs"
+
+[[test]]
+name = "ZipOutputStream"
+path = "tests/cn/wps/moffice/kfs/zip/ZipOutputStream.rs"
+
+[[test]]
+name = "Zip64"
+path = "tests/cn/wps/moffice/kfs/zip/Zip64.rs"

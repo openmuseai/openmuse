@@ -1,0 +1,40 @@
+// Rust stub for Pools (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/Pools.java
+use crate::*;
+
+pub struct Pools {
+    // TODO: fields
+}
+
+impl Pools {
+    pub fn new() -> Self { todo!() }
+    pub fn reuseClean(&self) { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn obtainTableCellLayoutState(&self) -> TableCellLayoutState { todo!() }
+    pub fn obtainTableCellWidthReceiver(&self) -> TableCellWidthReceiver { todo!() }
+    pub fn recycleTableCellWidthReveiver(&self, receiver: TableCellWidthReceiver) { todo!() }
+    pub fn recycleTableCellLayoutState(&self, cell: TableCellLayoutState) { todo!() }
+    pub fn recycleTableCellLayoutStates(&self, cells: KList) { todo!() }
+    pub fn obtainDrawingCacheItem(&self) -> DrawingCacheItem { todo!() }
+    pub fn recycleDrawingCacheItem(&self, cacheItem: DrawingCacheItem) { todo!() }
+    pub fn recycleDrawingCacheItems(&self, items: KList) { todo!() }
+    pub fn obtainBidiItem(&self) -> BidiItem { todo!() }
+    pub fn recycle(&self, item: BidiItem) { todo!() }
+    pub fn recycleBidiItems(&self, list: KList) { todo!() }
+    pub fn obtainTBD(&self) -> TBD { todo!() }
+    pub fn recycleTBD(&self, tbd: TBD) { todo!() }
+    pub fn recycleTBDs(&self, list: KList) { todo!() }
+    pub fn obtainEvent(&self) -> Event { todo!() }
+    pub fn recycleEvent(&self, item: Event) { todo!() }
+    pub fn recycleEvents(&self, list: KList) { todo!() }
+    pub fn recycleCommentCacheItem(&self, item: CommentCacheCollector::CommentCacheItem) { todo!() }
+    pub fn recycleCommentCacheItems(&self, list: KList) { todo!() }
+    pub fn obtainFootEndCacheItem(&self) -> FootNoteCacheItem { todo!() }
+    pub fn recycleFootEndNoteCacheItem(&self, val: FootNoteCacheItem) { todo!() }
+    pub fn recycleFootEndNoteCacheItems(&self, list: KList) { todo!() }
+    pub fn obtainParaPropEnv(&self) -> ParaPropEnv { todo!() }
+    pub fn recycleParaPropEnv(&self, propEnv: ParaPropEnv) { todo!() }
+    pub fn obtainStateSnapshot(&self) -> StateSnapshot { todo!() }
+    pub fn recycleStatesSnapshot(&self, list: KList) { todo!() }
+    pub fn recycle_1(&self, stateSnapshot: StateSnapshot) { todo!() }
+}

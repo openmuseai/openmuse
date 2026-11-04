@@ -1,0 +1,16 @@
+{
+  "mainJavaPath": "/Users/mac/src/ioffice/koffice/et/core/cn/wps/et/ss/util/level/LineLevelMap.java",
+  "mode": "rewrite",
+  "files": [
+    {
+      "javaPath": "/Users/mac/src/ioffice/koffice/et/core/cn/wps/et/ss/util/level/LineLevelMap.java",
+      "rustPath": "/Users/mac/src/ioffice/libs/ss-core/src/cn/wps/et/ss/util/level/LineLevelMap.rs",
+      "currentStep": "check_deps",
+      "status": "error",
+      "error": "Rust template not found (run step1 first)",
+      "retryCount": 0,
+      "errorCnt": 0
+    }
+  ],
+  "timestamp": "2026-06-23T07:42:29.004Z"
+}

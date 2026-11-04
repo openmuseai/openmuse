@@ -1,0 +1,607 @@
+@use "../component/counter";
+
+/*
+.status: 2
+
+.protyle-util: 4
+
+.protyle-hint: 5
+
+.side-mask: 6
+
+Mobile #menu & .side-panel: 7
+
+.fullscreen: 8
+
+#windowControls: 9
+
+window.siyuan.zIndex: 10
+
+.b3-tooltips: 1000000
+*/
+
+.app-loading {
+  z-index: 10;
+}
+
+html {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+}
+
+body {
+  --b3-window-background-image: var(--b3-body-background-gradient, radial-gradient(
+                  ellipse 45% 20% at 0% 0%,
+                  hsla(var(--b3-body-background-hl), calc(var(--b3-body-background-hl-opacity) * 0.5)) 0%,
+                  transparent 100%
+  ));
+  background-image: var(--b3-window-background-image);
+}
+
+.fullscreen {
+  position: fixed;
+  top: 0;
+  width: 100% !important;
+  left: 0;
+  height: 100vh !important;
+  z-index: 8;
+  border-radius: 0;
+
+  &.sy__graph,
+  &.sy__agentChat,
+  &.sy__globalGraph {
+    background-color: var(--b3-theme-background);
+  }
+
+  & > .protyle-breadcrumb,
+  & > .block__icons { // 关系图、card
+    padding-left: var(--b3-toolbar-left-mac);
+  }
+
+  .protyle-breadcrumb > .protyle-breadcrumb__space,
+  & > .block__icons > .fn__flex-1 {
+    -webkit-app-region: drag;
+    min-width: 32px;
+    height: 100%;
+    box-sizing: border-box;
+  }
+}
+
+html[data-frontend="browser-desktop"] {
+  .fullscreen {
+    > .protyle-breadcrumb,
+    > .block__icons {
+      padding-left: calc(env(titlebar-area-x, 0px) + 8px);
+      padding-right: calc(100% - env(titlebar-area-width, 100%) - env(titlebar-area-x, 0px) + 8px);
+      height: calc(env(titlebar-area-height, var(--b3-ui-browser-titlebar-height, 31px)) + 1px);
+    }
+  }
+}
+
+// 移动设备的桌面布局不预留 macOS 窗口按钮空间，iPad 窗口控件按原生上报的宽度避让。
+body.body--android,
+body.body--ios,
+body.body--harmony {
+  .fullscreen {
+    --b3-toolbar-left-mac: calc(var(--ios-window-controls-left, 0px) + 8px);
+  }
+}
+
+// 仅顶部工具栏避让原生窗口控件，正文与侧栏不增加横向留白。
+:root[data-ios-window-controls] #toolbar {
+  padding-left: calc(var(--ios-window-controls-left, 0px) + 5px);
+  padding-right: calc(var(--ios-window-controls-right, 0px) + 5px);
+  padding-top: var(--ios-window-safe-top, 0px);
+  height: max(calc(32px + var(--ios-window-safe-top, 0px)), var(--ios-window-controls-height, 0px));
+  align-items: flex-start;
+
+  #toolbarVIP {
+    align-self: center;
+  }
+}
+
+:root[data-ios-window-controls] #status {
+  height: calc(var(--b3-ui-status-height, 32px) + var(--ios-window-safe-bottom, 0px));
+  padding-bottom: var(--ios-window-safe-bottom, 0px);
+}
+
+// 融合页签与当前界面密度使用相同高度，仅增加横向占位，避免按钮与页签使用不同的纵向基准。
+:root[data-ios-window-controls] .body--toolbar-hide #toolbar {
+  height: var(--b3-ui-panel-height, 42px);
+  padding-top: 0;
+}
+
+.toolbar {
+  box-sizing: border-box;
+  height: var(--b3-ui-toolbar-height, 32px);
+  line-height: var(--b3-ui-toolbar-height, 32px);
+  padding: 0 5px 0 var(--b3-toolbar-left-mac);
+  overflow: hidden; // 最小化后右上角显示不全
+
+  & > [data-entry-hidden="true"],
+  & > [data-topbar-empty="true"] {
+    display: none !important;
+  }
+
+  &--browser {
+    padding-left: calc(env(titlebar-area-x, 0px) + 5px);
+    padding-right: calc(100% - env(titlebar-area-width, 100%) - env(titlebar-area-x, 0px) + 5px);
+    height: calc(env(titlebar-area-height, var(--b3-ui-browser-titlebar-height, 31px)) + 1px);
+  }
+
+  #windowControls {
+    top: 0;
+    // https://github.com/siyuan-note/siyuan/issues/11275#issuecomment-2112416383
+    z-index: 9;
+    right: 0;
+    position: relative;
+    margin-left: 2px;
+  }
+
+  #drag {
+    -webkit-app-region: drag;
+    color: var(--b3-toolbar-color);
+    user-select: none;
+    text-align: center;
+    white-space: nowrap;
+    align-self: center;
+    font-size: 12px;
+    min-width: 148px;
+    box-sizing: border-box;
+
+    &[data-topbar-reordering="true"] {
+      -webkit-app-region: no-drag;
+    }
+  }
+
+  &__title-content {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    gap: 4px;
+    vertical-align: top;
+    pointer-events: none;
+  }
+
+  &__title-icon {
+    display: flex;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+
+    img, svg {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  &__item {
+    flex-shrink: 0;
+    cursor: pointer;
+    color: var(--b3-toolbar-color);
+    padding: 4px;
+    margin: var(--b3-ui-toolbar-item-margin, 2px);
+    border-radius: var(--b3-border-radius);
+    box-sizing: border-box;
+    transition: var(--b3-transition);
+    display: flex;
+    align-self: center;
+    background-color: transparent;
+    border: 0;
+    line-height: 16px;
+    height: 23.5px;
+
+    &:not(.toolbar__item--disabled):not(.toolbar__item--close):hover,
+    &--active {
+      background-color: var(--b3-toolbar-hover);
+    }
+
+    svg {
+      height: 15.5px;
+      width: 15.5px;
+    }
+
+    svg.toolbar__svg {
+      width: 12px;
+      height: 15.5px;
+      margin: 0 -3px 0 2px;
+      opacity: .54;
+    }
+
+    &--disabled {
+      opacity: .54;
+      cursor: not-allowed;
+    }
+
+    &--win,
+    &--close {
+      align-items: center;
+    }
+
+    &--win {
+      padding: var(--b3-ui-toolbar-control-padding, 9px) 13px;
+      margin: 0;
+      height: var(--b3-ui-toolbar-control-height, 31.5px);
+      border-radius: 0;
+    }
+
+    &--close {
+      padding: var(--b3-ui-toolbar-control-padding, 9px) 15px;
+      margin: 0;
+      height: var(--b3-ui-toolbar-control-height, 31.5px);
+      border-radius: 0;
+
+      &:hover {
+        color: var(--b3-theme-on-error);
+        background-color: var(--b3-theme-error)
+      }
+    }
+  }
+
+  &__window {
+    position: fixed;
+    top: 0;
+    right: 0;
+    display: flex;
+    z-index: 502;
+
+    &-drag {
+      width: 26px;
+      flex-shrink: 0;
+      -webkit-app-region: drag;
+    }
+
+    .toolbar__item {
+      padding: var(--b3-ui-window-control-padding, 13.25px);
+      height: var(--b3-ui-panel-height, 42px);
+      margin: 0;
+      border-radius: 0;
+
+      &:not(.toolbar__item--disabled):not(.toolbar__item--close):hover,
+      &--active {
+        background-color: var(--b3-theme-background-light);
+      }
+    }
+  }
+
+  &__text {
+    font-size: 12px;
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    user-select: none;
+  }
+}
+
+// 原生按钮的实际尺寸由 Electron 上报，页面仅为同一块区域预留空间。
+html.window-controls-overlay {
+  --b3-window-controls-width: calc(100vw - env(titlebar-area-width, 100vw) - env(titlebar-area-x, 0px));
+  --b3-window-controls-height: env(titlebar-area-height, 0px);
+  --b3-window-controls-top-height: max(var(--b3-ui-panel-height, 42px), var(--b3-window-controls-height));
+
+  &.window-controls-overlay--hidden {
+    --b3-window-controls-width: 0px;
+    --b3-window-controls-height: 0px;
+  }
+
+  .body--windows {
+    #toolbar,
+    .toolbar--settings {
+      height: max(var(--b3-ui-toolbar-height, 32px), var(--b3-window-controls-height));
+    }
+
+    .window-controls-overlay__placeholder {
+      width: var(--b3-window-controls-width);
+      height: var(--b3-window-controls-height);
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
+    .toolbar__window,
+    .toolbar__window .toolbar__item,
+    .window-controls-overlay__top-row {
+      min-height: var(--b3-window-controls-top-height);
+    }
+
+    .fullscreen > .protyle-breadcrumb,
+    .fullscreen > .block__icons {
+      padding-right: calc(var(--b3-window-controls-width) + 8px);
+      min-height: var(--b3-window-controls-height);
+    }
+
+    &.body--toolbar-hide {
+      #toolbar,
+      #toolbar #drag,
+      #toolbar #drag::before,
+      #toolbar #drag::after {
+        height: var(--b3-window-controls-top-height);
+      }
+
+      #dockLeft,
+      #dockRight,
+      .layout__dockl:not(.layout--float),
+      .layout__dockr:not(.layout--float) {
+        margin-top: var(--b3-window-controls-top-height);
+      }
+
+      #dockLeft:not(.dock--float),
+      #dockRight:not(.dock--float) {
+        height: calc(100% - var(--b3-window-controls-top-height));
+      }
+    }
+  }
+}
+
+.status {
+  & > [data-entry-hidden="true"] {
+    display: none !important;
+  }
+
+  box-sizing: border-box;
+  z-index: 2;
+  height: var(--b3-ui-status-height, 32px);
+  line-height: var(--b3-ui-status-height, 32px);
+  padding: 0 7px;
+
+  &__msg {
+    color: var(--b3-theme-on-surface);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding-left: 5px;
+    font-size: 12px;
+  }
+
+  &__counter {
+    display: flex;
+    flex-shrink: 0;
+    font-size: 12px;
+  }
+
+  &__backgroundtask {
+    display: flex;
+    color: var(--b3-theme-on-surface);
+    font-size: 12px;
+  }
+
+  &__format-painter {
+    color: var(--b3-theme-primary);
+  }
+
+  .fn__space:last-child {
+    width: 5px;
+  }
+}
+
+.asset {
+  overflow: auto;
+  box-sizing: border-box;
+  margin: 16px;
+
+  &--pdf {
+    margin: 0;
+    height: 100%;
+  }
+
+  img, video, audio, canvas {
+    max-width: 100%;
+  }
+}
+
+.file-tree {
+  .block__icons:not(.protyle-wysiwyg *) .block__icon:not(.backlinkList__toggle),
+  &:not(.fullscreen) .block__icons:not(.protyle-wysiwyg *) .fn__space {
+    display: none;
+    transition: opacity .3s cubic-bezier(0, 0, .2, 1) 0ms, display .3s cubic-bezier(0, 0, .2, 1) 0ms allow-discrete;
+  }
+
+  .block__logo::-webkit-scrollbar {
+    display: none;
+  }
+
+  &:hover .block__icons:not(.protyle-wysiwyg *) .fn__space {
+    display: block;
+  }
+
+  &:hover .block__icons:not(.protyle-wysiwyg *) .block__icon:not([disabled], .backlinkList__toggle),
+  &:not(.fullscreen):hover .block__icons:not(.protyle-wysiwyg *) .fn__space,
+  &.fullscreen .block__icons:not(.protyle-wysiwyg *) .block__icon:not([disabled], .backlinkList__toggle) {
+    opacity: 1;
+    display: flex;
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  &:hover .block__icons:not(.protyle-wysiwyg *) .block__icon[disabled]:not(.backlinkList__toggle) {
+    opacity: .38;
+    display: block;
+    cursor: not-allowed;
+  }
+
+  &__close {
+    min-height: auto;
+    transition: var(--b3-transition);
+  }
+
+  &__item--icon-expand {
+    > .b3-list-item__toggle {
+      position: relative;
+      z-index: 1;
+    }
+
+    > .b3-list-item__icon {
+      position: relative;
+      z-index: 0;
+
+      &::before {
+        content: "";
+        position: absolute;
+        inset: -3px 0;
+        left: calc(-1 * var(--file-action-offset));
+        border-radius: var(--b3-border-radius);
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset: -3px 0;
+      }
+    }
+
+    > .b3-list-item__toggle:hover,
+    > .b3-list-item__icon:hover {
+      background-color: transparent;
+    }
+
+    > .b3-list-item__toggle:hover ~ .b3-list-item__icon::before,
+    > .b3-list-item__icon:hover::before {
+      background-color: var(--b3-list-icon-hover);
+    }
+  }
+
+  &__item--title-expand > .b3-list-item__text {
+    margin-left: -4px;
+    padding-left: 4px;
+  }
+
+  &__item--icon-open > .b3-list-item__icon:hover {
+    background-color: transparent;
+  }
+
+  &.sy__file--disablehover {
+    .b3-list--background .b3-list-item {
+      &:not(.b3-list-item--focus):hover {
+        background-color: transparent !important;
+      }
+
+      &--hide-action .b3-list-item__action {
+        display: none;
+      }
+
+      > * {
+        pointer-events: none;
+      }
+    }
+  }
+}
+
+// 触摸操作直接显示文档面板按钮，避免悬停显现动画延迟点击。
+.body--touch-input .sy__file {
+  .block__icons:not(.protyle-wysiwyg *) .block__icon:not(.backlinkList__toggle) {
+    display: flex;
+    opacity: 1;
+    transition: none;
+  }
+
+  .block__icons:not(.protyle-wysiwyg *) .block__icon[disabled]:not(.backlinkList__toggle) {
+    opacity: .38;
+  }
+
+  .block__icons:not(.protyle-wysiwyg *) .fn__space {
+    display: block;
+    transition: none;
+  }
+}
+
+.body--windows .sy__file .b3-list-item__icon {
+  font-size: 16px;
+}
+
+.reveal {
+  font-family: var(--b3-font-family);
+}
+
+.backlink--more {
+  .b3-list-item__text {
+    -webkit-line-clamp: initial;
+  }
+
+  .b3-list-item__graphic.popover__block {
+    align-self: flex-start;
+    margin-top: 7px;
+  }
+}
+
+.switch-doc {
+  max-height: 70vh;
+  max-width: 100%;
+  min-width: 0;
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__search {
+    flex: 0 1 200px;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    max-width: 100%;
+
+    .b3-select {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .b3-list {
+    padding: 8px 0;
+  }
+
+  .b3-list:last-child {
+    border-left: 1px solid var(--b3-theme-surface-lighter);
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-top: 1px solid var(--b3-theme-surface-lighter);
+    min-height: 36px;
+    box-sizing: border-box;
+  }
+
+  &__footer > &__path {
+    flex: 1;
+    min-width: 0;
+  }
+
+  & > &__path {
+    padding: 4px 8px;
+    border-top: 1px solid var(--b3-theme-surface-lighter);
+  }
+
+  &__path {
+    color: var(--b3-theme-on-surface);
+    font-size: 12px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    line-height: 18px;
+    min-height: 18px;
+  }
+}

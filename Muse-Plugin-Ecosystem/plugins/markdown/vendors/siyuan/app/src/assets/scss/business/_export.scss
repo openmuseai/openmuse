@@ -1,0 +1,83 @@
+.export-img__options {
+  justify-content: flex-start;
+  gap: 8px;
+
+  > label {
+    flex-shrink: 0;
+  }
+
+  > input {
+    min-width: 120px;
+  }
+}
+
+.export-img {
+  box-sizing: border-box;
+  position: relative;
+  border: 1px solid var(--b3-border-color);
+  border-radius: var(--b3-border-radius-b);
+
+  a {
+    color: var(--b3-protyle-inline-link-color);
+  }
+
+  // 图片导出只保留脑图内容，不包含悬停控件和选中状态。
+  .mindmap-view {
+    &__toolbar,
+    &__inspector,
+    &__tooltip,
+    &__route-handle,
+    &__route-status,
+    &__add-bridge,
+    &__fold,
+    &__add-child {
+      display: none !important;
+    }
+
+    &__node--selected::after {
+      display: none !important;
+    }
+
+    &__node,
+    &__relation {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  .protyle-wysiwyg {
+    position: relative;
+    z-index: 1;
+    overflow-x: visible;
+
+    .table,
+    [data-node-id].table[custom-pinthead="true"] {
+      > div:first-child {
+        overflow: visible;
+        max-height: none;
+      }
+    }
+
+    .sb[data-sb-layout="col"] > [data-node-id] {
+      min-width: min-content;
+    }
+
+    [data-node-id].li[fold="1"] > .protyle-action::after {
+      background-color: transparent;
+      border: 1px solid var(--b3-list-hover);
+      box-sizing: border-box;
+    }
+
+    .table th,
+    .table td {
+      background-color: transparent;
+    }
+  }
+}
+
+// 导出 Markdown 参数对话框 https://github.com/siyuan-note/siyuan/issues/17031
+.export-md__content {
+  .b3-label__text {
+    font-size: 13px !important;
+  }
+}

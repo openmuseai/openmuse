@@ -1,0 +1,14 @@
+name: muse_resource_center_io
+description: Private IO storage, versioned materialization and transports for the shared resource center.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  mime: ^2.0.0
+  muse_resource_center:
+    path: ../muse_resource_center
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openmuse.io/schema/native-conversation/v1/client-capabilities.schema.json",
+  "title": "OpenMuse Native Conversation Client Capabilities v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["nativeUiApi", "components", "slots"],
+  "properties": {
+    "nativeUiApi": { "const": 1 },
+    "components": {
+      "type": "array",
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*@1$" }
+    },
+    "slots": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": { "type": "string", "maxLength": 128 }
+    }
+  }
+}

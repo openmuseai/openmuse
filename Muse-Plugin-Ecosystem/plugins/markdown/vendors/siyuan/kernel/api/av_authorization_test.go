@@ -1,0 +1,196 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package api
+
+import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func TestAttributeViewEditorEndpointsRejectReader(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	previousConf := model.Conf
+	model.Conf = &model.AppConf{Lang: "en"}
+	t.Cleanup(func() {
+		model.Conf = previousConf
+	})
+
+	engine := gin.New()
+	engine.Use(func(c *gin.Context) {
+		c.Set(model.RoleContextKey, model.RoleReader)
+		c.Next()
+	})
+	ServeAPI(engine)
+
+	tests := []struct {
+		path string
+		body string
+	}{
+		{
+			path: "/api/av/getAttributeViewFieldViews",
+			body: `{"avID":"20260726000000-abcdefg","keyID":"20260726000001-abcdefg"}`,
+		},
+		{
+			path: "/api/av/getAttributeViewSearchTarget",
+			body: `{"id":"20260726000000-abcdefg","keywords":["secret"]}`,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(http.MethodPost, test.path, strings.NewReader(test.body))
+			request.Header.Set("Content-Type", "application/json")
+			engine.ServeHTTP(recorder, request)
+
+			response := &struct {
+				Code int            `json:"code"`
+				Data map[string]any `json:"data"`
+			}{}
+			if err := json.Unmarshal(recorder.Body.Bytes(), response); err != nil {
+				t.Fatalf("unmarshal response failed: %v", err)
+			}
+			if response.Code != -1 {
+				t.Fatalf("reader request returned code %d: %s", response.Code, recorder.Body.String())
+			}
+			if response.Data["closeTimeout"] != float64(5000) {
+				t.Fatalf("reader request reached the handler: %s", recorder.Body.String())
+			}
+		})
+	}
+}
+
+func TestAttributeViewLayoutRejectsReadonlyKernel(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	previousConf, previousReadonly := model.Conf, util.ReadOnly
+	model.Conf = &model.AppConf{Lang: "en"}
+	util.ReadOnly = true
+	t.Cleanup(func() {
+		model.Conf, util.ReadOnly = previousConf, previousReadonly
+	})
+	engine := gin.New()
+	engine.Use(func(c *gin.Context) {
+		c.Set(model.RoleContextKey, model.RoleAdministrator)
+		c.Next()
+	})
+	ServeAPI(engine)
+	recorder := httptest.NewRecorder()
+	engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, "/api/av/changeAttrViewLayout", strings.NewReader(`{}`)))
+	var response struct {
+		Code int `json:"code"`
+		Data struct {
+			CloseTimeout int `json:"closeTimeout"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatal(err)
+	}
+	if response.Code != -1 || response.Data.CloseTimeout != 5000 {
+		t.Fatalf("readonly request reached layout handler: %s", recorder.Body.String())
+	}
+	for _, endpoint := range []string{"updateRecentDocOpenTime", "updateRecentDocViewTime", "updateRecentDocCloseTime", "batchUpdateRecentDocCloseTime"} {
+		recorder = httptest.NewRecorder()
+		engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, "/api/storage/"+endpoint, strings.NewReader(`invalid`)))
+		var result struct {
+			Code int `json:"code"`
+		}
+		if err := json.Unmarshal(recorder.Body.Bytes(), &result); err != nil || result.Code != 0 {
+			t.Fatalf("readonly storage mutation was not skipped: %s (%v)", recorder.Body.String(), err)
+		}
+	}
+}
+
+func TestGetAttributeViewKeysByIDRespectsPublishAccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	previousConf := model.Conf
+	model.Conf = &model.AppConf{Lang: "en"}
+	previousDataDir := util.DataDir
+	util.DataDir = t.TempDir()
+	t.Cleanup(func() {
+		model.Conf = previousConf
+		util.DataDir = previousDataDir
+	})
+
+	roles := []struct {
+		name string
+		role model.Role
+		code int
+	}{
+		{name: "reader", role: model.RoleReader, code: -1},
+		{name: "editor", role: model.RoleEditor, code: 0},
+		{name: "administrator", role: model.RoleAdministrator, code: 0},
+	}
+	for _, role := range roles {
+		t.Run(role.name, func(t *testing.T) {
+			engine := gin.New()
+			engine.Use(func(c *gin.Context) {
+				c.Set(model.RoleContextKey, role.role)
+				c.Next()
+			})
+			engine.Handle(http.MethodPost, "/api/av/getAttributeViewKeysByID", getAttributeViewKeysByID)
+
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(
+				http.MethodPost,
+				"/api/av/getAttributeViewKeysByID",
+				strings.NewReader(`{"avID":"20260726000000-abcdefg","keyIDs":[]}`),
+			)
+			request.Header.Set("Content-Type", "application/json")
+			engine.ServeHTTP(recorder, request)
+
+			response := &struct {
+				Code int `json:"code"`
+			}{}
+			if err := json.Unmarshal(recorder.Body.Bytes(), response); err != nil {
+				t.Fatalf("unmarshal response failed: %v", err)
+			}
+			if response.Code != role.code {
+				t.Fatalf("unexpected code: got %d, want %d: %s", response.Code, role.code, recorder.Body.String())
+			}
+		})
+	}
+}
+
+func TestGetAttributeViewSearchTargetAllowsEditor(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	engine := gin.New()
+	engine.Use(func(c *gin.Context) {
+		c.Set(model.RoleContextKey, model.RoleEditor)
+		c.Next()
+	})
+	ServeAPI(engine)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/api/av/getAttributeViewSearchTarget",
+		strings.NewReader(`{"id":"","keywords":[]}`),
+	)
+	request.Header.Set("Content-Type", "application/json")
+	engine.ServeHTTP(recorder, request)
+
+	response := &struct {
+		Code int            `json:"code"`
+		Data map[string]any `json:"data"`
+	}{}
+	if err := json.Unmarshal(recorder.Body.Bytes(), response); err != nil {
+		t.Fatalf("unmarshal response failed: %v", err)
+	}
+	if response.Code != 0 {
+		t.Fatalf("editor request returned code %d: %s", response.Code, recorder.Body.String())
+	}
+	if response.Data["closeTimeout"] != nil {
+		t.Fatalf("editor request was rejected as read-only: %s", recorder.Body.String())
+	}
+}

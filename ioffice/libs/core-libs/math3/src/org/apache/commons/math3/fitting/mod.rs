@@ -1,0 +1,14 @@
+pub mod leastsquares;
+pub mod AbstractCurveFitter;
+pub mod CurveFitter;
+pub mod GaussianCurveFitter;
+pub mod GaussianFitter;
+pub mod HarmonicCurveFitter;
+pub mod HarmonicFitter;
+#[path = "package-info.rs"]
+pub mod package_info;
+pub mod PolynomialCurveFitter;
+pub mod PolynomialFitter;
+pub mod SimpleCurveFitter;
+pub mod WeightedObservedPoint;
+pub mod WeightedObservedPoints;

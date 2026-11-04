@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_text_line_command,排版行到DrawText,typo行(pl-05)+getTextRect文本区,DrawText{text,x,y}序列,pl-05-text-typo;pr-01-slide-layers,02,libs/ppt-core,pass
+2,02_function_run_style_command,run样式到DrawText,SpanInfo样式+行定位,带样式的DrawText,01,pr-04-ffi-flutter,libs/ppt-core,pass

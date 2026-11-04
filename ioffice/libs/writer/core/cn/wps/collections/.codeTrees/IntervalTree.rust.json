@@ -1,0 +1,1283 @@
+{
+  "filePath": "/Users/mac/src/ioffice/libs/writer/core/cn/wps/collections/IntervalTree.rs",
+  "javaFilePath": "/Users/mac/src/ioffice/koffice/writer/core/cn/wps/collections/IntervalTree.java",
+  "createdAt": "2026-06-24T02:06:18.628Z",
+  "lastModified": "2026-06-24T02:06:18.633Z",
+  "version": 1,
+  "lines": [
+    {
+      "id": "rl:out:0",
+      "ln": 0,
+      "text": "// Java: import cn.wps.collections.PositionTree",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:1",
+      "ln": 1,
+      "text": "use stubs::cn::wps::collections::PositionTree::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:2",
+      "ln": 2,
+      "text": "// Java: import cn.wps.collections.IntervalNode",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:3",
+      "ln": 3,
+      "text": "use stubs::cn::wps::collections::IntervalNode::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:4",
+      "ln": 4,
+      "text": "// Java: import java.lang.RuntimeException",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:5",
+      "ln": 5,
+      "text": "use stubs::java::lang::RuntimeException::*;",
+      "type": "use_import"
+    },
+    {
+      "id": "rl:out:6",
+      "ln": 6,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:7",
+      "ln": 7,
+      "text": "// Java: public class IntervalTree extends PositionTree ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:8",
+      "ln": 8,
+      "text": "#[derive(Default)]\npub struct IntervalTree {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:9",
+      "ln": 9,
+      "text": "    // Java field: PositionTree super_;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:10",
+      "ln": 10,
+      "text": "    pub super_: PositionTree,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:11",
+      "ln": 11,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:12",
+      "ln": 12,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:13",
+      "ln": 13,
+      "text": "// Java: public static class InsertSpace ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:14",
+      "ln": 14,
+      "text": "#[derive(Default)]\npub struct InsertSpace {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:15",
+      "ln": 15,
+      "text": "    // Java field:       IntervalNode node;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:16",
+      "ln": 16,
+      "text": "    pub node: IntervalNode,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:17",
+      "ln": 17,
+      "text": "    // Java field:       boolean left;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:18",
+      "ln": 18,
+      "text": "    pub left: bool,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:19",
+      "ln": 19,
+      "text": "    // Java field:       int pos;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:20",
+      "ln": 20,
+      "text": "    pub pos: i32,",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:21",
+      "ln": 21,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:22",
+      "ln": 22,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:23",
+      "ln": 23,
+      "text": "// Java: public class IntervalTree extends PositionTree ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:24",
+      "ln": 24,
+      "text": "impl IntervalTree {",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:25",
+      "ln": 25,
+      "text": "    // Java: public IntervalTree(IntervalNode head) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:26",
+      "ln": 26,
+      "text": "    pub fn new(head: IntervalNode) -> IntervalTree {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:27",
+      "ln": 27,
+      "text": "      Self { super_: PositionTree::new__intervalnode(head) }",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:28",
+      "ln": 28,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:29",
+      "ln": 29,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:30",
+      "ln": 30,
+      "text": "    // Java: int getEndPosition() ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:31",
+      "ln": 31,
+      "text": "    pub fn getEndPosition(&mut self) -> i32 {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:32",
+      "ln": 32,
+      "text": "      // Java: if (this.isEmpty())",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:33",
+      "ln": 33,
+      "text": "      if self.isEmpty() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:34",
+      "ln": 34,
+      "text": "         // Java: throw new RuntimeException(\"No interval in the tree\");",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:35",
+      "ln": 35,
+      "text": "         panic!(\"{}\", RuntimeException::new(\"No interval in the tree\"));",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:36",
+      "ln": 36,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:37",
+      "ln": 37,
+      "text": "      // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:38",
+      "ln": 38,
+      "text": "      else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:39",
+      "ln": 39,
+      "text": "         // Java: IntervalNode node = (IntervalNode)this.rightmost();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:40",
+      "ln": 40,
+      "text": "         let node: IntervalNode = (self.rightmost()).downcast_ref::<IntervalNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:41",
+      "ln": 41,
+      "text": "         // Java: return node.position() + node.getLength();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:42",
+      "ln": 42,
+      "text": "         return node.position() + node.getLength();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:43",
+      "ln": 43,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:44",
+      "ln": 44,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:45",
+      "ln": 45,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:46",
+      "ln": 46,
+      "text": "    // Java: public InsertSpace findForInsertSpace(int cp) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:47",
+      "ln": 47,
+      "text": "    pub fn findForInsertSpace(&mut self, cp: i32) -> &InsertSpace {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:48",
+      "ln": 48,
+      "text": "      // Java: IntervalNode p = (IntervalNode)this.lowerBound(cp);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:49",
+      "ln": 49,
+      "text": "      let p: IntervalNode = (self.lowerBound(cp)).downcast_ref::<IntervalNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:50",
+      "ln": 50,
+      "text": "      // Java: if (p == this.mHead)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:51",
+      "ln": 51,
+      "text": "      if p == self.mHead {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:52",
+      "ln": 52,
+      "text": "         // Java: IntervalNode pprev = (IntervalNode)p.getPrev();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:53",
+      "ln": 53,
+      "text": "         let pprev: IntervalNode = (p.getPrev()).downcast_ref::<IntervalNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:54",
+      "ln": 54,
+      "text": "         // Java: if (pprev == this.mHead)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:55",
+      "ln": 55,
+      "text": "         if pprev == self.mHead {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:56",
+      "ln": 56,
+      "text": "            // Java: return new InsertSpace(p, true, 0);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:57",
+      "ln": 57,
+      "text": "            return InsertSpace::new(p, true, 0);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:58",
+      "ln": 58,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:59",
+      "ln": 59,
+      "text": "         // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:60",
+      "ln": 60,
+      "text": "         else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:61",
+      "ln": 61,
+      "text": "            // Java: int pprev_pos = this.position(pprev);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:62",
+      "ln": 62,
+      "text": "            let pprev_pos: i32 = self.position(pprev);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:63",
+      "ln": 63,
+      "text": "            // Java: return cp < pprev_pos + pprev.getLength() ? new InsertSpace(pprev, false, cp - pprev_pos) : new InsertSpace(p, true, 0);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:64",
+      "ln": 64,
+      "text": "            return (if cp < pprev_pos + pprev.getLength() { InsertSpace::new(pprev, false, cp - pprev_pos) } else { InsertSpace::new(p, true, 0) });",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:65",
+      "ln": 65,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:66",
+      "ln": 66,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:67",
+      "ln": 67,
+      "text": "      // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:68",
+      "ln": 68,
+      "text": "      else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:69",
+      "ln": 69,
+      "text": "         // Java: int p_pos = this.position(p);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:70",
+      "ln": 70,
+      "text": "         let p_pos: i32 = self.super_.position(p);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:71",
+      "ln": 71,
+      "text": "         // Java: if (p_pos == cp)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:72",
+      "ln": 72,
+      "text": "         if p_pos == cp {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:73",
+      "ln": 73,
+      "text": "            // Java: return new InsertSpace(p, true, 0);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:74",
+      "ln": 74,
+      "text": "            return InsertSpace::new(p, true, 0);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:75",
+      "ln": 75,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:76",
+      "ln": 76,
+      "text": "         // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:77",
+      "ln": 77,
+      "text": "         else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:78",
+      "ln": 78,
+      "text": "            // Java: IntervalNode pprev = (IntervalNode)p.getPrev();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:79",
+      "ln": 79,
+      "text": "            let pprev: IntervalNode = (p.getPrev()).downcast_ref::<IntervalNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:80",
+      "ln": 80,
+      "text": "            // Java: if (pprev == this.mHead)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:81",
+      "ln": 81,
+      "text": "            if pprev == self.mHead {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:82",
+      "ln": 82,
+      "text": "               // Java: return new InsertSpace(p, true, 0);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:83",
+      "ln": 83,
+      "text": "               return InsertSpace::new(p, true, 0);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:84",
+      "ln": 84,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:85",
+      "ln": 85,
+      "text": "            // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:86",
+      "ln": 86,
+      "text": "            else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:87",
+      "ln": 87,
+      "text": "               // Java: int pprev_pos = this.position(pprev);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:88",
+      "ln": 88,
+      "text": "               let pprev_pos: i32 = self.super_.position(pprev);",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:89",
+      "ln": 89,
+      "text": "               // Java: return cp >= pprev_pos + pprev.getLength() ? new InsertSpace(p, true, 0) : new InsertSpace(pprev, false, cp - pprev_pos);",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:90",
+      "ln": 90,
+      "text": "               return (if cp >= pprev_pos + pprev.getLength() { InsertSpace::new(p, true, 0) } else { InsertSpace::new(pprev, false, cp - pprev_pos) });",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:91",
+      "ln": 91,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:92",
+      "ln": 92,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:93",
+      "ln": 93,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:94",
+      "ln": 94,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:95",
+      "ln": 95,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:96",
+      "ln": 96,
+      "text": "    // Java: public IntervalNode find(int pos, int[] off) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:97",
+      "ln": 97,
+      "text": "    pub fn find(&mut self, pos: i32, off: Vec<i32>) -> Option<IntervalNode> {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:98",
+      "ln": 98,
+      "text": "      // Java: IntervalNode node = (IntervalNode)this.getRoot();",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:99",
+      "ln": 99,
+      "text": "      let node: IntervalNode = (self.getRoot()).downcast_ref::<IntervalNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:100",
+      "ln": 100,
+      "text": "      // Java: while(node != null)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:101",
+      "ln": 101,
+      "text": "      while node.is_some() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:102",
+      "ln": 102,
+      "text": "         // Java: if (pos < node.offset)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:103",
+      "ln": 103,
+      "text": "         if pos < node.offset {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:104",
+      "ln": 104,
+      "text": "            // Java: node = (IntervalNode)node.left;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:105",
+      "ln": 105,
+      "text": "            node = (node.left).downcast_ref::<IntervalNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:106",
+      "ln": 106,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:107",
+      "ln": 107,
+      "text": "         // Java: else",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:108",
+      "ln": 108,
+      "text": "         else {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:109",
+      "ln": 109,
+      "text": "            // Java: if (pos < node.offset + node.getLength())",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:110",
+      "ln": 110,
+      "text": "            if pos < node.offset + node.getLength() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:111",
+      "ln": 111,
+      "text": "               // Java: if (off != null)",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:112",
+      "ln": 112,
+      "text": "               if off.is_some() {",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:113",
+      "ln": 113,
+      "text": "                  // Java: off[0] = pos - node.offset;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:114",
+      "ln": 114,
+      "text": "                  off[0] = pos - node.offset;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:115",
+      "ln": 115,
+      "text": "               }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:116",
+      "ln": 116,
+      "text": "               // Java: return node;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:117",
+      "ln": 117,
+      "text": "               return node;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:118",
+      "ln": 118,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:119",
+      "ln": 119,
+      "text": "            // Java: pos -= node.offset;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:120",
+      "ln": 120,
+      "text": "            pos = pos - node.offset;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:121",
+      "ln": 121,
+      "text": "            // Java: node = (IntervalNode)node.right;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:122",
+      "ln": 122,
+      "text": "            node = (node.right).downcast_ref::<IntervalNode>().unwrap();",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:123",
+      "ln": 123,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:124",
+      "ln": 124,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:125",
+      "ln": 125,
+      "text": "      // Java: return null;",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:126",
+      "ln": 126,
+      "text": "      return None;",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:127",
+      "ln": 127,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:128",
+      "ln": 128,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:129",
+      "ln": 129,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:130",
+      "ln": 130,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:131",
+      "ln": 131,
+      "text": "impl std::ops::Deref for IntervalTree {\n    type Target = PositionTree;\n\n    fn deref(&self) -> &Self::Target {\n        &self.super_\n    }\n}",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:132",
+      "ln": 132,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:133",
+      "ln": 133,
+      "text": "impl std::ops::DerefMut for IntervalTree {\n    fn deref_mut(&mut self) -> &mut Self::Target {\n        &mut self.super_\n    }\n}",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:134",
+      "ln": 134,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:135",
+      "ln": 135,
+      "text": "// Java: public static class InsertSpace ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:136",
+      "ln": 136,
+      "text": "impl InsertSpace {",
+      "type": "impl_decl"
+    },
+    {
+      "id": "rl:out:137",
+      "ln": 137,
+      "text": "    // Java: public InsertSpace(IntervalNode node, boolean left, int pos) ",
+      "type": "java_comment"
+    },
+    {
+      "id": "rl:out:138",
+      "ln": 138,
+      "text": "    pub fn new(node: IntervalNode, left: bool, pos: i32) -> InsertSpace {",
+      "type": "fn_decl"
+    },
+    {
+      "id": "rl:out:139",
+      "ln": 139,
+      "text": "      Self { node: node, left: left, pos: pos }",
+      "type": "rust_code"
+    },
+    {
+      "id": "rl:out:140",
+      "ln": 140,
+      "text": "    }",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:141",
+      "ln": 141,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "rl:out:142",
+      "ln": 142,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "rl:out:143",
+      "ln": 143,
+      "text": "",
+      "type": "empty"
+    }
+  ],
+  "imports": [
+    {
+      "id": "ri:ji:syn:0",
+      "javaCodeId": "ji:syn:0",
+      "usePath": "use stubs::cn::wps::collections::PositionTree::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:0",
+          "ln": -1,
+          "text": "// Java: import cn.wps.collections.PositionTree",
+          "type": "java_comment",
+          "jcid": "ji:syn:0"
+        },
+        {
+          "id": "rl:ji:syn:0",
+          "ln": -1,
+          "text": "use stubs::cn::wps::collections::PositionTree::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:0"
+        }
+      ]
+    },
+    {
+      "id": "ri:ji:syn:1",
+      "javaCodeId": "ji:syn:1",
+      "usePath": "use stubs::cn::wps::collections::IntervalNode::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:1",
+          "ln": -1,
+          "text": "// Java: import cn.wps.collections.IntervalNode",
+          "type": "java_comment",
+          "jcid": "ji:syn:1"
+        },
+        {
+          "id": "rl:ji:syn:1",
+          "ln": -1,
+          "text": "use stubs::cn::wps::collections::IntervalNode::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:1"
+        }
+      ]
+    },
+    {
+      "id": "ri:ji:syn:2",
+      "javaCodeId": "ji:syn:2",
+      "usePath": "use stubs::java::lang::RuntimeException::*",
+      "lines": [
+        {
+          "id": "rl:jc:ji:syn:2",
+          "ln": -1,
+          "text": "// Java: import java.lang.RuntimeException",
+          "type": "java_comment",
+          "jcid": "ji:syn:2"
+        },
+        {
+          "id": "rl:ji:syn:2",
+          "ln": -1,
+          "text": "use stubs::java::lang::RuntimeException::*;",
+          "type": "use_import",
+          "jcid": "ji:syn:2"
+        }
+      ]
+    }
+  ],
+  "statics": [],
+  "structs": [
+    {
+      "id": "rs:IntervalTree",
+      "javaCodeId": "jc:IntervalTree",
+      "structName": "IntervalTree",
+      "javaSignature": "// Java: public class IntervalTree extends PositionTree ",
+      "fields": [
+        {
+          "id": "rf:jf:super:IntervalTree",
+          "javaCodeId": "jf:super:IntervalTree",
+          "javaFieldName": "super_",
+          "javaFieldType": "PositionTree",
+          "rustText": "",
+          "rewriteState": "pending"
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "rs:InsertSpace",
+      "javaCodeId": "jc:IntervalTree$$InsertSpace",
+      "structName": "InsertSpace",
+      "javaSignature": "// Java: public static class InsertSpace ",
+      "fields": [
+        {
+          "id": "rf:jf:InsertSpace:node",
+          "javaCodeId": "jf:InsertSpace:node",
+          "javaFieldName": "node",
+          "javaFieldType": "IntervalNode",
+          "rustText": "",
+          "rewriteState": "pending"
+        },
+        {
+          "id": "rf:jf:InsertSpace:left",
+          "javaCodeId": "jf:InsertSpace:left",
+          "javaFieldName": "left",
+          "javaFieldType": "boolean",
+          "rustText": "",
+          "rewriteState": "pending"
+        },
+        {
+          "id": "rf:jf:InsertSpace:pos",
+          "javaCodeId": "jf:InsertSpace:pos",
+          "javaFieldName": "pos",
+          "javaFieldType": "int",
+          "rustText": "",
+          "rewriteState": "pending"
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    }
+  ],
+  "impls": [
+    {
+      "id": "ri:impl:IntervalTree",
+      "javaCodeId": "jc:IntervalTree",
+      "structName": "IntervalTree",
+      "javaSignature": "// Java: public class IntervalTree extends PositionTree ",
+      "methods": [
+        {
+          "id": "rm:IntervalTree:IntervalTree",
+          "javaCodeId": "jm:IntervalTree:IntervalTree",
+          "methodName": "new",
+          "javaSignature": "// Java: public IntervalTree(IntervalNode head) ",
+          "params": [
+            "IntervalNode head"
+          ],
+          "returnType": "",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.628Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalTree:getEndPosition",
+          "javaCodeId": "jm:IntervalTree:getEndPosition",
+          "methodName": "getEndPosition",
+          "javaSignature": "// Java: int getEndPosition() ",
+          "params": [],
+          "returnType": "int",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.629Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalTree:findForInsertSpace",
+          "javaCodeId": "jm:IntervalTree:findForInsertSpace",
+          "methodName": "findForInsertSpace",
+          "javaSignature": "// Java: public InsertSpace findForInsertSpace(int cp) ",
+          "params": [
+            "int cp"
+          ],
+          "returnType": "InsertSpace",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.630Z",
+              "action": "template_gen"
+            }
+          ]
+        },
+        {
+          "id": "rm:IntervalTree:find",
+          "javaCodeId": "jm:IntervalTree:find",
+          "methodName": "find",
+          "javaSignature": "// Java: public IntervalNode find(int pos, int[] off) ",
+          "params": [
+            "int pos",
+            "int[] off"
+          ],
+          "returnType": "IntervalNode",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.632Z",
+              "action": "template_gen"
+            }
+          ]
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "ri:deref:IntervalTree",
+      "javaCodeId": "jc:IntervalTree",
+      "structName": "IntervalTree",
+      "methods": [],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "ri:deref_mut:IntervalTree",
+      "javaCodeId": "jc:IntervalTree",
+      "structName": "IntervalTree",
+      "methods": [],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    },
+    {
+      "id": "ri:impl:InsertSpace",
+      "javaCodeId": "jc:IntervalTree$$InsertSpace",
+      "structName": "InsertSpace",
+      "javaSignature": "// Java: public static class InsertSpace ",
+      "methods": [
+        {
+          "id": "rm:InsertSpace:InsertSpace",
+          "javaCodeId": "jm:InsertSpace:InsertSpace",
+          "methodName": "new",
+          "javaSignature": "// Java: public InsertSpace(IntervalNode node, boolean left, int pos) ",
+          "params": [
+            "IntervalNode node",
+            "boolean left",
+            "int pos"
+          ],
+          "returnType": "",
+          "lineIndices": [],
+          "rewriteState": "pending",
+          "history": [
+            {
+              "timestamp": "2026-06-24T02:06:18.632Z",
+              "action": "template_gen"
+            }
+          ]
+        }
+      ],
+      "lineIndices": [],
+      "rewriteState": "pending",
+      "history": []
+    }
+  ],
+  "traits": [],
+  "fileLineMap": {
+    "ri:ji:syn:0": {
+      "start": 0,
+      "end": 2
+    },
+    "ri:ji:syn:1": {
+      "start": 2,
+      "end": 4
+    },
+    "ri:ji:syn:2": {
+      "start": 4,
+      "end": 6
+    },
+    "rf:jf:super:IntervalTree": {
+      "start": 9,
+      "end": 11
+    },
+    "rs:IntervalTree": {
+      "start": 7,
+      "end": 13
+    },
+    "rf:jf:InsertSpace:node": {
+      "start": 15,
+      "end": 17
+    },
+    "rf:jf:InsertSpace:left": {
+      "start": 17,
+      "end": 19
+    },
+    "rf:jf:InsertSpace:pos": {
+      "start": 19,
+      "end": 21
+    },
+    "rs:InsertSpace": {
+      "start": 13,
+      "end": 23
+    },
+    "rb:ctor:jm:IntervalTree:IntervalTree": {
+      "start": 27,
+      "end": 28
+    },
+    "rm:IntervalTree:IntervalTree": {
+      "start": 25,
+      "end": 30
+    },
+    "rb:jb:jm:IntervalTree:getEndPosition:block:0": {
+      "start": 32,
+      "end": 37
+    },
+    "rb:jb:jm:IntervalTree:getEndPosition:block:1": {
+      "start": 37,
+      "end": 44
+    },
+    "rb:jb:jm:IntervalTree:getEndPosition:block": {
+      "start": 32,
+      "end": 44
+    },
+    "rm:IntervalTree:getEndPosition": {
+      "start": 30,
+      "end": 46
+    },
+    "rb:jb:jm:IntervalTree:findForInsertSpace:block:0:0": {
+      "start": 54,
+      "end": 59
+    },
+    "rb:jb:jm:IntervalTree:findForInsertSpace:block:0:1": {
+      "start": 59,
+      "end": 66
+    },
+    "rb:jb:jm:IntervalTree:findForInsertSpace:block:0": {
+      "start": 50,
+      "end": 67
+    },
+    "rb:jb:jm:IntervalTree:findForInsertSpace:block:1:0": {
+      "start": 71,
+      "end": 76
+    },
+    "rb:jb:jm:IntervalTree:findForInsertSpace:block:1:1:0": {
+      "start": 80,
+      "end": 85
+    },
+    "rb:jb:jm:IntervalTree:findForInsertSpace:block:1:1:1": {
+      "start": 85,
+      "end": 92
+    },
+    "rb:jb:jm:IntervalTree:findForInsertSpace:block:1:1": {
+      "start": 76,
+      "end": 93
+    },
+    "rb:jb:jm:IntervalTree:findForInsertSpace:block:1": {
+      "start": 67,
+      "end": 94
+    },
+    "rb:jb:jm:IntervalTree:findForInsertSpace:block": {
+      "start": 48,
+      "end": 94
+    },
+    "rm:IntervalTree:findForInsertSpace": {
+      "start": 46,
+      "end": 96
+    },
+    "rb:jb:jm:IntervalTree:find:block:0:0": {
+      "start": 102,
+      "end": 107
+    },
+    "rb:jb:jm:IntervalTree:find:block:0:1:0:0": {
+      "start": 111,
+      "end": 116
+    },
+    "rb:jb:jm:IntervalTree:find:block:0:1:0": {
+      "start": 109,
+      "end": 119
+    },
+    "rb:jb:jm:IntervalTree:find:block:0:1": {
+      "start": 107,
+      "end": 124
+    },
+    "rb:jb:jm:IntervalTree:find:block:0": {
+      "start": 100,
+      "end": 125
+    },
+    "rb:jb:jm:IntervalTree:find:block": {
+      "start": 98,
+      "end": 127
+    },
+    "rm:IntervalTree:find": {
+      "start": 96,
+      "end": 129
+    },
+    "ri:impl:IntervalTree": {
+      "start": 23,
+      "end": 131
+    },
+    "ri:deref:IntervalTree": {
+      "start": 131,
+      "end": 133
+    },
+    "ri:deref_mut:IntervalTree": {
+      "start": 133,
+      "end": 135
+    },
+    "rb:ctor:jm:InsertSpace:InsertSpace": {
+      "start": 139,
+      "end": 140
+    },
+    "rm:InsertSpace:InsertSpace": {
+      "start": 137,
+      "end": 142
+    },
+    "ri:impl:InsertSpace": {
+      "start": 135,
+      "end": 144
+    }
+  }
+}

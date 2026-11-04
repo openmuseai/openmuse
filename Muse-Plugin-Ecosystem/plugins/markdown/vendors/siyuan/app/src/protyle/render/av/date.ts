@@ -1,0 +1,232 @@
+import dayjs from "dayjs";
+import {genCellValueByElement, updateCellsValue} from "./cell";
+import {getFieldsByData} from "./view";
+import {shouldSubmitDateEdit} from "./dateSubmit";
+import {bindLunarDateEvent, getLunarDateHTML} from "./lunarDate";
+
+export const getDateHTML = (cellElements: HTMLElement[], format?: TAVDateFormat) => {
+    const cellValue = genCellValueByElement("date", cellElements[0]).date;
+    if ((format ?? cellElements[0].dataset.dateFormat) === "lunar") {
+        return getLunarDateHTML(cellValue);
+    }
+    const isNotTime = cellValue.isNotTime;
+    let value = "";
+    const currentDate = Date.now();
+    if (cellValue.isNotEmpty) {
+        value = dayjs(cellValue.content).format(isNotTime ? "YYYY-MM-DD" : "YYYY-MM-DD HH:mm");
+        const year = value.split("-")[0];
+        if (year.length !== 4) {
+            value = new Array(4 - year.length).fill(0).join("") + value;
+        }
+    } else {
+        value = dayjs(currentDate).format(isNotTime ? "YYYY-MM-DD" : "YYYY-MM-DD HH:mm");
+    }
+    let value2 = "";
+    if (cellValue.isNotEmpty2) {
+        value2 = dayjs(cellValue.content2).format(isNotTime ? "YYYY-MM-DD" : "YYYY-MM-DD HH:mm");
+        const year = value2.split("-")[0];
+        if (year.length !== 4) {
+            value2 = new Array(4 - year.length).fill(0).join("") + value2;
+        }
+    } else if (cellValue.hasEndDate) {
+        value2 = dayjs(currentDate).format(isNotTime ? "YYYY-MM-DD" : "YYYY-MM-DD HH:mm");
+    }
+    return `<div class="b3-menu__items">
+<div>
+    <input type="${isNotTime ? "date" : "datetime-local"}" max="${isNotTime ? "9999-12-31" : "9999-12-31 23:59"}" value="${value}" data-value="${dayjs(cellValue.content || currentDate).format("YYYY-MM-DD HH:mm")}" class="b3-text-field fn__size200" style="margin-top: 4px;"><br>
+    <input type="${isNotTime ? "date" : "datetime-local"}" max="${isNotTime ? "9999-12-31" : "9999-12-31 23:59"}" value="${value2}" data-value="${cellValue.isNotEmpty2 ? dayjs(cellValue.content2).format("YYYY-MM-DD HH:mm") : ""}" style="margin-top: 8px;margin-bottom: 4px" class="b3-text-field fn__size200${cellValue.hasEndDate ? "" : " fn__none"}">
+    <button class="b3-menu__separator"></button>
+    <label class="b3-menu__item">
+        <span class="fn__flex-center">${window.siyuan.languages.endDate}</span>
+        <span class="fn__space fn__flex-1"></span>
+        <input type="checkbox" class="b3-switch b3-switch--menu"${cellValue.hasEndDate ? " checked" : ""}>
+    </label>
+    <label class="b3-menu__item">
+        <span class="fn__flex-center">${window.siyuan.languages.includeTime}</span>
+        <span class="fn__space fn__flex-1"></span>
+        <input type="checkbox" class="b3-switch b3-switch--menu"${isNotTime ? "" : " checked"}>
+    </label>
+    <button class="b3-menu__separator"></button>
+    <button class="b3-menu__item" data-type="clearDate">
+        <svg class="b3-menu__icon"><use xlink:href="#iconTrashcan"></use></svg>
+        <span class="b3-menu__label">${window.siyuan.languages.clear}</span>
+    </button>
+</div>
+</div>`;
+};
+
+export const bindDateEvent = (options: {
+    protyle: IProtyle,
+    data: IAV,
+    menuElement: HTMLElement,
+    blockElement: Element,
+    cellElements: HTMLElement[],
+    requireExplicitChange?: boolean,
+    format?: TAVDateFormat,
+}) => {
+    if ((options.format ?? options.cellElements?.[0]?.dataset.dateFormat) === "lunar") {
+        return bindLunarDateEvent(options);
+    }
+    const inputElements: NodeListOf<HTMLInputElement> = options.menuElement.querySelectorAll("input");
+    let dirty = false;
+
+    // <input type="date"> 对非法日期会清空 input.value。原生 date input 不触发 beforeinput，用 keydown 区分删空与非法日输入。
+    const lastNonEmptyValue: string[] = [inputElements[0].value, inputElements[1].value];
+    // 输入非法日导致浏览器清空 value 时为 true，提交时按当月最后一天截断重建。
+    const invalidEmpty: boolean[] = [false, false];
+    const bindTracking = (index: number) => {
+        const input = inputElements[index];
+        input.addEventListener("pointerdown", () => {
+            // 日期输入框会预填当前日期，用户主动点击表示接受该候选值。
+            dirty = true;
+        });
+        input.addEventListener("focus", () => {
+            lastNonEmptyValue[index] = input.value;
+            invalidEmpty[index] = false;
+        });
+        input.addEventListener("keydown", (event: KeyboardEvent) => {
+            if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) {
+                return;
+            }
+            const isDelete = event.key === "Backspace" || event.key === "Delete";
+            const isDigit = /^\d$/.test(event.key);
+            if (!isDelete && !isDigit) {
+                return;
+            }
+            // date input 的 value 更新晚于 keydown，需推迟到下一个宏任务再读取
+            setTimeout(() => {
+                if (!input.value) {
+                    invalidEmpty[index] = !isDelete;
+                }
+            });
+        });
+        input.addEventListener("input", () => {
+            dirty = true;
+            if (input.value) {
+                invalidEmpty[index] = false;
+                // 仅当 input.value 是合法完整日期时才更新
+                if (input.value.replace(/\D/g, "").length >= 8) {
+                    lastNonEmptyValue[index] = input.value;
+                }
+            }
+        });
+    };
+    bindTracking(0);
+    bindTracking(1);
+
+    const buildDateStr = (index: number): string => {
+        const inputVal = inputElements[index].value;
+        if (inputVal) {
+            return inputVal.length > 10 ? inputVal : inputVal + " 00:00";
+        }
+        if (!invalidEmpty[index]) {
+            return "";
+        }
+        // 如果输入超出日期范围的非法日导致 value 清空，则获取最后一次合法日期，并返回该月最后一天的日期
+        const lastVal = lastNonEmptyValue[index];
+        if (!lastVal) {
+            return "";
+        }
+        const valDigits = lastVal.replace(/\D/g, "");
+        if (valDigits.length < 6) {
+            return "";
+        }
+        const year = parseInt(valDigits.substring(0, 4), 10);
+        const month = parseInt(valDigits.substring(4, 6), 10);
+        if (month < 1 || month > 12) {
+            return "";
+        }
+        const monthStr = String(month).padStart(2, "0");
+        const maxDay = new Date(year, month, 0).getDate();
+        return `${year}-${monthStr}-${String(maxDay).padStart(2, "0")} 00:00`;
+    };
+
+    const submit = () => {
+        if (!shouldSubmitDateEdit(dirty, options.requireExplicitChange === true)) {
+            return;
+        }
+        const dateStr1 = buildDateStr(0);
+        const dateStr2 = buildDateStr(1);
+        const content1 = getFullYearTime(dateStr1) || 0;
+        const content2 = getFullYearTime(dateStr2) || 0;
+        updateCellsValue(options.protyle, options.blockElement as HTMLElement, {
+            content: content1,
+            isNotEmpty: content1 !== 0,
+            content2: content2,
+            isNotEmpty2: content2 !== 0,
+            hasEndDate: inputElements[2].checked,
+            isNotTime: !inputElements[3].checked,
+        }, options.cellElements, getFieldsByData(options.data));
+    };
+
+    inputElements.forEach(item => {
+        item.addEventListener("keydown", (event) => {
+            if (event.key !== "Escape") {
+                event.stopPropagation();
+            }
+            if (event.isComposing) {
+                return;
+            }
+            if (event.key === "Enter") {
+                dirty = true;
+                submit();
+                document.querySelector(".av__panel")?.dispatchEvent(new CustomEvent("click", {detail: "close"}));
+            }
+        });
+    });
+    inputElements[0].addEventListener("change", () => {
+        dirty = true;
+        inputElements[0].dataset.value = inputElements[0].value.length > 10 ? inputElements[0].value : inputElements[0].value + " 00:00";
+    });
+    inputElements[1].addEventListener("change", () => {
+        dirty = true;
+        inputElements[1].dataset.value = inputElements[1].value.length > 10 ? inputElements[1].value : inputElements[1].value + " 00:00";
+    });
+    inputElements[2].addEventListener("change", () => {
+        dirty = true;
+        if (inputElements[2].checked) {
+            if (!inputElements[1].dataset.value) {
+                const currentDate = Date.now();
+                inputElements[1].dataset.value = dayjs(currentDate).format("YYYY-MM-DD HH:mm");
+                inputElements[1].value = dayjs(currentDate).format(inputElements[3].checked ? "YYYY-MM-DD HH:mm" : "YYYY-MM-DD");
+            }
+            inputElements[1].classList.remove("fn__none");
+        } else {
+            inputElements[1].classList.add("fn__none");
+        }
+    });
+    inputElements[3].addEventListener("change", () => {
+        dirty = true;
+        inputElements[0].value = "";
+        inputElements[1].value = "";
+        if (inputElements[3].checked) {
+            inputElements[0].setAttribute("type", "datetime-local");
+            inputElements[1].setAttribute("type", "datetime-local");
+            inputElements[0].setAttribute("max", "9999-12-31 23:59");
+            inputElements[1].setAttribute("max", "9999-12-31 23:59");
+            inputElements[0].value = inputElements[0].dataset.value;
+            inputElements[1].value = inputElements[1].dataset.value;
+        } else {
+            inputElements[0].setAttribute("type", "date");
+            inputElements[1].setAttribute("type", "date");
+            inputElements[0].setAttribute("max", "9999-12-31");
+            inputElements[1].setAttribute("max", "9999-12-31");
+            inputElements[0].value = inputElements[0].dataset.value.substring(0, 10);
+            inputElements[1].value = inputElements[1].dataset.value.substring(0, 10);
+        }
+    });
+    return () => {
+        submit();
+    };
+};
+
+const getFullYearTime = (dateStr: string) => {
+    const year = dateStr.split("-")[0];
+    const date = new Date(dateStr);
+    if (year.startsWith("00") || year.startsWith("000") || year.length < 3) {
+        date.setFullYear(parseInt(year));
+        return date.getTime();
+    } else {
+        return date.getTime();
+    }
+};

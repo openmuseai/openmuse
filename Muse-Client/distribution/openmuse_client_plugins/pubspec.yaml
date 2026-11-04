@@ -1,0 +1,13 @@
+name: openmuse_client_plugins
+description: Shared compiled client plugin composition for Desktop and Mobile.
+publish_to: none
+version: 0.1.0
+environment:
+  sdk: ^3.12.2
+dependencies:
+  openmuse_resource_notes:
+    path: ../../plugins/resource-notes
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+  openmuse_siyuan_plugin:
+    path: ../../plugins/siyuan-client

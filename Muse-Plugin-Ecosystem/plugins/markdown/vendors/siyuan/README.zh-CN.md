@@ -1,0 +1,660 @@
+<p align="center">
+<img alt="SiYuan" src="https://b3log.org/images/brand/siyuan-128.png">
+<br>
+<em>从思考到洞见，与智能体同行</em>
+<br><br>
+<a title="Build Status" target="_blank" href="https://github.com/siyuan-note/siyuan/actions/workflows/cd.yml"><img src="https://img.shields.io/github/actions/workflow/status/siyuan-note/siyuan/cd.yml?style=flat-square"></a>
+<a title="Releases" target="_blank" href="https://github.com/siyuan-note/siyuan/releases"><img src="https://img.shields.io/github/release/siyuan-note/siyuan.svg?style=flat-square&color=9CF"></a>
+<a title="Downloads" target="_blank" href="https://github.com/siyuan-note/siyuan/releases"><img src="https://img.shields.io/github/downloads/siyuan-note/siyuan/total.svg?style=flat-square&color=blueviolet"></a>
+<br>
+<a title="Docker Pulls" target="_blank" href="https://hub.docker.com/r/b3log/siyuan"><img src="https://img.shields.io/docker/pulls/b3log/siyuan.svg?style=flat-square&color=green"></a>
+<a title="Docker Image Size" target="_blank" href="https://hub.docker.com/r/b3log/siyuan"><img src="https://img.shields.io/docker/image-size/b3log/siyuan.svg?style=flat-square&color=ff96b4"></a>
+<a title="Hits" target="_blank" href="https://github.com/siyuan-note/siyuan"><img src="https://hits.b3log.org/siyuan-note/siyuan.svg"></a>
+<br>
+<a title="AGPLv3" target="_blank" href="https://www.gnu.org/licenses/agpl-3.0.txt"><img src="https://img.shields.io/badge/license-AGPLv3-orange.svg?style=flat-square"></a>
+<a title="Code Size" target="_blank" href="https://github.com/siyuan-note/siyuan"><img src="https://img.shields.io/github/languages/code-size/siyuan-note/siyuan.svg?style=flat-square&color=yellow"></a>
+<a title="GitHub Pull Requests" target="_blank" href="https://github.com/siyuan-note/siyuan/pulls"><img src="https://img.shields.io/github/issues-pr-closed/siyuan-note/siyuan.svg?style=flat-square&color=FF9966"></a>
+<br>
+<a title="GitHub Commits" target="_blank" href="https://github.com/siyuan-note/siyuan/commits/master"><img src="https://img.shields.io/github/commit-activity/m/siyuan-note/siyuan.svg?style=flat-square"></a>
+<a title="Last Commit" target="_blank" href="https://github.com/siyuan-note/siyuan/commits/master"><img src="https://img.shields.io/github/last-commit/siyuan-note/siyuan.svg?style=flat-square&color=FF9900"></a>
+<br><br>
+<a title="X" target="_blank" href="https://x.com/b3logos"><img alt="X Follow" src="https://img.shields.io/twitter/follow/b3logos?label=Follow&style=social"></a>
+<br><br>
+<a href="https://trendshift.io/repositories/3949" target="_blank"><img src="https://trendshift.io/api/badge/repositories/3949" alt="siyuan-note%2Fsiyuan | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+</p>
+
+<p align="center">
+<a href="README.md">English</a>
+| <b>中文</b>
+| <a href="README.ja.md">日本語</a>
+| <a href="README.tr.md">Türkçe</a>
+| <a href="README.pt-BR.md">Português</a>
+</p>
+
+---
+
+## 目录
+
+- [💡 简介](#-简介)
+- [🔮 特性](#-特性)
+- [🏗️ 架构和生态](#️-架构和生态)
+- [🗺️ 路线图](#️-路线图)
+- [🚀 下载安装](#-下载安装)
+  - [应用市场](#应用市场)
+  - [安装包](#安装包)
+  - [包管理器](#包管理器)
+  - [Docker 部署](#docker-部署)
+  - [Kubernetes 部署](#kubernetes-部署)
+  - [Unraid 部署](#unraid-部署)
+  - [TrueNAS 部署](#truenas-部署)
+  - [宝塔面板部署](#宝塔面板部署)
+  - [小皮面板部署](#小皮面板部署)
+  - [1Panel 面板部署](#1Panel-面板部署)
+  - [测试通道](#测试通道)
+- [⌨️ 命令行接口](#-命令行接口)
+- [🏘️ 社区](#️-社区)
+- [🛠️ 开发指南](#️-开发指南)
+- [❓ 常见问题和解答](#-常见问题和解答)
+  - [思源是如何存储数据的？](#思源是如何存储数据的)
+  - [支持通过第三方同步盘进行数据同步吗？](#支持通过第三方同步盘进行数据同步吗)
+  - [思源是开源的吗？](#思源是开源的吗)
+  - [如何升级到新版本？](#如何升级到新版本)
+  - [有的块（比如在列表项中的段落块）找不到块标怎么办？](#有的块比如在列表项中的段落块找不到块标怎么办)
+  - [数据仓库密钥遗失怎么办？](#数据仓库密钥遗失怎么办)
+  - [使用需要付费吗？](#使用需要付费吗)
+- [🙏 鸣谢](#-鸣谢)
+  - [贡献者列表](#贡献者列表)
+
+---
+
+## 💡 简介
+
+思源笔记是一款隐私优先的个人知识管理系统，支持细粒度块级引用和 Markdown 所见即所得。
+
+![feature0.png](screenshots/feature0.png)
+
+![feature5-1.png](screenshots/feature5-1.png)
+
+如需了解更多，请阅读[在线用户指南](https://siyuan-cn.b3log.org/)或前往[思源笔记官方讨论区](https://ld246.com/domain/siyuan)交流。
+
+## 🔮 特性
+
+大部分功能是免费的，即使是在商业环境下使用。
+
+- 内容块
+  - 块级引用和双向链接
+  - 自定义属性
+  - SQL 查询嵌入
+  - 协议 `siyuan://`
+- 编辑器
+  - Block 风格
+  - Markdown 所见即所得
+  - 列表大纲
+  - 块缩放聚焦
+  - 百万字大文档编辑
+  - 数学公式、图表、流程图、甘特图、时序图、五线谱等
+  - 网页剪藏
+  - PDF 标注双链
+- 导出
+  - 块引用和嵌入块 
+  - 带 assets 文件夹的标准 Markdown
+  - PDF、Word 和 HTML
+  - 复制到微信公众号、知乎和语雀
+- 数据库
+  - 表格视图
+- 闪卡间隔重复
+- 连接 OpenAI 接口支持人工智能写作和问答聊天
+- Tesseract OCR
+- 模板片段
+- JavaScript/CSS 代码片段
+- Android/iOS/鸿蒙 App
+- Docker 部署
+- [API](docs/API.zh-CN.md)
+- 社区集市
+
+部分功能需要付费会员才能使用，更多细节请参考[定价](https://b3log.org/siyuan/pricing.html)。
+
+## 🏗️ 架构和生态
+
+![思源笔记架构设计](screenshots/SiYuan_Arch.svg "思源笔记架构设计")
+
+| Project                                                  | Description  | Forks                                                                           | Stars                                                                                | 
+|----------------------------------------------------------|--------------|---------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [lute](https://github.com/88250/lute)                    | 编辑器引擎        | ![GitHub forks](https://img.shields.io/github/forks/88250/lute)                 | ![GitHub Repo stars](https://img.shields.io/github/stars/88250/lute)                 |
+| [chrome](https://github.com/siyuan-note/siyuan-chrome)   | Chrome/Edge 扩展 | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/siyuan-chrome)  | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/siyuan-chrome)  |
+| [bazaar](https://github.com/siyuan-note/bazaar)          | 社区集市         | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/bazaar)         | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/bazaar)         |
+| [dejavu](https://github.com/siyuan-note/dejavu)          | 数据仓库         | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/dejavu)         | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/dejavu)         |
+| [petal](https://github.com/siyuan-note/petal)            | 插件 API       | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/petal)          | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/petal)          |
+| [android](https://github.com/siyuan-note/siyuan-android) | Android App  | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/siyuan-android) | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/siyuan-android) |
+| [ios](https://github.com/siyuan-note/siyuan-ios)         | iOS App      | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/siyuan-ios)     | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/siyuan-ios)     |
+| [harmony](https://github.com/siyuan-note/siyuan-harmony)         | 鸿蒙 App       | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/siyuan-harmony)     | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/siyuan-harmony)     |
+| [riff](https://github.com/siyuan-note/riff)              | 间隔重复         | ![GitHub forks](https://img.shields.io/github/forks/siyuan-note/riff)           | ![GitHub Repo stars](https://img.shields.io/github/stars/siyuan-note/riff)           |
+
+## 🗺️ 路线图
+
+- [思源笔记开发计划和进度](https://github.com/orgs/siyuan-note/projects/1)
+- [思源笔记版本变更和公告](CHANGELOG.md)
+
+## 🚀 下载安装
+
+桌面端和移动端建议优先考虑通过应用市场安装，这样以后升级版本时可以一键更新。
+
+### 应用市场
+
+移动端：
+
+- [App Store](https://apps.apple.com/cn/app/siyuan/id1583226508)
+- [Google Play](https://play.google.com/store/apps/details?id=org.b3log.siyuan)
+- [F-Droid](https://f-droid.org/packages/org.b3log.siyuan)
+- [华为应用市场](https://appgallery.huawei.com/app/C105558879)
+- [小米应用商店](https://app.mi.com/details?id=org.b3log.siyuan)
+- [酷安](https://www.coolapk.com/apk/292664)
+
+桌面端：
+
+- [Microsoft Store](https://apps.microsoft.com/detail/9p7hpmxp73k4)
+
+### 安装包
+
+- [B3log](https://b3log.org/siyuan/download.html)
+- [GitHub](https://github.com/siyuan-note/siyuan/releases)
+
+### 包管理器
+
+#### `siyuan`
+
+[![包状态](https://repology.org/badge/vertical-allrepos/siyuan.svg)](https://repology.org/project/siyuan/versions)
+
+#### `siyuan-note`
+
+[![包状态](https://repology.org/badge/vertical-allrepos/siyuan-note.svg)](https://repology.org/project/siyuan-note/versions)
+
+### Docker 部署
+
+<details>
+<summary>Docker 部署文档</summary>
+
+#### 概述
+
+在服务器上伺服思源最简单的方案是通过 Docker 部署。
+
+- 镜像名称 `b3log/siyuan`
+- [镜像地址](https://hub.docker.com/r/b3log/siyuan)
+
+#### 文件结构
+
+整体程序位于 `/opt/siyuan/` 下，基本上就是 Electron 安装包 resources 文件夹下的结构：
+
+- appearance：图标、主题、多语言
+- guide：帮助文档
+- stage：界面和静态资源
+- kernel：内核程序
+
+#### 启动入口
+
+入口点在构建 Docker 镜像时设置：`ENTRYPOINT ["/opt/siyuan/entrypoint.sh"]`。该脚本允许更改将在容器内运行的用户的 `PUID` 和 `PGID`。这对于解决从主机挂载目录时的权限问题尤为重要。`PUID` 和 `PGID` 可以作为环境变量传递，这样在访问主机挂载的目录时就能更容易地确保正确的权限。
+
+使用 `docker run b3log/siyuan` 运行容器时，请指定以下参数：
+
+- `--workspace`：指定工作空间文件夹路径，在宿主机上通过 `-v` 挂载到容器中
+- `--accessAuthCode`：指定锁屏密码
+
+> **注意：** 自 v3.7.0 起，必须显式传入 `serve` 子命令（例如 `docker run b3log/siyuan serve --workspace=...`）。运行 `docker run --rm b3log/siyuan serve --help` 可查看全部伺服参数。
+
+更多的参数可参考 `--help`。下面是一条启动命令示例：
+
+请先将 `AuthCode` 设置为你自己的强密码（Bash 中使用 `export AuthCode='你的强密码'`，Compose 也可从同目录的 `.env` 文件读取）。未设置或为空时，示例会报错并停止。
+
+```bash
+docker run -d \
+  -v workspace_dir_host:workspace_dir_container \
+  -p 6806:6806 \
+  -e PUID=1001 -e PGID=1002 \
+  -e SIYUAN_LANG=zh-CN \
+  b3log/siyuan \
+  serve \
+  --workspace=workspace_dir_container \
+  --accessAuthCode="${AuthCode:?Set AuthCode}"
+```
+
+- `PUID`: 自定义用户 ID（可选，如果未提供，默认为 `1000`）
+- `PGID`: 自定义组 ID（可选，如果未提供，默认为 `1000`）
+- `workspace_dir_host`：宿主机上的工作空间文件夹路径
+- `workspace_dir_container`：容器内工作空间文件夹路径，和后面 `--workspace` 指定成一样的
+  - 另外，也可以通过 `SIYUAN_WORKSPACE_PATH` 环境变量设置路径。如果两者都设置了，命令行的值将优先
+- `accessAuthCode`：锁屏密码，请**务必修改**，否则任何人都可以读写你的数据
+  - 另外，也可以通过 `SIYUAN_ACCESS_AUTH_CODE` 环境变量设置锁屏密码。如果两者都设置了，命令行的值将优先
+  - 可通过设置环境变量 `SIYUAN_ACCESS_AUTH_CODE_BYPASS=true` 禁用锁屏密码
+- OIDC 可替代锁屏密码作为 Docker 访问鉴权。设置 `SIYUAN_OIDC_ENABLED=true`、`SIYUAN_OIDC_PROVIDER`（`custom`、`google`、`microsoft` 或 `github`）、`SIYUAN_OIDC_CLIENT_ID` 以及下方的提供商相关配置。GitHub 使用其 OAuth 2.0 用户 API 适配器；其余提供商使用 OpenID Connect 发现与 ID Token 校验。在已启用 OIDC 且配置无效、又没有锁屏密码可用时，Docker 启动会直接终止
+  - `SIYUAN_OIDC_ISSUER_URL`：`custom` 和 `microsoft` 提供商所需的 Issuer URL；Microsoft 必须使用租户专属的 issuer，例如 `https://login.microsoftonline.com/<tenant-id>/v2.0`
+  - `SIYUAN_OIDC_CLIENT_SECRET`：OpenID Connect 提供商可选的客户端密钥；GitHub OAuth 适配器必须提供。所有授权码流程均使用 PKCE
+  - `SIYUAN_OIDC_SCOPES`：逗号或空格分隔的 scopes；始终包含 `openid`
+  - `SIYUAN_OIDC_REDIRECT_URL`：以 `/api/system/oidc/callback` 结尾的公网 HTTPS 回调 URL，远程浏览器访问时必填
+  - `SIYUAN_OIDC_ALLOW_ALL`：明确授予提供商认证的所有身份 SiYuan 管理员权限
+  - `SIYUAN_OIDC_CLAIM_RULES`：禁用 allow-all 时使用的声明规则 JSON 数组，例如 `[{"claim":"email","operator":"equals","values":["user@example.com"]},{"claim":"email_verified","operator":"equals","values":["true"]}]`；规则内取值为 OR，规则之间为 AND
+  - 原生移动应用使用固定的回调 URI `siyuan:/oidc-callback`；请按原样注册。移动端配置在保存前会使用该回调进行校验。自定义提供商、Microsoft 和 GitHub 仅在其应用注册接受该回调 URI 时可用；Google 的 Android 客户端类型不接受该私有 URI，因此 Google 登录仅限浏览器和桌面端流程
+- `SIYUAN_LANG`：界面语言（可选，Docker 下未设置时默认为 `en`）。接受 BCP 47 标签如 `zh-CN`/`zh-TW`/`en`/`ja`/`pt-BR`；旧下划线值如 `zh_CN`/`en_US` 也兼容。若希望**设置**中选择的语言在重启后仍生效，部署时请去掉该变量；若设置了，每次启动都会应用该值并覆盖已保存的语言设置
+  - 也可通过 `--lang` 命令行参数设置。如果两者都设置了，命令行的值将优先
+
+为了简化，建议将 workspace 文件夹路径在宿主机和容器上配置为一致的，比如将 `workspace_dir_host` 和 `workspace_dir_container` 都配置为 `/siyuan/workspace`，对应的启动命令示例：
+
+请先将 `AuthCode` 设置为你自己的强密码（Bash 中使用 `export AuthCode='你的强密码'`，Compose 也可从同目录的 `.env` 文件读取）。未设置或为空时，示例会报错并停止。
+
+```bash
+docker run -d \
+  -v /siyuan/workspace:/siyuan/workspace \
+  -p 6806:6806 \
+  -e PUID=1001 -e PGID=1002 \
+  -e SIYUAN_LANG=zh-CN \
+  b3log/siyuan \
+  serve \
+  --workspace=/siyuan/workspace/ \
+  --accessAuthCode="${AuthCode:?Set AuthCode}"
+```
+
+#### Docker Compose
+
+对于使用 Docker Compose 运行思源的用户，可以通过环境变量 `PUID` 和 `PGID` 来自定义用户和组的 ID。下面是一个 Docker Compose 配置示例：
+
+请先将 `AuthCode` 设置为你自己的强密码（Bash 中使用 `export AuthCode='你的强密码'`，Compose 也可从同目录的 `.env` 文件读取）。未设置或为空时，示例会报错并停止。
+
+```yaml
+version: "3.9"
+services:
+  main:
+    image: b3log/siyuan
+    command: ['serve', '--workspace=/siyuan/workspace/', '--accessAuthCode=${AuthCode:?Set AuthCode}']
+    ports:
+      - 6806:6806
+    volumes:
+      - /siyuan/workspace:/siyuan/workspace
+    restart: unless-stopped
+    environment:
+      - TZ=${YOUR_TIME_ZONE}    # 时区标识符列表见 https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+      - PUID=${YOUR_USER_PUID}  # 自定义用户 ID
+      - PGID=${YOUR_USER_PGID}  # 自定义组 ID
+      - SIYUAN_LANG=zh-CN       # 界面语言（与本文档一致）
+```
+
+在此设置中：
+
+- `PUID` 和 `PGID` 是动态设置并传递给容器的
+- 如果没有提供这些变量，则使用默认的 `1000`
+
+在环境中指定 `PUID` 和 `PGID` 后，就无需在 compose 文件中明确设置 `user` 指令（`user: '1000:1000'`）。容器将在启动时根据这些环境变量动态调整用户和组。
+
+#### 用户权限
+
+在镜像中，`entrypoint.sh` 脚本确保以指定的 `PUID` 和 `PGID` 创建 `siyuan` 用户和组。因此，当主机创建工作区文件夹时，请注意设置文件夹的用户和组所有权，使其与计划使用的 `PUID` 和 `PGID` 匹配。例如：
+
+```bash
+chown -R 1001:1002 /siyuan/workspace
+```
+
+如果使用自定义的 `PUID` 和 `PGID` 值，入口点脚本将确保在容器内创建正确的用户和组，并相应调整挂载卷的所有权。无需在 `docker run` 或 `docker-compose` 中手动传递 `-u`，因为环境变量会处理自定义。
+
+#### 隐藏端口
+
+使用 NGINX 反向代理可以隐藏 6806 端口，请注意：
+
+- 配置 WebSocket 反代 `/ws`
+- 普通请求和 `/ws` 的反向代理都需要保留原始 `Host` 请求头及端口，在 NGINX 的两处代理配置中均设置 `proxy_set_header Host $http_host;`。使用 `$host` 会丢失非标准端口（如 `8443`），可能导致来源校验失败，表现为登录后停留在 LOGO 并反复刷新、接口返回 `401` 或 WebSocket 连接失败
+
+#### 注意
+
+- 请务必确认挂载卷的正确性，否则容器删除后数据会丢失
+- 不要使用 URL 重写进行重定向，否则鉴权可能会有问题，建议配置反向代理
+
+#### 限制
+
+- 不支持桌面端和移动端应用连接，仅支持在浏览器上使用
+- 不支持导出 PDF、HTML 和 Word 格式
+- 不支持导入 Markdown 文件
+
+</details>
+
+### Kubernetes 部署
+
+<details>
+<summary>Kubernetes 部署文档</summary>
+
+[HelmForge 思源 Chart](https://github.com/helmforgedev/charts/tree/main/charts/siyuan) 由 HelmForge 社区维护，使用官方 `b3log/siyuan` 镜像，并非思源官方 Chart。Chart 相关问题请反馈至 [HelmForge](https://github.com/helmforgedev/charts/issues)。
+
+准备好 Helm、kubectl，以及默认 StorageClass 能够动态创建 10Gi ReadWriteOnce 存储卷的 Kubernetes 集群后，执行以下命令：
+
+```bash
+helm repo add helmforge https://repo.helmforge.dev
+helm repo update
+helm install siyuan helmforge/siyuan --namespace siyuan --create-namespace --wait
+kubectl -n siyuan get secret siyuan-siyuan-auth -o go-template='{{index .data "access-code" | base64decode}}{{"\n"}}'
+kubectl -n siyuan port-forward service/siyuan-siyuan 6806:6806
+```
+
+打开 <http://localhost:6806>，输入生成的锁屏密码。请妥善保管该密码；它与 API Token 不同。以上资源名称以 Chart 默认配置和 Helm 实例名称 `siyuan` 为前提。
+
+远程访问时，请使用独立的 HTTPS 域名，以及支持代理 `/ws` WebSocket 连接的 Ingress 控制器，不要进行 URL 重写。配置 `ingress`，并通过 `networkPolicy.ingressFrom` 允许控制器所在命名空间的流量；默认策略仅允许同命名空间的入站流量和 DNS 出站流量。云端同步等外部服务需要显式配置出站规则。TLS、现有 Secret 和存储配置请参阅 [Chart 指南及生产环境示例](https://helmforge.dev/docs/charts/siyuan)。
+
+- **一个工作区只能有一个写入实例：** 不要增加副本数，也不要将同一工作区挂载到另一个运行中的实例，即使使用 ReadWriteMany 存储也不例外。Chart 使用 `Recreate` 策略，升级时会先停止旧实例，再启动新实例，因此会有服务中断。
+- **持久化：** 完整工作区挂载在 `/siyuan/workspace`。默认情况下，卸载 Chart 会保留其创建的 PVC，但删除命名空间或 PVC 仍可能导致数据丢失。可通过 `persistence.existingClaim` 复用保留或恢复后的存储卷声明。
+- **备份与升级：** 备份完整工作区前，请正常停止写入实例，或使用能够保证应用一致性的备份流程。仅复制运行中的 SQLite 索引文件无法保证备份完整且一致。请妥善保管保存锁屏密码的 Secret、加密密钥和加密笔记本恢复密码，并在独立 PVC 上测试恢复。升级前先备份，并确认新版本是否涉及存储格式变更：Helm 回滚不会撤销数据迁移。
+
+Docker 部署的限制同样适用：仅支持浏览器访问，不支持桌面端和移动端应用连接，不支持导出 PDF、HTML 和 Word 格式，也不支持导入 Markdown 文件。
+
+</details>
+
+### Unraid 部署
+
+<details>
+<summary>Unraid 部署文档</summary>
+
+注意：首先终端运行 `chown -R 1000:1000 /mnt/user/appdata/siyuan`
+
+模板参考：
+
+```
+Web UI: 6806
+Container Port: 6806
+Container Path: /siyuan/workspace
+Host path: /mnt/user/appdata/siyuan
+PUID: 1000
+PGID: 1000
+SIYUAN_LANG: zh-CN
+Publish parameters: serve --accessAuthCode=******（锁屏密码）
+```
+
+</details>
+
+### TrueNAS 部署
+
+<details>
+<summary>TrueNAS 部署文档</summary>
+
+注意：首先在 TrueNAS Shell 中运行下面的命令。请将 `Pool_1/Apps_Data/siyuan` 更新为与你的应用数据集对应的路径。
+
+```shell
+zfs create Pool_1/Apps_Data/siyuan
+chown -R 1001:1002 /mnt/Pool_1/Apps_Data/siyuan
+chmod 755 /mnt/Pool_1/Apps_Data/siyuan
+```
+
+进入 Apps - DiscoverApps - More Options（右上，除 Custom App 外）- 通过 YAML 安装
+
+模板参考：
+
+部署前，请将下面的 `SIYUAN_ACCESS_AUTH_CODE=` 补全为你自己的强密码；不要留空。
+
+```yaml
+services:
+  siyuan:
+    image: b3log/siyuan
+    container_name: siyuan
+    command: ['serve', '--workspace=/siyuan/workspace/']
+    ports:
+      - 6806:6806
+    volumes:
+      - /mnt/Pool_1/Apps_Data/siyuan:/siyuan/workspace  # Adjust to your dataset path 
+    restart: unless-stopped
+    environment:
+      - SIYUAN_ACCESS_AUTH_CODE=
+      - TZ=Asia/Shanghai  # 按需替换为你的时区
+      - PUID=1001
+      - PGID=1002
+      - SIYUAN_LANG=zh-CN
+```
+
+</details>
+
+### 宝塔面板部署
+
+<details>
+<summary>宝塔面板 部署文档</summary>
+
+#### 前提
+
+- 仅适用于宝塔面板9.2.0及以上版本
+- 安装宝塔面板，前往[宝塔面板](https://www.bt.cn/new/download.html)官网，选择正式版的脚本下载安装
+
+#### 部署
+
+1. 登录宝塔面板，在左侧菜单栏中点击 `Docker`
+2. 首次会提示安装 `Docker` 和 `Docker Compose` 服务，点击立即安装，若已安装请忽略
+3. 安装完成后在 `Docker-应用商店-实用工具` 中找到 `思源笔记`，点击`安装`，也可以在搜索框直接搜索
+4. 设置域名等基本信息，点击 `确定`
+   - 名称：应用名称，默认 `siyuan_随机字符`
+   - 版本选择：默认 `latest`
+   - 域名：如你需要通过域名访问，请在此处填写你的域名
+   - 允许外部访问：如你需通过 `IP+Port` 直接访问，请勾选，如你已经设置了域名，请不要勾选此处
+   - 端口：默认 `6806`，可自行修改
+   - 锁屏密码：默认随机生成
+   - 内存限制：0为不限制，根据实际需要设置
+5. 提交后面板会自动进行应用初始化，大概需要`1-3`分钟，初始化完成后即可访问
+
+#### 访问思源笔记
+
+- 如果你填写了域名，请在浏览器输入域名访问
+- 如你选择了 `IP+端口`，请在浏览器中输入 `http://<宝塔面板IP>:6806` 访问
+
+</details>
+
+### 小皮面板部署
+
+<details>
+<summary>小皮面板 部署文档</summary>
+
+#### 前提
+
+- 需要安装小皮面板，前往[小皮面板](https://www.xp.cn/download)，选择对应的脚本执行安装
+
+#### 部署
+
+1. 登录小皮面板后，点击左侧菜单的 **Docker**
+2. 首次打开会提示安装 Docker，点击 **点击安装 Docker**
+3. 按照提示安装 Docker
+4. 点击 **应用商店**，找到 **思源笔记**，点击 **安装** -> **立即安装**
+5. 等待安装结束后，可在 **任务队列** 界面的 **已结束** 中点击 **详情** 查看安装信息
+
+#### 访问思源笔记
+
+- 在浏览器输入 `http://<小皮面板机器IP>:6806` 访问
+
+</details>
+
+### 1Panel 面板部署
+
+<details>
+<summary>1Panel面板 部署文档</summary>
+
+#### 前提
+
+- 仅适用于1Panel面板v1.10.32-lts及以上版本
+- 安装1Panel面板，前往[1Panel](https://1panel.cn/)官网，选择正式版安装脚本下载安装
+
+#### 部署
+
+1. 登录1Panel面板，在左侧菜单栏中点击 `应用商店`
+2. 在 `应用商店-实用工具` 中找到 `思源笔记`，点击`安装`，也可以在搜索框直接搜索
+3. 配置锁屏密码等基本信息，点击 `确定`
+
+    - 名称：应用名称，默认 `siyuan`
+    - 版本：默认最新发行版
+    - 端口：默认 `6806`
+    - 锁屏密码：访问笔记时需要使用的`锁屏密码`
+    - 端口外部访问：如你需通过 `IP+Port` 直接访问，请勾选，同时会开放服务器防火墙端口
+    - CPU限制：默认为0，不限制，可根据实际需要设置
+    - 内存限制：默认为0，不限制，可根据实际需要设置
+4. 提交后面板会自动进行应用安装启动，应用状态会变为`安装中`，大概需要`1-3`分钟，耐心等待安装完成
+5. 当应用状态变为`已启动`后，点击左侧的网站，首次使用需要安装`OpenResty`，点击`安装`
+6. 安装完成后，点击`网站`菜单栏左上角`创建`，在弹出的页面中选择`反向代理`
+7. 在`主域名`填入你的域名，网站代号会自动生成，代理选择`http`，代理地址填写`127.0.0.1:6806`，点击`确定`
+8. (可选) 配置你创建的网站，可根据需要配置`https`访问增强访问安全性
+
+#### 访问思源笔记
+
+- 如果你通过`OpenResty`反向代理反代了网站，并且填写了域名，请在浏览器输入`域名`访问
+- 如你选择了 `端口外部访问`，请在浏览器中输入 `http://<1Panel面板IP>:6806` 访问
+
+</details>
+
+### 测试通道
+
+可在`设置 - 关于 - 更新通道`中选择 Beta 或 Alpha 以接收预发布版本。Beta 通道接收正式版、RC 和 Beta，Alpha 通道接收全部版本。测试通道需要能够访问 GitHub。
+
+## ⌨️ 命令行接口
+
+内置 CLI，直接访问工作空间数据，无需启动内核服务。
+
+CLI 不支持操作加密笔记本；请通过应用内的专用流程解锁和操作。
+
+### 快速开始
+
+```bash
+# 列出所有笔记本
+siyuan notebook list -w ~/SiYuan
+
+# 全文搜索（JSON 输出）
+siyuan search "关键词" -w ~/SiYuan -f json
+
+# 搜索资源文件内容（PDF/Word/Excel/txt 等）
+siyuan search "关键词" --asset -w ~/SiYuan
+siyuan search "关键词" --asset --ext pdf --ext docx -w ~/SiYuan
+
+# 导出文档为 Markdown
+siyuan export md --id <block-id> -w ~/SiYuan
+```
+
+### 可用命令
+
+| 分类 | 命令 |
+|------|------|
+| 笔记本与文档 | `notebook`、`document`、`dailynote` — 增删改查、每日笔记 |
+| 内容 | `block`、`attr`、`outline` — 块读写、自定义属性、大纲 |
+| 元数据 | `tag`、`bookmark`、`template` — 标签、书签、模板片段 |
+| 查询 | `search`、`sql` — 全文、语义、资源文件内容、SQL 查询 |
+| 引用 | `ref` — 反向链接和提及 |
+| 导入导出 | `export`、`import`、`inbox` — Markdown、HTML、preview、Word、.sy.zip、Data、云端收集箱 |
+| 数据管理 | `repo`、`history`、`sync` — 快照、历史、云端同步 |
+| 工具 | `asset`、`file` — 资源与文件系统 |
+| 数据库 | `database` — 属性视图管理 |
+| 伺服 | `serve` — 启动内核 HTTP 服务 |
+| 工作空间与系统 | `workspace`、`system` — 列出、查看、系统信息 |
+
+运行 `siyuan --help` 查看完整命令树。使用 `-f json`（默认 `-f table`）获得适合脚本处理的输出。大多数写命令还支持 `--dry-run`，可预览将要发生的改动而不实际执行。
+
+### 安装
+
+CLI 可执行文件为 `<安装目录>/resources/kernel/SiYuan-Kernel`，可通过 `siyuan` 命令调用。
+
+- **Windows**：安装程序自动将内核目录加入 `PATH`，可直接使用 `siyuan`。微软商店版（3.8.7 及以上）在 Windows 10 1607（内部版本 14393）及以上系统中注册 `siyuan.exe` 应用执行别名。安装或更新后，打开新的终端并运行 `siyuan --help`
+  ```powershell
+  siyuan --help
+
+  # 检查实际使用的命令
+  Get-Command siyuan -All
+  where.exe siyuan
+  ```
+  如果找不到命令，请检查 Windows 中思源的应用执行别名是否已启用，以及 `%LOCALAPPDATA%\Microsoft\WindowsApps` 是否在 `PATH` 中。上述命令可检查命令解析结果；同时安装多个思源版本或 `PATH` 顺序可能导致调用其他可执行文件
+
+  如果曾创建旧的 `siyuan.cmd` 转发器，请先运行 `& "$env:LOCALAPPDATA\Microsoft\WindowsApps\siyuan.exe" --help` 确认商店版别名可用，再按需删除转发器：`Remove-Item "$env:LOCALAPPDATA\Microsoft\WindowsApps\siyuan.cmd"`
+- **macOS**：安装后创建软链接：
+  ```bash
+  ln -s /Applications/SiYuan.app/Contents/Resources/kernel/SiYuan-Kernel /usr/local/bin/siyuan
+  ```
+- **Linux**：安装后创建软链接：
+  ```bash
+  ln -s <安装目录>/resources/kernel/SiYuan-Kernel /usr/local/bin/siyuan
+  ```
+
+## 🏘️ 社区
+
+- [中文讨论区](https://ld246.com/domain/siyuan)
+- [用户社区汇总](https://ld246.com/article/1640266171309)
+- [Awesome SiYuan](https://github.com/siyuan-note/awesome)
+
+## 🛠️ 开发指南
+
+见：[开发指南](https://github.com/siyuan-note/siyuan/blob/master/.github/CONTRIBUTING.zh-CN.md)。
+
+## ❓ 常见问题和解答
+
+### 思源是如何存储数据的？
+
+数据保存在工作空间 data 文件夹下：
+
+- `assets` 用于保存所有插入的资源文件
+- `emojis` 用于保存自定义图标表情图片
+- `snippets` 用于保存代码片段
+- `storage` 用于保存查询条件、布局和闪卡数据等
+- `templates` 用于保存模板片段
+- `widgets` 用于保存挂件
+- `plugins` 用于保存插件
+- `public` 用于保存公开的数据
+- 其余笔记本文件夹用于保存文档数据。普通笔记本的 `.sy` 文档以 JSON 保存，加密笔记本的 `.sy` 文档以密文保存。
+
+### 支持通过第三方同步盘进行数据同步吗？
+
+不支持通过第三方同步盘进行数据同步，否则可能会导致数据损坏。
+
+虽然不支持第三方同步盘，但是支持连接第三方云端存储（会员特权）。
+
+### 思源是开源的吗？
+
+思源笔记是完全开源的，欢迎参与贡献：
+
+- [界面和内核](https://github.com/siyuan-note/siyuan)
+- [Android 端](https://github.com/siyuan-note/siyuan-android)
+- [iOS 端](https://github.com/siyuan-note/siyuan-ios)
+- [鸿蒙端](https://github.com/siyuan-note/siyuan-harmony)
+- [Chrome 剪藏扩展](https://github.com/siyuan-note/siyuan-chrome)
+
+更多细节请参考[开发指南](https://github.com/siyuan-note/siyuan/blob/master/.github/CONTRIBUTING.zh-CN.md)。
+
+### 如何升级到新版本？
+
+- 如果是通过应用商店安装的，请通过应用商店更新
+- 如果是 Windows 或 macOS 桌面端通过安装包安装的，可打开 <kbd>设置</kbd> - <kbd>关于</kbd> - <kbd>自动下载更新安装包</kbd> 选项，这样思源会自动下载最新版安装包并提示安装
+- 如果是通过手动安装包安装的，请再次下载安装包安装
+
+可在 <kbd>设置</kbd> - <kbd>关于</kbd> - <kbd>当前版本</kbd> 中 <kbd>检查更新</kbd>，也可以通过关注[官方下载](https://b3log.org/siyuan/download.html)或者 [GitHub Releases](https://github.com/siyuan-note/siyuan/releases) 来获取新版本。
+
+**注意**：切勿将工作空间放置于安装目录下，因为更新版本会清空安装目录下的所有文件
+
+### 有的块（比如在列表项中的段落块）找不到块标怎么办？
+
+在列表项下的第一个子块是省略块标的。可以将光标移到这个块中，然后通过 <kbd>Ctrl+/</kbd> 触发它的块标菜单。
+
+### 数据仓库密钥遗失怎么办？
+
+数据仓库密钥用于快照和同步，与加密笔记本的主密码及密钥备份不同。重置数据仓库不能恢复遗失的加密笔记本主密码，也不能替代匹配的加密密钥备份。
+
+重置前，请先正常退出思源并备份完整工作空间；如有加密笔记本，还应单独保存匹配的加密密钥备份，并确认主密码可用。完成新同步并确认数据完整、恢复材料已妥善保存后，再按需删除旧同步目录和云端快照。
+
+- 如果之前在多个设备上正确初始化过数据仓库密钥的话，那么该密钥在所有设备上都是相同的，可以在 <kbd>设置</kbd> - <kbd>账号与同步</kbd> - <kbd>数据仓库</kbd> - <kbd>数据仓库密钥</kbd> - <kbd>复制密钥字符串</kbd> 找回
+- 如果之前没有正确配置（比如多个设备上密钥不一致）或者所有设备均不可用，已经无法获得密钥字符串，则可通过如下步骤重置密钥：
+
+  1. 正常退出思源后，备份完整工作空间；如有加密笔记本，同时保留匹配的加密密钥备份和主密码
+  2. <kbd>设置</kbd> - <kbd>账号与同步</kbd> - <kbd>数据仓库</kbd> - <kbd>数据仓库密钥</kbd> - <kbd>重置数据仓库</kbd>
+  3. 重新初始化数据仓库密钥，在一台设备上初始化密钥以后，其他设备导入密钥
+  4. 云端改用新的同步目录；完成新同步并确认数据完整、恢复材料已妥善保存后，再按需删除旧同步目录
+  5. 完成新同步并确认数据完整、恢复材料已妥善保存后，再按需删除旧云端快照
+
+### 使用需要付费吗？
+
+大部分功能是免费的，即使是在商业环境下使用。
+
+会员特权需要付费后才能使用，请参考[定价](https://b3log.org/siyuan/pricing.html)。
+
+如果你没有会员特权需求但又想支持开发，欢迎进行捐赠：[靠爱发电 - 链滴](https://ld246.com/sponsor)
+
+## 🙏 鸣谢
+
+思源的诞生离不开众多的开源项目和贡献者，请参考项目源代码 kernel/go.mod、app/package.json 和项目首页。
+
+思源的成长离不开用户的反馈和宣传推广，感谢所有人对思源的帮助 ❤️
+
+### 贡献者列表
+
+欢迎加入我们，一起为思源贡献代码。
+
+<a href="https://github.com/siyuan-note/siyuan/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=siyuan-note/siyuan" />
+</a>

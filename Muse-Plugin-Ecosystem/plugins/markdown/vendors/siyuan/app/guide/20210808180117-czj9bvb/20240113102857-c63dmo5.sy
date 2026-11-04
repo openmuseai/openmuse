@@ -1,0 +1,1526 @@
+{
+	"ID": "20240113102857-c63dmo5",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"icon": "1f4f1",
+		"id": "20240113102857-c63dmo5",
+		"title": "移动端 App",
+		"type": "doc",
+		"updated": "20261024163013"
+	},
+	"Children": [
+		{
+			"ID": "20240113102857-aof1w7f",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240113102857-aof1w7f",
+				"updated": "20261012014930"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20240113103019-9qixtas",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240113103019-9qixtas",
+				"updated": "20250114214155"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源笔记提供了 Android 端、iOS 端和鸿蒙端 App，已经上架部分手机应用商店，请在应用商店中搜索 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "思源笔记"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 或者 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "SiYuan"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​。"
+				}
+			]
+		},
+		{
+			"ID": "20240113103514-zn9zqby",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240113103514-zn9zqby",
+				"updated": "20250114213859"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "安装和更新"
+				}
+			]
+		},
+		{
+			"ID": "20240113103522-9qmar6w",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240113103522-9qmar6w",
+				"updated": "20240113103715"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "目前已经上架应用商店："
+				}
+			]
+		},
+		{
+			"ID": "20240113103626-ubxacja",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20240113103626-ubxacja",
+				"updated": "20250114213859"
+			},
+			"Children": [
+				{
+					"ID": "20240113103627-3msi4nv",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113103627-3msi4nv",
+						"updated": "20240113103627"
+					},
+					"Children": [
+						{
+							"ID": "20240113103627-f8jrx6i",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113103627-f8jrx6i",
+								"updated": "20240113103636"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "小米"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113103636-d16mhk2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113103636-d16mhk2",
+						"updated": "20240113103636"
+					},
+					"Children": [
+						{
+							"ID": "20240113103636-sfd0an8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113103636-sfd0an8",
+								"updated": "20240113103639"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "华为"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20250114213857-808p5ry",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20250114213857-808p5ry",
+						"updated": "20250114213859"
+					},
+					"Children": [
+						{
+							"ID": "20250114213857-d50uviq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20250114213857-d50uviq",
+								"updated": "20250114213859"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "荣耀"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113103639-l2ytma2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113103639-l2ytma2",
+						"updated": "20240113103639"
+					},
+					"Children": [
+						{
+							"ID": "20240113103639-hb5o04j",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113103639-hb5o04j",
+								"updated": "20240113103641"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "OPPO"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113103641-v5mcpqr",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113103641-v5mcpqr",
+						"updated": "20240113103641"
+					},
+					"Children": [
+						{
+							"ID": "20240113103641-3m0bnw0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113103641-3m0bnw0",
+								"updated": "20240113103644"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "vivo"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113103645-f24px3a",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113103645-f24px3a",
+						"updated": "20240113103645"
+					},
+					"Children": [
+						{
+							"ID": "20240113103645-bn397ic",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113103645-bn397ic",
+								"updated": "20240113103659"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "苹果"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113103702-duvw7xt",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113103702-duvw7xt",
+						"updated": "20240113103702"
+					},
+					"Children": [
+						{
+							"ID": "20240113103702-4x92du8",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113103702-4x92du8",
+								"updated": "20240113103704"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "酷安"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113103706-rvth88e",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113103706-rvth88e",
+						"updated": "20240113103706"
+					},
+					"Children": [
+						{
+							"ID": "20240113103706-re3ljge",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113103706-re3ljge",
+								"updated": "20240113103709"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Google Play"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240113103718-csuv9qu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240113103718-csuv9qu",
+				"updated": "20240119205333"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "APK 下载： "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://b3log.org/siyuan/download.html",
+					"TextMarkTextContent": "https://b3log.org/siyuan/download.html"
+				}
+			]
+		},
+		{
+			"ID": "20261012014537-ygn9gm0",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20261012014537-ygn9gm0",
+				"updated": "20261020133924"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "界面导航"
+				}
+			],
+			"HeadingLevel": 2
+		},
+		{
+			"ID": "20260921090531-bcyyegw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260921090531-bcyyegw",
+				"updated": "20260921210136"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在编辑器中向右滑动可打开左侧栏，向左滑动可打开右侧栏。应用启动后，首次打开侧栏时显示该侧首个可见功能，之后再次打开会恢复该侧上次使用的功能。可在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "外观"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "左右布局"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中调整功能顺序。"
+				}
+			]
+		},
+		{
+			"ID": "20261010114821-9zssb7v",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261010114821-9zssb7v",
+				"updated": "20261020133924"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在 Android 上使用桌面布局时，系统返回键会先关闭当前最上层的弹窗、菜单、编辑浮层、图片预览或浮动抽屉，每次只关闭一层并保留底层浏览状态。没有可关闭的浮层时，沿应用内文档历史返回，不会重新加载整个界面。到达历史起点后会提示再次返回，提示显示期间再按一次返回键即可回到系统桌面。"
+				}
+			]
+		},
+		{
+			"ID": "20240113104101-rz1z8en",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240113104101-rz1z8en",
+				"updated": "20260819122705"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用集市"
+				}
+			]
+		},
+		{
+			"ID": "20240113104141-5jvccmj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240113104141-5jvccmj",
+				"updated": "20260819224004"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "部分应用商店版本可能因审核要求不在 App 内提供集市。"
+				}
+			]
+		},
+		{
+			"ID": "20240113104506-ko5m727",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240113104506-ko5m727",
+				"updated": "20260819114702"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "受限版本仍可使用集市，请启用 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "鉴权"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "网络伺服"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，然后使用桌面端浏览器访问思源。"
+				}
+			]
+		},
+		{
+			"ID": "20240113103753-6tsixvt",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20240113103753-6tsixvt",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20240113104525-jtaztd5",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20240113104525-jtaztd5",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"ID": "20240113104818-gc1i41e",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113104818-gc1i41e",
+						"updated": "20261024162311"
+					},
+					"Children": [
+						{
+							"ID": "20240113104818-pxt6yql",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113104818-pxt6yql",
+								"updated": "20261024162311"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "卸载 App 会删除本地数据。卸载前请完成同步，并在应用之外保存可恢复的备份；没有备份的数据可能无法恢复"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113104832-8e6vs9t",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113104832-8e6vs9t",
+						"updated": "20261024163013"
+					},
+					"Children": [
+						{
+							"ID": "20240113104832-2hvn950",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113104832-2hvn950",
+								"updated": "20261024163013"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "退出应用请使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "更多"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "退出应用"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " 进行正常退出，直接划走会强制结束应用，导致数据同步未被执行"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113105240-owjwqqn",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113105240-owjwqqn"
+					},
+					"Children": [
+						{
+							"ID": "20240113105240-bkhdigy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113105240-bkhdigy",
+								"updated": "20240113105348"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "iOS 端切换应用后会导致连接中断，请点击提示框中的按钮手动重连"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240113105419-g8m50a5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240113105419-g8m50a5",
+						"updated": "20240113105504"
+					},
+					"Children": [
+						{
+							"ID": "20240113105419-pwwa9ym",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240113105419-pwwa9ym",
+								"updated": "20240113105504"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "数据同步过程中请勿切换应用并保持亮屏，否则会导致数据同步失败"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20250114214413-n2v7z20",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20250114214413-n2v7z20",
+				"updated": "20260613174109"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Android 端自定义保活通知"
+				}
+			]
+		},
+		{
+			"ID": "20250114214422-sv4vhfx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20250114214422-sv4vhfx",
+				"updated": "20260317183614"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "如果你需要思源尽量保活后台运行，请按如下步骤操作："
+				}
+			]
+		},
+		{
+			"ID": "20250114215159-d40seb3",
+			"Type": "NodeList",
+			"ListData": {
+				"Typ": 1
+			},
+			"Properties": {
+				"id": "20250114215159-d40seb3",
+				"updated": "20260317202452"
+			},
+			"Children": [
+				{
+					"ID": "20260317183810-qwz9j00",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "MS4=",
+						"Num": 1
+					},
+					"Properties": {
+						"id": "20260317183810-qwz9j00",
+						"updated": "20260317202452"
+					},
+					"Children": [
+						{
+							"ID": "20260317183810-ghgiv5m",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260317183810-ghgiv5m",
+								"updated": "20260317202452"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "省电策略调整为 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "无限制"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260317183714-af6het7",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "Mi4=",
+						"Num": 2
+					},
+					"Properties": {
+						"id": "20260317183714-af6het7",
+						"updated": "20260317183714"
+					},
+					"Children": [
+						{
+							"ID": "20260317183714-uxiyad6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260317183714-uxiyad6",
+								"updated": "20260317183724"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "允许通知"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20250114215201-degei8s",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "My4=",
+						"Num": 3
+					},
+					"Properties": {
+						"id": "20250114215201-degei8s",
+						"updated": "20250117171835"
+					},
+					"Children": [
+						{
+							"ID": "20250114215201-ffgvnm6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20250114215201-ffgvnm6",
+								"updated": "20260317183745"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "在桌面端 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "工作空间/data/assets/"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 文件夹下创建一个名为 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "android-notification-texts.txt"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 的文本文件，其中每一行会作为通知的文本"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20250114215213-x87hdl5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"Typ": 1,
+						"Delimiter": 46,
+						"Marker": "NC4=",
+						"Num": 4
+					},
+					"Properties": {
+						"id": "20250114215213-x87hdl5",
+						"updated": "20250114215213"
+					},
+					"Children": [
+						{
+							"ID": "20250114215213-ca89zpd",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20250114215213-ca89zpd",
+								"updated": "20250114215220"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "通过"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20230808120347-3cob0nb",
+									"TextMarkBlockRefSubtype": "d",
+									"TextMarkTextContent": "数据同步"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "将其同步到 Android 端"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260317183852-dxt8l8a",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260317183852-dxt8l8a",
+				"updated": "20260317183945"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "完成以上步骤后思源每隔 45 秒会发送一条通知来尽量保活后台运行。"
+				}
+			]
+		},
+		{
+			"ID": "20260613174109-kf9rdvq",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613174109-kf9rdvq",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "闪念速记"
+				}
+			]
+		},
+		{
+			"ID": "20260613174109-55ofcrn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613174109-55ofcrn",
+				"updated": "20260613174109"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "闪念速记是移动端的快速记录功能。当灵感闪现或有临时信息需要记录时，无需打开思源进入文档编辑，即可通过系统分享或快捷入口将文本快速保存。速记内容先暂存在本地，之后自动转入文档面板进行整理。"
+				}
+			]
+		},
+		{
+			"ID": "20260613174109-bccohoq",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613174109-bccohoq",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "使用方式"
+				}
+			]
+		},
+		{
+			"ID": "20260613174109-6e5twqf",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613174109-6e5twqf",
+				"updated": "20261024162311"
+			},
+			"Children": [
+				{
+					"ID": "20260613174109-igar9kc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174109-igar9kc",
+						"updated": "20260613174109"
+					},
+					"Children": [
+						{
+							"ID": "20260613174109-0xg5mem",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174109-0xg5mem",
+								"updated": "20260613174109"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "创建速记"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：在移动端通过系统分享菜单将文本/链接发送到思源，或在桌面添加思源的快捷入口一键记录"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613174109-wuyfmvn",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174109-wuyfmvn",
+						"updated": "20261024162311"
+					},
+					"Children": [
+						{
+							"ID": "20260613174109-0vtxbwq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174109-0vtxbwq",
+								"updated": "20261024162311"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "自动转入：思源运行时每 7 秒检查本地速记目录，将新速记转入文档面板中配置的目标位置"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261004052629-tczd7hi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261004052629-tczd7hi",
+				"updated": "20261004052629"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "新导入的闪念速记遵循 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "编辑器"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中的 Markdown 语法开关。启用的行级语法、中点代码围栏（"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "···"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "）和全角任务快捷语法（"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "【】"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "【X】"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "）会在导入时直接转换，无需再次编辑触发转换。"
+				}
+			]
+		},
+		{
+			"ID": "20261004052629-5dh5rgu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261004052629-5dh5rgu",
+				"updated": "20261004052629"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "每条速记单独解析，未闭合的代码块不会影响下一条速记。已导入的文档不会重新解析。"
+				}
+			]
+		},
+		{
+			"ID": "20260613174109-f6x4sin",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613174109-f6x4sin",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "存放配置"
+				}
+			]
+		},
+		{
+			"ID": "20260613174109-mq2h4ye",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613174109-mq2h4ye",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "文档"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "新建文档"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "新建闪念速记的默认存放路径"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 中配置闪念速记的存放位置："
+				}
+			]
+		},
+		{
+			"ID": "20260613174109-k0fcrzv",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613174109-k0fcrzv",
+				"updated": "20260613174109"
+			},
+			"Children": [
+				{
+					"ID": "20260613174109-m6mai1x",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174109-m6mai1x",
+						"updated": "20260613174109"
+					},
+					"Children": [
+						{
+							"ID": "20260613174109-12l7x26",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174109-12l7x26",
+								"updated": "20260613174109"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "存放笔记本"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：选择速记转入的目标笔记本"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613174109-shjipox",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613174109-shjipox",
+						"updated": "20260613174109"
+					},
+					"Children": [
+						{
+							"ID": "20260613174109-eevgxvm",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613174109-eevgxvm",
+								"updated": "20260613174109"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "存放路径"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "：设置速记内容的保存路径模板："
+								}
+							]
+						},
+						{
+							"ID": "20260613174109-h2extb5",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"id": "20260613174109-h2extb5",
+								"updated": "20260613174109"
+							},
+							"Children": [
+								{
+									"ID": "20260613174109-zusf704",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613174109-zusf704",
+										"updated": "20260613174109"
+									},
+									"Children": [
+										{
+											"ID": "20260613174109-npg5j7i",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613174109-npg5j7i",
+												"updated": "20260613174109"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "不设置路径模板：每条速记单独创建一个文档，标题为时间戳"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20260613174109-w6cmh7f",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"id": "20260613174109-w6cmh7f",
+										"updated": "20260613174109"
+									},
+									"Children": [
+										{
+											"ID": "20260613174109-gc3shhc",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"id": "20260613174109-gc3shhc",
+												"updated": "20260613174109"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "设置路径模板：所有速记追加到指定文档的末尾。路径模板支持 Go template 语法，例如 "
+												},
+												{
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "/闪念速记/{{now | date \"20060102150405\"}}"
+												},
+												{
+													"Type": "NodeText",
+													"Data": "​ 会按时间生成独立文档"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613174109-gt6j3mh",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613174109-gt6j3mh",
+				"updated": "20260613181406"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "与收集箱的区别"
+				}
+			]
+		},
+		{
+			"ID": "20260613174109-30nokl3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613174109-30nokl3",
+				"updated": "20260613174109"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "闪念速记与云端收集箱是两种独立的快速记录方式："
+				}
+			]
+		},
+		{
+			"ID": "20260613174109-aw0019y",
+			"Type": "NodeTable",
+			"TableAligns": [
+				0,
+				0,
+				0
+			],
+			"Properties": {
+				"colgroup": "||",
+				"id": "20260613174109-aw0019y",
+				"updated": "20260613174109"
+			},
+			"Children": [
+				{
+					"Type": "NodeTableHead",
+					"Data": "thead",
+					"Children": [
+						{
+							"Type": "NodeTableRow",
+							"Data": "tr",
+							"Children": [
+								{
+									"Type": "NodeTableCell",
+									"Data": "th"
+								},
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "闪念速记"
+										}
+									]
+								},
+								{
+									"Type": "NodeTableCell",
+									"Data": "th",
+									"Children": [
+										{
+											"Type": "NodeText",
+											"Data": "云端收集箱"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "存储位置"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "本地"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "云端"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "使用方式"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "系统分享/快捷入口"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "微信发送/API 调用"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "转入方式"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "自动转入文档面板"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "需手动从收集箱面板处理"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "需要订阅"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "否"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "是"
+								}
+							]
+						}
+					]
+				},
+				{
+					"Type": "NodeTableRow",
+					"Data": "tr",
+					"Children": [
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "可用平台"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "仅移动端"
+								}
+							]
+						},
+						{
+							"Type": "NodeTableCell",
+							"Data": "td",
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "全平台"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613181406-4uql2vg",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613181406-4uql2vg",
+				"updated": "20260613181406"
+			}
+		}
+	]
+}

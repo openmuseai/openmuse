@@ -1,0 +1,9 @@
+# LINT.IfChange
+
+# Automatically wrap comments and documentation at the line limit
+wrap_comments = true
+
+# Ensure match blocks have trailing commas for cleaner git diffs
+match_block_trailing_comma = true
+
+# LINT.ThenChange(//src/gn/starlark/rustfmt-nightly.toml)

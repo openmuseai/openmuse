@@ -1,0 +1,184 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"strings"
+	"time"
+	"unicode/utf8"
+
+	"github.com/88250/gulu"
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/siyuan/kernel/av"
+	"github.com/siyuan-note/siyuan/kernel/filesys"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func checkAttrView(attrView *av.AttributeView, view *av.View) (changed bool) {
+	// 字段删除以后需要删除设置的过滤和排序
+	validColumns := map[string]bool{}
+	for _, kv := range attrView.KeyValues {
+		validColumns[kv.Key.ID] = true
+	}
+	newFilters, filterChanged := av.PruneInvalidColumnFilters(view.Filters, validColumns)
+	if 0 == len(newFilters) {
+		// 保持 spec 5 根组不变量：根组被裁空后补一个空 AND 根组
+		newFilters = []*av.ViewFilter{{Combination: av.FilterCombinationAnd}}
+	}
+	view.Filters = newFilters
+	changed = filterChanged
+
+	tmpSorts := []*av.ViewSort{}
+	for _, s := range view.Sorts {
+		if k, _ := attrView.GetKey(s.Column); nil != k {
+			tmpSorts = append(tmpSorts, s)
+		}
+	}
+	if !changed {
+		changed = len(tmpSorts) != len(view.Sorts)
+	}
+	view.Sorts = tmpSorts
+
+	// 字段删除以后需要删除设置的分组
+	if nil != view.Group {
+		if k, _ := attrView.GetKey(view.Group.Field); nil == k {
+			view.Group = nil
+		}
+	}
+
+	// 订正视图类型
+	for i, v := range attrView.Views {
+		if av.LayoutTypeGallery == v.LayoutType && nil == v.Gallery {
+			// 切换为卡片视图时可能没有初始化卡片实例 https://github.com/siyuan-note/siyuan/issues/15122
+			if nil != v.Table {
+				v.LayoutType = av.LayoutTypeTable
+				changed = true
+			} else {
+				attrView.Views = append(attrView.Views[:i], attrView.Views[i+1:]...)
+				changed = true
+			}
+		}
+	}
+
+	now := util.CurrentTimeMillis()
+
+	// 订正字段类型
+	for _, kv := range attrView.KeyValues {
+		for _, v := range kv.Values {
+			if v.KeyID != kv.Key.ID {
+				v.KeyID = kv.Key.ID
+				changed = true
+			}
+			if v.Type != kv.Key.Type {
+				v.Type = kv.Key.Type
+				if av.KeyTypeBlock == v.Type && nil == v.Block {
+					v.Block = &av.ValueBlock{}
+					if nil != v.Text {
+						v.Block.Content = v.Text.Content
+					}
+					if "" == v.BlockID {
+						v.BlockID = ast.NewNodeID()
+					}
+					createdStr := v.BlockID[:len("20060102150405")]
+					created, parseErr := time.ParseInLocation("20060102150405", createdStr, time.Local)
+					if nil == parseErr {
+						v.Block.Created = created.UnixMilli()
+					} else {
+						v.Block.Created = now
+					}
+					v.Block.Updated = v.Block.Created
+				}
+				changed = true
+			}
+		}
+	}
+
+	attrView.Name = strings.ReplaceAll(attrView.Name, "\n", " ")
+	// 截断超长的数据库标题 Limit the database title to 512 characters https://github.com/siyuan-note/siyuan/issues/15459
+	if 512 < utf8.RuneCountInString(attrView.Name) {
+		attrView.Name = gulu.Str.SubStr(attrView.Name, 512)
+		changed = true
+	}
+
+	return
+}
+
+func normalizeAttributeViewBlockRefSubtypes(attrView *av.AttributeView) (changed bool) {
+	blockValues := attrView.GetBlockKeyValues()
+	if nil == blockValues {
+		return
+	}
+
+	var blockIDs []string
+	addedBlockIDs := map[string]bool{}
+	for _, value := range blockValues.Values {
+		if nil == value || nil == value.Block || value.IsDetached || "" == value.Block.ID || value.Block.RefSubtype.IsValid() {
+			continue
+		}
+		if !addedBlockIDs[value.Block.ID] {
+			blockIDs = append(blockIDs, value.Block.ID)
+			addedBlockIDs[value.Block.ID] = true
+		}
+	}
+	attrs := sql.BatchGetBlockAttrs(blockIDs)
+	for _, value := range blockValues.Values {
+		if nil == value || nil == value.Block {
+			continue
+		}
+		if value.NormalizeBlockRefSubtype(attrView.ID, attrs[value.Block.ID]) {
+			changed = true
+		}
+	}
+	return
+}
+
+func upgradeAttributeViewSpec(attrView *av.AttributeView) (changed bool) {
+	currentSpec := attrView.Spec
+
+	upgradeAttributeViewSpec1(attrView)
+	av.UpgradeSpec(attrView)
+
+	return currentSpec != attrView.Spec
+}
+
+func upgradeAttributeViewSpec1(attrView *av.AttributeView) {
+	if 1 <= attrView.Spec {
+		return
+	}
+
+	var blockIDs []string
+	idBlocks := map[string]*av.Value{}
+	for _, kv := range attrView.KeyValues {
+		switch kv.Key.Type {
+		case av.KeyTypeBlock:
+			for _, v := range kv.Values {
+				if !v.IsDetached {
+					blockIDs = append(blockIDs, v.BlockID)
+					idBlocks[v.BlockID] = v
+				}
+			}
+		}
+	}
+	blockIDs = gulu.Str.RemoveDuplicatedElem(blockIDs)
+
+	trees := filesys.LoadTrees(blockIDs)
+	for _, id := range blockIDs {
+		tree := trees[id]
+		if nil == tree {
+			continue
+		}
+
+		node := treenode.GetNodeInTree(tree, id)
+		if nil == node {
+			continue
+		}
+
+		if block := idBlocks[id].Block; nil != block {
+			block.Icon = node.IALAttr("icon")
+		}
+	}
+}

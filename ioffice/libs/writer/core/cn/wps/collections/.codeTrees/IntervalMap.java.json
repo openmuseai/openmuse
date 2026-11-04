@@ -1,0 +1,3955 @@
+{
+  "filePath": "/Users/mac/src/ioffice/koffice/writer/core/cn/wps/collections/IntervalMap.java",
+  "createdAt": "2026-06-24T02:06:18.536Z",
+  "version": 1,
+  "packageName": "cn.wps.collections",
+  "lines": [
+    {
+      "id": "jl:0",
+      "ln": 0,
+      "text": "package cn.wps.collections;",
+      "type": "package"
+    },
+    {
+      "id": "jl:1",
+      "ln": 1,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:2",
+      "ln": 2,
+      "text": "import java.util.ArrayList;",
+      "type": "import"
+    },
+    {
+      "id": "jl:3",
+      "ln": 3,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:4",
+      "ln": 4,
+      "text": "public class IntervalMap {",
+      "type": "class_decl"
+    },
+    {
+      "id": "jl:5",
+      "ln": 5,
+      "text": "   IntervalMapTree tree1 = new IntervalMapTree(this.createNode1());",
+      "type": "statement"
+    },
+    {
+      "id": "jl:6",
+      "ln": 6,
+      "text": "   IntervalMapTree tree2 = new IntervalMapTree(this.createNode2());",
+      "type": "statement"
+    },
+    {
+      "id": "jl:7",
+      "ln": 7,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:8",
+      "ln": 8,
+      "text": "   public IntervalMap() {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:9",
+      "ln": 9,
+      "text": "      this.tree1.peer = this.tree2;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:10",
+      "ln": 10,
+      "text": "      this.tree2.peer = this.tree1;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:11",
+      "ln": 11,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:12",
+      "ln": 12,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:13",
+      "ln": 13,
+      "text": "   public final IntervalTree getTree1() {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:14",
+      "ln": 14,
+      "text": "      return this.tree1;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:15",
+      "ln": 15,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:16",
+      "ln": 16,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:17",
+      "ln": 17,
+      "text": "   public final IntervalTree getTree2() {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:18",
+      "ln": 18,
+      "text": "      return this.tree2;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:19",
+      "ln": 19,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:20",
+      "ln": 20,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:21",
+      "ln": 21,
+      "text": "   protected IntervalMapNode1 createNode1() {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:22",
+      "ln": 22,
+      "text": "      return new IntervalMapNode1();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:23",
+      "ln": 23,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:24",
+      "ln": 24,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:25",
+      "ln": 25,
+      "text": "   protected IntervalMapNode2 createNode2() {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:26",
+      "ln": 26,
+      "text": "      return new IntervalMapNode2();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:27",
+      "ln": 27,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:28",
+      "ln": 28,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:29",
+      "ln": 29,
+      "text": "   private static final IntervalMapNode cast(Node node) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:30",
+      "ln": 30,
+      "text": "      return (IntervalMapNode)node;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:31",
+      "ln": 31,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:32",
+      "ln": 32,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:33",
+      "ln": 33,
+      "text": "   public int forwardMapping(int start1, int def) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:34",
+      "ln": 34,
+      "text": "      return mapping(this.tree1, start1, def);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:35",
+      "ln": 35,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:36",
+      "ln": 36,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:37",
+      "ln": 37,
+      "text": "   public int backwardMapping(int start2, int def) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:38",
+      "ln": 38,
+      "text": "      return mapping(this.tree2, start2, def);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:39",
+      "ln": 39,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:40",
+      "ln": 40,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:41",
+      "ln": 41,
+      "text": "   private static int mapping(IntervalMapTree tree, int start, int def) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:42",
+      "ln": 42,
+      "text": "      if (tree.size() == 1) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:43",
+      "ln": 43,
+      "text": "         IntervalMapNode root = (IntervalMapNode)tree.getRoot();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:44",
+      "ln": 44,
+      "text": "         int len = root.getLength();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:45",
+      "ln": 45,
+      "text": "         int pos1 = root.offset;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:46",
+      "ln": 46,
+      "text": "         int pos2 = root.getPeer().offset;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:47",
+      "ln": 47,
+      "text": "         return start >= pos1 && start < pos1 + len ? start - pos1 + pos2 : def;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:48",
+      "ln": 48,
+      "text": "      } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:49",
+      "ln": 49,
+      "text": "         int pos = start;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:50",
+      "ln": 50,
+      "text": "         int off = 0;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:51",
+      "ln": 51,
+      "text": "         IntervalMapNode p1 = null;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:52",
+      "ln": 52,
+      "text": "         IntervalMapNode node = (IntervalMapNode)tree.getRoot();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:53",
+      "ln": 53,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:54",
+      "ln": 54,
+      "text": "         while(node != null) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:55",
+      "ln": 55,
+      "text": "            if (pos < node.offset) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:56",
+      "ln": 56,
+      "text": "               node = (IntervalMapNode)node.left;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:57",
+      "ln": 57,
+      "text": "            } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:58",
+      "ln": 58,
+      "text": "               if (pos < node.offset + node.getLength()) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:59",
+      "ln": 59,
+      "text": "                  off = pos - node.offset;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:60",
+      "ln": 60,
+      "text": "                  p1 = node;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:61",
+      "ln": 61,
+      "text": "                  break;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:62",
+      "ln": 62,
+      "text": "               }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:63",
+      "ln": 63,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:64",
+      "ln": 64,
+      "text": "               pos -= node.offset;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:65",
+      "ln": 65,
+      "text": "               node = (IntervalMapNode)node.right;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:66",
+      "ln": 66,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:67",
+      "ln": 67,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:68",
+      "ln": 68,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:69",
+      "ln": 69,
+      "text": "         return p1 != null ? tree.peer.position(p1.peer) + off : def;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:70",
+      "ln": 70,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:71",
+      "ln": 71,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:72",
+      "ln": 72,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:73",
+      "ln": 73,
+      "text": "   public IntervalMapNode addMapping1(int start1, int start2, int length) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:74",
+      "ln": 74,
+      "text": "      if (!this.tree1.isEmpty()) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:75",
+      "ln": 75,
+      "text": "         if (this.tree2.isEmpty()) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:76",
+      "ln": 76,
+      "text": "            throw new RuntimeException(\"The IntervalMap is in an insane state!\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:77",
+      "ln": 77,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:78",
+      "ln": 78,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:79",
+      "ln": 79,
+      "text": "         IntervalMapNode1 node1 = (IntervalMapNode1)this.tree1.rightmost();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:80",
+      "ln": 80,
+      "text": "         IntervalMapNode2 node2 = (IntervalMapNode2)this.tree2.rightmost();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:81",
+      "ln": 81,
+      "text": "         if (node1.peer == node2) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:82",
+      "ln": 82,
+      "text": "            int node1_pos = node1.position();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:83",
+      "ln": 83,
+      "text": "            int node2_pos = node2.position();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:84",
+      "ln": 84,
+      "text": "            int node_len = node1.mLength;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:85",
+      "ln": 85,
+      "text": "            if (node1_pos + node_len == start1 && node2_pos + node_len == start2) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:86",
+      "ln": 86,
+      "text": "               node1.mLength += length;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:87",
+      "ln": 87,
+      "text": "               return node1;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:88",
+      "ln": 88,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:89",
+      "ln": 89,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:90",
+      "ln": 90,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:91",
+      "ln": 91,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:92",
+      "ln": 92,
+      "text": "      IntervalMapNode p1 = (IntervalMapNode)this.tree1.lowerBound(start1);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:93",
+      "ln": 93,
+      "text": "      IntervalMapNode p2 = (IntervalMapNode)this.tree2.lowerBound(start2);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:94",
+      "ln": 94,
+      "text": "      if (p1 != this.tree1.mHead && p2 != this.tree2.mHead && p1.peer == p2 && start1 + length == this.tree1.position(p1) && start2 + length == this.tree2.position(p2)) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:95",
+      "ln": 95,
+      "text": "         p1.moveLeft(length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:96",
+      "ln": 96,
+      "text": "         p1.setLength(p1.getLength() + length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:97",
+      "ln": 97,
+      "text": "         p2.moveLeft(length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:98",
+      "ln": 98,
+      "text": "         return p1;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:99",
+      "ln": 99,
+      "text": "      } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:100",
+      "ln": 100,
+      "text": "         IntervalMapNode p1_prev = (IntervalMapNode)p1.getPrev();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:101",
+      "ln": 101,
+      "text": "         IntervalMapNode p2_prev = (IntervalMapNode)p2.getPrev();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:102",
+      "ln": 102,
+      "text": "         int p1_prev_pos = this.tree1.position(p1_prev);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:103",
+      "ln": 103,
+      "text": "         int p2_prev_pos = this.tree2.position(p2_prev);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:104",
+      "ln": 104,
+      "text": "         if (p1_prev != this.tree1.mHead && p2_prev != this.tree2.mHead && p1_prev.peer == p2_prev && p1_prev_pos + p1_prev.getLength() == start1 && p2_prev_pos + p2_prev.getLength() == start2) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:105",
+      "ln": 105,
+      "text": "            p1_prev.setLength(p1_prev.getLength() + length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:106",
+      "ln": 106,
+      "text": "            return p1_prev;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:107",
+      "ln": 107,
+      "text": "         } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:108",
+      "ln": 108,
+      "text": "            IntervalMapNode n1 = this.createNode1();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:109",
+      "ln": 109,
+      "text": "            IntervalMapNode n2 = this.createNode2();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:110",
+      "ln": 110,
+      "text": "            n1.peer = n2;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:111",
+      "ln": 111,
+      "text": "            n2.peer = n1;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:112",
+      "ln": 112,
+      "text": "            n1.setLength(length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:113",
+      "ln": 113,
+      "text": "            n1.offset = start1 - p1_prev_pos;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:114",
+      "ln": 114,
+      "text": "            n2.offset = start2 - p2_prev_pos;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:115",
+      "ln": 115,
+      "text": "            this.tree1.insertRight(p1_prev, n1);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:116",
+      "ln": 116,
+      "text": "            this.tree2.insertRight(p2_prev, n2);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:117",
+      "ln": 117,
+      "text": "            return n1;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:118",
+      "ln": 118,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:119",
+      "ln": 119,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:120",
+      "ln": 120,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:121",
+      "ln": 121,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:122",
+      "ln": 122,
+      "text": "   public void eraseMapping1(int start1, int length, ArrayList<Segment> segments) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:123",
+      "ln": 123,
+      "text": "      int end1 = start1 + length;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:124",
+      "ln": 124,
+      "text": "      IntervalTree.InsertSpace pHit = this.tree1.findForInsertSpace(start1);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:125",
+      "ln": 125,
+      "text": "      if (pHit.node != this.tree1.mHead) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:126",
+      "ln": 126,
+      "text": "         IntervalMapNode s;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:127",
+      "ln": 127,
+      "text": "         if (pHit.left) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:128",
+      "ln": 128,
+      "text": "            s = (IntervalMapNode)pHit.node;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:129",
+      "ln": 129,
+      "text": "         } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:130",
+      "ln": 130,
+      "text": "            if (pHit.pos + length < pHit.node.getLength()) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:131",
+      "ln": 131,
+      "text": "               if (segments != null) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:132",
+      "ln": 132,
+      "text": "                  segments.add(new Segment(start1, this.tree2.position(cast(pHit.node).peer) + pHit.pos, length));",
+      "type": "statement"
+    },
+    {
+      "id": "jl:133",
+      "ln": 133,
+      "text": "               }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:134",
+      "ln": 134,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:135",
+      "ln": 135,
+      "text": "               this.split1((IntervalMapNode)pHit.node, pHit.pos + length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:136",
+      "ln": 136,
+      "text": "               pHit.node.setLength(pHit.pos);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:137",
+      "ln": 137,
+      "text": "               return;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:138",
+      "ln": 138,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:139",
+      "ln": 139,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:140",
+      "ln": 140,
+      "text": "            if (segments != null) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:141",
+      "ln": 141,
+      "text": "               Segment segment = new Segment(start1, this.tree2.position(cast(pHit.node).peer) + pHit.pos, pHit.node.getLength() - pHit.pos);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:142",
+      "ln": 142,
+      "text": "               segments.add(segment);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:143",
+      "ln": 143,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:144",
+      "ln": 144,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:145",
+      "ln": 145,
+      "text": "            pHit.node.setLength(pHit.pos);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:146",
+      "ln": 146,
+      "text": "            s = (IntervalMapNode)pHit.node.getNext();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:147",
+      "ln": 147,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:148",
+      "ln": 148,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:149",
+      "ln": 149,
+      "text": "         Segment pLastSegment = null;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:150",
+      "ln": 150,
+      "text": "         pHit = this.tree1.findForInsertSpace(end1);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:151",
+      "ln": 151,
+      "text": "         IntervalMapNode e = (IntervalMapNode)pHit.node;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:152",
+      "ln": 152,
+      "text": "         if (e != this.tree1.mHead && !pHit.left) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:153",
+      "ln": 153,
+      "text": "            if (segments != null) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:154",
+      "ln": 154,
+      "text": "               pLastSegment = new Segment(end1 - pHit.pos, this.tree2.position(cast(pHit.node).peer), pHit.pos);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:155",
+      "ln": 155,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:156",
+      "ln": 156,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:157",
+      "ln": 157,
+      "text": "            e.moveRight(pHit.pos);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:158",
+      "ln": 158,
+      "text": "            e.setLength(e.getLength() - pHit.pos);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:159",
+      "ln": 159,
+      "text": "            e.peer.moveRight(pHit.pos);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:160",
+      "ln": 160,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:161",
+      "ln": 161,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:162",
+      "ln": 162,
+      "text": "         while(s != e) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:163",
+      "ln": 163,
+      "text": "            if (segments != null) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:164",
+      "ln": 164,
+      "text": "               segments.add(new Segment(this.tree1.position(s), this.tree2.position(s.peer), s.getLength()));",
+      "type": "statement"
+    },
+    {
+      "id": "jl:165",
+      "ln": 165,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:166",
+      "ln": 166,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:167",
+      "ln": 167,
+      "text": "            IntervalMapNode s_next = (IntervalMapNode)s.getNext();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:168",
+      "ln": 168,
+      "text": "            this.tree1.erase(s);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:169",
+      "ln": 169,
+      "text": "            this.tree2.erase(s.peer);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:170",
+      "ln": 170,
+      "text": "            s = s_next;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:171",
+      "ln": 171,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:172",
+      "ln": 172,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:173",
+      "ln": 173,
+      "text": "         if (segments != null && pLastSegment != null) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:174",
+      "ln": 174,
+      "text": "            segments.add(pLastSegment);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:175",
+      "ln": 175,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:176",
+      "ln": 176,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:177",
+      "ln": 177,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:178",
+      "ln": 178,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:179",
+      "ln": 179,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:180",
+      "ln": 180,
+      "text": "   public void insertSpace1(int start1, int length) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:181",
+      "ln": 181,
+      "text": "      this.insertSpace(this.tree1, start1, length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:182",
+      "ln": 182,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:183",
+      "ln": 183,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:184",
+      "ln": 184,
+      "text": "   public void insertSpace2(int start2, int length) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:185",
+      "ln": 185,
+      "text": "      this.insertSpace(this.tree2, start2, length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:186",
+      "ln": 186,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:187",
+      "ln": 187,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:188",
+      "ln": 188,
+      "text": "   private void insertSpace(IntervalMapTree tree, int start, int length) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:189",
+      "ln": 189,
+      "text": "      if (!tree.isEmpty() && start < tree.getEndPosition()) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:190",
+      "ln": 190,
+      "text": "         IntervalTree.InsertSpace pInsertSpace = tree.findForInsertSpace(start);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:191",
+      "ln": 191,
+      "text": "         if (pInsertSpace.left) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:192",
+      "ln": 192,
+      "text": "            tree.insertSpaceBefore(pInsertSpace.node, length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:193",
+      "ln": 193,
+      "text": "         } else {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:194",
+      "ln": 194,
+      "text": "            IntervalMapNode pNew = this.split(tree, (IntervalMapNode)pInsertSpace.node, pInsertSpace.pos);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:195",
+      "ln": 195,
+      "text": "            tree.insertSpaceBefore(pNew, length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:196",
+      "ln": 196,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:197",
+      "ln": 197,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:198",
+      "ln": 198,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:199",
+      "ln": 199,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:200",
+      "ln": 200,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:201",
+      "ln": 201,
+      "text": "   private IntervalMapNode split1(IntervalMapNode node1, int length) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:202",
+      "ln": 202,
+      "text": "      return this.split(this.tree1, node1, length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:203",
+      "ln": 203,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:204",
+      "ln": 204,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:205",
+      "ln": 205,
+      "text": "   private IntervalMapNode split(IntervalMapTree tree, IntervalMapNode node, int length) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:206",
+      "ln": 206,
+      "text": "      IntervalMapNode node_peer = node.peer;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:207",
+      "ln": 207,
+      "text": "      int nNewNodeLength = node.getLength() - length;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:208",
+      "ln": 208,
+      "text": "      IntervalMapNode new1 = this.createNode1();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:209",
+      "ln": 209,
+      "text": "      IntervalMapNode new2 = this.createNode2();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:210",
+      "ln": 210,
+      "text": "      new1.peer = new2;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:211",
+      "ln": 211,
+      "text": "      new2.peer = new1;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:212",
+      "ln": 212,
+      "text": "      new1.setLength(nNewNodeLength);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:213",
+      "ln": 213,
+      "text": "      node.setLength(length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:214",
+      "ln": 214,
+      "text": "      tree.insertRight(node, new1, tree.position(node) + length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:215",
+      "ln": 215,
+      "text": "      tree.peer.insertRight(node_peer, new2, tree.peer.position(node_peer) + length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:216",
+      "ln": 216,
+      "text": "      return new1;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:217",
+      "ln": 217,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:218",
+      "ln": 218,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:219",
+      "ln": 219,
+      "text": "   public final void eraseSpace1(int start1, int length) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:220",
+      "ln": 220,
+      "text": "      eraseSpace(this.tree1, start1, length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:221",
+      "ln": 221,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:222",
+      "ln": 222,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:223",
+      "ln": 223,
+      "text": "   public final void eraseSpace2(int start2, int length) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:224",
+      "ln": 224,
+      "text": "      eraseSpace(this.tree2, start2, length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:225",
+      "ln": 225,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:226",
+      "ln": 226,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:227",
+      "ln": 227,
+      "text": "   private static void eraseSpace(IntervalMapTree tree, int start, int length) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:228",
+      "ln": 228,
+      "text": "      IntervalMapNode n1 = (IntervalMapNode)tree.lowerBound(start);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:229",
+      "ln": 229,
+      "text": "      tree.eraseSpaceBefore(n1, length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:230",
+      "ln": 230,
+      "text": "      if (n1 != tree.mHead) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:231",
+      "ln": 231,
+      "text": "         IntervalMapNode n1_prev = (IntervalMapNode)n1.getPrev();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:232",
+      "ln": 232,
+      "text": "         if (n1_prev != tree.mHead) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:233",
+      "ln": 233,
+      "text": "            IntervalMapNode n2 = n1.peer;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:234",
+      "ln": 234,
+      "text": "            IntervalMapNode n2_prev = (IntervalMapNode)n2.getPrev();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:235",
+      "ln": 235,
+      "text": "            if (n1_prev.peer == n2_prev && tree.position(n1_prev) + n1_prev.getLength() == tree.position(n1) && tree.peer.position(n2_prev) + n2_prev.getLength() == tree.peer.position(n2)) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:236",
+      "ln": 236,
+      "text": "               n1_prev.setLength(n1_prev.getLength() + n1.getLength());",
+      "type": "statement"
+    },
+    {
+      "id": "jl:237",
+      "ln": 237,
+      "text": "               tree.erase(n1);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:238",
+      "ln": 238,
+      "text": "               tree.peer.erase(n2);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:239",
+      "ln": 239,
+      "text": "            }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:240",
+      "ln": 240,
+      "text": "         }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:241",
+      "ln": 241,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:242",
+      "ln": 242,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:243",
+      "ln": 243,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:244",
+      "ln": 244,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:245",
+      "ln": 245,
+      "text": "   public String toString() {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:246",
+      "ln": 246,
+      "text": "      StringBuilder sb = new StringBuilder();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:247",
+      "ln": 247,
+      "text": "      sb.append(this.getClass().getSimpleName());",
+      "type": "statement"
+    },
+    {
+      "id": "jl:248",
+      "ln": 248,
+      "text": "      sb.append(\"\\ncontent = {\\n\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:249",
+      "ln": 249,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:250",
+      "ln": 250,
+      "text": "      for(IntervalMapNode node = (IntervalMapNode)this.tree1.leftmost(); !node.isHead(); node = (IntervalMapNode)node.getNext()) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:251",
+      "ln": 251,
+      "text": "         int cp = node.position();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:252",
+      "ln": 252,
+      "text": "         int fc = node.peer.position();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:253",
+      "ln": 253,
+      "text": "         int len = node.getLength();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:254",
+      "ln": 254,
+      "text": "         sb.append(String.format(\"[%d, %d)\\t<=>\\t[%d, %d),\\n\", cp, cp + len, fc, fc + len));",
+      "type": "statement"
+    },
+    {
+      "id": "jl:255",
+      "ln": 255,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:256",
+      "ln": 256,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:257",
+      "ln": 257,
+      "text": "      sb.append(\"}\\n\");",
+      "type": "statement"
+    },
+    {
+      "id": "jl:258",
+      "ln": 258,
+      "text": "      return sb.toString();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:259",
+      "ln": 259,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:260",
+      "ln": 260,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:261",
+      "ln": 261,
+      "text": "   public static class IntervalMapNode1 extends IntervalMapNode {",
+      "type": "class_decl"
+    },
+    {
+      "id": "jl:262",
+      "ln": 262,
+      "text": "      private int mLength;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:263",
+      "ln": 263,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:264",
+      "ln": 264,
+      "text": "      public int getLength() {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:265",
+      "ln": 265,
+      "text": "         return this.mLength;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:266",
+      "ln": 266,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:267",
+      "ln": 267,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:268",
+      "ln": 268,
+      "text": "      public void setLength(int length) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:269",
+      "ln": 269,
+      "text": "         this.mLength = length;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:270",
+      "ln": 270,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:271",
+      "ln": 271,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:272",
+      "ln": 272,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:273",
+      "ln": 273,
+      "text": "   public static class IntervalMapNode2 extends IntervalMapNode {",
+      "type": "class_decl"
+    },
+    {
+      "id": "jl:274",
+      "ln": 274,
+      "text": "      public int getLength() {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:275",
+      "ln": 275,
+      "text": "         return this.peer.getLength();",
+      "type": "statement"
+    },
+    {
+      "id": "jl:276",
+      "ln": 276,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:277",
+      "ln": 277,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:278",
+      "ln": 278,
+      "text": "      public void setLength(int length) {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:279",
+      "ln": 279,
+      "text": "         this.peer.setLength(length);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:280",
+      "ln": 280,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:281",
+      "ln": 281,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:282",
+      "ln": 282,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:283",
+      "ln": 283,
+      "text": "   public static class IntervalMapTree extends IntervalTree {",
+      "type": "class_decl"
+    },
+    {
+      "id": "jl:284",
+      "ln": 284,
+      "text": "      IntervalMapTree peer;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:285",
+      "ln": 285,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:286",
+      "ln": 286,
+      "text": "      public IntervalMapTree(IntervalMapNode head) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:287",
+      "ln": 287,
+      "text": "         super(head);",
+      "type": "statement"
+    },
+    {
+      "id": "jl:288",
+      "ln": 288,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:289",
+      "ln": 289,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:290",
+      "ln": 290,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:291",
+      "ln": 291,
+      "text": "   public static class Segment {",
+      "type": "class_decl"
+    },
+    {
+      "id": "jl:292",
+      "ln": 292,
+      "text": "      public int position1;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:293",
+      "ln": 293,
+      "text": "      public int position2;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:294",
+      "ln": 294,
+      "text": "      public int length;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:295",
+      "ln": 295,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:296",
+      "ln": 296,
+      "text": "      public Segment(int position1, int position2, int length) {",
+      "type": "statement"
+    },
+    {
+      "id": "jl:297",
+      "ln": 297,
+      "text": "         this.position1 = position1;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:298",
+      "ln": 298,
+      "text": "         this.position2 = position2;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:299",
+      "ln": 299,
+      "text": "         this.length = length;",
+      "type": "statement"
+    },
+    {
+      "id": "jl:300",
+      "ln": 300,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:301",
+      "ln": 301,
+      "text": "",
+      "type": "empty"
+    },
+    {
+      "id": "jl:302",
+      "ln": 302,
+      "text": "      public String toString() {",
+      "type": "method_decl"
+    },
+    {
+      "id": "jl:303",
+      "ln": 303,
+      "text": "         return \"Segment: [\" + this.position1 + \" <=> \" + this.position2 + \", \" + this.length + \"]\";",
+      "type": "statement"
+    },
+    {
+      "id": "jl:304",
+      "ln": 304,
+      "text": "      }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:305",
+      "ln": 305,
+      "text": "   }",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:306",
+      "ln": 306,
+      "text": "}",
+      "type": "brace_close"
+    },
+    {
+      "id": "jl:307",
+      "ln": 307,
+      "text": "",
+      "type": "empty"
+    }
+  ],
+  "imports": [
+    {
+      "id": "ji:0",
+      "qualifiedName": "java.util.ArrayList",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:2"
+      ]
+    },
+    {
+      "id": "ji:syn:1",
+      "qualifiedName": "java.lang.StringBuilder",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:1"
+      ]
+    },
+    {
+      "id": "ji:syn:2",
+      "qualifiedName": "cn.wps.collections.IntervalTree",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:2"
+      ]
+    },
+    {
+      "id": "ji:syn:3",
+      "qualifiedName": "cn.wps.io.dom.Node",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:3"
+      ]
+    },
+    {
+      "id": "ji:syn:4",
+      "qualifiedName": "cn.wps.collections.IntervalMapNode",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:4"
+      ]
+    },
+    {
+      "id": "ji:syn:5",
+      "qualifiedName": "java.lang.RuntimeException",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:5"
+      ]
+    },
+    {
+      "id": "ji:syn:6",
+      "qualifiedName": "",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:6"
+      ]
+    },
+    {
+      "id": "ji:syn:7",
+      "qualifiedName": "java.lang.InsertSpace",
+      "isWildcard": false,
+      "isStatic": false,
+      "lineIds": [
+        "jl:syn:7"
+      ]
+    }
+  ],
+  "classes": [
+    {
+      "id": "jc:IntervalMap",
+      "className": "IntervalMap",
+      "classKind": "class",
+      "implementsInterfaces": [],
+      "lineIndices": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171,
+        172,
+        173,
+        174,
+        175,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212,
+        213,
+        214,
+        215,
+        216,
+        217,
+        218,
+        219,
+        220,
+        221,
+        222,
+        223,
+        224,
+        225,
+        226,
+        227,
+        228,
+        229,
+        230,
+        231,
+        232,
+        233,
+        234,
+        235,
+        236,
+        237,
+        238,
+        239,
+        240,
+        241,
+        242,
+        243,
+        244,
+        245,
+        246,
+        247,
+        248,
+        249,
+        250,
+        251,
+        252,
+        253,
+        254,
+        255,
+        256,
+        257,
+        258,
+        259,
+        260,
+        261,
+        262,
+        263,
+        264,
+        265,
+        266,
+        267,
+        268,
+        269,
+        270,
+        271,
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        278,
+        279,
+        280,
+        281,
+        282,
+        283,
+        284,
+        285,
+        286,
+        287,
+        288,
+        289,
+        290,
+        291,
+        292,
+        293,
+        294,
+        295,
+        296,
+        297,
+        298,
+        299,
+        300,
+        301,
+        302,
+        303,
+        304,
+        305,
+        306
+      ],
+      "methods": [
+        {
+          "id": "jm:IntervalMap:IntervalMap",
+          "methodName": "IntervalMap",
+          "params": [],
+          "returnType": "",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": true,
+          "overloadIndex": 0,
+          "lineIndices": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:IntervalMap:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:9"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:10"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:getTree1",
+          "methodName": "getTree1",
+          "params": [],
+          "returnType": "IntervalTree",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            13,
+            14,
+            15
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:getTree1:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:14"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:getTree2",
+          "methodName": "getTree2",
+          "params": [],
+          "returnType": "IntervalTree",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            17,
+            18,
+            19
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:getTree2:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:18"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:createNode1",
+          "methodName": "createNode1",
+          "params": [],
+          "returnType": "IntervalMapNode1",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            21,
+            22,
+            23
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:createNode1:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:22"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:createNode2",
+          "methodName": "createNode2",
+          "params": [],
+          "returnType": "IntervalMapNode2",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            25,
+            26,
+            27
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:createNode2:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:26"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:cast",
+          "methodName": "cast",
+          "params": [
+            "Node node"
+          ],
+          "returnType": "IntervalMapNode",
+          "isStatic": true,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            29,
+            30,
+            31
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:cast:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:30"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:forwardMapping",
+          "methodName": "forwardMapping",
+          "params": [
+            "int start1",
+            "int def"
+          ],
+          "returnType": "int",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            33,
+            34,
+            35
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:forwardMapping:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:34"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:backwardMapping",
+          "methodName": "backwardMapping",
+          "params": [
+            "int start2",
+            "int def"
+          ],
+          "returnType": "int",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            37,
+            38,
+            39
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:backwardMapping:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:38"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:mapping",
+          "methodName": "mapping",
+          "params": [
+            "IntervalMapTree tree",
+            "int start",
+            "int def"
+          ],
+          "returnType": "int",
+          "isStatic": true,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            71
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:mapping:block",
+            "elements": [
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalMap:mapping:block:0",
+                  "headerLineId": "jl:42",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:43"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:44"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:45"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:46"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:47"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalMap:mapping:block:1",
+                  "headerLineId": "jl:48",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:49"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:50"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:51"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:52"
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:mapping:block:1:0",
+                        "headerLineId": "jl:54",
+                        "elements": [
+                          {
+                            "kind": "block",
+                            "block": {
+                              "id": "jb:jm:IntervalMap:mapping:block:1:0:0",
+                              "headerLineId": "jl:55",
+                              "elements": [
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:56"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "block",
+                            "block": {
+                              "id": "jb:jm:IntervalMap:mapping:block:1:0:1",
+                              "headerLineId": "jl:57",
+                              "elements": [
+                                {
+                                  "kind": "block",
+                                  "block": {
+                                    "id": "jb:jm:IntervalMap:mapping:block:1:0:1:0",
+                                    "headerLineId": "jl:58",
+                                    "elements": [
+                                      {
+                                        "kind": "line",
+                                        "lineId": "jl:59"
+                                      },
+                                      {
+                                        "kind": "line",
+                                        "lineId": "jl:60"
+                                      },
+                                      {
+                                        "kind": "line",
+                                        "lineId": "jl:61"
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:64"
+                                },
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:65"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:69"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:addMapping1",
+          "methodName": "addMapping1",
+          "params": [
+            "int start1",
+            "int start2",
+            "int length"
+          ],
+          "returnType": "IntervalMapNode",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            73,
+            74,
+            75,
+            76,
+            77,
+            78,
+            79,
+            80,
+            81,
+            82,
+            83,
+            84,
+            85,
+            86,
+            87,
+            88,
+            89,
+            90,
+            91,
+            92,
+            93,
+            94,
+            95,
+            96,
+            97,
+            98,
+            99,
+            100,
+            101,
+            102,
+            103,
+            104,
+            105,
+            106,
+            107,
+            108,
+            109,
+            110,
+            111,
+            112,
+            113,
+            114,
+            115,
+            116,
+            117,
+            118,
+            119,
+            120
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:addMapping1:block",
+            "elements": [
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalMap:addMapping1:block:0",
+                  "headerLineId": "jl:74",
+                  "elements": [
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:addMapping1:block:0:0",
+                        "headerLineId": "jl:75",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:76"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:79"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:80"
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:addMapping1:block:0:1",
+                        "headerLineId": "jl:81",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:82"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:83"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:84"
+                          },
+                          {
+                            "kind": "block",
+                            "block": {
+                              "id": "jb:jm:IntervalMap:addMapping1:block:0:1:0",
+                              "headerLineId": "jl:85",
+                              "elements": [
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:86"
+                                },
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:87"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:92"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:93"
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalMap:addMapping1:block:1",
+                  "headerLineId": "jl:94",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:95"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:96"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:97"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:98"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalMap:addMapping1:block:2",
+                  "headerLineId": "jl:99",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:100"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:101"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:102"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:103"
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:addMapping1:block:2:0",
+                        "headerLineId": "jl:104",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:105"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:106"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:addMapping1:block:2:1",
+                        "headerLineId": "jl:107",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:108"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:109"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:110"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:111"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:112"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:113"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:114"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:115"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:116"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:117"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:eraseMapping1",
+          "methodName": "eraseMapping1",
+          "params": [
+            "int start1",
+            "int length",
+            "ArrayList<Segment> segments"
+          ],
+          "returnType": "void",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            122,
+            123,
+            124,
+            125,
+            126,
+            127,
+            128,
+            129,
+            130,
+            131,
+            132,
+            133,
+            134,
+            135,
+            136,
+            137,
+            138,
+            139,
+            140,
+            141,
+            142,
+            143,
+            144,
+            145,
+            146,
+            147,
+            148,
+            149,
+            150,
+            151,
+            152,
+            153,
+            154,
+            155,
+            156,
+            157,
+            158,
+            159,
+            160,
+            161,
+            162,
+            163,
+            164,
+            165,
+            166,
+            167,
+            168,
+            169,
+            170,
+            171,
+            172,
+            173,
+            174,
+            175,
+            176,
+            177,
+            178
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:eraseMapping1:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:123"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:124"
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalMap:eraseMapping1:block:0",
+                  "headerLineId": "jl:125",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:126"
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:eraseMapping1:block:0:0",
+                        "headerLineId": "jl:127",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:128"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:eraseMapping1:block:0:1",
+                        "headerLineId": "jl:129",
+                        "elements": [
+                          {
+                            "kind": "block",
+                            "block": {
+                              "id": "jb:jm:IntervalMap:eraseMapping1:block:0:1:0",
+                              "headerLineId": "jl:130",
+                              "elements": [
+                                {
+                                  "kind": "block",
+                                  "block": {
+                                    "id": "jb:jm:IntervalMap:eraseMapping1:block:0:1:0:0",
+                                    "headerLineId": "jl:131",
+                                    "elements": [
+                                      {
+                                        "kind": "line",
+                                        "lineId": "jl:132"
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:135"
+                                },
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:136"
+                                },
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:137"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "block",
+                            "block": {
+                              "id": "jb:jm:IntervalMap:eraseMapping1:block:0:1:1",
+                              "headerLineId": "jl:140",
+                              "elements": [
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:141"
+                                },
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:142"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:145"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:146"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:149"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:150"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:151"
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:eraseMapping1:block:0:2",
+                        "headerLineId": "jl:152",
+                        "elements": [
+                          {
+                            "kind": "block",
+                            "block": {
+                              "id": "jb:jm:IntervalMap:eraseMapping1:block:0:2:0",
+                              "headerLineId": "jl:153",
+                              "elements": [
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:154"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:157"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:158"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:159"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:eraseMapping1:block:0:3",
+                        "headerLineId": "jl:162",
+                        "elements": [
+                          {
+                            "kind": "block",
+                            "block": {
+                              "id": "jb:jm:IntervalMap:eraseMapping1:block:0:3:0",
+                              "headerLineId": "jl:163",
+                              "elements": [
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:164"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:167"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:168"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:169"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:170"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:eraseMapping1:block:0:4",
+                        "headerLineId": "jl:173",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:174"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:insertSpace1",
+          "methodName": "insertSpace1",
+          "params": [
+            "int start1",
+            "int length"
+          ],
+          "returnType": "void",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            180,
+            181,
+            182
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:insertSpace1:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:181"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:insertSpace2",
+          "methodName": "insertSpace2",
+          "params": [
+            "int start2",
+            "int length"
+          ],
+          "returnType": "void",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            184,
+            185,
+            186
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:insertSpace2:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:185"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:insertSpace",
+          "methodName": "insertSpace",
+          "params": [
+            "IntervalMapTree tree",
+            "int start",
+            "int length"
+          ],
+          "returnType": "void",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            188,
+            189,
+            190,
+            191,
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            199
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:insertSpace:block",
+            "elements": [
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalMap:insertSpace:block:0",
+                  "headerLineId": "jl:189",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:190"
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:insertSpace:block:0:0",
+                        "headerLineId": "jl:191",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:192"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:insertSpace:block:0:1",
+                        "headerLineId": "jl:193",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:194"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:195"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:split1",
+          "methodName": "split1",
+          "params": [
+            "IntervalMapNode node1",
+            "int length"
+          ],
+          "returnType": "IntervalMapNode",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            201,
+            202,
+            203
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:split1:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:202"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:split",
+          "methodName": "split",
+          "params": [
+            "IntervalMapTree tree",
+            "IntervalMapNode node",
+            "int length"
+          ],
+          "returnType": "IntervalMapNode",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            205,
+            206,
+            207,
+            208,
+            209,
+            210,
+            211,
+            212,
+            213,
+            214,
+            215,
+            216,
+            217
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:split:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:206"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:207"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:208"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:209"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:210"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:211"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:212"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:213"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:214"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:215"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:216"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:eraseSpace1",
+          "methodName": "eraseSpace1",
+          "params": [
+            "int start1",
+            "int length"
+          ],
+          "returnType": "void",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            219,
+            220,
+            221
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:eraseSpace1:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:220"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:eraseSpace2",
+          "methodName": "eraseSpace2",
+          "params": [
+            "int start2",
+            "int length"
+          ],
+          "returnType": "void",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            223,
+            224,
+            225
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:eraseSpace2:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:224"
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:eraseSpace",
+          "methodName": "eraseSpace",
+          "params": [
+            "IntervalMapTree tree",
+            "int start",
+            "int length"
+          ],
+          "returnType": "void",
+          "isStatic": true,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            227,
+            228,
+            229,
+            230,
+            231,
+            232,
+            233,
+            234,
+            235,
+            236,
+            237,
+            238,
+            239,
+            240,
+            241,
+            242,
+            243
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:eraseSpace:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:228"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:229"
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalMap:eraseSpace:block:0",
+                  "headerLineId": "jl:230",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:231"
+                    },
+                    {
+                      "kind": "block",
+                      "block": {
+                        "id": "jb:jm:IntervalMap:eraseSpace:block:0:0",
+                        "headerLineId": "jl:232",
+                        "elements": [
+                          {
+                            "kind": "line",
+                            "lineId": "jl:233"
+                          },
+                          {
+                            "kind": "line",
+                            "lineId": "jl:234"
+                          },
+                          {
+                            "kind": "block",
+                            "block": {
+                              "id": "jb:jm:IntervalMap:eraseSpace:block:0:0:0",
+                              "headerLineId": "jl:235",
+                              "elements": [
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:236"
+                                },
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:237"
+                                },
+                                {
+                                  "kind": "line",
+                                  "lineId": "jl:238"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "jm:IntervalMap:toString",
+          "methodName": "toString",
+          "params": [],
+          "returnType": "String",
+          "isStatic": false,
+          "isAbstract": false,
+          "isConstructor": false,
+          "overloadIndex": 0,
+          "lineIndices": [
+            245,
+            246,
+            247,
+            248,
+            249,
+            250,
+            251,
+            252,
+            253,
+            254,
+            255,
+            256,
+            257,
+            258,
+            259
+          ],
+          "block": {
+            "id": "jb:jm:IntervalMap:toString:block",
+            "elements": [
+              {
+                "kind": "line",
+                "lineId": "jl:246"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:247"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:248"
+              },
+              {
+                "kind": "block",
+                "block": {
+                  "id": "jb:jm:IntervalMap:toString:block:0",
+                  "headerLineId": "jl:250",
+                  "elements": [
+                    {
+                      "kind": "line",
+                      "lineId": "jl:251"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:252"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:253"
+                    },
+                    {
+                      "kind": "line",
+                      "lineId": "jl:254"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:257"
+              },
+              {
+                "kind": "line",
+                "lineId": "jl:258"
+              }
+            ]
+          }
+        }
+      ],
+      "fields": [
+        {
+          "id": "jf:IntervalMap:tree1",
+          "fieldName": "tree1",
+          "fieldType": "IntervalMapTree",
+          "isStatic": false,
+          "isFinal": false
+        },
+        {
+          "id": "jf:IntervalMap:tree2",
+          "fieldName": "tree2",
+          "fieldType": "IntervalMapTree",
+          "isStatic": false,
+          "isFinal": false
+        }
+      ],
+      "innerClasses": [
+        {
+          "id": "jc:IntervalMap$$IntervalMapNode1",
+          "className": "IntervalMapNode1",
+          "classKind": "class",
+          "implementsInterfaces": [],
+          "lineIndices": [
+            261,
+            262,
+            263,
+            264,
+            265,
+            266,
+            267,
+            268,
+            269,
+            270,
+            271
+          ],
+          "methods": [
+            {
+              "id": "jm:IntervalMapNode1:getLength",
+              "methodName": "getLength",
+              "params": [],
+              "returnType": "int",
+              "isStatic": false,
+              "isAbstract": false,
+              "isConstructor": false,
+              "overloadIndex": 0,
+              "lineIndices": [
+                264,
+                265,
+                266
+              ],
+              "block": {
+                "id": "jb:jm:IntervalMapNode1:getLength:block",
+                "elements": [
+                  {
+                    "kind": "line",
+                    "lineId": "jl:265"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "jm:IntervalMapNode1:setLength",
+              "methodName": "setLength",
+              "params": [
+                "int length"
+              ],
+              "returnType": "void",
+              "isStatic": false,
+              "isAbstract": false,
+              "isConstructor": false,
+              "overloadIndex": 0,
+              "lineIndices": [
+                268,
+                269,
+                270
+              ],
+              "block": {
+                "id": "jb:jm:IntervalMapNode1:setLength:block",
+                "elements": [
+                  {
+                    "kind": "line",
+                    "lineId": "jl:269"
+                  }
+                ]
+              }
+            }
+          ],
+          "fields": [
+            {
+              "id": "jf:IntervalMapNode1:mLength",
+              "fieldName": "mLength",
+              "fieldType": "int",
+              "isStatic": false,
+              "isFinal": false
+            }
+          ],
+          "innerClasses": []
+        },
+        {
+          "id": "jc:IntervalMap$$IntervalMapNode2",
+          "className": "IntervalMapNode2",
+          "classKind": "class",
+          "implementsInterfaces": [],
+          "lineIndices": [
+            273,
+            274,
+            275,
+            276,
+            277,
+            278,
+            279,
+            280,
+            281
+          ],
+          "methods": [
+            {
+              "id": "jm:IntervalMapNode2:getLength",
+              "methodName": "getLength",
+              "params": [],
+              "returnType": "int",
+              "isStatic": false,
+              "isAbstract": false,
+              "isConstructor": false,
+              "overloadIndex": 0,
+              "lineIndices": [
+                274,
+                275,
+                276
+              ],
+              "block": {
+                "id": "jb:jm:IntervalMapNode2:getLength:block",
+                "elements": [
+                  {
+                    "kind": "line",
+                    "lineId": "jl:275"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "jm:IntervalMapNode2:setLength",
+              "methodName": "setLength",
+              "params": [
+                "int length"
+              ],
+              "returnType": "void",
+              "isStatic": false,
+              "isAbstract": false,
+              "isConstructor": false,
+              "overloadIndex": 0,
+              "lineIndices": [
+                278,
+                279,
+                280
+              ],
+              "block": {
+                "id": "jb:jm:IntervalMapNode2:setLength:block",
+                "elements": [
+                  {
+                    "kind": "line",
+                    "lineId": "jl:279"
+                  }
+                ]
+              }
+            }
+          ],
+          "fields": [],
+          "innerClasses": []
+        },
+        {
+          "id": "jc:IntervalMap$$IntervalMapTree",
+          "className": "IntervalMapTree",
+          "classKind": "class",
+          "implementsInterfaces": [],
+          "lineIndices": [
+            283,
+            284,
+            285,
+            286,
+            287,
+            288,
+            289
+          ],
+          "methods": [
+            {
+              "id": "jm:IntervalMapTree:IntervalMapTree",
+              "methodName": "IntervalMapTree",
+              "params": [
+                "IntervalMapNode head"
+              ],
+              "returnType": "",
+              "isStatic": false,
+              "isAbstract": false,
+              "isConstructor": true,
+              "overloadIndex": 0,
+              "lineIndices": [
+                286,
+                287,
+                288
+              ],
+              "block": {
+                "id": "jb:jm:IntervalMapTree:IntervalMapTree:block",
+                "elements": [
+                  {
+                    "kind": "line",
+                    "lineId": "jl:287"
+                  }
+                ]
+              }
+            }
+          ],
+          "fields": [
+            {
+              "id": "jf:IntervalMapTree:peer",
+              "fieldName": "peer",
+              "fieldType": "IntervalMapTree",
+              "isStatic": false,
+              "isFinal": false
+            }
+          ],
+          "innerClasses": []
+        },
+        {
+          "id": "jc:IntervalMap$$Segment",
+          "className": "Segment",
+          "classKind": "class",
+          "implementsInterfaces": [],
+          "lineIndices": [
+            291,
+            292,
+            293,
+            294,
+            295,
+            296,
+            297,
+            298,
+            299,
+            300,
+            301,
+            302,
+            303,
+            304,
+            305
+          ],
+          "methods": [
+            {
+              "id": "jm:Segment:Segment",
+              "methodName": "Segment",
+              "params": [
+                "int position1",
+                "int position2",
+                "int length"
+              ],
+              "returnType": "",
+              "isStatic": false,
+              "isAbstract": false,
+              "isConstructor": true,
+              "overloadIndex": 0,
+              "lineIndices": [
+                296,
+                297,
+                298,
+                299,
+                300
+              ],
+              "block": {
+                "id": "jb:jm:Segment:Segment:block",
+                "elements": [
+                  {
+                    "kind": "line",
+                    "lineId": "jl:297"
+                  },
+                  {
+                    "kind": "line",
+                    "lineId": "jl:298"
+                  },
+                  {
+                    "kind": "line",
+                    "lineId": "jl:299"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "jm:Segment:toString",
+              "methodName": "toString",
+              "params": [],
+              "returnType": "String",
+              "isStatic": false,
+              "isAbstract": false,
+              "isConstructor": false,
+              "overloadIndex": 0,
+              "lineIndices": [
+                302,
+                303,
+                304
+              ],
+              "block": {
+                "id": "jb:jm:Segment:toString:block",
+                "elements": [
+                  {
+                    "kind": "line",
+                    "lineId": "jl:303"
+                  }
+                ]
+              }
+            }
+          ],
+          "fields": [
+            {
+              "id": "jf:Segment:position1",
+              "fieldName": "position1",
+              "fieldType": "int",
+              "isStatic": false,
+              "isFinal": false
+            },
+            {
+              "id": "jf:Segment:position2",
+              "fieldName": "position2",
+              "fieldType": "int",
+              "isStatic": false,
+              "isFinal": false
+            },
+            {
+              "id": "jf:Segment:length",
+              "fieldName": "length",
+              "fieldType": "int",
+              "isStatic": false,
+              "isFinal": false
+            }
+          ],
+          "innerClasses": []
+        }
+      ]
+    }
+  ]
+}

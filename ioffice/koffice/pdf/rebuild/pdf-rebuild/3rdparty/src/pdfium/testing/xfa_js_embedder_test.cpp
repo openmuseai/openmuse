@@ -1,0 +1,128 @@
+// Copyright 2017 The PDFium Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "testing/xfa_js_embedder_test.h"
+
+#include <memory>
+#include <string>
+
+#include "core/fxcrt/check_op.h"
+#include "core/fxcrt/compiler_specific.h"
+#include "fpdfsdk/cpdfsdk_helpers.h"
+#include "fpdfsdk/fpdfxfa/cpdfxfa_context.h"
+#include "fxjs/fxv8.h"
+#include "fxjs/xfa/cfxjse_engine.h"
+#include "fxjs/xfa/cfxjse_isolatetracker.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "v8/include/v8-container.h"
+#include "v8/include/v8-local-handle.h"
+#include "v8/include/v8-value.h"
+
+XFAJSEmbedderTest::XFAJSEmbedderTest() = default;
+
+XFAJSEmbedderTest::~XFAJSEmbedderTest() = default;
+
+void XFAJSEmbedderTest::SetUp() {
+  JSEmbedderTest::SetUp();
+}
+
+void XFAJSEmbedderTest::TearDown() {
+  value_.Reset();
+  script_context_ = nullptr;
+
+  JSEmbedderTest::TearDown();
+}
+
+CXFA_Document* XFAJSEmbedderTest::GetXFADocument() const {
+  auto* doc = CPDFDocumentFromFPDFDocument(document());
+  if (!doc) {
+    return nullptr;
+  }
+
+  auto* context = static_cast<CPDFXFA_Context*>(doc->GetExtension());
+  if (!context) {
+    return nullptr;
+  }
+
+  CXFA_FFDoc* pFFDoc = context->GetXFADoc();
+  if (!pFFDoc) {
+    return nullptr;
+  }
+
+  return pFFDoc->GetXFADoc();
+}
+
+v8::Local<v8::Value> XFAJSEmbedderTest::GetValue() const {
+  return v8::Local<v8::Value>::New(isolate(), value_);
+}
+
+bool XFAJSEmbedderTest::OpenDocumentWithOptions(
+    const std::string& filename,
+    const ByteString& password,
+    LinearizeOption linearize_option,
+    JavaScriptOption javascript_option) {
+  // JS required for XFA.
+  DCHECK_EQ(javascript_option, JavaScriptOption::kEnableJavaScript);
+  if (!EmbedderTest::OpenDocumentWithOptions(
+          filename, password, linearize_option, javascript_option)) {
+    return false;
+  }
+  CXFA_Document* doc = GetXFADocument();
+  if (!doc) {
+    return false;
+  }
+
+  script_context_ = doc->GetScriptContext();
+  return true;
+}
+
+bool XFAJSEmbedderTest::Execute(ByteStringView input) {
+  CFXJSE_ScopeUtil_IsolateHandleContext scope(
+      script_context_->GetJseContextForTest());
+  if (ExecuteHelper(input)) {
+    return true;
+  }
+
+  UNSAFE_TODO(fprintf(stderr, "FormCalc: %.*s\n",
+                      static_cast<int>(input.GetLength()),
+                      input.unterminated_c_str()));
+
+  v8::Local<v8::Value> result = GetValue();
+  if (!fxv8::IsArray(result)) {
+    return false;
+  }
+
+  v8::Local<v8::Value> msg = fxv8::ReentrantGetArrayElementHelper(
+      isolate(), result.As<v8::Array>(), 1);
+  if (!fxv8::IsString(msg)) {
+    return false;
+  }
+
+  WideString str = fxv8::ReentrantToWideStringHelper(isolate(), msg);
+  if (!str.IsEmpty()) {
+    UNSAFE_TODO(fprintf(stderr, "JS ERROR: %ls\n", str.c_str()));
+  }
+  return false;
+}
+
+bool XFAJSEmbedderTest::ExecuteSilenceFailure(ByteStringView input) {
+  CFXJSE_ScopeUtil_IsolateHandleContext scope(
+      script_context_->GetJseContextForTest());
+  return ExecuteHelper(input);
+}
+
+bool XFAJSEmbedderTest::ExecuteHelper(ByteStringView input) {
+  CFXJSE_Context::ExecutionResult exec_result = script_context_->RunScript(
+      CXFA_Script::Type::Formcalc, WideString::FromUTF8(input).AsStringView(),
+      GetXFADocument()->GetRoot());
+  value_.Reset(isolate(),
+               v8::Local<v8::Value>::New(isolate(), exec_result.value));
+  return exec_result.status;
+}
+
+void XFAJSEmbedderTest::ForceCppGarbageCollection() {
+  auto* doc = CPDFDocumentFromFPDFDocument(document());
+  auto* context = static_cast<CPDFXFA_Context*>(doc->GetExtension());
+  FXGC_ForceGarbageCollection(context->GetGCHeap());
+}

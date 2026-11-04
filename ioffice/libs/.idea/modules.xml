@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/DateTime/DateTime.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/DateTime/DateTime.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-libs/util/util/src/cn/wps/collections/collections.iml" filepath="$PROJECT_DIR$/core-libs/util/util/src/cn/wps/collections/collections.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/collections/collections2.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/collections/collections2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/core.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-libs/util/adapter/src/cn/wps/core/core2.iml" filepath="$PROJECT_DIR$/core-libs/util/adapter/src/cn/wps/core/core2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/data.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/data.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/parser/datetime/datetime.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/parser/datetime/datetime.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/writer/doc/doc.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/writer/doc/doc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-libs/drawing/drawing.iml" filepath="$PROJECT_DIR$/core-libs/drawing/drawing.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/exception/exception.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/exception/exception.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/field.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/field.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/footnoteendnote/footnoteendnote.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/footnoteendnote/footnoteendnote.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/parser/formula/formula.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/parser/formula/formula.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/function/function.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/function/function.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/list/gallery/gallery.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/list/gallery/gallery.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/table/grid/grid.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/table/grid/grid.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/reader/helper/helper.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/reader/helper/helper.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/helper/helper2.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/helper/helper2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/reader/docxReader/importer/helpers/helpers.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/reader/docxReader/importer/helpers/helpers.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/list/impl/impl.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/list/impl/impl.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/reader/docxReader/importer/importer.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/reader/docxReader/importer/importer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/internal/internal.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/internal/internal.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/internal_v2/internal_v2.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/internal_v2/internal_v2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-libs/util/util/src/cn/wps/kfc/kfc.iml" filepath="$PROJECT_DIR$/core-libs/util/util/src/cn/wps/kfc/kfc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/layout/layout.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/layout/layout.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/libs.iml" filepath="$PROJECT_DIR$/.idea/libs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/list/list.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/list/list.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-libs/util/adapter/src/cn/wps/moffice/moffice.iml" filepath="$PROJECT_DIR$/core-libs/util/adapter/src/cn/wps/moffice/moffice.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/parser/parser.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/field/parser/parser.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-libs/io/poi-compact/poi-compact.iml" filepath="$PROJECT_DIR$/core-libs/io/poi-compact/poi-compact.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-libs/util/util/src/cn/wps/moffice/property/property.iml" filepath="$PROJECT_DIR$/core-libs/util/util/src/cn/wps/moffice/property/property.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/reader/reader.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/reader/reader.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/table/table.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/table/table.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/table/table2.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/table/table2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/writer/text/text.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/writer/text/text.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/collections/textrope/textrope.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/collections/textrope/textrope.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/thai/thai.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/core/thai/thai.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-libs/util/util/src/cn/wps/moffice/transaction/transaction.iml" filepath="$PROJECT_DIR$/core-libs/util/util/src/cn/wps/moffice/transaction/transaction.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/table/tree/tree.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/table/tree/tree.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/util/util.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/util/util.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/value/value.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/data/value/value.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-libs/io/wps-io/wps-io.iml" filepath="$PROJECT_DIR$/core-libs/io/wps-io/wps-io.iml" />
+      <module fileurl="file://$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/reader/xml07/xml07.iml" filepath="$PROJECT_DIR$/word-core/src/cn/wps/moffice/writer/io/reader/xml07/xml07.iml" />
+    </modules>
+  </component>
+</project>

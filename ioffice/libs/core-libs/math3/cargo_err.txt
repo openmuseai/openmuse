@@ -1,0 +1,14 @@
+﻿cargo :     Checking core_libs_math3 v0.1.0 (D:\agentic\src\wordOffice\libs\core-libs\math3)
+所在位置 C:\Users\wps\AppData\Local\Temp\ps-script-57489715-090e-4320-800b-c15825600c51.ps1:88 字符: 52
++ ... agentic\src\wordOffice\libs\core-libs\math3; cargo check 2>&1 | Out-F ...
++                                                  ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Checking co...ore-libs\math3):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+error: expected expression, found `;`
+ --> src\org\apache\commons\math3\geometry\euclidean\threed\SphericalCoordinates.rs:7:52
+  |
+7 | pub(crate) const serialVersionUID: i64 = /* TODO */;
+  |                                                    ^ expected expression
+
+error: could not compile `core_libs_math3` (lib) due to 1 previous error

@@ -1,0 +1,136 @@
+import {addLoading, removeLoading} from "../ui/initUI";
+import {fetchPost} from "../../util/fetch";
+import {getDocByScroll, saveScroll} from "../scroll/saveScroll";
+import {renderBacklink} from "../wysiwyg/renderBacklink";
+import {hasClosestByClassName} from "./hasClosest";
+import {preventScroll} from "../scroll/preventScroll";
+import {isSupportCSSHL, searchMarkRender} from "../render/searchMarkRender";
+/// #if MOBILE
+import {hideKeyboardToolbar} from "../../mobile/util/keyboardToolbar";
+/// #endif
+import {restoreLuteMarkdownSyntax} from "./paste";
+import {invalidateTrackedRanges} from "./trackedRange";
+import {updateBacklinkReferenceVisibility} from "../wysiwyg/backlinkReference";
+import {shouldReloadProtyle} from "./reloadState";
+import {setAutoDirection, setTitleAutoDirection} from "../render/autoDirection";
+import {preserveReloadScroll} from "./reloadScroll";
+
+export const reloadProtyle = (protyle: IProtyle, focus: boolean, updateReadonly?: boolean, callback?: () => void, onError?: () => void) => {
+    if (!shouldReloadProtyle(protyle)) {
+        callback?.();
+        return;
+    }
+    updateBacklinkReferenceVisibility(protyle);
+    setAutoDirection(protyle.wysiwyg.element, window.siyuan.config.editor.autoDirection);
+    setTitleAutoDirection(protyle.title?.editElement, window.siyuan.config.editor.autoDirection);
+    protyle.wysiwyg.element.setAttribute("spellcheck", window.siyuan.config.editor.spellcheck.toString());
+    invalidateTrackedRanges(protyle);
+    /// #if MOBILE
+    hideKeyboardToolbar();
+    /// #endif
+    if (!protyle.preview.element.classList.contains("fn__none")) {
+        protyle.preview.render(protyle, callback, onError);
+        removeLoading(protyle);
+        return;
+    }
+    if (window.siyuan.config.editor.displayBookmarkIcon) {
+        protyle.wysiwyg.element.classList.add("protyle-wysiwyg--attr");
+    } else {
+        protyle.wysiwyg.element.classList.remove("protyle-wysiwyg--attr");
+    }
+    // RTL 切换时同步 .protyle 元素的 .rtl 类名
+    if (window.siyuan.config.editor.rtl) {
+        protyle.element.classList.add("rtl");
+    } else {
+        protyle.element.classList.remove("rtl");
+    }
+    if (protyle.title) {
+        protyle.title.element.removeAttribute("data-render");
+        protyle.title.element.setAttribute("spellcheck", window.siyuan.config.editor.spellcheck.toString());
+        if (window.siyuan.config.editor.displayBookmarkIcon) {
+            protyle.title.element.classList.add("protyle-wysiwyg--attr");
+        } else {
+            protyle.title.element.classList.remove("protyle-wysiwyg--attr");
+        }
+    }
+    protyle.lute.SetProtyleMarkNetImg(window.siyuan.config.editor.displayNetImgMark);
+    protyle.lute.SetSpellcheck(window.siyuan.config.editor.spellcheck);
+    restoreLuteMarkdownSyntax(protyle);
+    protyle.lute.SetGFMStrikethrough1(false);
+    addLoading(protyle);
+    if (protyle.options.backlinkData) {
+        const isMention = protyle.element.getAttribute("data-ismention") === "true";
+        const tabElement = hasClosestByClassName(protyle.element, "sy__backlink");
+        if (tabElement) {
+            const inputsElement = tabElement.querySelectorAll(".b3-text-field") as NodeListOf<HTMLInputElement>;
+            const keyword = isMention ? inputsElement[1].value : inputsElement[0].value;
+            const param: import("../../types/api").BacklinkDocumentRequestInput = {
+                defID: protyle.element.getAttribute("data-defid"),
+                refTreeID: protyle.block.rootID,
+                highlight: !isSupportCSSHL(),
+                keyword,
+            };
+            if (protyle.notebookId) {
+                param.notebook = protyle.notebookId;
+            }
+            const revision = protyle.element.getAttribute("data-backlink-revision");
+            if (revision) {
+                param.knownRevision = revision;
+            }
+            fetchPost(isMention ? "/api/ref/getBackmentionDoc" : "/api/ref/getBacklinkDoc", param, response => {
+                if (response.code !== 0 || !response.data) {
+                    removeLoading(protyle);
+                    onError?.();
+                    return;
+                }
+                protyle.element.setAttribute("data-backlink-revision", response.data.revision);
+                if (response.data.unchanged) {
+                    removeLoading(protyle);
+                    callback?.();
+                    return;
+                }
+                protyle.options.backlinkData = isMention ? response.data.backmentions : response.data.backlinks;
+                void renderBacklink(protyle, protyle.options.backlinkData).then(() => {
+                    searchMarkRender(protyle, response.data.keywords);
+                    callback?.();
+                }, onError);
+            }, undefined, () => onError?.()).catch(() => onError?.());
+        } else {
+            callback?.();
+        }
+    } else {
+        preventScroll(protyle);
+        const scrollAttr = saveScroll(protyle, true) as IScrollAttr;
+        const reloadScroll = focus ? undefined :
+            preserveReloadScroll(protyle, scrollAttr?.scrollTop ?? protyle.contentElement.scrollTop);
+        getDocByScroll({
+            protyle,
+            focus,
+            scrollAttr,
+            updateReadonly,
+            isValid: reloadScroll?.isValid,
+            beforeAVRender: reloadScroll?.beforeAVRender,
+            afterAVRender: async () => {
+                await reloadScroll?.afterAVRender();
+                callback?.();
+            },
+            onRenderError: () => {
+                reloadScroll?.cancel();
+                onError?.();
+            },
+            fail: () => onError?.(),
+            cb(keys) {
+                if (protyle.query?.key) {
+                    searchMarkRender(protyle, keys, protyle.highlight.rangeIndex);
+                }
+                protyle.databaseAttributePanel?.refresh();
+                protyle.model?.refreshBottomBacklinkPanel();
+            }
+        });
+    }
+};
+
+// 同步解除输入保护前等待新文档实际渲染，读取失败由调用方继续保持保护。
+export const reloadProtyleAndWait = (protyle: IProtyle, updateReadonly = true) => new Promise<void>((resolve, reject) => {
+    reloadProtyle(protyle, false, updateReadonly, resolve, () => reject(new Error("Could not refresh synchronized document")));
+});

@@ -1,0 +1,132 @@
+{
+  "mTheme": [
+    "application/vnd.openxmlformats-officedocument.theme+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
+    "/clipboard/theme/theme#.xml"
+  ],
+  "mThemeOverride": [
+    "application/vnd.openxmlformats-officedocument.themeOverride+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/themeOverride",
+    "/clipboard/theme/themeOverride#.xml"
+  ],
+  "mChart": [
+    "application/vnd.openxmlformats-officedocument.drawingml.chart+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
+    "/clipboard/charts/chart#.xml"
+  ],
+  "mChartColor": [
+    "application/vnd.ms-office.chartcolorstyle+xml",
+    "http://schemas.microsoft.com/office/2011/relationships/chartColorStyle",
+    "/clipboard/charts/colors#.xml"
+  ],
+  "mChartStyle": [
+    "application/vnd.ms-office.chartstyle+xml",
+    "http://schemas.microsoft.com/office/2011/relationships/chartStyle",
+    "/clipboard/charts/style#.xml"
+  ],
+  "mChartExternalSrc": [
+    "application/vnd.openxmlformats-officedocument.oleObject",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject",
+    "/clipboard/embeddings/oleObject#.bin"
+  ],
+  "mDiagramData": [
+    "application/vnd.openxmlformats-officedocument.drawingml.diagramData+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramData",
+    "/clipboard/diagrams/data#.xml"
+  ],
+  "mDiagramLayout": [
+    "application/vnd.openxmlformats-officedocument.drawingml.diagramLayout+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramLayout",
+    "/clipboard/diagrams/layout#.xml"
+  ],
+  "mDiagramQuickStyle": [
+    "application/vnd.openxmlformats-officedocument.drawingml.diagramStyle+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramQuickStyle",
+    "/clipboard/diagrams/quickStyle#.xml"
+  ],
+  "mDiagramColors": [
+    "application/vnd.openxmlformats-officedocument.drawingml.diagramColors+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/diagramColors",
+    "/clipboard/diagrams/colors#.xml"
+  ],
+  "mDiagramDrawing": [
+    "application/vnd.ms-office.drawingml.diagramDrawing+xml",
+    "http://schemas.microsoft.com/office/2007/relationships/diagramDrawing",
+    "/clipboard/diagrams/drawing#.xml"
+  ],
+  "mImageEmf": [
+    "image/x-emf",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/clipboard/media/image#.emf"
+  ],
+  "mImageWmf": [
+    "image/x-wmf",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/clipboard/media/image#.wmf"
+  ],
+  "mImagePict": [
+    "image/pict",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/clipboard/media/image#.pict"
+  ],
+  "mImageJpeg": [
+    "image/jpeg",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/clipboard/media/image#.jpeg"
+  ],
+  "mImagePng": [
+    "image/png",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/clipboard/media/image#.png"
+  ],
+  "mImageDib": [
+    "image/dib",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/clipboard/media/image#.dib"
+  ],
+  "mImageGif": [
+    "image/gif",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/clipboard/media/image#.gif"
+  ],
+  "mImageBmp": [
+    "image/bmp",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+    "/clipboard/media/image#.bmp"
+  ],
+  "mWdp": [
+    "image/vnd.ms-photo",
+    "http://schemas.microsoft.com/office/2007/relationships/hdphoto",
+    "/clipboard/media/hdphoto#.wdp"
+  ],
+  "mOleObjectBin": [
+    "application/vnd.openxmlformats-officedocument.oleObject",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject",
+    "/clipboard/embeddings/oleObject#.bin"
+  ],
+  "mOleObjectDocx": [
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "/clipboard/embeddings/Microsoft_Word_Document#.docx"
+  ],
+  "mOleObjectDoc": [
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject",
+    "/clipboard/embeddings/Microsoft_Word_Document#.doc"
+  ],
+  "mOleObjectDocm": [
+    "application/vnd.ms-word.document.macroEnabled.12",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "/clipboard/embeddings/Microsoft_Word_Macro-Enabled_Document#.docm"
+  ],
+  "mInk": [
+    "application/inkml+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml",
+    "/clipboard/ink/ink#.xml"
+  ],
+  "mDrawing": [
+    "application/vnd.openxmlformats-officedocument.drawing+xml",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing",
+    "/clipboard/drawings/drawing1.xml"
+  ]
+}

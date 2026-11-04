@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/core-libs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/core-libs/drawing" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/core-libs/io/poi-compact" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/core-libs/io/wps-io" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/core-libs/kfc/kfc_alpha" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/core-libs/kfs/kfs_app" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/core-libs/stubs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/core-libs/util/util" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/ppt-core" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/ss-core" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/word-core" vcs="Git" />
+  </component>
+</project>

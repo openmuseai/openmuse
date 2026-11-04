@@ -1,0 +1,18 @@
+file_path,module_path,reason,deferred_at
+koffice/presentation/core/cn/wps/drawing/data/basic/GroupTransform2D.java,drawing/data/basic,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/drawing/data/geometry/Geometry2D.java,drawing/data/geometry,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/drawing/data/style/ShapeStyle.java,drawing/data/style,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/drawing/data/table/Headers.java,drawing/data/table,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/drawing/data/table/Table.java,drawing/data/table,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/drawing/data/table/TableCell.java,drawing/data/table,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/drawing/data/table/TableStyleCellStyle.java,drawing/data/table,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/drawing/data/table/TableStyleTextStyle.java,drawing/data/table,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/drawing/data/model3d/AmbientLight.java,drawing/data/model3d,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/show/data/presproperty/PresProperty.java,show/data/presproperty,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/show/data/viewproperty/CommonSlideViewProperty.java,show/data/viewproperty,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/show/data/docproperty/CoreProperty.java,show/data/docproperty,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/show/data/shape/ShowShape.java,show/data/shape,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/show/data/control/Control.java,show/data/control,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/show/data/timing/Build.java,show/data/timing,too many dependencies,2026-05-23
+koffice/presentation/core/cn/wps/show/pptxr/util/PptxrFileDecrypt.java,show/pptxr/util,too many dependencies,2026-05-25
+koffice/presentation/core/cn/wps/show/KmoAutoRunDoc.java,cn/wps/show,too many dependencies,2026-06-06

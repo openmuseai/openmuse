@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resouce>
+	<token-decimal type="string">.</token-decimal>
+	<token-thous type="string">,</token-thous>
+	<token-escape-ex type="string">!</token-escape-ex>
+	<token-general type="string-array" size="2">
+		<item>g</item>
+		<item>G/通用格式</item>
+		<item>true</item>
+	</token-general>
+	<token-bracket type="string-array" size="">
+		<item>[</item>
+		<item name="ncl"/>
+		<item name="color">黑色|蓝色|蓝绿色|绿色|洋红|红色|白色|黄色|颜色\s*(\d{1,2})</item>
+		<item name="dbnum"/>
+		<item name="condition"/>
+		<item name="helapsed"/>
+		<item name="melapsed"/>
+		<item name="selapsed"/>
+	</token-bracket>
+</resouce>

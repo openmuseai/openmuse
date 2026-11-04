@@ -1,0 +1,383 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"bytes"
+	"encoding/binary"
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"reflect"
+	"testing"
+
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func TestEncryptedAssetRejectsSplicedVersions(t *testing.T) {
+	boxID := "20260905120000-review1"
+	diskName := "asset-20260905120000-review1.bin"
+	dek := bytes.Repeat([]byte{42}, 32)
+	firstPlain := bytes.Repeat([]byte("A"), encryptedAssetChunkSize*2)
+	secondPlain := bytes.Repeat([]byte("B"), encryptedAssetChunkSize*2)
+	first, err := EncryptAsset(boxID, diskName, "first.bin", dek, firstPlain)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := EncryptAsset(boxID, diskName, "second.bin", dek, secondPlain)
+	if err != nil {
+		t.Fatal(err)
+	}
+	firstOffset := 8 + int(binary.BigEndian.Uint32(first[4:8]))
+	secondOffset := 8 + int(binary.BigEndian.Uint32(second[4:8]))
+	firstSize := 4 + int(binary.BigEndian.Uint32(first[firstOffset:firstOffset+4]))
+	secondSize := 4 + int(binary.BigEndian.Uint32(second[secondOffset:secondOffset+4]))
+	if firstSize != secondSize {
+		t.Fatal("fixture chunk lengths differ")
+	}
+	for _, part := range []string{"first chunk", "last chunk", "all chunks", "metadata"} {
+		t.Run(part, func(t *testing.T) {
+			mixed := append([]byte(nil), second...)
+			switch part {
+			case "first chunk":
+				copy(mixed[secondOffset:secondOffset+secondSize], first[firstOffset:firstOffset+firstSize])
+			case "last chunk":
+				copy(mixed[secondOffset+secondSize:], first[firstOffset+firstSize:])
+			case "all chunks":
+				copy(mixed[secondOffset:], first[firstOffset:])
+			case "metadata":
+				mixed = append(append([]byte(nil), first[:firstOffset]...), second[secondOffset:]...)
+			}
+			if _, _, err := DecryptAssetWithName(boxID, diskName, dek, mixed); err == nil {
+				t.Fatal("accepted a never-encrypted mixed version")
+			}
+		})
+	}
+}
+
+func TestEncryptedAssetRejectsUnboundContainerMetadata(t *testing.T) {
+	boxID, diskName := "20260905120000-review1", "asset.bin"
+	dek := bytes.Repeat([]byte{42}, 32)
+	for _, version := range []map[string]any{
+		{"spec": 0},
+		{"spec": 1},
+		{"spec": encryptedAssetSpec + 1},
+		{"spec": encryptedAssetSpec},
+		{"spec": nil},
+		{"containerID": nil},
+		{"containerID": bytes.Repeat([]byte{1}, encryptedAssetContainerIDSize)},
+		{"spec": encryptedAssetSpec, "containerID": nil},
+		{"spec": encryptedAssetSpec, "containerID": []byte{1}},
+	} {
+		version["originalName"], version["size"], version["chunks"] = "asset.bin", 0, 1
+		metadata, err := json.Marshal(version)
+		if err != nil {
+			t.Fatal(err)
+		}
+		key := util.DeriveSubKey(dek, "siyuan/asset")
+		encryptedMetadata, err := util.EncryptWithAAD(key, metadata, []byte("siyuan:asset:"+boxID+":assets/"+diskName+":metadata"))
+		zeroAndClear(key)
+		if err != nil {
+			t.Fatal(err)
+		}
+		container := append([]byte(nil), encryptedAssetMagic...)
+		container = binary.BigEndian.AppendUint32(container, uint32(len(encryptedMetadata)))
+		container = append(container, encryptedMetadata...)
+		container = binary.BigEndian.AppendUint32(container, 0)
+		if _, err = DecryptAssetName(boxID, diskName, dek, container); err == nil {
+			t.Fatalf("metadata reader accepted invalid version fields: %v", version)
+		}
+		if _, err = DecryptAssetNameFromReader(boxID, diskName, dek, bytes.NewReader(container)); err == nil {
+			t.Fatalf("streaming metadata reader accepted invalid version fields: %v", version)
+		}
+		var output bytes.Buffer
+		if _, err = DecryptAssetToWriter(boxID, diskName, dek, bytes.NewReader(container), &output); err == nil || output.Len() != 0 {
+			t.Fatalf("content reader accepted invalid version fields: %v", version)
+		}
+	}
+}
+
+func TestEncryptedAssetEmptyAndChunkBoundaries(t *testing.T) {
+	boxID, diskName := "20260905120000-review1", "asset.bin"
+	dek := bytes.Repeat([]byte{42}, 32)
+	for _, size := range []int{0, encryptedAssetChunkSize - 1, encryptedAssetChunkSize, encryptedAssetChunkSize + 1} {
+		plain := bytes.Repeat([]byte{23}, size)
+		ciphertext, err := EncryptAsset(boxID, diskName, "asset.bin", dek, plain)
+		if err != nil {
+			t.Fatal(err)
+		}
+		decrypted, _, err := DecryptAssetWithName(boxID, diskName, dek, ciphertext)
+		if err != nil || !bytes.Equal(plain, decrypted) {
+			t.Fatalf("asset size %d failed round trip: %v", size, err)
+		}
+		if name, err := DecryptAssetNameFromReader(boxID, diskName, dek, bytes.NewReader(ciphertext)); err != nil || name != "asset.bin" {
+			t.Fatalf("streaming name read failed: %v", err)
+		}
+	}
+}
+
+func TestPasswordChangePreservesDeletedHistoryRecovery(t *testing.T) {
+	oldConf, oldDataDir, oldHistoryDir, oldConfDir := Conf, util.DataDir, util.HistoryDir, util.ConfDir
+	root := t.TempDir()
+	util.DataDir, util.HistoryDir, util.ConfDir = filepath.Join(root, "data"), filepath.Join(root, "history"), filepath.Join(root, "conf")
+	defer func() {
+		Conf, util.DataDir, util.HistoryDir, util.ConfDir = oldConf, oldDataDir, oldHistoryDir, oldConfDir
+	}()
+	for _, dir := range []string{util.DataDir, util.HistoryDir, util.ConfDir} {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	Conf = NewAppConf()
+	Conf.NotebookCrypto = conf.NewNotebookCrypto()
+	Conf.Sync.Store(conf.NewSync())
+	if err := EnableEncryptedNotebook("old-review-password"); err != nil {
+		t.Fatal(err)
+	}
+	oldKEK, err := deriveKEK("old-review-password")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer zeroAndClear(oldKEK)
+	boxID := "20260905120100-review2"
+	crypt, dek, err := WrapNewDEK(boxID, oldKEK)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer zeroAndClear(dek)
+	boxConf := conf.NewBoxConf()
+	boxConf.Encrypted, boxConf.BoxCrypt = true, crypt
+	if err = encryptBoxMetadata(boxID, boxConf, dek); err != nil {
+		t.Fatal(err)
+	}
+	historyDir := filepath.Join(util.HistoryDir, "2026-09-05-120100-delete", boxID, ".siyuan")
+	if err = os.MkdirAll(historyDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	data, err := json.Marshal(boxConf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(filepath.Join(historyDir, "conf.json"), data, 0644); err != nil {
+		t.Fatal(err)
+	}
+	data, err = json.Marshal(crypt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(filepath.Join(historyDir, notebookCryptoBackupFilename), data, 0644); err != nil {
+		t.Fatal(err)
+	}
+	if !verifyKEKAgainstEncryptedHistory(oldKEK, nil) {
+		t.Fatal("fixture history cannot be decrypted")
+	}
+	checkPersistedKeys := func() {
+		t.Helper()
+		data, readErr := os.ReadFile(filepath.Join(util.ConfDir, "conf.json"))
+		if readErr != nil {
+			t.Fatal(readErr)
+		}
+		persisted := NewAppConf()
+		if readErr = json.Unmarshal(data, persisted); readErr != nil {
+			t.Fatal(readErr)
+		}
+		if !reflect.DeepEqual(persisted.NotebookCrypto, Conf.NotebookCrypto) {
+			t.Fatal("password change left persisted key metadata different from memory")
+		}
+		// 重新加载已落盘的配置，后续改密和历史恢复不得依赖尚未保存的内存状态。
+		Conf.NotebookCrypto = persisted.NotebookCrypto
+	}
+	if err = ChangeMasterPassword("old-review-password", "new-review-password"); err != nil {
+		t.Fatal(err)
+	}
+	checkPersistedKeys()
+	if err = ChangeMasterPassword("new-review-password", "latest-password"); err != nil {
+		t.Fatal(err)
+	}
+	checkPersistedKeys()
+	newKEK, err := deriveKEK("latest-password")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer zeroAndClear(newKEK)
+	if !verifyKEKAgainstEncryptedHistory(newKEK, currentNotebookCrypto()) {
+		t.Fatal("current password cannot decrypt historical envelopes")
+	}
+	backupData, err := os.ReadFile(dataCryptoBackupPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	Conf.NotebookCrypto = conf.NewNotebookCrypto()
+	_, recoveredKEK, err := deriveNotebookCryptoBackupCandidate("latest-password")
+	if recoveredKEK != nil {
+		zeroAndClear(recoveredKEK)
+	}
+	if err != nil {
+		t.Fatalf("current valid backup cannot restore deleted history after successful password change: %v", err)
+	}
+	if err = ImportNotebookCryptoBackup(backupData, "latest-password"); err != nil {
+		t.Fatalf("importing current backup cannot restore history: %v", err)
+	}
+	// 模拟从其他设备恢复改密前的目录，确认解锁路径也接受由当前备份保护的历史包络。
+	boxDir := filepath.Join(util.DataDir, boxID, ".siyuan")
+	if err = os.MkdirAll(boxDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"conf.json", notebookCryptoBackupFilename} {
+		fileData, readErr := os.ReadFile(filepath.Join(historyDir, name))
+		if readErr != nil {
+			t.Fatal(readErr)
+		}
+		if err = os.WriteFile(filepath.Join(boxDir, name), fileData, 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	restoredDEK, _, err := decryptBoxCrypt(boxID, newKEK)
+	defer zeroAndClear(restoredDEK)
+	if err != nil || !bytes.Equal(restoredDEK, dek) {
+		t.Fatalf("restored notebook cannot use current password: %v", err)
+	}
+}
+
+func TestHistoryKEKsAuthenticateAndDeduplicate(t *testing.T) {
+	first, second, third := bytes.Repeat([]byte{1}, 32), bytes.Repeat([]byte{2}, 32), bytes.Repeat([]byte{3}, 32)
+	wrapped, err := rewrapHistoryKEKs(first, second, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wrapped, err = rewrapHistoryKEKs(second, third, wrapped)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wrapped, err = rewrapHistoryKEKs(third, first, wrapped)
+	if err != nil {
+		t.Fatal(err)
+	}
+	keys, err := decryptHistoryKEKs(first, wrapped)
+	defer clearHistoryKEKs(keys)
+	if err != nil || len(keys) != 2 || !bytes.Equal(keys[0], second) || !bytes.Equal(keys[1], third) {
+		t.Fatalf("password reuse lost or duplicated history keys: count=%d err=%v", len(keys), err)
+	}
+	nc := conf.NewNotebookCrypto()
+	nc.HistoryKEKs = wrapped
+	prepareBackupForWrite(nc)
+	nc.KEKMAC = computeKEKMAC(nc, first)
+	if !verifyKEKMAC(nc, first) {
+		t.Fatal("history key backup failed authentication")
+	}
+	nc.HistoryKEKs = nc.HistoryKEKs[:1]
+	if verifyKEKMAC(nc, first) {
+		t.Fatal("backup MAC accepted removed history key")
+	}
+	wrapped[1][len(wrapped[1])-1] ^= 1
+	if keys, err = decryptHistoryKEKs(first, wrapped); err == nil || len(keys) != 0 {
+		clearHistoryKEKs(keys)
+		t.Fatal("tampered keyring was accepted or returned partial plaintext keys")
+	}
+}
+
+func TestMasterPasswordMigrationRetainsHistoryKeysAfterBoxRemoval(t *testing.T) {
+	oldDataDir, oldConfDir, oldHistoryDir, oldConf := util.DataDir, util.ConfDir, util.HistoryDir, Conf
+	root := t.TempDir()
+	util.DataDir, util.ConfDir, util.HistoryDir = filepath.Join(root, "data"), filepath.Join(root, "conf"), filepath.Join(root, "history")
+	defer func() {
+		util.DataDir, util.ConfDir, util.HistoryDir, Conf = oldDataDir, oldConfDir, oldHistoryDir, oldConf
+	}()
+	for _, dir := range []string{util.DataDir, util.ConfDir, util.HistoryDir} {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	Conf = NewAppConf()
+	{
+		confSectionValue0, confSectionValue1 := conf.NewNotebookCrypto(), conf.NewSync()
+		Conf.NotebookCrypto = confSectionValue0
+		Conf.Sync.Store(confSectionValue1)
+	}
+	if err := EnableEncryptedNotebook("migration-old"); err != nil {
+		t.Fatal(err)
+	}
+	oldKEK, err := deriveKEK("migration-old")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer zeroAndClear(oldKEK)
+	newKEK := util.DeriveKey("migration-new", Conf.NotebookCrypto.MasterSalt, Conf.NotebookCrypto.KDFParams)
+	defer zeroAndClear(newKEK)
+	wrapped, err := rewrapHistoryKEKs(oldKEK, newKEK, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	verifier, err := util.EncryptWithAAD(newKEK, kekVerifierMagic, []byte("siyuan:kek-verifier"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	boxID := "20260905124500-migrate"
+	manifest := &masterPasswordMigration{OldVerifier: Conf.NotebookCrypto.KEKVerifier, NewVerifier: verifier, NewHistoryKEKs: wrapped, Boxes: []migrationBoxEntry{{BoxID: boxID}}}
+	if err = writeMasterPasswordMigration(manifest); err != nil {
+		t.Fatal(err)
+	}
+	Conf.NotebookCrypto.KEKVerifier = verifier
+	Conf.NotebookCrypto.VerifierNonce = mustEncryptionNonce(verifier)
+	removeMasterPasswordMigrationBox(boxID)
+	if pending, _ := MasterPasswordMigrationStatus(); !pending {
+		t.Fatal("removing last notebook discarded pending recovery keys")
+	}
+	recoverMasterPasswordMigration()
+	confPath := filepath.Join(util.ConfDir, "conf.json")
+	persisted, err := os.ReadFile(confPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.Remove(confPath); err != nil {
+		t.Fatal(err)
+	}
+	if err = os.Mkdir(confPath, 0755); err != nil {
+		t.Fatal(err)
+	}
+	failedKey, err := deriveKEK("migration-new")
+	zeroAndClear(failedKey)
+	if err == nil {
+		t.Fatal("migration completed despite failing to save authenticated configuration")
+	}
+	if pending, _ := MasterPasswordMigrationStatus(); !pending {
+		t.Fatal("failed configuration write discarded the recovery manifest")
+	}
+	if err = os.Remove(confPath); err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(confPath, persisted, 0644); err != nil {
+		t.Fatal(err)
+	}
+	derived, err := deriveKEK("migration-new")
+	defer zeroAndClear(derived)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pending, _ := MasterPasswordMigrationStatus(); pending {
+		t.Fatal("authenticated recovery did not finish migration")
+	}
+	backup, err := loadNotebookCryptoBackup()
+	if err != nil || backup == nil || !verifyKEKMAC(backup, newKEK) {
+		t.Fatalf("recovery did not publish authenticated backup: %v", err)
+	}
+	persisted, err = os.ReadFile(confPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reloaded := NewAppConf()
+	if err = json.Unmarshal(persisted, reloaded); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(reloaded.NotebookCrypto, Conf.NotebookCrypto) || !verifyKEKMAC(reloaded.NotebookCrypto, newKEK) {
+		t.Fatal("recovered key metadata was not persisted and authenticated")
+	}
+	keys, err := decryptHistoryKEKs(newKEK, backup.HistoryKEKs)
+	defer clearHistoryKEKs(keys)
+	if err != nil || len(keys) != 1 || !bytes.Equal(keys[0], oldKEK) {
+		t.Fatalf("recovery lost historical key: %v", err)
+	}
+}

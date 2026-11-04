@@ -1,0 +1,54 @@
+diff --git a/BUILD.gn b/BUILD.gn
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -19,6 +19,11 @@
+   if (pdf_is_standalone) {
+     deps += [ ":pdfium_all" ]
+   }
++}
++
++# Build the fixed product PDFium with the Emscripten secondary toolchain.
++group("ksp_web_pdfium") {
++  deps = [ ":pdfium(//build/toolchain/wasm:wasm)" ]
+ }
+ 
+ group("freetype_common") {
+@@ -237,7 +242,11 @@
+   ]
+ }
+ 
+-shared_library("pdfium") {
++_pdfium_library_type = "shared_library"
++if (is_wasm) {
++  _pdfium_library_type = "static_library"
++}
++target(_pdfium_library_type, "pdfium") {
+   output_name = "pdfium"
+   if (ksp_pdfium_viewer) {
+     output_name = "pdfium_viewer"
+@@ -290,8 +299,12 @@
+     ]
+   }
+ 
+-  if (pdf_is_complete_lib) {
++  if (pdf_is_complete_lib && !is_wasm) {
+     static_component_type = "static_library"
++    complete_static_lib = true
++    configs -= [ "//build/config/compiler:thin_archive" ]
++  }
++  if (is_wasm) {
+     complete_static_lib = true
+     configs -= [ "//build/config/compiler:thin_archive" ]
+   }
+diff --git a/third_party/libopenjpeg/opj_includes.h b/third_party/libopenjpeg/opj_includes.h
+--- a/third_party/libopenjpeg/opj_includes.h
++++ b/third_party/libopenjpeg/opj_includes.h
+@@ -64,7 +64,7 @@
+   ftello() only on systems with special LFS support since some systems
+   (e.g. FreeBSD) support a 64-bit off_t by default.
+ */
+-#if defined(OPJ_HAVE_FSEEKO) && !defined(fseek)
++#if defined(OPJ_HAVE_FSEEKO) && !defined(fseek) && !defined(__EMSCRIPTEN__)
+ #  define fseek  fseeko
+ #  define ftell  ftello
+ #endif

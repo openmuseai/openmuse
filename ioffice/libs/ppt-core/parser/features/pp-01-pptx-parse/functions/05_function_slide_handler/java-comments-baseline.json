@@ -1,0 +1,13 @@
+{
+  "total": 75,
+  "files": [
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/pptxr/handler/slides/SlideHandler.rs",
+      "count": 58
+    },
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/pptxr/handler/slides/ColorMapOverrideHandler.rs",
+      "count": 17
+    }
+  ]
+}

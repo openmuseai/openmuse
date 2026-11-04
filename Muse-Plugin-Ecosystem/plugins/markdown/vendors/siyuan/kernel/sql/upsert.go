@@ -1,0 +1,630 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package sql
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"database/sql"
+	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+	"sync"
+
+	"github.com/88250/gulu"
+	"github.com/88250/lute/parse"
+	"github.com/emirpasic/gods/sets/hashset"
+	ignore "github.com/sabhiram/go-gitignore"
+	"github.com/siyuan-note/eventbus"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+var luteEngine = util.NewLute()
+
+func init() {
+	luteEngine.RenderOptions.KramdownBlockIAL = false // 数据库 markdown 字段为标准 md，但是要保留 span block ial
+}
+
+const (
+	BlocksInsert      = "INSERT INTO blocks (id, parent_id, root_id, hash, box, path, hpath, name, alias, memo, tag, content, fcontent, markdown, length, type, subtype, ial, sort, created, updated) VALUES %s"
+	BlocksPlaceholder = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
+	// blocks_fts 采用 external content 模式（content='blocks'），写入时必须显式提供 rowid，
+	// 该 rowid 取自 blocks 表的隐式 rowid，否则 FTS rowid 与 blocks rowid 脱钩会导致
+	// snippet/highlight 回表取错行、按 rowid 删除静默失效。首列即为 rowid。
+	BlocksFTSInsert      = "INSERT INTO blocks_fts (rowid, id, parent_id, root_id, hash, box, path, hpath, name, alias, memo, tag, content, fcontent, markdown, length, type, subtype, ial, sort, created, updated) VALUES %s"
+	BlocksFTSPlaceholder = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
+	SpansInsert      = "INSERT INTO spans (id, block_id, root_id, box, path, content, markdown, type, ial) VALUES %s"
+	SpansPlaceholder = "(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
+	AssetsPlaceholder             = "(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	AttributesPlaceholder         = "(?, ?, ?, ?, ?, ?, ?, ?)"
+	RefsPlaceholder               = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	FileAnnotationRefsPlaceholder = "(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+)
+
+func insertBlocks(tx *sql.Tx, blocks []*Block, context map[string]any) (err error) {
+	if 1 > len(blocks) {
+		return
+	}
+
+	var bulk []*Block
+	for _, block := range blocks {
+		bulk = append(bulk, block)
+		if 512 > len(bulk) {
+			continue
+		}
+
+		if err = insertBlocks0(tx, bulk, context); err != nil {
+			return
+		}
+		bulk = []*Block{}
+	}
+	if 0 < len(bulk) {
+		if err = insertBlocks0(tx, bulk, context); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func insertBlocks0(tx *sql.Tx, bulk []*Block, context map[string]any) (err error) {
+	valueStrings := make([]string, 0, len(bulk))
+	valueArgs := make([]any, 0, len(bulk)*strings.Count(BlocksPlaceholder, "?"))
+	hashBuf := bytes.Buffer{}
+	for _, b := range bulk {
+		valueStrings = append(valueStrings, BlocksPlaceholder)
+		valueArgs = append(valueArgs, b.ID)
+		valueArgs = append(valueArgs, b.ParentID)
+		valueArgs = append(valueArgs, b.RootID)
+		valueArgs = append(valueArgs, b.Hash)
+		valueArgs = append(valueArgs, b.Box)
+		valueArgs = append(valueArgs, b.Path)
+		valueArgs = append(valueArgs, b.HPath)
+		valueArgs = append(valueArgs, b.Name)
+		valueArgs = append(valueArgs, b.Alias)
+		valueArgs = append(valueArgs, b.Memo)
+		valueArgs = append(valueArgs, b.Tag)
+		valueArgs = append(valueArgs, b.Content)
+		valueArgs = append(valueArgs, b.FContent)
+		valueArgs = append(valueArgs, b.Markdown)
+		valueArgs = append(valueArgs, b.Length)
+		valueArgs = append(valueArgs, b.Type)
+		valueArgs = append(valueArgs, b.SubType)
+		valueArgs = append(valueArgs, b.IAL)
+		valueArgs = append(valueArgs, b.Sort)
+		valueArgs = append(valueArgs, b.Created)
+		valueArgs = append(valueArgs, b.Updated)
+		putBlockCache(b)
+
+		hashBuf.WriteString(b.Hash)
+	}
+
+	stmt := fmt.Sprintf(BlocksInsert, strings.Join(valueStrings, ","))
+	if err = prepareExecInsertTx(tx, stmt, valueArgs); err != nil {
+		return
+	}
+	hashBuf.WriteString("blocks")
+	evtHash := fmt.Sprintf("%x", sha256.Sum256(hashBuf.Bytes()))[:7]
+	// 使用下面的 EvtSQLInsertBlocksFTS 就可以了
+	//eventbus.Publish(eventbus.EvtSQLInsertBlocks, context, current, total, len(bulk), evtHash)
+
+	// external content 模式下，FTS 行必须使用 blocks 的 rowid。刚插入的 blocks 行在同一事务内可见，
+	// 这里按 id 反查 rowid，再用与 bulk 顺序对齐的 rowid 拼装 FTS 写入参数。
+	blockRowIDs, err := queryBlockRowIDsTx(tx, bulk)
+	if err != nil {
+		return
+	}
+	ftsValueStrings := make([]string, 0, len(bulk))
+	ftsValueArgs := make([]any, 0, len(bulk)*strings.Count(BlocksFTSPlaceholder, "?"))
+	for _, b := range bulk {
+		rowID, ok := blockRowIDs[b.ID]
+		if !ok {
+			// 理论上不会发生（刚插入即反查），防御性处理避免错位
+			logging.LogErrorf("query block rowid failed after insert: id=%s not found", b.ID)
+			err = fmt.Errorf("block rowid not found after insert: %s", b.ID)
+			return
+		}
+		ftsValueStrings = append(ftsValueStrings, BlocksFTSPlaceholder)
+		ftsValueArgs = append(ftsValueArgs, rowID)
+		ftsValueArgs = append(ftsValueArgs, any(b.ID))
+		ftsValueArgs = append(ftsValueArgs, any(b.ParentID))
+		ftsValueArgs = append(ftsValueArgs, any(b.RootID))
+		ftsValueArgs = append(ftsValueArgs, any(b.Hash))
+		ftsValueArgs = append(ftsValueArgs, any(b.Box))
+		ftsValueArgs = append(ftsValueArgs, any(b.Path))
+		ftsValueArgs = append(ftsValueArgs, any(b.HPath))
+		ftsValueArgs = append(ftsValueArgs, any(b.Name))
+		ftsValueArgs = append(ftsValueArgs, any(b.Alias))
+		ftsValueArgs = append(ftsValueArgs, any(b.Memo))
+		ftsValueArgs = append(ftsValueArgs, any(b.Tag))
+		ftsValueArgs = append(ftsValueArgs, any(b.Content))
+		ftsValueArgs = append(ftsValueArgs, any(b.FContent))
+		ftsValueArgs = append(ftsValueArgs, any(b.Markdown))
+		ftsValueArgs = append(ftsValueArgs, any(b.Length))
+		ftsValueArgs = append(ftsValueArgs, any(b.Type))
+		ftsValueArgs = append(ftsValueArgs, any(b.SubType))
+		ftsValueArgs = append(ftsValueArgs, any(b.IAL))
+		ftsValueArgs = append(ftsValueArgs, any(b.Sort))
+		ftsValueArgs = append(ftsValueArgs, any(b.Created))
+		ftsValueArgs = append(ftsValueArgs, any(b.Updated))
+	}
+	stmt = fmt.Sprintf(BlocksFTSInsert, strings.Join(ftsValueStrings, ","))
+	if err = prepareExecInsertTx(tx, stmt, ftsValueArgs); err != nil {
+		return
+	}
+	hashBuf.WriteString("fts")
+	evtHash = fmt.Sprintf("%x", sha256.Sum256(hashBuf.Bytes()))[:7]
+	eventbus.Publish(eventbus.EvtSQLInsertBlocksFTS, context, len(bulk), evtHash)
+	return
+}
+
+func insertAttributes(tx *sql.Tx, attributes []*Attribute) (err error) {
+	if 1 > len(attributes) {
+		return
+	}
+
+	var bulk []*Attribute
+	for _, attr := range attributes {
+		bulk = append(bulk, attr)
+		if 512 > len(bulk) {
+			continue
+		}
+
+		if err = insertAttribute0(tx, bulk); err != nil {
+			return
+		}
+		bulk = []*Attribute{}
+	}
+	if 0 < len(bulk) {
+		if err = insertAttribute0(tx, bulk); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func insertAttribute0(tx *sql.Tx, bulk []*Attribute) (err error) {
+	if 1 > len(bulk) {
+		return
+	}
+
+	valueStrings := make([]string, 0, len(bulk))
+	valueArgs := make([]any, 0, len(bulk)*strings.Count(AttributesPlaceholder, "?"))
+	for _, attr := range bulk {
+		valueStrings = append(valueStrings, AttributesPlaceholder)
+		valueArgs = append(valueArgs, attr.ID)
+		valueArgs = append(valueArgs, attr.Name)
+		valueArgs = append(valueArgs, attr.Value)
+		valueArgs = append(valueArgs, attr.Type)
+		valueArgs = append(valueArgs, attr.BlockID)
+		valueArgs = append(valueArgs, attr.RootID)
+		valueArgs = append(valueArgs, attr.Box)
+		valueArgs = append(valueArgs, attr.Path)
+	}
+	stmt := fmt.Sprintf("INSERT INTO attributes (id, name, value, type, block_id, root_id, box, path) VALUES %s", strings.Join(valueStrings, ","))
+	err = prepareExecInsertTx(tx, stmt, valueArgs)
+	return
+}
+
+func insertAssets(tx *sql.Tx, assets []*Asset) (err error) {
+	if 1 > len(assets) {
+		return
+	}
+
+	var bulk []*Asset
+	for _, asset := range assets {
+		bulk = append(bulk, asset)
+		if 512 > len(bulk) {
+			continue
+		}
+
+		if err = insertAsset0(tx, bulk); err != nil {
+			return
+		}
+		bulk = []*Asset{}
+	}
+	if 0 < len(bulk) {
+		if err = insertAsset0(tx, bulk); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func insertAsset0(tx *sql.Tx, bulk []*Asset) (err error) {
+	if 1 > len(bulk) {
+		return
+	}
+
+	valueStrings := make([]string, 0, len(bulk))
+	valueArgs := make([]any, 0, len(bulk)*strings.Count(AssetsPlaceholder, "?"))
+	for _, asset := range bulk {
+		valueStrings = append(valueStrings, AssetsPlaceholder)
+		valueArgs = append(valueArgs, asset.ID)
+		valueArgs = append(valueArgs, asset.BlockID)
+		valueArgs = append(valueArgs, asset.RootID)
+		valueArgs = append(valueArgs, asset.Box)
+		valueArgs = append(valueArgs, asset.DocPath)
+		valueArgs = append(valueArgs, asset.Path)
+		valueArgs = append(valueArgs, asset.Name)
+		valueArgs = append(valueArgs, asset.Title)
+		valueArgs = append(valueArgs, asset.Hash)
+	}
+	stmt := fmt.Sprintf("INSERT INTO assets (id, block_id, root_id, box, docpath, path, name, title, hash) VALUES %s", strings.Join(valueStrings, ","))
+	err = prepareExecInsertTx(tx, stmt, valueArgs)
+	return
+}
+
+func insertSpans(tx *sql.Tx, spans []*Span) (err error) {
+	if 1 > len(spans) {
+		return
+	}
+
+	var bulk []*Span
+	for _, span := range spans {
+		bulk = append(bulk, span)
+		if 512 > len(bulk) {
+			continue
+		}
+
+		if err = insertSpans0(tx, bulk); err != nil {
+			return
+		}
+		bulk = []*Span{}
+	}
+	if 0 < len(bulk) {
+		if err = insertSpans0(tx, bulk); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func insertSpans0(tx *sql.Tx, bulk []*Span) (err error) {
+	if 1 > len(bulk) {
+		return
+	}
+
+	valueStrings := make([]string, 0, len(bulk))
+	valueArgs := make([]any, 0, len(bulk)*strings.Count(SpansPlaceholder, "?"))
+	for _, span := range bulk {
+		valueStrings = append(valueStrings, SpansPlaceholder)
+		valueArgs = append(valueArgs, span.ID)
+		valueArgs = append(valueArgs, span.BlockID)
+		valueArgs = append(valueArgs, span.RootID)
+		valueArgs = append(valueArgs, span.Box)
+		valueArgs = append(valueArgs, span.Path)
+		valueArgs = append(valueArgs, span.Content)
+		valueArgs = append(valueArgs, span.Markdown)
+		valueArgs = append(valueArgs, span.Type)
+		valueArgs = append(valueArgs, span.IAL)
+	}
+	stmt := fmt.Sprintf(SpansInsert, strings.Join(valueStrings, ","))
+	err = prepareExecInsertTx(tx, stmt, valueArgs)
+	return
+}
+
+func validBlockRefs(refs []*Ref) []*Ref {
+	validRefs := refs[:0]
+	for _, ref := range refs {
+		if nil == ref || "" == strings.TrimSpace(ref.DefBlockID) || "" == strings.TrimSpace(ref.BlockID) ||
+			"" == strings.TrimSpace(ref.RootID) {
+			continue
+		}
+		validRefs = append(validRefs, ref)
+	}
+	return validRefs
+}
+
+func insertBlockRefs(tx *sql.Tx, refs []*Ref) (err error) {
+	refs = validBlockRefs(refs)
+	if 1 > len(refs) {
+		return
+	}
+
+	var bulk []*Ref
+	for _, ref := range refs {
+		bulk = append(bulk, ref)
+		if 512 > len(bulk) {
+			continue
+		}
+
+		if err = insertRefs0(tx, bulk); err != nil {
+			return
+		}
+		bulk = []*Ref{}
+	}
+	if 0 < len(bulk) {
+		if err = insertRefs0(tx, bulk); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func insertRefs0(tx *sql.Tx, bulk []*Ref) (err error) {
+	if 1 > len(bulk) {
+		return
+	}
+
+	valueStrings := make([]string, 0, len(bulk))
+	valueArgs := make([]any, 0, len(bulk)*strings.Count(RefsPlaceholder, "?"))
+	for _, ref := range bulk {
+		valueStrings = append(valueStrings, RefsPlaceholder)
+		valueArgs = append(valueArgs, ref.ID)
+		valueArgs = append(valueArgs, ref.DefBlockID)
+		valueArgs = append(valueArgs, ref.DefBlockParentID)
+		valueArgs = append(valueArgs, ref.DefBlockRootID)
+		valueArgs = append(valueArgs, ref.DefBlockPath)
+		valueArgs = append(valueArgs, ref.BlockID)
+		valueArgs = append(valueArgs, ref.RootID)
+		valueArgs = append(valueArgs, ref.Box)
+		valueArgs = append(valueArgs, ref.Path)
+		valueArgs = append(valueArgs, ref.Content)
+		valueArgs = append(valueArgs, ref.Markdown)
+		valueArgs = append(valueArgs, ref.Type)
+
+		putRefCache(ref.Box, ref)
+	}
+	stmt := fmt.Sprintf("INSERT INTO refs (id, def_block_id, def_block_parent_id, def_block_root_id, def_block_path, block_id, root_id, box, path, content, markdown, type) VALUES %s", strings.Join(valueStrings, ","))
+	err = prepareExecInsertTx(tx, stmt, valueArgs)
+	return
+}
+
+func insertFileAnnotationRefs(tx *sql.Tx, refs []*FileAnnotationRef) (err error) {
+	if 1 > len(refs) {
+		return
+	}
+
+	var bulk []*FileAnnotationRef
+	for _, ref := range refs {
+		bulk = append(bulk, ref)
+		if 512 > len(bulk) {
+			continue
+		}
+
+		if err = insertFileAnnotationRefs0(tx, bulk); err != nil {
+			return
+		}
+		bulk = []*FileAnnotationRef{}
+	}
+	if 0 < len(bulk) {
+		if err = insertFileAnnotationRefs0(tx, bulk); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func insertFileAnnotationRefs0(tx *sql.Tx, bulk []*FileAnnotationRef) (err error) {
+	if 1 > len(bulk) {
+		return
+	}
+
+	valueStrings := make([]string, 0, len(bulk))
+	valueArgs := make([]any, 0, len(bulk)*strings.Count(FileAnnotationRefsPlaceholder, "?"))
+	for _, ref := range bulk {
+		valueStrings = append(valueStrings, FileAnnotationRefsPlaceholder)
+		valueArgs = append(valueArgs, ref.ID)
+		valueArgs = append(valueArgs, ref.FilePath)
+		valueArgs = append(valueArgs, ref.AnnotationID)
+		valueArgs = append(valueArgs, ref.BlockID)
+		valueArgs = append(valueArgs, ref.RootID)
+		valueArgs = append(valueArgs, ref.Box)
+		valueArgs = append(valueArgs, ref.Path)
+		valueArgs = append(valueArgs, ref.Content)
+		valueArgs = append(valueArgs, ref.Type)
+	}
+	stmt := fmt.Sprintf("INSERT INTO file_annotation_refs (id, file_path, annotation_id, block_id, root_id, box, path, content, type) VALUES %s", strings.Join(valueStrings, ","))
+	err = prepareExecInsertTx(tx, stmt, valueArgs)
+	return
+}
+
+func indexTree(tx *sql.Tx, tree *parse.Tree, context map[string]any) (err error) {
+	blocks, spans, assets, attributes := fromTree(tree.Root, tree)
+	refs, fileAnnotationRefs := refsFromTree(tree)
+	err = insertTree0(tx, tree, context, blocks, spans, assets, attributes, refs, fileAnnotationRefs)
+	return
+}
+
+func upsertTree(tx *sql.Tx, tree *parse.Tree, context map[string]any) (err error) {
+	return upsertTreeWithChanges(tx, tree, context, nil)
+}
+
+func upsertTreeWithChanges(tx *sql.Tx, tree *parse.Tree, context map[string]any, changes *TreeIndexChanges) (err error) {
+	if isIndexIgnored(tree) {
+		return
+	}
+	timing := util.BeginPerformance("index.update")
+	defer timing.Finish()
+	timing.Stage("project")
+	changes, err = usableTreeIndexChanges(tx, tree, changes)
+	if err != nil {
+		return
+	}
+	oldBlockHashes := queryBlockHashes(tx, tree.ID)
+	blocks, spans, assets, attributes := fromTreeWithChanges(tree.Root, tree, changes)
+	timing.Count("blocks_total", int64(len(oldBlockHashes)))
+	timing.Count("blocks_projected", int64(len(blocks)))
+	if changes != nil {
+		timing.Count("changeset", 1)
+	}
+	timing.Stage("compare_blocks")
+	newBlockHashes := map[string]string{}
+	for _, block := range blocks {
+		newBlockHashes[block.ID] = block.Hash
+	}
+	unChanges := hashset.New()
+	var toRemoves []string
+	for id, hash := range oldBlockHashes {
+		if changes != nil && !changes.blockIDs[id] {
+			continue
+		}
+		if newHash, ok := newBlockHashes[id]; ok {
+			if newHash == hash {
+				unChanges.Add(id)
+			}
+		} else {
+			toRemoves = append(toRemoves, id)
+		}
+	}
+	tmp := blocks[:0]
+	for _, b := range blocks {
+		if !unChanges.Contains(b.ID) {
+			tmp = append(tmp, b)
+		}
+	}
+	blocks = tmp
+	timing.Count("blocks_changed", int64(len(blocks)))
+	for _, b := range blocks {
+		toRemoves = append(toRemoves, b.ID)
+	}
+
+	if err = deleteBlocksByIDs(tx, toRemoves); err != nil {
+		return
+	}
+
+	timing.Stage("compare_auxiliary")
+	refs, fileAnnotationRefs := refsFromTree(tree)
+	refs = validBlockRefs(refs)
+	spanChange, err := diffAuxiliaryIndex(tx, spanIndex, tree.ID, tree.Box, tree.Path, spans, spanIndexKey)
+	if err != nil {
+		return
+	}
+	assetChange, err := diffAuxiliaryIndex(tx, assetIndex, tree.ID, tree.Box, tree.Path, assets, assetIndexKey)
+	if err != nil {
+		return
+	}
+	attributeChange, err := diffAuxiliaryIndex(tx, attributeIndex, tree.ID, tree.Box, tree.Path, attributes, attributeIndexKey)
+	if err != nil {
+		return
+	}
+	refChange, err := diffAuxiliaryIndex(tx, refIndex, tree.ID, tree.Box, tree.Path, refs, refIndexKey)
+	if err != nil {
+		return
+	}
+	fileChange, err := diffAuxiliaryIndex(tx, fileAnnotationIndex, tree.ID, tree.Box, tree.Path, fileAnnotationRefs, fileAnnotationIndexKey)
+	if err != nil {
+		return
+	}
+	timing.Count("auxiliary_deleted", int64(len(spanChange.remove)+len(assetChange.remove)+len(attributeChange.remove)+len(refChange.remove)+len(fileChange.remove)))
+	timing.Count("auxiliary_inserted", int64(len(spanChange.insert)+len(assetChange.insert)+len(attributeChange.insert)+len(refChange.insert)+len(fileChange.insert)))
+	timing.Stage("write")
+	for _, remove := range []func(*sql.Tx) error{spanChange.delete, assetChange.delete, attributeChange.delete, refChange.delete, fileChange.delete} {
+		if err = remove(tx); err != nil {
+			return
+		}
+	}
+	if err = insertTreeRows(tx, context, blocks, spanChange.insert, assetChange.insert, attributeChange.insert,
+		refChange.insert, fileChange.insert); err != nil {
+		return
+	}
+	return err
+}
+
+func isIndexIgnored(tree *parse.Tree) bool {
+	if ignoreLines := getIndexIgnoreLines(); 0 < len(ignoreLines) {
+		matcher := ignore.CompileIgnoreLines(ignoreLines...)
+		return matcher.MatchesPath("/" + path.Join(tree.Box, tree.Path))
+	}
+	return false
+}
+
+func insertTree0(tx *sql.Tx, tree *parse.Tree, context map[string]any,
+	blocks []*Block, spans []*Span, assets []*Asset, attributes []*Attribute,
+	refs []*Ref, fileAnnotationRefs []*FileAnnotationRef) (err error) {
+	if isIndexIgnored(tree) {
+		return
+	}
+	if 0 < len(spans) {
+		// 完整插入时移除已有文档标签，避免重复添加。
+		if err = deleteSpansByRootID(tx, tree.Root.ID); err != nil {
+			return
+		}
+	}
+	return insertTreeRows(tx, context, blocks, spans, assets, attributes, refs, fileAnnotationRefs)
+}
+
+func insertTreeRows(tx *sql.Tx, context map[string]any,
+	blocks []*Block, spans []*Span, assets []*Asset, attributes []*Attribute,
+	refs []*Ref, fileAnnotationRefs []*FileAnnotationRef) (err error) {
+
+	if err = insertBlocks(tx, blocks, context); err != nil {
+		return
+	}
+
+	if err = insertBlockRefs(tx, refs); err != nil {
+		return
+	}
+	if err = insertFileAnnotationRefs(tx, fileAnnotationRefs); err != nil {
+		return
+	}
+
+	if 0 < len(spans) {
+		if err = insertSpans(tx, spans); err != nil {
+			return
+		}
+	}
+	if err = insertAssets(tx, assets); err != nil {
+		return
+	}
+	if err = insertAttributes(tx, attributes); err != nil {
+		return
+	}
+	return
+}
+
+var (
+	IndexIgnoreCached bool
+	indexIgnore       []string
+	indexIgnoreLock   = sync.Mutex{}
+)
+
+func getIndexIgnoreLines() (ret []string) {
+	// Support ignore index https://github.com/siyuan-note/siyuan/issues/9198
+
+	if IndexIgnoreCached {
+		return indexIgnore
+	}
+
+	indexIgnoreLock.Lock()
+	defer indexIgnoreLock.Unlock()
+
+	IndexIgnoreCached = true
+	indexIgnorePath := filepath.Join(util.DataDir, ".siyuan", "indexignore")
+	err := os.MkdirAll(filepath.Dir(indexIgnorePath), 0755)
+	if err != nil {
+		return
+	}
+	if !gulu.File.IsExist(indexIgnorePath) {
+		if err = gulu.File.WriteFileSafer(indexIgnorePath, nil, 0644); err != nil {
+			logging.LogErrorf("create indexignore [%s] failed: %s", indexIgnorePath, err)
+			return
+		}
+	}
+	data, err := os.ReadFile(indexIgnorePath)
+	if err != nil {
+		logging.LogErrorf("read indexignore [%s] failed: %s", indexIgnorePath, err)
+		return
+	}
+	dataStr := string(data)
+	dataStr = strings.ReplaceAll(dataStr, "\r\n", "\n")
+	ret = strings.Split(dataStr, "\n")
+
+	ret = gulu.Str.RemoveDuplicatedElem(ret)
+	if 0 < len(ret) && "" == ret[0] {
+		ret = ret[1:]
+	}
+	indexIgnore = nil
+	for _, line := range ret {
+		indexIgnore = append(indexIgnore, line)
+	}
+	return
+}

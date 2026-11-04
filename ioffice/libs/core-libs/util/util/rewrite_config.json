@@ -1,0 +1,8 @@
+{
+  "projectRoot": "../../../..",
+  "javaBase": "koffice/core-libs/util/util/src",
+  "javaDepBase": "koffice/core-libs",
+  "rustDepRoot": "libs/core-libs",
+  "crateName": "core_libs_util",
+  "crateAlias": ["util"]
+}

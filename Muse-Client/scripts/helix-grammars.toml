@@ -1,0 +1,9 @@
+# Pinned grammar sources and revisions come from the vendored Helix
+# languages.toml. Build this practical editor set for each release platform.
+use-grammars = { only = [
+  "bash", "c", "cmake", "comment", "cpp", "c-sharp", "css", "dart",
+  "diff", "dockerfile", "go", "html", "java", "javascript", "json",
+  "kotlin", "lua", "make", "markdown", "markdown_inline", "php",
+  "powershell", "python", "regex", "ruby", "rust", "scss", "svelte",
+  "sql", "swift", "toml", "tsx", "typescript", "vue", "xml", "yaml",
+] }

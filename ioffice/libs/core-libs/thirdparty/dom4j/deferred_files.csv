@@ -1,0 +1,9 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/thirdparty/dom4j/src/org/dom4j/Attribute.java,org/dom4j,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/dom4j/src/org/dom4j/CDATA.java,org/dom4j,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/dom4j/src/org/dom4j/DocumentFactory.java,org/dom4j,Plan too large: 79 entries (54 unresolved deps exceed limit 30). File deferred.,2026-05-22
+koffice/core-libs/thirdparty/dom4j/src/org/dom4j/dom/DOMAttributeNodeMap.java,org/dom4j/dom,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/dom4j/src/org/dom4j/dom/DOMDocument.java,org/dom4j/dom,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/dom4j/src/org/dom4j/io/DocumentResult.java,org/dom4j/io,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/dom4j/src/org/dom4j/io/DOMDocumentResult.java,org/dom4j/io,too many dependencies,2026-05-22
+koffice/core-libs/thirdparty/dom4j/src/org/dom4j/io/SAXModifier.java,org/dom4j/io,too many dependencies,2026-05-22

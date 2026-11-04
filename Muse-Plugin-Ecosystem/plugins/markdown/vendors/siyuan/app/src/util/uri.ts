@@ -1,0 +1,187 @@
+import {isSiYuanUriProtocol, parseSiYuanUriInfo} from "./pathName";
+/// #if !BROWSER
+import {ipcRenderer} from "electron";
+/// #endif
+import {Constants} from "../constants";
+/// #if !MOBILE
+import {openFile, openFileById} from "../editor/util";
+/// #endif
+import {fetchPost} from "./fetch";
+import {checkFold} from "./noRelyPCFunction";
+import {openMobileFileById} from "../mobile/editor";
+import {isValidBazaarPackageName} from "./bazaarPackage";
+import {isBazaarAvailable} from "./bazaarAvailability";
+
+import type {App} from "../index";
+import {openDatabaseItem} from "../protyle/render/av/openDatabaseItem";
+import {openStandaloneDatabaseItemByURI} from "../protyle/render/av/openStandaloneDatabaseItem";
+import {forEachPluginSubscriber} from "../plugin/EventBusCore";
+import {normalizeSiYuanUri, type ParsedSiYuanUri} from "./normalizeSiYuanUri";
+
+const bazaarTypes = new Set<TBazaarType>(["plugins", "themes", "icons", "templates", "widgets"]);
+
+const processSiYuanUriBlocks = (app: App, uriObj: ParsedSiYuanUri): boolean => {
+    const blockInfo = parseSiYuanUriInfo(uriObj.href);
+    if (blockInfo != null) {
+        const {id, focus} = blockInfo;
+        window.siyuan.editorIsFullscreen = blockInfo.fullscreen;
+        fetchPost("/api/block/checkBlockExist", { id }, existResponse => {
+            if (existResponse.data) {
+                if (!openStandaloneDatabaseItemByURI(app, blockInfo)) {
+                    checkFold(id, (zoomIn) => {
+                        if (blockInfo.avItemID) {
+                            void openDatabaseItem(app, {
+                                databaseBlockID: id,
+                                itemID: blockInfo.avItemID,
+                                viewID: blockInfo.avViewID,
+                                groupID: blockInfo.avGroupID,
+                            });
+                            return;
+                        }
+                        /// #if !MOBILE
+                        openFileById({
+                            app,
+                            id,
+                            action: (zoomIn || focus) ? [Constants.CB_GET_FOCUS, Constants.CB_GET_HL, Constants.CB_GET_ALL] :
+                                [Constants.CB_GET_HL, Constants.CB_GET_CONTEXT, Constants.CB_GET_ROOTSCROLL],
+                            zoomIn: zoomIn || focus,
+                        });
+                        /// #else
+                        openMobileFileById(app, id, (zoomIn || focus) ? [Constants.CB_GET_FOCUS, Constants.CB_GET_HL, Constants.CB_GET_ALL] :
+                            [Constants.CB_GET_HL, Constants.CB_GET_CONTEXT, Constants.CB_GET_ROOTSCROLL],
+                        "start");
+                        /// #endif
+                    });
+                }
+                /// #if !BROWSER
+                ipcRenderer.send(Constants.SIYUAN_CMD, "show");
+                /// #endif
+            }
+            forEachPluginSubscriber("open-siyuan-url-block", eventBus => {
+                eventBus.emit("open-siyuan-url-block", {
+                    url: uriObj.href,
+                    id,
+                    focus,
+                    exist: existResponse.data,
+                });
+            });
+        });
+        return true;
+    }
+    return false;
+};
+
+const processSiYuanUriPlugins = (app: App, uriObj: ParsedSiYuanUri): boolean => {
+    const pluginNameOrTabType: string | null = (() => {
+        const name = uriObj.pathname.split("/")[1];
+        if (!name) {
+            return null;
+        }
+        try {
+            return decodeURIComponent(name);
+        } catch (error) {
+            return null;
+        }
+    })();
+
+    if (!pluginNameOrTabType) {
+        return false;
+    }
+
+    const plugin = app.plugins.find(plugin => pluginNameOrTabType === plugin.name);
+    if (plugin) {
+        // siyuan://plugins/plugin-name/foo?bar=baz
+        plugin.eventBus.emit("open-siyuan-url-plugin", { url: uriObj.href });
+    } else {
+        if (!app.plugins.some(item => item.models[pluginNameOrTabType])) {
+            return false;
+        }
+        // siyuan://plugins/plugin-samplecustom_tab?title=自定义页签&icon=iconFace&data={"text": "This is the custom plugin tab I opened via protocol."}
+        /// #if !MOBILE
+        // https://github.com/siyuan-note/siyuan/pull/9256
+        const data = (() => {
+            try {
+                return JSON.parse(uriObj.searchParams.get("data") || "{}");
+            } catch (e) {
+                console.log("Error open plugin tab with protocol:", e);
+                return undefined;
+            }
+        })();
+        let icon = uriObj.searchParams.get("icon");
+        if (icon && !/^[a-zA-Z0-9]+$/.test(icon)) {
+            icon = null; // 拒绝非法 icon 值，使用默认图标
+        }
+        openFile({
+            app,
+            custom: {
+                title: uriObj.searchParams.get("title") ?? pluginNameOrTabType,
+                icon: icon ?? "iconPlugin",
+                data,
+                id: pluginNameOrTabType
+            },
+        });
+        /// #endif
+    }
+    return true;
+};
+
+const processSiYuanUriBazaar = (app: App, uriObj: ParsedSiYuanUri): boolean => {
+    if (!isBazaarAvailable()) {
+        return false;
+    }
+    const [, _type, _name, target] = uriObj.pathname.split("/");
+    if (!_type || !_name) return false;
+    if (!bazaarTypes.has(_type as TBazaarType)) {
+        return false;
+    }
+    const resourceType = _type as TBazaarType;
+    let resourceName: string;
+    try {
+        resourceName = decodeURIComponent(_name);
+    } catch {
+        return false;
+    }
+    if (!isValidBazaarPackageName(resourceName)) {
+        return false;
+    }
+    switch (target) {
+        case "readme":
+        case "readme-installed": {
+            // siyuan://bazaar/plugins/plugin-sample/readme
+            // siyuan://bazaar/plugins/plugin-sample/readme-installed
+            const from = target === "readme-installed" ? "downloaded" : "bazaar";
+            (async () => {
+                const {openBazaarReadme} = await import("../config");
+                openBazaarReadme(app, resourceType, resourceName, from);
+            })();
+            return true;
+        }
+        default:
+            break;
+    }
+    return false;
+};
+
+export const processSiYuanUri = (app: App, uri: string) => {
+    let uriObj: ParsedSiYuanUri;
+    try {
+        const parsedURI = new URL(uri);
+        if (!isSiYuanUriProtocol(parsedURI)) {
+            return false;
+        }
+        uriObj = normalizeSiYuanUri(parsedURI);
+    } catch (error) {
+        return false;
+    }
+    switch (uriObj.hostname) {
+        case "blocks":
+            return processSiYuanUriBlocks(app, uriObj);
+        case "plugins":
+            return processSiYuanUriPlugins(app, uriObj);
+        case "bazaar":
+            return processSiYuanUriBazaar(app, uriObj);
+        default:
+            break;
+    }
+    return false;
+};

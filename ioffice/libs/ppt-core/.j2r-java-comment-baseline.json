@@ -1,0 +1,13 @@
+{
+  "total": 2027,
+  "files": [
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/pptxr/handler/shape/SwGroupShapeHandler.rs",
+      "count": 130
+    },
+    {
+      "file": "/Users/mac/src/ioffice/libs/ppt-core/src/cn/wps/show/app/shape/KmoShowShape.rs",
+      "count": 1897
+    }
+  ]
+}

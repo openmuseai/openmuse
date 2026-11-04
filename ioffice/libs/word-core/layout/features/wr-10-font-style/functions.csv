@@ -1,0 +1,6 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_font_size,字号pt转twip,PropertySet+langType,size_twip,wc-03,05_function_font_style_factory,libs/word-core,pass
+2,02_function_run_flags,粗体斜体标志,PropertySet+langType,bold+italic,wc-03,05_function_font_style_factory,libs/word-core,pass
+3,03_function_font_names,ascii与eastAsia族名,PropertySet+langType,ascii+eastAsia+resolved,wc-03,05_function_font_style_factory,libs/word-core,pass
+4,04_function_style_merge,rPrDefault与KStyle层叠,CHPX+PAPX+KStyles,merged PropertySet,wc-02,05_function_font_style_factory,libs/word-core,pass
+5,05_function_font_style_factory,编排TypoFontStyle,单run CHPX+PAPX+KStyles,TypoFontStyle,01;02;03;04,wr-11,libs/word-core,pass

@@ -1,0 +1,3 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_greedy_wrap,框内贪心断行,TextBoxData+度量表+可用宽,行列表(startCp/endCp/x/y/w/h),pl-04-text-box;02_function_text_box_geometry,pl-06-typo-shape;pr-03-text-command,libs/ppt-core,pass
+2,02_function_text_box_geometry,文本区内缩几何,TextBoxData+boxWxboxH,内缩矩形(left/top/right/bottom),pl-04-text-box;pl-01-units-view,01_function_greedy_wrap;pr-03-text-command,libs/ppt-core,pass

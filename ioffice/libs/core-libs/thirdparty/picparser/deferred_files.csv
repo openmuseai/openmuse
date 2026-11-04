@@ -1,0 +1,4 @@
+file_path,module_path,reason,deferred_at
+koffice/core-libs/thirdparty/picparser/src/cn/wps/graphics/BitmapCreator.java,cn/wps/graphics,Plan too large: 214 entries (177 unresolved deps exceed limit 30). File deferred.,2026-05-22
+koffice/core-libs/thirdparty/picparser/src/cn/wps/graphics/bitmap/BitmapLruManager.java,cn/wps/graphics/bitmap,too many dependencies,2026-05-23
+koffice/core-libs/thirdparty/picparser/src/cn/wps/graphics/bitmap/MetaPicture.java,cn/wps/graphics/bitmap,too many dependencies,2026-05-23

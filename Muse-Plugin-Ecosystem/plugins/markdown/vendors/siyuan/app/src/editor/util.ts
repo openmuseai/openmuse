@@ -1,0 +1,994 @@
+import type {FileTreeGetDocRequestInput} from "../types/api";
+import {isPhablet} from "../protyle/util/compatibility";
+import {Tab} from "../layout/Tab";
+import {Editor} from "./index";
+import {Wnd} from "../layout/Wnd";
+import {getInstanceById, getWndByLayout, newModelByInitData, pdfIsLoading, setPanelFocus} from "../layout/util";
+import {getDockByType} from "../layout/tabUtil";
+import {getAllModels, getAllTabs} from "../layout/getAll";
+import {highlightById, scrollCenter} from "../util/highlightById";
+import {
+    getAssetExtension,
+    getAssetPathWithoutFragment,
+    getAssetPathWithoutQuery,
+    getDisplayName,
+    getDocDisplayName,
+    isEncryptedBox,
+    useShell
+} from "../util/pathName";
+import {Constants} from "../constants";
+import {Files} from "../layout/dock/Files";
+import {fetchPost, fetchSyncPost} from "../util/fetch";
+import {focusBlock, focusByOffset} from "../protyle/util/selection";
+import {focusByRange} from "../protyle/util/selectionOffsets";
+import {onGet} from "../protyle/util/onGet";
+/// #if !BROWSER
+import {ipcRenderer} from "electron";
+/// #endif
+import {pushBack} from "../util/backForward";
+import {Asset} from "../asset";
+import {Layout} from "../layout";
+import {
+    hasClosestBlock,
+    hasClosestByAttribute,
+    hasClosestByClassName,
+    isInEmbedBlock,
+} from "../protyle/util/hasClosest";
+import {zoomOut} from "../menus/protyle";
+import {countBlockWord, countSelectWord} from "../layout/status";
+import {showMessage} from "../dialog/message";
+import {objEquals} from "../util/functions";
+import {resize} from "../protyle/util/resize";
+import {Search} from "../search";
+import type {App} from "../index";
+import {preventScroll} from "../protyle/scroll/preventScroll";
+import {clearOBG} from "../layout/dock/util";
+import {Model} from "../layout/Model";
+import {hideElements} from "../protyle/ui/hideElements";
+import {isBrowserRenderableImagePath} from "../util/imageURL";
+import {forEachPluginSubscriber} from "../plugin/EventBusCore";
+import {getHostCapabilities} from "../util/hostCapabilities";
+import {revealTabsForTarget} from "../protyle/render/tabsRender";
+import {isHiddenTabContent} from "../protyle/render/tabsVisibility";
+import {confirmDialog} from "../dialog/confirmDialog";
+import {shouldCheckOtherWindows} from "./openFileWindow";
+import {getContenteditableElement} from "../protyle/wysiwyg/getBlock";
+import type {Outline} from "../layout/dock/Outline";
+
+const isSameCustomTab = (type: string, data: any, options: IOpenFileOptions) => {
+    if (!options.custom || (options.custom.id && options.custom.id !== type)) {
+        return false;
+    }
+    if (type === "siyuan-database-row") {
+        return data?.avID === options.custom.data?.avID && data?.itemID === options.custom.data?.itemID;
+    }
+    return objEquals(data, options.custom.data);
+};
+
+export const openFileById = async (options: {
+    app: App,
+    id: string,
+    notebookId?: string,
+    position?: string,
+    mode?: TEditorMode,
+    action?: TProtyleAction[]
+    keepCursor?: boolean
+    zoomIn?: boolean
+    removeCurrentTab?: boolean
+    openNewTab?: boolean
+    forceCurrentWindow?: boolean
+    keepAVPanel?: boolean
+    afterOpen?: (model: Model) => void,
+    scrollPosition?: ScrollLogicalPosition
+    retryOnUnavailable?: number
+}): Promise<Tab | void> => {
+    const response = await fetchSyncPost("/api/block/getBlockInfo", {id: options.id, notebook: options.notebookId});
+    if (response.code === -1) {
+        const retryOnUnavailable = options.retryOnUnavailable || 0;
+        if (retryOnUnavailable > 0) {
+            await new Promise(resolve => window.setTimeout(resolve, Constants.TIMEOUT_TRANSITION));
+            return openFileById({
+                ...options,
+                retryOnUnavailable: retryOnUnavailable - 1,
+            });
+        }
+        return;
+    }
+    if (response.code === 3) {
+        showMessage(response.msg);
+        return;
+    }
+    if (response.code !== 0) {
+        return;
+    }
+    const zoomIn = options.zoomIn === true && options.id !== response.data.rootID;
+
+    return openFile({
+        app: options.app,
+        fileName: response.data.rootTitle,
+        rootTitleEmpty: response.data.rootTitleEmpty,
+        rootIcon: response.data.rootIcon,
+        rootID: response.data.rootID,
+        id: options.id,
+        notebookId: options.notebookId,
+        position: options.position,
+        mode: options.mode,
+        action: options.action,
+        zoomIn,
+        keepCursor: options.keepCursor,
+        removeCurrentTab: options.removeCurrentTab,
+        afterOpen: options.afterOpen,
+        openNewTab: options.openNewTab,
+        forceCurrentWindow: options.forceCurrentWindow,
+        keepAVPanel: options.keepAVPanel,
+        scrollPosition: options.scrollPosition,
+    });
+};
+
+const openAssetWithOptions = (
+    app: App,
+    assetPath: string,
+    page: number | string,
+    options: {
+        position?: string,
+        keepCursor?: boolean,
+    } = {},
+) => {
+    const suffix = getAssetExtension(assetPath).toLowerCase();
+    if (!Constants.SIYUAN_ASSETS_EXTS.includes(suffix) || !isBrowserRenderableImagePath(assetPath)) {
+        return;
+    }
+    openFile({
+        app,
+        assetPath,
+        page,
+        position: options.position,
+        keepCursor: options.keepCursor,
+        removeCurrentTab: true
+    });
+};
+
+export const openAsset = (app: App, assetPath: string, page: number | string, position?: string) => {
+    openAssetWithOptions(app, assetPath, page, {position});
+};
+
+export const openAssetInBackground = (app: App, assetPath: string, page: number | string) => {
+    openAssetWithOptions(app, assetPath, page, {keepCursor: true});
+};
+
+export const openFile = async (options: IOpenFileOptions) => {
+    if (typeof options.removeCurrentTab === "undefined") {
+        options.removeCurrentTab = true;
+    }
+    // https://github.com/siyuan-note/siyuan/issues/10168
+    if (!options.keepAVPanel) {
+        document.querySelectorAll(".av__panel, .av__mask").forEach(item => {
+            item.remove();
+        });
+    }
+    // 打开 PDF 时移除文档光标
+    if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+    }
+    const allModels = getAllModels();
+    // 文档已打开
+    if (options.assetPath) {
+        clearOBG();
+        const asset = allModels.asset.find((item) => {
+            if (item.path == options.assetPath) {
+                if (!pdfIsLoading(item.parent.parent.element)) {
+                    if (!options.keepCursor) {
+                        item.parent.parent.switchTab(item.parent.headElement);
+                        item.parent.parent.showHeading();
+                    }
+                    item.goToPage(options.page);
+                }
+                return true;
+            }
+        });
+        if (asset) {
+            if (options.afterOpen) {
+                options.afterOpen(asset);
+            }
+            return asset.parent;
+        }
+    } else if (options.custom) {
+        clearOBG();
+        const custom = !options.openNewTab && allModels.custom.find((item) => {
+            if (isSameCustomTab(item.type, item.data, options)) {
+                if (!pdfIsLoading(item.parent.parent.element)) {
+                    item.parent.parent.switchTab(item.parent.headElement);
+                    item.parent.parent.showHeading();
+                }
+                return true;
+            }
+        });
+        if (custom) {
+            if (options.afterOpen) {
+                options.afterOpen(custom);
+            }
+            return custom.parent;
+        }
+        const hasModel = !options.openNewTab && getUnInitTab(options);
+        if (hasModel) {
+            if (options.afterOpen) {
+                options.afterOpen(hasModel.model);
+            }
+            return hasModel;
+        }
+    } else if (options.searchData) {
+        clearOBG();
+        const search = allModels.search.find((item) => {
+            if (objEquals(item.config, options.searchData)) {
+                if (!pdfIsLoading(item.parent.parent.element)) {
+                    item.parent.parent.switchTab(item.parent.headElement);
+                    item.parent.parent.showHeading();
+                }
+                return true;
+            }
+        });
+        if (search) {
+            return search.parent;
+        }
+    } else if (!options.position && !options.openNewTab) {
+        let editor: Editor;
+        let activeEditor: Editor;
+        allModels.editor.find((item) => {
+            if (item.editor.protyle.block.rootID === options.rootID) {
+                if (hasClosestByClassName(item.element, "layout__wnd--active")) {
+                    if (item.headElement.classList.contains("item--focus")) {
+                        activeEditor = item;
+                        return true;
+                    }
+                    if (!activeEditor) {
+                        activeEditor = item;
+                    }
+                }
+                if (!editor || item.headElement.getAttribute("data-activetime") > editor.headElement.getAttribute("data-activetime")) {
+                    // https://github.com/siyuan-note/siyuan/issues/11981#issuecomment-2351939812
+                    editor = item;
+                }
+            }
+        });
+        if (activeEditor) {
+            editor = activeEditor;
+        }
+        if (editor) {
+            if (!pdfIsLoading(editor.parent.parent.element)) {
+                switchEditor(editor, options, allModels);
+            }
+            if (options.afterOpen) {
+                options.afterOpen(editor);
+            }
+            return editor.parent;
+        }
+        // 没有初始化的页签无法检测到
+        const hasEditor = getUnInitTab(options);
+        if (hasEditor) {
+            if (options.afterOpen) {
+                options.afterOpen(hasEditor.model);
+            }
+            return hasEditor;
+        }
+    }
+
+    /// #if !BROWSER
+    // https://github.com/siyuan-note/siyuan/issues/7491
+    if (shouldCheckOtherWindows(options)) {
+        let hasMatch = false;
+        const optionsClone: IObject = {};
+        Object.keys(options).forEach((key: keyof IOpenFileOptions) => {
+            if (key !== "app" && options[key] && typeof options[key] !== "function") {
+                optionsClone[key] = JSON.parse(JSON.stringify(options[key]));
+            }
+        });
+        try {
+            hasMatch = await ipcRenderer.invoke(Constants.SIYUAN_GET, {
+                cmd: Constants.SIYUAN_OPEN_FILE,
+                options: JSON.stringify(optionsClone),
+                port: location.port,
+            });
+        } catch (e) {
+            console.warn("Check opened file window error:", e);
+        }
+        if (hasMatch) {
+            if (options.afterOpen) {
+                options.afterOpen();
+            }
+            return;
+        }
+    }
+    /// #endif
+
+    let wnd: Wnd = undefined;
+    // 获取光标所在 tab
+    const element = document.querySelector(".layout__wnd--active");
+    if (element) {
+        wnd = getInstanceById(element.getAttribute("data-id")) as Wnd;
+    }
+    if (!wnd) {
+        // 中心 tab
+        wnd = getWndByLayout(window.siyuan.layout.centerLayout);
+    }
+    if (wnd) {
+        let createdTab: Tab;
+        if ((options.position === "right" || options.position === "bottom") && wnd.children[0].headElement) {
+            const direction = options.position === "right" ? "lr" : "tb";
+            let targetWnd: Wnd;
+            if (wnd.parent.children.length > 1 && wnd.parent instanceof Layout && wnd.parent.direction === direction) {
+                wnd.parent.children.find((item, index) => {
+                    if (item.id === wnd.id) {
+                        let nextWnd = wnd.parent.children[index + 1];
+                        if (!nextWnd) {
+                            // wnd 为右侧时，应设置其为目标
+                            nextWnd = wnd;
+                        }
+                        while (nextWnd instanceof Layout) {
+                            nextWnd = nextWnd.children[0];
+                        }
+                        targetWnd = nextWnd;
+                        return true;
+                    }
+                });
+            }
+            if (targetWnd) {
+                if (pdfIsLoading(targetWnd.element)) {
+                    if (options.afterOpen) {
+                        options.afterOpen();
+                    }
+                    return;
+                }
+                // 在右侧/下侧打开已有页签将进行页签切换 https://github.com/siyuan-note/siyuan/issues/5366
+                let hasEditor = !options.openNewTab && targetWnd.children.find(item => {
+                    if (item.model && item.model instanceof Editor && item.model.editor.protyle.block.rootID === options.rootID) {
+                        switchEditor(item.model, options, allModels);
+                        return true;
+                    }
+                });
+                if (!hasEditor) {
+                    hasEditor = !options.openNewTab && getUnInitTab(options);
+                    createdTab = hasEditor;
+                }
+                if (!hasEditor) {
+                    createdTab = newTab(options);
+                    targetWnd.addTab(createdTab);
+                }
+            } else {
+                createdTab = newTab(options);
+                wnd.split(direction).addTab(createdTab);
+            }
+            wnd.showHeading();
+            if (options.afterOpen) {
+                options.afterOpen(createdTab ? createdTab.model : undefined);
+            }
+            return createdTab;
+        }
+        if (pdfIsLoading(wnd.element)) {
+            if (options.afterOpen) {
+                options.afterOpen();
+            }
+            return;
+        }
+        if (options.keepCursor && wnd.children[0].headElement) {
+            createdTab = newTab(options);
+            if (options.id) {
+                createdTab.headElement.setAttribute("keep-cursor", options.id);
+            }
+            wnd.addTab(createdTab, options.keepCursor);
+        } else if (window.siyuan.config.fileTree.openFilesUseCurrentTab) {
+            let unUpdateTab: Tab;
+            // 不能 reverse, 找到也不能提前退出循环，否则 https://github.com/siyuan-note/siyuan/issues/3271
+            wnd.children.find((item) => {
+                if (item.headElement && item.headElement.classList.contains("item--unupdate") && !item.headElement.classList.contains("item--pin")) {
+                    unUpdateTab = item;
+                    if (item.headElement.classList.contains("item--focus")) {
+                        // https://ld246.com/article/1658979494658
+                        return true;
+                    }
+                }
+            });
+            createdTab = newTab(options);
+            wnd.addTab(createdTab);
+            if (unUpdateTab && options.removeCurrentTab) {
+                wnd.removeTab(unUpdateTab.id, false, false);
+            }
+        } else {
+            createdTab = newTab(options);
+            wnd.addTab(createdTab);
+        }
+        wnd.showHeading();
+        if (options.afterOpen) {
+            options.afterOpen(createdTab.model);
+        }
+        return createdTab;
+    }
+};
+
+// 没有初始化的页签无法检测到
+const getUnInitTab = (options: IOpenFileOptions) => {
+    return getAllTabs().find(item => {
+        const initData = item.headElement?.getAttribute("data-initdata");
+        if (initData) {
+            const initObj = JSON.parse(initData);
+            if (initObj.instance === "Editor" &&
+                (initObj.rootId === options.rootID || initObj.blockId === options.rootID)) {
+                initObj.blockId = options.id;
+                initObj.notebookId = options.notebookId;
+                initObj.mode = options.mode;
+                if (options.zoomIn) {
+                    initObj.action = [Constants.CB_GET_ALL, isPhablet() ? Constants.CB_GET_HL : Constants.CB_GET_FOCUS];
+                } else {
+                    initObj.action = options.action;
+                }
+                initObj.scrollPosition = options.scrollPosition;
+                item.headElement.setAttribute("data-initdata", JSON.stringify(initObj));
+                item.parent.switchTab(item.headElement);
+                return true;
+            } else if (initObj.instance === "Custom" && isSameCustomTab(initObj.customModelType, initObj.customModelData, options)) {
+                item.parent.switchTab(item.headElement);
+                return true;
+            }
+        }
+    });
+};
+
+const pushBackByEditor = (protyle: IProtyle, block?: Element) => {
+    // 浏览页签时记录位置，不聚焦编辑器，避免唤起软键盘。
+    const range = protyle.toolbar.range;
+    const container = block || protyle.element;
+    if (range && container.contains(range.startContainer) && container.contains(range.endContainer)) {
+        if (!block && protyle.title?.editElement?.contains(range.startContainer) &&
+            protyle.title.editElement.contains(range.endContainer)) {
+            block = protyle.title.editElement;
+        }
+        pushBack(protyle, range, block);
+    } else {
+        block = block || protyle.wysiwyg.element.firstElementChild;
+        let editable = block && getContenteditableElement(block);
+        if (!editable) {
+            // 空正文或不可编辑的首块仍需记录文档导航，使用标题作为定位入口。
+            block = protyle.title?.editElement;
+            editable = block;
+        }
+        if (editable) {
+            const initialRange = document.createRange();
+            initialRange.selectNodeContents(editable);
+            initialRange.collapse(true);
+            pushBack(protyle, initialRange, block);
+        }
+    }
+};
+
+const switchEditor = (editor: Editor, options: IOpenFileOptions, allModels: IModels) => {
+    if (options.keepCursor) {
+        editor.parent.headElement.setAttribute("keep-cursor", options.id);
+        return true;
+    }
+    if (options.action?.includes(Constants.CB_GET_OUTLINE)) {
+        // 大纲导航使用点击的标题，避免恢复旧光标时覆盖高亮并滚动大纲。
+        editor.parent.parent.switchTab(editor.parent.headElement, false, false);
+        updatePanelByEditor({
+            protyle: editor.editor.protyle,
+            focus: false,
+            pushBackStack: false,
+            reload: false,
+            resize: true,
+            outlineId: options.id,
+        });
+    } else {
+        editor.parent.parent.switchTab(editor.parent.headElement);
+    }
+    editor.parent.parent.showHeading();
+    if (options.mode !== "preview" && !editor.editor.protyle.preview.element.classList.contains("fn__none")) {
+        return true;
+    }
+    if (options.zoomIn) {
+        zoomOut({protyle: editor.editor.protyle, id: options.id});
+        return true;
+    }
+    let nodeElement: Element;
+    Array.from(editor.editor.protyle.wysiwyg.element.querySelectorAll(`[data-node-id="${options.id}"]`)).find(item => {
+        if (!isInEmbedBlock(item)) {
+            nodeElement = item;
+            return true;
+        }
+    });
+    if (nodeElement) {
+        revealTabsForTarget(nodeElement);
+    }
+    if ((!nodeElement || nodeElement?.clientHeight === 0) && options.id !== options.rootID) {
+        const getDocParam: FileTreeGetDocRequestInput = {
+            id: options.id,
+            mode: (options.action && options.action.includes(Constants.CB_GET_CONTEXT)) ? 3 : 0,
+            size: window.siyuan.config.editor.dynamicLoadBlocks,
+        };
+        if (isEncryptedBox(editor.editor.protyle.notebookId)) {
+            getDocParam.notebook = editor.editor.protyle.notebookId;
+        }
+        fetchPost("/api/filetree/getDoc", getDocParam, getResponse => {
+            onGet({
+                data: getResponse,
+                protyle: editor.editor.protyle,
+                action: options.action,
+                scrollPosition: options.scrollPosition
+            });
+            // 大纲点击折叠标题下的内容时，需更新反链面板
+            updateBacklinkGraph(allModels, editor.editor.protyle);
+        });
+    } else {
+        // 点击大纲产生滚动时会动态加载内容，最终导致定位不准确
+        preventScroll(editor.editor.protyle);
+        editor.editor.protyle.observerLoad?.disconnect();
+        if (options.action?.includes(Constants.CB_GET_HL)) {
+            highlightById(editor.editor.protyle, options.id, "start");
+        }
+        if (options.action?.includes(Constants.CB_GET_FOCUS)) {
+            if (nodeElement) {
+                let scrollTop: number;
+                if (options.action.includes(Constants.CB_GET_SEARCH)) {
+                    const scrollAttr = window.siyuan.storage[Constants.LOCAL_FILEPOSITION][editor.editor.protyle.block.rootID];
+                    focusByOffset(nodeElement, scrollAttr.focusStart, scrollAttr.focusEnd);
+                    scrollTop = scrollAttr.scrollTop;
+                } else {
+                    const newRange = focusBlock(nodeElement, undefined, !options.action?.includes(Constants.CB_GET_OUTLINE));
+                    if (newRange) {
+                        editor.editor.protyle.toolbar.range = newRange;
+                    }
+                }
+                if (typeof scrollTop === "number") {
+                    editor.editor.protyle.contentElement.scrollTop = scrollTop;
+                } else {
+                    scrollCenter(editor.editor.protyle, (editor.editor.protyle.disabled || options.scrollPosition) ? nodeElement : null, options.scrollPosition);
+                }
+                const userScrollAbort = new AbortController();
+                const observerLoad = new ResizeObserver(() => {
+                    // 用户已离开目标页签时停止补偿滚动，避免再次展开跳转目标。
+                    if (isHiddenTabContent(nodeElement)) {
+                        stopObserve();
+                        return;
+                    }
+                    if (document.contains(nodeElement)) {
+                        if (typeof scrollTop === "number") {
+                            editor.editor.protyle.contentElement.scrollTop = scrollTop;
+                        } else {
+                            scrollCenter(editor.editor.protyle, (editor.editor.protyle.disabled || options.scrollPosition) ? nodeElement : null, options.scrollPosition);
+                        }
+                    }
+                });
+                const stopObserve = () => {
+                    userScrollAbort.abort();
+                    observerLoad.disconnect();
+                };
+                const onUserScroll = () => stopObserve();
+                editor.editor.protyle.contentElement.addEventListener("pointerdown", onUserScroll, {
+                    capture: true,
+                    signal: userScrollAbort.signal
+                });
+                editor.editor.protyle.contentElement.addEventListener("wheel", onUserScroll, {
+                    capture: true,
+                    passive: true,
+                    signal: userScrollAbort.signal
+                });
+                editor.editor.protyle.contentElement.addEventListener("touchstart", onUserScroll, {
+                    capture: true,
+                    passive: true,
+                    signal: userScrollAbort.signal
+                });
+                editor.editor.protyle.contentElement.addEventListener("touchmove", onUserScroll, {
+                    capture: true,
+                    passive: true,
+                    signal: userScrollAbort.signal
+                });
+                // 开始编辑后停止定位补偿，避免输入改变布局时把光标滚回原位置
+                editor.editor.protyle.element.addEventListener("beforeinput", stopObserve, {
+                    capture: true,
+                    signal: userScrollAbort.signal
+                });
+                editor.editor.protyle.contentElement.addEventListener("keydown", (event: KeyboardEvent) => {
+                    if (["PageUp", "PageDown", "Home", "End", "ArrowUp", "ArrowDown", " "].includes(event.key)) {
+                        stopObserve();
+                    }
+                }, {capture: true, signal: userScrollAbort.signal});
+                editor.editor.protyle.observerLoad = observerLoad;
+                setTimeout(() => {
+                    stopObserve();
+                }, 1000 * 3);
+                observerLoad.observe(editor.editor.protyle.wysiwyg.element);
+            } else if (editor.editor.protyle.block.rootID === options.id) {
+                // 由于 https://github.com/siyuan-note/siyuan/issues/5420，移除定位
+            } else if (editor.editor.protyle.toolbar.range) {
+                nodeElement = hasClosestBlock(editor.editor.protyle.toolbar.range.startContainer) as Element;
+                focusByRange(editor.editor.protyle.toolbar.range);
+                scrollCenter(editor.editor.protyle, undefined, options.scrollPosition);
+            }
+        }
+        if (isPhablet()) {
+            pushBackByEditor(editor.editor.protyle, nodeElement);
+        } else {
+            pushBack(editor.editor.protyle, editor.editor.protyle.toolbar.range);
+        }
+    }
+    // https://github.com/siyuan-note/siyuan/issues/16445
+    if (options.action?.includes(Constants.CB_GET_OUTLINE)) {
+        hideElements(["select"], editor.editor.protyle);
+    }
+};
+
+export const newTab = (options: IOpenFileOptions, afterInitProtyle?: ConstructorParameters<typeof Editor>[0]["afterInitProtyle"]) => {
+    let tab: Tab;
+    if (options.assetPath) {
+        const suffix = getAssetExtension(options.assetPath).toLowerCase();
+        if (Constants.SIYUAN_ASSETS_EXTS.includes(suffix) &&
+            isBrowserRenderableImagePath(options.assetPath)) {
+            let icon = "iconPDF";
+            if (Constants.SIYUAN_ASSETS_IMAGE.includes(suffix)) {
+                icon = "iconImage";
+            } else if (Constants.SIYUAN_ASSETS_AUDIO.includes(suffix)) {
+                icon = "iconRecord";
+            } else if (Constants.SIYUAN_ASSETS_VIDEO.includes(suffix)) {
+                icon = "iconVideo";
+            }
+            tab = new Tab({
+                icon,
+                title: getDisplayName(getAssetPathWithoutQuery(options.assetPath)),
+                callback(tab) {
+                    tab.addModel(new Asset({
+                        app: options.app,
+                        tab,
+                        path: options.assetPath,
+                        page: options.page,
+                    }));
+                    if (!options.keepCursor) {
+                        setPanelFocus(tab.panelElement.parentElement.parentElement);
+                    }
+                }
+            });
+        }
+    } else if (options.custom) {
+        tab = new Tab({
+            icon: options.custom.icon,
+            title: options.custom.title,
+            callback(tab) {
+                if (options.custom.id) {
+                    const model = newModelByInitData(options.app, tab, {
+                        instance: "Custom",
+                        customModelType: options.custom.id,
+                        customModelData: options.custom.data,
+                    });
+                    if (model) {
+                        tab.addModel(model);
+                    }
+                } else {
+                    // plugin 0.8.3 历史兼容
+                    console.warn("0.8.3 将移除 custom.fn 参数，请参照 https://github.com/siyuan-note/plugin-sample/blob/91a716358941791b4269241f21db25fd22ae5ff5/src/index.ts 将其修改为 custom.id");
+                    tab.addModel(options.custom.fn({
+                        tab,
+                        data: options.custom.data
+                    }));
+                }
+                if (!options.keepCursor) {
+                    setPanelFocus(tab.panelElement.parentElement.parentElement);
+                }
+            }
+        });
+    } else if (options.searchData) {
+        tab = new Tab({
+            icon: "iconSearch",
+            title: window.siyuan.languages.search,
+            callback(tab) {
+                tab.addModel(new Search({
+                    app: options.app,
+                    tab,
+                    config: options.searchData
+                }));
+                setPanelFocus(tab.panelElement.parentElement.parentElement);
+            }
+        });
+    } else {
+        tab = new Tab({
+            title: getDocDisplayName(options.fileName, options.rootTitleEmpty),
+            docIcon: options.rootIcon,
+            callback(tab) {
+                let editor;
+                if (options.zoomIn) {
+                    editor = new Editor({
+                        app: options.app,
+                        tab,
+                        blockId: options.id,
+                        rootId: options.rootID,
+                        notebookId: options.notebookId,
+                        action: options.keepCursor ? [Constants.CB_GET_ALL] :
+                            [Constants.CB_GET_ALL, isPhablet() ? Constants.CB_GET_HL : Constants.CB_GET_FOCUS],
+                        scrollPosition: options.scrollPosition,
+                        afterInitProtyle,
+                    });
+                } else {
+                    editor = new Editor({
+                        app: options.app,
+                        tab,
+                        blockId: options.id,
+                        rootId: options.rootID,
+                        notebookId: options.notebookId,
+                        mode: options.mode,
+                        action: options.action,
+                        scrollPosition: options.scrollPosition,
+                        afterInitProtyle,
+                    });
+                }
+                tab.addModel(editor);
+            }
+        });
+    }
+    return tab;
+};
+
+export const updatePanelByEditor = (options: {
+    protyle?: IProtyle,
+    focus: boolean,
+    pushBackStack: boolean,
+    reload: boolean,
+    resize: boolean,
+    // 手动大纲导航按目标标题同步高亮，并保留大纲滚动位置。
+    outlineId?: string,
+}) => {
+    if (options.protyle && options.protyle.path) {
+        // https://ld246.com/article/1637636106054/comment/1641485541929#comments
+        if (options.protyle.element.classList.contains("fn__none") ||
+            (!hasClosestByClassName(options.protyle.element, "layout__wnd--active") &&
+                document.querySelector(".layout__wnd--active")  // https://github.com/siyuan-note/siyuan/issues/4414
+            )
+        ) {
+            return;
+        }
+        if (options.resize) {
+            resize(options.protyle);
+        }
+        if (options.focus) {
+            if (options.protyle.toolbar.range) {
+                focusByRange(options.protyle.toolbar.range);
+                countSelectWord(options.protyle.toolbar.range, options.protyle);
+                if (options.pushBackStack && options.protyle.preview.element.classList.contains("fn__none")) {
+                    pushBack(options.protyle, options.protyle.toolbar.range);
+                }
+            } else {
+                focusBlock(options.protyle.wysiwyg.element.firstElementChild);
+                if (options.pushBackStack && options.protyle.preview.element.classList.contains("fn__none")) {
+                    pushBack(options.protyle, undefined, options.protyle.wysiwyg.element.firstElementChild);
+                }
+                countBlockWord([], options.protyle);
+            }
+        }
+        if (!options.focus && options.pushBackStack && options.protyle.preview.element.classList.contains("fn__none")) {
+            pushBackByEditor(options.protyle);
+        }
+        if (window.siyuan.config.fileTree.alwaysSelectOpenedFile && options.protyle) {
+            const fileModel = getDockByType("file")?.data.file;
+            if (fileModel instanceof Files) {
+                const target = fileModel.element.querySelector(`li[data-path="${options.protyle.path}"]`);
+                if (!target || (target && !target.classList.contains("b3-list-item--focus"))) {
+                    fileModel.selectItem(options.protyle.notebookId, options.protyle.path);
+                }
+            }
+        }
+        forEachPluginSubscriber("switch-protyle", eventBus => {
+            eventBus.emit("switch-protyle", {protyle: options.protyle});
+        });
+    }
+    // 切换页签或关闭所有页签时，需更新对应的面板
+    const models = getAllModels();
+    updateOutline(models, options.protyle, options.reload, options.outlineId);
+    updateBacklinkGraph(models, options.protyle);
+};
+
+export const isCurrentEditor = (blockId: string) => {
+    const activeElement = document.querySelector(".layout__wnd--active > .fn__flex > .layout-tab-bar > .item--focus");
+    if (activeElement) {
+        const tab = getInstanceById(activeElement.getAttribute("data-id"));
+        if (tab instanceof Tab && tab.model instanceof Editor) {
+            if (tab.model.editor.protyle.block.rootID === blockId ||
+                tab.model.editor.protyle.block.parentID === blockId ||  // updateBacklinkGraph 时会传入 parentID
+                tab.model.editor.protyle.block.id === blockId) {
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
+const outlineRequests = new WeakMap<Outline, AbortController>();
+
+export const invalidateOutlineRequest = (outline: Outline) => {
+    outlineRequests.get(outline)?.abort();
+    outlineRequests.delete(outline);
+};
+
+const syncOutlineCurrent = (outline: Outline, protyle: IProtyle, outlineId?: string) => {
+    if (!protyle || outline.isPreview || !protyle.preview.element.classList.contains("fn__none") ||
+        outline.blockId !== protyle.block?.rootID) {
+        return;
+    }
+    if (outlineId !== undefined) {
+        outline.setCurrentById(outlineId, false);
+        return;
+    }
+    const selection = getSelection();
+    const selectedRange = selection.rangeCount > 0 ? selection.getRangeAt(0) : undefined;
+    const range = selectedRange && protyle.element.contains(selectedRange.startContainer) &&
+        protyle.element.contains(selectedRange.endContainer) ? selectedRange : protyle.toolbar.range;
+    const currentElement = range && protyle.wysiwyg.element.contains(range.startContainer) &&
+        protyle.wysiwyg.element.contains(range.endContainer) ?
+        hasClosestByAttribute(range.startContainer, "data-node-id", null) : undefined;
+    void outline.setCurrent(currentElement || undefined);
+};
+
+export const updateOutline = (models: IModels, protyle: IProtyle, reload = false, outlineId?: string) => {
+    models.outline.find(item => {
+        if (!reload && item.type === "local" && item.blockId !== protyle?.block?.rootID) {
+            return;
+        }
+        invalidateOutlineRequest(item);
+        const request = new AbortController();
+        outlineRequests.set(item, request);
+        item.invalidateCurrent();
+        const isPreview = protyle ? !protyle.preview.element.classList.contains("fn__none") : false;
+        if (reload ||
+            (item.type === "pin" &&
+                (!protyle || item.blockId !== protyle.block?.rootID ||
+                    item.isPreview !== isPreview)
+            )
+        ) {
+            let blockId = "";
+            if (protyle && protyle.block) {
+                blockId = protyle.block.rootID;
+                if (!blockId && reload && item.type === "local") {
+                    blockId = item.blockId;
+                }
+            }
+            const outlineParam: IObject = {
+                id: blockId,
+                preview: isPreview
+            };
+            if (protyle && isEncryptedBox(protyle.notebookId)) {
+                outlineParam.notebook = protyle.notebookId;
+            }
+            let currentOutlineId = outlineId;
+            if (protyle && outlineId !== undefined) {
+                // 等待大纲加载时，用户在正文中的新操作优先于此前点击的标题。
+                const followCaret = () => {
+                    currentOutlineId = undefined;
+                    request.abort();
+                };
+                ["pointerdown", "keydown", "beforeinput"].forEach(type => {
+                    protyle.element.addEventListener(type, followCaret, {capture: true, signal: request.signal});
+                });
+            }
+            fetchPost("/api/outline/getDocOutline", outlineParam, response => {
+                if (outlineRequests.get(item) !== request) {
+                    return;
+                }
+                if (protyle && (!protyle.element.isConnected ||
+                    isPreview === protyle.preview.element.classList.contains("fn__none") ||
+                    (item.type === "pin" && (protyle.element.classList.contains("fn__none") || !isCurrentEditor(blockId))))) {
+                    return;
+                }
+                item.isPreview = isPreview;
+                item.update(response, blockId, protyle?.notebookId || "");
+                if (protyle) {
+                    item.updateDocTitle(protyle.background.ial, Array.isArray(response.data) ? response.data.length : 0);
+                    syncOutlineCurrent(item, protyle, currentOutlineId);
+                } else {
+                    item.updateDocTitle();
+                }
+            }).finally(() => request.abort());
+        } else {
+            syncOutlineCurrent(item, protyle, outlineId);
+        }
+    });
+};
+
+export const updateBacklinkGraph = (models: IModels, protyle: IProtyle) => {
+    // https://ld246.com/article/1637636106054/comment/1641485541929#comments
+    if (protyle && protyle.element.classList.contains("fn__none") ||
+        (protyle && !hasClosestByClassName(protyle.element, "layout__wnd--active") &&
+            document.querySelector(".layout__wnd--active")  // https://github.com/siyuan-note/siyuan/issues/4414
+        )
+    ) {
+        return;
+    }
+    models.graph.forEach(item => {
+        if (item.type !== "global" && (!protyle || item.blockId !== protyle.block?.id)) {
+            if (item.type === "local" && item.rootId !== protyle?.block?.rootID) {
+                return;
+            }
+            let blockId = "";
+            if (protyle && protyle.block) {
+                blockId = protyle.block.showAll ? protyle.block.id : protyle.block.parentID;
+            }
+            const notebookId = protyle?.notebookId || "";
+            if (blockId === item.blockId && notebookId === item.notebookId) {
+                return;
+            }
+            item.notebookId = notebookId;
+            item.searchGraph({id: blockId});
+        }
+    });
+    models.backlink.forEach(item => {
+        if (item.type === "bottom") {
+            if (!protyle || item.ownerProtyle !== protyle) {
+                return;
+            }
+            const blockId = protyle.block.showAll ? protyle.block.id : (protyle.block.parentID || protyle.block.rootID);
+            if (blockId === item.blockId) {
+                return;
+            }
+            const backlinkKeyword = item.inputsElement[0].value;
+            const backmentionKeyword = item.inputsElement[1].value;
+            item.prepareForBlock(blockId, protyle.block.rootID);
+            item.inputsElement[0].value = backlinkKeyword;
+            item.inputsElement[1].value = backmentionKeyword;
+            item.markDirty();
+            item.refreshIfVisible(true);
+            return;
+        }
+        if (item.type === "local" && item.rootId !== protyle?.block?.rootID) {
+            return;
+        }
+        let blockId = "";
+        if (protyle && protyle.block) {
+            blockId = protyle.block.showAll ? protyle.block.id : protyle.block.parentID;
+        }
+        if (blockId === item.blockId) {
+            return;
+        }
+        item.switchBlock(blockId, protyle?.block?.rootID || "", protyle?.notebookId || "");
+    });
+};
+
+export const openBy = (url: string, type: "folder" | "app") => {
+    if (!getHostCapabilities().localFileSystem) {
+        return;
+    }
+    /// #if !BROWSER
+    if (url.startsWith("assets/")) {
+        const open = () => {
+            // 内核按文件名解析资源，需先去掉片段；查询中的 box 参数用于定位加密笔记本中的资源
+            fetchPost("/api/asset/resolveAssetPath", {
+                path: getAssetPathWithoutFragment(url).replace(/\.pdf\?page=\d{1,}$/, ".pdf")
+            }, (response) => {
+                if (type === "app") {
+                    useShell("openPath", response.data);
+                } else if (type === "folder") {
+                    useShell("showItemInFolder", response.data);
+                }
+            });
+        };
+        if (isEncryptedBox(new URL(url, window.location.origin).searchParams.get("box"))) {
+            confirmDialog("⚠️ " + window.siyuan.languages.openBy, window.siyuan.languages.encryptedAssetExternalOpenTip, open);
+        } else {
+            open();
+        }
+        return;
+    }
+    let address = "";
+    if ("windows" === window.siyuan.config.system.os) {
+        // `file://` 协议兼容 Window 平台使用 `/` 作为目录分割线 https://github.com/siyuan-note/siyuan/issues/5681
+        address = url.replace("file:///", "").replace("file://\\", "").replace("file://", "").replace(/\//g, "\\");
+    } else {
+        address = url.replace("file://", "");
+    }
+
+    // 拖入文件名包含 `)` 、`(` 的文件以 `file://` 插入后链接解析错误 https://github.com/siyuan-note/siyuan/issues/5786
+    address = address.replace(/\\\)/g, ")").replace(/\\\(/g, "(");
+    if (type === "app") {
+        useShell("openPath", address);
+    } else if (type === "folder") {
+        if ("windows" === window.siyuan.config.system.os) {
+            if (!address.startsWith("\\\\")) { // \\ 开头的路径是 Windows 网络共享路径 https://github.com/siyuan-note/siyuan/issues/5980
+                // Windows 端打开本地文件所在位置失效 https://github.com/siyuan-note/siyuan/issues/5808
+                address = address.replace(/\\\\/g, "\\");
+            }
+        }
+        useShell("showItemInFolder", address);
+    }
+    /// #endif
+};

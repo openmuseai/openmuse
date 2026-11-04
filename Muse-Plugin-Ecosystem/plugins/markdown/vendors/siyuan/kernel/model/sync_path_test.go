@@ -1,0 +1,195 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+
+	ignore "github.com/sabhiram/go-gitignore"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func TestPathsAffectSync(t *testing.T) {
+	oldDataDir := util.DataDir
+	util.DataDir = t.TempDir()
+	t.Cleanup(func() {
+		util.DataDir = oldDataDir
+	})
+
+	outsideDir := t.TempDir()
+	outsideFile := filepath.Join(outsideDir, "export.zip")
+	writeSyncPathTestFile(t, outsideFile)
+	if PathsAffectSync(outsideFile) {
+		t.Fatal("workspace path outside data should not affect sync")
+	}
+	if _, err := os.Stat(filepath.Join(util.DataDir, ".siyuan", "syncignore")); !os.IsNotExist(err) {
+		t.Fatal("checking a path outside data should not create syncignore")
+	}
+
+	syncIgnorePath := filepath.Join(util.DataDir, ".siyuan", "syncignore")
+	if err := os.MkdirAll(filepath.Dir(syncIgnorePath), 0755); nil != err {
+		t.Fatal(err)
+	}
+	ignoreData := []byte("/ignored/**/*\n!/ignored/keep.txt\n/ignored-only/**/*\n")
+	if err := os.WriteFile(syncIgnorePath, ignoreData, 0644); nil != err {
+		t.Fatal(err)
+	}
+
+	trackedFile := filepath.Join(util.DataDir, "assets", "tracked.txt")
+	writeSyncPathTestFile(t, trackedFile)
+	if !PathsAffectSync(trackedFile) {
+		t.Fatal("tracked data file should affect sync")
+	}
+
+	ignoredFile := filepath.Join(util.DataDir, "ignored", "drop.txt")
+	writeSyncPathTestFile(t, ignoredFile)
+	if PathsAffectSync(ignoredFile) {
+		t.Fatal("syncignore path should not affect sync")
+	}
+
+	unignoredFile := filepath.Join(util.DataDir, "ignored", "keep.txt")
+	writeSyncPathTestFile(t, unignoredFile)
+	if !PathsAffectSync(unignoredFile) {
+		t.Fatal("negated syncignore path should affect sync")
+	}
+
+	ignoredDir := filepath.Join(util.DataDir, "ignored-only")
+	writeSyncPathTestFile(t, filepath.Join(ignoredDir, "drop.txt"))
+	if PathsAffectSync(ignoredDir) {
+		t.Fatal("directory containing only ignored files should not affect sync")
+	}
+	if !PathsAffectSync(filepath.Join(util.DataDir, "ignored")) {
+		t.Fatal("directory containing an unignored file should affect sync")
+	}
+
+	if !PathsAffectSync(syncIgnorePath) {
+		t.Fatal("syncignore changes should affect sync")
+	}
+	if !PathsAffectSync(filepath.Dir(syncIgnorePath)) {
+		t.Fatal("directory containing syncignore should affect sync")
+	}
+	for _, ignored := range []string{
+		filepath.Join(util.DataDir, ".hidden", "file.txt"),
+		filepath.Join(util.DataDir, "assets", "upload.tmp"),
+		filepath.Join(util.DataDir, "filesys_status_check", "status"),
+		filepath.Join(util.DataDir, "storage", "local.json"),
+		filepath.Join(util.DataDir, "storage", "recent-doc.json"),
+		filepath.Join(util.DataDir, "storage", "ref-used.json"),
+		filepath.Join(util.DataDir, "storage", "view-state.json"),
+	} {
+		writeSyncPathTestFile(t, ignored)
+		if PathsAffectSync(ignored) {
+			t.Fatalf("repository ignored path should not affect sync: %s", ignored)
+		}
+	}
+}
+
+func TestPathsAffectSyncMetadata(t *testing.T) {
+	oldDataDir := util.DataDir
+	util.DataDir = t.TempDir()
+	t.Cleanup(func() {
+		util.DataDir = oldDataDir
+	})
+
+	for _, tc := range []struct {
+		path string
+		want bool
+	}{
+		{".siyuan/searchignore", true},
+		{".siyuan/embeddingignore", true},
+		{".siyuan/indexignore", true},
+		{".siyuan/refsearchignore", true},
+		{".siyuan/data-crypto-backup.json", true},
+		{".siyuan/conf.json", false},
+		{".siyuan/.hidden/file.json", false},
+		{".hidden/.siyuan/file.json", false},
+		{"notebook/.siyuan/conf.json", true},
+		{".siyuan/recovery.tmp", false},
+		{"storage/view-state-corrupted-20260913000000.json", false},
+	} {
+		t.Run(tc.path, func(t *testing.T) {
+			path := filepath.Join(util.DataDir, filepath.FromSlash(tc.path))
+			writeSyncPathTestFile(t, path)
+			if got := PathsAffectSync(path); got != tc.want {
+				t.Fatalf("existing path: got %v, want %v", got, tc.want)
+			}
+			if err := os.Remove(path); nil != err {
+				t.Fatal(err)
+			}
+			if got := PathsAffectSync(path); got != tc.want {
+				t.Fatalf("removed path: got %v, want %v", got, tc.want)
+			}
+		})
+	}
+
+	metadataDir := filepath.Join(util.DataDir, ".siyuan")
+	writeSyncPathTestFile(t, filepath.Join(metadataDir, "data-crypto-backup.json"))
+	matcher := ignore.CompileIgnoreLines(mustSyncIgnoreLines(t)...)
+	if err := os.Remove(filepath.Join(metadataDir, "syncignore")); nil != err {
+		t.Fatal(err)
+	}
+	if !pathAffectsSync(util.DataDir, metadataDir, matcher) {
+		t.Fatal("metadata directory without syncignore should affect sync")
+	}
+	matcher = ignore.CompileIgnoreLines("/.siyuan/data-crypto-backup.json")
+	if pathAffectsSync(util.DataDir, metadataDir, matcher) {
+		t.Fatal("ignored metadata should not affect sync")
+	}
+}
+
+func TestSyncIgnoreLegacyConfReadFailure(t *testing.T) {
+	oldDataDir := util.DataDir
+	util.DataDir = t.TempDir()
+	t.Cleanup(func() {
+		util.DataDir = oldDataDir
+	})
+	writeSyncPathTestFile(t, filepath.Join(util.DataDir, ".siyuan"))
+	if _, _, err := getSyncIgnoreRules(); err == nil {
+		t.Fatal("unreadable rules must prevent repository creation")
+	}
+}
+
+func TestPathsAffectSyncResolvesSymlinks(t *testing.T) {
+	oldDataDir := util.DataDir
+	util.DataDir = t.TempDir()
+	t.Cleanup(func() {
+		util.DataDir = oldDataDir
+	})
+
+	trackedDir := filepath.Join(util.DataDir, "assets")
+	trackedFile := filepath.Join(trackedDir, "tracked.txt")
+	writeSyncPathTestFile(t, trackedFile)
+	outsideDir := t.TempDir()
+	incomingLink := filepath.Join(outsideDir, "data-link")
+	if err := os.Symlink(trackedDir, incomingLink); nil != err {
+		t.Skipf("create symlink failed: %s", err)
+	}
+	if !PathsAffectSync(filepath.Join(incomingLink, "tracked.txt")) {
+		t.Fatal("path resolving into data should affect sync")
+	}
+
+	externalTargetDir := t.TempDir()
+	externalTarget := filepath.Join(externalTargetDir, "external.txt")
+	writeSyncPathTestFile(t, externalTarget)
+	outgoingLink := filepath.Join(util.DataDir, "external-link")
+	if err := os.Symlink(externalTargetDir, outgoingLink); nil != err {
+		t.Skipf("create symlink failed: %s", err)
+	}
+	if PathsAffectSync(filepath.Join(outgoingLink, "external.txt")) {
+		t.Fatal("path resolving outside data should not affect sync")
+	}
+}
+
+func writeSyncPathTestFile(t *testing.T, path string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0755); nil != err {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte("test"), 0644); nil != err {
+		t.Fatal(err)
+	}
+}

@@ -1,0 +1,95 @@
+name: 🐛 Bug report
+description: Report defects to help us improve
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!WARNING]
+        > Do not publicly report security vulnerabilities. Please create a [private security advisory](https://github.com/siyuan-note/siyuan/security/advisories/new) instead.
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: |
+        Please search to see if an issue already exists for the bug you encountered.
+      options:
+        - label: | 
+            I have searched the existing issues
+          required: true
+  - type: checkboxes
+    attributes:
+      label: Can the issue be reproduced with the default theme (daylight/midnight)?
+      description: |
+        Please confirm that the issue can be reproduced with the default theme.
+      options:
+        - label: |
+            I was able to reproduce the issue with the default theme
+          required: true
+  - type: checkboxes
+    attributes:
+      label: Could the issue be due to extensions?
+      description: |
+        Be aware that code snippets, plugins, themes, widgets, or other extensions may cause problems.
+      options:
+        - label: |
+            I've ruled out the possibility that the extension is causing the problem.
+          required: true
+  - type: textarea
+    attributes:
+      label: Describe the problem
+      description: |
+        Please describe the problem you are experiencing as clearly as possible.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Please provide the exact steps needed to reproduce the problem, preferably with a minimal reproducible example.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected result
+      description: |
+        Please be as clear and accurate as possible to describe the results you are looking for.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Screenshot or screen recording presentation
+      description: |
+        Please try to attach screenshots or videos to describe the problem you are experiencing.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Runtime information
+      description: |
+        Open "Settings - About - Runtime information", click "Copy" in the dialog, and paste the result here. If you are using an older version without this button or cannot start SiYuan, manually enter the version, operating system, and browser (if used).
+      placeholder: |
+        Paste runtime information here, or manually enter:
+        - Version:
+        - Operating system:
+        - Browser (if used):
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Log file
+      description: |
+        Export the system logs from "Settings - App - Maintenance - System log" and attach the exported ZIP file here. If SiYuan cannot start or the export option is unavailable, you can retrieve `workspace/temp/siyuan.log` manually. Check the logs and remove private information before uploading. Leave this field blank if no relevant log is available.
+      placeholder: |
+        Attach the log file here, or paste the relevant log content.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: More information
+      description: |
+        Please provide other additional information to help us diagnose the problem.
+    validations:
+      required: false

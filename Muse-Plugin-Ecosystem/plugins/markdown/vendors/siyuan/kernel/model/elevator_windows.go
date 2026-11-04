@@ -1,0 +1,130 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+//go:build windows
+
+package model
+
+import (
+	"errors"
+	"fmt"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/88250/gulu"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/internal/elevator"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+var microsoftDefenderLock = sync.Mutex{}
+
+func AddMicrosoftDefenderExclusion() (err error) {
+	microsoftDefenderLock.Lock()
+	defer microsoftDefenderLock.Unlock()
+
+	if !gulu.OS.IsWindows() {
+		return
+	}
+
+	if !isUsingMicrosoftDefender() {
+		return errors.New("Microsoft Defender preferences are unavailable")
+	}
+
+	elevatorBin := getElevatorBin()
+	if !gulu.File.IsExist(elevatorBin) {
+		err = fmt.Errorf("not found elevator [%s]", elevatorBin)
+		logging.LogWarn(err.Error())
+		return
+	}
+
+	installPath := filepath.Dir(util.WorkingDir)
+	logging.LogInfof("use elevator to add Windows Defender exclusion path [%s, %s]", installPath, util.WorkspaceDir)
+
+	// 工作空间路径由用户自由指定，这里校验并转义，避免路径中的 cmd.exe 元字符导致提权后命令注入
+	if err = validateExclusionPath(installPath); nil != err {
+		logging.LogWarnf("invalid Windows Defender exclusion path [%s]: %s", installPath, err)
+		return
+	}
+	if err = validateExclusionPath(util.WorkspaceDir); nil != err {
+		logging.LogWarnf("invalid Windows Defender exclusion path [%s]: %s", util.WorkspaceDir, err)
+		return
+	}
+
+	// 提权工具等待添加命令结束并核验两个路径，只有最终退出码为零才记录完成
+	args := []string{"add-defender-exclusion", syscall.EscapeArg(installPath), syscall.EscapeArg(util.WorkspaceDir)}
+	if err = elevator.Run(elevatorBin, util.WorkingDir, strings.Join(args, " ")); err != nil {
+		if processError, ok := errors.AsType[*elevator.ProcessError](err); ok {
+			logging.LogErrorf("Windows Defender exclusion helper [%s] diagnostics: %s", elevatorBin, processError.Diagnostics)
+		}
+		logging.LogErrorf("add Windows Defender exclusion path [%s, %s] failed: %s", installPath, util.WorkspaceDir, err)
+		return
+	}
+
+	UpdateSystemConf(func(s *conf.System) { s.MicrosoftDefenderExcluded = true })
+
+	logging.LogInfof("added Windows Defender exclusion path [%s, %s]", installPath, util.WorkspaceDir)
+	util.PushMsg(Conf.language(102), 5000)
+	return
+}
+
+func AutoCheckMicrosoftDefenderJob() {
+	time.Sleep(7 * time.Second)
+	microsoftDefenderLock.Lock()
+	defer microsoftDefenderLock.Unlock()
+
+	if !gulu.OS.IsWindows() || Conf.System.Load().MicrosoftDefenderExcluded {
+		return
+	}
+
+	elevator := getElevatorBin()
+	if !gulu.File.IsExist(elevator) {
+		logging.LogWarnf("not found elevator [%s]", elevator)
+		return
+	}
+
+	if !isUsingMicrosoftDefender() {
+		return
+	}
+
+	util.PushMsg(Conf.language(252), 0)
+}
+
+func isUsingMicrosoftDefender() bool {
+	if !gulu.OS.IsWindows() {
+		return false
+	}
+
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", "Get-MpPreference -ErrorAction Stop")
+	gulu.CmdAttr(cmd)
+	return cmd.Run() == nil
+}
+
+// validateExclusionPath 校验用于添加到 Windows Defender 排除项的路径，
+// 拒绝包含 cmd.exe 或 PowerShell 元字符的路径，防止通过未转义的路径字符串实现命令注入
+func validateExclusionPath(path string) error {
+	if path == "" {
+		return errors.New("exclusion path is empty")
+	}
+	for _, c := range path {
+		if strings.ContainsRune("&|<>^%!\"'$`\x00\r\n", c) {
+			return fmt.Errorf("path contains invalid character [%s]", string(c))
+		}
+	}
+	return nil
+}
+
+func getElevatorBin() string {
+	elevator := filepath.Join(util.WorkingDir, "kernel", "elevator.exe")
+	if "dev" == util.Mode || !gulu.File.IsExist(elevator) {
+		elevator = filepath.Join(util.WorkingDir, "elevator", "elevator-"+runtime.GOARCH+".exe")
+	}
+	return elevator
+}

@@ -1,0 +1,17 @@
+// Rust stub for PageEnv (auto-generated)
+// Original: cn/wps/moffice/writer/layout/base/env/PageEnv.java
+use crate::*;
+
+pub struct PageEnv {
+    // TODO: fields
+}
+
+impl PageEnv {
+    pub fn new() -> Self { todo!() }
+    pub fn getCoreHeight(&self) -> i32 { todo!() }
+    pub fn getCoreWidth(&self) -> i32 { todo!() }
+    pub fn dispose(&self) { todo!() }
+    pub fn init(&self) { todo!() }
+    pub fn isShowCardInfo(&self) -> bool { todo!() }
+    pub fn setShowCardInfo(&self, showCardInfo: bool) { todo!() }
+}

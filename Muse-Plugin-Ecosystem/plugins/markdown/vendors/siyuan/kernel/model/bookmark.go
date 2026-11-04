@@ -1,0 +1,278 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"errors"
+	"fmt"
+	"html"
+	"path/filepath"
+	"sort"
+	"strings"
+
+	"github.com/88250/gulu"
+	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/av"
+	"github.com/siyuan-note/siyuan/kernel/cache"
+	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+func RemoveBookmark(bookmark string) (err error) {
+	return removeBookmark(bookmark, nil)
+}
+
+func removeBookmark(bookmark string, beforeCommit func()) (err error) {
+	util.PushEndlessProgress(Conf.Language(116))
+	defer util.PushClearProgress()
+
+	bookmarks := sql.QueryBookmarkBlocks()
+	treeBlocks := map[string][]string{}
+	for _, bm := range bookmarks {
+		if blocks, ok := treeBlocks[bm.RootID]; !ok {
+			treeBlocks[bm.RootID] = []string{bm.ID}
+		} else {
+			treeBlocks[bm.RootID] = append(blocks, bm.ID)
+		}
+	}
+
+	historyDir, err := getHistoryDir(HistoryOpReplace)
+	if nil != err {
+		return
+	}
+
+	for treeID, blocks := range treeBlocks {
+		util.PushEndlessProgress("[" + treeID + "]")
+		tree, original, e := loadBatchMutationTree(treeID)
+		if nil != e {
+			return e
+		}
+
+		changed := false
+		for _, blockID := range blocks {
+			node := treenode.GetNodeInTree(tree, blockID)
+			if nil == node {
+				continue
+			}
+
+			// 前端按纯文本回传标签，存储态为转义形态，比较前统一还原
+			if bookmarkAttrVal := node.IALAttr("bookmark"); bookmarkAttrVal == html.UnescapeString(bookmark) {
+				node.RemoveIALAttr("bookmark")
+				changed = true
+			}
+		}
+
+		if changed {
+			generateTreeHistory(tree, historyDir)
+			util.PushEndlessProgress(fmt.Sprintf(Conf.Language(111), util.EscapeHTML(treenode.ReadDocumentTitle(tree.Root).Text)))
+			if beforeCommit != nil {
+				beforeCommit()
+			}
+			if err = writeReplacementTree(tree, original, "", false); err != nil {
+				util.ClearPushProgress(100)
+				return
+			}
+			for _, blockID := range blocks {
+				cache.RemoveBlockIAL(blockID)
+			}
+		}
+
+		util.RandomSleep(50, 150)
+	}
+
+	indexHistoryDir(filepath.Base(historyDir), util.NewLute())
+	sql.FlushQueue()
+
+	util.ReloadUI()
+	return
+}
+
+func RenameBookmark(oldBookmark, newBookmark string) (err error) {
+	return renameBookmark(oldBookmark, newBookmark, nil)
+}
+
+func renameBookmark(oldBookmark, newBookmark string, beforeCommit func()) (err error) {
+	if invalidChar := treenode.ContainsMarker(newBookmark); "" != invalidChar {
+		return fmt.Errorf(Conf.Language(112), invalidChar)
+	}
+
+	newBookmark = strings.TrimSpace(newBookmark)
+	if "" == newBookmark {
+		return errors.New(Conf.Language(126))
+	}
+
+	if oldBookmark == newBookmark {
+		return
+	}
+
+	util.PushEndlessProgress(Conf.Language(110))
+	defer util.ClearPushProgress(100)
+
+	bookmarks := sql.QueryBookmarkBlocks()
+	treeBlocks := map[string][]string{}
+	for _, bm := range bookmarks {
+		if blocks, ok := treeBlocks[bm.RootID]; !ok {
+			treeBlocks[bm.RootID] = []string{bm.ID}
+		} else {
+			treeBlocks[bm.RootID] = append(blocks, bm.ID)
+		}
+	}
+
+	historyDir, err := getHistoryDir(HistoryOpReplace)
+	if nil != err {
+		return
+	}
+
+	for treeID, blocks := range treeBlocks {
+		util.PushEndlessProgress("[" + treeID + "]")
+		tree, original, e := loadBatchMutationTree(treeID)
+		if nil != e {
+			return e
+		}
+
+		changed := false
+		for _, blockID := range blocks {
+			node := treenode.GetNodeInTree(tree, blockID)
+			if nil == node {
+				continue
+			}
+
+			// 前端按纯文本回传旧标签，存储态为转义形态，比较前统一还原
+			if bookmarkAttrVal := node.IALAttr("bookmark"); bookmarkAttrVal == html.UnescapeString(oldBookmark) {
+				node.SetIALAttr("bookmark", newBookmark)
+				changed = true
+			}
+		}
+
+		if changed {
+			generateTreeHistory(tree, historyDir)
+			util.PushEndlessProgress(fmt.Sprintf(Conf.Language(111), util.EscapeHTML(treenode.ReadDocumentTitle(tree.Root).Text)))
+			if beforeCommit != nil {
+				beforeCommit()
+			}
+			if err = writeReplacementTree(tree, original, "", false); err != nil {
+				util.ClearPushProgress(100)
+				return
+			}
+			for _, blockID := range blocks {
+				cache.RemoveBlockIAL(blockID)
+			}
+		}
+
+		util.RandomSleep(50, 150)
+	}
+
+	indexHistoryDir(filepath.Base(historyDir), util.NewLute())
+	sql.FlushQueue()
+
+	util.ReloadUI()
+	return
+}
+
+type BookmarkLabel string
+type BookmarkBlocks []*Block
+
+type Bookmark struct {
+	Name   BookmarkLabel `json:"name"`
+	Blocks []*Block      `json:"blocks"`
+	Type   string        `json:"type"` // "bookmark"
+	Depth  int           `json:"depth"`
+	Count  int           `json:"count"`
+}
+
+type Bookmarks []*Bookmark
+
+func (s Bookmarks) Len() int           { return len(s) }
+func (s Bookmarks) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s Bookmarks) Less(i, j int) bool { return s[i].Name < s[j].Name }
+
+func BookmarkLabels() (ret []string) {
+	ret = sql.QueryBookmarkLabels()
+	return
+}
+
+func BookmarkLabelsByPublishAccess(c *gin.Context, publishAccess PublishAccess) (ret []string) {
+	return filterBookmarkLabelsByPublishAccess(c, publishAccess, sql.QueryBookmarkLabelBlocks())
+}
+
+func filterBookmarkLabelsByPublishAccess(c *gin.Context, publishAccess PublishAccess, blocks []*sql.BookmarkLabelBlock) (ret []string) {
+	ret = []string{}
+	publishInvisible := GetInvisiblePublishAccess(publishAccess)
+	publishDisable := GetDisablePublishAccess(publishAccess)
+	labels := map[string]bool{}
+	for _, block := range blocks {
+		if block == nil || block.Label == "" ||
+			!CheckPathAccessableByPublishIgnore(block.Box, block.Path, publishInvisible) ||
+			!CheckPathAccessableByPublishIgnore(block.Box, block.Path, publishDisable) {
+			continue
+		}
+		passwordID, password := GetPathPasswordByPublishAccess(block.Box, block.Path, publishAccess)
+		if password != "" && !CheckPublishAuthCookie(c, passwordID, password) {
+			continue
+		}
+		labels[block.Label] = true
+	}
+
+	for label := range labels {
+		ret = append(ret, label)
+	}
+	sort.Strings(ret)
+	return
+}
+
+func BuildBookmark() (ret *Bookmarks) {
+	FlushTxQueue()
+	sql.FlushQueue()
+
+	ret = &Bookmarks{}
+	sqlBlocks := sql.QueryBookmarkBlocks()
+
+	labelBlocks := map[BookmarkLabel]BookmarkBlocks{}
+	blocks := fromSQLBlocks(&sqlBlocks, "", 0)
+	luteEngine := NewLute()
+	for _, block := range blocks {
+		if "" != block.Name {
+			// Blocks in the bookmark panel display their name instead of content https://github.com/siyuan-note/siyuan/issues/8514
+			// 名称是 SQL 索引中的裸文本，书签面板按 HTML 渲染 Content，转义后再展示
+			block.Content = util.EscapeHTML(block.Name)
+		} else if "NodeAttributeView" == block.Type {
+			// Display database title in bookmark panel https://github.com/siyuan-note/siyuan/issues/11666
+			avID := gulu.Str.SubStringBetween(block.Markdown, "av-id=\"", "\"")
+			avName, _ := av.GetAttributeViewName(avID)
+			block.Content = util.EscapeHTML(avName)
+		} else {
+			// Improve bookmark panel rendering https://github.com/siyuan-note/siyuan/issues/9361
+			tree, err := LoadTreeByBlockID(block.ID)
+			if err != nil {
+				logging.LogErrorf("parse block [%s] failed: %s", block.ID, err)
+			} else {
+				n := treenode.GetNodeInTree(tree, block.ID)
+				block.Content = renderOutline(n, luteEngine)
+			}
+		}
+
+		// 存储态为 HTML 转义形态，统一还原为纯文本：前端按上下文转义展示，
+		// 重命名/删除也按纯文本回传，保证比较一致
+		label := BookmarkLabel(html.UnescapeString(block.IAL["bookmark"]))
+		if bs, ok := labelBlocks[label]; ok {
+			bs = append(bs, block)
+			labelBlocks[label] = bs
+		} else {
+			labelBlocks[label] = []*Block{block}
+		}
+	}
+
+	for label, bs := range labelBlocks {
+		for _, b := range bs {
+			b.Depth = 1
+		}
+		*ret = append(*ret, &Bookmark{Name: label, Blocks: bs, Type: "bookmark", Count: len(bs)})
+	}
+
+	sort.Sort(ret)
+	return
+}

@@ -1,0 +1,11 @@
+pub mod AlternativeHypothesis;
+pub mod BinomialTest;
+pub mod ChiSquareTest;
+pub mod GTest;
+pub mod KolmogorovSmirnovTest;
+pub mod MannWhitneyUTest;
+pub mod OneWayAnova;
+#[path = "package-info.rs"] pub mod package_info;
+pub mod TTest;
+pub mod TestUtils;
+pub mod WilcoxonSignedRankTest;

@@ -1,0 +1,6 @@
+# 本地开发覆盖：word_editor 在仓库内直接用 ../word_render。
+# 发布到 pub/git 时此文件不随包发布（pub 自动忽略），消费者按 pubspec.yaml
+# 的版本约束解析 word_render。
+dependency_overrides:
+  word_render:
+    path: ../word_render

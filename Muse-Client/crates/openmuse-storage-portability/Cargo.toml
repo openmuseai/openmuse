@@ -1,0 +1,17 @@
+[package]
+name = "openmuse-storage-portability"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+openmuse-storage-contract = { path = "../openmuse-storage-contract" }
+serde.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+futures.workspace = true
+openmuse-contract = { path = "../openmuse-contract" }
+openmuse-storage-tck = { path = "../openmuse-storage-tck" }
+serde_json.workspace = true

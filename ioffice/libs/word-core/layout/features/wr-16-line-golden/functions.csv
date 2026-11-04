@@ -1,0 +1,4 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_line_normalize,行表规范化,rows,orderedRows,wr-14,02,libs/word-core,pass
+2,02_function_line_compare,行级比较,javaRows+rustRows+tol,firstDiff,01,03,libs/word-core,pass
+3,03_function_line_corpus,corpus门闩,namedJsonPairs,passOrFailure,02,release,libs/word-core,pass

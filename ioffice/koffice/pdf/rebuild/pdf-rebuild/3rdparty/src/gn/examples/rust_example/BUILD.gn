@@ -1,0 +1,17 @@
+group("default") {
+  deps = [
+    "//hello_world/src:hello_world",
+    ":c_main",
+  ]
+}
+
+static_library("c_lib") {
+  complete_static_lib = true
+  deps = [ "//hello_world/foo/src:foo" ]
+  sources = [ "c_lib.cc" ]
+}
+
+executable("c_main") {
+  deps = [ ":c_lib" ]
+  sources = [ "c_main.cc" ]
+}

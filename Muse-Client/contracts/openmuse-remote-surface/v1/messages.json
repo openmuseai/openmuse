@@ -1,0 +1,412 @@
+[
+  {
+    "name": "RS-FX-001 accepts a mobile capability hello",
+    "kind": "hello",
+    "valid": true,
+    "value": {
+      "protocol": "openmuse.remote-surface/hello/v1",
+      "protocolMajor": 1,
+      "protocolMinor": 0,
+      "components": ["text", "image", "video-player", "form", "button", "confirmation", "status"],
+      "mediaFormats": ["image/jpeg", "video/poster"],
+      "webSnapshot": true,
+      "webInteractive": false,
+      "maxControlBytes": 65536
+    }
+  },
+  {
+    "name": "RS-FX-002 accepts a publish surface descriptor",
+    "kind": "descriptor",
+    "valid": true,
+    "value": {
+      "protocol": "openmuse.remote-surface/descriptor/v1",
+      "pluginId": "com.openmuse.fake-publish",
+      "surfaceId": "publish-workflow",
+      "title": "社媒发布",
+      "workspaceRef": "ws.opaque.1",
+      "modes": ["declarative", "media"],
+      "requiredCapabilities": ["text", "image", "form", "button"],
+      "readPermissions": ["workspace.resource.read"],
+      "actions": [
+        {
+          "id": "social.preview",
+          "effect": "read",
+          "requiredPermissions": ["workspace.resource.read"],
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title"],
+            "properties": {
+              "title": {"type": "string", "minLength": 1, "maxLength": 200}
+            }
+          }
+        },
+        {
+          "id": "social.publish.commit",
+          "effect": "external-side-effect",
+          "requiredPermissions": ["social.content.publish"],
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["previewRef", "accountRef"],
+            "properties": {
+              "previewRef": {"type": "string", "minLength": 1, "maxLength": 80},
+              "accountRef": {"type": "string", "minLength": 1, "maxLength": 80}
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "RS-FX-003 accepts a snapshot with an optional unknown component",
+    "kind": "snapshot",
+    "valid": true,
+    "value": {
+      "protocol": "openmuse.remote-surface/snapshot/v1",
+      "pluginId": "com.openmuse.fake-publish",
+      "surfaceId": "publish-workflow",
+      "surfaceSessionRef": "sess.1",
+      "generation": 4,
+      "stateRevision": "state-12",
+      "mode": "declarative",
+      "nodes": [
+        {
+          "nodeId": "title",
+          "type": "text",
+          "required": true,
+          "props": {"text": "社媒发布"},
+          "children": []
+        },
+        {
+          "nodeId": "cover",
+          "type": "image",
+          "required": true,
+          "props": {"mediaHandle": "media.cover.1", "alt": "封面"},
+          "children": []
+        },
+        {
+          "nodeId": "clip",
+          "type": "video-player",
+          "required": true,
+          "props": {"posterHandle": "media.poster.1", "durationMs": 12000},
+          "children": []
+        },
+        {
+          "nodeId": "extra",
+          "type": "sparkline",
+          "required": false,
+          "props": {"label": "可选图表"},
+          "children": []
+        },
+        {
+          "nodeId": "draft",
+          "type": "form",
+          "required": true,
+          "props": {
+            "fields": [
+              {"id": "title", "kind": "text", "label": "标题", "value": "周末散步"}
+            ]
+          },
+          "children": []
+        },
+        {
+          "nodeId": "preview",
+          "type": "button",
+          "required": true,
+          "props": {
+            "label": "生成预览",
+            "actionId": "social.preview",
+            "inputFromFields": ["title"]
+          },
+          "children": []
+        },
+        {
+          "nodeId": "commit",
+          "type": "confirmation",
+          "required": true,
+          "props": {
+            "label": "确认发布",
+            "actionId": "social.publish.commit",
+            "prompt": "确认发布这份预览？",
+            "input": {"previewRef": "preview-1", "accountRef": "account-1"}
+          },
+          "children": []
+        },
+        {
+          "nodeId": "state",
+          "type": "status",
+          "required": true,
+          "props": {"label": "尚未预览", "state": "idle"},
+          "children": []
+        }
+      ]
+    }
+  },
+  {
+    "name": "RS-FX-004 accepts a preview control request",
+    "kind": "request",
+    "valid": true,
+    "value": {
+      "protocol": "openmuse.remote-control/request/v1",
+      "requestId": "req-73",
+      "surfaceSessionRef": "sess.1",
+      "generation": 4,
+      "actionId": "social.preview",
+      "input": {"title": "周末散步"},
+      "expectedStateRevision": "state-12",
+      "idempotencyKey": "submission-unique-73",
+      "deadlineMs": 10000
+    }
+  },
+  {
+    "name": "RS-FX-005 accepts an external side-effect receipt",
+    "kind": "receipt",
+    "valid": true,
+    "value": {
+      "protocol": "openmuse.remote-control/receipt/v1",
+      "requestId": "req-73",
+      "idempotencyKey": "submission-unique-73",
+      "status": "accepted",
+      "jobRef": "job-9",
+      "stateRevision": "state-13",
+      "decisionRef": "decision-4"
+    }
+  },
+  {
+    "name": "RS-FX-006 accepts a denied receipt",
+    "kind": "receipt",
+    "valid": true,
+    "value": {
+      "protocol": "openmuse.remote-control/receipt/v1",
+      "requestId": "req-74",
+      "idempotencyKey": "submission-unique-74",
+      "status": "denied",
+      "errorCode": "DENIED"
+    }
+  },
+  {
+    "name": "RS-FX-007 accepts a recoverable job event",
+    "kind": "event",
+    "valid": true,
+    "value": {
+      "protocol": "openmuse.remote-control/event/v1",
+      "surfaceSessionRef": "sess.1",
+      "generation": 4,
+      "seq": 3,
+      "jobRef": "job-9",
+      "state": "running",
+      "occurredAtMs": 1789466400000,
+      "stateRevision": "state-13"
+    }
+  },
+  {
+    "name": "RS-FX-101 rejects a hello with an unknown field",
+    "kind": "hello",
+    "valid": false,
+    "value": {
+      "protocol": "openmuse.remote-surface/hello/v1",
+      "protocolMajor": 1,
+      "protocolMinor": 0,
+      "components": ["text"],
+      "mediaFormats": ["image/jpeg"],
+      "webSnapshot": false,
+      "webInteractive": false,
+      "maxControlBytes": 65536,
+      "path": "/tmp/openmuse"
+    }
+  },
+  {
+    "name": "RS-FX-102 rejects a future protocol major",
+    "kind": "hello",
+    "valid": false,
+    "value": {
+      "protocol": "openmuse.remote-surface/hello/v1",
+      "protocolMajor": 2,
+      "protocolMinor": 0,
+      "components": ["text"],
+      "mediaFormats": ["image/jpeg"],
+      "webSnapshot": false,
+      "webInteractive": false,
+      "maxControlBytes": 65536
+    }
+  },
+  {
+    "name": "RS-FX-103 rejects a file locator in a descriptor",
+    "kind": "descriptor",
+    "valid": false,
+    "value": {
+      "protocol": "openmuse.remote-surface/descriptor/v1",
+      "pluginId": "com.openmuse.fake-publish",
+      "surfaceId": "publish-workflow",
+      "title": "file:///tmp/preview",
+      "workspaceRef": "ws.opaque.1",
+      "modes": ["declarative"],
+      "requiredCapabilities": ["text"],
+      "readPermissions": ["workspace.resource.read"],
+      "actions": []
+    }
+  },
+  {
+    "name": "RS-FX-104 rejects a required unknown component",
+    "kind": "snapshot",
+    "valid": false,
+    "value": {
+      "protocol": "openmuse.remote-surface/snapshot/v1",
+      "pluginId": "com.openmuse.fake-publish",
+      "surfaceId": "publish-workflow",
+      "surfaceSessionRef": "sess.1",
+      "generation": 4,
+      "stateRevision": "state-12",
+      "mode": "declarative",
+      "nodes": [
+        {
+          "nodeId": "pad",
+          "type": "camera-pad",
+          "required": true,
+          "props": {"label": "相机"},
+          "children": []
+        }
+      ]
+    }
+  },
+  {
+    "name": "RS-FX-105 rejects a file media handle",
+    "kind": "snapshot",
+    "valid": false,
+    "value": {
+      "protocol": "openmuse.remote-surface/snapshot/v1",
+      "pluginId": "com.openmuse.fake-publish",
+      "surfaceId": "publish-workflow",
+      "surfaceSessionRef": "sess.1",
+      "generation": 4,
+      "stateRevision": "state-12",
+      "mode": "declarative",
+      "nodes": [
+        {
+          "nodeId": "cover",
+          "type": "image",
+          "required": true,
+          "props": {"mediaHandle": "file:///tmp/a.jpg", "alt": "封面"},
+          "children": []
+        }
+      ]
+    }
+  },
+  {
+    "name": "RS-FX-106 rejects a caller-supplied actor",
+    "kind": "request",
+    "valid": false,
+    "value": {
+      "protocol": "openmuse.remote-control/request/v1",
+      "requestId": "req-73",
+      "surfaceSessionRef": "sess.1",
+      "generation": 4,
+      "actionId": "social.preview",
+      "input": {"title": "周末散步"},
+      "expectedStateRevision": "state-12",
+      "idempotencyKey": "submission-unique-73",
+      "deadlineMs": 10000,
+      "actor": "actor.spoofed"
+    }
+  },
+  {
+    "name": "RS-FX-107 rejects a loopback locator in action input",
+    "kind": "request",
+    "valid": false,
+    "value": {
+      "protocol": "openmuse.remote-control/request/v1",
+      "requestId": "req-73",
+      "surfaceSessionRef": "sess.1",
+      "generation": 4,
+      "actionId": "social.preview",
+      "input": {"title": "http://127.0.0.1/admin"},
+      "expectedStateRevision": "state-12",
+      "idempotencyKey": "submission-unique-73",
+      "deadlineMs": 10000
+    }
+  },
+  {
+    "name": "RS-FX-108 rejects a denied receipt without an error code",
+    "kind": "receipt",
+    "valid": false,
+    "value": {
+      "protocol": "openmuse.remote-control/receipt/v1",
+      "requestId": "req-74",
+      "idempotencyKey": "submission-unique-74",
+      "status": "denied"
+    }
+  },
+  {
+    "name": "RS-FX-109 rejects an event sequence of zero",
+    "kind": "event",
+    "valid": false,
+    "value": {
+      "protocol": "openmuse.remote-control/event/v1",
+      "surfaceSessionRef": "sess.1",
+      "generation": 4,
+      "seq": 0,
+      "state": "running",
+      "occurredAtMs": 1789466400000,
+      "stateRevision": "state-13"
+    }
+  },
+  {
+    "name": "RS-FX-110 rejects an unknown action effect",
+    "kind": "descriptor",
+    "valid": false,
+    "value": {
+      "protocol": "openmuse.remote-surface/descriptor/v1",
+      "pluginId": "com.openmuse.fake-publish",
+      "surfaceId": "publish-workflow",
+      "title": "社媒发布",
+      "workspaceRef": "ws.opaque.1",
+      "modes": ["declarative"],
+      "requiredCapabilities": ["text"],
+      "readPermissions": ["workspace.resource.read"],
+      "actions": [
+        {
+          "id": "social.preview",
+          "effect": "shell",
+          "requiredPermissions": ["workspace.resource.read"],
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [],
+            "properties": {}
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "RS-FX-111 rejects a duplicate node id",
+    "kind": "snapshot",
+    "valid": false,
+    "value": {
+      "protocol": "openmuse.remote-surface/snapshot/v1",
+      "pluginId": "com.openmuse.fake-publish",
+      "surfaceId": "publish-workflow",
+      "surfaceSessionRef": "sess.1",
+      "generation": 4,
+      "stateRevision": "state-12",
+      "mode": "declarative",
+      "nodes": [
+        {
+          "nodeId": "title",
+          "type": "text",
+          "required": true,
+          "props": {"text": "一"},
+          "children": []
+        },
+        {
+          "nodeId": "title",
+          "type": "text",
+          "required": true,
+          "props": {"text": "二"},
+          "children": []
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,8 @@
+if (true) {
+  if (true) {
+    # you are adding //third_party/a_foo_b_deps:a_foo_b_support_*, use the
+    # a_foo_bx version of the dep instead.
+    # TODO(b/123456789): Use per-feature -keep rules in R8 once supported, then
+    # this can be removed.
+  }
+}

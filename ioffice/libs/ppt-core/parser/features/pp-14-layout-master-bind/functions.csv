@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_slide_layout_rel,slide rels→layout part,slide.xml.rels,layout partName,pp-13:01,02,libs/ppt-core,pass
+2,02_function_layout_master_graphs,layout/master XML→树,layout+master bytes,KmoSlideLayout+KmoSlideMaster,01;pp-13:02,04,libs/ppt-core,pass
+3,03_function_nvpr_ph_bind,nvPr/ph 写入产品 shape,p:nvPr XML,Placeholder+is_placeholder,pp-01:03,pl-03;pl-07,libs/ppt-core,pass
+4,04_function_bind_resolve_pages,绑树后 resolve_pages,slides+layout/master,layout 非空的 KmoSlide,02;03;pl-03,pl-07,libs/ppt-core,pass

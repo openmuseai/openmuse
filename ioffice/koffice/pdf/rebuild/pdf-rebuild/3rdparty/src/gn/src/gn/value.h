@@ -1,0 +1,153 @@
+// Copyright (c) 2013 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef TOOLS_GN_VALUE_H_
+#define TOOLS_GN_VALUE_H_
+
+#include <stdint.h>
+
+#include <map>
+#include <memory>
+#include <vector>
+
+#include "base/logging.h"
+#include "base/memory/ref_counted.h"
+#include "base/memory/scoped_refptr.h"
+#include "gn/err.h"
+
+class ParseNode;
+class Scope;
+class Value;
+
+class ValueList : public base::RefCountedThreadSafe<ValueList> {
+ public:
+  ValueList();
+  ValueList(std::vector<Value> v);
+
+ private:
+  friend class base::RefCountedThreadSafe<ValueList>;
+  friend class Value;
+  ~ValueList();
+
+  std::vector<Value> values_;
+};
+
+// Represents a variable value in the interpreter.
+class Value {
+ public:
+  enum Type : uint8_t {
+    NONE = 0,
+    BOOLEAN,
+    INTEGER,
+    STRING,
+    LIST,
+    SCOPE,
+  };
+
+  Value();
+  Value(const ParseNode* origin, Type t);
+  Value(const ParseNode* origin, bool bool_val);
+  Value(const ParseNode* origin, int64_t int_val);
+  Value(const ParseNode* origin, std::string str_val);
+  Value(const ParseNode* origin, const char* str_val);
+  Value(const ParseNode* origin, std::vector<Value>&& list_val);
+  // Values "shouldn't" have null scopes when type == Scope, so be sure to
+  // always set one. However, this is not asserted since there are some
+  // use-cases for creating values and immediately setting the scope on it. So
+  // you can pass a null scope here if you promise to set it before any other
+  // code gets it (code will generally assume the scope is not null).
+  Value(const ParseNode* origin, std::unique_ptr<Scope> scope);
+
+  Value(const Value& other);
+  Value(Value&& other) noexcept;
+  ~Value();
+
+  Value& operator=(const Value& other);
+  Value& operator=(Value&& other) noexcept;
+
+  Type type() const { return type_; }
+
+  // Returns a string describing the given type.
+  static const char* DescribeType(Type t);
+
+  // Returns the node that made this. May be NULL.
+  const ParseNode* origin() const { return origin_; }
+  void set_origin(const ParseNode* o) { origin_ = o; }
+
+  bool& boolean_value() {
+    DCHECK(type_ == BOOLEAN);
+    return boolean_value_;
+  }
+  const bool& boolean_value() const {
+    DCHECK(type_ == BOOLEAN);
+    return boolean_value_;
+  }
+
+  int64_t& int_value() {
+    DCHECK(type_ == INTEGER);
+    return int_value_;
+  }
+  const int64_t& int_value() const {
+    DCHECK(type_ == INTEGER);
+    return int_value_;
+  }
+
+  std::string& string_value() {
+    DCHECK(type_ == STRING);
+    return string_value_;
+  }
+  const std::string& string_value() const {
+    DCHECK(type_ == STRING);
+    return string_value_;
+  }
+
+  std::vector<Value>& list_value();
+  const std::vector<Value>& list_value() const;
+
+  Scope* scope_value() {
+    DCHECK(type_ == SCOPE);
+    return scope_value_.get();
+  }
+  const Scope* scope_value() const {
+    DCHECK(type_ == SCOPE);
+    return scope_value_.get();
+  }
+  void SetScopeValue(std::unique_ptr<Scope> scope);
+
+  // Converts the given value to a string. Returns true if strings should be
+  // quoted or the ToString of a string should be the string itself. If the
+  // string is quoted, it will also enable escaping.
+  std::string ToString(bool quote_strings) const;
+
+  // Verifies that the value is of the given type. If it isn't, returns
+  // false and sets the error.
+  bool VerifyTypeIs(Type t, Err* err) const;
+  Err VerifyTypeIs(Type t) const;
+
+  // Compares values. Only the "value" is compared, not the origin. Scope
+  // values check only the contents of the current scope, and do not go to
+  // parent scopes.
+  bool operator==(const Value& other) const;
+  bool operator!=(const Value& other) const;
+
+ private:
+  void Deallocate();
+
+  Type type_ = NONE;
+  const ParseNode* origin_ = nullptr;
+
+  union {
+    bool boolean_value_;
+    int64_t int_value_;
+    std::string string_value_;
+    // Used to implement Copy-On-Write for lists.
+    // By sharing the list data via a reference-counted pointer, we avoid
+    // expensive deep copies of large lists when Values are passed around or
+    // copied, only performing a real copy when a modification is attempted.
+    scoped_refptr<ValueList> list_ptr_;
+    std::unique_ptr<Scope> scope_value_;
+  };
+};
+
+#endif  // TOOLS_GN_VALUE_H_

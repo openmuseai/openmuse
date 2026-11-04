@@ -1,0 +1,1711 @@
+{
+	"ID": "20240530101000-mpln2lp",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"ID": "20240530101000-ptnuh23",
+		"icon": "1f5c2",
+		"id": "20240530101000-mpln2lp",
+		"title": "用語集",
+		"type": "doc",
+		"updated": "20261024163013"
+	},
+	"Children": [
+		{
+			"ID": "20240530101000-jvis6t0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-jq8jkpa",
+				"id": "20240530101000-jvis6t0",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "概要"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-dsq1inp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-0czawoj",
+				"id": "20240530101000-dsq1inp",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "この用語集では、ガイドで使う主な用語と、SiYuan における意味を説明します。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-yhf1b7l",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-5te4ctj",
+				"id": "20240530101000-yhf1b7l",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意事項"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​: 具体的な機能はデスクトップ版を例に紹介します。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-fidycup",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-232agxh",
+				"id": "20240530101000-fidycup",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エディタ"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-xrjohag",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-7h710cb",
+				"id": "20240530101000-xrjohag",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "パンくずリスト"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-6wzp9bk",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"ID": "20240530101000-2b9mh4i",
+				"id": "20240530101000-6wzp9bk",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20240530101000-0fplbka",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"ID": "20240530101000-i4qhols",
+						"id": "20240530101000-0fplbka",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "パンくずリストは、現在の位置と上位の構造を示すナビゲーションです。上位の内容へ戻るときに使えます。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-mwlyp22",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-no1adfs",
+				"id": "20240530101000-mwlyp22",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan でのパンくずリストはエディタ上部に右矢印で繫がれたブロックのパスを指し、ブロック構造内でのナビゲーションに使われます。各階層はブロックアイコンで始まり、アイコンにマウスカーソルを合わせるとフローティングウィンドウでプレビューが開きます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-qgxgqf9",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-7x1rsjj",
+				"id": "20240530101000-qgxgqf9",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "アンカーテキスト"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ep8q9yc",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"ID": "20240530101000-8err3nm",
+				"id": "20240530101000-ep8q9yc",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20240530101000-cb9gqhn",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"ID": "20240530101000-m7ss1sf",
+						"id": "20240530101000-cb9gqhn",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "アンカーテキストは、リンク先の内容を示す、画面に表示されるリンクの文字列です。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-f0sz19e",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-ue7k9hj",
+				"id": "20240530101000-f0sz19e",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan では通常のハイパーリンク要素に加えて、ブロック参照や PDF 注釈の参照要素にもアンカーテキストの概念を拡張しています。特に、ブロック参照要素のアンカーテキストは、静的アンカーテキストと動的アンカーテキストに分けられます。詳しくは、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240530101000-k5rp4xa",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "コンテンツブロックのアンカーテキストセクション"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "を参照してください。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-urpx8am",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-96ap24d",
+				"id": "20240530101000-urpx8am",
+				"updated": "20260614111408"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "編集モード"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-dqt8frl",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"ID": "20240530101000-0aqnivs",
+				"id": "20240530101000-dqt8frl",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"ID": "20240530101000-7gymzrk",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-cpu2a40",
+						"id": "20240530101000-7gymzrk",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-70yb26k",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-kf88ubq",
+								"id": "20240530101000-70yb26k",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "WYSIWYG"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": 通常の編集画面"
+								}
+							]
+						},
+						{
+							"ID": "20240530101000-8wr2fkj",
+							"Type": "NodeList",
+							"ListData": {},
+							"Properties": {
+								"ID": "20240530101000-zd0aw2a",
+								"id": "20240530101000-8wr2fkj",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"ID": "20240530101000-fsx8g1o",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"ID": "20240530101000-86hi60m",
+										"id": "20240530101000-fsx8g1o",
+										"updated": "20240530101000"
+									},
+									"Children": [
+										{
+											"ID": "20240530101000-i2kryek",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"ID": "20240530101000-xh064bx",
+												"id": "20240530101000-i2kryek",
+												"updated": "20240530101000"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "編集可能: 内容の修正が可能"
+												}
+											]
+										}
+									]
+								},
+								{
+									"ID": "20240530101000-bwap9b1",
+									"Type": "NodeListItem",
+									"ListData": {
+										"BulletChar": 42,
+										"Marker": "Kg=="
+									},
+									"Properties": {
+										"ID": "20240530101000-kmjn9yk",
+										"id": "20240530101000-bwap9b1",
+										"updated": "20240530101000"
+									},
+									"Children": [
+										{
+											"ID": "20240530101000-i0q317e",
+											"Type": "NodeParagraph",
+											"Properties": {
+												"ID": "20240530101000-prwffq6",
+												"id": "20240530101000-i0q317e",
+												"updated": "20240530101000"
+											},
+											"Children": [
+												{
+													"Type": "NodeText",
+													"Data": "読み取り専用: 内容の閲覧のみ可能、修正不可"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20240530101000-naiag7x",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"ID": "20240530101000-ecr61gc",
+						"id": "20240530101000-naiag7x",
+						"updated": "20240530101000"
+					},
+					"Children": [
+						{
+							"ID": "20240530101000-f499abb",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"ID": "20240530101000-a0ho4rm",
+								"id": "20240530101000-f499abb",
+								"updated": "20240530101000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "プレビュー"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Markdown に変換後のプレビュー"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-17rtvfz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240530101000-17rtvfz",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "編集モードと読み取りモードの切り替えはエディタ右上の "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "︙"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ メニューから行います。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-vk0xmpd",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111408-vk0xmpd",
+				"updated": "20260614111408"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ブロック参照"
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-qzyyj71",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111408-qzyyj71",
+				"updated": "20260614111408"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111408-bmw1qqx",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111408-bmw1qqx",
+						"updated": "20260614111408"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "参照とは別の場所のコンテンツへのリンクであり、読者を参照先へジャンプさせることができます。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-9gv28yr",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111408-9gv28yr",
+				"updated": "20260614111408"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源では、ブロック参照は "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "(("
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ でトリガーされる別のコンテンツブロックへのリンクです。静的アンカーテキストと動的アンカーテキストの両方をサポートします。ブロック参照をクリックすると参照先のブロックにジャンプし、ホバーするとプレビューが表示されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-sm0q0gi",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111408-sm0q0gi",
+				"updated": "20260614111408"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "バックリンク"
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-qny0eh7",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111408-qny0eh7",
+				"updated": "20260614111408"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111408-4e5mgm4",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111408-4e5mgm4",
+						"updated": "20260614111408"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "バックリンク（Backlink）とは、他のページから現在のページへのリンクであり、双方向リンクシステムの重要な要素です。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-qpnxtl5",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111408-qpnxtl5",
+				"updated": "20260614111408"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源では、バックリンクパネルに現在のブロックを参照しているすべてのブロックが表示されます。バックリンクはリンク（ブロック参照による直接的な関連付け）とメンション（テキストマッチングによる潜在的な関連付け）の2つの部分で構成されます。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-aut68xk",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111408-aut68xk",
+				"updated": "20260614111408"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "メンション"
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-b4jqt4a",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111408-b4jqt4a",
+				"updated": "20260614111408"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111408-f6b9b0i",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111408-f6b9b0i",
+						"updated": "20260614111408"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "メンション（Mention）とは、テキスト内で発見されたキーワードマッチングであり、潜在的な関連関係を発見するために使用されます。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-eyflmhq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111408-eyflmhq",
+				"updated": "20260614111408"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源では、メンションはバックリンクのリンク部分と似ていますが、ブロック参照で確立されるのではなく、コンテンツブロック名、エイリアス、参照アンカーテキストを検索して自動的にマッチングされたテキストコンテンツです。メンションはワンクリックでブロック参照に変換できます。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-8a0yvi6",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111408-8a0yvi6",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "仮想参照"
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-aupje3s",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111408-aupje3s",
+				"updated": "20260614111408"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111408-4qsmcdm",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111408-4qsmcdm",
+						"updated": "20260614111408"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "仮想参照は、手動で作成することなく、関連する可能性のあるコンテンツブロックをテキスト内で自動的に特定する技術です。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111408-guewqrn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111408-guewqrn",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源では、仮想参照はコンテンツブロックの名前、エイリアス、アンカーテキストに基づいて自動的に検出され、エディタでは破線の下線で表示されます。ホバーすると対応するコンテンツブロックのプレビューが表示され、クリックすると正式なブロック参照に変換できます。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "エディタ"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "双方向リンク"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "仮想参照"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " でオン/オフを切り替えられます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-s5b0r81",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-5kjhu1a",
+				"id": "20240530101000-s5b0r81",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "データリポジトリ"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-r7jdcms",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-7yi55my",
+				"id": "20240530101000-r7jdcms",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "キー"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-hillvxs",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-c3oimhp",
+				"id": "20240530101000-hillvxs",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "キーはデータスナップショットの暗号化に使用されます。"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240530101000-gohibke",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "3 種類の生成方法"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "がありますが、通常はパスワードを使用して生成することをお勧めします。同じパスワードは他のデバイスでも同じキーを生成するため、データ同期の初期化が容易に行えます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-nrw2esd",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-0ile6s4",
+				"id": "20240530101000-nrw2esd",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ローカルスナップショット"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-tkpujkm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-yj5dhex",
+				"id": "20240530101000-tkpujkm",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ローカルデバイスに保存されているデータスナップショットです。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ptjbd3x",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-v1cozc4",
+				"id": "20240530101000-ptjbd3x",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ローカルのタグ付きスナップショット"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-41itaql",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-xbyaini",
+				"id": "20240530101000-41itaql",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "手動でタグ付けされたローカルスナップショットです。タグ付けの目的は検索を容易にすることにあり、意味のあるタグ名はスナップショットをロールバックする際のヒントになります。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-67aciwk",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-wo555lc",
+				"id": "20240530101000-67aciwk",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "クラウドスナップショット"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-r46grsh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-uutjkg6",
+				"id": "20240530101000-r46grsh",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "クラウドストレージに保存されているデータスナップショットです。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-rturqxy",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-i9ge6g3",
+				"id": "20240530101000-rturqxy",
+				"updated": "20260614111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "クラウドのタグ付きスナップショット"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ppikiul",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240530101000-ppikiul",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "クラウドにアップロードされたローカルのタグ付きスナップショットです。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-cuzmq47",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-3p714h4",
+				"id": "20240530101000-cuzmq47",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "インターフェース"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-lro6ixm",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-qzz0e3u",
+				"id": "20240530101000-lro6ixm",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ドック"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-1ycubqa",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-bk56nwf",
+				"id": "20240530101000-1ycubqa",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "メインインターフェースの左側、右側、下側にあるバーで、パネルのエントリボタンを配置するために使用されます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-ssty64i",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-e26sr7g",
+				"id": "20240530101000-ssty64i",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "パネル"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-7sl1svq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-o6uzq8h",
+				"id": "20240530101000-7sl1svq",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ドキュメントツリー、アウトライン、バックリンクなど、ドックから開かれる機能領域を指します。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-wn4yzvj",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-tvnywd0",
+				"id": "20240530101000-wn4yzvj",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "タブ"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-wye0icf",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-6mb8m13",
+				"id": "20240530101000-wye0icf",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ブラウザのタブに似ており、タブの種類によって機能が異なります。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-0zkran0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"ID": "20240530101000-7dv3cdv",
+				"id": "20240530101000-0zkran0",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "エディタタブ"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-msdw4r8",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-vgr5ors",
+				"id": "20240530101000-msdw4r8",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ドキュメントエディタを読み込むために使用します。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-3z9dhh2",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"ID": "20240530101000-fm58z1l",
+				"id": "20240530101000-3z9dhh2",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PDF タブ"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-402bzze",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-47a6znc",
+				"id": "20240530101000-402bzze",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "PDF を読み込むために使用します。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-leoj76n",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"ID": "20240530101000-ynd8yr6",
+				"id": "20240530101000-leoj76n",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "検索タブ"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-mywe0w2",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-pkiiolv",
+				"id": "20240530101000-mywe0w2",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "検索インターフェースをタブで開いて他のタブと同時に使用できます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-aig5rgo",
+			"Type": "NodeHeading",
+			"HeadingLevel": 4,
+			"Properties": {
+				"ID": "20240530101000-7qfeahc",
+				"id": "20240530101000-aig5rgo",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "復習タブ"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-97xnyw6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-fbo9bs1",
+				"id": "20240530101000-97xnyw6",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "復習インターフェースをタブで開いて他のタブと同時に使用できます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-uodm275",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-ilqxitl",
+				"id": "20240530101000-uodm275",
+				"updated": "20260930224728"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ウィンドウ"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-0ert27u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-gexmcsc",
+				"id": "20240530101000-0ert27u",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "タブ上の右クリックメニューから "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "新しいウィンドウに移動"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ を選ぶことで、メインインターフェースから独立したウィンドウに変換できます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-sjijinn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-38efo4p",
+				"id": "20240530101000-sjijinn",
+				"updated": "20260930224728"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "独立したウィンドウでは「ウィンドウを最前面に表示」ボタンで最前面表示を有効にし、「ウィンドウの最前面表示を解除」で解除できます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-unjptfm",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-zu4jzku",
+				"id": "20240530101000-unjptfm",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "レイアウト"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-pwg15ok",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-xj16s65",
+				"id": "20240530101000-pwg15ok",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "現在のインターフェースのドック、タブ、パネルの状態がレイアウトを構成し、メインメニューの "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "レイアウト"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ から保存と切り替えができます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-b4l3ltr",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-n230loy",
+				"id": "20240530101000-b4l3ltr",
+				"updated": "20250115163249"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ブロックアイコン"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-91br7eq",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-au8qnky",
+				"id": "20240530101000-91br7eq",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ブロックにマウスカーソルを合わせると左側に表示されるアイコンです。パネル (アウトラインパネル、バックリンクパネルなど) に表示されるブロックアイコンにマウスカーソルを合わせると、フローティングウィンドウでプレビューが開かれます。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-0svfhj0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240530101000-0svfhj0",
+				"updated": "20250115163249"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ブロックアイコンにマウスカーソルを合わせると表示されるプレビューに加えて、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Ctrl"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "クリック"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ でタブを開くこともできます。これは、バックリンクパネルからコンテキストに移動する場合に便利です。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-taubi38",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111431-taubi38",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "バザール"
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-9qypo5g",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111431-9qypo5g",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111431-0es045w",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111431-0es045w",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "マーケットプレイスは、コミュニティの拡張機能を探して管理する場所です。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-f1sre8s",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111431-f1sre8s",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan のバザールは、プラグイン、テーマ、アイコン、テンプレート、ウィジェットを含むコミュニティ拡張機能を閲覧してインストールするための入口です。アプリ内で検索、インストール、更新を行えます。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-lt22acr",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111431-lt22acr",
+				"updated": "20260614111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "受信トレイ"
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-hf09vm3",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111431-hf09vm3",
+				"updated": "20260614111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111431-xhi7168",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111431-xhi7168",
+						"updated": "20260614111431"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "受信トレイ（Inbox）は、処理待ちの情報を一時的に保管するコンテナです。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-rtrcw9g",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111431-rtrcw9g",
+				"updated": "20260614111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源では、受信トレイはクラウドベースのクイックキャプチャ機能です。WeChat送信やAPI呼び出しでテキストをクラウドに一時保存し、後で受信トレイパネルからドキュメントに移動して整理できます。この機能にはサブスクリプションが必要です。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-4r2ugxx",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111431-4r2ugxx",
+				"updated": "20260614111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "フラッシュカード"
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-nhrve6j",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111431-nhrve6j",
+				"updated": "20260614111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111431-56kdl5g",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111431-56kdl5g",
+						"updated": "20260614111431"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "フラッシュカード（Flashcard）は、記憶トレーニングに使用されるカードで、表面に問題、裏面に答えが書かれ、間隔反復アルゴリズムで復習スケジュールが決められます。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-elxwoq9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111431-elxwoq9",
+				"updated": "20260614111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源では、フラッシュカードはコンテンツブロックに基づく間隔反復復習機能です。コンテンツブロックをフラッシュカードとして作成でき、システムは復習のパフォーマンスに基づいて次回の復習時間を自動的にスケジュールします。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-r7qhatv",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111431-r7qhatv",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "コマンドパレット"
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-qmhrbd1",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111431-qmhrbd1",
+				"updated": "20260614111431"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111431-657nzag",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111431-657nzag",
+						"updated": "20260614111431"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "コマンドパレット（Command Palette）は、キーボードからアプリケーション機能にすばやくアクセスする入り口で、ユーザーがキーワードを入力してコマンドを検索・実行できます。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111431-0jjd1x6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111431-0jjd1x6",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "デフォルトでは "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Alt"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "P"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "（macOS では "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Option"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "P"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "）でコマンドパレットを開き、キーワードでコマンドを検索して実行します。利用できるコマンドは、現在の画面とフォーカス位置によって変わります。"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-9mcnl5p",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"ID": "20240530101000-3m9drx0",
+				"id": "20240530101000-9mcnl5p",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "その他"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-yikp9my",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"ID": "20240530101000-a3ifxlm",
+				"id": "20240530101000-yikp9my",
+				"updated": "20260614111442"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "サービス"
+				}
+			]
+		},
+		{
+			"ID": "20240530101000-r6ymde7",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"ID": "20240530101000-zanjben",
+				"id": "20240530101000-r6ymde7",
+				"updated": "20240530101000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan カーネルが提供するサービス機能を利用して"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240530101000-40hohog",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "ブラウザで使用"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "できます。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111442-uzd7ap4",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111442-uzd7ap4",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "カーネル"
+				}
+			]
+		},
+		{
+			"ID": "20260614111442-r76ira9",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111442-r76ira9",
+				"updated": "20261024161440"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111442-t5qeayt",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111442-t5qeayt",
+						"updated": "20261024161440"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "このガイドの「カーネル」は、SiYuan でデータを処理するバックエンドプログラムを指します。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111442-xfcnmf9",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111442-xfcnmf9",
+				"updated": "20260614111442"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源では、カーネルは起動後に実行されるバックエンドサービスプロセスを指し、データの読み書き、インデックス検索、同期バックアップなどの中核機能を担当します。フロントエンドは HTTP/WebSocket でカーネルと通信します。デスクトップ版とモバイル版にはカーネルが内蔵されており、Dockerデプロイではカーネルを個別に実行します。"
+				}
+			]
+		},
+		{
+			"ID": "20260614111442-1h0w47v",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260614111442-1h0w47v",
+				"updated": "20260614111442"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "ワークスペース"
+				}
+			]
+		},
+		{
+			"ID": "20260614111442-ykut5zd",
+			"Type": "NodeBlockquote",
+			"Properties": {
+				"id": "20260614111442-ykut5zd",
+				"updated": "20260614111442"
+			},
+			"Children": [
+				{
+					"Type": "NodeBlockquoteMarker",
+					"Data": "\u003e"
+				},
+				{
+					"ID": "20260614111442-rr22ro5",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20260614111442-rr22ro5",
+						"updated": "20260614111442"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "ワークスペースは、ユーザーが作業するためのデータ環境であり、オペレーティングシステムのユーザーディレクトリに似ています。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260614111442-2c8f039",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260614111442-2c8f039",
+				"updated": "20260614111442"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "思源では、ワークスペースはすべてのデータを保存するフォルダです。ノートブック、ドキュメント、アセットファイル、設定、履歴などが含まれます。異なるワークスペースはファイルシステムのフォルダによって分離され、1つのワークスペースは1つのカーネルプロセスのみがサーブできます。"
+				}
+			]
+		}
+	]
+}

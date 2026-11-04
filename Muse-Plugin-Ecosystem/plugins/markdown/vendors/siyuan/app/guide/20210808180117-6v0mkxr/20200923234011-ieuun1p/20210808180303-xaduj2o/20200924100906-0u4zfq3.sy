@@ -1,0 +1,1631 @@
+{
+	"ID": "20200924100906-0u4zfq3",
+	"Spec": "2",
+	"Type": "NodeDocument",
+	"Properties": {
+		"id": "20200924100906-0u4zfq3",
+		"title": "Window and Tab",
+		"type": "doc",
+		"updated": "20261024164212"
+	},
+	"Children": [
+		{
+			"ID": "20260613204526-iql8y2x",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260613204526-iql8y2x",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Overview"
+				}
+			]
+		},
+		{
+			"ID": "20260613204526-elo1esx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613204526-elo1esx",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "SiYuan provides tabs on both desktop and mobile. Desktop also supports split views and multiple windows, while mobile provides a tab overview adapted to touch operation."
+				}
+			]
+		},
+		{
+			"ID": "20260809170000-fdf0e30",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260809170000-fdf0e30",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Desktop"
+				}
+			]
+		},
+		{
+			"ID": "20260613204526-advo9ec",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613204526-advo9ec",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Tabs"
+				}
+			]
+		},
+		{
+			"ID": "20260613204526-0sc1qhb",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613204526-0sc1qhb",
+				"updated": "20261016111305"
+			},
+			"Children": [
+				{
+					"ID": "20260613204526-1qs6oeg",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-1qs6oeg",
+						"updated": "20260613204526"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-l2fgbpu",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-l2fgbpu",
+								"updated": "20260613204526"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "New Tab"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Click a document in the doc tree to open it in a new tab"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204526-hfumoz5",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-hfumoz5",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-5ckrdhz",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-5ckrdhz",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Close: Right-click a tab and select \"Close\", or use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "W"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "W"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204526-lwpyh8t",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-lwpyh8t",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-hvbm473",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-hvbm473",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Reopen: Use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Shift"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "T"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⇧"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "T"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " to reopen the most recently closed tab"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204526-07fob1g",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-07fob1g",
+						"updated": "20261016111305"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-t8vdi56",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-t8vdi56",
+								"updated": "20261016111305"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Switch: Use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Shift"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "["
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⇧"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "["
+								},
+								{
+									"Type": "NodeText",
+									"Data": " to switch to the previous tab, and use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Shift"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "]"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⇧"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "]"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " to switch to the next tab; use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "1-8"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "1-8"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " to jump to tabs 1 through 8; use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "9"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "9"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " to jump to the last tab"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204526-w88aosw",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-w88aosw",
+						"updated": "20260613204526"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-hl8qcrx",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-hl8qcrx",
+								"updated": "20260613204526"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Drag"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Tabs can be dragged to reorder, allowing flexible arrangement of tab positions"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260903130000-7sj2m4e",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260903130000-7sj2m4e",
+						"updated": "20260903130000"
+					},
+					"Children": [
+						{
+							"ID": "20260903130000-v8q1n5c",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260903130000-v8q1n5c",
+								"updated": "20260903130000"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Move documents"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": While dragging documents from the Documents panel, hold "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Shift"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " and drop them in the Same level or Child document area temporarily shown on a document tab"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613204526-buhhsds",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613204526-buhhsds",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Split Screen"
+				}
+			]
+		},
+		{
+			"ID": "20260613204526-96nn2ue",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613204526-96nn2ue",
+				"updated": "20260613204526"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Tabs support vertical and horizontal split screen for simultaneous multi-document viewing."
+				}
+			]
+		},
+		{
+			"ID": "20260613204526-wdd1lbj",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613204526-wdd1lbj",
+				"updated": "20261024163013"
+			},
+			"Children": [
+				{
+					"ID": "20260613204526-t0g6ol6",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-t0g6ol6",
+						"updated": "20260613204526"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-q49b36a",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-q49b36a",
+								"updated": "20260613204526"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "How to Split"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Drag a tab to the top/bottom/left/right edge of the editing area, or choose a split direction from the tab right-click menu"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204526-rp8hz1w",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-rp8hz1w",
+						"updated": "20260613204526"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-lcpnuug",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-lcpnuug",
+								"updated": "20260613204526"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Resize"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Drag the split boundary to adjust the size of each area"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204526-swad9qh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-swad9qh",
+						"updated": "20261024163013"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-d85bynq",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-d85bynq",
+								"updated": "20261024163013"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Unsplit"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Right-click a tab and select \"Unsplit\", or configure a shortcut for unsplit in "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Keymap"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204526-fg45n7c",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-fg45n7c",
+						"updated": "20260613204526"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-ipu14ax",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-ipu14ax",
+								"updated": "20260613204526"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Real-time Sync"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": All open tabs are synced in real time. When the same document is edited and saved across multiple tabs, other tabs automatically sync to the latest content, preventing dirty data overwrites. In addition to content sync, linked rendering also refreshes simultaneously—content block previews and the graph view are updated in real time"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613204526-3udxrs0",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613204526-3udxrs0",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Multiple Windows"
+				}
+			]
+		},
+		{
+			"ID": "20260613204526-rmw9imm",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613204526-rmw9imm",
+				"updated": "20260613204526"
+			},
+			"Children": [
+				{
+					"ID": "20260613204526-s7vxi6r",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-s7vxi6r",
+						"updated": "20260613204526"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-8jbpqt5",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-8jbpqt5",
+								"updated": "20260613204526"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Move to New Window"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Right-click a tab and select \"Move to New Window\", or drag a tab outside the current window and release"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204526-gsm6wz8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-gsm6wz8",
+						"updated": "20260613204526"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-es1xaxc",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-es1xaxc",
+								"updated": "20260613204526"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Drag Between Windows"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Tabs can be dragged and transferred between different windows"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260922155242-zq7j067",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260922155242-zq7j067",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "New window layouts"
+				}
+			]
+		},
+		{
+			"ID": "20260922155242-he816jm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260922155242-he816jm",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "A new window layout saves the tabs, splits, and reading positions of a named window. Main window layouts and new window layouts are grouped in the same layout menu and saved separately. Saving or updating a main window layout also records its size, position, and maximized or fullscreen state. Named new windows save this information automatically."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-0yw0td3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-0yw0td3",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Opening a layout restores these window settings; if the display configuration has changed, the window is adjusted to an available display. Older layouts without window settings remain usable. Window positioning and resizing depend on the operating system and may be restricted on Wayland. Select up to one main window layout and multiple new window layouts, then click Open above the list to open them together."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-fn0is6d",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-fn0is6d",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "This selection is not saved. This feature is available in the desktop client; tabs from encrypted notebooks are excluded."
+				},
+				{
+					"Type": "NodeText",
+					"Data": " Click the layout button again to close the naming dialog. The visibility and order of the layout and \"Keep window on top\" buttons can be configured in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Appearance"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Menu and button visibility and order"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "New window top bar"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20260922155242-py20wzf",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260922155242-py20wzf",
+				"updated": "20260930224728"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Create: Arrange the tabs in a new window, click "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Save as new window layout"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " beside the \"Keep window on top\" button, enter a name, and save. Changes to tabs, splits, document reading positions, and PDF pages are then saved automatically."
+				}
+			]
+		},
+		{
+			"ID": "20260922155242-q8e48jj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260922155242-q8e48jj",
+				"updated": "20260923114823"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Reopen: In the main window, open "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Layout"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "New window layouts"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " and select a layout to restore it in a new window. If its window is already open, SiYuan switches to that window. You can search the list by name."
+				}
+			]
+		},
+		{
+			"ID": "20260922155242-ikklk4b",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260922155242-ikklk4b",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Manage: Click "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Save"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to the right of "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Main window layouts"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to save the current main window layout. Move the pointer over an entry or its right arrow to open a submenu while keeping the layout list visible. New window layouts provide "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Open"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "( "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Switch"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " when the window is already open), "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Rename"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", and "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Delete"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ". Main window layouts provide "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Use"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to load the selected layout and "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Update"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " to save the current main window into that entry."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-bwtvov0",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-bwtvov0",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "New window layouts save automatically. Both types show the latest save time at the bottom of the submenu. You can also rename a new window layout using the layout icon beside the \"Keep window on top\" button."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-ayx85bi",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-ayx85bi",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Rename dialogs are titled "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Main window layouts"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " or "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "New window layouts"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " and provide Cancel and Confirm buttons. Deleting a layout keeps its documents, attachments, and open window. The search field stays at the top while the list scrolls below it."
+				}
+			]
+		},
+		{
+			"ID": "20260613204526-tboolrb",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260613204526-tboolrb",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Navigation"
+				}
+			]
+		},
+		{
+			"ID": "20260613204526-ufgq4p7",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260613204526-ufgq4p7",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"ID": "20260613204526-466o50b",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-466o50b",
+						"updated": "20260613204526"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-cdk5ia9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-cdk5ia9",
+								"updated": "20260613204526"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Forward/Back"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Use the forward and back buttons in the toolbar to quickly jump between browsing history"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204526-19js40n",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-19js40n",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-8srns6n",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-8srns6n",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Recent Documents: Use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "E"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌘"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "E"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " to open the recent documents list"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204526-k6xo9gc",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-k6xo9gc",
+						"updated": "20260613204526"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-7l1d5tp",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-7l1d5tp",
+								"updated": "20260613204526"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "Locate Document"
+								},
+								{
+									"Type": "NodeText",
+									"Data": ": Click the locate button at the top of the doc tree to quickly navigate to the currently open document in the doc tree"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260613204526-12wa0f9",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260613204526-12wa0f9",
+						"updated": "20260810212846"
+					},
+					"Children": [
+						{
+							"ID": "20260613204526-thzdfc0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260613204526-thzdfc0",
+								"updated": "20260810212846"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Tab Switch: Use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Ctrl"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Tab"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " / "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "⌃"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "+"
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Tab"
+								},
+								{
+									"Type": "NodeText",
+									"Data": " to switch to the next editing tab"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20261021161724-4je25jy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261021161724-4je25jy",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "In the desktop recent documents list, select recently viewed, opened, or closed documents and click Clear at the bottom to clear all three types of records after confirmation; on mobile, use the trash button at the top of the list."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-nfpsyef",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-nfpsyef",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "This clears only the local records in the current workspace; documents, recent creation and modification lists, and tab navigation history are kept, and the clear action is unavailable in those two lists."
+				}
+			]
+		},
+		{
+			"ID": "20261024164212-gzf6c6h",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024164212-gzf6c6h",
+				"updated": "20261024164212"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "New browsing, opening, or closing activity will be recorded again, including closing a tab that was already open."
+				}
+			]
+		},
+		{
+			"ID": "20260930192450-5l394sc",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20260930192450-5l394sc",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeHeadingC8hMarker",
+					"Data": "### "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "Settings window"
+				}
+			]
+		},
+		{
+			"ID": "20260930192450-jc5b7ix",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260930192450-jc5b7ix",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The desktop client opens settings in the main window by default. In "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "App"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Open settings in a separate window"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ", turn this switch on to open settings in an independent window that can be moved, resized, and minimized; the change applies the next time settings are opened. You can also open settings with the configured shortcut from a detached document window."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-nodswvz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-nodswvz",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "You can keep it open while scrolling, switching, and editing documents. Opening settings again focuses the existing window. Setting changes synchronize with other windows in the same workspace. Bulk cleanup of unreferenced assets or databases and settings import temporarily block interaction while they run."
+				}
+			]
+		},
+		{
+			"ID": "20261024161816-ltq1lyn",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20261024161816-ltq1lyn",
+				"updated": "20261024161816"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The browser uses a settings dialog, and mobile uses a settings page. Legacy plugin settings open in their owning window and bring it to the foreground; plugins that opt in open in an independent window. In an independent settings window, press "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Ctrl+Shift+I"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " (Windows/Linux) or "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Cmd+Option+I"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " (macOS) to toggle developer tools."
+				}
+			]
+		},
+		{
+			"ID": "20260809170000-6df6960",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260809170000-6df6960",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Mobile"
+				}
+			]
+		},
+		{
+			"ID": "20260809170000-d10393b",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260809170000-d10393b",
+				"updated": "20260810212846"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Mobile also supports multiple tabs. Tap the tabs button at the top of the screen to open the tab overview."
+				}
+			]
+		},
+		{
+			"ID": "20260809170000-38f6e49",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20260809170000-38f6e49",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"ID": "20260809170000-06e5aff",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260809170000-06e5aff",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20260809170000-9f07708",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260809170000-9f07708",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Switch: Tap a tab in the overview to switch to it"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260809170000-bae31e3",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260809170000-bae31e3",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20260809170000-5174759",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260809170000-5174759",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Navigate: Use the back and forward buttons in the overview to move through browsing history"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260809170000-a2b0569",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260809170000-a2b0569",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20260809170000-dafbedb",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260809170000-dafbedb",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Create: Use the new-document button in the overview to create and open a document"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20260809170000-45979e8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20260809170000-45979e8",
+						"updated": "20260809232000"
+					},
+					"Children": [
+						{
+							"ID": "20260809170000-5ebb86a",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20260809170000-5ebb86a",
+								"updated": "20260809232000"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Close: Close an individual tab from its card, or use the menu to close all tabs"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20260613204604-9nmigbp",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260613204604-9nmigbp",
+				"updated": "20260613204604"
+			}
+		}
+	]
+}

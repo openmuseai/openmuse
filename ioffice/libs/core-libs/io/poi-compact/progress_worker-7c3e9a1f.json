@@ -1,0 +1,15 @@
+{
+  "mainJavaPath": "d:\\agentic\\src\\wordOffice\\koffice\\core-libs\\io\\poi-compact\\src\\org\\apache\\poi\\hpsf\\Util.java",
+  "mode": "rewrite",
+  "files": [
+    {
+      "javaPath": "d:\\agentic\\src\\wordOffice\\koffice\\core-libs\\io\\poi-compact\\src\\org\\apache\\poi\\hpsf\\Util.java",
+      "rustPath": "d:\\agentic\\src\\wordOffice\\libs\\core-libs\\io\\poi-compact\\src\\org\\apache\\poi\\hpsf\\Util.rs",
+      "currentStep": "cargo_test",
+      "status": "pending",
+      "retryCount": 0,
+      "errorCnt": 0
+    }
+  ],
+  "timestamp": "2026-06-07T19:01:02.437Z"
+}

@@ -1,0 +1,30 @@
+/* Mobile rearranges the unchanged editor chrome; the slide's coordinate system
+   and original Konva drawing code remain identical to Desktop. */
+@media (max-width: 700px) {
+  .ai-dock { display: none !important; }
+  .ribbon-tabs { padding-left: 4px !important; overflow-x: auto; }
+  .ribbon-tabs > * { flex-shrink: 0; }
+  .ribbon-body { overflow-x: auto; }
+  .workspace { flex-direction: column; }
+  .slide-list { width: 100% !important; height: 86px; min-height: 86px; display: flex; gap: 8px; padding: 6px; overflow-x: auto; overflow-y: hidden; }
+  .slide-list > * { flex-shrink: 0; }
+  .thumb-resizer { display: none; }
+  .stage-col { min-height: 0; width: 100%; }
+  .stage-ai-bar { display: none; }
+  .notes-pane { max-height: 72px; }
+}
+@media (max-width: 700px) {
+  .ribbon-tab, .ribbon-file, .autosave-toggle { white-space: nowrap; flex-shrink: 0; }
+  .ribbon-tabs { gap: 8px; }
+  .ribbon-tabs .autosave-toggle { display: none; }
+}
+@media (max-width: 700px) {
+  .status-bar { height: auto; min-height: 44px; flex-wrap: wrap; padding: 2px 8px; }
+  .status-left { width: 100%; min-height: 20px; }
+  .status-right { width: 100%; justify-content: flex-end; }
+}
+/* The host's Agent plugin owns conversation UI. No GenSpark provider or chat
+   surface is mounted; this plugin contributes live document tools instead. */
+.ai-dock, .stage-ai-bar { display: none !important; }
+.openmuse-agent-entry { display: flex; align-items: center; }
+.openmuse-agent-entry [role=alert] { color: #9b1c1c; max-width: 160px; font-size: 11px; }

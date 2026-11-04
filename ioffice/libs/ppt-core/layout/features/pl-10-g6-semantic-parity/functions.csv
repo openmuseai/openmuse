@@ -1,0 +1,5 @@
+order,function_id,title,input,output,upstream,downstream,crate,status
+1,01_function_anchor_1_2,bodyPr anchor 1/2 对齐 Java,TextBoxData.anchor 0/1/2 + 行高 < 框高,1=垂直居中，2=底（Java RichTextLayout.modifyTextBoxAlign:1050）,pl-05,—,libs/ppt-core,spec
+2,02_function_ph_type_default,ph type 缺省 8,Placeholder 无 type 属性、无 parent,type()==8（ShowShape.Placeholder.java:865-867）不是 0,pl-03,—,libs/ppt-core,spec
+3,03_function_neg_emu_round,负 EMU 舍入同 Java,负 f32 emu→px,Math.round 语义 floor(x+0.5) 对负值,pl-01,—,libs/ppt-core,spec
+4,04_function_canrotate_group,组 canRotate 递归,type0 组 + 子 canRotate,任一子 false → 组 false；type4 永远 false；其它 true,pp-20:02,—,libs/ppt-core,spec

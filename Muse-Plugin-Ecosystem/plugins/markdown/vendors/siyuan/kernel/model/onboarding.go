@@ -1,0 +1,184 @@
+// SiYuan - https://github.com/siyuan-note/siyuan
+// Copyright (c) 2020-present, b3log.org
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package model
+
+import (
+	"errors"
+	"path/filepath"
+	"sync"
+
+	"github.com/88250/lute/ast"
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/conf"
+	"github.com/siyuan-note/siyuan/kernel/util"
+)
+
+var onboardingLock sync.Mutex
+
+func prepareOnboardingForEmptyWorkspace(onboarding *conf.Onboarding, readOnly bool, notebookCount int) bool {
+	if readOnly || notebookCount > 0 {
+		return false
+	}
+	onboarding.State = conf.OnboardingPending
+	onboarding.NewUser = true
+	onboarding.Dismissed = false
+	onboarding.NotebookID = ""
+	onboarding.DocumentID = ""
+	return true
+}
+
+func reconcileOnboarding(onboarding *conf.Onboarding, boxes []*Box, documentExists bool) bool {
+	if !onboarding.NewUser || onboarding.Dismissed {
+		return false
+	}
+
+	notebookExists := false
+	for _, box := range boxes {
+		if box.ID == onboarding.NotebookID {
+			notebookExists = true
+			break
+		}
+	}
+	if onboarding.NotebookID != "" && !notebookExists {
+		if len(boxes) == 0 {
+			return prepareOnboardingForEmptyWorkspace(onboarding, false, 0)
+		}
+		onboarding.State = conf.OnboardingCompleted
+		onboarding.NewUser = false
+		onboarding.NotebookID = ""
+		onboarding.DocumentID = ""
+		return true
+	}
+	if onboarding.State == conf.OnboardingCompleted && (!notebookExists || onboarding.DocumentID == "" || !documentExists) {
+		if !notebookExists {
+			if len(boxes) == 0 {
+				return prepareOnboardingForEmptyWorkspace(onboarding, false, 0)
+			}
+			onboarding.NewUser = false
+			onboarding.NotebookID = ""
+		} else {
+			onboarding.State = conf.OnboardingNotebookCreated
+		}
+		onboarding.DocumentID = ""
+		return true
+	}
+	return false
+}
+
+func EnsureOnboarding() (ret *conf.Onboarding, notebookCreated bool, err error) {
+	onboardingLock.Lock()
+	defer onboardingLock.Unlock()
+
+	if nil == Conf.Onboarding.Load() {
+		UpdateOnboardingConf(func(value *conf.Onboarding) {})
+	}
+	onboarding := cloneOnboarding(Conf.Onboarding.Load())
+	save := func() { UpdateOnboardingConf(func(value *conf.Onboarding) { *value = *onboarding }) }
+	if !onboarding.NewUser || onboarding.Dismissed {
+		return cloneOnboarding(onboarding), false, nil
+	}
+
+	boxes, listErr := ListNotebooks()
+	if listErr != nil {
+		return cloneOnboarding(onboarding), false, listErr
+	}
+	documentExists := onboarding.NotebookID != "" && onboarding.DocumentID != "" && filelock.IsExist(filepath.Join(
+		util.DataDir, onboarding.NotebookID, onboarding.DocumentID+".sy"))
+	if reconcileOnboarding(onboarding, boxes, documentExists) {
+		save()
+	}
+	if !onboarding.NewUser || onboarding.State == conf.OnboardingCompleted {
+		return cloneOnboarding(onboarding), false, nil
+	}
+	if util.ReadOnly || Conf.Publish.Load().Enable {
+		return cloneOnboarding(onboarding), false, errors.New(Conf.Language(34))
+	}
+
+	if onboarding.NotebookID == "" {
+		if len(boxes) > 0 {
+			if len(boxes) == 1 && boxes[0].Name == Conf.Language(342) {
+				onboarding.NotebookID = boxes[0].ID
+				onboarding.State = conf.OnboardingNotebookCreated
+				save()
+			} else {
+				onboarding.State = conf.OnboardingCompleted
+				onboarding.NewUser = false
+				save()
+				return cloneOnboarding(onboarding), false, nil
+			}
+		}
+
+		if onboarding.NotebookID == "" {
+			onboarding.NotebookID, err = CreateBox(Conf.Language(342))
+			if err != nil {
+				return cloneOnboarding(onboarding), false, err
+			}
+			onboarding.State = conf.OnboardingNotebookCreated
+			save()
+			notebookCreated = true
+		}
+	}
+
+	if _, mountErr := Mount(onboarding.NotebookID); mountErr != nil {
+		return cloneOnboarding(onboarding), notebookCreated, mountErr
+	}
+	if onboarding.DocumentID == "" {
+		onboarding.DocumentID = ast.NewNodeID()
+		save()
+	}
+
+	docPath := "/" + onboarding.DocumentID + ".sy"
+	docAbsPath := filepath.Join(util.DataDir, onboarding.NotebookID, onboarding.DocumentID+".sy")
+	if !filelock.IsExist(docAbsPath) {
+		if _, err = CreateDocByMd(onboarding.NotebookID, docPath, Conf.Language(343), "", nil, nil); err != nil {
+			return cloneOnboarding(onboarding), notebookCreated, err
+		}
+	}
+	onboarding.State = conf.OnboardingCompleted
+	save()
+	return cloneOnboarding(onboarding), notebookCreated, nil
+}
+
+// TriggerOnboardingIfEmpty 在最后一个笔记本被删除后重置状态，并通知已连接的界面立即重新进入引导。
+func TriggerOnboardingIfEmpty() {
+	onboardingLock.Lock()
+	defer onboardingLock.Unlock()
+
+	if nil == Conf.Onboarding.Load() {
+		UpdateOnboardingConf(func(value *conf.Onboarding) {})
+	}
+	boxes, err := ListNotebooks()
+	if err != nil {
+		logging.LogErrorf("list notebooks before triggering onboarding failed: %s", err)
+		return
+	}
+	publish := Conf.Publish.Load()
+	publishEnabled := publish != nil && publish.Enable
+	onboarding := cloneOnboarding(Conf.Onboarding.Load())
+	if !prepareOnboardingForEmptyWorkspace(onboarding, util.ReadOnly || publishEnabled, len(boxes)) {
+		return
+	}
+	UpdateOnboardingConf(func(value *conf.Onboarding) { *value = *onboarding })
+	evt := util.NewCmdResult("onboarding", 0, util.PushModeBroadcast)
+	evt.Data = cloneOnboarding(Conf.Onboarding.Load())
+	util.PushEvent(evt)
+}
+
+func DismissOnboarding() *conf.Onboarding {
+	onboardingLock.Lock()
+	defer onboardingLock.Unlock()
+
+	UpdateOnboardingConf(func(s *conf.Onboarding) { s.Dismissed = true })
+	return cloneOnboarding(Conf.Onboarding.Load())
+}
+
+func cloneOnboarding(onboarding *conf.Onboarding) *conf.Onboarding {
+	if nil == onboarding {
+		return nil
+	}
+	ret := *onboarding
+	return &ret
+}

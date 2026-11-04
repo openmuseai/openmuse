@@ -1,0 +1,10 @@
+#[cfg(feature = "full")]
+pub mod table;
+#[cfg(feature = "full")]
+pub mod ShapeText;
+pub mod ShowTypoShape;
+pub mod SlideRender;
+pub mod ShapeRender;
+pub mod rendercommand;
+pub mod mvp_pipeline;
+pub mod cache;
