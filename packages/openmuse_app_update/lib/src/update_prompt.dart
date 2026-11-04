@@ -1,4 +1,6 @@
+import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
 import 'package:flutter/material.dart';
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 
 import 'update_feed.dart';
 
@@ -32,10 +34,21 @@ final class _OpenMuseStartupUpdatePromptState
 
   void _showIfNeeded() {
     if (!mounted || _shown) return;
+    if (RuntimeConfigScope.maybeOf(
+          context,
+        )?.isEnabled(AppFeature.updatePrompts) ==
+        false)
+      return;
     final release = widget.controller?.available;
     if (release == null) return;
     _shown = true;
     showOpenMuseUpdateDialog(context, release, onUpdate: widget.onUpdate);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showIfNeeded());
   }
 
   @override
@@ -47,7 +60,12 @@ Future<void> showOpenMuseUpdateDialog(
   OpenMuseRelease release, {
   required Future<void> Function(OpenMuseRelease release) onUpdate,
 }) async {
-  final zh = Localizations.localeOf(context).languageCode == 'zh';
+  if (RuntimeConfigScope.maybeOf(
+        context,
+      )?.isEnabled(AppFeature.updatePrompts) ==
+      false)
+    return;
+  final localeStrings = stringsOf(context);
   await showDialog<void>(
     context: context,
     barrierDismissible: !release.mandatory,
@@ -56,7 +74,7 @@ Future<void> showOpenMuseUpdateDialog(
       child: AlertDialog(
         key: const ValueKey('app-update-dialog'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text(zh ? '发现新版本' : 'Update available'),
+        title: Text(localeStrings.updatesUpdateAvailable5157b4c7()),
         content: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 470),
           child: Column(
@@ -69,11 +87,11 @@ Future<void> showOpenMuseUpdateDialog(
               ),
               const SizedBox(height: 16),
               Text(
-                "What's new",
+                stringsOf(dialogContext).updatesWhatsNew(),
                 style: Theme.of(dialogContext).textTheme.labelLarge,
               ),
               const SizedBox(height: 7),
-              Text(release.notesFor(zh ? 'zh' : 'en')),
+              Text(release.notesFor(stringsOf(dialogContext).locale)),
             ],
           ),
         ),
@@ -82,7 +100,7 @@ Future<void> showOpenMuseUpdateDialog(
             TextButton(
               key: const ValueKey('app-update-later'),
               onPressed: () => Navigator.pop(dialogContext),
-              child: Text(zh ? '稍后' : 'Later'),
+              child: Text(localeStrings.updatesLater78fd2cc2()),
             ),
           FilledButton(
             key: const ValueKey('app-update-install'),
@@ -90,7 +108,7 @@ Future<void> showOpenMuseUpdateDialog(
               Navigator.pop(dialogContext);
               onUpdate(release);
             },
-            child: Text(zh ? '获取更新' : 'Get update'),
+            child: Text(localeStrings.updatesGetUpdate987882f6()),
           ),
         ],
       ),

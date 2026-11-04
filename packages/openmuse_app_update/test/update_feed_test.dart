@@ -59,6 +59,31 @@ void main() {
     older.dispose();
   });
 
+  test('update feed and package keep a configured gateway base path', () async {
+    final prefixed = {
+      ...release,
+      'downloadUrl': 'https://updates.example/gateway/downloads/package.zip',
+    };
+    final feed = OpenMuseUpdateFeed(
+      origin: Uri.parse('https://updates.example/gateway/'),
+      channel: 'canary',
+      target: 'macos-universal',
+      fetchOverride: (uri) async {
+        expect(
+          uri.path,
+          '/gateway/downloads/updates/v1/canary/macos-universal.json',
+        );
+        return jsonEncode(prefixed);
+      },
+    );
+    expect(
+      (await feed.fetch())?.downloadUri.path,
+      '/gateway/downloads/package.zip',
+    );
+    prefixed['downloadUrl'] = 'https://updates.example/downloads/package.zip';
+    await expectLater(feed.fetch(), throwsFormatException);
+  });
+
   testWidgets('launch update dialog shows notes and dismisses', (tester) async {
     final feed = OpenMuseUpdateFeed(
       origin: origin,

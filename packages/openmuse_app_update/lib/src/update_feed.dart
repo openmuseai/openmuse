@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 /// A public, immutable release record served from the website download root.
@@ -34,8 +35,19 @@ final class OpenMuseRelease {
   final String installKind;
   final bool mandatory;
 
-  String notesFor(String languageCode) =>
-      notes[languageCode] ?? notes['en'] ?? notes.values.first;
+  String notesFor(String languageTag) {
+    final catalog = OpenMuseCatalog.builtIn;
+    final option = catalog.option(languageTag);
+    for (final tag in [
+      languageTag,
+      option.tag,
+      ...option.aliases,
+      catalog.templateLocale,
+    ]) {
+      if (notes[tag] case final value?) return value;
+    }
+    return notes.isEmpty ? '' : notes.values.first;
+  }
 
   bool isNewerThan(Version installedVersion, int installedBuild) =>
       version > installedVersion ||
@@ -68,6 +80,18 @@ final class OpenMuseRelease {
       _ => throw const FormatException('不支持的更新目标'),
     };
     final isStore = expectedKind.endsWith('-store');
+    // The feed path ends with downloads/updates/v1/channel/target.json.
+    // Preserve any deployment gateway prefix when admitting download URLs.
+    final prefixLength = feedUri.pathSegments.length - 5;
+    final downloadPrefix = [
+      ...feedUri.pathSegments.take(prefixLength < 0 ? 0 : prefixLength),
+      'downloads',
+    ];
+    final matchesDownloadPrefix =
+        uri.pathSegments.length > downloadPrefix.length &&
+        Iterable<int>.generate(
+          downloadPrefix.length,
+        ).every((index) => uri.pathSegments[index] == downloadPrefix[index]);
     final validDownload = isStore
         ? uri.scheme == 'https' &&
               (expectedKind == 'ios-store'
@@ -80,8 +104,7 @@ final class OpenMuseRelease {
                   (feedUri.scheme == 'http' && uri.scheme == 'http')) &&
               uri.host == feedUri.host &&
               uri.port == feedUri.port &&
-              uri.pathSegments.length >= 2 &&
-              uri.pathSegments.first == 'downloads';
+              matchesDownloadPrefix;
     if (build is! int ||
         build < 1 ||
         size is! int ||
@@ -156,7 +179,14 @@ final class OpenMuseUpdateFeed {
       throw const FormatException('更新服务必须使用 HTTPS');
     }
     return origin.replace(
-      path: '/downloads/updates/v1/$channel/$target.json',
+      pathSegments: [
+        ...origin.pathSegments.where((segment) => segment.isNotEmpty),
+        'downloads',
+        'updates',
+        'v1',
+        channel,
+        '$target.json',
+      ],
       query: '',
       fragment: '',
     );

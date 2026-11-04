@@ -41,6 +41,22 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.19.1"
+  crypto:
+    dependency: transitive
+    description:
+      name: crypto
+      sha256: e3626ae6270383c9e3a549f34c9e4cd26c09ae6a9adaab2bf4737a00340efdc4
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.0.8"
+  cryptography:
+    dependency: transitive
+    description:
+      name: cryptography
+      sha256: "3eda3029d34ec9095a27a198ac9785630fe525c0eb6a49f3d575272f8e792ef0"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.9.0"
   fake_async:
     dependency: transitive
     description:
@@ -70,6 +86,11 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "6.0.0"
+  flutter_localizations:
+    dependency: transitive
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -96,6 +117,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.1.2"
+  intl:
+    dependency: transitive
+    description:
+      name: intl
+      sha256: "3df61194eb431efc39c4ceba583b95633a403f46c9fd341e550ce0bfa50e9aa5"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.20.2"
   leak_tracker:
     dependency: transitive
     description:
@@ -152,6 +181,27 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.18.0"
+  openmuse_i18n:
+    dependency: "direct main"
+    description:
+      path: "../openmuse_i18n"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_plugin_sdk:
+    dependency: transitive
+    description:
+      path: "../openmuse_plugin_sdk"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_runtime_config:
+    dependency: "direct main"
+    description:
+      path: "../openmuse_runtime_config"
+      relative: true
+    source: path
+    version: "0.1.0"
   package_info_plus:
     dependency: "direct main"
     description:
