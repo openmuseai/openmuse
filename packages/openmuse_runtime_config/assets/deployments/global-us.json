@@ -1,0 +1,156 @@
+{
+  "bootstrap": {
+    "discoveryUrls": [
+      "https://us.openmuseai.com/v1/runtime/scopes/global-us/active.jws"
+    ],
+    "publicKeys": {
+      "openmuse-us-config-20261102": "ChFWLkD5oeAWGqEL8lZHxKA1P6JXArRYB4Bt7iK0x-o"
+    },
+    "allowedServiceOrigins": {
+      "auth": [
+        "https://us.openmuseai.com"
+      ],
+      "cloud": [
+        "https://us.openmuseai.com"
+      ],
+      "pluginRegistry": [
+        "https://us.openmuseai.com"
+      ],
+      "updates": [
+        "https://openmuseai.com"
+      ],
+      "relay": [
+        "https://us.openmuseai.com"
+      ]
+    },
+    "allowedResourceOrigins": [
+      "https://us.openmuseai.com"
+    ]
+  },
+  "snapshot": {
+    "schemaVersion": 1,
+    "releaseId": "bundled-global-us-v1",
+    "sequence": 0,
+    "productId": "openmuse",
+    "environment": "production",
+    "distributionId": "official",
+    "scope": {
+      "dataRegion": "us",
+      "platform": "any",
+      "variantId": "default"
+    },
+    "compatibility": {
+      "minBuild": 0,
+      "requiredCapabilities": [
+        "config.v1"
+      ]
+    },
+    "deployment": {
+      "id": "global-us",
+      "authBindingId": "global-us",
+      "services": {
+        "auth": {
+          "baseUrl": "https://us.openmuseai.com/gotrue"
+        },
+        "cloud": {
+          "baseUrl": "https://us.openmuseai.com"
+        },
+        "pluginRegistry": {
+          "baseUrl": "https://us.openmuseai.com"
+        },
+        "updates": {
+          "baseUrl": "https://openmuseai.com"
+        },
+        "relay": {
+          "baseUrl": "https://us.openmuseai.com"
+        }
+      }
+    },
+    "localization": {
+      "defaultLocale": "en",
+      "enabledLocales": [
+        "en",
+        "zh-Hans"
+      ],
+      "aliases": {
+        "zh": "zh-Hans",
+        "zh-CN": "zh-Hans",
+        "zh-SG": "zh-Hans"
+      },
+      "bundleRefs": []
+    },
+    "origins": {
+      "website": "https://openmuseai.com",
+      "filing": "https://beian.miit.gov.cn",
+      "legalWebsite": "https://us.openmuseai.com"
+    },
+    "links": {
+      "legal.terms": {
+        "originRef": "legalWebsite",
+        "pathByLocale": {
+          "en": "/en/terms",
+          "zh-Hans": "/zh/terms"
+        },
+        "fallbackLocale": "en"
+      },
+      "legal.privacy": {
+        "originRef": "legalWebsite",
+        "pathByLocale": {
+          "en": "/en/privacy",
+          "zh-Hans": "/zh/privacy"
+        },
+        "fallbackLocale": "en"
+      },
+      "legal.accountDeletion": {
+        "originRef": "legalWebsite",
+        "pathByLocale": {
+          "en": "/en/account-deletion",
+          "zh-Hans": "/zh/account-deletion"
+        },
+        "fallbackLocale": "en"
+      },
+      "regulatory.filing": {
+        "originRef": "filing",
+        "pathByLocale": {
+          "en": "/",
+          "zh-Hans": "/"
+        },
+        "fallbackLocale": "en"
+      }
+    },
+    "updates": {
+      "channel": "stable"
+    },
+    "resources": [],
+    "authentication": {
+      "sessionStorageKey": "openmuse.auth.gotrue.session.us.v1"
+    },
+    "web": {
+      "servicePaths": {
+        "auth": "/gotrue",
+        "cloud": "/",
+        "relay": "/"
+      },
+      "sessionStorageKey": "openmuse.auth.session.us.v1"
+    },
+    "support": {
+      "email": "developer@openmuseai.com"
+    },
+    "navigation": {
+      "entryRouteId": "home",
+      "routes": {
+        "home": {
+          "path": "/",
+          "handler": "session"
+        },
+        "login": {
+          "path": "/sign-in",
+          "handler": "login"
+        }
+      }
+    },
+    "regulatory": {
+      "appFilingNumber": ""
+    }
+  }
+}
