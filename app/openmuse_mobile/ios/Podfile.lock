@@ -42,8 +42,18 @@ PODS:
   - Flutter (1.0.0)
   - flutter_secure_storage (6.0.0):
     - Flutter
+  - flutter_timezone (0.0.1):
+    - Flutter
   - integration_test (0.0.1):
     - Flutter
+  - onnxruntime-c (1.24.3)
+  - open_filex (0.0.2):
+    - Flutter
+  - openmuse_resource_clipboard (0.1.0):
+    - Flutter
+  - openmuse_siyuan_client (0.1.0):
+    - Flutter
+    - onnxruntime-c (= 1.24.3)
   - package_info_plus (0.4.5):
     - Flutter
   - record_ios (2.0.0):
@@ -69,7 +79,11 @@ DEPENDENCIES:
   - fjs (from `.symlinks/plugins/fjs/darwin`)
   - Flutter (from `Flutter`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
+  - flutter_timezone (from `.symlinks/plugins/flutter_timezone/ios`)
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - open_filex (from `.symlinks/plugins/open_filex/ios`)
+  - openmuse_resource_clipboard (from `.symlinks/plugins/openmuse_resource_clipboard/ios`)
+  - openmuse_siyuan_client (from `.symlinks/plugins/openmuse_siyuan_client/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - record_ios (from `.symlinks/plugins/record_ios/ios`)
   - sherpa_onnx_ios (from `.symlinks/plugins/sherpa_onnx_ios/ios`)
@@ -81,6 +95,7 @@ SPEC REPOS:
   trunk:
     - DKImagePickerController
     - DKPhotoGallery
+    - onnxruntime-c
     - SDWebImage
     - SwiftyGif
 
@@ -95,8 +110,16 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_secure_storage:
     :path: ".symlinks/plugins/flutter_secure_storage/ios"
+  flutter_timezone:
+    :path: ".symlinks/plugins/flutter_timezone/ios"
   integration_test:
     :path: ".symlinks/plugins/integration_test/ios"
+  open_filex:
+    :path: ".symlinks/plugins/open_filex/ios"
+  openmuse_resource_clipboard:
+    :path: ".symlinks/plugins/openmuse_resource_clipboard/ios"
+  openmuse_siyuan_client:
+    :path: ".symlinks/plugins/openmuse_siyuan_client/ios"
   package_info_plus:
     :path: ".symlinks/plugins/package_info_plus/ios"
   record_ios:
@@ -118,7 +141,12 @@ SPEC CHECKSUMS:
   fjs: 779e458e31512d064ddaa9772a0cd7cb3b16a7c7
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
+  flutter_timezone: 7c838e17ffd4645d261e87037e5bebf6d38fe544
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
+  onnxruntime-c: 4a1a1a81da2087869dc9b6357f182952db2df29c
+  open_filex: 432f3cd11432da3e39f47fcc0df2b1603854eff1
+  openmuse_resource_clipboard: e5febd7fa3d4d05687b3d5763b87bc1ca08ebc76
+  openmuse_siyuan_client: 143331e12bb0fece23e2bf36d222dc80d291a4e8
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   record_ios: 390a30c7caaf8b5d0fb1cb1d2fd5064b48b4520c
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
@@ -128,6 +156,6 @@ SPEC CHECKSUMS:
   video_player_avfoundation: 3453f792138786248960ca029747fcd9f318ef52
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 
-PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+PODFILE CHECKSUM: aa138be8409ad2ab7f70f36aee65b237099b922e
 
 COCOAPODS: 1.16.2

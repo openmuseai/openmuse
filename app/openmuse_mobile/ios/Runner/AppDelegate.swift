@@ -3,33 +3,22 @@ import Flutter
 import Security
 import UIKit
 
-@_silgen_name("openmuse_docx_abi_version")
-private func openMuseDocxAbiVersion() -> UInt32
-
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+@objc class AppDelegate: FlutterAppDelegate {
+  // An engine with a running shell must exist before the scene creates its
+  // FlutterViewController. The implicit engine can race viewDidLoad on iOS
+  // ProMotion devices and crash in VSyncClient before Dart starts.
+  let flutterEngine = FlutterEngine(name: "OpenMuseEngine")
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    precondition(openMuseDocxAbiVersion() == 1, "Unsupported OpenMuse DOCX ABI")
     precondition(openmuse_paired_abi_version() == 1, "Unsupported OpenMuse Paired ABI")
-    precondition(openmuse_office_viewers_abi_version() == 1, "Unsupported Office Viewers ABI")
-    let viewerProbe = openmuse_xlsx_inspect(nil, 0)
-    precondition(viewerProbe.status != 0, "Office Viewers fail-closed probe failed")
-    openmuse_office_viewer_buffer_free(viewerProbe)
-    let slidesProbe = openmuse_pptx_inspect(nil, 0)
-    precondition(slidesProbe.status != 0, "Office Slides fail-closed probe failed")
-    openmuse_office_viewer_buffer_free(slidesProbe)
-    let pdfProbe = openmuse_pdf_inspect(nil, 0)
-    precondition(pdfProbe.status != 0, "Office PDF fail-closed probe failed")
-    openmuse_office_viewer_buffer_free(pdfProbe)
+    guard flutterEngine.run() else { return false }
+    GeneratedPluginRegistrant.register(with: flutterEngine)
+    DeviceKeyStoreBridge.register(messenger: flutterEngine.binaryMessenger)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-
-  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
-    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
-    DeviceKeyStoreBridge.register(messenger: engineBridge.applicationRegistrar.messenger())
   }
 }
 
