@@ -65,6 +65,9 @@ def main() -> None:
             if endpoint is None:
                 raise RuntimeError(f"DSH did not start: {diagnostics[-6:]}")
             client = urllib.request.build_opener(
+                # This smoke server is always our own loopback process. macOS
+                # system proxy settings may otherwise route it to a gateway.
+                urllib.request.ProxyHandler({}),
                 urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
             )
             with client.open(endpoint, timeout=10) as response:

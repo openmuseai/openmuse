@@ -32,7 +32,8 @@ jobs:
           flutter pub get
           flutter analyze
           flutter test
-          flutter build web --release --base-href /app/
+          python3 ../../scripts/release/prepare-web-config.py --region us --output "$RUNNER_TEMP/web-us.defines.json"
+          flutter build web --release --base-href /app/ --dart-define-from-file="$RUNNER_TEMP/web-us.defines.json" --no-web-resources-cdn
       - uses: actions/upload-artifact@v4
         with:
           name: OpenMuse-web

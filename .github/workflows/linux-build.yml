@@ -1,0 +1,63 @@
+name: Linux build
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'app/openmuse_linux/**'
+      - 'packages/**'
+      - 'plugins/**'
+      - 'distribution/**'
+      - 'third_party/**'
+      - 'scripts/build_dsh_closure.py'
+      - '.github/workflows/linux-build.yml'
+  pull_request:
+    paths:
+      - 'app/openmuse_linux/**'
+      - 'packages/**'
+      - 'plugins/**'
+      - 'distribution/**'
+      - 'third_party/**'
+      - '.github/workflows/linux-build.yml'
+permissions:
+  contents: read
+concurrency:
+  group: linux-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+            region: cn
+          - runner: ubuntu-24.04
+            arch: amd64
+            region: us
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            region: cn
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            region: us
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare Debian 12 builder
+        run: docker build --build-arg DEBIAN_MIRROR=http://deb.debian.org/debian -f app/openmuse_linux/tool/Dockerfile -t openmuse-linux-builder .
+      - name: Build, test and package
+        run: |
+          docker run --rm --shm-size=1g \
+            -v "$PWD:/workspace" \
+            -v openmuse-linux-pub:/root/.pub-cache \
+            -v openmuse-linux-cargo-registry:/root/.cargo/registry \
+            -v openmuse-linux-cargo-git:/root/.cargo/git \
+            openmuse-linux-builder bash app/openmuse_linux/tool/build.sh --region "${{ matrix.region }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenMuse-linux-${{ matrix.arch }}-${{ matrix.region }}-${{ github.sha }}
+          path: app/openmuse_linux/build/dist/${{ matrix.arch }}/${{ matrix.region }}/
+          if-no-files-found: error
+          retention-days: 14

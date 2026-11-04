@@ -56,7 +56,7 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
   else
     echo "cargo test --workspace --locked"
   fi
-  echo "scripts/package_macos.sh --profile $PROFILE$([[ "$SKIP_TESTS" -eq 1 ]] && echo ' --skip-tests')"
+  echo "scripts/package_macos.sh --profile $PROFILE --components none --package$([[ "$SKIP_TESTS" -eq 1 ]] && echo ' --skip-tests')"
   echo "write $SUMS and $INFO"
   exit 0
 fi
@@ -69,7 +69,7 @@ else
 fi
 
 step "package"
-pack_args=(--profile "$PROFILE")
+pack_args=(--profile "$PROFILE" --components none --package)
 if [[ "$SKIP_TESTS" -eq 1 ]]; then
   pack_args+=(--skip-tests)
 fi

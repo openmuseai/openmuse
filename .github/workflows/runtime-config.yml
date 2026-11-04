@@ -1,0 +1,56 @@
+name: Runtime configuration
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  contract-and-sdk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: services/config-control/package-lock.json
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.44.2"
+          cache: true
+      - name: Reject new business hardcoding
+        run: python3 scripts/ci/check_globalization.py
+      - name: Verify control plane and immutable publishing
+        working-directory: services/config-control
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm test
+      - name: Check generated message contracts
+        run: python3 scripts/generate_i18n.py --check
+      - name: Verify SDK and deployment compiler
+        working-directory: packages/openmuse_runtime_config
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+          dart run bin/compile_release.dart --input assets/releases/china.json --output /tmp/openmuse-china-release.json
+          dart run bin/compile_release.dart --input assets/releases/overseas.json --output /tmp/openmuse-overseas-release.json
+          dart run bin/compile_deployment.dart --input assets/deployments/global-us.json --output /tmp/openmuse-deployment-defines.json
+          flutter test --platform chrome test/runtime_config_browser_test.dart --dart-define-from-file=/tmp/openmuse-deployment-defines.json
+          flutter test --platform chrome test/config_transport_browser_test.dart
+      - name: Verify runtime language integration and publisher interoperability
+        working-directory: packages/openmuse_i18n
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+      - name: Verify browser storage and session adapters
+        working-directory: app/openmuse_web
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+          flutter test --platform chrome test/browser_config_store_test_web.dart test/browser_auth_test_web.dart

@@ -30,6 +30,8 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MOBILE_ROOT = REPO_ROOT / "app" / "openmuse_mobile"
+HARMONY_ROOT = REPO_ROOT / "app" / "openmuse_harmony"
+PUBLIC_CERTS = MOBILE_ROOT / "release_materials" / "assets"
 
 
 @dataclass
@@ -105,7 +107,12 @@ def print_all() -> None:
         "iOS",
         package_label="Bundle ID",
         package_value=ios_bundle_id(),
-        identity=certificate_from_env("OPENMUSE_IOS_CERTIFICATE", "OPENMUSE_IOS_P12", "OPENMUSE_IOS_P12_PASSWORD"),
+        identity=certificate_from_env(
+            "OPENMUSE_IOS_CERTIFICATE",
+            "OPENMUSE_IOS_P12",
+            "OPENMUSE_IOS_P12_PASSWORD",
+            PUBLIC_CERTS / "AppleDistribution-2026.cer",
+        ),
         fingerprint_field="SHA1指纹",
     )
     print()
@@ -118,6 +125,7 @@ def print_all() -> None:
             "OPENMUSE_HARMONY_CERTIFICATE",
             "OPENMUSE_HARMONY_P12",
             "OPENMUSE_HARMONY_P12_PASSWORD",
+            PUBLIC_CERTS / "OpenMuse-HarmonyOS-Release-2026.cer",
         ),
         fingerprint_field="MD5指纹",
         package_note=harmony_note,
@@ -219,16 +227,26 @@ def android_identity_from_env() -> CertificateIdentity | None:
     cert = os.environ.get("OPENMUSE_ANDROID_CERTIFICATE", "")
     if cert:
         return identify(load_certificate_file(Path(cert)))
+    default_cert = PUBLIC_CERTS / "OpenMuse-Android-Release-2026.cer"
+    if default_cert.is_file():
+        return identify(load_certificate_file(default_cert))
     return None
 
 
-def certificate_from_env(cert_env: str, p12_env: str, password_env: str) -> CertificateIdentity | None:
+def certificate_from_env(
+    cert_env: str,
+    p12_env: str,
+    password_env: str,
+    default_cert: Path | None = None,
+) -> CertificateIdentity | None:
     cert = os.environ.get(cert_env, "")
     if cert:
         return identify(load_certificate_file(Path(cert)))
     p12 = os.environ.get(p12_env, "")
     if p12:
         return certificate_from_p12(Path(p12), os.environ.get(password_env, ""))
+    if default_cert is not None and default_cert.is_file():
+        return identify(load_certificate_file(default_cert))
     return None
 
 
@@ -386,12 +404,13 @@ def ios_bundle_id() -> str:
 
 
 def harmony_bundle_id() -> tuple[str, str]:
-    manifests = sorted(MOBILE_ROOT.rglob("app.json5"))
-    for manifest in manifests:
-        match = re.search(r'"bundleName"\s*:\s*"([^"]+)"', manifest.read_text())
-        if match:
-            return match.group(1), ""
-    return "", "仓库里还没有鸿蒙工程。有签名证书后用 --bundle-id 和 --cert 生成。"
+    manifest = HARMONY_ROOT / "AppScope" / "app.json5"
+    if not manifest.is_file():
+        return "", "仓库里还没有鸿蒙工程。有签名证书后用 --bundle-id 和 --cert 生成。"
+    match = re.search(r'"bundleName"\s*:\s*"([^"]+)"', manifest.read_text())
+    if not match:
+        raise SystemExit(f"无法从 {manifest} 读取 bundleName")
+    return match.group(1), ""
 
 
 def build_tool(name: str) -> Path | None:
