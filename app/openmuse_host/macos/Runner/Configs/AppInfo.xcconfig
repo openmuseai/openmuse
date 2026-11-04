@@ -7,6 +7,9 @@
 // The application's name. By default this is also the title of the Flutter window.
 PRODUCT_NAME = OpenMuse
 
+OPENMUSE_DISTRIBUTION_CHANNEL = direct
+#include? "../../Flutter/ephemeral/OpenMuse-Distribution.xcconfig"
+
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = com.openmuseai.office
 

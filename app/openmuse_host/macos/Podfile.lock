@@ -10,6 +10,10 @@ PODS:
     - FlutterMacOS
   - openmuse_native_text_gate (0.1.0):
     - FlutterMacOS
+  - openmuse_resource_clipboard (0.1.0):
+    - FlutterMacOS
+  - openmuse_siyuan_client (0.1.0):
+    - FlutterMacOS
 
 DEPENDENCIES:
   - flutter_pty (from `Flutter/ephemeral/.symlinks/plugins/flutter_pty/macos`)
@@ -18,6 +22,8 @@ DEPENDENCIES:
   - openmuse_dsh_plugin (from `Flutter/ephemeral/.symlinks/plugins/openmuse_dsh_plugin/macos`)
   - openmuse_file_viewer (from `Flutter/ephemeral/.symlinks/plugins/openmuse_file_viewer/macos`)
   - openmuse_native_text_gate (from `Flutter/ephemeral/.symlinks/plugins/openmuse_native_text_gate/macos`)
+  - openmuse_resource_clipboard (from `Flutter/ephemeral/.symlinks/plugins/openmuse_resource_clipboard/macos`)
+  - openmuse_siyuan_client (from `Flutter/ephemeral/.symlinks/plugins/openmuse_siyuan_client/macos`)
 
 EXTERNAL SOURCES:
   flutter_pty:
@@ -32,6 +38,10 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/openmuse_file_viewer/macos
   openmuse_native_text_gate:
     :path: Flutter/ephemeral/.symlinks/plugins/openmuse_native_text_gate/macos
+  openmuse_resource_clipboard:
+    :path: Flutter/ephemeral/.symlinks/plugins/openmuse_resource_clipboard/macos
+  openmuse_siyuan_client:
+    :path: Flutter/ephemeral/.symlinks/plugins/openmuse_siyuan_client/macos
 
 SPEC CHECKSUMS:
   flutter_pty: 1e360feaf8b1a213d2d50da3c076005b8eef1eee
@@ -40,7 +50,9 @@ SPEC CHECKSUMS:
   openmuse_dsh_plugin: 5f8716962236c0ca7f90a80f5f5074ec9cd692cb
   openmuse_file_viewer: 69820774a1fd25a625a9324d1807cc1beec8c858
   openmuse_native_text_gate: 2524a8796b346bd1033fdf4cfd864aaa8c2816d8
+  openmuse_resource_clipboard: 80e1d6088b689813eb05211dd8da54d6ae212971
+  openmuse_siyuan_client: 816e151bab464dcd152eb90a3ce0a6105dc0baa5
 
-PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
+PODFILE CHECKSUM: 1e95c36afbfd1cb6423ceca4de7a8e1b256fb6ac
 
 COCOAPODS: 1.16.2

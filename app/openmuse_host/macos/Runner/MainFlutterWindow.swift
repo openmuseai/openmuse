@@ -2,9 +2,53 @@ import Cocoa
 import FlutterMacOS
 
 class MainFlutterWindow: NSWindow {
+  private var scopedWorkspaceURLs: [String: URL] = [:]
+  private let bookmarksKey = "OpenMuseWorkspaceBookmarks"
+
+  private func restoreWorkspaceBookmarks() {
+    let stored = UserDefaults.standard.dictionary(forKey: bookmarksKey) ?? [:]
+    var refreshed = stored
+    for (path, value) in stored {
+      guard let data = value as? Data else { continue }
+      do {
+        var stale = false
+        let url = try URL(resolvingBookmarkData: data, options: [.withSecurityScope],
+                          relativeTo: nil, bookmarkDataIsStale: &stale)
+        if url.startAccessingSecurityScopedResource() {
+          scopedWorkspaceURLs[path] = url
+          if stale {
+            refreshed[path] = try url.bookmarkData(options: [.withSecurityScope],
+                                                   includingResourceValuesForKeys: nil, relativeTo: nil)
+          }
+        }
+      } catch {
+        // Keep the bookmark for explicit user reauthorization; never broaden access.
+        NSLog("Workspace bookmark restore failed: %@", error.localizedDescription)
+      }
+    }
+    UserDefaults.standard.set(refreshed, forKey: bookmarksKey)
+  }
+
+  private func retainWorkspaceAccess(_ url: URL) throws {
+    let data = try url.bookmarkData(options: [.withSecurityScope],
+                                    includingResourceValuesForKeys: nil, relativeTo: nil)
+    var stored = UserDefaults.standard.dictionary(forKey: bookmarksKey) ?? [:]
+    stored[url.path] = data
+    UserDefaults.standard.set(stored, forKey: bookmarksKey)
+    if scopedWorkspaceURLs[url.path] == nil && url.startAccessingSecurityScopedResource() {
+      scopedWorkspaceURLs[url.path] = url
+    }
+  }
+
+  func releaseWorkspaceAccess() {
+    for url in scopedWorkspaceURLs.values { url.stopAccessingSecurityScopedResource() }
+    scopedWorkspaceURLs.removeAll()
+  }
+
   override func awakeFromNib() {
     disableImpellerForDesktop()
     sanitizeWorkingDirectory()
+    restoreWorkspaceBookmarks()
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
     self.contentViewController = flutterViewController
@@ -17,7 +61,7 @@ class MainFlutterWindow: NSWindow {
     if windowFrame.width < 1100 || windowFrame.height < 650 {
       let visible = self.screen?.visibleFrame ?? NSScreen.main?.visibleFrame
       let targetWidth = min(1280, visible?.width ?? 1280)
-      let targetHeight = min(760, visible?.height ?? 760)
+      let targetHeight = min(800, visible?.height ?? 800)
       self.setContentSize(NSSize(width: targetWidth, height: targetHeight))
       self.center()
     }
@@ -30,7 +74,7 @@ class MainFlutterWindow: NSWindow {
       name: "com.openmuse.host/workspace",
       binaryMessenger: flutterViewController.engine.binaryMessenger
     )
-    workspaceChannel.setMethodCallHandler { call, result in
+    workspaceChannel.setMethodCallHandler { [weak self] call, result in
       switch call.method {
       case "chooseDirectory":
         let panel = NSOpenPanel()
@@ -38,7 +82,16 @@ class MainFlutterWindow: NSWindow {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = true
-        result(panel.runModal() == .OK ? panel.url?.path : nil)
+        guard panel.runModal() == .OK, let url = panel.url else {
+          result(nil)
+          return
+        }
+        do {
+          try self?.retainWorkspaceAccess(url)
+          result(url.path)
+        } catch {
+          result(FlutterError(code: "workspace-authorization", message: error.localizedDescription, details: nil))
+        }
       case "reveal":
         guard
           let values = call.arguments as? [String: Any],

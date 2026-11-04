@@ -28,5 +28,16 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>OpenMuseDistributionChannel</key>
+	<string>$(OPENMUSE_DISTRIBUTION_CHANNEL)</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>OpenMuse connects to devices you pair to share your selected workspace and tasks.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>
