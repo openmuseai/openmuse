@@ -129,6 +129,10 @@ constexpr wchar_t kBridgeScript[] =
     L"window.MuseHostResource={postMessage:function(raw){"
     L"if(window.chrome&&window.chrome.webview)"
     L"window.chrome.webview.postMessage(String(raw));}};"
+    L"document.addEventListener('click',function(e){const a=e.target?.closest?.('a[href]');"
+    L"const u=a?.getAttribute('href');if(!u?.startsWith('openmuse-resource://v1/'))return;"
+    L"e.preventDefault();e.stopImmediatePropagation();window.MuseHostResource.postMessage("
+    L"JSON.stringify({type:'resource.reference.open',uri:u}));},true);"
     L"window.MuseHostWorkspace={postMessage:function(raw){"
     L"if(window.chrome&&window.chrome.webview)"
     L"window.chrome.webview.postMessage(String(raw));}};"
@@ -314,6 +318,13 @@ class DshView : public std::enable_shared_from_this<DshView> {
         flutter_window_(flutter_view),
         parent_(::GetAncestor(flutter_view, GA_ROOT)) {
     if (parent_ == nullptr) parent_ = flutter_view;
+  }
+
+  // Empty string means the view was accepted. Synchronous failures are
+  void SetResourceReferenceScript(const std::wstring& script) {
+    if (resource_reference_script_ == script) return;
+    resource_reference_script_ = script;
+    if (webview_ && !script.empty()) webview_->ExecuteScript(script.c_str(), nullptr);
   }
 
   // Empty string means the view was accepted. Synchronous failures are
@@ -587,6 +598,7 @@ class DshView : public std::enable_shared_from_this<DshView> {
 
   std::wstring BridgeScript() const {
     std::wstring script = kBridgeScript;
+    script += resource_reference_script_;
     script += kCompactSidebarScript;
     if (!desired_workspace_.empty()) {
       script += L"window.__OpenMuseDesiredWorkspace=\"" +
@@ -611,6 +623,7 @@ class DshView : public std::enable_shared_from_this<DshView> {
   ComPtr<ICoreWebView2Controller> controller_;
   ComPtr<ICoreWebView2> webview_;
   std::wstring url_;
+  std::wstring resource_reference_script_;
   RECT bounds_{};
   int port_ = 0;
   bool has_bounds_ = false;
@@ -697,6 +710,12 @@ void OpenMuseDshWebViewPlugin::HandleMethodCall(
   }
   if (!view_) {
     view_ = std::make_shared<DshView>(channel_.get(), parent);
+  }
+  const auto resource_script=arguments->find(flutter::EncodableValue("resourceReferenceScript"));
+  if(resource_script!=arguments->end()) {
+    if(const auto* value=std::get_if<std::string>(&resource_script->second)) {
+      if(value->size()<65536)view_->SetResourceReferenceScript(Utf16FromUtf8(*value));
+    }
   }
   const auto atLeastOne = [](double value) -> LONG {
     const auto rounded = static_cast<LONG>(value);

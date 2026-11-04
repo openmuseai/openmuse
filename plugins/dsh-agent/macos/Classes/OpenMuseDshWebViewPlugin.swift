@@ -43,6 +43,9 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
     configuration.userContentController.add(workspaceHandler, name: "MuseHostWorkspace")
     configuration.userContentController.add(clipboardHandler, name: "MuseHostClipboard")
     configuration.userContentController.add(DshPageDiagnostics(), name: "MuseHostDiagnostics")
+    if let script=values["resourceReferenceScript"] as? String,script.utf8.count<65536 {
+      configuration.userContentController.addUserScript(WKUserScript(source:script,injectionTime:.atDocumentEnd,forMainFrameOnly:true))
+    }
     configuration.userContentController.addUserScript(WKUserScript(source: """
       window.addEventListener('error', event => window.webkit.messageHandlers.MuseHostDiagnostics.postMessage(String(event.message)));
       window.addEventListener('unhandledrejection', event => window.webkit.messageHandlers.MuseHostDiagnostics.postMessage(String(event.reason)));
@@ -50,6 +53,13 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
     configuration.userContentController.addUserScript(WKUserScript(
       source: """
       window.MuseHostResource = { postMessage: function(raw) { window.webkit.messageHandlers.MuseHostResource.postMessage(raw); } };
+      document.addEventListener('click', function(event) {
+        const link=event.target?.closest?.('a[href]');
+        const uri=link?.getAttribute('href');
+        if(!uri?.startsWith('openmuse-resource://v1/'))return;
+        event.preventDefault();event.stopImmediatePropagation();
+        window.MuseHostResource.postMessage(JSON.stringify({type:'resource.reference.open',uri:uri}));
+      },true);
       window.MuseHostWorkspace = { postMessage: function(raw) { window.webkit.messageHandlers.MuseHostWorkspace.postMessage(raw); } };
       window.MuseHostClipboard = { postMessage: function(raw) { window.webkit.messageHandlers.MuseHostClipboard.postMessage(raw); } };
       window.addEventListener('keydown', function(event) {
