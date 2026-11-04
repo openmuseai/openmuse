@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 
@@ -54,7 +55,8 @@ def main():
         if offset % 4000 == 0:
             print(f'Source Git inputs stored: {min(offset + len(batch), len(entries))}/{len(entries)}', flush=True)
     portable = {k: {x: y for x, y in v.items() if x != 'path'} for k, v in record['files'].items()}
-    instructions = args.build_instructions.read_text().replace('source archive', 'source version').replace('source ZIP', 'source tree').replace('--build-number 9', '--build-number 10')
+    instructions = args.build_instructions.read_text().replace('source archive', 'source version').replace('source ZIP', 'source tree')
+    instructions = re.sub(r'--build-number \d+', '--build-number 11', instructions)
     extra = {
         'BUILD-MACOS.md': instructions.encode(),
         'README.md': ('# OpenMuse Desktop 1.0.0 macOS source\n\n'
