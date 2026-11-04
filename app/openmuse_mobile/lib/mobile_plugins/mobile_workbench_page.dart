@@ -15,6 +15,8 @@ final class MobileWorkbenchPage extends StatefulWidget {
     this.scope = 'default',
     this.onDiscover,
     this.onManagePlugins,
+    this.embedded = false,
+    this.onEditingChanged,
   });
 
   final OpenMusePluginRegistry registry;
@@ -23,13 +25,37 @@ final class MobileWorkbenchPage extends StatefulWidget {
   final String scope;
   final VoidCallback? onDiscover;
   final VoidCallback? onManagePlugins;
+  final bool embedded;
+  final ValueChanged<bool>? onEditingChanged;
 
   @override
-  State<MobileWorkbenchPage> createState() => _MobileWorkbenchPageState();
+  State<MobileWorkbenchPage> createState() => MobileWorkbenchPageState();
 }
 
-final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
+final class MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
   bool _editing = false;
+  bool get editing => _editing;
+  final scroll = ScrollController();
+  Set<String> _hidden = {}, _beforeHidden = {};
+  String _layout() => jsonEncode([
+    _order,
+    _pinned.toList()..sort(),
+    _heights.map((k, v) => MapEntry(k, v.name)),
+    _columns,
+    _hidden.toList()..sort(),
+  ]);
+  String? _editBaseline;
+  bool get dirty => _editing && _editBaseline != _layout();
+  void scrollToTop() {
+    if (scroll.hasClients) {
+      scroll.animateTo(
+        0,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   List<String> _order = [];
   Set<String> _pinned = {};
   Map<String, OpenMuseWidgetHeight> _heights = {};
@@ -59,6 +85,8 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
     if (oldWidget.subject != widget.subject ||
         oldWidget.scope != widget.scope) {
       _order = [];
+      _hidden = {};
+      _editing = false;
       _pinned = {};
       _heights = {};
       _columns = {};
@@ -76,10 +104,14 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
       final encoded = await widget.values.read(key);
       if (!mounted || key != _key || encoded == null) return;
       final data = jsonDecode(encoded);
-      if (data is! Map || (data['version'] != 1 && data['version'] != 2)) {
+      if (data is! Map ||
+          (data['version'] != 1 &&
+              data['version'] != 2 &&
+              data['version'] != 3)) {
         return;
       }
       setState(() {
+        _hidden = (data['hidden'] as List? ?? []).whereType<String>().toSet();
         _order = (data['order'] as List? ?? []).whereType<String>().toList();
         _pinned = (data['pinned'] as List? ?? []).whereType<String>().toSet();
         _heights = {
@@ -89,6 +121,11 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
                 if (height.name == entry.value) entry.key as String: height,
         };
         _columns = {
+          if (data['version'] != 3)
+            for (final descriptor in widget.registry.descriptors)
+              if (widget.registry.plugin(descriptor.id)
+                  case final OpenMuseMobileWorkbenchContributor contributor)
+                descriptor.id: contributor.workbenchCard.columns,
           for (final entry in (data['columns'] as Map? ?? {}).entries)
             if (entry.key is String && (entry.value == 1 || entry.value == 2))
               entry.key as String: entry.value as int,
@@ -99,40 +136,58 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
     }
   }
 
-  Future<void> _save() async {
+  Future<bool> _save() async {
+    final localeStrings = stringsOf(context);
+
     try {
       await widget.values.write(
         _key,
         jsonEncode({
-          'version': 2,
+          'version': 3,
+          'hidden': _hidden.toList()..sort(),
           'order': _order,
           'pinned': _pinned.toList()..sort(),
           'heights': _heights.map((id, height) => MapEntry(id, height.name)),
           'columns': _columns,
         }),
       );
+      return true;
     } on Object {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('布局保存失败，请稍后重试')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              (localeStrings
+                  .mobileUnableToSaveTheLayoutTryAgainLater8661017f()),
+            ),
+          ),
+        );
       }
+      return false;
     }
   }
 
+  void beginEdit() => _beginEdit();
   void _beginEdit() {
     setState(() {
+      _editBaseline = _layout();
+      _beforeHidden = {..._hidden};
       _beforeOrder = [..._order];
       _beforePinned = {..._pinned};
       _beforeHeights = {..._heights};
       _beforeColumns = {..._columns};
       _editing = true;
     });
+    widget.onEditingChanged?.call(true);
   }
 
-  void _finishEdit({required bool save}) {
+  Future<bool> finishEdit({required bool save}) => _finishEdit(save: save);
+  Future<bool> _finishEdit({required bool save}) async {
+    if (save && !await _save()) return false;
+    if (!mounted) return false;
     setState(() {
       if (!save) {
+        _hidden = _beforeHidden;
         _order = _beforeOrder;
         _pinned = _beforePinned;
         _heights = _beforeHeights;
@@ -140,7 +195,38 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
       }
       _editing = false;
     });
-    if (save) unawaited(_save());
+    widget.onEditingChanged?.call(false);
+    return true;
+  }
+
+  Future<bool> requestLeave() async {
+    if (!_editing) return true;
+    if (!dirty) return _finishEdit(save: false);
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: Text(stringsOf(context).mobileSaveLayoutChanges()),
+        actions: [
+          TextButton(
+            key: const ValueKey('apps-edit-keep'),
+            onPressed: () => Navigator.pop(dialog),
+            child: Text(stringsOf(context).mobileKeepEditing()),
+          ),
+          TextButton(
+            key: const ValueKey('apps-edit-discard'),
+            onPressed: () => Navigator.pop(dialog, 'discard'),
+            child: Text(stringsOf(context).mobileDiscardChanges()),
+          ),
+          FilledButton(
+            key: const ValueKey('apps-edit-save'),
+            onPressed: () => Navigator.pop(dialog, 'save'),
+            child: Text(stringsOf(context).mobileSaveChanges()),
+          ),
+        ],
+      ),
+    );
+    if (choice == null || !mounted) return false;
+    return _finishEdit(save: choice == 'save');
   }
 
   void _move(String moved, String target) {
@@ -158,7 +244,12 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
       for (final descriptor in widget.registry.descriptors)
         if (widget.registry.plugin(descriptor.id)
             case final OpenMuseMobileWorkbenchContributor contributor)
-          contributor as OpenMusePlugin,
+          if (!widget.embedded ||
+              _editing ||
+              (!_hidden.contains(descriptor.id) &&
+                  widget.registry.stateOf(descriptor.id) ==
+                      OpenMusePluginState.active))
+            contributor as OpenMusePlugin,
     ];
     final position = {for (var i = 0; i < _order.length; i++) _order[i]: i};
     plugins.sort((a, b) {
@@ -186,7 +277,7 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
       _heights[id] ?? card.height;
 
   int _columnsFor(String id, OpenMuseWorkbenchCard card) =>
-      _columns[id] ?? card.columns;
+      _columns[id] ?? (widget.embedded ? 2 : card.columns);
 
   void _resize(String id, String option) {
     setState(() {
@@ -206,6 +297,7 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
   @override
   void dispose() {
     widget.registry.removeListener(_refresh);
+    scroll.dispose();
     super.dispose();
   }
 
@@ -213,10 +305,11 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
   Widget build(BuildContext context) {
     final plugins = _visible();
     final colors = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: CustomScrollView(
-        slivers: [
+    final body = CustomScrollView(
+      controller: scroll,
+      key: const PageStorageKey('apps-overview-scroll'),
+      slivers: [
+        if (!widget.embedded)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(22, 22, 16, 18),
@@ -227,7 +320,7 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '工作台',
+                          (stringsOf(context).mobileWorkbenchA6f1b51f()),
                           style: Theme.of(context).textTheme.headlineLarge
                               ?.copyWith(
                                 fontWeight: FontWeight.w800,
@@ -236,7 +329,9 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '常用插件，一眼掌握',
+                          (stringsOf(
+                            context,
+                          ).mobileYourToolsAtAGlance9f2e8073()),
                           style: TextStyle(color: colors.onSurfaceVariant),
                         ),
                       ],
@@ -247,65 +342,153 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
                     onPressed: _editing
                         ? () => _finishEdit(save: false)
                         : _beginEdit,
-                    child: Text(_editing ? '取消编辑' : '编辑布局'),
+                    child: Text(
+                      _editing
+                          ? (stringsOf(context).mobileCancelEditing3a1cf24b())
+                          : (stringsOf(context).mobileEditLayoutBb3d555a()),
+                    ),
                   ),
                   if (_editing)
                     FilledButton(
                       key: const ValueKey('workbench-done'),
                       onPressed: () => _finishEdit(save: true),
-                      child: const Text('完成'),
+                      child: Text((stringsOf(context).mobileDone92e3eec4())),
                     ),
                 ],
               ),
             ),
           ),
-          if (plugins.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.widgets_outlined,
-                      size: 48,
-                      color: colors.primary,
-                    ),
-                    const SizedBox(height: 12),
-                    const Text('还没有可放在工作台的插件'),
-                    TextButton(
-                      onPressed: widget.onDiscover,
-                      child: const Text('探索插件'),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                child: LayoutBuilder(
-                  builder: (context, constraints) => constraints.maxWidth < 340
-                      ? Column(
-                          children: [
-                            for (final plugin in plugins)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _card(
-                                  plugin,
-                                  plugin as OpenMuseMobileWorkbenchContributor,
-                                ),
-                              ),
-                          ],
-                        )
-                      : _masonry(plugins),
-                ),
+        if (widget.embedded)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 6, 20, 22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.grid_view_outlined,
+                        size: 15,
+                        color: colors.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          stringsOf(context).mobileYourAppsArranged(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 23),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          stringsOf(context).mobileYourOverview(),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        stringsOf(context).mobileThisDevice(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-        ],
-      ),
+          ),
+        if (plugins.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.widgets_outlined, size: 48, color: colors.primary),
+                  const SizedBox(height: 12),
+                  Text(
+                    (widget.embedded
+                        ? stringsOf(context).mobileNoAppsTitle()
+                        : stringsOf(
+                            context,
+                          ).mobileNoWorkbenchPluginsAreAvailable4cba5019()),
+                  ),
+                  if (widget.embedded)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        stringsOf(context).mobileNoAppsDetail(),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: colors.onSurfaceVariant),
+                      ),
+                    ),
+                  TextButton(
+                    onPressed: widget.embedded && _hidden.isNotEmpty
+                        ? _beginEdit
+                        : widget.onDiscover,
+                    child: Text(
+                      (widget.embedded && _hidden.isNotEmpty
+                          ? stringsOf(context).mobileChooseVisibleApps()
+                          : stringsOf(context).mobileExplorePlugins1ff2cee8()),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              child: LayoutBuilder(
+                builder: (context, constraints) => constraints.maxWidth < 340
+                    ? Column(
+                        children: [
+                          for (final plugin in plugins)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _card(
+                                plugin,
+                                plugin as OpenMuseMobileWorkbenchContributor,
+                              ),
+                            ),
+                        ],
+                      )
+                    : _masonry(plugins),
+              ),
+            ),
+          ),
+        if (widget.embedded && plugins.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              child: OutlinedButton.icon(
+                onPressed: _editing ? null : widget.onDiscover,
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(stringsOf(context).mobileFindMoreApps()),
+              ),
+            ),
+          ),
+      ],
     );
+    return widget.embedded
+        ? body
+        : Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            body: body,
+          );
   }
 
   Widget _masonry(List<OpenMusePlugin> plugins) {
@@ -359,8 +542,8 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
 
   double _height(OpenMuseWidgetHeight value) => switch (value) {
     OpenMuseWidgetHeight.small => 166,
-    OpenMuseWidgetHeight.medium => 236,
-    OpenMuseWidgetHeight.large => 308,
+    OpenMuseWidgetHeight.medium => widget.embedded ? 190 : 236,
+    OpenMuseWidgetHeight.large => widget.embedded ? 264 : 308,
   };
 
   Widget _card(
@@ -379,7 +562,9 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
         key: ValueKey('workbench-card-$id'),
         onTap: _editing || !active ? null : () => _open(plugin),
         child: SizedBox(
-          height: _height(_heightFor(id, card)),
+          height:
+              _height(_heightFor(id, card)) +
+              (widget.embedded && _editing ? 60 : 0),
           child: Padding(
             padding: const EdgeInsets.all(15),
             child: Column(
@@ -387,32 +572,75 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
               children: [
                 Row(
                   children: [
-                    Expanded(
-                      child: Text(
-                        card.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
+                    if (widget.embedded) ...[
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: colors.primary.withValues(alpha: .09),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        child: Icon(
+                          Icons.widgets_outlined,
+                          color: colors.primary,
+                          size: 23,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            card.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          if (widget.embedded) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              card.summary,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colors.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     if (!_editing && _pinned.contains(id))
                       Icon(Icons.push_pin, size: 18, color: colors.primary),
                   ],
                 ),
-                const SizedBox(height: 8),
+                if (widget.embedded) ...[
+                  const SizedBox(height: 12),
+                  Divider(height: 1, color: colors.outlineVariant),
+                  const SizedBox(height: 12),
+                ] else
+                  const SizedBox(height: 8),
                 Expanded(
                   child: active
                       ? IgnorePointer(
                           ignoring: _editing,
                           child: ClipRect(
-                            child: MobileWidgetPreview(
-                              key: ValueKey('workbench-preview-$id'),
-                              messages: contribution.buildWorkbenchPreview(),
-                              changes: contribution.workbenchChanges,
-                              reload: contribution.buildWorkbenchPreview,
+                            child: KeyedSubtree(
+                              key: ValueKey(
+                                Localizations.localeOf(context).toLanguageTag(),
+                              ),
+                              child: MobileWidgetPreview(
+                                key: ValueKey('workbench-preview-$id'),
+                                messages: contribution.buildWorkbenchPreview(),
+                                changes: contribution.workbenchChanges,
+                                reload: contribution.buildWorkbenchPreview,
+                              ),
                             ),
                           ),
                         )
@@ -420,55 +648,129 @@ final class _MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text('插件未启用'),
+                              Text(
+                                (stringsOf(
+                                  context,
+                                ).mobileThisPluginIsDisabled64309558()),
+                              ),
                               if (widget.onManagePlugins != null)
                                 TextButton(
                                   onPressed: _editing
                                       ? null
                                       : widget.onManagePlugins,
-                                  child: const Text('管理插件'),
+                                  child: Text(
+                                    (stringsOf(
+                                      context,
+                                    ).mobileManagePlugins1429ebfe()),
+                                  ),
                                 ),
                             ],
                           ),
                         ),
                 ),
                 if (_editing)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  Wrap(
+                    alignment: WrapAlignment.end,
                     children: [
+                      if (widget.embedded) ...[
+                        IconButton(
+                          tooltip: stringsOf(context).mobileMoveUp(),
+                          icon: const Icon(Icons.keyboard_arrow_up),
+                          onPressed: () {
+                            final ids = _visible();
+                            final i = ids.indexOf(plugin);
+                            if (i > 0) _move(id, ids[i - 1].descriptor.id);
+                          },
+                        ),
+                        IconButton(
+                          tooltip: stringsOf(context).mobileMoveDown(),
+                          icon: const Icon(Icons.keyboard_arrow_down),
+                          onPressed: () {
+                            final ids = _visible();
+                            final i = ids.indexOf(plugin);
+                            if (i < ids.length - 1) {
+                              final order = ids
+                                  .map((p) => p.descriptor.id)
+                                  .toList();
+                              order.remove(id);
+                              order.insert(i + 1, id);
+                              setState(() => _order = order);
+                            }
+                          },
+                        ),
+                        IconButton(
+                          key: ValueKey('workbench-visible-$id'),
+                          tooltip: _hidden.contains(id)
+                              ? stringsOf(context).mobileShowApp()
+                              : stringsOf(context).mobileHideApp(),
+                          icon: Icon(
+                            _hidden.contains(id)
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                          ),
+                          onPressed: () => setState(() {
+                            if (!_hidden.remove(id)) _hidden.add(id);
+                          }),
+                        ),
+                      ],
                       PopupMenuButton<String>(
                         key: ValueKey('workbench-size-$id'),
-                        tooltip: '调整尺寸',
+                        tooltip: (stringsOf(context).mobileResizeC93a70d1()),
                         icon: const Icon(Icons.aspect_ratio, size: 20),
                         onSelected: (value) => _resize(id, value),
-                        itemBuilder: (_) => const [
+                        itemBuilder: (_) => [
                           PopupMenuItem(
                             value: 'height.small',
-                            child: Text('紧凑高度'),
+                            child: Text(
+                              (stringsOf(
+                                context,
+                              ).mobileCompactHeight557e1f94()),
+                            ),
                           ),
                           PopupMenuItem(
                             value: 'height.medium',
-                            child: Text('标准高度'),
+                            child: Text(
+                              (stringsOf(
+                                context,
+                              ).mobileStandardHeight173970c3()),
+                            ),
                           ),
                           PopupMenuItem(
                             value: 'height.large',
-                            child: Text('扩展高度'),
+                            child: Text(
+                              (stringsOf(
+                                context,
+                              ).mobileExpandedHeight61c3586f()),
+                            ),
                           ),
                           PopupMenuDivider(),
                           PopupMenuItem(
                             value: 'columns.1',
-                            child: Text('单列宽度'),
+                            child: Text(
+                              (stringsOf(context).mobileOneColumn84e0d35c()),
+                            ),
                           ),
-                          PopupMenuItem(value: 'columns.2', child: Text('跨两列')),
+                          PopupMenuItem(
+                            value: 'columns.2',
+                            child: Text(
+                              (stringsOf(context).mobileTwoColumnsA45919ff()),
+                            ),
+                          ),
                           PopupMenuItem(
                             value: 'reset',
-                            child: Text('恢复插件默认尺寸'),
+                            child: Text(
+                              (stringsOf(
+                                context,
+                              ).mobileResetPluginSize1482e95f()),
+                            ),
                           ),
                         ],
                       ),
                       IconButton(
                         key: ValueKey('workbench-pin-$id'),
-                        tooltip: _pinned.contains(id) ? '取消置顶' : '置顶',
+                        tooltip: _pinned.contains(id)
+                            ? (stringsOf(context).mobileUnpinEf1e845f())
+                            : (stringsOf(context).mobilePinFc99471d()),
                         onPressed: () => setState(() {
                           if (!_pinned.add(id)) _pinned.remove(id);
                         }),

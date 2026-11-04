@@ -10,7 +10,7 @@ packages:
     source: hosted
     version: "0.1.1"
   archive:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: archive
       sha256: "0d58d1fa1fddf6588251ccf2819f3fb3b6d0452c1b2813ac7413a05592bfbefe"
@@ -146,7 +146,7 @@ packages:
     source: hosted
     version: "0.3.5+5"
   crypto:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: crypto
       sha256: c8ea0233063ba03258fbcf2ca4d6dadfefe14f02fab57702265467a19f27fadf
@@ -193,6 +193,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.0.0"
+  equatable:
+    dependency: transitive
+    description:
+      name: equatable
+      sha256: "3bce007a596ff8b3119c45d68aaef631272537c03d30e5d4534dd24bf4c5eaa2"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.1.0"
   fake_async:
     dependency: transitive
     description:
@@ -218,7 +226,7 @@ packages:
     source: hosted
     version: "7.0.1"
   file_picker:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: file_picker
       sha256: "57d9a1dd5063f85fa3107fb42d1faffda52fdc948cefd5fe5ea85267a5fc7343"
@@ -260,12 +268,12 @@ packages:
     source: hosted
     version: "6.0.0"
   flutter_localizations:
-    dependency: transitive
+    dependency: "direct dev"
     description: flutter
     source: sdk
     version: "0.0.0"
   flutter_markdown_plus:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_markdown_plus
       sha256: fce641d6c2106cc495de1cd603f97a4f9d615a97a64011928ded380dbdade935
@@ -341,6 +349,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_timezone:
+    dependency: transitive
+    description:
+      name: flutter_timezone
+      sha256: "978192f2f9ea6d019a4de4f0211d76a9af955ca24865828fa98ca4e20cf0cb3c"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "5.0.1"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -367,13 +383,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.2.4"
-  genoffice_pptx_flutter:
-    dependency: "direct dev"
-    description:
-      path: "../../../Muse-Plugin-Ecosystem/plugins/genoffice-pptx/flutter_renderer"
-      relative: true
-    source: path
-    version: "0.3.1"
   genui:
     dependency: transitive
     description:
@@ -598,6 +607,27 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  muse_resource_center:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_resource_center"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_resource_center_io:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_resource_center_io"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_resource_contract:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_resource_contract"
+      relative: true
+    source: path
+    version: "0.1.0"
   muse_speech_contract:
     dependency: "direct main"
     description:
@@ -620,6 +650,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "9.5.0"
+  open_filex:
+    dependency: transitive
+    description:
+      name: open_filex
+      sha256: "9976da61b6a72302cf3b1efbce259200cd40232643a467aac7370addf94d6900"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "4.7.0"
   openmuse_app_update:
     dependency: "direct main"
     description:
@@ -631,6 +669,13 @@ packages:
     dependency: "direct main"
     description:
       path: "../../plugins/auth-gotrue"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_client_plugins:
+    dependency: "direct main"
+    description:
+      path: "../../distribution/openmuse_client_plugins"
       relative: true
     source: path
     version: "0.1.0"
@@ -652,6 +697,13 @@ packages:
     dependency: "direct main"
     description:
       path: "../../packages/openmuse_host_shell"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_i18n:
+    dependency: "direct main"
+    description:
+      path: "../../packages/openmuse_i18n"
       relative: true
     source: path
     version: "0.1.0"
@@ -690,24 +742,10 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
-  openmuse_office_docx:
-    dependency: "direct main"
-    description:
-      path: "../../packages/openmuse_office_docx"
-      relative: true
-    source: path
-    version: "0.1.0"
   openmuse_office_flutter:
     dependency: "direct main"
     description:
       path: "../../packages/openmuse_office_flutter"
-      relative: true
-    source: path
-    version: "0.1.0"
-  openmuse_office_viewers:
-    dependency: "direct main"
-    description:
-      path: "../../packages/openmuse_office_viewers"
       relative: true
     source: path
     version: "0.1.0"
@@ -732,6 +770,55 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  openmuse_resource_center:
+    dependency: transitive
+    description:
+      path: "../../packages/openmuse_resource_center"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_resource_center_host:
+    dependency: "direct main"
+    description:
+      path: "../../packages/openmuse_resource_center_host"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_resource_clipboard:
+    dependency: "direct dev"
+    description:
+      path: "../../packages/openmuse_resource_clipboard"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_resource_notes:
+    dependency: "direct dev"
+    description:
+      path: "../../plugins/resource-notes"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_runtime_config:
+    dependency: "direct main"
+    description:
+      path: "../../packages/openmuse_runtime_config"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_siyuan_client:
+    dependency: transitive
+    description:
+      path: "../../../Muse-Plugin-Ecosystem/plugins/markdown/flutter_runtime"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_siyuan_plugin:
+    dependency: transitive
+    description:
+      path: "../../plugins/siyuan-client"
+      relative: true
+    source: path
+    version: "0.1.1"
   openmuse_speech_input:
     dependency: "direct main"
     description:

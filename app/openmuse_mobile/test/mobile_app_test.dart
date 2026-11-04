@@ -1,9 +1,9 @@
+import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:genoffice_pptx_flutter/genoffice_pptx_flutter.dart';
 import 'package:openmuse_app_update/openmuse_app_update.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
@@ -15,8 +15,9 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:pub_semver/pub_semver.dart';
 
-final _pptxFixture = File('test_assets/genoffice_standard_business.pptx')
-    .readAsBytesSync();
+final _pptxFixture = File(
+  'test_assets/genoffice_standard_business.pptx',
+).readAsBytesSync();
 
 void main() {
   testWidgets('Mobile startup shows a newer store release before work', (
@@ -72,6 +73,9 @@ void main() {
     expect(find.text('手机端更新说明'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('app-update-later')));
     await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('wb-tab-首页')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('wb-tab-任务')));
+    await tester.pumpAndSettle();
     expect(find.text('OpenMuse，与你一起创造'), findsOneWidget);
   });
 
@@ -110,26 +114,30 @@ void main() {
       application.installedPluginIds,
       contains('com.openmuse.remote-workbench'),
     );
+    expect(find.byKey(const ValueKey('wb-tab-首页')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('wb-tab-任务')));
+    await tester.pumpAndSettle();
     expect(find.text('OpenMuse，与你一起创造'), findsOneWidget);
     expect(find.text('发消息'), findsOneWidget);
     expect(find.text('Welcome to OpenMuse'), findsNothing);
     expect(find.text('请登录以访问 Cloud Workspace'), findsNothing);
+    expect(application.installedPluginIds, contains('io.openmuse.siyuan'));
+    await tester.tap(find.byKey(const ValueKey('wb-tab-应用')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('workbench-card-io.openmuse.siyuan')),
+      findsNothing,
+    );
+    expect(find.textContaining('插件预览不可用'), findsNothing);
   });
 
-  test('physical-device defaults never point authentication at loopback', () {
-    expect(
-      MobileEndpointConfig.defaultGoTrueOrigin,
-      'https://openmuseai.com/gotrue',
-    );
-    expect(MobileEndpointConfig.defaultCloudOrigin, 'https://openmuseai.com');
-    expect(
-      Uri.parse(MobileEndpointConfig.defaultGoTrueOrigin).isScheme('https'),
-      isTrue,
-    );
-    expect(
-      Uri.parse(MobileEndpointConfig.defaultGoTrueOrigin).host,
-      isNot(anyOf('127.0.0.1', 'localhost')),
-    );
+  test('physical-device defaults come from a validated deployment', () async {
+    final config = (await loadDeploymentBundle()).snapshot;
+    final endpoints = MobileEndpointConfig.fromEnvironment(config: config);
+    expect(endpoints.gotrueOrigin, config.serviceUri(ServiceId.auth));
+    expect(endpoints.cloudOrigin, config.serviceUri(ServiceId.cloud));
+    expect(endpoints.gotrueOrigin.scheme, 'https');
+    expect(endpoints.gotrueOrigin.host, isNot(anyOf('127.0.0.1', 'localhost')));
   });
 
   test('DOCX capability is advertised only when an engine is injected', () {
@@ -185,7 +193,7 @@ void main() {
       'online': true,
     });
     await tester.pumpWidget(
-      MaterialApp(
+      _localizedApp(
         home: PairedDesktopConnectScreen(
           controller: controller,
           initialDevice: device,
@@ -218,9 +226,7 @@ void main() {
       ),
     );
     await tester.pumpWidget(
-      const MaterialApp(
-        home: PairedDesktopWorkspaceScreen(connection: connection),
-      ),
+      _localizedApp(home: PairedDesktopWorkspaceScreen(connection: connection)),
     );
 
     await tester.pump();
@@ -350,9 +356,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Deck.pptx'));
     await tester.pumpAndSettle();
-    expect(find.byType(GenOfficePptxViewer), findsOneWidget);
-    expect(find.byKey(const ValueKey('pptx-page-counter')), findsOneWidget);
-    expect(find.textContaining('Q3 Business Review'), findsOneWidget);
+    expect(find.byKey(const ValueKey('office-view-only')), findsOneWidget);
+    expect(find.text('PPTX · 只读兼容视图'), findsOneWidget);
+    expect(find.textContaining('Slide 1\tHello'), findsOneWidget);
     expect(find.byIcon(Icons.save), findsNothing);
   });
 
@@ -400,7 +406,9 @@ void main() {
     expect(tester.widget<ListTile>(resource).enabled, isTrue);
     await tester.tap(find.text('Deck.pptx'));
     await tester.pumpAndSettle();
-    expect(find.byType(GenOfficePptxViewer), findsOneWidget);
+    expect(find.byKey(const ValueKey('office-view-only')), findsOneWidget);
+    expect(find.textContaining('Slide 1\tHello'), findsOneWidget);
+    expect(find.byIcon(Icons.save), findsNothing);
   });
 
   testWidgets(
@@ -681,10 +689,10 @@ final class _FakeCloudService
 
   @override
   Future<List<int>> read(ResourceHandle handle, int start, int endExclusive) =>
-      Future.value((handle.resourceRef == 'resource:pptx'
-              ? _pptxFixture
-              : const [1, 2, 3])
-          .sublist(start, endExclusive));
+      Future.value(
+        (handle.resourceRef == 'resource:pptx' ? _pptxFixture : const [1, 2, 3])
+            .sublist(start, endExclusive),
+      );
 
   @override
   Future<OfficeResourceCommitReceipt> commit({
@@ -701,3 +709,10 @@ final class _FakeCloudService
     generation: generation,
   );
 }
+
+Widget _localizedApp({required Widget home}) => OpenMuseLocaleScope(
+  controller: OpenMuseLocaleController(
+    initialTag: OpenMuseCatalog.builtIn.fallbackLocale,
+  ),
+  child: MaterialApp(home: home),
+);

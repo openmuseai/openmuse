@@ -1,3 +1,6 @@
+import 'mobile_build_locale.dart';
+import 'ai_content_reporting.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -5,8 +8,6 @@ import 'package:muse_dsh_conversation_core/muse_dsh_conversation_core.dart';
 import 'package:muse_dsh_conversation_flutter/muse_dsh_conversation_flutter.dart';
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
-
-import 'remote_dsh_page.dart';
 
 final class NativeDshSessionHandle extends ChangeNotifier {
   DshConversationController? _conversation;
@@ -115,6 +116,7 @@ final class NativeDshPage extends StatefulWidget {
     this.showComposer = true,
     this.handle,
     this.initialPrompt,
+    this.onInitialPromptDeclined,
     this.onInitialPromptConsumed,
     this.onConnectionFailure,
   });
@@ -127,6 +129,7 @@ final class NativeDshPage extends StatefulWidget {
   final bool showComposer;
   final NativeDshSessionHandle? handle;
   final String? initialPrompt;
+  final ValueChanged<String>? onInitialPromptDeclined;
   final VoidCallback? onInitialPromptConsumed;
   final VoidCallback? onConnectionFailure;
 
@@ -144,8 +147,8 @@ final class _NativeDshPageState extends State<NativeDshPage> {
   bool _started = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     if (widget.active) _ensureOpen();
   }
 
@@ -175,6 +178,8 @@ final class _NativeDshPageState extends State<NativeDshPage> {
   }
 
   Future<void> _openWithRetry() async {
+    final localeStrings = stringsOf(context);
+
     var attempt = 0;
     while (mounted) {
       if (!widget.active) {
@@ -189,7 +194,10 @@ final class _NativeDshPageState extends State<NativeDshPage> {
         _client = null;
         if (!mounted) return;
         debugPrint('OpenMuse native DSH open: attempt=$attempt error=$error');
-        setState(() => _failure = 'Desktop 连接暂时不可用，正在自动重试…');
+        setState(
+          () => _failure = (localeStrings
+              .mobileDesktopIsUnavailableRetryingAutomaticaC2b4ac01()),
+        );
         widget.onConnectionFailure?.call();
         final seconds = 1 << attempt.clamp(0, 3);
         attempt++;
@@ -236,6 +244,7 @@ final class _NativeDshPageState extends State<NativeDshPage> {
     final conversation = DshConversationController(
       client: client,
       onConnectionFailure: (_) => widget.onConnectionFailure?.call(),
+      approveSend: _approveSharing,
     );
     await conversation.start(selected.sessionId, running: selected.running);
     if (!widget.active) conversation.pause();
@@ -256,9 +265,91 @@ final class _NativeDshPageState extends State<NativeDshPage> {
         await conversation.send(initialPrompt);
         widget.onInitialPromptConsumed?.call();
       } catch (error) {
+        if (error is DshSendDeclined) {
+          widget.onInitialPromptDeclined?.call(initialPrompt);
+        }
         debugPrint('OpenMuse native DSH prompt: $error');
       }
     }
+  }
+
+  final _approvedRecipients = <String>{};
+  Future<bool> _approveSharing(
+    DshConversationSnapshot snapshot,
+    String text,
+  ) async {
+    final strings = stringsOf(context);
+    DshNativeSessionOptions? options;
+    try {
+      options = await _client?.sessionOptions(snapshot.sessionId!);
+    } on Object {
+      // Unknown recipients never inherit an earlier sharing decision.
+    }
+    if (!mounted) return false;
+    final provider = snapshot.provider ?? options?.defaultModel.provider;
+    final model = snapshot.model ?? options?.defaultModel.model;
+    final matches =
+        options?.models
+            .where((value) => value.provider == provider && value.id == model)
+            .toList() ??
+        [];
+    if (provider == null || model == null || matches.length != 1) {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(strings.commonAiSharingTitle()),
+          content: Text(strings.commonAiSharingUnknown()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(strings.commonAiSharingCancel()),
+            ),
+          ],
+        ),
+      );
+      return false;
+    }
+    final key =
+        '${widget.session.origin}${widget.session.path}|$provider|$model';
+    if (_approvedRecipients.contains(key)) return true;
+    final accepted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text(strings.commonAiSharingTitle()),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                strings.commonAiSharingBody(
+                  provider: matches.single.providerName,
+                  model: matches.single.name,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SelectableText(
+                text.length > 500 ? '${text.substring(0, 500)}…' : text,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(strings.commonAiSharingCancel()),
+          ),
+          FilledButton(
+            key: const ValueKey('ai-sharing-allow'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(strings.commonAiSharingAllow()),
+          ),
+        ],
+      ),
+    );
+    if (accepted == true && mounted) _approvedRecipients.add(key);
+    return accepted == true;
   }
 
   Future<void> _loadOptions(
@@ -297,10 +388,13 @@ final class _NativeDshPageState extends State<NativeDshPage> {
 
   @override
   Widget build(BuildContext context) {
+    final reports = AiContentReportScope.maybeOf(context);
     if (_webFallback) {
-      return RemoteDshPage(
-        session: widget.session,
-        workspaceTitle: widget.workspaceTitle,
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(stringsOf(context).commonDesktopUpdateNeeded()),
+        ),
       );
     }
     final conversation = _conversation;
@@ -311,7 +405,10 @@ final class _NativeDshPageState extends State<NativeDshPage> {
               children: [
                 const CircularProgressIndicator.adaptive(),
                 const SizedBox(height: 12),
-                Text(_failure ?? '正在连接 Desktop DSH…'),
+                Text(
+                  _failure ??
+                      (stringsOf(context).mobileConnectingToDesktop46ee792f()),
+                ),
               ],
             ),
           )
@@ -321,6 +418,19 @@ final class _NativeDshPageState extends State<NativeDshPage> {
             compatibilityPlugins: _negotiation?.plugins ?? const [],
             onSend: conversation.send,
             onCancel: conversation.cancel,
+            onReportResponse: reports == null
+                ? null
+                : (row) => unawaited(
+                    showAiContentReport(
+                      context: context,
+                      client: reports,
+                      response: row.text.isEmpty
+                          ? stringsOf(context).commonAiReportAttachments()
+                          : row.text,
+                      provider: conversation.store.snapshot.provider ?? '',
+                      model: conversation.store.snapshot.model ?? '',
+                    ),
+                  ),
             onFallbackRequested: _useWebFallback,
             onQuestionAnswer: (answers) => conversation.client.answerQuestion(
               sessionId: conversation.store.snapshot.sessionId!,

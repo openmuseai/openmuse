@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.0.1+1
+version: 1.0.0+9
 
 environment:
   sdk: ^3.12.2
@@ -28,6 +28,16 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  openmuse_resource_center_host:
+    path: ../../packages/openmuse_resource_center_host
+  openmuse_client_plugins:
+    path: ../../distribution/openmuse_client_plugins
+  crypto: ^3.0.6
+  openmuse_i18n:
+    path: ../../packages/openmuse_i18n
+  openmuse_runtime_config:
+    path: ../../packages/openmuse_runtime_config
+  file_picker: ^10.3.10
   openmuse_dsh_mobile_agent:
     path: ../../plugins/dsh-mobile-agent
   flutter:
@@ -62,12 +72,8 @@ dependencies:
     path: ../../packages/openmuse_registry_provider
   openmuse_mobile_cloud:
     path: ../../packages/openmuse_mobile_cloud
-  openmuse_office_docx:
-    path: ../../packages/openmuse_office_docx
   openmuse_office_flutter:
     path: ../../packages/openmuse_office_flutter
-  openmuse_office_viewers:
-    path: ../../packages/openmuse_office_viewers
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
   openmuse_remote_workbench:
@@ -79,11 +85,17 @@ dependencies:
   path_provider: ^2.1.5
   package_info_plus: ^9.0.1
   url_launcher: ^6.3.3
+  flutter_markdown_plus: 1.0.12
   webview_flutter: ^4.13.0
 
 dev_dependencies:
-  genoffice_pptx_flutter:
-    path: ../../../Muse-Plugin-Ecosystem/plugins/genoffice-pptx/flutter_renderer
+  openmuse_resource_notes:
+    path: ../../plugins/resource-notes
+  openmuse_resource_clipboard:
+    path: ../../packages/openmuse_resource_clipboard
+  archive: ^4.0.7
+  flutter_localizations:
+    sdk: flutter
   flutter_test:
     sdk: flutter
   integration_test:
@@ -111,7 +123,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/brand.png
-    - test_assets/genoffice_standard_business.pptx
+    - assets/launch/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

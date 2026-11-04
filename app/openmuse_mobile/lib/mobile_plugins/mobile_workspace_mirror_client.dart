@@ -1,3 +1,5 @@
+import '../mobile_build_locale.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -13,9 +15,13 @@ final class MobileWorkspaceMirrorClient {
   MobileWorkspaceMirrorClient(
     this.connection, {
     HttpClient? client,
+    OpenMuseStrings? strings,
     this.idleTimeout = const Duration(seconds: 45),
     this.totalTimeout = const Duration(minutes: 5),
-  }) : _client = client ?? HttpClient();
+  }) : _client = client ?? HttpClient(),
+       _strings = strings ?? OpenMuseStrings.fallback;
+
+  final OpenMuseStrings _strings;
 
   final PairedDesktopConnection connection;
   final HttpClient _client;
@@ -25,7 +31,9 @@ final class MobileWorkspaceMirrorClient {
   Uri get _origin {
     final target = resolveRemoteDshUri(connection.session);
     if (connection.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
-      throw StateError('Desktop 授权已过期');
+      throw StateError(
+        (_strings.mobileDesktopAuthorizationHasExpiredCff089e8()),
+      );
     }
     return Uri(
       scheme: target.scheme,
@@ -53,7 +61,9 @@ final class MobileWorkspaceMirrorClient {
   Future<Map<String, Object?>> search(String query) {
     final trimmed = query.trim();
     if (trimmed.isEmpty || trimmed.length > 120) {
-      throw const FormatException('搜索词长度无效');
+      throw FormatException(
+        (_strings.mobileInvalidSearchQueryLength9db7d4a7()),
+      );
     }
     return _get({
       'operation': 'search',
@@ -68,7 +78,9 @@ final class MobileWorkspaceMirrorClient {
     final mediaType = payload['mediaType'] as String;
     final bytes = payload['bytes'] as Uint8List;
     if (bytes.length > 2 * 1024 * 1024) {
-      throw const FormatException('文件太大，无法在手机内联预览');
+      throw FormatException(
+        (_strings.mobileThisFileIsTooLargeForAnInlinePrevi9350b84b()),
+      );
     }
     if (mediaType.startsWith('text/') ||
         mediaType.startsWith('application/json')) {
@@ -98,7 +110,9 @@ final class MobileWorkspaceMirrorClient {
     void Function(String step, int received, int? total)? onProgress,
   }) async {
     if (resourceRef.isEmpty || resourceRef.length > 128) {
-      throw const FormatException('资源引用无效');
+      throw FormatException(
+        (_strings.mobileInvalidResourceReferenceD9a208e5()),
+      );
     }
     final uri = _origin
         .resolve('/openmuse/workspace-mirror/resource/v1')
@@ -112,7 +126,9 @@ final class MobileWorkspaceMirrorClient {
     final mediaType = response.$1;
     final bytes = response.$2;
     if (bytes.length > 64 * 1024 * 1024) {
-      throw const FormatException('文件超过 64 MiB 限额');
+      throw FormatException(
+        (_strings.mobileTheFileExceedsThe64MibLimitAd41f580()),
+      );
     }
     return {'mediaType': mediaType, 'bytes': bytes};
   }
@@ -123,7 +139,11 @@ final class MobileWorkspaceMirrorClient {
         .replace(queryParameters: query);
     final (_, bytes) = await _request(uri);
     final value = jsonDecode(utf8.decode(bytes));
-    if (value is! Map) throw const FormatException('目录响应无效');
+    if (value is! Map) {
+      throw FormatException(
+        (_strings.mobileInvalidDirectoryResponseEf6bbe6d()),
+      );
+    }
     return Map<String, Object?>.from(value);
   }
 
@@ -131,10 +151,12 @@ final class MobileWorkspaceMirrorClient {
     Uri uri, {
     void Function(String step, int received, int? total)? onProgress,
   }) async {
-    var step = '连接 Desktop';
+    var step = (_strings.mobileConnectingToDesktop6fa59c15());
     HttpClientRequest? activeRequest;
     final deadline = Timer(totalTimeout, () {
-      activeRequest?.abort(TimeoutException('读取文件总时间超限'));
+      activeRequest?.abort(
+        TimeoutException((_strings.mobileTheFileTransferTimedOut3f953668())),
+      );
       _client.close(force: true);
     });
     try {
@@ -146,28 +168,37 @@ final class MobileWorkspaceMirrorClient {
         HttpHeaders.cookieHeader,
         'OpenMuse-Paired=${connection.grantRef}',
       );
-      step = '等待 Desktop 读取文件';
+      step = (_strings.mobileWaitingForDesktopToReadTheFile2407e9d7());
       onProgress?.call(step, 0, null);
       final response = await request.close().timeout(idleTimeout);
       if (response.statusCode != HttpStatus.ok) {
         final message = switch (response.statusCode) {
-          401 || 403 => 'Desktop 授权已失效，请返回工作台重新连接',
-          400 || 404 => '文件引用已失效，请刷新目录后重试',
-          502 || 503 || 504 => 'Desktop 中继连接不可用，请重连后重试',
-          _ => 'Desktop 请求失败：HTTP ${response.statusCode}',
+          401 || 403 =>
+            (_strings.mobileDesktopAuthorizationHasExpiredReconnecA267882b()),
+          400 || 404 =>
+            (_strings.mobileThisFileReferenceHasExpiredRefreshTh19c36658()),
+          502 || 503 || 504 =>
+            (_strings.mobileTheDesktopRelayIsUnavailableReconnectEbf1165a()),
+          _ => (_strings.mobileTheDesktopRequestFailedHttpEb760a86(
+            value1: response.statusCode,
+          )),
         };
         throw StateError(message);
       }
-      step = '接收 Desktop 文件';
+      step = (_strings.mobileReceivingTheDesktopFileDb4f8afd());
       final total = response.contentLength >= 0 ? response.contentLength : null;
       if (total != null && total > 64 * 1024 * 1024) {
-        throw const FormatException('Desktop 响应超过 64 MiB 限额');
+        throw FormatException(
+          (_strings.mobileTheDesktopResponseExceedsThe64MibLiDc5ead0a()),
+        );
       }
       final bytes = BytesBuilder(copy: false);
       onProgress?.call(step, 0, total);
       await for (final chunk in response.timeout(idleTimeout)) {
         if (bytes.length + chunk.length > 64 * 1024 * 1024) {
-          throw const FormatException('Desktop 响应超过 64 MiB 限额');
+          throw FormatException(
+            (_strings.mobileTheDesktopResponseExceedsThe64MibLiDc5ead0a()),
+          );
         }
         bytes.add(chunk);
         onProgress?.call(step, bytes.length, total);
@@ -178,11 +209,19 @@ final class MobileWorkspaceMirrorClient {
       );
     } on TimeoutException {
       activeRequest?.abort();
-      throw StateError('$step 超时，请检查网络后重试');
+      throw StateError(
+        (_strings.mobileTimedOutCheckYourNetworkAndRetry031c4f34(value1: step)),
+      );
     } on SocketException {
-      throw StateError('$step 连接中断，请重连 Desktop 后重试');
+      throw StateError(
+        (_strings.mobileWasInterruptedReconnectDesktopAndRetr38590292(
+          value1: step,
+        )),
+      );
     } on HttpException {
-      throw StateError('$step 传输中断，请重试');
+      throw StateError(
+        (_strings.mobileWasInterruptedTryAgain217c79d1(value1: step)),
+      );
     } finally {
       deadline.cancel();
     }

@@ -1,3 +1,5 @@
+import '../mobile_build_locale.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -250,7 +252,9 @@ final class _FloatingWindow extends StatelessWidget {
                   ),
                   IconButton(
                     key: ValueKey('extension-toggle:${spec['id']}'),
-                    tooltip: window.minimized ? '展开' : '缩小',
+                    tooltip: window.minimized
+                        ? (stringsOf(context).mobileExpand71acc101())
+                        : (stringsOf(context).mobileMinimize4f64bec2()),
                     onPressed: () => controller.toggle(window),
                     icon: Icon(
                       window.minimized ? Icons.open_in_full : Icons.minimize,
@@ -259,7 +263,7 @@ final class _FloatingWindow extends StatelessWidget {
                   ),
                   IconButton(
                     key: ValueKey('extension-close:${spec['id']}'),
-                    tooltip: '关闭',
+                    tooltip: (stringsOf(context).mobileClose94058aa6()),
                     onPressed: () => unawaited(controller.closeWindow(window)),
                     icon: const Icon(Icons.close, size: 20),
                   ),

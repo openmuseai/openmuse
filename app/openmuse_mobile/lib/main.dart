@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart';
+import 'package:openmuse_client_plugins/openmuse_client_plugins.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -7,8 +9,11 @@ import 'host/mobile_resource_extensions.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:openmuse_app_update/openmuse_app_update.dart';
+import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
+import 'package:openmuse_runtime_config/openmuse_runtime_config_io.dart';
 import 'package:muse_speech_contract/muse_speech_contract.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
@@ -18,8 +23,6 @@ import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
 import 'package:openmuse_mobile_plugin_market/openmuse_mobile_plugin_market.dart';
 import 'package:openmuse_registry_provider/openmuse_registry_provider.dart';
-import 'package:openmuse_office_docx/openmuse_office_docx.dart';
-import 'package:openmuse_office_viewers/openmuse_office_viewers.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_remote_workbench/openmuse_remote_workbench.dart';
 import 'package:openmuse_speech_input/openmuse_speech_input.dart';
@@ -27,32 +30,94 @@ import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'docx_editor_screen.dart';
+import 'account_deletion.dart';
+import 'ai_content_reporting.dart';
 import 'native_dsh_page.dart';
 import 'native_desktop_shell.dart';
 import 'office_viewer_screen.dart';
+import 'docx_editor_screen.dart';
 import 'mobile_plugins/scheduled_tasks_plugin.dart';
 import 'mobile_plugins/workspace_files_plugin.dart';
 import 'workbuddy/workbuddy_controller.dart';
+import 'workbuddy/workbuddy_models.dart';
 import 'workbuddy/workbuddy_shell.dart';
 import 'workbuddy/workbuddy_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final officeEngine = _loadPackagedOfficeEngine();
-  final endpoints = MobileEndpointConfig.fromEnvironment();
+  runApp(
+    OpenMuseRegionBootstrap(
+      store: (release) async {
+        final support = await getApplicationSupportDirectory();
+        return FileConfigStore(
+          File('${support.path}/region-${release.id}.json'),
+        );
+      },
+      boot: bootOpenMuseMobile,
+    ),
+  );
+}
+
+Future<Widget> bootOpenMuseMobile(
+  DeploymentBundle deploymentBundle,
+  String? initialLanguage,
+) async {
+  var runtimeConfig = deploymentBundle.snapshot;
+  final support = await getApplicationSupportDirectory();
+  final localeStore = FileConfigStore(
+    File('${support.path}/locale-${runtimeConfig.storageIdentity}.json'),
+  );
+  final localeController = OpenMuseUiLocale(
+    defaultTag: runtimeConfig.defaultLocale,
+    initialTag: runtimeConfig.defaultLocale,
+    enabledLocales: runtimeConfig.enabledLocales,
+    aliases: runtimeConfig.localeAliases,
+    systemLocales: WidgetsBinding.instance.platformDispatcher.locales.map(
+      (v) => v.toLanguageTag(),
+    ),
+    preferences: CallbackLocalePreferences(
+      readValue: localeStore.read,
+      writeValue: localeStore.commit,
+    ),
+  );
+  await localeController.restore();
+  if (initialLanguage != null) {
+    localeController.selectTag(initialLanguage);
+    await localeController.saved;
+  }
+  final package = await PackageInfo.fromPlatform();
+  final runtime = OpenMuseClientRuntime(
+    bundle: deploymentBundle,
+    transport: createConfigTransport(),
+    store: FileConfigStore(
+      File('${support.path}/runtime-${runtimeConfig.storageIdentity}.json'),
+    ),
+    build: int.tryParse(package.buildNumber) ?? 0,
+    locale: localeController,
+  );
+  await runtime.bootstrap();
+  runtimeConfig = runtime.client.current;
+  runtime.start();
+
+  final endpoints = MobileEndpointConfig.fromEnvironment(config: runtimeConfig);
   const secureValues = FlutterSecureValueStore();
   final deviceId = await _persistentMobileDeviceId(secureValues);
   final authentication = GoTrueAuthenticationController(
+    networkGuard: runtime.checkNetwork,
     requirePersistedSession: true,
     provider: GoTrueHttpClient(
+      networkGuard: runtime.checkNetwork,
       config: GoTrueClientConfig(
         origin: endpoints.gotrueOrigin,
         allowInsecureLoopback: endpoints.allowInsecureLoopback,
       ),
     ),
-    store: const SecureAuthSessionStore(values: secureValues),
+    store: SecureAuthSessionStore(
+      values: secureValues,
+      key: runtimeConfig.authSessionStorageKey,
+    ),
     bootstrapper: AppFlowyAccountBootstrapper(
+      networkGuard: runtime.checkNetwork,
       cloudOrigin: endpoints.cloudOrigin,
       allowInsecureLoopback: endpoints.allowInsecureLoopback,
     ),
@@ -60,8 +125,11 @@ Future<void> main() async {
   final authPlugin = OpenMuseGoTruePlugin(
     authentication: authentication,
     cloudLabel: endpoints.cloudOrigin.toString(),
-    termsUri: Uri.parse('https://openmuseai.com/terms'),
-    privacyUri: Uri.parse('https://openmuseai.com/privacy'),
+    termsUri: runtimeConfig.linkUri(LinkId.terms, locale: localeController.tag),
+    privacyUri: runtimeConfig.linkUri(
+      LinkId.privacy,
+      locale: localeController.tag,
+    ),
   );
   final cloudPlugin = OpenMuseCloudWorkspacePlugin(
     authentication: authentication,
@@ -106,54 +174,86 @@ Future<void> main() async {
     Directory(
       '${(await getApplicationSupportDirectory()).path}/mobile-plugins',
     ),
+    allowInstall: () => runtime.presentation.isEnabled(AppFeature.pluginMarket),
+    allowDownloadedPlugins: false,
   );
   await mobileMarketStore.restore();
-  const marketUrl = String.fromEnvironment('OPENMUSE_MOBILE_MARKET_URL');
-  const marketKey = String.fromEnvironment('OPENMUSE_MOBILE_MARKET_PUBLIC_KEY');
-  final MobileMarketSource marketSource =
-      marketUrl.isNotEmpty && marketKey.isNotEmpty
-      ? SignedHttpMobileMarketSource(
-          indexUri: Uri.parse(marketUrl),
-          publicKey: base64Decode(marketKey),
-          sequenceFile: File(
-            '${(await getApplicationSupportDirectory()).path}/mobile-market-sequence.txt',
-          ),
-        )
-      : const BundledMobileMarketSource();
+  const marketSource = BundledMobileMarketSource(officialRelease: true);
+  final launchRecord =
+      jsonDecode(await rootBundle.loadString('assets/launch/slides.json'))
+          as Map;
+  final launchEntry = RemoteMcpEntry.fromRecord(launchRecord);
+  final launchPackages = Map<String, String>.unmodifiable({
+    '${launchEntry.name}@${launchEntry.version}': launchEntry.packageSha256!,
+  });
   final mobileMarketPlugin = OpenMuseMobilePluginMarket(
     mobileMarketStore,
     source: marketSource,
+    allowedMcpPackages: launchPackages,
     registryProviders: await () async {
-      const configured = String.fromEnvironment(
+      const registryOverride = String.fromEnvironment(
         'OPENMUSE_MCP_REGISTRY_URL',
-        defaultValue: 'https://plugins.openmuseai.com',
       );
+      final configured = !kDebugMode || registryOverride.isEmpty
+          ? runtimeConfig.serviceUri(ServiceId.pluginRegistry)
+          : Uri.parse(registryOverride);
       final providers = McpRegistryProviders(
         file: File(
           '${(await getApplicationSupportDirectory()).path}/mcp-registries.json',
         ),
-        defaultOrigin: Uri.parse(configured),
+        defaultOrigin: configured,
       );
       await providers.load();
       return providers;
     }(),
   );
-  const speechTestAudio = String.fromEnvironment('OPENMUSE_SPEECH_TEST_AUDIO');
-  OpenMuseUpdateController? updates;
-  try {
-    updates = await bootOpenMuseUpdates();
-  } catch (error) {
-    debugPrint('App update check unavailable: $error');
+  // This reviewed offline plugin is shipped with the app. It is installed
+  // through the same digest and archive checks as other MCP bundles.
+  final launchMarket = RemoteMcpMarket(
+    runtimeConfig.serviceUri(ServiceId.pluginRegistry),
+    File('${support.path}/mcp-remote-installations.json'),
+    allowedPackages: launchPackages,
+  );
+  final launchMarker = File(
+    '${support.path}/launch-slides-${launchEntry.version}.seeded',
+  );
+  if (!await launchMarker.exists()) {
+    final data = await rootBundle.load('assets/launch/slides.mcpb');
+    await launchMarket.install(
+      launchEntry,
+      bundledArtifact: data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      ),
+    );
+    await launchMarker.writeAsString(launchEntry.version, flush: true);
   }
-  runApp(
-    OpenMuseMobileApplication(
+  const speechTestAudio = String.fromEnvironment('OPENMUSE_SPEECH_TEST_AUDIO');
+  const distributionChannel = String.fromEnvironment(
+    'OPENMUSE_DISTRIBUTION_CHANNEL',
+  );
+  OpenMuseUpdateController? updates;
+  // The current Android update feed only accepts a Google Play listing. A
+  // Chinese-market build must rely on its own store until a channel-specific
+  // verified update URL is implemented, rather than sending users to Play.
+  if (distributionChannel != 'android-cn') {
+    try {
+      updates = await bootOpenMuseUpdates(config: runtimeConfig);
+    } catch (error) {
+      debugPrint('App update check unavailable: $error');
+    }
+  }
+  return OpenMuseRuntimeHost(
+    runtime: runtime,
+    child: OpenMuseMobileApplication(
+      localeController: localeController,
+      runtime: runtime,
       updates: updates,
       authenticationPlugin: authPlugin,
       cloudWorkspacePlugin: cloudPlugin,
       pairedDesktopPlugin: pairedPlugin,
       speechInputPlugin: speechPlugin,
       mobileMarketPlugin: mobileMarketPlugin,
-      officeEngine: officeEngine,
       debugSpeechSource:
           !kReleaseMode &&
               const bool.fromEnvironment('OPENMUSE_SPEECH_E2E_AUTORUN') &&
@@ -184,9 +284,6 @@ Future<String> _persistentMobileDeviceId(SecureValueStore values) async {
 
 @immutable
 final class MobileEndpointConfig {
-  static const defaultGoTrueOrigin = 'https://openmuseai.com/gotrue';
-  static const defaultCloudOrigin = 'https://openmuseai.com';
-
   const MobileEndpointConfig({
     required this.gotrueOrigin,
     required this.cloudOrigin,
@@ -195,23 +292,25 @@ final class MobileEndpointConfig {
     required this.allowInsecurePrivateNetworkForTesting,
   });
 
-  factory MobileEndpointConfig.fromEnvironment() => MobileEndpointConfig(
+  factory MobileEndpointConfig.fromEnvironment({
+    required RuntimeConfig config,
+  }) => MobileEndpointConfig(
     gotrueOrigin: Uri.parse(
       _mobileEndpoint(
         key: 'OPENMUSE_GOTRUE_ORIGIN',
         dartDefine: const String.fromEnvironment('OPENMUSE_GOTRUE_ORIGIN'),
         // A physical Mobile device resolves loopback to itself. Local backend
         // development remains available through an explicit dart-define.
-        debugDefault: defaultGoTrueOrigin,
-        releaseDefault: defaultGoTrueOrigin,
+        debugDefault: config.serviceUri(ServiceId.auth).toString(),
+        releaseDefault: config.serviceUri(ServiceId.auth).toString(),
       ),
     ),
     cloudOrigin: Uri.parse(
       _mobileEndpoint(
         key: 'OPENMUSE_CLOUD_ORIGIN',
         dartDefine: const String.fromEnvironment('OPENMUSE_CLOUD_ORIGIN'),
-        debugDefault: defaultCloudOrigin,
-        releaseDefault: defaultCloudOrigin,
+        debugDefault: config.serviceUri(ServiceId.cloud).toString(),
+        releaseDefault: config.serviceUri(ServiceId.cloud).toString(),
       ),
     ),
     allowInsecureLoopback: _mobileBool(
@@ -249,8 +348,8 @@ String _mobileEndpoint({
   required String releaseDefault,
 }) {
   final compiled = dartDefine.trim();
-  if (compiled.isNotEmpty) return compiled;
-  final environment = Platform.environment[key]?.trim();
+  if (kDebugMode && compiled.isNotEmpty) return compiled;
+  final environment = kDebugMode ? Platform.environment[key]?.trim() : null;
   if (environment != null && environment.isNotEmpty) return environment;
   return kReleaseMode ? releaseDefault : debugDefault;
 }
@@ -260,9 +359,14 @@ bool _mobileBool({
   required String dartDefine,
   required bool fallback,
 }) {
-  final raw = dartDefine.trim().isNotEmpty
-      ? dartDefine.trim()
-      : Platform.environment[key]?.trim().toLowerCase();
+  final raw =
+      (dartDefine.trim().isNotEmpty
+              ? dartDefine
+              : kDebugMode
+              ? Platform.environment[key]
+              : null)
+          ?.trim()
+          .toLowerCase();
   if (raw == 'true' || raw == '1') return true;
   if (raw == 'false' || raw == '0') return false;
   return fallback;
@@ -280,8 +384,12 @@ final class OpenMuseMobileApplication extends StatefulWidget {
     this.officeEngine,
     this.debugSpeechSource,
     this.updates,
+    this.localeController,
+    this.runtime,
   });
 
+  final OpenMuseUiLocale? localeController;
+  final OpenMuseClientRuntime? runtime;
   final OpenMuseGoTruePlugin authenticationPlugin;
   final OpenMuseCloudWorkspacePlugin cloudWorkspacePlugin;
   final OpenMusePairedDesktopMobilePlugin pairedDesktopPlugin;
@@ -298,8 +406,19 @@ final class OpenMuseMobileApplication extends StatefulWidget {
 }
 
 final class OpenMuseMobileApplicationState
-    extends State<OpenMuseMobileApplication> {
+    extends State<OpenMuseMobileApplication>
+    with WidgetsBindingObserver {
   late final OpenMusePluginRegistry _plugins;
+  late final _contentReports = AiContentReportClient(
+    origin: widget.cloudWorkspacePlugin.service.baseUri,
+    accessToken: () => widget.authenticationPlugin.authentication.accessToken(),
+    currentAccount: () =>
+        widget.authenticationPlugin.authentication.snapshot.identity?.subject,
+    networkGuard: () => widget.runtime?.checkNetwork(),
+    allowInsecureLoopback: !kReleaseMode,
+  );
+  late final List<OpenMusePlugin> _compiledClientPlugins =
+      createOpenMuseClientPlugins();
   late final OpenMuseRemoteWorkbenchPlugin _workbench;
   late final MobileScheduledTasksPlugin _scheduledTasks;
   late final MobileWorkspaceFilesPlugin _workspaceFiles;
@@ -319,21 +438,23 @@ final class OpenMuseMobileApplicationState
   }
 
   Future<bool> _approveExtension(String title, String details) async {
-    final context = _navigatorKey.currentContext;
-    if (context == null || !context.mounted) return false;
+    final localeStrings = _locale.strings;
+
+    final navigationContext = _navigatorKey.currentContext;
+    if (navigationContext == null || !navigationContext.mounted) return false;
     return await showDialog<bool>(
-          context: context,
+          context: navigationContext,
           builder: (dialog) => AlertDialog(
             title: Text(title),
             content: Text(details),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialog, false),
-                child: const Text('取消'),
+                child: Text((localeStrings.mobileCancelCda6010b())),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(dialog, true),
-                child: const Text('允许'),
+                child: Text((localeStrings.mobileAllow295ba601())),
               ),
             ],
           ),
@@ -344,7 +465,7 @@ final class OpenMuseMobileApplicationState
   final _navigatorKey = GlobalKey<NavigatorState>();
   final Set<String> _registeredMobilePlugins = {};
   Future<void> _marketSync = Future<void>.value();
-  final _locale = OpenMuseUiLocale();
+  late final _locale = widget.localeController ?? OpenMuseUiLocale();
   ThemeMode _themeMode = ThemeMode.system;
   static const _themeKey = 'openmuse.mobile.theme-mode.v1';
 
@@ -370,11 +491,12 @@ final class OpenMuseMobileApplicationState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     unawaited(_restoreThemeMode());
     _workbench =
         widget.remoteWorkbenchPlugin ?? OpenMuseRemoteWorkbenchPlugin();
-    _scheduledTasks = MobileScheduledTasksPlugin();
-    _workspaceFiles = MobileWorkspaceFilesPlugin();
+    _scheduledTasks = MobileScheduledTasksPlugin(strings: _locale.strings);
+    _workspaceFiles = MobileWorkspaceFilesPlugin(strings: _locale.strings);
     _workspaceFiles.onOpenResource = _openWorkspaceResource;
     unawaited(
       _localMcpMarket()
@@ -386,6 +508,10 @@ final class OpenMuseMobileApplicationState
     _plugins =
         OpenMusePluginRegistry(
             context: OpenMusePluginContext(
+              localizations: OpenMusePluginLocalizationAdapter(_locale),
+              configuration: widget.runtime == null
+                  ? null
+                  : OpenMusePluginConfigurationAdapter(widget.runtime!),
               executeHostCommand: (_, _) async => null,
             ),
           )
@@ -401,6 +527,9 @@ final class OpenMuseMobileApplicationState
           widget.pairedDesktopPlugin.controller.snapshot.connection,
     );
     _plugins.install(_agent);
+    for (final plugin in _compiledClientPlugins) {
+      _plugins.install(plugin);
+    }
     _extensions = MobileResourceExtensions(
       market: _localMcpMarket,
       contributors: () => [
@@ -430,15 +559,38 @@ final class OpenMuseMobileApplicationState
       if (speech != null) await _plugins.activate(speech.descriptor.id);
       if (market != null) await _plugins.activate(market.descriptor.id);
       await _plugins.activate(_workbench.descriptor.id);
-      await _plugins.activate(_scheduledTasks.descriptor.id);
-      await _plugins.activate(_workspaceFiles.descriptor.id);
+      if (market == null ||
+          await market.builtInPreferences.isEnabled(
+            _scheduledTasks.descriptor.id,
+          )) {
+        await _plugins.activate(_scheduledTasks.descriptor.id);
+      }
+      if (market == null ||
+          await market.builtInPreferences.isEnabled(
+            _workspaceFiles.descriptor.id,
+          )) {
+        await _plugins.activate(_workspaceFiles.descriptor.id);
+      }
       await _plugins.activate(widget.cloudWorkspacePlugin.descriptor.id);
       await _plugins.activate(widget.pairedDesktopPlugin.descriptor.id);
+      for (final plugin in _compiledClientPlugins) {
+        if (market == null ||
+            !mobilePluginCanBeManaged(plugin) ||
+            await market.builtInPreferences.isEnabled(plugin.descriptor.id)) {
+          await _plugins.activate(plugin.descriptor.id);
+        }
+      }
     }());
   }
 
   @override
+  void didChangeLocales(List<Locale>? locales) => _locale.updateSystemLocales(
+    (locales ?? []).map((v) => v.toLanguageTag()),
+  );
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.mobileMarketPlugin?.store.removeListener(_onMobileMarketChanged);
     widget.authenticationPlugin.authentication.removeListener(
       _extensionScopeChanged,
@@ -464,6 +616,8 @@ final class OpenMuseMobileApplicationState
               _plugins.deactivate(_scheduledTasks.descriptor.id),
               _plugins.deactivate(_workspaceFiles.descriptor.id),
               _plugins.deactivate(_workbench.descriptor.id),
+              for (final plugin in _compiledClientPlugins)
+                _plugins.deactivate(plugin.descriptor.id),
             ]),
           )
           .whenComplete(() {
@@ -533,28 +687,36 @@ final class OpenMuseMobileApplicationState
   }
 
   Future<RemoteMcpMarket> _localMcpMarket() async {
-    final provider =
-        widget.mobileMarketPlugin?.registryProviders?.selected ??
-        Uri.parse('https://plugins.openmuseai.com');
+    final provider = widget.mobileMarketPlugin?.registryProviders?.selected;
+    if (provider == null) {
+      throw StateError('No MCP Registry provider is configured');
+    }
     final support = await getApplicationSupportDirectory();
     return RemoteMcpMarket(
       provider,
       File('${support.path}/mcp-remote-installations.json'),
+      allowedPackages: widget.mobileMarketPlugin?.allowedMcpPackages,
     );
   }
 
-  Future<void> _openWorkspaceResource(
+  Future<bool> _openWorkspaceResource(
     OpenMuseResource resource,
     Future<Map<String, Object?>> Function() read,
     ValueChanged<String> reportStep,
   ) async {
+    final localeStrings = _locale.strings;
+
     final payload = await read();
     if (payload['bytes'] is! Uint8List) {
-      throw const FormatException('无法读取文件');
+      throw FormatException(
+        (localeStrings.mobileUnableToReadTheFile8c868ffb()),
+      );
     }
     final bytes = payload['bytes'] as Uint8List;
     if (bytes.length > 64 * 1024 * 1024) {
-      throw const FormatException('文件超过 64 MiB 限额');
+      throw FormatException(
+        (localeStrings.mobileTheFileExceedsThe64MibLimitAd41f580()),
+      );
     }
     final mediaType =
         ((payload['mediaType'] as String?) ??
@@ -568,8 +730,9 @@ final class OpenMuseMobileApplicationState
       uri: resource.uri,
       displayName: resource.displayName,
       mediaType: mediaType,
+      reference: resource.reference,
     );
-    reportStep('匹配已安装插件');
+    reportStep((localeStrings.mobileFindingAnInstalledEditor78027f4d()));
     final market = await _localMcpMarket();
     final candidates = <RemoteMcpEntry>[];
     for (final entry in await market.installedEntries()) {
@@ -582,22 +745,26 @@ final class OpenMuseMobileApplicationState
         candidates.add(entry);
       }
     }
-    final context = _navigatorKey.currentContext;
-    if (context == null || !context.mounted) return;
+    final navigationContext = _navigatorKey.currentContext;
+    if (navigationContext == null || !navigationContext.mounted) return false;
     RemoteMcpEntry? editor;
     final saved = await const FlutterSecureValueStore().read(
       'openmuse.mobile.default-editor.${resource.extension}',
     );
-    if (!context.mounted) return;
+    if (!navigationContext.mounted) return false;
     for (final candidate in candidates) {
       if (candidate.name == saved) editor = candidate;
     }
     if (editor == null && candidates.length == 1) editor = candidates.single;
     if (editor == null && candidates.length > 1) {
       editor = await showDialog<RemoteMcpEntry>(
-        context: context,
+        context: navigationContext,
         builder: (dialog) => AlertDialog(
-          title: Text('使用哪个插件打开 ${resource.displayName}？'),
+          title: Text(
+            (localeStrings.mobileWhichEditorShouldOpenBd34ddac(
+              value1: resource.displayName,
+            )),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -606,7 +773,8 @@ final class OpenMuseMobileApplicationState
                   title: Text(candidate.title),
                   onTap: () => Navigator.pop(dialog, candidate),
                   trailing: IconButton(
-                    tooltip: '设为默认打开方式',
+                    tooltip: (localeStrings
+                        .mobileSetAsTheDefaultEditor310a2582()),
                     icon: const Icon(Icons.push_pin_outlined),
                     onPressed: () async {
                       await const FlutterSecureValueStore().write(
@@ -621,21 +789,22 @@ final class OpenMuseMobileApplicationState
           ),
         ),
       );
-      if (editor == null) return;
+      if (editor == null) return false;
     }
     if (editor == null) {
       await const MethodChannel('io.openmuse/resource_open').invokeMethod<void>(
         'open',
         {'name': resource.displayName, 'mediaType': mediaType, 'bytes': bytes},
       );
-      return;
+      return true;
     }
-    reportStep('准备本地编辑器');
+    reportStep((localeStrings.mobilePreparingTheLocalEditor139ca003()));
     final appHtml = await market.mcpAppDocument(editor);
-    if (!mounted) return;
-    reportStep('启动本地编辑器');
+    if (!mounted) return false;
+    reportStep((localeStrings.mobileOpeningTheLocalEditor59b2af8c()));
     await _navigatorKey.currentState?.push<void>(
       MaterialPageRoute(
+        settings: const RouteSettings(name: openMuseResourceRouteName),
         builder: (_) => RemoteMcpOfflineAppPage(
           title: resource.displayName,
           digest: editor!.packageSha256!.toLowerCase(),
@@ -646,6 +815,7 @@ final class OpenMuseMobileApplicationState
         ),
       ),
     );
+    return true;
   }
 
   Future<void> _getUpdate(OpenMuseRelease release) async {
@@ -660,23 +830,56 @@ final class OpenMuseMobileApplicationState
       child: MaterialApp(
         navigatorKey: _navigatorKey,
         debugShowCheckedModeBanner: false,
-        title: 'OpenMuse',
+        title: 'OpenMuse AI',
         locale: _locale.locale,
         theme: workBuddyTheme(brightness: Brightness.light),
         darkTheme: workBuddyTheme(brightness: Brightness.dark),
         themeMode: _themeMode,
-        localizationsDelegates:
-            OpenMuseAuthLocalizations.localizationsDelegates,
-        supportedLocales: OpenMuseAuthLocalizations.supportedLocales,
-        builder: (context, child) => MobileResourceExtensionLayer(
-          controller: _extensions,
-          child: child ?? const SizedBox.shrink(),
+        localizationsDelegates: [
+          OpenMuseStringsDelegate(_locale.catalog),
+          ...OpenMuseAuthLocalizations.localizationsDelegates,
+        ],
+        supportedLocales: _locale.supportedLocales,
+        builder: (context, child) => AiContentReportScope(
+          client: _contentReports,
+          child: MobileResourceExtensionLayer(
+            controller: _extensions,
+            child: OpenMuseRuntimeNotice(
+              child: child ?? const SizedBox.shrink(),
+            ),
+          ),
         ),
         home: OpenMuseStartupUpdatePrompt(
           controller: widget.updates,
           onUpdate: _getUpdate,
           child: _WorkBuddyHost(
             plugins: _plugins,
+            canOpenResource: (record) async {
+              final market = await _localMcpMarket();
+              for (final entry in await market.installedEntries()) {
+                if ((market.hasOfflineUi(entry) ||
+                        market.nativeMediaTypes.containsKey(entry.name)) &&
+                    (await market.resourceMediaTypes(
+                      entry,
+                    )).contains(record.mediaType)) {
+                  return true;
+                }
+              }
+              return false;
+            },
+            openResource: (record, bytes) => _openWorkspaceResource(
+              OpenMuseResource(
+                uri: Uri(scheme: 'resource', path: '/${record.name}'),
+                displayName: record.name,
+                mediaType: record.mediaType,
+                reference: record.reference(),
+              ),
+              () async => {
+                'bytes': Uint8List.fromList(bytes),
+                'mediaType': record.mediaType,
+              },
+              (_) {},
+            ),
             themeMode: _themeMode,
             onThemeMode: _setThemeMode,
             authentication: widget.authenticationPlugin.authentication,
@@ -697,6 +900,8 @@ final class OpenMuseMobileApplicationState
 final class _WorkBuddyHost extends StatefulWidget {
   const _WorkBuddyHost({
     required this.plugins,
+    this.canOpenResource,
+    this.openResource,
     required this.themeMode,
     required this.onThemeMode,
     required this.authentication,
@@ -711,6 +916,8 @@ final class _WorkBuddyHost extends StatefulWidget {
 
   final OpenMuseAuthenticationController authentication;
   final OpenMusePluginRegistry plugins;
+  final Future<bool> Function(ResourceRecord)? canOpenResource;
+  final Future<bool> Function(ResourceRecord, List<int>)? openResource;
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeMode;
   final String? cloudLabel;
@@ -727,18 +934,107 @@ final class _WorkBuddyHost extends StatefulWidget {
 
 final class _WorkBuddyHostState extends State<_WorkBuddyHost>
     with WidgetsBindingObserver {
-  WorkBuddyController _buddy = WorkBuddyController();
+  WorkBuddyController _buddy = WorkBuddyController()..selectTab(WbTab.home);
   String? _accountSubject;
   final AcceptanceDesktop? _acceptance = debugAcceptanceDesktop();
   late OpenMuseHostComposition _composition;
+  NativeResourceCenter? _resources;
+  Object? _resourceFailure;
+  int _resourceEpoch = 0;
+  Future<void> _resourceWork = Future.value();
+  Future<void> _openResources() async {
+    final epoch = ++_resourceEpoch,
+        scope = _accountSubject ?? 'signed-out-local';
+    final previous = _resources;
+    _resources = null;
+    _resourceFailure = null;
+    if (mounted) setState(() {});
+    final work = _resourceWork.catchError((Object _) {}).then((_) async {
+      await previous?.close();
+      if (!mounted || epoch != _resourceEpoch) return;
+      try {
+        const values = FlutterSecureValueStore();
+        var device = await values.read('openmuse.resource.device.v1');
+        if (device == null) {
+          device = opaqueResourceId('mobile');
+          await values.write('openmuse.resource.device.v1', device);
+        }
+        final resources = await NativeResourceCenter.open(
+          seedWelcomeResources: true,
+          scope: scope,
+          deviceRef: device,
+          deviceLabel: Platform.isIOS ? 'iPhone' : 'Android',
+          registry: widget.plugins,
+          canOpenLegacy: widget.canOpenResource,
+          openLegacy: widget.openResource,
+        );
+        if (!mounted || epoch != _resourceEpoch) {
+          await resources.close();
+          return;
+        }
+        setState(() {
+          _resources = resources;
+          _resourceFailure = null;
+        });
+        _resourcePairChanged();
+      } on Object catch (error) {
+        if (mounted && epoch == _resourceEpoch) {
+          setState(() => _resourceFailure = error);
+        }
+      }
+    });
+    _resourceWork = work;
+    await work;
+  }
+
+  void _resourcePairChanged() {
+    final resources = _resources;
+    if (resources == null) return;
+    final connection = widget.pairedDesktop.snapshot.connection;
+    if (connection == null) {
+      unawaited(resources.disconnect());
+      return;
+    }
+    final origin = Uri.parse(connection.session.origin);
+    unawaited(
+      resources
+          .connect(
+            key: connection.grantRef,
+            peerRef: connection.deviceRef,
+            endpoint: origin.resolve('/openmuse/resource-center/v1'),
+            headers: () => {
+              HttpHeaders.cookieHeader:
+                  'OpenMuse-Paired=${connection.grantRef}',
+            },
+            allowPrivateNetwork:
+                connection.session.allowInsecurePrivateNetworkForTesting,
+          )
+          .catchError((Object error) {
+            if (mounted) {
+              debugPrint(
+                'Resource peer unavailable: ${error is ResourceFailure ? error.code : error.runtimeType}',
+              );
+            }
+          }),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
     _accountSubject = widget.authentication.snapshot.identity?.subject;
+    widget.pairedDesktop.addListener(_resourcePairChanged);
+    unawaited(_openResources());
     WidgetsBinding.instance.addObserver(this);
     widget.authentication.addListener(_onAuth);
     widget.mobileMarketPlugin?.store.addListener(_onMarketStoreChanged);
+    _recompose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _buddy.attachStrings(stringsOf(context));
     _recompose();
   }
 
@@ -766,8 +1062,10 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
     final subject = widget.authentication.snapshot.identity?.subject;
     if (subject != _accountSubject) {
       final previous = _buddy;
-      _buddy = WorkBuddyController();
+      _buddy = WorkBuddyController(strings: stringsOf(context))
+        ..selectTab(WbTab.home);
       _accountSubject = subject;
+      unawaited(_openResources());
       widget.pairedDesktop.disconnect();
       WidgetsBinding.instance.addPostFrameCallback((_) => previous.dispose());
     }
@@ -777,6 +1075,7 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
   void _recompose() {
     final identity = widget.authentication.snapshot.identity;
     _composition = connectedCloudMobileComposition(
+      strings: _buddy.strings,
       session: identity == null
           ? const MobileAccountSession.signedOut()
           : MobileAccountSession.authenticated(identity.email),
@@ -792,11 +1091,41 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
     );
   }
 
+  Future<void> _deleteAccount() async {
+    final reports = AiContentReportScope.maybeOf(context);
+    final subject = widget.authentication.snapshot.identity?.subject;
+    if (reports != null && subject != null) {
+      try {
+        await reports.eraseForAccount(account: subject);
+      } on AiReportFailure {
+        if (!mounted) return;
+        throw AccountDeletionException(
+          stringsOf(context).commonAiReportDeleteFailed(),
+        );
+      }
+    }
+    if (!mounted) return;
+    await deleteOpenMuseAccount(
+      strings: stringsOf(context),
+      cloudOrigin: widget.cloudService.baseUri,
+      accessToken: widget.authentication.accessToken,
+    );
+    await widget.authentication.signOut();
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     widget.authentication.removeListener(_onAuth);
     widget.mobileMarketPlugin?.store.removeListener(_onMarketStoreChanged);
+    widget.pairedDesktop.removeListener(_resourcePairChanged);
+    _resourceEpoch++;
+    final resources = _resources;
+    unawaited(
+      _resourceWork.catchError((Object _) {}).then((_) async {
+        await resources?.close();
+      }),
+    );
     _buddy.dispose();
     _acceptance?.controller.dispose();
     super.dispose();
@@ -806,53 +1135,57 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(widget.pairedDesktop.directory?.reconcile());
+      _resourcePairChanged();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(_resources?.disconnect());
     }
   }
 
   @override
-  Widget build(BuildContext context) => WorkBuddyShell(
-    key: ValueKey('workbuddy.${_accountSubject ?? 'signed-out'}'),
-    controller: _buddy,
-    pluginRegistry: widget.plugins,
-    themeMode: widget.themeMode,
-    onThemeMode: widget.onThemeMode,
-    authentication: widget.authentication,
-    pairedDesktop: widget.pairedDesktop,
-    deviceSelectionStore: const FlutterSecureValueStore(),
-    catalog: _composition.workspaceCatalog,
-    speechRecognition: widget.speechRecognition,
-    debugSpeechSource: widget.debugSpeechSource,
-    remoteWorkbench: _acceptance?.controller,
-    mobileMarketPlugin: widget.mobileMarketPlugin,
-    cloudLabel: widget.cloudLabel,
-    onSignOut: widget.authentication.signOut,
+  Widget build(BuildContext context) => ResourceLinkRouting(
+    open: (uri) async {
+      final center = _resources;
+      if (center == null) return;
+      try {
+        await openResourcePage(
+          context,
+          center.controller,
+          ResourceReference.fromUri(uri),
+        );
+      } on Object catch (error) {
+        if (context.mounted) showResourceError(context, error);
+      }
+    },
+    child: WorkBuddyShell(
+      key: ValueKey('workbuddy.${_accountSubject ?? 'signed-out'}'),
+      controller: _buddy,
+      pluginRegistry: widget.plugins,
+      resources: _resources,
+      resourceFailure: _resourceFailure,
+      onRetryResources: () => unawaited(_openResources()),
+      themeMode: widget.themeMode,
+      onThemeMode: widget.onThemeMode,
+      authentication: widget.authentication,
+      pairedDesktop: widget.pairedDesktop,
+      deviceSelectionStore: const FlutterSecureValueStore(),
+      catalog: _composition.workspaceCatalog,
+      speechRecognition: widget.speechRecognition,
+      debugSpeechSource: widget.debugSpeechSource,
+      remoteWorkbench: _acceptance?.controller,
+      mobileMarketPlugin: widget.mobileMarketPlugin,
+      cloudLabel: widget.cloudLabel,
+      onSignOut: widget.authentication.signOut,
+      onDeleteAccount: _deleteAccount,
+    ),
   );
-}
-
-OfficeEnginePort? _loadPackagedOfficeEngine() {
-  final engines = <OfficeFormat, OfficeEnginePort>{};
-  try {
-    engines[OfficeFormat.word] = DocxFfiEngine.open();
-  } on Object {
-    // A missing or incompatible artifact removes only this capability.
-  }
-  try {
-    final viewers = OfficeViewersFfiEngine.open();
-    engines[OfficeFormat.sheet] = viewers;
-    engines[OfficeFormat.slides] = viewers;
-    engines[OfficeFormat.pdf] = viewers;
-  } on Object {
-    // A missing or incompatible artifact removes only this capability.
-  }
-  if (engines.isEmpty) return null;
-  if (engines.length == 1) return engines.values.single;
-  return MultiFormatOfficeEngine(engines);
 }
 
 /// Composition entry used by the login/bootstrap layer after it has obtained
 /// an account session and a short-lived access-token provider. No credential is
 /// compiled into the Mobile artifact or stored by the Cloud adapter.
 OpenMuseHostComposition connectedCloudMobileComposition({
+  OpenMuseStrings? strings,
   required OpenMuseSessionPort session,
   required Uri apiOrigin,
   required AccessTokenProvider accessToken,
@@ -875,13 +1208,14 @@ OpenMuseHostComposition connectedCloudMobileComposition({
         allowHttpForTesting: allowHttpForTesting,
       );
   return mobileComposition(
+    strings: strings,
     session: session,
     cloudService: cloud,
     dshConnector: cloud,
     resources: cloud,
     resourceCatalog: cloud,
     officeCommits: cloud,
-    officeEngine: officeEngine ?? _loadPackagedOfficeEngine(),
+    officeEngine: officeEngine,
     pluginStore: pluginStore,
     pairedDesktop: pairedDesktop,
     onSignOut: onSignOut,
@@ -889,6 +1223,7 @@ OpenMuseHostComposition connectedCloudMobileComposition({
 }
 
 OpenMuseHostComposition mobileComposition({
+  OpenMuseStrings? strings,
   OpenMuseSessionPort session = const MobileAccountSession.signedOut(),
   CloudWorkspaceService? cloudService,
   DshRuntimeConnector? dshConnector,
@@ -900,7 +1235,11 @@ OpenMuseHostComposition mobileComposition({
   PairedDesktopMobileController? pairedDesktop,
   Future<void> Function()? onSignOut,
 }) {
-  final catalog = _MobileCatalogAdapter(cloudService, pairedDesktop);
+  final catalog = _MobileCatalogAdapter(
+    cloudService,
+    pairedDesktop,
+    strings: strings,
+  );
   return OpenMuseHostComposition(
     platform: OpenMuseHostPlatform.mobile,
     session: session,
@@ -919,8 +1258,14 @@ OpenMuseHostComposition mobileComposition({
         final controller = pairedDesktop;
         final connection = controller?.snapshot.connection;
         if (controller == null) {
-          return const Scaffold(
-            body: Center(child: Text('Paired Desktop 插件未加载')),
+          return Scaffold(
+            body: Center(
+              child: Text(
+                (stringsOf(
+                  context,
+                ).mobileThePairedDesktopPluginIsUnavailableD368a69e()),
+              ),
+            ),
           );
         }
         if (connection == null) {
@@ -935,7 +1280,11 @@ OpenMuseHostComposition mobileComposition({
           resources == null) {
         return Scaffold(
           appBar: AppBar(title: Text(workspace.title)),
-          body: const Center(child: Text('Cloud Workspace 服务未连接')),
+          body: Center(
+            child: Text(
+              (stringsOf(context).mobileCloudWorkspaceIsNotConnected9de62d6c()),
+            ),
+          ),
         );
       }
       return CloudWorkspaceScreen(
@@ -968,7 +1317,12 @@ final class MobileAccountSession implements OpenMuseSessionPort {
 }
 
 final class _MobileCatalogAdapter implements WorkspaceCatalogPort {
-  _MobileCatalogAdapter(this.service, this.pairedDesktop);
+  _MobileCatalogAdapter(
+    this.service,
+    this.pairedDesktop, {
+    OpenMuseStrings? strings,
+  }) : _strings = strings ?? OpenMuseStrings.fallback;
+  final OpenMuseStrings _strings;
   final CloudWorkspaceService? service;
   final PairedDesktopMobileController? pairedDesktop;
   final Map<String, CloudWorkspaceRecord> _records = {};
@@ -1017,7 +1371,9 @@ final class _MobileCatalogAdapter implements WorkspaceCatalogPort {
       result.add(
         WorkspaceSummary(
           workspaceRef: connection?.workspaceRef ?? 'openmuse.paired.connect',
-          title: connection?.workspaceTitle ?? '连接本地 Desktop',
+          title:
+              connection?.workspaceTitle ??
+              (_strings.mobileConnectToDesktop60b27881()),
           placement: WorkspacePlacement.pairedDesktop,
           writable: false,
           runningSessionRef: connection?.session.sessionRef,
@@ -1037,15 +1393,30 @@ final class AccountDevicesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final directory = controller.directory;
     return Scaffold(
-      appBar: AppBar(title: const Text('账号设备')),
+      appBar: AppBar(
+        title: Text((stringsOf(context).mobileAccountDevicesB456d767())),
+      ),
       body: directory == null
-          ? const Center(child: Text('设备目录插件未加载'))
+          ? Center(
+              child: Text(
+                (stringsOf(
+                  context,
+                ).mobileTheDeviceDirectoryIsUnavailableF874e876()),
+              ),
+            )
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                const Text('同一账号下的设备', style: TextStyle(fontSize: 20)),
+                Text(
+                  (stringsOf(context).mobileDevicesOnYourAccountE2737cc7()),
+                  style: TextStyle(fontSize: 20),
+                ),
                 const SizedBox(height: 6),
-                const Text('在线 Desktop 可直接连接；离线设备保留在列表中，但不可进入。'),
+                Text(
+                  (stringsOf(
+                    context,
+                  ).mobileConnectToAnOnlineDesktopOfflineDevic84faed1b()),
+                ),
                 const SizedBox(height: 16),
                 AccountDeviceList(
                   controller: directory,
@@ -1106,7 +1477,9 @@ final class _PairedDesktopConnectScreenState
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('选择电脑')),
+    appBar: AppBar(
+      title: Text((stringsOf(context).mobileChooseAComputer7f4e6ff3())),
+    ),
     body: ListenableBuilder(
       listenable: widget.controller,
       builder: (context, _) {
@@ -1116,8 +1489,10 @@ final class _PairedDesktopConnectScreenState
           children: [
             const Icon(Icons.devices_outlined, size: 48),
             const SizedBox(height: 18),
-            const Text(
-              '选择同账号下在线的电脑。无需配对码，连接后即可查看电脑上的 Workspace、全部对话与运行状态。',
+            Text(
+              (stringsOf(
+                context,
+              ).mobileChooseAnOnlineComputerSignedInToThe0a48865d()),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 18),
@@ -1143,8 +1518,12 @@ final class _PairedDesktopConnectScreenState
                   : const Icon(Icons.arrow_forward),
               label: Text(
                 _selectedDevice == null
-                    ? '请选择在线电脑'
-                    : '进入 ${_selectedDevice!.displayName}',
+                    ? (stringsOf(
+                        context,
+                      ).mobileChooseAnOnlineComputer6c104504())
+                    : (stringsOf(context).mobileOpen9cdb481b(
+                        value1: _selectedDevice!.displayName,
+                      )),
               ),
             ),
             if (snapshot.failureMessage case final message?) ...[
@@ -1175,12 +1554,6 @@ final class PairedDesktopWorkspaceScreen extends StatelessWidget {
 bool _supportsFormat(OfficeEnginePort? engine, OfficeFormat format) {
   if (engine == null) return false;
   if (engine is MultiFormatOfficeEngine) return engine.formats.contains(format);
-  if (engine is DocxFfiEngine) return format == OfficeFormat.word;
-  if (engine is OfficeViewersFfiEngine) {
-    return format == OfficeFormat.sheet ||
-        format == OfficeFormat.slides ||
-        format == OfficeFormat.pdf;
-  }
   return format == OfficeFormat.word;
 }
 
@@ -1294,7 +1667,18 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
   bool _isPdf(CloudResourceRecord value) =>
       value.mediaType == 'application/pdf';
 
+  // Cloud resources must use the injected engine and revision transaction.
+  // The standalone product screens save local copies and are used only by the
+  // local-file entry points, not for cloud writes.
+  Future<void> _openPdf(CloudResourceRecord resource) =>
+      _openViewer(resource, OfficeFormat.pdf);
+
+  Future<void> _openSpreadsheet(CloudResourceRecord resource) =>
+      _openViewer(resource, OfficeFormat.sheet);
+
   Future<void> _openDocx(CloudResourceRecord resource) async {
+    final localeStrings = stringsOf(context);
+
     final engine = widget.officeEngine;
     final commits = widget.officeCommits;
     if (engine == null || commits == null || !_isDocx(resource)) return;
@@ -1328,9 +1712,11 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
       );
     } on Object {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('DOCX 打开失败')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text((localeStrings.mobileUnableToOpenDocxE1967d9f())),
+          ),
+        );
       }
     }
   }
@@ -1339,6 +1725,8 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
     CloudResourceRecord resource,
     OfficeFormat format,
   ) async {
+    final localeStrings = stringsOf(context);
+
     final engine = widget.officeEngine;
     if (engine == null ||
         (format == OfficeFormat.slides && !_pptxPluginEnabled) ||
@@ -1377,9 +1765,13 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
       );
     } on Object {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Office 文件打开失败')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              (localeStrings.mobileUnableToOpenThisDocumentA6fd0081()),
+            ),
+          ),
+        );
       }
     }
   }
@@ -1409,13 +1801,17 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
             Text('Revision ${coordinator.flow.revision}'),
             Text(
               widget.record.storageState == CloudStorageState.available
-                  ? (widget.record.writable ? 'Storage · 可写' : 'Storage · 只读')
+                  ? (widget.record.writable
+                        ? (stringsOf(
+                            context,
+                          ).mobileStorageReadAndWrite34cf9652())
+                        : (stringsOf(context).mobileStorageReadOnlyE72ee688()))
                   : 'Storage · Unavailable',
             ),
             Text('DSH · ${coordinator.flow.state.name}'),
             if (session != null)
               Text(
-                'Remote DSH · 已连接',
+                (stringsOf(context).mobileRemoteDshConnectedF83ee6e6()),
                 key: const ValueKey('remote-dsh-session'),
               ),
             if (session != null) ...[
@@ -1431,7 +1827,7 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.auto_awesome_outlined),
-                label: const Text('打开 Agent'),
+                label: Text((stringsOf(context).mobileOpenAssistant018b4e66())),
               ),
             ],
             if (resources.isNotEmpty) const Divider(),
@@ -1441,7 +1837,9 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
                 title: Text(resource.title),
                 subtitle: Text(
                   _isPptx(resource) && !_pptxPluginEnabled
-                      ? '安装 PPTX 阅读器后可打开'
+                      ? (stringsOf(
+                          context,
+                        ).mobileInstallThePptxViewerToOpenThisFile8e07e3cd())
                       : resource.mediaType,
                 ),
                 enabled:
@@ -1455,11 +1853,11 @@ final class _CloudWorkspaceScreenState extends State<CloudWorkspaceScreen> {
                     (_isPdf(resource) && widget.officeEngine != null),
                 onTap: () {
                   if (_isXlsx(resource)) {
-                    _openViewer(resource, OfficeFormat.sheet);
+                    _openSpreadsheet(resource);
                   } else if (_isPptx(resource)) {
                     _openViewer(resource, OfficeFormat.slides);
                   } else if (_isPdf(resource)) {
-                    _openViewer(resource, OfficeFormat.pdf);
+                    _openPdf(resource);
                   } else {
                     _openDocx(resource);
                   }

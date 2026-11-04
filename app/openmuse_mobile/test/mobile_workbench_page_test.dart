@@ -1,3 +1,4 @@
+import 'support/localized_test_app.dart';
 import 'dart:io';
 import 'dart:convert';
 
@@ -34,7 +35,7 @@ void main() {
       final values = _MemoryValues();
       var manageOpened = false;
       await tester.pumpWidget(
-        MaterialApp(
+        localizedTestApp(
           home: MobileWorkbenchPage(
             registry: registry,
             values: values,
@@ -91,7 +92,7 @@ void main() {
     registry.install(schedules);
     await registry.activate(schedules.descriptor.id);
     final values = _MemoryValues();
-    Widget page() => MaterialApp(
+    Widget page() => localizedTestApp(
       home: MobileWorkbenchPage(
         registry: registry,
         values: values,
@@ -158,7 +159,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       ThemeMode? selected;
       await tester.pumpWidget(
-        MaterialApp(
+        localizedTestApp(
           home: MobileMyPage(
             themeMode: ThemeMode.system,
             onThemeMode: (value) => selected = value,
@@ -191,7 +192,7 @@ void main() {
     await registry.activate(schedules.descriptor.id);
     await registry.activate(files.descriptor.id);
     final values = _MemoryValues();
-    Widget page() => MaterialApp(
+    Widget page() => localizedTestApp(
       home: MobileWorkbenchPage(
         registry: registry,
         values: values,
@@ -250,7 +251,7 @@ void main() {
     await registry.activate(schedules.descriptor.id);
     await registry.activate(files.descriptor.id);
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(
             context,
@@ -300,7 +301,7 @@ void main() {
     registry.install(plugin);
     await registry.activate(bundle.id);
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: MobileWorkbenchPage(
           registry: registry,
           values: _MemoryValues(),
@@ -315,7 +316,10 @@ void main() {
     await registry.deactivate(bundle.id);
     await tester.pumpAndSettle();
     expect(find.byKey(ValueKey('workbench-card-${bundle.id}')), findsOneWidget);
-    expect(find.byKey(ValueKey('workbench-preview-${bundle.id}')), findsNothing);
+    expect(
+      find.byKey(ValueKey('workbench-preview-${bundle.id}')),
+      findsNothing,
+    );
   });
 
   testWidgets('Discover and My show registry-backed first-party plugins', (
@@ -332,7 +336,7 @@ void main() {
     await registry.activate(schedules.descriptor.id);
     OpenMusePlugin? opened;
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: MobileMarketPage(
           store: MobilePluginStore(root),
           pluginRegistry: registry,

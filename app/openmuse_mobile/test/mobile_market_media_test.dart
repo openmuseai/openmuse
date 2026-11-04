@@ -27,7 +27,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('动图'), findsOneWidget);
+    expect(find.text('GIF'), findsOneWidget);
 
     await tester.pumpWidget(
       const MaterialApp(
@@ -44,9 +44,9 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byTooltip('播放视频'));
+    await tester.tap(find.byTooltip('Play video'));
     await tester.pump();
-    expect(find.text('视频地址不可用'), findsOneWidget);
+    expect(find.text('Media unavailable'), findsOneWidget);
   });
 
   testWidgets(
@@ -108,11 +108,13 @@ void main() {
         search.decoration!.fillColor,
         ThemeData.dark().colorScheme.surface,
       );
-      final heading = tester.widget<Text>(find.text('把好用的工具\n放进工作台'));
+      final heading = tester.widget<Text>(
+        find.text('Bring useful tools\nto your workbench'),
+      );
       expect(heading.style!.color, const Color(0xFF25303E));
       final semantics = tester.ensureSemantics();
-      expect(find.bySemanticsLabel(RegExp('发现插件')), findsOneWidget);
-      expect(find.bySemanticsLabel(RegExp('我的插件')), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('Discover plugins')), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('My plugins')), findsOneWidget);
       semantics.dispose();
       expect(tester.takeException(), isNull);
     },
@@ -122,6 +124,7 @@ void main() {
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
     final store = MobilePluginStore(
       Directory('${Directory.systemTemp.path}/market-platform-only'),
     );
@@ -162,7 +165,7 @@ void main() {
       find.byKey(const ValueKey('install-com.openmuse.pptx')),
     );
     expect(button.onPressed, isNull);
-    expect(find.text('不支持'), findsOneWidget);
+    expect(find.text('Unsupported'), findsOneWidget);
     debugDefaultTargetPlatformOverride = null;
   });
 

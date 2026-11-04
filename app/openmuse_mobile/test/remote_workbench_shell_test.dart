@@ -1,3 +1,4 @@
+import 'support/localized_test_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_mobile/workbuddy/workbuddy_controller.dart';
@@ -22,7 +23,7 @@ void main() {
     });
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         theme: workBuddyTheme(),
         home: RemoteWorkbenchPage(controller: desktop.controller),
       ),
@@ -129,7 +130,7 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         theme: workBuddyTheme(),
         home: WorkBuddyShell(controller: buddy),
       ),

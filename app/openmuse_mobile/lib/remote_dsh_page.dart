@@ -1,3 +1,6 @@
+import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart' show isPrivateNativeTransportHost;
+import 'mobile_build_locale.dart';
+
 import 'package:flutter/material.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -17,7 +20,7 @@ Uri resolveRemoteDshUri(DshSessionDescriptor session) {
       origin.host == '127.0.0.1' ||
       origin.host == '::1' ||
       origin.host == '10.0.2.2';
-  final privateNetwork = _isPrivateIpv4(origin.host);
+  final privateNetwork = isPrivateNativeTransportHost(origin.host);
   if (origin.scheme != 'https' &&
       !(session.allowInsecureLoopback && origin.scheme == 'http' && loopback) &&
       !(session.allowInsecurePrivateNetworkForTesting &&
@@ -38,15 +41,7 @@ Uri resolveRemoteDshUri(DshSessionDescriptor session) {
   return target;
 }
 
-bool _isPrivateIpv4(String host) {
-  final parts = host.split('.').map(int.tryParse).toList(growable: false);
-  if (parts.length != 4 || parts.any((value) => value == null)) return false;
-  final first = parts[0]!;
-  final second = parts[1]!;
-  return first == 10 ||
-      (first == 192 && second == 168) ||
-      (first == 172 && second >= 16 && second <= 31);
-}
+
 
 bool isAllowedRemoteDshNavigation(Uri target, Uri origin) =>
     target.scheme == origin.scheme &&
@@ -56,6 +51,7 @@ bool isAllowedRemoteDshNavigation(Uri target, Uri origin) =>
 
 final class RemoteDshPage extends StatefulWidget {
   const RemoteDshPage({
+    this.strings,
     super.key,
     required this.session,
     required this.workspaceTitle,
@@ -63,6 +59,8 @@ final class RemoteDshPage extends StatefulWidget {
 
   final DshSessionDescriptor session;
   final String workspaceTitle;
+
+  final OpenMuseStrings? strings;
 
   @override
   State<RemoteDshPage> createState() => _RemoteDshPageState();
@@ -108,7 +106,8 @@ final class _RemoteDshPageState extends State<RemoteDshPage> {
               if (error.isForMainFrame == false || !mounted) return;
               setState(() {
                 _loading = false;
-                _failure = 'Agent 页面加载失败，请检查连接后重试。';
+                _failure = ((widget.strings ?? OpenMuseStrings.fallback)
+                    .mobileUnableToLoadTheAssistantCheckYourCo12dc91dd());
               });
             },
           ),
@@ -116,7 +115,8 @@ final class _RemoteDshPageState extends State<RemoteDshPage> {
         ..loadRequest(target);
     } on Object {
       _loading = false;
-      _failure = 'Remote DSH 地址无效，已拒绝加载。';
+      _failure = ((widget.strings ?? OpenMuseStrings.fallback)
+          .mobileTheRemoteDshUrlIsInvalidAndWasBlocE6098bb8());
     }
   }
 
@@ -158,7 +158,7 @@ final class _RemoteDshPageState extends State<RemoteDshPage> {
           IconButton(
             key: const ValueKey('remote-dsh.reload'),
             onPressed: _loading ? null : _reload,
-            tooltip: '重新连接',
+            tooltip: (stringsOf(context).mobileReconnectF80f36fd()),
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -193,7 +193,9 @@ final class _RemoteDshPageState extends State<RemoteDshPage> {
                         const SizedBox(height: 12),
                         OutlinedButton(
                           onPressed: _controller == null ? null : _reload,
-                          child: const Text('重试'),
+                          child: Text(
+                            (stringsOf(context).mobileRetry4c2e361c()),
+                          ),
                         ),
                       ],
                     ),

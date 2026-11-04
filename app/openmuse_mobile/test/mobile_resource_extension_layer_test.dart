@@ -1,3 +1,4 @@
+import 'support/localized_test_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_mobile_plugin_market/openmuse_mobile_plugin_market.dart';
@@ -33,7 +34,7 @@ void main() {
       controller.windows.add(window);
       final navigator = GlobalKey<NavigatorState>();
       await tester.pumpWidget(
-        MaterialApp(
+        localizedTestApp(
           navigatorKey: navigator,
           builder: (context, child) => MobileResourceExtensionLayer(
             controller: controller,
