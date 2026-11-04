@@ -1,0 +1,17 @@
+name: openmuse_siyuan_plugin
+description: Public SDK contributions for the independent SiYuan client plugin.
+publish_to: none
+version: 0.1.1
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  mime: ^2.0.0
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+  openmuse_siyuan_client:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/markdown/flutter_runtime
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
