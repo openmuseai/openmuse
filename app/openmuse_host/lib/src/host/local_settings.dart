@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 
 /// Local, non-secret Host preferences. Plugin values are namespaced and never
 /// interpreted by the Host; credentials remain the responsibility of plugins.
@@ -14,6 +15,7 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
   double? sidebarWidth;
   double? assistantWidth;
   bool assistantVisible = true;
+  String? generatedOutputDirectory;
   final Map<String, String> _defaultEditors = {};
   final Map<String, Map<String, Object?>> _pluginValues = {};
   String? _accountSubject;
@@ -46,6 +48,11 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
       assistantVisible = data['assistantVisible'] is bool
           ? data['assistantVisible'] as bool
           : true;
+      final outputDirectory = data['generatedOutputDirectory'];
+      generatedOutputDirectory =
+          outputDirectory is String && p.isAbsolute(outputDirectory)
+          ? outputDirectory
+          : null;
       if (data['defaultEditors'] case final Map defaults) {
         for (final entry in defaults.entries) {
           if (entry.key is String && entry.value is String) {
@@ -111,6 +118,16 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
     await save();
   }
 
+  Future<void> setGeneratedOutputDirectory(String? path) async {
+    if (path != null && !p.isAbsolute(path)) {
+      throw ArgumentError.value(path, 'path', 'Expected an absolute directory');
+    }
+    if (generatedOutputDirectory == path) return;
+    generatedOutputDirectory = path;
+    notifyListeners();
+    await save();
+  }
+
   void setPaneWidth({double? sidebar, double? assistant}) {
     if (sidebar != null) sidebarWidth = sidebar.clamp(180, 520);
     if (assistant != null) assistantWidth = assistant.clamp(280, 960);
@@ -144,6 +161,7 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
         'sidebarWidth': sidebarWidth,
         'assistantWidth': assistantWidth,
         'assistantVisible': assistantVisible,
+        'generatedOutputDirectory': generatedOutputDirectory,
         'defaultEditors': _defaultEditors,
         'plugins': _pluginValues,
       }),

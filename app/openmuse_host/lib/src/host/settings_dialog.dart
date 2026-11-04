@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:path/path.dart' as p;
 
@@ -239,6 +241,8 @@ final class _WorkspaceSettings extends StatelessWidget {
     title: 'Workspace',
     description: '自定义本地工作区外观和面板布局。',
     children: [
+      const OpenMuseLanguageSelector(),
+      const SizedBox(height: 16),
       const Text(
         'Appearance',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -275,8 +279,47 @@ final class _WorkspaceSettings extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 24),
+      if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) ...[
+        const Text(
+          'PDF 生成文件默认目录',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 7),
+        Text(
+          settings.generatedOutputDirectory ?? '默认：应用文档目录/OpenMuse',
+          key: const Key('generated-output-directory-value'),
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('generated-output-directory-choose'),
+              onPressed: () async {
+                final chosen = await getDirectoryPath(confirmButtonText: '选取');
+                if (chosen != null) {
+                  await settings.setGeneratedOutputDirectory(chosen);
+                }
+              },
+              icon: const Icon(Icons.folder_open_outlined, size: 16),
+              label: const Text('选取目录'),
+            ),
+            if (settings.generatedOutputDirectory != null)
+              TextButton(
+                key: const Key('generated-output-directory-reset'),
+                onPressed: () => settings.setGeneratedOutputDirectory(null),
+                child: const Text('恢复默认'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
       Text(
-        '文件只保存在已添加的本地 Project Workspace。',
+        '工作区文件保存在已添加的本地 Project Workspace；PDF 抽取生成的文件保存在上方目录。',
         style: TextStyle(
           fontSize: 12,
           color: Theme.of(context).colorScheme.onSurfaceVariant,

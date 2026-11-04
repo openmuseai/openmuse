@@ -63,6 +63,12 @@ String identifyLocalMediaType(Uint8List bytes, String name) {
     if (extension == '.pptx') {
       return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
     }
+    if (extension == '.docx') {
+      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    }
+    if (extension == '.xlsx') {
+      return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    }
     return 'application/octet-stream';
   }
   if (begins([0x1f, 0x8b]) ||

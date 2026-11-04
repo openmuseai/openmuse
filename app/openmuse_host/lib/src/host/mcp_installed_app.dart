@@ -1,3 +1,4 @@
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -170,6 +171,9 @@ final class McpAppsEnvironment {
     String caller,
     Map<String, Object?> args,
   ) async {
+    if (const bool.fromEnvironment('OPENMUSE_MAC_APP_STORE')) {
+      throw UnsupportedError('Development code execution is unavailable in the App Store distribution');
+    }
     final ownerScope = scope(), bytes = base64Decode(args['content'] as String);
     if (bytes.length > 32 * 1024 * 1024 ||
         sha256.convert(bytes).toString() != args['sha256']) {
@@ -425,6 +429,28 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
       widget.environment.scope() == _scope &&
       widget.authorization?.value != false;
   String? _html, _failure;
+  Map<String, Object?> _presentation = const {};
+  bool _viewReady = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = mcpAppPresentation(context);
+    if (jsonEncode(next) != jsonEncode(_presentation)) {
+      _presentation = next;
+      unawaited(_sendPresentation());
+    }
+  }
+
+  Future<void> _sendPresentation() async {
+    if (_viewReady && _channel != null) {
+      try {
+        await _channel!.invokeMethod<void>('message', {
+          '_hostContext': _presentation,
+        });
+      } catch (_) {}
+    }
+  }
+
   late final String _caller =
       'view-${identityHashCode(this)}-${DateTime.now().microsecondsSinceEpoch}';
 
@@ -633,6 +659,7 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
             appHtml: html,
             arguments: const {},
             platform: 'desktop',
+            presentation: _presentation,
             serverAvailable: true,
           ),
         );
@@ -654,6 +681,11 @@ final class _McpInstalledAppState extends State<McpInstalledApp> {
     channel.setMethodCallHandler((call) async {
       if (call.method != 'message' || call.arguments is! Map) return;
       final request = Map<String, Object?>.from(call.arguments as Map);
+      if (request['method'] == 'ui/notifications/initialized') {
+        _viewReady = true;
+        await _sendPresentation();
+        return;
+      }
       if (request['id'] == null) return;
       final response = <String, Object?>{'jsonrpc': '2.0', 'id': request['id']};
       try {

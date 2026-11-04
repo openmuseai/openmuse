@@ -177,6 +177,9 @@ final class McpBundleRuntime {
   }
 
   Future<List<Map<String, Object?>>> tools() => _withClient((client) async {
+    // Resource-only MCP servers have no tools/list handler. A successful
+    // handshake still makes them valid installable MCPB packages.
+    if (client.getServerCapabilities()?.tools == null) return [];
     final result = await client.listTools();
     return [
       for (final tool in result.tools)
@@ -428,6 +431,9 @@ final class McpRegistryMarket {
     McpMarketEntry entry, {
     List<int>? bundleBytes,
   }) async {
+    if (const bool.fromEnvironment('OPENMUSE_MAC_APP_STORE') && bundleBytes == null) {
+      throw UnsupportedError('External code installation is unavailable in the App Store distribution');
+    }
     final planned = await plan(entry);
     if (planned['action'] == 'already-installed') return planned;
     final bytes = bundleBytes ?? await _get(entry.packageUri, 80 * 1024 * 1024);
@@ -452,9 +458,6 @@ final class McpRegistryMarket {
       }
       if (!item.isFile) continue;
       final content = item.content;
-      if (content is! List<int>) {
-        throw const FormatException('Invalid MCPB file');
-      }
       expandedSize += content.length;
       if (expandedSize > 160 * 1024 * 1024) {
         throw const FormatException('MCPB expanded size limit exceeded');

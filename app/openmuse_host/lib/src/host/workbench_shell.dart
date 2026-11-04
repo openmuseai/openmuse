@@ -1,6 +1,9 @@
+import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
 import 'dart:async';
+import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,8 +37,10 @@ final class OpenMuseWorkbench extends StatefulWidget {
     this.updates,
     this.desktopUpdate,
     this.onGetUpdate,
+    this.resources,
   });
 
+  final NativeResourceCenter? resources;
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
@@ -65,7 +70,12 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   Size _lastSize = Size.zero;
   final OpenMuseCliController _terminalController = OpenMuseCliController();
   bool _terminalVisible = false;
-  _HostView _view = _HostView.agent;
+  _HostView _view =
+      kDebugMode &&
+          Platform.environment.containsKey('OPENMUSE_E2E_SUPPORT_DIR') &&
+          Platform.environment.containsKey('OPENMUSE_E2E_OPEN_DOCX')
+      ? _HostView.ide
+      : _HostView.agent;
   bool _hasOpenedTerminal = false;
   bool _marketPageOpen = false;
 
@@ -81,9 +91,10 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   void initState() {
     super.initState();
     if (_layout.snapshot == createDefaultWorkbenchLayout()) {
-      _layout.restore(_layoutForView(_HostView.agent));
+      _layout.restore(_layoutForView(_view));
     }
     _ensureEditorGroups();
+    widget.resources?.controller.presentEditor = _presentResourceEditor;
     _layout.addListener(_layoutChanged);
     _removeLegacyMarketPane();
     if (_macNativeChrome) {
@@ -93,7 +104,17 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   }
 
   @override
+  void didUpdateWidget(OpenMuseWorkbench oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.resources != widget.resources) {
+      oldWidget.resources?.controller.presentEditor = null;
+      widget.resources?.controller.presentEditor = _presentResourceEditor;
+    }
+  }
+
+  @override
   void dispose() {
+    widget.resources?.controller.presentEditor = null;
     if (_macNativeChrome) _menuChannel.setMethodCallHandler(null);
     final shouldFlush = _saveDebounce?.isActive ?? false;
     _saveDebounce?.cancel();
@@ -102,6 +123,70 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     if (_ownsLayout) _layout.dispose();
     _terminalController.dispose();
     super.dispose();
+  }
+
+  Future<void> _presentResourceEditor(
+    ResourceEditorPresentation request,
+  ) async {
+    if (!mounted) return;
+    Navigator.of(
+      context,
+    ).popUntil((route) => route.settings.name != openMuseResourceRouteName);
+    final session = request.session;
+    final reference = ResourceReference(
+      identity: session.record.identity,
+      version: session.opened.fromSnapshot ? session.record.version : null,
+    );
+    await widget.workspace.openResourceSession(
+      OpenMuseResource(
+        uri: reference.toUri(),
+        displayName: session.record.name,
+        mediaType: session.record.mediaType,
+        reference: session.opened.reference,
+      ),
+      WorkspaceResourceSession(
+        session: session,
+        confirmClose: () async =>
+            await showDialog<bool>(
+              context: context,
+              builder: (dialog) {
+                final s = ResourceCenterStrings(dialog);
+                return AlertDialog(
+                  title: Text(s.unsaved),
+                  actions: [
+                    TextButton(
+                      key: const ValueKey('resource-keep-editing'),
+                      onPressed: () => Navigator.pop(dialog, false),
+                      child: Text(s.keepEditing),
+                    ),
+                    TextButton(
+                      key: const ValueKey('resource-discard'),
+                      onPressed: () => Navigator.pop(dialog, true),
+                      child: Text(s.discard),
+                    ),
+                  ],
+                );
+              },
+            ) ??
+            false,
+        builder: (context) => ListenableBuilder(
+          listenable: widget.registry,
+          builder: (context, _) {
+            if (widget.registry.stateOf(request.choice.plugin.descriptor.id) !=
+                OpenMusePluginState.active) {
+              return Center(
+                child: Text(ResourceCenterStrings(context).noHandler),
+              );
+            }
+            return request.choice.contributor.buildResourceEditor(
+              context,
+              request.choice.spec.id,
+              session,
+            );
+          },
+        ),
+      ),
+    );
   }
 
   void _openTerminal([String? directory]) {
@@ -135,6 +220,12 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   }
 
   Future<void> _openPluginMarket(BuildContext context) async {
+    if (RuntimeConfigScope.maybeOf(
+          context,
+        )?.isEnabled(AppFeature.pluginMarket) ==
+        false) {
+      return;
+    }
     if (_marketPageOpen) return;
     _marketPageOpen = true;
     try {
@@ -144,14 +235,20 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
       }
       await widget.registry.activate(pluginId);
       if (!mounted || !context.mounted) return;
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => _PluginMarketPage(
-            registry: widget.registry,
-            workspace: widget.workspace,
-          ),
-        ),
-      );
+      final candidate = await Navigator.of(context)
+          .push<OpenMusePanelCandidate>(
+            MaterialPageRoute(
+              builder: (_) => _PluginMarketPage(
+                registry: widget.registry,
+                workspace: widget.workspace,
+              ),
+            ),
+          );
+      if (candidate != null) {
+        await widget.registry.ensureActive(candidate.plugin);
+        if (!mounted) return;
+        revealPluginPanel(_layout, candidate);
+      }
     } catch (error) {
       if (mounted && context.mounted) {
         ScaffoldMessenger.of(
@@ -245,6 +342,31 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
               onViewHelp: _showViewHelp,
               onTerminal: _terminalAvailable ? _toggleTerminal : null,
             ),
+          if (widget.resources != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: const ValueKey('desktop-resource-center'),
+                icon: const Icon(Icons.home_outlined, size: 18),
+                label: Text(stringsOf(context).resourcecenterHome()),
+                onPressed: () async {
+                  final center = widget.resources!;
+                  await Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      settings: const RouteSettings(
+                        name: openMuseResourceRouteName,
+                      ),
+                      builder: (_) => Scaffold(
+                        appBar: AppBar(
+                          title: Text(stringsOf(context).resourcecenterHome()),
+                        ),
+                        body: ResourceCenterView(controller: center.controller),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           Expanded(
             child: WorkbenchCanvas(
               controller: _layout,
@@ -264,7 +386,13 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
                           setState(() => _terminalVisible = false),
                       onOpenTerminal: _openTerminal,
                       onOpenMarket: () => unawaited(_openPluginMarket(context)),
-                      updates: widget.updates,
+                      updates:
+                          RuntimeConfigScope.maybeOf(
+                                context,
+                              )?.isEnabled(AppFeature.updatePrompts) ==
+                              false
+                          ? null
+                          : widget.updates,
                       desktopUpdate: widget.desktopUpdate,
                       onStartUpdate: () {
                         final release = widget.updates?.available;
@@ -1021,7 +1149,9 @@ final class _WorkspaceSidebar extends StatelessWidget {
               workspace: workspace,
               settings: settings,
               onOpenTerminal: onOpenTerminal,
-              selected: entry.path == workspace.selected?.uri.toFilePath(),
+              selected:
+                  workspace.selected?.uri.isScheme('file') == true &&
+                  entry.path == workspace.selected!.uri.toFilePath(),
             ),
         ],
       ],
@@ -1135,7 +1265,7 @@ final class _WorkspaceSidebar extends StatelessWidget {
                                   ? '重启更新'
                                   : failed
                                   ? '继续下载'
-                                  : 'Update',
+                                  : stringsOf(context).updatesUpdate(),
                             ),
                           ),
                         ),
@@ -1157,7 +1287,7 @@ final class _WorkspaceSidebar extends StatelessWidget {
   Widget _updateNotice(BuildContext context) {
     final release = updates!.available!;
     final status = _statusFor(release);
-    final zh = Localizations.localeOf(context).languageCode == 'zh';
+
     final scheme = Theme.of(context).colorScheme;
     final downloading = status == OpenMuseDesktopUpdateStatus.downloading;
     final ready = status == OpenMuseDesktopUpdateStatus.ready;
@@ -1184,14 +1314,16 @@ final class _WorkspaceSidebar extends StatelessWidget {
                 Expanded(
                   child: Text(
                     ready
-                        ? (zh ? '更新已就绪' : 'Ready to update')
+                        ? (stringsOf(context).updatesReadyToUpdateB17ee8fe())
                         : downloading
-                        ? (zh ? '正在下载新版本' : 'Downloading update')
+                        ? (stringsOf(
+                            context,
+                          ).updatesDownloadingUpdate63359be5())
                         : failed
-                        ? (zh ? '更新下载失败' : 'Update failed')
-                        : (zh
-                              ? '发现新版本 ${release.version}'
-                              : 'Update available ${release.version}'),
+                        ? (stringsOf(context).updatesUpdateFailed6aaaf1ba())
+                        : (stringsOf(context).updatesUpdateAvailableEb64bf34(
+                            value1: release.version,
+                          )),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -1214,15 +1346,15 @@ final class _WorkspaceSidebar extends StatelessWidget {
                     ),
                     child: Text(
                       ready
-                          ? (zh ? '重启' : 'Restart')
+                          ? (stringsOf(context).updatesRestart8c8f1d01())
                           : failed
-                          ? (zh ? '重试' : 'Retry')
-                          : 'Update',
+                          ? (stringsOf(context).updatesRetry4c2e361c())
+                          : stringsOf(context).updatesUpdate(),
                     ),
                   ),
                 IconButton(
                   key: const ValueKey('app-update-dismiss'),
-                  tooltip: '隐藏更新提示',
+                  tooltip: stringsOf(context).updatesDismiss(),
                   onPressed: _dismissNotice,
                   constraints: const BoxConstraints.tightFor(
                     width: 24,
@@ -1760,7 +1892,8 @@ Future<void> _showTabMenu(
     items: [
       _menuAction('close', 'Close', Icons.close),
       _menuAction('close-others', 'Close other tabs', Icons.tab_unselected),
-      if (tab.kind == WorkspaceTabKind.resource) ...[
+      if (tab.kind == WorkspaceTabKind.resource &&
+          tab.resource.uri.isScheme('file')) ...[
         const PopupMenuDivider(height: 12),
         _menuAction(
           'open-with',
@@ -1983,7 +2116,10 @@ final class _EditorArea extends StatelessWidget {
     final tab = workspace.activeTabFor(groupId);
     final current = tab?.resource;
     final plugin =
-        current == null || tab?.kind == WorkspaceTabKind.diff || tab!.inspecting
+        current == null ||
+            tab?.kind == WorkspaceTabKind.diff ||
+            tab!.inspecting ||
+            tab.resourceSession != null
         ? null
         : registry.editorFor(
             current,
@@ -2035,6 +2171,12 @@ final class _EditorArea extends StatelessWidget {
   }
 
   Widget _buildOpenTab(BuildContext context, WorkspaceTab tab) {
+    if (tab.resourceSession case final binding?) {
+      return KeyedSubtree(
+        key: ValueKey(tab.id),
+        child: Builder(builder: binding.builder),
+      );
+    }
     if (tab.kind == WorkspaceTabKind.diff) {
       return KeyedSubtree(
         key: ValueKey(tab.id),
@@ -2086,7 +2228,8 @@ final class _TabStrip extends StatelessWidget {
         for (final tab in tabs)
           OpenMuseEditorTabData(
             id: tab.id,
-            title: tab.title,
+            title:
+                '${tab.title}${tab.resourceSession?.session.dirty == true ? ' •' : ''}',
             extension: tab.resource.extension,
             pinned: tab.pinned,
             isDiff: tab.kind == WorkspaceTabKind.diff,
@@ -3073,6 +3216,16 @@ final class _PluginMarketPageState extends State<_PluginMarketPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (RuntimeConfigScope.maybeOf(
+          context,
+        )?.isEnabled(AppFeature.pluginMarket) ==
+        false) {
+      return Scaffold(
+        body: Center(
+          child: Text(stringsOf(context).commonFeatureUnavailable()),
+        ),
+      );
+    }
     final theme = openMuseMarketTheme();
     final size = MediaQuery.sizeOf(context);
     final wide = size.width >= 850;
@@ -3233,6 +3386,9 @@ final class _PluginMarketPageState extends State<_PluginMarketPage> {
                                       _InstalledOpenMusePlugins(
                                         registry: widget.registry,
                                         workspace: widget.workspace,
+                                        onOpen: (candidate) => Navigator.of(
+                                          context,
+                                        ).pop(candidate),
                                       ),
                                     ],
                                   ),
@@ -3310,10 +3466,12 @@ final class _InstalledOpenMusePlugins extends StatelessWidget {
   const _InstalledOpenMusePlugins({
     required this.registry,
     required this.workspace,
+    required this.onOpen,
   });
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
+  final ValueChanged<OpenMusePanelCandidate> onOpen;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -3336,6 +3494,14 @@ final class _InstalledOpenMusePlugins extends StatelessWidget {
         }
         final descriptor = registry.descriptors.elementAt(index - 1);
         final state = registry.stateOf(descriptor.id);
+        final candidate = registry
+            .panelCandidates()
+            .where(
+              (item) =>
+                  item.plugin.descriptor.id == descriptor.id &&
+                  item.panel.region != OpenMuseSurfaceRegion.dialog,
+            )
+            .firstOrNull;
         return ListTile(
           contentPadding: const EdgeInsets.symmetric(
             vertical: 5,
@@ -3363,6 +3529,12 @@ final class _InstalledOpenMusePlugins extends StatelessWidget {
             children: [
               _StatePill(state: state),
               const SizedBox(width: 8),
+              if (candidate != null)
+                TextButton(
+                  key: ValueKey('plugin-open-${descriptor.id}'),
+                  onPressed: () => onOpen(candidate),
+                  child: const Text('打开'),
+                ),
               TextButton(
                 onPressed: () =>
                     _openPluginLog(context, registry, workspace, descriptor),

@@ -1,22 +1,35 @@
+import 'dart:io';
+import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_host/src/host/endpoint_config.dart';
 
 void main() {
+  late RuntimeConfig config;
+  setUpAll(() async {
+    config = DeploymentBundle.parse(
+      await File(
+        '../../packages/openmuse_runtime_config/assets/deployments/default.json',
+      ).readAsString(),
+    ).snapshot;
+  });
   test('the shipped endpoint contract matches the deployment document', () {
     expect(
-      HostEndpointConfig.defaultGoTrueOrigin,
+      config.serviceUri(ServiceId.auth).toString(),
       'https://openmuseai.com/gotrue',
     );
-    expect(HostEndpointConfig.defaultCloudOrigin, 'https://openmuseai.com');
     expect(
-      HostEndpointConfig.defaultRelayOrigin,
+      config.serviceUri(ServiceId.cloud).toString(),
+      'https://openmuseai.com',
+    );
+    expect(
+      config.serviceUri(ServiceId.relay).toString(),
       'https://openmuseai.com:8443',
     );
     // No shipped default may point at loopback: a local backend is opt-in.
-    for (final origin in const [
-      HostEndpointConfig.defaultGoTrueOrigin,
-      HostEndpointConfig.defaultCloudOrigin,
-      HostEndpointConfig.defaultRelayOrigin,
+    for (final origin in [
+      config.serviceUri(ServiceId.auth).toString(),
+      config.serviceUri(ServiceId.cloud).toString(),
+      config.serviceUri(ServiceId.relay).toString(),
     ]) {
       expect(
         HostEndpointConfig.loopbackHosts,
@@ -29,24 +42,27 @@ void main() {
   test(
     'an unconfigured host points every endpoint at the public deployment',
     () {
-      final endpoints = HostEndpointConfig.resolve();
+      final endpoints = HostEndpointConfig.resolve(config: config);
 
       expect(
         endpoints.gotrueOrigin.toString(),
-        HostEndpointConfig.defaultGoTrueOrigin,
+        config.serviceUri(ServiceId.auth).toString(),
       );
       expect(
         endpoints.cloudOrigin.toString(),
-        HostEndpointConfig.defaultCloudOrigin,
+        config.serviceUri(ServiceId.cloud).toString(),
       );
       expect(endpoints.gotrueOrigin.isScheme('https'), isTrue);
-      expect(endpoints.cloudOrigin.host, HostEndpointConfig.productionHost);
+      expect(
+        endpoints.cloudOrigin.host,
+        config.serviceUri(ServiceId.cloud).host,
+      );
       // Loopback permission and the relay are both opt-in, never implied by a
       // build mode.
       expect(endpoints.allowInsecureLoopback, isFalse);
       expect(
         endpoints.relayPublicOrigin,
-        HostEndpointConfig.defaultRelayOrigin,
+        config.serviceUri(ServiceId.relay).toString(),
       );
       expect(endpoints.pairedDesktopPort, 13180);
       expect(endpoints.fixedPairedDesktopPairingCode, isNull);
@@ -54,8 +70,32 @@ void main() {
     },
   );
 
+  test(
+    'another installed deployment does not inherit the public endpoints',
+    () async {
+      final alternate = DeploymentBundle.parse(
+        await File(
+          '../../packages/openmuse_runtime_config/assets/deployments/global-us.json',
+        ).readAsString(),
+      ).snapshot;
+      final endpoints = HostEndpointConfig.resolve(config: alternate);
+      expect(endpoints.cloudOrigin, alternate.serviceUri(ServiceId.cloud));
+      expect(endpoints.gotrueOrigin, alternate.serviceUri(ServiceId.auth));
+      expect(endpoints.cloudOrigin, isNot(config.serviceUri(ServiceId.cloud)));
+      expect(
+        endpoints.relayPublicOrigin,
+        alternate.serviceUri(ServiceId.relay).toString(),
+      );
+      expect(
+        alternate.authSessionStorageKey,
+        isNot(config.authSessionStorageKey),
+      );
+    },
+  );
+
   test('a dart-define wins over the process environment', () {
     final endpoints = HostEndpointConfig.resolve(
+      config: config,
       environment: const {
         'OPENMUSE_GOTRUE_ORIGIN': 'https://env.example/gotrue',
         'OPENMUSE_CLOUD_ORIGIN': 'https://env.example',
@@ -70,6 +110,7 @@ void main() {
 
   test('the process environment overrides the shipped default', () {
     final endpoints = HostEndpointConfig.resolve(
+      config: config,
       environment: const {'OPENMUSE_CLOUD_ORIGIN': 'https://env.example/'},
     );
 
@@ -77,7 +118,7 @@ void main() {
     // GoTrue keeps its own default when only Cloud is configured.
     expect(
       endpoints.gotrueOrigin.toString(),
-      HostEndpointConfig.defaultGoTrueOrigin,
+      config.serviceUri(ServiceId.auth).toString(),
     );
   });
 
@@ -85,13 +126,15 @@ void main() {
     // An explicitly configured production Cloud still inherits the public relay.
     expect(
       HostEndpointConfig.resolve(
+        config: config,
         environment: const {'OPENMUSE_CLOUD_ORIGIN': 'https://openmuseai.com'},
       ).relayPublicOrigin,
-      HostEndpointConfig.defaultRelayOrigin,
+      config.serviceUri(ServiceId.relay).toString(),
     );
     // Any other Cloud host must not silently advertise the public relay.
     expect(
       HostEndpointConfig.resolve(
+        config: config,
         environment: const {'OPENMUSE_CLOUD_ORIGIN': 'https://env.example/'},
       ).relayPublicOrigin,
       isEmpty,
@@ -99,6 +142,7 @@ void main() {
     // An explicit relay origin always wins.
     expect(
       HostEndpointConfig.resolve(
+        config: config,
         environment: const {'OPENMUSE_CLOUD_ORIGIN': 'http://127.0.0.1:8000'},
         relayDefine: 'https://relay.example:9443',
       ).relayPublicOrigin,
@@ -107,10 +151,14 @@ void main() {
   });
 
   test('loopback permission is off unless configured truthy', () {
-    expect(HostEndpointConfig.resolve().allowInsecureLoopback, isFalse);
+    expect(
+      HostEndpointConfig.resolve(config: config).allowInsecureLoopback,
+      isFalse,
+    );
     for (final raw in const ['true', 'TRUE', '1', ' true ']) {
       expect(
         HostEndpointConfig.resolve(
+          config: config,
           allowInsecureLoopbackDefine: raw,
         ).allowInsecureLoopback,
         isTrue,
@@ -121,6 +169,7 @@ void main() {
     for (final raw in const ['false', 'FALSE', '0', 'maybe', '']) {
       expect(
         HostEndpointConfig.resolve(
+          config: config,
           allowInsecureLoopbackDefine: raw,
         ).allowInsecureLoopback,
         isFalse,
@@ -132,12 +181,14 @@ void main() {
   test('the paired-Desktop port falls back when the value is unusable', () {
     expect(
       HostEndpointConfig.resolve(
+        config: config,
         pairedDesktopPortDefine: '13200',
       ).pairedDesktopPort,
       13200,
     );
     expect(
       HostEndpointConfig.resolve(
+        config: config,
         environment: const {'OPENMUSE_PAIRED_DESKTOP_PORT': '13181'},
       ).pairedDesktopPort,
       13181,
@@ -145,6 +196,7 @@ void main() {
     for (final raw in const ['', 'abc', '0', '65536', '-1']) {
       expect(
         HostEndpointConfig.resolve(
+          config: config,
           pairedDesktopPortDefine: raw,
         ).pairedDesktopPort,
         13180,
@@ -154,9 +206,13 @@ void main() {
   });
 
   test('the fixed pairing code is only set when configured', () {
-    expect(HostEndpointConfig.resolve().fixedPairedDesktopPairingCode, isNull);
+    expect(
+      HostEndpointConfig.resolve(config: config).fixedPairedDesktopPairingCode,
+      isNull,
+    );
     expect(
       HostEndpointConfig.resolve(
+        config: config,
         pairedDesktopPairingCodeDefine: '2468',
       ).fixedPairedDesktopPairingCode,
       '2468',
@@ -165,17 +221,19 @@ void main() {
 
   test('the keychain account falls back to the reviewed default', () {
     expect(
-      HostEndpointConfig.resolve().authKeychainAccount,
+      HostEndpointConfig.resolve(config: config).authKeychainAccount,
       'flutter_secure_storage_service',
     );
     expect(
       HostEndpointConfig.resolve(
+        config: config,
         environment: const {'OPENMUSE_AUTH_KEYCHAIN_ACCOUNT': 'openmuse.e2e'},
       ).authKeychainAccount,
       'openmuse.e2e',
     );
     expect(
       HostEndpointConfig.resolve(
+        config: config,
         authKeychainAccountDefine: 'openmuse.define',
         environment: const {'OPENMUSE_AUTH_KEYCHAIN_ACCOUNT': 'openmuse.env'},
       ).authKeychainAccount,

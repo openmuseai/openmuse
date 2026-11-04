@@ -11,7 +11,7 @@ import 'workspace_controller.dart';
 import 'resource_inspector.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
-/// Desktop-owned, read-only directory authority for an authorized pair.
+/// Desktop-owned directory authority for an authorized pair.
 /// References are random handles; browser responses never contain local paths.
 final class DesktopWorkspaceMirrorService {
   DesktopWorkspaceMirrorService(this.workspace);
@@ -20,6 +20,137 @@ final class DesktopWorkspaceMirrorService {
   final Random _random = Random.secure();
   final Map<String, _MirrorPath> _paths = {};
   final Map<String, String> _refsByPath = {};
+
+  Future<Map<String, Object?>> act(WorkspaceMirrorAction action) async {
+    if (action.operation == 'add-workspace') {
+      final input = action.name?.trim() ?? '';
+      if (input.isEmpty) throw const FormatException();
+      String target;
+      if (p.isAbsolute(input)) {
+        target = input;
+      } else {
+        _validateName(input);
+        target = p.join(p.dirname(workspace.rootPath), 'Workspaces', input);
+        await Directory(target).create(recursive: true);
+      }
+      await workspace.addWorkspace(target);
+      return {'ok': true};
+    }
+    final ref = _paths[action.nodeRef];
+    if (ref == null || !workspace.mounts.any((m) => m.path == ref.mountPath)) {
+      throw const FormatException();
+    }
+    final type = await FileSystemEntity.type(ref.path, followLinks: false);
+    if (type != FileSystemEntityType.file &&
+        type != FileSystemEntityType.directory) {
+      throw const FormatException();
+    }
+    final resolved = type == FileSystemEntityType.directory
+        ? await Directory(ref.path).resolveSymbolicLinks()
+        : await File(ref.path).resolveSymbolicLinks();
+    if (!_inside(ref.mountPath, resolved)) throw const FormatException();
+    if (action.operation == 'mount') {
+      if (type != FileSystemEntityType.directory) throw const FormatException();
+      await workspace.addWorkspace(ref.path);
+    } else if (action.operation == 'unmount') {
+      if (ref.path != ref.mountPath || workspace.mounts.length < 2) {
+        throw const FormatException();
+      }
+      await workspace.removeWorkspace(
+        workspace.mounts.firstWhere((m) => m.path == ref.path),
+      );
+    } else {
+      final entry = await _entry(ref);
+      if (action.operation == 'new-file' || action.operation == 'new-folder') {
+        _validateName(action.name ?? '');
+        await workspace.createEntry(
+          entry,
+          action.name!,
+          directory: action.operation == 'new-folder',
+        );
+      } else {
+        if (ref.path == ref.mountPath) throw const FormatException();
+        if (ref.path == p.join(ref.mountPath, '.openmuse-trash')) {
+          throw const FormatException();
+        }
+        if (action.operation == 'restore') {
+          if (p.dirname(ref.path) != p.join(ref.mountPath, '.openmuse-trash')) {
+            throw const FormatException();
+          }
+          final match = RegExp(r'^\d+-(.+)$').firstMatch(p.basename(ref.path));
+          if (match == null) throw const FormatException();
+          _validateName(match.group(1)!);
+          final target = p.join(ref.mountPath, match.group(1)!);
+          if (await FileSystemEntity.type(target, followLinks: false) !=
+              FileSystemEntityType.notFound) {
+            throw const FileSystemException('目标已存在');
+          }
+          if (entry.isDirectory) {
+            await Directory(ref.path).rename(target);
+          } else {
+            await File(ref.path).rename(target);
+          }
+          await workspace.refreshDirectory(
+            workspace.mounts.firstWhere((m) => m.path == ref.mountPath).root,
+          );
+        } else if (action.operation == 'rename') {
+          _validateName(action.name ?? '');
+          await workspace.renameEntry(entry, action.name!);
+        } else if (action.operation == 'trash') {
+          // Recoverable through the normal workspace tree, never permanent delete.
+          final trashPath = p.join(ref.mountPath, '.openmuse-trash');
+          if (_inside(trashPath, ref.path)) throw const FormatException();
+          if (await FileSystemEntity.type(trashPath, followLinks: false) ==
+              FileSystemEntityType.link) {
+            throw const FormatException();
+          }
+          await Directory(trashPath).create();
+          final target = p.join(
+            trashPath,
+            '${DateTime.now().microsecondsSinceEpoch}-${p.basename(ref.path)}',
+          );
+          if (entry.isDirectory) {
+            await Directory(ref.path).rename(target);
+          } else {
+            await File(ref.path).rename(target);
+          }
+          await workspace.refreshDirectory(
+            workspace.mounts.firstWhere((m) => m.path == ref.mountPath).root,
+          );
+        } else {
+          throw const FormatException();
+        }
+      }
+    }
+    return {'ok': true};
+  }
+
+  void _validateName(String name) {
+    if (name.trim().isEmpty ||
+        name != name.trim() ||
+        name == '.' ||
+        name == '..' ||
+        name.contains('/') ||
+        name.contains('\\') ||
+        name.contains('\x00')) {
+      throw const FormatException();
+    }
+  }
+
+  Future<WorkspaceEntry> _entry(_MirrorPath ref) async {
+    var entry = workspace.mounts
+        .firstWhere((m) => m.path == ref.mountPath)
+        .root;
+    if (ref.path == ref.mountPath) return entry;
+    for (final part in p.split(p.relative(ref.path, from: ref.mountPath))) {
+      await workspace.refreshDirectory(entry);
+      entry = entry.children.firstWhere(
+        (e) => e.name == part,
+        orElse: () => throw const FormatException(),
+      );
+    }
+    return entry;
+  }
 
   Future<Map<String, Object?>> handle(WorkspaceMirrorQuery query) async {
     if (query.operation == 'mounts') {
@@ -85,6 +216,8 @@ final class DesktopWorkspaceMirrorService {
             'nodeRef': _ref(mount.path, entry.path),
             'name': entry.name,
             'isDirectory': entry.directory,
+            'canRestore':
+                p.dirname(entry.path) == p.join(mount.path, '.openmuse-trash'),
             if (!entry.directory) 'resourceRef': _ref(mount.path, entry.path),
           },
       ],

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:path/path.dart' as p;
 
@@ -75,6 +75,22 @@ final class WorkspaceDiff {
   final String after;
 }
 
+final class WorkspaceResourceSession {
+  WorkspaceResourceSession({
+    required this.session,
+    required this.builder,
+    required this.confirmClose,
+  });
+  final ResourceEditorSession session;
+  final WidgetBuilder builder;
+  final Future<bool> Function() confirmClose;
+  final closed = Completer<void>();
+  bool confirming = false;
+  void finish() {
+    if (!closed.isCompleted) closed.complete();
+  }
+}
+
 final class WorkspaceTab {
   WorkspaceTab.resource(this.resource, {this.preferredEditorId})
     : id = resource.uri.toString(),
@@ -90,6 +106,7 @@ final class WorkspaceTab {
       resource = value.resource,
       diff = value;
 
+  WorkspaceResourceSession? resourceSession;
   final String id;
   final String title;
   final WorkspaceTabKind kind;
@@ -383,9 +400,12 @@ final class LocalWorkspaceController extends ChangeNotifier {
     String? groupId,
   }) {
     final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
-    final path = resource.uri.toFilePath();
+    final path = resource.uri.isScheme('file')
+        ? resource.uri.toFilePath()
+        : null;
     for (final mount in _mounts) {
-      if (mount.path == path || p.isWithin(mount.path, path)) {
+      if (path != null &&
+          (mount.path == path || p.isWithin(mount.path, path))) {
         _activeMountPath = mount.path;
         break;
       }
@@ -409,6 +429,32 @@ final class LocalWorkspaceController extends ChangeNotifier {
     group._activeTab = tab;
     _focusedEditorGroupId = group.id;
     notifyListeners();
+  }
+
+  Future<void> openResourceSession(
+    OpenMuseResource resource,
+    WorkspaceResourceSession binding,
+  ) {
+    final group = _requireEditorGroup(_focusedEditorGroupId);
+    final existing = group._tabs
+        .where((t) => t.resource.uri == resource.uri)
+        .firstOrNull;
+    if (existing?.resourceSession != null) {
+      group._activeTab = existing;
+      notifyListeners();
+      return existing!.resourceSession!.closed.future;
+    }
+    final tab = WorkspaceTab.resource(resource)..resourceSession = binding;
+    group._tabs.add(tab);
+    group._activeTab = tab;
+    binding.session.addListener(notifyListeners);
+    unawaited(
+      binding.closed.future.then(
+        (_) => binding.session.removeListener(notifyListeners),
+      ),
+    );
+    notifyListeners();
+    return binding.closed.future;
   }
 
   Future<OpenMuseResource> inspectResource(OpenMuseResource resource) =>
@@ -450,9 +496,44 @@ final class LocalWorkspaceController extends ChangeNotifier {
   void closeTab(WorkspaceTab tab, {String? groupId}) {
     if (tab.pinned) return;
     final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
+    final binding = tab.resourceSession;
+    if (binding != null &&
+        binding.session.flushPendingChanges != null &&
+        !binding.session.closePrepared) {
+      if (binding.confirming) return;
+      binding.confirming = true;
+      unawaited(() async {
+        final saved = await binding.session.prepareToClose();
+        if (_disposed) return;
+        if (saved || await binding.confirmClose()) {
+          if (!saved) binding.session.discardChangesForClose();
+          binding.confirming = false;
+          if (!_disposed) closeTab(tab, groupId: group.id);
+        } else {
+          binding.confirming = false;
+        }
+      }());
+      return;
+    }
+    if (binding != null && binding.session.dirty) {
+      if (!binding.confirming) {
+        binding.confirming = true;
+        unawaited(
+          binding.confirmClose().then((discard) {
+            binding.confirming = false;
+            if (discard && !_disposed) {
+              binding.session.markDirty(false);
+              closeTab(tab, groupId: group.id);
+            }
+          }),
+        );
+      }
+      return;
+    }
     final index = group._tabs.indexOf(tab);
     if (index < 0) return;
     group._tabs.removeAt(index);
+    binding?.finish();
     if (identical(group._activeTab, tab)) {
       group._activeTab = group._tabs.isEmpty
           ? null
@@ -463,9 +544,15 @@ final class LocalWorkspaceController extends ChangeNotifier {
 
   void closeOtherTabs(WorkspaceTab tab, {String? groupId}) {
     final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
-    group._tabs.removeWhere(
-      (candidate) => !identical(candidate, tab) && !candidate.pinned,
-    );
+    group._tabs.removeWhere((candidate) {
+      if (identical(candidate, tab) ||
+          candidate.pinned ||
+          candidate.resourceSession?.session.dirty == true) {
+        return false;
+      }
+      candidate.resourceSession?.finish();
+      return true;
+    });
     group._activeTab = tab;
     _focusedEditorGroupId = group.id;
     notifyListeners();
@@ -871,6 +958,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
     for (final group in _editorGroups.values) {
       for (var index = 0; index < group._tabs.length; index++) {
         final tab = group._tabs[index];
+        if (!tab.resource.uri.isScheme('file')) continue;
         final path = tab.resource.uri.toFilePath();
         if (path != oldPath && !p.isWithin(oldPath, path)) continue;
         if (tab.kind == WorkspaceTabKind.diff) {
@@ -901,6 +989,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
   void _removeTabsWithin(String path) {
     for (final group in _editorGroups.values) {
       group._tabs.removeWhere((tab) {
+        if (!tab.resource.uri.isScheme('file')) return false;
         final resourcePath = tab.resource.uri.toFilePath();
         return resourcePath == path || p.isWithin(path, resourcePath);
       });
@@ -968,6 +1057,13 @@ final class LocalWorkspaceController extends ChangeNotifier {
       unawaited(watcher.cancel());
     }
     _watchers.clear();
+    for (final group in _editorGroups.values) {
+      for (final tab in group._tabs) {
+        final binding = tab.resourceSession;
+        binding?.session.removeListener(notifyListeners);
+        binding?.finish();
+      }
+    }
     super.dispose();
   }
 }

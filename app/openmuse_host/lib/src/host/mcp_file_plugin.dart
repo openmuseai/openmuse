@@ -1,3 +1,4 @@
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -167,6 +168,27 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
   final _extensions = <String, McpResourceExtension>{};
   final _extensionSessions = <String, ResourceExtensionSession>{};
   bool? _active;
+  Map<String, Object?> _presentation = const {};
+  bool _viewReady = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = mcpAppPresentation(context);
+    if (jsonEncode(next) != jsonEncode(_presentation)) {
+      _presentation = next;
+      unawaited(_sendPresentation());
+    }
+  }
+
+  Future<void> _sendPresentation() async {
+    if (!_viewReady || _channel == null) return;
+    try {
+      await _channel!.invokeMethod<void>('message', {
+        '_hostContext': _presentation,
+      });
+    } catch (_) {}
+  }
+
   @override
   void initState() {
     super.initState();
@@ -266,6 +288,7 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
   void _created(int id) {
     final channel = MethodChannel('com.openmuse.mcp/app-view/$id');
     _channel = channel;
+    _viewReady = false;
     _active = null;
     _activityChanged();
     final session = ResourceAppSession(
@@ -319,6 +342,8 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
       try {
         switch (message['method']) {
           case 'ui/notifications/initialized':
+            _viewReady = true;
+            await _sendPresentation();
             widget.agentBroker?.register(session);
             return;
           case 'ui/update-model-context':
@@ -407,6 +432,7 @@ final class _McpFileEditorState extends State<_McpFileEditor> {
           'name': widget.resource.displayName,
         },
         platform: 'desktop',
+        presentation: _presentation,
         extensions: [
           for (final e in _extensions.values)
             McpAppExtensionDocument(

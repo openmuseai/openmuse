@@ -16,6 +16,7 @@ import 'package:openmuse_host/src/host/layout/plugin_panel.dart';
 import 'package:openmuse_host/src/host/local_settings.dart';
 import 'package:openmuse_host/src/host/workspace_controller.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart';
 import 'package:path/path.dart' as p;
 import 'package:pub_semver/pub_semver.dart';
 
@@ -78,6 +79,44 @@ void main() {
         hasLength(1),
       );
       layout.dispose();
+    },
+  );
+
+  testWidgets(
+    'Home hides the native DSH overlay until the resource route closes',
+    (tester) async {
+      late NativeResourceCenter center;
+      await tester.runAsync(() async {
+        center = await NativeResourceCenter.open(
+          scope: 'desktop-home-test',
+          deviceRef: 'desktop-home-test',
+          deviceLabel: 'Desktop',
+          registry: registry,
+          storageRoot: Directory('${root.path}/resources'),
+        );
+      });
+      final resources = ValueNotifier<NativeResourceCenter?>(center);
+      addTearDown(() async {
+        resources.dispose();
+        await center.close();
+      });
+      await tester.pumpWidget(
+        OpenMuseHostApp(
+          registry: registry,
+          workspace: workspace,
+          resources: resources,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(DshNativeOverlay.obscured, isFalse);
+      await tester.tap(find.byKey(const ValueKey('desktop-resource-center')));
+      await tester.pumpAndSettle();
+      expect(find.byType(ResourceCenterView), findsOneWidget);
+      expect(DshNativeOverlay.obscured, isTrue);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(DshNativeOverlay.obscured, isFalse);
+      await tester.pumpWidget(const SizedBox.shrink());
     },
   );
 
@@ -337,6 +376,65 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('plugin-market-catalog')), findsOneWidget);
   });
+
+  testWidgets(
+    'installed plugin opens and reuses its panel without replacing files',
+    (tester) async {
+      tester.view.physicalSize = const Size(1600, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      registry = OpenMusePluginRegistry(
+        context: OpenMusePluginContext(
+          executeHostCommand: (command, _) async =>
+              command == 'plugin.market.list' ? <Map<String, Object?>>[] : null,
+        ),
+      );
+      registry.install(
+        createOpenMuseBuiltInPlugins().firstWhere(
+          (plugin) => plugin.descriptor.id == 'com.openmuse.plugin-market',
+        ),
+      );
+      final plugin = _StatefulPanelPlugin();
+      registry.install(plugin);
+      final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+      final editor = layout.snapshot.bindingFor('editor');
+      await tester.pumpWidget(
+        OpenMuseHostApp(
+          registry: registry,
+          workspace: workspace,
+          layoutController: layout,
+        ),
+      );
+      for (var attempt = 0; attempt < 2; attempt++) {
+        await tester.tap(find.text('插件').first);
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('plugin-market-tab-1')));
+        await tester.pumpAndSettle();
+        final open = find.byKey(
+          const ValueKey('plugin-open-test.stateful-panel'),
+        );
+        await tester.ensureVisible(open);
+        await tester.tap(open);
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('desktop-market-page')), findsNothing);
+        expect(find.byKey(const Key('surface-probe')), findsOneWidget);
+        expect(
+          registry.stateOf(plugin.descriptor.id),
+          OpenMusePluginState.active,
+        );
+        expect(layout.snapshot.bindingFor('editor'), editor);
+        expect(
+          layout.snapshot.bindings.values.where(
+            (binding) => binding.surfaceRef == 'plugin.panel:test.panel',
+          ),
+          hasLength(1),
+        );
+      }
+      expect(plugin.created, 1);
+      expect(plugin.disposed, 0);
+    },
+  );
 
   testWidgets('market page collapses its sidebar in a narrow window', (
     tester,

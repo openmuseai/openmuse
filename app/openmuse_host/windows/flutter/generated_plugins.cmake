@@ -3,7 +3,9 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  file_selector_windows
   flutter_secure_storage_windows
+  flutter_timezone
   openmuse_dsh_plugin
   openmuse_native_text_gate
   url_launcher_windows

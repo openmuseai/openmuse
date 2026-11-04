@@ -417,10 +417,7 @@ Map<String, List<int>> _payload(
 }
 
 List<int> _fileBytes(ArchiveFile entry) {
-  final content = entry.content;
-  if (content is Uint8List) return content;
-  if (content is List<int>) return content;
-  throw FormatException('无法读取 ${entry.name}');
+  return entry.content;
 }
 
 File _within(Directory root, String relative) {

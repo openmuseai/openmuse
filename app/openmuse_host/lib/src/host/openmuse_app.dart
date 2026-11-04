@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -16,6 +17,8 @@ import 'local_settings.dart';
 import 'workbench_shell.dart';
 import 'workspace_controller.dart';
 import 'desktop_update.dart';
+import 'distribution_channel.dart';
+import 'store_home.dart';
 
 final class OpenMuseHostApp extends StatefulWidget {
   const OpenMuseHostApp({
@@ -28,11 +31,14 @@ final class OpenMuseHostApp extends StatefulWidget {
     this.mutationGuards,
     this.authentication,
     this.readyAccount,
+    this.resources,
     this.updates,
     this.desktopUpdate,
     this.navigatorKey,
+    this.localeController,
   });
 
+  final OpenMuseUiLocale? localeController;
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings? settings;
@@ -41,6 +47,7 @@ final class OpenMuseHostApp extends StatefulWidget {
   final SurfaceMutationGuards? mutationGuards;
   final OpenMuseAuthenticationContributor? authentication;
   final ValueListenable<String?>? readyAccount;
+  final ValueListenable<NativeResourceCenter?>? resources;
   final OpenMuseUpdateController? updates;
   final OpenMuseDesktopUpdate? desktopUpdate;
   final GlobalKey<NavigatorState>? navigatorKey;
@@ -51,7 +58,7 @@ final class OpenMuseHostApp extends StatefulWidget {
 
 final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
     with WidgetsBindingObserver {
-  final _locale = OpenMuseUiLocale();
+  late final _locale = widget.localeController ?? OpenMuseUiLocale();
   OpenMuseLocalSettings? _ownedSettings;
   final _ownedNavigatorKey = GlobalKey<NavigatorState>();
   GlobalKey<NavigatorState> get _navigatorKey =>
@@ -69,6 +76,11 @@ final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
   }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) => _locale.updateSystemLocales(
+    (locales ?? []).map((v) => v.toLanguageTag()),
+  );
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -99,7 +111,7 @@ final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
     final context = _navigatorKey.currentContext;
     if (context == null) return;
     _updateBusy = true;
-    final zh = Localizations.localeOf(context).languageCode == 'zh';
+    final localeStrings = stringsOf(context);
     try {
       File archive;
       if (_readyHash == release.sha256 &&
@@ -120,22 +132,22 @@ final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
         barrierDismissible: false,
         builder: (dialogContext) => AlertDialog(
           key: const ValueKey('app-update-restart-dialog'),
-          title: Text(zh ? '更新已就绪' : 'Update ready'),
+          title: Text(localeStrings.updatesUpdateReadyEf88289a()),
           content: Text(
-            zh
-                ? 'OpenMuse ${release.version} 已下载并校验。立即重启以安装更新，或稍后在左下角再次点击更新。'
-                : 'OpenMuse ${release.version} is downloaded and verified. Restart now to install, or use the update notice later.',
+            localeStrings.updatesOpenmuseIsDownloadedAndVerifiedRestar14710fdb(
+              value1: release.version,
+            ),
           ),
           actions: [
             TextButton(
               key: const ValueKey('app-update-restart-later'),
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(zh ? '稍后重启' : 'Restart later'),
+              child: Text(localeStrings.updatesRestartLaterD2da82eb()),
             ),
             FilledButton(
               key: const ValueKey('app-update-restart-now'),
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(zh ? '立即重启' : 'Restart now'),
+              child: Text(localeStrings.updatesRestartNow09959419()),
             ),
           ],
         ),
@@ -147,7 +159,11 @@ final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
       if (mounted) {
         _desktopUpdate.status.value = OpenMuseDesktopUpdateStatus.failed;
         ScaffoldMessenger.of(_navigatorKey.currentContext!).showSnackBar(
-          SnackBar(content: Text(zh ? '更新失败：$error' : 'Update failed: $error')),
+          SnackBar(
+            content: Text(
+              localeStrings.updatesUpdateFailed9d48e538(value1: error),
+            ),
+          ),
         );
       }
     } finally {
@@ -159,7 +175,7 @@ final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
   Widget build(BuildContext context) {
     final preferences = _settings;
     return ListenableBuilder(
-      listenable: Listenable.merge([preferences, _locale]),
+      listenable: Listenable.merge([preferences, _locale, ?widget.resources]),
       builder: (context, _) => OpenMuseUiLocaleScope(
         controller: _locale,
         child: MaterialApp(
@@ -167,26 +183,61 @@ final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
           debugShowCheckedModeBanner: false,
           title: 'OpenMuse',
           locale: _locale.locale,
-          localizationsDelegates:
-              OpenMuseAuthLocalizations.localizationsDelegates,
-          supportedLocales: OpenMuseAuthLocalizations.supportedLocales,
+          localizationsDelegates: [
+            OpenMuseStringsDelegate(_locale.catalog),
+            ...OpenMuseAuthLocalizations.localizationsDelegates,
+          ],
+          supportedLocales: _locale.supportedLocales,
+          builder: (context, child) => ResourceLinkRouting(
+            open: (uri) async {
+              final center = widget.resources?.value,
+                  navContext = _navigatorKey.currentContext;
+              if (center == null || navContext == null) return;
+              try {
+                await openResourcePage(
+                  navContext,
+                  center.controller,
+                  ResourceReference.fromUri(uri),
+                );
+              } on Object catch (error) {
+                if (navContext.mounted) showResourceError(navContext, error);
+              }
+            },
+            child: OpenMuseRuntimeNotice(
+              child: child ?? const SizedBox.shrink(),
+            ),
+          ),
           theme: buildOpenMuseTheme(),
           darkTheme: buildOpenMuseTheme(brightness: Brightness.dark),
           themeMode: preferences.themeMode,
           navigatorObservers: [DshPopupRouteObserver.instance],
           home: Builder(
             builder: (context) {
-              final workbench = OpenMuseWorkbench(
-                updates: widget.updates,
-                desktopUpdate: _desktopUpdate,
-                onGetUpdate: _getUpdate,
-                registry: widget.registry,
-                workspace: widget.workspace,
-                settings: preferences,
-                layoutController: widget.layoutController,
-                layoutStore: widget.layoutStore,
-                mutationGuards: widget.mutationGuards,
-              );
+              final Widget workbench = macAppStoreDistribution
+                  ? OpenMuseStoreHome(
+                      resources: widget.resources?.value,
+                      workspace: widget.workspace,
+                      registry: widget.registry,
+                    )
+                  : OpenMuseWorkbench(
+                      updates: widget.updates,
+                      desktopUpdate: _desktopUpdate,
+                      onGetUpdate: _getUpdate,
+                      resources: widget.resources?.value,
+                      registry: widget.registry,
+                      workspace: widget.workspace,
+                      settings: preferences,
+                      layoutController: widget.layoutController,
+                      layoutStore: widget.layoutStore,
+                      mutationGuards: widget.mutationGuards,
+                    );
+              if (kDebugMode &&
+                  Platform.environment.containsKey(
+                    'OPENMUSE_E2E_SUPPORT_DIR',
+                  ) &&
+                  Platform.environment.containsKey('OPENMUSE_E2E_OPEN_DOCX')) {
+                return workbench;
+              }
               final auth = widget.authentication;
               if (auth == null) {
                 return OpenMuseStartupUpdatePrompt(

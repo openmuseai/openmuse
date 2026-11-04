@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
 
 import 'host_loopback.dart';
 
@@ -26,26 +27,12 @@ const _pairedDesktopPairingCodeDefine = String.fromEnvironment(
 /// the GoTrue origin, the Cloud origin, the public outbound-relay origin, the
 /// paired-Desktop gateway port and the auth keychain account.
 ///
-/// Every value resolves the same way — compile-time dart-define, then the
-/// process environment, then the one default declared here. Nothing depends on
-/// debug or release mode: a build that must reach another deployment passes
-/// configuration instead of inheriting a build-mode default. Callers read this
+/// Debug endpoints resolve from an explicit compile-time override, the process
+/// environment, then the installed deployment snapshot. Release deployments
+/// use only installed configuration. Callers read this
 /// config rather than embedding hosts, ports or loopback addresses.
 @immutable
 final class HostEndpointConfig {
-  /// Host of the public deployment, used to tell whether Cloud points at it.
-  static const productionHost = 'openmuseai.com';
-
-  /// Public GoTrue origin.
-  static const defaultGoTrueOrigin = 'https://openmuseai.com/gotrue';
-
-  /// Public Cloud origin.
-  static const defaultCloudOrigin = 'https://openmuseai.com';
-
-  /// Public outbound-relay origin. Inherited only while Cloud points at
-  /// [productionHost]; every other deployment opts in explicitly.
-  static const defaultRelayOrigin = 'https://openmuseai.com:8443';
-
   /// IPv4 loopback host advertised by the local CLI broker.
   static const loopbackHostIpv4 = hostLoopbackIpv4;
 
@@ -70,21 +57,28 @@ final class HostEndpointConfig {
   });
 
   /// Resolves the configuration for the running host.
-  factory HostEndpointConfig.fromEnvironment() => HostEndpointConfig.resolve(
-    environment: Platform.environment,
-    gotrueDefine: _gotrueDefine,
-    cloudDefine: _cloudDefine,
-    relayDefine: _relayDefine,
-    allowInsecureLoopbackDefine: _allowInsecureLoopbackDefine,
-    authKeychainAccountDefine: _authKeychainAccountDefine,
-    pairedDesktopPortDefine: _pairedDesktopPortDefine,
-    pairedDesktopPairingCodeDefine: _pairedDesktopPairingCodeDefine,
-  );
+  factory HostEndpointConfig.fromEnvironment({required RuntimeConfig config}) =>
+      HostEndpointConfig.resolve(
+        config: config,
+        environment: kDebugMode ? Platform.environment : const {},
+        gotrueDefine: kDebugMode ? _gotrueDefine : '',
+        cloudDefine: kDebugMode ? _cloudDefine : '',
+        relayDefine: kDebugMode ? _relayDefine : '',
+        allowInsecureLoopbackDefine: kDebugMode
+            ? _allowInsecureLoopbackDefine
+            : '',
+        authKeychainAccountDefine: kDebugMode ? _authKeychainAccountDefine : '',
+        pairedDesktopPortDefine: kDebugMode ? _pairedDesktopPortDefine : '',
+        pairedDesktopPairingCodeDefine: kDebugMode
+            ? _pairedDesktopPairingCodeDefine
+            : '',
+      );
 
   /// Resolution seam with explicit inputs, so precedence stays testable without
   /// mutating the real process environment.
   @visibleForTesting
   factory HostEndpointConfig.resolve({
+    required RuntimeConfig config,
     Map<String, String> environment = const <String, String>{},
     String gotrueDefine = '',
     String cloudDefine = '',
@@ -99,7 +93,7 @@ final class HostEndpointConfig {
         key: 'OPENMUSE_CLOUD_ORIGIN',
         dartDefine: cloudDefine,
         environment: environment,
-        fallback: defaultCloudOrigin,
+        fallback: config.serviceUri(ServiceId.cloud).toString(),
       ),
     );
     return HostEndpointConfig(
@@ -108,7 +102,7 @@ final class HostEndpointConfig {
           key: 'OPENMUSE_GOTRUE_ORIGIN',
           dartDefine: gotrueDefine,
           environment: environment,
-          fallback: defaultGoTrueOrigin,
+          fallback: config.serviceUri(ServiceId.auth).toString(),
         ),
       ),
       cloudOrigin: cloudOrigin,
@@ -121,7 +115,10 @@ final class HostEndpointConfig {
         key: 'OPENMUSE_RELAY_PUBLIC_ORIGIN',
         dartDefine: relayDefine,
         environment: environment,
-        fallback: cloudOrigin.host == productionHost ? defaultRelayOrigin : '',
+        fallback:
+            cloudOrigin.origin == config.serviceUri(ServiceId.cloud).origin
+            ? config.services[ServiceId.relay]?.toString() ?? ''
+            : '',
       ),
       pairedDesktopPort: _port(
         _configured(
