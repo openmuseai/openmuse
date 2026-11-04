@@ -159,16 +159,29 @@ fn validate_relationships(xml: &[u8]) -> Result<(), DocxError> {
             Event::Start(tag) | Event::Empty(tag)
                 if local_name(tag.name().as_ref()) == b"Relationship" =>
             {
+                let mut external = false;
+                let mut relation_type = None;
                 for attribute in tag.attributes().with_checks(true) {
                     let attribute = attribute.map_err(|_| DocxError::InvalidXml)?;
-                    if local_name(attribute.key.as_ref()) == b"TargetMode"
-                        && attribute
-                            .decode_and_unescape_value(reader.decoder())
-                            .map_err(|_| DocxError::InvalidXml)?
-                            .eq_ignore_ascii_case("external")
-                    {
-                        return Err(DocxError::ExternalRelationship);
+                    let value = attribute
+                        .decode_and_unescape_value(reader.decoder())
+                        .map_err(|_| DocxError::InvalidXml)?;
+                    match local_name(attribute.key.as_ref()) {
+                        b"TargetMode" if value.eq_ignore_ascii_case("external") => {
+                            external = true;
+                        }
+                        b"Type" => relation_type = Some(value.into_owned()),
+                        _ => {}
                     }
+                }
+                // An attached template is metadata for this byte-only reader;
+                // it is never fetched or consulted while parsing document.xml.
+                if external
+                    && !relation_type
+                        .as_deref()
+                        .is_some_and(|kind| kind.ends_with("/attachedTemplate"))
+                {
+                    return Err(DocxError::ExternalRelationship);
                 }
             }
             Event::DocType(_) => return Err(DocxError::DocTypeDenied),

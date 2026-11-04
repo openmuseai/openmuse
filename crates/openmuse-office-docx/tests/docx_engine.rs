@@ -83,6 +83,18 @@ fn corrupt_external_and_doctype_inputs_fail_closed() {
 }
 
 #[test]
+fn external_attached_template_is_ignored_without_loading_it() {
+    let input = package(
+        r#"<w:document xmlns:w="urn:w"><w:body><w:p><w:r><w:t>Thesis</w:t></w:r></w:p></w:body></w:document>"#,
+        &[(
+            "word/_rels/settings.xml.rels",
+            r#"<Relationships><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/attachedTemplate" TargetMode="External" Target="file:///unused/template.docx"/></Relationships>"#,
+        )],
+    );
+    assert_eq!(inspect(&input).unwrap().paragraphs, ["Thesis"]);
+}
+
+#[test]
 fn package_traversal_and_non_portable_paths_fail_closed() {
     let traversal = package(
         r#"<w:document xmlns:w="urn:w"><w:body/></w:document>"#,
