@@ -1,7 +1,7 @@
 {
-  "clientBuildCommit": "325ad0df0a2dc075c9b12169bb2a4ce69fdc915f",
+  "clientBuildCommit": "88c9da5f28309e6a1dbb316a535ddfcae002dbb2",
   "version": "1.0.0",
-  "buildNumber": 13,
+  "buildNumber": 15,
   "clientDirectory": "Muse-Client",
   "fileCount": 33696,
   "sourcePublication": "Git source branch; no separately uploaded source ZIP",

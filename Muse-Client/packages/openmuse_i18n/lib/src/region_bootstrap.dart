@@ -15,10 +15,15 @@ final class OpenMuseRegionBootstrap extends StatefulWidget {
     required this.store,
     required this.boot,
     this.loadRelease = loadInstalledRelease,
+    this.requiresLegalConsent = true,
   });
   final Future<ConfigStore> Function(InstalledRelease) store;
   final Future<Widget> Function(DeploymentBundle, String? initialLanguage) boot;
   final Future<InstalledRelease> Function() loadRelease;
+
+  /// Mac App Store apps must not present an additional license at launch.
+  /// Skipping this page never records agreement on the user's behalf.
+  final bool requiresLegalConsent;
   @override
   State<OpenMuseRegionBootstrap> createState() => _RegionBootstrapState();
 }
@@ -70,7 +75,8 @@ final class _RegionBootstrapState extends State<OpenMuseRegionBootstrap> {
   }
 
   Future<void> _boot(InstalledRegion region) async {
-    if (!await _selection!.hasAcceptedLegal(region)) {
+    if (widget.requiresLegalConsent &&
+        !await _selection!.hasAcceptedLegal(region)) {
       if (mounted) {
         setState(() {
           _consentRegion = region;

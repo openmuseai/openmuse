@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 import plistlib
 import shutil
+import stat
 import subprocess
 import tempfile
 
@@ -59,6 +60,26 @@ def main():
     app = output / 'OpenMuse.app'
     execute(['ditto', app_source, app])
     shutil.copyfile(args.profile, app / 'Contents/embedded.provisionprofile')
+    # Browser-downloaded provisioning profiles can carry quarantine metadata.
+    # Apple rejects this attribute anywhere in a TestFlight/App Store payload.
+    attribute_listing = execute(['xattr', '-lr', app])
+    quarantine_removed = [line.split(': com.apple.quarantine:', 1)[0]
+                          .removeprefix(str(app) + '/')
+                          for line in attribute_listing.splitlines()
+                          if ': com.apple.quarantine:' in line]
+    execute(['xattr', '-r', '-d', 'com.apple.quarantine', app])
+    # Installer installs payloads as root. Every distributed resource must be
+    # readable by a normal user; local source files may have restrictive modes.
+    permission_changes = []
+    for path in [app, *app.rglob('*')]:
+        if path.is_symlink():
+            continue
+        before = stat.S_IMODE(path.stat().st_mode)
+        after = 0o755 if path.is_dir() or before & 0o111 else 0o644
+        if before != after:
+            path.chmod(after)
+            permission_changes.append({'path': str(path.relative_to(app)),
+                                       'before': oct(before), 'after': oct(after)})
     entitlements = plistlib.loads((ROOT / 'app/openmuse_host/macos/Runner/AppStore.entitlements').read_bytes())
     entitlements.update({'com.apple.application-identifier': app_id,
                          'com.apple.developer.team-identifier': team,
@@ -93,6 +114,15 @@ def main():
                                           check=True, capture_output=True).stdout)
     if any(signed.get(k) != v for k, v in entitlements.items()):
         raise SystemExit('Final app entitlement mismatch.')
+    unreadable = [str(path.relative_to(app)) for path in [app, *app.rglob('*')]
+                  if not path.is_symlink()
+                  and (not path.stat().st_mode & stat.S_IROTH
+                       or path.is_dir() and not path.stat().st_mode & stat.S_IXOTH)]
+    if unreadable:
+        raise SystemExit('Distribution payload is unreadable by non-root users: '
+                         + ', '.join(unreadable))
+    if 'com.apple.quarantine:' in execute(['xattr', '-lr', app]):
+        raise SystemExit('Quarantine metadata remains in the distribution payload.')
     pkg = output / f"OpenMuse-macos-store-{info['CFBundleShortVersionString']}-{info['CFBundleVersion']}.pkg"
     execute(['productbuild', '--component', app, '/Applications', '--sign', args.installer_identity, pkg])
     pkg_signature = execute(['pkgutil', '--check-signature', pkg])
@@ -100,6 +130,10 @@ def main():
               'teamId': team, 'bundleId': info['CFBundleIdentifier'],
               'version': info['CFBundleShortVersionString'], 'build': info['CFBundleVersion'],
               'sandboxEnabled': True, 'signedCodeFiles': len(code_files),
+              'permissionChanges': permission_changes,
+              'unreadablePayloadFiles': unreadable,
+              'quarantineAttributesRemoved': quarantine_removed,
+              'quarantineAttributesRemaining': [],
               'sha256': hashlib.sha256(pkg.read_bytes()).hexdigest(),
               'profileUUID': profile['UUID'], 'pkgSignature': pkg_signature,
               'signedAt': datetime.now(timezone.utc).isoformat()}

@@ -12,6 +12,47 @@ void main() {
     ).readAsStringSync(),
   );
   testWidgets(
+    'Store launch resolves region without a license page or fabricated agreement',
+    (tester) async {
+      final installed = release('overseas');
+      final saved = MemoryConfigStore();
+      final region = installed.regions.firstWhere((r) => r.id == 'us');
+      var boots = 0;
+      Widget app() => OpenMuseRegionBootstrap(
+        requiresLegalConsent: false,
+        loadRelease: () async => installed,
+        store: (_) async => saved,
+        boot: (_, _) async {
+          boots++;
+          return const MaterialApp(home: Text('local document welcome'));
+        },
+      );
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      expect(boots, 0);
+      await tester.tap(find.byKey(const ValueKey('region-us')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('region-continue')));
+      await tester.pumpAndSettle();
+      expect(boots, 1);
+      expect(find.text('local document welcome'), findsOneWidget);
+      expect(find.byKey(const ValueKey('legal-checkbox')), findsNothing);
+      expect(
+        await RegionSelection(installed, saved).hasAcceptedLegal(region),
+        isFalse,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      expect(boots, 2);
+      expect(find.byKey(const ValueKey('region-us')), findsNothing);
+      expect(
+        await RegionSelection(installed, saved).hasAcceptedLegal(region),
+        isFalse,
+      );
+    },
+  );
+  testWidgets(
     'returning users never flash region or legal UI during restore and boot',
     (tester) async {
       final installed = release('overseas');

@@ -416,8 +416,8 @@
     "bytes": 2746
   },
   "Muse-Client/app/openmuse_host/lib/main.dart": {
-    "sha256": "37a0b6cf57f16387230ad6433461b7486b0d6d402d506cc2a57cf944797418f2",
-    "bytes": 57295
+    "sha256": "dec4318889b64f37aad9ee7f10832cb08b107146f4448ac0ff4cdba38d36c315",
+    "bytes": 57349
   },
   "Muse-Client/app/openmuse_host/lib/src/host/account_deletion.dart": {
     "sha256": "3cfef91081ed7d652191f3e69548e41fc72e360645eba19d954dd044c004747f",
@@ -3900,8 +3900,8 @@
     "bytes": 2133
   },
   "Muse-Client/packages/openmuse_i18n/lib/src/region_bootstrap.dart": {
-    "sha256": "80cffeb52ac1aa9081f09ecdc50360ac60d0cb69aebd3d6e93e618912527728f",
-    "bytes": 11501
+    "sha256": "a11aa013f796b8b9f56f194d204831b02877bc69fa50b510080260994d9320a9",
+    "bytes": 11760
   },
   "Muse-Client/packages/openmuse_i18n/pubspec.lock": {
     "sha256": "b9a8f7404aa78e47a1517df0ec5d4b15cde6c84080021fed2815111b60f01658",
@@ -3936,8 +3936,8 @@
     "bytes": 3265
   },
   "Muse-Client/packages/openmuse_i18n/test/region_bootstrap_test.dart": {
-    "sha256": "a8f4790c8d474f6c1dea5e2be8023595b0c1b71e807d2dd2bb248f0c07f40b2b",
-    "bytes": 7804
+    "sha256": "63194a119824da7e2b0b11cadb1a16fb539807a33293dd225fa687fd8293d4fb",
+    "bytes": 9332
   },
   "Muse-Client/packages/openmuse_market_ui/assets/archify-editorial.png": {
     "sha256": "d683321e9dde0777239a8bb715960447bfcf15f21b274cc0ab90901b2d62dbae",
@@ -10408,8 +10408,8 @@
     "bytes": 5707
   },
   "Muse-Client/scripts/release/sign-macos-store.py": {
-    "sha256": "f6b42b66bbd90fcad95bd06e072bbd155f47489f3b5ff826c570b3f733283c99",
-    "bytes": 5900
+    "sha256": "85394bb397c3f6cc06038368fc55fcf28e84db46087c028e7207c84ea9f0e078",
+    "bytes": 7855
   },
   "Muse-Client/scripts/release/sign-public-config.mjs": {
     "sha256": "1019b5f3be1646ad737041ef2ef42b89d2ee6dbfd7740c1338cf2a8bc4e23eca",

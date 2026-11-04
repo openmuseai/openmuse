@@ -55,6 +55,7 @@ Future<void> main() async {
   // Finder-launched windows blank while Dart is still in main().
   runApp(
     OpenMuseRegionBootstrap(
+      requiresLegalConsent: !macAppStoreDistribution,
       store: (release) async {
         final support = await getApplicationSupportDirectory();
         return FileConfigStore(
