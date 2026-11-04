@@ -1,0 +1,21 @@
+name: openmuse_resource_center
+description: Shared Flutter resource center and conversation reference surfaces for Desktop, Mobile and Web.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  openmuse_resource_clipboard:
+    path: ../openmuse_resource_clipboard
+  flutter:
+    sdk: flutter
+  muse_resource_center:
+    path: ../muse_resource_center
+  openmuse_plugin_sdk:
+    path: ../openmuse_plugin_sdk
+  openmuse_i18n:
+    path: ../openmuse_i18n
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
