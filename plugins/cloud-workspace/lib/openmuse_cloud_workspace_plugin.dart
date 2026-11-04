@@ -1,5 +1,7 @@
 library openmuse_cloud_workspace_plugin;
 
+import 'package:openmuse_i18n/openmuse_i18n.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -87,6 +89,7 @@ final class CloudWorkspacePluginSnapshot {
     this.sessions = const [],
     this.openingWorkspaceRef,
     this.failureMessage,
+    this.failureCode,
   });
 
   final bool loading;
@@ -94,6 +97,7 @@ final class CloudWorkspacePluginSnapshot {
   final List<DshSessionSummary> sessions;
   final String? openingWorkspaceRef;
   final String? failureMessage;
+  final String? failureCode;
 
   DshSessionSummary? sessionFor(String workspaceRef) {
     for (final session in sessions) {
@@ -178,7 +182,7 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
         CloudWorkspacePluginSnapshot(
           workspaces: _snapshot.workspaces,
           sessions: _snapshot.sessions,
-          failureMessage: 'Cloud Workspace 暂时不可用，请稍后重试。',
+          failureCode: 'CLOUD_UNAVAILABLE',
         ),
       );
     }
@@ -205,7 +209,7 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
         CloudWorkspacePluginSnapshot(
           workspaces: _snapshot.workspaces,
           sessions: _snapshot.sessions,
-          failureMessage: '无法连接 Remote DSH，请检查 Workspace 与服务状态。',
+          failureCode: 'DSH_UNAVAILABLE',
         ),
       );
       return null;
@@ -244,15 +248,15 @@ final class CloudWorkspacePluginPanel extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 6, 6),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'CLOUD WORKSPACES',
+                    stringsOf(context).cloudTitle(),
                     style: TextStyle(fontSize: 11, letterSpacing: 0.8),
                   ),
                 ),
                 IconButton(
                   key: const ValueKey('cloud-workspace.refresh'),
-                  tooltip: '刷新',
+                  tooltip: stringsOf(context).cloudRefresh(),
                   iconSize: 17,
                   onPressed: snapshot.loading ? null : controller.refresh,
                   icon: const Icon(Icons.refresh),
@@ -261,14 +265,17 @@ final class CloudWorkspacePluginPanel extends StatelessWidget {
             ),
           ),
           if (snapshot.loading) const LinearProgressIndicator(minHeight: 2),
-          if (snapshot.failureMessage case final message?)
+          if (snapshot.failureCode != null || snapshot.failureMessage != null)
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(message, style: const TextStyle(fontSize: 12)),
+              child: Text(switch (snapshot.failureCode) {
+                'DSH_UNAVAILABLE' => stringsOf(context).cloudDshUnavailable(),
+                _ => stringsOf(context).cloudUnavailable(),
+              }, style: const TextStyle(fontSize: 12)),
             ),
           Expanded(
             child: snapshot.workspaces.isEmpty && !snapshot.loading
-                ? const Center(child: Text('没有可用的 Cloud Workspace'))
+                ? Center(child: Text(stringsOf(context).cloudEmpty()))
                 : ListView.builder(
                     itemCount: snapshot.workspaces.length,
                     itemBuilder: (context, index) {
@@ -293,8 +300,10 @@ final class CloudWorkspacePluginPanel extends StatelessWidget {
                         title: Text(workspace.title),
                         subtitle: Text(
                           session == null
-                              ? 'Cloud Workspace'
-                              : 'Remote DSH 运行中 · ${session.attachedDeviceCount} 设备',
+                              ? stringsOf(context).cloudWorkspace()
+                              : stringsOf(context).cloudRunning(
+                                  devices: session.attachedDeviceCount,
+                                ),
                         ),
                         trailing: opening
                             ? const SizedBox.square(
@@ -307,7 +316,11 @@ final class CloudWorkspacePluginPanel extends StatelessWidget {
                                 onPressed: () => controller.openWorkspace(
                                   workspace.workspaceRef,
                                 ),
-                                child: Text(session == null ? '连接' : '复用'),
+                                child: Text(
+                                  session == null
+                                      ? stringsOf(context).cloudConnect()
+                                      : stringsOf(context).cloudReuse(),
+                                ),
                               ),
                       );
                     },
