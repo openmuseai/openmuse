@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pty/flutter_pty.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -304,7 +305,7 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  _cliText('终端', 'TERMINAL'),
+                  stringsOf(context).cliTerminal(),
                   style: const TextStyle(
                     color: Color(0xffdedede),
                     fontSize: 11,
@@ -323,21 +324,21 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
                 ),
               if (_sessions.isNotEmpty)
                 IconButton(
-                  tooltip: _cliText('关闭终端', 'Close Terminal'),
+                  tooltip: stringsOf(context).cliCloseTerminal(),
                   icon: const Icon(Icons.close, size: 16),
                   onPressed: () => _close(_selected),
                 ),
               const Spacer(),
               IconButton(
                 key: const ValueKey('cli-new-terminal'),
-                tooltip: _cliText('新建终端', 'New Terminal'),
+                tooltip: stringsOf(context).cliNewTerminal(),
                 icon: const Icon(Icons.add, size: 18),
                 onPressed: () => _start(),
               ),
               if (widget.onMinimize != null)
                 IconButton(
                   key: const ValueKey('cli-bottom-collapse'),
-                  tooltip: _cliText('最小化终端', 'Minimize Terminal'),
+                  tooltip: stringsOf(context).cliMinimizeTerminal(),
                   icon: const Icon(Icons.keyboard_arrow_down, size: 18),
                   onPressed: widget.onMinimize,
                 ),
@@ -357,7 +358,7 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
                   child: TextButton.icon(
                     onPressed: () => _start(),
                     icon: const Icon(Icons.add),
-                    label: Text(_cliText('新建终端', 'New Terminal')),
+                    label: Text(stringsOf(context).cliNewTerminal()),
                   ),
                 )
               : IndexedStack(
@@ -375,11 +376,6 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
     ),
   );
 }
-
-String _cliText(String zh, String en) =>
-    WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'zh'
-    ? zh
-    : en;
 
 final class OpenMuseCliTerminalView extends StatefulWidget {
   const OpenMuseCliTerminalView({
@@ -539,6 +535,11 @@ const _cliTerminalTheme = TerminalTheme(
 );
 
 String? _bundledCliBin() {
+  if (Platform.isLinux) {
+    final directory = File(Platform.resolvedExecutable).parent.path;
+    final candidate = File('$directory/openmuse/cli/bin/openmuse');
+    return candidate.existsSync() ? candidate.path : null;
+  }
   if (!Platform.isMacOS) return null;
   final contents = File(Platform.resolvedExecutable).parent.parent;
   final candidate = File(
