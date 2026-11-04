@@ -1,3 +1,5 @@
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:muse_dsh_conversation_core/muse_dsh_conversation_core.dart';
@@ -33,19 +35,29 @@ void main() {
       ),
     );
     String? sent;
+    String? reported;
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+        localizationsDelegates: [
+          OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         home: Scaffold(
           body: DshConversationSurface(
             store: store,
             onSend: (text, {mode = 'queue'}) async => sent = text,
             onCancel: () async {},
             onFallbackRequested: () {},
+            onReportResponse: (row) => reported = row.text,
           ),
         ),
       ),
     );
     expect(find.text('Desktop reply'), findsOneWidget);
+    await tester.tap(find.byKey(ValueKey('dsh-native.report:${store.snapshot.rows.single.key}')));
+    expect(reported, 'Desktop reply');
     await tester.enterText(
       find.byKey(const ValueKey('dsh-native.composer')),
       'Mobile prompt',
@@ -70,6 +82,12 @@ void main() {
       );
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('zh', 'CN'),
+          supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+          localizationsDelegates: [
+            OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+            ...GlobalMaterialLocalizations.delegates,
+          ],
           home: Scaffold(
             appBar: AppBar(title: const Text('Workspace header')),
             body: DshConversationSurface(
@@ -106,6 +124,12 @@ void main() {
     var fallback = false;
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+        localizationsDelegates: [
+          OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         home: DshConversationSurface(
           store: store,
           onSend: (_, {mode = 'queue'}) async {},
@@ -137,6 +161,12 @@ void main() {
     );
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+        localizationsDelegates: [
+          OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         home: DshConversationSurface(
           store: store,
           showHeader: false,
@@ -188,6 +218,12 @@ void main() {
     });
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+        localizationsDelegates: [
+          OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         home: DshConversationSurface(
           store: store,
           nativeContributions: [contribution],
@@ -228,6 +264,12 @@ void main() {
     List<JsonMap>? answered;
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+        localizationsDelegates: [
+          OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         home: DshConversationSurface(
           store: store,
           onQuestionAnswer: (answers) async => answered = answers,
@@ -288,6 +330,12 @@ void main() {
       );
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('zh', 'CN'),
+          supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+          localizationsDelegates: [
+            OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+            ...GlobalMaterialLocalizations.delegates,
+          ],
           home: DshConversationSurface(
             store: store,
             onSend: (_, {mode = 'queue'}) async {},
@@ -341,6 +389,12 @@ void main() {
     );
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+        localizationsDelegates: [
+          OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         home: DshConversationSurface(
           store: store,
           onSend: (_, {mode = 'queue'}) async {},
@@ -380,6 +434,12 @@ void main() {
     (int, int)? opened;
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+        localizationsDelegates: [
+          OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         home: Scaffold(
           body: DshConversationSurface(
             store: store,
@@ -485,6 +545,12 @@ void main() {
       final loaded = <int>[];
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('zh', 'CN'),
+          supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+          localizationsDelegates: [
+            OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+            ...GlobalMaterialLocalizations.delegates,
+          ],
           home: Scaffold(
             body: DshConversationSurface(
               store: store,
@@ -639,6 +705,12 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+        localizationsDelegates: [
+          OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         home: Scaffold(
           body: DshConversationSurface(
             store: store,
@@ -747,6 +819,12 @@ void main() {
     String? opened;
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+        localizationsDelegates: [
+          OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         home: Scaffold(
           body: DshConversationSurface(
             store: store,
@@ -863,6 +941,12 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+        localizationsDelegates: [
+          OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         home: Scaffold(
           body: DshConversationSurface(
             store: store,
@@ -938,6 +1022,12 @@ void main() {
       );
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('zh', 'CN'),
+          supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+          localizationsDelegates: [
+            OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+            ...GlobalMaterialLocalizations.delegates,
+          ],
           home: Scaffold(
             body: DshConversationSurface(
               store: store,

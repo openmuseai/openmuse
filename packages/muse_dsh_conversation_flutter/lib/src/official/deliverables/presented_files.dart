@@ -1,3 +1,4 @@
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:flutter/material.dart';
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
 
@@ -94,7 +95,11 @@ final class _DshPresentedFilesState extends State<DshPresentedFiles> {
                       : Icons.keyboard_arrow_down_rounded,
                   size: 16,
                 ),
-                label: Text(_expanded ? '收起' : '全部 ${files.length} 个文件'),
+                label: Text(
+                  _expanded
+                      ? stringsOf(context).dshCollapse()
+                      : stringsOf(context).dshAllFiles(count: files.length),
+                ),
               ),
             ),
         ],
@@ -124,7 +129,12 @@ final class _PresentedFileCard extends StatelessWidget {
     final name = file['name'] as String? ?? '';
     final path = file['path'] as String? ?? name;
     final pending = phase == 'opening' || phase == 'revealing';
-    final status = _status(phase, file['description'] as String?, name);
+    final status = _status(
+      context,
+      phase,
+      file['description'] as String?,
+      name,
+    );
     final failed = phase == 'error' || phase == 'revealError';
     final mark = _fileMark(name);
     final dark = Theme.of(context).brightness == Brightness.dark;
@@ -202,7 +212,7 @@ final class _PresentedFileCard extends StatelessWidget {
                       children: [
                         IconButton(
                           key: ValueKey('dsh-native.presented.open:$path'),
-                          tooltip: '用默认应用打开',
+                          tooltip: stringsOf(context).dshDefaultOpen(),
                           visualDensity: VisualDensity.compact,
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           constraints: const BoxConstraints(
@@ -224,7 +234,9 @@ final class _PresentedFileCard extends StatelessWidget {
                           ),
                           child: IconButton(
                             key: ValueKey('dsh-native.presented.more:$path'),
-                            tooltip: '$name 的更多文件操作',
+                            tooltip: stringsOf(
+                              context,
+                            ).dshMoreFileActions(name: name),
                             visualDensity: VisualDensity.compact,
                             padding: const EdgeInsets.symmetric(horizontal: 4),
                             constraints: const BoxConstraints(
@@ -237,14 +249,18 @@ final class _PresentedFileCard extends StatelessWidget {
                                     final action = await showMenu<String>(
                                       context: context,
                                       position: _menuPosition(context),
-                                      items: const [
+                                      items: [
                                         PopupMenuItem(
                                           value: 'open',
-                                          child: Text('用默认应用打开'),
+                                          child: Text(
+                                            stringsOf(context).dshDefaultOpen(),
+                                          ),
                                         ),
                                         PopupMenuItem(
                                           value: 'reveal',
-                                          child: Text('打开所在文件夹'),
+                                          child: Text(
+                                            stringsOf(context).dshReveal(),
+                                          ),
                                         ),
                                       ],
                                     );
@@ -281,26 +297,35 @@ RelativeRect _menuPosition(BuildContext context) {
   return RelativeRect.fromRect(offset & box.size, Offset.zero & overlay.size);
 }
 
-String _status(String? phase, String? description, String name) {
+String _status(
+  BuildContext context,
+  String? phase,
+  String? description,
+  String name,
+) {
   return switch (phase) {
-    'opening' => '正在打开…',
-    'opened' => '已在默认程序中打开',
-    'error' => '打开失败，点击重试',
-    'revealing' => '正在打开所在文件夹…',
-    'revealed' => '已请求打开所在文件夹',
-    'revealError' => '无法打开所在文件夹，请重试',
-    _ => _cardDescription(description, name),
+    'opening' => stringsOf(context).dshOpening(),
+    'opened' => stringsOf(context).dshOpenedDefault(),
+    'error' => stringsOf(context).dshOpenRetry(),
+    'revealing' => stringsOf(context).dshRevealing(),
+    'revealed' => stringsOf(context).dshRevealed(),
+    'revealError' => stringsOf(context).dshRevealFailed(),
+    _ => _cardDescription(context, description, name),
   };
 }
 
 /// Official cards drop a trailing parenthetical before showing the description.
-String _cardDescription(String? description, String name) {
+String _cardDescription(
+  BuildContext context,
+  String? description,
+  String name,
+) {
   final trimmed = description
       ?.replaceFirst(RegExp(r'\s*(?:\([^()]*\)|（[^（）]*）)\s*$'), '')
       .trim();
   if (trimmed == null || trimmed.isEmpty) {
     final dot = name.lastIndexOf('.');
-    if (dot <= 0 || dot == name.length - 1) return '文件';
+    if (dot <= 0 || dot == name.length - 1) return stringsOf(context).dshFile();
     return name.substring(dot + 1).toUpperCase();
   }
   return trimmed;

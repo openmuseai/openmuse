@@ -5,6 +5,10 @@ publish_to: none
 environment:
   sdk: ^3.12.2
 dependencies:
+  openmuse_plugin_sdk:
+    path: ../openmuse_plugin_sdk
+  openmuse_i18n:
+    path: ../openmuse_i18n
   flutter:
     sdk: flutter
   flutter_markdown_plus: 1.0.12
@@ -13,6 +17,8 @@ dependencies:
   muse_dsh_conversation_protocol:
     path: ../muse_dsh_conversation_protocol
 dev_dependencies:
+  flutter_localizations:
+    sdk: flutter
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0

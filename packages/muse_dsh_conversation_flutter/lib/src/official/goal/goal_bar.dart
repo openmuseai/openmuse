@@ -1,3 +1,4 @@
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:flutter/material.dart';
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
 
@@ -14,7 +15,7 @@ final class DshGoalBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final label = goal['label'] as String? ?? '进行中的目标';
+    final label = goal['label'] as String? ?? stringsOf(context).dshGoal();
     final objective = goal['objective'] as String? ?? '';
     final blocked = goal['blockedMessage'] as String?;
     final paused = goal['phase'] == 'paused';

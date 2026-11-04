@@ -1,3 +1,4 @@
+import 'network_policy.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -427,7 +428,7 @@ final class DshNativeGatewayClient {
         (origin.scheme == 'http' && allowInsecureLoopback && loopback) ||
         (origin.scheme == 'http' &&
             allowInsecurePrivateNetworkForTesting &&
-            _isPrivateIpv4(origin.host));
+            isPrivateNativeTransportHost(origin.host));
     if (!safe || origin.userInfo.isNotEmpty) {
       throw const DshNativeGatewayException('Unsafe DSH origin');
     }
@@ -438,11 +439,5 @@ final class DshNativeGatewayClient {
       first.host == second.host &&
       first.port == second.port;
 
-  bool _isPrivateIpv4(String host) {
-    final parts = host.split('.').map(int.tryParse).toList(growable: false);
-    if (parts.length != 4 || parts.any((part) => part == null)) return false;
-    return parts[0] == 10 ||
-        (parts[0] == 192 && parts[1] == 168) ||
-        (parts[0] == 172 && parts[1]! >= 16 && parts[1]! <= 31);
-  }
+
 }

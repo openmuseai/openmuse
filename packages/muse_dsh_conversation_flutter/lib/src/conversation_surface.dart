@@ -1,4 +1,6 @@
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'dart:async';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -36,6 +38,7 @@ final class DshConversationSurface extends StatefulWidget {
     this.onLoadWorkspaceChangePreview,
     this.onOpenWorkspaceChange,
     this.onOpenPresentedFile,
+    this.onReportResponse,
     this.showHeader = true,
     this.showComposer = true,
     this.compatibilityPlugins = const [],
@@ -53,6 +56,7 @@ final class DshConversationSurface extends StatefulWidget {
   final DshWorkspaceChangePreviewLoader? onLoadWorkspaceChangePreview;
   final DshWorkspaceChangeOpener? onOpenWorkspaceChange;
   final DshPresentedFileOpener? onOpenPresentedFile;
+  final ValueChanged<DshConversationRow>? onReportResponse;
   final bool showHeader;
   final bool showComposer;
   final List<JsonMap> compatibilityPlugins;
@@ -193,6 +197,7 @@ final class _DshConversationSurfaceState extends State<DshConversationSurface> {
                                         widget.onOpenWorkspaceChange,
                                     onOpenPresentedFile:
                                         widget.onOpenPresentedFile,
+                                    onReportResponse: widget.onReportResponse,
                                     onFallbackRequested:
                                         widget.onFallbackRequested,
                                   ),
@@ -237,9 +242,9 @@ final class _SessionHeader extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final title = snapshot.title?.trim();
     final preset = switch (snapshot.agentPreset) {
-      'standard' => '标准模式',
+      'standard' => stringsOf(context).dshStandardMode(),
       final value? when value.isNotEmpty => value,
-      _ => '标准模式',
+      _ => stringsOf(context).dshStandardMode(),
     };
     return Material(
       key: const ValueKey('dsh-native.header'),
@@ -260,7 +265,9 @@ final class _SessionHeader extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          title == null || title.isEmpty ? 'DSH 对话' : title,
+                          title == null || title.isEmpty
+                              ? stringsOf(context).dshConversation()
+                              : title,
                           key: const ValueKey('dsh-native.session-title'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -287,7 +294,7 @@ final class _SessionHeader extends StatelessWidget {
                       const SizedBox(width: 4),
                       IconButton(
                         key: const ValueKey('dsh-native.use-web'),
-                        tooltip: '完整 DSH 前端',
+                        tooltip: stringsOf(context).dshFullFrontend(),
                         visualDensity: VisualDensity.compact,
                         onPressed: onFallbackRequested,
                         icon: const Icon(Icons.more_horiz, size: 20),
@@ -302,9 +309,15 @@ final class _SessionHeader extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      _HeaderTab(label: '对话', selected: true),
+                      _HeaderTab(
+                        label: stringsOf(context).dshChat(),
+                        selected: true,
+                      ),
                       const SizedBox(width: 28),
-                      const _HeaderTab(label: '轨迹', selected: false),
+                      _HeaderTab(
+                        label: stringsOf(context).dshTrail(),
+                        selected: false,
+                      ),
                     ],
                   ),
                 ),
@@ -374,7 +387,9 @@ final class _ConnectionBanner extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  reconnecting ? '正在恢复 Desktop 实时对话…' : '正在连接 DSH…',
+                  reconnecting
+                      ? stringsOf(context).dshReconnecting()
+                      : stringsOf(context).dshConnecting(),
                   key: const ValueKey('dsh-native.connection-state'),
                 ),
               ),
@@ -393,17 +408,20 @@ final class _EmptyConversation extends StatelessWidget {
   Widget build(BuildContext context) => Center(
     child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 340),
-      child: const Column(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.explore_outlined, size: 40),
           SizedBox(height: 12),
           Text(
-            '探索未至之境',
+            stringsOf(context).dshExplore(),
             style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 6),
-          Text('Desktop 与 Mobile 共享同一个实时 Session', textAlign: TextAlign.center),
+          Text(
+            stringsOf(context).dshSharedSession(),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     ),
@@ -422,6 +440,7 @@ final class _ConversationRow extends StatelessWidget {
     this.onLoadWorkspaceChangePreview,
     this.onOpenWorkspaceChange,
     this.onOpenPresentedFile,
+    this.onReportResponse,
     required this.onFallbackRequested,
   });
   final DshConversationRow row;
@@ -434,6 +453,7 @@ final class _ConversationRow extends StatelessWidget {
   final DshWorkspaceChangePreviewLoader? onLoadWorkspaceChangePreview;
   final DshWorkspaceChangeOpener? onOpenWorkspaceChange;
   final DshPresentedFileOpener? onOpenPresentedFile;
+  final ValueChanged<DshConversationRow>? onReportResponse;
   final VoidCallback onFallbackRequested;
 
   bool get _user =>
@@ -533,7 +553,7 @@ final class _ConversationRow extends StatelessWidget {
                           tilePadding: EdgeInsets.zero,
                           childrenPadding: const EdgeInsets.only(bottom: 8),
                           dense: true,
-                          title: const Text('思考过程'),
+                          title: Text(stringsOf(context).dshReasoning()),
                           children: [SelectableText(row.reasoning)],
                         ),
                       if (row.text.isNotEmpty)
@@ -551,7 +571,11 @@ final class _ConversationRow extends StatelessWidget {
                       if (row.pending || row.failed) ...[
                         const SizedBox(height: 6),
                         Text(
-                          row.failed ? '发送失败 · ${row.detail ?? ''}' : '发送中…',
+                          row.failed
+                              ? stringsOf(
+                                  context,
+                                ).dshSendFailed(detail: row.detail ?? '')
+                              : stringsOf(context).dshSending(),
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: row.failed
@@ -587,6 +611,18 @@ final class _ConversationRow extends StatelessWidget {
                   color: colors.onSurfaceVariant,
                 ),
               ),
+              if (row.kind == DshConversationRowKind.assistant &&
+                  (row.text.isNotEmpty ||
+                      (row.nativeContext['presented'] is List &&
+                          (row.nativeContext['presented'] as List)
+                              .isNotEmpty)) &&
+                  onReportResponse != null)
+                IconButton(
+                  key: ValueKey('dsh-native.report:${row.key}'),
+                  tooltip: stringsOf(context).commonAiReportTitle(),
+                  onPressed: () => onReportResponse!(row),
+                  icon: const Icon(Icons.flag_outlined, size: 18),
+                ),
             ],
           ),
         ],
@@ -603,6 +639,48 @@ final class _MessageBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final routing = ResourceLinkRouting.maybeOf(context);
+    if (routing != null && markdown.contains('openmuse-resource://v1/')) {
+      final pattern = RegExp(
+        r'\[([^\]\n]+)\]\((openmuse-resource://v1/[A-Za-z0-9_-]+)\)',
+      );
+      final matches = pattern.allMatches(markdown).toList();
+      if (matches.isNotEmpty) {
+        final body = markdown
+            .replaceAll(pattern, '')
+            .replaceAll(
+              RegExp(
+                r'<resource-context digest="[a-f0-9]+">[\s\S]*?</resource-context>',
+              ),
+              '',
+            )
+            .trim();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (body.isNotEmpty)
+              SelectableText(
+                body,
+                style: const TextStyle(fontSize: 14, height: 1.55),
+              ),
+            for (final match in matches)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: OutlinedButton.icon(
+                  key: ValueKey('conversation-resource-${match.group(2)!}'),
+                  icon: const Icon(Icons.link, size: 18),
+                  label: Text(
+                    match.group(1)!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onPressed: () => unawaited(routing.open(match.group(2)!)),
+                ),
+              ),
+          ],
+        );
+      }
+    }
     if (plain) {
       return SelectableText(
         markdown,
@@ -613,6 +691,10 @@ final class _MessageBody extends StatelessWidget {
     return MarkdownBody(
       key: const ValueKey('dsh-native.markdown'),
       data: markdown,
+      onTapLink: (text, href, title) {
+        if (href != null && href.startsWith('openmuse-resource://v1/'))
+          unawaited(routing?.open(href));
+      },
       selectable: false,
       softLineBreak: true,
       styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
@@ -739,14 +821,18 @@ final class _QuestionCardState extends State<_QuestionCard> {
               children: [
                 Icon(Icons.help_outline, size: 19, color: colors.primary),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    '需要你的回答',
+                    stringsOf(context).dshAnswerRequired(),
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
                 Text(
-                  _submitted ? '已提交' : (phase == 'result' ? '已回答' : '等待中'),
+                  _submitted
+                      ? stringsOf(context).dshSubmitted()
+                      : (phase == 'result'
+                            ? stringsOf(context).dshAnswered()
+                            : stringsOf(context).dshWaiting()),
                   style: TextStyle(
                     fontSize: 12,
                     color: colors.onSurfaceVariant,
@@ -766,7 +852,8 @@ final class _QuestionCardState extends State<_QuestionCard> {
                 ),
               const SizedBox(height: 4),
               Text(
-                question['question']?.toString() ?? '请选择',
+                question['question']?.toString() ??
+                    stringsOf(context).dshSelect(),
                 style: const TextStyle(
                   fontSize: 14,
                   height: 1.4,
@@ -827,8 +914,8 @@ final class _QuestionCardState extends State<_QuestionCard> {
                     final id = _idOf(question);
                     if (id != null) _skipped.remove(id);
                   }),
-                  decoration: const InputDecoration(
-                    hintText: '其他答案（可选）',
+                  decoration: InputDecoration(
+                    hintText: stringsOf(context).dshOtherAnswer(),
                     isDense: true,
                     border: OutlineInputBorder(),
                   ),
@@ -846,7 +933,9 @@ final class _QuestionCardState extends State<_QuestionCard> {
                             _skipped.add(id);
                           }),
                     child: Text(
-                      _skipped.contains(_idOf(question)) ? '已跳过' : '跳过',
+                      _skipped.contains(_idOf(question))
+                          ? stringsOf(context).dshSkipped()
+                          : stringsOf(context).dshSkip(),
                     ),
                   ),
                 ),
@@ -874,20 +963,20 @@ final class _QuestionCardState extends State<_QuestionCard> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.check_rounded),
-                label: const Text('确认并继续'),
+                label: Text(stringsOf(context).dshContinue()),
               ),
             ],
             if (_submitted)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 10),
-                child: Text('回答已发送到 Desktop，正在继续执行。'),
+                child: Text(stringsOf(context).dshAnswerSent()),
               ),
             if (phase == 'result' && result != null) ...[
               const SizedBox(height: 12),
               Divider(color: colors.outlineVariant),
               const SizedBox(height: 8),
               Text(
-                '回答结果',
+                stringsOf(context).dshAnswerResult(),
                 style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
               ),
               const SizedBox(height: 4),
@@ -986,7 +1075,7 @@ final class _FailureSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            '处理失败',
+            stringsOf(context).dshFailed(),
             style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
           ),
           const SizedBox(height: 10),
@@ -1007,7 +1096,7 @@ final class _FailureSection extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
-                      row.title ?? '运行失败',
+                      row.title ?? stringsOf(context).dshRunFailed(),
                       style: const TextStyle(
                         color: error,
                         fontSize: 13,
@@ -1101,15 +1190,15 @@ final class _WorkspaceChangesCardState extends State<_WorkspaceChangesCard> {
     try {
       await open(seq, index);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('已在 Desktop 打开文件')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(stringsOf(context).dshOpenedDesktop())),
+        );
       }
-    } on Object catch (error) {
+    } on Object {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('打开文件失败：$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(stringsOf(context).dshOpenError())),
+        );
       }
     } finally {
       if (mounted) setState(() => _opening = null);
@@ -1155,7 +1244,11 @@ final class _WorkspaceChangesCardState extends State<_WorkspaceChangesCard> {
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
-                    summary == null ? '工作区产物' : '已更新 ${summary.total} 个文件',
+                    summary == null
+                        ? stringsOf(context).dshArtifacts()
+                        : stringsOf(
+                            context,
+                          ).dshUpdatedFiles(count: summary.total),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -1183,7 +1276,7 @@ final class _WorkspaceChangesCardState extends State<_WorkspaceChangesCard> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(29, 10, 4, 4),
                 child: Text(
-                  '产物摘要已不可用；对话内容仍完整保留。',
+                  stringsOf(context).dshSummaryUnavailable(),
                   style: TextStyle(
                     fontSize: 12,
                     color: colors.onSurfaceVariant,
@@ -1209,9 +1302,9 @@ final class _WorkspaceChangesCardState extends State<_WorkspaceChangesCard> {
                   ),
                   subtitle: Text(
                     summary.files[index].binary
-                        ? '二进制文件'
+                        ? stringsOf(context).dshBinary()
                         : summary.files[index].oversized
-                        ? '文件过大'
+                        ? stringsOf(context).dshTooLarge()
                         : '+${summary.files[index].added}  −${summary.files[index].deleted}',
                     style: TextStyle(
                       fontSize: 11,
@@ -1234,7 +1327,7 @@ final class _WorkspaceChangesCardState extends State<_WorkspaceChangesCard> {
                         )
                       else
                         IconButton(
-                          tooltip: '在 Desktop 打开',
+                          tooltip: stringsOf(context).dshOpenDesktop(),
                           onPressed: widget.open == null
                               ? null
                               : () => _open(index),
@@ -1311,11 +1404,11 @@ final class _ArtifactPreviewPageState extends State<_ArtifactPreviewPage> {
     return Scaffold(
       key: const ValueKey('dsh-native.artifact-preview'),
       appBar: AppBar(
-        title: const Text('产物预览'),
+        title: Text(stringsOf(context).dshPreviewTitle()),
         actions: [
           _ArtifactLayoutAction(
             key: const ValueKey('dsh-native.artifact-preview.layout-unified'),
-            tooltip: '单栏对比',
+            tooltip: stringsOf(context).dshUnifiedDiff(),
             selected: layout == _ArtifactDiffLayout.unified,
             icon: Icons.view_agenda_outlined,
             onPressed: () => setState(() {
@@ -1325,7 +1418,7 @@ final class _ArtifactPreviewPageState extends State<_ArtifactPreviewPage> {
           ),
           _ArtifactLayoutAction(
             key: const ValueKey('dsh-native.artifact-preview.layout-split'),
-            tooltip: '双栏对比',
+            tooltip: stringsOf(context).dshSplitDiff(),
             selected: layout == _ArtifactDiffLayout.split,
             icon: Icons.view_column_outlined,
             onPressed: () => setState(() {
@@ -1335,7 +1428,7 @@ final class _ArtifactPreviewPageState extends State<_ArtifactPreviewPage> {
           ),
           if (widget.onOpenDesktop != null)
             IconButton(
-              tooltip: '在 Desktop 打开',
+              tooltip: stringsOf(context).dshOpenDesktop(),
               onPressed: () => widget.onOpenDesktop!(_index),
               icon: const Icon(Icons.open_in_new_rounded),
             ),
@@ -1349,16 +1442,20 @@ final class _ArtifactPreviewPageState extends State<_ArtifactPreviewPage> {
           }
           if (snapshot.hasError) {
             return _ArtifactPreviewUnavailable(
-              message: '无法读取这份产物的改动记录。',
+              message: stringsOf(context).dshChangesUnavailable(),
               onRetry: _retry,
             );
           }
           final preview = snapshot.requireData;
           if (preview.kind == DshNativeArtifactPreviewKind.binary) {
-            return _ArtifactPreviewUnavailable(message: '二进制文件暂不支持原生预览。');
+            return _ArtifactPreviewUnavailable(
+              message: stringsOf(context).dshBinaryUnavailable(),
+            );
           }
           if (preview.kind == DshNativeArtifactPreviewKind.oversized) {
-            return _ArtifactPreviewUnavailable(message: '文件过大，无法在 Mobile 中预览。');
+            return _ArtifactPreviewUnavailable(
+              message: stringsOf(context).dshSizeUnavailable(),
+            );
           }
           final canRender = preview.isCreated && _isMarkdown(preview.display);
           return Column(
@@ -1380,9 +1477,15 @@ final class _ArtifactPreviewPageState extends State<_ArtifactPreviewPage> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
                   child: SegmentedButton<bool>(
-                    segments: const [
-                      ButtonSegment(value: false, label: Text('改动')),
-                      ButtonSegment(value: true, label: Text('预览')),
+                    segments: [
+                      ButtonSegment(
+                        value: false,
+                        label: Text(stringsOf(context).dshChanges()),
+                      ),
+                      ButtonSegment(
+                        value: true,
+                        label: Text(stringsOf(context).dshPreview()),
+                      ),
                     ],
                     selected: {_rendered},
                     onSelectionChanged: (value) {
@@ -1487,10 +1590,10 @@ final class _ArtifactPreviewHeader extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     preview.isCreated
-                        ? '本轮新建的文件'
+                        ? stringsOf(context).dshNewFile()
                         : preview.isDeleted
-                        ? '本轮删除的文件'
-                        : '本轮文件改动',
+                        ? stringsOf(context).dshDeletedFile()
+                        : stringsOf(context).dshChangedFile(),
                     style: TextStyle(
                       fontSize: 12,
                       color: colors.onSurfaceVariant,
@@ -1509,13 +1612,13 @@ final class _ArtifactPreviewHeader extends StatelessWidget {
             ),
             IconButton(
               key: const ValueKey('dsh-native.artifact-preview.previous'),
-              tooltip: '上一个产物',
+              tooltip: stringsOf(context).dshPreviousFile(),
               onPressed: onPrevious,
               icon: const Icon(Icons.chevron_left_rounded),
             ),
             IconButton(
               key: const ValueKey('dsh-native.artifact-preview.next'),
-              tooltip: '下一个产物',
+              tooltip: stringsOf(context).dshNextFile(),
               onPressed: onNext,
               icon: const Icon(Icons.chevron_right_rounded),
             ),
@@ -1544,7 +1647,10 @@ final class _ArtifactPreviewUnavailable extends StatelessWidget {
           Text(message, textAlign: TextAlign.center),
           if (onRetry != null) ...[
             const SizedBox(height: 14),
-            OutlinedButton(onPressed: onRetry, child: const Text('重试')),
+            OutlinedButton(
+              onPressed: onRetry,
+              child: Text(stringsOf(context).dshRetry()),
+            ),
           ],
         ],
       ),
@@ -1952,7 +2058,7 @@ final class _ToolCardState extends State<_ToolCard> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        row.title ?? '工具调用',
+                        row.title ?? stringsOf(context).dshToolCall(),
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -1989,12 +2095,20 @@ final class _ToolCardState extends State<_ToolCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (arguments != null)
-                    _ToolPayload(label: '输入', value: arguments),
+                    _ToolPayload(
+                      label: stringsOf(context).dshInput(),
+                      value: arguments,
+                    ),
                   if (result != null)
-                    _ToolPayload(label: '输出', value: result)
+                    _ToolPayload(
+                      label: stringsOf(context).dshOutput(),
+                      value: result,
+                    )
                   else if (arguments == null && row.text.isNotEmpty)
                     _ToolPayload(
-                      label: phase == 'result' ? '输出' : '输入',
+                      label: phase == 'result'
+                          ? stringsOf(context).dshOutput()
+                          : stringsOf(context).dshInput(),
                       value: row.text,
                     ),
                 ],
@@ -2117,8 +2231,8 @@ final class _Composer extends StatelessWidget {
                           textInputAction: TextInputAction.newline,
                           decoration: InputDecoration(
                             hintText: enabled
-                                ? '发消息或创建任务，/ 调用指令，@ 文件或对话'
-                                : '等待连接…',
+                                ? stringsOf(context).dshComposer()
+                                : stringsOf(context).dshWaitConnection(),
                             border: InputBorder.none,
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(
@@ -2132,7 +2246,7 @@ final class _Composer extends StatelessWidget {
                           children: [
                             _ComposerControl(
                               icon: Icons.add,
-                              tooltip: '添加文件或调用指令',
+                              tooltip: stringsOf(context).dshAddContent(),
                               onPressed: enabled ? () {} : null,
                             ),
                             const SizedBox(width: 4),
@@ -2146,7 +2260,7 @@ final class _Composer extends StatelessWidget {
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                '工作区内修改',
+                                stringsOf(context).dshWorkspaceEdits(),
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 12,
@@ -2159,7 +2273,7 @@ final class _Composer extends StatelessWidget {
                             const Spacer(),
                             Flexible(
                               child: Text(
-                                _modelLabel(model, reasoningEffort),
+                                _modelLabel(context, model, reasoningEffort),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -2174,13 +2288,13 @@ final class _Composer extends StatelessWidget {
                             running
                                 ? IconButton.filledTonal(
                                     key: const ValueKey('dsh-native.stop'),
-                                    tooltip: '停止',
+                                    tooltip: stringsOf(context).dshStop(),
                                     onPressed: onCancel,
                                     icon: const Icon(Icons.stop_rounded),
                                   )
                                 : IconButton.filled(
                                     key: const ValueKey('dsh-native.send'),
-                                    tooltip: '发送',
+                                    tooltip: stringsOf(context).dshSend(),
                                     onPressed: enabled && !sending
                                         ? onSubmit
                                         : null,
@@ -2200,7 +2314,9 @@ final class _Composer extends StatelessWidget {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  '$turnCount 轮  $stepCount 步',
+                  stringsOf(
+                    context,
+                  ).dshTurnSteps(turns: turnCount, steps: stepCount),
                   key: const ValueKey('dsh-native.session-stats'),
                   style: TextStyle(
                     fontSize: 11,
@@ -2244,11 +2360,11 @@ String _timeLabel(int milliseconds) {
   return '${two(value.hour)}:${two(value.minute)}';
 }
 
-String _modelLabel(String? model, String? effort) {
+String _modelLabel(BuildContext context, String? model, String? effort) {
   final modelLabel = switch (model) {
     'deepseek-flash' => 'DeepSeek-V41-Flash',
     final value? when value.isNotEmpty => value,
-    _ => '选择模型',
+    _ => stringsOf(context).dshSelectModel(),
   };
   final effortLabel = switch (effort) {
     'high' => 'High',
@@ -2286,7 +2402,7 @@ final class _ElementCompatibilityNotice extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    row.title ?? 'Mobile 暂不支持此元素',
+                    row.title ?? stringsOf(context).dshUnsupported(),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 3),
@@ -2300,7 +2416,7 @@ final class _ElementCompatibilityNotice extends StatelessWidget {
                     key: ValueKey('dsh-native.open-web:${row.key}'),
                     onPressed: onFallbackRequested,
                     icon: const Icon(Icons.open_in_browser, size: 16),
-                    label: const Text('打开 Web 兼容模式'),
+                    label: Text(stringsOf(context).dshWebFallback()),
                   ),
                 ],
               ),
@@ -2338,7 +2454,7 @@ final class _PluginCompatibilityNotice extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                '$names 含 Mobile 暂未适配的元素；已保持原生对话并逐项降级。',
+                stringsOf(context).dshUnsupportedNames(names: names),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall,
@@ -2347,7 +2463,7 @@ final class _PluginCompatibilityNotice extends StatelessWidget {
             TextButton(
               key: const ValueKey('dsh-native.open-web-fallback'),
               onPressed: onFallbackRequested,
-              child: const Text('兼容模式'),
+              child: Text(stringsOf(context).dshCompatibility()),
             ),
           ],
         ),

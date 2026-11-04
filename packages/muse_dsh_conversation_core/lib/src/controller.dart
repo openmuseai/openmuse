@@ -4,18 +4,28 @@ import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.da
 
 import 'store.dart';
 
+final class DshSendDeclined implements Exception {
+  const DshSendDeclined();
+  @override
+  String toString() =>
+      'The message was not sent because sharing permission was not granted.';
+}
+
 final class DshConversationController {
   DshConversationController({
     required this.client,
     DshConversationStore? store,
     this.reconciliationInterval = const Duration(seconds: 2),
     this.onConnectionFailure,
+    this.approveSend,
   }) : store = store ?? DshConversationStore();
 
   final DshNativeGatewayClient client;
   final DshConversationStore store;
   final Duration reconciliationInterval;
   final void Function(Object error)? onConnectionFailure;
+  final Future<bool> Function(DshConversationSnapshot snapshot, String text)?
+  approveSend;
   bool _closed = false;
   bool _active = false;
   int _generation = 0;
@@ -61,6 +71,18 @@ final class DshConversationController {
     final sessionId = store.snapshot.sessionId;
     final normalized = text.trim();
     if (sessionId == null || normalized.isEmpty) return;
+    final recipient = store.snapshot;
+    if (approveSend != null && !await approveSend!(recipient, normalized)) {
+      throw const DshSendDeclined();
+    }
+    if (_closed ||
+        store.snapshot.sessionId != sessionId ||
+        store.snapshot.provider != recipient.provider ||
+        store.snapshot.model != recipient.model) {
+      throw StateError(
+        'The conversation recipient changed before sending. Please try again.',
+      );
+    }
     final requestId =
         'flutter-${DateTime.now().microsecondsSinceEpoch}-${_requestSequence++}';
     print(

@@ -1,3 +1,4 @@
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:flutter/material.dart';
 import 'package:muse_dsh_conversation_core/muse_dsh_conversation_core.dart';
 
@@ -112,7 +113,11 @@ List<DshTimelineEntry> dshTimelineEntries(
   return entries;
 }
 
-String dshProcessSummary(List<DshProcessMoment> moments) {
+String dshProcessSummary(
+  List<DshProcessMoment> moments, {
+  OpenMuseStrings? strings,
+}) {
+  strings ??= OpenMuseStrings.fallback;
   final phrases = <String>[];
   var hasTool = false;
   var thinking = false;
@@ -120,39 +125,45 @@ String dshProcessSummary(List<DshProcessMoment> moments) {
     final row = moment.row;
     if (row != null) {
       hasTool = true;
-      final phrase = _categoryPhrase(row.nativeKey);
+      final phrase = _categoryPhrase(row.nativeKey, strings);
       if (phrase != null && !phrases.contains(phrase)) phrases.add(phrase);
     } else {
       thinking = true;
     }
   }
-  if (!hasTool) return thinking ? '思考过程' : '任务进程';
-  return '加载了工具${phrases.join()}';
+  if (!hasTool)
+    return thinking ? strings.dshReasoning() : strings.dshTaskProgress();
+  return strings.dshToolsSummary(tools: phrases.join(', '));
 }
 
-String? _categoryPhrase(String? name) => switch (name) {
-  'read' || 'read_image' => '读取文件',
-  'write' => '写入文件',
-  'edit' || 'str_replace_editor' => '修改文件',
-  'bash' || 'pwsh' || 'terminal_send' || 'shell' => '运行了命令',
-  'glob' || 'grep' => '搜索文件',
-  'web_search' => '搜索网络',
-  'web_fetch' => '读取网页',
-  'present' => '交付文件',
-  _ => null,
-};
+String? _categoryPhrase(String? name, OpenMuseStrings strings) =>
+    switch (name) {
+      'read' || 'read_image' => strings.dshReadFiles(),
+      'write' => strings.dshWriteFiles(),
+      'edit' || 'str_replace_editor' => strings.dshEditFiles(),
+      'bash' || 'pwsh' || 'terminal_send' || 'shell' => strings.dshCommands(),
+      'glob' || 'grep' => strings.dshSearchFiles(),
+      'web_search' => strings.dshSearchWeb(),
+      'web_fetch' => strings.dshFetchWeb(),
+      'present' => strings.dshPresentFiles(),
+      _ => null,
+    };
 
-String dshProcessActivityLabel(DshConversationRow row) {
+String dshProcessActivityLabel(
+  DshConversationRow row, {
+  OpenMuseStrings? strings,
+}) {
+  strings ??= OpenMuseStrings.fallback;
   final arguments = _toolArguments(row);
   final running = DshProcessMoment.tool(row).isRunningTool;
   final name = row.nativeKey;
   if (_isShell(name)) {
     final command = _commandOf(arguments);
     final verb = row.failed
-        ? '运行失败'
+        ? strings.dshRunFailed()
         : running
-        ? '正在运行'
-        : '已运行';
+        ? strings.dshRunning()
+        : strings.dshRan();
     if (command == null) return verb;
     return '$verb ${_oneLine(command)}';
   }
@@ -163,27 +174,27 @@ String dshProcessActivityLabel(DshConversationRow row) {
     final verb = switch (name) {
       'read' || 'read_image' =>
         row.failed
-            ? '读取失败'
+            ? strings.dshReadFailed()
             : running
-            ? '正在读取'
-            : '已读取',
+            ? strings.dshReading()
+            : strings.dshRead(),
       'write' =>
         row.failed
-            ? '写入失败'
+            ? strings.dshWriteFailed()
             : running
-            ? '正在写入'
-            : '已写入',
+            ? strings.dshWriting()
+            : strings.dshWritten(),
       'edit' || 'str_replace_editor' =>
         row.failed
-            ? '修改失败'
+            ? strings.dshEditFailed()
             : running
-            ? '正在修改'
-            : '已修改',
+            ? strings.dshEditing()
+            : strings.dshEdited(),
       _ => null,
     };
     if (verb != null) return '$verb $file';
   }
-  return row.title ?? '工具调用';
+  return row.title ?? strings.dshToolCall();
 }
 
 String? _argumentPath(Object? arguments) {
@@ -269,7 +280,10 @@ final class _DshProcessTrailState extends State<DshProcessTrail> {
           _TrailLine(
             key: ValueKey('dsh-native.process.toggle:$anchor'),
             icon: true,
-            label: dshProcessSummary(widget.moments),
+            label: dshProcessSummary(
+              widget.moments,
+              strings: stringsOf(context),
+            ),
             muted: muted,
             expanded: _expanded,
             onTap: () => setState(() => _expanded = !_expanded),
@@ -292,7 +306,7 @@ final class _DshProcessTrailState extends State<DshProcessTrail> {
                         child: Text(
                           (moment.reasoning == null ||
                                   moment.reasoning!.isEmpty)
-                              ? '正在思考 …'
+                              ? stringsOf(context).dshThinking()
                               : moment.reasoning!,
                           style: TextStyle(
                             fontSize: 13,
@@ -318,7 +332,6 @@ final class _TrailLine extends StatelessWidget {
     required this.muted,
     required this.expanded,
     required this.onTap,
-    this.showChevron = true,
   });
 
   final bool icon;
@@ -326,7 +339,6 @@ final class _TrailLine extends StatelessWidget {
   final Color muted;
   final bool expanded;
   final VoidCallback onTap;
-  final bool showChevron;
 
   @override
   Widget build(BuildContext context) => InkWell(
@@ -348,12 +360,11 @@ final class _TrailLine extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: muted),
             ),
           ),
-          if (showChevron)
-            AnimatedRotation(
-              turns: expanded ? .25 : 0,
-              duration: const Duration(milliseconds: 150),
-              child: Icon(Icons.chevron_right_rounded, size: 18, color: muted),
-            ),
+          AnimatedRotation(
+            turns: expanded ? .25 : 0,
+            duration: const Duration(milliseconds: 150),
+            child: Icon(Icons.chevron_right_rounded, size: 18, color: muted),
+          ),
         ],
       ),
     ),
@@ -399,7 +410,7 @@ final class _ProcessToolRowState extends State<_ProcessToolRow> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    dshProcessActivityLabel(row),
+                    dshProcessActivityLabel(row, strings: stringsOf(context)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 14, color: muted),

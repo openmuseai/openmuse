@@ -1,3 +1,4 @@
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:flutter/material.dart';
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
 
@@ -27,9 +28,9 @@ final class _DshTodoPanelState extends State<DshTodoPanel> {
         .length;
     final pending = todos.length - done - active;
     final progress = [
-      if (done > 0) '$done 已完成',
-      if (active > 0) '$active 进行中',
-      if (pending > 0) '$pending 待处理',
+      if (done > 0) stringsOf(context).dshCompletedCount(count: done),
+      if (active > 0) stringsOf(context).dshActiveCount(count: active),
+      if (pending > 0) stringsOf(context).dshPendingCount(count: pending),
     ].join('\u2002·\u2002');
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -56,8 +57,8 @@ final class _DshTodoPanelState extends State<DshTodoPanel> {
                         color: colors.onSurfaceVariant,
                       ),
                       const SizedBox(width: 10),
-                      const Text(
-                        '任务',
+                      Text(
+                        stringsOf(context).dshTasks(),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
