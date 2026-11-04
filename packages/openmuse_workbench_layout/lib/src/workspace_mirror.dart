@@ -21,6 +21,7 @@ final class WorkspaceMirrorEntry {
     required this.isDirectory,
     this.resourceRef,
     this.mediaType,
+    this.canRestore = false,
   });
 
   final String nodeRef;
@@ -28,6 +29,7 @@ final class WorkspaceMirrorEntry {
   final bool isDirectory;
   final String? resourceRef;
   final String? mediaType;
+  final bool canRestore;
 }
 
 final class WorkspaceMirrorPage {
@@ -49,6 +51,16 @@ abstract interface class WorkspaceMirrorPort {
   });
 }
 
+/// Authenticated, Desktop-owned mutations; paths never grant browser-local access.
+abstract interface class WorkspaceActionPort {
+  Future<void> performWorkspaceAction({
+    required String workspaceRef,
+    required String operation,
+    String? nodeRef,
+    String? name,
+  });
+}
+
 abstract interface class WorkspaceResourcePort {
   Future<Uint8List> readResource({
     required String workspaceRef,
@@ -65,6 +77,7 @@ final class WorkspaceMirrorNode {
     required int generation,
     this.resourceRef,
     this.mediaType,
+    this.canRestore = false,
   }) : _generation = generation;
 
   final String mountRef;
@@ -73,6 +86,7 @@ final class WorkspaceMirrorNode {
   final bool isDirectory;
   final String? resourceRef;
   final String? mediaType;
+  final bool canRestore;
   final int _generation;
   final List<WorkspaceMirrorNode> children = [];
   bool expanded = false;
@@ -218,6 +232,7 @@ final class WorkspaceMirrorController extends ChangeNotifier {
             generation: generation,
             resourceRef: entry.resourceRef,
             mediaType: entry.mediaType,
+            canRestore: entry.canRestore,
           ),
         );
       }
