@@ -1,5 +1,7 @@
 library;
 
+import 'package:openmuse_client_plugins/openmuse_client_plugins.dart';
+
 import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
 import 'package:openmuse_cli_plugin/openmuse_cli_plugin.dart';
 import 'package:openmuse_file_viewer/openmuse_file_viewer.dart';
@@ -16,6 +18,7 @@ List<OpenMusePlugin> createOpenMuseBuiltInPlugins({
   Future<bool> Function(PluginInteraction)? routeInteraction,
   Widget? Function(String pluginId)? nativeMcpEditorBuilder,
 }) => [
+  ...createOpenMuseClientPlugins(),
   OpenMuseHelixPlugin(),
   OpenMuseCliPlugin(),
   OpenMusePluginMarket(nativeEditorBuilder: nativeMcpEditorBuilder),
