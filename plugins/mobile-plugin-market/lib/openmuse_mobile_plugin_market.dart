@@ -1,4 +1,6 @@
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -23,6 +25,8 @@ export 'src/mcp_remote_market.dart'
         RemoteMcpViewConnection,
         RemoteMcpResourceHostScope;
 
+enum MobileMarketMode { discover, installed }
+
 final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
   OpenMuseMobilePluginMarket(
     this.store, {
@@ -30,13 +34,18 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
     this.mcpRegistryOrigin,
     this.registryProviders,
     this.nativeMediaTypes = const {},
+    this.allowedMcpPackages,
     this.openNativeFile,
   });
+  late final builtInPreferences = MobileBuiltInPreferences(
+    File('${store.directory.path}/built-in-enablement.json'),
+  );
   final MobilePluginStore store;
   final MobileMarketSource source;
   final Uri? mcpRegistryOrigin;
   final McpRegistryProviders? registryProviders;
   final Map<String, Set<String>> nativeMediaTypes;
+  final Map<String, String>? allowedMcpPackages;
   final Future<void> Function(BuildContext, RemoteMcpEntry, File)?
   openNativeFile;
 
@@ -63,7 +72,7 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
 
   @override
   Widget buildEditor(BuildContext context, OpenMuseResource resource) =>
-      const Center(child: Text('插件市场不编辑文件'));
+      Center(child: Text(stringsOf(context).marketMarketNoEditor()));
 
   @override
   Widget? buildPanel(BuildContext context, String panelId) =>
@@ -74,6 +83,7 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
           mcpRegistryOrigin: mcpRegistryOrigin,
           registryProviders: registryProviders,
           nativeMediaTypes: nativeMediaTypes,
+          allowedMcpPackages: allowedMcpPackages,
           openNativeFile: openNativeFile,
         )
       : null;
@@ -82,6 +92,8 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
     PairedDesktopMarketClient? desktop,
     bool embedded = false,
     bool initialMine = false,
+    MobileMarketMode? mode,
+    VoidCallback? onDiscover,
     OpenMusePluginRegistry? pluginRegistry,
     ValueChanged<OpenMusePlugin>? onOpenBuiltIn,
     VoidCallback? onManageWorkbench,
@@ -91,12 +103,16 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
     desktop: desktop,
     embedded: embedded,
     initialMine: initialMine,
+    mode: mode,
+    onDiscover: onDiscover,
+    builtInPreferences: builtInPreferences,
     pluginRegistry: pluginRegistry,
     onOpenBuiltIn: onOpenBuiltIn,
     onManageWorkbench: onManageWorkbench,
     mcpRegistryOrigin: mcpRegistryOrigin,
     registryProviders: registryProviders,
     nativeMediaTypes: nativeMediaTypes,
+    allowedMcpPackages: allowedMcpPackages,
     openNativeFile: openNativeFile,
   );
 }
@@ -130,7 +146,7 @@ final class OpenMuseQuickJsInstalledPlugin implements OpenMusePlugin {
 
   @override
   Widget buildEditor(BuildContext context, OpenMuseResource resource) =>
-      const Center(child: Text('该插件没有文件编辑器'));
+      Center(child: Text(stringsOf(context).marketNoEditor()));
 
   @override
   Widget? buildPanel(BuildContext context, String panelId) =>
@@ -198,12 +214,16 @@ final class MobileMarketPage extends StatefulWidget {
     this.desktop,
     this.embedded = false,
     this.initialMine = false,
+    this.mode,
+    this.onDiscover,
+    this.builtInPreferences,
     this.pluginRegistry,
     this.onOpenBuiltIn,
     this.onManageWorkbench,
     this.mcpRegistryOrigin,
     this.registryProviders,
     this.nativeMediaTypes = const {},
+    this.allowedMcpPackages,
     this.openNativeFile,
   });
   final MobilePluginStore store;
@@ -211,12 +231,16 @@ final class MobileMarketPage extends StatefulWidget {
   final PairedDesktopMarketClient? desktop;
   final bool embedded;
   final bool initialMine;
+  final MobileMarketMode? mode;
+  final VoidCallback? onDiscover;
+  final MobileBuiltInPreferences? builtInPreferences;
   final OpenMusePluginRegistry? pluginRegistry;
   final ValueChanged<OpenMusePlugin>? onOpenBuiltIn;
   final VoidCallback? onManageWorkbench;
   final Uri? mcpRegistryOrigin;
   final McpRegistryProviders? registryProviders;
   final Map<String, Set<String>> nativeMediaTypes;
+  final Map<String, String>? allowedMcpPackages;
   final Future<void> Function(BuildContext, RemoteMcpEntry, File)?
   openNativeFile;
 
@@ -228,13 +252,18 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
   List<MobileMarketEntry>? entries;
   String? error;
   String? busy;
-  String category = '精选';
+  late String category = mine ? '全部' : '精选';
   String query = '';
-  late bool mine = widget.initialMine;
+  final _search = TextEditingController();
+  final _operation = ValueNotifier<String?>(null);
+  final _installFailure = ValueNotifier<String?>(null);
+  late bool mine =
+      widget.mode == MobileMarketMode.installed || widget.initialMine;
 
   @override
   void initState() {
     super.initState();
+    if (mine) entries = [];
     widget.store.addListener(_refresh);
     widget.pluginRegistry?.addListener(_refresh);
     unawaited(_load());
@@ -245,19 +274,29 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
   }
 
   Future<void> _load() async {
+    if (mounted) setState(() => error = null);
     try {
       final loaded = await widget.source.list();
-      if (mounted) setState(() => entries = loaded);
+      if (mounted)
+        setState(() {
+          entries = loaded;
+          error = null;
+        });
     } catch (exception) {
       if (mounted)
         setState(() {
-          entries = [];
-          error = '$exception';
+          entries ??= [];
+          error = stringsOf(context).marketOpenFailed(
+            title: stringsOf(context).marketCategoryDiscover(),
+          );
         });
     }
   }
 
   Future<void> _install(MobileMarketEntry entry) async {
+    if (busy != null) return;
+    _operation.value = entry.id;
+    _installFailure.value = null;
     setState(() {
       busy = entry.id;
       error = null;
@@ -265,9 +304,16 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
     try {
       await widget.store.install(entry, await widget.source.artifact(entry));
     } catch (exception) {
-      if (mounted) setState(() => error = '$exception');
+      if (mounted)
+        setState(() {
+          error = stringsOf(context).marketOpenFailed(title: entry.name);
+          _installFailure.value = error;
+        });
     } finally {
-      if (mounted) setState(() => busy = null);
+      if (mounted) {
+        _operation.value = null;
+        setState(() => busy = null);
+      }
     }
   }
 
@@ -314,8 +360,11 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
           ),
         ),
       );
-    } on Object catch (failure) {
-      if (mounted) setState(() => error = '无法打开插件：$failure');
+    } on Object {
+      if (mounted)
+        setState(
+          () => error = stringsOf(context).marketOpenFailed(title: entry.name),
+        );
     }
   }
 
@@ -325,6 +374,11 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
         builder: (_) => MarketPluginDetailPage(
           entry: entry,
           store: widget.store,
+          operation: _operation,
+          installationFailure: _installFailure,
+          onShowOverview: entry.runtime == 'webview'
+              ? widget.onManageWorkbench
+              : null,
           onInstall: () => unawaited(_install(entry)),
           onOpen: () => unawaited(_open(entry, preview: false)),
           onPreview: () => unawaited(_open(entry, preview: true)),
@@ -342,6 +396,9 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
 
   @override
   void dispose() {
+    _search.dispose();
+    _operation.dispose();
+    _installFailure.dispose();
     widget.store.removeListener(_refresh);
     widget.pluginRegistry?.removeListener(_refresh);
     super.dispose();
@@ -352,31 +409,73 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
     if (registry == null) return const [];
     return [
       for (final descriptor in registry.descriptors)
-        if (registry.plugin(descriptor.id)
-            case final OpenMuseMobileWorkbenchContributor contributor)
-          contributor as OpenMusePlugin,
+        if (registry.plugin(descriptor.id) case final OpenMusePlugin plugin)
+          if (!widget.store.isInstalled(plugin.descriptor.id) &&
+              (widget.mode == MobileMarketMode.installed
+                  ? mobilePluginCanBeManaged(plugin)
+                  : plugin is OpenMuseMobileWorkbenchContributor))
+            plugin,
+    ];
+  }
+
+  List<MobileMarketEntry> get _visibleEntries {
+    if (!mine) return entries ?? [];
+    final available = {
+      for (final entry in entries ?? <MobileMarketEntry>[]) entry.id: entry,
+    };
+    return [
+      for (final bundle in widget.store.installedBundles)
+        available[bundle.id] ??
+            MobileMarketEntry(
+              id: bundle.id,
+              name: bundle.manifest.name,
+              version: bundle.version,
+              description: '',
+              author: '',
+              platforms: [
+                for (final target in bundle.manifest.compatibility)
+                  if (target.status == OpenMuseTargetStatus.supported)
+                    target.target.os.name,
+              ],
+              bundle: '',
+              sha256: '',
+              runtime: bundle.isWebView ? 'webview' : 'quickjs',
+              permissions: bundle.manifest.requestedPermissions.toList(),
+            ),
     ];
   }
 
   @override
   Widget build(BuildContext context) => entries == null
-      ? Scaffold(
-          body: Center(
-            child: error == null
-                ? const CircularProgressIndicator()
-                : Text(error!),
-          ),
-        )
+      ? const MarketLoadingView()
       : MarketDiscoverView(
-          entries: entries!,
+          entries: _visibleEntries,
+          onRetry: () => unawaited(_load()),
           store: widget.store,
           category: category,
           mine: mine,
+          showSections: widget.mode == null,
+          searchController: _search,
+          showAppBar: widget.mode != null && !widget.embedded,
+          onDiscover: widget.onDiscover,
+          onManageBuiltIn: widget.mode == MobileMarketMode.installed
+              ? (plugin) => Navigator.of(context).push<void>(
+                  MaterialPageRoute(
+                    builder: (_) => BuiltInPluginManagementPage(
+                      plugin: plugin,
+                      registry: widget.pluginRegistry!,
+                      preferences: widget.builtInPreferences,
+                      onOpen: widget.onOpenBuiltIn,
+                    ),
+                  ),
+                )
+              : null,
           query: query,
           onSection: (value) => setState(() {
             mine = value;
             category = value ? '全部' : '精选';
             query = '';
+            _search.clear();
           }),
           error: error,
           busy: busy,
@@ -400,6 +499,7 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
                   origin: widget.mcpRegistryOrigin,
                   providers: widget.registryProviders,
                   nativeMediaTypes: widget.nativeMediaTypes,
+                  allowedPackages: widget.allowedMcpPackages,
                   openNativeFile: widget.openNativeFile,
                   embedded: true,
                   query: query,
@@ -407,9 +507,9 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
                   visibleCategory: category,
                 ),
           desktopSection: widget.desktop == null
-              ? const Padding(
-                  padding: EdgeInsets.all(14),
-                  child: Text('连接 Desktop 后可管理其插件。'),
+              ? Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Text(stringsOf(context).marketConnectDesktop()),
                 )
               : _DesktopMarketSection(client: widget.desktop!),
         );
@@ -556,7 +656,7 @@ final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '${entry['description'] ?? '在配对的 Desktop DSH 中使用。'}',
+                  '${entry['description'] ?? stringsOf(context).marketDesktopUsage()}',
                   style: TextStyle(
                     fontSize: 13,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -568,10 +668,10 @@ final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
                   const SizedBox(height: 12),
                   Text(
                     plans[entry['id']]?['enabled'] == true
-                        ? '已启用'
+                        ? stringsOf(context).marketEnabled()
                         : plans[entry['id']]?['installedVersion'] != null
-                        ? '已禁用'
-                        : '未安装',
+                        ? stringsOf(context).marketDisabled()
+                        : stringsOf(context).marketNotInstalled(),
                   ),
                   const SizedBox(height: 8),
                   if (busy == entry['id'])
@@ -584,18 +684,20 @@ final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
                           FilledButton(
                             onPressed: () => _act('$action', '${entry['id']}'),
                             child: Text(
-                              action == 'install' ? '安装到 Desktop' : '启用',
+                              action == 'install'
+                                  ? stringsOf(context).marketInstallDesktop()
+                                  : stringsOf(context).marketEnable(),
                             ),
                           ),
                         if (plans[entry['id']]?['enabled'] == true)
                           OutlinedButton(
                             onPressed: () => _act('disable', '${entry['id']}'),
-                            child: Text('禁用'),
+                            child: Text(stringsOf(context).marketDisable()),
                           ),
                       ],
                     ),
                   Text(
-                    '启停后需重启 Desktop DSH。',
+                    stringsOf(context).marketRestartDesktop(),
                     style: TextStyle(
                       fontSize: 11,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -659,7 +761,11 @@ final class _PluginRunPageState extends State<_PluginRunPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(widget.preview ? '${widget.title} · 预览' : widget.title),
+      title: Text(
+        widget.preview
+            ? stringsOf(context).marketPreviewTitle(title: widget.title)
+            : widget.title,
+      ),
     ),
     body: error != null
         ? Center(child: Text(error!))
@@ -684,5 +790,193 @@ final class _PluginRunPageState extends State<_PluginRunPage> {
               ],
             ),
           ),
+  );
+}
+
+bool mobilePluginCanBeManaged(OpenMusePlugin plugin) =>
+    plugin is OpenMuseMobileWorkbenchContributor ||
+    plugin is OpenMuseResourceHandlerContributor ||
+    plugin is OpenMuseResourceCreatorContributor;
+
+/// Device/region installation state, independent of account document data.
+final class MobileBuiltInPreferences {
+  MobileBuiltInPreferences(this.file);
+  final File file;
+  Map<String, Object?>? _values;
+  Future<Map<String, Object?>> _read() async {
+    if (_values != null) return _values!;
+    if (!await file.exists()) return _values = {};
+    try {
+      return _values = Map<String, Object?>.from(
+        jsonDecode(await file.readAsString()) as Map,
+      );
+    } on Object {
+      return _values = {};
+    }
+  }
+
+  Future<bool> isEnabled(String id) async => (await _read())[id] != false;
+  Future<void> setEnabled(
+    OpenMusePluginRegistry registry,
+    OpenMusePlugin plugin,
+    bool enabled,
+  ) async {
+    if (!mobilePluginCanBeManaged(plugin))
+      throw StateError('Plugin is managed by the application');
+    final previous =
+        registry.stateOf(plugin.descriptor.id) == OpenMusePluginState.active;
+    if (enabled) {
+      await registry.activate(plugin.descriptor.id);
+    } else {
+      await registry.deactivate(plugin.descriptor.id);
+    }
+    final values = {...await _read(), plugin.descriptor.id: enabled};
+    try {
+      await file.parent.create(recursive: true);
+      final temporary = File(
+        '${file.path}.${DateTime.now().microsecondsSinceEpoch}.tmp',
+      );
+      await temporary.writeAsString(jsonEncode(values), flush: true);
+      await temporary.rename(file.path);
+      _values = values;
+    } on Object {
+      if (previous) {
+        await registry.activate(plugin.descriptor.id);
+      } else {
+        await registry.deactivate(plugin.descriptor.id);
+      }
+      rethrow;
+    }
+  }
+}
+
+final class BuiltInPluginManagementPage extends StatefulWidget {
+  const BuiltInPluginManagementPage({
+    super.key,
+    required this.plugin,
+    required this.registry,
+    this.preferences,
+    this.onOpen,
+  });
+  final OpenMusePlugin plugin;
+  final OpenMusePluginRegistry registry;
+  final MobileBuiltInPreferences? preferences;
+  final ValueChanged<OpenMusePlugin>? onOpen;
+  @override
+  State<BuiltInPluginManagementPage> createState() =>
+      _BuiltInPluginManagementPageState();
+}
+
+final class _BuiltInPluginManagementPageState
+    extends State<BuiltInPluginManagementPage> {
+  bool busy = false;
+  String? failure;
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: widget.registry,
+    builder: (context, _) {
+      final s = stringsOf(context), colors = Theme.of(context).colorScheme;
+      final active =
+          widget.registry.stateOf(widget.plugin.descriptor.id) ==
+          OpenMusePluginState.active;
+      final title = builtinPluginDisplayName(
+        context,
+        widget.plugin.descriptor.id,
+        widget.plugin.descriptor.name,
+      );
+      return Scaffold(
+        appBar: AppBar(title: Text(s.marketMyPlugins())),
+        body: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: .09),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Icon(
+                    Icons.widgets_outlined,
+                    color: colors.primary,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 23,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text(
+              active ? s.mobileEnabledHere() : s.mobileDisabledHere(),
+              style: TextStyle(color: colors.onSurfaceVariant),
+            ),
+            const SizedBox(height: 24),
+            if (widget.plugin is OpenMuseMobileWorkbenchContributor &&
+                widget.onOpen != null)
+              FilledButton(
+                key: const ValueKey('installed-plugin-open'),
+                onPressed: active ? () => widget.onOpen!(widget.plugin) : null,
+                child: Text(s.mobileOpenApp()),
+              ),
+            const SizedBox(height: 12),
+            if (failure != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text(failure!, style: TextStyle(color: colors.error)),
+              ),
+            OutlinedButton(
+              key: const ValueKey('installed-plugin-toggle'),
+              onPressed: busy
+                  ? null
+                  : () async {
+                      setState(() {
+                        busy = true;
+                        failure = null;
+                      });
+                      try {
+                        final preferences = widget.preferences;
+                        if (preferences != null) {
+                          await preferences.setEnabled(
+                            widget.registry,
+                            widget.plugin,
+                            !active,
+                          );
+                        } else if (active) {
+                          await widget.registry.deactivate(
+                            widget.plugin.descriptor.id,
+                          );
+                        } else {
+                          await widget.registry.activate(
+                            widget.plugin.descriptor.id,
+                          );
+                        }
+                      } on Object {
+                        if (mounted)
+                          setState(
+                            () => failure = s.marketOpenFailed(title: title),
+                          );
+                      } finally {
+                        if (mounted) setState(() => busy = false);
+                      }
+                    },
+              child: Text(
+                active ? s.mobileDisablePlugin() : s.mobileEnablePlugin(),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
   );
 }

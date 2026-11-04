@@ -89,13 +89,13 @@ void main() {
         );
         for (
           var i = 0;
-          i < 30 && find.textContaining('已下架').evaluate().isEmpty;
+          i < 30 && find.textContaining('Delisted').evaluate().isEmpty;
           i++
         ) {
           await Future<void>.delayed(const Duration(milliseconds: 30));
           await tester.pump();
         }
-        expect(find.textContaining('1.0.0 · 已下架'), findsOneWidget);
+        expect(find.textContaining('1.0.0 · Delisted'), findsOneWidget);
         expect(find.text('2.0.0'), findsNothing);
         await tester.pumpWidget(const SizedBox());
         await server.close(force: true);

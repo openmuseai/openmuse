@@ -246,6 +246,11 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_localizations:
+    dependency: transitive
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   flutter_markdown_plus:
     dependency: transitive
     description:
@@ -340,10 +345,10 @@ packages:
     dependency: transitive
     description:
       name: intl
-      sha256: "1ca20c894b1717686a2319b8548763d812bc0aabdac580420a44c5178c57a867"
+      sha256: "3df61194eb431efc39c4ceba583b95633a403f46c9fd341e550ce0bfa50e9aa5"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.20.3"
+    version: "0.20.2"
   jni:
     dependency: transitive
     description:
@@ -464,6 +469,20 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.0"
+  muse_resource_center:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_resource_center"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_resource_contract:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_resource_contract"
+      relative: true
+    source: path
+    version: "0.1.0"
   objective_c:
     dependency: transitive
     description:
@@ -472,6 +491,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "9.5.0"
+  openmuse_i18n:
+    dependency: "direct main"
+    description:
+      path: "../../packages/openmuse_i18n"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_market_ui:
     dependency: "direct main"
     description:
@@ -497,6 +523,13 @@ packages:
     dependency: "direct main"
     description:
       path: "../../packages/openmuse_registry_provider"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_runtime_config:
+    dependency: transitive
+    description:
+      path: "../../packages/openmuse_runtime_config"
       relative: true
     source: path
     version: "0.1.0"
@@ -605,7 +638,7 @@ packages:
     source: hosted
     version: "1.9.4"
   pub_semver:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: pub_semver
       sha256: "261236774e8b1d69cfc6b9eabbc96c40f25e7a2d6b171f3385d4f65d5734fb24"
