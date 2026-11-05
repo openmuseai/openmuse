@@ -1,0 +1,39 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for the AppFlowy Web 
+title: "[FR] "
+body:
+  - type: textarea
+    id: feature_description
+    attributes:
+      label: Feature Description
+      description: "Describe the feature you'd like to see in AppFlowy Web. Include its purpose, functionality, and how it would improve the user experience."
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_cases
+    attributes:
+      label: Use Cases
+      description: "Provide specific examples or scenarios where this feature would be helpful. How will it be used in real-world situations?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_impact
+    attributes:
+      label: User Impact
+      description: "Explain the types of users (e.g., developers, designers, managers) who would benefit from this feature. Highlight how it addresses their needs."
+    validations:
+      required: true
+
+  - type: textarea
+    id: potential_implementation
+    attributes:
+      label: Potential Implementation Ideas
+      description: "If you have thoughts on how this feature could be implemented, share them here. Include technical or design ideas, if applicable."
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: "Provide any other relevant context, references, or links that could help us understand or evaluate your suggestion."

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Do not use base-config/debug-overrides: those broaden CA trust. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">dsh.openmuseai.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/dsh_trusted_ca" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

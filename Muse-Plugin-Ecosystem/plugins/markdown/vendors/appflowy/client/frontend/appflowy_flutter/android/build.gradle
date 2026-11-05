@@ -1,0 +1,48 @@
+buildscript {
+    ext.kotlin_version = '2.1.20'
+    ext.agp_version = '8.8.2'
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:$agp_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = '../build'
+// All Flutter plugins share the app's Android/Kotlin toolchain. Some plugins
+// declare their own (older or newer) buildscript versions; resolving those
+// separately duplicates compilers and can load incompatible plugin classes.
+subprojects {
+    buildscript.configurations.configureEach {
+        resolutionStrategy.force(
+            "com.android.tools.build:gradle:${rootProject.ext.agp_version}",
+            "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.ext.kotlin_version}"
+        )
+    }
+    afterEvaluate {
+        if (plugins.hasPlugin('com.android.library')) {
+            // Compile plugins against the same SDK as the app. This does not
+            // change their minSdk or the app's device compatibility.
+            android.compileSdkVersion 35
+        }
+    }
+}
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+    project.evaluationDependsOn(':app')
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

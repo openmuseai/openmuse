@@ -1,0 +1,36 @@
+.custom-color-picker.react-colorful {
+  width: auto;
+}
+
+.custom-color-picker .react-colorful__saturation {
+  height: 160px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.custom-color-picker .react-colorful__hue {
+  height: 24px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.custom-color-picker .react-colorful__saturation-pointer,
+.custom-color-picker .react-colorful__hue-pointer {
+  width: 23px;
+  height: 23px;
+  border-radius: 12px;
+  border: 2px solid white;
+  outline: 1px solid black;
+  box-shadow: none;
+}
+
+.custom-color-picker .react-colorful__pointer-fill {
+  background-color: transparent;
+}
+
+.custom-color-picker .react-colorful__interactive:focus .react-colorful__pointer {
+  transform: translate(-50%, -50%);
+}

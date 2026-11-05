@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.eslintrc.cjs
+tsconfig.json
+**/backend/**
+vite.config.ts
+**/*.cy.tsx
+*.config.ts
+coverage/
+src/proto/**/*
+cypress/e2e/**
+scripts/export-indexeddb-to-zip.js

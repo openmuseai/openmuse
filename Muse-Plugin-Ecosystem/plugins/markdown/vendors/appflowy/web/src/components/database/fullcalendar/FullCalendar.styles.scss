@@ -1,0 +1,998 @@
+/* =============================================
+   FullCalendar Custom Styles
+   ============================================= */
+
+/* CSS Variables */
+:root {
+  --fc-border-color: var(--border-primary);
+  --fc-timegrid-axis-width: 63px; /* Width of the all-day/time axis area in week view */
+  --fc-today-bg-color: transparent;
+  --fc-event-bg-color: var(--other-colors-filled-event);
+  --fc-highlight-color: var(--fill-theme-select);
+}
+
+.database-calendar {
+  /* Event height configuration */
+  --fc-daygrid-event-height: 22px;
+  
+  /* Disable momentum scrolling and overscroll behavior */
+  -webkit-overflow-scrolling: auto; /* Disable momentum scrolling on iOS */
+  overscroll-behavior: none; /* Prevent overscroll bounce */
+  scroll-behavior: auto; /* Disable smooth scrolling */
+
+  /* =============================================
+     1. Base Calendar Styles
+     ============================================= */
+  
+  
+  .fc {
+    font-family: inherit;
+    font-size: 0.875rem;
+    
+    &.fc-theme-standard {
+      height: 100%;
+      
+      .fc-view-harness {
+        height: 100%;
+      }
+    }
+
+    .fc-timegrid-slots, .fc-timegrid-cols, .fc-daygrid-body {
+      > table > colgroup > col {
+        width: var(--fc-timegrid-axis-width) !important;
+      }
+    }
+  }
+
+  /* Remove all outer borders */
+  .fc-scrollgrid {
+    border: none !important;
+  }
+  
+  .fc-scrollgrid-section-header th {
+    border: none !important;
+  }
+  
+  .fc-scrollgrid-section-body {
+    border: none !important;
+    
+    > td {
+      border: 1px solid theme('colors.border.primary') !important;
+    }
+  }
+
+  .fc-day-other .fc-daygrid-day-top {
+    opacity: 1 !important;
+  }
+
+  /* =============================================
+     2. Month View Styles
+     ============================================= */
+  
+  &.month-view {
+    .fc {
+      height: 100%;
+      /* Remove overflow hidden to allow container expansion */
+      
+      /* Hide scrollbars in month view */
+      .fc-scroller {
+        overflow: hidden !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        position: static !important; /* Remove absolute positioning that causes inset:0 */
+        inset: auto !important; /* Override inset: 0 that prevents expansion */
+        
+        &::-webkit-scrollbar {
+          display: none !important;
+        }
+      }
+     
+      
+      .fc-daygrid-day-top {
+        height: 28px;
+      }
+
+      /* Month view cell minimum height settings */
+      .fc-daygrid-day {
+        min-height: 114px; /* Set minimum height for each date cell */
+      }
+      
+      .fc-daygrid-day-frame {
+        min-height: 114px; /* Ensure the entire date frame has minimum height */
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+
+      }
+      
+      .fc-daygrid-day-events {
+        min-height: 60px; /* Minimum height for event area */
+        flex-grow: 1;
+      }
+      
+      .fc-daygrid-day-top {
+        flex-shrink: 0; /* Prevent date number from shrinking */
+        height: 28px;
+      }
+    }
+  }
+
+
+  /* =============================================
+     3. Week View Styles
+     ============================================= */
+  
+  &.week-view {
+    padding-bottom: 2rem;
+    
+    .fc {
+      height: calc(100% - 2rem) !important;
+      
+      .fc-view-harness {
+        height: 100% !important;
+      }
+
+      .fc-daygrid-day, .fc-daygrid-day-frame {
+        min-height: 26px !important;
+        height: auto;
+        max-height: 72px;
+        
+      }
+      /* Hide and remove borders for divider sections */
+      .fc-scrollgrid-section:has(.fc-timegrid-divider.fc-cell-shaded) {
+        display: none !important;
+      }
+      
+      .fc-timegrid-divider,
+      .fc-cell-shaded {
+        border: none !important;
+      }
+
+      .fc-theme-standard .fc-scrollgrid {
+        border: none !important;
+      }
+
+      .fc-daygrid-day:nth-child(2) {
+        border-right: none !important;
+        border-left: none !important;
+      }
+
+      .fc-timegrid-cols tbody td:nth-child(1) {
+        border-right: none !important;
+      }
+      
+      .fc-scrollgrid-section {
+        border-left: none !important;
+        border-right: none !important;
+      }
+
+      .fc-timegrid-axis {
+        border: none !important;
+        width: var(--fc-timegrid-axis-width) !important;
+      }
+
+      .fc-timegrid-slot-label-cushion {
+        padding: 0;
+      }
+
+      .fc-scrollgrid-section-body > td {
+        border-left: none !important;
+        border-right: none !important;
+      }
+
+      .fc-timegrid-slots td,
+      .fc-timegrid-slots th {
+        border-left: none !important;
+        cursor: default;
+      }
+
+      .fc-timegrid-col:first-child,
+      .fc-timegrid-axis + .fc-timegrid-col {
+        border-left: none !important;
+      }
+
+      .fc-timegrid-body tr td:first-child {
+        border-left: none !important;
+        border-right: none !important;
+      }
+
+      .fc-timegrid-slots td:first-child {
+        border-left: none !important;
+      }
+
+      .fc-timegrid-axis-cushion::after {
+        border-right: none !important;
+      }
+
+      .fc-timegrid-body {
+        border-left: none !important;
+      }
+
+      .fc-timegrid-slots {
+        border-right: none !important;
+      }
+
+      .fc-timegrid-col:last-child,
+      .fc-col-header-cell:last-child {
+        border-right: none !important;
+      }
+
+      /* Weekend background colors */
+      .fc-timegrid-col.fc-day-sat,
+      .fc-timegrid-col.fc-day-sun,
+      .fc-daygrid-day.fc-day-sat,
+      .fc-daygrid-day.fc-day-sun {
+        @apply bg-surface-container-layer-00;
+      }
+
+      /* Today background (transparent) */
+      .fc-timegrid-body .fc-timegrid-col.fc-day-today,
+      .fc-daygrid-day.fc-day-today {
+        @apply bg-transparent !important;
+      }
+    }
+
+    .fc-daygrid-day-bottom {
+      @apply ml-0 mr-[1px] py-0.5;
+    }
+
+    .fc-event {
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .fc-daygrid-day-events .fc-event {
+      overflow: visible;
+    }
+    
+    .fc-daygrid-day-events .fc-daygrid-block-event:not(.fc-h-event) {
+      margin-top: 4px !important;
+      
+      .fc-event-main {
+        margin-top: 4px !important;
+      }
+    }
+  }
+
+  /* =============================================
+     4. Header and Column Styles
+     ============================================= */
+  
+  /* Hide native FullCalendar week header since we use custom sticky header */
+  .fc-col-header-row {
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .fc-col-header-cell {
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    padding: 0 !important;
+    font-size: 14px !important;
+    vertical-align: middle !important;
+    @apply bg-fill-content py-2;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    
+    .fc-theme-standard td,
+    .fc-theme-standard th {
+      border: none !important;
+    }
+    
+    .fc-col-header-cell-cushion {
+      @apply text-text-primary font-medium text-sm tracking-wide;
+      text-transform: capitalize;
+    }
+  }
+
+  /* Week view column header specific styles */
+  &.week-view .fc .fc-col-header-cell .fc-col-header-cell-cushion {
+    height: 32px !important;
+    line-height: 32px !important;
+    padding: 0 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Today's date styling in week view */
+  .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
+    @apply flex items-center gap-1 justify-center;
+    
+    .today-date {
+      @apply bg-other-colors-filled-today text-text-inverse rounded-300;
+      @apply min-w-6 w-fit h-6 flex items-center justify-center font-medium text-sm;
+      @apply inline-flex;
+    }
+  }
+
+  /* =============================================
+     5. Date Grid Styles
+     ============================================= */
+  
+  .fc-daygrid {
+    .fc-daygrid-day {
+      @apply relative;
+      border: none !important;
+      overflow: visible !important;
+      cursor: default;
+      border-bottom: 1px solid theme('colors.border.primary') !important;
+      border-right: none !important;
+
+      &:not(:nth-child(1)) {
+        border-left: 1px solid theme('colors.border.primary') !important;
+      }
+
+      /* Weekend background */
+      &.fc-day-sat,
+      &.fc-day-sun {
+        @apply bg-surface-container-layer-00;
+      }
+      
+      /* Today's styles */
+      &.fc-day-today {
+        @apply bg-transparent;
+        
+        .fc-daygrid-day-number {
+          @apply flex items-center px-1 justify-center font-medium;
+        }
+      }
+      
+      /* Non-current month dates */
+      &.fc-day-other .fc-daygrid-day-number {
+        @apply text-text-tertiary;
+      }
+    }
+
+    .fc-daygrid-day-number {
+      @apply text-text-primary font-normal text-sm;
+      padding: 4px 8px;
+    }
+  }
+
+  /* =============================================
+     6. Time Grid Styles (Week View)
+     ============================================= */
+  
+  &.week-view .fc {
+    /* Time slot configuration */
+    .fc-timegrid-slot {
+      height: 28px !important;
+      min-height: 28px !important;
+    }
+
+    /* Hide specific time labels */
+    .fc-timegrid-slot[data-time="00:00:00"] .fc-timegrid-slot-label,
+    .fc-timegrid-slot[data-time="12:00:00"] .fc-timegrid-slot-label,
+    .fc-timegrid-axis .fc-timegrid-slot-label:first-child,
+    .fc-timegrid-slot:first-child .fc-timegrid-slot-label,
+    .fc-timegrid-slot-minor:first-child .fc-timegrid-slot-label,
+    .fc-timegrid-slot-label[aria-label*="12:00 AM"],
+    .fc-timegrid-slot-label[aria-label*="12:00 PM"] {
+      display: none !important;
+    }
+    
+    /* Hide half-hour slots */
+    .fc-timegrid-slot[data-time$="30:00"] {
+      border-top: none !important;
+      
+      .fc-timegrid-slot-label {
+        display: none !important;
+      }
+    }
+    
+    /* Hide full hour time lines */
+    .fc-timegrid-slot[data-time$="00:00:00"] {
+      visibility: hidden !important;
+    }
+
+    /* Time label styling */
+    .fc-timegrid-slot-label {
+      @apply text-xs font-normal bg-background-primary;
+      padding: 0 4px !important;
+      text-align: left !important;
+      transform: translateY(-50%) !important;
+      position: relative !important;
+      z-index: 2 !important;
+      border-radius: 2px !important;
+      
+      .text-number {
+        @apply text-text-primary;
+      }
+      
+      .text-slot {
+        @apply text-text-secondary;
+      }
+
+      &.hidden-text {
+        .text-number, .text-slot {
+          @apply text-transparent;
+        }
+      }
+    }
+
+    /* Current time indicator */
+    .fc-timegrid-now-indicator-line {
+      @apply bg-other-colors-filled-today !important;
+      height: 2px !important;
+      z-index: 10;
+      position: relative !important;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        @apply bg-other-colors-filled-today;
+        border-radius: 50%;
+        z-index: 50;
+      }
+    }
+  
+
+    /* Current time label using FullCalendar's native arrow element */
+    .fc-timegrid-axis .fc-timegrid-now-indicator-arrow {
+      display: block !important; /* Override the previous display: none */
+      position: relative !important;
+      @apply bg-other-colors-filled-today rounded-200 py-0 px-0.5 text-text-inverse text-xs;
+      white-space: nowrap;
+      z-index: 20;
+      pointer-events: none;
+      left: 4px !important;
+      line-height: 18px;
+      transform: translateY(-3px) !important;
+      border: none !important;
+      width: 58px !important;
+      height: auto !important;
+      text-align: center;
+    }
+
+    /* Custom horizontal time indicator line */
+    .custom-now-indicator-line {
+      position: absolute !important;
+      height: 1px !important;
+      @apply bg-other-colors-filled-today !important;
+      z-index: 10 !important;
+      opacity: 25%;
+      pointer-events: none !important;
+    }
+
+    /* Scrollbar */
+    .fc-scroller {
+      height: 100% !important;
+      overflow-y: auto !important;
+      scrollbar-width: thin;
+      scrollbar-color: theme('colors.border.primary') transparent;
+      
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      &::-webkit-scrollbar-track {
+        @apply bg-transparent;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        @apply bg-border-primary rounded-full;
+        
+        &:hover {
+          @apply bg-border-primary-hover;
+        }
+      }
+    }
+    
+    .fc-timegrid {
+      min-height: 100%;
+    }
+    
+    .fc-scrollgrid {
+      height: 100% !important;
+    }
+  }
+
+  /* =============================================
+     7. Event Styles
+     ============================================= */
+  
+  .fc-event {
+    @apply border-0 bg-transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    
+    .fc-event-main {
+      @apply bg-transparent px-0 !important;
+    }
+
+    
+    .fc-event-title {
+      @apply bg-transparent truncate !important;
+    }
+
+  
+  }
+
+  .fc-event-past {
+    &:not(:hover):not(.fc-event-open) {
+      .event-inner, .event-title {
+        opacity: 0.50 !important;
+      }
+      .time-slot {
+        opacity: 0.50 !important;
+      }
+      .event-line {
+        opacity: 0.30 !important;
+      }
+    }
+  }
+
+  .fc-timegrid-event.fc-event-past:not(:hover):not(.fc-event-open) > .fc-event-main {
+    &:before {
+      opacity: 0.30 !important;
+    }
+  }
+
+  // .fc-daygrid-day, .fc-daygrid-day.fc-day-today {
+  //   &:hover {
+  //     @apply bg-fill-info-light;
+  //   }
+  // }
+
+  /* Week view event background */
+  &.week-view .fc-event {
+    @apply bg-other-colors-filled-event !important;
+    @apply hover:bg-other-colors-filled-event-hover  !important;
+  }
+
+  
+  /* Time grid events */
+  .fc-timegrid-event {
+    @apply rounded-200;
+    
+    .fc-event-main {
+      padding: 2px 4px !important;
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: flex-start !important;
+    }
+    
+    /* Override FullCalendar default heights */
+    &[style] {
+      height: auto !important;
+      min-height: auto !important;
+      top: var(--event-top, initial) !important;
+      bottom: auto !important;
+    }
+    
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    
+    /* Events without end time */
+    &.event-no-end,
+    &.event-no-end .fc-event-main {
+      height: 22px !important;
+      min-height: 22px !important;
+      max-height: 22px !important;
+      bottom: auto !important;
+    }
+    
+    &.event-no-end[style*="height"] {
+      height: 22px !important;
+    }
+
+    /* Events with duration */
+    &.event-with-duration {
+      height: auto !important;
+      min-height: 22px !important;
+    }
+  }
+
+  .fc-timegrid-event-harness {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    margin-right: 2px;
+    
+    &:has(.event-no-end) {
+      height: 22px !important;
+      min-height: 22px !important;
+      max-height: 22px !important;
+      bottom: auto !important;
+    }
+    
+    &:has(.event-no-end)[style*="height"] {
+      height: 22px !important;
+    }
+  }
+
+  /* All-day events */
+  .fc-daygrid-event {
+    height: var(--fc-daygrid-event-height) !important;
+    min-height: var(--fc-daygrid-event-height) !important;
+    max-height: var(--fc-daygrid-event-height) !important;
+    margin-bottom: 0px !important;
+    margin-left: 0 !important;
+    
+    .fc-event-main {
+      height: 100% !important;
+      min-height: auto !important;
+      max-height: none !important;
+      padding: 0px !important;
+    }
+  }
+
+  /* Event frames */
+  .fc-h-event {
+    border-color: transparent !important;
+    border: none !important;
+  }
+  
+  .fc-event-main-frame {
+    border: none !important;
+  }
+
+  .fc-daygrid-day-events {
+    min-height: 20px;
+    overflow: visible !important;
+    
+    .fc-event {
+      @apply bg-transparent !important;
+    }
+  }
+
+  .fc-daygrid-body-natural .fc-daygrid-day-events {
+    margin-bottom: 2px !important;
+  }
+
+  /* Week view event indicators */
+  .fc-timegrid-col-events .fc-timegrid-event .fc-event-main {
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 4px;
+      bottom: 4px;
+      width: 3px;
+      @apply bg-fill-theme-thick rounded-200;
+      z-index: 2;
+    }
+    
+    > div {
+      @apply ml-0;
+    }
+  }
+
+  /* =============================================
+     8. More Link and Popover Styles
+     ============================================= */
+  
+  .fc-daygrid-more-link {
+    @apply w-full text-text-secondary border-none bg-transparent hover:bg-transparent p-0;
+  }
+
+  .fc-daygrid-day-bottom {
+    @apply px-0 py-0.5 ml-0 mx-[2px];
+  }
+
+  .custom-more-link {
+    @apply h-[20px] w-full flex items-center px-1 text-xs text-text-primary;
+    @apply bg-transparent hover:bg-fill-content-hover;
+    @apply border-none rounded-200 cursor-pointer;
+  }
+
+  
+  /* =============================================
+     9. Drag and Drop Styles
+     ============================================= */
+  
+  .fc-event-draggable {
+    cursor: grab;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    border-radius: 6px;
+    &:active {
+      cursor: grabbing;
+      transform: translateY(0) scale(0.98) !important;
+    }
+  }
+
+
+
+  .fc-event-dragging {
+    transform: scale(1.001) !important;
+    transition: opacity 0.2s ease, transform 0.2s ease !important;
+    animation: dragPulse 2s infinite ease-in-out !important;    
+  }
+  
+  .fc-event-resizing {
+    transform: scale(1.001) !important;
+  }
+
+  /* =============================================
+     10. State and Utility Styles
+     ============================================= */
+  
+  /* Loading state */
+  &.loading .fc-daygrid {
+    @apply opacity-50 pointer-events-none;
+  }
+
+  .fc-highlight {
+    @apply opacity-30;
+  }
+
+  
+  /* Global scrollbar styles */
+  .fc-scroller {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.border.primary') transparent;
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      @apply bg-transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      @apply bg-border-primary rounded-full;
+      
+      &:hover {
+        @apply bg-border-primary-hover;
+      }
+    }
+  }
+
+  /* =============================================
+     11. Responsive Styles
+     ============================================= */
+  
+  @media (max-width: 640px) {
+    .fc-header-toolbar {
+      @apply flex-col gap-2;
+      
+      .fc-toolbar-chunk {
+        @apply justify-center;
+      }
+    }
+    
+    .fc-daygrid-day {
+      @apply min-h-[80px];
+    }
+    
+    .fc-col-header-cell-cushion {
+      @apply text-xs;
+    }
+  }
+}
+
+/* =============================================
+   Global Styles
+   ============================================= */
+
+/* Drag mirror styles */
+body > .fc-event[data-is-mirror="true"],
+body > .fc-event[style*="position: fixed"],
+body > .fc-event[style*="z-index"] {
+  border-radius: 6px !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.fc-event {
+  &.fc-event-open, &.fc-event-dragging-start, &.fc-event-resizing {
+    border: none !important;
+    transform: scale(1.001) !important;
+    &:not(.fc-timegrid-event) .event-content {
+      @apply border !bg-fill-theme-thick !border-border-theme-thick !text-text-inverse;
+      
+      .event-inner, .event-title, .event-icon {
+        @apply text-text-inverse !important;
+        @apply opacity-100 !important;
+      }
+
+      .time-slot {
+        @apply text-text-inverse !important;
+        @apply opacity-100 !important;
+      }
+    }
+    
+    &.fc-timegrid-event {
+      @apply border !bg-fill-theme-thick !border-border-theme-thick !text-text-inverse;
+      
+      .event-content {
+        @apply bg-fill-theme-thick text-text-inverse !important;
+        
+        .event-inner, .event-title, .event-icon {
+          @apply text-text-inverse !important;
+          @apply opacity-100 !important;
+        }
+
+        .time-slot {
+          @apply text-text-inverse !important;
+          @apply opacity-100 !important;
+        }
+      }
+    }
+  }
+
+  &.fc-popover-event.event-hovered {
+    .event-content {
+      @apply bg-other-colors-filled-event-hover !important;
+    }
+    .time-event-content {
+      @apply bg-fill-content-hover !important;
+    }
+  }
+}
+
+/* =============================================
+   Animations
+   ============================================= */
+
+@keyframes dragPulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+
+/* =============================================
+   External Drag and Drop Styles
+   ============================================= */
+
+/* Style for external draggable elements */
+.fc-event.external-draggable {
+  cursor: grab !important;
+  
+  @apply bg-other-colors-filled-event;
+  
+  &.fc-dragging {
+    // opacity: 0.5 !important;
+    cursor: grabbing !important;
+  }
+}
+
+.event-time-icon .event-icon {
+  @apply text-text-primary opacity-65;
+}
+
+.fc-scrollgrid-sync-table {
+  @apply overflow-hidden;
+}
+.event-icon {
+  @apply opacity-80;
+}
+
+body {
+  .fc-event.fc-event-dragging {
+    border: none !important;
+    transform: scale(1.001) !important;
+    opacity: 1 !important;
+    cursor: grabbing;
+    &.fc-nodate-event {
+      box-shadow: 0 2px 16px 0 var(--shadow-color);
+      opacity: 1 !important;
+    }
+  
+    &:not(.fc-timegrid-event) .event-content {
+      @apply border !bg-fill-theme-thick !border-border-theme-thick !text-text-inverse;
+      
+      .event-inner, .event-time-icon .event-icon {
+        @apply text-text-inverse !important;
+        opacity: 1;
+      }
+
+      .time-slot {
+        @apply text-text-inverse !important;
+      }
+    }
+    
+    &.fc-timegrid-event {
+      @apply text-text-inverse;
+
+      &:hover {
+        @apply bg-fill-theme-thick !important;
+      }
+      
+      .event-content {
+        @apply  text-text-inverse !important;
+        
+        .event-inner, .event-title, .event-icon {
+          @apply text-text-inverse !important;
+        }
+
+        .time-slot {
+          @apply text-text-inverse !important;
+        }
+      }
+    }
+  }
+}
+/* Calendar drop zone highlighting */
+.fc-daygrid-day {
+  transition: background-color 0.2s ease !important;
+  
+  &.fc-day-hover {
+    @apply bg-other-colors-filled-event !important;
+  }
+}
+
+.fc-timegrid-slot {
+  transition: background-color 0.2s ease !important;
+  
+  &.fc-slot-hover {
+    @apply bg-other-colors-filled-event !important;
+    @apply hover:bg-other-colors-filled-event-hover;
+  }
+}
+
+/* Drag over states for calendar cells */
+.fc .fc-daygrid-day.fc-drag-over,
+.fc .fc-timegrid-slot.fc-drag-over {
+  @apply bg-other-colors-filled-event !important;
+  animation: dragPulse 1s ease-in-out infinite;
+}
+
+/* Enhanced drag feedback for external dragging */
+.fc .fc-daygrid-day:hover.fc-external-drag-target,
+.fc .fc-timegrid-slot:hover.fc-external-drag-target {
+  @apply bg-fill-info-light !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* Global drag state class when external dragging is active */
+.calendar-external-dragging {
+  .fc-daygrid-day:hover,
+  .fc-timegrid-slot:hover {
+    @apply bg-fill-info-light !important;
+    transition: all 0.1s ease !important;
+  }
+}
+
+/* Alternative approach - always show hover feedback during any external drag */
+body.fc-dragging {
+  .database-calendar {
+    .fc-daygrid-day:hover,
+    .fc-timegrid-slot:hover {
+      @apply bg-fill-info-light !important;
+      transition: all 0.1s ease !important;
+    }
+  }
+}
+
+/* Mirror/ghost element styling during drag */
+.fc-external-ghost {
+  @apply bg-fill-theme-thick !important;
+  @apply border-border-theme-thick !important;
+  @apply text-text-inverse !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  font-size: 0.75rem !important;
+  opacity: 0.8 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+@keyframes event-bling {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,56 @@
+import { useMemo } from 'react';
+
+import { useDatabaseContext, useDatabaseView, useFiltersSelector, useSortsSelector } from '@/application/database-yjs';
+import { DatabaseViewLayout, YjsDatabaseKey } from '@/application/types';
+import { AFScroller } from '@/components/_shared/scroller';
+import { useConditionsContext } from '@/components/database/components/conditions/context';
+import { Separator } from '@/components/ui/separator';
+
+import Filters from 'src/components/database/components/filters/Filters';
+import Sorts from 'src/components/database/components/sorts/Sorts';
+
+export function DatabaseConditions() {
+  const conditionsContext = useConditionsContext();
+  const expanded = conditionsContext?.expanded ?? false;
+  const sorts = useSortsSelector();
+  const filters = useFiltersSelector();
+  const view = useDatabaseView();
+  const { paddingStart, paddingEnd } = useDatabaseContext();
+  const layout = Number(view?.get(YjsDatabaseKey.layout));
+  const className = useMemo(() => {
+    const classList = ['database-conditions min-w-0 max-w-full relative transform overflow-hidden transition-all'];
+
+    if (layout === DatabaseViewLayout.Grid) {
+      classList.push('max-sm:!pl-6');
+      classList.push('pl-24');
+    } else {
+      classList.push('max-sm:!px-6');
+      classList.push('px-24');
+    }
+
+    return classList.join(' ');
+  }, [layout]);
+
+  return (
+    <div
+      style={{
+        // Collapse to 0 height when not expanded to avoid unnecessary space
+        height: expanded ? '40px' : '0',
+        visibility: expanded ? 'visible' : 'hidden',
+        opacity: expanded ? 1 : 0,
+        pointerEvents: expanded ? 'auto' : 'none',
+        paddingLeft: paddingStart === undefined ? '96px' : paddingStart,
+        paddingRight: paddingEnd === undefined ? '96px' : paddingEnd,
+      }}
+      className={className}
+    >
+      <AFScroller overflowYHidden hideScrollbars className={`flex items-center border-b border-border-primary`}>
+        <Sorts />
+        {sorts.length > 0 && filters.length > 0 && <Separator orientation={'vertical'} className={'!mx-2 !h-5'} />}
+        <Filters />
+      </AFScroller>
+    </div>
+  );
+}
+
+export default DatabaseConditions;

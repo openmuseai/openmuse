@@ -1,0 +1,58 @@
+# syntax=docker/dockerfile:1
+# Build stage - Build the React application
+FROM node:20.12.0-alpine AS builder
+
+ARG VERSION=dev
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+# Copy package files for better layer caching
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN corepack enable && \
+    pnpm install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN pnpm run build
+
+# Runtime stage - SSR with Bun + nginx
+FROM oven/bun:latest
+
+WORKDIR /app
+
+# Install nginx and supervisor for process management
+RUN apt-get update && \
+    apt-get install -y nginx supervisor && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Node dependencies for SSR server
+RUN bun install cheerio pino pino-pretty
+
+# Copy built static files from builder to BOTH locations
+# nginx serves from /usr/share/nginx/html, Bun SSR reads from /app/dist
+COPY --from=builder /app/dist /usr/share/nginx/html/
+COPY --from=builder /app/dist /app/dist
+
+# Copy all SSR server files (server.ts imports config.ts, logger.ts, routes.ts, etc.)
+COPY deploy/ /app/
+COPY docker/nginx-ssr.conf /etc/nginx/nginx.conf 
+COPY docker/supervisord-ssr.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/entrypoint-ssr.sh /docker-entrypoint.sh
+
+# Make entrypoint executable
+RUN chmod +x /docker-entrypoint.sh
+
+# Set version as environment variable (from build arg)
+ARG VERSION
+ENV APP_VERSION=${VERSION}
+
+# Expose port 80
+EXPOSE 80
+
+# Use entrypoint to set up environment variables and start supervisor
+ENTRYPOINT ["/docker-entrypoint.sh"]

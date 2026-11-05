@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  appflowy-web:
+    image: appflowy/appflowy_web:latest
+    ports:
+      - "80:80"
+    environment:
+      # REQUIRED: Configure these to match your AppFlowy backend URLs
+      # The container will fail to start if these are not set
+      - APPFLOWY_BASE_URL=https://your-backend.example.com
+      - APPFLOWY_GOTRUE_BASE_URL=https://your-backend.example.com/gotrue
+      - APPFLOWY_WS_BASE_URL=wss://your-backend.example.com/ws/v2
+    restart: unless-stopped

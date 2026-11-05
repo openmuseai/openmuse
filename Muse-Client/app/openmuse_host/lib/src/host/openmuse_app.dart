@@ -17,8 +17,6 @@ import 'local_settings.dart';
 import 'workbench_shell.dart';
 import 'workspace_controller.dart';
 import 'desktop_update.dart';
-import 'distribution_channel.dart';
-import 'store_home.dart';
 
 final class OpenMuseHostApp extends StatefulWidget {
   const OpenMuseHostApp({
@@ -213,24 +211,18 @@ final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
           navigatorObservers: [DshPopupRouteObserver.instance],
           home: Builder(
             builder: (context) {
-              final Widget workbench = macAppStoreDistribution
-                  ? OpenMuseStoreHome(
-                      resources: widget.resources?.value,
-                      workspace: widget.workspace,
-                      registry: widget.registry,
-                    )
-                  : OpenMuseWorkbench(
-                      updates: widget.updates,
-                      desktopUpdate: _desktopUpdate,
-                      onGetUpdate: _getUpdate,
-                      resources: widget.resources?.value,
-                      registry: widget.registry,
-                      workspace: widget.workspace,
-                      settings: preferences,
-                      layoutController: widget.layoutController,
-                      layoutStore: widget.layoutStore,
-                      mutationGuards: widget.mutationGuards,
-                    );
+              final Widget workbench = OpenMuseWorkbench(
+                updates: widget.updates,
+                desktopUpdate: _desktopUpdate,
+                onGetUpdate: _getUpdate,
+                resources: widget.resources?.value,
+                registry: widget.registry,
+                workspace: widget.workspace,
+                settings: preferences,
+                layoutController: widget.layoutController,
+                layoutStore: widget.layoutStore,
+                mutationGuards: widget.mutationGuards,
+              );
               if (kDebugMode &&
                   Platform.environment.containsKey(
                     'OPENMUSE_E2E_SUPPORT_DIR',

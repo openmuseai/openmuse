@@ -1,0 +1,213 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import * as Y from 'yjs';
+
+import {
+  DatabaseContextState,
+  getPrimaryFieldId,
+  useDatabaseContextOptional,
+  useDatabaseIdFromField,
+} from '@/application/database-yjs';
+import { RelationCell, RelationCellData } from '@/application/database-yjs/cell.type';
+import { getRowKey } from '@/application/database-yjs/row_meta';
+import { YDoc, YjsEditorKey } from '@/application/types';
+import { notify } from '@/components/_shared/notify';
+import { RelationPrimaryValue } from '@/components/database/components/cell/relation/RelationPrimaryValue';
+import { cn } from '@/lib/utils';
+
+function RelationItems({
+  style,
+  cell,
+  fieldId,
+  wrap,
+}: {
+  cell: RelationCell;
+  fieldId: string;
+  style?: React.CSSProperties;
+  wrap: boolean;
+}) {
+  const context = useDatabaseContextOptional();
+  // databasePageId: The main database page ID in the folder structure
+  const viewId = context?.databasePageId;
+  const relatedDatabaseId = useDatabaseIdFromField(fieldId);
+
+  const createRow = context?.createRow;
+  const loadView = context?.loadView;
+  const navigateToRow = context?.navigateToRow;
+  const getViewIdFromDatabaseId = context?.getViewIdFromDatabaseId;
+
+  const [noAccess, setNoAccess] = useState(false);
+  const [rows, setRows] = useState<DatabaseContextState['rowMap'] | null>();
+  const [relatedFieldId, setRelatedFieldId] = useState<string | undefined>();
+  const [relatedViewId, setRelatedViewId] = useState<string | null>(null);
+
+  const [docGuid, setDocGuid] = useState<string | null>(null);
+  const [databaseDoc, setDatabaseDoc] = useState<YDoc | null>(null);
+
+  const [rowIds, setRowIds] = useState([] as string[]);
+
+  const navigateToView = context?.navigateToView;
+
+  const handleUpdateRowIds = useCallback(() => {
+    const data = cell?.data;
+
+    if (!data || !(data instanceof Y.Array)) {
+      setRowIds([]);
+      return;
+    }
+
+    const ids = (data.toJSON() as RelationCellData) ?? [];
+
+    setRowIds(ids);
+  }, [cell.data]);
+
+  useEffect(() => {
+    if (!relatedDatabaseId) {
+      setRelatedViewId(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const viewId = await getViewIdFromDatabaseId?.(relatedDatabaseId);
+
+        if (cancelled) return;
+
+        if (!viewId) {
+          setRelatedViewId(null);
+          setNoAccess(true);
+          return;
+        }
+
+        setNoAccess(false);
+        setRelatedViewId(viewId);
+      } catch (e) {
+        if (cancelled) return;
+        console.error(e);
+        setRelatedViewId(null);
+        setNoAccess(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [getViewIdFromDatabaseId, relatedDatabaseId]);
+
+  useEffect(() => {
+    if (!relatedViewId || !createRow || !docGuid) return;
+    void (async () => {
+      try {
+        // Load all rows in parallel instead of sequentially (async-parallel optimization)
+        const rowEntries = await Promise.all(
+          rowIds.map(async (rowId) => {
+            const rowDoc = await createRow(getRowKey(docGuid, rowId));
+
+            return [rowId, rowDoc] as const;
+          })
+        );
+
+        const rows: Record<string, YDoc> = Object.fromEntries(rowEntries);
+
+        setRows(rows);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [createRow, relatedViewId, relatedFieldId, rowIds, docGuid]);
+
+  useEffect(() => {
+    handleUpdateRowIds();
+  }, [handleUpdateRowIds]);
+
+  useEffect(() => {
+    if (!relatedViewId) return;
+
+    void (async () => {
+      try {
+        const viewDoc = await loadView?.(relatedViewId);
+
+        if (!viewDoc) {
+          throw new Error('No access');
+        }
+
+        setDocGuid(viewDoc.guid);
+
+        setDatabaseDoc(viewDoc);
+      } catch (e) {
+        console.error(e);
+        setNoAccess(true);
+      }
+    })();
+  }, [loadView, relatedViewId]);
+
+  useEffect(() => {
+    if (!databaseDoc) return;
+    const sharedRoot = databaseDoc.getMap(YjsEditorKey.data_section);
+
+    const observerEvent = () => {
+      const database = sharedRoot.get(YjsEditorKey.database);
+
+      const fieldId = getPrimaryFieldId(database);
+
+      setRelatedFieldId(fieldId);
+      setNoAccess(!fieldId);
+    };
+
+    observerEvent();
+
+    sharedRoot.observe(observerEvent);
+    return () => {
+      sharedRoot.unobserve(observerEvent);
+    };
+  }, [databaseDoc]);
+
+  return (
+    <div
+      style={style}
+      className={cn(
+        'relation-cell flex w-full gap-2 overflow-hidden',
+        wrap ? 'flex-wrap whitespace-pre-wrap break-words' : 'flex-nowrap'
+      )}
+    >
+      {noAccess ? (
+        <div className={'text-text-secondary'}>No access</div>
+      ) : (
+        rowIds.map((rowId) => {
+          const rowDoc = rows?.[rowId];
+
+          if (!rowDoc) return null;
+          return (
+            <div
+              key={rowId}
+              onClick={async (e) => {
+                if (!relatedViewId) return;
+                e.stopPropagation();
+
+                try {
+                  if (navigateToRow) {
+                    navigateToRow(rowId, relatedViewId !== viewId ? relatedViewId : undefined);
+                    return;
+                  }
+
+                  await navigateToView?.(relatedViewId);
+                  // eslint-disable-next-line
+                } catch (e: any) {
+                  notify.error(e.message);
+                }
+              }}
+              className={`min-w-fit overflow-hidden text-text-primary underline ${
+                relatedViewId ? 'cursor-pointer hover:text-text-action' : ''
+              }`}
+            >
+              <RelationPrimaryValue fieldId={relatedFieldId} rowDoc={rowDoc} />
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
+export default RelationItems;

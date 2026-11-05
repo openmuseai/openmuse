@@ -1,0 +1,38 @@
+# Product brand — edit this file, then run:
+#   python scripts/apply-brand.py
+#
+# TypeScript, i18n appName, and index.html metadata are stamped from this file
+# (those formats cannot load YAML at runtime).
+
+display:
+  en: OpenMuse
+  zh: 思构
+
+site_url: https://openmuseai.com
+app_path: /app
+terms_url: https://openmuseai.com/terms
+privacy_url: https://openmuseai.com/privacy
+download_url: https://openmuseai.com/download
+github_url: https://github.com/openmuseai/openmuse
+
+# Empty → hide the corresponding UI entry (same rule as the marketing site / client).
+twitter_handle: ""
+discord_url: ""
+docs_url: ""
+whats_new_url: ""
+templates_url: ""
+forum_url: ""
+reddit_url: ""
+
+desktop_scheme: openmuse://
+legacy_desktop_scheme: appflowy-flutter://
+
+description: OpenMuse is an AI-native office suite. Work locally, keep your data, and let AI help you write.
+
+# Old display names still present in translations. apply-brand rewrites copy values only (not JSON keys).
+legacy_display:
+  - OpenMuse AI
+  - AppFlowy
+  - Muse
+  - 妙思
+  - DSH Office

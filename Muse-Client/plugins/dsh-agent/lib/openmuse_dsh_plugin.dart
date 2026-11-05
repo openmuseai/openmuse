@@ -51,6 +51,7 @@ final class OpenMuseDshPlugin
   ) {
     final supervisor = _supervisor;
     if (supervisor == null) throw StateError('AGENT_NOT_ACTIVE');
+    supervisor.requireAiSharing();
     _generation ??= DshGeneration(
       endpoint: () => supervisor.endpoint,
       token: supervisor.bridgeToken,
@@ -75,6 +76,7 @@ final class OpenMuseDshPlugin
     final mount = _activeMount.value;
     if (supervisor == null || mount == null)
       throw StateError('Agent workspace unavailable');
+    supervisor.requireAiSharing();
     await supervisor.ensureStarted();
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
     try {
@@ -303,6 +305,12 @@ final class OpenMuseDshPlugin
           Text('状态：${supervisor.state.name}'),
           Text('运行时：${supervisor.cliPath == null ? '未配置' : '已配置'}'),
           const Text('模型供应商与模型可在 DSH 启动后设置；启动不要求 DeepSeek API Key。'),
+          if (DshSidecarSupervisor.requiresAiSharingConsent &&
+              supervisor.aiSharingAllowed)
+            TextButton(
+              onPressed: () => unawaited(supervisor.revokeAiSharing()),
+              child: const Text('Disable AI sharing / 停用 AI 共享'),
+            ),
           const SizedBox(height: 8),
           Text(
             '运行时路径由 OPENMUSE_DSH_CLI 配置；工作区绑定自动同步。',

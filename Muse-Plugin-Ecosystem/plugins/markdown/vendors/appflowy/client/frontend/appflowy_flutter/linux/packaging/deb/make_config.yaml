@@ -1,0 +1,36 @@
+display_name: OpenMuse
+package_name: appflowy
+
+maintainer:
+  name: OpenMuseAI
+  email: https://github.com/openmuseai/openmuse/issues
+
+keywords:
+  - OpenMuse
+  - Office
+  - Document
+  - Database
+  - Note
+  - Kanban
+  - Note
+
+installed_size: 100000
+icon: linux/packaging/assets/logo.png
+
+generic_name: OpenMuse
+
+categories:
+  - Office
+  - Productivity
+
+startup_notify: true
+essential: false
+
+section: x11
+priority: optional
+
+supportedMimeType: x-scheme-handler/appflowy-flutter
+
+dependencies:
+  - libnotify-bin
+  - libkeybinder-3.0-0

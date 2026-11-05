@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+.github
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+dist
+build
+.next
+.nuxt
+
+# Testing
+cypress
+__mocks__
+coverage
+.nyc_output
+
+# Development
+.vscode
+.idea
+*.log
+.env.local
+.env.development
+.env.test
+
+# Documentation
+*.md
+LICENSE
+doc
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml 

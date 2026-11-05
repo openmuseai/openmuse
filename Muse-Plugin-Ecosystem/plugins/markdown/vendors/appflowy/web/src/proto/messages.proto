@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "collab.proto";
+import "notification.proto";
+
+package messages;
+
+/**
+ * All messages send between client/server are wrapped into a `Message`.
+ */
+message Message {
+    oneof payload {
+        collab.CollabMessage collab_message = 1;
+        notification.WorkspaceNotification notification = 2;
+    }
+}
+
+message HttpRealtimeMessage {
+    string device_id = 1;
+    bytes payload = 2;
+}

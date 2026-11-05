@@ -1,0 +1,61 @@
+name: Bug Report
+description: Report a bug in the AppFlowy Web 
+title: "[Bug] "
+body:
+  - type: textarea
+    id: bug_desc
+    attributes:
+      label: Bug Description
+      description: "Provide a clear and concise description of the issue you encountered in AppFlowy Web."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps_to_reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: "List the steps to reproduce the bug in AppFlowy Web. Include specific details like page interactions, actions, or conditions."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: "What behavior did you expect instead of the bug? Please be clear and concise."
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and Version
+      description: "Specify the browser and its version where the bug was observed (e.g., Chrome 112, Firefox 98)."
+    validations:
+      required: true
+
+  - type: input
+    id: appflowy_version
+    attributes:
+      label: AppFlowy Version(s)
+      description: "Specify the version(s) of AppFlowy Web where this bug was encountered (e.g., v0.10.1)."
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: "If applicable, include screenshots to help explain the issue. Provide URLs or attach files."
+  
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and Console Output
+      description: "Include any relevant logs or browser console output that could help diagnose the issue."
+  
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: "Provide any additional information about the issue, including specific modules, plugins, or configurations."

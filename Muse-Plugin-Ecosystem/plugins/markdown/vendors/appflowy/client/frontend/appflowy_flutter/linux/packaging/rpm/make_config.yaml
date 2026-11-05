@@ -1,0 +1,33 @@
+display_name: OpenMuse
+icon: linux/packaging/assets/logo.png
+group: Applications/Office
+vendor: OpenMuseAI
+packager: OpenMuseAI
+packagerEmail: https://github.com/openmuseai/openmuse/issues
+license: AGPL-3.0
+url: https://github.com/openmuseai/openmuse
+
+build_arch: x86_64
+
+keywords:
+  - OpenMuse
+  - Office
+  - Document
+  - Database
+  - Note
+  - Kanban
+  - AI
+
+generic_name: OpenMuse
+
+categories:
+  - Office
+  - Productivity
+
+startup_notify: true
+
+supportedMimeType: x-scheme-handler/appflowy-flutter
+
+requires:
+  - libnotify
+  - keybinder

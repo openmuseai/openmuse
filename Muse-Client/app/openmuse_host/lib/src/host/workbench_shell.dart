@@ -95,6 +95,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     }
     _ensureEditorGroups();
     widget.resources?.controller.presentEditor = _presentResourceEditor;
+    widget.workspace.interceptResourceOpen = _openResourceDocument;
     _layout.addListener(_layoutChanged);
     _removeLegacyMarketPane();
     if (_macNativeChrome) {
@@ -115,6 +116,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   @override
   void dispose() {
     widget.resources?.controller.presentEditor = null;
+    widget.workspace.interceptResourceOpen = null;
     if (_macNativeChrome) _menuChannel.setMethodCallHandler(null);
     final shouldFlush = _saveDebounce?.isActive ?? false;
     _saveDebounce?.cancel();
@@ -123,6 +125,34 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     if (_ownsLayout) _layout.dispose();
     _terminalController.dispose();
     super.dispose();
+  }
+
+  bool _openResourceDocument(OpenMuseResource resource) {
+    final center = widget.resources;
+    final name = resource.displayName.toLowerCase();
+    if (center == null ||
+        !resource.uri.isScheme('file') ||
+        !(name.endsWith('.sydoc') ||
+            name.endsWith('.sy.zip') ||
+            name.endsWith('.sy'))) {
+      return false;
+    }
+    unawaited(() async {
+      try {
+        final reference = await center.referenceForMountedFile(
+          File.fromUri(resource.uri),
+        );
+        if (reference == null) {
+          throw const ResourceFailure('SOURCE_UNAVAILABLE');
+        }
+        if (mounted) {
+          await openResourcePage(context, center.controller, reference);
+        }
+      } catch (error) {
+        if (mounted) showResourceError(context, error);
+      }
+    }());
+    return true;
   }
 
   Future<void> _presentResourceEditor(

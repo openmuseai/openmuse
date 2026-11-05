@@ -1,0 +1,173 @@
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { AuthService } from '@/application/services/domains';
+import { Log } from '@/utils/log';
+import { ReactComponent as Logo } from '@/assets/icons/logo.svg';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
+import { createHotkey, HOT_KEY_NAME } from '@/utils/hotkeys';
+
+
+function CheckEmail ({ email, redirectTo, otpType }: {
+  email: string;
+  redirectTo: string;
+  otpType?: 'signup';
+}) {
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+
+  const [error, setError] = useState<string>('');
+  const [isEnter, setEnter] = useState<boolean>(true);
+  const [code, setCode] = useState<string>('');
+  const [resendCooldown, setResendCooldown] = useState(60);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = window.setTimeout(() => setResendCooldown((seconds) => seconds - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleResend = async () => {
+    if (loading || resendCooldown > 0) return;
+    setLoading(true);
+    setError('');
+    try {
+      if (otpType === 'signup') {
+        await AuthService.resendSignUpCode(email);
+      } else {
+        await AuthService.signInMagicLink({ email, redirectTo });
+      }
+      setResendCooldown(60);
+    } catch (e: any) {
+      setError(e?.response?.status === 429 ? t('tooManyRequests') : (e?.message || t('tooManyRequests')));
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleSubmit = async () => {
+    if (loading) return;
+    if (!code) {
+      setError(t('requireCode'));
+      return;
+    }
+
+    setLoading(true);
+    Log.info('[Auth] CheckEmail: starting OTP verification', { email });
+
+    try {
+      Log.info('[Auth] CheckEmail: calling signInOTP');
+      await AuthService.signInOTP({
+        email,
+        redirectTo,
+        code,
+        ...(otpType ? { type: otpType } : {}),
+      });
+      Log.info('[Auth] CheckEmail: signInOTP completed successfully');
+      // eslint-disable-next-line
+    } catch (e: any) {
+      Log.error('[Auth] CheckEmail: signInOTP failed', e);
+      if (e.code === 403) {
+        setError(t('invalidOTPCode'));
+      } else {
+        setError(e.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className={'flex text-text-primary flex-col gap-5 items-center justify-center w-full px-4'}>
+      <div
+        onClick={() => {
+          window.location.href = '/';
+        }}
+        className={'flex cursor-pointer'}
+      >
+        <Logo className={'h-10 w-10'} />
+      </div>
+      <div className={'text-xl text-text-primary font-semibold'}>
+        {isEnter ? t('enterCode') : t('checkYourEmail')}
+      </div>
+      <div className={'flex text-sm w-[320px] text-center items-center flex-col justify-center'}>
+        <div className={'font-normal'}>{isEnter ? t('checkCodeTip') : t('checkEmailTip')}</div>
+        <div className={'font-semibold'}>
+          {email}
+        </div>
+      </div>
+      {isEnter ? (
+        <div className={'flex flex-col gap-3'}>
+          <div className={'flex flex-col gap-1'}>
+            <Input
+              data-testid="otp-code-input"
+              autoFocus
+              size={'md'}
+              className={'w-[320px]'}
+              onChange={(e) => {
+                setError('');
+                setCode(e.target.value);
+              }}
+              value={code}
+              placeholder={t('enterCode')}
+              variant={error ? 'destructive' : 'default'}
+              onKeyDown={e => {
+                if (createHotkey(HOT_KEY_NAME.ENTER)(e.nativeEvent)) {
+                  void handleSubmit();
+                }
+              }}
+            />
+            {error && <div className={cn('help-text text-xs text-text-error')}>
+              {error}
+            </div>}
+          </div>
+
+          <Button
+            data-testid="otp-submit-button"
+            loading={loading}
+            onClick={handleSubmit}
+            size={'lg'}
+            className={'w-[320px]'}
+          >
+            {loading ? <>
+              <Progress />
+              {t('verifying')}
+            </> : t('continueToSignIn')}
+          </Button>
+        </div>
+      ) : <Button
+        data-testid="enter-code-manually-button"
+        size={'lg'}
+        className={'w-[320px]'}
+        onClick={() => setEnter(true)}
+      >
+        {t('enterCodeManually')}
+      </Button>}
+
+      <Button
+        variant={'link'}
+        disabled={loading || resendCooldown > 0}
+        onClick={() => void handleResend()}
+        className={'w-[320px]'}
+      >
+        {resendCooldown > 0
+          ? t('resendCodeCountdown', { seconds: resendCooldown })
+          : t('resendCode')}
+      </Button>
+
+      <Button
+        variant={'link'}
+        onClick={() => {
+          window.location.href = `/login?redirectTo=${encodeURIComponent(redirectTo)}`;
+        }}
+        className={'w-[320px]'}
+      >
+        {t('backToLogin')}
+      </Button>
+    </div>
+  );
+}
+
+export default CheckEmail;

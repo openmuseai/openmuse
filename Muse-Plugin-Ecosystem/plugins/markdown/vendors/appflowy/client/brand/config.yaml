@@ -1,0 +1,28 @@
+# Product brand — edit this file, then run:
+#   python frontend/client/scripts/apply-brand.py
+#
+# Pack/install scripts read this file directly. Dart, Xcode, CMake, Android,
+# and i18n `appName` are stamped by apply-brand.py (those formats cannot load YAML).
+
+display:
+  en: OpenMuse
+  zh: 思构
+
+# Filesystem-safe names (no spaces). Windows exe / macOS .app / zip prefix.
+binary:
+  windows: OpenMuse
+  linux: openmuse
+  macos: OpenMuse
+
+data_dir: OpenMuse
+data_dir_linux: openmuse
+artifact_prefix: OpenMuse
+company_name: OpenMuseAI
+
+# Old display names still present in translations or on-disk data folders.
+# apply-brand rewrites copy; the app migrates these data dirs on first launch.
+legacy_display:
+  - Muse
+  - 妙思
+  - OpenMuse AI
+  - DSH Office

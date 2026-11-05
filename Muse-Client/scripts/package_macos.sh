@@ -399,8 +399,9 @@ mkdir -p "$update_dest"
 install -m 755 "$repo_root/scripts/update/install_macos.sh" "$update_dest/install_macos.sh"
 if [[ "$distribution" == app-store ]]; then
   # Slides uses the bundled Node interpreter and its self-contained server.
-  # The Store document workspace does not ship the local agent/package manager.
-  rm -rf "$update_dest" "$bundled_helix" "$dsh_dest/node_modules"
+  # Fixed DSH composition retains the desktop panel without package management.
+  install -m 644 "$repo_root/plugins/dsh-agent/assets/store-runner.mjs" "$dsh_dest/node_modules/openmuse-store-runner.mjs"
+  rm -rf "$update_dest" "$dsh_dest/node_modules/pnpm" "$dsh_dest/node_modules/.bin/pnpm" "$dsh_dest/node_modules/.bin/pnpx"
   codesign --force --sign - --entitlements "$app_root/macos/Runner/$entitlement_file" "$app_path"
 fi
 

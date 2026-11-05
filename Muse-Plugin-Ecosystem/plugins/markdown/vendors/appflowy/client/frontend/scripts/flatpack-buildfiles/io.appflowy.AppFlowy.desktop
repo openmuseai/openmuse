@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=OpenMuse
+Icon=com.openmuseai.dshoffice
+Exec=openmuse %U
+Categories=Network;Productivity;
+Keywords=Notes
+DBusActivatable=true
+Implements=io.appflowy.Appflowy;

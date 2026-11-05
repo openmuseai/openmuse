@@ -1,0 +1,311 @@
+import { BaseRange, Descendant, Editor, Operation, Transforms } from 'slate';
+import Y, { Transaction, YEvent } from 'yjs';
+
+import { translateYEvents } from '@/application/slate-yjs/utils/applyToSlate';
+import { applyToYjs } from '@/application/slate-yjs/utils/applyToYjs';
+import { yDocToSlateContent } from '@/application/slate-yjs/utils/convert';
+import { findNearestValidSelection, isValidSelection } from '@/application/slate-yjs/utils/transformSelection';
+import { CollabOrigin, YjsEditorKey, YSharedRoot } from '@/application/types';
+
+type LocalChange = {
+  op: Operation;
+  slateContent: Descendant[];
+};
+
+export interface YjsEditor extends Editor {
+  readOnly: boolean;
+  isYjsEditor: (value: unknown) => value is YjsEditor;
+  connect: () => void;
+  disconnect: () => void;
+  sharedRoot: YSharedRoot;
+  applyRemoteEvents: (events: Array<YEvent>, transaction: Transaction) => void;
+  flushLocalChanges: () => void;
+  storeLocalChange: (op: Operation) => void;
+  interceptLocalChange: boolean;
+  uploadFile?: (file: File) => Promise<string>;
+}
+
+const connectSet = new WeakSet<YjsEditor>();
+
+const localChanges = new WeakMap<YjsEditor, LocalChange[]>();
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const YjsEditor = {
+  isYjsEditor(value: unknown): value is YjsEditor {
+    return (
+      Editor.isEditor(value) &&
+      'connect' in value &&
+      'disconnect' in value &&
+      'sharedRoot' in value &&
+      'applyRemoteEvents' in value &&
+      'flushLocalChanges' in value &&
+      'storeLocalChange' in value
+    );
+  },
+  connected(editor: YjsEditor): boolean {
+    return connectSet.has(editor);
+  },
+
+  connect(editor: YjsEditor): void {
+    editor.connect();
+  },
+
+  disconnect(editor: YjsEditor): void {
+    editor.disconnect();
+  },
+
+  applyRemoteEvents(editor: YjsEditor, events: Array<YEvent>, transaction: Transaction): void {
+    editor.applyRemoteEvents(events, transaction);
+  },
+
+  localChanges(editor: YjsEditor): LocalChange[] {
+    return localChanges.get(editor) ?? [];
+  },
+
+  storeLocalChange(editor: YjsEditor, op: Operation): void {
+    editor.storeLocalChange(op);
+  },
+
+  flushLocalChanges(editor: YjsEditor): void {
+    editor.flushLocalChanges();
+  },
+};
+
+export function withYjs<T extends Editor>(
+  editor: T,
+  doc: Y.Doc,
+  opts?: {
+    id?: string;
+    readOnly: boolean;
+    localOrigin: CollabOrigin;
+    readSummary?: boolean;
+    onContentChange?: (content: Descendant[]) => void;
+    uploadFile?: (file: File) => Promise<string>;
+    onSelectionChange?: (editor: YjsEditor) => void;
+  }
+): T & YjsEditor {
+  const {
+    uploadFile,
+    localOrigin = CollabOrigin.Local,
+    readSummary,
+    onContentChange,
+    readOnly = true,
+    onSelectionChange,
+  } = opts ?? {};
+  const e = editor as T & YjsEditor;
+  const { apply, onChange, select } = e;
+
+  e.interceptLocalChange = false;
+  e.readOnly = readOnly;
+  e.uploadFile = uploadFile;
+
+  e.sharedRoot = doc.getMap(YjsEditorKey.data_section) as YSharedRoot;
+
+  const initializeDocumentContent = () => {
+    const content = yDocToSlateContent(doc);
+
+    if (!content) {
+      return;
+    }
+
+    const selection = e.selection;
+
+    if (readSummary) {
+      e.children = content.children.slice(0, 10);
+    } else {
+      e.children = content.children;
+    }
+
+    // `ReactEditor.hasRange` only checks path existence, not whether each
+    // offset is within its node's text length. After a content swap the path
+    // can still resolve while the offset overshoots the new text — that's the
+    // "Cannot resolve a DOM point from Slate point" precondition. Use the
+    // offset-aware validator instead.
+    if (selection && !isValidSelection(e, selection)) {
+      try {
+        Transforms.select(e, Editor.start(editor, [0]));
+      } catch (err) {
+        console.error(err);
+        editor.deselect();
+      }
+    }
+
+    onContentChange?.(content.children);
+    Editor.normalize(e, { force: true });
+  };
+
+  const applyIntercept = (op: Operation) => {
+    if (YjsEditor.connected(e) && !e.interceptLocalChange) {
+      YjsEditor.storeLocalChange(e, op);
+    }
+
+    apply(op);
+  };
+
+  e.applyRemoteEvents = (events: Array<YEvent>, transaction: Transaction) => {
+    console.time('applyRemoteEvents');
+    // Flush local changes to ensure all local changes are applied before processing remote events
+    YjsEditor.flushLocalChanges(e);
+    // Replace the apply function to avoid storing remote changes as local changes
+    e.interceptLocalChange = true;
+
+    const myCurrentSelection = editor.selection;
+
+    let newSelection: BaseRange | null = null;
+
+    if (transaction.origin === null) {
+      translateYEvents(e, events);
+      newSelection = myCurrentSelection;
+    } else {
+      translateYEvents(e, events);
+    }
+
+    // Restore the cached cursor. The cached selection's paths may still be
+    // reachable in the new tree while its offsets overshoot the new text
+    // length (e.g. a peer shortened the text under the cursor). Applying it
+    // unchanged would leave editor.selection at offset > text length, which
+    // crashes slate-react's render-time selection sync (`toDOMPoint`). Clamp
+    // via `findNearestValidSelection`, falling back to deselect if no point
+    // can be recovered.
+    try {
+      if (newSelection) {
+        if (isValidSelection(editor, newSelection)) {
+          Transforms.select(editor, newSelection);
+        } else {
+          const clamped = findNearestValidSelection(editor, newSelection);
+
+          if (clamped) {
+            Transforms.select(editor, clamped);
+          } else {
+            editor.deselect();
+          }
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      try {
+        editor.deselect();
+      } catch {
+        // Selection may already be null.
+      }
+    }
+
+    // Restore the apply function to store local changes after applying remote changes
+    e.interceptLocalChange = false;
+    console.timeEnd('applyRemoteEvents');
+  };
+
+  const handleYEvents = (events: Array<YEvent>, transaction: Transaction) => {
+    if (transaction.origin === CollabOrigin.Local) return;
+    YjsEditor.applyRemoteEvents(e, events, transaction);
+  };
+
+  // When the sync layer is about to destroy this doc (version-reset or revert),
+  // it emits 'reset' before calling doc.destroy(). We must disconnect the editor
+  // immediately so that:
+  //   1. observeDeep events from the dying doc don't mutate editor.children
+  //   2. Slate's <Editable> layout effect doesn't try to sync a stale selection
+  //      against DOM nodes that no longer exist (the "Cannot resolve a DOM point"
+  //      crash triggered by flushSync in react-use-websocket).
+  const handleDocReset = () => {
+    if (!YjsEditor.connected(e)) return;
+    console.debug('[Version] withYjs: doc reset received, disconnecting editor for docId=%s', doc.guid);
+    try {
+      e.deselect();
+    } catch {
+      // Selection may already be null — safe to ignore.
+    }
+
+    e.disconnect();
+  };
+
+  doc.on('reset', handleDocReset);
+
+  e.connect = () => {
+    if (YjsEditor.connected(e)) {
+      throw new Error('Already connected');
+    }
+
+    initializeDocumentContent();
+    e.sharedRoot.observeDeep(handleYEvents);
+    connectSet.add(e);
+  };
+
+  e.disconnect = () => {
+    if (!YjsEditor.connected(e)) {
+      return;
+    }
+
+    doc.off('reset', handleDocReset);
+    e.sharedRoot.unobserveDeep(handleYEvents);
+    connectSet.delete(e);
+  };
+
+  e.storeLocalChange = (op) => {
+    const changes = localChanges.get(e) ?? [];
+
+    localChanges.set(e, [...changes, { op, slateContent: e.children }]);
+  };
+
+  e.flushLocalChanges = () => {
+    const changes = YjsEditor.localChanges(e);
+
+    localChanges.delete(e);
+    // parse changes and apply to ydoc
+    doc.transact(() => {
+      changes.forEach((change) => {
+        applyToYjs(doc, editor, change.op, change.slateContent);
+      });
+    }, localOrigin);
+  };
+
+  // Proxy the select function with error handling
+  const selectWithErrorHandling = (...args: Parameters<typeof select>) => {
+    try {
+      return select.apply(e, args);
+    } catch (error) {
+      console.error('Editor select operation failed:', error);
+      console.warn('Selection arguments:', args);
+
+      // Try to fallback to a safe selection
+      try {
+        if (e.children.length > 0) {
+          // Try to select the start of the first block
+          const startPoint = Editor.start(e, [0]);
+
+          if (startPoint) {
+            select.call(e, startPoint);
+            console.info('Fallback to document start selection');
+            return;
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback selection also failed:', fallbackError);
+      }
+
+      // Last resort: deselect
+      try {
+        e.deselect();
+        console.info('Deselected as last resort');
+      } catch (deselectError) {
+        console.error('Even deselect failed:', deselectError);
+      }
+    }
+  };
+
+  e.apply = applyIntercept;
+  e.select = selectWithErrorHandling;
+
+  e.onChange = () => {
+    if (YjsEditor.connected(e)) {
+      YjsEditor.flushLocalChanges(e);
+      if (onSelectionChange) {
+        onSelectionChange(e);
+      }
+    }
+
+    onChange();
+  };
+
+  return e;
+}

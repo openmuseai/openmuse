@@ -1,5 +1,7 @@
 # 思源客户端插件
 
+面向 Agent、多人协作与 Mobile/Web/Desktop 的后续智能文档设计，见 [架构、产品稿、可点击视觉稿与开发计划 v1.1](docs/smart-document/v1/README.zh-CN.md)（2026-11-05；含协作 package/plugin 解耦设计，尚未实施运行产品）。[前期架构讨论](docs/smart-document/README.zh-CN.md)与 [思源 + AppFlowy 融合评估](docs/collaboration/README.zh-CN.md)保留为来源记录；以下描述仍为当前已实现的思源插件。
+
 资源能力插件：使用固定版本的 Protyle 编辑器和 Go 内核。无需部署服务端，不连接远端思源实例。原始源码位于 `vendors/siyuan`，插件构建在独立目录进行，不覆盖上游产品产物。
 
 领域归属：笔记本、块、Protyle、属性视图、搜索、引用、关系图、附件、闪卡、历史、加密及工作空间数据均归思源插件。客户端 Host 只消费公开插件贡献接口，不增加思源 API、数据库、文件格式或原生桥接分支。

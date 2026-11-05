@@ -1,0 +1,62 @@
+name: Web Code Coverage
+
+on:
+  pull_request:
+    branches:
+      - "main"
+      - "develop"
+      - "release/*"
+env:
+  NODE_VERSION: "20.19.0"
+  PNPM_VERSION: "10.9.0"
+  COVERAGE: "true"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    if: github.event.pull_request.draft != true
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      # - name: Maximize build space (ubuntu only)
+      #   run: |
+      #     sudo rm -rf /usr/share/dotnet
+      #     sudo rm -rf /opt/ghc
+      #     sudo rm -rf "/usr/local/share/boost"
+      #     sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      #     sudo docker image prune --all --force
+      #     sudo rm -rf /opt/hostedtoolcache/codeQL
+      #     sudo rm -rf ${GITHUB_WORKSPACE}/.git
+      #     sudo rm -rf $ANDROID_HOME/ndk
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      # Install pnpm dependencies, cache them correctly
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Jest run
+        run: |
+          pnpm run test:unit
+        env:
+          COVERAGE: "true"
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/jest/lcov.info
+          flags: appflowy_web
+          name: codecov-umbrella
+          fail_ci_if_error: true
+          verbose: true

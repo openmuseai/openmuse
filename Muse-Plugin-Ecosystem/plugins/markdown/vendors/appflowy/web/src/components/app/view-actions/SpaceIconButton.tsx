@@ -1,0 +1,72 @@
+import { Avatar } from '@mui/material';
+import React from 'react';
+
+import { ReactComponent as EditIcon } from '@/assets/icons/edit.svg';
+import { CustomIconPopover } from '@/components/_shared/cutsom-icon';
+import SpaceIcon from '@/components/_shared/view-icon/SpaceIcon';
+
+function SpaceIconButton({
+  spaceIcon,
+  spaceIconColor,
+  spaceName,
+  onSelectSpaceIcon,
+  onSelectSpaceIconColor,
+  size,
+  container,
+}: {
+  spaceIconColor?: string;
+  spaceIcon?: string;
+  spaceName: string;
+  onSelectSpaceIcon: (icon: string) => void;
+  onSelectSpaceIconColor: (color: string) => void;
+  size?: number;
+  container: HTMLDivElement;
+}) {
+  const [spaceIconEditing, setSpaceIconEditing] = React.useState<boolean>(false);
+
+  return (
+    <CustomIconPopover
+      onSelectIcon={({ value, color }) => {
+        onSelectSpaceIcon(value);
+        onSelectSpaceIconColor(color || '');
+      }}
+      removeIcon={() => {
+        onSelectSpaceIcon('');
+        onSelectSpaceIconColor('');
+      }}
+      defaultActiveTab={'icon'}
+      tabs={['icon']}
+      popoverContentProps={{ container }}
+    >
+      <Avatar
+        variant={'rounded'}
+        className={`aspect-square h-10 w-10 rounded-[30%] bg-transparent`}
+        onMouseEnter={() => setSpaceIconEditing(true)}
+        onMouseLeave={() => setSpaceIconEditing(false)}
+        onClick={() => {
+          setSpaceIconEditing(false);
+        }}
+        style={{
+          minWidth: size ? `${size}px` : undefined,
+          minHeight: size ? `${size}px` : '100%',
+        }}
+      >
+        <SpaceIcon
+          bgColor={spaceIconColor}
+          value={spaceIcon || ''}
+          className={'h-full w-full !p-2'}
+          char={spaceIcon ? undefined : spaceName.slice(0, 1)}
+        />
+        {spaceIconEditing && (
+          <div className={'absolute inset-0 cursor-pointer rounded-[8px] bg-black bg-opacity-30'}>
+            <div className={'flex h-full w-full items-center justify-center text-white'}>
+              <EditIcon />
+            </div>
+          </div>
+        )}
+      </Avatar>
+    </CustomIconPopover>
+  );
+}
+
+export default SpaceIconButton;

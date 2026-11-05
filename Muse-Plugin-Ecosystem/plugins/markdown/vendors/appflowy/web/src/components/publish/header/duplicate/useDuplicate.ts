@@ -1,0 +1,135 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+
+import { WorkspaceService } from '@/application/services/domains';
+import { SpaceView, Workspace } from '@/application/types';
+import { notify } from '@/components/_shared/notify';
+import { useCurrentUserOptional, useIsAuthenticatedOptional } from '@/components/main/app.hooks';
+
+export function useDuplicate () {
+  const isAuthenticated = useIsAuthenticatedOptional();
+  const [search, setSearch] = useSearchParams();
+  const [loginOpen, setLoginOpen] = React.useState(false);
+  const [duplicateOpen, setDuplicateOpen] = React.useState(false);
+
+  useEffect(() => {
+    const isDuplicate = search.get('action') === 'duplicate';
+
+    if (!isDuplicate) return;
+
+    setLoginOpen(!isAuthenticated);
+    setDuplicateOpen(isAuthenticated);
+  }, [isAuthenticated, search, setSearch]);
+
+  const url = window.location.href;
+
+  const handleLoginClose = useCallback(() => {
+    setLoginOpen(false);
+    setSearch((prev) => {
+      prev.delete('action');
+      return prev;
+    });
+  }, [setSearch]);
+
+  const handleDuplicateClose = useCallback(() => {
+    setDuplicateOpen(false);
+    setSearch((prev) => {
+      prev.delete('action');
+      return prev;
+    });
+  }, [setSearch]);
+
+  return {
+    loginOpen,
+    handleLoginClose,
+    url,
+    duplicateOpen,
+    handleDuplicateClose,
+  };
+}
+
+export function useLoadWorkspaces () {
+  const currentUser = useCurrentUserOptional();
+  const isAuthenticated = useIsAuthenticatedOptional() && Boolean(currentUser);
+  const [spaceLoading, setSpaceLoading] = useState<boolean>(false);
+  const [workspaceLoading, setWorkspaceLoading] = useState<boolean>(false);
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>(() => {
+    return localStorage.getItem('duplicate_selected_workspace') || '';
+  });
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string>('');
+
+  const [workspaceList, setWorkspaceList] = useState<Workspace[]>([]);
+
+  const [spaceList, setSpaceList] = useState<SpaceView[]>([]);
+
+  const loadWorkspaces = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setWorkspaceLoading(true);
+    try {
+      const workspaces = await WorkspaceService.getAll();
+
+      if (workspaces) {
+        setWorkspaceList(workspaces);
+        setSelectedWorkspaceId(prev => {
+          if (!prev || !workspaces.find(item => item.id === prev)) return workspaces[0].id;
+          return prev;
+        });
+      } else {
+        setWorkspaceList([]);
+        setSelectedWorkspaceId('');
+      }
+    } catch (e) {
+      notify.error('Failed to load workspaces');
+    } finally {
+      setWorkspaceLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  const loadSpaces = useCallback(
+    async (selectedWorkspaceId: string) => {
+      if (!isAuthenticated) return;
+      setSpaceLoading(true);
+      try {
+        const folder = await WorkspaceService.getFolder(selectedWorkspaceId);
+
+        if (folder) {
+          const spaces = [];
+
+          for (const child of folder.children) {
+            if (child.isSpace) {
+              spaces.push({
+                id: child.id,
+                name: child.name,
+                isPrivate: child.isPrivate,
+                extra: child.extra,
+              });
+            }
+          }
+
+          setSpaceList(spaces);
+        } else {
+          setSpaceList([]);
+        }
+      } catch (e) {
+        console.error('Failed to load spaces');
+      } finally {
+        setSelectedSpaceId('');
+        setSpaceLoading(false);
+      }
+    },
+    [isAuthenticated],
+  );
+
+  return {
+    workspaceList,
+    spaceList,
+    selectedWorkspaceId,
+    setSelectedWorkspaceId,
+    selectedSpaceId,
+    setSelectedSpaceId,
+    workspaceLoading,
+    spaceLoading,
+    loadWorkspaces,
+    loadSpaces,
+  };
+}

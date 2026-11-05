@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+if [ -e /usr/local/bin/muse ]; then
+    echo "Symlink already exists, skipping."
+else
+    echo "Creating Symlink in /usr/local/bin/muse"
+    ln -s /opt/dsh-office/muse /usr/local/bin/muse
+fi

@@ -13,6 +13,25 @@ final class DshSidecarSupervisor extends ChangeNotifier {
     : environment = environment ?? Platform.environment;
 
   final Map<String, String> environment;
+  static const requiresAiSharingConsent = bool.fromEnvironment(
+    'OPENMUSE_MAC_APP_STORE',
+  );
+  bool aiSharingAllowed = !requiresAiSharingConsent;
+  void allowAiSharing() {
+    aiSharingAllowed = true;
+    notifyListeners();
+  }
+
+  Future<void> revokeAiSharing() async {
+    aiSharingAllowed = false;
+    await stop();
+    notifyListeners();
+  }
+
+  void requireAiSharing() {
+    if (!aiSharingAllowed) throw StateError('AI_SHARING_CONSENT_REQUIRED');
+  }
+
   final String bridgeToken = List<int>.generate(
     32,
     (_) => Random.secure().nextInt(256),
@@ -44,7 +63,10 @@ final class DshSidecarSupervisor extends ChangeNotifier {
   String? get marketPatch => _bundledPatch('dshmarket/openmuse.patch.yml');
 
   List<String> get defaultPatchPaths => [
-    for (final path in [modelCapabilitiesPatch, marketPatch])
+    for (final path in [
+      modelCapabilitiesPatch,
+      if (!const bool.fromEnvironment('OPENMUSE_MAC_APP_STORE')) marketPatch,
+    ])
       if (path != null) path,
   ];
 
@@ -72,6 +94,7 @@ final class DshSidecarSupervisor extends ChangeNotifier {
   }
 
   Future<void> ensureStarted() async {
+    if (!aiSharingAllowed) return;
     if (state == DshSidecarState.ready) return;
     final inFlight = _starting;
     if (inFlight != null) return inFlight;
@@ -148,11 +171,26 @@ final class DshSidecarSupervisor extends ChangeNotifier {
           await Process.run('chmod', ['600', patch.path]);
         resourcePatches.add(patch.path);
       }
-      final command = dshWebCommand(
-        cli,
-        nodeExecutable: runtime.nodeExecutable,
-        patchPaths: [...defaultPatchPaths, ...resourcePatches],
-      );
+      final command = const bool.fromEnvironment('OPENMUSE_MAC_APP_STORE')
+          ? (
+              executable: runtime.nodeExecutable,
+              arguments: [
+                p.join(
+                  dshClosureRoot(cli)!,
+                  'node_modules',
+                  'openmuse-store-runner.mjs',
+                ),
+                for (final patch in [
+                  ...defaultPatchPaths,
+                  ...resourcePatches,
+                ]) ...['--patch', patch],
+              ],
+            )
+          : dshWebCommand(
+              cli,
+              nodeExecutable: runtime.nodeExecutable,
+              patchPaths: [...defaultPatchPaths, ...resourcePatches],
+            );
       final reportedEndpoint = Completer<Uri>();
       final launchEnvironment = dshLaunchEnvironment(
         environment,

@@ -1170,9 +1170,7 @@ Future<Widget> bootOpenMuseHost({
     if (macAppStoreDistribution &&
         const {
           'com.openmuse.cli',
-          'com.openmuse.helix',
           'com.openmuse.plugin-market',
-          'com.openmuse.dsh-agent',
         }.contains(plugin.descriptor.id)) {
       continue;
     }
@@ -1385,9 +1383,7 @@ Future<Widget> bootOpenMuseHost({
   }());
   unawaited(() async {
     try {
-      if (!macAppStoreDistribution) {
-        await registry.activate('com.openmuse.dsh-agent');
-      }
+      await registry.activate('com.openmuse.dsh-agent');
     } catch (error) {
       debugPrint('DSH plugin activate deferred: $error');
     }

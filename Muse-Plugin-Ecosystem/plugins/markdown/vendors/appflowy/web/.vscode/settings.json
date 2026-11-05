@@ -1,0 +1,48 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "cursor.ai.language": "en",
+  "cursor.commitMessage.language": "english",
+  "locale": "en-US",
+  "editor.rulers": [
+    120
+  ],
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  // Disable the default formatter, use eslint instead
+  "search.followSymlinks": false,
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/*.code-search": true,
+    "**/lib": true
+  },
+  // Auto fix
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "eslint.useFlatConfig": false,
+  "eslint.format.enable": true,
+  "eslint.debug": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.options": {
+    "overrideConfigFile": "./.eslintrc.cjs"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "files.autoSave": "afterDelay",
+  "dart.mcpServerLogFile": null
+}

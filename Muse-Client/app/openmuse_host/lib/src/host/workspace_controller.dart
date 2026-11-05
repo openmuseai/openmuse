@@ -394,11 +394,16 @@ final class LocalWorkspaceController extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool Function(OpenMuseResource)? interceptResourceOpen;
+
   void openResource(
     OpenMuseResource resource, {
     String? editorId,
     String? groupId,
   }) {
+    if (editorId == null && interceptResourceOpen?.call(resource) == true) {
+      return;
+    }
     final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
     final path = resource.uri.isScheme('file')
         ? resource.uri.toFilePath()

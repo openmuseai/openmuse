@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package notification;
+
+message WorkspaceNotification {
+    oneof payload {
+        UserProfileChange profile_change = 1;
+        PermissionChanged permission_changed = 2;
+        SectionChanged section_changed = 3;
+        ShareViewsChanged share_views_changed = 4;
+        MentionablePersonListChanged mentionable_person_list_changed = 5;
+        ServerLimit server_limit = 6;
+        WorkspaceMemberProfileChanged workspace_member_profile_changed = 7;
+        FolderChanged folder_changed = 8;
+        FolderViewChanged folder_view_changed = 9;
+        InboxNotification inbox_notification = 10;
+    }
+}
+
+message UserProfileChange {
+    int64 uid = 1;
+    optional string name = 2;
+    optional string email = 3;
+}
+
+message PermissionChanged {
+    string object_id = 1;
+    uint32 reason = 2;
+}
+
+message SectionChanged {
+    string data = 1;
+}
+
+message MentionablePersonListChanged {
+    oneof payload {
+        UpdateMemberRole update_member_role = 1;
+        PageMention page_mention = 2;
+        NewMember new_member = 3;
+        RemovedMember removed_member = 4;
+    }
+}
+
+message NewMember {
+    string user_uuid = 1;
+}
+
+message RemovedMember {
+    string user_uuid = 1;
+}
+
+message UpdateMemberRole {
+    string user_uuid = 1;
+    string email = 2;
+    int32 role = 3;
+}
+
+message PageMention {
+    string user_uuid = 1;
+    string view_id = 2;
+    int64 mentioned_at = 3;
+}
+
+message ShareViewsChanged {
+    string view_id = 1;
+    repeated string emails = 2;
+}
+
+message ServerLimit {
+    repeated int32 features = 1;
+    uint64 max_users = 2;
+    uint64 max_guests = 3;
+}
+
+message WorkspaceMemberProfileChanged {
+    string user_uuid = 1;
+    string name = 2;
+    optional string avatar_url = 3;
+    optional string cover_image_url = 4;
+    optional string custom_image_url = 5;
+    optional string description = 6;
+}
+
+message FolderChanged {
+    string outline_diff_json = 1;
+    optional string folder_rid = 2;
+}
+
+message FolderViewChanged {
+    // 0=VIEW_FIELDS_CHANGED, 1=VIEW_ADDED, 2=VIEW_REMOVED, 3=CHILDREN_REORDERED
+    uint32 change_type = 1;
+    // The changed view_id (types 0,1) or parent_view_id (types 2,3)
+    string view_id = 2;
+    // JSON-serialized FolderView (present for types 0,1; absent for 2,3)
+    optional string view_json = 3;
+    // Parent view ID (for type 1=VIEW_ADDED)
+    optional string parent_view_id = 4;
+    // Remaining/reordered child IDs (for types 2,3)
+    repeated string child_view_ids = 5;
+    // Dedup token
+    optional string folder_rid = 6;
+}
+
+message InboxNotification {
+    // UUID of af_notification.id.
+    string id = 1;
+    // snake_case AFNotificationType string (mention, page_shared, ...).
+    string type = 2;
+    optional string view_id = 3;
+    optional int64 actor_uid = 4;
+    // JSON-serialized metadata payload.
+    string metadata_json = 5;
+    // Unix timestamp seconds.
+    int64 created_at = 6;
+}

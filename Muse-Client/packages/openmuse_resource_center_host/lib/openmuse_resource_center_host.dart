@@ -428,6 +428,48 @@ final class NativeResourceCenter {
     return next;
   }
 
+  /// Resolve only an already mounted file through the opaque resource index.
+  /// The provider retains read-only access and verifies path/symlink boundaries.
+  Future<ResourceReference?> referenceForMountedFile(File file) async {
+    await _mountTail;
+    final canonical = await file.resolveSymbolicLinks();
+    final providers = _mounts.values.toList()
+      ..sort((a, b) => b.root.path.length.compareTo(a.root.path.length));
+    for (final provider in providers) {
+      final prefix = '${provider.root.path}${Platform.pathSeparator}';
+      if (!canonical.startsWith(prefix)) continue;
+      final parts = canonical
+          .substring(prefix.length)
+          .split(Platform.pathSeparator);
+      var parent = 'root';
+      for (var i = 0; i < parts.length; i++) {
+        String? cursor;
+        ResourceDirectoryEntry? found;
+        do {
+          final page = await provider.list(
+            parent,
+            hub.access('workspace-open'),
+            cursor: cursor,
+            limit: 200,
+          );
+          found = page.entries
+              .where((entry) => entry.name == parts[i])
+              .firstOrNull;
+          cursor = page.nextCursor;
+        } while (found == null && cursor != null);
+        if (found == null) return null;
+        if (i == parts.length - 1) {
+          final identity = found.deferredIdentity;
+          return identity == null
+              ? null
+              : ResourceReference(identity: identity);
+        }
+        parent = found.nodeRef;
+      }
+    }
+    return null;
+  }
+
   Future<void> refreshRemote() async {
     if (_remote == null) return;
     final providers = await _remote!.catalog(

@@ -1,6 +1,6 @@
 # OpenMuse Desktop 1.0.0 — macOS corresponding source
 
-This source accompanies the Mac App Store document workspace. OpenMuse is
+This source accompanies the Mac App Store desktop workbench. OpenMuse is
 licensed under GNU AGPL version 3 or later; the license is in `Muse-Client/LICENSE`.
 Original third-party licenses and copyright notices remain applicable. There is
 no warranty except where separately provided. You may modify and redistribute
@@ -95,14 +95,22 @@ After preparing the native assets and Slides bundle:
 ```sh
 cd Muse-Client
 bash scripts/package_macos.sh --distribution app-store --profile release \
-  --components ppt --skip-tests --build-name 1.0.0 --build-number 15
+  --components none --skip-tests --build-name 1.0.0 --build-number 19
 ```
 
-The Store compile flag selects the fixed document workspace, sandbox bookmarks,
-account deletion, bundled software notices and Store update policy. The default
-`direct` distribution retains the full workbench. `--skip-tests` in the packaging
-example skips the separate Host test stage; run the tests with the documented
-fixtures before distributing your own build. This command does not upload to
+The Store build uses the original desktop workbench, security-scoped bookmarks,
+Store update policy, built-in Notes/Slides, Helix, and a fixed bundled DSH
+composition. The Store DSH launcher is `plugins/dsh-agent/assets/store-runner.mjs`.
+It loads bundled modules without user profile or home configuration overlays;
+package installation, configuration mutation, shell tools, runtime Cordis tools,
+and terminal integrations are disabled. The `direct` distribution retains the
+complete desktop capabilities.
+
+Run `python3 scripts/release/test-macos-host.py --output /tmp/openmuse-host-tests`
+and `python3 scripts/release/test-macos-store-dsh.py` separately. The latter uses
+the closure staged under `target/dsh-closure` and makes no model request.
+`--skip-tests` above skips duplicate packaging tests; it is not evidence that the
+release passed acceptance. This command does not upload to
 Apple or publish anything. Its output is `Muse-Client/dist/OpenMuse.app`.
 
 The original release's exact Client commit and file hashes are recorded beside

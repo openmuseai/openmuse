@@ -1,0 +1,153 @@
+name: Web-CI
+on:
+  pull_request:
+    branches:
+      - "main"
+      - "develop"
+      - "release/*"
+env:
+  NODE_VERSION: "20.19.0"
+  PNPM_VERSION: "10.9.0"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  web-build:
+    if: github.event.pull_request.draft != true
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ ubuntu-latest ]
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Maximize build space (ubuntu only)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo docker image prune --all --force
+          sudo rm -rf /opt/hostedtoolcache/codeQL
+          sudo rm -rf ${GITHUB_WORKSPACE}/.git
+          sudo rm -rf $ANDROID_HOME/ndk
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+     
+      - name: install frontend dependencies
+        run: |
+          pnpm install
+      - name: Run lint check
+        run: |
+          pnpm run lint
+
+      - name: Build Storybook
+        run: |
+          pnpm run build-storybook
+
+      - name: build and analyze
+        run: |
+          pnpm run analyze >> analyze-size.txt
+      - name: Upload analyze-size.txt
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyze-size.txt
+          path: analyze-size.txt
+          retention-days: 30
+      - name: Upload stats.html
+        uses: actions/upload-artifact@v4
+        with:
+          name: stats.html
+          path: dist/stats.html
+          retention-days: 30
+
+  docker-runtime-test:
+    if: github.event.pull_request.draft != true
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image (runtime env injection test)
+        run: |
+          docker build -t appflowy-web-test:ci -f docker/Dockerfile .
+
+      - name: Test container fails without required env vars
+        run: |
+          set -e
+          echo "Testing container fails without environment variables..."
+          OUTPUT=$(docker run --rm appflowy-web-test:ci 2>&1 || true)
+          echo "$OUTPUT" | grep -q "ERROR: APPFLOWY_BASE_URL environment variable is required" || (echo "ERROR: Container should fail without env vars" && exit 1)
+          echo "✓ Container correctly fails without required env vars"
+
+      - name: Run container with injected env vars
+        run: |
+          docker run -d --rm --name appflowy-web-test -p 8080:80 \
+            -e APPFLOWY_BASE_URL=https://ci-backend.example.com \
+            -e APPFLOWY_GOTRUE_BASE_URL=https://ci-backend.example.com/gotrue \
+            -e APPFLOWY_WS_BASE_URL=wss://ci-backend.example.com/ws/v2 \
+            appflowy-web-test:ci
+
+      - name: Wait for server to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8080/ >/dev/null 2>&1; then
+              echo "Server is up"; break; fi; sleep 1; done
+          curl -fsS http://localhost:8080/ >/dev/null
+
+      - name: Verify injected runtime config in index.html
+        run: |
+          set -e
+          echo "Fetching HTML content..."
+          HTML=$(curl -fsS http://localhost:8080/)
+          
+          echo "Checking for __APP_CONFIG__ injection..."
+          echo "$HTML" | grep -q "window.__APP_CONFIG__" || (echo "ERROR: Missing window.__APP_CONFIG__" && exit 1)
+          echo "✓ Found window.__APP_CONFIG__"
+          
+          echo "Verifying injected values..."
+          # Note: The config is injected as a single line with format: {APPFLOWY_BASE_URL:'value',APPFLOWY_GOTRUE_BASE_URL:'value',APPFLOWY_WS_BASE_URL:'value'}
+          echo "$HTML" | grep -q "APPFLOWY_BASE_URL:'https://ci-backend.example.com'" || (echo "ERROR: APPFLOWY_BASE_URL not correctly injected" && exit 1)
+          echo "✓ APPFLOWY_BASE_URL correctly injected"
+          
+          echo "$HTML" | grep -q "APPFLOWY_GOTRUE_BASE_URL:'https://ci-backend.example.com/gotrue'" || (echo "ERROR: APPFLOWY_GOTRUE_BASE_URL not correctly injected" && exit 1)
+          echo "✓ APPFLOWY_GOTRUE_BASE_URL correctly injected"
+          
+          echo "$HTML" | grep -q "APPFLOWY_WS_BASE_URL:'wss://ci-backend.example.com/ws/v2'" || (echo "ERROR: APPFLOWY_WS_BASE_URL not correctly injected" && exit 1)
+          echo "✓ APPFLOWY_WS_BASE_URL correctly injected"
+          
+          echo "All runtime configuration values verified successfully!"
+
+      - name: Verify config format and structure
+        run: |
+          set -e
+          echo "Extracting and verifying configuration structure..."
+          
+          # Extract the config object from HTML
+          CONFIG=$(curl -fsS http://localhost:8080/ | grep -o "window.__APP_CONFIG__={[^}]*}")
+          echo "Extracted config: $CONFIG"
+          
+          # Verify it's a valid JavaScript object format
+          echo "$CONFIG" | grep -q "window.__APP_CONFIG__={APPFLOWY_BASE_URL:'[^']*',APPFLOWY_GOTRUE_BASE_URL:'[^']*',APPFLOWY_WS_BASE_URL:'[^']*'}" || \
+            (echo "ERROR: Config format is invalid" && exit 1)
+          
+          echo "✓ Configuration format and structure verified"
+
+      - name: Show container logs on failure
+        if: failure()
+        run: |
+          docker logs appflowy-web-test || true
+
+      - name: Cleanup container
+        if: always()
+        run: |
+          docker rm -f appflowy-web-test || true

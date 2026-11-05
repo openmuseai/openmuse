@@ -1,0 +1,287 @@
+@use "src/styles/mixin.scss";
+
+:root {
+  --font-size-base: 16px;
+  --rem-base: 16;
+  font-size: var(--font-size-base);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+.sketch-picker {
+  background-color: var(--bg-body) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.sketch-picker .flexbox-fix {
+  border-color: var(--border-primary) !important;
+}
+
+.custom-caret {
+  @apply caret-fill-default;
+}
+
+.sketch-picker [id^='rc-editable-input'] {
+  background-color: var(--bg-body) !important;
+  border-color: var(--border-primary) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--line-border) 0px 0px 0px 1px inset !important;
+}
+
+
+body {
+  ::selection {
+    @apply bg-bg-selection;
+  }
+
+  @apply bg-background-primary text-text-primary;
+
+  &[data-os="windows"]:not([data-browser="firefox"]) {
+    .appflowy-custom-scroller {
+      @include mixin.hidden-scrollbar
+    }
+
+    .MuiBox-root {
+      @include mixin.scrollbar-style;
+    }
+  }
+
+  .grid-sticky-header {
+    @include mixin.hidden-scrollbar
+  }
+}
+
+
+.appflowy-date-picker-calendar {
+  width: 100%;
+}
+
+
+.appflowy-scroller {
+  @include mixin.scrollbar-style;
+}
+
+.appflowy-hidden-scroller {
+  ::-webkit-scrollbar, &::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    background-color: transparent;
+  }
+
+  &:hover {
+
+    &::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb {
+      border-radius: 0px;
+      background-color: transparent;
+    }
+  }
+}
+
+
+.appflowy-scrollbar-thumb-horizontal, .appflowy-scrollbar-thumb-vertical {
+  background-color: var(--fill-content-hover);
+  border-radius: 4px;
+  opacity: 100%;
+}
+
+.appflowy-scrollbar-track-horizontal, .appflowy-scrollbar-track-vertical {
+  background-color: var(--fill-content-hover);
+}
+
+.icon {
+  font-family: 'Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI Emoji', 'Twemoji Mozilla', sans-serif;
+}
+
+.view-icon {
+  @apply flex w-fit cursor-pointer rounded-lg;
+  line-height: 1em;
+  font-size: 1.25em;
+  white-space: nowrap;
+}
+
+.theme-mode-item {
+  @apply relative flex h-[72px] w-[88px] cursor-pointer items-end justify-end rounded border hover:shadow;
+  background: linear-gradient(150.74deg, rgba(231, 231, 231, 0) 17.95%, #C5C5C5 95.51%);
+}
+
+[data-dark-mode="true"] {
+  .theme-mode-item {
+    background: linear-gradient(150.74deg, rgba(128, 125, 125, 0) 17.95%, #4d4d4d 95.51%);
+  }
+}
+
+.document-header {
+  .view-banner {
+    @apply items-center;
+  }
+}
+
+.tooltip-arrow {
+  overflow: hidden;
+  position: absolute;
+  width: 1em;
+  height: 0.71em;
+  color: var(--bg-body);
+
+  &:before {
+    content: '""';
+    margin: auto;
+    display: block;
+    width: 100%;
+    height: 100%;
+    box-shadow: var(--shadow);
+    background-color: var(--bg-body);
+    transform: rotate(45deg);
+  }
+}
+
+
+@keyframes blink {
+  0%, 100% {
+    background-color: var(--content-blue-100);
+  }
+  50% {
+    background-color: unset;
+  }
+}
+
+
+.blink {
+  animation: blink 2s linear infinite;
+}
+
+.reply-line {
+  width: 28px;
+  height: 16px;
+  border-left: 2px solid;
+  border-top: 2px solid;
+  border-color: var(--line-border);
+  border-top-left-radius: 6px;
+}
+
+.read-more {
+  box-shadow: 0px -15px 20px 12px var(--bg-body);
+  background-color: transparent;
+}
+
+.comment {
+  scroll-margin-top: 100px;
+}
+
+#addComment {
+  scroll-margin-top: 60px;
+}
+
+.board-card {
+  @apply border-border-primary border-[1px];
+  border-radius: 6px;
+  background: var(--background-primary);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+
+@mixin scrollbar-style {
+  ::-webkit-scrollbar, &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &:hover {
+
+    &::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb {
+      border-radius: 4px;
+      background-color: var(--scrollbar-thumb);
+    }
+  }
+}
+
+@mixin hidden-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.appflowy-scrollbar {
+  @include scrollbar-style;
+}
+
+.appflowy-visible-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: var(--scrollbar-thumb);
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  // Firefox
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+.appflowy-hidden-horizontal-scrollbar {
+  // Hide all scrollbars - we use a custom horizontal scrollbar component
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+
+  // Firefox
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.appflowy-hidden-scrollbar {
+  @include hidden-scrollbar;
+}
+
+
+#appflowy-chat, #ai-assistant {
+  #appflowy-editor > div {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  #appflowy-editor {
+    [data-block-type="bulleted_list"] .h-6 {
+      height: 1.25rem;
+    }
+  }
+}
+
+
+@keyframes dots-loading {
+  20% {
+    background-position: 0% 0%, 50% 50%, 100% 50%;
+  }
+  40% {
+    background-position: 0% 100%, 50% 0%, 100% 50%;
+  }
+  60% {
+    background-position: 0% 50%, 50% 100%, 100% 0%;
+  }
+  80% {
+    background-position: 0% 50%, 50% 50%, 100% 100%;
+  }
+}

@@ -1,0 +1,7 @@
+CFBundleDisplayName = "思构";
+CFBundleName = "思构";
+NSCameraUsageDescription = "思构需要使用相機，以便把照片加入文件。";
+NSMicrophoneUsageDescription = "思构需要使用麥克風，以便把語音轉成草稿。音訊只留在本機，不會自動傳送。";
+NSPhotoLibraryAddUsageDescription = "思构需要取用相簿，以便把圖片儲存到相簿。";
+NSPhotoLibraryUsageDescription = "思构需要取用相簿，以便把圖片加入文件。";
+NSSpeechRecognitionUsageDescription = "思构僅在填寫草稿時使用語音辨識。點傳送後才會提交內容。";

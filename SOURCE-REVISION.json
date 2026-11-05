@@ -1,9 +1,38 @@
 {
-  "clientBuildCommit": "88c9da5f28309e6a1dbb316a535ddfcae002dbb2",
+  "clientBuildCommit": "80c694036ea4aa03c3fcf076bd0d133d057f09a3",
   "version": "1.0.0",
-  "buildNumber": 15,
+  "buildNumber": 19,
   "clientDirectory": "Muse-Client",
-  "fileCount": 33696,
+  "fileCount": 41966,
   "sourcePublication": "Git source branch; no separately uploaded source ZIP",
-  "provenance": "Client source files map to the clean isolated build commit. External source file hashes are pinned by SOURCE-SHA256.json. Signing credentials and generated build caches are excluded."
+  "provenance": "Client source files map to the clean isolated build commit. External source file hashes are pinned by SOURCE-SHA256.json. Signing credentials and generated build caches are excluded.",
+  "publicationRedactions": [
+    {
+      "file": "Muse-Plugin-Ecosystem/plugins/markdown/vendors/appflowy/client/doc/agent-native-knowledge-platform/workspace-platform/04-domain-model-and-provider-contract.md",
+      "originalSha256": "f298f291afa19a3db87b820bba6cd63f03740f313eff283d330f3b3a588052e8",
+      "publishedSha256": "7dcd596af34e7481632f8f5c1968fd1e622e68cf383335b81f332b867c0af59a",
+      "findingsAddressed": 1
+    },
+    {
+      "file": "Muse-Plugin-Ecosystem/plugins/markdown/vendors/appflowy/client/frontend/appflowy_flutter/lib/plugins/document/presentation/editor_plugins/image/unsplash_image_widget.dart",
+      "originalSha256": "48c508543cffdfcb0ae338d55a3d9673e3b92df0e853a750d89bdd096c022591",
+      "publishedSha256": "bb858ffa4865a2ba6e5744bb0eabbee4397c49ca2bfb31ae59aa64165500b107",
+      "findingsAddressed": 4
+    },
+    {
+      "file": "Muse-Plugin-Ecosystem/plugins/markdown/vendors/appflowy/web/.github/workflows/web_coverage.yaml",
+      "originalSha256": "38c49ce74aaf9960924131b8cb35cbc54b9073d289816e0a654c774c8baa1bf7",
+      "publishedSha256": "647e44ee4f70f5d486a5fcdbe3d2e772dab03088cd44a49aac6af068d3713532",
+      "findingsAddressed": 1
+    },
+    {
+      "file": "Muse-Plugin-Ecosystem/plugins/markdown/vendors/appflowy/web/src/components/_shared/image-upload/Unsplash.tsx",
+      "originalSha256": "fbbf9989fad96fa0acedd43e5c0af9bc4429716ed7c8fa3ee4a4b0b0d3e030e3",
+      "publishedSha256": "a41ab695c53905c75acc659f462fa1de4d97f95b1d4521dc1042d473510f2739",
+      "findingsAddressed": 1
+    }
+  ],
+  "history": "Parent is the previous reviewed public source15; unpublished intermediate commits are excluded.",
+  "clientCompileCommit": "54bdd51c8488d8f0f4cb2590de551dfea0d97f29",
+  "bundledAssetCommit": "80c694036ea4aa03c3fcf076bd0d133d057f09a3"
 }

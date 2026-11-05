@@ -1,0 +1,404 @@
+import EventEmitter from 'events';
+
+import { type FC, type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Awareness } from 'y-protocols/awareness';
+
+import { APP_EVENTS } from '@/application/constants';
+import { db } from '@/application/db';
+import { CollabService, UserService } from '@/application/services/domains';
+import { getTokenParsed } from '@/application/session/token';
+import { clearDrainConfig, configureDrain, setCurrentSession, startDrainAll } from '@/application/sync-outbox';
+import type { AppEventEmitter } from '@/components/app/contexts/AppEventEmitterContext';
+import { useAppflowyWebSocket, useBroadcastChannel, useSync } from '@/components/ws';
+import { notification } from '@/proto/messages';
+
+import { useAuthInternal } from '../contexts/AuthInternalContext';
+import { SyncInternalContext, SyncInternalContextType } from '../contexts/SyncInternalContext';
+
+interface AppSyncLayerProps {
+  children: ReactNode;
+}
+
+const WS_READY_STATE_OPEN = 1;
+
+// Second layer: WebSocket connection and synchronization
+// Handles WebSocket connection, broadcast channel, sync context, and event management
+// Depends on workspace ID and service from auth layer
+export const AppSyncLayer: FC<AppSyncLayerProps> = ({ children }) => {
+  const { currentWorkspaceId, isAuthenticated } = useAuthInternal();
+  const [awarenessMap] = useState<Record<string, Awareness>>({});
+  // Lazy-init so a throwaway EventEmitter isn't constructed on every render
+  // (useRef keeps only the first value but still evaluates its argument each time).
+  const eventEmitterRef = useRef<AppEventEmitter | null>(null);
+
+  if (eventEmitterRef.current === null) {
+    eventEmitterRef.current = new EventEmitter() as AppEventEmitter;
+  }
+
+  const eventEmitter = eventEmitterRef.current;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const globalWindow = window as typeof window & {
+      Cypress?: unknown;
+      __APPFLOWY_EVENT_EMITTER__?: EventEmitter;
+    };
+
+    if (globalWindow.Cypress) {
+      // Expose event emitter for Cypress so tests can simulate workspace notifications
+      globalWindow.__APPFLOWY_EVENT_EMITTER__ = eventEmitter;
+    }
+  }, [eventEmitter]);
+
+  // Initialize WebSocket connection - currentWorkspaceId and service are guaranteed to exist when this component renders
+  const webSocket = useAppflowyWebSocket({
+    workspaceId: currentWorkspaceId!,
+    clientId: CollabService.getClientId(),
+    deviceId: CollabService.getDeviceId(),
+  });
+
+  // Initialize broadcast channel for multi-tab communication
+  const broadcastChannel = useBroadcastChannel(`workspace:${currentWorkspaceId!}`);
+
+  // Initialize sync context for collaborative editing
+  const { registerSyncContext, flushAllSync, syncAllToServer, revertCollabVersion, scheduleDeferredCleanup } = useSync(
+    webSocket,
+    broadcastChannel,
+    eventEmitter,
+    currentWorkspaceId!
+  );
+
+  // Handle WebSocket reconnection. Depend on the stable `reconnect` function,
+  // not the webSocket container whose identity changes per incoming message.
+  const webSocketReconnect = webSocket.reconnect;
+
+  // Set up WebSocket reconnection event listener
+  useEffect(() => {
+    const currentEventEmitter = eventEmitter;
+
+    currentEventEmitter.on(APP_EVENTS.RECONNECT_WEBSOCKET, webSocketReconnect);
+
+    return () => {
+      currentEventEmitter.off(APP_EVENTS.RECONNECT_WEBSOCKET, webSocketReconnect);
+    };
+  }, [eventEmitter, webSocketReconnect]);
+
+  // Emit WebSocket status on actual readyState transitions only — not on every
+  // webSocket identity change (which happens for each incoming message).
+  const webSocketReadyState = webSocket.readyState;
+
+  useLayoutEffect(() => {
+    const currentEventEmitter = eventEmitter;
+
+    currentEventEmitter.webSocketReadyState = webSocketReadyState;
+    currentEventEmitter.emit(APP_EVENTS.WEBSOCKET_STATUS, webSocketReadyState);
+  }, [eventEmitter, webSocketReadyState]);
+
+  // Wire the persistent sync_outbox drain to this WebSocket. The drain loop
+  // runs whenever a record is enqueued AND the socket is OPEN. The drain is
+  // scoped to `currentWorkspaceId` so pending rows from one workspace are not
+  // accidentally replayed on a different workspace's WebSocket after switch.
+  // The drain also fans out to BroadcastChannel so sibling tabs in the same
+  // workspace receive local edits immediately, without waiting for a server
+  // round-trip (matches the behaviour of the pre-outbox `emit` callback).
+  const wsSendMessage = webSocket.sendMessage;
+  const wsReadyState = webSocket.readyState;
+  const bcPostMessage = broadcastChannel.postMessage;
+
+  // Live readyState for the drain send callback. The closure capture
+  // `wsReadyState` reflects the value at render time, but a drain can run
+  // later — a ref ensures `isReady()` and the post-send check always see
+  // the latest known state.
+  const wsReadyStateRef = useRef(wsReadyState);
+
+  useEffect(() => {
+    wsReadyStateRef.current = wsReadyState;
+  }, [wsReadyState]);
+
+  // Re-derive only when auth state flips — the user id is stable for the
+  // lifetime of an authenticated session, so re-parsing the token on every
+  // unrelated re-render (e.g. WS status, BC message, child remount) just
+  // burns a localStorage read + JSON.parse. Token-refresh still flows in
+  // because `isAuthenticated` gates AppSyncLayer's mount via the auth layer.
+  const currentUserId = useMemo(() => (isAuthenticated ? getTokenParsed()?.user?.id ?? null : null), [isAuthenticated]);
+
+  useEffect(() => {
+    if (currentUserId && currentWorkspaceId) {
+      setCurrentSession({ userId: currentUserId, workspaceId: currentWorkspaceId });
+    } else {
+      setCurrentSession(null);
+    }
+
+    return () => {
+      // Unmount path (e.g., sign-out); clear so no stale session is stamped
+      // onto subsequent enqueues before a new AppSyncLayer mounts.
+      setCurrentSession(null);
+    };
+  }, [currentUserId, currentWorkspaceId]);
+
+  useEffect(() => {
+    if (!currentWorkspaceId || !currentUserId) return;
+
+    configureDrain({
+      userId: currentUserId,
+      workspaceId: currentWorkspaceId,
+      // Server send — gated on WS being OPEN via isReady(). `keep=false` so
+      // a transient close does not silently buffer the message into
+      // react-use-websocket's in-memory retry queue (which would be lost on
+      // refresh). The drain catches send failures and leaves outbox records
+      // in place for retry.
+      send: (message) => {
+        if (wsReadyStateRef.current !== WS_READY_STATE_OPEN) {
+          throw new Error('[outbox] WS not OPEN at send time');
+        }
+
+        wsSendMessage(message, false);
+      },
+      // Sibling-tab fan-out — runs synchronously on every enqueue, regardless
+      // of WS readiness, so local edits propagate across tabs even during a
+      // reconnect.
+      broadcast: bcPostMessage,
+      // Best-effort fallback when the durable IDB enqueue fails. Uses
+      // `keep=true` so react-use-websocket buffers in-memory until reconnect;
+      // lost on refresh/crash, but better than silently dropping edits in
+      // the quota/private-mode/blocked-IDB failure mode.
+      sendBestEffort: (message) => wsSendMessage(message, true),
+      isReady: () => wsReadyStateRef.current === WS_READY_STATE_OPEN,
+    });
+
+    if (wsReadyState === WS_READY_STATE_OPEN) {
+      startDrainAll();
+    }
+
+    return () => {
+      clearDrainConfig();
+    };
+  }, [currentUserId, currentWorkspaceId, wsSendMessage, wsReadyState, bcPostMessage]);
+
+  // Handle user profile change notifications
+  // This provides automatic UI updates when user profile changes occur via WebSocket.
+  //
+  // Notification Flow:
+  // 1. Server sends WorkspaceNotification with profileChange
+  // 2. useSync processes notification from WebSocket OR BroadcastChannel
+  // 3. useSync emits USER_PROFILE_CHANGED event via eventEmitter
+  // 4. This handler receives the event and updates local database
+  // 5. useLiveQuery in AppConfig detects database change
+  // 6. All components using currentUser automatically re-render with new data
+  //
+  // Multi-tab Support:
+  // - Active tab: WebSocket → useSync → this handler → database update
+  // - Other tabs: BroadcastChannel → useSync → this handler → database update
+  // - Result: All tabs show updated profile simultaneously
+  //
+  // UI Components that auto-update:
+  // - Workspace dropdown (shows email)
+  // - Collaboration user lists (shows names/avatars)
+  // - Any component using useCurrentUser() hook
+  useEffect(() => {
+    if (!isAuthenticated || !currentWorkspaceId) return;
+
+    const currentEventEmitter = eventEmitter;
+
+    const handleUserProfileChange = async (profileChange: notification.IUserProfileChange) => {
+      try {
+        // Extract user ID from authentication token
+        const token = getTokenParsed();
+        const userId = token?.user?.id;
+
+        if (!userId) {
+          console.warn('No user ID found for profile update');
+          return;
+        }
+
+        // Retrieve current user data from local database cache
+        const existingUser = await db.users.get(userId);
+
+        if (!existingUser) {
+          console.warn('No existing user found in database for profile update');
+          return;
+        }
+
+        // UserProfileChange notification only contains uid, name, and email
+        // It does NOT include metadata or avatar_url
+        // Avatar updates come via WorkspaceMemberProfileChanged notification
+        const updatedUser = {
+          ...existingUser,
+          name: profileChange.name ?? existingUser.name,
+          email: profileChange.email ?? existingUser.email,
+          // Preserve existing metadata - UserProfileChange doesn't include it
+        };
+
+        await db.users.put(updatedUser, userId);
+      } catch (error) {
+        console.error('Failed to handle user profile change notification:', error);
+      }
+    };
+
+    const handleWorkspaceMemberProfileChange = async (profileChange: notification.IWorkspaceMemberProfileChanged) => {
+      if (!currentWorkspaceId) {
+        console.warn('No current workspace ID available');
+        return;
+      }
+
+      const userUuid = profileChange.userUuid;
+
+      if (!userUuid) {
+        console.warn('Workspace member profile change missing user UUID');
+        return;
+      }
+
+      // Name is required in the proto, but we handle it defensively
+      if (!profileChange.name) {
+        console.warn('Workspace member profile change missing required name field');
+      }
+
+      // Note: Field name conversion
+      // - Server sends protobuf with snake_case: avatar_url, cover_image_url, etc.
+      // - Protobuf JS generator automatically converts to camelCase: avatarUrl, coverImageUrl, etc.
+      // - We use camelCase (avatarUrl) when reading from profileChange
+      // - We use snake_case (avatar_url) when storing in database (matches schema)
+
+      try {
+        const existingProfile = await db.workspace_member_profiles
+          .where('[workspace_id+user_uuid]')
+          .equals([currentWorkspaceId, userUuid])
+          .first();
+
+        // If profile doesn't exist locally and this is the current user's profile,
+        // try fetching it from the API first (only works for current user)
+        // This can happen if the notification arrives before initial hydration
+        if (!existingProfile) {
+          // Check if this notification is for the current user
+          const token = getTokenParsed();
+          const currentUser = await db.users.get(token?.user?.id || '');
+          const isCurrentUser = currentUser?.uuid === userUuid;
+
+          if (isCurrentUser) {
+            try {
+              const fetchedProfile = await UserService.getWorkspaceMemberProfile(currentWorkspaceId);
+
+              if (fetchedProfile) {
+                // Use fetched profile as base, then apply notification updates
+                const baseProfile = {
+                  workspace_id: currentWorkspaceId,
+                  user_uuid: userUuid,
+                  person_id: fetchedProfile.person_id ?? userUuid,
+                  name: profileChange.name ?? fetchedProfile.name ?? '',
+                  email: fetchedProfile.email ?? '',
+                  role: fetchedProfile.role ?? 0,
+                  avatar_url: fetchedProfile.avatar_url ?? null,
+                  cover_image_url: fetchedProfile.cover_image_url ?? null,
+                  custom_image_url: fetchedProfile.custom_image_url ?? null,
+                  description: fetchedProfile.description ?? null,
+                  invited: fetchedProfile.invited ?? false,
+                  last_mentioned_at: fetchedProfile.last_mentioned_at ?? null,
+                  updated_at: Date.now(),
+                };
+
+                // Apply notification updates, handling optional fields correctly
+                // undefined = field not in notification (preserve existing)
+                // null/empty string = field explicitly cleared
+                // Note: profileChange uses camelCase (avatarUrl) from proto, we convert to snake_case (avatar_url) for database
+                const updatedProfile = {
+                  ...baseProfile,
+                  name: profileChange.name ?? baseProfile.name,
+                  avatar_url:
+                    profileChange.avatarUrl !== undefined ? profileChange.avatarUrl || null : baseProfile.avatar_url,
+                  cover_image_url:
+                    profileChange.coverImageUrl !== undefined
+                      ? profileChange.coverImageUrl || null
+                      : baseProfile.cover_image_url,
+                  custom_image_url:
+                    profileChange.customImageUrl !== undefined
+                      ? profileChange.customImageUrl || null
+                      : baseProfile.custom_image_url,
+                  description:
+                    profileChange.description !== undefined
+                      ? profileChange.description || null
+                      : baseProfile.description,
+                };
+
+                await db.workspace_member_profiles.put(updatedProfile);
+                return;
+              }
+            } catch (error) {
+              console.warn('Failed to fetch workspace member profile for notification:', error);
+              // Continue with creating a minimal profile from notification data
+            }
+          }
+          // For other users' profiles, we'll create from notification data below
+        }
+
+        // Update existing profile or create new one from notification
+        const updatedProfile = {
+          workspace_id: currentWorkspaceId,
+          user_uuid: userUuid,
+          person_id: existingProfile?.person_id ?? userUuid,
+          name: profileChange.name ?? existingProfile?.name ?? '',
+          email: existingProfile?.email ?? '',
+          role: existingProfile?.role ?? 0,
+          // Handle optional fields: undefined = preserve, null/empty = clear
+          // Note: profileChange uses camelCase (avatarUrl) from proto, we convert to snake_case (avatar_url) for database
+          avatar_url:
+            profileChange.avatarUrl !== undefined
+              ? profileChange.avatarUrl || null
+              : existingProfile?.avatar_url ?? null,
+          cover_image_url:
+            profileChange.coverImageUrl !== undefined
+              ? profileChange.coverImageUrl || null
+              : existingProfile?.cover_image_url ?? null,
+          custom_image_url:
+            profileChange.customImageUrl !== undefined
+              ? profileChange.customImageUrl || null
+              : existingProfile?.custom_image_url ?? null,
+          description:
+            profileChange.description !== undefined
+              ? profileChange.description || null
+              : existingProfile?.description ?? null,
+          invited: existingProfile?.invited ?? false,
+          last_mentioned_at: existingProfile?.last_mentioned_at ?? null,
+          updated_at: Date.now(),
+        };
+
+        // Update workspace member profile in local database while preserving unspecified fields
+        await db.workspace_member_profiles.put(updatedProfile);
+
+        // Note: No need to re-emit event here. Components using useCurrentUserWorkspaceAvatar
+        // will automatically re-render when the database is updated via Dexie's reactive queries.
+      } catch (error) {
+        console.error('Failed to handle workspace member profile change notification:', error);
+      }
+    };
+
+    // Subscribe to user profile change notifications from the event system
+    currentEventEmitter.on(APP_EVENTS.USER_PROFILE_CHANGED, handleUserProfileChange);
+    currentEventEmitter.on(APP_EVENTS.WORKSPACE_MEMBER_PROFILE_CHANGED, handleWorkspaceMemberProfileChange);
+
+    // Cleanup subscription when component unmounts or dependencies change
+    return () => {
+      currentEventEmitter.off(APP_EVENTS.USER_PROFILE_CHANGED, handleUserProfileChange);
+      currentEventEmitter.off(APP_EVENTS.WORKSPACE_MEMBER_PROFILE_CHANGED, handleWorkspaceMemberProfileChange);
+    };
+  }, [eventEmitter, isAuthenticated, currentWorkspaceId]);
+
+  // Context value for synchronization layer. The webSocket/broadcastChannel
+  // transports are intentionally excluded: their identity changes on every
+  // incoming message and would re-render all consumers per message. Everything
+  // exposed here is referentially stable across messages.
+  const syncContextValue: SyncInternalContextType = useMemo(
+    () => ({
+      registerSyncContext,
+      revertCollabVersion,
+      eventEmitter,
+      awarenessMap,
+      flushAllSync,
+      syncAllToServer,
+      scheduleDeferredCleanup,
+    }),
+    [eventEmitter, registerSyncContext, revertCollabVersion, awarenessMap, flushAllSync, syncAllToServer, scheduleDeferredCleanup]
+  );
+
+  return <SyncInternalContext.Provider value={syncContextValue}>{children}</SyncInternalContext.Provider>;
+};

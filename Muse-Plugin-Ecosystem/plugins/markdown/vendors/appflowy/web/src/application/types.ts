@@ -1,0 +1,1699 @@
+import EventEmitter from 'events';
+
+import { AxiosInstance } from 'axios';
+import * as Y from 'yjs';
+
+import { SyncContext } from '@/application/services/js-services/sync-protocol';
+import { PromptDatabaseConfiguration } from '@/components/chat';
+
+export type BlockId = string;
+
+export type ExternalId = string;
+
+export type ChildrenId = string;
+
+export type ViewId = string;
+
+export type RowId = string;
+
+export type CellId = string;
+
+export enum BlockType {
+  Paragraph = 'paragraph',
+  Page = 'page',
+  HeadingBlock = 'heading',
+  TodoListBlock = 'todo_list',
+  BulletedListBlock = 'bulleted_list',
+  NumberedListBlock = 'numbered_list',
+  ToggleListBlock = 'toggle_list',
+  CodeBlock = 'code',
+  EquationBlock = 'math_equation',
+  QuoteBlock = 'quote',
+  CalloutBlock = 'callout',
+  DividerBlock = 'divider',
+  ImageBlock = 'image',
+  VideoBlock = 'video',
+  AudioBlock = 'audio',
+  GoogleDriveBlock = 'google_drive',
+  GridBlock = 'grid',
+  BoardBlock = 'board',
+  CalendarBlock = 'calendar',
+  ChartBlock = 'chart',
+  OutlineBlock = 'outline',
+  TableBlock = 'table',
+  TableCell = 'table/cell',
+  LinkPreview = 'link_preview',
+  FileBlock = 'file',
+  GalleryBlock = 'multi_image',
+  SubpageBlock = 'sub_page',
+  SimpleTableBlock = 'simple_table',
+  SimpleTableRowBlock = 'simple_table_row',
+  SimpleTableCellBlock = 'simple_table_cell',
+  ColumnsBlock = 'simple_columns',
+  ColumnBlock = 'simple_column',
+  AIMeetingBlock = 'ai_meeting',
+  AIMeetingSummaryBlock = 'ai_meeting_summary',
+  AIMeetingNotesBlock = 'ai_meeting_notes',
+  AIMeetingTranscriptionBlock = 'ai_meeting_transcription',
+  AIMeetingSpeakerBlock = 'ai_meeting_speaker',
+  PDFBlock = 'pdf',
+}
+
+export enum InlineBlockType {
+  Formula = 'formula',
+  Mention = 'mention',
+}
+
+export enum AlignType {
+  Left = 'left',
+  Center = 'center',
+  Right = 'right',
+}
+
+export interface BlockData {
+  bgColor?: string;
+  font_color?: string;
+  align?: AlignType;
+  delta?: {
+    insert: string;
+    attributes: Record<string, unknown>;
+  }[];
+}
+
+export interface HeadingBlockData extends BlockData {
+  level: number;
+}
+
+export interface NumberedListBlockData extends BlockData {
+  number: number;
+}
+
+export interface TodoListBlockData extends BlockData {
+  checked: boolean;
+}
+
+export interface ToggleListBlockData extends BlockData {
+  collapsed: boolean;
+  level?: number;
+}
+
+export interface CodeBlockData extends BlockData {
+  language: string;
+}
+
+export interface CalloutBlockData extends BlockData {
+  icon: string;
+  icon_type?: 'emoji' | 'icon';
+  textColor?: string;
+}
+
+export interface MathEquationBlockData extends BlockData {
+  formula?: string;
+}
+
+export enum LinkPreviewType {
+  Bookmark = 'bookmark',
+  Embed = 'embed',
+}
+
+export interface LinkPreviewBlockData extends BlockData {
+  url?: string;
+  preview_type?: LinkPreviewType;
+}
+
+export enum FieldURLType {
+  Upload = 2,
+  Link = 1,
+}
+
+export interface FileBlockData extends BlockData {
+  name?: string;
+  uploaded_at?: number;
+  url?: string;
+  url_type?: FieldURLType;
+  retry_local_url?: string;
+  pending_upload_id?: string;
+}
+
+export enum ImageType {
+  Local = 0,
+  Internal = 1,
+  External = 2,
+}
+
+export interface ImageBlockData extends BlockData {
+  url?: string;
+  width?: number;
+  align?: AlignType;
+  image_type?: ImageType;
+  height?: number;
+  retry_local_url?: string;
+  pending_upload_id?: string;
+}
+
+export enum VideoType {
+  Local = 0,
+  Internal = 1,
+  External = 2,
+}
+
+/**
+ * Desktop (Flutter) stores video type as string in `url_type`: "local" | "network" | "cloud"
+ * Web stores video type as number in `video_type`: 0 | 1 | 2
+ * Both keys are read/written for cross-platform compatibility.
+ */
+export type DesktopVideoUrlType = 'local' | 'network' | 'cloud';
+
+export interface VideoBlockData extends BlockData {
+  url?: string;
+  width?: number;
+  height?: number;
+  align?: AlignType;
+  video_type?: VideoType;
+  url_type?: DesktopVideoUrlType;
+  name?: string;
+}
+
+export enum AudioUrlType {
+  Local = 'local',
+  Network = 'network',
+  Cloud = 'cloud',
+}
+
+export interface AudioBlockData extends BlockData {
+  url?: string;
+  url_type?: AudioUrlType | string;
+  name?: string;
+  uploaded_at?: number;
+  uploaded_by?: string;
+  duration_in_second?: number;
+  retry_local_url?: string;
+  pending_upload_id?: string;
+}
+
+export interface GoogleDriveBlockData extends BlockData {
+  url?: string;
+  name?: string;
+  email?: string;
+  uploaded_at?: number;
+  width_factor?: number;
+  height_factor?: number;
+}
+
+export interface AIMeetingBlockData extends BlockData {
+  title?: string;
+  date?: string | number;
+  audio_file_path?: string;
+  recording_state?: string;
+  summary_template?: string;
+  summary_detail?: string;
+  summary_language?: string;
+  transcript_id?: string;
+  transcription_type?: string;
+  created_at?: string | number;
+  last_modified?: string | number;
+  selected_tab_index?: number | string;
+  pending_billing_duration?: number;
+  show_notes_directly?: boolean;
+  auto_start_recording?: boolean;
+  speaker_info_map?: string | Record<string, Record<string, unknown>>;
+}
+
+export interface AIMeetingSpeakerBlockData extends BlockData {
+  speaker_id?: string;
+  timestamp?: number;
+  end_timestamp?: number;
+}
+
+export interface PDFBlockData extends BlockData {
+  name?: string;
+  uploaded_at?: number;
+  url?: string;
+  url_type?: FieldURLType;
+  retry_local_url?: string;
+  pending_upload_id?: string;
+}
+
+export enum GalleryLayout {
+  Carousel = 0,
+  Grid = 1,
+}
+
+export interface GalleryBlockData extends BlockData {
+  images: {
+    type: ImageType;
+    url: string;
+  }[];
+  layout: GalleryLayout;
+}
+
+export interface OutlineBlockData extends BlockData {
+  depth?: number;
+}
+
+export interface TableBlockData extends BlockData {
+  colDefaultWidth: number;
+  colMinimumWidth: number;
+  colsHeight: number;
+  colsLen: number;
+  rowDefaultHeight: number;
+  rowsLen: number;
+}
+
+export enum TableAlignType {
+  Left = 'Left',
+  Center = 'Center',
+  Right = 'Right',
+}
+
+export interface SimpleTableData extends BlockData {
+  column_widths?: Record<string, number>;
+  enable_header_row?: boolean;
+  row_colors?: Record<string, string>;
+  enable_header_column?: boolean;
+  column_aligns?: Record<string, TableAlignType>;
+  column_colors?: Record<string, string>;
+  row_aligns?: Record<string, TableAlignType>;
+}
+
+export interface TableCellBlockData extends BlockData {
+  colPosition: number;
+  height: number;
+  rowPosition: number;
+  width: number;
+  rowBackgroundColor: string;
+  colBackgroundColor: string;
+}
+
+export interface DatabaseNodeData extends BlockData {
+  view_id?: ViewId;
+  view_ids?: ViewId[];
+  parent_id?: ViewId;
+  database_id?: string;
+  is_database_duplicate_placeholder?: boolean;
+}
+
+export interface SubpageNodeData extends BlockData {
+  view_id: string;
+}
+
+export interface ColumnNodeData extends BlockData {
+  ratio?: number;
+}
+
+export enum MentionType {
+  PageRef = 'page',
+  Date = 'date',
+  childPage = 'childPage',
+  externalLink = 'externalLink',
+  Person = 'person',
+}
+
+export interface Mention {
+  // inline page ref id
+  page_id?: string;
+  block_id?: string;
+  // reminder date ref id
+  date?: string;
+  reminder_id?: string;
+  reminder_option?: string;
+  include_time?: boolean;
+
+  // external link
+  url?: string;
+  type: MentionType;
+
+  // mention person
+  person_id?: string;
+  person_name?: string;
+}
+
+export interface FolderMeta {
+  current_view: ViewId;
+  current_workspace: string;
+}
+
+export enum DocCoverType {
+  Color = 'CoverType.color',
+  Image = 'CoverType.file',
+  Asset = 'CoverType.asset',
+}
+
+export type DocCover = {
+  image_type?: ImageType;
+  cover_selection_type?: DocCoverType;
+  cover_selection?: string;
+} | null;
+
+export enum ViewLayout {
+  Document = 0,
+  Grid = 1,
+  Board = 2,
+  Calendar = 3,
+  AIChat = 4,
+  Chart = 5,
+  List = 6,
+  Gallery = 7,
+}
+
+export enum YjsEditorKey {
+  data_section = 'data',
+  document = 'document',
+  database = 'database',
+  workspace_database = 'databases',
+  folder = 'folder',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  database_row = 'data',
+  user_awareness = 'user_awareness',
+  empty = 'empty',
+
+  // document
+  blocks = 'blocks',
+  page_id = 'page_id',
+  meta = 'meta',
+  children_map = 'children_map',
+  text_map = 'text_map',
+  text = 'text',
+  delta = 'delta',
+  block_id = 'id',
+  block_type = 'ty',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  block_data = 'data',
+  block_parent = 'parent',
+  block_children = 'children',
+  block_external_id = 'external_id',
+  block_external_type = 'external_type',
+
+  // row comment
+  comment = 'comment',
+}
+
+export enum YjsFolderKey {
+  views = 'views',
+  relation = 'relation',
+  section = 'section',
+  private = 'private',
+  favorite = 'favorite',
+  recent = 'recent',
+  trash = 'trash',
+  meta = 'meta',
+  current_view = 'current_view',
+  current_workspace = 'current_workspace',
+  id = 'id',
+  name = 'name',
+  icon = 'icon',
+  extra = 'extra',
+  cover = 'cover',
+  line_height_layout = 'line_height_layout',
+  font_layout = 'font_layout',
+  type = 'ty',
+  value = 'value',
+  layout = 'layout',
+  bid = 'bid',
+}
+
+export enum YjsDatabaseKey {
+  views = 'views',
+  id = 'id',
+  metas = 'metas',
+  fields = 'fields',
+  is_primary = 'is_primary',
+  last_modified = 'last_modified',
+  created_at = 'created_at',
+  name = 'name',
+  type = 'ty',
+  type_option = 'type_option',
+  content = 'content',
+  data = 'data',
+  iid = 'iid',
+  database_id = 'database_id',
+  is_two_way = 'is_two_way',
+  reciprocal_field_id = 'reciprocal_field_id',
+  reciprocal_field_name = 'reciprocal_field_name',
+  source_limit = 'source_limit',
+  target_limit = 'target_limit',
+  relation_field_id = 'relation_field_id',
+  target_field_id = 'target_field_id',
+  calculation_type = 'calculation_type',
+  show_as = 'show_as',
+  condition_value = 'condition_value',
+  field_orders = 'field_orders',
+  field_settings = 'field_settings',
+  visibility = 'visibility',
+  wrap = 'wrap',
+  width = 'width',
+  filters = 'filters',
+  children = 'children',
+  groups = 'groups',
+  layout = 'layout',
+  layout_settings = 'layout_settings',
+  modified_at = 'modified_at',
+  row_orders = 'row_orders',
+  sorts = 'sorts',
+  height = 'height',
+  cells = 'cells',
+  field_type = 'field_type',
+  end_timestamp = 'end_timestamp',
+  include_time = 'include_time',
+  is_range = 'is_range',
+  reminder_id = 'reminder_id',
+  time_format = 'time_format_v2',
+  date_format = 'date_format_v2',
+  calculations = 'calculations',
+  field_id = 'field_id',
+  calculation_value = 'calculation_value',
+  cv = 'cv',
+  source_field_type = 'source_field_type', // Added this
+  condition = 'condition',
+  schema_version = 'schema_version',
+  format = 'format',
+  filter_type = 'filter_type',
+  visible = 'visible',
+  collapsed_group_ids = 'collapsed_group_ids',
+  hide_ungrouped_column = 'hide_ungrouped_column',
+  collapse_hidden_groups = 'collapse_hidden_groups',
+  first_day_of_week = 'first_day_of_week',
+  show_week_numbers = 'show_week_numbers',
+  show_weekends = 'show_weekends',
+  layout_ty = 'layout_ty',
+  icon = 'icon',
+  is_inline = 'is_inline',
+  embedded = 'embedded',
+  auto_fill = 'auto_fill',
+  language = 'language',
+  number_of_days = 'number_of_days',
+  // Person type option keys
+  is_single_select = 'is_single_select',
+  fill_with_creator = 'fill_with_creator',
+  disable_notification = 'disable_notification',
+  persons = 'persons',
+  // URL type option keys
+  url = 'url',
+}
+
+/**
+ * YDoc extends Y.Doc with AppFlowy-specific properties.
+ *
+ * Document Identification:
+ * - `object_id`: Collab object ID used by sync/persistence routing.
+ *                - Document collab: `object_id = viewId`
+ *                - Database collab: `object_id = databaseId`
+ * - `view_id`: Host view ID that currently renders this doc.
+ *              For database collab, this distinguishes grid/board/calendar layouts that
+ *              share the same underlying `object_id`.
+ * - `guid`: The Y.Doc globally unique identifier. In AppFlowy, this is typically
+ *           set to the same collab object ID as `object_id`.
+ *           The guid is used for sync context registration and WebSocket communication.
+ *
+ * Note:
+ * - `guid` and `object_id` should align on collab object identity.
+ * - `view_id` is the UI routing identity.
+ */
+export interface YDoc extends Y.Doc {
+  /**
+   * Collab object ID used by sync/persistence routing.
+   */
+  object_id?: string;
+
+  /**
+   * Host view ID used by route-level/render-level guards.
+   */
+  view_id?: string;
+
+  /**
+   * Collab version for this document.
+   */
+  version?: string;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getMap(key: YjsEditorKey.data_section): YSharedRoot | any;
+}
+
+/**
+ * Extended YDoc with metadata for deferred sync binding.
+ * These properties are set during loadView and used by bindViewSync.
+ */
+export interface YDocWithMeta extends YDoc {
+  /** The collab type for sync binding */
+  _collabType?: Types;
+  /** Whether sync has been bound for this doc */
+  _syncBound?: boolean;
+}
+
+export interface YDatabaseRow extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.id): RowId;
+
+  get(key: YjsDatabaseKey.database_id | YjsDatabaseKey.height): string;
+
+  get(key: YjsDatabaseKey.visibility): boolean;
+
+  get(key: YjsDatabaseKey.cells): YDatabaseCells;
+
+  get(key: YjsDatabaseKey.created_at): CreatedAt;
+
+  get(key: YjsDatabaseKey.last_modified): LastModified;
+}
+
+export interface YDatabaseCells extends Y.Map<unknown> {
+  get(key: FieldId): YDatabaseCell;
+}
+
+export type EndTimestamp = string;
+export type ReminderId = string;
+
+export interface YDatabaseCell extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.created_at): CreatedAt;
+
+  get(key: YjsDatabaseKey.last_modified): LastModified;
+
+  get(key: YjsDatabaseKey.field_type | YjsDatabaseKey.source_field_type): string;
+
+  get(key: YjsDatabaseKey.data): string | boolean | number | null | Y.Array<string> | object;
+
+  get(key: YjsDatabaseKey.end_timestamp): EndTimestamp;
+
+  get(key: YjsDatabaseKey.include_time): boolean;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.is_range): boolean;
+
+  get(key: YjsDatabaseKey.reminder_id): ReminderId;
+}
+
+export interface YSharedRoot extends Y.Map<unknown> {
+  get(key: YjsEditorKey.document): YDocument;
+
+  get(key: YjsEditorKey.folder): YFolder;
+
+  get(key: YjsEditorKey.database): YDatabase;
+
+  get(key: YjsEditorKey.database_row): YDatabaseRow;
+
+  get(key: YjsEditorKey.meta): Y.Map<unknown>;
+
+  get(key: YjsEditorKey.comment): Y.Map<Y.Map<unknown>>;
+}
+
+export interface YFolder extends Y.Map<unknown> {
+  get(key: YjsFolderKey.views): YViews;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsFolderKey.meta): YFolderMeta;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsFolderKey.relation): YFolderRelation;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsFolderKey.section): YFolderSection;
+}
+
+export interface YViews extends Y.Map<unknown> {
+  get(key: ViewId): YView;
+}
+
+export interface YView extends Y.Map<unknown> {
+  get(key: YjsFolderKey.id): ViewId;
+
+  get(key: YjsFolderKey.bid): string;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsFolderKey.name): string;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsFolderKey.icon | YjsFolderKey.extra): string;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsFolderKey.layout): string;
+}
+
+export interface YFolderRelation extends Y.Map<unknown> {
+  get(key: ViewId): Y.Array<ViewId>;
+}
+
+export interface YFolderMeta extends Y.Map<unknown> {
+  get(key: YjsFolderKey.current_view | YjsFolderKey.current_workspace): string;
+}
+
+export interface YFolderSection extends Y.Map<unknown> {
+  get(key: YjsFolderKey.favorite | YjsFolderKey.private | YjsFolderKey.recent | YjsFolderKey.trash): YFolderSectionItem;
+}
+
+export interface YFolderSectionItem extends Y.Map<unknown> {
+  get(key: string): Y.Array<unknown>;
+}
+
+export interface YDocument extends Y.Map<unknown> {
+  get(key: YjsEditorKey.blocks | YjsEditorKey.page_id | YjsEditorKey.meta): YBlocks | YMeta | string;
+}
+
+export interface YBlocks extends Y.Map<unknown> {
+  get(key: BlockId): YBlock;
+}
+
+export interface YBlock extends Y.Map<unknown> {
+  get(key: YjsEditorKey.block_id | YjsEditorKey.block_parent): BlockId;
+
+  get(key: YjsEditorKey.block_type): BlockType;
+
+  get(key: YjsEditorKey.block_data): string;
+
+  get(key: YjsEditorKey.block_children): ChildrenId;
+
+  get(key: YjsEditorKey.block_external_id): ExternalId;
+}
+
+export interface YMeta extends Y.Map<unknown> {
+  get(key: YjsEditorKey.children_map | YjsEditorKey.text_map): YChildrenMap | YTextMap;
+}
+
+export interface YChildrenMap extends Y.Map<unknown> {
+  get(key: ChildrenId): Y.Array<BlockId>;
+}
+
+export interface YTextMap extends Y.Map<unknown> {
+  get(key: ExternalId): Y.Text;
+}
+
+export interface YDatabase extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.views): YDatabaseViews;
+
+  get(key: YjsDatabaseKey.metas): YDatabaseMetas;
+
+  get(key: YjsDatabaseKey.fields): YDatabaseFields;
+
+  get(key: YjsDatabaseKey.id): string;
+}
+
+export interface YDatabaseViews extends Y.Map<YDatabaseView> {
+  get(key: ViewId): YDatabaseView;
+}
+
+export type DatabaseId = string;
+export type CreatedAt = string;
+export type LastModified = string;
+export type ModifiedAt = string;
+export type FieldId = string;
+
+export enum DatabaseViewLayout {
+  Grid = 0,
+  Board = 1,
+  Calendar = 2,
+  Chart = 3,
+  List = 4,
+  Gallery = 5,
+}
+
+export interface YDatabaseView extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.database_id): DatabaseId;
+
+  get(key: YjsDatabaseKey.name): string;
+
+  get(key: YjsDatabaseKey.created_at): CreatedAt;
+
+  get(key: YjsDatabaseKey.modified_at): ModifiedAt;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.layout): string;
+
+  get(key: YjsDatabaseKey.layout_settings): YDatabaseLayoutSettings;
+
+  get(key: YjsDatabaseKey.filters): YDatabaseFilters;
+
+  get(key: YjsDatabaseKey.groups): YDatabaseGroups;
+
+  get(key: YjsDatabaseKey.sorts): YDatabaseSorts;
+
+  get(key: YjsDatabaseKey.field_settings): YDatabaseFieldSettings;
+
+  get(key: YjsDatabaseKey.field_orders): YDatabaseFieldOrders;
+
+  get(key: YjsDatabaseKey.row_orders): YDatabaseRowOrders;
+
+  get(key: YjsDatabaseKey.calculations): YDatabaseCalculations;
+
+  get(key: YjsDatabaseKey.is_inline): boolean;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.embedded): boolean;
+}
+
+export type YDatabaseFieldOrders = Y.Array<{ id: FieldId }>; // [ { id: FieldId } ]
+
+export type YDatabaseRowOrders = Y.Array<{ id: RowId; height: number }>; // [ { id: RowId, height: number } ]
+
+export type YDatabaseGroups = Y.Array<YDatabaseGroup>;
+
+export type YDatabaseFilters = Y.Array<YDatabaseFilter>;
+
+export type YDatabaseSorts = Y.Array<YDatabaseSort>;
+
+export type YDatabaseCalculations = Y.Array<YDatabaseCalculation>;
+
+export type SortId = string;
+
+export type GroupId = string;
+
+export interface YDatabaseLayoutSettings extends Y.Map<unknown> {
+  // DatabaseViewLayout.Board
+  get(key: '1'): YDatabaseBoardLayoutSetting;
+
+  // DatabaseViewLayout.Calendar
+  get(key: '2'): YDatabaseCalendarLayoutSetting;
+
+  // DatabaseViewLayout.Chart
+  get(key: '3'): YDatabaseChartLayoutSetting;
+}
+
+export interface YDatabaseBoardLayoutSetting extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.hide_ungrouped_column | YjsDatabaseKey.collapse_hidden_groups): boolean;
+}
+
+export interface YDatabaseCalendarLayoutSetting extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.first_day_of_week | YjsDatabaseKey.field_id | YjsDatabaseKey.layout_ty): string;
+  get(key: YjsDatabaseKey.number_of_days): number;
+
+  get(key: YjsDatabaseKey.show_week_numbers | YjsDatabaseKey.show_weekends): boolean;
+}
+
+export interface YDatabaseChartLayoutSetting extends Y.Map<unknown> {
+  get(key: 'chartType' | 'aggregationType' | 'dateCondition'): string;
+  get(key: 'xFieldId' | 'yFieldId'): string | undefined;
+  get(key: 'showEmptyValues' | 'cumulative'): boolean;
+}
+
+export interface YDatabaseGroup extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.id): GroupId;
+
+  get(key: YjsDatabaseKey.field_id): FieldId;
+
+  get(key: YjsDatabaseKey.type): number | string;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.content): string; // "{"hide_empty":false,"condition":2}"
+
+  get(key: YjsDatabaseKey.groups): YDatabaseGroupColumns;
+
+  get(key: YjsDatabaseKey.collapsed_group_ids): Y.Array<string> | string[] | undefined;
+}
+
+export type YDatabaseGroupColumns = Y.Array<{ id: string; visible: boolean }>;
+
+export interface YDatabaseGroupColumn extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.id): string;
+
+  get(key: YjsDatabaseKey.visible): boolean;
+}
+
+export interface YDatabaseSort extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.id): SortId;
+
+  get(key: YjsDatabaseKey.field_id): FieldId;
+
+  get(key: YjsDatabaseKey.condition): string;
+}
+
+export type FilterId = string;
+
+export interface YDatabaseFilter extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.id): FilterId;
+
+  get(key: YjsDatabaseKey.field_id): FieldId;
+
+  get(key: YjsDatabaseKey.type | YjsDatabaseKey.condition | YjsDatabaseKey.content | YjsDatabaseKey.filter_type): string;
+
+  get(key: YjsDatabaseKey.children): YDatabaseFilters | YDatabaseFilter[] | undefined;
+}
+
+export interface YDatabaseCalculation extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.field_id): FieldId;
+
+  get(key: YjsDatabaseKey.id | YjsDatabaseKey.cv): string;
+
+  get(key: YjsDatabaseKey.type): string | number;
+
+  get(key: YjsDatabaseKey.calculation_value): string | number | undefined;
+}
+
+export interface YDatabaseFieldSettings extends Y.Map<unknown> {
+  get(key: FieldId): YDatabaseFieldSetting;
+}
+
+export interface YDatabaseFieldSetting extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.visibility): string;
+
+  get(key: YjsDatabaseKey.wrap): boolean;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.width): string;
+}
+
+export interface YDatabaseMetas extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.iid): string;
+  get(key: YjsDatabaseKey.schema_version): string | number;
+}
+
+export interface YDatabaseFields extends Y.Map<YDatabaseField> {
+  get(key: FieldId): YDatabaseField;
+}
+
+export interface YDatabaseField extends Y.Map<unknown> {
+  get(key: YjsDatabaseKey.name): string;
+
+  get(key: YjsDatabaseKey.id): FieldId;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.icon): string;
+
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.type): string;
+
+  get(key: YjsDatabaseKey.type_option): YDatabaseFieldTypeOption;
+
+  get(key: YjsDatabaseKey.is_primary): boolean;
+
+  get(key: YjsDatabaseKey.created_at | YjsDatabaseKey.last_modified): LastModified;
+}
+
+export interface YDatabaseFieldTypeOption extends Y.Map<unknown> {
+  // key is the field type
+  get(key: string): YMapFieldTypeOption;
+}
+
+export interface YMapFieldTypeOption extends Y.Map<unknown> {
+  // single select, Multi select, File media
+  get(
+    key:
+      | YjsDatabaseKey.content
+      | YjsDatabaseKey.relation_field_id
+      | YjsDatabaseKey.target_field_id
+      | YjsDatabaseKey.condition_value
+  ): string;
+
+  get(key: YjsDatabaseKey.reciprocal_field_id | YjsDatabaseKey.reciprocal_field_name): string | undefined;
+
+  // CreatedTime, LastEditedTime, DateTime
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.time_format): string | undefined;
+
+  // CreatedTime, LastEditedTime, DateTime
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.date_format): string | undefined;
+
+  // Relation
+  get(key: YjsDatabaseKey.database_id): DatabaseId;
+
+  get(key: YjsDatabaseKey.is_two_way | YjsDatabaseKey.include_time): boolean;
+
+  get(key: YjsDatabaseKey.source_limit | YjsDatabaseKey.target_limit): number | undefined;
+
+  get(key: YjsDatabaseKey.calculation_type | YjsDatabaseKey.show_as): number;
+
+  // Number
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.format): string;
+
+  // AI Translate
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.auto_fill): boolean;
+
+  get(key: YjsDatabaseKey.language): bigint;
+
+  // Person
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  get(key: YjsDatabaseKey.is_single_select | YjsDatabaseKey.disable_notification): boolean;
+}
+
+export enum Types {
+  Document = 0,
+  Database = 1,
+  WorkspaceDatabase = 2,
+  Folder = 3,
+  DatabaseRow = 4,
+  UserAwareness = 5,
+  Empty = 6,
+}
+
+export enum CollabOrigin {
+  // from local changes
+  Local = 'local',
+  // from remote changes and never sync to remote.
+  Remote = 'remote',
+  // from local changes manually applied to Yjs
+  LocalManual = 'local_manual',
+}
+
+export interface PublishViewPayload {
+  publish_name?: string;
+  visible_database_view_ids?: string[];
+}
+
+export interface UploadPublishNamespacePayload {
+  old_namespace: string;
+  new_namespace: string;
+}
+
+export const layoutMap = {
+  [ViewLayout.Document]: 'document',
+  [ViewLayout.Grid]: 'grid',
+  [ViewLayout.Board]: 'board',
+  [ViewLayout.Calendar]: 'calendar',
+  [ViewLayout.Chart]: 'chart',
+};
+
+export const databaseLayoutMap = {
+  [DatabaseViewLayout.Grid]: 'grid',
+  [DatabaseViewLayout.Board]: 'board',
+  [DatabaseViewLayout.Calendar]: 'calendar',
+  [DatabaseViewLayout.Chart]: 'chart',
+};
+
+export enum FontLayout {
+  small = 'small',
+  normal = 'normal',
+  large = 'large',
+}
+
+export enum LineHeightLayout {
+  small = 'small',
+  normal = 'normal',
+  large = 'large',
+}
+
+export interface ViewMetaIcon {
+  ty: number;
+  value: string;
+}
+
+export interface ViewInfo {
+  view_id: string;
+  name: string;
+  icon: ViewMetaIcon | null;
+  extra: string | null;
+  layout: number;
+  created_at: string;
+  created_by: string;
+  last_edited_time: string;
+  last_edited_by: string;
+  child_views: ViewInfo[] | null;
+}
+
+export interface PublishViewMetaData {
+  view: ViewInfo;
+  child_views: ViewInfo[];
+  ancestor_views: ViewInfo[];
+}
+
+export type AppendBreadcrumb = (view?: View) => void;
+
+export type CreateRow = (rowKey: string) => Promise<YDoc>;
+export interface LoadViewOptions {
+  databaseId?: string | null;
+  forceFetch?: boolean;
+}
+
+export type LoadView = (
+  viewId: string,
+  isSubDocument?: boolean,
+  loadAwareness?: boolean,
+  options?: LoadViewOptions
+) => Promise<YDoc>;
+
+export type LoadViewMeta = (viewId: string, onChange?: (meta: View | null) => void) => Promise<View | null>;
+
+export type DatabaseRelations = Record<DatabaseId, ViewId>;
+
+export interface Workspace {
+  icon: string;
+  id: string;
+  name: string;
+  memberCount: number;
+  owner?: {
+    uid: number;
+    name: string;
+  };
+  databaseStorageId: string;
+  createdAt: string;
+  role?: Role;
+}
+
+export interface UserWorkspaceInfo {
+  userId: string;
+  selectedWorkspace: Workspace;
+  workspaces: Workspace[];
+}
+
+export interface SpaceView {
+  id: string;
+  extra: string | null;
+  name: string;
+  isPrivate: boolean;
+}
+
+export interface FolderView {
+  id: string;
+  icon: string | null;
+  extra: string | null;
+  name: string;
+  isSpace: boolean;
+  isPrivate: boolean;
+  children: FolderView[];
+  accessLevel?: AccessLevel;
+  // Optional for backward compatibility: servers older than the
+  // return_workspace_id change do not include this field in responses.
+  workspaceId?: string;
+}
+
+export enum AuthProvider {
+  GOOGLE = 'google',
+  APPLE = 'apple',
+  GITHUB = 'github',
+  DISCORD = 'discord',
+  PASSWORD = 'password',
+  MAGIC_LINK = 'magic_link',
+  SAML = 'saml',
+  PHONE = 'phone',
+  EMAIL = 'email',
+}
+
+export interface AuthProvidersResponse {
+  providers: AuthProvider[];
+}
+
+export interface User {
+  email: string | null;
+  name: string | null;
+  uid: string;
+  avatar: string | null;
+  uuid: string;
+  latestWorkspaceId: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface DuplicatePublishView {
+  workspaceId: string;
+  spaceViewId: string;
+  collabType: Types;
+  viewId: string;
+}
+
+export interface DuplicatePublishViewResponse {
+  viewId: string;
+  /** Mapping of database_id -> list of view_ids for databases created during duplication */
+  databaseMappings: Record<string, string[]>;
+}
+
+export enum ViewIconType {
+  Emoji = 0,
+  URL = 1,
+  Icon = 2,
+}
+
+export interface ViewIcon {
+  ty: ViewIconType;
+  value: string;
+}
+
+export enum SpacePermission {
+  Public = 0,
+  Private = 1,
+}
+
+/**
+ * Represents the space info of a view.
+ * Aligned with Desktop/Flutter `SpaceInfo` struct.
+ *
+ * Two view types are supported:
+ * - Space view: A view associated with space info. Parent view that can contain normal views.
+ *   Child views inherit the space's permissions.
+ * - Normal view: Cannot contain space views and has no direct permission controls.
+ */
+export interface SpaceInfo {
+  /** Whether the view is a space view. */
+  is_space: boolean;
+
+  /** The permission of the space view. Defaults to SpacePermission.Public if not set. */
+  space_permission?: SpacePermission;
+
+  /** The created time of the space view (timestamp). */
+  space_created_at?: number;
+
+  /** The space icon. If not set, uses the default icon. */
+  space_icon?: string;
+
+  /** The space icon color. Should be a valid hex color code: 0xFFA34AFD */
+  space_icon_color?: string;
+
+  /** Whether this is a hidden space. */
+  is_hidden_space?: boolean;
+}
+
+/**
+ * Information about a database view stored in the `extra` JSON field.
+ * Aligned with Desktop/Flutter `DatabaseViewExtra` struct.
+ * Used to track database container views and their children.
+ */
+export interface DatabaseViewExtra {
+  /** The database_id that this view is linked to. */
+  database_id?: string;
+
+  /**
+   * Whether this view is a database container (sidebar entry point).
+   * Container views are folder-like views that hold actual database views as children.
+   * When opening a container, the app should auto-select the first child view.
+   */
+  is_database_container?: boolean;
+
+  /**
+   * Whether this view is embedded/inline (created inside a document).
+   * Aligned with Desktop/Flutter and server-side `EXTRA_KEY_EMBEDDED`.
+   */
+  embedded?: boolean;
+}
+
+/**
+ * View cover configuration.
+ */
+export interface ViewCover {
+  type: CoverType;
+  value: string;
+  offset?: number;
+}
+
+/**
+ * Combined view extra data.
+ * This is the union of all extra types that can be stored in a view's extra field.
+ * The extra field is a JSON blob that may contain any combination of these properties.
+ */
+export interface ViewExtra extends SpaceInfo, DatabaseViewExtra {
+  /** Whether this view is pinned. */
+  is_pinned?: boolean;
+
+  /** The view's cover image/color configuration. */
+  cover?: ViewCover;
+}
+
+export interface View {
+  folder_rid?: string;
+  view_id: string;
+  name: string;
+  icon: ViewIcon | null;
+  layout: ViewLayout;
+  extra: ViewExtra | null;
+  children: View[];
+  has_children?: boolean;
+  is_published: boolean;
+  is_private: boolean;
+  /** Whether this view is currently in the user's favorites. Synced via the folder. */
+  is_favorite?: boolean;
+  /** Favorite-section pin state returned by the favorites endpoint. */
+  is_pinned?: boolean;
+  /** Whether the page is locked (read-only) for everyone until unlocked. Synced via the folder. */
+  is_locked?: boolean;
+  last_edited_time?: string;
+  favorited_at?: string;
+  last_viewed_at?: string;
+  created_at?: string;
+  database_relations?: DatabaseRelations;
+  publisher_email?: string;
+  publish_name?: string;
+  publish_timestamp?: string;
+  parent_view_id?: string;
+  access_level?: AccessLevel;
+  workspace_id?: string;
+}
+
+export interface UpdatePublishConfigPayload {
+  comments_enabled?: boolean;
+  duplicate_enabled?: boolean;
+  publish_name?: string;
+  view_id: string;
+}
+
+export interface Invitation {
+  invite_id: string;
+  workspace_id: string;
+  workspace_name: string;
+  inviter_email: string;
+  inviter_name: string;
+  inviter_icon: string;
+  workspace_icon: string;
+  member_count: number;
+  status: 'Accepted' | 'Pending';
+}
+
+export interface GuestInvitation {
+  workspace_id: string;
+  workspace_name: string;
+  workspace_icon_url: string;
+  view_id: string;
+  page_name: string;
+  is_existing_member: boolean;
+}
+
+export interface GuestConversionCodeInfo {
+  workspace_name: string;
+  requester_avatar?: string;
+  requester_name: string;
+  workspace_icon_url?: string;
+  member_count: number;
+  guest_name: string;
+  guest_is_already_a_member: boolean;
+}
+
+export enum CoverType {
+  NormalColor = 'color',
+  GradientColor = 'gradient',
+  BuildInImage = 'built_in',
+  CustomImage = 'custom',
+  LocalImage = 'local',
+  UpsplashImage = 'unsplash',
+  None = 'none',
+}
+
+export enum RowCoverType {
+  ColorCover = 0,
+  FileCover = 1,
+  AssetCover = 2,
+  GradientCover = 3,
+}
+
+export enum UIVariant {
+  Publish = 'publish',
+  App = 'app',
+  Recent = 'recent',
+  Favorite = 'favorite',
+}
+
+export interface AFWebUser {
+  uuid: string;
+  name: string;
+  avatarUrl: string | null;
+}
+
+export enum RequestAccessInfoStatus {
+  Pending = 0,
+  Accepted = 1,
+  Rejected = 2,
+}
+
+export enum Role {
+  Owner = 'Owner',
+  Member = 'Member',
+  Guest = 'Guest',
+}
+
+export interface WorkspaceMember {
+  name: string;
+  email: string;
+  avatar_url: string;
+  role: Role;
+  joined_at?: string | null;
+  is_pending_invitation?: boolean;
+}
+
+export interface GetRequestAccessInfoResponse {
+  request_id: string;
+  workspace: Workspace;
+  requester: AFWebUser & {
+    email: string;
+  };
+  view: View;
+  status: RequestAccessInfoStatus;
+}
+
+export enum SubscriptionPlan {
+  Free = 'free',
+  Pro = 'pro',
+  Team = 'team',
+  AIMax = 'ai_max',
+}
+
+export enum SubscriptionInterval {
+  Month = 'month',
+  Year = 'year',
+}
+
+export interface Subscription {
+  currency: string;
+  plan: SubscriptionPlan;
+  price_cents: number;
+  recurring_interval: SubscriptionInterval;
+}
+
+export type Subscriptions = Subscription[];
+
+export interface UpdatePagePayload {
+  name: string;
+  icon?: {
+    ty: ViewIconType;
+    value: string;
+  };
+  extra?: Partial<ViewExtra>;
+  is_locked?: boolean;
+}
+
+export interface RowDocumentSourcePayload {
+  database_id: string;
+  database_view_id: string;
+  row_id: string;
+}
+
+export interface CreateOrphanedViewPayload {
+  document_id: string;
+  row_document_source?: RowDocumentSourcePayload;
+}
+
+export type ViewMetaCover = ViewCover;
+
+export interface ViewMetaProps {
+  icon?: ViewMetaIcon;
+  cover?: ViewMetaCover;
+  name?: string;
+  viewId?: string;
+  parentViewId?: string;
+  workspaceId?: string;
+  layout?: ViewLayout;
+  visibleViewIds?: string[];
+  database_relations?: DatabaseRelations;
+  extra?: ViewExtra | null;
+  readOnly?: boolean;
+  updatePage?: (viewId: string, data: UpdatePagePayload) => Promise<void>;
+  uploadFile?: (file: File) => Promise<string>;
+  updatePageIcon?: (viewId: string, icon: { ty: ViewIconType; value: string }) => Promise<void>;
+  updatePageName?: (viewId: string, name: string) => Promise<void>;
+  onEnter?: (text: string) => void;
+  maxWidth?: number;
+  onFocus?: () => void;
+}
+
+export interface TextCount {
+  words: number;
+  characters: number;
+}
+
+export interface ViewComponentProps {
+  doc: YDoc;
+  workspaceId: string;
+  readOnly: boolean;
+  navigateToView?: (viewId: string, blockId?: string) => Promise<void>;
+  loadViewMeta?: LoadViewMeta;
+  createRow?: CreateRow;
+  loadView?: LoadView;
+  bindViewSync?: (doc: YDoc) => SyncContext | null;
+  checkIfRowDocumentExists?: (documentId: string) => Promise<boolean>;
+  /**
+   * Load a row sub-document (document content inside a database row).
+   * In app mode: loads from server via authenticated API.
+   * In publish mode: loads from published cache.
+   */
+  loadRowDocument?: (documentId: string) => Promise<YDoc | null>;
+  /**
+   * Create a row document on the server (orphaned view).
+   * Only available in app mode - not provided in publish mode.
+   */
+  createRowDocument?: (documentId: string, source?: RowDocumentSourcePayload) => Promise<Uint8Array | null>;
+  duplicateRowDocument?: (
+    databaseId: string,
+    sourceRowId: string,
+    newRowId: string,
+    clientDocStateB64?: string
+  ) => Promise<void>;
+  viewMeta: ViewMetaProps;
+  appendBreadcrumb?: AppendBreadcrumb;
+  onRendered?: () => void;
+  updatePage?: (viewId: string, data: UpdatePagePayload) => Promise<void>;
+  addPage?: (parentId: string, payload: CreatePagePayload) => Promise<CreatePageResponse>;
+  deletePage?: (viewId: string) => Promise<void>;
+  duplicatePage?: (viewId: string, options?: DuplicatePageOperationOptions) => Promise<void>;
+  openPageModal?: (viewId: string) => void;
+  variant?: UIVariant;
+  isTemplateThumb?: boolean;
+  loadViews?: (variant?: UIVariant) => Promise<View[] | undefined>;
+  onWordCountChange?: (viewId: string, props: TextCount) => void;
+  uploadFile?: (file: File) => Promise<string>;
+  requestInstance?: AxiosInstance | null;
+  generateAISummaryForRow?: (payload: GenerateAISummaryRowPayload) => Promise<string>;
+  generateAITranslateForRow?: (payload: GenerateAITranslateRowPayload) => Promise<string>;
+  loadDatabasePrompts?: (config: PromptDatabaseConfiguration) => Promise<{
+    rawDatabasePrompts: DatabasePrompt[];
+    fields: DatabasePromptField[];
+  }>;
+  testDatabasePromptConfig?: (viewId: string) => Promise<{
+    config: PromptDatabaseConfiguration;
+    fields: DatabasePromptField[];
+  }>;
+  updatePageIcon?: (viewId: string, icon: { ty: ViewIconType; value: string }) => Promise<void>;
+  updatePageName?: (viewId: string, name: string) => Promise<void>;
+  currentUser?: User;
+  getViewIdFromDatabaseId?: (databaseId: string) => Promise<string | null>;
+  loadDatabaseRelations?: (options?: { refresh?: boolean }) => Promise<DatabaseRelations | undefined>;
+  scheduleDeferredCleanup?: (objectId: string, delayMs?: number) => void;
+  getSubscriptions?: () => Promise<Subscription[]>;
+  eventEmitter?: EventEmitter;
+  getMentionUser?: (uuid: string) => Promise<MentionablePerson | undefined>;
+  createDatabaseView?: (viewId: string, payload: CreateDatabaseViewPayload) => Promise<CreateDatabaseViewResponse>;
+}
+
+export interface CreatePagePayload {
+  layout: ViewLayout;
+  name?: string;
+  /** Insert the new page after this sibling. When omitted the backend prepends. */
+  prev_view_id?: string;
+}
+
+export interface CreatePageResponse {
+  view_id: string;
+  database_id?: string;
+}
+
+export interface DuplicatePageOptions {
+  parentViewId?: string;
+  openAfterDuplicate?: boolean;
+  includeChildren?: boolean;
+  suffix?: string;
+  source?: number;
+}
+
+export interface DuplicatePageOperationOptions extends DuplicatePageOptions {
+  /**
+   * Client-only lifecycle hook. Runs after the pre-duplicate collab sync and
+   * before the duplicate API request; it is not sent to the server.
+   */
+  afterPreSync?: () => Promise<void>;
+}
+
+export interface CreateDatabaseViewPayload {
+  parent_view_id: string;
+  /**
+   * Insert the new database view after this sibling. When omitted, the
+   * backend appends the view to the end of the parent's children.
+   */
+  prev_view_id?: string;
+  database_id: string;
+  layout: ViewLayout;
+  name?: string;
+  /** Whether this view is embedded inside a document (e.g., database block). Defaults to false. */
+  embedded?: boolean;
+}
+
+export interface CreateDatabaseViewResponse {
+  view_id: string;
+  database_id: string;
+  database_update?: number[];
+}
+
+export enum DatabaseCsvImportMode {
+  Create = 'create',
+  Append = 'append',
+  Replace = 'replace',
+}
+
+export enum DatabaseCsvImportLayout {
+  Grid = 'grid',
+  Board = 'board',
+  Calendar = 'calendar',
+}
+
+export interface DatabaseCsvOptions {
+  has_header: boolean;
+  delimiter: string;
+  quote: string;
+  escape?: string;
+  encoding: string;
+  trim: boolean;
+}
+
+export interface DatabaseCsvImportRequest {
+  content_length: number;
+  md5_base64?: string;
+  mode: DatabaseCsvImportMode;
+  parent_view_id?: string;
+  database_id?: string;
+  name?: string;
+  layout: DatabaseCsvImportLayout;
+  csv: DatabaseCsvOptions;
+}
+
+export interface DatabaseCsvImportCreateResponse {
+  task_id: string;
+  presigned_url: string;
+  expires_in_secs: number;
+}
+
+export interface DatabaseCsvImportProgress {
+  rows_processed: number;
+  rows_total: number;
+}
+
+export type DatabaseCsvImportStatus = 'Pending' | 'Completed' | 'Failed' | 'Expire' | 'Cancel';
+
+export interface DatabaseCsvImportStatusResponse {
+  task_id: string;
+  status: DatabaseCsvImportStatus;
+  progress: DatabaseCsvImportProgress;
+  database_id?: string;
+  view_id?: string;
+  error?: string;
+}
+
+export interface CreateSpacePayload {
+  name?: string;
+  space_icon?: string;
+  space_icon_color?: string;
+  space_permission?: SpacePermission; // 0 for public space, 1 for private space
+}
+
+export interface UpdateSpacePayload extends CreateSpacePayload {
+  view_id: string;
+}
+
+export interface QuickNoteEditorData {
+  type: string;
+  delta: { insert: string; attributes?: Record<string, string | boolean | number> }[];
+  data?: BlockData;
+  children: QuickNoteEditorData[];
+}
+
+export interface QuickNote {
+  id: string;
+  title: string;
+  data: QuickNoteEditorData[];
+  created_at: string;
+  last_updated_at: string;
+}
+
+export interface CreateWorkspacePayload {
+  workspace_name: string;
+}
+
+export interface UpdateWorkspacePayload {
+  workspace_name: string;
+}
+
+export enum SettingMenuItem {
+  ACCOUNT = 'ACCOUNT',
+  PROFILE = 'PROFILE',
+  WORKSPACE = 'WORKSPACE',
+  MEMBERS = 'MEMBERS',
+  MANAGE_DATA = 'MANAGE_DATA',
+  SITES = 'SITES',
+}
+
+export interface GenerateAISummaryRowPayload {
+  Content: {
+    // key = field name, value = cell data
+    [key: string]: string;
+  };
+}
+
+export interface GenerateAITranslateRowPayload {
+  cells: {
+    // field name
+    title: string;
+    // cell data
+    content: string;
+  }[];
+  language: string;
+  include_header?: boolean;
+}
+
+export type LoadDatabasePrompts = (config: PromptDatabaseConfiguration) => Promise<{
+  rawDatabasePrompts: DatabasePrompt[];
+  fields: DatabasePromptField[];
+}>;
+
+export type TestDatabasePromptConfig = (viewId: string) => Promise<{
+  config: PromptDatabaseConfiguration;
+  fields: DatabasePromptField[];
+}>;
+
+export interface DatabasePrompt {
+  id: string;
+  name: string;
+  content: string;
+  example: string;
+  category: string;
+}
+
+export interface DatabasePromptField {
+  id: string;
+  name: string;
+  isPrimary: boolean;
+  isSelect: boolean;
+}
+
+export interface DatabasePromptRow {
+  id: string;
+  data: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [fieldId: string]: any;
+  };
+}
+
+export enum MentionPersonRole {
+  Member = 1,
+  Guest = 2,
+  Contact = 3,
+}
+export interface MentionablePerson {
+  avatar_url: string | null;
+  cover_image_url: string | null;
+  custom_image_url: string | null;
+  description: string | null;
+  email: string;
+
+  name: string;
+  role: MentionPersonRole;
+  person_id: string;
+  invited: boolean;
+  last_mentioned_at: string | null;
+}
+
+export enum DateFormat {
+  Local = 0,
+  US = 1,
+  ISO = 2,
+  Friendly = 3,
+  DayMonthYear = 4,
+}
+
+export enum TimeFormat {
+  TwelveHour = 0,
+  TwentyFourHour = 1,
+}
+
+export interface IPeopleWithAccessType {
+  email: string;
+  name: string;
+  access_level?: number;
+  role: Role;
+  avatar_url: string;
+  pending_invitation: boolean;
+}
+
+export enum AccessLevel {
+  ReadOnly = 10,
+  ReadAndComment = 20,
+  ReadAndWrite = 30,
+  FullAccess = 50,
+}

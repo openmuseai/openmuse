@@ -100,7 +100,7 @@ def main():
             arguments = ['codesign', '--force', '--sign', args.identity, '--timestamp']
             # Libraries inherit their containing process. Standalone bundled
             # interpreters/helpers explicitly inherit the app's sandbox.
-            if path.name == 'node':
+            if 'EXECUTE' in execute(['otool', '-hv', path]):
                 arguments += ['--entitlements', str(inherited)]
             execute([*arguments, path])
         for bundle in bundles:

@@ -1,0 +1,7 @@
+{
+  "MUSE_CLOUD_URL": "https://openmuseai.com",
+  "MUSE_CLOUD_GOTRUE_URL": "https://openmuseai.com/gotrue",
+  "MUSE_CLOUD_WS_URL": "wss://openmuseai.com/ws/v1",
+  "MUSE_CLOUD_WEB_URL": "https://openmuseai.com",
+  "MUSE_DSH_PUBLIC_URL": "https://openmuseai.com"
+}
