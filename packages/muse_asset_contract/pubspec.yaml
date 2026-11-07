@@ -1,0 +1,8 @@
+name: muse_asset_contract
+description: Content-neutral asset identity and repository ports for Muse plugins.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dev_dependencies:
+  test: ^1.25.0
