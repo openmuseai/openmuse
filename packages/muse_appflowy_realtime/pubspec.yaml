@@ -1,0 +1,22 @@
+name: muse_appflowy_realtime
+description: Content-neutral AppFlowy WS v2 transport, original protocol codec and lifecycle.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  http: ^1.2.0
+  muse_collab_contract:
+    path: ../muse_collab_contract
+  hooks: 2.0.2
+  code_assets: 1.2.1
+  ffi: ^2.2.0
+  web: 1.1.1
+  web_socket_channel: ^3.0.3
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  assets:
+    - assets/wasm/
