@@ -11,6 +11,13 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
   OpenMuseLocalSettings({this.file});
 
   final File? file;
+
+  /// Serial that keeps two concurrent saves in this isolate from sharing a
+  /// temporary name. `DateTime.now()` only advances by about a millisecond on
+  /// Windows, so the timestamp alone is not unique enough there and the second
+  /// save would consume the first one's file.
+  static int _tempSerial = 0;
+
   ThemeMode themeMode = ThemeMode.system;
   double? sidebarWidth;
   double? assistantWidth;
@@ -149,10 +156,13 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
     if (target == null) return;
     await target.parent.create(recursive: true);
     // Distinct Host instances (for example during an app update handoff) can
-    // briefly save the same profile. A shared `.tmp` name lets one instance
-    // rename the other's file and makes the loser fail at startup.
+    // briefly save the same profile, and so can two concurrent saves inside one
+    // Host. A shared `.tmp` name lets one writer rename the other's file and
+    // makes the loser fail at startup, so the name carries the pid, the clock
+    // and a serial that is unique inside this isolate.
     final temporary = File(
-      '${target.path}.tmp.$pid.${DateTime.now().microsecondsSinceEpoch}',
+      '${target.path}.tmp.$pid.${DateTime.now().microsecondsSinceEpoch}'
+      '.${_tempSerial++}',
     );
     await temporary.writeAsString(
       jsonEncode({
@@ -167,10 +177,26 @@ final class OpenMuseLocalSettings extends ChangeNotifier {
       }),
       flush: true,
     );
+    // A concurrent save can hold the destination open long enough for the whole
+    // replacement to fail with a sharing violation, so retry it briefly instead
+    // of failing the save.
+    for (var attempt = 0; ; attempt++) {
+      try {
+        await _renameOver(temporary, target);
+        return;
+      } on FileSystemException {
+        if (!Platform.isWindows || attempt >= 4) rethrow;
+        await Future<void>.delayed(Duration(milliseconds: 20 * (attempt + 1)));
+      }
+    }
+  }
+
+  /// Renames [temporary] onto [target], dropping the destination first on
+  /// Windows, which does not replace an existing file atomically.
+  Future<void> _renameOver(File temporary, File target) async {
     try {
       await temporary.rename(target.path);
     } on FileSystemException {
-      // Windows does not replace an existing destination atomically.
       if (!Platform.isWindows || !await target.exists()) rethrow;
       await target.delete();
       await temporary.rename(target.path);

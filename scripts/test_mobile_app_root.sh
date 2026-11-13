@@ -4,8 +4,14 @@ repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo_root"
 gradle_home="${OPENMUSE_GRADLE_HOME:-$repo_root/target/mobile-gradle-cache}"
 export GRADLE_USER_HOME="$gradle_home"
+# The Android build's :app:verifyOpenMusePairedNative task consumes
+# target/paired-relay/android/arm64-v8a/libopenmuse_paired_relay.so and the iOS
+# build links OpenMusePaired.xcframework, so the paired relay is a prerequisite
+# of the app build exactly like the Office engines. Building only the Office
+# artifacts left Gradle with a missing input file and failed the gate.
 "$repo_root/scripts/build_office_docx_mobile_artifacts.sh"
 "$repo_root/scripts/build_office_viewers_mobile_artifacts.sh"
+"$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
 
 (cd packages/openmuse_host_shell && flutter analyze && flutter test)
 (cd app/openmuse_mobile && flutter analyze && flutter test && flutter build apk --debug && flutter build ios --debug --no-codesign)
