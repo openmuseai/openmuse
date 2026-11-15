@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'model.dart';
 import 'provider.dart';
+import 'locator.dart';
 
 final class RecentResource {
   const RecentResource(this.record, this.openedAtMs, this.handlerId);
@@ -34,6 +35,7 @@ final class ResourceCenterHub {
   final int Function() _clock;
   final _providers = <String, ResourceProvider>{};
   final _hiddenSources = <String>{};
+  final _referenceSources = <String, ResourceReferenceSource>{};
   final _recent = <RecentResource>[];
   final _defaults = <String, String>{};
   final _events = StreamController<void>.broadcast(sync: true);
@@ -117,6 +119,28 @@ final class ResourceCenterHub {
     changed();
   }
 
+  void registerReferenceSource(
+    String sourceId,
+    ResourceReferenceSource source,
+  ) {
+    checkedRef(sourceId);
+    if (_disposed) throw const ResourceFailure('SOURCE_UNAVAILABLE');
+    if (_referenceSources.containsKey(sourceId) &&
+        !identical(_referenceSources[sourceId], source)) {
+      throw const ResourceFailure('SOURCE_ALREADY_REGISTERED');
+    }
+    _referenceSources[sourceId] = source;
+  }
+
+  void unregisterReferenceSource(
+    String sourceId,
+    ResourceReferenceSource source,
+  ) {
+    if (identical(_referenceSources[sourceId], source)) {
+      _referenceSources.remove(sourceId);
+    }
+  }
+
   ResourceProvider provider(ResourceIdentity identity) {
     if (identity.scope != scope) throw const ResourceFailure('DENIED');
     final p = _providers[identity.sourceKey];
@@ -124,10 +148,121 @@ final class ResourceCenterHub {
     return p;
   }
 
+  Future<ResourceLocatorResult> locateRelative(
+    ResourceReference base,
+    String target,
+    ResourceAccess access,
+  ) async {
+    if (_disposed ||
+        access.scope != scope ||
+        base.identity.scope != scope ||
+        base.retained != null ||
+        target.length > 4096) {
+      throw const ResourceFailure('DENIED');
+    }
+    final source = provider(base.identity);
+    if (!source.available || source is! ResourceRelativeLocatorProvider) {
+      throw const ResourceFailure('SOURCE_UNAVAILABLE');
+    }
+    void check() {
+      access.check(
+        base.identity,
+        ResourceOperation.read,
+        currentGeneration: generation,
+        nowMs: _clock(),
+      );
+      if (_disposed ||
+          !source.available ||
+          !identical(_providers[source.source.key], source)) {
+        throw const ResourceFailure('SOURCE_UNAVAILABLE');
+      }
+    }
+
+    check();
+    final result = await (source as ResourceRelativeLocatorProvider)
+        .locateRelative(base, target, access);
+    check();
+    for (final match in result.matches) {
+      if (match.reference.identity.sourceKey != source.source.key ||
+          match.reference.identity.scope != scope) {
+        throw const ResourceFailure('DENIED');
+      }
+    }
+    return result;
+  }
+
+  Future<ResourceLocatorResult> locate(
+    ResourceLocator locator,
+    ResourceAccess access, {
+    String? workspace,
+    bool localOnly = false,
+  }) async {
+    if (_disposed || access.scope != scope)
+      throw const ResourceFailure('DENIED');
+    final candidates = _providers.values
+        .where(
+          (p) =>
+              p is ResourceLocatorProvider &&
+              (p as ResourceLocatorProvider).locatorOwner == locator.owner &&
+              (workspace == null || p.source.workspace == workspace) &&
+              (!localOnly || p.source.local) &&
+              p.available,
+        )
+        .toList();
+    if (candidates.length != 1)
+      throw const ResourceFailure('SOURCE_UNAVAILABLE');
+    final provider = candidates.single;
+    access.check(
+      provider.source.identity('root'),
+      ResourceOperation.read,
+      currentGeneration: generation,
+      nowMs: _clock(),
+    );
+    final result = await (provider as ResourceLocatorProvider).locate(
+      locator,
+      access,
+    );
+    access.check(
+      provider.source.identity('root'),
+      ResourceOperation.read,
+      currentGeneration: generation,
+      nowMs: _clock(),
+    );
+    if (_disposed ||
+        !provider.available ||
+        !identical(_providers[provider.source.key], provider))
+      throw const ResourceFailure('SOURCE_UNAVAILABLE');
+    for (final match in result.matches) {
+      if (match.reference.identity.sourceKey != provider.source.key ||
+          match.reference.identity.scope != scope)
+        throw const ResourceFailure('DENIED');
+    }
+    return result;
+  }
+
   Future<OpenedResource> resolve(
     ResourceReference ref,
     ResourceAccess access,
   ) async {
+    if (_disposed) throw const ResourceFailure('SOURCE_UNAVAILABLE');
+    final bridge = _referenceSources[ref.identity.source];
+    if (ref.identity.scope != scope) {
+      // Local files, personal retained copies and version pins remain private.
+      // Only a Host-configured source may admit a portable live reference.
+      if (bridge == null || ref.version != null || ref.retained != null) {
+        throw const ResourceFailure('DENIED');
+      }
+      final id = ref.identity;
+      ref = ResourceReference(
+        identity: ResourceIdentity(
+          scope: scope,
+          source: id.source,
+          workspace: id.workspace,
+          mount: id.mount,
+          resource: id.resource,
+        ),
+      );
+    }
     access.check(
       ref.identity,
       ResourceOperation.read,
@@ -166,9 +301,33 @@ final class ResourceCenterHub {
           rethrow;
       }
     }
+    if (bridge != null) {
+      await bridge.prepare(ref, access);
+      if (_disposed ||
+          !identical(_referenceSources[ref.identity.source], bridge)) {
+        throw const ResourceFailure('SOURCE_UNAVAILABLE');
+      }
+      access.check(
+        ref.identity,
+        ResourceOperation.read,
+        currentGeneration: generation,
+        nowMs: _clock(),
+      );
+    }
     final p = provider(ref.identity);
     if (!p.available) throw const ResourceFailure('SOURCE_UNAVAILABLE');
     final content = await p.read(ref.identity.resource, ref.version, access);
+    access.check(
+      ref.identity,
+      ResourceOperation.read,
+      currentGeneration: generation,
+      nowMs: _clock(),
+    );
+    if (_disposed ||
+        !p.available ||
+        !identical(_providers[ref.identity.sourceKey], p)) {
+      throw const ResourceFailure('SOURCE_UNAVAILABLE');
+    }
     if (content.record.identity != ref.identity ||
         (ref.version != null && content.record.version != ref.version)) {
       throw const ResourceFailure('VERSION_MISMATCH');
@@ -279,6 +438,7 @@ final class ResourceCenterHub {
     generation++;
     clipboard = null;
     _providers.clear();
+    _referenceSources.clear();
     _hiddenSources.clear();
     _recent.clear();
     changed();
@@ -287,6 +447,7 @@ final class ResourceCenterHub {
 
   Future<void> dispose() async {
     _disposed = true;
+    _referenceSources.clear();
     generation++;
     clipboard = null;
     await _writes;

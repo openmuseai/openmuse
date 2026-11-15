@@ -17,6 +17,7 @@ final class ResourceSource {
     this.canEdit = false,
     this.exactVersions = true,
     this.internal = false,
+    this.locatorOwner,
   }) : deviceRef = checkedRef(deviceRef ?? id),
        scope = checkedRef(scope),
        id = checkedRef(id),
@@ -35,6 +36,7 @@ final class ResourceSource {
 
   /// An addressable Host-owned replica volume, excluded from browse/create UI.
   final bool internal;
+  final String? locatorOwner;
   ResourceIdentity identity(String ref) => ResourceIdentity(
     scope: scope,
     source: id,
@@ -59,6 +61,7 @@ final class ResourceSource {
     'canEdit': canEdit,
     'exactVersions': exactVersions,
     'internal': internal,
+    if (locatorOwner != null) 'locatorOwner': locatorOwner,
   };
   factory ResourceSource.fromJson(Map<String, Object?> m) => ResourceSource(
     scope: checkedRef(m['scope']),
@@ -76,6 +79,7 @@ final class ResourceSource {
     canEdit: m['canEdit'] == true,
     exactVersions: m['exactVersions'] == true,
     internal: m['internal'] == true,
+    locatorOwner: m['locatorOwner'] as String?,
   );
 }
 
@@ -125,6 +129,13 @@ abstract interface class ResourceProvider {
   );
 }
 
+/// A Host-installed bridge for one configured remote source. References never
+/// supply an endpoint or credential. The Hub rebinds only live references to
+/// its own account before calling this bridge with checked local access.
+abstract interface class ResourceReferenceSource {
+  Future<void> prepare(ResourceReference reference, ResourceAccess access);
+}
+
 enum ResourceOpenIntent { view, edit }
 
 final class ResourceHandlerSpec {
@@ -139,6 +150,7 @@ final class ResourceHandlerSpec {
   final String id, title;
   final Set<String> mediaTypes, extensions;
   final bool editable;
+
   final int priority;
   bool accepts(ResourceRecord record) =>
       mediaTypes.any(

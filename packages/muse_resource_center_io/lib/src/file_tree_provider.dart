@@ -7,7 +7,8 @@ import 'local_provider.dart';
 /// private storage, never derived from public paths. External files remain
 /// read-only until a platform supplies a transactional writer. Exact old bytes
 /// are not invented when another process changes the file.
-final class FileTreeResourceProvider implements ResourceProvider {
+final class FileTreeResourceProvider
+    implements ResourceProvider, ResourceRelativeLocatorProvider {
   FileTreeResourceProvider._(
     this.root,
     this.index,
@@ -125,6 +126,66 @@ final class FileTreeResourceProvider implements ResourceProvider {
     if (resolved != root.path && !resolved.startsWith('${root.path}/'))
       throw const ResourceFailure('DENIED');
     return resolved;
+  }
+
+  @override
+  Future<ResourceLocatorResult> locateRelative(
+    ResourceReference base,
+    String target,
+    ResourceAccess access,
+  ) async {
+    if (base.identity.sourceKey != source.key ||
+        base.identity.scope != source.scope ||
+        base.retained != null ||
+        target.length > 4096) {
+      throw const ResourceFailure('DENIED');
+    }
+    _check(base.identity.resource, access, ResourceOperation.read);
+    final baseParts = _parts(base.identity.resource);
+    await _path(baseParts);
+    int? line, column;
+    final location = RegExp(
+      r'(?:#L(\d+)(?:C(\d+))?|:(\d+)(?::(\d+))?)$',
+    ).firstMatch(target);
+    if (location != null) {
+      line = int.parse(location[1] ?? location[3]!);
+      column = int.tryParse(location[2] ?? location[4] ?? '');
+      target = target.substring(0, location.start);
+    }
+    final uri = Uri.tryParse(target);
+    if (uri == null || uri.hasAuthority || uri.hasScheme || uri.path.isEmpty) {
+      throw const ResourceFailure('INVALID_REFERENCE');
+    }
+    final parts = uri.path.startsWith('/')
+        ? <String>[]
+        : baseParts.take(baseParts.length - 1).toList();
+    for (final part in uri.pathSegments) {
+      if (part.isEmpty || part == '.') continue;
+      if (part == '..') {
+        if (parts.isEmpty) throw const ResourceFailure('DENIED');
+        parts.removeLast();
+      } else {
+        parts.add(checkedName(part));
+      }
+    }
+    final path = await _path(parts);
+    if (await FileSystemEntity.type(path, followLinks: false) !=
+        FileSystemEntityType.file) {
+      throw const ResourceFailure('NOT_FOUND');
+    }
+    final ref = _ref(parts);
+    await _save();
+    _check(ref, access, ResourceOperation.read);
+    return ResourceLocatorResult(
+      [
+        ResourceLocatorMatch(
+          ResourceReference(identity: source.identity(ref)),
+          parts.join('/'),
+        ),
+      ],
+      line: line,
+      column: column,
+    );
   }
 
   @override

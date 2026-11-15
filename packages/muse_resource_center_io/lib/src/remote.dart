@@ -115,6 +115,37 @@ final class ResourceRpcService {
     final args = Map<String, Object?>.from(envelope['arguments'] as Map? ?? {});
     final access = _access(peer);
     switch (op) {
+      case 'locateRelative':
+        final base = ResourceReference.fromJson(args['base']);
+        _local(peer, base.identity.toJson());
+        final result = await hub.locateRelative(
+          base,
+          args['target'] as String,
+          access,
+        );
+        _authorize(peer);
+        for (final match in result.matches) {
+          _local(peer, match.reference.identity.toJson());
+        }
+        return result.toJson();
+      case 'locate':
+        final identity = ResourceIdentity.fromJson(args['identity']);
+        final p = _local(peer, identity.toJson());
+        final locator = ResourceLocator.fromJson(args['locator']);
+        if (p is! ResourceLocatorProvider ||
+            (p as ResourceLocatorProvider).locatorOwner != locator.owner)
+          throw const ResourceFailure('DENIED');
+        final result = await hub.locate(
+          locator,
+          access,
+          workspace: peer.workspaceRef,
+          localOnly: true,
+        );
+        _authorize(peer);
+        for (final match in result.matches) {
+          _local(peer, match.reference.identity.toJson());
+        }
+        return result.toJson();
       case 'retain':
         final ref = ResourceReference.fromJson(args['reference']);
         _local(peer, ref.identity.toJson());
@@ -641,7 +672,11 @@ final class ResourceRpcClient {
   }
 }
 
-final class RemoteResourceProvider implements ResourceProvider {
+final class RemoteResourceProvider
+    implements
+        ResourceProvider,
+        ResourceLocatorProvider,
+        ResourceRelativeLocatorProvider {
   RemoteResourceProvider(
     this.client,
     ResourceSource advertised,
@@ -662,7 +697,51 @@ final class RemoteResourceProvider implements ResourceProvider {
         canEdit: advertised.canEdit,
         exactVersions: advertised.exactVersions,
         internal: advertised.internal,
+        locatorOwner: advertised.locatorOwner,
       );
+  @override
+  String get locatorOwner => source.locatorOwner ?? 'unsupported';
+  @override
+  Future<ResourceLocatorResult> locateRelative(
+    ResourceReference base,
+    String target,
+    ResourceAccess access,
+  ) async {
+    if (base.identity.sourceKey != source.key ||
+        base.identity.scope != source.scope) {
+      throw const ResourceFailure('DENIED');
+    }
+    access.check(
+      base.identity,
+      ResourceOperation.read,
+      currentGeneration: generation(),
+    );
+    return ResourceLocatorResult.fromJson(
+      await client.call('locateRelative', {
+        'base': base.toJson(),
+        'target': target,
+      }),
+    );
+  }
+
+  @override
+  Future<ResourceLocatorResult> locate(
+    ResourceLocator locator,
+    ResourceAccess access,
+  ) async {
+    access.check(
+      source.identity('root'),
+      ResourceOperation.read,
+      currentGeneration: generation(),
+    );
+    return ResourceLocatorResult.fromJson(
+      await client.call('locate', {
+        'identity': source.identity('root').toJson(),
+        'locator': locator.toJson(),
+      }),
+    );
+  }
+
   final ResourceRpcClient client;
   @override
   final ResourceSource source;
