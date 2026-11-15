@@ -18,9 +18,9 @@ window.__ModuleLoader__.load({
         try {
           const sessionId = decodeURIComponent(rest.slice(0, slash));
           const path = rest.slice(slash + 1).split('/').map(decodeURIComponent).join('/');
-          const cwd = ctx.sessions.list.getSnapshot().byId[sessionId]?.cwd;
-          if (typeof cwd !== 'string' || !cwd || !path) return;
-          bridge.postMessage(JSON.stringify({ type: 'resource.open', path, cwd, line: options?.params?.line }));
+          if (!sessionId || !path) return;
+          const target = options?.params?.line ? `${path}#L${options.params.line}` : path;
+          bridge.postMessage(JSON.stringify({ type: 'resource.locator.open', locator: { owner: 'dsh', kind: 'path', target, context: { sessionId } } }));
           return;
         } catch (_) { return; }
       };

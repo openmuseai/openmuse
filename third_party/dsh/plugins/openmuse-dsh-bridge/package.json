@@ -1,6 +1,6 @@
 {
   "name": "openmuse-dsh-bridge",
-  "version": "0.1.17",
+  "version": "0.1.22",
   "type": "module",
   "license": "AGPL-3.0-only",
   "main": "lib/index.js",
@@ -12,7 +12,8 @@
   "files": [
     "lib/index.js",
     "lib/client.js",
-    "LICENSE"
+    "LICENSE",
+    "lib/resource_files.js"
   ],
   "scripts": {
     "test": "node --test test/*.test.js"

@@ -53,7 +53,7 @@ test('DSH file-address click goes to Host, non-file resources remain in DSH', as
   };
   module.apply(ctx);
   sidebarRight.openResource('dsh-resource://file/session/s1/docs/hello%20world.md', { params: { line: 12 } });
-  assert.deepEqual(messages, [{ type: 'resource.open', path: 'docs/hello world.md', cwd: '/workspace', line: 12 }]);
+  assert.deepEqual(messages, [{ type: 'resource.locator.open', locator: { owner: 'dsh', kind: 'path', target: 'docs/hello world.md#L12', context: { sessionId: 's1' } } }]);
   sidebarRight.openResource('dsh-resource://plan/s1/a');
   assert.equal(original.length, 1);
   sidebarRight.openResource('dsh-resource://file/session/unknown/private.txt');

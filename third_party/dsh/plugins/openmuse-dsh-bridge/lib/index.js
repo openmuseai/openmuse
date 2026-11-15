@@ -1,3 +1,4 @@
+import { resolveSessionFiles, readSessionFile } from './resource_files.js';
 /** OpenMuse-owned, token-gated bridge for Host-granted local workspaces. */
 import { realpath, stat, readFile } from 'node:fs/promises';
 import { isAbsolute } from 'node:path';
@@ -414,10 +415,44 @@ async function nativeDescriptors(ctx) {
   return descriptors.filter(Boolean);
 }
 
+function nativeSessionSummary(session) {
+  const source = session.projections?.values ?? {};
+  const selection = (value) => value && typeof value === 'object'
+    ? Object.fromEntries(['provider', 'model', 'reasoningEffort']
+      .filter((key) => typeof value[key] === 'string').map((key) => [key, value[key]]))
+    : undefined;
+  const values = {};
+  for (const key of ['title', 'agentPreset']) {
+    if (typeof source[key] === 'string') values[key] = source[key];
+  }
+  if (source.modelSelection) {
+    values.modelSelection = {
+      next: selection(source.modelSelection.next),
+      lastUsed: selection(source.modelSelection.lastUsed),
+    };
+  }
+  if (typeof source.permissions?.currentValue === 'string') {
+    values.permissions = { currentValue: source.permissions.currentValue };
+  }
+  return {
+    sessionId: session.sessionId, updatedAt: session.updatedAt,
+    running: session.running, blank: session.blank,
+    projections: { asOfSeq: session.projections?.asOfSeq ?? 0, values },
+  };
+}
+
 async function handleNative(ctx, interactions, req, res, url) {
   const controller = ctx.get('sessionController');
   if (!controller) return reply(res, 503, { error: 'session controller unavailable' });
   const path = url.pathname;
+  if (req.method === 'POST' && ['/openmuse-native/v1/session/files/resolve', '/openmuse-native/v1/session/files/read'].includes(path)) {
+    const abort = new AbortController(); res.on('close', () => abort.abort());
+    try {
+      const input = await bodyOf(req);
+      const value = path.endsWith('/resolve') ? await resolveSessionFiles(ctx, input, abort.signal) : await readSessionFile(ctx, input, abort.signal);
+      return reply(res, 200, value);
+    } catch (error) { return reply(res, 400, { error: error.resourceCode ?? 'FILE_UNAVAILABLE' }); }
+  }
   if (req.method === 'GET' && path === '/openmuse-native/v1/hello') {
     return reply(res, 200, {
       protocolVersion: NATIVE_API_VERSION,
@@ -443,7 +478,10 @@ async function handleNative(ctx, interactions, req, res, url) {
   if (req.method === 'GET' && path === '/openmuse-native/v1/sessions') {
     const abort = new AbortController();
     res.on('close', () => abort.abort());
-    return reply(res, 200, await controller.list({}, abort.signal));
+    const catalog = await controller.list({}, abort.signal);
+    // Native catalogs are polled for headSeq/running/title, not full plugin state.
+    // Keep the authoritative cursor while avoiding large projections per session.
+    return reply(res, 200, { items: catalog.items.map(nativeSessionSummary) });
   }
   if (req.method === 'POST' && path === '/openmuse-native/v1/session/create') {
     const payload = await bodyOf(req);
@@ -478,12 +516,15 @@ async function handleNative(ctx, interactions, req, res, url) {
       connection: 'keep-alive',
       'x-accel-buffering': 'no',
     });
+    const heartbeat = setInterval(() => {
+      if (!abort.signal.aborted && !res.writableEnded) res.write(': keep-alive\n\n');
+    }, 15000);
     try {
       const frames = controller.follow({
         address,
         assistantStream: true,
-        maxMessages: 500,
-        turnWindow: { minMessages: 50, minTurns: 2 },
+        maxMessages: 80,
+        turnWindow: { minMessages: 20, minTurns: 2 },
       }, abort.signal);
       for await (const frame of frames) {
         if (abort.signal.aborted) break;
@@ -494,6 +535,7 @@ async function handleNative(ctx, interactions, req, res, url) {
         res.write(`event: error\ndata: ${JSON.stringify(nativeFailure(error))}\n\n`);
       }
     } finally {
+      clearInterval(heartbeat);
       closeFollower();
       if (!res.writableEnded) res.end();
     }
@@ -507,8 +549,8 @@ async function handleNative(ctx, interactions, req, res, url) {
       address: sessionAddress(payload.sessionId),
       throughSeq: payload.throughSeq,
       ...(payload.beforeSeq === undefined ? {} : { beforeSeq: payload.beforeSeq }),
-      maxMessages: 500,
-      turnWindow: { minMessages: 50, minTurns: 2 },
+      maxMessages: 80,
+      turnWindow: { minMessages: 20, minTurns: 2 },
     }, abort.signal);
     return reply(res, 200, value);
   }
