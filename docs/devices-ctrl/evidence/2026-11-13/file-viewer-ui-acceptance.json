@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-13",
+  "market": "china",
+  "branch": "codex/file-viewer-treesitter-links",
+  "originMain": "84299545",
+  "originMerge": "83f5676f",
+  "productionEntry": "normal app main.dart",
+  "desktop": {
+    "build": 111319,
+    "bridge": "0.1.22",
+    "uiPassed": true,
+    "observedVia": "CUA",
+    "markdownFromConversation": true,
+    "unicodeSourceFile": "示例.dart",
+    "nativeTreeSitterLabel": "Tree-sitter · dart",
+    "sourceMarker": "TREE_SITTER_OWNER_OK",
+    "lineHighlighted": 2,
+    "documentMarker": "DOCUMENT_LINK_OWNER_OK",
+    "chainedReturnToReadme": true
+  },
+  "mobileEmulator": {
+    "api": 34,
+    "architecture": "arm64",
+    "uiPassed": true,
+    "driverExitCode": 0,
+    "report": "file-viewer-mobile-e2e-result.json",
+    "actualDesktop": true,
+    "mockResources": false,
+    "normalVersionCodeRestored": 111321,
+    "nativeHighlightObservedViaCua": true
+  },
+  "physicalAndroid": {
+    "model": "PLP110",
+    "normalVersionCodeInstalled": 111321,
+    "testEntryInstalled": false,
+    "uiPassed": true,
+    "method": "user-authorized ADB input/UIAutomator",
+    "result": "oppo-file-viewer-e2e-result.json",
+    "line120AutoScrollPassed": true,
+    "nativeHighlightObserved": true
+  },
+  "relatedChecksPassed": 40,
+  "liveUiScenariosPassed": 1,
+  "normalApkSha256": "8b7a2465d877938a4cf118b7cc1f3e6b8a8fcdb3cd58b54113f5101b3e4ac345",
+  "releaseCertificateSha256": "7e6cefb279eeb3f73890c35ecb8e941bb7630c8a6adda9a010d1d9d997ef22c4",
+  "thirdPartyNoticesBundled": true,
+  "limitations": [
+    "iOS/Web end-to-end acceptance not run",
+    "No Markdown heading scrolling, LSP or embedded-language injection acceptance"
+  ]
+}
