@@ -12,7 +12,8 @@ final class DshResourceSource
     implements
         ResourceProvider,
         ResourceLocatorProvider,
-        ResourceRelativeLocatorProvider {
+        ResourceRelativeLocatorProvider,
+        ResourceCodeNavigationProvider {
   DshResourceSource(
     this.context, {
     required this.endpoint,
@@ -103,6 +104,67 @@ final class DshResourceSource
   bool get available => enabled();
   @override
   String get locatorOwner => 'dsh';
+  @override
+  Future<ResourceCodeResult> codeNavigation(
+    ResourceReference base,
+    ResourceCodeRequest request,
+    ResourceAccess access,
+  ) async {
+    if (base.identity.scope != source.scope ||
+        base.identity.sourceKey != source.key ||
+        base.retained != null)
+      throw const ResourceFailure('DENIED');
+    final ref = base.identity.resource;
+    _check(ref, access);
+    await _loaded;
+    _bridgeRefs.remove(ref);
+    final value = await _request('navigation', {
+      'ref': await _bridgeRef(ref),
+      'partition': source.scope,
+      'generation': context.generation(),
+      'operation': request.operation.name,
+      'digest': request.version?.digest,
+      'line': request.line,
+      'character': request.character,
+    });
+    _check(ref, access);
+    final sessionId = _entries[ref]!['sessionId'] as String;
+    final matches = <ResourceCodeTarget>[];
+    for (final item in value['matches'] as List? ?? []) {
+      final label = item['label'] as String;
+      final id = _identity(sessionId, label);
+      _bridgeRefs[id] = checkedRef(item['ref']);
+      final digest = item['digest'] as String;
+      final range = item['selectionRange'] as Map;
+      final start = range['start'] as Map, end = range['end'] as Map;
+      matches.add(
+        ResourceCodeTarget(
+          reference: ResourceReference(
+            identity: source.identity(id),
+            version: ResourceVersion(
+              revision: 'sha256-$digest',
+              digest: digest,
+            ),
+          ),
+          label: label,
+          line: start['line'] as int,
+          character: start['character'] as int,
+          endLine: end['line'] as int,
+          endCharacter: end['character'] as int,
+        ),
+      );
+    }
+    await _save();
+    return ResourceCodeResult(
+      enabled: value['enabled'] == true,
+      configured: value['configured'] == true,
+      instances: value['instances'] as int? ?? 0,
+      matches: matches,
+      truncated: value['truncated'] == true,
+      hover: value['hover'] as String?,
+    );
+  }
+
   void _check(String ref, ResourceAccess access) {
     if (!available) throw const ResourceFailure('SOURCE_UNAVAILABLE');
     access.check(

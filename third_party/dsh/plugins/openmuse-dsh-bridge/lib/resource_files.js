@@ -154,3 +154,11 @@ export async function readSessionFile(ctx, input, signal) {
   const digest = createHash('sha256').update(bytes).digest('hex');
   return { ref: input.ref, label: entry.label, digest, bytes: bytes.toString('base64') };
 }
+
+// Private capability for another owner-side adapter. Never serialized to clients.
+export async function sessionFileContext(ctx, ref, signal) {
+  const entry = store(ctx).get(ref);
+  if (!entry) fail('EXPIRED');
+  await readSessionFile(ctx, { ref }, signal);
+  return { ...entry, scope: await scopeOf(ctx, entry.scope.sessionId, signal) };
+}

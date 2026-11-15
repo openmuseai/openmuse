@@ -1,6 +1,6 @@
 {
   "name": "openmuse-dsh-bridge",
-  "version": "0.1.22",
+  "version": "0.1.24",
   "type": "module",
   "license": "AGPL-3.0-only",
   "main": "lib/index.js",
@@ -13,7 +13,8 @@
     "lib/index.js",
     "lib/client.js",
     "LICENSE",
-    "lib/resource_files.js"
+    "lib/resource_files.js",
+    "lib/code_navigation.js"
   ],
   "scripts": {
     "test": "node --test test/*.test.js"
@@ -34,5 +35,8 @@
       "impact": "native-covered",
       "contributions": []
     }
+  },
+  "dependencies": {
+    "@openmuse/code-navigation-service": "0.1.0"
   }
 }

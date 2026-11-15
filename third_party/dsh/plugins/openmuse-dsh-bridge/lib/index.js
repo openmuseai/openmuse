@@ -1,4 +1,5 @@
 import { resolveSessionFiles, readSessionFile } from './resource_files.js';
+import { codeNavigation } from './code_navigation.js';
 /** OpenMuse-owned, token-gated bridge for Host-granted local workspaces. */
 import { realpath, stat, readFile } from 'node:fs/promises';
 import { isAbsolute } from 'node:path';
@@ -445,13 +446,13 @@ async function handleNative(ctx, interactions, req, res, url) {
   const controller = ctx.get('sessionController');
   if (!controller) return reply(res, 503, { error: 'session controller unavailable' });
   const path = url.pathname;
-  if (req.method === 'POST' && ['/openmuse-native/v1/session/files/resolve', '/openmuse-native/v1/session/files/read'].includes(path)) {
+  if (req.method === 'POST' && ['/openmuse-native/v1/session/files/resolve', '/openmuse-native/v1/session/files/read', '/openmuse-native/v1/session/files/navigation'].includes(path)) {
     const abort = new AbortController(); res.on('close', () => abort.abort());
     try {
       const input = await bodyOf(req);
-      const value = path.endsWith('/resolve') ? await resolveSessionFiles(ctx, input, abort.signal) : await readSessionFile(ctx, input, abort.signal);
+      const value = path.endsWith('/navigation') ? await codeNavigation(ctx, input, abort.signal) : path.endsWith('/resolve') ? await resolveSessionFiles(ctx, input, abort.signal) : await readSessionFile(ctx, input, abort.signal);
       return reply(res, 200, value);
-    } catch (error) { return reply(res, 400, { error: error.resourceCode ?? 'FILE_UNAVAILABLE' }); }
+    } catch (error) { return reply(res, 400, { error: error.resourceCode ?? error.code ?? 'FILE_UNAVAILABLE' }); }
   }
   if (req.method === 'GET' && path === '/openmuse-native/v1/hello') {
     return reply(res, 200, {
