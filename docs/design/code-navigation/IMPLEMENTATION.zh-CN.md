@@ -2,6 +2,8 @@
 
 日期：2026-11-15。源代码提交：`50bf7f5f`。范围：独立服务内核与语言进程生命周期；不是 Mobile 功能已发布声明。
 
+后续进展（2026-11-16）：通用导航契约/RPC、DSH owner adapter、Viewer 符号点击及导航栈已接通，并完成国内 Desktop 与 OPPO 正常版的文件/函数/方法/返回 UI 验收。实际范围、截图与剩余门禁见 [端到端验收记录](ACCEPTANCE-2026-11-16.zh-CN.md)。下文保留 M1 当时的阶段记录。
+
 ## 已实现
 
 代码位于 [plugins/code-navigation-service](../../../plugins/code-navigation-service/README.zh-CN.md)。

@@ -2,6 +2,8 @@
 
 日期：2026-11-15。关联：[产品稿](PRODUCT.zh-CN.md)、[实施计划](PLAN.zh-CN.md)。
 
+2026-11-16 更新：通用可选能力/RPC、DSH 本地 owner adapter 和 Viewer 导航已接通；当前实现与未达门禁以 [验收记录](ACCEPTANCE-2026-11-16.zh-CN.md) 为准。下文“当前事实”是最初设计时的基线。
+
 ## 当前事实与架构决策
 
 当前资源框架为 muse_resource_center → ResourceProvider/ResourceReference → Plugin SDK 会话 → open-file-viewer。已有 owner-resolved locateRelative、账号/代际校验、跨设备资源 RPC、行号定位与 native Tree-sitter 高亮。符号点击、语义查询、目标范围、导航历史尚未接通。
