@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:muse_resource_center/muse_resource_center.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'src/syntax.dart';
+import 'src/navigation.dart';
 export 'src/syntax.dart'
     show
         viewerCodeLanguage,
@@ -19,12 +22,16 @@ final class OpenMuseFileViewerBody extends StatefulWidget {
     this.mediaType,
     this.initialLine,
     this.onOpenLink,
+    this.navigateCode,
+    this.openCodeTarget,
   });
 
   final String resourceName;
   final String? mediaType;
   final int? initialLine;
   final Future<void> Function(String target)? onOpenLink;
+  final CodeNavigationCallback? navigateCode;
+  final Future<bool> Function(ResourceCodeTarget target)? openCodeTarget;
   final Future<Uint8List> Function() readBytes;
 
   @override
@@ -66,6 +73,8 @@ final class _OpenMuseFileViewerBodyState extends State<OpenMuseFileViewerBody> {
           contents: utf8.decode(bytes),
           language: language,
           initialLine: widget.initialLine,
+          navigateCode: widget.navigateCode,
+          openCodeTarget: widget.openCodeTarget,
         );
       }
       if ((widget.mediaType?.startsWith('text/') ?? false) ||
@@ -155,9 +164,13 @@ final class OpenMuseCodeBody extends StatefulWidget {
     required this.contents,
     required this.language,
     this.initialLine,
+    this.navigateCode,
+    this.openCodeTarget,
   });
   final String contents, language;
   final int? initialLine;
+  final CodeNavigationCallback? navigateCode;
+  final Future<bool> Function(ResourceCodeTarget target)? openCodeTarget;
   @override
   State<OpenMuseCodeBody> createState() => _OpenMuseCodeBodyState();
 }
@@ -211,21 +224,29 @@ final class _OpenMuseCodeBodyState extends State<OpenMuseCodeBody> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                snapshot.data != null && snapshot.data!.isNotEmpty
-                    ? 'Tree-sitter · ${widget.language}'
-                    : widget.language,
-                key: ValueKey(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (widget.navigateCode != null)
+                  TextButton.icon(
+                    onPressed: () => _navigate(0, 0, '代码导航'),
+                    icon: const Icon(Icons.code, size: 18),
+                    label: const Text('代码导航'),
+                  ),
+                Text(
                   snapshot.data != null && snapshot.data!.isNotEmpty
-                      ? 'file-viewer-highlight-ready'
-                      : 'file-viewer-highlight-pending',
+                      ? 'Tree-sitter · ${widget.language}'
+                      : widget.language,
+                  key: ValueKey(
+                    snapshot.data != null && snapshot.data!.isNotEmpty
+                        ? 'file-viewer-highlight-ready'
+                        : 'file-viewer-highlight-pending',
+                  ),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
+              ],
             ),
           ),
           Expanded(
@@ -261,11 +282,36 @@ final class _OpenMuseCodeBodyState extends State<OpenMuseCodeBody> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text.rich(
-                                TextSpan(children: lines[i]),
+                              child: _CodeTapText(
+                                spans: lines[i],
+                                onTap: widget.navigateCode == null
+                                    ? null
+                                    : (column) {
+                                        final raw = rawLines[i];
+                                        if (column >= raw.length ||
+                                            raw[column].trim().isEmpty)
+                                          return;
+                                        var a = column, b = column;
+                                        bool part(int index) =>
+                                            index >= 0 &&
+                                            index < raw.length &&
+                                            RegExp(
+                                              r'[a-zA-Z0-9_$\u0080-\uffff]',
+                                            ).hasMatch(raw[index]);
+                                        while (part(a - 1)) {
+                                          a--;
+                                        }
+                                        while (part(b)) {
+                                          b++;
+                                        }
+                                        if (b > a)
+                                          _navigate(
+                                            i,
+                                            column,
+                                            raw.substring(a, b),
+                                          );
+                                      },
                                 key: ValueKey('file-viewer-code-line-${i + 1}'),
-                                maxLines: 1,
-                                softWrap: false,
                                 style: TextStyle(
                                   fontFamily: 'monospace',
                                   fontSize: 14,
@@ -286,6 +332,91 @@ final class _OpenMuseCodeBodyState extends State<OpenMuseCodeBody> {
         ],
       );
     },
+  );
+
+  Future<void> _navigate(int line, int character, String symbol) async {
+    final callback = widget.navigateCode;
+    if (callback == null) return;
+    final target = await showModalBottomSheet<ResourceCodeTarget>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => CodeNavigationSheet(
+        callback: callback,
+        line: line,
+        character: character,
+        symbol: symbol,
+      ),
+    );
+    if (target != null && mounted) await widget.openCodeTarget?.call(target);
+  }
+}
+
+final class _CodeTapText extends StatefulWidget {
+  const _CodeTapText({
+    super.key,
+    required this.spans,
+    required this.style,
+    this.onTap,
+  });
+  final List<TextSpan> spans;
+  final TextStyle style;
+  final void Function(int)? onTap;
+  @override
+  State<_CodeTapText> createState() => _CodeTapTextState();
+}
+
+final class _CodeTapTextState extends State<_CodeTapText> {
+  final _text = GlobalKey();
+  Offset? _down;
+  Duration? _downTime;
+  @override
+  Widget build(BuildContext context) => Listener(
+    onPointerDown: (event) {
+      _down = event.position;
+      _downTime = event.timeStamp;
+    },
+    onPointerMove: (event) {
+      if (_down != null && (event.position - _down!).distance > 8) _down = null;
+    },
+    onPointerCancel: (_) => _down = null,
+    onPointerUp: widget.onTap == null
+        ? null
+        : (event) {
+            if (_down == null ||
+                _downTime == null ||
+                event.timeStamp - _downTime! >
+                    const Duration(milliseconds: 350))
+              return;
+            _down = null;
+            final root = _text.currentContext?.findRenderObject();
+            RenderParagraph? paragraph;
+            void find(RenderObject node) {
+              if (node is RenderParagraph) {
+                paragraph ??= node;
+              } else {
+                node.visitChildren(find);
+              }
+            }
+
+            if (root != null) find(root);
+            if (paragraph != null)
+              widget.onTap!(
+                paragraph!
+                    .getPositionForOffset(
+                      paragraph!.globalToLocal(event.position),
+                    )
+                    .offset,
+              );
+          },
+    child: Text.rich(
+      TextSpan(children: widget.spans),
+      key: _text,
+      maxLines: 1,
+      softWrap: false,
+      style: widget.style,
+    ),
   );
 }
 

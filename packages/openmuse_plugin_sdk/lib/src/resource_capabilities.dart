@@ -67,6 +67,10 @@ final class ResourceEditorSession extends ChangeNotifier {
 
   /// The Host routes document links through the current resource owner.
   Future<bool> Function(String target)? openResourceLink;
+  /// Optional owner-side semantic navigation; no commands or host paths.
+  Future<ResourceCodeResult> Function(ResourceCodeRequest request)? navigateCode;
+  Future<bool> Function(ResourceCodeTarget target)? openCodeTarget;
+  bool get isPresentationActive => !_disposed;
   final bool allowEditing;
   final Future<ResourceRecord> Function(
     ResourceVersion base,

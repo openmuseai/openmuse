@@ -185,6 +185,17 @@ final class OpenMuseFileViewerPlugin
     resourceName: session.record.name,
     mediaType: session.record.mediaType,
     initialLine: session.initialLine,
+    navigateCode: session.navigateCode == null
+        ? null
+        : (operation, line, character) => session.navigateCode!(
+            ResourceCodeRequest(
+              operation,
+              version: session.record.version,
+              line: line,
+              character: character,
+            ),
+          ),
+    openCodeTarget: session.openCodeTarget,
     onOpenLink: (target) async {
       await session.openResourceLink?.call(target);
     },

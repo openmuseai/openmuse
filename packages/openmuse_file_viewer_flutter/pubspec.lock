@@ -203,6 +203,20 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.18.0"
+  muse_resource_center:
+    dependency: "direct main"
+    description:
+      path: "../muse_resource_center"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_resource_contract:
+    dependency: transitive
+    description:
+      path: "../muse_resource_contract"
+      relative: true
+    source: path
+    version: "0.1.0"
   native_toolchain_c:
     dependency: transitive
     description:
