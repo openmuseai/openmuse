@@ -45,12 +45,134 @@ void showResourceError(BuildContext context, Object error) {
     );
 }
 
+/// Resolve through the resource owner; even one result is not auto-selected
+/// when a bounded search was truncated (uniqueness has not been established).
+Future<bool> openResourceLocator(
+  BuildContext context,
+  ResourceCenterController controller,
+  ResourceLocator locator,
+) async {
+  try {
+    final result = await controller.hub.locate(
+      locator,
+      controller.hub.access('resource-locator'),
+    );
+    return _openLocatedResource(context, controller, result);
+  } on Object catch (error) {
+    if (context.mounted) showResourceError(context, error);
+    return false;
+  }
+}
+
+Future<bool> openResourceLink(
+  BuildContext context,
+  ResourceCenterController controller,
+  ResourceReference base,
+  String target, {
+  String? preferredHandlerKey,
+}) async {
+  try {
+    if (target.startsWith('openmuse-resource://v1/')) {
+      return openResourcePage(
+        context,
+        controller,
+        ResourceReference.fromUri(target),
+        readOnly: true,
+        preferredHandlerKey: preferredHandlerKey,
+      );
+    }
+    final result = await controller.hub.locateRelative(
+      base,
+      target,
+      controller.hub.access('resource-document-link'),
+    );
+    return _openLocatedResource(
+      context,
+      controller,
+      result,
+      preferredHandlerKey: preferredHandlerKey,
+    );
+  } on Object catch (error) {
+    if (context.mounted) showResourceError(context, error);
+    return false;
+  }
+}
+
+Future<bool> _openLocatedResource(
+  BuildContext context,
+  ResourceCenterController controller,
+  ResourceLocatorResult result, {
+  String? preferredHandlerKey,
+}) async {
+  try {
+    if (!context.mounted) return false;
+    if (result.matches.isEmpty) throw const ResourceFailure('NOT_FOUND');
+    ResourceLocatorMatch? selected;
+    if (result.matches.length == 1 && !result.truncated) {
+      selected = result.matches.single;
+    } else {
+      selected = await showModalBottomSheet<ResourceLocatorMatch>(
+        context: context,
+        useSafeArea: true,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (sheet) => SizedBox(
+          height: MediaQuery.sizeOf(sheet).height * .65,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  result.truncated
+                      ? '${ResourceCenterStrings(sheet).open} · ${ResourceCenterStrings(sheet).search}'
+                      : ResourceCenterStrings(sheet).open,
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  children: [
+                    for (final match in result.matches)
+                      ListTile(
+                        key: ValueKey('resource-locator-${match.label}'),
+                        leading: const Icon(Icons.insert_drive_file_outlined),
+                        title: Text(match.label),
+                        onTap: () => Navigator.pop(sheet, match),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (selected == null || !context.mounted) return false;
+    return openResourcePage(
+      context,
+      controller,
+      selected.reference,
+      readOnly: true,
+      initialLine: result.line,
+      initialColumn: result.column,
+      preferredHandlerKey: preferredHandlerKey,
+    );
+  } on Object catch (error) {
+    if (context.mounted) showResourceError(context, error);
+    return false;
+  }
+}
+
 /// Shared entry for list rows, pasted references and conversation cards.
 Future<bool> openResourcePage(
   BuildContext context,
   ResourceCenterController controller,
   ResourceReference reference, {
   bool chooseHandler = false,
+  bool readOnly = false,
+  int? initialLine,
+  int? initialColumn,
+  String? preferredHandlerKey,
+  bool stackNavigation = false,
 }) async {
   final navigator = Navigator.of(context);
   bool cancelled = false;
@@ -110,7 +232,9 @@ Future<bool> openResourcePage(
       controller.preferenceKey(record),
     );
     if (!chooseHandler) {
-      choice = choices.where((x) => x.key == preferred).firstOrNull;
+      choice = choices
+          .where((x) => x.key == (preferredHandlerKey ?? preferred))
+          .firstOrNull;
       if (choice == null && choices.length == 1) choice = choices.single;
     }
     if (choices.isEmpty) {
@@ -162,6 +286,7 @@ Future<bool> openResourcePage(
     final session = ResourceEditorSession(
       opened: opened,
       allowEditing:
+          !readOnly &&
           choice.spec.editable &&
           provider.available &&
           provider.source.canEdit &&
@@ -181,6 +306,40 @@ Future<bool> openResourcePage(
       onOpened: (record) => unawaited(controller.opened(record, selected.key)),
       onChanged: (record) => unawaited(controller.hub.refreshRecord(record)),
     );
+    session.initialLine = initialLine;
+    session.initialColumn = initialColumn;
+    session.navigateCode = (request) async {
+      if (!session.isPresentationActive)
+        throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
+      return controller.hub.codeNavigation(
+        session.opened.reference,
+        request,
+        controller.hub.access('resource-code-navigation'),
+      );
+    };
+    session.openCodeTarget = (target) async {
+      if (!session.isPresentationActive || !context.mounted) return false;
+      return openResourcePage(
+        context,
+        controller,
+        target.reference,
+        readOnly: true,
+        initialLine: target.line + 1,
+        initialColumn: target.character + 1,
+        preferredHandlerKey: selected.key,
+        stackNavigation: true,
+      );
+    };
+    session.openResourceLink = (target) async {
+      if (!session.isPresentationActive || !context.mounted) return false;
+      return openResourceLink(
+        context,
+        controller,
+        session.opened.reference,
+        target,
+        preferredHandlerKey: selected.key,
+      );
+    };
     session.openLinkedContent = (name, content) async {
       final materialize = controller.materializeLinkedContent;
       if (materialize == null || !context.mounted) return false;
@@ -193,7 +352,7 @@ Future<bool> openResourcePage(
       return openResourcePage(context, controller, linked.reference(pin: true));
     };
     try {
-      final present = controller.presentEditor;
+      final present = stackNavigation ? null : controller.presentEditor;
       if (present != null) {
         await present(ResourceEditorPresentation(selected, session));
       } else {
@@ -400,7 +559,9 @@ final class _ResourceEditorPageState extends State<_ResourceEditorPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  record.sourceLabel,
+                  session.allowEditing
+                      ? record.sourceLabel
+                      : '${record.sourceLabel} · ${s.readOnly}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
