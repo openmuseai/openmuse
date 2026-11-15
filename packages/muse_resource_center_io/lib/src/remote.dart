@@ -115,6 +115,19 @@ final class ResourceRpcService {
     final args = Map<String, Object?>.from(envelope['arguments'] as Map? ?? {});
     final access = _access(peer);
     switch (op) {
+      case 'codeNavigation':
+        final base = ResourceReference.fromJson(args['base']);
+        _local(peer, base.identity.toJson());
+        final result = await hub.codeNavigation(
+          base,
+          ResourceCodeRequest.fromJson(args['request']),
+          access,
+        );
+        _authorize(peer);
+        for (final target in result.matches) {
+          _local(peer, target.reference.identity.toJson());
+        }
+        return result.toJson();
       case 'locateRelative':
         final base = ResourceReference.fromJson(args['base']);
         _local(peer, base.identity.toJson());
@@ -676,7 +689,8 @@ final class RemoteResourceProvider
     implements
         ResourceProvider,
         ResourceLocatorProvider,
-        ResourceRelativeLocatorProvider {
+        ResourceRelativeLocatorProvider,
+        ResourceCodeNavigationProvider {
   RemoteResourceProvider(
     this.client,
     ResourceSource advertised,
@@ -701,6 +715,28 @@ final class RemoteResourceProvider
       );
   @override
   String get locatorOwner => source.locatorOwner ?? 'unsupported';
+  @override
+  Future<ResourceCodeResult> codeNavigation(
+    ResourceReference base,
+    ResourceCodeRequest request,
+    ResourceAccess access,
+  ) async {
+    if (base.identity.scope != source.scope ||
+        base.identity.sourceKey != source.key)
+      throw const ResourceFailure('DENIED');
+    access.check(
+      base.identity,
+      ResourceOperation.read,
+      currentGeneration: generation(),
+    );
+    return ResourceCodeResult.fromJson(
+      await client.call('codeNavigation', {
+        'base': base.toJson(),
+        'request': request.toJson(),
+      }),
+    );
+  }
+
   @override
   Future<ResourceLocatorResult> locateRelative(
     ResourceReference base,

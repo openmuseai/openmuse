@@ -2,6 +2,7 @@ import 'dart:async';
 import 'model.dart';
 import 'provider.dart';
 import 'locator.dart';
+import 'code_navigation.dart';
 
 final class RecentResource {
   const RecentResource(this.record, this.openedAtMs, this.handlerId);
@@ -146,6 +147,44 @@ final class ResourceCenterHub {
     final p = _providers[identity.sourceKey];
     if (p == null) throw const ResourceFailure('SOURCE_UNAVAILABLE');
     return p;
+  }
+
+  Future<ResourceCodeResult> codeNavigation(
+    ResourceReference base,
+    ResourceCodeRequest request,
+    ResourceAccess access,
+  ) async {
+    if (_disposed ||
+        access.scope != scope ||
+        base.identity.scope != scope ||
+        base.retained != null)
+      throw const ResourceFailure('DENIED');
+    final source = provider(base.identity);
+    if (source is! ResourceCodeNavigationProvider)
+      throw const ResourceFailure('NAVIGATION_UNAVAILABLE');
+    void check() {
+      access.check(
+        base.identity,
+        ResourceOperation.read,
+        currentGeneration: generation,
+        nowMs: _clock(),
+      );
+      if (_disposed ||
+          !source.available ||
+          !identical(_providers[source.source.key], source))
+        throw const ResourceFailure('SOURCE_UNAVAILABLE');
+    }
+
+    check();
+    final result = await (source as ResourceCodeNavigationProvider)
+        .codeNavigation(base, request, access);
+    check();
+    for (final target in result.matches) {
+      if (target.reference.identity.scope != scope ||
+          target.reference.identity.sourceKey != source.source.key)
+        throw const ResourceFailure('DENIED');
+    }
+    return result;
   }
 
   Future<ResourceLocatorResult> locateRelative(
