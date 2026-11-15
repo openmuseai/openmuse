@@ -2,16 +2,29 @@
   "id": "com.openmuse.open-file-viewer",
   "name": "Open File Viewer",
   "version": "0.1.0",
-  "protocol": { "major": 1, "minor": 0 },
+  "protocol": {
+    "major": 1,
+    "minor": 0
+  },
   "runtime": "web-view",
-  "activation_events": ["onFileType:image", "onFileType:pdf"],
-  "permissions": ["filesystem.workspace.read"],
+  "activation_events": [
+    "onStartup",
+    "onFileType:markdown",
+    "onFileType:text",
+    "onFileType:image",
+    "onFileType:pdf"
+  ],
+  "permissions": [
+    "filesystem.workspace.read"
+  ],
   "contributes": {
     "commands": [
       {
         "id": "viewer.open",
         "title": "Open Preview",
-        "required_permissions": ["filesystem.workspace.read"]
+        "required_permissions": [
+          "filesystem.workspace.read"
+        ]
       }
     ],
     "services": [
@@ -19,21 +32,109 @@
         "id": "resource.preview",
         "version": 1,
         "priority": 10,
-        "required_permissions": ["filesystem.workspace.read"]
+        "required_permissions": [
+          "filesystem.workspace.read"
+        ]
       }
     ],
     "editors": [
       {
+        "id": "viewer.markdown",
+        "extensions": [
+          "md",
+          "markdown",
+          "mdown"
+        ],
+        "priority": 20
+      },
+      {
+        "id": "viewer.text",
+        "extensions": [
+          "txt",
+          "log",
+          "json",
+          "jsonl",
+          "yaml",
+          "yml",
+          "toml",
+          "xml",
+          "csv",
+          "tsv",
+          "ini",
+          "cfg",
+          "conf",
+          "properties",
+          "env",
+          "dart",
+          "py",
+          "pyi",
+          "js",
+          "jsx",
+          "mjs",
+          "cjs",
+          "ts",
+          "tsx",
+          "html",
+          "htm",
+          "css",
+          "scss",
+          "sass",
+          "less",
+          "vue",
+          "svelte",
+          "java",
+          "kt",
+          "kts",
+          "swift",
+          "m",
+          "mm",
+          "h",
+          "hpp",
+          "c",
+          "cc",
+          "cpp",
+          "cs",
+          "rs",
+          "go",
+          "rb",
+          "php",
+          "sh",
+          "bash",
+          "zsh",
+          "fish",
+          "ps1",
+          "bat",
+          "sql",
+          "graphql",
+          "proto",
+          "gradle",
+          "cmake",
+          "make",
+          "dockerfile",
+          "gitignore",
+          "lock"
+        ],
+        "priority": 20
+      },
+      {
         "id": "viewer.image",
-        "extensions": ["png", "jpg", "jpeg", "gif", "webp", "svg"],
+        "extensions": [
+          "png",
+          "jpg",
+          "jpeg",
+          "gif",
+          "webp",
+          "svg"
+        ],
         "priority": 20
       },
       {
         "id": "viewer.pdf",
-        "extensions": ["pdf"],
+        "extensions": [
+          "pdf"
+        ],
         "priority": 20
       }
     ]
   }
 }
-

@@ -62,6 +62,11 @@ final class ResourceEditorSession extends ChangeNotifier {
   OpenedResource get opened => _opened;
   ResourceRecord get record => _opened.content.record;
   List<int> get bytes => _opened.content.bytes;
+  /// Presentation-only navigation supplied by the resource owner.
+  int? initialLine, initialColumn;
+
+  /// The Host routes document links through the current resource owner.
+  Future<bool> Function(String target)? openResourceLink;
   final bool allowEditing;
   final Future<ResourceRecord> Function(
     ResourceVersion base,
