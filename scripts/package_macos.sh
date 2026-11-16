@@ -101,7 +101,7 @@ app_path="$app_root/build/macos/Build/Products/${product_dir}/OpenMuse.app"
 archive_path="$dist_root/OpenMuse-macos.zip"
 dist_app_path="$dist_root/OpenMuse.app"
 dsh_closure="$repo_root/target/dsh-closure"
-node_runtime="$repo_root/target/node-v22.19.0-universal"
+node_runtime="$repo_root/target/node-v22.22.2-universal"
 ecosystem_root="$repo_root/../Muse-Plugin-Ecosystem"
 office_root="$repo_root/../ioffice"
 mobile_assets="$repo_root/app/openmuse_mobile/assets"
@@ -378,6 +378,7 @@ if [[ -L "$dsh_dest/node_modules" ]]; then
 fi
 mkdir -p "$dsh_dest/node_modules" "$dsh_dest/node/bin" "$dsh_dest/licenses"
 rsync -a --delete "$dsh_closure/node_modules/" "$dsh_dest/node_modules/"
+python3 "$repo_root/scripts/stage-code-navigation-artifacts.py" --from-archives --out "$dsh_dest/navigation-artifacts"
 if [[ -L "$dsh_dest/node/bin/node" ]]; then
   rm "$dsh_dest/node/bin/node"
 fi
