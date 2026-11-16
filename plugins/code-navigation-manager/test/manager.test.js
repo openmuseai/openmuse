@@ -52,6 +52,19 @@ test('tampered or extra artifact files fail closed', async t => {
   await assert.rejects(manager.manage('install', SERVICE), /ARTIFACT_INVALID/);
   assert.equal((await manager.plan(SERVICE)).installedVersion, null);
 });
+test('failed shutdown preserves the enabled receipt and can be retried', async t => {
+  const { manager } = await fixture(t);
+  await manager.manage('install', SERVICE);
+  await manager.manage('enable', SERVICE);
+  const runtime = await manager.runtime({});
+  const disable = runtime.disable.bind(runtime);
+  runtime.disable = async () => { throw new Error('STOP_FAILED'); };
+  await assert.rejects(manager.manage('disable', SERVICE), /STOP_FAILED/);
+  assert.equal((await manager.plan(SERVICE)).enabled, true);
+  runtime.disable = disable;
+  await manager.manage('disable', SERVICE);
+  assert.equal((await manager.plan(SERVICE)).enabled, false);
+});
 for (const identity of [DART, TYPESCRIPT]) test(`real language install/configure/detect/enable/release: ${identity}`, { skip: identity === DART && !dart }, async t => {
   const { manager } = await fixture(t);
   await manager.manage('install', SERVICE);
