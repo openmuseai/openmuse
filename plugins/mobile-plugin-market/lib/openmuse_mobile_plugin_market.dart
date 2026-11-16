@@ -563,6 +563,21 @@ final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
     }
   }
 
+  Future<void> _manageNavigation(Map<String, Object?> entry) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => CodeNavigationSettingsPage(
+          pluginId: entry['id'] as String,
+          title: entry['name'] as String,
+          targetLabel: '已连接 Desktop',
+          request: (operation, id, options) =>
+              widget.client.request(operation, pluginId: id, options: options),
+        ),
+      ),
+    );
+    if (mounted) await _load();
+  }
+
   Future<void> _act(String operation, String id) async {
     setState(() {
       busy = id;
@@ -680,7 +695,12 @@ final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
                     Wrap(
                       spacing: 8,
                       children: [
-                        if (action == 'install' || action == 'enable')
+                        if (entry['ecosystem'] == 'code-navigation')
+                          FilledButton(
+                            onPressed: () => _manageNavigation(entry),
+                            child: const Text('安装与配置'),
+                          )
+                        else if (action == 'install' || action == 'enable')
                           FilledButton(
                             onPressed: () => _act('$action', '${entry['id']}'),
                             child: Text(
@@ -689,7 +709,8 @@ final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
                                   : stringsOf(context).marketEnable(),
                             ),
                           ),
-                        if (plans[entry['id']]?['enabled'] == true)
+                        if (entry['ecosystem'] != 'code-navigation' &&
+                            plans[entry['id']]?['enabled'] == true)
                           OutlinedButton(
                             onPressed: () => _act('disable', '${entry['id']}'),
                             child: Text(stringsOf(context).marketDisable()),
@@ -697,7 +718,9 @@ final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
                       ],
                     ),
                   Text(
-                    stringsOf(context).marketRestartDesktop(),
+                    entry['ecosystem'] == 'code-navigation'
+                        ? '安装与启停即时生效；首次查询才启动语言服务。'
+                        : stringsOf(context).marketRestartDesktop(),
                     style: TextStyle(
                       fontSize: 11,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,

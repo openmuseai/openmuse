@@ -229,6 +229,28 @@ final class _MarketPanelState extends State<_MarketPanel> {
     }
   }
 
+  Future<void> _manageNavigation(Map<String, Object?> plugin) async {
+    final id = plugin['id'] as String;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => CodeNavigationSettingsPage(
+          pluginId: id,
+          title: plugin['name'] as String,
+          targetLabel: '当前 Desktop',
+          request: (operation, pluginId, options) async {
+            final value = await widget.host!.executeHostCommand(
+              'plugin.market.$operation',
+              {'id': pluginId, 'options': options},
+            );
+            if (value is! Map) throw StateError('插件管理响应无效');
+            return Map<String, Object?>.from(value);
+          },
+        ),
+      ),
+    );
+    if (mounted) await _load();
+  }
+
   Future<void> _install(String id) async {
     if (_busy != null) return;
     setState(() {
@@ -805,7 +827,12 @@ final class _MarketPanelState extends State<_MarketPanel> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (installed && plugin['ecosystem'] == 'mcp')
+                  if (plugin['ecosystem'] == 'code-navigation')
+                    TextButton(
+                      onPressed: busy ? null : () => _manageNavigation(plugin),
+                      child: const Text('安装与配置'),
+                    )
+                  else if (installed && plugin['ecosystem'] == 'mcp')
                     Text(plugin['listed'] == false ? '已下架 · 已安装' : '已安装')
                   else if (installed)
                     TextButton(
@@ -843,7 +870,9 @@ final class _MarketPanelState extends State<_MarketPanel> {
                 children: [
                   const MarketPlatformBadge('Desktop'),
                   const SizedBox(width: 7),
-                  if (plugin['ecosystem'] == 'dsh')
+                  if (plugin['ecosystem'] == 'code-navigation')
+                    const MarketPlatformBadge('语言服务')
+                  else if (plugin['ecosystem'] == 'dsh')
                     const MarketPlatformBadge('DSH')
                   else
                     const MarketPlatformBadge('MCP'),
@@ -866,7 +895,11 @@ final class _MarketPanelState extends State<_MarketPanel> {
               const SizedBox(height: 10),
               if (plan != null)
                 Text(
-                  plugin['ecosystem'] == 'mcp'
+                  plugin['ecosystem'] == 'code-navigation'
+                      ? (installed
+                            ? '已安装 · ${plan['enabled'] == true ? '已启用，按需启动' : '已关闭'}'
+                            : '安装到当前资源宿主')
+                      : plugin['ecosystem'] == 'mcp'
                       ? (installed
                             ? '已安装 ${plan['installedVersion']} · 可使用 MCP 工具'
                             : '在线安装 MCP Bundle')
@@ -962,7 +995,12 @@ final class _MarketPanelState extends State<_MarketPanel> {
             style: const TextStyle(fontSize: 12, color: MarketColors.secondary),
           ),
           const SizedBox(height: 15),
-          if (installed && plugin['ecosystem'] == 'mcp')
+          if (plugin['ecosystem'] == 'code-navigation')
+            FilledButton(
+              onPressed: () => _manageNavigation(plugin),
+              child: const Text('安装与配置'),
+            )
+          else if (installed && plugin['ecosystem'] == 'mcp')
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

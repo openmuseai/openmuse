@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+export 'src/code_navigation_settings.dart';
 
 abstract final class MarketColors {
   static const canvas = Color(0xFFF5F4F1);

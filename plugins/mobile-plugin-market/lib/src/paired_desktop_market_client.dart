@@ -17,6 +17,7 @@ final class PairedDesktopMarketClient {
   Future<Map<String, Object?>> request(
     String operation, {
     String? pluginId,
+    Map<String, Object?> options = const {},
   }) async {
     if (DateTime.now().millisecondsSinceEpoch >= expiresAtMs) {
       throw StateError('Desktop 配对已过期，请重新连接');
@@ -27,6 +28,9 @@ final class PairedDesktopMarketClient {
           'install',
           'enable',
           'disable',
+          'configure',
+          'detect',
+          'uninstall',
         }.contains(operation) ||
         (operation != 'list' && (pluginId == null || pluginId.isEmpty))) {
       throw const FormatException('无效插件市场操作');
@@ -51,6 +55,7 @@ final class PairedDesktopMarketClient {
         jsonEncode({
           'operation': operation,
           if (pluginId != null) 'pluginId': pluginId,
+          if (options.isNotEmpty) 'options': options,
         }),
       );
       final response = await request.close().timeout(
