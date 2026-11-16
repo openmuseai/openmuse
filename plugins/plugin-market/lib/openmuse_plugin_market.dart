@@ -985,7 +985,11 @@ final class _MarketPanelState extends State<_MarketPanel> {
           ),
           const SizedBox(height: 14),
           Text(
-            plugin['ecosystem'] == 'mcp'
+            plugin['ecosystem'] == 'code-navigation'
+                ? (installed
+                      ? '已安装到当前 Desktop · ${plan?['enabled'] == true ? '已启用，按需启动' : '已关闭'}'
+                      : '安装到当前 Desktop · 安装后默认关闭')
+                : plugin['ecosystem'] == 'mcp'
                 ? (installed
                       ? '已安装 ${plan?['installedVersion']} · MCP 工具已就绪'
                       : '从在线 MCP Registry 安装已审核的 MCP Bundle')

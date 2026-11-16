@@ -81,6 +81,7 @@ class _CodeNavigationSettingsPageState
       'TIMEOUT': '检测超时，请检查 SDK 和宿主状态。',
       'ARTIFACT': '插件交付物校验失败，请更新正常版应用后重试。',
       'DISABLED': '操作已取消或服务已关闭。',
+      'STOP_FAILED': '语言进程尚未完全停止，请重试关闭；当前状态保留。',
     }.entries) {
       if (text.contains(entry.key)) return entry.value;
     }
@@ -139,7 +140,7 @@ class _CodeNavigationSettingsPageState
       'values': _values(),
     });
     _apply(result);
-    message = '配置已保存；语言扩展需重新检测后启用';
+    message = isService ? '配置已保存，插件已关闭；可重新启用。' : '配置已保存，语言扩展已关闭；请重新检测后启用。';
   });
   Widget _field(
     String label,

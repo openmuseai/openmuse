@@ -92,7 +92,7 @@ void main() {
     expect(find.textContaining('另一端更新'), findsOneWidget);
     await tester.tap(find.text('关闭并释放'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('STOP_FAILED'), findsOneWidget);
+    expect(find.textContaining('语言进程尚未完全停止'), findsOneWidget);
     expect(find.textContaining('已启用 · 按需启动'), findsOneWidget);
     expect(find.text('已关闭，语言进程已释放'), findsNothing);
   });
