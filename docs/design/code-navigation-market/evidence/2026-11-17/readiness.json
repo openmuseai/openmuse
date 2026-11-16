@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "date": "2026-11-17",
+  "timezone": "Asia/Shanghai",
+  "overall": "implementation-and-build-ready; real-device UI acceptance pending user/system steps",
+  "catalog": {
+    "scope": "application-signed curated marketplace snapshot",
+    "publicRegistryPublished": false,
+    "plugins": [
+      "com.openmuse.code-navigation",
+      "com.openmuse.code-navigation.dart",
+      "com.openmuse.code-navigation.typescript"
+    ],
+    "artifactFilesVerified": 193
+  },
+  "desktop": {
+    "version": "1.0.1",
+    "build": 111705,
+    "normalDomesticReleaseInstalled": true,
+    "deepStrictCodesignVerified": true,
+    "nodeVersion": "22.22.2",
+    "nodeUniversalArchitectures": [
+      "x86_64",
+      "arm64"
+    ],
+    "bridgeVersion": "0.1.27",
+    "managerVersion": "0.1.2",
+    "installedRuntimeMatchesLockedArchivesAndSource": true
+  },
+  "android": {
+    "deviceModel": "OPPO PKM110",
+    "androidVersion": 16,
+    "physicalDeviceConnected": true,
+    "package": "com.openmuseai.mobile",
+    "builtVersionCode": 111704,
+    "normalDomesticReleaseBuilt": true,
+    "apkSha256": "755b95cfd8d0f9cbc084300e86edee802ad1deb34732ca70e350e0c3637d77e4",
+    "sameReleaseCertificateSha256": "7e6cefb279eeb3f73890c35ecb8e941bb7630c8a6adda9a010d1d9d997ef22c4",
+    "normalPackageInstalledAtRecordTime": false,
+    "initialInstallVersionCodePendingSystemVerification": 111702,
+    "resumeAction": "Finish the pending system installation, then replace with final 111704 APK and verify package flags/version"
+  },
+  "tests": {
+    "managerLifecycleAndActualDartTypescriptDetection": 5,
+    "serviceLifecycleAndSubprocess": 21,
+    "serviceActualTypescriptCrossFile": 1,
+    "bridgePortable": 23,
+    "bridgeActualDartAndTypescriptOwnerAdapters": 2,
+    "sharedSettingsWidgets": 2,
+    "pairedMarketGrantAndPortConflict": 2,
+    "passedTotal": 56,
+    "failedInFinalRuns": 0,
+    "skippedInFinalRuns": 0
+  },
+  "staticAnalysis": {
+    "hostMainAndManagementClient": "pass",
+    "sharedSettings": "pass",
+    "desktopMarket": "pass",
+    "mobileMarketAndPairedClient": "pass",
+    "pairedGateway": "pass"
+  },
+  "realDeviceUiAcceptance": {
+    "sameDomesticAccountVerifiedThisRound": false,
+    "marketInstallConfigureDetectEnableQueryDisableUninstallVerifiedOnDesktop": false,
+    "marketLifecycleVerifiedOnAndroid": false,
+    "oldFileNavigationAcceptanceReusedAsCurrentProof": false
+  },
+  "pending": [
+    "Mac unlock for native UI controls",
+    "Explicit confirmation for the displayed Desktop terms/privacy acceptance and this round of device login",
+    "OPPO system slider verification: user completes or explicitly authorizes this CAPTCHA action"
+  ],
+  "privacy": {
+    "credentialsInArtifacts": false,
+    "accountFileEmptyAtObservation": true,
+    "userAccountDataCleared": false,
+    "newTestEntryApkInstalled": false,
+    "otherQaApplicationsStopped": false
+  }
+}

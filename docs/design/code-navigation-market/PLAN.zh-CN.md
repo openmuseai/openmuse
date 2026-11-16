@@ -6,7 +6,7 @@
 
 市场展示三张卡片，明确“安装到当前 Desktop”。语言扩展依赖代码导航服务，安装前展示依赖，服务默认不启用。安装只落盘并校验固定发行物，不启动 LS。详情页提供配置、检测、启用/关闭、卸载。手机远程操作必须等待 Desktop 返回真实状态。
 
-语言配置表单包含 SDK/程序路径、参数、initializationOptions、configuration 和文件类型；内置语言模板优先，高级项经有界 Schema 校验。首期 Dart 使用宿主已有 Dart SDK，TS/JS 使用发行锁定的 TypeScript 和 typescript-language-server；不在一次代码点击中联网下载。配置中的机器路径保留在所选宿主，不同步为手机路径。远端不接受通用 shell 命令；语言扩展只允许其明确声明的可执行类型/参数。
+语言配置表单包含 SDK/程序路径、initializationOptions、configuration；启动参数和文件类型首期由语言模板声明，只读。高级 JSON 经有界结构校验。首期 Dart 使用宿主已有 Dart SDK，TS/JS 使用发行锁定的 TypeScript 和 typescript-language-server；不在一次代码点击中联网下载。配置中的机器路径保留在所选宿主，不同步为手机路径。远端不接受通用 shell 命令；语言扩展只允许其明确声明的可执行类型/参数。
 
 安装、启用、运行是独立状态。服务和语言扩展都启用且当前 workspace 明确允许后，首个查询才启动 LS。关闭/卸载/修改启动配置先撤销旧请求、等待语言进程释放，再保存配置并返回成功。服务仍有已安装语言扩展时拒绝卸载并显示依赖；先卸载语言扩展，再卸载服务。卸载仅删除插件私有目录与策略，不删除 workspace 或 SDK。
 
