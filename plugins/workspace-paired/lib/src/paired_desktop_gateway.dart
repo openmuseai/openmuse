@@ -75,10 +75,12 @@ final class PairedPluginMarketRequest {
     required this.operation,
     required this.accountRef,
     this.pluginId,
+    this.options = const {},
   });
   final String operation;
   final String accountRef;
   final String? pluginId;
+  final Map<String, Object?> options;
 }
 
 typedef WorkspaceMirrorResourceReader =
@@ -226,6 +228,7 @@ final class PairedDesktopGateway {
     this.workspaceMirrorResource,
     this.workspaceMirrorAction,
     this.pluginMarket,
+    this.fallbackOnPortConflict = false,
     this.scheduledTasks,
     this.resources,
     String? fixedPairingCode,
@@ -251,6 +254,7 @@ final class PairedDesktopGateway {
   final WorkspaceMirrorReader? workspaceMirror;
   final WorkspaceMirrorResourceReader? workspaceMirrorResource;
   final PairedPluginMarketDispatcher? pluginMarket;
+  final bool fallbackOnPortConflict;
   final PairedScheduledTaskDispatcher? scheduledTasks;
   final PairedResourceDispatcher? resources;
   final String? _fixedPairingCode;
@@ -294,10 +298,21 @@ final class PairedDesktopGateway {
   Future<void> start() async {
     if (_server != null) return;
     try {
-      final server = await HttpServer.bind(
-        bindAddress ?? InternetAddress.loopbackIPv4,
-        port,
-      );
+      final address = bindAddress ?? InternetAddress.loopbackIPv4;
+      HttpServer server;
+      try {
+        server = await HttpServer.bind(address, port);
+      } on SocketException catch (error) {
+        // Multiple normal/QA installations may coexist. Only loopback listeners
+        // explicitly opted in may choose a free port, which origin advertises.
+        if (!fallbackOnPortConflict ||
+            !address.isLoopback ||
+            !({48, 98, 10048}.contains(error.osError?.errorCode) ||
+                (error.osError?.message.contains('The shared flag to bind()') ??
+                    false)))
+          rethrow;
+        server = await HttpServer.bind(address, 0);
+      }
       _server = server;
       lastError = null;
       unawaited(_serve(server));
@@ -728,7 +743,7 @@ final class PairedDesktopGateway {
       );
     }
     final bytes = await request.fold<List<int>>(<int>[], (value, chunk) {
-      if (value.length + chunk.length > 4096) {
+      if (value.length + chunk.length > 65536) {
         throw const _GatewayFailure(
           HttpStatus.requestEntityTooLarge,
           'REQUEST_TOO_LARGE',
@@ -747,7 +762,19 @@ final class PairedDesktopGateway {
           'install',
           'enable',
           'disable',
+          'configure',
+          'detect',
+          'uninstall',
         }.contains(decoded['operation']) ||
+        decoded.keys.any(
+          (key) => !{'operation', 'pluginId', 'options'}.contains(key),
+        ) ||
+        (decoded['options'] != null && decoded['options'] is! Map) ||
+        ({'configure', 'detect', 'uninstall'}.contains(decoded['operation']) &&
+            !(decoded['pluginId'] is String &&
+                (decoded['pluginId'] as String).startsWith(
+                  'com.openmuse.code-navigation',
+                ))) ||
         (decoded['operation'] == 'list'
             ? decoded['pluginId'] != null
             : decoded['pluginId'] is! String ||
@@ -763,8 +790,20 @@ final class PairedDesktopGateway {
         operation: decoded['operation'] as String,
         accountRef: grant.accountRef,
         pluginId: decoded['pluginId'] as String?,
+        options: Map<String, Object?>.from(
+          decoded['options'] as Map? ?? const {},
+        ),
       ),
     );
+    if (_grantFromCookie(request.cookies) != grant ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Desktop 登录或授权已变化。',
+      );
+    }
     _json(request.response, HttpStatus.ok, result);
   }
 
@@ -1229,6 +1268,13 @@ final class PairedDesktopGateway {
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
         'Paired Desktop grant 无效或已过期。',
+      );
+    }
+    if (request.uri.path.startsWith('/openmuse-native/v1/code-navigation/')) {
+      throw const _GatewayFailure(
+        HttpStatus.forbidden,
+        'MANAGEMENT_PROXY_DENIED',
+        '请通过已授权的插件市场管理接口操作。',
       );
     }
     final upstreamUri = initial == null

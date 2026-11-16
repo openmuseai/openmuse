@@ -41,6 +41,7 @@ import 'src/host/mcp_capability_gateway.dart';
 import 'src/host/mcp_bin_registry.dart';
 import 'src/host/plugin_cli_broker.dart';
 import 'src/host/plugin_market.dart';
+import 'src/host/code_navigation_market.dart';
 import 'src/host/workspace_controller.dart';
 import 'src/host/workspace_mirror_service.dart';
 import 'src/host/word_product_plugin.dart';
@@ -494,10 +495,12 @@ Future<Widget> bootOpenMuseHost({
     await refreshBins();
   }
 
+  late final CodeNavigationMarket navigationMarket;
   Future<Map<String, Object?>> runMarketAction(
     String operation,
-    String id,
-  ) async {
+    String id, {
+    Map<String, Object?> options = const {},
+  }) async {
     if (macAppStoreDistribution) {
       throw UnsupportedError(
         'External plugin actions are unavailable in this distribution',
@@ -506,6 +509,10 @@ Future<Widget> bootOpenMuseHost({
     if (operation == 'install' &&
         !runtime.presentation.isEnabled(AppFeature.pluginMarket)) {
       throw StateError('Plugin installation is currently disabled');
+    }
+    if (id == 'com.openmuse.code-navigation' ||
+        id.startsWith('com.openmuse.code-navigation.')) {
+      return navigationMarket.request(operation, id, options: options);
     }
     final mcpMarket = selectedMarket();
     List<McpMarketEntry> listed = [];
@@ -719,6 +726,7 @@ Future<Widget> bootOpenMuseHost({
             }
             final names = listed.map((entry) => entry.name).toSet();
             return [
+              ...await navigationMarket.list(),
               for (final entry in builtInMarketPlugins) entry.toJson(),
               for (final entry in listed)
                 {...entry.toMarketCard(), 'listed': true},
@@ -747,12 +755,18 @@ Future<Widget> bootOpenMuseHost({
           case 'plugin.market.open':
           case 'plugin.market.enable':
           case 'plugin.market.disable':
+          case 'plugin.market.configure':
+          case 'plugin.market.detect':
+          case 'plugin.market.uninstall':
             if (arguments is! Map || arguments['id'] is! String) {
               throw const FormatException('无效市场插件 ID');
             }
             return runMarketAction(
               command.substring('plugin.market.'.length),
               arguments['id'] as String,
+              options: Map<String, Object?>.from(
+                arguments['options'] as Map? ?? const {},
+              ),
             );
           case 'settings.plugin.read':
             if (arguments is! String) throw const FormatException('无效插件 ID');
@@ -850,6 +864,12 @@ Future<Widget> bootOpenMuseHost({
       'OPENMUSE_CLI_BROKER_URL': cliBroker.origin.toString(),
       'OPENMUSE_CLI_BROKER_TOKEN': cliBroker.token,
     },
+  );
+  navigationMarket = CodeNavigationMarket(
+    account: () => readyAccount.value,
+    ready: dshSupervisor.ensureStarted,
+    endpoint: () => dshSupervisor.endpoint,
+    token: () => dshSupervisor.bridgeToken,
   );
   Future<void> executeScheduledPrompt(
     String workspaceId,
@@ -1048,16 +1068,24 @@ Future<Widget> bootOpenMuseHost({
         _ => throw const FormatException('无效定时任务操作'),
       };
     },
+    fallbackOnPortConflict: true,
     pluginMarket: (request) async {
       if (request.accountRef != readyAccount.value) {
         throw StateError('Desktop 登录状态已变化');
       }
       if (request.operation == 'list') {
         return {
-          'plugins': [for (final entry in builtInMarketPlugins) entry.toJson()],
+          'plugins': [
+            ...await navigationMarket.list(),
+            for (final entry in builtInMarketPlugins) entry.toJson(),
+          ],
         };
       }
-      return runMarketAction(request.operation, request.pluginId!);
+      return runMarketAction(
+        request.operation,
+        request.pluginId!,
+        options: request.options,
+      );
     },
     nativeApiToken: dshSupervisor.bridgeToken,
     deviceRef: desktopDeviceId,

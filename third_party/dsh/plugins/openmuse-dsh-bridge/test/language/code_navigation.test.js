@@ -4,7 +4,7 @@ import { mkdtemp, writeFile, readFile, stat, realpath, rm, mkdir } from 'node:fs
 import { tmpdir } from 'node:os';
 import { join, resolve, relative, isAbsolute } from 'node:path';
 import { resolveSessionFiles, readSessionFile } from '../../lib/resource_files.js';
-import { codeNavigation } from '../../lib/code_navigation.js';
+import { codeNavigation, manageNavigationPlugins } from '../../lib/code_navigation.js';
 
 test('real Dart owner adapter: opt-in, cross-file function/method, version fence, release', async t => {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'navigation-owner-')));
@@ -16,7 +16,7 @@ test('real Dart owner adapter: opt-in, cross-file function/method, version fence
   await writeFile(join(root, 'main.dart'), "import '定义.dart';\nvoid main() {\n  print(greeting());\n  print(Service().greet());\n}\n");
   const cleanups = [];
   const services = {
-    codeNavigationConfig: { directory: policy },
+    codeNavigationConfig: { directory: policy, artifactsRoot: new URL('../../../../navigation-artifacts/', import.meta.url).pathname },
     fs: { resolve: async (p, options = {}) => realpath(resolve(options.cwd ?? root, p)), processPath: x => x, contains: (a, b) => { const r = relative(a, b); return !r || !r.startsWith('..') && !isAbsolute(r); } },
     sessionPersistence: { stat: async () => ({ header: { cwd: root } }) },
     workspaceFiles: {
@@ -26,6 +26,16 @@ test('real Dart owner adapter: opt-in, cross-file function/method, version fence
   };
   const ctx = { get: key => services[key], effect: f => cleanups.push(f()) };
   t.after(async () => { for (const dispose of cleanups) await dispose(); await rm(root, { recursive: true, force: true }); });
+  const partition = 'account:test';
+  const serviceId = 'com.openmuse.code-navigation', dartId = serviceId + '.dart';
+  const manage = (operation, pluginId, options = {}) => manageNavigationPlugins(ctx, { partition, operation, pluginId, options });
+  await manage('install', serviceId);
+  await manage('enable', serviceId);
+  await manage('install', dartId);
+  let config = await manage('plan', dartId);
+  await manage('configure', dartId, { expectedRevision: config.revision, values: { sdkPath: dart } });
+  await manage('detect', dartId);
+  await manage('enable', dartId);
   const resolved = await resolveSessionFiles(ctx, { locator: { kind: 'canonical', target: 'main.dart', context: { sessionId: 'test-session' } } });
   const ref = resolved.matches[0].ref;
   const content = await readSessionFile(ctx, { ref });

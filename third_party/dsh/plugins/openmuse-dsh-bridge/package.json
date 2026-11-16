@@ -1,6 +1,6 @@
 {
   "name": "openmuse-dsh-bridge",
-  "version": "0.1.24",
+  "version": "0.1.27",
   "type": "module",
   "license": "AGPL-3.0-only",
   "main": "lib/index.js",
@@ -37,6 +37,6 @@
     }
   },
   "dependencies": {
-    "@openmuse/code-navigation-service": "0.1.0"
+    "@openmuse/code-navigation-manager": "0.1.2"
   }
 }

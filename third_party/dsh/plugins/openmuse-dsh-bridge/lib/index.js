@@ -1,5 +1,5 @@
 import { resolveSessionFiles, readSessionFile } from './resource_files.js';
-import { codeNavigation } from './code_navigation.js';
+import { codeNavigation, manageNavigationPlugins } from './code_navigation.js';
 /** OpenMuse-owned, token-gated bridge for Host-granted local workspaces. */
 import { realpath, stat, readFile } from 'node:fs/promises';
 import { isAbsolute } from 'node:path';
@@ -446,6 +446,10 @@ async function handleNative(ctx, interactions, req, res, url) {
   const controller = ctx.get('sessionController');
   if (!controller) return reply(res, 503, { error: 'session controller unavailable' });
   const path = url.pathname;
+  if (req.method === 'POST' && path === '/openmuse-native/v1/code-navigation/manage') {
+    try { return reply(res, 200, await manageNavigationPlugins(ctx, await bodyOf(req))); }
+    catch (error) { return reply(res, 400, { error: error.resourceCode ?? error.code ?? 'MANAGEMENT_FAILED' }); }
+  }
   if (req.method === 'POST' && ['/openmuse-native/v1/session/files/resolve', '/openmuse-native/v1/session/files/read', '/openmuse-native/v1/session/files/navigation'].includes(path)) {
     const abort = new AbortController(); res.on('close', () => abort.abort());
     try {
