@@ -1,6 +1,6 @@
 {
   "name": "@openmuse/code-navigation-service",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Opt-in resource-owner code navigation runtime, independent of DSH and Flutter.",

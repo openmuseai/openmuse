@@ -1,0 +1,17 @@
+{
+  "name": "@openmuse/code-navigation-manager",
+  "version": "0.1.2",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "exports": "./lib/manager.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=22.22.2"
+  }
+}

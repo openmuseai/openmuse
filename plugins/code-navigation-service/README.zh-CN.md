@@ -1,5 +1,7 @@
 # 可选代码导航服务（M1）
 
+2026-11-17 更新：服务已由独立 [插件管理器](../code-navigation-manager/README.zh-CN.md) 接入市场安装、配置和启停；Dart、TS/JS 分别为可安装语言扩展。下面保留内核接口说明，产品当前范围以 [市场方案](../../docs/design/code-navigation-market/PRODUCT.zh-CN.md) 和验收记录为准。
+
 独立资源宿主服务插件。默认关闭，启用后只在第一次查询时启动语言进程；不依赖 DSH 内部包、Flutter 或大模型。产品/指标/后续 SDK、设置 UI 与 Mobile 接线见 [完整方案](../../docs/design/code-navigation/PLAN.zh-CN.md)。目前不在应用默认发行装配中，不能把本包通过测试称为手机已有符号导航。
 
 ```js

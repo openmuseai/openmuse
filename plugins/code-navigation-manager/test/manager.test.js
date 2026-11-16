@@ -1,0 +1,75 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, rm, readFile, writeFile, cp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { NavigationPluginManager, SERVICE, DART, TYPESCRIPT } from '../lib/manager.js';
+
+const artifactsRoot = fileURLToPath(new URL('../../../third_party/dsh/navigation-artifacts/', import.meta.url));
+const dart = process.env.OPENMUSE_TEST_DART;
+async function fixture(t, partition = 'account:a') {
+  const directory = await mkdtemp(join(tmpdir(), 'navigation-manager-'));
+  const manager = new NavigationPluginManager({ directory, artifactsRoot, partition });
+  t.after(async () => { await manager.stop(); await rm(directory, { recursive: true, force: true }); });
+  return { manager, directory };
+}
+test('verified installs, dependency order, revision conflict, opt-in, independent account, uninstall', async t => {
+  const { manager, directory } = await fixture(t);
+  assert.equal((await manager.manage('list')).plugins.length, 3);
+  await assert.rejects(manager.manage('install', DART), /DEPENDENCY_REQUIRED/);
+  await manager.manage('install', SERVICE);
+  assert.equal(manager.instances, 0);
+  await manager.manage('install', DART);
+  await assert.rejects(manager.manage('uninstall', SERVICE), /DEPENDENTS_INSTALLED/);
+  let plan = await manager.plan(SERVICE);
+  await assert.rejects(manager.manage('configure', SERVICE, { expectedRevision: -1, values: {} }), /CONFIGURATION_CONFLICT/);
+  await assert.rejects(manager.manage('configure', SERVICE, { expectedRevision: plan.revision, values: { command: '/bin/sh' } }), /INVALID_CONFIGURATION/);
+  plan = await manager.manage('configure', SERVICE, { expectedRevision: plan.revision, values: { idleSeconds: 30, maxInstances: 1 } });
+  assert.equal(plan.configuration.maxInstances, 1);
+  await manager.manage('enable', SERVICE);
+  assert.equal(manager.instances, 0);
+  const other = new NavigationPluginManager({ directory, artifactsRoot, partition: 'account:b' });
+  assert.equal((await other.plan(SERVICE)).installedVersion, null);
+  await manager.manage('disable', SERVICE);
+  await manager.manage('uninstall', DART);
+  await manager.manage('uninstall', SERVICE);
+  assert.equal((await manager.plan(SERVICE)).installedVersion, null);
+  const restored = new NavigationPluginManager({ directory, artifactsRoot, partition: 'account:a' });
+  assert.equal((await restored.plan(SERVICE)).installedVersion, null);
+});
+test('tampered or extra artifact files fail closed', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'navigation-artifacts-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await cp(artifactsRoot, root, { recursive: true });
+  const manager = new NavigationPluginManager({ directory: join(root, 'state'), artifactsRoot: root, partition: 'test' });
+  const file = join(root, SERVICE, 'lib/service.js');
+  const original = await readFile(file);
+  await writeFile(file, 'tampered');
+  await assert.rejects(manager.manage('install', SERVICE), /ARTIFACT_DIGEST_MISMATCH/);
+  await writeFile(file, original);
+  await writeFile(join(root, SERVICE, 'extra.js'), 'extra');
+  await assert.rejects(manager.manage('install', SERVICE), /ARTIFACT_INVALID/);
+  assert.equal((await manager.plan(SERVICE)).installedVersion, null);
+});
+for (const identity of [DART, TYPESCRIPT]) test(`real language install/configure/detect/enable/release: ${identity}`, { skip: identity === DART && !dart }, async t => {
+  const { manager } = await fixture(t);
+  await manager.manage('install', SERVICE);
+  await manager.manage('install', identity);
+  await assert.rejects(manager.manage('enable', identity), /DETECTION_REQUIRED/);
+  let plan = await manager.plan(identity);
+  plan = await manager.manage('configure', identity, { expectedRevision: plan.revision, values: { sdkPath: identity === DART ? dart : '', initializationOptions: {}, configuration: {} } });
+  const detected = await manager.manage('detect', identity);
+  assert.equal(detected.detection.ok, true);
+  assert.equal(detected.detection.instancesAfter, 0);
+  await assert.rejects(manager.manage('enable', identity), /SERVICE_DISABLED/);
+  await manager.manage('enable', SERVICE);
+  await manager.manage('enable', identity);
+  assert.equal(manager.instances, 0);
+  assert.ok(Object.keys(await manager.profiles()).length);
+  await manager.manage('disable', identity);
+  assert.equal(manager.instances, 0);
+  assert.deepEqual(await manager.profiles(), {});
+  await manager.manage('uninstall', identity);
+  await manager.manage('uninstall', SERVICE);
+});

@@ -92,7 +92,14 @@ class StdioBackend {
     const connection = this.#connection = createMessageConnection(
       new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
     connection.onRequest('workspace/configuration', params =>
-      (params.items ?? []).map(() => this.profile.configuration ?? null));
+      (params.items ?? []).map(item => {
+        let value = this.profile.configuration ?? {};
+        for (const part of (item.section ?? '').split('.').filter(Boolean)) {
+          if (!Object.hasOwn(value ?? {}, part)) return null;
+          value = value[part];
+        }
+        return value;
+      }));
     connection.onRequest('workspace/applyEdit', () => ({ applied: false, failureReason: 'Read-only navigation' }));
     connection.onRequest('workspace/workspaceFolders', () => [{ uri: document.rootUri, name: 'Workspace' }]);
     connection.onRequest('client/registerCapability', () => null);

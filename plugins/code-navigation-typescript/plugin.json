@@ -1,0 +1,11 @@
+{
+  "id": "com.openmuse.code-navigation.typescript",
+  "version": "0.1.0",
+  "license": "AGPL-3.0-only",
+  "kind": "language-profile",
+  "languageIds": ["typescript", "javascript"],
+  "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"],
+  "requires": ["com.openmuse.code-navigation"],
+  "serverSource": "bundled-locked-dependencies",
+  "dependencies": {"typescript": "5.9.3", "typescript-language-server": "6.1.0"}
+}
