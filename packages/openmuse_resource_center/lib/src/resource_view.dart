@@ -16,10 +16,16 @@ final class ResourceCenterView extends StatefulWidget {
     this.onAddToConversation,
     this.remoteLabel,
     this.title,
+    this.onSelectResource,
+    this.recordFilter,
+    this.headerActions = const [],
   });
   final ResourceCenterController controller;
+  final Future<void> Function(ResourceRecord)? onSelectResource;
+  final bool Function(ResourceRecord)? recordFilter;
   final Future<void> Function(ResourceRecord record)? onAddToConversation;
   final String? remoteLabel, title;
+  final List<Widget> headerActions;
   @override
   State<ResourceCenterView> createState() => _ResourceCenterViewState();
 }
@@ -87,6 +93,22 @@ final class _ResourceCenterViewState extends State<ResourceCenterView> {
                   dismiss();
                   unawaited(openResourcePage(context, c, record.reference()));
                 }),
+                item(
+                  'open-readonly',
+                  '${s.open} · ${s.readOnly}',
+                  Icons.visibility_outlined,
+                  () {
+                    dismiss();
+                    unawaited(
+                      openResourcePage(
+                        context,
+                        c,
+                        record.reference(),
+                        readOnly: true,
+                      ),
+                    );
+                  },
+                ),
                 item('open-with', s.openWith, Icons.apps_outlined, () {
                   dismiss();
                   unawaited(
@@ -196,7 +218,11 @@ final class _ResourceCenterViewState extends State<ResourceCenterView> {
 
   Future<void> _saveCopy(ResourceRecord record) async {
     try {
-      await c.saveCopy(record.reference(pin: true));
+      await c.saveCopy(
+        record.reference(
+          pin: c.hub.provider(record.identity).source.exactVersions,
+        ),
+      );
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(ResourceCenterStrings(context).imported)),
@@ -491,6 +517,10 @@ final class _ResourceCenterViewState extends State<ResourceCenterView> {
       ),
     );
     if (created != null && mounted) {
+      if (widget.onSelectResource != null) {
+        await widget.onSelectResource!(created);
+        return;
+      }
       final opened = await openResourcePage(context, c, created.reference());
       if (!opened && mounted)
         ScaffoldMessenger.of(
@@ -502,8 +532,7 @@ final class _ResourceCenterViewState extends State<ResourceCenterView> {
   Future<void> _import(ResourceProvider target) async {
     try {
       final record = await c.importResource(destination: target);
-      if (record != null && mounted)
-        await openResourcePage(context, c, record.reference());
+      if (record != null && mounted) await _openRecord(record);
     } on Object catch (error) {
       if (mounted) showResourceError(context, error);
     }
@@ -547,8 +576,7 @@ final class _ResourceCenterViewState extends State<ResourceCenterView> {
     title: Text(entry.name, maxLines: 2, overflow: TextOverflow.ellipsis),
     onTap: () async {
       final r = await _describeEntry(entry);
-      if (r != null && mounted)
-        await openResourcePage(context, c, r.reference());
+      if (r != null && mounted) await _openRecord(r);
     },
     onLongPress: () async {
       final r = await _describeEntry(entry);
@@ -572,7 +600,7 @@ final class _ResourceCenterViewState extends State<ResourceCenterView> {
         final s = ResourceCenterStrings(context),
             colors = Theme.of(context).colorScheme;
         return PopScope(
-          canPop: c.selectedSource == null,
+          canPop: widget.onSelectResource != null || c.selectedSource == null,
           onPopInvokedWithResult: (popped, result) {
             if (!popped)
               unawaited(
@@ -599,6 +627,7 @@ final class _ResourceCenterViewState extends State<ResourceCenterView> {
                             ),
                           ),
                         ),
+                        ...widget.headerActions,
                         IconButton(
                           key: const ValueKey('resource-refresh'),
                           tooltip: s.refresh,
@@ -919,11 +948,25 @@ final class _ResourceCenterViewState extends State<ResourceCenterView> {
     ];
   }
 
-  Widget _recordRow(ResourceRecord record) => ResourceRow(
-    record: record,
-    onOpen: () => unawaited(openResourcePage(context, c, record.reference())),
-    onMenu: () => unawaited(_menu(record)),
-  );
+  Future<void> _openRecord(ResourceRecord record) async {
+    if (widget.recordFilter?.call(record) == false) return;
+    if (widget.onSelectResource != null) {
+      await widget.onSelectResource!(record);
+      return;
+    }
+    await openResourcePage(context, c, record.reference());
+  }
+
+  Widget _recordRow(ResourceRecord record) =>
+      widget.recordFilter?.call(record) == false
+      ? const SizedBox.shrink()
+      : ResourceRow(
+          record: record,
+          onOpen: () => unawaited(_openRecord(record)),
+          onMenu: widget.onSelectResource == null
+              ? () => unawaited(_menu(record))
+              : null,
+        );
 }
 
 final class ResourceRow extends StatelessWidget {
@@ -934,7 +977,8 @@ final class ResourceRow extends StatelessWidget {
     required this.onMenu,
   });
   final ResourceRecord record;
-  final VoidCallback onOpen, onMenu;
+  final VoidCallback onOpen;
+  final VoidCallback? onMenu;
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme,
@@ -960,20 +1004,21 @@ final class ResourceRow extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(
-            width: 44,
-            height: 48,
-            child: IconButton(
-              key: ValueKey('resource-more-${record.identity.resource}'),
-              tooltip: s.more,
-              onPressed: onMenu,
-              icon: Icon(
-                Icons.more_vert,
-                size: 21,
-                color: colors.onSurfaceVariant,
+          if (onMenu != null)
+            SizedBox(
+              width: 44,
+              height: 48,
+              child: IconButton(
+                key: ValueKey('resource-more-${record.identity.resource}'),
+                tooltip: s.more,
+                onPressed: onMenu,
+                icon: Icon(
+                  Icons.more_vert,
+                  size: 21,
+                  color: colors.onSurfaceVariant,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

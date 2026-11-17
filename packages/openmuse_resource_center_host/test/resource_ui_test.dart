@@ -7,6 +7,34 @@ import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart
 import 'package:openmuse_resource_notes/openmuse_resource_notes.dart';
 
 void main() {
+  test('resource open uses the unique highest-priority plugin', () {
+    final plugin = OpenMuseResourceNotesPlugin();
+    ResourceHandlerChoice choice(String id, int priority) =>
+        ResourceHandlerChoice(
+          plugin,
+          plugin,
+          ResourceHandlerSpec(
+            id: id,
+            title: id,
+            mediaTypes: const {'application/pdf'},
+            priority: priority,
+          ),
+        );
+    final product = choice('product', 110);
+    final legacy = choice('legacy', 50);
+    expect(defaultResourceHandler([legacy, product]), same(product));
+    expect(
+      defaultResourceHandler([legacy, product], preferredKey: legacy.key),
+      same(legacy),
+    );
+    expect(
+      defaultResourceHandler([legacy, product], chooseHandler: true),
+      isNull,
+    );
+    expect(defaultResourceHandler([product, choice('equal', 110)]), isNull);
+    expect(defaultResourceHandler([legacy]), same(legacy));
+  });
+
   late Directory root;
   late OpenMusePluginRegistry registry;
   late NativeResourceCenter center;
@@ -122,6 +150,39 @@ void main() {
     );
     expect(center.hub.recent, hasLength(2));
   });
+
+  test(
+    'China starter uses the Chinese guide without US service links',
+    () async {
+      await center.seedWelcome(region: 'cn');
+      final entries = (await center.documents.list(
+        'root',
+        center.hub.access('test'),
+      )).entries;
+      final guide = entries
+          .singleWhere((e) => e.name == 'OpenMuse 国内版使用指南.sydoc')
+          .resource!;
+      final content = await center.documents.read(
+        guide.identity.resource,
+        null,
+        center.hub.access('test'),
+      );
+      expect(
+        content.bytes,
+        await File(
+          'assets/welcome/OpenMuse-User-Guide.zh-CN.sydoc',
+        ).readAsBytes(),
+      );
+      await center.seedWelcome(region: 'cn');
+      expect(
+        (await center.documents.list(
+          'root',
+          center.hub.access('test'),
+        )).entries,
+        hasLength(2),
+      );
+    },
+  );
 
   Future<ResourceRecord> oldGuide() async {
     final record = await center.documents.create(
@@ -244,6 +305,80 @@ void main() {
     },
   );
 
+  test(
+    'China upgrade retains an edited guide and offers the domestic guide once',
+    () async {
+      final original = await oldGuide();
+      await center.documents.commit(
+        original.identity.resource,
+        original.version,
+        [1, 2, 3],
+        'personal-cn-edit',
+        center.hub.access('test'),
+      );
+      await center.seedWelcome(region: 'cn');
+      await center.seedWelcome(region: 'cn');
+      expect(
+        (await center.documents.read(
+          original.identity.resource,
+          null,
+          center.hub.access('test'),
+        )).bytes,
+        [1, 2, 3],
+      );
+      final entries = (await center.documents.list(
+        'root',
+        center.hub.access('test'),
+      )).entries;
+      expect(entries, hasLength(2));
+      expect(entries.map((e) => e.name), contains('OpenMuse 国内版使用指南.sydoc'));
+    },
+  );
+
+  test(
+    'China upgrade replaces only pristine English guide and preserves history',
+    () async {
+      final original = await oldGuide();
+      await center.seedWelcome();
+      await center.seedWelcome(region: 'cn');
+      expect(
+        (await center.documents.read(
+          original.identity.resource,
+          null,
+          center.hub.access('test'),
+        )).bytes,
+        await File(
+          'assets/welcome/OpenMuse-User-Guide.zh-CN.sydoc',
+        ).readAsBytes(),
+      );
+      expect(
+        (await center.documents.read(
+          original.identity.resource,
+          original.version,
+          center.hub.access('test'),
+        )).bytes,
+        await File('test/fixtures/legacy-guide.sydoc').readAsBytes(),
+      );
+    },
+  );
+
+  test(
+    'China upgrade does not resurrect a deleted or renamed starter',
+    () async {
+      await File(
+        '${center.root.path}/welcome-v1.json',
+      ).writeAsString('{"version":1}');
+      await center.seedWelcome(region: 'cn');
+      expect(
+        (await center.documents.list(
+          'root',
+          center.hub.access('test'),
+        )).entries,
+        isEmpty,
+      );
+    },
+  );
+
   Widget host({
     double scale = 1,
     ResourceCenterController? controller,
@@ -274,6 +409,49 @@ void main() {
     debugPrint('UI step: $key');
   }
 
+  testWidgets(
+    'readonly menu narrows a live resource session without changing its provider permissions',
+    (tester) async {
+      final record = (await tester.runAsync(
+        () => center.controller.create(
+          center.controller.creators.firstWhere(
+            (c) => c.spec.id == 'notes.markdown',
+          ),
+          center.documents,
+          'root',
+          'Readonly.md',
+          const {},
+          'readonly-menu',
+        ),
+      ))!;
+      final seen = <ResourceEditorSession>[];
+      center.controller.presentEditor = (presentation) async {
+        seen.add(presentation.session);
+        expect(presentation.session.opened.fromSnapshot, isFalse);
+        expect(presentation.session.allowEditing, isFalse);
+        expect(presentation.session.record.readOnly, isFalse);
+        expect(center.documents.source.canEdit, isTrue);
+        expect(
+          () => presentation.session.enterEditing(),
+          throwsA(isA<ResourceFailure>()),
+        );
+      };
+      await tester.pumpWidget(host());
+      await tap(tester, 'resource-section-local');
+      await tap(tester, 'resource-source-${center.documents.source.key}');
+      await tap(tester, 'resource-more-${record.identity.resource}');
+      await tap(tester, 'resource-menu-open-readonly');
+      for (var i = 0; i < 100 && seen.isEmpty; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump();
+      }
+      expect(seen, hasLength(1));
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
   testWidgets(
     'offline peer refresh does not block local documents or recent history',
     (tester) async {

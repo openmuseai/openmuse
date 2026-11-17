@@ -5,6 +5,8 @@ publish_to: none
 environment:
   sdk: ^3.12.2
 dependencies:
+  muse_resource_embed:
+    path: ../muse_resource_embed
   openmuse_resource_clipboard:
     path: ../openmuse_resource_clipboard
   flutter:

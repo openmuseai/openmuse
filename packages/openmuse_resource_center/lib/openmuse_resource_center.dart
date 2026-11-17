@@ -6,3 +6,4 @@ export 'src/strings.dart';
 export 'src/resource_view.dart';
 export 'src/resource_open.dart';
 export 'src/conversation.dart';
+export 'src/resource_embed.dart';

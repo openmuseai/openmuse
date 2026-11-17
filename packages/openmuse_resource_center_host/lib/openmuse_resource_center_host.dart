@@ -40,6 +40,47 @@ final class NativeResourceCenter {
   final _sharesByPeer = <String, Map<String, ResourceRecord>>{};
   String? _peerRef;
   final _mounts = <String, FileTreeResourceProvider>{};
+  final _pluginSources = <String, List<ResourceProvider>>{};
+  void _syncPluginSources() {
+    if (_closed) return;
+    final active = registry.descriptors
+        .where((d) => registry.stateOf(d.id) == OpenMusePluginState.active)
+        .map((d) => d.id)
+        .toSet();
+    for (final id
+        in _pluginSources.keys.where((id) => !active.contains(id)).toList()) {
+      for (final p in _pluginSources.remove(id)!) {
+        hub.unregister(p.source.key);
+      }
+    }
+    for (final id in active) {
+      final plugin = registry.plugin(id);
+      if (plugin is! OpenMuseResourceSourceContributor ||
+          _pluginSources.containsKey(id))
+        continue;
+      final sources = (plugin as OpenMuseResourceSourceContributor)
+          .createResourceSources(
+            ResourceSourceContext(
+              scope: hub.scope,
+              deviceRef: documents.source.deviceRef,
+              deviceLabel: documents.source.deviceLabel,
+              workspace: documents.source.workspace,
+              workspaceLabel: documents.source.workspaceLabel,
+              generation: () => hub.generation,
+              state: FileResourceStateStore(
+                File(
+                  '${root.path}/plugin-source-${resourceDigest(utf8.encode(id))}.json',
+                ),
+              ),
+            ),
+          );
+      for (final p in sources) {
+        hub.register(p, visible: !p.source.internal);
+      }
+      _pluginSources[id] = sources;
+    }
+  }
+
   String? _mountFingerprint;
   Future<void> _mountTail = Future.value();
   String? _connectionKey;
@@ -51,6 +92,7 @@ final class NativeResourceCenter {
     required String deviceLabel,
     required OpenMusePluginRegistry registry,
     bool seedWelcomeResources = false,
+    String welcomeRegion = 'us',
     String workspace = 'personal',
     String workspaceLabel = 'Documents',
     String documentsLabel = 'Documents',
@@ -161,6 +203,8 @@ final class NativeResourceCenter {
         value.execution.projections.sweep().catchError((Object _) {}),
       ),
     );
+    value._syncPluginSources();
+    registry.addListener(value._syncPluginSources);
     await value.execution.projections.sweep();
     await value.rpc.restore();
     final shares = await FileResourceStateStore(
@@ -181,15 +225,16 @@ final class NativeResourceCenter {
         }
       }
     }
-    if (seedWelcomeResources) await value.seedWelcome();
+    if (seedWelcomeResources) await value.seedWelcome(region: welcomeRegion);
     return value;
   }
 
   /// One durable seed per local account scope. Later edits and deletions win.
-  Future<void> seedWelcome() async {
+  Future<void> seedWelcome({String region = 'us'}) async {
+    final china = region == 'cn';
     final marker = File('${root.path}/welcome-v1.json');
     if (await marker.exists()) {
-      await _upgradeWelcomeGuide();
+      await _upgradeWelcomeGuide(china: china);
       return;
     }
     for (final sample in [
@@ -199,8 +244,8 @@ final class NativeResourceCenter {
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       ),
       (
-        'OpenMuse User Guide.sydoc',
-        'OpenMuse-User-Guide.sydoc',
+        china ? 'OpenMuse 国内版使用指南.sydoc' : 'OpenMuse User Guide.sydoc',
+        china ? 'OpenMuse-User-Guide.zh-CN.sydoc' : 'OpenMuse-User-Guide.sydoc',
         'application/vnd.openmuse.siyuan.document+zip',
       ),
     ]) {
@@ -222,7 +267,7 @@ final class NativeResourceCenter {
       await hub.recordOpened(record, 'welcome');
     }
     await marker.writeAsString('{"version":1}', flush: true);
-    await _upgradeWelcomeGuide();
+    await _upgradeWelcomeGuide(china: china);
   }
 
   Future<List<ResourceRecord>> _rootResources() async {
@@ -243,22 +288,30 @@ final class NativeResourceCenter {
     return result;
   }
 
-  Future<void> _upgradeWelcomeGuide() async {
-    const edition = '2026-11-03-illustrated';
+  Future<void> _upgradeWelcomeGuide({required bool china}) async {
+    final edition = china ? '2026-11-06-cn' : '2026-11-03-illustrated';
     final marker = File('${root.path}/welcome-guide-$edition.json');
     if (await marker.exists()) return;
-    const pristineDigests = {
+    final pristineDigests = {
+      if (china)
+        '346d58fb16f4e734438da60eb087b70ab00367d13db01aaa3a7e7c45ac346922',
       '2a3c34022420c3a2a626cd33bab4868d5280393c1fe5d54d59d231b60de67170',
       'c135995a41eb5c5141158bf120b59c7dcc8200266939845588cb4fda8f7f652d',
     };
     final guides = (await _rootResources())
-        .where((r) => r.name == 'OpenMuse User Guide.sydoc')
+        .where(
+          (r) =>
+              r.name == 'OpenMuse User Guide.sydoc' ||
+              (china && r.name == 'OpenMuse 国内版使用指南.sydoc'),
+        )
         .toList();
     // Missing/renamed resources express user intent; do not resurrect them.
     if (guides.length == 1) {
       final guide = guides.single;
       final data = await rootBundle.load(
-        'packages/openmuse_resource_center_host/assets/welcome/OpenMuse-User-Guide.sydoc',
+        china
+            ? 'packages/openmuse_resource_center_host/assets/welcome/OpenMuse-User-Guide.zh-CN.sydoc'
+            : 'packages/openmuse_resource_center_host/assets/welcome/OpenMuse-User-Guide.sydoc',
       );
       final bytes = data.buffer.asUint8List(
         data.offsetInBytes,
@@ -282,7 +335,9 @@ final class NativeResourceCenter {
         }
       } else if (guide.version.digest != digest) {
         // An edited guide is personal content. Offer the new edition separately.
-        const name = 'OpenMuse User Guide — 2026-11.sydoc';
+        final name = china
+            ? 'OpenMuse 国内版使用指南.sydoc'
+            : 'OpenMuse User Guide — 2026-11.sydoc';
         if (!(await _rootResources()).any((r) => r.name == name)) {
           final updated = await documents.create(
             parentRef: 'root',
@@ -428,6 +483,48 @@ final class NativeResourceCenter {
     return next;
   }
 
+  /// Resolve only an already mounted file through the opaque resource index.
+  /// The provider retains read-only access and verifies path/symlink boundaries.
+  Future<ResourceReference?> referenceForMountedFile(File file) async {
+    await _mountTail;
+    final canonical = await file.resolveSymbolicLinks();
+    final providers = _mounts.values.toList()
+      ..sort((a, b) => b.root.path.length.compareTo(a.root.path.length));
+    for (final provider in providers) {
+      final prefix = '${provider.root.path}${Platform.pathSeparator}';
+      if (!canonical.startsWith(prefix)) continue;
+      final parts = canonical
+          .substring(prefix.length)
+          .split(Platform.pathSeparator);
+      var parent = 'root';
+      for (var i = 0; i < parts.length; i++) {
+        String? cursor;
+        ResourceDirectoryEntry? found;
+        do {
+          final page = await provider.list(
+            parent,
+            hub.access('workspace-open'),
+            cursor: cursor,
+            limit: 200,
+          );
+          found = page.entries
+              .where((entry) => entry.name == parts[i])
+              .firstOrNull;
+          cursor = page.nextCursor;
+        } while (found == null && cursor != null);
+        if (found == null) return null;
+        if (i == parts.length - 1) {
+          final identity = found.deferredIdentity;
+          return identity == null
+              ? null
+              : ResourceReference(identity: identity);
+        }
+        parent = found.nodeRef;
+      }
+    }
+    return null;
+  }
+
   Future<void> refreshRemote() async {
     if (_remote == null) return;
     final providers = await _remote!.catalog(
@@ -547,6 +644,8 @@ final class NativeResourceCenter {
   Future<void> close() => _closing ??= _close();
   Future<void> _close() async {
     _closed = true;
+    registry.removeListener(_syncPluginSources);
+    controller.editorLifetime.invalidate();
     _janitor?.cancel();
     await _mountTail.catchError((Object _) {});
     await _connectionTail.catchError((Object _) {});

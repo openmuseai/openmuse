@@ -29,6 +29,26 @@ final class ResourceHandlerChoice {
   String get key => '${plugin.descriptor.id}/${spec.id}';
 }
 
+/// Use an explicit preference first. Otherwise a single highest-priority
+/// active handler can open directly; ties still require a user choice.
+ResourceHandlerChoice? defaultResourceHandler(
+  List<ResourceHandlerChoice> choices, {
+  String? preferredKey,
+  bool chooseHandler = false,
+}) {
+  if (chooseHandler || choices.isEmpty) return null;
+  for (final choice in choices) {
+    if (choice.key == preferredKey) return choice;
+  }
+  final highestPriority = choices
+      .map((choice) => choice.spec.priority)
+      .reduce(max);
+  final highest = choices
+      .where((choice) => choice.spec.priority == highestPriority)
+      .toList();
+  return highest.length == 1 ? highest.single : null;
+}
+
 final class ResourceCreatorChoice {
   const ResourceCreatorChoice(this.plugin, this.contributor, this.spec);
   final OpenMusePlugin plugin;
@@ -71,6 +91,7 @@ final class ResourceCenterController extends ChangeNotifier {
   )?
   materializeLinkedContent;
   final ResourceCenterHub hub;
+  final editorLifetime = ResourceSessionLifetime();
   final OpenMusePluginRegistry registry;
   final Future<ResourceImport?> Function()? importFile;
   final Future<void> Function()? refreshSources;
@@ -82,6 +103,41 @@ final class ResourceCenterController extends ChangeNotifier {
   final Future<bool> Function(ResourceRecord record, List<int> bytes)?
   openLegacy;
   late final StreamSubscription<void> _subscription;
+  final _editorSessions = <ResourceEditorSession>{};
+
+  /// Projects labels already verified by the registered source. This neither
+  /// commits content nor changes the source's metadata revision/permissions.
+  Future<void> observeResourceDisplayMetadata(
+    ResourceIdentity identity, {
+    required String name,
+    List<String>? location,
+  }) async {
+    if (_disposed ||
+        !editorLifetime.active ||
+        identity.scope != hub.scope ||
+        !hub.provider(identity).available) {
+      throw const ResourceFailure('DENIED');
+    }
+    for (final session in _editorSessions.toList()) {
+      if (session.isActive &&
+          !session.opened.fromSnapshot &&
+          session.record.identity == identity) {
+        session.observeDisplayMetadata(
+          identity: identity,
+          name: name,
+          location: location,
+        );
+      }
+    }
+    for (final recent
+        in hub.recent.where((r) => r.record.identity == identity).toList()) {
+      if (_disposed || !editorLifetime.active) return;
+      await hub.refreshRecord(
+        recent.record.withDisplayMetadata(name: name, location: location),
+      );
+    }
+  }
+
   bool _disposed = false, loading = false;
   int _epoch = 0;
   Object? failure;
@@ -425,6 +481,11 @@ final class ResourceCenterController extends ChangeNotifier {
           hub.access('resource-rename'),
         );
     await hub.refreshRecord(result);
+    await observeResourceDisplayMetadata(
+      result.identity,
+      name: result.name,
+      location: result.location,
+    );
     await refresh();
     return result;
   }
@@ -469,8 +530,61 @@ final class ResourceCenterController extends ChangeNotifier {
     }
   }
 
+  ResourceEditorSession createEditorSession(
+    OpenedResource opened,
+    ResourceHandlerChoice choice, {
+    bool readOnly = false,
+  }) {
+    final record = opened.content.record,
+        provider = hub.provider(opened.content.record.identity);
+    late final ResourceEditorSession session;
+    session = ResourceEditorSession(
+      opened: opened,
+      lifetime: editorLifetime,
+      allowEditing:
+          !readOnly &&
+          choice.spec.editable &&
+          provider.available &&
+          provider.source.canEdit &&
+          !record.readOnly &&
+          !opened.fromSnapshot,
+      commitContent: (base, bytes, key) {
+        final access = hub.access(
+          'editor:${choice.plugin.descriptor.id}',
+          operations: {ResourceOperation.edit},
+          resourceKeys: {record.identity.key},
+        );
+        if (provider is ResourceDeviceCheckpointProvider) {
+          if (session.record.version != base) {
+            throw const ResourceFailure('REVISION_CONFLICT');
+          }
+          return (provider as ResourceDeviceCheckpointProvider).checkpoint(
+            session.record,
+            bytes,
+            key,
+            access,
+          );
+        }
+        return provider.commit(
+          record.identity.resource,
+          base,
+          bytes,
+          key,
+          access,
+        );
+      },
+      onOpened: (record) => unawaited(this.opened(record, choice.key)),
+      onChanged: (record) => unawaited(hub.refreshRecord(record)),
+    );
+    _editorSessions.add(session);
+    unawaited(session.released.then((_) => _editorSessions.remove(session)));
+    return session;
+  }
+
   @override
   void dispose() {
+    editorLifetime.invalidate();
+    _editorSessions.clear();
     _disposed = true;
     _epoch++;
     _subscription.cancel();

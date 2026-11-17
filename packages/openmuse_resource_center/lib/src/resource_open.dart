@@ -15,7 +15,7 @@ String resourceErrorText(BuildContext context, Object error) {
     'CONTEXT_TOO_LARGE' => s.strings.resourcecenterContextTooLarge(),
     'RESOURCE_CENTER_UNAVAILABLE' => s.strings.resourcecenterPeerUpgrade(),
     'EXPIRED' || 'STALE_GENERATION' => s.expired,
-    'READ_ONLY' => s.sourceReadOnly,
+    'READ_ONLY' || 'RESOURCE_PRESENTATION_POLICY_CONFLICT' => s.sourceReadOnly,
     'NAME_CONFLICT' => s.nameConflict,
     'INVALID_NAME' => s.invalidName,
     'EXTENSION_REQUIRED' => s.keepExtension,
@@ -28,6 +28,9 @@ String resourceErrorText(BuildContext context, Object error) {
     'RESOURCE_TOO_LARGE' ||
     'RESPONSE_TOO_LARGE' => s.tooLarge,
     'DIGEST_MISMATCH' => s.integrityFailure,
+    'RESOURCE_DEPENDENCY_CYCLE' => s.strings.resourcecenterEmbedCycle(),
+    'RESOURCE_EMBED_DEPTH_EXCEEDED' => s.strings.resourcecenterEmbedDepth(),
+    'EMBED_RESOURCE_MISMATCH' => s.strings.resourcecenterEmbedMismatch(),
     'INVALID_REFERENCE' ||
     'INVALID_ENVELOPE' ||
     'UNSUPPORTED_PROTOCOL' => s.invalidReference,
@@ -227,16 +230,14 @@ Future<bool> openResourcePage(
     }
     dismiss();
     final record = opened.content.record, s = ResourceCenterStrings(context);
-    ResourceHandlerChoice? choice;
     final preferred = controller.hub.defaultHandler(
       controller.preferenceKey(record),
     );
-    if (!chooseHandler) {
-      choice = choices
-          .where((x) => x.key == (preferredHandlerKey ?? preferred))
-          .firstOrNull;
-      if (choice == null && choices.length == 1) choice = choices.single;
-    }
+    ResourceHandlerChoice? choice = defaultResourceHandler(
+      choices,
+      preferredKey: preferredHandlerKey ?? preferred,
+      chooseHandler: chooseHandler,
+    );
     if (choices.isEmpty) {
       if (await controller.canOpenLegacy?.call(record) == true &&
           context.mounted) {
@@ -281,30 +282,11 @@ Future<bool> openResourcePage(
         OpenMusePluginState.active) {
       throw const ResourceFailure('HANDLER_UNAVAILABLE');
     }
-    final provider = controller.hub.provider(record.identity),
-        selected = choice;
-    final session = ResourceEditorSession(
-      opened: opened,
-      allowEditing:
-          !readOnly &&
-          choice.spec.editable &&
-          provider.available &&
-          provider.source.canEdit &&
-          !record.readOnly &&
-          !opened.fromSnapshot,
-      commitContent: (base, bytes, key) => provider.commit(
-        record.identity.resource,
-        base,
-        bytes,
-        key,
-        controller.hub.access(
-          'editor:${selected.plugin.descriptor.id}',
-          operations: {ResourceOperation.edit},
-          resourceKeys: {record.identity.key},
-        ),
-      ),
-      onOpened: (record) => unawaited(controller.opened(record, selected.key)),
-      onChanged: (record) => unawaited(controller.hub.refreshRecord(record)),
+    final selected = choice;
+    final session = controller.createEditorSession(
+      opened,
+      selected,
+      readOnly: readOnly,
     );
     session.initialLine = initialLine;
     session.initialColumn = initialColumn;
@@ -392,6 +374,23 @@ Future<bool> openResourcePage(
     return false;
   }
 }
+
+/// Present an authorized plugin editor; its caller owns the session lifetime.
+Future<void> presentResourceEditor(
+  BuildContext context,
+  ResourceCenterController controller,
+  ResourceEditorPresentation presentation, {
+  String? routeName,
+}) => Navigator.of(context).push<void>(
+  MaterialPageRoute<void>(
+    settings: RouteSettings(name: routeName ?? openMuseResourceRouteName),
+    builder: (_) => _ResourceEditorPage(
+      controller: controller,
+      choice: presentation.choice,
+      session: presentation.session,
+    ),
+  ),
+);
 
 final class _HandlerSheet extends StatefulWidget {
   const _HandlerSheet({
@@ -610,10 +609,13 @@ final class _ResourceEditorPageState extends State<_ResourceEditorPage> {
                   ),
                 ),
               Expanded(
-                child: choice.contributor.buildResourceEditor(
-                  context,
-                  choice.spec.id,
-                  session,
+                child: ResourceEditorSessionScope(
+                  session: session,
+                  child: choice.contributor.buildResourceEditor(
+                    context,
+                    choice.spec.id,
+                    session,
+                  ),
                 ),
               ),
             ],
