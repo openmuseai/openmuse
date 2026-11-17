@@ -1,0 +1,12 @@
+{
+  "id": "02-development",
+  "status": "in_progress",
+  "owner": "",
+  "summary": "完成 Mobile 依赖和预装资源隔离首批改造；兼容标识、来源审查、升级迁移和最终包检查仍待办",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-isolation/README.zh-CN.md",
+    "docs/release/runs/2026-11-mobile-isolation/evidence/source-audit.json",
+    "docs/release/runs/2026-11-mobile-isolation/evidence/verification.json"
+  ],
+  "exceptions": []
+}

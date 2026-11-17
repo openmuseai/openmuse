@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-mobile-isolation",
+  "version": "1.0.2",
+  "mode": "planned",
+  "lanes": [
+    "android-cn",
+    "ios-cn",
+    "play",
+    "ios-us"
+  ],
+  "createdAt": "2026-11-17T02:52:14.424826+00:00",
+  "sourceFrozen": false,
+  "sourceRevisions": {
+    "Muse-Client": {
+      "commit": "80a14f5f6893e97164f2219910e90c3af90f9e35",
+      "dirty": true,
+      "role": "inspection baseline only; not frozen build inputs"
+    }
+  },
+  "artifacts": [],
+  "stores": {
+    "android-cn": {
+      "status": "not_submitted",
+      "build": null,
+      "releaseMode": "undecided"
+    },
+    "ios-cn": {
+      "status": "not_submitted",
+      "build": null,
+      "releaseMode": "undecided"
+    },
+    "play": {
+      "status": "not_submitted",
+      "build": null,
+      "releaseMode": "undecided"
+    },
+    "ios-us": {
+      "status": "not_submitted",
+      "build": null,
+      "releaseMode": "undecided"
+    }
+  },
+  "planningAssumptions": {
+    "versionAndLanes": "Proposed; scope owner has not locked channels/version",
+    "buildNumbers": "unallocated; query stores before assignment"
+  },
+  "scopeDocument": "docs/release/runs/2026-11-mobile-isolation/README.zh-CN.md"
+}
