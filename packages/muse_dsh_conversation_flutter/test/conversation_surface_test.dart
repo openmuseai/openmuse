@@ -1,12 +1,79 @@
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:muse_dsh_conversation_core/muse_dsh_conversation_core.dart';
 import 'package:muse_dsh_conversation_flutter/muse_dsh_conversation_flutter.dart';
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
 
 void main() {
+  testWidgets(
+    'AI notice appears once at top only after a reply and resets with session',
+    (tester) async {
+      var store = DshConversationStore();
+      Future<void> show(List<String> replies) async {
+        store.apply(
+          DshSnapshotFrame(
+            header: const {'id': 'notice-session'},
+            cursor: replies.length,
+            records: [
+              for (var i = 0; i < replies.length; i++)
+                DshWireEvent.fromJson({
+                  'type': 'assistant/message',
+                  'seq': i + 1,
+                  'time': i + 1,
+                  'surfaceOp': 'append',
+                  'data': {
+                    'message': {
+                      'content': [
+                        {'type': 'text', 'text': replies[i]},
+                      ],
+                    },
+                  },
+                }),
+            ],
+            hasMore: false,
+            projections: const {},
+          ),
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('zh', 'CN'),
+            supportedLocales: const [Locale('en'), Locale('zh', 'CN')],
+            localizationsDelegates: [
+              OpenMuseStringsDelegate(OpenMuseCatalog.builtIn),
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            home: Scaffold(
+              body: DshConversationSurface(
+                store: store,
+                onSend: (text, {mode = 'queue'}) async {},
+                onCancel: () async {},
+                onFallbackRequested: () {},
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+      }
+
+      await show([]);
+      expect(find.byKey(const ValueKey('dsh-native.ai-label')), findsNothing);
+      await show(['First response']);
+      expect(find.text('内容由 AI 生成'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('内容由 AI 生成')).dy,
+        lessThan(tester.getTopLeft(find.text('First response')).dy),
+      );
+      await show(['First response', 'Second response']);
+      expect(find.text('内容由 AI 生成'), findsOneWidget);
+      store = DshConversationStore();
+      await show([]);
+      expect(find.byKey(const ValueKey('dsh-native.ai-label')), findsNothing);
+    },
+  );
+
   testWidgets('renders Desktop journal and sends from native composer', (
     tester,
   ) async {
@@ -56,7 +123,33 @@ void main() {
       ),
     );
     expect(find.text('Desktop reply'), findsOneWidget);
-    await tester.tap(find.byKey(ValueKey('dsh-native.report:${store.snapshot.rows.single.key}')));
+    expect(find.text('内容由 AI 生成'), findsOneWidget);
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map)['text'] as String;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    await tester.tap(
+      find.byKey(ValueKey('dsh-native.copy:${store.snapshot.rows.single.key}')),
+    );
+    await tester.pump();
+    expect(copied, '内容由 AI 生成\nDesktop reply');
+    await tester.tap(
+      find.byKey(
+        ValueKey('dsh-native.report:${store.snapshot.rows.single.key}'),
+      ),
+    );
     expect(reported, 'Desktop reply');
     await tester.enterText(
       find.byKey(const ValueKey('dsh-native.composer')),

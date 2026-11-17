@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:flutter/material.dart';
 import 'package:muse_dsh_conversation_core/muse_dsh_conversation_core.dart';
@@ -253,7 +255,8 @@ IconData _momentIcon(String? name) => switch (name) {
 ///
 /// The opened list stays within half the screen and scrolls inside that bound.
 final class DshProcessTrail extends StatefulWidget {
-  const DshProcessTrail({super.key, required this.moments});
+  const DshProcessTrail({super.key, required this.moments, this.sessionId});
+  final String? sessionId;
 
   final List<DshProcessMoment> moments;
 
@@ -299,7 +302,7 @@ final class _DshProcessTrailState extends State<DshProcessTrail> {
                 children: [
                   for (final moment in widget.moments)
                     if (moment.row case final row?)
-                      _ProcessToolRow(row: row)
+                      _ProcessToolRow(row: row, sessionId: widget.sessionId)
                     else
                       Padding(
                         padding: const EdgeInsets.fromLTRB(24, 4, 0, 8),
@@ -372,7 +375,8 @@ final class _TrailLine extends StatelessWidget {
 }
 
 final class _ProcessToolRow extends StatefulWidget {
-  const _ProcessToolRow({required this.row});
+  const _ProcessToolRow({required this.row, this.sessionId});
+  final String? sessionId;
 
   final DshConversationRow row;
 
@@ -416,6 +420,27 @@ final class _ProcessToolRowState extends State<_ProcessToolRow> {
                     style: TextStyle(fontSize: 14, color: muted),
                   ),
                 ),
+                if (!shell &&
+                    widget.sessionId != null &&
+                    row.seq != null &&
+                    _argumentPath(_toolArguments(row)) != null)
+                  IconButton(
+                    key: ValueKey('dsh-process-file-${row.seq}'),
+                    tooltip: stringsOf(context).resourcecenterOpen(),
+                    icon: const Icon(Icons.open_in_new, size: 18),
+                    onPressed: () => unawaited(
+                      ResourceLinkRouting.maybeOf(context)?.locate?.call(
+                        ResourceLocator(
+                          owner: 'dsh',
+                          kind: 'tool',
+                          context: {
+                            'sessionId': widget.sessionId,
+                            'seq': row.seq,
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
                 if (shell)
                   AnimatedRotation(
                     turns: _open ? .25 : 0,

@@ -4,8 +4,10 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:markdown/markdown.dart' as md;
 import 'package:muse_dsh_conversation_core/muse_dsh_conversation_core.dart';
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
 
@@ -39,6 +41,7 @@ final class DshConversationSurface extends StatefulWidget {
     this.onOpenWorkspaceChange,
     this.onOpenPresentedFile,
     this.onReportResponse,
+    this.onLoadOlder,
     this.showHeader = true,
     this.showComposer = true,
     this.compatibilityPlugins = const [],
@@ -57,6 +60,7 @@ final class DshConversationSurface extends StatefulWidget {
   final DshWorkspaceChangeOpener? onOpenWorkspaceChange;
   final DshPresentedFileOpener? onOpenPresentedFile;
   final ValueChanged<DshConversationRow>? onReportResponse;
+  final Future<void> Function()? onLoadOlder;
   final bool showHeader;
   final bool showComposer;
   final List<JsonMap> compatibilityPlugins;
@@ -70,14 +74,26 @@ final class _DshConversationSurfaceState extends State<DshConversationSurface> {
   final ScrollController _scroll = ScrollController();
   StreamSubscription<void>? _changes;
   bool _sending = false;
+  bool _loadingOlder = false;
 
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(_onScroll);
+    if (widget.store.snapshot.hasMore ||
+        widget.store.snapshot.rows.length > 10) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scroll.hasClients)
+          _scroll.jumpTo(_scroll.position.maxScrollExtent);
+      });
+    }
     _changes = widget.store.changes.listen((_) {
       if (!mounted) return;
       setState(() {});
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+      if (!_loadingOlder &&
+          (!_scroll.hasClients || _scroll.position.extentAfter < 160)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+      }
     });
   }
 
@@ -125,6 +141,37 @@ final class _DshConversationSurfaceState extends State<DshConversationSurface> {
     );
   }
 
+  Future<void> _onScroll() async {
+    if (_loadingOlder ||
+        !_scroll.hasClients ||
+        _scroll.position.userScrollDirection == ScrollDirection.idle ||
+        _scroll.offset > 100 ||
+        !widget.store.snapshot.hasMore ||
+        widget.onLoadOlder == null)
+      return;
+    final height = _scroll.position.maxScrollExtent;
+    final offset = _scroll.offset;
+    _loadingOlder = true;
+    try {
+      await widget.onLoadOlder!();
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _scroll.hasClients) {
+          _scroll.jumpTo(
+            (offset + _scroll.position.maxScrollExtent - height).clamp(
+              0.0,
+              _scroll.position.maxScrollExtent,
+            ),
+          );
+        }
+        _loadingOlder = false;
+      });
+    } on Object {
+      _loadingOlder =
+          false; // A later scroll can retry; retain visible history.
+    }
+  }
+
   void _scrollToEnd() {
     if (!_scroll.hasClients) return;
     _scroll.animateTo(
@@ -154,6 +201,23 @@ final class _DshConversationSurfaceState extends State<DshConversationSurface> {
               plugins: widget.compatibilityPlugins,
               onFallbackRequested: widget.onFallbackRequested,
             ),
+          if (snapshot.rows.any(
+            (row) =>
+                row.kind == DshConversationRowKind.assistant &&
+                (row.text.trim().isNotEmpty || row.reasoning.trim().isNotEmpty),
+          ))
+            Padding(
+              key: const ValueKey('dsh-native.ai-label'),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Center(
+                child: Text(
+                  stringsOf(context).mobileAiGeneratedContentB3eeebbf(),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
           Expanded(
             child: snapshot.rows.isEmpty
                 ? const _EmptyConversation()
@@ -176,13 +240,17 @@ final class _DshConversationSurfaceState extends State<DshConversationSurface> {
                               constraints: const BoxConstraints(maxWidth: 720),
                               child: switch (entry) {
                                 DshTimelineProcessEntry(:final moments) =>
-                                  DshProcessTrail(moments: moments),
+                                  DshProcessTrail(
+                                    moments: moments,
+                                    sessionId: widget.store.snapshot.sessionId,
+                                  ),
                                 DshTimelineRowEntry(
                                   :final row,
                                   :final hideReasoning,
                                 ) =>
                                   _ConversationRow(
                                     row: row,
+                                    sessionId: widget.store.snapshot.sessionId,
                                     hideReasoning: hideReasoning,
                                     nativeContributions:
                                         widget.nativeContributions,
@@ -430,6 +498,7 @@ final class _EmptyConversation extends StatelessWidget {
 
 final class _ConversationRow extends StatelessWidget {
   const _ConversationRow({
+    this.sessionId,
     required this.row,
     required this.nativeContributions,
     required this.componentRegistry,
@@ -443,6 +512,7 @@ final class _ConversationRow extends StatelessWidget {
     this.onReportResponse,
     required this.onFallbackRequested,
   });
+  final String? sessionId;
   final DshConversationRow row;
   final bool hideReasoning;
   final List<DshNativeContribution> nativeContributions;
@@ -515,7 +585,7 @@ final class _ConversationRow extends StatelessWidget {
           ),
         );
       }
-      return _ToolCard(row: row);
+      return _ToolCard(row: row, sessionId: sessionId);
     }
     final colors = Theme.of(context).colorScheme;
     final dark = Theme.of(context).brightness == Brightness.dark;
@@ -557,7 +627,11 @@ final class _ConversationRow extends StatelessWidget {
                           children: [SelectableText(row.reasoning)],
                         ),
                       if (row.text.isNotEmpty)
-                        _MessageBody(markdown: row.text, plain: _user),
+                        _MessageBody(
+                          markdown: row.text,
+                          plain: _user,
+                          sessionId: sessionId,
+                        ),
                       if (!_user && row.nativeContext['presented'] is List)
                         DshPresentedFiles(
                           files: [
@@ -604,7 +678,13 @@ final class _ConversationRow extends StatelessWidget {
                 radius: 16,
                 onTap: row.text.isEmpty
                     ? null
-                    : () => Clipboard.setData(ClipboardData(text: row.text)),
+                    : () => Clipboard.setData(
+                        ClipboardData(
+                          text: row.kind == DshConversationRowKind.assistant
+                              ? '${stringsOf(context).mobileAiGeneratedContentB3eeebbf()}\n${row.text}'
+                              : row.text,
+                        ),
+                      ),
                 child: Icon(
                   Icons.copy_outlined,
                   size: 14,
@@ -632,7 +712,13 @@ final class _ConversationRow extends StatelessWidget {
 }
 
 final class _MessageBody extends StatelessWidget {
-  const _MessageBody({required this.markdown, this.plain = false});
+  const _MessageBody({
+    required this.markdown,
+    this.plain = false,
+    this.sessionId,
+  });
+
+  final String? sessionId;
 
   final String markdown;
   final bool plain;
@@ -692,10 +778,37 @@ final class _MessageBody extends StatelessWidget {
       key: const ValueKey('dsh-native.markdown'),
       data: markdown,
       onTapLink: (text, href, title) {
-        if (href != null && href.startsWith('openmuse-resource://v1/'))
+        if (href == null) return;
+        if (href.startsWith('openmuse-resource://v1/')) {
           unawaited(routing?.open(href));
+        } else if (sessionId != null && isDshFileHint(href)) {
+          unawaited(
+            routing?.locate?.call(
+              ResourceLocator(
+                owner: 'dsh',
+                kind: 'path',
+                target: href,
+                context: {'sessionId': sessionId},
+              ),
+            ),
+          );
+        }
       },
       selectable: false,
+      builders: sessionId == null || routing?.locate == null
+          ? {}
+          : {
+              'code': _FileHintBuilder(
+                (value) => routing!.locate!(
+                  ResourceLocator(
+                    owner: 'dsh',
+                    kind: 'path',
+                    target: value,
+                    context: {'sessionId': sessionId},
+                  ),
+                ),
+              ),
+            },
       softLineBreak: true,
       styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
         p: const TextStyle(fontSize: 14, height: 1.55),
@@ -2012,7 +2125,8 @@ final class _SplitDiffCell extends StatelessWidget {
 }
 
 final class _ToolCard extends StatefulWidget {
-  const _ToolCard({required this.row});
+  const _ToolCard({required this.row, this.sessionId});
+  final String? sessionId;
   final DshConversationRow row;
 
   @override
@@ -2055,6 +2169,32 @@ final class _ToolCardState extends State<_ToolCard> {
                           ? colors.error
                           : colors.onSurfaceVariant,
                     ),
+                    if (widget.sessionId != null &&
+                        row.seq != null &&
+                        arguments is Map &&
+                        [
+                          'path',
+                          'file_path',
+                          'filePath',
+                          'target_file',
+                        ].any((k) => arguments[k] is String))
+                      IconButton(
+                        key: ValueKey('dsh-tool-file-${row.seq}'),
+                        tooltip: stringsOf(context).resourcecenterOpen(),
+                        icon: const Icon(Icons.open_in_new, size: 18),
+                        onPressed: () => unawaited(
+                          ResourceLinkRouting.maybeOf(context)?.locate?.call(
+                            ResourceLocator(
+                              owner: 'dsh',
+                              kind: 'tool',
+                              context: {
+                                'sessionId': widget.sessionId,
+                                'seq': row.seq,
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -2467,6 +2607,36 @@ final class _PluginCompatibilityNotice extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Recognizes link-shaped hints only; resolution always belongs to DSH.
+bool isDshFileHint(String value) {
+  if (value.length > 4096 || value.contains('\n')) return false;
+  if (value.startsWith('file://') || value.startsWith('dsh-resource://file/'))
+    return true;
+  if (RegExp(r'^[a-zA-Z][a-zA-Z0-9+.-]*://').hasMatch(value)) return false;
+  return RegExp(r'^(?:[./~]|[a-zA-Z]:[\\/])').hasMatch(value) ||
+      RegExp(
+        r'^[^\s<>]+\.[a-zA-Z0-9]{1,12}(?:(?::\d+(?::\d+)?)|(?:#L\d+(?:C\d+)?(?:-L?\d+)?))?$',
+      ).hasMatch(value);
+}
+
+final class _FileHintBuilder extends MarkdownElementBuilder {
+  _FileHintBuilder(this.open);
+  final Future<void> Function(String) open;
+  @override
+  Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
+    final text = element.textContent;
+    if (!isDshFileHint(text)) return null;
+    return InkWell(
+      key: ValueKey('dsh-file-hint-$text'),
+      onTap: () => unawaited(open(text)),
+      child: Text(
+        text,
+        style: preferredStyle?.copyWith(decoration: TextDecoration.underline),
       ),
     );
   }
