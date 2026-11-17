@@ -49,6 +49,70 @@ ResourceEditorSession session() {
 
 void main() {
   test(
+    'overlapping checkpoint holds preserve private recovery on final resume and reset that intent for the next pause',
+    () async {
+      final barrier = ResourceCheckpointBarrier(), inFlight = Completer<void>();
+      var ordinary = 0, privately = 0;
+      final a = barrier.pause(
+        inFlight.future,
+        () => ordinary++,
+        onPrivateResume: () => privately++,
+      );
+      final b = barrier.pause(
+        null,
+        () => ordinary++,
+        onPrivateResume: () => privately++,
+      );
+      var drained = false;
+      final drain = a.drain().then((_) => drained = true);
+      await Future<void>.delayed(Duration.zero);
+      expect(drained, isFalse);
+      inFlight.complete();
+      await drain;
+      (a as ResourcePrivateRecoveryCheckpointHold).resumeAfterPrivateRecovery();
+      a.resume();
+      expect(barrier.isPaused, isTrue);
+      expect(privately, 0);
+      expect(ordinary, 0);
+      b.resume();
+      await barrier.resumed;
+      expect(privately, 1);
+      expect(ordinary, 0);
+      expect(barrier.isPaused, isFalse);
+      final next = barrier.pause(
+        null,
+        () => ordinary++,
+        onPrivateResume: () => privately++,
+      );
+      next.resume();
+      expect(ordinary, 1);
+      expect(privately, 1);
+    },
+  );
+
+  test(
+    'final release follows dependent save barriers and remains retryable',
+    () async {
+      final editor = session();
+      var calls = 0;
+      editor.releaseForClose = () async {
+        calls++;
+        if (calls == 1) throw const ResourceFailure('FINAL_CHECKPOINT_FAILED');
+      };
+      expect(await editor.finalizeToClose(), isFalse);
+      expect(calls, 0);
+      expect(await editor.prepareToClose(), isTrue);
+      expect(await editor.finalizeToClose(), isFalse);
+      expect(editor.closePrepared, isFalse);
+      expect(editor.closeFinalized, isFalse);
+      expect(await editor.prepareToClose(), isTrue);
+      expect(await editor.finalizeToClose(), isTrue);
+      expect(await editor.finalizeToClose(), isTrue);
+      expect(calls, 2);
+      editor.dispose();
+    },
+  );
+  test(
     'close waits for one shared save barrier; a later edit invalidates it',
     () async {
       final editor = session();

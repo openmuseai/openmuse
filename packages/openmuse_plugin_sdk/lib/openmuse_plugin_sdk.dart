@@ -16,6 +16,7 @@ export 'src/resource_extension_session.dart';
 export 'src/authentication.dart';
 export 'src/mobile_workbench.dart';
 export 'src/resource_capabilities.dart';
+export 'src/resource_session_owners.dart';
 
 enum OpenMusePluginRuntime { builtIn, nativeProcess, webView, quickJs }
 
