@@ -1,7 +1,20 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'cloud_http_io.dart' if (dart.library.js_interop) 'cloud_http_web.dart';
 
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
+import 'package:uuid/uuid.dart';
+
+part 'appflowy_workspace_access.dart';
+part 'appflowy_row_document.dart';
+part 'appflowy_workspace_invitations.dart';
+part 'appflowy_access_mutations.dart';
+part 'appflowy_owner_invitations.dart';
+part 'appflowy_workspace_invite_code.dart';
+part 'appflowy_document_creation.dart';
+part 'appflowy_page_rename.dart';
+part 'appflowy_page_title.dart';
+part 'appflowy_document_publication.dart';
 
 typedef RefreshAccessTokenProvider = Future<String?> Function();
 
@@ -18,16 +31,33 @@ final class AppFlowyCloudWorkspaceService
     required this.accessToken,
     required this.deviceId,
     this.refreshAccessToken,
+    this.accountSubject,
     HttpClient? client,
     this.allowHttpForTesting = false,
     this.maxJsonBytes = 1024 * 1024,
+    this.rowCreationTimeout = const Duration(seconds: 20),
+    this.documentCreationTimeout = const Duration(seconds: 20),
+    this.pageRenameTimeout = const Duration(seconds: 20),
   }) : _client = client ?? HttpClient() {
     final loopback =
         baseUri.host == 'localhost' ||
         baseUri.host == '127.0.0.1' ||
         baseUri.host == '::1' ||
         baseUri.host == '10.0.2.2';
+    if (rowCreationTimeout <= Duration.zero ||
+        rowCreationTimeout > const Duration(minutes: 2)) {
+      throw ArgumentError('invalid row creation timeout');
+    }
+    if (documentCreationTimeout <= Duration.zero ||
+        documentCreationTimeout > const Duration(minutes: 2)) {
+      throw ArgumentError('invalid document creation timeout');
+    }
+    if (pageRenameTimeout <= Duration.zero ||
+        pageRenameTimeout > const Duration(minutes: 2)) {
+      throw ArgumentError('invalid page rename timeout');
+    }
     if (baseUri.host.isEmpty ||
+        baseUri.userInfo.isNotEmpty ||
         baseUri.hasQuery ||
         baseUri.hasFragment ||
         (baseUri.path.isNotEmpty && baseUri.path != '/') ||
@@ -42,24 +72,99 @@ final class AppFlowyCloudWorkspaceService
   final Uri baseUri;
   final Future<String?> Function() accessToken;
   final RefreshAccessTokenProvider? refreshAccessToken;
+
+  /// Pins each operation to the originating authenticated account, including
+  /// token refresh and delayed HTTP responses. No token is decoded locally.
+  final String? Function()? accountSubject;
   final String deviceId;
   final bool allowHttpForTesting;
   final int maxJsonBytes;
+  final Duration rowCreationTimeout;
+  final Duration documentCreationTimeout;
+  final Duration pageRenameTimeout;
   final HttpClient _client;
+  int _accountEpoch = 0;
+  final _rowDocumentCreations = <(String?, int, String, String, String)>{};
+  final _documentIntents = <String, _DocumentCreationIntent>{};
+  final _renameIntents = <(String, String), _PageRenameIntent>{};
+  int _pageNameReadSerial = 0;
+  final _pageNameReads = <String, int>{};
+  final _pageNameSnapshots =
+      <
+        String,
+        ({
+          int version,
+          (String?, int) account,
+          List<AppFlowyWorkspacePage> pages,
+        })
+      >{};
+  final _renameChanges = StreamController<void>.broadcast();
+  final _pageNameChanges =
+      StreamController<AppFlowyPageNameObservation>.broadcast();
+  Stream<void> get pageRenameChanges => _renameChanges.stream;
+  Stream<AppFlowyPageNameObservation> get pageNameChanges =>
+      _pageNameChanges.stream;
+  final _documentChanges = StreamController<void>.broadcast();
+  Stream<void> get documentCreationChanges => _documentChanges.stream;
+  final _accessIntents = <_AccessIntent>[];
+  final _codeIntents = <_AccessIntent>[];
+  final _codeReads = <String, AppFlowyWorkspaceInviteCode>{};
+  final _codePreviews = <String, AppFlowyWorkspaceInviteCodePreview>{};
+  int _codeReadVersion = 0;
+  final _ownerCancellations =
+      <_OwnerCancelKey, Future<AppFlowyOwnerInvitationCancellation>>{};
+  final _accessChanges = StreamController<void>.broadcast();
+  Stream<void> get accessMutationChanges => _accessChanges.stream;
+  void _accessChanged() {
+    if (!_accessChanges.isClosed) _accessChanges.add(null);
+  }
+
+  /// Called by the owning account plugin on sign-out/subject transitions.
+  /// Also fences A -> B -> A transitions during an in-flight operation.
+  void invalidateAccountOperations() {
+    _accountEpoch++;
+    _documentIntents.clear();
+    _renameIntents.clear();
+    _pageNameReads.clear();
+    _pageNameSnapshots.clear();
+    if (!_renameChanges.isClosed) _renameChanges.add(null);
+    if (!_documentChanges.isClosed) _documentChanges.add(null);
+    _accessIntents.clear();
+    _codeIntents.clear();
+    _codeReads.clear();
+    _codePreviews.clear();
+    _ownerCancellations.clear();
+    _accessChanged();
+  }
 
   @override
   DshPlacement get placement => DshPlacement.cloudRemote;
 
-  void closeClient() => _client.close(force: true);
+  void closeClient() {
+    _renameIntents.clear();
+    _pageNameReads.clear();
+    _pageNameSnapshots.clear();
+    unawaited(_renameChanges.close());
+    unawaited(_pageNameChanges.close());
+    _documentIntents.clear();
+    unawaited(_documentChanges.close());
+    _accessIntents.clear();
+    _codeIntents.clear();
+    _codeReads.clear();
+    _codePreviews.clear();
+    _ownerCancellations.clear();
+    _client.close(force: true);
+    unawaited(_accessChanges.close());
+  }
 
   @override
   Future<List<CloudWorkspaceRecord>> listWorkspaces() async {
-    final data = await _envelope('GET', '/api/workspace');
+    final data = await _envelope('GET', '/api/workspace?include_role=true');
     if (data is! List) throw _invalid('workspace data must be a list');
     return data
         .map((item) {
           final value = _object(item, 'workspace');
-          final role = value['role']?.toString().toLowerCase();
+          final role = value['role'];
           return CloudWorkspaceRecord(
             workspaceRef: _requiredString(value, 'workspace_id'),
             title: _requiredString(value, 'workspace_name'),
@@ -67,7 +172,8 @@ final class AppFlowyCloudWorkspaceService
                 _optionalString(value, 'database_storage_id') ??
                 _optionalString(value, 'created_at') ??
                 'cloud',
-            writable: role == null || !role.contains('guest'),
+            writable:
+                role == 'Owner' || role == 'Member' || role == 1 || role == 2,
             storageState: CloudStorageState.available,
           );
         })
@@ -213,31 +319,123 @@ final class AppFlowyCloudWorkspaceService
   Future<Object?> _envelope(
     String method,
     String path, {
-    Map<String, Object?>? body,
+    Object? body,
+    int? responseBudget,
+    Exception Function()? authorizationRejection,
+    Duration? timeout,
+    _AccessIntent? accessIntent,
   }) async {
-    var response = await _request(method, path, body: body);
+    if (responseBudget != null &&
+        (responseBudget < 1 || responseBudget > 32 * 1024 * 1024)) {
+      throw ArgumentError('invalid response budget');
+    }
+    final subject = (accountSubject?.call(), _accountEpoch);
+    for (var attempt = 0; ; attempt++) {
+      final requestScope = _CloudRequestScope();
+      try {
+        final task = _envelopeOnce(
+          method,
+          path,
+          subject: subject,
+          body: body,
+          responseBudget: responseBudget ?? maxJsonBytes,
+          authorizationRejection: authorizationRejection,
+          requestScope: requestScope,
+          accessIntent: accessIntent,
+        );
+        return timeout == null
+            ? await task
+            : await task.timeout(
+                timeout,
+                onTimeout: () {
+                  requestScope.cancel();
+                  throw TimeoutException(
+                    'Cloud creation request deadline exceeded',
+                  );
+                },
+              );
+      } on HttpException {
+        if (method != 'GET' || attempt != 0) rethrow;
+        _checkAccount(subject);
+      } on SocketException {
+        if (method != 'GET' || attempt != 0) rethrow;
+        _checkAccount(subject);
+      }
+    }
+  }
+
+  // A suspended native client may miss a keep-alive connection close. Retry
+  // one idempotent read with fresh authorization, never an ambiguous mutation.
+  Future<Object?> _envelopeOnce(
+    String method,
+    String path, {
+    required (String?, int) subject,
+    Object? body,
+    required int responseBudget,
+    Exception Function()? authorizationRejection,
+    required _CloudRequestScope requestScope,
+    _AccessIntent? accessIntent,
+  }) async {
+    _checkAccount(subject);
+    var response = await _request(
+      method,
+      path,
+      subject: subject,
+      body: body,
+      requestScope: requestScope,
+      accessIntent: accessIntent,
+    );
+    requestScope.check();
     if (response.statusCode == 401 && refreshAccessToken != null) {
+      accessIntent?.rejected = true;
       await response.drain<void>();
       final refreshed = await refreshAccessToken!();
+      _checkAccount(subject);
       if (refreshed != null && refreshed.isNotEmpty) {
-        response = await _request(method, path, body: body);
+        response = await _request(
+          method,
+          path,
+          subject: subject,
+          body: body,
+          requestScope: requestScope,
+          accessIntent: accessIntent,
+        );
+      } else {
+        if (authorizationRejection != null) throw authorizationRejection();
+        throw const CloudServiceException(
+          CloudServiceErrorCode.unauthorized,
+          'login required',
+        );
       }
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final status = response.statusCode;
+      if (status == 401 || status == 403) accessIntent?.rejected = true;
       await response.drain<void>();
+      if ((status == 401 || status == 403) && authorizationRejection != null)
+        throw authorizationRejection();
       throw CloudServiceException(
         status == 401 || status == 403
             ? CloudServiceErrorCode.unauthorized
             : CloudServiceErrorCode.unavailable,
         'Cloud request failed with HTTP $status',
+        httpStatus: status,
       );
     }
-    final root = _object(await _readJson(response), 'Cloud envelope');
+    final root = _object(
+      await _readJson(response, responseBudget),
+      'Cloud envelope',
+    );
+    _checkAccount(subject);
     final code = root['code'];
-    if (code is! num || code.toInt() != 0) {
-      throw const CloudServiceException(
-        CloudServiceErrorCode.unavailable,
+    if (code is! num || code != 0) {
+      if ({1011, 1012, 1024}.contains(code)) accessIntent?.rejected = true;
+      if ({1011, 1012, 1024}.contains(code) && authorizationRejection != null)
+        throw authorizationRejection();
+      throw CloudServiceException(
+        {1011, 1012, 1024}.contains(code)
+            ? CloudServiceErrorCode.unauthorized
+            : CloudServiceErrorCode.unavailable,
         'Cloud returned a business error',
       );
     }
@@ -247,9 +445,15 @@ final class AppFlowyCloudWorkspaceService
   Future<HttpClientResponse> _request(
     String method,
     String path, {
-    Map<String, Object?>? body,
+    required (String?, int) subject,
+    Object? body,
+    required _CloudRequestScope requestScope,
+    _AccessIntent? accessIntent,
   }) async {
+    requestScope.check();
     final token = await accessToken();
+    requestScope.check();
+    _checkAccount(subject);
     if (token == null || token.isEmpty || token.length > 8192) {
       throw const CloudServiceException(
         CloudServiceErrorCode.unauthorized,
@@ -257,23 +461,46 @@ final class AppFlowyCloudWorkspaceService
       );
     }
     final request = await _client.openUrl(method, baseUri.resolve(path));
+    requestScope.attach(request);
+    try {
+      _checkAccount(subject);
+    } catch (_) {
+      request.abort();
+      rethrow;
+    }
     request.followRedirects = false;
     request.headers
       ..set(HttpHeaders.authorizationHeader, 'Bearer $token')
-      ..set(HttpHeaders.acceptHeader, 'application/json');
+      ..set(HttpHeaders.acceptHeader, 'application/json')
+      ..set('device_id', deviceId)
+      ..set('client-version', '0.16.5');
     if (body != null) {
       request.headers.contentType = ContentType.json;
       request.write(jsonEncode(body));
     }
+    if (accessIntent != null) {
+      accessIntent.sent = true;
+      accessIntent.rejected = false;
+    }
     return request.close();
   }
 
-  Future<Object?> _readJson(HttpClientResponse response) async {
+  void _checkAccount((String?, int) expected) {
+    if (expected.$2 != _accountEpoch ||
+        (accountSubject != null &&
+            (expected.$1 == null || expected.$1 != accountSubject!()))) {
+      throw const CloudServiceException(
+        CloudServiceErrorCode.unauthorized,
+        'originating account is no longer active',
+      );
+    }
+  }
+
+  Future<Object?> _readJson(HttpClientResponse response, int limit) async {
     final bytes = <int>[];
     await for (final chunk in response) {
       bytes.addAll(chunk);
-      if (bytes.length > maxJsonBytes)
-        throw _invalid('JSON response too large');
+      if (bytes.length > limit) throw _invalid('JSON response too large');
     }
     try {
       return jsonDecode(utf8.decode(bytes));
@@ -317,3 +544,24 @@ CloudServiceException _invalid(String message) =>
 
 CloudServiceException _unavailable(String message) =>
     CloudServiceException(CloudServiceErrorCode.unavailable, message);
+
+// A deadline retires this attempt before a delayed token/openUrl can send a
+// late mutation. Aborting an already-sent POST does not claim server rollback.
+final class _CloudRequestScope {
+  bool cancelled = false;
+  HttpClientRequest? request;
+  void check() {
+    if (cancelled) throw TimeoutException('Cloud request attempt ended');
+  }
+
+  void attach(HttpClientRequest value) {
+    request = value;
+    if (cancelled) value.abort();
+    check();
+  }
+
+  void cancel() {
+    cancelled = true;
+    request?.abort();
+  }
+}

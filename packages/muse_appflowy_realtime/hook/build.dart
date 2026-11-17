@@ -24,10 +24,12 @@ Future<void> main(List<String> args) async {
         'Realtime codec native artifact is not available for $os/$arch',
       ),
     };
-    final rust = Directory.fromUri(
-      input.packageRoot.resolve(
-        '../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/runtime/appflowy_realtime/',
-      ),
+    final rust = Directory(
+      await Directory.fromUri(
+        input.packageRoot.resolve(
+          '../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/runtime/appflowy_realtime/',
+        ),
+      ).resolveSymbolicLinks(),
     );
     final environment = <String, String>{
       'CARGO_TARGET_DIR': '${rust.path}/target',
@@ -59,15 +61,20 @@ Future<void> main(List<String> args) async {
       environment['CARGO_TARGET_${key}_RUSTFLAGS'] =
           '-Clink-arg=--target=$abi${input.config.code.android.targetNdkApi}';
     }
-    final result = await Process.run('cargo', [
-      'build',
-      '--locked',
-      '--release',
-      '--manifest-path',
-      '${rust.path}/Cargo.toml',
-      '--target',
-      target,
-    ], environment: environment);
+    final result = await Process.run(
+      'cargo',
+      [
+        'build',
+        '--locked',
+        '--release',
+        '--manifest-path',
+        '${rust.path}/Cargo.toml',
+        '--target',
+        target,
+      ],
+      environment: environment,
+      workingDirectory: rust.path,
+    );
     if (result.exitCode != 0)
       throw StateError('Rust build failed: ${result.stderr}');
     final name = os == OS.macOS || os == OS.iOS

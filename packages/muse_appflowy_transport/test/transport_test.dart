@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -8,6 +9,125 @@ import 'package:test/test.dart';
 const id = '041c01d0-831a-408a-b8fa-190d40dd9e94';
 const workspace = '041c01d0-831a-408a-b8fa-190d40dd9e93';
 void main() {
+  test(
+    'original payload business error and HTTP413 are quota failures, never successful exchanges or replays',
+    () async {
+      for (final status in [200, 413]) {
+        var requests = 0;
+        final transport = AppFlowyObjectTransport(
+          origin: Uri.parse('https://cloud.example.test'),
+          workspaceId: workspace,
+          deviceId: 'payload-budget',
+          collabType: 1,
+          accessToken: () async => 'synthetic',
+          boundObjectId: id,
+          binding: const CollaborationBinding(
+            protocol: 'appflowy.full-sync/1',
+            engine: 'test',
+            encoding: 'yrs.update-v1',
+            schema: 'root',
+            epoch: 0,
+          ),
+          client: MockClient((_) async {
+            requests++;
+            return http.Response(
+              status == 200
+                  ? '{"code":1016,"message":"Full sync decoded payload exceeds limit"}'
+                  : '',
+              status,
+              headers: {'content-type': 'application/json'},
+            );
+          }),
+        );
+        await expectLater(
+          transport.exchange(id, Uint8List.fromList([1, 2])),
+          throwsA(
+            isA<AppFlowyTransportFailure>().having(
+              (e) => e.code,
+              'code',
+              'QUOTA_EXCEEDED',
+            ),
+          ),
+        );
+        expect(requests, 1);
+        transport.close();
+      }
+    },
+  );
+
+  test(
+    'bound objects fail before requesting a token or network bytes',
+    () async {
+      final t = AppFlowyObjectTransport(
+        origin: Uri.parse('https://cloud.example.test'),
+        workspaceId: workspace,
+        deviceId: 'scope',
+        collabType: 1,
+        boundObjectId: id,
+        accessToken: () async => throw StateError('must not request token'),
+        binding: const CollaborationBinding(
+          protocol: 'appflowy.full-sync/1',
+          engine: 'test',
+          encoding: 'yrs.update-v1',
+          schema: 'root',
+          epoch: 0,
+        ),
+      );
+      await expectLater(
+        t.readState(workspace),
+        throwsA(
+          isA<AppFlowyTransportFailure>().having(
+            (e) => e.code,
+            'code',
+            'COLLABORATION_OBJECT_MISMATCH',
+          ),
+        ),
+      );
+      t.close();
+    },
+  );
+  test('late responses cannot cross an account lifetime boundary', () async {
+    var active = true;
+    final entered = Completer<void>(), release = Completer<void>();
+    final t = AppFlowyObjectTransport(
+      origin: Uri.parse('https://cloud.example.test'),
+      workspaceId: workspace,
+      deviceId: 'scope',
+      collabType: 1,
+      boundObjectId: id,
+      accessToken: () async => 'synthetic',
+      checkAuthority: () {
+        if (!active) throw const AppFlowyTransportFailure('FORBIDDEN');
+      },
+      binding: const CollaborationBinding(
+        protocol: 'appflowy.full-sync/1',
+        engine: 'test',
+        encoding: 'yrs.update-v1',
+        schema: 'root',
+        epoch: 0,
+      ),
+      client: MockClient((_) async {
+        entered.complete();
+        await release.future;
+        return http.Response('{"code":0,"data":{"doc_state":[1,2]}}', 200);
+      }),
+    );
+    final result = expectLater(
+      t.readState(id),
+      throwsA(
+        isA<AppFlowyTransportFailure>().having(
+          (e) => e.code,
+          'code',
+          'FORBIDDEN',
+        ),
+      ),
+    );
+    await entered.future;
+    active = false;
+    release.complete();
+    await result;
+    t.close();
+  });
   test(
     'a broken idempotent GET is retried only once with fresh authorization',
     () async {
