@@ -1,0 +1,31 @@
+{
+  "observedFrom": "User-provided App Review message and screenshot; no live App Store Connect lookup",
+  "recordedOn": "2026-11-17",
+  "reviewDate": "2026-11-13",
+  "messageTimeDisplayed": "2026-11-13 13:14",
+  "displayTimezone": "not independently verified",
+  "appId": "6827192902",
+  "version": "1.0.0",
+  "build": 16,
+  "submissionId": "feef7887-1297-4f62-afd1-ed77242ec0f5",
+  "reviewDevice": "iPhone 17 Pro Max",
+  "status": "rejected",
+  "issues": [
+    {
+      "guidelines": [
+        "4.1(a)"
+      ],
+      "detail": "Name includes references to Muse; remove misleading third-party content or provide documentary rights evidence"
+    },
+    {
+      "guidelines": [
+        "5.1.1(i)",
+        "5.1.2(i)"
+      ],
+      "detail": "Disclose data and third-party AI recipients and obtain permission before sharing; update privacy policy"
+    }
+  ],
+  "screenshot": "docs/release/runs/2026-11-mobile-isolation/evidence/apple-build16-rejected.png",
+  "screenshotSha256": "25ac3e699fc52869eecfd85afbc01b5260323b647314983c6b4138ae1a5eb69c",
+  "sourceUrl": "https://appstoreconnect.apple.com/apps/6827192902/distribution/ios/version/inflight"
+}

@@ -1,0 +1,105 @@
+{
+  "sourceBranch": "codex/file-viewer-treesitter-links",
+  "originalHead": "80a14f5f6893e97164f2219910e90c3af90f9e35",
+  "releaseBaseline": "093207c7cf55bf614ab6e9199f08c0f766bca884",
+  "releaseBranch": "codex/release/mobile-1.0.2-review-recovery",
+  "commits": [
+    {
+      "commit": "26a18b22",
+      "subject": "docs: reorganize architecture and platform guides with updated links",
+      "pathCount": 179
+    },
+    {
+      "commit": "7a56a472",
+      "subject": "feat(content): add scoped asset repositories and collaboration capabilities",
+      "pathCount": 17
+    },
+    {
+      "commit": "1b4a2181",
+      "subject": "feat(resource-sdk): coordinate resource ownership and transactional close trees",
+      "pathCount": 12
+    },
+    {
+      "commit": "499398ec",
+      "subject": "feat(resource-host): resolve embedded resources and retain mounted surfaces",
+      "pathCount": 25
+    },
+    {
+      "commit": "e7365d75",
+      "subject": "feat(cloud): add document creation sharing invitations and asset transport",
+      "pathCount": 73
+    },
+    {
+      "commit": "c9bee0f9",
+      "subject": "feat(documents): compose SmartDocument and dataset resource lifecycles",
+      "pathCount": 38
+    },
+    {
+      "commit": "a4eb3eaf",
+      "subject": "feat(dsh-transport): trace connection lifecycle and bound session requests",
+      "pathCount": 8
+    },
+    {
+      "commit": "cfd00ce7",
+      "subject": "feat(dsh-state): reconcile history and require approval before prompt sends",
+      "pathCount": 4
+    },
+    {
+      "commit": "2575c3a0",
+      "subject": "feat(conversation): paginate history and present navigable resource links",
+      "pathCount": 7
+    },
+    {
+      "commit": "fedffe6b",
+      "subject": "fix(pairing): bound discovery and improve relay connection recovery",
+      "pathCount": 8
+    },
+    {
+      "commit": "88f6c8ed",
+      "subject": "feat(runtime-config): resolve regional document locations and onboarding",
+      "pathCount": 50
+    },
+    {
+      "commit": "631eec76",
+      "subject": "fix(plugin-market): preserve connection and navigation management state",
+      "pathCount": 7
+    },
+    {
+      "commit": "f3aabeb5",
+      "subject": "feat(mobile): isolate document plugins and restore paired conversation state",
+      "pathCount": 25
+    },
+    {
+      "commit": "ce13004f",
+      "subject": "feat(desktop): integrate document embedding and resource session ownership",
+      "pathCount": 58
+    },
+    {
+      "commit": "1daf2856",
+      "subject": "feat(web): add browser document routes and workspace session integration",
+      "pathCount": 10
+    },
+    {
+      "commit": "96c43eb8",
+      "subject": "feat(dsh-agent): enforce store AI sharing flow and resource media types",
+      "pathCount": 11
+    },
+    {
+      "commit": "b7cef57d",
+      "subject": "fix(office-viewers): refine native document inspection",
+      "pathCount": 1
+    },
+    {
+      "commit": "c84b979f",
+      "subject": "build(release): validate mobile payload closure and regional signed configuration",
+      "pathCount": 16
+    },
+    {
+      "commit": "093207c7",
+      "subject": "docs(release): initialize mobile dependency isolation scope and stage receipts",
+      "pathCount": 18
+    }
+  ],
+  "candidateTextCredentialPatternMatches": 0,
+  "fullSecurityAudit": false
+}

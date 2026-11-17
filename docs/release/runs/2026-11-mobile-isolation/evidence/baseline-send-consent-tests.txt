@@ -1,0 +1,7 @@
+00:00 +0: loading test/send_consent_test.dart
+00:00 +0: declining AI sharing sends no prompt and creates no pending message
+00:00 +1: recipient changes during consent cannot receive the approved prompt
+00:00 +2: an explicitly approved prompt uses the normal gateway
+OpenMuse prompt: session=review-session request=flutter-1794884642864726-0 chars=21 mode=queue
+OpenMuse prompt: accepted request=flutter-1794884642864726-0
+00:00 +3: All tests passed!

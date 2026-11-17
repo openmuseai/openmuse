@@ -4,6 +4,10 @@
 
 规划版本为 **1.0.2**，拟覆盖国内 Android、中国区 iOS、Google Play 和美区 iOS；版本和渠道待产品负责人锁定，构建号须查询渠道后分配。既有 1.0.0 和 1.0.1 发布记录不变。本轮尚未冻结源码、生成正式包、上传或提审。
 
+## Apple 拒审整改
+
+2026 年 11 月 13 日，iOS 1.0.0 build 16 因名称中的 Muse 引用和 AI 数据分享披露及事前授权被拒。已从分类提交基线建立发布分支；本轮增加品牌与隐私两条 P0 整改线，详见 [重新提审计划](REVIEW-RECOVERY.zh-CN.md)。
+
 ## 功能边界
 
 | 范围 | 本轮行为 | 验收要求 |
@@ -45,7 +49,7 @@ SmartDocument 的 vendor 目录含 AppFlowy 编辑器双许可文本以及 SiYua
 
 ## 执行与关口
 
-按 `stages/*.json` 保存十二个阶段的真实状态。当前范围为 partial，开发为 in_progress，其余阶段 pending。源码冻结、来源审查、真机回归和最终签名包检查完成前，不进入上传和提审。
+按 `stages/*.json` 保存十二个阶段的真实状态。当前范围为 partial，开发与隐私为 in_progress，其余阶段 pending。源码冻结、来源审查、真机回归和最终签名包检查完成前，不进入上传和提审。
 
 ```sh
 python3 scripts/release/pipeline.py plan --run docs/release/runs/2026-11-mobile-isolation

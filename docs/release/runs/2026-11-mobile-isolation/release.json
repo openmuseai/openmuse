@@ -13,9 +13,10 @@
   "sourceFrozen": false,
   "sourceRevisions": {
     "Muse-Client": {
-      "commit": "80a14f5f6893e97164f2219910e90c3af90f9e35",
-      "dirty": true,
-      "role": "inspection baseline only; not frozen build inputs"
+      "commit": "093207c7cf55bf614ab6e9199f08c0f766bca884",
+      "role": "committed development baseline; not a frozen release snapshot",
+      "trackedDirtyAtBaseline": false,
+      "untrackedLocalArtifactCount": 1145
     }
   },
   "artifacts": [],
@@ -45,5 +46,16 @@
     "versionAndLanes": "Proposed; scope owner has not locked channels/version",
     "buildNumbers": "unallocated; query stores before assignment"
   },
-  "scopeDocument": "docs/release/runs/2026-11-mobile-isolation/README.zh-CN.md"
+  "scopeDocument": "docs/release/runs/2026-11-mobile-isolation/README.zh-CN.md",
+  "branch": "codex/release/mobile-1.0.2-review-recovery",
+  "baselineCommit": "093207c7cf55bf614ab6e9199f08c0f766bca884",
+  "recoveryPlan": "docs/release/runs/2026-11-mobile-isolation/REVIEW-RECOVERY.zh-CN.md",
+  "previousAppleSubmission": {
+    "version": "1.0.0",
+    "build": 16,
+    "status": "rejected",
+    "submissionId": "feef7887-1297-4f62-afd1-ed77242ec0f5",
+    "reviewDate": "2026-11-13",
+    "evidence": "docs/release/runs/2026-11-mobile-isolation/evidence/apple-build16-rejection.json"
+  }
 }

@@ -2,11 +2,13 @@
   "id": "02-development",
   "status": "in_progress",
   "owner": "",
-  "summary": "完成 Mobile 依赖和预装资源隔离首批改造；兼容标识、来源审查、升级迁移和最终包检查仍待办",
+  "summary": "19 个分类提交已入库并建立发布分支；AI 全路径授权、品牌改造、旧标识和迁移等 P0 尚未全部完成",
   "evidence": [
     "docs/release/runs/2026-11-mobile-isolation/README.zh-CN.md",
     "docs/release/runs/2026-11-mobile-isolation/evidence/source-audit.json",
-    "docs/release/runs/2026-11-mobile-isolation/evidence/verification.json"
+    "docs/release/runs/2026-11-mobile-isolation/evidence/verification.json",
+    "docs/release/runs/2026-11-mobile-isolation/REVIEW-RECOVERY.zh-CN.md",
+    "docs/release/runs/2026-11-mobile-isolation/evidence/apple-build16-rejection.json"
   ],
   "exceptions": []
 }

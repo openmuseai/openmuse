@@ -101,3 +101,5 @@ python3 scripts/release/pipeline.py verify-archive \
 [2026 年 11 月国内发布执行记录](../runs/2026-11-china/README.zh-CN.md)：本轮选定华为 Android 与中国区 iOS 1.0.1，保留美区既有审核；生产签名配置已上线，当前仍在正式包和材料前置检查中，尚未上传或送审。
 
 [Mobile 文档依赖隔离版本](../runs/2026-11-mobile-isolation/README.zh-CN.md)：已启动范围与开发阶段，规划 1.0.2；SiYuan 和旧 Office 依赖隔离、SmartDocument 来源审查、最终包检查及升级迁移按独立待办推进。
+
+[Apple 拒审整改与重新提审计划](../runs/2026-11-mobile-isolation/REVIEW-RECOVERY.zh-CN.md)：build 16 于 11 月 13 日被拒；名称与 AI 分享授权整改并入 Mobile 发布，范围 partial、开发及隐私 in_progress。

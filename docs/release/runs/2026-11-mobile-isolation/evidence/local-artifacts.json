@@ -1,0 +1,4586 @@
+{
+  "disposition": "Kept in original local paths, not committed or approved as release inputs",
+  "count": 1145,
+  "files": [
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/candidate.json",
+      "bytes": 6230
+    },
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/connection-lifecycle.browser-check.json",
+      "bytes": 21222
+    },
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/connection-lifecycle.delivery.json",
+      "bytes": 639
+    },
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/connection-lifecycle.finalize-summary.json",
+      "bytes": 9309
+    },
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/connection-lifecycle.finalize.json",
+      "bytes": 47275
+    },
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/connection-lifecycle.html",
+      "bytes": 773509
+    },
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/connection-lifecycle.visual-check.1440x900.dark.png",
+      "bytes": 121378
+    },
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/connection-lifecycle.visual-check.1440x900.light.png",
+      "bytes": 109591
+    },
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/connection-lifecycle.visual-check.2048x1320.dark.png",
+      "bytes": 181985
+    },
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/connection-lifecycle.visual-check.2048x1320.light.png",
+      "bytes": 161696
+    },
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/connection-lifecycle.visual-check.html",
+      "bytes": 1964
+    },
+    {
+      "path": ".archify/lifecycle-connection-20261110-164345/connection-lifecycle.visual-check.json",
+      "bytes": 28914
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/accuracy-fix/cold-start.browser-check.json",
+      "bytes": 21582
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/accuracy-fix/cold-start.finalize-summary.json",
+      "bytes": 1622
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/accuracy-fix/cold-start.finalize.json",
+      "bytes": 36138
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/candidate.json",
+      "bytes": 7781
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/cold-start.browser-check.json",
+      "bytes": 21465
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/cold-start.delivery.json",
+      "bytes": 626
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/cold-start.finalize-summary.json",
+      "bytes": 1583
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/cold-start.finalize.json",
+      "bytes": 35847
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/cold-start.html",
+      "bytes": 769622
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/content-fix/cold-start.browser-check.json",
+      "bytes": 21581
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/content-fix/cold-start.finalize-summary.json",
+      "bytes": 1619
+    },
+    {
+      "path": ".archify/sequence-cold-start-20261110-164345/content-fix/cold-start.finalize.json",
+      "bytes": 36134
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/accuracy-fix/desktop-cold-start.browser-check.json",
+      "bytes": 21245
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/accuracy-fix/desktop-cold-start.finalize-summary.json",
+      "bytes": 1694
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/accuracy-fix/desktop-cold-start.finalize.json",
+      "bytes": 36003
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/candidate.json",
+      "bytes": 6731
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/content-fix/desktop-cold-start.browser-check.json",
+      "bytes": 21244
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/content-fix/desktop-cold-start.finalize-summary.json",
+      "bytes": 1691
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/content-fix/desktop-cold-start.finalize.json",
+      "bytes": 35997
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/desktop-cold-start.browser-check.json",
+      "bytes": 21120
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/desktop-cold-start.delivery.json",
+      "bytes": 650
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/desktop-cold-start.finalize-summary.json",
+      "bytes": 2593
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/desktop-cold-start.finalize.json",
+      "bytes": 35691
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/desktop-cold-start.html",
+      "bytes": 764155
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/width-review/desktop-cold-start.browser-check.json",
+      "bytes": 21245
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/width-review/desktop-cold-start.finalize-summary.json",
+      "bytes": 1694
+    },
+    {
+      "path": ".archify/sequence-desktop-cold-start-20261110-164345/width-review/desktop-cold-start.finalize.json",
+      "bytes": 36002
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/.archify/sequence-warm-start-20261110-164345/warm-start.delivery-pending.json",
+      "bytes": 445
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/.archify/sequence-warm-start-20261110-164345/width-review/warm-start.finalize-summary.json",
+      "bytes": 2665
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/.archify/sequence-warm-start-20261110-164345/width-review/warm-start.finalize.json",
+      "bytes": 5161
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/candidate.json",
+      "bytes": 7538
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/warm-start.browser-check.json",
+      "bytes": 21501
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/warm-start.delivery.json",
+      "bytes": 626
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/warm-start.finalize-summary.json",
+      "bytes": 2521
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/warm-start.finalize.json",
+      "bytes": 35879
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/warm-start.html",
+      "bytes": 769252
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/width-review/warm-start.browser-check.json",
+      "bytes": 21618
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/width-review/warm-start.finalize-summary.json",
+      "bytes": 1622
+    },
+    {
+      "path": ".archify/sequence-warm-start-20261110-164345/width-review/warm-start.finalize.json",
+      "bytes": 36174
+    },
+    {
+      "path": ".archify/workflow-connect-decision-20261110-164345/accuracy-fix/connect-decision.browser-check.json",
+      "bytes": 41370
+    },
+    {
+      "path": ".archify/workflow-connect-decision-20261110-164345/accuracy-fix/connect-decision.finalize-summary.json",
+      "bytes": 4260
+    },
+    {
+      "path": ".archify/workflow-connect-decision-20261110-164345/accuracy-fix/connect-decision.finalize.json",
+      "bytes": 61858
+    },
+    {
+      "path": ".archify/workflow-connect-decision-20261110-164345/candidate.json",
+      "bytes": 7241
+    },
+    {
+      "path": ".archify/workflow-connect-decision-20261110-164345/connect-decision.browser-check.json",
+      "bytes": 41247
+    },
+    {
+      "path": ".archify/workflow-connect-decision-20261110-164345/connect-decision.delivery.json",
+      "bytes": 644
+    },
+    {
+      "path": ".archify/workflow-connect-decision-20261110-164345/connect-decision.finalize-summary.json",
+      "bytes": 4221
+    },
+    {
+      "path": ".archify/workflow-connect-decision-20261110-164345/connect-decision.finalize.json",
+      "bytes": 61555
+    },
+    {
+      "path": ".archify/workflow-connect-decision-20261110-164345/connect-decision.html",
+      "bytes": 768013
+    },
+    {
+      "path": "app/openmuse_mobile/android/app/src/main/jniLibs/arm64-v8a/libkspfreetext.so",
+      "bytes": 2156000
+    },
+    {
+      "path": "app/openmuse_mobile/android/app/src/main/jniLibs/arm64-v8a/libopenmuse_gridcraft_bridge.so",
+      "bytes": 13477992
+    },
+    {
+      "path": "app/openmuse_mobile/android/app/src/main/jniLibs/arm64-v8a/libpdfium.so",
+      "bytes": 6766424
+    },
+    {
+      "path": "app/openmuse_mobile/android/app/src/main/jniLibs/arm64-v8a/libword_core.so",
+      "bytes": 1524808
+    },
+    {
+      "path": "app/openmuse_mobile/android/app/src/main/jniLibs/arm64-v8a/libword_core_ffi.so",
+      "bytes": 10271104
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/01-备案信息表.zh-CN.md",
+      "bytes": 5796
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/02-商店文案.zh-CN-en.md",
+      "bytes": 5742
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/03-隐私与数据申报.zh-CN.md",
+      "bytes": 4329
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/04-上架前清单.zh-CN.md",
+      "bytes": 5840
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/05-正式签名证书准备.zh-CN.md",
+      "bytes": 7285
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/06-iOS-正式证书备案值.txt",
+      "bytes": 1729
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/07-Android-正式证书备案值.txt",
+      "bytes": 2764
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/08-鸿蒙-正式证书备案值.txt",
+      "bytes": 848
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/09-国内海外上架流水线.zh-CN.md",
+      "bytes": 18168
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/10-单次发布记录模板.zh-CN.md",
+      "bytes": 2781
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/11-2026-10-28-内部候选构建记录.zh-CN.md",
+      "bytes": 4864
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/12-域名与联网审计.zh-CN.md",
+      "bytes": 2689
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/13-Google-Play-上架操作记录-2026-10-28.zh-CN.md",
+      "bytes": 13599
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/14-Apple-美区上架操作记录-2026-10-29.zh-CN.md",
+      "bytes": 19349
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/14-全球化移动验收-2026-10-30.zh-CN.md",
+      "bytes": 9763
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/15-Apple-US-store-metadata.en.json",
+      "bytes": 3492
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/16-Mobile-界面整改与验收-2026-10-31.zh-CN.md",
+      "bytes": 7879
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/README.zh-CN.md",
+      "bytes": 10402
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/AppleDistribution-2026.cer",
+      "bytes": 1577
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/OpenMuse-Android-Release-2026.cer",
+      "bytes": 2109
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/OpenMuse-HarmonyOS-Release-2026.cer",
+      "bytes": 1099
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/app-icon-1024.png",
+      "bytes": 525102
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/app-store-connect-created.png",
+      "bytes": 45148
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/apple-age-rating-draft-20261029.png",
+      "bytes": 58115
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/apple-export-no-docs-us-20261029.png",
+      "bytes": 61302
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/apple-privacy-confirmation-20261029.png",
+      "bytes": 49560
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/apple-privacy-published-20261029.png",
+      "bytes": 39048
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/apple-upload-build3-20261029.png",
+      "bytes": 174943
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/apple-upload-build4-20261029.png",
+      "bytes": 65595
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/apple-us-availability-20261029.png",
+      "bytes": 41201
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/apple-us-name-saved-20261029.png",
+      "bytes": 33138
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/apple-us-version-metadata-20261029.png",
+      "bytes": 72204
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/apple-validation-build3-20261029.png",
+      "bytes": 173591
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/apple-validation-failed-build2-20261029.png",
+      "bytes": 204158
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/google-play-feature-1024x500.png",
+      "bytes": 471360
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/google-play-icon-512.png",
+      "bytes": 169992
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/huawei-harmony-app-id-created.png",
+      "bytes": 41298
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/huawei-harmony-profile-created.png",
+      "bytes": 51781
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/openmuseai-com-icp-footer-20261027.jpg",
+      "bytes": 31781
+    },
+    {
+      "path": "docs/design/legal-onboarding/evidence/desktop-en-dark.png",
+      "bytes": 156765
+    },
+    {
+      "path": "docs/design/legal-onboarding/evidence/desktop-en-light.png",
+      "bytes": 157925
+    },
+    {
+      "path": "docs/design/legal-onboarding/evidence/desktop-short.png",
+      "bytes": 133996
+    },
+    {
+      "path": "docs/design/legal-onboarding/evidence/ios-native/legal-first-use.png",
+      "bytes": 225405
+    },
+    {
+      "path": "docs/design/legal-onboarding/evidence/ios-native/result.json",
+      "bytes": 199
+    },
+    {
+      "path": "docs/design/legal-onboarding/evidence/large-text.png",
+      "bytes": 62707
+    },
+    {
+      "path": "docs/design/legal-onboarding/evidence/phone-en-light.png",
+      "bytes": 98178
+    },
+    {
+      "path": "docs/design/legal-onboarding/evidence/phone-zh-dark.png",
+      "bytes": 96510
+    },
+    {
+      "path": "docs/design/legal-onboarding/evidence/small-phone.png",
+      "bytes": 75513
+    },
+    {
+      "path": "docs/design/legal-onboarding/evidence/tablet.png",
+      "bytes": 104126
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-11/connection-probe-summary.txt",
+      "bytes": 897
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-11/connection-probe.jsonl",
+      "bytes": 62131
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-11/desktop-cn-fixed-trace.jsonl",
+      "bytes": 4121115
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-11/desktop-cn-trace.jsonl",
+      "bytes": 554398
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-11/mobile-cn-trace.jsonl",
+      "bytes": 752856
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-11/real-device-cn-session-catalog.json",
+      "bytes": 447
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-13/desktop-resource-delivered-trace.jsonl",
+      "bytes": 1903
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-13/desktop-resource-final-trace.jsonl",
+      "bytes": 1903
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-13/desktop-resource-mobile-e2e-trace.jsonl",
+      "bytes": 5291
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-13/desktop-resource-trace.jsonl",
+      "bytes": 7630
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-13/mobile-resource-e2e-result.json",
+      "bytes": 489
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-13/mobile-resource-e2e-trace.jsonl",
+      "bytes": 32012
+    },
+    {
+      "path": "docs/devices-ctrl/evidence/2026-11-13/resource-owner-ui-acceptance.json",
+      "bytes": 2368
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/README.zh-CN.md",
+      "bytes": 2231
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/android-closed.png",
+      "bytes": 47598
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/android-keyboard.png",
+      "bytes": 65524
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/android/layout.json",
+      "bytes": 440
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/android/result.json",
+      "bytes": 242
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/artifacts.json",
+      "bytes": 5452
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/before-user.png",
+      "bytes": 225396
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/installations.json",
+      "bytes": 420
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/ios-closed.png",
+      "bytes": 53411
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/ios-keyboard.png",
+      "bytes": 69356
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/ios/layout.json",
+      "bytes": 436
+    },
+    {
+      "path": "docs/evidence/mobile-tasks-bottom/2026-11-02/ios/native-suite.json",
+      "bytes": 242
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/PRIVACY-INVENTORY.md",
+      "bytes": 7886
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/REVIEW-NOTES.en.txt",
+      "bytes": 2590
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/SPRINT.md",
+      "bytes": 31000
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/STORE-CHECKLIST.md",
+      "bytes": 3929
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/STORE-METADATA.en.json",
+      "bytes": 3788
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/android-bundled-guide-fixed.json",
+      "bytes": 341
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/android-candidate8.json",
+      "bytes": 715
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/android-connected-reporting.json",
+      "bytes": 626
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/android-connected9.json",
+      "bytes": 258
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/android-documents82.json",
+      "bytes": 432
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/android-illustrated-guide.json",
+      "bytes": 419
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/android-launch-polish.json",
+      "bytes": 462
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/android-notes-rebuilt-kernel.json",
+      "bytes": 284
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/android-permissions-build12.json",
+      "bytes": 519
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/app-store-build14-upload.json",
+      "bytes": 392
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/app-store-build15-upload.json",
+      "bytes": 1822
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/app-store-build16-upload.json",
+      "bytes": 2121
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/app-store-english-metadata.jpg",
+      "bytes": 167561
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/app-store-privacy-updated.jpg",
+      "bytes": 105449
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-build15-not-yet-listed.txt",
+      "bytes": 6869
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-build15-processing-error-90683.txt",
+      "bytes": 371
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-build15-transporter-delivered.jpg",
+      "bytes": 94794
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-build15-xcode-validation.txt",
+      "bytes": 704
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-build16-submitted-confirmation.txt",
+      "bytes": 992
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-build16-testflight-processed.txt",
+      "bytes": 11288
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-encryption-us-questionnaire.json",
+      "bytes": 629
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-encryption-us-questionnaire.txt",
+      "bytes": 3523
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-privacy-url-reverified.txt",
+      "bytes": 11738
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-us-pricing-verification.txt",
+      "bytes": 434
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-version-preflight-incomplete.txt",
+      "bytes": 17332
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/apple-version-preflight-latest.txt",
+      "bytes": 16739
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/build11-validation.json",
+      "bytes": 904
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/bundled-guide-compatibility.json",
+      "bytes": 294
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-build14-internal-published.txt",
+      "bytes": 7548
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-build14-preflight.txt",
+      "bytes": 8068
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-build14-production-preflight.txt",
+      "bytes": 7888
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-build14-testers.txt",
+      "bytes": 8503
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-build14-upload.json",
+      "bytes": 580
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-data-safety-updated.txt",
+      "bytes": 8701
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-device-install14.json",
+      "bytes": 1218
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-listing-draft-state.txt",
+      "bytes": 12330
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-production-submitted.jpg",
+      "bytes": 164107
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-production-submitted.txt",
+      "bytes": 12111
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-review-access.jpg",
+      "bytes": 155041
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/google-play-target-audience.jpg",
+      "bytes": 27700
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/illustrated-guide-provenance.json",
+      "bytes": 922
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/ios-archive15-ffi-gate.txt",
+      "bytes": 84
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/ios-archive15-guide-reopen.json",
+      "bytes": 368
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/ios-bundled-guide-fixed.json",
+      "bytes": 93
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/ios-connected-reporting.json",
+      "bytes": 684
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/ios-illustrated-guide-first-attempt.json",
+      "bytes": 4953
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/ios-illustrated-guide.json",
+      "bytes": 334
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/ios-launch-polish.json",
+      "bytes": 377
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/ios-notes-native-touch.json",
+      "bytes": 241
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/ios-notes-release-ffi-defect.json",
+      "bytes": 695
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/macos-legal-build.json",
+      "bytes": 269
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/notes-embedded-build-provenance.json",
+      "bytes": 2367
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/online-illustrated-guide.jpg",
+      "bytes": 177961
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/release-source-manifest-20261103.json",
+      "bytes": 393234
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/slides82-publication.json",
+      "bytes": 186
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/us-account-deletion-api.json",
+      "bytes": 530
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/us-content-reports-api.json",
+      "bytes": 252
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/us-illustrated-guide-deployment.json",
+      "bytes": 670
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/us-legal-console-alignment.json",
+      "bytes": 429
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/us-legal-pages-20261103.json",
+      "bytes": 823
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/us-linux-legal-staged.json",
+      "bytes": 324
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/us-review-service-final-check.json",
+      "bytes": 819
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/us-runtime-publication-build11.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/us-web-launch-polish.json",
+      "bytes": 343
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/us-web-legal-deployment.json",
+      "bytes": 323
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/evidence/us-workspace-illustrated-guide.json",
+      "bytes": 218
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/android-build12/01-home.json",
+      "bytes": 308
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/android-build12/01-home.png",
+      "bytes": 134599
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/android-build12/02-notes-guide.json",
+      "bytes": 308
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/android-build12/02-notes-guide.png",
+      "bytes": 284167
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/android-build14/01-home.json",
+      "bytes": 308
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/android-build14/01-home.png",
+      "bytes": 132344
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/android-build14/02-notes-guide.json",
+      "bytes": 308
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/android-build14/02-notes-guide.png",
+      "bytes": 248136
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/android-build14/03-slides.json",
+      "bytes": 308
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/android-build14/03-slides.png",
+      "bytes": 153218
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ios-build14/01-home.json",
+      "bytes": 334
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ios-build14/01-home.png",
+      "bytes": 157386
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ios-build14/04-apps.json",
+      "bytes": 355
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ios-build14/04-apps.png",
+      "bytes": 228825
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ios-build15/01-home.json",
+      "bytes": 320
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ios-build15/01-home.png",
+      "bytes": 157569
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ios-build15/02-notes-guide.json",
+      "bytes": 257
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ios-build15/02-notes-guide.png",
+      "bytes": 314684
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ios-build15/03-slides.json",
+      "bytes": 257
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ios-build15/03-slides.png",
+      "bytes": 213849
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ipad13-build15/01-home.json",
+      "bytes": 395
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ipad13-build15/01-home.png",
+      "bytes": 198084
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ipad13-build15/03-slides.json",
+      "bytes": 395
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/ipad13-build15/03-slides.png",
+      "bytes": 293539
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/iphone-medium-build15/01-home.json",
+      "bytes": 389
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/iphone-medium-build15/01-home.png",
+      "bytes": 190152
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/iphone-medium-build15/03-slides.json",
+      "bytes": 389
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/store-assets/iphone-medium-build15/03-slides.png",
+      "bytes": 215467
+    },
+    {
+      "path": "docs/release/overseas-2026-11-02/welcome-manifest.json",
+      "bytes": 419
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/README.zh-CN.md",
+      "bytes": 9642
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/archive-inputs.json",
+      "bytes": 79104
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/channels/huawei-android.json",
+      "bytes": 2726
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/channels/ios-cn.json",
+      "bytes": 1829
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/channels/oppo.json",
+      "bytes": 878
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/channels/vivo.json",
+      "bytes": 874
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/channels/xiaomi.json",
+      "bytes": 1121
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/android-101-17-device-install.json",
+      "bytes": 531
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/android-101-18-acceptance.json",
+      "bytes": 2180
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/android-101-18-source-binary-verification.json",
+      "bytes": 488
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/android-101-19-acceptance.json",
+      "bytes": 2371
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/android-101-19-guide-check.json",
+      "bytes": 299
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/android-101-19-source-binary-verification.json",
+      "bytes": 531
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/archive-input-review-19.json",
+      "bytes": 445
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/automated-checks.json",
+      "bytes": 997
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/build-log-input-review.json",
+      "bytes": 127
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/build-space-recovery-2.json",
+      "bytes": 1871
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/build-space-recovery.json",
+      "bytes": 428
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/candidate-20-verification.json",
+      "bytes": 897
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/china-review-account-preparation.json",
+      "bytes": 446
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/china-runtime-defines.json",
+      "bytes": 2641
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/china-runtime-preflight.json",
+      "bytes": 571
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/china-runtime-validation.json",
+      "bytes": 247
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/cn-account-deletion-api-qa.json",
+      "bytes": 577
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/cn-content-report-anonymous-check.json",
+      "bytes": 346
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/cn-content-report-authenticated-qa.json",
+      "bytes": 434
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/cn-content-report-deployment.json",
+      "bytes": 758
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/cn-preparation-checks.json",
+      "bytes": 1388
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/cn-review-desktop-deployment.json",
+      "bytes": 1825
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/cn-speech-resource-deployment.json",
+      "bytes": 1147
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/continuation-20-status.json",
+      "bytes": 1617
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/desktop-keyring-user-completion.json",
+      "bytes": 367
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/disk-recovery.json",
+      "bytes": 613
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/existing-artifacts-inventory.json",
+      "bytes": 12469
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/filing-android.png",
+      "bytes": 210230
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/filing-console-verification.json",
+      "bytes": 557
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/filing-harmony.png",
+      "bytes": 217114
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/filing-identity-check.json",
+      "bytes": 1300
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/filing-ios.png",
+      "bytes": 209347
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/final-android-filing-signature.json",
+      "bytes": 252
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/final-binary-identity.json",
+      "bytes": 1383
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/final-runtime-online.json",
+      "bytes": 541
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/frozen-source-verification.json",
+      "bytes": 472
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/gates.json",
+      "bytes": 1011
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/huawei-101-19-review-receipt.json",
+      "bytes": 1394
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/huawei-android-created.json",
+      "bytes": 1733
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/huawei-draft-progress.json",
+      "bytes": 2826
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/ios-101-17-upload.json",
+      "bytes": 13151
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/ios-101-20-console-continuation.json",
+      "bytes": 2392
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/ios-101-20-testflight-processing.json",
+      "bytes": 564
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/ios-101-20-upload.json",
+      "bytes": 516
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/ios-console-preflight.json",
+      "bytes": 795
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/mobile-host-copyright-application-status.json",
+      "bytes": 4291
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/mobile-source-snapshot.json",
+      "bytes": 293
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/pre-submit-archive-19.json",
+      "bytes": 463
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/pre-submit-gate-19.json",
+      "bytes": 497
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/production-service-identities.json",
+      "bytes": 531
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/public-endpoints.json",
+      "bytes": 1010
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/runtime/china-active.jws",
+      "bytes": 2733
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/runtime/china-bundle-source.json",
+      "bytes": 3336
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/runtime/china-bundle.json",
+      "bytes": 3565
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/runtime/china-runtime-defines.json",
+      "bytes": 2933
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/runtime/ios-production-input-report.json",
+      "bytes": 99
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/runtime/ios-runtime-defines.json",
+      "bytes": 5686
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/runtime/live-client-verification.json",
+      "bytes": 541
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/runtime/production-input-report.json",
+      "bytes": 99
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/runtime/publication.json",
+      "bytes": 616
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/source-inventory.json",
+      "bytes": 3153
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/temporary-device-configuration.json",
+      "bytes": 312
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/user-direction-20.json",
+      "bytes": 716
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/evidence/vivo-101-20-draft-progress.json",
+      "bytes": 4556
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/OpenMuse-Mobile-Host-Copyright-Draft/OpenMuse-Mobile-Host-Application-Draft.pdf",
+      "bytes": 81075
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/OpenMuse-Mobile-Host-Copyright-Draft/OpenMuse-Mobile-Host-Manual.pdf",
+      "bytes": 208107
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/OpenMuse-Mobile-Host-Copyright-Draft/OpenMuse-Mobile-Host-Source-60pages.pdf",
+      "bytes": 122810
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/OpenMuse-Mobile-Host-Copyright-Draft/application-fields.json",
+      "bytes": 930
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/OpenMuse-Mobile-Host-Copyright-Draft/application-status.json",
+      "bytes": 2912
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/OpenMuse-Mobile-Host-Copyright-Draft/final-material-review.json",
+      "bytes": 3092
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/OpenMuse-Mobile-Host-Copyright-Draft/host-code-audit.json",
+      "bytes": 9371
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/OpenMuse-Mobile-Host-Copyright-Draft/source-selection.json",
+      "bytes": 19017
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/OpenMuse-Mobile-Host-Copyright-Draft/上架衔接说明.txt",
+      "bytes": 1387
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/OpenMuse-Mobile-Host-Copyright-Draft/提交说明.txt",
+      "bytes": 1757
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/ai/OpenMuse-AI-技术说明与补证清单.docx",
+      "bytes": 39819
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/ai/OpenMuse-AI-技术说明与补证清单.pdf",
+      "bytes": 172868
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/ai/delivery-surface-audit.json",
+      "bytes": 1198
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/ai/huawei-byok-review-inquiry.zh-CN.txt",
+      "bytes": 1297
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/ai/huawei-official-unsigned-template.docx",
+      "bytes": 33867
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/ai/qualification-checklist.json",
+      "bytes": 2534
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/huawei-icon-216.png",
+      "bytes": 28581
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/ios-101-20-acceptance.txt",
+      "bytes": 1403
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/ios-101-20-metadata.zh-Hans.json",
+      "bytes": 3089
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/permission-source-inventory.json",
+      "bytes": 1252
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/permissions/OpenMuse-Android-1.0.1-18-权限与真机验收.pdf",
+      "bytes": 1034706
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/permissions/OpenMuse-Android-1.0.1-19-国内指南验收补充.pdf",
+      "bytes": 662972
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/permissions/evidence.json",
+      "bytes": 1624
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/permissions/huawei-technical-permission-pack-19.json",
+      "bytes": 961
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/permissions/huawei-technical-permission-pack.json",
+      "bytes": 838
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/review-notes.zh-CN.txt",
+      "bytes": 1382
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-17/01-home.json",
+      "bytes": 614
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-17/01-home.png",
+      "bytes": 141556
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-17/02-notes-saved.json",
+      "bytes": 599
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-17/02-notes-saved.png",
+      "bytes": 94065
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-17/03-slides-edited.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-17/03-slides-edited.png",
+      "bytes": 184746
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-17/04-slides-reopened.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-17/04-slides-reopened.png",
+      "bytes": 176259
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-17/05-home-portrait.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-17/05-home-portrait.png",
+      "bytes": 166399
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/01-slides-saved-reopened.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/01-slides-saved-reopened.png",
+      "bytes": 171513
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/02-home.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/02-home.png",
+      "bytes": 162265
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/03-notes-saved-reopened.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/03-notes-saved-reopened.png",
+      "bytes": 96191
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/04-cn-login-desktop-empty.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/04-cn-login-desktop-empty.png",
+      "bytes": 172075
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/05-microphone-rationale.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/05-microphone-rationale.png",
+      "bytes": 194675
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/06-android-microphone-permission.png",
+      "bytes": 204794
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/07-microphone-denied.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/07-microphone-denied.png",
+      "bytes": 252459
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/08-apps-after-microphone-denial.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/08-apps-after-microphone-denial.png",
+      "bytes": 191492
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/09-speech-model-installed.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/09-speech-model-installed.png",
+      "bytes": 103123
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/10-version-and-filing.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/10-version-and-filing.png",
+      "bytes": 134443
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/11-account-deletion-explanation.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-18/11-account-deletion-explanation.png",
+      "bytes": 140031
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/01-cn-guide.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/01-cn-guide.png",
+      "bytes": 245715
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/02-guide-external-link-target.json",
+      "bytes": 395
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/02-guide-external-link-target.png",
+      "bytes": 386767
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/03-guide-home-image.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/03-guide-home-image.png",
+      "bytes": 241254
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/04-guide-notes-image.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/04-guide-notes-image.png",
+      "bytes": 129368
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/05-guide-slides-image.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/05-guide-slides-image.png",
+      "bytes": 271252
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/06-home.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/06-home.png",
+      "bytes": 137701
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/07-version-and-filing.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/07-version-and-filing.png",
+      "bytes": 137773
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/08-slides.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/08-slides.png",
+      "bytes": 169100
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/09-slides-edited-reopened.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/09-slides-edited-reopened.png",
+      "bytes": 172730
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/10-slides-edited-reopened-twice.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-19/10-slides-edited-reopened-twice.png",
+      "bytes": 173410
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-20/01-home.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-20/01-home.png",
+      "bytes": 137850
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-20/02-cn-guide.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-20/02-cn-guide.png",
+      "bytes": 246872
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-20/03-slides.json",
+      "bytes": 448
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/screenshots/android-1.0.1-20/03-slides.png",
+      "bytes": 172512
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/store-metadata.zh-Hans.json",
+      "bytes": 2287
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/vivo-byok-and-copyright-inquiry.zh-CN.txt",
+      "bytes": 1296
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/materials/vivo-icon-512.png",
+      "bytes": 169992
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/operations.zh-CN.md",
+      "bytes": 2414
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/ops/review-desktop/openmuse-cn-review-desktop.service",
+      "bytes": 659
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/ops/review-desktop/openmuse-cn-review-novnc.service",
+      "bytes": 422
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/ops/review-desktop/openmuse-cn-review-vnc.service",
+      "bytes": 470
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/ops/review-desktop/openmuse-cn-review-window-manager.service",
+      "bytes": 358
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/ops/review-desktop/openmuse-cn-review-xvfb.service",
+      "bytes": 361
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/release.json",
+      "bytes": 11167
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/01-scope.json",
+      "bytes": 476
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/02-development.json",
+      "bytes": 934
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/03-privacy.json",
+      "bytes": 1015
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/04-tests.json",
+      "bytes": 942
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/05-build.json",
+      "bytes": 1011
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/06-binary.json",
+      "bytes": 981
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/07-materials.json",
+      "bytes": 1402
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/08-upload.json",
+      "bytes": 1359
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/09-submit.json",
+      "bytes": 945
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/10-review.json",
+      "bytes": 310
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/11-publish.json",
+      "bytes": 118
+    },
+    {
+      "path": "docs/release/runs/2026-11-china/stages/12-archive.json",
+      "bytes": 118
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/archive-inputs.json",
+      "bytes": 18
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/release.json",
+      "bytes": 397
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/01-scope.json",
+      "bytes": 116
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/02-development.json",
+      "bytes": 122
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/03-privacy.json",
+      "bytes": 118
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/04-tests.json",
+      "bytes": 116
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/05-build.json",
+      "bytes": 116
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/06-binary.json",
+      "bytes": 117
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/07-materials.json",
+      "bytes": 120
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/08-upload.json",
+      "bytes": 117
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/09-submit.json",
+      "bytes": 117
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/10-review.json",
+      "bytes": 117
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/11-publish.json",
+      "bytes": 118
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos-direct/stages/12-archive.json",
+      "bytes": 118
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/README.zh-CN.md",
+      "bytes": 3633
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/archive-inputs.json",
+      "bytes": 2380
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/acceptance-build13.json",
+      "bytes": 1659
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/acceptance-build15.json",
+      "bytes": 926
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/agpl-source-decision.json",
+      "bytes": 590
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/apple-macos-setup.json",
+      "bytes": 1038
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/apple-processed-build15.jpg",
+      "bytes": 70307
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/apple-processing-error-91109.json",
+      "bytes": 413
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/build-record-13.json",
+      "bytes": 2729
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/build-record-15.json",
+      "bytes": 2602
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/build7-static-summary.json",
+      "bytes": 366
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/client-source-snapshot.json",
+      "bytes": 441
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/desktop-restoration16.json",
+      "bytes": 1341
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/desktop-restore-analyze-01.txt",
+      "bytes": 2802
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/desktop-restore-build16.txt",
+      "bytes": 25543
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/desktop-restore-tests-01.txt",
+      "bytes": 5872
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/desktop-restored16.jpg",
+      "bytes": 668250
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/disk-incident-2026-11-04.json",
+      "bytes": 1860
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/encryption-questionnaire-01.json",
+      "bytes": 689
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/execution-status.json",
+      "bytes": 2384
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/export-compliance-build15.json",
+      "bytes": 509
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/final-payload-build13.json",
+      "bytes": 4011
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/final-payload-build15.json",
+      "bytes": 3388
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/first-launch-region-fixture-15.json",
+      "bytes": 519
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-04-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-05-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-06-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-07-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-08-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-09-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-10-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-10-verified.txt",
+      "bytes": 105
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-11-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-11-verified.txt",
+      "bytes": 105
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-12-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-12-verified.txt",
+      "bytes": 105
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-13-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-13-verified.txt",
+      "bytes": 105
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-14-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-14-verified.txt",
+      "bytes": 105
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-15-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-15-verified.txt",
+      "bytes": 105
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-17-fixed-loader-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-17-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-17-packaging-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-18-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-19-final-packaging-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-19-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/frozen-build-19-loader-packaging-inputs.json",
+      "bytes": 11179754
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/helix-store20-probe-ready.json",
+      "bytes": 971
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-analyze-build12.txt",
+      "bytes": 96
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-analyze-build13.txt",
+      "bytes": 2802
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-analyze-build15.txt",
+      "bytes": 2802
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-analyze-build9.txt",
+      "bytes": 96
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-analyze-current.txt",
+      "bytes": 96
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-analyze-execution-01.txt",
+      "bytes": 96
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-analyze-mcp-resource-01.txt",
+      "bytes": 379
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-analyze-mcp-resource-final.txt",
+      "bytes": 96
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/analyze.txt",
+      "bytes": 645
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/result.json",
+      "bytes": 337
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/chart-roundtrip.xlsx",
+      "bytes": 6523
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-border-submenu.png",
+      "bytes": 94878
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-chart-context.png",
+      "bytes": 84840
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-chart-menu.png",
+      "bytes": 100346
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-chart-submenu.png",
+      "bytes": 104230
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-chart.png",
+      "bytes": 97895
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-data.png",
+      "bytes": 80490
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-formulas.png",
+      "bytes": 88340
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-go-to-dialog.png",
+      "bytes": 86944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-go-to-result.png",
+      "bytes": 78597
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-home.png",
+      "bytes": 84659
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-inline-editor.png",
+      "bytes": 89180
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-insert.png",
+      "bytes": 81081
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-objects-zoom-75.png",
+      "bytes": 97356
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-objects.png",
+      "bytes": 101818
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-page-break-view.png",
+      "bytes": 69277
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-pageLayout.png",
+      "bytes": 73986
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-picture-context.png",
+      "bytes": 85504
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-picture-deleted.png",
+      "bytes": 96146
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-review.png",
+      "bytes": 69479
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-selection-stats-max.png",
+      "bytes": 98642
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-selection-stats.png",
+      "bytes": 88141
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-shape-context.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-shape-eight-handles.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-shape-inserted.png",
+      "bytes": 98059
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-shape-menu.png",
+      "bytes": 100609
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-shape-moved.png",
+      "bytes": 81632
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-shape-northwest-resized.png",
+      "bytes": 80970
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-shape-resized.png",
+      "bytes": 81121
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-shape-west-resized.png",
+      "bytes": 80992
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-sheet-color-palette.png",
+      "bytes": 113327
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-sheet-colored.png",
+      "bytes": 83115
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-sheet-copied.png",
+      "bytes": 84424
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-sheet-hidden.png",
+      "bytes": 81964
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-sheet-inserted.png",
+      "bytes": 69281
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-sheet-move-dialog.png",
+      "bytes": 94319
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-sheet-moved.png",
+      "bytes": 84466
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-sheet-renamed.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-sheet-tab-menu.png",
+      "bytes": 105202
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-sheet-unhidden.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-status-menu.png",
+      "bytes": 97610
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-status-normal.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-table-context.png",
+      "bytes": 70415
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-variable-geometry.png",
+      "bytes": 82376
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-view.png",
+      "bytes": 71828
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-zoom-75.png",
+      "bytes": 84649
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-zoom-dialog.png",
+      "bytes": 94425
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-zoom-fit-selection.png",
+      "bytes": 107288
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/desktop-zoom-range-error.png",
+      "bytes": 97912
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/foldable-view.png",
+      "bytes": 57002
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/mobile-objects.png",
+      "bytes": 41341
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/mobile-row-501-col-CV.png",
+      "bytes": 36539
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/mobile-row-501.png",
+      "bytes": 35944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/mobile-view.png",
+      "bytes": 40109
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/objects-edited.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/objects-roundtrip.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/spreadsheet/tablet-view.png",
+      "bytes": 66330
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build17/tests.txt",
+      "bytes": 47013
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/analyze-final.txt",
+      "bytes": 96
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/analyze.txt",
+      "bytes": 860
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/result.json",
+      "bytes": 337
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/chart-roundtrip.xlsx",
+      "bytes": 6523
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-border-submenu.png",
+      "bytes": 94878
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-chart-context.png",
+      "bytes": 84840
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-chart-menu.png",
+      "bytes": 100346
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-chart-submenu.png",
+      "bytes": 104230
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-chart.png",
+      "bytes": 97895
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-data.png",
+      "bytes": 80490
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-formulas.png",
+      "bytes": 88340
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-go-to-dialog.png",
+      "bytes": 86944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-go-to-result.png",
+      "bytes": 78597
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-home.png",
+      "bytes": 84659
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-inline-editor.png",
+      "bytes": 89180
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-insert.png",
+      "bytes": 81081
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-objects-zoom-75.png",
+      "bytes": 97356
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-objects.png",
+      "bytes": 101818
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-page-break-view.png",
+      "bytes": 69277
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-pageLayout.png",
+      "bytes": 73986
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-picture-context.png",
+      "bytes": 85504
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-picture-deleted.png",
+      "bytes": 96146
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-review.png",
+      "bytes": 69479
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-selection-stats-max.png",
+      "bytes": 98642
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-selection-stats.png",
+      "bytes": 88141
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-shape-context.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-shape-eight-handles.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-shape-inserted.png",
+      "bytes": 98059
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-shape-menu.png",
+      "bytes": 100609
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-shape-moved.png",
+      "bytes": 81632
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-shape-northwest-resized.png",
+      "bytes": 80970
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-shape-resized.png",
+      "bytes": 81121
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-shape-west-resized.png",
+      "bytes": 80992
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-sheet-color-palette.png",
+      "bytes": 113327
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-sheet-colored.png",
+      "bytes": 83115
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-sheet-copied.png",
+      "bytes": 84424
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-sheet-hidden.png",
+      "bytes": 81964
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-sheet-inserted.png",
+      "bytes": 69281
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-sheet-move-dialog.png",
+      "bytes": 94319
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-sheet-moved.png",
+      "bytes": 84466
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-sheet-renamed.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-sheet-tab-menu.png",
+      "bytes": 105202
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-sheet-unhidden.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-status-menu.png",
+      "bytes": 97610
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-status-normal.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-table-context.png",
+      "bytes": 70415
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-variable-geometry.png",
+      "bytes": 82376
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-view.png",
+      "bytes": 71828
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-zoom-75.png",
+      "bytes": 84649
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-zoom-dialog.png",
+      "bytes": 94425
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-zoom-fit-selection.png",
+      "bytes": 107288
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/desktop-zoom-range-error.png",
+      "bytes": 97912
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/foldable-view.png",
+      "bytes": 57002
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/mobile-objects.png",
+      "bytes": 41341
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/mobile-row-501-col-CV.png",
+      "bytes": 36539
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/mobile-row-501.png",
+      "bytes": 35944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/mobile-view.png",
+      "bytes": 40109
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/objects-edited.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/objects-roundtrip.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/spreadsheet/tablet-view.png",
+      "bytes": 66330
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build18/tests.txt",
+      "bytes": 47352
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/analyze.txt",
+      "bytes": 96
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/result.json",
+      "bytes": 337
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/chart-roundtrip.xlsx",
+      "bytes": 6523
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-border-submenu.png",
+      "bytes": 94878
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-chart-context.png",
+      "bytes": 84840
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-chart-menu.png",
+      "bytes": 100346
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-chart-submenu.png",
+      "bytes": 104230
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-chart.png",
+      "bytes": 97895
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-data.png",
+      "bytes": 80490
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-formulas.png",
+      "bytes": 88340
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-go-to-dialog.png",
+      "bytes": 86944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-go-to-result.png",
+      "bytes": 78597
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-home.png",
+      "bytes": 84659
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-inline-editor.png",
+      "bytes": 89180
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-insert.png",
+      "bytes": 81081
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-objects-zoom-75.png",
+      "bytes": 97356
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-objects.png",
+      "bytes": 101818
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-page-break-view.png",
+      "bytes": 69277
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-pageLayout.png",
+      "bytes": 73986
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-picture-context.png",
+      "bytes": 85504
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-picture-deleted.png",
+      "bytes": 96146
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-review.png",
+      "bytes": 69479
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-selection-stats-max.png",
+      "bytes": 98642
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-selection-stats.png",
+      "bytes": 88141
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-shape-context.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-shape-eight-handles.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-shape-inserted.png",
+      "bytes": 98059
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-shape-menu.png",
+      "bytes": 100609
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-shape-moved.png",
+      "bytes": 81632
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-shape-northwest-resized.png",
+      "bytes": 80970
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-shape-resized.png",
+      "bytes": 81121
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-shape-west-resized.png",
+      "bytes": 80992
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-sheet-color-palette.png",
+      "bytes": 113327
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-sheet-colored.png",
+      "bytes": 83115
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-sheet-copied.png",
+      "bytes": 84424
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-sheet-hidden.png",
+      "bytes": 81964
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-sheet-inserted.png",
+      "bytes": 69281
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-sheet-move-dialog.png",
+      "bytes": 94319
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-sheet-moved.png",
+      "bytes": 84466
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-sheet-renamed.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-sheet-tab-menu.png",
+      "bytes": 105202
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-sheet-unhidden.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-status-menu.png",
+      "bytes": 97610
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-status-normal.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-table-context.png",
+      "bytes": 70415
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-variable-geometry.png",
+      "bytes": 82376
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-view.png",
+      "bytes": 71828
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-zoom-75.png",
+      "bytes": 84649
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-zoom-dialog.png",
+      "bytes": 94425
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-zoom-fit-selection.png",
+      "bytes": 107288
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/desktop-zoom-range-error.png",
+      "bytes": 97912
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/foldable-view.png",
+      "bytes": 57002
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/mobile-objects.png",
+      "bytes": 41341
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/mobile-row-501-col-CV.png",
+      "bytes": 36539
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/mobile-row-501.png",
+      "bytes": 35944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/mobile-view.png",
+      "bytes": 40109
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/objects-edited.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/objects-roundtrip.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/spreadsheet/tablet-view.png",
+      "bytes": 66330
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-build19/tests.txt",
+      "bytes": 46472
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/analyze.txt",
+      "bytes": 96
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/result.json",
+      "bytes": 337
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/chart-roundtrip.xlsx",
+      "bytes": 6523
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-border-submenu.png",
+      "bytes": 94878
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-chart-context.png",
+      "bytes": 84840
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-chart-menu.png",
+      "bytes": 100346
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-chart-submenu.png",
+      "bytes": 104230
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-chart.png",
+      "bytes": 97895
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-data.png",
+      "bytes": 80490
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-formulas.png",
+      "bytes": 88340
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-go-to-dialog.png",
+      "bytes": 86944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-go-to-result.png",
+      "bytes": 78597
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-home.png",
+      "bytes": 84659
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-inline-editor.png",
+      "bytes": 89180
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-insert.png",
+      "bytes": 81081
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-objects-zoom-75.png",
+      "bytes": 97356
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-objects.png",
+      "bytes": 101818
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-page-break-view.png",
+      "bytes": 69277
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-pageLayout.png",
+      "bytes": 73986
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-picture-context.png",
+      "bytes": 85504
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-picture-deleted.png",
+      "bytes": 96146
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-review.png",
+      "bytes": 69479
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-selection-stats-max.png",
+      "bytes": 98642
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-selection-stats.png",
+      "bytes": 88141
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-shape-context.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-shape-eight-handles.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-shape-inserted.png",
+      "bytes": 98059
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-shape-menu.png",
+      "bytes": 100609
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-shape-moved.png",
+      "bytes": 81632
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-shape-northwest-resized.png",
+      "bytes": 80970
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-shape-resized.png",
+      "bytes": 81121
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-shape-west-resized.png",
+      "bytes": 80992
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-sheet-color-palette.png",
+      "bytes": 113327
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-sheet-colored.png",
+      "bytes": 83115
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-sheet-copied.png",
+      "bytes": 84424
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-sheet-hidden.png",
+      "bytes": 81964
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-sheet-inserted.png",
+      "bytes": 69281
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-sheet-move-dialog.png",
+      "bytes": 94319
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-sheet-moved.png",
+      "bytes": 84466
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-sheet-renamed.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-sheet-tab-menu.png",
+      "bytes": 105202
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-sheet-unhidden.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-status-menu.png",
+      "bytes": 97610
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-status-normal.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-table-context.png",
+      "bytes": 70415
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-variable-geometry.png",
+      "bytes": 82376
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-view.png",
+      "bytes": 71828
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-zoom-75.png",
+      "bytes": 84649
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-zoom-dialog.png",
+      "bytes": 94425
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-zoom-fit-selection.png",
+      "bytes": 107288
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/desktop-zoom-range-error.png",
+      "bytes": 97912
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/foldable-view.png",
+      "bytes": 57002
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/mobile-objects.png",
+      "bytes": 41341
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/mobile-row-501-col-CV.png",
+      "bytes": 36539
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/mobile-row-501.png",
+      "bytes": 35944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/mobile-view.png",
+      "bytes": 40109
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/objects-edited.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/objects-roundtrip.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/spreadsheet/tablet-view.png",
+      "bytes": 66330
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-02/tests.txt",
+      "bytes": 45104
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/analyze.txt",
+      "bytes": 267
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/result.json",
+      "bytes": 337
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/chart-roundtrip.xlsx",
+      "bytes": 6523
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-border-submenu.png",
+      "bytes": 94878
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-chart-context.png",
+      "bytes": 84840
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-chart-menu.png",
+      "bytes": 100346
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-chart-submenu.png",
+      "bytes": 104230
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-chart.png",
+      "bytes": 97895
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-data.png",
+      "bytes": 80490
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-formulas.png",
+      "bytes": 88340
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-go-to-dialog.png",
+      "bytes": 86944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-go-to-result.png",
+      "bytes": 78597
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-home.png",
+      "bytes": 84659
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-inline-editor.png",
+      "bytes": 89180
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-insert.png",
+      "bytes": 81081
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-objects-zoom-75.png",
+      "bytes": 97356
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-objects.png",
+      "bytes": 101818
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-page-break-view.png",
+      "bytes": 69277
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-pageLayout.png",
+      "bytes": 73986
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-picture-context.png",
+      "bytes": 85504
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-picture-deleted.png",
+      "bytes": 96146
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-review.png",
+      "bytes": 69479
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-selection-stats-max.png",
+      "bytes": 98642
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-selection-stats.png",
+      "bytes": 88141
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-shape-context.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-shape-eight-handles.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-shape-inserted.png",
+      "bytes": 98059
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-shape-menu.png",
+      "bytes": 100609
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-shape-moved.png",
+      "bytes": 81632
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-shape-northwest-resized.png",
+      "bytes": 80970
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-shape-resized.png",
+      "bytes": 81121
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-shape-west-resized.png",
+      "bytes": 80992
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-sheet-color-palette.png",
+      "bytes": 113327
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-sheet-colored.png",
+      "bytes": 83115
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-sheet-copied.png",
+      "bytes": 84424
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-sheet-hidden.png",
+      "bytes": 81964
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-sheet-inserted.png",
+      "bytes": 69281
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-sheet-move-dialog.png",
+      "bytes": 94319
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-sheet-moved.png",
+      "bytes": 84466
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-sheet-renamed.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-sheet-tab-menu.png",
+      "bytes": 105202
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-sheet-unhidden.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-status-menu.png",
+      "bytes": 97610
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-status-normal.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-table-context.png",
+      "bytes": 70415
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-variable-geometry.png",
+      "bytes": 82376
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-view.png",
+      "bytes": 71828
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-zoom-75.png",
+      "bytes": 84649
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-zoom-dialog.png",
+      "bytes": 94425
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-zoom-fit-selection.png",
+      "bytes": 107288
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/desktop-zoom-range-error.png",
+      "bytes": 97912
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/foldable-view.png",
+      "bytes": 57002
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/mobile-objects.png",
+      "bytes": 41341
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/mobile-row-501-col-CV.png",
+      "bytes": 36539
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/mobile-row-501.png",
+      "bytes": 35944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/mobile-view.png",
+      "bytes": 40109
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/objects-edited.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/objects-roundtrip.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/spreadsheet/tablet-view.png",
+      "bytes": 66330
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-03/tests.txt",
+      "bytes": 42689
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/analyze.txt",
+      "bytes": 96
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/result.json",
+      "bytes": 337
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/chart-roundtrip.xlsx",
+      "bytes": 6523
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-border-submenu.png",
+      "bytes": 94878
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-chart-context.png",
+      "bytes": 84840
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-chart-menu.png",
+      "bytes": 100346
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-chart-submenu.png",
+      "bytes": 104230
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-chart.png",
+      "bytes": 97895
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-data.png",
+      "bytes": 80490
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-formulas.png",
+      "bytes": 88340
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-go-to-dialog.png",
+      "bytes": 86944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-go-to-result.png",
+      "bytes": 78597
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-home.png",
+      "bytes": 84659
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-inline-editor.png",
+      "bytes": 89180
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-insert.png",
+      "bytes": 81081
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-objects-zoom-75.png",
+      "bytes": 97356
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-objects.png",
+      "bytes": 101818
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-page-break-view.png",
+      "bytes": 69277
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-pageLayout.png",
+      "bytes": 73986
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-picture-context.png",
+      "bytes": 85504
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-picture-deleted.png",
+      "bytes": 96146
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-review.png",
+      "bytes": 69479
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-selection-stats-max.png",
+      "bytes": 98642
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-selection-stats.png",
+      "bytes": 88141
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-shape-context.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-shape-eight-handles.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-shape-inserted.png",
+      "bytes": 98059
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-shape-menu.png",
+      "bytes": 100609
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-shape-moved.png",
+      "bytes": 81632
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-shape-northwest-resized.png",
+      "bytes": 80970
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-shape-resized.png",
+      "bytes": 81121
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-shape-west-resized.png",
+      "bytes": 80992
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-sheet-color-palette.png",
+      "bytes": 113327
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-sheet-colored.png",
+      "bytes": 83115
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-sheet-copied.png",
+      "bytes": 84424
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-sheet-hidden.png",
+      "bytes": 81964
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-sheet-inserted.png",
+      "bytes": 69281
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-sheet-move-dialog.png",
+      "bytes": 94319
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-sheet-moved.png",
+      "bytes": 84466
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-sheet-renamed.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-sheet-tab-menu.png",
+      "bytes": 105202
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-sheet-unhidden.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-status-menu.png",
+      "bytes": 97610
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-status-normal.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-table-context.png",
+      "bytes": 70415
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-variable-geometry.png",
+      "bytes": 82376
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-view.png",
+      "bytes": 71828
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-zoom-75.png",
+      "bytes": 84649
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-zoom-dialog.png",
+      "bytes": 94425
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-zoom-fit-selection.png",
+      "bytes": 107288
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/desktop-zoom-range-error.png",
+      "bytes": 97912
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/foldable-view.png",
+      "bytes": 57002
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/mobile-objects.png",
+      "bytes": 41341
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/mobile-row-501-col-CV.png",
+      "bytes": 36539
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/mobile-row-501.png",
+      "bytes": 35944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/mobile-view.png",
+      "bytes": 40109
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/objects-edited.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/objects-roundtrip.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/spreadsheet/tablet-view.png",
+      "bytes": 66330
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-04/tests.txt",
+      "bytes": 43683
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/analyze.txt",
+      "bytes": 96
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/result.json",
+      "bytes": 337
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/chart-roundtrip.xlsx",
+      "bytes": 6523
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-border-submenu.png",
+      "bytes": 94878
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-chart-context.png",
+      "bytes": 84840
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-chart-menu.png",
+      "bytes": 100346
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-chart-submenu.png",
+      "bytes": 104230
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-chart.png",
+      "bytes": 97895
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-data.png",
+      "bytes": 80490
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-formulas.png",
+      "bytes": 88340
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-go-to-dialog.png",
+      "bytes": 86944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-go-to-result.png",
+      "bytes": 78597
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-home.png",
+      "bytes": 84659
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-inline-editor.png",
+      "bytes": 89180
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-insert.png",
+      "bytes": 81081
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-objects-zoom-75.png",
+      "bytes": 97356
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-objects.png",
+      "bytes": 101818
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-page-break-view.png",
+      "bytes": 69277
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-pageLayout.png",
+      "bytes": 73986
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-picture-context.png",
+      "bytes": 85504
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-picture-deleted.png",
+      "bytes": 96146
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-review.png",
+      "bytes": 69479
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-selection-stats-max.png",
+      "bytes": 98642
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-selection-stats.png",
+      "bytes": 88141
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-shape-context.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-shape-eight-handles.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-shape-inserted.png",
+      "bytes": 98059
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-shape-menu.png",
+      "bytes": 100609
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-shape-moved.png",
+      "bytes": 81632
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-shape-northwest-resized.png",
+      "bytes": 80970
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-shape-resized.png",
+      "bytes": 81121
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-shape-west-resized.png",
+      "bytes": 80992
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-sheet-color-palette.png",
+      "bytes": 113327
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-sheet-colored.png",
+      "bytes": 83115
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-sheet-copied.png",
+      "bytes": 84424
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-sheet-hidden.png",
+      "bytes": 81964
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-sheet-inserted.png",
+      "bytes": 69281
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-sheet-move-dialog.png",
+      "bytes": 94319
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-sheet-moved.png",
+      "bytes": 84466
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-sheet-renamed.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-sheet-tab-menu.png",
+      "bytes": 105202
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-sheet-unhidden.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-status-menu.png",
+      "bytes": 97610
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-status-normal.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-table-context.png",
+      "bytes": 70415
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-variable-geometry.png",
+      "bytes": 82376
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-view.png",
+      "bytes": 71828
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-zoom-75.png",
+      "bytes": 84649
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-zoom-dialog.png",
+      "bytes": 94425
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-zoom-fit-selection.png",
+      "bytes": 107288
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/desktop-zoom-range-error.png",
+      "bytes": 97912
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/foldable-view.png",
+      "bytes": 57002
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/mobile-objects.png",
+      "bytes": 41341
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/mobile-row-501-col-CV.png",
+      "bytes": 36539
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/mobile-row-501.png",
+      "bytes": 35944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/mobile-view.png",
+      "bytes": 40109
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/objects-edited.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/objects-roundtrip.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/spreadsheet/tablet-view.png",
+      "bytes": 66330
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-05/tests.txt",
+      "bytes": 44141
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/analyze.txt",
+      "bytes": 379
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/result.json",
+      "bytes": 337
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/chart-roundtrip.xlsx",
+      "bytes": 6523
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-border-submenu.png",
+      "bytes": 94878
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-chart-context.png",
+      "bytes": 84840
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-chart-menu.png",
+      "bytes": 100346
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-chart-submenu.png",
+      "bytes": 104230
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-chart.png",
+      "bytes": 97895
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-data.png",
+      "bytes": 80490
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-formulas.png",
+      "bytes": 88340
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-go-to-dialog.png",
+      "bytes": 86944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-go-to-result.png",
+      "bytes": 78597
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-home.png",
+      "bytes": 84659
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-inline-editor.png",
+      "bytes": 89180
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-insert.png",
+      "bytes": 81081
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-objects-zoom-75.png",
+      "bytes": 97356
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-objects.png",
+      "bytes": 101818
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-page-break-view.png",
+      "bytes": 69277
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-pageLayout.png",
+      "bytes": 73986
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-picture-context.png",
+      "bytes": 85504
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-picture-deleted.png",
+      "bytes": 96146
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-review.png",
+      "bytes": 69479
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-selection-stats-max.png",
+      "bytes": 98642
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-selection-stats.png",
+      "bytes": 88141
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-shape-context.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-shape-eight-handles.png",
+      "bytes": 85605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-shape-inserted.png",
+      "bytes": 98059
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-shape-menu.png",
+      "bytes": 100609
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-shape-moved.png",
+      "bytes": 81632
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-shape-northwest-resized.png",
+      "bytes": 80970
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-shape-resized.png",
+      "bytes": 81121
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-shape-west-resized.png",
+      "bytes": 80992
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-sheet-color-palette.png",
+      "bytes": 113327
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-sheet-colored.png",
+      "bytes": 83115
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-sheet-copied.png",
+      "bytes": 84424
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-sheet-hidden.png",
+      "bytes": 81964
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-sheet-inserted.png",
+      "bytes": 69281
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-sheet-move-dialog.png",
+      "bytes": 94319
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-sheet-moved.png",
+      "bytes": 84466
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-sheet-renamed.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-sheet-tab-menu.png",
+      "bytes": 105202
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-sheet-unhidden.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-status-menu.png",
+      "bytes": 97610
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-status-normal.png",
+      "bytes": 69321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-table-context.png",
+      "bytes": 70415
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-variable-geometry.png",
+      "bytes": 82376
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-view.png",
+      "bytes": 71828
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-zoom-75.png",
+      "bytes": 84649
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-zoom-dialog.png",
+      "bytes": 94425
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-zoom-fit-selection.png",
+      "bytes": 107288
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/desktop-zoom-range-error.png",
+      "bytes": 97912
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/foldable-view.png",
+      "bytes": 57002
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/mobile-objects.png",
+      "bytes": 41341
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/mobile-row-501-col-CV.png",
+      "bytes": 36539
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/mobile-row-501.png",
+      "bytes": 35944
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/mobile-view.png",
+      "bytes": 40109
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/objects-edited.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/objects-roundtrip.xlsx",
+      "bytes": 7428
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/spreadsheet/tablet-view.png",
+      "bytes": 66330
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-execution-06/tests.txt",
+      "bytes": 45288
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/host-tests-execution-01.txt",
+      "bytes": 80859
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/installer-permissions-build13-r2.json",
+      "bytes": 756
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/mac-app-store-profile.json",
+      "bytes": 425
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/mcp-resource-editor-tests-01.txt",
+      "bytes": 454
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/minimum-os-build12.json",
+      "bytes": 302
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/mounted-notes-reference18.txt",
+      "bytes": 1185
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/notes-smoke-build15.jpg",
+      "bytes": 149917
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/packaging-audit-build15.json",
+      "bytes": 873
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/preflight-macos.json",
+      "bytes": 7616
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/privacy19-published-ax.txt",
+      "bytes": 10223
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/qa19-pty-output.txt",
+      "bytes": 521
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/resume17-status.json",
+      "bytes": 1486
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/sdk-resource-context-tests-01.txt",
+      "bytes": 895
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/sign-store-build13-r2.txt",
+      "bytes": 112
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/sign-store-build13.txt",
+      "bytes": 112
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/sign-store-build15.txt",
+      "bytes": 112
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/signing-report17-invalidated.json",
+      "bytes": 1959
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/signing-report17b.json",
+      "bytes": 1728
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/signing-report19-final.json",
+      "bytes": 1959
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/signing-report19-superseded.json",
+      "bytes": 1959
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/slides-save-reopen-build15.jpg",
+      "bytes": 85126
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gc-01.txt",
+      "bytes": 0
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gc-02.txt",
+      "bytes": 0
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-git-01.txt",
+      "bytes": 499
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-git-02.txt",
+      "bytes": 423
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-git-13.txt",
+      "bytes": 423
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-git-15.txt",
+      "bytes": 423
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-git-18.txt",
+      "bytes": 499
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-git-19.txt",
+      "bytes": 499
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-01.json",
+      "bytes": 601390
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-01.txt",
+      "bytes": 114
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-02.json",
+      "bytes": 480601
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-02.txt",
+      "bytes": 115
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-13.json",
+      "bytes": 3
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-13.txt",
+      "bytes": 109
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-15.json",
+      "bytes": 3
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-15.txt",
+      "bytes": 106
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-19-final.json",
+      "bytes": 3
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-19-final.txt",
+      "bytes": 176
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-19-reviewed.json",
+      "bytes": 3
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-19-reviewed.txt",
+      "bytes": 176
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-19.json",
+      "bytes": 7068
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-19.txt",
+      "bytes": 176
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-gitleaks-review-01.json",
+      "bytes": 246316
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-inventory-01.txt",
+      "bytes": 82
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-inventory-02.txt",
+      "bytes": 82
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-inventory-03.txt",
+      "bytes": 82
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-inventory-04.txt",
+      "bytes": 81
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-inventory-05.txt",
+      "bytes": 81
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-inventory-06.txt",
+      "bytes": 81
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-inventory-15.txt",
+      "bytes": 81
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-inventory-17.inventory.json",
+      "bytes": 15169956
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-inventory-17b.inventory.json",
+      "bytes": 15169956
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-inventory-18.inventory.json",
+      "bytes": 15170321
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-inventory-19.inventory.json",
+      "bytes": 15170632
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-public-revision-13.json",
+      "bytes": 452
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-public-revision-15.json",
+      "bytes": 452
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-public-revision-19.json",
+      "bytes": 2245
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-publication-11.json",
+      "bytes": 307
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-publication-push-01.txt",
+      "bytes": 732
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-publication-secret-review.json",
+      "bytes": 350
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-publication19-review.json",
+      "bytes": 1832
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-push-13.txt",
+      "bytes": 200
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/source-push-15.txt",
+      "bytes": 200
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-ai-consent19.txt",
+      "bytes": 702
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-build-01.txt",
+      "bytes": 1489
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-build-02.txt",
+      "bytes": 18211
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-build-03.txt",
+      "bytes": 17661
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-build17.txt",
+      "bytes": 24680
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-build18-retry.txt",
+      "bytes": 24657
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-build18.txt",
+      "bytes": 95
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-build19-retry.txt",
+      "bytes": 24657
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-build19.txt",
+      "bytes": 96
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-dsh-policy17.txt",
+      "bytes": 166
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-dsh-policy18.txt",
+      "bytes": 166
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-dsh-policy19-final.txt",
+      "bytes": 166
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-dsh-policy19-loader.txt",
+      "bytes": 166
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-dsh-policy19.txt",
+      "bytes": 166
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-01.txt",
+      "bytes": 22523
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-04.txt",
+      "bytes": 22228
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-05.txt",
+      "bytes": 95
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-05b.txt",
+      "bytes": 6625
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-06.txt",
+      "bytes": 95
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-06b.txt",
+      "bytes": 18339
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-07.txt",
+      "bytes": 51060
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-08.txt",
+      "bytes": 137
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-08b.txt",
+      "bytes": 24595
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-09.txt",
+      "bytes": 24595
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-10.txt",
+      "bytes": 24657
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-11.txt",
+      "bytes": 24657
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-12.txt",
+      "bytes": 24704
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-13.txt",
+      "bytes": 24704
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-14.txt",
+      "bytes": 24704
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-frozen-build-15.txt",
+      "bytes": 24704
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-link-check-15.json",
+      "bytes": 367
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-onboarding-tests-01.txt",
+      "bytes": 569
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-policy-tests-01.txt",
+      "bytes": 674
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-policy-tests-02.txt",
+      "bytes": 1367
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-policy-tests-03.txt",
+      "bytes": 1339
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-sign-01.txt",
+      "bytes": 110
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-sign-build12.txt",
+      "bytes": 112
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-sign17.txt",
+      "bytes": 112
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-sign17b.txt",
+      "bytes": 112
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-sign19-final.txt",
+      "bytes": 112
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-sign19-loader.txt",
+      "bytes": 112
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-sign19.txt",
+      "bytes": 112
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store-smoke-01.txt",
+      "bytes": 17893
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store17-dsh-sandbox-notes-routing-failure.jpg",
+      "bytes": 181414
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store18-three-pane-notes.jpg",
+      "bytes": 410786
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store19-native-validation-status.json",
+      "bytes": 775
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/store19-notes-before-ai-consent.jpg",
+      "bytes": 440603
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/testflight-install-15.json",
+      "bytes": 411
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/testflight-notes-open-15.jpg",
+      "bytes": 143832
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/transporter-delivered-build13-r2.jpg",
+      "bytes": 56820
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/transporter-delivered-build15.jpg",
+      "bytes": 68605
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/transporter-delivery-13.json",
+      "bytes": 424
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/transporter-delivery-15.json",
+      "bytes": 479
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/transporter-error-90255.json",
+      "bytes": 542
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/upload-gate-build13-r2.txt",
+      "bytes": 152
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/upload-gate-build13.txt",
+      "bytes": 152
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/evidence/upload-gate-build15.txt",
+      "bytes": 152
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/materials/BUILD-MACOS-source.md",
+      "bytes": 6336
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/materials/assets.json",
+      "bytes": 2301
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/materials/direct-listing.en-US.json",
+      "bytes": 772
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/materials/icon-1024.png",
+      "bytes": 767931
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/materials/listing.en-US.json",
+      "bytes": 1789
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/materials/privacy19-review.json",
+      "bytes": 1155
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/materials/review-notes.en.md",
+      "bytes": 2384
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/materials/screenshots/01-home.jpg",
+      "bytes": 56170
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/materials/screenshots/02-notes.jpg",
+      "bytes": 149525
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/materials/screenshots/03-slides.jpg",
+      "bytes": 86402
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/materials/source-fixture-review.json",
+      "bytes": 1952
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/release.json",
+      "bytes": 3409
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/01-scope.json",
+      "bytes": 295
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/02-development.json",
+      "bytes": 451
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/03-privacy.json",
+      "bytes": 513
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/04-tests.json",
+      "bytes": 1022
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/05-build.json",
+      "bytes": 852
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/06-binary.json",
+      "bytes": 639
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/07-materials.json",
+      "bytes": 489
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/08-upload.json",
+      "bytes": 412
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/09-submit.json",
+      "bytes": 117
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/10-review.json",
+      "bytes": 117
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/11-publish.json",
+      "bytes": 118
+    },
+    {
+      "path": "docs/release/runs/2026-11-macos/stages/12-archive.json",
+      "bytes": 118
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/README.zh-CN.md",
+      "bytes": 2555
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/archive-inputs.json",
+      "bytes": 171849
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/archives.json",
+      "bytes": 671
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/evidence/ios16-build.txt",
+      "bytes": 30057
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/evidence/ios16-upload.txt",
+      "bytes": 8744
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/evidence/pipeline-verification.txt",
+      "bytes": 968
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/policies/account-deletion.html",
+      "bytes": 1884
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/policies/capture.json",
+      "bytes": 1178
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/policies/privacy.html",
+      "bytes": 6406
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/policies/terms.html",
+      "bytes": 2622
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/release.json",
+      "bytes": 2701
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/review-events/2026-11-12-apple-history.txt",
+      "bytes": 1373
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/review-events/2026-11-12-apple-status-inquiry-draft.en.txt",
+      "bytes": 881
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/review-events/2026-11-12-apple-status-inquiry-receipt.jpg",
+      "bytes": 97396
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/review-events/2026-11-12-apple-status-inquiry-receipt.txt",
+      "bytes": 11514
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/review-events/2026-11-12-apple-status-inquiry-sent.en.txt",
+      "bytes": 881
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/review-events/2026-11-12-apple-status.json",
+      "bytes": 1060
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/01-scope.json",
+      "bytes": 478
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/02-development.json",
+      "bytes": 503
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/03-privacy.json",
+      "bytes": 549
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/04-tests.json",
+      "bytes": 661
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/05-build.json",
+      "bytes": 417
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/06-binary.json",
+      "bytes": 470
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/07-materials.json",
+      "bytes": 550
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/08-upload.json",
+      "bytes": 570
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/09-submit.json",
+      "bytes": 498
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/10-review.json",
+      "bytes": 783
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/11-publish.json",
+      "bytes": 210
+    },
+    {
+      "path": "docs/release/runs/2026-11-overseas/stages/12-archive.json",
+      "bytes": 367
+    },
+    {
+      "path": "third_party/dsh/tarballs/openmuse-dsh-bridge-0.1.18.tgz",
+      "bytes": 12088
+    },
+    {
+      "path": "third_party/dsh/tarballs/openmuse-dsh-bridge-0.1.19.tgz",
+      "bytes": 12482
+    },
+    {
+      "path": "third_party/dsh/tarballs/openmuse-dsh-bridge-0.1.21.tgz",
+      "bytes": 15307
+    }
+  ]
+}

@@ -2,10 +2,12 @@
   "id": "01-scope",
   "status": "partial",
   "owner": "",
-  "summary": "功能边界和待办已登记；版本、渠道、构建号与负责人尚未锁定",
+  "summary": "补充 Apple 4.1 名称及 5.1 AI 分享拒审整改范围；品牌路线、渠道版本和构建号待锁定",
   "evidence": [
     "docs/release/runs/2026-11-mobile-isolation/README.zh-CN.md",
-    "docs/release/runs/2026-11-mobile-isolation/evidence/source-audit.json"
+    "docs/release/runs/2026-11-mobile-isolation/evidence/source-audit.json",
+    "docs/release/runs/2026-11-mobile-isolation/REVIEW-RECOVERY.zh-CN.md",
+    "docs/release/runs/2026-11-mobile-isolation/evidence/apple-build16-rejection.json"
   ],
   "exceptions": []
 }
