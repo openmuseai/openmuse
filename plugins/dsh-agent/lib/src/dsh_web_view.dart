@@ -18,6 +18,8 @@ final class DshNativeOverlay {
 }
 
 final class DshPopupRouteObserver extends NavigatorObserver {
+  /// A navigator owns its observer; separate Host contexts cannot share one.
+  DshPopupRouteObserver();
   DshPopupRouteObserver._();
 
   static final instance = DshPopupRouteObserver._();
@@ -59,6 +61,12 @@ final class DshPopupRouteObserver extends NavigatorObserver {
 
 Future<bool> _openCanonicalResource(BuildContext context, Object? raw) async {
   final value = raw is String ? jsonDecode(raw) : raw;
+  if (value is Map && value['type'] == 'resource.locator.open') {
+    final router = ResourceLinkRouting.maybeOf(context)?.locate;
+    if (router == null) throw const ResourceFailure('SOURCE_UNAVAILABLE');
+    await router(ResourceLocator.fromJson(value['locator']));
+    return true;
+  }
   if (value is! Map || value['type'] != 'resource.reference.open') return false;
   final uri = value['uri'];
   if (uri is! String) throw const FormatException('Invalid resource reference');

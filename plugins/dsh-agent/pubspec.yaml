@@ -7,6 +7,9 @@ environment:
   sdk: ^3.12.2
 
 dependencies:
+  muse_dsh_conversation_protocol:
+    path: ../../packages/muse_dsh_conversation_protocol
+  mime: ^2.0.0
   crypto: ^3.0.6
   flutter:
     sdk: flutter

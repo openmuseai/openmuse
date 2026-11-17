@@ -131,6 +131,21 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.18.0"
+  mime:
+    dependency: "direct main"
+    description:
+      name: mime
+      sha256: bd47de35f07e27267e69c8c8b22edf9473bfee170a60d60fcc93730c5144b7f6
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.1.0"
+  muse_dsh_conversation_protocol:
+    dependency: "direct main"
+    description:
+      path: "../../packages/muse_dsh_conversation_protocol"
+      relative: true
+    source: path
+    version: "0.1.0"
   muse_resource_center:
     dependency: transitive
     description:
@@ -142,6 +157,13 @@ packages:
     dependency: transitive
     description:
       path: "../../packages/muse_resource_contract"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_resource_embed:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_resource_embed"
       relative: true
     source: path
     version: "0.1.0"

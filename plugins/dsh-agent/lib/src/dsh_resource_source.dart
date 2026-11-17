@@ -6,6 +6,25 @@ import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.da
 import 'package:mime/mime.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
+/// The .ts suffix is shared with MPEG transport streams. Only valid text may
+/// override that extension-based video guess; magic-detected PDF/image media
+/// and binary transport streams keep their actual classification.
+String dshResourceFileMediaType(String name, List<int> bytes) {
+  final detected =
+      lookupMimeType(name, headerBytes: bytes.take(64).toList()) ??
+      'application/octet-stream';
+  if (name.toLowerCase().endsWith('.ts') && detected.startsWith('video/')) {
+    try {
+      final text = utf8.decode(bytes);
+      if (!RegExp(r'[\x00-\x08\x0b\x0c\x0e-\x1f]').hasMatch(text))
+        return 'text/typescript';
+    } on FormatException {
+      /* Preserve binary media classification. */
+    }
+  }
+  return detected;
+}
+
 /// DSH owns path interpretation and filesystem access, including sandbox paths.
 /// Only opaque file handles leave this plugin's source adapter.
 final class DshResourceSource
@@ -301,9 +320,7 @@ final class DshResourceSource
       throw const ResourceFailure('VERSION_UNAVAILABLE');
     final parts = (value['label'] as String).split('/');
     final name = checkedName(parts.last);
-    final mime =
-        lookupMimeType(name, headerBytes: bytes.take(64).toList()) ??
-        'application/octet-stream';
+    final mime = dshResourceFileMediaType(name, bytes);
     return ResourceContent(
       ResourceRecord(
         identity: source.identity(resourceRef),
