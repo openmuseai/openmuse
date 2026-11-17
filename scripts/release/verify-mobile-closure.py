@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-"""Verify the first-launch mobile package excludes unready Office engines."""
+"""Reject excluded mobile implementations, identifiers and payloads.
+
+A technical exclusion check; passing does not certify copyright ownership.
+"""
 import argparse
 import json
+import io
+import zlib
 from pathlib import Path
 import re
 import subprocess
 import struct
 import zipfile
 
-FORBIDDEN = re.compile(r'word_core|openmuse_office_(?:docx|viewers)|pdfium|pdfrx|gridcraft|spreadsheet_engine|pdf_rebuild|word_render|word_editor', re.I)
-FORBIDDEN_PACKAGES = {'openmuse_office_docx', 'openmuse_office_viewers', 'word_editor', 'word_render', 'pdf_rebuild_flutter', 'pdfium_dart', 'pdfium_flutter', 'pdfrx', 'spreadsheet_editor'}
+FORBIDDEN = re.compile(r'word_core|openmuse_office_(?:docx|viewers)|pdfium|pdfrx|gridcraft|spreadsheet_engine|pdf_rebuild|word_render|word_editor|siyuan|genoffice|ioffice|kspfreetext|cn[/._]wps', re.I)
+FORBIDDEN_PACKAGES = {'openmuse_office_docx', 'openmuse_office_viewers', 'word_editor', 'word_render', 'pdf_rebuild_flutter', 'pdfium_dart', 'pdfium_flutter', 'pdfrx', 'spreadsheet_editor', 'openmuse_siyuan_client', 'openmuse_siyuan_plugin'}
 FORBIDDEN_PERMISSIONS = {
     'android.permission.READ_EXTERNAL_STORAGE',
     'android.permission.WRITE_EXTERNAL_STORAGE',
@@ -26,12 +31,53 @@ FORBIDDEN_PERMISSIONS = {
 }
 
 
+# Scan payloads as well as names: Flutter notices, DEX, AOT strings and nested
+# offline bundles can retain an excluded implementation under a neutral name.
+CONTENT = re.compile(FORBIDDEN.pattern.encode('ascii'), re.I)
+MAX_EXPANDED = 512 * 1024 * 1024
+
+
+def inspect_payload(name, data, depth=0, budget=None):
+    budget = budget if budget is not None else [MAX_EXPANDED]
+    budget[0] -= len(data)
+    if budget[0] < 0 or depth > 5:
+        raise ValueError('Payload inspection budget exceeded: ' + name)
+    bad = []
+    # UTF-16 strings appear in Android XML/DEX resources and native metadata.
+    normalized = data.replace(b'\x00', b'')
+    matches = sorted({m.group().decode('ascii').lower() for m in CONTENT.finditer(normalized)})
+    if matches:
+        bad.append(name + ': ' + ', '.join(matches))
+    if data.startswith(b'PK\x03\x04'):
+        with zipfile.ZipFile(io.BytesIO(data)) as nested:
+            for item in nested.infolist():
+                if item.is_dir():
+                    continue
+                if item.file_size > budget[0]:
+                    raise ValueError('Nested payload too large: ' + name)
+                child = name + '!/' + item.filename
+                if FORBIDDEN.search(item.filename):
+                    bad.append(child)
+                bad.extend(inspect_payload(child, nested.read(item), depth + 1, budget))
+    elif data.startswith(b'\x1f\x8b') or name.endswith('NOTICES.Z'):
+        # Limit decompression before allocating an unbounded notices payload.
+        inflater = zlib.decompressobj(16 + zlib.MAX_WBITS if data.startswith(b'\x1f\x8b') else zlib.MAX_WBITS)
+        expanded = inflater.decompress(data, max(1, budget[0] + 1))
+        if not inflater.eof:
+            raise ValueError('Compressed payload incomplete or too large: ' + name)
+        bad.extend(inspect_payload(name + '!/expanded', expanded, depth + 1, budget))
+    return bad
+
+
 def verify(path):
     if path.name == 'package_config.json':
         names = {p['name'] for p in json.loads(path.read_text())['packages']}
-        bad = sorted(names & FORBIDDEN_PACKAGES)
+        bad = sorted(name for name in names if name in FORBIDDEN_PACKAGES or FORBIDDEN.search(name))
     elif path.is_dir():
         bad = [str(p.relative_to(path)) for p in path.rglob('*') if p.is_file() and FORBIDDEN.search(str(p.relative_to(path)))]
+        for file in path.rglob('*'):
+            if file.is_file():
+                bad.extend(inspect_payload(str(file.relative_to(path)), file.read_bytes()))
         executable = path / 'Runner'
         if executable.exists():
             symbols = subprocess.check_output(['nm', '-gU', str(executable)], text=True)
@@ -39,6 +85,9 @@ def verify(path):
     else:
         with zipfile.ZipFile(path) as archive:
             bad = [name for name in archive.namelist() if FORBIDDEN.search(name)]
+            for item in archive.infolist():
+                if not item.is_dir():
+                    bad.extend(inspect_payload(item.filename, archive.read(item)))
             manifests = [name for name in archive.namelist()
                          if name == 'AndroidManifest.xml' or name.endswith('/manifest/AndroidManifest.xml')]
             if path.suffix in {'.apk', '.aab'} and not manifests:
@@ -72,8 +121,8 @@ def verify(path):
                 native_count += 1
             print(f'Android ELF load-segment alignment: PASS ({native_count} arm64 libraries)')
     if bad:
-        raise SystemExit('Unready Office dependencies in mobile release:\n' + '\n'.join(bad))
-    print(f'Mobile Office dependency closure: PASS ({path})')
+        raise SystemExit('Excluded implementations or identifiers in mobile release:\n' + '\n'.join(bad))
+    print(f'Mobile dependency and payload closure: PASS ({path})')
 
 
 if __name__ == '__main__':

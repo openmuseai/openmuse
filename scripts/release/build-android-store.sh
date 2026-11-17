@@ -90,10 +90,9 @@ fi
 runtime_tmp="$(mktemp -d)"
 trap 'rm -rf "$runtime_tmp"' EXIT
 bash "$repo_root/scripts/release/prepare-runtime-config.sh" "$deployment_profile" "$runtime_tmp/runtime-defines.json"
-runtime_validation_args=()
+runtime_validation_args=("$runtime_tmp/runtime-defines.json" --report "$runtime_tmp/runtime-input-report.json")
 if [[ "$allow_dirty" == true ]]; then runtime_validation_args+=(--allow-incomplete); fi
-python3 "$repo_root/scripts/release/verify-runtime-input.py" "$runtime_tmp/runtime-defines.json" \
-  --report "$runtime_tmp/runtime-input-report.json" "${runtime_validation_args[@]}"
+python3 "$repo_root/scripts/release/verify-runtime-input.py" "${runtime_validation_args[@]}"
 python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$repo_root/app/openmuse_mobile/.dart_tool/package_config.json"
 
 (cd app/openmuse_mobile && "$repo_root/scripts/filing/with-android-release-signing.sh" \

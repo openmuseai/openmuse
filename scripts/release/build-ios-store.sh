@@ -46,10 +46,9 @@ security find-identity -v -p codesigning | grep -q "$identity" || {
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 bash "$repo_root/scripts/release/prepare-runtime-config.sh" "$deployment_profile" "$tmp/runtime-defines.json"
-runtime_validation_args=()
+runtime_validation_args=("$tmp/runtime-defines.json" --report "$tmp/runtime-input-report.json")
 if [[ "$allow_dirty" == true ]]; then runtime_validation_args+=(--allow-incomplete); fi
-python3 "$repo_root/scripts/release/verify-runtime-input.py" "$tmp/runtime-defines.json" \
-  --report "$tmp/runtime-input-report.json" "${runtime_validation_args[@]}"
+python3 "$repo_root/scripts/release/verify-runtime-input.py" "${runtime_validation_args[@]}"
 python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$repo_root/app/openmuse_mobile/.dart_tool/package_config.json"
 security cms -D -i "$profile" >"$tmp/profile.plist"
 python3 - "$tmp/profile.plist" "$profile_name" "$team" <<'PY'
@@ -130,20 +129,25 @@ mkdir -p "$output_dir"
 cp "${tmp}/runtime-input-report.json" "$output_dir/runtime-input-report.json"
 artifact="$output_dir/OpenMuse-ios-${market}-${version}-${build_number}.ipa"
 cp "$source_ipa" "$artifact"
+python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$artifact"
 cp "$tmp/codesign.txt" "$output_dir/signature-report.txt"
 python3 - "$artifact" "$output_dir/release.json" "$version" "$build_number" "$identity" "$dirty" "$skip_tests" "${OPENMUSE_APP_FILING_NUMBER:-}" "$market" "$tmp/runtime-defines.json" <<'PY'
 import hashlib, json, pathlib, subprocess, sys
 artifact, output, version, number, cert, dirty, skipped, filing, market, config_path = sys.argv[1:]
 release = json.loads(json.loads(pathlib.Path(config_path).read_text())['OPENMUSE_RELEASE_JSON'])
 snapshot = next(region['bundle']['snapshot'] for region in release['regions'] if region['available'])
-language = snapshot['localization']['defaultLocale']
+language = release.get('defaultLocale', snapshot['localization']['defaultLocale'])
+service_regions = [region['id'] for region in release['regions'] if region['available']]
+storefronts = [{'us': 'US', 'cn': 'CN'}[region] for region in service_regions
+              if region in {'us', 'cn'}]
 filing = snapshot.get('regulatory', {}).get('appFilingNumber', '')
 runtime_report = json.loads(pathlib.Path(output).with_name('runtime-input-report.json').read_text())
 record = {
     'status': 'internal-test-only' if not runtime_report['productionInputsComplete'] or dirty == 'true' or skipped == 'true' or (market == 'cn' and not filing) else 'store-candidate',
     'lane': f'ios-{market}',
     'defaultLanguage': language,
-    'targetStorefronts': ['US'] if market == 'us' else ['CN'],
+    'targetStorefronts': storefronts,
+    'serviceRegions': service_regions,
     'showChinaFiling': bool(filing),
     'artifact': pathlib.Path(artifact).name,
     'sha256': hashlib.sha256(pathlib.Path(artifact).read_bytes()).hexdigest(),

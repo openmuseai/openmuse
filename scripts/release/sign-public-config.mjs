@@ -11,7 +11,7 @@ const key=fs.readFileSync(v['private-key']);
 const publicX=createPublicKey(key).export({format:'jwk'}).x;
 if(bundle.bootstrap.publicKeys[v.kid]!==publicX)throw Error('Private signer does not match installation trust root');
 const snapshot=structuredClone(bundle.snapshot), now=new Date();
-snapshot.sequence=Number(v.sequence);snapshot.releaseId=`us-official-${snapshot.sequence}`;
+snapshot.sequence=Number(v.sequence);snapshot.releaseId=`${snapshot.scope.dataRegion}-official-${snapshot.sequence}`;
 snapshot.issuedAt=now.toISOString();snapshot.expiresAt=new Date(now.getTime()+90*86400000).toISOString();
 const encode=v=>Buffer.from(JSON.stringify(v)).toString('base64url');
 const body=encode({alg:'EdDSA',typ:'openmuse.runtime-config+json',kid:v.kid})+'.'+encode(snapshot);

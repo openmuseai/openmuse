@@ -20,14 +20,19 @@ def nodes(value):
             yield from nodes(child)
 
 
-def verify():
-    markdown = (BASE / 'OpenMuse-User-Guide.md').read_text()
+def verify(china=False):
+    stem = 'OpenMuse-User-Guide.zh-CN' if china else 'OpenMuse-User-Guide'
+    markdown = (BASE / (stem + '.md')).read_text()
     links = re.findall(r'(?<!!)\[[^\]]*\]\(([^)]+)\)', markdown)
     images = re.findall(r'!\[[^\]]*\]\(([^)]+)\)', markdown)
     assert len(images) >= 3 and len(links) >= 15
     assert len(re.findall(r'^## ', markdown, re.M)) >= 15
-    assert not re.search('[\u4e00-\u9fff]', markdown), 'Overseas guide must be English'
-    document = BASE / 'OpenMuse-User-Guide.sydoc'
+    if china:
+        assert re.search('[\u4e00-\u9fff]', markdown), 'China guide must include Chinese'
+        assert all('us.openmuseai.com' not in link for link in links), 'China guide must not send users to US services'
+    else:
+        assert not re.search('[\u4e00-\u9fff]', markdown), 'Overseas guide must be English'
+    document = BASE / (stem + '.sydoc')
     provenance = json.loads(document.with_suffix('.provenance.json').read_text())
     assert hashlib.sha256(document.read_bytes()).hexdigest() == provenance['sha256']
     with zipfile.ZipFile(document) as archive:
@@ -50,8 +55,9 @@ def verify():
             embedded = [n for n in names if '/assets/' in n and hashlib.sha256(archive.read(n)).hexdigest() == digest]
             assert len(embedded) == 1, 'Screenshot missing from native document'
         assert sum(n.get('Type') == 'NodeHeading' for n in all_nodes) >= 16
-    print(f'Welcome guide PASS: {len(images)} embedded screenshots, {len(links)} real hyperlinks, 15 sections.')
+    print(f'{stem} PASS: {len(images)} embedded screenshots, {len(links)} real hyperlinks, 15 sections.')
 
 
 if __name__ == '__main__':
     verify()
+    verify(china=True)

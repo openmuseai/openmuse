@@ -141,6 +141,21 @@ if (( pdf_selected )); then
   require_component_file PDF "$OPENMUSE_PDF_PRODUCT_BUNDLE"
   require_component_file PDF "$OPENMUSE_PDF_PRODUCT_PUBLIC_KEY"
   require_component_file PDF "$OPENMUSE_PDF_PRODUCT_IDENTITY"
+  python3 - "$OPENMUSE_PDF_PRODUCT_BUNDLE" "$OPENMUSE_PDF_PRODUCT_IDENTITY" <<'PY'
+import json, sys, zipfile
+
+with zipfile.ZipFile(sys.argv[1]) as bundle:
+    manifest = json.loads(bundle.read('manifest.json'))
+    catalog = json.loads(bundle.read('catalog.json'))
+with open(sys.argv[2], encoding='utf-8') as source:
+    identity = json.load(source)
+if not identity.get('keyId') or not identity.get('version'):
+    raise SystemExit('PDF identity must pin a keyId and version')
+if manifest.get('version') != identity['version'] or catalog.get('version') != identity['version']:
+    raise SystemExit(
+        f"PDF bundle version {manifest.get('version')} does not match pinned identity {identity['version']}"
+    )
+PY
 fi
 if (( ppt_selected )); then
   OPENMUSE_PPTX_BUNDLE="${OPENMUSE_PPTX_BUNDLE:-$(current_bundle genoffice-pptx genoffice-pptx)}"
@@ -318,6 +333,9 @@ output.write_text(json.dumps({
     'sha256': hashlib.sha256(bundle.read_bytes()).hexdigest(),
 }, indent=2) + '\n')
 PY
+  if [[ "$distribution" == app-store ]]; then
+    python3 "$repo_root/scripts/release/stage-macos-fixed-mcp.py" --root "$pptx_dest"
+  fi
 fi
 
 # The CLI plugin ships a native launcher beside the GUI. It remains callable
@@ -340,6 +358,7 @@ fi
 if [[ "$skip_tests" -eq 0 ]]; then
   (
     cd "$repo_root/plugins/helix"
+    flutter pub get
     flutter analyze
     OPENMUSE_REQUIRE_PTY_TEST=1 \
       OPENMUSE_PTY_LIBRARY_DIR="$app_path/Contents/Frameworks" \
@@ -397,8 +416,9 @@ mkdir -p "$update_dest"
 install -m 755 "$repo_root/scripts/update/install_macos.sh" "$update_dest/install_macos.sh"
 if [[ "$distribution" == app-store ]]; then
   # Slides uses the bundled Node interpreter and its self-contained server.
-  # The Store document workspace does not ship the local agent/package manager.
-  rm -rf "$update_dest" "$bundled_helix" "$dsh_dest/node_modules"
+  # Fixed DSH composition retains the desktop panel without package management.
+  install -m 644 "$repo_root/plugins/dsh-agent/assets/store-runner.mjs" "$dsh_dest/node_modules/openmuse-store-runner.mjs"
+  rm -rf "$update_dest" "$dsh_dest/node_modules/pnpm" "$dsh_dest/node_modules/.bin/pnpm" "$dsh_dest/node_modules/.bin/pnpx"
   codesign --force --sign - --entitlements "$app_root/macos/Runner/$entitlement_file" "$app_path"
 fi
 

@@ -15,6 +15,8 @@ def main():
     parser.add_argument('--inventory', type=Path, required=True)
     parser.add_argument('--build-instructions', type=Path, required=True)
     parser.add_argument('--repository', type=Path, required=True)
+    parser.add_argument('--parent')
+    parser.add_argument('--build-number', type=int, default=12)
     args = parser.parse_args()
     record = json.loads(args.inventory.read_text())
     if record['rejectedPotentialSecrets'] or record['oversizedFilesRequireReview']:
@@ -32,8 +34,12 @@ def main():
         return subprocess.check_output(['git', *args], input=data, env=env)
 
     ref = 'refs/heads/release/macos-1.0.0-source'
-    if subprocess.run(['git', 'show-ref', '--verify', '--quiet', ref], env=env).returncode == 0:
-        raise SystemExit('Snapshot ref already exists; inspect before replacing it.')
+    exists = subprocess.run(['git', 'show-ref', '--verify', '--quiet', ref], env=env).returncode == 0
+    previous = git('rev-parse', ref).decode().strip() if exists else None
+    if previous and previous != args.parent:
+        raise SystemExit('Supply the exact previous snapshot as --parent for a reviewed update.')
+    if args.parent and previous != args.parent:
+        raise SystemExit('Parent must match the current source branch.')
     git('read-tree', '--empty')
     entries = sorted(record['files'].items())
     for offset in range(0, len(entries), 400):
@@ -56,7 +62,7 @@ def main():
             print(f'Source Git inputs stored: {min(offset + len(batch), len(entries))}/{len(entries)}', flush=True)
     portable = {k: {x: y for x, y in v.items() if x != 'path'} for k, v in record['files'].items()}
     instructions = args.build_instructions.read_text().replace('source archive', 'source version').replace('source ZIP', 'source tree')
-    instructions = re.sub(r'--build-number \d+', '--build-number 11', instructions)
+    instructions = re.sub(r'--build-number \d+', f'--build-number {args.build_number}', instructions)
     extra = {
         'BUILD-MACOS.md': instructions.encode(),
         'README.md': ('# OpenMuse Desktop 1.0.0 macOS source\n\n'
@@ -66,6 +72,7 @@ def main():
                       'OpenMuse is AGPL-3.0-or-later; third-party licenses remain applicable.\n').encode(),
         'SOURCE-SHA256.json': (json.dumps(portable, indent=2) + '\n').encode(),
         'SOURCE-REVISION.json': (json.dumps({'clientBuildCommit': record['clientCommit'],
+            'version': '1.0.0', 'buildNumber': args.build_number,
             'clientDirectory': 'Muse-Client', 'fileCount': len(entries),
             'sourcePublication': 'Git source branch; no separately uploaded source ZIP',
             'provenance': 'Client source files map to the clean isolated build commit. External source file hashes are pinned by SOURCE-SHA256.json. Signing credentials and generated build caches are excluded.'}, indent=2) + '\n').encode(),
@@ -74,8 +81,9 @@ def main():
         oid = git('hash-object', '-w', '--stdin', data=content).decode().strip()
         git('update-index', '--add', '--cacheinfo', '100644', oid, name)
     tree = git('write-tree').decode().strip()
-    commit = git('commit-tree', tree, data=b'Provide macOS 1.0.0 corresponding source and build instructions\n').decode().strip()
-    git('update-ref', ref, commit)
+    parents = ['-p', args.parent] if args.parent else []
+    commit = git('commit-tree', tree, *parents, data=f'Provide macOS 1.0.0 build {args.build_number} corresponding source\n'.encode()).decode().strip()
+    git('update-ref', ref, commit, *([previous] if previous else []))
     print(f'Prepared local source snapshot {commit}; not pushed.', flush=True)
 
 

@@ -11,9 +11,11 @@ python3 - "$repo_root" "$deployment_profile" "$bundle_tmp" <<'PY'
 import json, os, pathlib, sys
 root, profile, target = sys.argv[1:]
 market = os.environ.get('OPENMUSE_RELEASE_MARKET') or ('china' if profile == 'china' else 'overseas')
-if market not in {'china','overseas'}:
-    raise SystemExit('OPENMUSE_RELEASE_MARKET must be china or overseas')
+if market not in {'china','overseas','custom'}:
+    raise SystemExit('OPENMUSE_RELEASE_MARKET must be china, overseas or custom')
 source = os.environ.get('OPENMUSE_RELEASE_CONFIG_FILE')
+if market == 'custom' and not source:
+    raise SystemExit('A multi-region release requires an explicit OPENMUSE_RELEASE_CONFIG_FILE')
 release = json.loads(pathlib.Path(source).read_text()) if source else json.loads((pathlib.Path(root) / 'packages/openmuse_runtime_config/assets/releases' / f'{market}.json').read_text())
 provided = os.environ.get('OPENMUSE_DEPLOYMENT_DEFINES_FILE')
 if provided:
@@ -34,7 +36,8 @@ for region in release['regions']:
     if not region['available']:
         continue
     bundle = region['bundle']
-    if 'OPENMUSE_APP_FILING_NUMBER' in os.environ:
+    if ('OPENMUSE_APP_FILING_NUMBER' in os.environ and
+            bundle['snapshot']['scope']['dataRegion'] == 'cn'):
         bundle['snapshot'].setdefault('regulatory', {})['appFilingNumber'] = os.environ['OPENMUSE_APP_FILING_NUMBER']
     if 'OPENMUSE_UPDATE_CHANNEL' in os.environ:
         bundle['snapshot']['updates']['channel'] = os.environ['OPENMUSE_UPDATE_CHANNEL']
