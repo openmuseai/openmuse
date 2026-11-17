@@ -1184,6 +1184,11 @@ final class OpenMuseStrings {
   String resourcecenterDraft() => format("resourcecenter.draft");
   String resourcecenterEarlier() => format("resourcecenter.earlier");
   String resourcecenterEdit() => format("resourcecenter.edit");
+  String resourcecenterEmbedCycle() => format("resourcecenter.embedCycle");
+  String resourcecenterEmbedDepth() => format("resourcecenter.embedDepth");
+  String resourcecenterEmbedMismatch() =>
+      format("resourcecenter.embedMismatch");
+  String resourcecenterEmbedRetry() => format("resourcecenter.embedRetry");
   String resourcecenterEmptyFolder() => format("resourcecenter.emptyFolder");
   String resourcecenterEmptyHint() => format("resourcecenter.emptyHint");
   String resourcecenterExpired() => format("resourcecenter.expired");

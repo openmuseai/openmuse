@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "en",
   "namespace": "builtin",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "builtin.auth": "Account",
     "builtin.cloud": "Cloud workspaces",

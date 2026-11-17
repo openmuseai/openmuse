@@ -8,7 +8,7 @@
 
 `assets/deployments/` 保存部署数据。`default` 保留既有默认部署，`global-us` 对齐现有 US 商店参数，`china` 对齐原 Linux CN 构建参数。默认部署的数据区域使用 `legacy-default`，不从域名推断真实数据驻留位置。
 
-正式多端发行优先编译 `assets/releases/china.json` / `overseas.json`，使用 `scripts/release/prepare-runtime-config.sh` 输出 `OPENMUSE_RELEASE_JSON`；地区选择与配置下发清单见 `docs/REGIONAL-APPS-RUNTIME-REMEDIATION.zh-CN.md`。以下 profile/bundle 接口保留低层 SDK 与自定义安装兼容用途。
+正式多端发行优先编译 `assets/releases/china.json` / `overseas.json`，使用 `scripts/release/prepare-runtime-config.sh` 输出 `OPENMUSE_RELEASE_JSON`；地区选择与配置下发清单见 `docs/globalization/REGIONAL-APPS-RUNTIME-REMEDIATION.zh-CN.md`。以下 profile/bundle 接口保留低层 SDK 与自定义安装兼容用途。
 
 选择兼容发行 profile：
 

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "zh-Hans",
   "namespace": "updates",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "updates.update_ready.ef88289a": "更新已就绪",
     "updates.openmuse_is_downloaded_and_verified_restar.14710fdb": "OpenMuse {value1} 已下载并校验。立即重启以安装更新，或稍后在左下角再次点击更新。",

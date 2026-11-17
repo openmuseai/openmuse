@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "zh-Hans",
   "namespace": "mobile",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "mobile.desktop_authorization_has_expired.cff089e8": "Desktop 授权已过期",
     "mobile.the_scheduled_task_response_is_too_large.8fb95058": "定时任务响应过大",

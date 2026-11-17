@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "en",
   "namespace": "updates",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "updates.update_ready.ef88289a": "Update ready",
     "updates.openmuse_is_downloaded_and_verified_restar.14710fdb": "OpenMuse {value1} is downloaded and verified. Restart now to install, or use the update notice later.",

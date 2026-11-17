@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "zh-Hans",
   "namespace": "builtin",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "builtin.auth": "账户",
     "builtin.cloud": "云工作区",

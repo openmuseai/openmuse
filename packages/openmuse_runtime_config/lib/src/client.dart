@@ -400,8 +400,9 @@ final class RuntimeConfigClient {
     for (final item in snapshot.json['resources'] as List? ?? const []) {
       final r = item as Map;
       if (!{'messages', 'pluginMessages'}.contains(r['kind']) ||
-          r['locale'] != locale)
+          r['locale'] != locale) {
         continue;
+      }
       found = true;
       final id = r['id'] as String;
       if (staged.containsKey(id)) continue;

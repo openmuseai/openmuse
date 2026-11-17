@@ -15,10 +15,15 @@ final class OpenMuseRegionBootstrap extends StatefulWidget {
     required this.store,
     required this.boot,
     this.loadRelease = loadInstalledRelease,
+    this.requiresLegalConsent = true,
   });
   final Future<ConfigStore> Function(InstalledRelease) store;
   final Future<Widget> Function(DeploymentBundle, String? initialLanguage) boot;
   final Future<InstalledRelease> Function() loadRelease;
+
+  /// Mac App Store apps must not present an additional license at launch.
+  /// Skipping this page never records agreement on the user's behalf.
+  final bool requiresLegalConsent;
   @override
   State<OpenMuseRegionBootstrap> createState() => _RegionBootstrapState();
 }
@@ -70,7 +75,8 @@ final class _RegionBootstrapState extends State<OpenMuseRegionBootstrap> {
   }
 
   Future<void> _boot(InstalledRegion region) async {
-    if (!await _selection!.hasAcceptedLegal(region)) {
+    if (widget.requiresLegalConsent &&
+        !await _selection!.hasAcceptedLegal(region)) {
       if (mounted) {
         setState(() {
           _consentRegion = region;
@@ -156,6 +162,7 @@ final class _RegionBootstrapState extends State<OpenMuseRegionBootstrap> {
     // page. A returning user sees only the neutral launch surface during I/O.
     if (_busy && _consentRegion == null) {
       return MaterialApp(
+        initialRoute: '/',
         debugShowCheckedModeBanner: false,
         theme: openMuseOnboardingTheme(Brightness.light),
         darkTheme: openMuseOnboardingTheme(Brightness.dark),
@@ -186,10 +193,11 @@ final class _RegionBootstrapState extends State<OpenMuseRegionBootstrap> {
     if (_consentRegion case final region?) {
       // The legal documents follow the release market, independently of the
       // device language. No service boot happens before durable acceptance.
-      final english = _selection!.release.market != 'china';
+      final english = region.id != 'cn';
       final locale = english ? 'en' : 'zh-Hans';
       final legalStrings = OpenMuseStrings.forLocale(locale);
       return MaterialApp(
+        initialRoute: '/',
         debugShowCheckedModeBanner: false,
         theme: openMuseOnboardingTheme(Brightness.light),
         darkTheme: openMuseOnboardingTheme(Brightness.dark),
@@ -222,6 +230,7 @@ final class _RegionBootstrapState extends State<OpenMuseRegionBootstrap> {
       builder: (context, _) => OpenMuseLocaleScope(
         controller: _locale,
         child: MaterialApp(
+          initialRoute: '/',
           debugShowCheckedModeBanner: false,
           theme: openMuseOnboardingTheme(Brightness.light),
           darkTheme: openMuseOnboardingTheme(Brightness.dark),

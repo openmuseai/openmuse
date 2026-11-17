@@ -394,6 +394,11 @@
         "sessionStorageKey": {
           "type": "string",
           "pattern": "^[A-Za-z0-9_.-]{1,180}$"
+        },
+        "documentBaseUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://[^?#]+/$"
         }
       },
       "additionalProperties": false

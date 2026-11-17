@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "zh-Hans",
   "namespace": "office",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "office.unable_to_safely_open_this_docx_file.d2dd2cd6": "DOCX 无法安全打开",
     "office.paragraph.e6bbad92": "段落 {value1}",

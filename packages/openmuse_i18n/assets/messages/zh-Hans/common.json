@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "zh-Hans",
   "namespace": "common",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "common.language": "语言",
     "common.followSystem": "跟随系统",

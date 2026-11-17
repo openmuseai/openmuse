@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "en",
   "namespace": "office",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "office.unable_to_safely_open_this_docx_file.d2dd2cd6": "Unable to safely open this DOCX file",
     "office.paragraph.e6bbad92": "Paragraph {value1}",

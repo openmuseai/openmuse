@@ -195,6 +195,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  muse_resource_embed:
+    dependency: transitive
+    description:
+      path: "../muse_resource_embed"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_plugin_sdk:
     dependency: "direct main"
     description:

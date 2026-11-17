@@ -131,7 +131,8 @@
         "cloud": "/",
         "relay": "/"
       },
-      "sessionStorageKey": "openmuse.auth.session.us.v1"
+      "sessionStorageKey": "openmuse.auth.session.us.v1",
+      "documentBaseUrl": "https://us.openmuseai.com/app/"
     },
     "support": {
       "email": "developer@openmuseai.com"

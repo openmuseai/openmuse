@@ -9,7 +9,7 @@
       "id": "us",
       "labels": {
         "en": "United States",
-        "zh-Hans": "\u7f8e\u56fd"
+        "zh-Hans": "美国"
       },
       "available": true,
       "bundle": {
@@ -145,7 +145,8 @@
               "cloud": "/",
               "relay": "/"
             },
-            "sessionStorageKey": "openmuse.auth.session.us.v1"
+            "sessionStorageKey": "openmuse.auth.session.us.v1",
+            "documentBaseUrl": "https://us.openmuseai.com/app/"
           },
           "support": {
             "email": "developer@openmuseai.com"
@@ -173,7 +174,7 @@
       "id": "eu",
       "labels": {
         "en": "Europe",
-        "zh-Hans": "\u6b27\u6d32"
+        "zh-Hans": "欧洲"
       },
       "available": false
     },
@@ -181,7 +182,7 @@
       "id": "apac",
       "labels": {
         "en": "Asia Pacific",
-        "zh-Hans": "\u4e9a\u592a"
+        "zh-Hans": "亚太"
       },
       "available": false
     }

@@ -37,4 +37,4 @@ flutter test
 
 The integration test launches the Node publisher with an ephemeral Ed25519 key and verifies its signed releases in Dart, including cohort persistence, language overlays, endpoint staging, expiry and atomic rejection. Mobile's `test/html_localization_test.dart` additionally compares both message parsers and runs the generated plugin HTML against a DOM with a mock host bridge.
 
-Region boot, downloadable languages, plugin adapters and runtime parameters are described in `../../docs/REGIONAL-APPS-RUNTIME-REMEDIATION.zh-CN.md`. `OpenMuseClientRuntime.bootstrap()` restores, refreshes the selected regional feed, and prepares the preferred language before the account adapters are created.
+Region boot, downloadable languages, plugin adapters and runtime parameters are described in `../../docs/globalization/REGIONAL-APPS-RUNTIME-REMEDIATION.zh-CN.md`. `OpenMuseClientRuntime.bootstrap()` restores, refreshes the selected regional feed, and prepares the preferred language before the account adapters are created.

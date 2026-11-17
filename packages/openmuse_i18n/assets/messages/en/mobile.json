@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "en",
   "namespace": "mobile",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "mobile.desktop_authorization_has_expired.cff089e8": "Desktop authorization has expired",
     "mobile.the_scheduled_task_response_is_too_large.8fb95058": "The scheduled task response is too large",

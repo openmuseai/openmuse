@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "zh-Hans",
   "namespace": "resourcecenter",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "resourcecenter.home": "首页",
     "resourcecenter.recent": "最近",
@@ -112,6 +112,10 @@
     "resourcecenter.contextUnavailable": "当前没有已启用的插件可读取此资源供对话使用。引用已保留在草稿中。",
     "resourcecenter.contextTooLarge": "引用内容超过当前对话运行时的 32 KiB 限制，请减少资源数量或选择更小的文件。",
     "resourcecenter.peerUpgrade": "此电脑尚不支持资源中心，请更新电脑上的 OpenMuse 后重新连接。",
-    "resourcecenter.localImportHint": "导入的文件会保存为 OpenMuse 副本，编辑不会覆盖其他应用中的原文件。"
+    "resourcecenter.localImportHint": "导入的文件会保存为 OpenMuse 副本，编辑不会覆盖其他应用中的原文件。",
+    "resourcecenter.embedCycle": "不能在此处嵌入当前资源或上级资源，请选择其他资源。",
+    "resourcecenter.embedDepth": "引用嵌套层级过深，请单独打开资源或减少嵌套。",
+    "resourcecenter.embedMismatch": "引用目标与资源内容不一致，请重新选择。",
+    "resourcecenter.embedRetry": "重试加载"
   }
 }

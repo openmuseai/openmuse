@@ -278,7 +278,19 @@ final class RuntimeConfig {
       }
     }
     final web = configObject(data['web'], 'web');
-    configKeys(web, {'sessionStorageKey', 'servicePaths'}, 'web');
+    configKeys(web, {
+      'sessionStorageKey',
+      'servicePaths',
+      'documentBaseUrl',
+    }, 'web');
+    if (web.containsKey('documentBaseUrl')) {
+      final base = configHttpsUri(web['documentBaseUrl'], 'documentBaseUrl');
+      if (!base.path.endsWith('/')) {
+        throw const FormatException(
+          'Document browser base must end with a slash',
+        );
+      }
+    }
     final webStorageKey = configText(
       web['sessionStorageKey'],
       'web sessionStorageKey',
@@ -477,6 +489,11 @@ final class RuntimeConfig {
 
   String get webAuthSessionStorageKey =>
       (json['web'] as Map)['sessionStorageKey'] as String;
+
+  Uri? get documentBrowserUri {
+    final value = (json['web'] as Map)['documentBaseUrl'];
+    return value == null ? null : Uri.parse(value as String);
+  }
 
   Uri webServiceUri(ServiceId id, Uri page) {
     final path = ((json['web'] as Map)['servicePaths'] as Map)[id.name];

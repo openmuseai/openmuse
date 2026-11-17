@@ -25,7 +25,7 @@
         "uiKey": "zh"
       }
     ],
-    "sourceRevision": 2
+    "sourceRevision": 3
   },
   "entries": {
     "office.unable_to_safely_open_this_docx_file.d2dd2cd6": {
@@ -13199,6 +13199,66 @@
         "zh-Hans": "此 AI 回复仅包含附件，举报不会上传附件文件。请在补充说明中描述问题。"
       },
       "sources": []
+    },
+    "resourcecenter.embedCycle": {
+      "namespace": "resourcecenter",
+      "parameters": [],
+      "sourceRevision": 3,
+      "messages": {
+        "en": "This resource is already in the containing reference chain. Choose another resource.",
+        "zh-Hans": "不能在此处嵌入当前资源或上级资源，请选择其他资源。"
+      },
+      "sources": [
+        {
+          "file": "packages/openmuse_resource_center/lib/src/resource_open.dart",
+          "member": "embedCycle"
+        }
+      ]
+    },
+    "resourcecenter.embedDepth": {
+      "namespace": "resourcecenter",
+      "parameters": [],
+      "sourceRevision": 3,
+      "messages": {
+        "en": "This reference is nested too deeply. Open the resource separately or reduce nesting.",
+        "zh-Hans": "引用嵌套层级过深，请单独打开资源或减少嵌套。"
+      },
+      "sources": [
+        {
+          "file": "packages/openmuse_resource_center/lib/src/resource_open.dart",
+          "member": "embedDepth"
+        }
+      ]
+    },
+    "resourcecenter.embedMismatch": {
+      "namespace": "resourcecenter",
+      "parameters": [],
+      "sourceRevision": 3,
+      "messages": {
+        "en": "The reference does not match this resource. Choose it again.",
+        "zh-Hans": "引用目标与资源内容不一致，请重新选择。"
+      },
+      "sources": [
+        {
+          "file": "packages/openmuse_resource_center/lib/src/resource_open.dart",
+          "member": "embedMismatch"
+        }
+      ]
+    },
+    "resourcecenter.embedRetry": {
+      "namespace": "resourcecenter",
+      "parameters": [],
+      "sourceRevision": 3,
+      "messages": {
+        "en": "Retry loading",
+        "zh-Hans": "重试加载"
+      },
+      "sources": [
+        {
+          "file": "packages/openmuse_resource_center/lib/src/resource_embed.dart",
+          "member": "embedRetry"
+        }
+      ]
     }
   }
 }

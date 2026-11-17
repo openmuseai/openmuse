@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "zh-Hans",
   "namespace": "admin",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "admin.workspace": "工作空间",
     "admin.overview": "总览",

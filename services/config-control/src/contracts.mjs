@@ -83,6 +83,7 @@ export function validateSnapshot(s, bundle) {
     if (!Object.hasOwn(s.origins, link.originRef) || !locales.includes(link.fallbackLocale) || !Object.hasOwn(link.pathByLocale, link.fallbackLocale)) throw Error('Unresolved link origin or fallback');
     for (const [locale, path] of Object.entries(link.pathByLocale)) { if (!locales.includes(locale)) throw Error('Link language is not enabled'); safePath(path); }
   }
+  if (s.web.documentBaseUrl !== undefined && !https(s.web.documentBaseUrl).pathname.endsWith('/')) throw Error('Document browser base must end with a slash');
   for (const path of Object.values(s.web.servicePaths)) safePath(path);
   if (s.web.servicePaths.relay && s.web.servicePaths.relay !== '/') throw Error('Paired relay gateway requires the origin root');
   if (s.navigation) {

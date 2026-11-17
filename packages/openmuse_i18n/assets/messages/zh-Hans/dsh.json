@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "zh-Hans",
   "namespace": "dsh",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "dsh.standardMode": "标准模式",
     "dsh.conversation": "DSH 对话",

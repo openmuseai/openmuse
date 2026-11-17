@@ -118,7 +118,8 @@
         "cloud": "/",
         "relay": "/"
       },
-      "sessionStorageKey": "openmuse.auth.session.cn.v1"
+      "sessionStorageKey": "openmuse.auth.session.cn.v1",
+      "documentBaseUrl": "https://app.openmuseai.com/"
     },
     "support": {
       "email": "developer@openmuseai.com"

@@ -14,8 +14,12 @@
       "available": true,
       "bundle": {
         "bootstrap": {
-          "discoveryUrls": [],
-          "publicKeys": {},
+          "discoveryUrls": [
+            "https://cn.openmuseai.com/v1/runtime/scopes/china/active.jws"
+          ],
+          "publicKeys": {
+            "openmuse-cn-config-20261105": "9u4OdYvgudf0iC13fJCm5wAgTgvecyqLVNiq0vgXLik"
+          },
           "allowedServiceOrigins": {
             "auth": [
               "https://cn.openmuseai.com"
@@ -28,9 +32,15 @@
             ],
             "updates": [
               "https://openmuseai.com"
+            ],
+            "relay": [
+              "https://cn.openmuseai.com"
             ]
           },
-          "allowedResourceOrigins": []
+          "allowedResourceOrigins": [
+            "https://cn.openmuseai.com"
+          ],
+          "cohortRouting": false
         },
         "snapshot": {
           "schemaVersion": 1,
@@ -65,6 +75,9 @@
               },
               "updates": {
                 "baseUrl": "https://openmuseai.com"
+              },
+              "relay": {
+                "baseUrl": "https://cn.openmuseai.com"
               }
             }
           },
@@ -132,7 +145,8 @@
               "cloud": "/",
               "relay": "/"
             },
-            "sessionStorageKey": "openmuse.auth.session.cn.v1"
+            "sessionStorageKey": "openmuse.auth.session.cn.v1",
+            "documentBaseUrl": "https://app.openmuseai.com/"
           },
           "support": {
             "email": "developer@openmuseai.com"
@@ -151,7 +165,7 @@
             }
           },
           "regulatory": {
-            "appFilingNumber": ""
+            "appFilingNumber": "粤ICP备2024331713号-5A"
           }
         }
       }

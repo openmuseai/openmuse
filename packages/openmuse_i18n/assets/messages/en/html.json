@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "en",
   "namespace": "html",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "html.connect_and_select_a_desktop_workspace_first": "Connect and select a Desktop workspace first",
     "html.send_a_message_to_a_workspace_at_a_scheduled_time": "Send a message to a workspace at a scheduled time",

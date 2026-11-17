@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "en",
   "namespace": "resourcecenter",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "resourcecenter.home": "Home",
     "resourcecenter.recent": "Recent",
@@ -112,6 +112,10 @@
     "resourcecenter.contextUnavailable": "No enabled plugin can provide conversation content for this resource. The reference remains in your draft.",
     "resourcecenter.contextTooLarge": "The content exceeds this conversation runtime’s 32 KiB resource limit. Choose fewer or smaller resources.",
     "resourcecenter.peerUpgrade": "This computer does not yet support the resource center. Update OpenMuse on the computer and reconnect.",
-    "resourcecenter.localImportHint": "Imported files are copies in OpenMuse. Changes do not overwrite the original in another app."
+    "resourcecenter.localImportHint": "Imported files are copies in OpenMuse. Changes do not overwrite the original in another app.",
+    "resourcecenter.embedCycle": "This resource is already in the containing reference chain. Choose another resource.",
+    "resourcecenter.embedDepth": "This reference is nested too deeply. Open the resource separately or reduce nesting.",
+    "resourcecenter.embedMismatch": "The reference does not match this resource. Choose it again.",
+    "resourcecenter.embedRetry": "Retry loading"
   }
 }

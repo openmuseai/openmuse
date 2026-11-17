@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "en",
   "namespace": "cli",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "cli.terminal": "TERMINAL",
     "cli.closeTerminal": "Close Terminal",

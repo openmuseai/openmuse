@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "locale": "zh-Hans",
   "namespace": "market",
-  "sourceRevision": 2,
+  "sourceRevision": 3,
   "messages": {
     "market.providers": "插件商店提供商",
     "market.registryAddress": "添加 HTTPS Registry 地址",
