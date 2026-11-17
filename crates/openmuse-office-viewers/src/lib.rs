@@ -101,6 +101,11 @@ pub fn inspect_pptx(bytes: &[u8]) -> Result<ViewerInspection, ViewerError> {
             return Err(ViewerError::MissingPart(required));
         }
     }
+    // Slide-level relationships are separate parts from presentation.xml.rels.
+    // Check all relationship parts before the text-only reader opens slides.
+    for part in parts.iter().filter(|part| part.name.ends_with(".rels")) {
+        validate_pptx_relationships(&part.bytes)?;
+    }
     let presentation = parts
         .iter()
         .find(|part| part.name == "ppt/presentation.xml")
@@ -129,6 +134,32 @@ pub fn inspect_pptx(bytes: &[u8]) -> Result<ViewerInspection, ViewerError> {
         paragraphs,
         capabilities: vec!["view"],
     })
+}
+
+fn validate_pptx_relationships(xml: &[u8]) -> Result<(), ViewerError> {
+    let mut reader = Reader::from_reader(xml);
+    loop {
+        match reader.read_event().map_err(|_| ViewerError::InvalidXml)? {
+            Event::Start(tag) | Event::Empty(tag)
+                if local_name(tag.name().as_ref()) == b"Relationship" =>
+            {
+                for attribute in tag.attributes().with_checks(true) {
+                    let attribute = attribute.map_err(|_| ViewerError::InvalidXml)?;
+                    if local_name(attribute.key.as_ref()) == b"TargetMode"
+                        && attribute
+                            .decode_and_unescape_value(reader.decoder())
+                            .map_err(|_| ViewerError::InvalidXml)?
+                            .eq_ignore_ascii_case("external")
+                    {
+                        return Err(ViewerError::ExternalRelationship);
+                    }
+                }
+            }
+            Event::DocType(_) => return Err(ViewerError::DocTypeDenied),
+            Event::Eof => return Ok(()),
+            _ => {}
+        }
+    }
 }
 
 pub fn inspect_pdf(bytes: &[u8]) -> Result<ViewerInspection, ViewerError> {
