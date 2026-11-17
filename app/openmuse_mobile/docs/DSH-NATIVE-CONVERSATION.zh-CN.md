@@ -3,7 +3,7 @@
 状态：按 2026-10-10 仓库实现整理。官方 DSH 对话样式的目标是完全兼容；当前代码是可在产品链路使用的纵向切片，不是 Desktop 对话面的完整复刻。  
 目标读者：OpenMuse Mobile、DSH Native Gateway、Flutter 对话渲染。
 
-本文描述 `app/openmuse_mobile` 里已经落地的 Flutter 对话流：它如何消费 DSH Session 事件、官方样式做到哪一层、插件定制 UI 为什么只能有限兼容。更早的开发计划与验收矩阵见 [`DSH-NATIVE-FLUTTER-CONVERSATION-ARCHITECTURE-PLAN.zh-CN.md`](../../../docs/DSH-NATIVE-FLUTTER-CONVERSATION-ARCHITECTURE-PLAN.zh-CN.md)。对话以外的业务插件预览与控制见 [`MOBILE-REMOTE-PLUGIN-SURFACE-PROTOCOL.zh-CN.md`](../../../docs/MOBILE-REMOTE-PLUGIN-SURFACE-PROTOCOL.zh-CN.md)；那是另一条协议，不负责渲染 DSH 对话事件。
+本文描述 `app/openmuse_mobile` 里已经落地的 Flutter 对话流：它如何消费 DSH Session 事件、官方样式做到哪一层、插件定制 UI 为什么只能有限兼容。更早的开发计划与验收矩阵见 [`DSH-NATIVE-FLUTTER-CONVERSATION-ARCHITECTURE-PLAN.zh-CN.md`](../../../docs/dsh/DSH-NATIVE-FLUTTER-CONVERSATION-ARCHITECTURE-PLAN.zh-CN.md)。对话以外的业务插件预览与控制见 [`MOBILE-REMOTE-PLUGIN-SURFACE-PROTOCOL.zh-CN.md`](../../../docs/plugins/MOBILE-REMOTE-PLUGIN-SURFACE-PROTOCOL.zh-CN.md)；那是另一条协议，不负责渲染 DSH 对话事件。
 
 ## 1. 决策
 

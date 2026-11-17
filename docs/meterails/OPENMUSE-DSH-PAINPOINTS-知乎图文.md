@@ -92,12 +92,12 @@
 
 | 缺口 | DSH 现状 | 宿主补法（OpenMuse） | 证据 |
 |---:|---|---|---|
-| 1 账号与身份 | 只有匿名 ID | GoTrue 账号 + 设备配对密码学 + 同账号实时接管 | `plugins/auth-gotrue`、`docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md` |
+| 1 账号与身份 | 只有匿名 ID | GoTrue 账号 + 设备配对密码学 + 同账号实时接管 | `plugins/auth-gotrue`、`docs/identity/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md` |
 | 2 存储与同步 | 只有本地存储 | S3 存储 ABI + TCK + BYOS + 同步插件，资源带租约与 Revision | `crates/openmuse-storage-s3`、`openmuse-storage-tck`、`crates/openmuse-workspace-sync` |
 | 3 多设备与移动端 | 无移动端 | 移动端 App + 语音输入 + 配对/远程工作台 | `packages/openmuse_mobile_core`、`plugins/speech-input`、`plugins/workspace-paired`、`plugins/remote-workbench` |
 | 4 桌面宿主表面 | 只有 web / headless | 窗口 + Helix 编辑器 + Office 只读 Viewer，全部按需激活 | `packages/muse_helix_surface`、`packages/openmuse_office_viewers`、`plugins/open-file-viewer` |
 | 5 开箱门槛 | 全手动 | sidecar 装 DSH + profile patch + 合同冻结权限，四步拉起 | `plugins/dsh-agent/openmuse.plugin.json`、`contracts/dsh/0.1.7-rc.1.contract.json` |
-| 6 云端执行世界 | 控制面之外没落地 | 云执行运行时 + 资源权威，作为 DSH 的 remote provider | `crates/openmuse-cloud-execution-runtime`、`crates/openmuse-cloud-resource-authority`、`docs/CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md` |
+| 6 云端执行世界 | 控制面之外没落地 | 云执行运行时 + 资源权威，作为 DSH 的 remote provider | `crates/openmuse-cloud-execution-runtime`、`crates/openmuse-cloud-resource-authority`、`docs/dsh/CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md` |
 
 这张表里最容易被忽略的是第 2 和第 3 行：**账号和存储是"无聊"的能力，但它们决定了这套东西能不能从"我一个人在电脑前玩"变成"我们团队一起用"。**
 

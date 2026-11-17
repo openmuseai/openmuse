@@ -9,7 +9,7 @@
 1. 打开 [可交互原型 index.html](index.html)。无需安装依赖，可离线双击，也可用下方本地服务器。左侧选场景，右侧切换插件安装状态、电脑在线状态和列表空/错/加载状态。
 2. 阅读 [产品范围与交互稿](PRODUCT.zh-CN.md)，重点看首期范围、复制语义、目录层级和新建规则。
 3. 技术审核看 [框架衔接与拟新增能力](FRAMEWORK-MAPPING.zh-CN.md)：逐项标明现有代码、缺口及 draft 契约，不将设计原型当作已完成的功能。
-4. 跨端场景看 [统一资源引用、可用性与对话交接](../../RESOURCE-REFERENCE-AVAILABILITY-AND-HANDOFF.zh-CN.md)：Mobile 只是 UI 入口；手机资源被 PC 对话消费、源端离线、临时目录清理以及对话版本保留，按共享框架语义处理。
+4. 跨端场景看 [统一资源引用、可用性与对话交接](../../workspace/RESOURCE-REFERENCE-AVAILABILITY-AND-HANDOFF.zh-CN.md)：Mobile 只是 UI 入口；手机资源被 PC 对话消费、源端离线、临时目录清理以及对话版本保留，按共享框架语义处理。
 
 ```bash
 cd /Users/mac/src/openmuse-io/Muse-Client

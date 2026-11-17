@@ -50,13 +50,13 @@
 | 中文深色概览，预览语言已切换 | [概览](../../../target/mobile-acceptance/2026-11-02/app-center/ios-r3/screenshots/08-overview-zh-dark.png) |
 | 中文深色真实目录 | [发现](../../../target/mobile-acceptance/2026-11-02/app-center/ios-r3/screenshots/09-discover-zh-dark.png) |
 
-[implementation-screenshots](implementation-screenshots/) 中的 `widget-*` 是测试环境中的真实 Flutter 组件渲染，用于快速复核布局，不冒充真机或真实账号截图。可用 `flutter test test/mobile_apps_center_test.dart --dart-define=APPS_CENTER_CAPTURE_DIR=<绝对输出目录>` 重新生成；完整设备入口为 `app/openmuse_mobile/integration_test/apps_center_acceptance_test.dart`。
+[implementation-screenshots](implementation-screenshots) 中的 `widget-*` 是测试环境中的真实 Flutter 组件渲染，用于快速复核布局，不冒充真机或真实账号截图。可用 `flutter test test/mobile_apps_center_test.dart --dart-define=APPS_CENTER_CAPTURE_DIR=<绝对输出目录>` 重新生成；完整设备入口为 `app/openmuse_mobile/integration_test/apps_center_acceptance_test.dart`。
 
 ## iOS 产物与构建记录
 
 - [1.0.0（10）App Store 签名 IPA](../../../dist/mobile/1.0.0-10/ios-us/OpenMuse-ios-us-1.0.0-10.ipa)、[SHA256SUMS](../../../dist/mobile/1.0.0-10/ios-us/SHA256SUMS)、[发布记录](../../../dist/mobile/1.0.0-10/ios-us/release.json)。
 - [产物验证](../../../dist/mobile/1.0.0-10/ios-us/artifact-validation.json)：ZIP CRC、深层签名、App Store profile、既有 Distribution 证书、bundle ID 与版本；Office 依赖闭包和资源内可执行文件扫描通过。
-- [主应用安装 / 启动记录](../../../target/mobile-acceptance/2026-11-02/app-center/ios-main10/smoke.json)、[构建与测试日志](../../../target/mobile-acceptance/2026-11-02/app-center/logs/)、[关键源码摘要](../../../target/mobile-acceptance/2026-11-02/app-center/source-sha256.json)。
+- [主应用安装 / 启动记录](../../../target/mobile-acceptance/2026-11-02/app-center/ios-main10/smoke.json)、[构建与测试日志](../../../target/mobile-acceptance/2026-11-02/app-center/logs)、[关键源码摘要](../../../target/mobile-acceptance/2026-11-02/app-center/source-sha256.json)。
 
 为避免影响 Android 的并行测试，iOS 在隔离源码副本中构建。修复副本外部依赖不同步和原生库链接缓存后，使用 Xcode 原生构建完成 Profile 验收；最终 Release 从 `lib/main.dart` 单独归档。设备安装的是该 Release archive 的开发签名副本，保留原 App Store 签名 IPA；完整自动点击运行于同源 Profile 测试入口，Release 主入口另做启动检查。
 

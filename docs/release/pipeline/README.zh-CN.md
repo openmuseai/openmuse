@@ -97,3 +97,7 @@ python3 scripts/release/pipeline.py verify-archive \
 ## 本次首发实例
 
 [2026 年 11 月海外首发执行记录](../runs/2026-11-overseas/README.zh-CN.md)：Google Play 14、Apple 16 已提交审核的历史记录；保留 iOS14/15 失败经过、源码未冻结及最终分发验收缺项，审核通过/正式上线尚无归档证据。以后复用流程和通用素材，并新建发布单。
+
+[2026 年 11 月国内发布执行记录](../runs/2026-11-china/README.zh-CN.md)：本轮选定华为 Android 与中国区 iOS 1.0.1，保留美区既有审核；生产签名配置已上线，当前仍在正式包和材料前置检查中，尚未上传或送审。
+
+[Mobile 文档依赖隔离版本](../runs/2026-11-mobile-isolation/README.zh-CN.md)：已启动范围与开发阶段，规划 1.0.2；SiYuan 和旧 Office 依赖隔离、SmartDocument 来源审查、最终包检查及升级迁移按独立待办推进。

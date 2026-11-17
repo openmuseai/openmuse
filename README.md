@@ -39,7 +39,7 @@ macOS 上是完整工作台。左侧 Project Workspace 管目录、搜索、插�
 |发行|macOS 安装包在本仓库内闭合构建：Helix、DSH 锁文件、校验和都在这里。第三方组件保留各自许可证。|
 ## 三句话
 **开源生态。** Host 只管窗口、工作区、插件生命周期和权限。编辑器、查看器和 DSH 都是可组合的插件。协议、清单和 SDK 公开，AGPL-3.0，生态可以在这条边界上往上长。
-**开源可信。** 依赖有固定版本、校验和与来源说明。能力调用经过 Broker，权限、取消和审计留在 Host。macOS 发行包对照锁文件校验后再打包，第三方声明单独保留。代码从哪来，写在 [来源与出处](docs/CODE-REUSE-PROVENANCE.zh-CN.md)。
+**开源可信。** 依赖有固定版本、校验和与来源说明。能力调用经过 Broker，权限、取消和审计留在 Host。macOS 发行包对照锁文件校验后再打包，第三方声明单独保留。代码从哪来，写在 [来源与出处](docs/architecture/CODE-REUSE-PROVENANCE.zh-CN.md)。
 **完全兼容 DSH。** OpenMuse 把 DSH 当作工作台的一员。工作区绑定、模型、对话和插件命令都走 DSH。当前打包版本为 0.2.0-rc.2，并通过对应的 [Provider 契约测试](contracts/dsh/0.2.0-rc.2.contract.json)。
 ## 构建与验证
 macOS 发行构建只使用本仓库里的检出。Helix 资源、DSH 注册表锁文件、本地模型插件包和官方 Node 归档都在这里。在 macOS 上运行 `./scripts/package_macos.sh`，它会在 `target/` 组装 DSH 的 npm 闭包、校验校验和、构建 Flutter 应用，并写出 `dist/OpenMuse.app`。默认不包含可选 Office 组件，也不生成 ZIP；用 `--components word,pdf,ppt,spreadsheet`（或 `--components all`）选择组件，用 `--package` 额外生成 `dist/OpenMuse-macos.zip`。组件包、公钥与原生库默认从相邻的 `Muse-Plugin-Ecosystem`、`ioffice` 仓库及移动端已验证资源获取，也可用 `OPENMUSE_*` 环境变量覆盖。`third_party/dsh/package-lock.json` 钉住的第三方注册表依赖，本机没有缓存时仍会由 npm 下载。
@@ -49,13 +49,13 @@ Web 构建见 [app/openmuse_web/README.md](app/openmuse_web/README.md)。线上�
 ## 许可证
 OpenMuse 源码使用仓库中的 AGPL-3.0 [LICENSE](LICENSE)。第三方组件保留各自许可证，见 [third_party/README.md](third_party/README.md)。可分发的发行版仍需要完整的第三方声明，以及各平台自己的校验。
 ## 设计文档
-* 总体架构：[docs/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md](docs/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md)
-* 工作台对齐：[docs/WORKBENCH-PARITY-SPEC.zh-CN.md](docs/WORKBENCH-PARITY-SPEC.zh-CN.md)
-* 代码来源：[docs/CODE-REUSE-PROVENANCE.zh-CN.md](docs/CODE-REUSE-PROVENANCE.zh-CN.md)
-* 账号与多端：[docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md](docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md)、[docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md](docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md)
-* 手机：[docs/MOBILE-PRODUCT-PRD.zh-CN.md](docs/MOBILE-PRODUCT-PRD.zh-CN.md)
-* Web 工作台验收：[docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md](docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md)
+* 总体架构：[docs/architecture/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md](docs/architecture/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md)
+* 工作台对齐：[docs/platforms/desktop/WORKBENCH-PARITY-SPEC.zh-CN.md](docs/platforms/desktop/WORKBENCH-PARITY-SPEC.zh-CN.md)
+* 代码来源：[docs/architecture/CODE-REUSE-PROVENANCE.zh-CN.md](docs/architecture/CODE-REUSE-PROVENANCE.zh-CN.md)
+* 账号与多端：[docs/identity/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md](docs/identity/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md)、[docs/product/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md](docs/product/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md)
+* 手机：[docs/product/MOBILE-PRODUCT-PRD.zh-CN.md](docs/product/MOBILE-PRODUCT-PRD.zh-CN.md)
+* Web 工作台验收：[docs/platforms/web/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md](docs/platforms/web/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md)
 * DSH 契约：[contracts/dsh/0.2.0-rc.2.contract.json](contracts/dsh/0.2.0-rc.2.contract.json)
 其余设计文档在 [docs/](docs/)。
 
-多端地区、首次启动和不发版参数/开关下发的代码入口与配置清单见 [整改说明](docs/REGIONAL-APPS-RUNTIME-REMEDIATION.zh-CN.md)。
+多端地区、首次启动和不发版参数/开关下发的代码入口与配置清单见 [整改说明](docs/globalization/REGIONAL-APPS-RUNTIME-REMEDIATION.zh-CN.md)。

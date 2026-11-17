@@ -75,7 +75,7 @@ Settings shows whether this desktop and the phone are online, and whether the re
 
 **Open ecosystem.** The Host owns the window, the workspace, plugin lifecycle, and permissions. The editor, the viewer, and DSH are composable plugins. Protocols, manifests, and the SDK are public, under AGPL-3.0.
 
-**Open trust.** Dependencies have pinned versions, checksums, and a written origin. Capability calls go through the Broker. The macOS package is checked against the lockfile before it is packed, and third-party notices stay separate. Where the code comes from is written in [provenance](docs/CODE-REUSE-PROVENANCE.zh-CN.md).
+**Open trust.** Dependencies have pinned versions, checksums, and a written origin. Capability calls go through the Broker. The macOS package is checked against the lockfile before it is packed, and third-party notices stay separate. Where the code comes from is written in [provenance](docs/architecture/CODE-REUSE-PROVENANCE.zh-CN.md).
 
 **Fully compatible with DSH.** OpenMuse treats DSH as part of the workbench. Workspace binding, models, conversation, and plugin commands go through DSH. The current packaged version is 0.2.0-rc.2 and passes its [provider contract test](contracts/dsh/0.2.0-rc.2.contract.json).
 
@@ -100,12 +100,12 @@ OpenMuse source uses the repository's AGPL-3.0 [LICENSE](LICENSE). Third-party c
 
 ## Design docs
 
-- Architecture: [docs/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md](docs/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md)
-- Workbench parity: [docs/WORKBENCH-PARITY-SPEC.zh-CN.md](docs/WORKBENCH-PARITY-SPEC.zh-CN.md)
-- Provenance: [docs/CODE-REUSE-PROVENANCE.zh-CN.md](docs/CODE-REUSE-PROVENANCE.zh-CN.md)
-- Account and devices: [docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md](docs/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md), [docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md](docs/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md)
-- Phone: [docs/MOBILE-PRODUCT-PRD.zh-CN.md](docs/MOBILE-PRODUCT-PRD.zh-CN.md)
-- Web workbench acceptance: [docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md](docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md)
+- Architecture: [docs/architecture/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md](docs/architecture/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md)
+- Workbench parity: [docs/platforms/desktop/WORKBENCH-PARITY-SPEC.zh-CN.md](docs/platforms/desktop/WORKBENCH-PARITY-SPEC.zh-CN.md)
+- Provenance: [docs/architecture/CODE-REUSE-PROVENANCE.zh-CN.md](docs/architecture/CODE-REUSE-PROVENANCE.zh-CN.md)
+- Account and devices: [docs/identity/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md](docs/identity/ACCOUNT-DEVICE-PRESENCE-PAIRING.zh-CN.md), [docs/product/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md](docs/product/SAME-ACCOUNT-MULTI-DEVICE-PRODUCT-INTERACTION.zh-CN.md)
+- Phone: [docs/product/MOBILE-PRODUCT-PRD.zh-CN.md](docs/product/MOBILE-PRODUCT-PRD.zh-CN.md)
+- Web workbench acceptance: [docs/platforms/web/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md](docs/platforms/web/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md)
 - DSH contract: [contracts/dsh/0.2.0-rc.2.contract.json](contracts/dsh/0.2.0-rc.2.contract.json)
 
 The rest of the design docs are in [docs/](docs/).

@@ -2,14 +2,14 @@
 
 原始设计：2026-11-01。下文保留设计时的缺口与 draft 示例。2026-11-02 的已实现契约见 [IMPLEMENTED-CONTRACT](IMPLEMENTED-CONTRACT.zh-CN.md)，验收见 [ACCEPTANCE](ACCEPTANCE-2026-11-02.zh-CN.md)；不要把旧 draft JSON 当生产输入，也不要把原型模拟当真机证据。
 
-**多端边界澄清：** 本目录设计的是 Mobile 入口，统一资源/版本/可用性、打开/创建/编辑贡献、最近事件、引用交接属于多端共享框架。Host 核心服务不能落成 Mobile 私有协议，各端只实现 UI 与平台/传输 adapter。手机文档被 PC 任务引用、临时目录清理后重新打开及源端离线的详细行为，见 [多端资源引用、可用性与对话交接](../../RESOURCE-REFERENCE-AVAILABILITY-AND-HANDOFF.zh-CN.md)。
+**多端边界澄清：** 本目录设计的是 Mobile 入口，统一资源/版本/可用性、打开/创建/编辑贡献、最近事件、引用交接属于多端共享框架。Host 核心服务不能落成 Mobile 私有协议，各端只实现 UI 与平台/传输 adapter。手机文档被 PC 任务引用、临时目录清理后重新打开及源端离线的详细行为，见 [多端资源引用、可用性与对话交接](../../workspace/RESOURCE-REFERENCE-AVAILABILITY-AND-HANDOFF.zh-CN.md)。
 
 ## 1. 仓库核对结果
 
 | 现有代码/契约 | 已有基础 | 对本稿的限制 |
 | --- | --- | --- |
 | [`muse_resource_contract/resource.dart`](../../../packages/muse_resource_contract/lib/src/resource.dart) | Descriptor v1、ResourceRef/Revision、format/confidence、安全分类、Materialization | 严格 wire，不添加裸 path、cookie 或任意未知字段；它本身不是目录树、剪贴板或最近服务 |
-| [`WORKSPACE-RESOURCE-AUTHORITY-V1`](../../WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md) + [`MuseWorkspaceAuthority`](../../../packages/muse_resource_bridge/lib/src/authority.dart) | WorkspaceRef/MountRef、describe/list/materialize、已有资源 draft/commit、audience/generation/TTL、CAS | 当前 reference provider 不能冒称生产 Local/PC 存储；createDraft 接受已有 ResourceRef，不等于创建新文件；缺通用 metadata rename/new-resource 事务 |
+| [`WORKSPACE-RESOURCE-AUTHORITY-V1`](../../workspace/WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md) + [`MuseWorkspaceAuthority`](../../../packages/muse_resource_bridge/lib/src/authority.dart) | WorkspaceRef/MountRef、describe/list/materialize、已有资源 draft/commit、audience/generation/TTL、CAS | 当前 reference provider 不能冒称生产 Local/PC 存储；createDraft 接受已有 ResourceRef，不等于创建新文件；缺通用 metadata rename/new-resource 事务 |
 | [`OpenMuseResource / editorCandidates`](../../../packages/openmuse_plugin_sdk/lib/openmuse_plugin_sdk.dart) | URI/名称/MIME，按 editor contribution 匹配候选 | URI/文件名不够当跨源稳定身份；当前候选函数不自行证明平台、启用状态与运行时 probe 可用，需能力过滤 |
 | [`MuseEngineRouter`](../../../packages/muse_engine_adapter/lib/src/router.dart) | probe、requested mode、policy、effective mode、候选原因 | 可复用路由原则/契约，不能声称 Mobile Home 已完整走过该链；需适配当前插件 Registry 与资源上下文 |
 | [`RESOURCE-OPEN-ROUTING`](../plugin-platform-v2/RESOURCE-OPEN-ROUTING.zh-CN.md) | 已安装收据、MCP tools schema 到编辑器贡献；MIME 探测、默认打开方式设计 | 安装包不提供可动态加载的原生 Flutter 代码；工具发现不等于 creator 发现 |

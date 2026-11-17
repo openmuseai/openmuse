@@ -3,7 +3,7 @@
 > 状态：工程盘点报告（可复核）
 > 范围：OpenMuse `Muse-Client` 仓库现状 + DSH（DeepSeek Harness）随附闭包
 > 方法：只读代码与文档取证，不采信产品文案；每条结论附文件路径
-> 图表：4 张，由 [`scripts/make_openmuse_vs_dsh_figures.py`](../scripts/make_openmuse_vs_dsh_figures.py) 生成
+> 图表：4 张，由 [`scripts/make_openmuse_vs_dsh_figures.py`](../../scripts/make_openmuse_vs_dsh_figures.py) 生成
 
 ---
 
@@ -68,7 +68,7 @@ DSH 拥有 *怎么想、怎么调工具、怎么记事件*。
 
 | 载体 | DSH 版本 | 证据 |
 |---|---|---|
-| OpenMuse 产品闭包（钉扎） | `0.1.7-rc.1` | [`third_party/dsh/package.json`](../third_party/dsh/package.json) |
+| OpenMuse 产品闭包（钉扎） | `0.1.7-rc.1` | [`third_party/dsh/package.json`](../../third_party/dsh/package.json) |
 | 本机 DSH Desktop | `0.2.0-rc.2` | `app.asar` 内 `package.json`（解包方法见 §1.3） |
 | 本机全局 `dsh` CLI | `0.1.2-rc.1` | `~/.nvm/.../lib/node_modules/@deepseek-ai/dsh/package.json` |
 
@@ -133,8 +133,8 @@ Host Shell（app/openmuse_host）          窗口 / 三区 Workbench / 布局 to
 ```
 
 > **实现与文档的偏差（已核实）**：架构文档要求 Host 只依赖 SDK 与装配层，
-> 且"不直接依赖 DSH 实现包"（[`PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md:105`](PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md)），
-> 但 [`app/openmuse_host/pubspec.yaml`](../app/openmuse_host/pubspec.yaml) 直接依赖了
+> 且"不直接依赖 DSH 实现包"（[`PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md:105`](../architecture/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md)），
+> 但 [`app/openmuse_host/pubspec.yaml`](../../app/openmuse_host/pubspec.yaml) 直接依赖了
 > `openmuse_dsh_plugin`、`openmuse_auth_gotrue`、`openmuse_cloud_workspace_plugin`、
 > `openmuse_remote_workbench`、`openmuse_workspace_paired`。
 > 同时 `createOpenMuseBuiltInPlugins()` 只装配 5 个插件
@@ -147,58 +147,58 @@ Host Shell（app/openmuse_host）          窗口 / 三区 Workbench / 布局 to
 
 | 能力 | 成熟度 | 证据 |
 |---|---|---|
-| 三区 Workbench + 自由切分/移动/resize | 已实现 | [`layout.dart`](../app/openmuse_host/lib/src/host/layout/layout.dart)、`workbench_shell.dart` |
+| 三区 Workbench + 自由切分/移动/resize | 已实现 | [`layout.dart`](../../app/openmuse_host/lib/src/host/layout/layout.dart)、`workbench_shell.dart` |
 | 多 mount 资源树、标签、右键、内容寻址版本历史、统一/并排 Diff | 已实现 | `workspace_controller.dart` |
-| Helix PTY + 进程池复用同进程开第二文件 | 已实现（macOS PoC） | [`helix_pty.dart`](../plugins/helix/lib/src/helix_pty.dart)、`helix_runtime.dart` |
-| Helix LSP | 部分（产品闭包未含 LSP adapter） | `helix_language_servers.dart`；[`DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md`](DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md) |
-| Markdown 富文本 | 设计稿 | [`WORKBENCH-PARITY-SPEC.zh-CN.md`](WORKBENCH-PARITY-SPEC.zh-CN.md) |
+| Helix PTY + 进程池复用同进程开第二文件 | 已实现（macOS PoC） | [`helix_pty.dart`](../../plugins/helix/lib/src/helix_pty.dart)、`helix_runtime.dart` |
+| Helix LSP | 部分（产品闭包未含 LSP adapter） | `helix_language_servers.dart`；[`DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md`](../dsh/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md) |
+| Markdown 富文本 | 设计稿 | [`WORKBENCH-PARITY-SPEC.zh-CN.md`](../platforms/desktop/WORKBENCH-PARITY-SPEC.zh-CN.md) |
 
 **文件与 Office**
 
 | 能力 | 成熟度 | 证据 |
 |---|---|---|
-| 扩展名路由到插件编辑器 | 已实现 | [`open-file-viewer/openmuse.plugin.json`](../plugins/open-file-viewer/openmuse.plugin.json) |
+| 扩展名路由到插件编辑器 | 已实现 | [`open-file-viewer/openmuse.plugin.json`](../../plugins/open-file-viewer/openmuse.plugin.json) |
 | macOS PNG/PDF 只读 WKWebView（禁 JS、非持久化） | 已实现 | `macos/Classes/OpenMuseFileViewerPlugin.swift` |
-| Windows PNG/PDF renderer | 未实现 | [`PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md:391`](PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md) |
-| DOCX 有界解析/校验/受限导出 + C ABI | 已实现 | [`crates/openmuse-office-docx`](../crates/openmuse-office-docx/src/lib.rs) |
-| XLSX/PPTX/PDF 只读兼容视图 | 已实现 | [`crates/openmuse-office-viewers`](../crates/openmuse-office-viewers/src/lib.rs) |
-| Office dispatcher / worker supervisor | 已实现（reference） | [`crates/openmuse-worker-supervisor`](../crates/openmuse-worker-supervisor/src/lib.rs) |
+| Windows PNG/PDF renderer | 未实现 | [`PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md:391`](../architecture/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md) |
+| DOCX 有界解析/校验/受限导出 + C ABI | 已实现 | [`crates/openmuse-office-docx`](../../crates/openmuse-office-docx/src/lib.rs) |
+| XLSX/PPTX/PDF 只读兼容视图 | 已实现 | [`crates/openmuse-office-viewers`](../../crates/openmuse-office-viewers/src/lib.rs) |
+| Office dispatcher / worker supervisor | 已实现（reference） | [`crates/openmuse-worker-supervisor`](../../crates/openmuse-worker-supervisor/src/lib.rs) |
 
 **DSH 集成**
 
 | 能力 | 成熟度 | 证据 |
 |---|---|---|
-| DSH 面板 + 真实 sidecar（动态 loopback、readiness、停止） | 已实现 | [`dsh_sidecar.dart`](../plugins/dsh-agent/lib/src/dsh_sidecar.dart)、`dsh_panel.dart`、`dsh_web_view.dart` |
+| DSH 面板 + 真实 sidecar（动态 loopback、readiness、停止） | 已实现 | [`dsh_sidecar.dart`](../../plugins/dsh-agent/lib/src/dsh_sidecar.dart)、`dsh_panel.dart`、`dsh_web_view.dart` |
 | 原生 Flutter 对话流（WorkBuddy + 日志 reducer） | 已实现 | `packages/` 下 `muse_dsh_conversation_core`、`_protocol`、`_flutter` |
-| DSH Provider TCK（fs/subprocess/shell/sandbox/jobs） | 已实现 | [`contracts/dsh/0.1.7-rc.1.contract.json`](../contracts/dsh/0.1.7-rc.1.contract.json)、[`scripts/dsh_provider_contract_tck.mjs`](../scripts/dsh_provider_contract_tck.mjs) |
+| DSH Provider TCK（fs/subprocess/shell/sandbox/jobs） | 已实现 | [`contracts/dsh/0.1.7-rc.1.contract.json`](../../contracts/dsh/0.1.7-rc.1.contract.json)、[`scripts/dsh_provider_contract_tck.mjs`](../../scripts/dsh_provider_contract_tck.mjs) |
 | curated closure / credential handle / Workspace binding 全链路 | 部分（代码在，未接入） | `dsh_workspace_binding.dart`、`dsh_workspace_sync.dart` |
 
 **沙箱与执行**
 
 | 能力 | 成熟度 | 证据 |
 |---|---|---|
-| `workspace.sandbox@1` 控制面（lease/attach/quiesce/draft/release/cleanup） | 已实现 | [`crates/openmuse-workspace-sandbox`](../crates/openmuse-workspace-sandbox/src/lib.rs) |
-| 本地 runtime（native / 容器隔离） | 已实现（reference，substrate 在 port 后） | `InMemorySandboxRuntime`、[`HOST-SANDBOX-SERVICE-LOCAL-RUNTIME.zh-CN.md`](HOST-SANDBOX-SERVICE-LOCAL-RUNTIME.zh-CN.md) |
-| Cloud execution runtime 控制面 | 已实现（reference） | [`crates/openmuse-cloud-execution-runtime`](../crates/openmuse-cloud-execution-runtime/src/lib.rs) |
-| Draft / checkpoint / quiescence | 已实现 | [`crates/openmuse-draft-transaction`](../crates/openmuse-draft-transaction/src/lib.rs) |
-| 生产安全 gate（多租户等级） | 策略已实现，等级未达 | [`crates/openmuse-sandbox-security`](../crates/openmuse-sandbox-security/src/lib.rs) |
+| `workspace.sandbox@1` 控制面（lease/attach/quiesce/draft/release/cleanup） | 已实现 | [`crates/openmuse-workspace-sandbox`](../../crates/openmuse-workspace-sandbox/src/lib.rs) |
+| 本地 runtime（native / 容器隔离） | 已实现（reference，substrate 在 port 后） | `InMemorySandboxRuntime`、[`HOST-SANDBOX-SERVICE-LOCAL-RUNTIME.zh-CN.md`](../sandbox/HOST-SANDBOX-SERVICE-LOCAL-RUNTIME.zh-CN.md) |
+| Cloud execution runtime 控制面 | 已实现（reference） | [`crates/openmuse-cloud-execution-runtime`](../../crates/openmuse-cloud-execution-runtime/src/lib.rs) |
+| Draft / checkpoint / quiescence | 已实现 | [`crates/openmuse-draft-transaction`](../../crates/openmuse-draft-transaction/src/lib.rs) |
+| 生产安全 gate（多租户等级） | 策略已实现，等级未达 | [`crates/openmuse-sandbox-security`](../../crates/openmuse-sandbox-security/src/lib.rs) |
 
 **工作区权威与权限**
 
 | 能力 | 成熟度 | 证据 |
 |---|---|---|
-| `MuseWorkspaceAuthority` port（list/describe/materialize/draft/commit/subscribe） | 已实现（内存 reference） | [`authority.dart`](../packages/muse_resource_bridge/lib/src/authority.dart) |
-| Manifest v2 + target resolution fail-closed | 已实现 | [`schemas/openmuse.plugin.v2.schema.json`](../schemas/openmuse.plugin.v2.schema.json)、[`validate_plugin_manifest_v2.mjs`](../scripts/validate_plugin_manifest_v2.mjs) |
-| Delegation 权限交集 / handle / 审计脱敏 | 已实现（内存 sink） | [`delegation.rs`](../crates/openmuse-platform-runtime/src/delegation.rs) |
+| `MuseWorkspaceAuthority` port（list/describe/materialize/draft/commit/subscribe） | 已实现（内存 reference） | [`authority.dart`](../../packages/muse_resource_bridge/lib/src/authority.dart) |
+| Manifest v2 + target resolution fail-closed | 已实现 | [`schemas/openmuse.plugin.v2.schema.json`](../../schemas/openmuse.plugin.v2.schema.json)、[`validate_plugin_manifest_v2.mjs`](../../scripts/validate_plugin_manifest_v2.mjs) |
+| Delegation 权限交集 / handle / 审计脱敏 | 已实现（内存 sink） | [`delegation.rs`](../../crates/openmuse-platform-runtime/src/delegation.rs) |
 
 **存储、同步与可移植性**
 
 | 能力 | 成熟度 | 证据 |
 |---|---|---|
 | BlobStorePort + S3 profile + TCK + fake | 已实现 | `crates/openmuse-storage-contract`、`openmuse-storage-tck` |
-| AWS SDK S3 adapter / 端点与凭据安全 | 已实现 | [`crates/openmuse-storage-s3`](../crates/openmuse-storage-s3/src/lib.rs) |
-| BYOS / 迁移 / 可移植导出 | 已实现 | [`crates/openmuse-storage-portability`](../crates/openmuse-storage-portability/src/lib.rs) |
-| Workspace Sync 四策略 + durable cursor | 已实现（内存 state store） | [`crates/openmuse-workspace-sync`](../crates/openmuse-workspace-sync/src/lib.rs) |
+| AWS SDK S3 adapter / 端点与凭据安全 | 已实现 | [`crates/openmuse-storage-s3`](../../crates/openmuse-storage-s3/src/lib.rs) |
+| BYOS / 迁移 / 可移植导出 | 已实现 | [`crates/openmuse-storage-portability`](../../crates/openmuse-storage-portability/src/lib.rs) |
+| Workspace Sync 四策略 + durable cursor | 已实现（内存 state store） | [`crates/openmuse-workspace-sync`](../../crates/openmuse-workspace-sync/src/lib.rs) |
 | Managed rollout 资格策略 | 策略已实现 | `crates/openmuse-storage-qualification` |
 
 **账号、多设备与移动端**
@@ -206,26 +206,26 @@ Host Shell（app/openmuse_host）          窗口 / 三区 Workbench / 布局 to
 | 能力 | 成熟度 | 证据 |
 |---|---|---|
 | GoTrue 登录插件（client / 安全会话存储 / UI / ports） | 已实现 | `plugins/auth-gotrue/lib/src/*` |
-| 配对密码学（Ed25519+X25519+HKDF+ChaCha20-Poly1305+SAS） | 已实现 | [`crates/openmuse-paired-relay`](../crates/openmuse-paired-relay/src/lib.rs) |
-| 设备目录 / presence / 真实 relay | 部分（部署门禁待完成） | [`PAIRED-DESKTOP-E2E-RELAY.zh-CN.md`](PAIRED-DESKTOP-E2E-RELAY.zh-CN.md) |
-| 移动端 1/2/3 槽 Window 投影 | 已实现 | [`adaptive_windows.dart`](../packages/openmuse_mobile_core/lib/src/adaptive_windows.dart) |
-| 语音输入（sherpa_onnx isolate） | 已实现 | [`sherpa_worker.dart`](../plugins/speech-input/lib/src/sherpa_worker.dart) |
-| iOS 构建 / Android 真机 soak | 门禁脚本 | [`IOS-UNSIGNED-BUILD-GATE.zh-CN.md`](IOS-UNSIGNED-BUILD-GATE.zh-CN.md) |
+| 配对密码学（Ed25519+X25519+HKDF+ChaCha20-Poly1305+SAS） | 已实现 | [`crates/openmuse-paired-relay`](../../crates/openmuse-paired-relay/src/lib.rs) |
+| 设备目录 / presence / 真实 relay | 部分（部署门禁待完成） | [`PAIRED-DESKTOP-E2E-RELAY.zh-CN.md`](../devices-ctrl/PAIRED-DESKTOP-E2E-RELAY.zh-CN.md) |
+| 移动端 1/2/3 槽 Window 投影 | 已实现 | [`adaptive_windows.dart`](../../packages/openmuse_mobile_core/lib/src/adaptive_windows.dart) |
+| 语音输入（sherpa_onnx isolate） | 已实现 | [`sherpa_worker.dart`](../../plugins/speech-input/lib/src/sherpa_worker.dart) |
+| iOS 构建 / Android 真机 soak | 门禁脚本 | [`IOS-UNSIGNED-BUILD-GATE.zh-CN.md`](../release/gates/IOS-UNSIGNED-BUILD-GATE.zh-CN.md) |
 
 **插件分发**
 
 | 能力 | 成熟度 | 证据 |
 |---|---|---|
-| CLI registry + artifact resolver | 已实现 | [`crates/openmuse-cli-registry`](../crates/openmuse-cli-registry/src/lib.rs) |
-| 分发锁 / SBOM / 闭包 gate | 已实现（脚本级） | [`distribution_lock.py`](../scripts/distribution_lock.py) |
-| 外部 Runtime 插件动态装载 | 未实现（built-in 仍编译期装配） | [`PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md:140`](PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md) |
+| CLI registry + artifact resolver | 已实现 | [`crates/openmuse-cli-registry`](../../crates/openmuse-cli-registry/src/lib.rs) |
+| 分发锁 / SBOM / 闭包 gate | 已实现（脚本级） | [`distribution_lock.py`](../../scripts/distribution_lock.py) |
+| 外部 Runtime 插件动态装载 | 未实现（built-in 仍编译期装配） | [`PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md:140`](../architecture/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md) |
 
 ### 3.3 关键机制
 
 - **权限强制**：有效权限 = tenant ceiling ∩ actor ∩ caller plugin ∩ target provider ∩
   workspace classification ∩ handle ∩ command required；交集不覆盖即拒。
   `requested_permissions` 只是输入，不是授权
-  （[`BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md`](BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md)、`delegation.rs`）。
+  （[`BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md`](../identity/BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md)、`delegation.rs`）。
 - **委托上下文**：`DelegatedRequestContext` 显式区分 actor / caller / target_provider / scope /
   revision / handle_ref / generation / deadline（`crates/openmuse-plugin-protocol`）。
 - **审计**：单调 decision ref + 字段白名单 + 防御性脱敏（path / presigned / S3 URI / token → `[redacted]`）；
@@ -233,7 +233,7 @@ Host Shell（app/openmuse_host）          窗口 / 三区 Workbench / 布局 to
 - **生命周期清理**：deactivate 自动注销命令/服务/订阅/context/Native View；
   `shutdown_plugin` 逐 lease cleanup，失败收敛 `Degraded` 而不 panic。
 - **版本协商**：仅同 major 且 `peer.minor <= local.minor`；未知字段、未知枚举、
-  receipt 不一致一律 fail-closed（[`CONTRACT-BASELINE-V1.zh-CN.md`](CONTRACT-BASELINE-V1.zh-CN.md)）。
+  receipt 不一致一律 fail-closed（[`CONTRACT-BASELINE-V1.zh-CN.md`](../architecture/CONTRACT-BASELINE-V1.zh-CN.md)）。
 - **TCK 体系**：storage provider、engine adapter、resource authority、DSH provider、
   manifest v2、contract baseline——共 6 套黑盒验收。
 
@@ -288,7 +288,7 @@ OpenMuse 自评 PoC、DSH 已发布，因此矩阵整体偏向 DSH 是预期结�
 
 ### 5.1 DSH 是如何被拉起的
 
-[`plugins/dsh-agent/lib/src/dsh_sidecar.dart`](../plugins/dsh-agent/lib/src/dsh_sidecar.dart) 中：
+[`plugins/dsh-agent/lib/src/dsh_sidecar.dart`](../../plugins/dsh-agent/lib/src/dsh_sidecar.dart) 中：
 
 - `resolveDshRuntime()` 从 `Contents/Resources/openmuse/dsh/...` 解析捆绑 CLI 与 Node；
 - `dshClosureRoot()` 把 cwd 设为闭包根，使 package-relative 文件可解析；
@@ -301,7 +301,7 @@ OpenMuse 自评 PoC、DSH 已发布，因此矩阵整体偏向 DSH 是预期结�
 
 ### 5.2 Provider 合同与 TCK
 
-[`contracts/dsh/0.1.7-rc.1.contract.json`](../contracts/dsh/0.1.7-rc.1.contract.json) 冻结了：
+[`contracts/dsh/0.1.7-rc.1.contract.json`](../../contracts/dsh/0.1.7-rc.1.contract.json) 冻结了：
 
 - **6 个 provider row**：`subprocess` / `sandbox` / `sandbox-policy` / `bash-sandbox` / `fs-sandbox` / `jobs`；
 - **15 个 requiredPackages**；
@@ -309,16 +309,16 @@ OpenMuse 自评 PoC、DSH 已发布，因此矩阵整体偏向 DSH 是预期结�
 - capability 快照：`lspTransport: true` 但 `lspAdapterInProductClosure: false`
   （即"传输可行，但产品不得宣称 LSP 可用"）。
 
-验收入口 [`scripts/test_dsh_provider_contract.sh`](../scripts/test_dsh_provider_contract.sh) 覆盖：
+验收入口 [`scripts/test_dsh_provider_contract.sh`](../../scripts/test_dsh_provider_contract.sh) 覆盖：
 exact version、Base row 替换、FS↔Bash 双向可见、abort 与后台 kill、真 PTY、
 LSP JSON-RPC framing、read-only 拒改与越界拒绝、jobs wait/kill。
 
-local fixture [`contracts/dsh/providers/local/cordis.patch.yml`](../contracts/dsh/providers/local/cordis.patch.yml)
+local fixture [`contracts/dsh/providers/local/cordis.patch.yml`](../../contracts/dsh/providers/local/cordis.patch.yml)
 **只重写 provider row，不出现 `agent-loop`**——这正是"扩展执行面而不改 Agent"的证明。
 
 ### 5.3 执行世界不变量
 
-[`DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md`](DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md) 要求一个可接入的
+[`DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md`](../dsh/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md) 要求一个可接入的
 provider 组必须同时满足：
 
 1. `ctx.fs.processPath(target)` 返回同一执行世界内 `ctx.subprocess`/`ctx.shell` 能打开的路径；
@@ -331,7 +331,7 @@ provider 组必须同时满足：
 
 ### 5.4 领域归属（权威划分）
 
-[`DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md`](DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md)
+[`DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md`](../dsh/DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md)
 第 4.2 节给出了双方都不应越界的划分：
 
 | 角色 | 负责 | 不负责 |
@@ -383,7 +383,7 @@ Broker 权限裁决 → Surface Orchestrator 选编辑器 → Host 激活/复用
 | 其他与实验 | 34 | 2 | 基础工具、品牌、平台适配 |
 
 归类为手工判定（同一单元只计一次），规则写在
-[`scripts/make_openmuse_vs_dsh_figures.py`](../scripts/make_openmuse_vs_dsh_figures.py) 的 `DOMAINS` 常量中，可审阅。
+[`scripts/make_openmuse_vs_dsh_figures.py`](../../scripts/make_openmuse_vs_dsh_figures.py) 的 `DOMAINS` 常量中，可审阅。
 
 ---
 
@@ -482,7 +482,7 @@ DSH 不拥有：跨插件资源身份与授权、Workspace 权威、宿主窗口
 
 | # | 事项 | 严重度 | 说明与建议 |
 |---:|---|---|---|
-| 1 | **DSH 版本三方漂移** | 高 | OpenMuse 钉 `0.1.7-rc.1`，Desktop 是 `0.2.0-rc.2`。provider 合同与客户端 slot 合同都按 0.1.7 冻结；对齐新版必须显式审查合同、重跑 [`test_dsh_provider_contract.sh`](../scripts/test_dsh_provider_contract.sh) 与客户端合同 |
+| 1 | **DSH 版本三方漂移** | 高 | OpenMuse 钉 `0.1.7-rc.1`，Desktop 是 `0.2.0-rc.2`。provider 合同与客户端 slot 合同都按 0.1.7 冻结；对齐新版必须显式审查合同、重跑 [`test_dsh_provider_contract.sh`](../../scripts/test_dsh_provider_contract.sh) 与客户端合同 |
 | 2 | **Host 直接依赖插件包** | 中 | `app/openmuse_host/pubspec.yaml` 依赖 `openmuse_dsh_plugin` 等 5 个插件，违反架构文档的边界约定；建议把这 5 个插件纳入 `distribution/openmuse_builtin_plugins`，Host 只依赖 SDK + 装配层 |
 | 3 | **Windows 未发布** | 高 | HWND 未真机验证、无 PNG/PDF renderer、无安装包。文档已明确"不得宣称已发布" |
 | 4 | **macOS 未签名公证** | 中 | 仅 ad-hoc；对外分发前需 Developer ID + 公证 + Gatekeeper 验证 |
@@ -510,18 +510,18 @@ DSH 不拥有：跨插件资源身份与授权、Workspace 权威、宿主窗口
 
 | 主题 | 文件 |
 |---|---|
-| 架构与边界 | [`docs/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md`](PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md) |
-| 契约基线 | [`docs/CONTRACT-BASELINE-V1.zh-CN.md`](CONTRACT-BASELINE-V1.zh-CN.md) |
-| 权限与审计 | [`docs/BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md`](BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md) |
-| 资源权威 | [`docs/WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md`](WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md) |
-| DSH provider 合同 | [`docs/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md`](DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md) |
-| DSH 集成接缝 | [`docs/DSH-PLUGIN-HOST-MIGRATION.zh-CN.md`](DSH-PLUGIN-HOST-MIGRATION.zh-CN.md) |
-| 执行面领域归属 | [`docs/DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md`](DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md) |
-| 云执行与 provider 组 | [`docs/CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md`](CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md) |
-| 门禁结果 | [`docs/DESKTOP-GATE-RESULTS.zh-CN.md`](DESKTOP-GATE-RESULTS.zh-CN.md)、[`docs/POC-RESULTS.zh-CN.md`](POC-RESULTS.zh-CN.md) |
-| 移动端产品 | [`docs/MOBILE-PRODUCT-PRD.zh-CN.md`](MOBILE-PRODUCT-PRD.zh-CN.md) |
-| 插件清单 v2 | [`docs/PLUGIN-MANIFEST-V2.zh-CN.md`](PLUGIN-MANIFEST-V2.zh-CN.md) |
-| 图表生成器 | [`scripts/make_openmuse_vs_dsh_figures.py`](../scripts/make_openmuse_vs_dsh_figures.py) |
+| 架构与边界 | [`docs/architecture/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md`](../architecture/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md) |
+| 契约基线 | [`docs/architecture/CONTRACT-BASELINE-V1.zh-CN.md`](../architecture/CONTRACT-BASELINE-V1.zh-CN.md) |
+| 权限与审计 | [`docs/identity/BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md`](../identity/BROKER-DELEGATION-POLICY-AUDIT.zh-CN.md) |
+| 资源权威 | [`docs/workspace/WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md`](../workspace/WORKSPACE-RESOURCE-AUTHORITY-V1.zh-CN.md) |
+| DSH provider 合同 | [`docs/dsh/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md`](../dsh/DSH-0.1.7-PROVIDER-CONTRACT-TCK.zh-CN.md) |
+| DSH 集成接缝 | [`docs/dsh/DSH-PLUGIN-HOST-MIGRATION.zh-CN.md`](../dsh/DSH-PLUGIN-HOST-MIGRATION.zh-CN.md) |
+| 执行面领域归属 | [`docs/dsh/DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md`](../dsh/DSH-WORKSPACE-EXECUTION-PLANE-FEASIBILITY.zh-CN.md) |
+| 云执行与 provider 组 | [`docs/dsh/CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md`](../dsh/CLOUD-EXECUTION-RUNTIME-DSH-PROVIDERS.zh-CN.md) |
+| 门禁结果 | [`docs/platforms/desktop/DESKTOP-GATE-RESULTS.zh-CN.md`](../platforms/desktop/DESKTOP-GATE-RESULTS.zh-CN.md)、[`docs/architecture/POC-RESULTS.zh-CN.md`](../architecture/POC-RESULTS.zh-CN.md) |
+| 移动端产品 | [`docs/product/MOBILE-PRODUCT-PRD.zh-CN.md`](../product/MOBILE-PRODUCT-PRD.zh-CN.md) |
+| 插件清单 v2 | [`docs/plugins/PLUGIN-MANIFEST-V2.zh-CN.md`](../plugins/PLUGIN-MANIFEST-V2.zh-CN.md) |
+| 图表生成器 | [`scripts/make_openmuse_vs_dsh_figures.py`](../../scripts/make_openmuse_vs_dsh_figures.py) |
 
 ## 附录 B · 本报告未能验证的项
 
