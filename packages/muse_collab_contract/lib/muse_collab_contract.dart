@@ -74,3 +74,9 @@ abstract interface class CollaborationProvider {
   Future<Uint8List> exchange(String objectId, Uint8List request);
   void close();
 }
+
+/// Optional host-bound object capability. Portable content cannot substitute a
+/// different object ID for an already authorized online editor session.
+abstract interface class CollaborationObjectScope {
+  String? get boundObjectId;
+}

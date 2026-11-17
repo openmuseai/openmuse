@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:convert';
 
 /// Identity/integrity metadata only. Does not grant access, contain credentials,
 /// store a local absolute path, or prescribe an editor/document content model.
@@ -42,6 +43,43 @@ final class AssetReference {
     'byteLength': byteLength,
     'sha256': sha256,
   };
+
+  /// Portable identity for original media fields whose URL is a string.
+  /// This contains no endpoint or credential and never grants access.
+  Uri toUri() => Uri(
+    scheme: 'muse-asset',
+    host: 'v1',
+    pathSegments: [
+      base64Url.encode(utf8.encode(jsonEncode(toJson()))).replaceAll('=', ''),
+    ],
+  );
+  factory AssetReference.fromUri(Uri uri) {
+    if (uri.toString().length > 8192 ||
+        uri.scheme != 'muse-asset' ||
+        uri.host != 'v1' ||
+        uri.hasPort ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasQuery ||
+        uri.hasFragment ||
+        uri.pathSegments.length != 1 ||
+        !RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(uri.pathSegments.single)) {
+      throw const FormatException('INVALID_ASSET_URI');
+    }
+    try {
+      final raw = jsonDecode(
+        utf8.decode(
+          base64Url.decode(base64Url.normalize(uri.pathSegments.single)),
+        ),
+      );
+      if (raw is! Map<String, dynamic>) throw const FormatException();
+      final ref = AssetReference.fromJson(raw);
+      if (ref.toUri().toString() != uri.toString())
+        throw const FormatException();
+      return ref;
+    } on Object {
+      throw const FormatException('INVALID_ASSET_URI');
+    }
+  }
   factory AssetReference.fromJson(Map<String, dynamic> json) {
     const fields = {
       'version',

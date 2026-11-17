@@ -136,6 +136,18 @@ abstract interface class ResourceReferenceSource {
   Future<void> prepare(ResourceReference reference, ResourceAccess access);
 }
 
+/// Collaboratively managed content can save an editor's device checkpoint
+/// without advertising a provider-wide compare-and-swap write. The base is
+/// owned by this editor session; this operation is not a remote durable ACK.
+abstract interface class ResourceDeviceCheckpointProvider {
+  Future<ResourceRecord> checkpoint(
+    ResourceRecord base,
+    List<int> bytes,
+    String idempotencyKey,
+    ResourceAccess access,
+  );
+}
+
 enum ResourceOpenIntent { view, edit }
 
 final class ResourceHandlerSpec {
@@ -146,11 +158,15 @@ final class ResourceHandlerSpec {
     this.extensions = const {},
     this.editable = false,
     this.priority = 0,
+    this.supportsSharedPresentations = false,
   });
   final String id, title;
   final Set<String> mediaTypes, extensions;
   final bool editable;
 
+  /// Runtime promise: the contributor retains one content owner and provides
+  /// independent UI state for each separately authorized session.
+  final bool supportsSharedPresentations;
   final int priority;
   bool accepts(ResourceRecord record) =>
       mediaTypes.any(

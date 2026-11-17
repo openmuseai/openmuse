@@ -278,6 +278,17 @@ final class ResourceRecord {
   final String sourceLabel, parentRef;
   final List<String> location;
   final int metadataRevision;
+
+  /// Projects verified source labels without changing content, authority,
+  /// references or the source's metadata revision/CAS contract.
+  ResourceRecord withDisplayMetadata({
+    required String name,
+    List<String>? location,
+  }) => ResourceRecord.fromJson({
+    ...toJson(),
+    'descriptor': {...descriptor.toJson(), 'displayName': name},
+    if (location != null) 'location': List<String>.of(location),
+  });
   final bool readOnly;
   final ResourceReference? provenance;
   String get name => descriptor.displayName;
