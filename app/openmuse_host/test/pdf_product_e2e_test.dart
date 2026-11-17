@@ -324,6 +324,24 @@ void main() {
               greaterThan(viewerController.layout.pageLayouts[0].bottom),
             );
             await capturePng('$screenshotDir/view-single-restored-desktop.png');
+            await tester.tap(find.byKey(const Key('pdf-control-view-night')));
+            await tester.pumpAndSettle();
+            final nightViewer = tester.widget<PdfViewer>(
+              find.byType(PdfViewer),
+            );
+            expect(nightViewer.params.backgroundColor, const Color(0xff1e1e1e));
+            expect(nightViewer.params.pageImageColorFilter, isNotNull);
+            await capturePng('$screenshotDir/view-night-desktop.png');
+            await tester.tap(find.byKey(const Key('pdf-control-view-night')));
+            await tester.pumpAndSettle();
+            expect(
+              tester
+                  .widget<PdfViewer>(find.byType(PdfViewer))
+                  .params
+                  .backgroundColor,
+              snapshot.chrome.color('canvas'),
+            );
+            await capturePng('$screenshotDir/view-night-restored-desktop.png');
           }
         }
         await tester.tap(find.byKey(const Key('pdf-tab-home')));
@@ -623,6 +641,108 @@ void main() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
       debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('resource center opens the signed PDF product from session bytes', (
+    tester,
+  ) async {
+    if (!enabled) return;
+    late OpenMusePdfProductPlugin plugin;
+    late ResourceEditorSession session;
+    await tester.runAsync(() async {
+      plugin = await OpenMusePdfProductPlugin.loadBundled(
+        bundleFile: File(bundlePath),
+        trustedPublicKeyPem: await File(keyPath).readAsString(),
+        expectedKeyId: keyId,
+        expectedVersion: expectedVersion,
+      );
+      final fixture = File(
+        '../../../ioffice/koffice/pdf/rebuild/pdf-flutter-app/assets/test/editable-two-page.pdf',
+      ).absolute;
+      final bytes = await fixture.readAsBytes();
+      final record = ResourceRecord(
+        identity: ResourceIdentity(
+          scope: 'qa',
+          source: 'local',
+          workspace: 'w',
+          mount: 'm',
+          resource: 'editable-two-page.pdf',
+        ),
+        version: ResourceVersion(revision: 'v1', digest: resourceDigest(bytes)),
+        descriptor: const MuseResourceDescriptorV1(
+          resourceRef: 'editable-two-page.pdf',
+          revision: 'v1',
+          displayName: 'editable-two-page.pdf',
+          mediaType: 'application/pdf',
+          format: MuseResourceFormat(
+            formatId: 'pdf',
+            confidence: MuseFormatConfidence.claimed,
+          ),
+          capabilities: [
+            MuseResourceCapability.describe,
+            MuseResourceCapability.materialize,
+          ],
+          security: MuseResourceSecurity(
+            classification: MuseSecurityClassification.internal,
+            activeContent: MuseActiveContent.unknown,
+          ),
+        ),
+        sourceLabel: 'Local',
+        location: const ['Downloads'],
+        parentRef: 'root',
+        metadataRevision: 1,
+      );
+      expect(
+        await plugin.probeResource(record, ResourceOpenIntent.view),
+        isTrue,
+      );
+      expect(
+        await plugin.probeResource(record, ResourceOpenIntent.edit),
+        isFalse,
+      );
+      expect(plugin.resourceHandlers.single.priority, 110);
+      session = ResourceEditorSession(
+        opened: OpenedResource(
+          reference: ResourceReference(identity: record.identity),
+          content: ResourceContent(record, bytes),
+        ),
+        allowEditing: false,
+        commitContent: (_, _, _) => throw UnsupportedError('read only'),
+        onOpened: (_) {},
+        onChanged: (_) {},
+      );
+    });
+    try {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => plugin.buildResourceEditor(
+                context,
+                plugin.resourceHandlers.single.id,
+                session,
+              ),
+            ),
+          ),
+        ),
+      );
+      for (
+        var i = 0;
+        i < 80 && find.text('第 1 页，共 2 页').evaluate().isEmpty;
+        i++
+      ) {
+        await tester.runAsync(
+          () async => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+        await tester.pump();
+      }
+      expect(find.byType(PdfWorkspace), findsOneWidget);
+      expect(find.text('第 1 页，共 2 页'), findsOneWidget);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+      session.dispose();
     }
   });
 

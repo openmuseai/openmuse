@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 
@@ -17,6 +18,7 @@ import 'package:openmuse_host/src/host/local_settings.dart';
 import 'package:openmuse_host/src/host/workspace_controller.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart';
+import 'resource_session_ownership_test.dart' as owner_fixture;
 import 'package:path/path.dart' as p;
 import 'package:pub_semver/pub_semver.dart';
 
@@ -54,6 +56,463 @@ void main() {
   tearDown(() async {
     if (await root.exists()) await root.delete(recursive: true);
   });
+
+  testWidgets(
+    'selecting a resource closes narrow navigation and preserves the desktop hidden preference',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      workspace.toggleSidebar();
+      await tester.pumpWidget(
+        OpenMuseHostApp(registry: registry, workspace: workspace),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('title-sidebar-toggle')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('README.md').first);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('workspace-navigation-drawer')),
+        findsNothing,
+      );
+      expect(workspace.activeTab?.resource.displayName, 'README.md');
+      expect(workspace.sidebarVisible, isFalse);
+      await tester.binding.setSurfaceSize(const Size(1400, 900));
+      await tester.pumpAndSettle();
+      expect(workspace.sidebarVisible, isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'narrow navigation overlays and resizing retains the dirty editor and desktop preference',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1400, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final session = owner_fixture.session([]);
+      session.enterEditing();
+      session.markDirty(true);
+      var created = 0, disposed = 0, checkpoints = 0;
+      session.flushPendingChanges = () async {
+        checkpoints++;
+      };
+      unawaited(
+        workspace.openResourceSession(
+          owner_fixture.resource(session),
+          WorkspaceResourceSession(
+            session: session,
+            confirmClose: () async => false,
+            builder: (_) => _ResourceMountProbe(
+              key: const ValueKey('responsive-editor'),
+              onCreate: () => created++,
+              onDispose: () => disposed++,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpWidget(
+        OpenMuseHostApp(registry: registry, workspace: workspace),
+      );
+      await tester.pumpAndSettle();
+      final state = tester.state(
+        find.byKey(const ValueKey('responsive-editor')),
+      );
+      for (final width in [430.0, 320.0]) {
+        await tester.binding.setSurfaceSize(Size(width, 900));
+        await tester.pumpAndSettle();
+        expect(
+          tester.getSize(find.byKey(const ValueKey('responsive-editor'))).width,
+          greaterThan(width - 40),
+        );
+        await tester.tap(find.byKey(const ValueKey('title-sidebar-toggle')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('workspace-navigation-drawer')),
+          findsOneWidget,
+        );
+        expect(workspace.sidebarVisible, isTrue);
+        final scaffold = tester.state<ScaffoldState>(
+          find.byType(Scaffold).first,
+        );
+        expect(scaffold.isDrawerOpen, isTrue);
+        scaffold.closeDrawer();
+        await tester.pumpAndSettle();
+        expect(
+          tester.state(find.byKey(const ValueKey('responsive-editor'))),
+          same(state),
+        );
+        expect(tester.takeException(), isNull);
+      }
+      await tester.binding.setSurfaceSize(const Size(1400, 900));
+      await tester.pumpAndSettle();
+      expect(workspace.sidebarVisible, isTrue);
+      expect(
+        tester.state(find.byKey(const ValueKey('responsive-editor'))),
+        same(state),
+      );
+      expect(created, 1);
+      expect(disposed, 0);
+      expect(checkpoints, 0);
+      await tester.pumpWidget(const SizedBox());
+      session.dispose();
+      workspace.dispose();
+    },
+  );
+
+  testWidgets(
+    'view switching and reset retain both live resource states without checkpointing; failed close can still change views',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1400, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+      final group = workspace.createEditorGroup();
+      layout.splitPane(
+        'editor',
+        axis: Axis.vertical,
+        newPaneId: 'second-editor',
+      );
+      layout.bind(
+        'second-editor',
+        SurfaceBinding(
+          bindingId: 'binding.second',
+          surfaceRef: 'host.editorGroup:${group.id}',
+          instanceRef: 'surface.second',
+        ),
+      );
+      var created = 0, disposed = 0, checkpoints = 0;
+      final first = owner_fixture.session([]),
+          second = owner_fixture.session([], account: 'second');
+      WorkspaceResourceSession bind(
+        ResourceEditorSession session,
+        String key,
+      ) => WorkspaceResourceSession(
+        session: session,
+        confirmClose: () async => false,
+        builder: (_) => _ResourceMountProbe(
+          key: ValueKey(key),
+          onCreate: () => created++,
+          onDispose: () => disposed++,
+        ),
+      );
+      first.enterEditing();
+      first.markDirty(true);
+      first.flushPendingChanges = () async {
+        checkpoints++;
+        throw StateError('Keep this resource open');
+      };
+      unawaited(
+        workspace.openResourceSession(
+          owner_fixture.resource(first),
+          bind(first, 'layout-first'),
+        ),
+      );
+      final firstTab = workspace.activeTab!;
+      workspace.focusEditorGroup(group.id);
+      unawaited(
+        workspace.openResourceSession(
+          owner_fixture.resource(second),
+          bind(second, 'layout-second'),
+        ),
+      );
+      await tester.pumpWidget(
+        OpenMuseHostApp(
+          registry: registry,
+          workspace: workspace,
+          layoutController: layout,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final firstState = tester.state(
+            find.byKey(const ValueKey('layout-first')),
+          ),
+          secondState = tester.state(
+            find.byKey(const ValueKey('layout-second')),
+          );
+      await _showIdeView(tester);
+      await _showAgentView(tester);
+      await _showIdeView(tester);
+      await tester.tap(find.byKey(const Key('pane-menu-button:second-editor')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('重置默认布局'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.state(find.byKey(const ValueKey('layout-first'))),
+        same(firstState),
+      );
+      expect(
+        tester.state(find.byKey(const ValueKey('layout-second'))),
+        same(secondState),
+      );
+      expect(created, 2);
+      expect(disposed, 0);
+      expect(checkpoints, 0);
+      expect(workspace.tabsFor(group.id), hasLength(1));
+      expect(
+        await workspace.requestCloseTab(
+          firstTab,
+          groupId: LocalWorkspaceController.primaryEditorGroupId,
+        ),
+        isFalse,
+      );
+      await _showAgentView(tester);
+      expect(
+        tester.state(find.byKey(const ValueKey('layout-first'))),
+        same(firstState),
+      );
+      expect(
+        tester.state(find.byKey(const ValueKey('layout-second'))),
+        same(secondState),
+      );
+      expect(checkpoints, 1);
+      expect(disposed, 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+      first.dispose();
+      second.dispose();
+      workspace.dispose();
+      layout.dispose();
+    },
+  );
+  testWidgets(
+    'view switching recovers missing resource and file groups once and preserves the mounted editor and close barrier',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1600, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+      var created = 0, disposed = 0, checkpoints = 0;
+      final first = owner_fixture.session([]),
+          source = owner_fixture.session([], account: 'unbound');
+      WorkspaceResourceSession bind(ResourceEditorSession session, String id) =>
+          WorkspaceResourceSession(
+            session: session,
+            builder: (_) => _ResourceMountProbe(
+              key: ValueKey(id),
+              onCreate: () => created++,
+              onDispose: () => disposed++,
+            ),
+            confirmClose: () async => false,
+          );
+      unawaited(
+        workspace.openResourceSession(
+          owner_fixture.resource(first),
+          bind(first, 'existing-editor'),
+        ),
+      );
+      final resourceGroup = workspace.createEditorGroup();
+      workspace.focusEditorGroup(resourceGroup.id);
+      unawaited(
+        workspace.openResourceSession(
+          owner_fixture.resource(source),
+          bind(source, 'recovered-editor'),
+        ),
+      );
+      final sourceTab = workspace.activeTab!;
+      source.enterEditing();
+      source.markDirty(true);
+      source.flushPendingChanges = () async {
+        checkpoints++;
+        throw StateError('retained original dirty owner');
+      };
+      final fileGroup = workspace.createEditorGroup();
+      workspace.focusEditorGroup(fileGroup.id);
+      workspace.openResource(
+        OpenMuseResource(
+          uri: Uri.file('${root.path}/README.md'),
+          displayName: 'README.md',
+        ),
+      );
+      final fileTab = workspace.activeTab!;
+      workspace.focusEditorGroup(resourceGroup.id);
+      await tester.pumpWidget(
+        OpenMuseHostApp(
+          registry: registry,
+          workspace: workspace,
+          layoutController: layout,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final firstState = tester.state(
+        find.byKey(const ValueKey('existing-editor')),
+      );
+      expect(created, 1);
+      expect(find.byKey(const ValueKey('recovered-editor')), findsNothing);
+      await _showIdeView(tester);
+      final recoveredState = tester.state(
+        find.byKey(const ValueKey('recovered-editor')),
+      );
+      for (final group in [resourceGroup, fileGroup]) {
+        expect(
+          layout.snapshot.bindings.values.where(
+            (b) => b.surfaceRef == 'host.editorGroup:${group.id}',
+          ),
+          hasLength(1),
+        );
+      }
+      expect(
+        layout.snapshot.bindingFor(layout.snapshot.focusedPaneId!)!.surfaceRef,
+        'host.editorGroup:${resourceGroup.id}',
+      );
+      expect(
+        tester.state(find.byKey(const ValueKey('existing-editor'))),
+        same(firstState),
+      );
+      final resetPane = layout.snapshot.bindings.entries
+          .singleWhere(
+            (e) => e.value.surfaceRef == 'host.editorGroup:${resourceGroup.id}',
+          )
+          .key;
+      await tester.tap(find.byKey(ValueKey('pane-menu-button:$resetPane')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('重置默认布局'));
+      await tester.pumpAndSettle();
+      await _showAgentView(tester);
+      await _showIdeView(tester);
+      expect(
+        tester.state(find.byKey(const ValueKey('existing-editor'))),
+        same(firstState),
+      );
+      expect(
+        tester.state(find.byKey(const ValueKey('recovered-editor'))),
+        same(recoveredState),
+      );
+      expect(workspace.tabsFor(resourceGroup.id), [sourceTab]);
+      expect(workspace.tabsFor(fileGroup.id), [fileTab]);
+      expect(sourceTab.resourceSession!.session, same(source));
+      expect(source.dirty, isTrue);
+      expect(created, 2);
+      expect(disposed, 0);
+      expect(checkpoints, 0);
+      expect(
+        await workspace.requestCloseTab(sourceTab, groupId: resourceGroup.id),
+        isFalse,
+      );
+      expect(checkpoints, 1);
+      expect(disposed, 0);
+      expect(
+        tester.state(find.byKey(const ValueKey('recovered-editor'))),
+        same(recoveredState),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      first.dispose();
+      source.dispose();
+      workspace.dispose();
+      layout.dispose();
+    },
+  );
+  testWidgets(
+    'oversized missing-group recovery leaves the layout and every unbound tab unchanged',
+    (tester) async {
+      final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+      final groups = <String>[];
+      for (var i = 0; i < 20; i++) {
+        final group = workspace.createEditorGroup();
+        groups.add(group.id);
+        workspace.focusEditorGroup(group.id);
+        workspace.openResource(
+          OpenMuseResource(
+            uri: Uri.file('${root.path}/unbound-$i.txt'),
+            displayName: 'unbound-$i.txt',
+          ),
+        );
+      }
+      final tabs = {for (final id in groups) id: workspace.tabsFor(id).single};
+      await tester.pumpWidget(
+        OpenMuseHostApp(
+          registry: registry,
+          workspace: workspace,
+          layoutController: layout,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final original = layout.snapshot;
+      await _showIdeView(tester);
+      expect(layout.snapshot, same(original));
+      expect(find.text('当前页面无法安全调整布局，已保留原视图。'), findsOneWidget);
+      for (final id in groups) {
+        expect(workspace.tabsFor(id), [tabs[id]]);
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+      workspace.dispose();
+      layout.dispose();
+    },
+  );
+  testWidgets(
+    'switching views restores the default editor after its empty pane was closed',
+    (tester) async {
+      final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+      layout.unbind('editor');
+      layout.closeEmptyPane('editor');
+      await tester.pumpWidget(
+        OpenMuseHostApp(
+          registry: registry,
+          workspace: workspace,
+          layoutController: layout,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _showIdeView(tester);
+      expect(
+        layout.snapshot.bindingFor('editor')?.surfaceRef,
+        'host.editorGroup:editor.primary',
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      workspace.dispose();
+      layout.dispose();
+    },
+  );
+  testWidgets(
+    'closing an earlier resource tab keeps the active editor State mounted',
+    (tester) async {
+      var created = 0, disposed = 0;
+      final first = owner_fixture.session([]),
+          second = owner_fixture.session([], account: 'second');
+      WorkspaceResourceSession bind(
+        ResourceEditorSession session,
+        String key,
+      ) => WorkspaceResourceSession(
+        session: session,
+        builder: (_) => _ResourceMountProbe(
+          key: ValueKey(key),
+          onCreate: () => created++,
+          onDispose: () => disposed++,
+        ),
+        confirmClose: () async => false,
+      );
+      unawaited(
+        workspace.openResourceSession(
+          owner_fixture.resource(first),
+          bind(first, 'resource-mount-first'),
+        ),
+      );
+      final earlier = workspace.activeTab!;
+      unawaited(
+        workspace.openResourceSession(
+          owner_fixture.resource(second),
+          bind(second, 'resource-mount-second'),
+        ),
+      );
+      await tester.pumpWidget(
+        OpenMuseHostApp(registry: registry, workspace: workspace),
+      );
+      await tester.pumpAndSettle();
+      final state = tester.state(
+        find.byKey(const ValueKey('resource-mount-second')),
+      );
+      expect(created, 2);
+      workspace.closeTab(earlier);
+      await tester.pumpAndSettle();
+      expect(
+        tester.state(find.byKey(const ValueKey('resource-mount-second'))),
+        same(state),
+      );
+      expect(created, 2);
+      expect(disposed, 1);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      first.dispose();
+      second.dispose();
+      workspace.dispose();
+    },
+  );
 
   test(
     'restore a closed plugin panel without replacing files or duplicating panes',
@@ -459,6 +918,8 @@ void main() {
     await tester.pumpWidget(
       OpenMuseHostApp(registry: registry, workspace: workspace),
     );
+    await tester.tap(find.byKey(const ValueKey('title-sidebar-toggle')));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('插件').first);
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('desktop-market-page')), findsOneWidget);
@@ -983,6 +1444,18 @@ void main() {
   );
 }
 
+Future<void> _showAgentView(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('title-view')));
+  await tester.pumpAndSettle();
+  await tester.tap(
+    find.ancestor(
+      of: find.text('Agent 视图'),
+      matching: find.byType(PopupMenuItem<String>),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 Future<void> _showIdeView(WidgetTester tester) async {
   await tester.tap(find.byKey(const ValueKey('title-view')));
   await tester.pumpAndSettle();
@@ -1079,4 +1552,32 @@ final class _SurfaceProbeState extends State<_SurfaceProbe> {
   @override
   Widget build(BuildContext context) =>
       const ColoredBox(key: Key('surface-probe'), color: Colors.blue);
+}
+
+class _ResourceMountProbe extends StatefulWidget {
+  const _ResourceMountProbe({
+    super.key,
+    required this.onCreate,
+    required this.onDispose,
+  });
+  final VoidCallback onCreate, onDispose;
+  @override
+  State<_ResourceMountProbe> createState() => _ResourceMountProbeState();
+}
+
+class _ResourceMountProbeState extends State<_ResourceMountProbe> {
+  @override
+  void initState() {
+    super.initState();
+    widget.onCreate();
+  }
+
+  @override
+  void dispose() {
+    widget.onDispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => const Text('Retained resource editor');
 }

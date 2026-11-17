@@ -71,6 +71,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.1"
+  calendar_view:
+    dependency: transitive
+    description:
+      path: "../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/vendor/openmuse_calendar_view"
+      relative: true
+    source: path
+    version: "1.0.5"
   characters:
     dependency: transitive
     description:
@@ -79,6 +86,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.4.1"
+  charcode:
+    dependency: transitive
+    description:
+      name: charcode
+      sha256: fb0f1107cac15a5ea6ef0a6ef71a807b9e4267c713bb93e00e92d737cc8dbd8a
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.4.0"
   clock:
     dependency: transitive
     description:
@@ -183,6 +198,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.4.1"
+  duskmoon_highlight:
+    dependency: transitive
+    description:
+      name: duskmoon_highlight
+      sha256: "6b005f66801030f66fd430208bdf5210f8709a86eadd1be81161fdea5809c56d"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.2.11"
   equatable:
     dependency: transitive
     description:
@@ -287,6 +310,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.9.3+6"
+  fixnum:
+    dependency: transitive
+    description:
+      name: fixnum
+      sha256: b6dc7065e46c974bc7c5f143080a6764ec7a4be6da1285ececdc37be96de53be
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.1.1"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -318,6 +349,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.0.12"
+  flutter_math_fork:
+    dependency: transitive
+    description:
+      path: "../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/vendor/flutter_math_fork"
+      relative: true
+    source: path
+    version: "0.7.3"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -429,6 +467,22 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  glob:
+    dependency: transitive
+    description:
+      name: glob
+      sha256: "218aeb56050c714f62a3182775320dfa04602b55074873e24e31bbd39bda96fb"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.2.0"
+  highlight:
+    dependency: transitive
+    description:
+      name: highlight
+      sha256: "5353a83ffe3e3eca7df0abfb72dcf3fa66cc56b953728e7113ad4ad88497cf21"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.7.0"
   hooks:
     dependency: transitive
     description:
@@ -446,7 +500,7 @@ packages:
     source: hosted
     version: "0.15.7"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       sha256: "87721a4a50b19c7f1d49001e51409bddc46303966ce89a65af4f4e6004896412"
@@ -618,10 +672,73 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.0"
+  muse_appflowy_realtime:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_appflowy_realtime"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_appflowy_transport:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_appflowy_transport"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_asset_contract:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_asset_contract"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_asset_repository:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_asset_repository"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_attachment_source:
+    dependency: "direct dev"
+    description:
+      path: "../../packages/muse_attachment_source"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_collab_contract:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_collab_contract"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_collab_widgets:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_collab_widgets"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_content_store:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_content_store"
+      relative: true
+    source: path
+    version: "0.1.0"
   muse_dsh_conversation_protocol:
     dependency: transitive
     description:
       path: "../../packages/muse_dsh_conversation_protocol"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_image_source:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_image_source"
       relative: true
     source: path
     version: "0.1.0"
@@ -660,6 +777,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  muse_resource_embed:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_resource_embed"
+      relative: true
+    source: path
+    version: "0.1.0"
   nanoid:
     dependency: transitive
     description:
@@ -668,6 +792,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.0.0"
+  native_toolchain_c:
+    dependency: transitive
+    description:
+      name: native_toolchain_c
+      sha256: f9c168717100ae6d9fee9ffb0be379bf1f8b26b0f6bcbd4fdddcd931993a6a72
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.19.2"
   nested:
     dependency: transitive
     description:
@@ -707,6 +839,20 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  openmuse_appflowy_code_block:
+    dependency: transitive
+    description:
+      path: "../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/vendor/openmuse_appflowy_code_block"
+      relative: true
+    source: path
+    version: "0.0.6"
+  openmuse_appflowy_editor:
+    dependency: "direct dev"
+    description:
+      path: "../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/vendor/openmuse_appflowy_editor"
+      relative: true
+    source: path
+    version: "5.2.0"
   openmuse_auth_gotrue:
     dependency: "direct main"
     description:
@@ -739,6 +885,20 @@ packages:
     dependency: "direct main"
     description:
       path: "../../plugins/cloud-workspace"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_dataset:
+    dependency: "direct dev"
+    description:
+      path: "../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/dataset/flutter"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_dataset_plugin:
+    dependency: "direct dev"
+    description:
+      path: "../../plugins/dataset"
       relative: true
     source: path
     version: "0.1.0"
@@ -792,7 +952,7 @@ packages:
     source: path
     version: "0.1.0"
   openmuse_mobile_cloud:
-    dependency: transitive
+    dependency: "direct main"
     description:
       path: "../../packages/openmuse_mobile_cloud"
       relative: true
@@ -889,6 +1049,27 @@ packages:
       relative: true
     source: path
     version: "0.1.1"
+  openmuse_smart_document:
+    dependency: "direct dev"
+    description:
+      path: "../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/flutter"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_smart_document_plugin:
+    dependency: "direct dev"
+    description:
+      path: "../../plugins/smart-document"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_smart_document_plugins:
+    dependency: "direct dev"
+    description:
+      path: "../../distribution/openmuse_smart_document_plugins"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_spreadsheet_product:
     dependency: "direct main"
     description:
@@ -1286,6 +1467,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.7.11"
+  tuple:
+    dependency: transitive
+    description:
+      name: tuple
+      sha256: a97ce2013f240b2f3807bcbaf218765b6f301c3eff91092bcfa23a039e7dd151
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.0.2"
   typed_data:
     dependency: transitive
     description:
@@ -1294,6 +1483,22 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.4.0"
+  universal_html:
+    dependency: transitive
+    description:
+      name: universal_html
+      sha256: c0bcae5c733c60f26c7dfc88b10b0fd27cbcc45cb7492311cdaa6067e21c9cd4
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.3.0"
+  universal_io:
+    dependency: transitive
+    description:
+      name: universal_io
+      sha256: f63cbc48103236abf48e345e07a03ce5757ea86285ed313a6a032596ed9301e2
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.3.1"
   universal_platform:
     dependency: transitive
     description:
@@ -1366,6 +1571,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.1.6"
+  uuid:
+    dependency: transitive
+    description:
+      name: uuid
+      sha256: "9b129329f58692f6e6578329498a8fe9fbe98f090beb764ffbb8ee2eadd01dcd"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "4.6.0"
   vector_graphics:
     dependency: transitive
     description:
@@ -1414,6 +1627,22 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.1.1"
+  web_socket:
+    dependency: transitive
+    description:
+      name: web_socket
+      sha256: "34d64019aa8e36bf9842ac014bb5d2f5586ca73df5e4d9bf5c936975cae6982c"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.1"
+  web_socket_channel:
+    dependency: transitive
+    description:
+      name: web_socket_channel
+      sha256: d645757fb0f4773d602444000a8131ff5d48c9e47adfe9772652dd1a4f2d45c8
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.0.3"
   webdriver:
     dependency: transitive
     description:

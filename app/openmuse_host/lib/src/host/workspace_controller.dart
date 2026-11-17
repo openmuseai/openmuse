@@ -75,32 +75,67 @@ final class WorkspaceDiff {
   final String after;
 }
 
+enum ResourceCloseDecision { keepEditing, discard, preservePrivate }
+
 final class WorkspaceResourceSession {
   WorkspaceResourceSession({
     required this.session,
     required this.builder,
     required this.confirmClose,
+    this.chooseClose,
+    this.onRecoveryFailed,
+    this.supportsSharedPresentations = false,
   });
+  static int _nextPresentation = 0;
+  final String presentationId = 'resource-presentation:${_nextPresentation++}';
+  final bool supportsSharedPresentations;
   final ResourceEditorSession session;
   final WidgetBuilder builder;
   final Future<bool> Function() confirmClose;
+  final Future<ResourceCloseDecision> Function()? chooseClose;
+  final VoidCallback? onRecoveryFailed;
+  Future<bool> resolveFailedClose() async {
+    final decision = chooseClose == null
+        ? (await confirmClose()
+              ? ResourceCloseDecision.discard
+              : ResourceCloseDecision.keepEditing)
+        : await chooseClose!();
+    switch (decision) {
+      case ResourceCloseDecision.keepEditing:
+        session.cancelClosePreparation();
+        return false;
+      case ResourceCloseDecision.discard:
+        session.discardChangesForClose();
+        return true;
+      case ResourceCloseDecision.preservePrivate:
+        final ready = await session.prepareToClose(privateRecoveryOnly: true);
+        if (ready && await session.finalizeToClose()) return true;
+        onRecoveryFailed?.call();
+        return false;
+    }
+  }
+
   final closed = Completer<void>();
   bool confirming = false;
+  Future<bool>? closeRequest;
   void finish() {
     if (!closed.isCompleted) closed.complete();
   }
 }
 
 final class WorkspaceTab {
-  WorkspaceTab.resource(this.resource, {this.preferredEditorId})
-    : id = resource.uri.toString(),
-      title = resource.displayName,
-      kind = WorkspaceTabKind.resource,
-      diff = null;
+  WorkspaceTab.resource(
+    this.resource, {
+    this.preferredEditorId,
+    String? presentationId,
+  }) : id = presentationId ?? resource.uri.toString(),
+       _title = resource.displayName,
+       kind = WorkspaceTabKind.resource,
+       diff = null;
 
   WorkspaceTab.diff(WorkspaceDiff value)
     : id = 'diff:${value.resource.uri}:${value.comparisonId}',
-      title =
+      _title =
           '${value.resource.displayName}-${value.snapshot.shortId}↔${value.afterLabel}',
       kind = WorkspaceTabKind.diff,
       resource = value.resource,
@@ -108,7 +143,10 @@ final class WorkspaceTab {
 
   WorkspaceResourceSession? resourceSession;
   final String id;
-  final String title;
+  final String _title;
+  String get title => kind == WorkspaceTabKind.resource
+      ? resourceSession?.session.record.name ?? _title
+      : _title;
   final WorkspaceTabKind kind;
   OpenMuseResource resource;
   final WorkspaceDiff? diff;
@@ -380,6 +418,11 @@ final class LocalWorkspaceController extends ChangeNotifier {
 
   void removeEditorGroup(String groupId) {
     if (groupId == primaryEditorGroupId || _editorGroups.length == 1) return;
+    // Live resource leases must pass the same close barrier as individual tabs.
+    if (_editorGroups[groupId]?._tabs.any((t) => t.resourceSession != null) ==
+        true) {
+      return;
+    }
     if (_editorGroups.remove(groupId) == null) return;
     if (_focusedEditorGroupId == groupId) {
       _focusedEditorGroupId = primaryEditorGroupId;
@@ -394,11 +437,16 @@ final class LocalWorkspaceController extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool Function(OpenMuseResource)? interceptResourceOpen;
+
   void openResource(
     OpenMuseResource resource, {
     String? editorId,
     String? groupId,
   }) {
+    if (editorId == null && interceptResourceOpen?.call(resource) == true) {
+      return;
+    }
     final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
     final path = resource.uri.isScheme('file')
         ? resource.uri.toFilePath()
@@ -435,16 +483,46 @@ final class LocalWorkspaceController extends ChangeNotifier {
     OpenMuseResource resource,
     WorkspaceResourceSession binding,
   ) {
-    final group = _requireEditorGroup(_focusedEditorGroupId);
-    final existing = group._tabs
-        .where((t) => t.resource.uri == resource.uri)
-        .firstOrNull;
-    if (existing?.resourceSession != null) {
-      group._activeTab = existing;
-      notifyListeners();
-      return existing!.resourceSession!.closed.future;
+    // Contributors explicitly opt into independent presentations of one shared
+    // content owner. All other handlers retain the existing owner-focus rule.
+    // Version/account isolation is already encoded in the resource URI.
+    for (final candidate in _editorGroups.values) {
+      final matches = candidate._tabs.where(
+        (t) => t.resource.uri == resource.uri && t.resourceSession != null,
+      );
+      final existing = matches.where((tab) {
+        final current = tab.resourceSession!.session;
+        final next = binding.session;
+        return current.isPresentationActive &&
+            current.ownershipScope == next.ownershipScope &&
+            identical(current.lifetime, next.lifetime) &&
+            current.allowEditing == next.allowEditing &&
+            current.opened.fromSnapshot == next.opened.fromSnapshot;
+      }).firstOrNull;
+      if (existing != null &&
+          (candidate.id == _focusedEditorGroupId ||
+              !binding.supportsSharedPresentations ||
+              !existing.resourceSession!.supportsSharedPresentations)) {
+        candidate._activeTab = existing;
+        _focusedEditorGroupId = candidate.id;
+        notifyListeners();
+        return existing.resourceSession!.closed.future;
+      }
+      if (existing == null &&
+          matches.any(
+            (tab) =>
+                tab.resourceSession!.session.isPresentationActive &&
+                (!binding.supportsSharedPresentations ||
+                    !tab.resourceSession!.supportsSharedPresentations),
+          )) {
+        throw const ResourceFailure('RESOURCE_PRESENTATION_POLICY_CONFLICT');
+      }
     }
-    final tab = WorkspaceTab.resource(resource)..resourceSession = binding;
+    final group = _requireEditorGroup(_focusedEditorGroupId);
+    final tab = WorkspaceTab.resource(
+      resource,
+      presentationId: binding.presentationId,
+    )..resourceSession = binding;
     group._tabs.add(tab);
     group._activeTab = tab;
     binding.session.addListener(notifyListeners);
@@ -494,46 +572,55 @@ final class LocalWorkspaceController extends ChangeNotifier {
   }
 
   void closeTab(WorkspaceTab tab, {String? groupId}) {
-    if (tab.pinned) return;
+    unawaited(requestCloseTab(tab, groupId: groupId));
+  }
+
+  /// One application close path for tab, batch and pane actions. Fallible
+  /// checkpoint/release work runs while the original surface is still mounted.
+  Future<bool> requestCloseTab(WorkspaceTab tab, {String? groupId}) {
+    if (tab.pinned) return Future.value(false);
     final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
+    if (!group._tabs.contains(tab)) return Future.value(true);
     final binding = tab.resourceSession;
-    if (binding != null &&
-        binding.session.flushPendingChanges != null &&
-        !binding.session.closePrepared) {
-      if (binding.confirming) return;
+    if (binding == null) {
+      _removeClosedTab(group, tab);
+      return Future.value(true);
+    }
+    return binding.closeRequest ??= (() async {
       binding.confirming = true;
-      unawaited(() async {
-        final saved = await binding.session.prepareToClose();
-        if (_disposed) return;
-        if (saved || await binding.confirmClose()) {
-          if (!saved) binding.session.discardChangesForClose();
-          binding.confirming = false;
-          if (!_disposed) closeTab(tab, groupId: group.id);
-        } else {
-          binding.confirming = false;
+      try {
+        if ((binding.session.closeParticipant != null ||
+                binding.session.flushPendingChanges != null ||
+                binding.session.releaseForClose != null) &&
+            (!binding.session.closePrepared ||
+                (binding.session.releaseForClose != null &&
+                    !binding.session.closeFinalized))) {
+          var saved =
+              binding.session.closePrepared ||
+              await binding.session.prepareToClose();
+          if (saved) saved = await binding.session.finalizeToClose();
+          if (_disposed) return false;
+          if (!saved) {
+            if (!await binding.resolveFailedClose() || _disposed) return false;
+          }
         }
-      }());
-      return;
-    }
-    if (binding != null && binding.session.dirty) {
-      if (!binding.confirming) {
-        binding.confirming = true;
-        unawaited(
-          binding.confirmClose().then((discard) {
-            binding.confirming = false;
-            if (discard && !_disposed) {
-              binding.session.markDirty(false);
-              closeTab(tab, groupId: group.id);
-            }
-          }),
-        );
+        if (binding.session.dirty && !binding.session.closeFinalized) {
+          if (!await binding.resolveFailedClose() || _disposed) return false;
+        }
+        if (_disposed) return false;
+        _removeClosedTab(group, tab);
+        return true;
+      } finally {
+        binding.confirming = false;
       }
-      return;
-    }
+    })().whenComplete(() => binding.closeRequest = null);
+  }
+
+  void _removeClosedTab(WorkspaceEditorGroup group, WorkspaceTab tab) {
     final index = group._tabs.indexOf(tab);
     if (index < 0) return;
     group._tabs.removeAt(index);
-    binding?.finish();
+    tab.resourceSession?.finish();
     if (identical(group._activeTab, tab)) {
       group._activeTab = group._tabs.isEmpty
           ? null
@@ -542,17 +629,26 @@ final class LocalWorkspaceController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> closeEditorGroup(String groupId) async {
+    final group = _requireEditorGroup(groupId);
+    for (final tab in group._tabs.toList()) {
+      if (!await requestCloseTab(tab, groupId: groupId)) return false;
+    }
+    if (group._tabs.isNotEmpty) return false;
+    if (groupId == primaryEditorGroupId) return true;
+    removeEditorGroup(groupId);
+    return !_editorGroups.containsKey(groupId);
+  }
+
   void closeOtherTabs(WorkspaceTab tab, {String? groupId}) {
     final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
-    group._tabs.removeWhere((candidate) {
-      if (identical(candidate, tab) ||
-          candidate.pinned ||
-          candidate.resourceSession?.session.dirty == true) {
-        return false;
+    for (final candidate in group._tabs.toList()) {
+      if (!identical(candidate, tab) &&
+          !candidate.pinned &&
+          candidate.resourceSession?.session.dirty != true) {
+        closeTab(candidate, groupId: group.id);
       }
-      candidate.resourceSession?.finish();
-      return true;
-    });
+    }
     group._activeTab = tab;
     _focusedEditorGroupId = group.id;
     notifyListeners();

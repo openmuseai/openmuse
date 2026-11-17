@@ -15,7 +15,8 @@ const pdfProductId = 'io.openmuse/pdf';
 
 /// Desktop Host adapter. The installed MCPB supplies signed product chrome;
 /// PDF document state and rendering stay in the ioffice product SDK.
-final class OpenMusePdfProductPlugin implements OpenMusePlugin {
+final class OpenMusePdfProductPlugin
+    implements OpenMusePlugin, OpenMuseResourceHandlerContributor {
   OpenMusePdfProductPlugin._(
     this.entry,
     this.snapshot,
@@ -45,6 +46,46 @@ final class OpenMusePdfProductPlugin implements OpenMusePlugin {
 
   @override
   final OpenMusePluginDescriptor descriptor;
+
+  @override
+  List<ResourceHandlerSpec> get resourceHandlers => [
+    ResourceHandlerSpec(
+      id: '${descriptor.id}.resource',
+      title: descriptor.name,
+      mediaTypes: const {'application/pdf'},
+      extensions: const {'pdf'},
+      priority: 110,
+    ),
+  ];
+
+  @override
+  Future<bool> probeResource(
+    ResourceRecord record,
+    ResourceOpenIntent intent,
+  ) async =>
+      intent == ResourceOpenIntent.view &&
+      resourceHandlers.any((handler) => handler.accepts(record));
+
+  @override
+  Widget buildResourceEditor(
+    BuildContext context,
+    String handlerId,
+    ResourceEditorSession session,
+  ) {
+    if (handlerId != resourceHandlers.single.id) {
+      return const Center(child: Text('未知 PDF 处理器'));
+    }
+    return PdfWorkspace(
+      key: ValueKey('pdf-resource-${session.record.identity.key}'),
+      chrome: snapshot.chrome,
+      commands: snapshot.commands,
+      enabledFeatures: snapshot.enabledFeatures,
+      initialBytes: Uint8List.fromList(session.bytes),
+      initialName: session.record.name,
+      generatedOutputDirectory: () => settings?.generatedOutputDirectory,
+      openGeneratedDocument: openGeneratedDocument,
+    );
+  }
 
   static Future<OpenMusePdfProductPlugin> load({
     required McpMarketEntry entry,

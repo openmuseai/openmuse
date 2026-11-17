@@ -7,6 +7,9 @@ environment:
   sdk: ^3.12.2
 
 dependencies:
+  http: 1.6.0
+  openmuse_mobile_cloud:
+    path: ../../packages/openmuse_mobile_cloud
   openmuse_resource_center_host:
     path: ../../packages/openmuse_resource_center_host
   openmuse_i18n:
@@ -75,6 +78,20 @@ dependencies:
   mcp_dart: ^2.4.3
 
 dev_dependencies:
+  muse_attachment_source:
+    path: ../../packages/muse_attachment_source
+  openmuse_smart_document_plugins:
+    path: ../../distribution/openmuse_smart_document_plugins
+  openmuse_dataset_plugin:
+    path: ../../plugins/dataset
+  openmuse_smart_document_plugin:
+    path: ../../plugins/smart-document
+  openmuse_smart_document:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/flutter
+  openmuse_dataset:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/dataset/flutter
+  openmuse_appflowy_editor:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/vendor/openmuse_appflowy_editor
   flutter_test:
     sdk: flutter
   integration_test:

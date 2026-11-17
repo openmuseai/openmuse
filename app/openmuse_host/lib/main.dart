@@ -56,6 +56,7 @@ Future<void> main() async {
   // Finder-launched windows blank while Dart is still in main().
   runApp(
     OpenMuseRegionBootstrap(
+      requiresLegalConsent: !macAppStoreDistribution,
       store: (release) async {
         final support = await getApplicationSupportDirectory();
         return FileConfigStore(
@@ -295,6 +296,17 @@ Future<Widget> bootOpenMuseHost({
       );
   mcpApps.onDevelopmentClosed = resourceExtensions.removeDevelopment;
   Future<void> registerMcp(McpMarketEntry entry) async {
+    if (macAppStoreDistribution) {
+      final bundled =
+          jsonDecode(await bundledPptxIdentity.readAsString()) as Map;
+      if (entry.name != 'io.openmuse/genoffice-pptx' ||
+          entry.sha256 != bundled['sha256'] ||
+          entry.version != bundled['version']) {
+        throw UnsupportedError(
+          'Only the fixed bundled app is available in this distribution',
+        );
+      }
+    }
     final existing = registry.plugin(entry.name);
     if (existing?.descriptor.version == entry.version) return;
     if (entry.name == wordProductId) {
@@ -347,6 +359,7 @@ Future<Widget> bootOpenMuseHost({
       );
       if (existing != null) await registry.uninstall(entry.name);
       registry.install(pdf);
+      await registry.activate(pdf.descriptor.id);
       return;
     }
     if (entry.name == spreadsheetProductId) {
@@ -382,14 +395,16 @@ Future<Widget> bootOpenMuseHost({
       environment: Platform.environment,
     ).nodeExecutable;
     final runtime = McpBundleRuntime(
-      bundleDirectory: receiptMarket.directoryFor(entry),
+      bundleDirectory: macAppStoreDistribution
+          ? Directory(p.join(bundledPptxRoot.path, 'runtime'))
+          : receiptMarket.directoryFor(entry),
       nodeExecutable: node,
     );
     final plugin = await discoverMcpFilePlugin(
       entry: entry,
       runtime: runtime,
-      agentBroker: resourceAgents,
-      extensions: resourceExtensions,
+      agentBroker: macAppStoreDistribution ? null : resourceAgents,
+      extensions: macAppStoreDistribution ? null : resourceExtensions,
       contributors: () => [
         for (final descriptor in registry.descriptors)
           if (registry.plugin(descriptor.id)
@@ -401,6 +416,7 @@ Future<Widget> bootOpenMuseHost({
     if (plugin != null) {
       if (existing != null) await registry.uninstall(entry.name);
       registry.install(plugin);
+      await registry.activate(plugin.descriptor.id);
     }
   }
 
@@ -844,11 +860,21 @@ Future<Widget> bootOpenMuseHost({
   final desktopDisplayName = Platform.localHostname.isEmpty
       ? 'OpenMuse Desktop'
       : Platform.localHostname;
+  late final AppFlowyDocumentWorkspace cloudDocuments;
   final cloudWorkspacePlugin = OpenMuseCloudWorkspacePlugin(
     authentication: authenticationController,
     cloudOrigin: endpoints.cloudOrigin,
     deviceId: desktopDeviceId,
     allowInsecureLoopback: endpoints.allowInsecureLoopback,
+    onOpenDocument: (page) => cloudDocuments.openDocument(page),
+    onOpenDatabase: (page) => cloudDocuments.databases.openDatabase(page),
+  );
+  cloudDocuments = AppFlowyDocumentWorkspace(
+    authentication: authenticationController,
+    service: cloudWorkspacePlugin.service,
+    browserBaseUri:
+        runtimeConfig.documentBrowserUri ??
+        deploymentBundle.snapshot.documentBrowserUri,
   );
   final cliBroker = PluginCliBroker(
     installRoot: Directory(p.join(support.path, 'OpenMuse', 'plugins')),
@@ -986,6 +1012,7 @@ Future<Widget> bootOpenMuseHost({
           await center.mountDirectories({
             for (final mount in controller.mounts) mount.path: mount.name,
           });
+          cloudDocuments.attach(center.controller);
           resourceCenter.value = center;
         })
         .catchError((Object error) {
@@ -1146,6 +1173,7 @@ Future<Widget> bootOpenMuseHost({
   registry.install(cloudWorkspacePlugin);
   if (!macAppStoreDistribution) registry.install(pairedDesktopPlugin);
   for (final plugin in createOpenMuseBuiltInPlugins(
+    cloudDocuments: cloudDocuments,
     dshSupervisor: dshSupervisor,
     nativeMcpEditorBuilder: (pluginId) =>
         pluginId == 'io.openmuse/appflowy-editor'
@@ -1183,9 +1211,7 @@ Future<Widget> bootOpenMuseHost({
     if (macAppStoreDistribution &&
         const {
           'com.openmuse.cli',
-          'com.openmuse.helix',
           'com.openmuse.plugin-market',
-          'com.openmuse.dsh-agent',
         }.contains(plugin.descriptor.id)) {
       continue;
     }
@@ -1204,6 +1230,7 @@ Future<Widget> bootOpenMuseHost({
     }
   }
   bootPhase('reading installed plugins');
+  McpMarketEntry? fixedBundledPptx;
   if (await bundledPptxBundle.exists() && await bundledPptxIdentity.exists()) {
     try {
       final identity =
@@ -1220,15 +1247,20 @@ Future<Widget> bootOpenMuseHost({
         ]),
         sha256: digest,
       );
-      await receiptMarket.install(
-        entry,
-        bundleBytes: await bundledPptxBundle.readAsBytes(),
-      );
+      fixedBundledPptx = entry;
+      if (!macAppStoreDistribution) {
+        await receiptMarket.install(
+          entry,
+          bundleBytes: await bundledPptxBundle.readAsBytes(),
+        );
+      }
     } catch (error) {
       debugPrint('Bundled PPTX registration failed: $error');
     }
   }
-  final installedMcpEntries = await receiptMarket.installedEntries();
+  final installedMcpEntries = macAppStoreDistribution
+      ? [?fixedBundledPptx]
+      : await receiptMarket.installedEntries();
   // The native Word editor must be available for a restored DOCX tab. Other
   // MCP servers are probed after the Host has painted its first frame: an
   // unresponsive installed plugin must never hold the entire window on the
@@ -1270,16 +1302,16 @@ Future<Widget> bootOpenMuseHost({
     try {
       final identity =
           jsonDecode(await bundledPdfIdentity.readAsString()) as Map;
-      registry.install(
-        await OpenMusePdfProductPlugin.loadBundled(
-          bundleFile: File(p.join(bundledPdfRoot.path, 'pdf.mcpb')),
-          trustedPublicKeyPem: await bundledPdfKey.readAsString(),
-          expectedKeyId: identity['keyId'] as String,
-          expectedVersion: identity['version'] as String,
-          settings: settings,
-          openGeneratedDocument: openGeneratedPdfDocument,
-        ),
+      final pdf = await OpenMusePdfProductPlugin.loadBundled(
+        bundleFile: File(p.join(bundledPdfRoot.path, 'pdf.mcpb')),
+        trustedPublicKeyPem: await bundledPdfKey.readAsString(),
+        expectedKeyId: identity['keyId'] as String,
+        expectedVersion: identity['version'] as String,
+        settings: settings,
+        openGeneratedDocument: openGeneratedPdfDocument,
       );
+      registry.install(pdf);
+      await registry.activate(pdf.descriptor.id);
     } catch (error) {
       debugPrint('Bundled PDF product registration failed: $error');
     }
@@ -1392,9 +1424,7 @@ Future<Widget> bootOpenMuseHost({
   }());
   unawaited(() async {
     try {
-      if (!macAppStoreDistribution) {
-        await registry.activate('com.openmuse.dsh-agent');
-      }
+      await registry.activate('com.openmuse.dsh-agent');
     } catch (error) {
       debugPrint('DSH plugin activate deferred: $error');
     }

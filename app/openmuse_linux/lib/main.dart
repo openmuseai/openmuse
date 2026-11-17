@@ -742,6 +742,8 @@ Future<Widget> bootOpenMuseHost({
           if (epoch != resourceEpoch) return;
           final center = await NativeResourceCenter.open(
             seedWelcomeResources: true,
+            welcomeRegion:
+                (runtimeConfig.json['scope'] as Map)['dataRegion'] as String,
             scope: scope,
             deviceRef: desktopDeviceId,
             deviceLabel: Platform.localHostname,

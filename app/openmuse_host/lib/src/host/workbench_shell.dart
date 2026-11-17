@@ -68,6 +68,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   late final bool _ownsLayout = widget.layoutController == null;
   Timer? _saveDebounce;
   Size _lastSize = Size.zero;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   final OpenMuseCliController _terminalController = OpenMuseCliController();
   bool _terminalVisible = false;
   _HostView _view =
@@ -78,6 +79,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
       : _HostView.agent;
   bool _hasOpenedTerminal = false;
   bool _marketPageOpen = false;
+  bool _resourceAgentRequested = false;
 
   bool get _terminalAvailable =>
       widget.settings.pluginValues('com.openmuse.cli')['enabled'] != false &&
@@ -95,6 +97,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     }
     _ensureEditorGroups();
     widget.resources?.controller.presentEditor = _presentResourceEditor;
+    widget.workspace.interceptResourceOpen = _openResourceDocument;
     _layout.addListener(_layoutChanged);
     _removeLegacyMarketPane();
     if (_macNativeChrome) {
@@ -115,6 +118,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   @override
   void dispose() {
     widget.resources?.controller.presentEditor = null;
+    widget.workspace.interceptResourceOpen = null;
     if (_macNativeChrome) _menuChannel.setMethodCallHandler(null);
     final shouldFlush = _saveDebounce?.isActive ?? false;
     _saveDebounce?.cancel();
@@ -125,6 +129,34 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     super.dispose();
   }
 
+  bool _openResourceDocument(OpenMuseResource resource) {
+    final center = widget.resources;
+    final name = resource.displayName.toLowerCase();
+    if (center == null ||
+        !resource.uri.isScheme('file') ||
+        !(name.endsWith('.sydoc') ||
+            name.endsWith('.sy.zip') ||
+            name.endsWith('.sy'))) {
+      return false;
+    }
+    unawaited(() async {
+      try {
+        final reference = await center.referenceForMountedFile(
+          File.fromUri(resource.uri),
+        );
+        if (reference == null) {
+          throw const ResourceFailure('SOURCE_UNAVAILABLE');
+        }
+        if (mounted) {
+          await openResourcePage(context, center.controller, reference);
+        }
+      } catch (error) {
+        if (mounted) showResourceError(context, error);
+      }
+    }());
+    return true;
+  }
+
   Future<void> _presentResourceEditor(
     ResourceEditorPresentation request,
   ) async {
@@ -132,6 +164,16 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     Navigator.of(
       context,
     ).popUntil((route) => route.settings.name != openMuseResourceRouteName);
+    final agentInstances = _layout.snapshot.bindings.values
+        .where((binding) => binding.surfaceRef == 'plugin.panel:dsh.agent')
+        .map((binding) => binding.instanceRef);
+    final canFocusResource = await _prepareMutation(
+      context,
+      agentInstances,
+      SurfaceMutationKind.close,
+    );
+    if (!mounted) return;
+    setState(() => _resourceAgentRequested = !canFocusResource);
     final session = request.session;
     final reference = ResourceReference(
       identity: session.record.identity,
@@ -146,29 +188,55 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
       ),
       WorkspaceResourceSession(
         session: session,
-        confirmClose: () async =>
-            await showDialog<bool>(
-              context: context,
-              builder: (dialog) {
-                final s = ResourceCenterStrings(dialog);
-                return AlertDialog(
-                  title: Text(s.unsaved),
-                  actions: [
-                    TextButton(
-                      key: const ValueKey('resource-keep-editing'),
-                      onPressed: () => Navigator.pop(dialog, false),
-                      child: Text(s.keepEditing),
-                    ),
-                    TextButton(
-                      key: const ValueKey('resource-discard'),
-                      onPressed: () => Navigator.pop(dialog, true),
-                      child: Text(s.discard),
-                    ),
-                  ],
-                );
-              },
-            ) ??
-            false,
+        supportsSharedPresentations:
+            request.choice.spec.supportsSharedPresentations,
+        confirmClose: () async => false,
+        chooseClose: () async {
+          final preserve = session.canPreserveForClose;
+          return await showDialog<ResourceCloseDecision>(
+                context: context,
+                builder: (dialog) {
+                  final s = ResourceCenterStrings(dialog);
+                  return AlertDialog(
+                    title: Text(preserve ? '资源保存未完成' : s.unsaved),
+                    content: preserve
+                        ? const Text('可以保留本机副本后关闭，稍后重新打开继续编辑。已共享的内容不会撤回。')
+                        : null,
+                    actions: [
+                      TextButton(
+                        key: const ValueKey('resource-keep-editing'),
+                        onPressed: () => Navigator.pop(
+                          dialog,
+                          ResourceCloseDecision.keepEditing,
+                        ),
+                        child: Text(s.keepEditing),
+                      ),
+                      TextButton(
+                        key: ValueKey(
+                          preserve
+                              ? 'resource-preserve-private'
+                              : 'resource-discard',
+                        ),
+                        onPressed: () => Navigator.pop(
+                          dialog,
+                          preserve
+                              ? ResourceCloseDecision.preservePrivate
+                              : ResourceCloseDecision.discard,
+                        ),
+                        child: Text(preserve ? '保留本机副本并关闭' : s.discard),
+                      ),
+                    ],
+                  );
+                },
+              ) ??
+              ResourceCloseDecision.keepEditing;
+        },
+        onRecoveryFailed: () {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('未能完成本机副本保存，页面已保留，请重试。')),
+          );
+        },
         builder: (context) => ListenableBuilder(
           listenable: widget.registry,
           builder: (context, _) {
@@ -178,10 +246,13 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
                 child: Text(ResourceCenterStrings(context).noHandler),
               );
             }
-            return request.choice.contributor.buildResourceEditor(
-              context,
-              request.choice.spec.id,
-              session,
+            return ResourceEditorSessionScope(
+              session: session,
+              child: request.choice.contributor.buildResourceEditor(
+                context,
+                request.choice.spec.id,
+                session,
+              ),
             );
           },
         ),
@@ -322,77 +393,40 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
       ?widget.desktopUpdate?.status,
       ?widget.desktopUpdate?.progress,
     ]),
-    builder: (context, _) => Scaffold(
-      body: Column(
-        children: [
-          if (_macNativeChrome)
-            _MacTitleBar(
-              workspace: widget.workspace,
-              onDrag: OpenMuseWindowChrome.startDrag,
-              onSettings: () => _openLocalSettings(context),
-              onShowAgent: _showAgentPanel,
-            )
-          else
-            _WindowsTitleStrip(
-              registry: widget.registry,
-              workspace: widget.workspace,
-              settings: widget.settings,
-              view: _view,
-              onView: _selectView,
-              onViewHelp: _showViewHelp,
-              onTerminal: _terminalAvailable ? _toggleTerminal : null,
-            ),
-          if (widget.resources != null)
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                key: const ValueKey('desktop-resource-center'),
-                icon: const Icon(Icons.home_outlined, size: 18),
-                label: Text(stringsOf(context).resourcecenterHome()),
-                onPressed: () async {
-                  final center = widget.resources!;
-                  await Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      settings: const RouteSettings(
-                        name: openMuseResourceRouteName,
-                      ),
-                      builder: (_) => Scaffold(
-                        appBar: AppBar(
-                          title: Text(stringsOf(context).resourcecenterHome()),
-                        ),
-                        body: ResourceCenterView(controller: center.controller),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          Expanded(
-            child: WorkbenchCanvas(
-              controller: _layout,
-              hiddenPaneIds: _hiddenPaneIds(_layout.snapshot),
-              onSizeChanged: (size) => _lastSize = size,
-              onPaneFocus: _focusPane,
-              paneBuilder: (context, paneId, binding) => binding == null
-                  ? const SizedBox.expand()
-                  : _BoundSurface(
-                      binding: binding,
+    builder: (context, _) => LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 720;
+        void toggleNavigation() {
+          if (compact) {
+            final scaffold = _scaffoldKey.currentState;
+            if (scaffold?.isDrawerOpen == true) {
+              scaffold?.closeDrawer();
+            } else {
+              scaffold?.openDrawer();
+            }
+          } else {
+            widget.workspace.toggleSidebar();
+          }
+        }
+
+        return Scaffold(
+          key: _scaffoldKey,
+          drawer: compact
+              ? Drawer(
+                  key: const ValueKey('workspace-navigation-drawer'),
+                  width: (constraints.maxWidth - 32).clamp(0.0, 300.0),
+                  child: SafeArea(
+                    child: _WorkspaceSidebar(
                       registry: widget.registry,
                       workspace: widget.workspace,
                       settings: widget.settings,
-                      terminalController: _terminalController,
-                      terminalVisible: _terminalVisible,
-                      onCloseTerminal: () =>
-                          setState(() => _terminalVisible = false),
+                      onToggleSidebar: () =>
+                          _scaffoldKey.currentState?.closeDrawer(),
+                      onResourceOpened: () =>
+                          _scaffoldKey.currentState?.closeDrawer(),
                       onOpenTerminal: _openTerminal,
                       onOpenMarket: () => unawaited(_openPluginMarket(context)),
-                      updates:
-                          RuntimeConfigScope.maybeOf(
-                                context,
-                              )?.isEnabled(AppFeature.updatePrompts) ==
-                              false
-                          ? null
-                          : widget.updates,
+                      updates: widget.updates,
                       desktopUpdate: widget.desktopUpdate,
                       onStartUpdate: () {
                         final release = widget.updates?.available;
@@ -400,32 +434,145 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
                           unawaited(widget.onGetUpdate?.call(release));
                         }
                       },
-                      onShowUpdate: () {
-                        final release = widget.updates?.available;
-                        if (release == null) return;
-                        unawaited(
-                          showOpenMuseUpdateDialog(
-                            context,
-                            release,
-                            onUpdate: widget.onGetUpdate ?? (_) async {},
-                          ),
-                        );
-                      },
-                      paneMenu: _embeddedPaneMenu(
-                        context,
-                        _layout.snapshot,
-                        paneId,
-                      ),
-                      onFocus: () => _focusPane(paneId, binding),
                     ),
-              overlayMenuBuilder: (context, paneId, binding) =>
-                  _showsOverlayPaneMenu(_layout.snapshot, paneId)
-                  ? _paneMenuButton(context, _layout.snapshot, paneId)
-                  : null,
-            ),
+                  ),
+                )
+              : null,
+          body: Column(
+            children: [
+              if (_macNativeChrome)
+                _MacTitleBar(
+                  workspace: widget.workspace,
+                  onToggleSidebar: toggleNavigation,
+                  compactNavigation: compact,
+                  onDrag: OpenMuseWindowChrome.startDrag,
+                  onSettings: () => _openLocalSettings(context),
+                  onShowAgent: _showAgentPanel,
+                )
+              else
+                _WindowsTitleStrip(
+                  registry: widget.registry,
+                  workspace: widget.workspace,
+                  settings: widget.settings,
+                  view: _view,
+                  onToggleSidebar: toggleNavigation,
+                  compactNavigation: compact,
+                  onView: _selectView,
+                  onViewHelp: _showViewHelp,
+                  onTerminal: _terminalAvailable ? _toggleTerminal : null,
+                ),
+              if (widget.resources != null)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final descriptor in widget.registry.descriptors)
+                        if (widget.registry.stateOf(descriptor.id) ==
+                            OpenMusePluginState.active)
+                          ...switch (widget.registry.plugin(descriptor.id)) {
+                            OpenMuseWorkspaceActionsContributor contributor =>
+                              contributor.buildWorkspaceActions(context),
+                            _ => const <Widget>[],
+                          },
+                      TextButton.icon(
+                        key: const ValueKey('desktop-resource-center'),
+                        icon: const Icon(Icons.home_outlined, size: 18),
+                        label: Text(stringsOf(context).resourcecenterHome()),
+                        onPressed: () async {
+                          final center = widget.resources!;
+                          await Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              settings: const RouteSettings(
+                                name: openMuseResourceRouteName,
+                              ),
+                              builder: (_) => Scaffold(
+                                appBar: AppBar(
+                                  title: Text(
+                                    stringsOf(context).resourcecenterHome(),
+                                  ),
+                                ),
+                                body: ResourceCenterView(
+                                  controller: center.controller,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              Expanded(
+                child: WorkbenchCanvas(
+                  controller: _layout,
+                  hiddenPaneIds: _hiddenPaneIds(
+                    _layout.snapshot,
+                    compact: compact,
+                  ),
+                  retainedInstanceRefs: {
+                    for (final binding in _layout.snapshot.bindings.values)
+                      if (binding.surfaceRef.startsWith('host.editorGroup:'))
+                        binding.instanceRef,
+                  },
+                  onSizeChanged: (size) => _lastSize = size,
+                  onPaneFocus: _focusPane,
+                  paneBuilder: (context, paneId, binding) => binding == null
+                      ? const SizedBox.expand()
+                      : _BoundSurface(
+                          binding: binding,
+                          registry: widget.registry,
+                          workspace: widget.workspace,
+                          settings: widget.settings,
+                          terminalController: _terminalController,
+                          terminalVisible: _terminalVisible,
+                          onCloseTerminal: () =>
+                              setState(() => _terminalVisible = false),
+                          onOpenTerminal: _openTerminal,
+                          onOpenMarket: () =>
+                              unawaited(_openPluginMarket(context)),
+                          updates:
+                              RuntimeConfigScope.maybeOf(
+                                    context,
+                                  )?.isEnabled(AppFeature.updatePrompts) ==
+                                  false
+                              ? null
+                              : widget.updates,
+                          desktopUpdate: widget.desktopUpdate,
+                          onStartUpdate: () {
+                            final release = widget.updates?.available;
+                            if (release != null) {
+                              unawaited(widget.onGetUpdate?.call(release));
+                            }
+                          },
+                          onShowUpdate: () {
+                            final release = widget.updates?.available;
+                            if (release == null) return;
+                            unawaited(
+                              showOpenMuseUpdateDialog(
+                                context,
+                                release,
+                                onUpdate: widget.onGetUpdate ?? (_) async {},
+                              ),
+                            );
+                          },
+                          paneMenu: _embeddedPaneMenu(
+                            context,
+                            _layout.snapshot,
+                            paneId,
+                          ),
+                          onFocus: () => _focusPane(paneId, binding),
+                        ),
+                  overlayMenuBuilder: (context, paneId, binding) =>
+                      _showsOverlayPaneMenu(_layout.snapshot, paneId)
+                      ? _paneMenuButton(context, _layout.snapshot, paneId)
+                      : null,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     ),
   );
 
@@ -527,8 +674,11 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
       case _PaneAction.close:
         await _closePane(context, paneId);
       case _PaneAction.reset:
-        _layout.restore(_layoutForView(_view));
+        final target = _retainingViewLayout(_view);
+        if (target == null || !mounted) return;
+        _layout.restore(target);
         _removeUnboundEditorGroups();
+        _restorePlacedPresentations();
     }
   }
 
@@ -593,7 +743,10 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   ) async {
     final visibleRoot = _withoutPanes(
       _layout.snapshot.root,
-      _hiddenPaneIds(_layout.snapshot),
+      _hiddenPaneIds(
+        _layout.snapshot,
+        compact: _lastSize.width > 0 && _lastSize.width < 720,
+      ),
     );
     final neighbor = visibleRoot == null
         ? null
@@ -614,12 +767,17 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     }
   }
 
-  Set<String> _hiddenPaneIds(WorkbenchLayoutSnapshot snapshot) {
+  Set<String> _hiddenPaneIds(
+    WorkbenchLayoutSnapshot snapshot, {
+    bool compact = false,
+  }) {
     final hidden = <String>{
       for (final entry in snapshot.bindings.entries)
-        if ((!widget.workspace.sidebarVisible &&
+        if (((compact || !widget.workspace.sidebarVisible) &&
                 entry.value.surfaceRef == 'host.workspaceExplorer') ||
-            (!widget.settings.assistantVisible &&
+            ((!widget.settings.assistantVisible ||
+                    (widget.workspace.activeTab?.resourceSession != null &&
+                        !_resourceAgentRequested)) &&
                 entry.value.surfaceRef == 'plugin.panel:dsh.agent') ||
             entry.value.surfaceRef == 'plugin.panel:cloud.workspace')
           entry.key,
@@ -694,13 +852,95 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     if (!mounted) return;
     await widget.settings.setAssistantVisible(true);
     if (!mounted) return;
+    setState(() => _resourceAgentRequested = true);
     revealPluginPanel(_layout, candidate);
   }
 
+  void _restorePlacedPresentations() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      for (final group in widget.workspace.editorGroups) {
+        final session = widget.workspace
+            .activeTabFor(group.id)
+            ?.resourceSession
+            ?.session;
+        if (session != null && session.isPresentationActive) {
+          unawaited(
+            session.restorePresentationAfterPlacement().catchError(
+              (Object _) {},
+            ),
+          );
+        }
+      }
+    });
+  }
+
+  WorkbenchLayoutSnapshot? _retainingViewLayout(_HostView view) {
+    try {
+      final current = _layout.snapshot;
+      final boundGroups = current.bindings.values
+          .map((b) => b.surfaceRef)
+          .toSet();
+      final liveGroups = {
+        for (final group in widget.workspace.editorGroups)
+          if (widget.workspace.tabsFor(group.id).isNotEmpty ||
+              (group.id == LocalWorkspaceController.primaryEditorGroupId &&
+                  boundGroups.contains('host.editorGroup:${group.id}')))
+            'host.editorGroup:${group.id}',
+      };
+      final missingGroups = liveGroups.difference(boundGroups);
+      final recovered = [
+        for (final surface in missingGroups)
+          SurfaceBinding(
+            bindingId:
+                'binding.${surface.substring('host.editorGroup:'.length)}',
+            surfaceRef: surface,
+            instanceRef:
+                'surface.${surface.substring('host.editorGroup:'.length)}',
+            mobility: SurfaceMobility.snapshotRestore,
+          ),
+      ];
+      final reframed = reframeWorkbenchSurfaces(
+        current: current,
+        target: _layoutForView(view),
+        targetPaneId: 'editor',
+        retainedInstances: {
+          for (final binding in current.bindings.values)
+            if (liveGroups.contains(binding.surfaceRef)) binding.instanceRef,
+        },
+        additionalSurfaces: recovered,
+      );
+      final focusedSurface =
+          'host.editorGroup:${widget.workspace.focusedEditorGroupId}';
+      if (missingGroups.contains(focusedSurface)) {
+        return WorkbenchLayoutSnapshot(
+          root: reframed.root,
+          bindings: reframed.bindings,
+          focusedPaneId: reframed.bindings.entries
+              .singleWhere((e) => e.value.surfaceRef == focusedSurface)
+              .key,
+        );
+      }
+      return reframed;
+    } on Object {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('当前页面无法安全调整布局，已保留原视图。')));
+      return null;
+    }
+  }
+
   void _selectView(_HostView view) {
-    setState(() => _view = view);
+    final target = _retainingViewLayout(view);
+    if (target == null) return;
+    setState(() {
+      _view = view;
+      _resourceAgentRequested = true;
+    });
     unawaited(widget.settings.setAssistantVisible(true));
-    _layout.restore(_layoutForView(view));
+    _layout.restore(target);
+    _removeUnboundEditorGroups();
+    _restorePlacedPresentations();
     _publishMacView(view);
   }
 
@@ -751,7 +991,8 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
         .toSet();
     for (final group in widget.workspace.editorGroups.toList()) {
       if (group.id != LocalWorkspaceController.primaryEditorGroupId &&
-          !bound.contains(group.id)) {
+          !bound.contains(group.id) &&
+          widget.workspace.tabsFor(group.id).isEmpty) {
         widget.workspace.removeEditorGroup(group.id);
       }
     }
@@ -786,13 +1027,16 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
           ) ??
           false;
       if (!confirmed || !mounted) return;
-      _layout.unbind(paneId);
       const prefix = 'host.editorGroup:';
       if (binding.surfaceRef.startsWith(prefix)) {
-        widget.workspace.removeEditorGroup(
+        if (!await widget.workspace.closeEditorGroup(
           binding.surfaceRef.substring(prefix.length),
-        );
+        )) {
+          return;
+        }
+        if (!mounted) return;
       }
+      _layout.unbind(paneId);
     }
     _layout.closeEmptyPane(paneId);
   }
@@ -1089,12 +1333,16 @@ final class _WorkspaceSidebar extends StatelessWidget {
     required this.settings,
     required this.onOpenTerminal,
     required this.onOpenMarket,
+    this.onToggleSidebar,
+    this.onResourceOpened,
     this.updates,
     this.desktopUpdate,
     this.onStartUpdate,
     this.onShowUpdate,
   });
 
+  final VoidCallback? onToggleSidebar;
+  final VoidCallback? onResourceOpened;
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
@@ -1123,7 +1371,7 @@ final class _WorkspaceSidebar extends StatelessWidget {
                 enabled: enabled,
               ),
     ),
-    onToggleSidebar: workspace.toggleSidebar,
+    onToggleSidebar: onToggleSidebar ?? workspace.toggleSidebar,
     onSearch: () => _showSearch(context, workspace),
     onAddWorkspace: () => _addWorkspace(context, workspace),
     onPlugins: onOpenMarket,
@@ -1145,6 +1393,7 @@ final class _WorkspaceSidebar extends StatelessWidget {
           for (final entry in workspace.visibleEntries(mount))
             _ResourceRow(
               entry: entry,
+              onResourceOpened: onResourceOpened,
               registry: registry,
               workspace: workspace,
               settings: settings,
@@ -1452,6 +1701,7 @@ final class _MountRow extends StatelessWidget {
 final class _ResourceRow extends StatelessWidget {
   const _ResourceRow({
     required this.entry,
+    this.onResourceOpened,
     required this.registry,
     required this.workspace,
     required this.settings,
@@ -1460,6 +1710,7 @@ final class _ResourceRow extends StatelessWidget {
   });
 
   final WorkspaceEntry entry;
+  final VoidCallback? onResourceOpened;
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
   final OpenMuseLocalSettings settings;
@@ -1475,9 +1726,14 @@ final class _ResourceRow extends StatelessWidget {
     isMount: false,
     selected: selected,
     extension: entry.resource.extension,
-    onTap: () => entry.isDirectory
-        ? workspace.toggleDirectory(entry)
-        : workspace.openResource(entry.resource),
+    onTap: () {
+      if (entry.isDirectory) {
+        workspace.toggleDirectory(entry);
+      } else {
+        workspace.openResource(entry.resource);
+        onResourceOpened?.call();
+      }
+    },
     onSecondaryTapDown: (details) => _showResourceMenu(
       context,
       details.globalPosition,
@@ -2157,12 +2413,17 @@ final class _EditorArea extends StatelessWidget {
                   onSearch: () => _showSearch(context, workspace),
                   onCreate: () => _createDocument(context, workspace),
                 )
-              : IndexedStack(
-                  index: workspace.tabsFor(groupId).indexOf(tab),
-                  sizing: StackFit.expand,
+              : Stack(
+                  fit: StackFit.expand,
                   children: [
                     for (final openTab in workspace.tabsFor(groupId))
-                      _buildOpenTab(context, openTab),
+                      Offstage(
+                        // IndexedStack's unkeyed Visibility wrappers discard
+                        // shifted children when an earlier tab is closed.
+                        key: ValueKey(openTab.id),
+                        offstage: !identical(openTab, tab),
+                        child: _buildOpenTab(context, openTab),
+                      ),
                   ],
                 ),
         ),
@@ -2229,7 +2490,7 @@ final class _TabStrip extends StatelessWidget {
           OpenMuseEditorTabData(
             id: tab.id,
             title:
-                '${tab.title}${tab.resourceSession?.session.dirty == true ? ' •' : ''}',
+                '${tab.title}${tab.resourceSession?.session.allowEditing == false ? ' · ${ResourceCenterStrings(context).readOnly}' : ''}${tab.resourceSession?.session.dirty == true ? ' •' : ''}',
             extension: tab.resource.extension,
             pinned: tab.pinned,
             isDiff: tab.kind == WorkspaceTabKind.diff,
@@ -2586,12 +2847,16 @@ final class _Welcome extends StatelessWidget {
 final class _MacTitleBar extends StatelessWidget {
   const _MacTitleBar({
     required this.workspace,
+    required this.onToggleSidebar,
+    required this.compactNavigation,
     required this.onDrag,
     required this.onSettings,
     required this.onShowAgent,
   });
 
   final LocalWorkspaceController workspace;
+  final VoidCallback onToggleSidebar;
+  final bool compactNavigation;
   final VoidCallback onDrag;
   final VoidCallback onSettings;
   final VoidCallback onShowAgent;
@@ -2609,10 +2874,10 @@ final class _MacTitleBar extends StatelessWidget {
             children: [
               IconButton(
                 key: const ValueKey('title-sidebar-toggle'),
-                tooltip: workspace.sidebarVisible
+                tooltip: !compactNavigation && workspace.sidebarVisible
                     ? _hostText(context, '收起侧边栏', 'Collapse Sidebar')
                     : _hostText(context, '展开侧边栏', 'Expand Sidebar'),
-                onPressed: workspace.toggleSidebar,
+                onPressed: onToggleSidebar,
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints.tightFor(
@@ -2673,6 +2938,8 @@ final class _WindowsTitleStrip extends StatelessWidget {
   const _WindowsTitleStrip({
     required this.registry,
     required this.workspace,
+    required this.onToggleSidebar,
+    required this.compactNavigation,
     required this.settings,
     required this.view,
     required this.onView,
@@ -2682,6 +2949,8 @@ final class _WindowsTitleStrip extends StatelessWidget {
 
   final OpenMusePluginRegistry registry;
   final LocalWorkspaceController workspace;
+  final VoidCallback onToggleSidebar;
+  final bool compactNavigation;
   final OpenMuseLocalSettings settings;
   final _HostView view;
   final ValueChanged<_HostView> onView;
@@ -2761,19 +3030,21 @@ final class _WindowsTitleStrip extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 10),
-          const OpenMuseBrandMark(),
-          const SizedBox(width: 8),
-          const Text(
-            'OpenMuse',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(width: 12),
+          if (!compactNavigation) ...[
+            const OpenMuseBrandMark(),
+            const SizedBox(width: 8),
+            const Text(
+              'OpenMuse',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 12),
+          ],
           IconButton(
             key: const ValueKey('title-sidebar-toggle'),
-            tooltip: workspace.sidebarVisible
+            tooltip: !compactNavigation && workspace.sidebarVisible
                 ? _hostText(context, '收起侧边栏', 'Collapse Sidebar')
                 : _hostText(context, '展开侧边栏', 'Expand Sidebar'),
-            onPressed: workspace.toggleSidebar,
+            onPressed: onToggleSidebar,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints.tightFor(width: 32, height: 32),

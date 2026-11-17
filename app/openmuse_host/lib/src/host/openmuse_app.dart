@@ -17,8 +17,6 @@ import 'local_settings.dart';
 import 'workbench_shell.dart';
 import 'workspace_controller.dart';
 import 'desktop_update.dart';
-import 'distribution_channel.dart';
-import 'store_home.dart';
 
 final class OpenMuseHostApp extends StatefulWidget {
   const OpenMuseHostApp({
@@ -61,6 +59,7 @@ final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
   late final _locale = widget.localeController ?? OpenMuseUiLocale();
   OpenMuseLocalSettings? _ownedSettings;
   final _ownedNavigatorKey = GlobalKey<NavigatorState>();
+  final _popupRouteObserver = DshPopupRouteObserver();
   GlobalKey<NavigatorState> get _navigatorKey =>
       widget.navigatorKey ?? _ownedNavigatorKey;
   late final _desktopUpdate = widget.desktopUpdate ?? OpenMuseDesktopUpdate();
@@ -189,6 +188,17 @@ final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
           ],
           supportedLocales: _locale.supportedLocales,
           builder: (context, child) => ResourceLinkRouting(
+            locate: (locator) async {
+              final center = widget.resources?.value,
+                  navContext = _navigatorKey.currentContext;
+              if (center != null && navContext != null) {
+                await openResourceLocator(
+                  navContext,
+                  center.controller,
+                  locator,
+                );
+              }
+            },
             open: (uri) async {
               final center = widget.resources?.value,
                   navContext = _navigatorKey.currentContext;
@@ -203,34 +213,31 @@ final class _OpenMuseHostAppState extends State<OpenMuseHostApp>
                 if (navContext.mounted) showResourceError(navContext, error);
               }
             },
-            child: OpenMuseRuntimeNotice(
-              child: child ?? const SizedBox.shrink(),
+            child: ResourceEmbeddingScope(
+              controller: widget.resources?.value?.controller,
+              child: OpenMuseRuntimeNotice(
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
           theme: buildOpenMuseTheme(),
           darkTheme: buildOpenMuseTheme(brightness: Brightness.dark),
           themeMode: preferences.themeMode,
-          navigatorObservers: [DshPopupRouteObserver.instance],
+          navigatorObservers: [_popupRouteObserver],
           home: Builder(
             builder: (context) {
-              final Widget workbench = macAppStoreDistribution
-                  ? OpenMuseStoreHome(
-                      resources: widget.resources?.value,
-                      workspace: widget.workspace,
-                      registry: widget.registry,
-                    )
-                  : OpenMuseWorkbench(
-                      updates: widget.updates,
-                      desktopUpdate: _desktopUpdate,
-                      onGetUpdate: _getUpdate,
-                      resources: widget.resources?.value,
-                      registry: widget.registry,
-                      workspace: widget.workspace,
-                      settings: preferences,
-                      layoutController: widget.layoutController,
-                      layoutStore: widget.layoutStore,
-                      mutationGuards: widget.mutationGuards,
-                    );
+              final Widget workbench = OpenMuseWorkbench(
+                updates: widget.updates,
+                desktopUpdate: _desktopUpdate,
+                onGetUpdate: _getUpdate,
+                resources: widget.resources?.value,
+                registry: widget.registry,
+                workspace: widget.workspace,
+                settings: preferences,
+                layoutController: widget.layoutController,
+                layoutStore: widget.layoutStore,
+                mutationGuards: widget.mutationGuards,
+              );
               if (kDebugMode &&
                   Platform.environment.containsKey(
                     'OPENMUSE_E2E_SUPPORT_DIR',
