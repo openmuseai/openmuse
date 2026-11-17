@@ -121,7 +121,7 @@ internal class OfflineWebPluginFactory(private val appContext: Context, private 
                 val raw = message.data ?: return@addWebMessageListener
                 if (raw.length > 96 * 1024 * 1024) return@addWebMessageListener
                 val incoming = try { JSONObject(raw) } catch (_: Exception) { return@addWebMessageListener }
-                if (incoming.optString("method") != "ui/download-file") {
+                if (incoming.optString("method") != "ui/download-file" || params?.get("forwardDownloads") == true) {
                     channel.invokeMethod("message", raw)
                     return@addWebMessageListener
                 }

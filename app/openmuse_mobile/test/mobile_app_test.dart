@@ -121,7 +121,15 @@ void main() {
     expect(find.text('发消息'), findsOneWidget);
     expect(find.text('Welcome to OpenMuse'), findsNothing);
     expect(find.text('请登录以访问 Cloud Workspace'), findsNothing);
-    expect(application.installedPluginIds, contains('io.openmuse.siyuan'));
+    expect(application.installedPluginIds, isNot(contains('io.openmuse.siyuan')));
+    expect(
+      application.installedPluginIds,
+      containsAll(['io.openmuse.smart-document', 'io.openmuse.dataset']),
+    );
+    expect(
+      application.installedPluginIds,
+      contains('com.openmuse.open-file-viewer'),
+    );
     await tester.tap(find.byKey(const ValueKey('wb-tab-应用')));
     await tester.pumpAndSettle();
     expect(
@@ -362,7 +370,7 @@ void main() {
     expect(find.byIcon(Icons.save), findsNothing);
   });
 
-  testWidgets('PPTX route becomes available after market installation', (
+  testWidgets('store catalog excludes PPTX engine and keeps route unavailable', (
     tester,
   ) async {
     final directory = (await tester.runAsync(
@@ -371,9 +379,8 @@ void main() {
     addTearDown(() => directory.delete(recursive: true));
     final store = MobilePluginStore(directory);
     const source = BundledMobileMarketSource();
-    final entry = (await tester.runAsync(
-      source.list,
-    ))!.singleWhere((candidate) => candidate.id == 'com.openmuse.pptx');
+    final entries = (await tester.runAsync(source.list))!;
+    expect(entries.map((entry) => entry.id), isNot(contains('com.openmuse.pptx')));
     final service = _FakeCloudService(pptx: true);
     final engine = MultiFormatOfficeEngine({
       OfficeFormat.slides: _FakeSlidesEngine(),
@@ -396,19 +403,7 @@ void main() {
     await tester.pumpAndSettle();
     final resource = find.byKey(const ValueKey('resource-resource:pptx'));
     expect(tester.widget<ListTile>(resource).enabled, isFalse);
-    await tester.runAsync(() async {
-      final bytes = await File(
-        '../../packages/openmuse_mobile_plugin_runtime/assets/pptx-mobile.json',
-      ).readAsBytes();
-      await store.install(entry, bytes);
-    });
-    await tester.pumpAndSettle();
-    expect(tester.widget<ListTile>(resource).enabled, isTrue);
-    await tester.tap(find.text('Deck.pptx'));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('office-view-only')), findsOneWidget);
-    expect(find.textContaining('Slide 1\tHello'), findsOneWidget);
-    expect(find.byIcon(Icons.save), findsNothing);
+    expect(find.byKey(const ValueKey('office-view-only')), findsNothing);
   });
 
   testWidgets(

@@ -325,6 +325,17 @@ final class WorkBuddyController extends ChangeNotifier {
     );
   }
 
+  /// Upsert only a session ID already acknowledged by Desktop session.create.
+  void acceptCreatedPairedSession(WbTask session) {
+    if (!session.id.startsWith('dsh.session.') ||
+        !_workspaces.any((workspace) => workspace.id == session.workspaceId &&
+            workspace.deviceId == session.deviceId)) {
+      throw StateError('Created session is outside the Desktop catalog');
+    }
+    _tasks = [session, ..._tasks.where((task) => task.id != session.id)];
+    notifyListeners();
+  }
+
   void replacePairedCatalog({
     required String deviceId,
     required List<WbWorkspace> workspaces,

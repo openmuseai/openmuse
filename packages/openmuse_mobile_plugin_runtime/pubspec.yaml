@@ -22,7 +22,6 @@ dev_dependencies:
 flutter:
   assets:
     - assets/official-market.json
-    - assets/market.json
+    - assets/store-market.json
     - assets/task-board.json
     - assets/usage-budget.json
-    - assets/pptx-mobile.json

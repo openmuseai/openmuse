@@ -7,6 +7,7 @@ import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.da
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 import 'native_dsh_page.dart';
+import 'mobile_dsh_connection.dart';
 import 'plugin_interaction_remote.dart';
 
 /// Native Mobile information architecture for one paired Desktop.
@@ -29,6 +30,10 @@ final class NativeDesktopShell extends StatefulWidget {
 
 final class _NativeDesktopShellState extends State<NativeDesktopShell> {
   DshNativeGatewayClient? _catalog;
+  late final _messages = MobileDshRecentMessages(
+    '${widget.connection.accountRef}|${widget.connection.deviceRef}',
+  );
+  late final _transport = MobileDshConnection(widget.connection, _messages);
   Timer? _refreshTimer;
   List<DshNativeWorkspaceSummary> _workspaces = const [];
   List<DshNativeSessionSummary> _sessions = const [];
@@ -47,18 +52,10 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
     if (_catalog == null) unawaited(_initialize());
   }
 
-  DshNativeGatewayClient _newClient() => DshNativeGatewayClient(
-    origin: Uri.parse(widget.connection.session.origin),
-    bootstrapPath: widget.connection.session.path,
-    allowInsecureLoopback: widget.connection.session.allowInsecureLoopback,
-    allowInsecurePrivateNetworkForTesting:
-        widget.connection.session.allowInsecurePrivateNetworkForTesting,
-  );
-
   Future<void> _initialize() async {
     final localeStrings = stringsOf(context);
 
-    final client = _newClient();
+    final client = _transport.client;
     _catalog = client;
     try {
       final hello = await client.initialize();
@@ -69,9 +66,7 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
           (localeStrings.mobileDesktopDoesNotYetSupportTheComplete8ad183cf()),
         );
       }
-      final negotiation = await client.negotiate(
-        DshNativeCapabilities.standard(),
-      );
+      final negotiation = await _transport.prepare();
       if (negotiation.requiresWebFallback) {
         throw DshNativeGatewayException(
           (localeStrings.mobileThisDesktopPluginRequiresItsWebConve49ea4be8()),
@@ -261,7 +256,8 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
-    _catalog?.close();
+    _transport.close();
+    _messages.dispose();
     super.dispose();
   }
 
@@ -348,7 +344,8 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
     if (_loading) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }
-    if (_failure case final failure?) {
+    if (_failure != null && _sessions.isEmpty) {
+      final failure = _failure!;
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(28),
@@ -398,6 +395,8 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
     return NativeDshPage(
       key: ValueKey('native-session-$sessionId'),
       session: widget.connection.session,
+      connection: _transport,
+      knownSession: _session(sessionId),
       workspaceTitle: workspace.title,
       requestedSessionId: sessionId,
       embedded: true,

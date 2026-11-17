@@ -289,7 +289,7 @@ void main() {
       await tester.runAsync(() async {
         const assets = '../../packages/openmuse_mobile_plugin_runtime/assets';
         final records =
-            jsonDecode(await File('$assets/market.json').readAsString())
+            jsonDecode(await File('$assets/store-market.json').readAsString())
                 as List;
         entry = records
             .map(
@@ -389,7 +389,7 @@ void main() {
       await tester.runAsync(() async {
         const assets = '../../packages/openmuse_mobile_plugin_runtime/assets';
         final records =
-            jsonDecode(await File('$assets/market.json').readAsString())
+            jsonDecode(await File('$assets/store-market.json').readAsString())
                 as List;
         entry = records
             .map(

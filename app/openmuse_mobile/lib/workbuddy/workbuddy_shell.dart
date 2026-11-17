@@ -24,6 +24,7 @@ import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:openmuse_speech_input/openmuse_speech_input.dart';
 import '../speech_model_manager.dart';
 import '../native_dsh_page.dart';
+import '../mobile_dsh_connection.dart';
 import '../mobile_plugin_detail_page.dart';
 import '../plugin_interaction_remote.dart';
 import '../mobile_plugins/mobile_workbench_page.dart';
@@ -143,6 +144,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   final NativeDshSessionHandle _sessionHandle = NativeDshSessionHandle();
   final List<String> _recentNativeSessionIds = [];
   String? _nativeConnectionKey;
+  MobileDshConnection? _dshConnection;
+  MobileDshRecentMessages? _recentMessages;
   String? _pendingSessionId;
   String? _pendingPrompt;
   String? _pendingOriginalText;
@@ -153,8 +156,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   Future<void>? _desktopRestoreTask;
   String? _desktopRestoreDeviceRef;
   bool _submitting = false;
+  String? _creatingPrompt;
   bool _appForeground = true;
-  DateTime? _backgroundedAt;
 
   SpeechModelManager? _speechModels;
   WorkBuddyController get controller => widget.controller;
@@ -267,17 +270,11 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      final wasAway =
-          _backgroundedAt != null &&
-          DateTime.now().difference(_backgroundedAt!) >=
-              const Duration(seconds: 30);
-      _backgroundedAt = null;
       _appForeground = true;
-      unawaited(_restoreDesktopConnection(force: wasAway));
+      unawaited(_restoreDesktopConnection());
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
       _appForeground = false;
-      _backgroundedAt ??= DateTime.now();
     }
   }
 
@@ -593,7 +590,30 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         : '${connection.deviceRef}:${connection.grantRef}';
     if (_nativeConnectionKey != connectionKey) {
       _nativeConnectionKey = connectionKey;
-      _recentNativeSessionIds.clear();
+      _dshConnection?.close();
+      _dshConnection = null;
+      final subject = connection?.accountRef;
+      final scope = connection == null
+          ? null
+          : '$subject|${connection.deviceRef}';
+      if (_recentMessages?.scope != scope) {
+        _recentMessages?.dispose();
+        _recentMessages = scope == null ? null : MobileDshRecentMessages(scope);
+        _recentNativeSessionIds.clear();
+      }
+      if (connection != null && _recentMessages != null) {
+        final transport = MobileDshConnection(connection, _recentMessages!);
+        _dshConnection = transport;
+        unawaited(
+          transport
+              .prepare()
+              .catchError((Object error) {
+                debugPrint('OpenMuse Desktop prewarm: $error');
+                throw error;
+              })
+              .then<void>((_) {}, onError: (Object _) {}),
+        );
+      }
       _desktopRenewalTimer?.cancel();
       if (connection != null) {
         final renewAt =
@@ -787,6 +807,8 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _dshConnection?.close();
+    _recentMessages?.dispose();
     _desktopRenewalTimer?.cancel();
     _speechModels?.dispose();
     controller.removeListener(_syncDrawer);
@@ -937,13 +959,13 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   ) async {
     final localeStrings = stringsOf(context);
 
-    final client = DshNativeGatewayClient(
-      origin: Uri.parse(connection.session.origin),
-      bootstrapPath: connection.session.path,
-      allowInsecureLoopback: connection.session.allowInsecureLoopback,
-      allowInsecurePrivateNetworkForTesting:
-          connection.session.allowInsecurePrivateNetworkForTesting,
-    );
+    final transport = _dshConnection;
+    if (transport == null ||
+        widget.pairedDesktop?.snapshot.connection?.grantRef !=
+            connection.grantRef) {
+      return;
+    }
+    final client = transport.client;
     try {
       await client.initialize();
       final values = await Future.wait<Object>([
@@ -990,8 +1012,6 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       _applySavedWorkspace();
     } catch (error) {
       debugPrint('OpenMuse desktop catalog: $error');
-    } finally {
-      client.close();
     }
   }
 
@@ -1089,6 +1109,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       await _submitOnce();
     } finally {
       _submitting = false;
+      if (mounted) setState(() => _creatingPrompt = null);
     }
   }
 
@@ -1221,55 +1242,48 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
         );
         return;
       }
+      setState(() => _creatingPrompt = text);
       _composer.clear();
       _focus.unfocus();
-      var sessionConnection = connection;
-      final paired = widget.pairedDesktop;
-      final devices = paired?.devices.where(
-        (device) => device.deviceRef == targetDeviceRef,
-      );
-      if (paired != null && devices != null && devices.isNotEmpty) {
-        final renewed = await paired.connectDevice(devices.first, force: true);
-        if (!renewed ||
-            paired.snapshot.connection?.deviceRef != targetDeviceRef) {
-          if (mounted) {
-            _composer.text = text;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  (localeStrings
-                      .mobileDesktopAuthorizationHasExpiredReconnec2671ccbf()),
-                ),
-              ),
-            );
-          }
-          return;
-        }
-        sessionConnection = paired.snapshot.connection!;
+      final sessionConnection = connection;
+      final transport = _dshConnection;
+      if (transport == null) {
+        _composer.text = text;
+        return;
       }
-      final client = DshNativeGatewayClient(
-        origin: Uri.parse(sessionConnection.session.origin),
-        bootstrapPath: sessionConnection.session.path,
-        allowInsecureLoopback: sessionConnection.session.allowInsecureLoopback,
-        allowInsecurePrivateNetworkForTesting:
-            sessionConnection.session.allowInsecurePrivateNetworkForTesting,
-      );
+      final client = transport.client;
       try {
         await client.initialize();
         final created = await client.createSession(
           workspaceId: workspaceId.substring('dsh.workspace.'.length),
         );
-        await _publishDesktopCatalog(
-          sessionConnection,
-          'paired.${sessionConnection.deviceRef}',
-        );
         if (!mounted) return;
+        if (controller.selectedDeviceId != 'paired.$targetDeviceRef' ||
+            controller.selectedWorkspaceId != workspaceId) {
+          _composer.text = text;
+          return;
+        }
+        controller.acceptCreatedPairedSession(
+          WbTask(
+            id: 'dsh.session.${created.sessionId}',
+            title: localeStrings.mobileNewConversationBcec2f30(),
+            workspaceId: workspaceId,
+            deviceId: 'paired.$targetDeviceRef',
+            status: WbTaskStatus.completed,
+            updatedAt: DateTime.now().millisecondsSinceEpoch,
+            messages: const [],
+          ),
+        );
         setState(() {
+          _creatingPrompt = null;
           _pendingSessionId = created.sessionId;
           _pendingPrompt = prompt;
           _pendingOriginalText = text;
         });
         controller.openTaskById('dsh.session.${created.sessionId}');
+        unawaited(
+          _publishDesktopCatalog(sessionConnection, 'paired.$targetDeviceRef'),
+        );
       } on Object catch (error) {
         if (mounted) {
           _composer.text = text;
@@ -1283,8 +1297,6 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
             ),
           );
         }
-      } finally {
-        client.close();
       }
       return;
     }
@@ -1901,7 +1913,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
             expiresAtMs: connection.expiresAtMs,
           );
     Widget inventory(VoidCallback? onDiscover) => market.buildMarketPage(
-      desktop: initialMine ? null : desktop,
+      desktop: desktop,
       mode: initialMine
           ? MobileMarketMode.installed
           : MobileMarketMode.discover,
@@ -1959,22 +1971,38 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                     mobileMarket: widget.mobileMarketPlugin,
                     pluginRegistry: widget.pluginRegistry,
                     onOpenBuiltIn: _openBuiltInPlugin,
-                    homePage: widget.resources == null
-                        ? ResourceCenterPlaceholder(
-                            error: widget.resourceFailure,
-                            onRetry: widget.onRetryResources,
-                          )
-                        : ResourceCenterView(
-                            controller: widget.resources!.controller,
-                            onAddToConversation: (record) async {
-                              try {
-                                widget.resources!.draft.attach(record);
-                                controller.selectTab(WbTab.tasks);
-                              } on Object catch (error) {
-                                if (mounted) showResourceError(context, error);
-                              }
-                            },
-                          ),
+                    homePage: ListenableBuilder(
+                      listenable: Listenable.merge([widget.pluginRegistry]),
+                      builder: (context, _) => widget.resources == null
+                          ? ResourceCenterPlaceholder(
+                              error: widget.resourceFailure,
+                              onRetry: widget.onRetryResources,
+                            )
+                          : ResourceCenterView(
+                              controller: widget.resources!.controller,
+                              headerActions: [
+                                if (widget.pluginRegistry case final registry?)
+                                  for (final descriptor in registry.descriptors)
+                                    if (registry.stateOf(descriptor.id) ==
+                                        OpenMusePluginState.active)
+                                      if (registry.plugin(descriptor.id)
+                                          case final OpenMuseWorkspaceActionsContributor
+                                              contributor)
+                                        ...contributor.buildWorkspaceActions(
+                                          context,
+                                        ),
+                              ],
+                              onAddToConversation: (record) async {
+                                try {
+                                  widget.resources!.draft.attach(record);
+                                  controller.selectTab(WbTab.tasks);
+                                } on Object catch (error) {
+                                  if (mounted)
+                                    showResourceError(context, error);
+                                }
+                              },
+                            ),
+                    ),
                     resourceDraft: widget.resources?.draft,
                     workbenchKey: _workbenchKey,
                     appsEditing: _appsEditing,
@@ -2078,6 +2106,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                       if (mounted) _focus.requestFocus();
                     },
                     conversationBuilder: _nativeConversation,
+                    pendingPrompt: _creatingPrompt,
                     sessionHandle: _sessionHandle,
                     onPermission: _choosePermission,
                     onModel: _chooseModel,
@@ -2160,6 +2189,14 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
               'wb-native-session-${connection.grantRef}-$sessionId',
             ),
             session: connection.session,
+            connection: _dshConnection,
+            knownSession: DshNativeSessionSummary(
+              sessionId: sessionId,
+              updatedAt: tasksBySessionId[sessionId]!.updatedAt,
+              running:
+                  tasksBySessionId[sessionId]!.status == WbTaskStatus.running,
+              blank: false,
+            ),
             workspaceTitle:
                 workspaceNames[tasksBySessionId[sessionId]!.workspaceId] ?? '',
             requestedSessionId: sessionId,
@@ -2250,6 +2287,7 @@ final class _MainColumn extends StatelessWidget {
     required this.onVoiceMove,
     required this.onNewTask,
     required this.conversationBuilder,
+    this.pendingPrompt,
     required this.sessionHandle,
     required this.onPermission,
     required this.onModel,
@@ -2284,6 +2322,7 @@ final class _MainColumn extends StatelessWidget {
   final ValueChanged<LongPressMoveUpdateDetails> onVoiceMove;
   final VoidCallback onNewTask;
   final Widget? Function() conversationBuilder;
+  final String? pendingPrompt;
   final NativeDshSessionHandle sessionHandle;
   final VoidCallback onPermission;
   final VoidCallback onModel;
@@ -2412,6 +2451,7 @@ final class _MainColumn extends StatelessWidget {
                         controller: controller,
                         onNewTask: onNewTask,
                         conversation: conversation,
+                        pendingPrompt: pendingPrompt,
                         homePage: homePage,
                         workbenchPage: workbenchPage,
                         workbenchKey: workbenchKey,
@@ -2615,6 +2655,7 @@ final class _TabBody extends StatelessWidget {
     required this.controller,
     required this.onNewTask,
     required this.conversation,
+    this.pendingPrompt,
     required this.discoverPage,
     required this.homePage,
     required this.workbenchPage,
@@ -2627,6 +2668,7 @@ final class _TabBody extends StatelessWidget {
   final WorkBuddyController controller;
   final VoidCallback onNewTask;
   final Widget? conversation;
+  final String? pendingPrompt;
   final Widget? discoverPage;
   final Widget homePage;
   final Widget workbenchPage;
@@ -2647,9 +2689,28 @@ final class _TabBody extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Offstage(offstage: nativeSelected, child: ordinary),
+        Offstage(
+          offstage: nativeSelected || pendingPrompt != null,
+          child: ordinary,
+        ),
         if (cachedConversation != null)
-          Offstage(offstage: !nativeSelected, child: cachedConversation),
+          Offstage(
+            offstage: !nativeSelected || pendingPrompt != null,
+            child: cachedConversation,
+          ),
+        if (pendingPrompt case final prompt?)
+          Column(
+            children: [
+              const LinearProgressIndicator(),
+              Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(prompt),
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }

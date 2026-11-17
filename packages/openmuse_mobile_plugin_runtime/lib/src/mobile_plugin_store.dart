@@ -425,7 +425,7 @@ final class MobilePluginStore extends ChangeNotifier {
 /// it must never be passed directly to [MobilePluginStore.install].
 Future<List<MobileMarketEntry>> loadBundledMobileMarket({
   String catalogAsset =
-      'packages/openmuse_mobile_plugin_runtime/assets/market.json',
+      'packages/openmuse_mobile_plugin_runtime/assets/store-market.json',
 }) async {
   final raw = await rootBundle.loadString(catalogAsset);
   final entries = jsonDecode(raw) as List;

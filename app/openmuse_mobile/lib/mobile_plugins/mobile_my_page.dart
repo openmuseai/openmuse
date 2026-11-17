@@ -286,7 +286,7 @@ final class _MobileMyPageState extends State<MobileMyPage> {
 }
 
 String _version(PackageInfo? info) =>
-    info == null ? '—' : '${info.version} (${info.buildNumber})';
+    info == null ? '—' : 'V${info.version}';
 
 final class SettingsGroup extends StatelessWidget {
   const SettingsGroup({super.key, required this.children});
@@ -938,10 +938,6 @@ final class _MobileAboutPage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 18),
-        Text(
-          s.mobileOperatedByDongguanChengxuanElectronic4bdff712(),
-          style: const TextStyle(fontSize: 13, height: 1.5),
-        ),
         if (filing != null)
           Text(
             s.mobileFilingNumber(number: filing),

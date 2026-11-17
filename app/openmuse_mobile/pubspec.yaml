@@ -28,10 +28,14 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  openmuse_smart_document_plugins:
+    path: ../../distribution/openmuse_smart_document_plugins
+  openmuse_file_viewer:
+    path: ../../plugins/open-file-viewer
   openmuse_resource_center_host:
     path: ../../packages/openmuse_resource_center_host
-  openmuse_client_plugins:
-    path: ../../distribution/openmuse_client_plugins
+  openmuse_resource_notes:
+    path: ../../plugins/resource-notes
   crypto: ^3.0.6
   openmuse_i18n:
     path: ../../packages/openmuse_i18n
@@ -89,8 +93,6 @@ dependencies:
   webview_flutter: ^4.13.0
 
 dev_dependencies:
-  openmuse_resource_notes:
-    path: ../../plugins/resource-notes
   openmuse_resource_clipboard:
     path: ../../packages/openmuse_resource_clipboard
   archive: ^4.0.7
@@ -123,7 +125,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/brand.png
-    - assets/launch/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

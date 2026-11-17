@@ -1,7 +1,9 @@
+import 'package:openmuse_smart_document_plugins/openmuse_smart_document_plugins.dart';
 import 'dart:async';
 import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart';
-import 'package:openmuse_client_plugins/openmuse_client_plugins.dart';
-import 'dart:convert';
+import 'package:openmuse_resource_notes/openmuse_resource_notes.dart';
+import 'package:openmuse_file_viewer/openmuse_file_viewer.dart';
+import 'host/mobile_file_viewer.dart';
 import 'dart:io';
 import 'dart:math';
 import 'package:openmuse_dsh_mobile_agent/openmuse_dsh_mobile_agent.dart';
@@ -131,11 +133,18 @@ Future<Widget> bootOpenMuseMobile(
       locale: localeController.tag,
     ),
   );
+  late final AppFlowyDocumentWorkspace smartDocuments;
   final cloudPlugin = OpenMuseCloudWorkspacePlugin(
     authentication: authentication,
     cloudOrigin: endpoints.cloudOrigin,
     deviceId: deviceId,
     allowInsecureLoopback: endpoints.allowInsecureLoopback,
+    onOpenDocument: (page) => smartDocuments.openDocument(page),
+    onOpenDatabase: (page) => smartDocuments.databases.openDatabase(page),
+  );
+  smartDocuments = AppFlowyDocumentWorkspace(
+    authentication: authentication, service: cloudPlugin.service,
+    browserBaseUri: runtimeConfig.documentBrowserUri ?? deploymentBundle.snapshot.documentBrowserUri,
   );
   final deviceDirectory = AccountDeviceDirectoryController(
     authentication: authentication,
@@ -179,13 +188,8 @@ Future<Widget> bootOpenMuseMobile(
   );
   await mobileMarketStore.restore();
   const marketSource = BundledMobileMarketSource(officialRelease: true);
-  final launchRecord =
-      jsonDecode(await rootBundle.loadString('assets/launch/slides.json'))
-          as Map;
-  final launchEntry = RemoteMcpEntry.fromRecord(launchRecord);
-  final launchPackages = Map<String, String>.unmodifiable({
-    '${launchEntry.name}@${launchEntry.version}': launchEntry.packageSha256!,
-  });
+  // Store builds expose the generic connector without bundled Office engines.
+  const launchPackages = <String, String>{};
   final mobileMarketPlugin = OpenMuseMobilePluginMarket(
     mobileMarketStore,
     source: marketSource,
@@ -207,27 +211,6 @@ Future<Widget> bootOpenMuseMobile(
       return providers;
     }(),
   );
-  // This reviewed offline plugin is shipped with the app. It is installed
-  // through the same digest and archive checks as other MCP bundles.
-  final launchMarket = RemoteMcpMarket(
-    runtimeConfig.serviceUri(ServiceId.pluginRegistry),
-    File('${support.path}/mcp-remote-installations.json'),
-    allowedPackages: launchPackages,
-  );
-  final launchMarker = File(
-    '${support.path}/launch-slides-${launchEntry.version}.seeded',
-  );
-  if (!await launchMarker.exists()) {
-    final data = await rootBundle.load('assets/launch/slides.mcpb');
-    await launchMarket.install(
-      launchEntry,
-      bundledArtifact: data.buffer.asUint8List(
-        data.offsetInBytes,
-        data.lengthInBytes,
-      ),
-    );
-    await launchMarker.writeAsString(launchEntry.version, flush: true);
-  }
   const speechTestAudio = String.fromEnvironment('OPENMUSE_SPEECH_TEST_AUDIO');
   const distributionChannel = String.fromEnvironment(
     'OPENMUSE_DISTRIBUTION_CHANNEL',
@@ -251,6 +234,7 @@ Future<Widget> bootOpenMuseMobile(
       updates: updates,
       authenticationPlugin: authPlugin,
       cloudWorkspacePlugin: cloudPlugin,
+      smartDocuments: smartDocuments,
       pairedDesktopPlugin: pairedPlugin,
       speechInputPlugin: speechPlugin,
       mobileMarketPlugin: mobileMarketPlugin,
@@ -381,6 +365,7 @@ final class OpenMuseMobileApplication extends StatefulWidget {
     this.speechInputPlugin,
     this.mobileMarketPlugin,
     this.remoteWorkbenchPlugin,
+    this.smartDocuments,
     this.officeEngine,
     this.debugSpeechSource,
     this.updates,
@@ -392,6 +377,7 @@ final class OpenMuseMobileApplication extends StatefulWidget {
   final OpenMuseClientRuntime? runtime;
   final OpenMuseGoTruePlugin authenticationPlugin;
   final OpenMuseCloudWorkspacePlugin cloudWorkspacePlugin;
+  final AppFlowyDocumentWorkspace? smartDocuments;
   final OpenMusePairedDesktopMobilePlugin pairedDesktopPlugin;
   final OpenMuseSpeechInputPlugin? speechInputPlugin;
   final OpenMuseMobilePluginMarket? mobileMarketPlugin;
@@ -417,8 +403,12 @@ final class OpenMuseMobileApplicationState
     networkGuard: () => widget.runtime?.checkNetwork(),
     allowInsecureLoopback: !kReleaseMode,
   );
-  late final List<OpenMusePlugin> _compiledClientPlugins =
-      createOpenMuseClientPlugins();
+  final _fileViewer = OpenMuseFileViewerPlugin();
+  late final List<OpenMusePlugin> _compiledClientPlugins = [
+    OpenMuseResourceNotesPlugin(),
+    ...createNativeSmartDocumentPlugins(cloudDocuments: widget.smartDocuments),
+    _fileViewer,
+  ];
   late final OpenMuseRemoteWorkbenchPlugin _workbench;
   late final MobileScheduledTasksPlugin _scheduledTasks;
   late final MobileWorkspaceFilesPlugin _workspaceFiles;
@@ -628,6 +618,7 @@ final class OpenMuseMobileApplicationState
               if (plugin is OpenMuseWebViewInstalledPlugin) plugin.dispose();
             }
             _plugins.dispose();
+            widget.smartDocuments?.dispose();
           }),
     );
     _locale.dispose();
@@ -702,8 +693,9 @@ final class OpenMuseMobileApplicationState
   Future<bool> _openWorkspaceResource(
     OpenMuseResource resource,
     Future<Map<String, Object?>> Function() read,
-    ValueChanged<String> reportStep,
-  ) async {
+    ValueChanged<String> reportStep, {
+    Future<void> Function(Uint8List)? onSave,
+  }) async {
     final localeStrings = _locale.strings;
 
     final payload = await read();
@@ -733,6 +725,12 @@ final class OpenMuseMobileApplicationState
       reference: resource.reference,
     );
     reportStep((localeStrings.mobileFindingAnInstalledEditor78027f4d()));
+    // Built-in previews do not depend on a market account or a remote editor.
+    if (onSave == null &&
+        (_fileViewer.canPreviewText(resource) ||
+            _fileViewer.descriptor.editors[2].accepts(resource))) {
+      return _openFileViewer(resource, bytes, reportStep);
+    }
     final market = await _localMcpMarket();
     final candidates = <RemoteMcpEntry>[];
     for (final entry in await market.installedEntries()) {
@@ -792,11 +790,7 @@ final class OpenMuseMobileApplicationState
       if (editor == null) return false;
     }
     if (editor == null) {
-      await const MethodChannel('io.openmuse/resource_open').invokeMethod<void>(
-        'open',
-        {'name': resource.displayName, 'mediaType': mediaType, 'bytes': bytes},
-      );
-      return true;
+      return _openFileViewer(resource, bytes, reportStep);
     }
     reportStep((localeStrings.mobilePreparingTheLocalEditor139ca003()));
     final appHtml = await market.mcpAppDocument(editor);
@@ -811,11 +805,30 @@ final class OpenMuseMobileApplicationState
           fileName: resource.displayName,
           mediaType: mediaType,
           fileBytes: bytes,
+          onSave: onSave,
           appHtml: appHtml,
         ),
       ),
     );
     return true;
+  }
+
+  Future<bool> _openFileViewer(
+    OpenMuseResource resource,
+    Uint8List bytes,
+    ValueChanged<String> reportStep,
+  ) async {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null || !mounted) return false;
+    await _plugins.activate(_fileViewer.descriptor.id);
+    reportStep(_locale.strings.mobileOpeningTheLocalEditor59b2af8c());
+    return openMobileFileViewer(
+      navigator: navigator,
+      plugin: _fileViewer,
+      resource: resource,
+      bytes: bytes,
+      cacheRoot: await getTemporaryDirectory(),
+    );
   }
 
   Future<void> _getUpdate(OpenMuseRelease release) async {
@@ -853,6 +866,11 @@ final class OpenMuseMobileApplicationState
           controller: widget.updates,
           onUpdate: _getUpdate,
           child: _WorkBuddyHost(
+            welcomeRegion:
+                (widget.runtime?.client.current.json['scope']
+                        as Map?)?['dataRegion']
+                    as String? ??
+                'us',
             plugins: _plugins,
             canOpenResource: (record) async {
               final market = await _localMcpMarket();
@@ -867,7 +885,7 @@ final class OpenMuseMobileApplicationState
               }
               return false;
             },
-            openResource: (record, bytes) => _openWorkspaceResource(
+            openResource: (record, bytes, save) => _openWorkspaceResource(
               OpenMuseResource(
                 uri: Uri(scheme: 'resource', path: '/${record.name}'),
                 displayName: record.name,
@@ -879,12 +897,14 @@ final class OpenMuseMobileApplicationState
                 'mediaType': record.mediaType,
               },
               (_) {},
+              onSave: save,
             ),
             themeMode: _themeMode,
             onThemeMode: _setThemeMode,
             authentication: widget.authenticationPlugin.authentication,
             cloudLabel: widget.authenticationPlugin.cloudLabel,
             cloudService: widget.cloudWorkspacePlugin.service,
+            smartDocuments: widget.smartDocuments,
             pairedDesktop: widget.pairedDesktopPlugin.controller,
             speechRecognition: widget.speechInputPlugin,
             officeEngine: widget.officeEngine,
@@ -900,12 +920,14 @@ final class OpenMuseMobileApplicationState
 final class _WorkBuddyHost extends StatefulWidget {
   const _WorkBuddyHost({
     required this.plugins,
+    this.welcomeRegion = 'us',
     this.canOpenResource,
     this.openResource,
     required this.themeMode,
     required this.onThemeMode,
     required this.authentication,
     required this.cloudService,
+    this.smartDocuments,
     required this.pairedDesktop,
     this.speechRecognition,
     this.cloudLabel,
@@ -916,12 +938,19 @@ final class _WorkBuddyHost extends StatefulWidget {
 
   final OpenMuseAuthenticationController authentication;
   final OpenMusePluginRegistry plugins;
+  final String welcomeRegion;
   final Future<bool> Function(ResourceRecord)? canOpenResource;
-  final Future<bool> Function(ResourceRecord, List<int>)? openResource;
+  final Future<bool> Function(
+    ResourceRecord,
+    List<int>,
+    Future<void> Function(Uint8List)?,
+  )?
+  openResource;
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeMode;
   final String? cloudLabel;
   final AppFlowyCloudWorkspaceService cloudService;
+  final AppFlowyDocumentWorkspace? smartDocuments;
   final PairedDesktopMobileController pairedDesktop;
   final SpeechRecognitionPort? speechRecognition;
   final OfficeEnginePort? officeEngine;
@@ -959,19 +988,53 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
           device = opaqueResourceId('mobile');
           await values.write('openmuse.resource.device.v1', device);
         }
-        final resources = await NativeResourceCenter.open(
+        late NativeResourceCenter resources;
+        resources = await NativeResourceCenter.open(
           seedWelcomeResources: true,
+          welcomeRegion: widget.welcomeRegion,
           scope: scope,
           deviceRef: device,
           deviceLabel: Platform.isIOS ? 'iPhone' : 'Android',
           registry: widget.plugins,
           canOpenLegacy: widget.canOpenResource,
-          openLegacy: widget.openResource,
+          openLegacy: widget.openResource == null
+              ? null
+              : (record, bytes) async {
+                  final provider = resources.hub.provider(record.identity);
+                  var current = record;
+                  final editable =
+                      provider.available &&
+                      provider.source.canEdit &&
+                      !record.readOnly;
+                  return widget.openResource!(record, bytes, (content) async {
+                    if (!editable) throw const ResourceFailure('READ_ONLY');
+                    final updated = await provider.commit(
+                      current.identity.resource,
+                      current.version,
+                      content,
+                      resourceOperationKey('legacy-editor-save'),
+                      resources.hub.access(
+                        'legacy-editor-save',
+                        operations: {ResourceOperation.edit},
+                        resourceKeys: {record.identity.key},
+                      ),
+                    );
+                    current = updated;
+                    await resources.hub.refreshRecord(updated);
+                  });
+                },
         );
         if (!mounted || epoch != _resourceEpoch) {
           await resources.close();
           return;
         }
+        resources.controller.presentEditor = (presentation) async {
+          if (!mounted || epoch != _resourceEpoch) {
+            throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
+          }
+          await presentResourceEditor(context, resources.controller, presentation);
+        };
+        widget.smartDocuments?.attach(resources.controller);
         setState(() {
           _resources = resources;
           _resourceFailure = null;
@@ -1144,6 +1207,11 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
 
   @override
   Widget build(BuildContext context) => ResourceLinkRouting(
+    locate: (locator) async {
+      final center = _resources;
+      if (center != null)
+        await openResourceLocator(context, center.controller, locator);
+    },
     open: (uri) async {
       final center = _resources;
       if (center == null) return;
