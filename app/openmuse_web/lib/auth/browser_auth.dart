@@ -120,8 +120,13 @@ final class BrowserGoTrueProvider implements GoTrueAuthProvider {
       GoTrueUser.fromJson(await _request('GET', '/user', token: accessToken));
 
   @override
-  Future<void> logout(String accessToken) async =>
-      _request('POST', '/logout', query: {'scope': 'local'}, token: accessToken, emptyOk: true);
+  Future<void> logout(String accessToken) async => _request(
+    'POST',
+    '/logout',
+    query: {'scope': 'local'},
+    token: accessToken,
+    emptyOk: true,
+  );
 
   @override
   Future<GoTrueSettings> settings() async {

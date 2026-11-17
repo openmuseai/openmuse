@@ -8,6 +8,8 @@ import 'browser_paired_client.dart';
 import 'dsh_pane.dart';
 import 'paired_workspace_mirror_port.dart';
 import 'web_workbench_page.dart';
+import 'browser_cloud_documents.dart';
+import 'package:openmuse_resource_center/openmuse_resource_center.dart';
 
 final class WebSessionPage extends StatefulWidget {
   const WebSessionPage({
@@ -15,11 +17,13 @@ final class WebSessionPage extends StatefulWidget {
     required this.authentication,
     this.pairedClient,
     this.config,
+    this.initialDocument,
   });
 
   final GoTrueAuthenticationController authentication;
   final BrowserPairedClient? pairedClient;
   final RuntimeConfig? config;
+  final ({String workspaceId, String viewId})? initialDocument;
 
   @override
   State<WebSessionPage> createState() => _WebSessionPageState();
@@ -39,11 +43,60 @@ final class _WebSessionPageState extends State<WebSessionPage> {
   PairedWorkspaceMirrorPort? _mirror;
   String? _error;
   bool _busy = false;
+  BrowserCloudDocuments? _documents;
+  bool _openingDocuments = false;
+  Object? _documentError;
 
   @override
   void initState() {
     super.initState();
     unawaited(_load());
+    unawaited(_openDocuments());
+  }
+
+  Future<void> _openDocuments() async {
+    if (_openingDocuments) return;
+    setState(() {
+      _openingDocuments = true;
+      _documentError = null;
+    });
+    try {
+      final previous = _documents;
+      _documents = null;
+      await previous?.close();
+      final value = await BrowserCloudDocuments.open(
+        authentication: widget.authentication,
+        origin:
+            widget.config?.webServiceUri(ServiceId.cloud, Uri.base) ??
+            Uri.parse(Uri.base.origin),
+        presentEditor: (presentation) async {
+          final value = _documents;
+          if (!mounted || value == null) throw const ResourceFailure('DENIED');
+          final link = value.documents.browserLinkForResource(
+            presentation.session.record,
+          );
+          await presentResourceEditor(
+            context,
+            value.center,
+            presentation,
+            routeName: link == null ? null : '${link.fragment}/edit',
+          );
+        },
+      );
+      if (!mounted) {
+        await value.close();
+        return;
+      }
+      setState(() => _documents = value);
+      final target = widget.initialDocument;
+      if (target != null) {
+        await value.openDocument(target.workspaceId, target.viewId);
+      }
+    } on Object catch (error) {
+      if (mounted) setState(() => _documentError = error);
+    } finally {
+      if (mounted) setState(() => _openingDocuments = false);
+    }
   }
 
   Future<void> _load() async {
@@ -87,6 +140,7 @@ final class _WebSessionPageState extends State<WebSessionPage> {
 
   @override
   void dispose() {
+    unawaited(_documents?.close());
     _paired.close();
     _mirror?.close();
     super.dispose();
@@ -124,9 +178,40 @@ final class _WebSessionPageState extends State<WebSessionPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.initialDocument != null && _documentError != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('智能文档'),
+          actions: [TextButton(onPressed: _account, child: const Text('账号'))],
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('无法打开文档，请确认当前账号具有访问权限。'),
+              TextButton(
+                onPressed: _openingDocuments ? null : _openDocuments,
+                child: const Text('重试'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     final connection = _connection;
     final mirror = _mirror;
     return WebWorkbenchPage(
+      workspaceActions: [
+        if (_documents case final documents?)
+          ...documents.cloud.buildWorkspaceActions(context)
+        else
+          TextButton.icon(
+            key: const ValueKey('web-cloud-documents-load'),
+            onPressed: _openingDocuments ? null : _openDocuments,
+            icon: const Icon(Icons.description_outlined),
+            label: Text(_documentError != null ? '重试协作文档' : '协作文档'),
+          ),
+      ],
       desktopRef: connection?.desktopRef,
       workspaceRef: connection?.workspaceRef,
       mirrorPort: mirror,

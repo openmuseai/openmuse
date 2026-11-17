@@ -11,17 +11,25 @@ import 'auth/web_deployment.dart';
 import 'auth/browser_locale.dart';
 import 'auth/browser_config_store.dart';
 import 'workbench/web_session_page.dart';
+import 'workbench/document_link_page.dart';
+import 'package:openmuse_smart_document_plugins/public_document.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final editingEntry = DocumentBrowserTarget.parseEditing(Uri.base.fragment);
+  final documentEntry =
+      DocumentBrowserTarget.parse(Uri.base.fragment) ?? editingEntry;
   InstalledRelease? webRelease;
   runApp(
     OpenMuseRegionBootstrap(
+      requiresLegalConsent: documentEntry == null || editingEntry != null,
       loadRelease: () async => webRelease = await loadWebInstalledRelease(),
       store: (release) async => BrowserConfigStore('region-${release.id}'),
       boot: (bundle, language) => bootOpenMuseWeb(
         bundle,
         language,
+        documentEntry: documentEntry,
+        editingDocument: editingEntry != null,
         regionLabels: webRelease!.regions
             .firstWhere(
               (value) =>
@@ -36,6 +44,8 @@ Future<void> main() async {
 Future<Widget> bootOpenMuseWeb(
   DeploymentBundle bundle,
   String? initialLanguage, {
+  DocumentBrowserTarget? documentEntry,
+  bool editingDocument = false,
   Map<String, String> regionLabels = const {},
 }) async {
   final config = bundle.snapshot;
@@ -76,6 +86,8 @@ Future<Widget> bootOpenMuseWeb(
       localeController: locale,
       runtime: runtime,
       regionLabels: regionLabels,
+      documentEntry: documentEntry,
+      editingDocument: editingDocument,
     ),
   );
 }
@@ -88,9 +100,13 @@ final class OpenMuseWebApp extends StatefulWidget {
     this.localeController,
     this.runtime,
     this.regionLabels = const {},
+    this.documentEntry,
+    this.editingDocument = false,
   });
 
   final Map<String, String> regionLabels;
+  final DocumentBrowserTarget? documentEntry;
+  final bool editingDocument;
   final RuntimeConfig? config;
   final OpenMuseUiLocale? localeController;
   final OpenMuseClientRuntime? runtime;
@@ -161,29 +177,43 @@ final class _OpenMuseWebAppState extends State<OpenMuseWebApp>
         debugShowCheckedModeBanner: false,
         title: 'OpenMuse',
         theme: buildOpenMuseTheme(),
-        initialRoute: widget.config?.navigation?.entry.path,
-        onGenerateRoute: (settings) {
-          final navigation =
-              (RuntimeConfigScope.maybeOf(context) ?? widget.config)
-                  ?.navigation;
-          final route = navigation?.resolve(settings.name ?? '');
-          return MaterialPageRoute<void>(
-            settings: settings,
-            builder: (context) {
-              if (navigation != null && route == null) {
-                return Scaffold(
-                  body: Center(
-                    child: Text(_locale.strings.commonRouteUnavailable()),
-                  ),
-                );
-              }
-              return _sessionGate(context);
-            },
-          );
-        },
+        initialRoute: widget.documentEntry != null
+            ? '${widget.documentEntry!.route}${widget.editingDocument ? '/edit' : ''}'
+            : widget.config?.navigation?.entry.path,
+        onGenerateInitialRoutes: (name) => [
+          _route(context, RouteSettings(name: name)),
+        ],
+        onGenerateRoute: (settings) => _route(context, settings),
       ),
     ),
   );
+
+  Route<void> _route(BuildContext context, RouteSettings settings) {
+    final navigation =
+        (RuntimeConfigScope.maybeOf(context) ?? widget.config)?.navigation;
+    final route = navigation?.resolve(settings.name ?? '');
+    final document = DocumentBrowserTarget.parse(settings.name ?? '');
+    final edit = DocumentBrowserTarget.parseEditing(settings.name ?? '');
+    return MaterialPageRoute<void>(
+      settings: settings,
+      builder: (context) {
+        if (document != null || edit != null) {
+          return DocumentLinkPage(
+            target: (document ?? edit)!,
+            initialEditing: edit != null,
+            authentication: _authentication,
+            config: widget.config,
+          );
+        }
+        if (navigation != null && route == null) {
+          return Scaffold(
+            body: Center(child: Text(_locale.strings.commonRouteUnavailable())),
+          );
+        }
+        return _sessionGate(context);
+      },
+    );
+  }
 
   Widget _sessionGate(BuildContext context) => AnimatedBuilder(
     animation: _authentication,

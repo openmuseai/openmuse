@@ -31,8 +31,19 @@ function installedService(name) {
   return url
 }
 const productionRelay = installedService('relay')
-const productionCloud = installedService('cloud')
-const productionAuth = installedService('auth')
+function qaOrigin(name) {
+  const text = process.env[name]
+  if (!text) return null
+  const value = new URL(text)
+  if (productionE2e || value.protocol !== 'http:' ||
+      !['127.0.0.1', 'localhost', '[::1]'].includes(value.hostname) ||
+      value.username || value.password || value.search || value.hash || value.pathname !== '/') {
+    throw new Error(`${name} requires a local QA HTTP origin`)
+  }
+  return value
+}
+const productionCloud = qaOrigin('OPENMUSE_QA_CLOUD_ORIGIN') ?? installedService('cloud')
+const productionAuth = qaOrigin('OPENMUSE_QA_AUTH_ORIGIN') ?? installedService('auth')
 if (!productionAuth) throw new Error('Deployment must configure auth')
 if (!productionCloud) throw new Error('Deployment must configure cloud')
 const localGateway = new URL(process.env.OPENMUSE_PAIRED_GATEWAY_ORIGIN ?? 'http://127.0.0.1:13180')
@@ -64,7 +75,7 @@ const types = {
 
 function dshTarget(url) {
   const isAuth = url.pathname.startsWith('/gotrue/')
-  const isCloud = url.pathname.startsWith('/api/muse/devices')
+  const isCloud = url.pathname.startsWith('/api/') || url.pathname.startsWith('/ws/')
   const destination = isAuth ? productionAuth
     : isCloud ? productionCloud
       : !productionE2e && !url.pathname.startsWith('/dsh/')

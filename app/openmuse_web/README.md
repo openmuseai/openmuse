@@ -27,7 +27,15 @@ The browser discovers same-account online Desktop devices after login and reques
 
 Run browser-only adapter tests with `flutter test --platform chrome test/browser_adapters_test.dart`; ordinary `flutter test` runs the VM-safe workbench tests.
 
-The shared Flutter File Viewer displays authorized Markdown, text and images through the paired resource endpoint. PDF/video, Range and the production Web pairing Edge remain pending. The Office route factory in `lib/office_routes.dart` accepts an authorized resource handle and Engine ports; the browser Office Engine adapter remains pending. See the [UI and interaction acceptance matrix](../../docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md) for passed and remaining gates.
+The shared Flutter File Viewer displays authorized Markdown, text and images through the paired resource endpoint. PDF/video, Range and the production Web pairing Edge remain pending. The Office route factory in `lib/office_routes.dart` accepts an authorized resource handle and Engine ports; the browser Office Engine adapter remains pending. See the [UI and interaction acceptance matrix](../../docs/platforms/web/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md) for passed and remaining gates.
+
+## SmartDocument collaboration and browser links
+
+Cloud workspaces use the same SmartDocument plugin composition, original Doc0 identity, membership checks and collaboration transport as Mobile and Desktop. Browser storage and WASM loading are platform adapters. Opening a cloud document does not require an online paired Desktop.
+
+`#/documents/{workspaceUuid}/{viewUuid}` opens an explicitly shared document in an anonymous, read-only session. The reader fetches current original document content every two seconds, including referenced private images; it does not create a writer or persist an offline copy. Revoking the original publication removes the visible document after the next read. The explicit Edit action uses the `/edit` suffix, runs the installed region, consent and sign-in gates, preserves the target across reloads, and opens the original resource only when that account has permission.
+
+Mobile/Desktop browser links use the installed runtime configuration's `web.documentBaseUrl`; URLs contain document identity only. For local QA, the edge supports `OPENMUSE_QA_CLOUD_ORIGIN`, `OPENMUSE_QA_AUTH_ORIGIN` and `OPENMUSE_WEB_PORT`. Native debug builds can set `OPENMUSE_DOCUMENT_WEB_BASE`. These loopback overrides are for local integration; this work does not deploy the production Web Edge.
 
 ## Regional releases
 

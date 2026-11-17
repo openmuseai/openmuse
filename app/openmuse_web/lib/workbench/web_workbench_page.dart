@@ -24,6 +24,7 @@ final class WebWorkbenchPage extends StatefulWidget {
     this.disconnectedWorkspace,
     this.workspaceStatus,
     this.onReconnect,
+    this.workspaceActions = const [],
   });
 
   final String? desktopRef;
@@ -36,6 +37,7 @@ final class WebWorkbenchPage extends StatefulWidget {
   final Widget? disconnectedWorkspace;
   final Widget? workspaceStatus;
   final VoidCallback? onReconnect;
+  final List<Widget> workspaceActions;
 
   @override
   State<WebWorkbenchPage> createState() => _WebWorkbenchPageState();
@@ -606,6 +608,13 @@ final class _WebWorkbenchPageState extends State<WebWorkbenchPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    appBar: widget.workspaceActions.isEmpty
+        ? null
+        : AppBar(
+            title: const Text('OpenMuse'),
+            toolbarHeight: 48,
+            actions: widget.workspaceActions,
+          ),
     body: WorkbenchCanvas(
       controller: _layout,
       hiddenPaneIds: _sidebarVisible ? const {} : const {'workspace'},
