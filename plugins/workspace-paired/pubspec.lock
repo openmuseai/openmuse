@@ -152,6 +152,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  muse_resource_embed:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_resource_embed"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_mobile_core:
     dependency: "direct main"
     description:

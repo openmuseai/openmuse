@@ -1,4 +1,6 @@
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart'
+    show ConnectionTrace;
+import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart'
     show isPrivateNativeTransportHost;
 import 'dart:async';
 import 'dart:convert';
@@ -546,7 +548,13 @@ final class PairedDesktopGateway {
         'Desktop 尚未登录。',
       );
     }
-    final mobileAccountRef = await validateToken(authorization.substring(7));
+    final trace = ConnectionTrace.fromTraceparent(
+      request.headers.value('traceparent'),
+    );
+    final mobileAccountRef = await trace.measure(
+      'desktop.auth_validate',
+      (_) => validateToken(authorization.substring(7)),
+    );
     if (mobileAccountRef != desktopAccountRef) {
       throw const _GatewayFailure(
         HttpStatus.forbidden,
@@ -554,7 +562,10 @@ final class PairedDesktopGateway {
         'Mobile 与 Desktop 必须登录同一个账号。',
       );
     }
-    final upstream = await dshEndpoint();
+    final upstream = await trace.measure(
+      'desktop.dsh_ready',
+      (_) => dshEndpoint(),
+    );
     if (!_isLoopbackHttp(upstream)) {
       throw const _GatewayFailure(
         HttpStatus.badGateway,
@@ -1287,15 +1298,24 @@ final class PairedDesktopGateway {
       await _proxyWebSocket(request, grant, upstreamUri);
       return;
     }
+    final span =
+        ConnectionTrace.fromTraceparent(
+          request.headers.value('traceparent'),
+        ).start(
+          'desktop.gateway.${initial == null ? ConnectionTrace.route(request.uri.path) : 'bootstrap'}',
+        );
+    var complete = false;
     final client = HttpClient()
       ..connectionTimeout = const Duration(seconds: 10);
     try {
       final outbound = await client.openUrl(request.method, upstreamUri);
+      span.mark('connected');
       // DSH's bootstrap URL answers with a one-time 303 + auth cookie. The
       // browser, not this stateless proxy client, must follow that redirect so
       // the cookie is installed on the paired origin.
       outbound.followRedirects = false;
       _copyRequestHeaders(request, outbound, upstreamUri: upstreamUri);
+      outbound.headers.set('traceparent', span.traceparent);
       // Android WebView may keep an empty GET request stream open while the
       // response is pending. Waiting for that stream before close() deadlocks
       // the bootstrap navigation through adb reverse.
@@ -1319,6 +1339,7 @@ final class PairedDesktopGateway {
         await outbound.addStream(request);
       }
       final upstreamResponse = await outbound.close();
+      span.mark('headers', status: upstreamResponse.statusCode);
       request.response.statusCode = upstreamResponse.statusCode;
       // Dart otherwise holds the first 8KB until the upstream ends or the
       // buffer fills. A DSH follow snapshot is often smaller than that and
@@ -1354,16 +1375,22 @@ final class PairedDesktopGateway {
       // Await cancellation of the upstream iterator before force-closing its
       // client. IOSink.addStream can finish while an async* cancellation is
       // still unwinding, leaving the upstream SSE socket error unobserved.
+      var bytes = 0;
       await for (final chunk in _tapProxyBody(
         label: label,
         eventStream: eventStream,
         source: upstreamResponse,
       )) {
+        if (bytes == 0) span.mark('first_chunk', bytes: chunk.length);
+        bytes += chunk.length;
         request.response.add(chunk);
         await request.response.flush();
       }
       await request.response.close();
+      span.mark('body', bytes: bytes);
+      complete = true;
     } finally {
+      span.end(ok: complete);
       client.close(force: true);
     }
   }

@@ -1,8 +1,11 @@
+import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart'
+    show ConnectionTrace;
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 
 final class PairedDesktopConnection {
   const PairedDesktopConnection({
     required this.accountRef,
+    this.trace,
     required this.deviceRef,
     required this.deviceName,
     required this.workspaceRef,
@@ -12,6 +15,7 @@ final class PairedDesktopConnection {
     required this.session,
   });
 
+  final ConnectionTrace? trace;
   final String accountRef;
   final String deviceRef;
   final String deviceName;
@@ -24,6 +28,7 @@ final class PairedDesktopConnection {
   factory PairedDesktopConnection.fromJson(
     Map<String, Object?> json, {
     bool allowInsecurePrivateNetworkForTesting = false,
+    ConnectionTrace? trace,
   }) {
     final accountRef = json['accountRef'];
     final deviceRef = json['deviceRef'];
@@ -62,6 +67,7 @@ final class PairedDesktopConnection {
     }
     return PairedDesktopConnection(
       accountRef: accountRef,
+      trace: trace,
       deviceRef: deviceRef,
       deviceName: deviceName is String && deviceName.isNotEmpty
           ? deviceName
