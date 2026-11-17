@@ -18,9 +18,13 @@ final class DshConversationController {
     this.reconciliationInterval = const Duration(seconds: 2),
     this.onConnectionFailure,
     this.approveSend,
+    this.ownsClient = true,
   }) : store = store ?? DshConversationStore();
 
   final DshNativeGatewayClient client;
+  final bool ownsClient;
+  Timer? _idleTimer;
+  bool _loadingHistory = false;
   final DshConversationStore store;
   final Duration reconciliationInterval;
   final void Function(Object error)? onConnectionFailure;
@@ -42,9 +46,43 @@ final class DshConversationController {
     resume();
   }
 
+  /// A short navigation away must not tear down a healthy stream.
+  void idle({Duration timeout = const Duration(minutes: 2)}) {
+    _idleTimer?.cancel();
+    _idleTimer = Timer(timeout, pause);
+  }
+
+  Future<void> loadOlder() async {
+    final current = store.snapshot;
+    final before = store.oldestSeq;
+    if (_closed ||
+        _loadingHistory ||
+        !current.hasMore ||
+        before == null ||
+        current.sessionId == null)
+      return;
+    _loadingHistory = true;
+    try {
+      final page = await client.sessionPage(
+        DshNativeSessionSummary(
+          sessionId: current.sessionId!,
+          updatedAt: 0,
+          running: current.running,
+          blank: false,
+          headSeq: current.cursor,
+        ),
+        beforeSeq: before,
+      );
+      if (!_closed) store.prepend(page);
+    } finally {
+      _loadingHistory = false;
+    }
+  }
+
   /// Keeps the projected conversation in memory without holding a Desktop
   /// follow stream or polling an offstage session.
   void pause() {
+    _idleTimer?.cancel();
     if (!_active) return;
     _active = false;
     _generation++;
@@ -56,12 +94,21 @@ final class DshConversationController {
   }
 
   void resume() {
+    _idleTimer?.cancel();
     final sessionId = _sessionId;
     if (_closed || _active || sessionId == null) return;
     _active = true;
     final generation = ++_generation;
     _followTask = _follow(sessionId, generation);
-    _reconcileTask = _reconcile(sessionId, generation);
+    _reconcileTask = _reconcileAfterFirstFollow(sessionId, generation);
+  }
+
+  Future<void> _reconcileAfterFirstFollow(
+    String sessionId,
+    int generation,
+  ) async {
+    await Future<void>.delayed(reconciliationInterval);
+    if (_isCurrent(generation)) await _reconcile(sessionId, generation);
   }
 
   bool _isCurrent(int generation) =>
@@ -72,7 +119,11 @@ final class DshConversationController {
     final normalized = text.trim();
     if (sessionId == null || normalized.isEmpty) return;
     final recipient = store.snapshot;
-    if (approveSend != null && !await approveSend!(recipient, normalized)) {
+    if (approveSend != null &&
+        !await client.trace.measure(
+          'prompt.approval',
+          (_) => approveSend!(recipient, normalized),
+        )) {
       throw const DshSendDeclined();
     }
     if (_closed ||
@@ -88,11 +139,13 @@ final class DshConversationController {
     print(
       'OpenMuse prompt: session=$sessionId request=$requestId chars=${normalized.length} mode=$mode',
     );
+    final submit = client.trace.start('prompt.submit');
     store.beginPrompt(
       requestId,
       normalized,
       time: DateTime.now().millisecondsSinceEpoch,
     );
+    submit.mark('optimistic');
     try {
       await client.prompt(
         sessionId: sessionId,
@@ -100,8 +153,10 @@ final class DshConversationController {
         text: normalized,
         mode: mode,
       );
+      submit.end();
       print('OpenMuse prompt: accepted request=$requestId');
     } catch (error) {
+      submit.end(ok: false);
       print('OpenMuse prompt: failed request=$requestId error=$error');
       store.promptFailed(requestId, error);
       rethrow;
@@ -115,6 +170,7 @@ final class DshConversationController {
 
   Future<void> _follow(String sessionId, int generation) async {
     var attempt = 0;
+    var assistantObserved = false;
     while (_isCurrent(generation)) {
       if (store.snapshot.rows.isEmpty) {
         store.connecting(sessionId, reconnecting: attempt > 0);
@@ -133,6 +189,15 @@ final class DshConversationController {
           attempt = 0;
           print('OpenMuse follow: ${_frameLog(frame)}');
           store.apply(frame);
+          if (!assistantObserved &&
+              frame is DshAssistantStreamFrame &&
+              frame.frame['type'] == 'chunk') {
+            assistantObserved = true;
+            final observed = client.trace.start(
+              'conversation.assistant_observed',
+            );
+            observed.end();
+          }
         }
         if (!_isCurrent(generation)) return;
         throw const DshNativeGatewayException('DSH follow stream ended');
@@ -223,7 +288,7 @@ final class DshConversationController {
   Future<void> dispose() async {
     _closed = true;
     pause();
-    client.close();
+    if (ownsClient) client.close();
     store.close();
     // The tasks observe [_closed] after their active I/O/delay. They are kept
     // as fields so failures are owned by this controller instead of becoming

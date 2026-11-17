@@ -133,6 +133,47 @@ final class DshConversationStore {
     permissionPreset: _permissionPreset,
   );
 
+  int? get oldestSeq =>
+      _journal.isEmpty ? null : _journal.keys.reduce((a, b) => a < b ? a : b);
+
+  /// A bounded local view, never an authority for Desktop state.
+  DshSnapshotFrame cachePage({int maxRecords = 120}) {
+    final records = _journal.values.toList()
+      ..sort((a, b) => a.seq.compareTo(b.seq));
+    final start = records.length > maxRecords ? records.length - maxRecords : 0;
+    return DshSnapshotFrame(
+      header: {'id': _sessionId},
+      cursor: _cursor,
+      records: List.unmodifiable(records.skip(start)),
+      hasMore: _hasMore || start > 0,
+      projections: {
+        'values': {
+          'title': _title,
+          'agentPreset': _agentPreset,
+          'modelSelection': {
+            'next': {
+              'provider': _provider,
+              'model': _model,
+              'reasoningEffort': _reasoningEffort,
+            },
+          },
+          'permissions': {'currentValue': _permissionPreset},
+        },
+      },
+    );
+  }
+
+  void prepend(DshSnapshotFrame page) {
+    if (page.header['id'] != _sessionId) return;
+    final before = oldestSeq;
+    for (final event in page.records) {
+      if (before == null || event.seq < before)
+        _journal.putIfAbsent(event.seq, () => event);
+    }
+    _hasMore = page.hasMore;
+    _publish();
+  }
+
   void connecting(String sessionId, {bool reconnecting = false}) {
     _sessionId = sessionId;
     _phase = reconnecting
@@ -149,13 +190,25 @@ final class DshConversationStore {
         // newer journal with an older recovery snapshot.
         if (frame.cursor < _cursor) return;
         _sessionId = frame.header['id'] as String? ?? _sessionId;
-        _journal
-          ..clear()
-          ..addEntries(
-            frame.records.map((event) => MapEntry(event.seq, event)),
-          );
+        final oldest = oldestSeq;
+        final incomingOldest = frame.records.isEmpty
+            ? null
+            : frame.records.first.seq;
+        final retainedHistory =
+            oldest != null &&
+            incomingOldest != null &&
+            oldest < incomingOldest &&
+            incomingOldest <= _cursor + 1;
+        if (retainedHistory) {
+          _journal.removeWhere((seq, _) => seq >= incomingOldest);
+        } else {
+          _journal.clear();
+        }
+        _journal.addEntries(
+          frame.records.map((event) => MapEntry(event.seq, event)),
+        );
         _cursor = frame.cursor;
-        _hasMore = frame.hasMore;
+        if (!retainedHistory) _hasMore = frame.hasMore;
         _live.clear();
         _applyProjections(frame.projections);
         for (final event in frame.records) {

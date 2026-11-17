@@ -95,6 +95,12 @@ void main() {
       );
       await controller.start('s-1');
       await _until(() => controller.store.snapshot.rows.isNotEmpty);
+      final warmFollows = followRequests;
+      controller.idle(timeout: const Duration(milliseconds: 150));
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      controller.resume();
+      await Future<void>.delayed(const Duration(milliseconds: 180));
+      expect(followRequests, warmFollows);
       controller.pause();
       await Future<void>.delayed(const Duration(milliseconds: 100));
       final pausedRequests = sessionRequests;
