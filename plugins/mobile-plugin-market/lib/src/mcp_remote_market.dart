@@ -1243,6 +1243,7 @@ final class RemoteMcpViewConnection {
   bool closed = false;
   Future<Map<String, Object?>> Function(String, Map<String, Object?>)?
   onRequest;
+  Future<void> Function(Map<String, Object?>)? onDownload;
 
   Future<void> handleMessage(Map<String, Object?> message) async {
     if (closed) return;
@@ -1263,6 +1264,17 @@ final class RemoteMcpViewConnection {
     }
     if (requestId == null) return;
     try {
+      if (message['method'] == 'ui/download-file' && onDownload != null) {
+        await onDownload!(
+          Map<String, Object?>.from(message['params'] as Map? ?? {}),
+        );
+        await receive({
+          'jsonrpc': '2.0',
+          'id': requestId,
+          'result': <String, Object?>{},
+        });
+        return;
+      }
       final result = await onRequest?.call(
         message['method'] as String,
         Map<String, Object?>.from(message['params'] as Map? ?? {}),
@@ -1332,10 +1344,12 @@ final class RemoteMcpOfflineView extends StatefulWidget {
     this.mediaType,
     this.fileBytes,
     this.filePath,
+    this.forwardDownloads = false,
     this.onCreated,
     this.onClosed,
   });
   final String digest;
+  final bool forwardDownloads;
   final String? hostDocument, fileName, mediaType, filePath;
   final Uint8List? fileBytes;
   final ValueChanged<RemoteMcpViewConnection>? onCreated, onClosed;
@@ -1385,6 +1399,7 @@ final class _RemoteMcpOfflineViewState extends State<RemoteMcpOfflineView> {
           },
           creationParams: {
             'digest': widget.digest,
+            'forwardDownloads': widget.forwardDownloads,
             if (widget.hostDocument != null) 'html': widget.hostDocument,
             if (widget.filePath != null) 'filePath': widget.filePath,
             if (widget.fileName != null) 'fileName': widget.fileName,
@@ -1406,12 +1421,14 @@ final class RemoteMcpOfflineAppPage extends StatefulWidget {
     this.fileBytes,
     this.appHtml,
     this.filePath,
+    this.onSave,
     this.onCreated,
     this.onClosed,
   });
   final String title, digest;
   final String? fileName, mediaType, appHtml, filePath;
   final Uint8List? fileBytes;
+  final Future<void> Function(Uint8List)? onSave;
   final ValueChanged<RemoteMcpViewConnection>? onCreated, onClosed;
   @override
   State<RemoteMcpOfflineAppPage> createState() =>
@@ -1430,6 +1447,24 @@ final class _RemoteMcpOfflineAppPageState
 
   void _created(RemoteMcpViewConnection connection) {
     _connection = connection;
+    if (widget.onSave != null) {
+      connection.onDownload = (params) async {
+        final contents = params['contents'] as List;
+        if (contents.length != 1) throw StateError('INVALID_RESOURCE_EXPORT');
+        final resource = (contents.single as Map)['resource'] as Map;
+        if (resource['mimeType'] != widget.mediaType)
+          throw StateError('RESOURCE_EXPORT_TYPE_MISMATCH');
+        final name = Uri.parse(resource['uri'] as String).pathSegments.last;
+        if (name != widget.fileName)
+          throw StateError('RESOURCE_EXPORT_NAME_MISMATCH');
+        final bytes = resource['blob'] is String
+            ? base64Decode(resource['blob'] as String)
+            : Uint8List.fromList(utf8.encode(resource['text'] as String));
+        if (bytes.length > 64 * 1024 * 1024)
+          throw StateError('RESOURCE_EXPORT_TOO_LARGE');
+        await widget.onSave!(bytes);
+      };
+    }
     widget.onCreated?.call(connection);
     unawaited(
       _host?.open(
@@ -1469,6 +1504,7 @@ final class _RemoteMcpOfflineAppPageState
               fileName: widget.fileName,
               fileBytes: widget.fileBytes,
               filePath: widget.filePath,
+              forwardDownloads: widget.onSave != null,
               resourceToolsAvailable: _host != null || widget.onCreated != null,
               onCreated: _created,
               onClosed: _closed,
@@ -1495,6 +1531,7 @@ final class _RemoteMcpOfflineAppPageState
               mediaType: widget.mediaType,
               fileBytes: widget.fileBytes,
               filePath: widget.filePath,
+              forwardDownloads: widget.onSave != null,
               onCreated: _created,
               onClosed: _closed,
             ),
@@ -1512,6 +1549,7 @@ final class _IosOfflineMcpAppView extends StatefulWidget {
     this.fileName,
     this.fileBytes,
     this.filePath,
+    this.forwardDownloads = false,
     required this.resourceToolsAvailable,
     this.onCreated,
     this.onClosed,
@@ -1521,6 +1559,7 @@ final class _IosOfflineMcpAppView extends StatefulWidget {
   final String? fileName, filePath;
   final Uint8List? fileBytes;
   final bool resourceToolsAvailable;
+  final bool forwardDownloads;
   final ValueChanged<RemoteMcpViewConnection>? onCreated, onClosed;
 
   @override
@@ -1629,7 +1668,7 @@ final class _IosOfflineMcpAppViewState extends State<_IosOfflineMcpAppView> {
     } on Object {
       return;
     }
-    if (request['method'] != 'ui/download-file') {
+    if (request['method'] != 'ui/download-file' || widget.forwardDownloads) {
       await _connection.handleMessage(request);
       return;
     }

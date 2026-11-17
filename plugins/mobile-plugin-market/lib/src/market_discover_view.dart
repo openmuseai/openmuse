@@ -544,6 +544,14 @@ class MarketDiscoverView extends StatelessWidget {
                     ),
                 ],
                 if (mine && mcpSection != null) mcpSection!,
+                if (mine || category == '精选' || category == '编程') ...[
+                  const SizedBox(height: 20),
+                  Text('资源宿主插件', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 8),
+                  const Text('安装和配置在已连接的 Desktop 上生效。'),
+                  const SizedBox(height: 12),
+                  desktopSection,
+                ],
                 if (mine && onDiscover != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 20),

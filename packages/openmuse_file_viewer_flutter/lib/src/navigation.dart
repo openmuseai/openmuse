@@ -98,7 +98,7 @@ final class _CodeNavigationSheetState extends State<CodeNavigationSheet> {
           if (_result case final result?) ...[
             if (!result.configured) const Text('当前宿主尚未配置此语言的导航服务。'),
             if (!result.enabled) ...[
-              const Text('代码导航默认关闭。启用后在资源宿主按需运行语言服务，空闲 5 分钟自动释放；代码高亮不受影响。'),
+              const Text('此工作区的代码导航尚未开启。启用后在资源宿主按需运行语言服务，空闲后按宿主配置自动释放；代码高亮不受影响。'),
               FilledButton(
                 onPressed: _busy || !result.configured
                     ? null

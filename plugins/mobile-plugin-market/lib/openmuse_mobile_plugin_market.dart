@@ -511,19 +511,32 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
                   padding: const EdgeInsets.all(14),
                   child: Text(stringsOf(context).marketConnectDesktop()),
                 )
-              : _DesktopMarketSection(client: widget.desktop!),
+              : _DesktopMarketSection(
+                  client: widget.desktop!,
+                  installedOnly: mine,
+                  query: query,
+                  category: category,
+                ),
         );
 }
 
 final class _DesktopMarketSection extends StatefulWidget {
-  const _DesktopMarketSection({required this.client});
+  const _DesktopMarketSection({
+    required this.client,
+    this.installedOnly = false,
+    this.query = '',
+    this.category = '精选',
+  });
   final PairedDesktopMarketClient client;
+  final bool installedOnly;
+  final String query, category;
 
   @override
   State<_DesktopMarketSection> createState() => _DesktopMarketSectionState();
 }
 
 final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
+  int _loadEpoch = 0;
   List<Map<String, Object?>>? plugins;
   final Map<String, Map<String, Object?>> plans = {};
   String? error;
@@ -535,9 +548,23 @@ final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
     unawaited(_load());
   }
 
+  @override
+  void didUpdateWidget(covariant _DesktopMarketSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.client.grantRef != widget.client.grantRef ||
+        oldWidget.client.origin != widget.client.origin) {
+      plugins = null;
+      plans.clear();
+      unawaited(_load());
+    }
+  }
+
   Future<void> _load() async {
+    final epoch = ++_loadEpoch;
+    final client = widget.client;
     try {
-      final response = await widget.client.request('list');
+      final response = await client.request('list');
+      if (!mounted || epoch != _loadEpoch) return;
       final raw = response['plugins'];
       if (raw is! List) throw const FormatException('Desktop 市场目录无效');
       final loaded = [
@@ -552,18 +579,20 @@ final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
         final id = entry['id'];
         if (id is! String) continue;
         try {
-          final plan = await widget.client.request('plan', pluginId: id);
-          if (mounted) setState(() => plans[id] = plan);
+          final plan = await client.request('plan', pluginId: id);
+          if (mounted && epoch == _loadEpoch) setState(() => plans[id] = plan);
         } catch (exception) {
-          if (mounted) setState(() => plans[id] = {'error': '$exception'});
+          if (mounted && epoch == _loadEpoch)
+            setState(() => plans[id] = {'error': '$exception'});
         }
       }
     } catch (exception) {
-      if (mounted) setState(() => error = '$exception');
+      if (mounted && epoch == _loadEpoch) setState(() => error = '$exception');
     }
   }
 
   Future<void> _manageNavigation(Map<String, Object?> entry) async {
+    final client = widget.client;
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => CodeNavigationSettingsPage(
@@ -571,7 +600,7 @@ final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
           title: entry['name'] as String,
           targetLabel: '已连接 Desktop',
           request: (operation, id, options) =>
-              widget.client.request(operation, pluginId: id, options: options),
+              client.request(operation, pluginId: id, options: options),
         ),
       ),
     );
@@ -611,7 +640,21 @@ final class _DesktopMarketSectionState extends State<_DesktopMarketSection> {
           padding: EdgeInsets.all(12),
           child: CircularProgressIndicator(),
         ),
-      for (final entry in plugins ?? const <Map<String, Object?>>[])
+      for (final entry in (plugins ?? const <Map<String, Object?>>[]).where((
+        entry,
+      ) {
+        final plan = plans[entry['id']];
+        if (widget.installedOnly && plan?['installedVersion'] == null)
+          return false;
+        if (widget.category == '已启用' && plan?['enabled'] != true) return false;
+        if (widget.category == '已停用' && plan?['enabled'] != false) return false;
+        if (widget.category == '更新') return false;
+        final query = widget.query.trim().toLowerCase();
+        return query.isEmpty ||
+            '${entry['name']} ${entry['package']} ${entry['description']}'
+                .toLowerCase()
+                .contains(query);
+      }))
         Container(
           margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
