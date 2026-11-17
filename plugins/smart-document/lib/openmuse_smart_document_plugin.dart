@@ -2,21 +2,43 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_smart_document/openmuse_smart_document.dart';
-import 'package:path_provider/path_provider.dart';
+import 'src/platform_storage.dart';
+export 'src/platform_storage.dart' show createSmartDocumentStore;
 import 'package:uuid/uuid.dart';
+import 'src/resource_checkpoint.dart';
+export 'src/resource_checkpoint.dart';
+
+typedef SmartDocumentResourceLease =
+    ResourceSessionLease<
+      SmartDocumentController,
+      SmartDocumentResourceCheckpoint,
+      DocumentRealtimeSession?
+    >;
 
 const smartDocumentMediaType = 'application/vnd.openmuse.smart-document+json';
 typedef SmartDocumentProviderFactory =
     CollaborationProvider? Function(ResourceRecord record);
 typedef SmartDocumentAssetFactory =
-    Future<AssetRepository> Function(ResourceEditorSession session);
+    Future<AssetRepository?> Function(ResourceEditorSession session);
+typedef SmartDocumentOwnerAssetFactory =
+    Future<AssetRepository?> Function(
+      ResourceEditorSession session,
+      SmartDocumentController owner,
+    );
 typedef SmartDocumentStoreFactory =
     Future<DocumentStore> Function(ResourceEditorSession session);
+
+/// Observes the existing content owner without acquiring another resource,
+/// controller, checkpoint or transport. Cleanup must detach its listeners.
+typedef SmartDocumentContentObserverFactory =
+    VoidCallback? Function(
+      ResourceEditorSession session,
+      SmartDocumentController controller,
+    );
 
 typedef SmartDocumentRealtimeFactory =
     Future<DocumentRealtimeSession?> Function(
@@ -31,40 +53,159 @@ final class OpenMuseSmartDocumentPlugin
         OpenMusePlugin,
         OpenMuseResourceHandlerContributor,
         OpenMuseResourceCreatorContributor,
+        OpenMuseResourceEmbedContributor,
+        OpenMuseResourceEmbedValidator,
         OpenMuseResourceContextContributor {
   OpenMuseSmartDocumentPlugin({
     DocumentCore? core,
     this.providerFactory,
     this.realtimeFactory,
     this.assetFactory,
+    this.ownerAssetFactory,
     this.draftStoreFactory,
+    this.replacementDraftStoreFactory,
     this.linkOpener,
     this.imagePicker,
+    this.networkImageReader,
     this.embedHostFactory,
+    this.headerActions,
+    this.contentObserverFactory,
     SmartDocumentStoreFactory? storeFactory,
   }) : _coreOverride = core,
        _storeFactory = storeFactory ?? _defaultStore;
   final DocumentCore? _coreOverride;
+  final SmartDocumentContentObserverFactory? contentObserverFactory;
+  final _contentObserverStops = <ResourceSessionScope, VoidCallback>{};
   DocumentCore? _core;
   final SmartDocumentProviderFactory? providerFactory;
   final SmartDocumentRealtimeFactory? realtimeFactory;
-  final Map<String, DocumentRealtimeSession> _realtime = {};
-  DocumentRealtimeSession? realtimeFor(ResourceIdentity identity) =>
-      _realtime[identity.key];
+  final Map<ResourceSessionScope, DocumentRealtimeSession> _realtime = {};
+  DocumentRealtimeSession? realtimeFor(
+    ResourceIdentity identity, {
+    ResourceVersion? snapshotVersion,
+  }) =>
+      _realtime[ResourceSessionScope(
+        identity,
+        snapshotVersion: snapshotVersion,
+      )];
   final SmartDocumentAssetFactory? assetFactory;
+  final SmartDocumentOwnerAssetFactory? ownerAssetFactory;
   final SmartDocumentStoreFactory? draftStoreFactory;
+  final SmartDocumentStoreFactory? replacementDraftStoreFactory;
   final DocumentLinkOpener? linkOpener;
   final DocumentImagePicker? imagePicker;
+  final DocumentNetworkImageReader? networkImageReader;
   final ResourceEmbedHost? Function(ResourceEditorSession)? embedHostFactory;
-  final Map<String, DocumentMediaSession> _media = {};
-  DocumentMediaSession? mediaFor(ResourceIdentity identity) =>
-      _media[identity.key];
+  final List<Widget> Function(BuildContext, ResourceEditorSession)?
+  headerActions;
+  final Map<
+    ResourceSessionScope,
+    ({ResourceSessionLifetime? lifetime, VoidCallback callback})
+  >
+  _authorityListeners = {};
+  final Map<ResourceSessionScope, DocumentMediaSession> _media = {};
+  DocumentMediaSession? mediaFor(
+    ResourceIdentity identity, {
+    ResourceVersion? snapshotVersion,
+  }) =>
+      _media[ResourceSessionScope(identity, snapshotVersion: snapshotVersion)];
   final SmartDocumentStoreFactory _storeFactory;
-  final Set<String> _open = {};
-  final Map<String, SmartDocumentController> _controllers = {};
-  SmartDocumentController? activeController(ResourceIdentity identity) =>
-      _controllers[identity.key];
-  DocumentCore get core => _core ??= _coreOverride ?? NativeDocumentCore();
+  late final _owners =
+      ResourceSessionOwners<
+        SmartDocumentController,
+        SmartDocumentResourceCheckpoint,
+        DocumentRealtimeSession?
+      >(
+        open: openController,
+        release: _releaseController,
+        objectId: (bytes) => decode(bytes)['objectId'] as String,
+        realtime: (scope) => _realtime[scope],
+        createCheckpoint: (c, session) => SmartDocumentResourceCheckpoint(
+          c,
+          session,
+          savedState: decode(session.bytes)['docState'] as String,
+          encode: _export,
+        ),
+        controllerObjectId: (c) => c.objectId,
+        controllerEditable: (c) => c.editable,
+        supportsPrivateRecovery: true,
+        prepareAuthority: (c, next) async {
+          final seed = decode(next.bytes);
+          if (seed['objectId'] != c.objectId)
+            throw const ResourceFailure('RESOURCE_CONTENT_CHANGED');
+          final ticket = await c.prepareWriteAuthority(
+            seed['docState'] as String,
+          );
+          return ResourceOwnerAuthorityPreparation(
+            active: () => ticket.isActive,
+            commit: ticket.commit,
+            cancel: ticket.cancel,
+            complete: ticket.complete,
+          );
+        },
+        prepareClose: (c) async {
+          final ticket = await c.prepareClose();
+          DocumentMediaClosePreparation? media;
+          try {
+            final scope = _controllers.entries
+                .singleWhere((e) => identical(e.value, c))
+                .key;
+            media = await _media[scope]?.prepareClose();
+            return ResourceOwnerPreparation(
+              active: () => ticket.isActive && (media?.isActive ?? true),
+              cancel: () {
+                media?.cancel();
+                ticket.cancel();
+              },
+            );
+          } on Object {
+            media?.cancel();
+            ticket.cancel();
+            rethrow;
+          }
+        },
+        authorityEnded: (c, realtime) {
+          c.invalidateAuthority();
+          if (realtime != null)
+            unawaited(realtime.close().catchError((Object _) {}));
+        },
+      );
+  Future<SmartDocumentResourceLease> acquireResourceSession(
+    ResourceEditorSession session,
+  ) => _owners.acquire(session);
+  bool hasActiveResourceOwner(ResourceSessionScope scope) =>
+      _owners.hasActiveOwner(scope);
+  final _primaryEditors = <ResourceSessionScope, Object>{};
+  bool _claimPrimary(
+    ResourceSessionScope scope,
+    SmartDocumentController c,
+    Object user,
+  ) {
+    if (c.isClosed || !c.canRead || _primaryEditors.containsKey(scope))
+      return false;
+    _primaryEditors[scope] = user;
+    c.editor.selection = null;
+    return true;
+  }
+
+  void _releasePrimary(ResourceSessionScope scope, Object user) {
+    if (identical(_primaryEditors[scope], user)) _primaryEditors.remove(scope);
+  }
+
+  final Set<ResourceSessionScope> _open = {};
+  final Map<ResourceSessionScope, SmartDocumentController> _controllers = {};
+  SmartDocumentController? activeController(
+    ResourceIdentity identity, {
+    ResourceVersion? snapshotVersion,
+  }) =>
+      _controllers[ResourceSessionScope(
+        identity,
+        snapshotVersion: snapshotVersion,
+      )];
+  DocumentCore get core =>
+      _core ??= _coreOverride ?? createPlatformDocumentCore();
+  Future<DocumentCore> _loadCore() async =>
+      _core ??= _coreOverride ?? await loadDocumentCore();
   @override
   OpenMusePluginDescriptor get descriptor => const OpenMusePluginDescriptor(
     id: 'io.openmuse.smart-document',
@@ -75,21 +216,43 @@ final class OpenMuseSmartDocumentPlugin
     permissions: {'resource.read', 'resource.create', 'resource.edit'},
   );
   @override
-  Future<void> activate(OpenMusePluginContext context) async {}
+  Future<void> activate(OpenMusePluginContext context) async {
+    _owners.activate();
+  }
+
   @override
   Future<void> deactivate() async {
+    await _owners.close();
+    for (final stop in _contentObserverStops.values.toList()) {
+      stop();
+    }
+    _contentObserverStops.clear();
+    for (final listener in _authorityListeners.values) {
+      listener.lifetime?.removeListener(listener.callback);
+    }
+    _authorityListeners.clear();
     for (final session in _realtime.values.toList()) {
       await session.close();
     }
     _realtime.clear();
-    for (final c in _controllers.values.toList()) {
-      await c.close();
+    for (final entry in _controllers.entries.toList()) {
+      DocumentMediaClosePreparation? prepared;
+      try {
+        final media = _media[entry.key];
+        if (media != null && !media.isPreparingClose)
+          prepared = await media.prepareClose();
+        await entry.value.close();
+      } on Object {
+        prepared?.cancel();
+        rethrow;
+      }
     }
     for (final m in _media.values) {
       m.dispose();
     }
     _media.clear();
     _controllers.clear();
+    _primaryEditors.clear();
     _open.clear();
   }
 
@@ -97,6 +260,7 @@ final class OpenMuseSmartDocumentPlugin
   List<ResourceHandlerSpec> get resourceHandlers => [
     ResourceHandlerSpec(
       id: 'smart-document.document',
+      supportsSharedPresentations: true,
       title: '智能文档',
       mediaTypes: const {smartDocumentMediaType},
       extensions: const {'musedoc'},
@@ -115,12 +279,61 @@ final class OpenMuseSmartDocumentPlugin
     ),
   ];
   @override
+  Set<String> get resourceEmbedSurfaces => const {'smart-document.document'};
+  @override
+  Future<void> validateResourceEmbedTarget(
+    OpenedResource opened,
+    ResourceEmbedTarget target,
+  ) async {
+    if (target.surface != 'smart-document.document' ||
+        target.selector.length != 1 ||
+        target.selector['objectId'] !=
+            decode(opened.content.bytes)['objectId']) {
+      throw const ResourceFailure('EMBED_RESOURCE_MISMATCH');
+    }
+  }
+
+  @override
+  Future<List<({String title, ResourceEmbedTarget target})>>
+  resourceEmbedTargets(OpenedResource opened, String surface) async {
+    if (!resourceEmbedSurfaces.contains(surface)) return const [];
+    final seed = decode(opened.content.bytes);
+    return [
+      (
+        title: opened.content.record.name,
+        target: ResourceEmbedTarget(
+          reference: opened.content.record.reference(
+            // Hub records the observed version even for a live resolve. Only
+            // an explicit snapshot opening selects a historical child surface.
+            pin: opened.fromSnapshot,
+          ),
+          surface: surface,
+          selector: {'objectId': seed['objectId'] as String},
+        ),
+      ),
+    ];
+  }
+
+  @override
+  Widget buildResourceEmbed(
+    BuildContext context,
+    ResourceEditorSession session,
+    ResourceEmbedTarget target,
+    ResourceEmbedPolicy policy,
+  ) => _SmartDocumentResourceView(
+    plugin: this,
+    session: session,
+    target: target,
+    policy: policy,
+  );
+  @override
   Future<ResourceSeed> createResource(
     String creatorId,
     Map<String, Object?> values,
   ) async {
     if (creatorId != 'smart-document.document')
       throw const ResourceFailure('CREATOR_UNAVAILABLE');
+    final core = await _loadCore();
     final state = core.call({'action': 'open', 'objectId': const Uuid().v4()});
     try {
       return ResourceSeed(
@@ -132,13 +345,14 @@ final class OpenMuseSmartDocumentPlugin
     }
   }
 
-  static List<int> _export(Map<String, dynamic> state) => utf8.encode(
+  static List<int> encodeSnapshot(Map<String, dynamic> state) => utf8.encode(
     jsonEncode({
       'profile': 'muse.smart-document/phase1',
       'objectId': state['objectId'],
       'docState': state['docState'],
     }),
   );
+  static List<int> _export(Map<String, dynamic> state) => encodeSnapshot(state);
   static Map<String, dynamic> decode(List<int> bytes) {
     if (bytes.length > 8 * 1024 * 1024)
       throw const ResourceFailure('CONTENT_TOO_LARGE');
@@ -158,19 +372,16 @@ final class OpenMuseSmartDocumentPlugin
   static Future<DocumentStore> _defaultStore(
     ResourceEditorSession session,
   ) async {
-    final base = await getApplicationSupportDirectory();
     final identity =
         '${session.record.identity.key}:${session.opened.fromSnapshot ? session.record.version.digest : 'live'}';
     final key = sha256.convert(utf8.encode(identity));
-    return FileDocumentStore(
-      File('${base.path}/openmuse/smart-document/$key.json'),
-    );
+    return createSmartDocumentStore('smart-document', '$key');
   }
 
   Future<SmartDocumentController> openController(
     ResourceEditorSession session,
   ) async {
-    final key = session.record.identity.key;
+    final key = session.ownershipScope;
     if (!_open.add(key)) throw const ResourceFailure('RESOURCE_ALREADY_OPEN');
     try {
       final seed = decode(session.bytes);
@@ -178,8 +389,10 @@ final class OpenMuseSmartDocumentPlugin
           ? null
           : providerFactory?.call(session.record);
       final c = await SmartDocumentController.open(
-        core: core,
-        store: await _storeFactory(session),
+        core: await _loadCore(),
+        store: session.opened.fromSnapshot
+            ? _SnapshotMemory()
+            : await _storeFactory(session),
         objectId: seed['objectId'] as String,
         initialDocState: seed['docState'] as String,
         provider: provider,
@@ -192,33 +405,40 @@ final class OpenMuseSmartDocumentPlugin
             !session.opened.fromSnapshot,
       );
       try {
-        final base = await getApplicationSupportDirectory();
         final cacheKey = sha256
             .convert(utf8.encode(session.record.identity.key))
             .toString();
         final cache = DocumentStoreAssetCache(
-          (key) => FileDocumentStore(
-            File(
-              '${base.path}/openmuse/smart-document-assets/$cacheKey/$key.json',
-            ),
-          ),
+          (key) =>
+              createSmartDocumentStore('smart-document-assets/$cacheKey', key),
         );
-        final repository = assetFactory == null
-            ? LocalAssetRepository(scope: cacheKey, cache: cache)
-            : await assetFactory!(session);
+        final repository =
+            (await ownerAssetFactory?.call(session, c)) ??
+            (await assetFactory?.call(session)) ??
+            LocalAssetRepository(scope: cacheKey, cache: cache);
         final media = DocumentMediaSession(
           picker: imagePicker,
+          networkReader: networkImageReader,
           controller: c,
           repository: repository,
-          draftStore:
-              await (draftStoreFactory?.call(session) ??
-                  Future.value(
-                    FileDocumentStore(
-                      File(
-                        '${base.path}/openmuse/smart-document-assets/$cacheKey/draft.json',
+          replacementDraftStore: await (session.opened.fromSnapshot
+              ? Future<DocumentStore>.value(_SnapshotMemory())
+              : replacementDraftStoreFactory?.call(session) ??
+                    Future.value(
+                      createSmartDocumentStore(
+                        'smart-document-assets/$cacheKey',
+                        'replacement-draft.v1',
                       ),
-                    ),
-                  )),
+                    )),
+          draftStore: await (session.opened.fromSnapshot
+              ? Future<DocumentStore>.value(_SnapshotMemory())
+              : draftStoreFactory?.call(session) ??
+                    Future.value(
+                      createSmartDocumentStore(
+                        'smart-document-assets/$cacheKey',
+                        'draft',
+                      ),
+                    )),
         );
         try {
           await media.restore();
@@ -243,12 +463,28 @@ final class OpenMuseSmartDocumentPlugin
             await realtime.start();
           }
         }
+        final stop = contentObserverFactory?.call(session, c);
+        if (stop != null) _contentObserverStops[key] = stop;
       } on Object {
+        await _realtime.remove(key)?.close();
         _media.remove(key)?.dispose();
         await c.close();
         rethrow;
       }
       _controllers[key] = c;
+      void checkAuthority() {
+        if (session.isActive) return;
+        c.invalidateAuthority();
+        final realtime = _realtime[key];
+        if (realtime != null) unawaited(realtime.close());
+      }
+
+      session.lifetime?.addListener(checkAuthority);
+      _authorityListeners[key] = (
+        lifetime: session.lifetime,
+        callback: checkAuthority,
+      );
+      checkAuthority();
       return c;
     } on Object {
       _open.remove(key);
@@ -260,12 +496,42 @@ final class OpenMuseSmartDocumentPlugin
     ResourceEditorSession session,
     SmartDocumentController c,
   ) async {
-    await _realtime[session.record.identity.key]?.close();
-    await c.close();
-    _realtime.remove(session.record.identity.key);
-    _media.remove(session.record.identity.key)?.dispose();
-    _controllers.remove(session.record.identity.key);
-    _open.remove(session.record.identity.key);
+    if (_owners.owns(session.ownershipScope))
+      throw const ResourceFailure('RESOURCE_SHARED_OWNER');
+    await _releaseController(session, c);
+  }
+
+  Future<void> _releaseController(
+    ResourceEditorSession session,
+    SmartDocumentController c, {
+    Future<void> Function()? beforeRelease,
+  }) async {
+    final key = session.ownershipScope;
+    if (!identical(_controllers[key], c))
+      throw const ResourceFailure('RESOURCE_SESSION_MISMATCH');
+    DocumentMediaClosePreparation? mediaPreparation;
+    try {
+      await c.close(
+        beforeRelease: () async {
+          final media = _media[key];
+          if (media != null && !media.isPreparingClose) {
+            mediaPreparation = await media.prepareClose();
+          }
+          await beforeRelease?.call();
+          await _realtime[key]?.close();
+        },
+      );
+    } on Object {
+      mediaPreparation?.cancel();
+      rethrow;
+    }
+    final listener = _authorityListeners.remove(key);
+    _contentObserverStops.remove(key)?.call();
+    if (listener != null) listener.lifetime?.removeListener(listener.callback);
+    _realtime.remove(key);
+    _media.remove(key)?.dispose();
+    _controllers.remove(key);
+    _open.remove(key);
   }
 
   @override
@@ -285,6 +551,7 @@ final class OpenMuseSmartDocumentPlugin
   Future<String?> resourceConversationText(ResourceContent content) async {
     if (content.record.mediaType != smartDocumentMediaType) return null;
     final seed = decode(content.bytes);
+    final core = await _loadCore();
     final state = core.call({
       'action': 'open',
       'objectId': seed['objectId'],
@@ -334,9 +601,13 @@ final class _SmartDocumentResourceView extends StatefulWidget {
   const _SmartDocumentResourceView({
     required this.plugin,
     required this.session,
+    this.target,
+    this.policy,
   });
   final OpenMuseSmartDocumentPlugin plugin;
   final ResourceEditorSession session;
+  final ResourceEmbedTarget? target;
+  final ResourceEmbedPolicy? policy;
   @override
   State<_SmartDocumentResourceView> createState() =>
       _SmartDocumentResourceViewState();
@@ -346,82 +617,208 @@ final class _SmartDocumentResourceViewState
     extends State<_SmartDocumentResourceView> {
   SmartDocumentController? controller;
   Object? failure;
-  Timer? timer;
-  Future<void>? saving;
-  String? savedState;
+  SmartDocumentResourceLease? lease;
+  SmartDocumentResourceCheckpoint? checkpoint;
+  SmartDocumentPresentation? presentation;
+  bool usesPrimary = false;
+  DocumentSelectionBookmark? _selectionBookmark;
+  Listenable? _selectionChanges;
+  Future<void>? _restoringPlacement;
+  late final Future<void> Function() _placementCallback = _restorePlacement;
+
+  bool _focusWithinView() {
+    var inside = false;
+    final focusContext = FocusManager.instance.primaryFocus?.context;
+    if (identical(focusContext, context)) return true;
+    focusContext?.visitAncestorElements((element) {
+      if (identical(element, context)) {
+        inside = true;
+        return false;
+      }
+      return true;
+    });
+    return inside;
+  }
+
+  void _rememberSelection() {
+    final owner = controller;
+    if (!mounted || owner == null || !owner.canRead) {
+      _selectionBookmark = null;
+      return;
+    }
+    final editor = presentation?.editor ?? owner.editor;
+    if (editor.selection != null) {
+      if (owner.editorProjectionCurrent(editor)) {
+        _selectionBookmark = owner.captureSelectionBookmark(
+          presentation: presentation,
+        );
+      }
+    } else {
+      // Escape or a deliberate deselection while still inside this editor
+      // clears the bookmark. Blur into Host chrome retains the last position.
+      if (_focusWithinView()) _selectionBookmark = null;
+    }
+  }
+
+  Future<void> _restorePlacement() => _restoringPlacement ??=
+      _restoreLocalPlacement().whenComplete(() => _restoringPlacement = null);
+
+  Future<void> _restoreLocalPlacement() async {
+    final owner = controller;
+    if (!mounted ||
+        owner == null ||
+        _selectionBookmark == null ||
+        !widget.session.isPresentationActive)
+      return;
+    await owner.projectionReady;
+    if (!mounted ||
+        !identical(controller, owner) ||
+        !widget.session.isPresentationActive ||
+        !owner.canRead)
+      return;
+    // A new selection or explicit deselection can arrive while projection is
+    // pending. Never restore the bookmark captured before that newer intent.
+    final bookmark = _selectionBookmark;
+    if (bookmark == null) return;
+    final editor = presentation?.editor ?? owner.editor;
+    if (editor.selection == null)
+      owner.restoreSelectionBookmark(bookmark, presentation: presentation);
+  }
+
   @override
   void initState() {
     super.initState();
+    widget.session.addListener(_displayChanged);
     unawaited(_start());
+  }
+
+  void _displayChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didUpdateWidget(_SmartDocumentResourceView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.session, widget.session)) {
+      oldWidget.session.removeListener(_displayChanged);
+      widget.session.addListener(_displayChanged);
+    }
+    presentation?.setEditingPolicy(widget.policy?.allowEditing ?? true);
   }
 
   Future<void> _start() async {
     try {
-      final c = await widget.plugin.openController(widget.session);
-      if (!mounted) {
-        await widget.plugin.release(widget.session, c);
+      if (!mounted) return;
+      if (!widget.session.isPresentationActive) {
+        throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
+      }
+      final target = widget.target;
+      if (target != null) {
+        await widget.plugin.validateResourceEmbedTarget(
+          widget.session.opened,
+          target,
+        );
+      }
+      if (!mounted) return;
+      if (!widget.session.isPresentationActive) {
+        throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
+      }
+      final acquired = await widget.plugin.acquireResourceSession(
+        widget.session,
+      );
+      if (target != null &&
+          (target.surface != 'smart-document.document' ||
+              target.selector.length != 1 ||
+              target.selector['objectId'] != acquired.controller.objectId)) {
+        await acquired.close();
+        throw const ResourceFailure('EMBED_RESOURCE_MISMATCH');
+      }
+      if (!mounted ||
+          acquired.isClosed ||
+          !widget.session.isPresentationActive) {
+        await acquired.close();
+        if (mounted) throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
         return;
       }
-      controller = c;
-      savedState =
-          OpenMuseSmartDocumentPlugin.decode(widget.session.bytes)['docState']
-              as String;
-      if (widget.session.allowEditing && !widget.session.opened.fromSnapshot)
-        widget.session.enterEditing();
-      widget.session.flushPendingChanges = _flush;
-      c.addListener(_changed);
-      widget.session.reportOpened();
+      lease = acquired;
+      controller = acquired.controller;
+      usesPrimary =
+          widget.target == null &&
+          acquired.allowEditing &&
+          controller!.editable &&
+          widget.plugin._claimPrimary(
+            widget.session.ownershipScope,
+            controller!,
+            this,
+          );
+      if (!usesPrimary) {
+        presentation = controller!.openPresentation(
+          allowEditing: acquired.allowEditing,
+        );
+        presentation!.setEditingPolicy(widget.policy?.allowEditing ?? true);
+      }
+      _selectionChanges =
+          (presentation?.editor ?? controller!.editor).selectionNotifier;
+      _selectionChanges!.addListener(_rememberSelection);
+      widget.session.onPlacementRestored = _placementCallback;
+      _rememberSelection();
+      checkpoint = acquired.checkpoint..addListener(_changed);
       setState(() {});
-      _changed();
-    } on Object catch (error) {
+    } on Object catch (error, stack) {
+      assert(() {
+        debugPrint('SmartDocument open failed: ${error.runtimeType}'
+          '${error is SmartDocumentFailure ? ' ${error.code}' : ''}'
+          '${error is RangeError ? ' $error' : ''}');
+        debugPrintStack(stackTrace: stack, maxFrames: 12);
+        return true;
+      }());
+      if (usesPrimary)
+        widget.plugin._releasePrimary(widget.session.ownershipScope, this);
+      usesPrimary = false;
+      controller = null;
       if (mounted) setState(() => failure = error);
     }
   }
 
   void _changed() {
-    final c = controller;
-    if (c == null || !widget.session.editing) return;
-    if (c.contentFailure != null) {
-      widget.session.markDirty(true);
-      return;
-    }
-    if (c.snapshot['docState'] == savedState) return;
-    widget.session.markDirty(true);
-    timer?.cancel();
-    timer = Timer(const Duration(milliseconds: 250), () async {
-      try {
-        await _flush();
-      } on Object catch (e) {
-        if (mounted) setState(() => failure = e);
-      }
-    });
+    if (controller?.canRead != true) _selectionBookmark = null;
+    if (mounted) setState(() => failure = checkpoint?.failure);
   }
 
-  Future<void> _flush() => saving ??= (() async {
-    final c = controller;
-    if (c == null || !widget.session.editing) return;
-    await c.flush();
-    final state = c.snapshot;
-    if (state['docState'] == savedState) {
-      widget.session.markDirty(false);
-      return;
+  Future<void> _flush() => lease?.flush() ?? Future.value();
+
+  Future<bool> _openLink(Uri target) async {
+    final custom = widget.plugin.linkOpener;
+    if (custom != null) return custom(target);
+    if (target.scheme == 'openmuse-resource') {
+      // Use the shared SDK parser and current Host router. No provider or
+      // account credential is passed through the document's href mark.
+      final reference = ResourceReference.fromUri(target.toString());
+      final routing = ResourceLinkRouting.maybeOf(context);
+      if (routing == null) return false;
+      await routing.open(reference.toUri().toString());
+      return true;
     }
-    await widget.session.commit(OpenMuseSmartDocumentPlugin._export(state));
-    savedState = state['docState'] as String;
-    if (c.snapshot['docState'] != savedState) {
-      widget.session.markDirty(true);
-      _changed();
-    }
-  })().whenComplete(() => saving = null);
+    return openDocumentLink(controller!, target.toString());
+  }
+
   @override
   void dispose() {
-    timer?.cancel();
-    widget.session.flushPendingChanges = null;
-    final c = controller;
-    if (c != null) {
-      c.removeListener(_changed);
-      unawaited(widget.plugin.release(widget.session, c));
-    }
+    widget.session.removeListener(_displayChanged);
+    _selectionChanges?.removeListener(_rememberSelection);
+    _selectionBookmark = null;
+    if (identical(widget.session.onPlacementRestored, _placementCallback))
+      widget.session.onPlacementRestored = null;
+    checkpoint?.removeListener(_changed);
+    final acquired = lease;
+    if (usesPrimary)
+      widget.plugin._releasePrimary(widget.session.ownershipScope, this);
+    final projection = presentation;
+    if (acquired != null)
+      unawaited(() async {
+        await projection?.close();
+        await acquired.close();
+      }());
     super.dispose();
   }
 
@@ -453,16 +850,30 @@ final class _SmartDocumentResourceViewState
         Expanded(
           child: SmartDocumentView(
             controller: controller!,
+            presentation: presentation,
             title: widget.session.record.name,
-            media: widget.plugin.mediaFor(widget.session.record.identity),
-            realtime: widget.plugin.realtimeFor(widget.session.record.identity),
-            linkOpener: widget.plugin.linkOpener,
+            headerActions:
+                widget.plugin.headerActions?.call(context, widget.session) ??
+                const [],
+            media: widget.plugin._media[widget.session.ownershipScope],
+            realtime: widget.plugin._realtime[widget.session.ownershipScope],
+            linkOpener: _openLink,
             embeds: widget.session.opened.fromSnapshot
                 ? null
-                : widget.plugin.embedHostFactory?.call(widget.session),
+                : widget.plugin.embedHostFactory?.call(widget.session) ??
+                      ResourceEmbedScope.of(context),
           ),
         ),
       ],
     );
   }
+}
+
+/// Historical previews never consult or overwrite a mutable recovery checkpoint.
+final class _SnapshotMemory implements DocumentStore {
+  Map<String, dynamic>? _value;
+  @override
+  Future<Map<String, dynamic>?> read() async => _value;
+  @override
+  Future<void> write(Map<String, dynamic> value) async => _value = value;
 }

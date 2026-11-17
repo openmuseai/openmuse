@@ -1,5 +1,7 @@
 library;
 
+import 'package:openmuse_smart_document_plugins/openmuse_smart_document_plugins.dart';
+
 import 'package:openmuse_client_plugins/openmuse_client_plugins.dart';
 
 import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
@@ -12,13 +14,16 @@ import 'package:openmuse_plugin_market/openmuse_plugin_market.dart';
 import 'package:flutter/widgets.dart';
 
 export 'src/demo_workspace.dart';
+export 'package:openmuse_smart_document_plugins/openmuse_smart_document_plugins.dart' show AppFlowyDocumentWorkspace;
 
 List<OpenMusePlugin> createOpenMuseBuiltInPlugins({
   DshSidecarSupervisor? dshSupervisor,
   Future<bool> Function(PluginInteraction)? routeInteraction,
   Widget? Function(String pluginId)? nativeMcpEditorBuilder,
+  AppFlowyDocumentWorkspace? cloudDocuments,
 }) => [
   ...createOpenMuseClientPlugins(),
+  ...createNativeSmartDocumentPlugins(cloudDocuments: cloudDocuments),
   OpenMuseHelixPlugin(),
   OpenMuseCliPlugin(),
   OpenMusePluginMarket(nativeEditorBuilder: nativeMcpEditorBuilder),

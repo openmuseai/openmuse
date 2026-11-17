@@ -7,7 +7,9 @@ import 'package:openmuse_dataset/openmuse_dataset.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:uuid/uuid.dart';
 import 'src/resource_checkpoint.dart';
+import 'src/shared_sessions.dart';
 export 'src/resource_checkpoint.dart';
+export 'src/shared_sessions.dart' show DatasetResourceLease;
 
 const datasetMediaType = 'application/vnd.openmuse.dataset+json';
 typedef DatasetStoreFactory =
@@ -27,23 +29,79 @@ final class OpenMuseDatasetPlugin
         OpenMusePlugin,
         OpenMuseResourceHandlerContributor,
         OpenMuseResourceCreatorContributor,
-        OpenMuseResourceContextContributor {
+        OpenMuseResourceContextContributor,
+        OpenMuseResourceEmbedContributor,
+        OpenMuseResourceEmbedValidator {
   OpenMuseDatasetPlugin({
     required this.core,
     required this.storeFactory,
     this.collaborationFactory,
     this.realtimeFactory,
+    this.viewIdFor,
+    this.headerActions,
+    this.allowRowCreationFor,
+    this.rowCreationFor,
+    this.linkOpener,
+    this.ownerAssetFactory,
+    this.recordDocumentFactory,
   });
+  final DatasetRecordDocumentPort? Function(
+    ResourceEditorSession,
+    DatasetController,
+  )?
+  recordDocumentFactory;
   final DatasetCore core;
   final DatasetStoreFactory storeFactory;
   final DatasetCollaborationFactory? collaborationFactory;
   final DatasetRealtimeFactory? realtimeFactory;
-  final Map<String, DatasetRealtimeSession> _realtime = {};
-  DatasetRealtimeSession? realtimeFor(ResourceIdentity id) => _realtime[id.key];
-  final Map<String, DatasetController> _controllers = {};
-  final Set<String> _opening = {};
-  DatasetController? activeController(ResourceIdentity id) =>
-      _controllers[id.key];
+  final String? Function(ResourceRecord)? viewIdFor;
+  final List<Widget> Function(BuildContext, ResourceEditorSession)?
+  headerActions;
+  final bool Function(ResourceRecord)? allowRowCreationFor;
+  final DatasetRowCreationPort? Function(ResourceRecord)? rowCreationFor;
+  final DatasetLinkOpener? linkOpener;
+  final Future<DatasetAssetSource?> Function(
+    ResourceEditorSession,
+    DatasetController,
+  )?
+  ownerAssetFactory;
+  final Map<ResourceSessionScope, DatasetAssetSource> _assets = {};
+  late final _owners = DatasetSessionOwners(
+    open: openController,
+    release: _releaseController,
+    objectId: (bytes) => decode(bytes)['objectId'] as String,
+    realtime: (scope) => _realtime[scope],
+    prepareAuthority: (c, next) async {
+      final seed = decode(next.bytes);
+      if (seed['objectId'] != c.objectId)
+        throw const ResourceFailure('RESOURCE_CONTENT_CHANGED');
+      final ticket = await c.prepareWriteAuthority(
+        seed,
+        rowCreation: rowCreationFor?.call(next.record),
+      );
+      return ResourceOwnerAuthorityPreparation(
+        active: () => ticket.isActive,
+        commit: ticket.commit,
+        cancel: ticket.cancel,
+        complete: ticket.complete,
+      );
+    },
+  );
+  Future<DatasetResourceLease> acquireResourceSession(
+    ResourceEditorSession session,
+  ) => _owners.acquire(session);
+  final Map<ResourceSessionScope, DatasetRealtimeSession> _realtime = {};
+  DatasetRealtimeSession? realtimeFor(
+    ResourceIdentity id, {
+    ResourceVersion? snapshotVersion,
+  }) => _realtime[ResourceSessionScope(id, snapshotVersion: snapshotVersion)];
+  final Map<ResourceSessionScope, DatasetController> _controllers = {};
+  final Set<ResourceSessionScope> _opening = {};
+  DatasetController? activeController(
+    ResourceIdentity id, {
+    ResourceVersion? snapshotVersion,
+  }) =>
+      _controllers[ResourceSessionScope(id, snapshotVersion: snapshotVersion)];
   @override
   OpenMusePluginDescriptor get descriptor => const OpenMusePluginDescriptor(
     id: 'io.openmuse.dataset',
@@ -54,9 +112,13 @@ final class OpenMuseDatasetPlugin
     permissions: {'resource.read', 'resource.create', 'resource.edit'},
   );
   @override
-  Future<void> activate(OpenMusePluginContext context) async {}
+  Future<void> activate(OpenMusePluginContext context) async {
+    _owners.activate();
+  }
+
   @override
   Future<void> deactivate() async {
+    await _owners.close();
     for (final rt in _realtime.values.toList()) {
       await rt.close();
     }
@@ -75,6 +137,7 @@ final class OpenMuseDatasetPlugin
       mediaTypes: const {datasetMediaType},
       extensions: const {'musedataset'},
       editable: true,
+      supportsSharedPresentations: true,
       priority: 40,
     ),
   ];
@@ -127,7 +190,7 @@ final class OpenMuseDatasetPlugin
   Future<DatasetController> openController(
     ResourceEditorSession session,
   ) async {
-    final key = session.record.identity.key;
+    final key = session.ownershipScope;
     if (_controllers.containsKey(key) || !_opening.add(key))
       throw const ResourceFailure('RESOURCE_ALREADY_OPEN');
     try {
@@ -144,8 +207,13 @@ final class OpenMuseDatasetPlugin
         providerFactory: factory,
         editable: session.allowEditing && !historical,
         createRemote: factory != null && session.allowEditing && !historical,
+        rowCreation: historical ? null : rowCreationFor?.call(session.record),
       );
       try {
+        if (!historical && ownerAssetFactory != null) {
+          final source = await ownerAssetFactory!(session, c);
+          if (source != null) _assets[key] = source;
+        }
         if (!historical && realtimeFactory != null) {
           final realtime = await realtimeFactory!(session, c);
           if (realtime != null) {
@@ -158,6 +226,7 @@ final class OpenMuseDatasetPlugin
           }
         }
       } on Object {
+        _assets.remove(key)?.close();
         await _realtime.remove(key)?.close();
         await c.close();
         rethrow;
@@ -173,10 +242,28 @@ final class OpenMuseDatasetPlugin
     ResourceEditorSession session,
     DatasetController c,
   ) async {
-    await _realtime[session.record.identity.key]?.close();
-    await c.close();
-    _realtime.remove(session.record.identity.key);
-    _controllers.remove(session.record.identity.key);
+    if (_owners.owns(session.ownershipScope))
+      throw const ResourceFailure('RESOURCE_SHARED_OWNER');
+    await _releaseController(session, c);
+  }
+
+  Future<void> _releaseController(
+    ResourceEditorSession session,
+    DatasetController c, {
+    Future<void> Function()? beforeRelease,
+  }) async {
+    final key = session.ownershipScope;
+    if (!identical(_controllers[key], c))
+      throw const ResourceFailure('RESOURCE_SESSION_MISMATCH');
+    await c.close(
+      beforeRelease: () async {
+        await beforeRelease?.call();
+        await _realtime[key]?.close();
+      },
+    );
+    _assets.remove(key)?.close();
+    _realtime.remove(key);
+    _controllers.remove(key);
   }
 
   /// The Host resolves/authorizes the child first. This method receives the same
@@ -185,22 +272,18 @@ final class OpenMuseDatasetPlugin
   Future<DatasetEmbedSession> openEmbeddedSession(
     ResourceEditorSession session,
   ) async {
-    final c = await openController(session);
-    final checkpoint = DatasetResourceCheckpoint(c, session);
+    final lease = await acquireResourceSession(session);
+    final checkpoint = lease.checkpoint;
     return DatasetEmbedSession(
-      realtime: realtimeFor(session.record.identity),
+      assets: _assets[session.ownershipScope],
+      realtime: lease.realtime,
+      allowEditing: lease.allowEditing,
       checkpointStatus: checkpoint,
       checkpointFailure: () => checkpoint.failure,
-      flushCheckpoint: checkpoint.flush,
-      controller: c,
+      flushCheckpoint: lease.flush,
+      controller: lease.controller,
       title: session.record.name,
-      close: () async {
-        await checkpoint.flush();
-        if (!await session.prepareToClose())
-          throw const ResourceFailure('UNSAVED_CHANGES');
-        await release(session, c);
-        checkpoint.dispose();
-      },
+      close: lease.close,
     );
   }
 
@@ -217,6 +300,78 @@ final class OpenMuseDatasetPlugin
     String handlerId,
     ResourceEditorSession session,
   ) => _DatasetResourceView(plugin: this, session: session);
+  @override
+  Set<String> get resourceEmbedSurfaces => const {'dataset.grid'};
+  @override
+  Future<void> validateResourceEmbedTarget(
+    OpenedResource opened,
+    ResourceEmbedTarget target,
+  ) async {
+    if (target.surface != 'dataset.grid' ||
+        target.selector.length != 2 ||
+        target.selector['objectId'] !=
+            decode(opened.content.bytes)['objectId']) {
+      throw const ResourceFailure('EMBED_RESOURCE_MISMATCH');
+    }
+    final targets = await resourceEmbedTargets(opened, target.surface);
+    if (!targets.any(
+      (candidate) =>
+          candidate.target.selector['viewId'] == target.selector['viewId'],
+    )) {
+      throw const ResourceFailure('EMBED_RESOURCE_MISMATCH');
+    }
+  }
+
+  @override
+  Future<List<({String title, ResourceEmbedTarget target})>>
+  resourceEmbedTargets(OpenedResource opened, String surface) async {
+    if (!resourceEmbedSurfaces.contains(surface))
+      throw const ResourceFailure('EMBED_UNAVAILABLE');
+    final bundle = decode(opened.content.bytes);
+    final state = core.call({
+      'action': 'open',
+      'objectId': bundle['objectId'],
+      'bundle': bundle,
+    });
+    try {
+      return [
+        for (final view in (state['views'] as List).whereType<Map>())
+          if (DatasetViewProjection.fromJson(view).supportedLayout)
+            (
+              title: view['name'] as String? ?? '表格',
+              target: ResourceEmbedTarget(
+                reference: ResourceReference(
+                  identity: opened.content.record.identity,
+                  version: opened.fromSnapshot
+                      ? opened.content.record.version
+                      : null,
+                ),
+                surface: surface,
+                selector: {
+                  'objectId': bundle['objectId'] as String,
+                  'viewId': view['id'] as String,
+                },
+              ),
+            ),
+      ];
+    } finally {
+      core.call({'action': 'close', 'handle': state['handle']});
+    }
+  }
+
+  @override
+  Widget buildResourceEmbed(
+    BuildContext context,
+    ResourceEditorSession session,
+    ResourceEmbedTarget target,
+    ResourceEmbedPolicy policy,
+  ) => _DatasetResourceView(
+    plugin: this,
+    session: session,
+    target: target,
+    policy: policy,
+  );
+
   @override
   Future<String?> resourceConversationText(ResourceContent content) async {
     if (content.record.mediaType != datasetMediaType) return null;
@@ -266,17 +421,29 @@ final class _SnapshotMemory implements SnapshotStore {
 }
 
 class _DatasetResourceView extends StatefulWidget {
-  const _DatasetResourceView({required this.plugin, required this.session});
+  const _DatasetResourceView({
+    required this.plugin,
+    required this.session,
+    this.target,
+    this.policy,
+  });
   final OpenMuseDatasetPlugin plugin;
   final ResourceEditorSession session;
+  final ResourceEmbedTarget? target;
+  final ResourceEmbedPolicy? policy;
   @override
   State<_DatasetResourceView> createState() => _DatasetResourceViewState();
 }
 
 class _DatasetResourceViewState extends State<_DatasetResourceView> {
+  DatasetResourceLease? lease;
   DatasetController? c;
   DatasetResourceCheckpoint? checkpoint;
+  String? resourceViewId;
+  DatasetRecordDocumentPort? recordDocuments;
   Object? failure;
+  bool get _canUseResourcePorts =>
+      widget.session.isPresentationActive && c?.canRead == true;
   @override
   void initState() {
     super.initState();
@@ -285,14 +452,55 @@ class _DatasetResourceViewState extends State<_DatasetResourceView> {
 
   Future<void> _start() async {
     try {
-      final controller = await widget.plugin.openController(widget.session);
-      if (!mounted) {
-        await widget.plugin.release(widget.session, controller);
+      if (!mounted) return;
+      if (!widget.session.isPresentationActive) {
+        throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
+      }
+      final target = widget.target;
+      if (target != null) {
+        await widget.plugin.validateResourceEmbedTarget(
+          widget.session.opened,
+          target,
+        );
+      }
+      if (!mounted) return;
+      if (!widget.session.isPresentationActive) {
+        throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
+      }
+      final selectedViewId =
+          widget.target?.selector['viewId'] ??
+          widget.plugin.viewIdFor?.call(widget.session.record);
+      final acquired = await widget.plugin.acquireResourceSession(
+        widget.session,
+      );
+      if (!widget.session.opened.fromSnapshot &&
+          (widget.policy?.allowLive ?? true)) {
+        recordDocuments = widget.plugin.recordDocumentFactory?.call(
+          widget.session,
+          acquired.controller,
+        );
+      }
+      if (target != null &&
+          (target.surface != 'dataset.grid' ||
+              target.selector.length != 2 ||
+              target.selector['objectId'] != acquired.controller.objectId ||
+              !acquired.controller.views.any(
+                (v) => v.id == target.selector['viewId'] && v.supportedLayout,
+              ))) {
+        await acquired.close();
+        throw const ResourceFailure('EMBED_RESOURCE_MISMATCH');
+      }
+      if (!mounted ||
+          acquired.isClosed ||
+          !widget.session.isPresentationActive) {
+        await acquired.close();
+        if (mounted) throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
         return;
       }
-      c = controller;
-      checkpoint = DatasetResourceCheckpoint(controller, widget.session)
-        ..addListener(_changed);
+      lease = acquired;
+      c = acquired.controller;
+      resourceViewId = selectedViewId;
+      checkpoint = acquired.checkpoint..addListener(_changed);
       setState(() {});
     } on Object catch (e) {
       if (mounted) setState(() => failure = e);
@@ -303,16 +511,26 @@ class _DatasetResourceViewState extends State<_DatasetResourceView> {
     if (mounted) setState(() {});
   }
 
+  Future<bool> _openLink(Uri target) async {
+    if (!mounted || !_canUseResourcePorts || c?.isClosed != false) return false;
+    if (target.scheme == 'openmuse-resource') {
+      final reference = ResourceReference.fromUri(target.toString());
+      final routing = ResourceLinkRouting.maybeOf(context);
+      if (routing == null) return false;
+      await routing.open(reference.toUri().toString());
+      return true;
+    }
+    return widget.plugin.linkOpener?.call(target) ?? false;
+  }
+
   @override
   void dispose() {
-    final adapter = checkpoint, controller = c;
+    final adapter = checkpoint, acquired = lease;
     adapter?.removeListener(_changed);
-    if (controller != null)
+    if (acquired != null)
       unawaited(
         (() async {
-          await adapter?.flush();
-          await widget.plugin.release(widget.session, controller);
-          adapter?.dispose();
+          await acquired.close();
         })().catchError((Object e, StackTrace s) {
           FlutterError.reportError(
             FlutterErrorDetails(
@@ -342,7 +560,7 @@ class _DatasetResourceViewState extends State<_DatasetResourceView> {
                   TextButton(
                     onPressed: () async {
                       try {
-                        await checkpoint!.flush();
+                        await lease!.flush();
                         if (mounted) setState(() {});
                       } on Object {}
                     },
@@ -351,11 +569,49 @@ class _DatasetResourceViewState extends State<_DatasetResourceView> {
                 ],
               ),
             Expanded(
-              child: DatasetSurface(
-                controller: c!,
-                title: widget.session.record.name,
-                realtime: widget.plugin.realtimeFor(
-                  widget.session.record.identity,
+              child: DatasetRecordDocumentScope(
+                port: recordDocuments,
+                child: DatasetAssetScope(
+                  source: widget.plugin._assets[widget.session.ownershipScope],
+                  child: DatasetSurface(
+                    allowRecordNavigation: !widget.session.opened.fromSnapshot,
+                    controller: c!,
+                    title: widget.session.record.name,
+                    linkCapabilities: DatasetLinkCapabilities(
+                      open: _openLink,
+                      isActive: () => mounted && _canUseResourcePorts,
+                      isEditable: () =>
+                          widget.session.allowEditing &&
+                          !widget.session.opened.fromSnapshot &&
+                          (widget.policy?.allowEditing ?? true),
+                      changes: Listenable.merge([
+                        widget.session,
+                        if (widget.session.lifetime != null)
+                          widget.session.lifetime!,
+                      ]),
+                    ),
+                    realtime: _canUseResourcePorts ? lease?.realtime : null,
+                    headerActions: !_canUseResourcePorts
+                        ? const []
+                        : widget.plugin.headerActions?.call(
+                                context,
+                                widget.session,
+                              ) ??
+                              const [],
+                    allowRowCreation:
+                        _canUseResourcePorts &&
+                        (widget.plugin.allowRowCreationFor?.call(
+                              widget.session.record,
+                            ) ??
+                            true),
+                    embedded: widget.target != null,
+                    viewId: resourceViewId,
+                    allowEditing:
+                        widget.session.isPresentationActive &&
+                        widget.session.allowEditing &&
+                        !widget.session.opened.fromSnapshot &&
+                        (widget.policy?.allowEditing ?? true),
+                  ),
                 ),
               ),
             ),
