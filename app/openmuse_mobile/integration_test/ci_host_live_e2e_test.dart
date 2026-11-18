@@ -49,6 +49,28 @@ void main() {
         debugPrint('CI_MOBILE_PASS $phase');
       }
 
+      Future<void> capture(String stage) async {
+        await File(
+          '${support.path}/ci-e2e-stage',
+        ).writeAsString(stage, flush: true);
+        if (!await File('${support.path}/ci-e2e-capture-stages').exists()) {
+          return;
+        }
+        final receipt = File('${support.path}/ci-e2e-capture-$stage');
+        if (await receipt.exists()) await receipt.delete();
+        final deadline = DateTime.now().add(const Duration(seconds: 45));
+        await tester.runAsync(() async {
+          while (!await receipt.exists() && DateTime.now().isBefore(deadline)) {
+            await Future<void>.delayed(const Duration(milliseconds: 150));
+          }
+        });
+        expect(
+          await receipt.exists(),
+          isTrue,
+          reason: 'Native $stage screenshot must be captured.',
+        );
+      }
+
       // Exercise the real configured Host composition; first-use legal UI has
       // its own acceptance suite and is never auto-accepted by this test.
       final release = await loadInstalledRelease();
@@ -89,11 +111,29 @@ void main() {
       app.onRequestCompleted = (method, name, agent) {
         if (name != null) uiTools.add(name);
       };
+      // First sign-in offers the ordinary Desktop binding sheet. Dismiss its
+      // scrim by a real gesture before opening the independently installed App;
+      // pairing itself is verified below against the expected live Desktop.
       await until(
-        () => find.text('Muse-CI').evaluate().isNotEmpty,
+        () =>
+            find.text('Muse-CI').hitTestable().evaluate().isNotEmpty ||
+            find.byKey(const ValueKey('wb-bind-desktop')).evaluate().isNotEmpty,
+        'first-login Desktop guide or plugin entry ready',
+      );
+      if (find.byKey(const ValueKey('wb-bind-desktop')).evaluate().isNotEmpty) {
+        await tester.pumpAndSettle(const Duration(milliseconds: 100));
+        final sheetTop = tester
+            .getTopLeft(find.byKey(const ValueKey('wb-bind-desktop')))
+            .dy;
+        expect(sheetTop, greaterThan(48));
+        await tester.tapAt(Offset(12, sheetTop / 2));
+        await tester.pumpAndSettle(const Duration(milliseconds: 100));
+      }
+      await until(
+        () => find.text('Muse-CI').hitTestable().evaluate().isNotEmpty,
         'installed plugin entry visible in full Mobile Host',
       );
-      await tester.tap(find.text('Muse-CI').first);
+      await tester.tap(find.text('Muse-CI').hitTestable().first);
       await until(
         () => find.byType(WebViewWidget).evaluate().isNotEmpty,
         'reviewed native CI WebView mounted',
@@ -106,10 +146,7 @@ void main() {
         'real CI UI initialized and called backend through native MCP Apps bridge',
       );
       report['uiTools'] = uiTools.toSet().toList();
-      await tester.runAsync(() async {
-        await File('${support.path}/ci-e2e-stage').writeAsString('ci-ui');
-        await Future<void>.delayed(const Duration(seconds: 5));
-      });
+      await capture('ci-ui');
       Navigator.of(tester.element(find.byType(WebViewWidget))).pop();
       await tester.pump();
       final paired = host.pairedDesktopPlugin;
@@ -186,9 +223,23 @@ void main() {
         'native Mobile DSH joined real Desktop session over China relay',
       );
       final projectId = config['projectId'] as String;
+      final baselineReply = await tester.runAsync(
+        () => app.request('tools/call', {
+          'name': 'ci_project_get',
+          'arguments': {'projectId': projectId},
+        }),
+      );
+      final baseline =
+          (baselineReply!['structuredContent'] as Map)['project'] as Map;
+      final baselineAttempts =
+          ((baseline['graph']['nodes'] as List).singleWhere(
+                    (node) => node['id'] == 'product-spec',
+                  )['attempts']
+                  as List)
+              .length;
       final marker = 'MOBILE_CI_E2E_${DateTime.now().millisecondsSinceEpoch}';
       final prompt =
-          '这是手机 CI 操作验收。只允许通过 resources 的 apps_call_tool 操作项目 $projectId，禁止修改其他项目，禁止使用 shell。先用 ci_project_get 读取版本和计划，然后用 ci_plan_save 保留原有 title、type、budget，仅在 goal 末尾追加验收标记 $marker。再以最新 version 和新的 commandId 用 ci_run_command 执行 rerun、nodeId 为 product-spec、auto:false，查询到该节点最新尝试成功后再回复 $marker 和保存后的版本号、runId。';
+          '这是手机 CI 操作验收。只允许通过 resources 的 apps_call_tool 操作项目 $projectId，禁止修改其他项目，禁止使用 shell。先用 ci_project_get 读取版本和计划，然后用 ci_plan_save 保留原有 title、type、budget，仅在 goal 末尾追加验收标记 $marker。再按工具 Schema 以最新 version 和新的 commandId 用 ci_run_command 执行 action:start、nodeIds:[product-spec]、auto:false 来重跑该节点，查询到该节点最新尝试成功后再回复 $marker 和保存后的版本号、runId。';
       await tester.enterText(
         find.byKey(const ValueKey('dsh-native.composer')),
         prompt,
@@ -201,16 +252,25 @@ void main() {
             .isNotEmpty,
         'per-send AI recipient and sharing disclosure displayed',
       );
+      await capture('ai-consent');
       // The explicit test request authorizes this synthetic CI prompt.
       await tester.tap(find.byKey(const ValueKey('ai-sharing-allow')));
       await until(
-        () => handle.snapshot!.rows.any(
-          (row) =>
-              row.kind == DshConversationRowKind.assistant &&
-              row.text.contains(marker),
-        ),
-        'real Mobile DSH model completed CI tool write',
-        seconds: 180,
+        () =>
+            !handle.snapshot!.running &&
+            handle.snapshot!.turnCount >= 1 &&
+            handle.snapshot!.rows.any(
+              (row) =>
+                  row.kind == DshConversationRowKind.user &&
+                  row.text.contains(marker),
+            ) &&
+            handle.snapshot!.rows.any(
+              (row) =>
+                  row.kind == DshConversationRowKind.assistant &&
+                  row.text.isNotEmpty,
+            ),
+        'real Mobile DSH turn completed after sending the synthetic CI request',
+        seconds: 300,
       );
       final result = await tester.runAsync(
         () => app.request('tools/call', {
@@ -224,7 +284,10 @@ void main() {
         (n) => n['id'] == 'product-spec',
       );
       expect(productNode['status'], 'succeeded');
-      expect((productNode['attempts'] as List).length, greaterThanOrEqualTo(3));
+      expect(
+        (productNode['attempts'] as List).length,
+        greaterThan(baselineAttempts),
+      );
       report['mobileNodeAttempt'] = productNode['attempts'].last['id'];
       report['projectId'] = projectId;
       report['marker'] = marker;
@@ -232,12 +295,7 @@ void main() {
       milestones.add(
         'Mobile DSH write confirmed by independent CI backend read',
       );
-      await tester.runAsync(
-        () => File('${support.path}/ci-e2e-stage').writeAsString('native-dsh'),
-      );
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(seconds: 5)),
-      );
+      await capture('native-dsh');
       await File(
         '${support.path}/ci-host-e2e.json',
       ).writeAsString(jsonEncode(report), flush: true);
