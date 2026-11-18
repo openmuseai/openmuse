@@ -4,6 +4,42 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_host/src/host/resource_agent_broker.dart';
 
 void main() {
+  test('installed Apps do not authorize inactive documents', () async {
+    final broker = ResourceAgentBroker();
+    var appCalls = 0;
+    broker.appToolCall = (name, args) async {
+      appCalls++;
+      return {
+        'content': [
+          {'type': 'text', 'text': name},
+        ],
+      };
+    };
+    final tools = await broker.dispatch('tools/list', {});
+    expect(
+      (tools['tools'] as List).any((t) => t['name'] == 'apps_list'),
+      isTrue,
+    );
+    final result = await broker.dispatch('tools/call', {
+      'name': 'apps_list',
+      'arguments': {},
+    });
+    expect((result['content'] as List).single['text'], 'apps_list');
+    expect(appCalls, 1);
+    await expectLater(
+      broker.dispatch('tools/call', {
+        'name': 'call_resource_tool',
+        'arguments': {'uri': 'file:///inactive', 'name': 'edit'},
+      }),
+      throwsStateError,
+    );
+    broker.appToolCall = null;
+    await expectLater(
+      broker.dispatch('tools/call', {'name': 'apps_list', 'arguments': {}}),
+      throwsStateError,
+    );
+  });
+
   test(
     'only the active mounted resource receives opaque plugin tools',
     () async {

@@ -22,6 +22,11 @@ final class ResourceAgentBroker extends ChangeNotifier {
 
   Future<void> Function(List<Map<String, Object?>> content)? sendAgentMessage;
 
+  /// Installed Apps have independent server-owned scopes. This never grants
+  /// access to inactive document resources.
+  Future<Map<String, Object?>> Function(String, Map<String, Object?>)?
+  appToolCall;
+
   Uri get endpoint =>
       Uri(scheme: 'http', host: '127.0.0.1', port: _server!.port, path: '/mcp');
 
@@ -73,7 +78,12 @@ final class ResourceAgentBroker extends ChangeNotifier {
       case 'ping':
         return {};
       case 'tools/list':
-        return {'tools': resourceRouterTools};
+        return {
+          'tools': [
+            ...resourceRouterTools,
+            if (appToolCall != null) ...installedAppRouterTools,
+          ],
+        };
       case 'resources/list':
         return {
           'resources': [
@@ -97,6 +107,12 @@ final class ResourceAgentBroker extends ChangeNotifier {
         final args = Map<String, Object?>.from(
           params['arguments'] as Map? ?? {},
         );
+        if (installedAppRouterTools.any((t) => t['name'] == params['name'])) {
+          final call = appToolCall;
+          if (call == null)
+            throw StateError('Installed App router unavailable');
+          return call(params['name'] as String, args);
+        }
         Object? result;
         switch (params['name']) {
           case 'list_open_resources':
@@ -248,6 +264,61 @@ const resourceRouterTools = [
         'arguments': {'type': 'object'},
       },
       'required': ['uri', 'name', 'arguments'],
+      'additionalProperties': false,
+    },
+  },
+];
+
+/// Generic routing only. Discover each installed App's business schemas.
+const installedAppRouterTools = [
+  {
+    'name': 'apps_list',
+    'description':
+        'List installed MCP Apps (including project/workflow apps). Use apps_tools_list to discover their business tools.',
+    'inputSchema': {
+      'type': 'object',
+      'properties': {},
+      'additionalProperties': false,
+    },
+  },
+  {
+    'name': 'apps_open',
+    'description':
+        'Open an installed MCP App in a workbench panel next to this conversation.',
+    'inputSchema': {
+      'type': 'object',
+      'properties': {
+        'appId': {'type': 'string'},
+      },
+      'required': ['appId'],
+      'additionalProperties': false,
+    },
+  },
+  {
+    'name': 'apps_tools_list',
+    'description':
+        'Discover exact tool schemas of an installed MCP App before calling a tool. Projects, pipelines, nodes and artifacts are owned by the App.',
+    'inputSchema': {
+      'type': 'object',
+      'properties': {
+        'appId': {'type': 'string'},
+      },
+      'required': ['appId'],
+      'additionalProperties': false,
+    },
+  },
+  {
+    'name': 'apps_call_tool',
+    'description':
+        'Call a discovered tool of an installed MCP App. Use its exact schema; do not substitute shell or filesystem edits for live App operations.',
+    'inputSchema': {
+      'type': 'object',
+      'properties': {
+        'appId': {'type': 'string'},
+        'name': {'type': 'string'},
+        'arguments': {'type': 'object'},
+      },
+      'required': ['appId', 'name', 'arguments'],
       'additionalProperties': false,
     },
   },
