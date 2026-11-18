@@ -28,6 +28,8 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  openmuse_mcp_app_runtime:
+    path: ../../packages/openmuse_mcp_app_runtime
   openmuse_smart_document_plugins:
     path: ../../distribution/openmuse_smart_document_plugins
   openmuse_file_viewer:

@@ -1,3 +1,4 @@
+import 'package:openmuse_mcp_app_runtime/openmuse_mcp_app_runtime.dart';
 import 'package:openmuse_smart_document_plugins/openmuse_smart_document_plugins.dart';
 import 'dart:async';
 import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart';
@@ -232,6 +233,16 @@ Future<Widget> bootOpenMuseMobile(
       localeController: localeController,
       runtime: runtime,
       updates: updates,
+      remoteApps: kDebugMode
+          ? await RemoteMcpApp.load(
+              directory: Directory('${support.path}/remote-mcp-apps'),
+              scope: () =>
+                  authentication.snapshot.identity?.subject ??
+                  'signed-out-local',
+              readSecret: secureValues.read,
+              writeSecret: secureValues.write,
+            )
+          : const [],
       authenticationPlugin: authPlugin,
       cloudWorkspacePlugin: cloudPlugin,
       smartDocuments: smartDocuments,
@@ -362,6 +373,7 @@ final class OpenMuseMobileApplication extends StatefulWidget {
     required this.authenticationPlugin,
     required this.cloudWorkspacePlugin,
     required this.pairedDesktopPlugin,
+    this.remoteApps = const [],
     this.speechInputPlugin,
     this.mobileMarketPlugin,
     this.remoteWorkbenchPlugin,
@@ -373,6 +385,7 @@ final class OpenMuseMobileApplication extends StatefulWidget {
     this.runtime,
   });
 
+  final List<RemoteMcpApp> remoteApps;
   final OpenMuseUiLocale? localeController;
   final OpenMuseClientRuntime? runtime;
   final OpenMuseGoTruePlugin authenticationPlugin;
@@ -420,6 +433,11 @@ final class OpenMuseMobileApplicationState
         widget.authenticationPlugin.authentication.snapshot.identity?.subject;
     final grant =
         widget.pairedDesktopPlugin.controller.snapshot.connection?.grantRef;
+    if (identity != _extensionIdentity) {
+      for (final app in widget.remoteApps) {
+        unawaited(app.closeSession());
+      }
+    }
     if (identity != _extensionIdentity || grant != _extensionGrant) {
       _extensionIdentity = identity;
       _extensionGrant = grant;
@@ -517,6 +535,9 @@ final class OpenMuseMobileApplicationState
           widget.pairedDesktopPlugin.controller.snapshot.connection,
     );
     _plugins.install(_agent);
+    for (final app in widget.remoteApps) {
+      _plugins.install(app);
+    }
     for (final plugin in _compiledClientPlugins) {
       _plugins.install(plugin);
     }
@@ -549,6 +570,9 @@ final class OpenMuseMobileApplicationState
       if (speech != null) await _plugins.activate(speech.descriptor.id);
       if (market != null) await _plugins.activate(market.descriptor.id);
       await _plugins.activate(_workbench.descriptor.id);
+      for (final app in widget.remoteApps) {
+        await _plugins.activate(app.descriptor.id);
+      }
       if (market == null ||
           await market.builtInPreferences.isEnabled(
             _scheduledTasks.descriptor.id,
