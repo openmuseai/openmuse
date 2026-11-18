@@ -951,6 +951,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  openmuse_mcp_app_runtime:
+    dependency: "direct main"
+    description:
+      path: "../../packages/openmuse_mcp_app_runtime"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_mobile_cloud:
     dependency: "direct main"
     description:

@@ -5,8 +5,10 @@ import 'layout.dart';
 /// Reveal a singleton contribution without replacing document/editor bindings.
 void revealPluginPanel(
   WorkbenchLayoutController layout,
-  OpenMusePanelCandidate candidate,
-) {
+  OpenMusePanelCandidate candidate, {
+  bool right = false,
+  String? besidePaneId,
+}) {
   final ref = 'plugin.panel:${candidate.panel.id}';
   final existing = layout.snapshot.bindings.entries
       .where((e) => e.value.surfaceRef == ref)
@@ -16,6 +18,7 @@ void revealPluginPanel(
     return;
   }
   final target =
+      besidePaneId ??
       layout.snapshot.bindings.entries
           .where((e) => e.value.surfaceRef.startsWith('host.editorGroup:'))
           .firstOrNull
@@ -25,8 +28,8 @@ void revealPluginPanel(
   final pane = layout.splitPane(
     target,
     axis: Axis.horizontal,
-    ratio: 0.4,
-    newPaneFirst: true,
+    ratio: right ? 0.5 : 0.4,
+    newPaneFirst: !right,
   );
   final id = '${candidate.plugin.descriptor.id}.${candidate.panel.id}';
   layout.bind(

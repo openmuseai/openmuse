@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:openmuse_mcp_app_runtime/openmuse_mcp_app_runtime.dart';
+import 'src/host/layout/plugin_panel.dart';
 import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -1169,6 +1171,48 @@ Future<Widget> bootOpenMuseHost({
     directory: deviceDirectory,
     relay: relay,
   );
+  // Developer-installed reviewed Apps are separate from production pins.
+  final remoteApps = kDebugMode
+      ? await RemoteMcpApp.load(
+          directory: Directory(
+            p.join(support.path, 'OpenMuse', 'remote-mcp-apps'),
+          ),
+          scope: () => readyAccount.value ?? 'signed-out-local',
+          readSecret: FlutterSecureValueStore.macOsCompatible().read,
+          writeSecret: FlutterSecureValueStore.macOsCompatible().write,
+        )
+      : <RemoteMcpApp>[];
+  final appRouter = RemoteMcpAppsRouter(remoteApps);
+  resourceAgents.appToolCall = appRouter.call;
+  for (final app in remoteApps) {
+    registry.install(app);
+    await registry.activate(app.descriptor.id);
+    app.onOpen = () {
+      final agentPanels = {
+        for (final d in registry.descriptors)
+          if (registry.plugin(d.id) is OpenMuseAgentContributor)
+            for (final panel in d.panels) 'plugin.panel:${panel.id}',
+      };
+      final agentPane = layoutController.snapshot.bindings.entries
+          .where((entry) => agentPanels.contains(entry.value.surfaceRef))
+          .firstOrNull
+          ?.key;
+      revealPluginPanel(
+        layoutController,
+        OpenMusePanelCandidate(
+          plugin: app,
+          panel: app.descriptor.panels.single,
+        ),
+        right: true,
+        besidePaneId: agentPane,
+      );
+    };
+  }
+  readyAccount.addListener(() {
+    for (final app in remoteApps) {
+      unawaited(app.closeSession());
+    }
+  });
   registry.install(authenticationPlugin);
   registry.install(cloudWorkspacePlugin);
   if (!macAppStoreDistribution) registry.install(pairedDesktopPlugin);
