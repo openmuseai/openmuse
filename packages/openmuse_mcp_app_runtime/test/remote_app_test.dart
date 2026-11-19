@@ -129,6 +129,63 @@ void main() {
       });
       expect(result['isError'], isNot(true));
       expect(jsonEncode(result), isNot(contains(vars['CI_MCP_TOKEN'])));
+      // Exercise new nested document-edit schemas through the real shared
+      // Host runtime, not only the backend's TypeScript client.
+      final marker = DateTime.now().microsecondsSinceEpoch.toString();
+      final created = await app.request('tools/call', {
+        'name': 'ci_lifecycle_create',
+        'arguments': {
+          'kind': 'requirement',
+          'title': 'HostRuntime LC2 $marker',
+          'goal': 'Native document and Agent schema conformance',
+          'commandId': 'host-lc2-$marker',
+        },
+      }, agent: true);
+      final project = (created['structuredContent'] as Map)['project'] as Map;
+      final docId =
+          ((project['lifecycle']['documents'] as List).firstWhere(
+                (d) => d['nodeId'] == 'feature-prd',
+              )
+              as Map)['id'];
+      final read = await app.request('tools/call', {
+        'name': 'ci_document_get',
+        'arguments': {'projectId': project['id'], 'documentId': docId},
+      }, agent: true);
+      final nativeDoc = (read['structuredContent'] as Map)['document'] as Map;
+      final changed = await app.request('tools/call', {
+        'name': 'ci_agent_document_edit',
+        'arguments': {
+          'projectId': project['id'],
+          'expectedVersion': project['version'],
+          'commandId': 'host-edit-$marker',
+          'documentId': docId,
+          'expectedRevision': nativeDoc['revision'],
+          'summary': 'Host runtime Agent contribution',
+          'edits': [
+            {
+              'op': 'append',
+              'type': 'paragraph',
+              'text': 'Verified Host contribution $marker',
+            },
+          ],
+        },
+      }, agent: true);
+      expect(changed['isError'], isNot(true));
+      final updated = await app.request('tools/call', {
+        'name': 'ci_document_get',
+        'arguments': {'projectId': project['id'], 'documentId': docId},
+      }, agent: true);
+      final content = updated['structuredContent'] as Map;
+      expect((content['document']['versions'] as List).last['role'], 'agent');
+      expect(
+        jsonEncode(content['blocks']),
+        contains('Verified Host contribution $marker'),
+      );
+      expect(
+        jsonDecode(content['nativeFile']['content'])['profile'],
+        'muse.smart-document/phase1',
+      );
+
       await expectLater(
         app.request('tools/call', {'name': 'undeclared', 'arguments': {}}),
         throwsStateError,
