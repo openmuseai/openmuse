@@ -4,6 +4,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'codec.dart';
 import 'core_api.dart';
 import 'profile_identity.dart';
+import 'socket_factory.dart' if (dart.library.io) 'socket_factory_io.dart';
 
 /// Provider-level socket construction port; defaults to the original channel.
 typedef AppFlowySocketFactory = WebSocketChannel Function(Uri uri);
@@ -33,7 +34,7 @@ final class AppFlowyRealtimeConnection {
     required this.codec,
     AppFlowySocketFactory? socketFactory,
     AppFlowyActorIdentityLoader? actorIdentityLoader,
-  }) : _socketFactory = socketFactory ?? WebSocketChannel.connect,
+  }) : _socketFactory = socketFactory ?? createAppFlowySocket,
        _actorIdentityLoader =
            actorIdentityLoader ??
            ((token) => readAppFlowyActorUid(
@@ -128,6 +129,8 @@ final class AppFlowyRealtimeConnection {
   Stream<RealtimePacket> get packets => _packets.stream;
   Stream<RealtimeConnectionState> get states => _states.stream;
   RealtimeConnectionState state = RealtimeConnectionState.idle;
+  String? connectionFailureCode;
+  String connectionPhase = 'idle';
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _subscription;
   Future<void>? _connecting, _closing;
@@ -151,11 +154,13 @@ final class AppFlowyRealtimeConnection {
 
   Future<void> _connect() async {
     final epoch = ++_epoch;
+    connectionFailureCode = null;
+    connectionPhase = 'authorizing';
     _state(RealtimeConnectionState.connecting);
     WebSocketChannel? channel;
     var ready = false;
     try {
-      final token = await accessToken();
+      final token = await accessToken().timeout(const Duration(seconds: 20));
       if (_closed || epoch != _epoch)
         throw const RealtimeFailure('SESSION_CLOSED');
       // Existing Cloud's browser-compatible query authentication. This URI must
@@ -170,6 +175,7 @@ final class AppFlowyRealtimeConnection {
         },
       );
       channel = _socketFactory(uri);
+      connectionPhase = 'handshaking';
       _channel = channel;
       _subscription = channel.stream.listen(
         (dynamic data) {
@@ -198,16 +204,33 @@ final class AppFlowyRealtimeConnection {
       await channel.ready.timeout(const Duration(seconds: 20));
       if (_closed || epoch != _epoch) {
         try {
-          await channel.sink.close();
+          await channel.sink.close().timeout(const Duration(seconds: 2));
         } on Object {}
         return;
       }
       ready = true;
+      connectionPhase = 'connected';
       _state(RealtimeConnectionState.connected);
       unawaited(_resolveActor(token, epoch));
-    } on Object {
+    } on Object catch (error) {
+      final status = RegExp(
+        r'status code[^0-9]*([0-9]{3})',
+        caseSensitive: false,
+      ).firstMatch('$error')?.group(1);
+      connectionFailureCode = error is TimeoutException
+          ? 'CONNECT_TIMEOUT'
+          : status == null
+          ? 'CONNECT_FAILED'
+          : 'HTTP_$status';
+      assert(() {
+        print(
+          'AppFlowy realtime connection: $connectionPhase $connectionFailureCode',
+        );
+        return true;
+      }());
+      connectionPhase = 'disconnected';
       try {
-        await channel?.sink.close();
+        await channel?.sink.close().timeout(const Duration(seconds: 2));
       } on Object {}
       if (!_closed && epoch == _epoch)
         _state(RealtimeConnectionState.disconnected);

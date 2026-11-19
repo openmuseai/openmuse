@@ -66,6 +66,12 @@ Future<Widget> bootOpenMuseMobile(
   String? initialLanguage,
 ) async {
   var runtimeConfig = deploymentBundle.snapshot;
+  if (runtimeConfig.serviceUri(ServiceId.cloud).host == 'cn.openmuseai.com') {
+    installServiceDnsFallback(
+      origins: {runtimeConfig.serviceUri(ServiceId.cloud), runtimeConfig.serviceUri(ServiceId.auth)},
+      resolver: Uri.parse('https://dns.alidns.com/resolve'),
+    );
+  }
   final support = await getApplicationSupportDirectory();
   final localeStore = FileConfigStore(
     File('${support.path}/locale-${runtimeConfig.storageIdentity}.json'),

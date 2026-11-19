@@ -110,6 +110,13 @@ final class OpenMuseSmartDocumentPlugin
   }) =>
       _media[ResourceSessionScope(identity, snapshotVersion: snapshotVersion)];
   final SmartDocumentStoreFactory _storeFactory;
+  void _openPhase(String phase) {
+    assert(() {
+      debugPrint('SmartDocument opening: $phase');
+      return true;
+    }());
+  }
+
   late final _owners =
       ResourceSessionOwners<
         SmartDocumentController,
@@ -381,6 +388,7 @@ final class OpenMuseSmartDocumentPlugin
   Future<SmartDocumentController> openController(
     ResourceEditorSession session,
   ) async {
+    _openPhase('controller-start');
     final key = session.ownershipScope;
     if (!_open.add(key)) throw const ResourceFailure('RESOURCE_ALREADY_OPEN');
     try {
@@ -388,11 +396,15 @@ final class OpenMuseSmartDocumentPlugin
       final provider = session.opened.fromSnapshot
           ? null
           : providerFactory?.call(session.record);
+      final documentCore = await _loadCore();
+      _openPhase('core-ready');
+      final documentStore = session.opened.fromSnapshot
+          ? _SnapshotMemory()
+          : await _storeFactory(session);
+      _openPhase('store-ready');
       final c = await SmartDocumentController.open(
-        core: await _loadCore(),
-        store: session.opened.fromSnapshot
-            ? _SnapshotMemory()
-            : await _storeFactory(session),
+        core: documentCore,
+        store: documentStore,
         objectId: seed['objectId'] as String,
         initialDocState: seed['docState'] as String,
         provider: provider,
@@ -404,6 +416,7 @@ final class OpenMuseSmartDocumentPlugin
             session.allowEditing &&
             !session.opened.fromSnapshot,
       );
+      _openPhase('controller-ready');
       try {
         final cacheKey = sha256
             .convert(utf8.encode(session.record.identity.key))
@@ -442,6 +455,7 @@ final class OpenMuseSmartDocumentPlugin
         );
         try {
           await media.restore();
+          _openPhase('media-ready');
         } on Object {
           media.dispose();
           rethrow;
@@ -453,14 +467,19 @@ final class OpenMuseSmartDocumentPlugin
       }
       try {
         if (!session.opened.fromSnapshot && realtimeFactory != null) {
+          _openPhase('realtime-factory');
           final realtime = await realtimeFactory!(session, c);
+          _openPhase('realtime-created');
           if (realtime != null) {
             if (!identical(realtime.controller, c)) {
               await realtime.close();
               throw const ResourceFailure('REALTIME_CONTROLLER_MISMATCH');
             }
             _realtime[key] = realtime;
-            await realtime.start();
+            // The original editor and accepted HTTP sync stay usable while a
+            // transient WS handshake reconnects. The view shows session state.
+            unawaited(realtime.start());
+            _openPhase('realtime-started');
           }
         }
         final stop = contentObserverFactory?.call(session, c);
@@ -723,9 +742,11 @@ final class _SmartDocumentResourceViewState
       if (!widget.session.isPresentationActive) {
         throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
       }
+      widget.plugin._openPhase('acquire-owner');
       final acquired = await widget.plugin.acquireResourceSession(
         widget.session,
       );
+      widget.plugin._openPhase('owner-ready');
       if (target != null &&
           (target.surface != 'smart-document.document' ||
               target.selector.length != 1 ||
@@ -766,9 +787,11 @@ final class _SmartDocumentResourceViewState
       setState(() {});
     } on Object catch (error, stack) {
       assert(() {
-        debugPrint('SmartDocument open failed: ${error.runtimeType}'
+        debugPrint(
+          'SmartDocument open failed: ${error.runtimeType}'
           '${error is SmartDocumentFailure ? ' ${error.code}' : ''}'
-          '${error is RangeError ? ' $error' : ''}');
+          '${error is RangeError ? ' $error' : ''}',
+        );
         debugPrintStack(stackTrace: stack, maxFrames: 12);
         return true;
       }());

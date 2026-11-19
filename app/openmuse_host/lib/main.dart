@@ -77,6 +77,12 @@ Future<Widget> bootOpenMuseHost({
 }) async {
   final deploymentBundle = installation ?? await loadDeploymentBundle();
   var runtimeConfig = deploymentBundle.snapshot;
+  if (runtimeConfig.serviceUri(ServiceId.cloud).host == 'cn.openmuseai.com') {
+    installServiceDnsFallback(
+      origins: {runtimeConfig.serviceUri(ServiceId.cloud), runtimeConfig.serviceUri(ServiceId.auth)},
+      resolver: Uri.parse('https://dns.alidns.com/resolve'),
+    );
+  }
   void bootPhase(String phase) => debugPrint('OpenMuse boot: $phase');
   final supportOverride = kDebugMode
       ? Platform.environment['OPENMUSE_E2E_SUPPORT_DIR']
