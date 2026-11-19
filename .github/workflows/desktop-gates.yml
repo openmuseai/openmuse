@@ -11,7 +11,7 @@ jobs:
   # Same script as .github/workflows/macos-build.yml, so the gate and the
   # releasable package can never diverge.
   macos:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 180
     env:
       FLUTTER_VERSION: "3.44.2"
