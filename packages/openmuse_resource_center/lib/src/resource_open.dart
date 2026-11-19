@@ -495,133 +495,150 @@ final class _ResourceEditorPageState extends State<_ResourceEditorPage> {
   ResourceEditorSession get session => widget.session;
   bool handlingPop = false;
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: session,
-    builder: (context, _) {
-      final s = ResourceCenterStrings(context), record = session.record;
-      return PopScope(
-        canPop:
-            !session.dirty &&
-            (session.flushPendingChanges == null || session.closePrepared),
-        onPopInvokedWithResult: (popped, result) async {
-          if (popped || handlingPop) return;
-          handlingPop = true;
-          try {
-            if (session.flushPendingChanges != null && !session.closePrepared) {
-              if (await session.prepareToClose()) {
-                if (context.mounted) Navigator.pop(context);
-                return;
+  Widget build(BuildContext context) => ResourceLinkRouting(
+    open: (uri) async {
+      if (!mounted || !session.isActive)
+        throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
+      await openResourcePage(
+        context,
+        controller,
+        ResourceReference.fromUri(uri),
+      );
+    },
+    locate: (locator) async {
+      if (!mounted || !session.isActive)
+        throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
+      await openResourceLocator(context, controller, locator);
+    },
+    child: ListenableBuilder(
+      listenable: session,
+      builder: (context, _) {
+        final s = ResourceCenterStrings(context), record = session.record;
+        return PopScope(
+          canPop:
+              !session.dirty &&
+              (session.flushPendingChanges == null || session.closePrepared),
+          onPopInvokedWithResult: (popped, result) async {
+            if (popped || handlingPop) return;
+            handlingPop = true;
+            try {
+              if (session.flushPendingChanges != null &&
+                  !session.closePrepared) {
+                if (await session.prepareToClose()) {
+                  if (context.mounted) Navigator.pop(context);
+                  return;
+                }
               }
+              if (!context.mounted || !session.dirty) return;
+              final discard = await showDialog<bool>(
+                context: context,
+                builder: (dialog) => AlertDialog(
+                  title: Text(s.unsaved),
+                  actions: [
+                    TextButton(
+                      key: const ValueKey('resource-keep-editing'),
+                      onPressed: () => Navigator.pop(dialog, false),
+                      child: Text(s.keepEditing),
+                    ),
+                    TextButton(
+                      key: const ValueKey('resource-discard'),
+                      onPressed: () => Navigator.pop(dialog, true),
+                      child: Text(s.discard),
+                    ),
+                  ],
+                ),
+              );
+              if (discard == true && context.mounted) {
+                session.discardChangesForClose();
+                Navigator.pop(context);
+              }
+            } finally {
+              handlingPop = false;
             }
-            if (!context.mounted || !session.dirty) return;
-            final discard = await showDialog<bool>(
-              context: context,
-              builder: (dialog) => AlertDialog(
-                title: Text(s.unsaved),
-                actions: [
-                  TextButton(
-                    key: const ValueKey('resource-keep-editing'),
-                    onPressed: () => Navigator.pop(dialog, false),
-                    child: Text(s.keepEditing),
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              toolbarHeight: 80,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    record.name,
+                    key: const ValueKey('resource-editor-title'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  TextButton(
-                    key: const ValueKey('resource-discard'),
-                    onPressed: () => Navigator.pop(dialog, true),
-                    child: Text(s.discard),
+                  const SizedBox(height: 4),
+                  Text(
+                    session.allowEditing
+                        ? record.sourceLabel
+                        : '${record.sourceLabel} · ${s.readOnly}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
-            );
-            if (discard == true && context.mounted) {
-              session.discardChangesForClose();
-              Navigator.pop(context);
-            }
-          } finally {
-            handlingPop = false;
-          }
-        },
-        child: Scaffold(
-          appBar: AppBar(
-            toolbarHeight: 80,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  record.name,
-                  key: const ValueKey('resource-editor-title'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
+              actions: [
+                if (session.opened.fromSnapshot)
+                  IconButton(
+                    tooltip: s.openOriginal,
+                    icon: const Icon(Icons.source_outlined),
+                    onPressed: () => openResourcePage(
+                      context,
+                      controller,
+                      ResourceReference(
+                        identity: session.opened.reference.identity,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  session.allowEditing
-                      ? record.sourceLabel
-                      : '${record.sourceLabel} · ${s.readOnly}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ],
+            ),
+            body: Column(
+              children: [
+                if (session.opened.fromSnapshot)
+                  Material(
+                    color: Theme.of(context).colorScheme.surfaceContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.history, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              session.opened.sourceOffline
+                                  ? s.offlineCopy
+                                  : s.conversationVersion,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                Expanded(
+                  child: ResourceEditorSessionScope(
+                    session: session,
+                    child: choice.contributor.buildResourceEditor(
+                      context,
+                      choice.spec.id,
+                      session,
+                    ),
                   ),
                 ),
               ],
             ),
-            actions: [
-              if (session.opened.fromSnapshot)
-                IconButton(
-                  tooltip: s.openOriginal,
-                  icon: const Icon(Icons.source_outlined),
-                  onPressed: () => openResourcePage(
-                    context,
-                    controller,
-                    ResourceReference(
-                      identity: session.opened.reference.identity,
-                    ),
-                  ),
-                ),
-            ],
           ),
-          body: Column(
-            children: [
-              if (session.opened.fromSnapshot)
-                Material(
-                  color: Theme.of(context).colorScheme.surfaceContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.history, size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            session.opened.sourceOffline
-                                ? s.offlineCopy
-                                : s.conversationVersion,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              Expanded(
-                child: ResourceEditorSessionScope(
-                  session: session,
-                  child: choice.contributor.buildResourceEditor(
-                    context,
-                    choice.spec.id,
-                    session,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
+        );
+      },
+    ),
   );
 }

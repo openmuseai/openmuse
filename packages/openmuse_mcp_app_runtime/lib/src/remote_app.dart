@@ -36,6 +36,7 @@ final class RemoteMcpApp extends ChangeNotifier
   String? _connectedScope;
   List<Tool> _tools = [];
   VoidCallback? onOpen;
+
   /// Host auditing hook. No arguments, results or credentials are included.
   void Function(String method, String? tool, bool agent)? onRequestCompleted;
   String get id => definition['id'] as String;
@@ -126,17 +127,29 @@ final class RemoteMcpApp extends ChangeNotifier
   Future<McpClient> _open(String owner, int epoch) async {
     _check(owner);
     final key = 'openmuse.remote-app.$id.$owner';
-    var token = await readSecret(key);
+    Future<String?> readCredential() async {
+      try {
+        return await readSecret(key);
+      } on Object {
+        throw StateError('APP_CREDENTIAL_READ_FAILED');
+      }
+    }
+
+    var token = await readCredential();
     final bootstrap = File('${directory.path}/$id.token');
     if (token == null && await bootstrap.exists()) {
       final candidate = (await bootstrap.readAsString()).trim();
       _check(owner);
       if (candidate.isEmpty || candidate.contains('\n'))
         throw StateError('APP_CREDENTIAL_INVALID');
-      await writeSecret(key, candidate);
+      try {
+        await writeSecret(key, candidate);
+      } on Object {
+        throw StateError('APP_CREDENTIAL_WRITE_FAILED');
+      }
       _check(owner);
       // Verify durable secure storage before consuming the one-time import.
-      token = await readSecret(key);
+      token = await readCredential();
       if (token != candidate) throw StateError('APP_CREDENTIAL_STORAGE_FAILED');
       definition['owner'] = owner;
       final profiles = File('${directory.path}/apps.json');
@@ -320,9 +333,12 @@ final class RemoteMcpApp extends ChangeNotifier
         }
         Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (_) => Scaffold(
-              appBar: AppBar(title: Text(title)),
-              body: RemoteMcpAppView(app: this),
+            builder: (_) => ResourceLinkRouting.capture(
+              context,
+              Scaffold(
+                appBar: AppBar(title: Text(title)),
+                body: RemoteMcpAppView(app: this),
+              ),
             ),
           ),
         );

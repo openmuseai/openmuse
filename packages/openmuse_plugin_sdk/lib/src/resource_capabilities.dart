@@ -30,6 +30,20 @@ final class ResourceLinkRouting extends InheritedWidget {
   final Future<void> Function(ResourceLocator locator)? locate;
   static ResourceLinkRouting? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ResourceLinkRouting>();
+
+  /// Navigator routes are siblings of their launching page. Carry its resource
+  /// routing port explicitly; this does not carry or create an access grant.
+  static Widget capture(BuildContext context, Widget child) {
+    final routing = maybeOf(context);
+    return routing == null
+        ? child
+        : ResourceLinkRouting(
+            open: routing.open,
+            locate: routing.locate,
+            child: child,
+          );
+  }
+
   @override
   bool updateShouldNotify(ResourceLinkRouting oldWidget) =>
       open != oldWidget.open || locate != oldWidget.locate;

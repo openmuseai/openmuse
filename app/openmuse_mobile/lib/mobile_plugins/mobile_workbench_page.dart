@@ -267,8 +267,10 @@ final class MobileWorkbenchPageState extends State<MobileWorkbenchPage> {
     final contribution = plugin as OpenMuseMobileWorkbenchContributor;
     Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) =>
-            MobilePluginDetailPage(plugin: plugin, contribution: contribution),
+        builder: (_) => ResourceLinkRouting.capture(
+          context,
+          MobilePluginDetailPage(plugin: plugin, contribution: contribution),
+        ),
       ),
     );
   }

@@ -1938,9 +1938,12 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     if (plugin is! OpenMuseMobileWorkbenchContributor) return;
     Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) => MobilePluginDetailPage(
-          plugin: plugin,
-          contribution: plugin as OpenMuseMobileWorkbenchContributor,
+        builder: (_) => ResourceLinkRouting.capture(
+          context,
+          MobilePluginDetailPage(
+            plugin: plugin,
+            contribution: plugin as OpenMuseMobileWorkbenchContributor,
+          ),
         ),
       ),
     );

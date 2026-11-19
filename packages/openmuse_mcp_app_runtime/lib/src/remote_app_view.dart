@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'remote_app.dart';
+import 'resource_link.dart';
 
 class RemoteMcpAppView extends StatefulWidget {
   const RemoteMcpAppView({super.key, required this.app});
@@ -45,6 +47,7 @@ class _RemoteMcpAppViewState extends State<RemoteMcpAppView> {
         arguments: const {},
         platform: Platform.isMacOS ? 'desktop' : 'mobile',
         serverAvailable: true,
+        resourceLinksAvailable: ResourceLinkRouting.maybeOf(context) != null,
         nativeSend: Platform.isMacOS
             ? 'window.webkit.messageHandlers.mcpApp.postMessage(message)'
             : 'window.McpHost.postMessage(JSON.stringify(message))',
@@ -76,8 +79,17 @@ class _RemoteMcpAppViewState extends State<RemoteMcpAppView> {
         _web = web;
       }
       if (mounted) setState(() => _document = document);
-    } catch (_) {
-      if (mounted) setState(() => _failure = '插件连接失败，请检查后端、凭据和当前账号。');
+    } catch (error) {
+      // Only locally defined codes are safe to render. Transport exceptions can
+      // contain credentials, endpoints or response bodies.
+      final code =
+          error is StateError &&
+              RegExp(r'^APP_[A-Z_]+$').hasMatch('${error.message}')
+          ? '${error.message}'
+          : 'APP_CONNECTION_FAILED';
+      if (mounted) {
+        setState(() => _failure = '插件连接失败（$code），请检查后端、凭据和当前账号。');
+      }
     }
   }
 
@@ -88,10 +100,25 @@ class _RemoteMcpAppViewState extends State<RemoteMcpAppView> {
     try {
       if (!mounted || widget.app.scope() != _scope)
         throw StateError('VIEW_REVOKED');
-      final result = await widget.app.request(
-        raw['method'] as String,
-        Map<String, Object?>.from(raw['params'] as Map? ?? {}),
-      );
+      final Map<String, Object?> result;
+      if (raw['method'] == 'ui/open-link') {
+        final reference = checkedAppResourceLink(
+          (raw['params'] as Map?)?['url'],
+          _scope,
+        );
+        final routing = ResourceLinkRouting.maybeOf(context);
+        if (routing == null)
+          throw StateError('APP_RESOURCE_ROUTING_UNAVAILABLE');
+        // Opening the resource awaits its own native authorization/UI route.
+        // Release the MCP reply before navigation's Future waits for page pop.
+        unawaited(routing.open(reference.toUri().toString()));
+        result = {'status': 'success'};
+      } else {
+        result = await widget.app.request(
+          raw['method'] as String,
+          Map<String, Object?>.from(raw['params'] as Map? ?? {}),
+        );
+      }
       if (!mounted || widget.app.scope() != _scope)
         throw StateError('VIEW_REVOKED');
       response['result'] = result;
