@@ -218,7 +218,10 @@ void main() {
       final serving = server.forEach((request) async {
         request.response.statusCode = 400;
         request.response.write(
-          jsonEncode({'message': 'secret server diagnostic and token'}),
+          jsonEncode({
+            'error': 'invalid_grant',
+            'message': 'secret server diagnostic and token',
+          }),
         );
         await request.response.close();
       });
@@ -242,6 +245,46 @@ void main() {
       expect(captured.toString(), isNot(contains('secret server diagnostic')));
     },
   );
+
+  for (final response in [
+    '<html>400 Bad Request: plain HTTP request sent to HTTPS port</html>',
+    '{"error":"upstream_unavailable","message":"private diagnostic"}',
+  ]) {
+    test(
+      'gateway rejection is not reported as an incorrect password: $response',
+      () async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final serving = server.forEach((request) async {
+          request.response.statusCode = 400;
+          request.response.write(response);
+          await request.response.close();
+        });
+        final client = GoTrueHttpClient(
+          config: GoTrueClientConfig(
+            origin: Uri.parse('http://127.0.0.1:${server.port}'),
+            allowInsecureLoopback: true,
+          ),
+        );
+        try {
+          await expectLater(
+            client.signInWithPassword('muse@example.test', 'test-password'),
+            throwsA(
+              isA<AuthFailure>()
+                  .having((e) => e.kind, 'kind', AuthFailureKind.server)
+                  .having(
+                    (e) => e.safeMessage,
+                    'safe message',
+                    isNot(contains(response)),
+                  ),
+            ),
+          );
+        } finally {
+          await server.close(force: true);
+          await serving;
+        }
+      },
+    );
+  }
 
   test(
     'email passcode requests follow GoTrue otp and verify contracts',

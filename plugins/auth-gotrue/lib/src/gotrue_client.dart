@@ -278,7 +278,10 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
         String? errorCode;
         try {
           final errorBody = jsonDecode(responseText);
-          if (errorBody is Map) errorCode = errorBody['error_code']?.toString();
+          if (errorBody is Map) {
+            errorCode = (errorBody['error_code'] ?? errorBody['error'])
+                ?.toString();
+          }
         } on FormatException {
           // Server response text is never shown to the user or logged.
         }
@@ -305,7 +308,9 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
           );
         }
         if (invalidCredentialsOnUnauthorized &&
-            (response.statusCode == 400 || response.statusCode == 401)) {
+            (response.statusCode == 400 || response.statusCode == 401) &&
+            (errorCode == 'invalid_credentials' ||
+                errorCode == 'invalid_grant')) {
           throw const AuthFailure.invalidCredentials();
         }
         throw AuthFailure(
