@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'remote_app_view.dart';
+import 'mcp_resource_source.dart';
 
 /// Explicit developer installation, separate from the production marketplace.
 /// Only verified, self-contained UI bytes enter the sandbox. Credentials stay
@@ -15,7 +16,8 @@ final class RemoteMcpApp extends ChangeNotifier
         OpenMusePlugin,
         OpenMuseWorkspaceActionsContributor,
         OpenMuseMobileWorkbenchContributor,
-        OpenMuseMobileNativeDetailContributor {
+        OpenMuseMobileNativeDetailContributor,
+        OpenMuseResourceSourceContributor {
   RemoteMcpApp._(
     this.definition,
     this.directory,
@@ -41,6 +43,33 @@ final class RemoteMcpApp extends ChangeNotifier
   void Function(String method, String? tool, bool agent)? onRequestCompleted;
   String get id => definition['id'] as String;
   String get title => definition['title'] as String;
+  @override
+  List<ResourceProvider> createResourceSources(ResourceSourceContext context) =>
+      [McpDataResourceSource(this, context)];
+
+  /// Native read-only data uses MCP resources; it never replaces reviewed UI.
+  Future<Map<String, Object?>> readDataResource(String uri) async {
+    if (uri.startsWith('ui:')) throw StateError('APP_RESOURCE_UNDECLARED');
+    final owner = _owner, epoch = _epoch;
+    _check(owner);
+    final client = await _connect();
+    _check(owner);
+    final declared = await client.listResources();
+    if (!declared.resources.any((r) => r.uri == uri))
+      throw StateError('APP_RESOURCE_UNDECLARED');
+    final result =
+        (await client
+                .readResource(ReadResourceRequest(uri: uri))
+                .timeout(const Duration(seconds: 30)))
+            .toJson();
+    _check(owner);
+    if (epoch != _epoch) throw StateError('APP_SESSION_REVOKED');
+    if (utf8.encode(jsonEncode(result)).length > 12 * 1024 * 1024)
+      throw StateError('APP_RESULT_TOO_LARGE');
+    onRequestCompleted?.call('resources/read', null, false);
+    return result;
+  }
+
   String get panelId => '$id.main';
   String get uiUri => definition['uiResourceUri'] as String;
   String get _owner => sha256.convert(utf8.encode(scope())).toString();

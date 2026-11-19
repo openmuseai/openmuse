@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_mcp_app_runtime/openmuse_mcp_app_runtime.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 void main() {
   late Directory directory;
@@ -88,6 +89,28 @@ void main() {
         throwsStateError,
       );
       expect(opens, 1);
+    },
+  );
+  test(
+    'native data sources use hashed owners and revoke on account changes',
+    () async {
+      profile['owner'] = sha256.convert(utf8.encode(scope)).toString();
+      final app = (await load()).single;
+      final provider = app
+          .createResourceSources(
+            ResourceSourceContext(
+              scope: scope,
+              deviceRef: 'device',
+              deviceLabel: 'Test',
+              workspace: 'personal',
+              workspaceLabel: 'Test',
+              generation: () => 1,
+            ),
+          )
+          .single;
+      expect(provider.available, isTrue);
+      scope = 'account-b';
+      expect(provider.available, isFalse);
     },
   );
   test(

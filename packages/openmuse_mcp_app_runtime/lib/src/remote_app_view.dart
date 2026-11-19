@@ -7,6 +7,7 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'remote_app.dart';
 import 'resource_link.dart';
+import 'mcp_resource_source.dart';
 
 class RemoteMcpAppView extends StatefulWidget {
   const RemoteMcpAppView({super.key, required this.app});
@@ -102,10 +103,10 @@ class _RemoteMcpAppViewState extends State<RemoteMcpAppView> {
         throw StateError('VIEW_REVOKED');
       final Map<String, Object?> result;
       if (raw['method'] == 'ui/open-link') {
-        final reference = checkedAppResourceLink(
-          (raw['params'] as Map?)?['url'],
-          _scope,
-        );
+        final target = (raw['params'] as Map?)?['url'];
+        final reference = target is String && target.startsWith('mcp-resource:')
+            ? checkedMcpResourceLink(target, _scope, widget.app.id)
+            : checkedAppResourceLink(target, _scope);
         final routing = ResourceLinkRouting.maybeOf(context);
         if (routing == null)
           throw StateError('APP_RESOURCE_ROUTING_UNAVAILABLE');
