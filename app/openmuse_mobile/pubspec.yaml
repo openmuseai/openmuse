@@ -95,6 +95,10 @@ dependencies:
   webview_flutter: ^4.13.0
 
 dev_dependencies:
+  openmuse_appflowy_editor:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/vendor/openmuse_appflowy_editor
+  openmuse_smart_document:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/flutter
   openmuse_resource_clipboard:
     path: ../../packages/openmuse_resource_clipboard
   archive: ^4.0.7

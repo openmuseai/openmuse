@@ -933,7 +933,7 @@ packages:
     source: path
     version: "0.0.6"
   openmuse_appflowy_editor:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       path: "../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/vendor/openmuse_appflowy_editor"
       relative: true
@@ -1108,7 +1108,7 @@ packages:
     source: path
     version: "0.1.0"
   openmuse_smart_document:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       path: "../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/flutter"
       relative: true

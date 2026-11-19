@@ -41,6 +41,12 @@ void recordDeviceResult(IntegrationTestWidgetsFlutterBinding binding) {
           ),
         },
         'milestones': binding.reportData?['milestones'],
+        // Fixed diagnostic fields only; never copy arbitrary report payloads
+        // that another test could use for an account or token fixture.
+        if (binding.reportData?['nativeSocketProbe'] != null)
+          'nativeSocketProbe': binding.reportData!['nativeSocketProbe'],
+        if (binding.reportData?['realtimeState'] != null)
+          'realtimeState': binding.reportData!['realtimeState'],
         'tests': binding.results.map(
           (name, result) => MapEntry(name, result.toString()),
         ),
