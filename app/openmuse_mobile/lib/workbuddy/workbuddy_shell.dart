@@ -4358,12 +4358,23 @@ final class _DeviceStatusRow extends StatelessWidget {
         : !online
         ? Text((stringsOf(context).mobileOffline054e29cd()), style: wbSub)
         : connected
-        ? Text(
-            (stringsOf(context).mobileConnectedAfe95341()),
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 14,
-            ),
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                (stringsOf(context).mobileConnectedAfe95341()),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
+              ),
+              IconButton(
+                key: ValueKey('wb-device-reconnect-$id'),
+                tooltip: stringsOf(context).mobileReconnectF80f36fd(),
+                onPressed: onBind,
+                icon: const Icon(Icons.refresh),
+              ),
+            ],
           )
         : connecting
         ? Text(
