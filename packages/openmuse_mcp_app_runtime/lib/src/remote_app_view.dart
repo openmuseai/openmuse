@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'remote_app.dart';
+import 'request_failure.dart';
 import 'resource_link.dart';
 import 'mcp_resource_source.dart';
 
@@ -123,10 +124,10 @@ class _RemoteMcpAppViewState extends State<RemoteMcpAppView> {
       if (!mounted || widget.app.scope() != _scope)
         throw StateError('VIEW_REVOKED');
       response['result'] = result;
-    } catch (_) {
+    } catch (error) {
       response['error'] = {
         'code': -32602,
-        'message': 'App request rejected; check scope, tool and arguments',
+        'message': appRequestFailureCode(error),
       };
     }
     return response;
