@@ -143,8 +143,21 @@ void main() {
       final card = find.byKey(
         const ValueKey('workbench-card-io.openmuse.muse-ci'),
       );
-      await tester.ensureVisible(card);
-      await tester.tap(card);
+      // Embedded workbench cards can extend behind the shell's bottom bar.
+      // Scroll the actual list until the card's center can receive a gesture.
+      for (
+        var attempt = 0;
+        attempt < 4 && card.hitTestable().evaluate().isEmpty;
+        attempt++
+      ) {
+        await tester.drag(
+          find.byKey(const PageStorageKey('apps-overview-scroll')),
+          const Offset(0, -280),
+        );
+        await tester.pump();
+      }
+      expect(card.hitTestable(), findsOneWidget);
+      await tester.tap(card.hitTestable());
       await tester.pump();
       await until(
         () => find.byType(RemoteMcpAppView).evaluate().isNotEmpty,
