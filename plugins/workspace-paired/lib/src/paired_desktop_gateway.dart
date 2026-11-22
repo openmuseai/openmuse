@@ -785,6 +785,9 @@ final class PairedDesktopGateway {
         'Invalid App request',
       );
     }
+    if(body['method']!='apps/list'&&(body['appId'] is! String||!RegExp(r'^[a-zA-Z0-9._-]{1,128}$').hasMatch(body['appId'] as String))){
+      throw const _GatewayFailure(HttpStatus.badRequest,'APP_REQUEST_INVALID','Invalid App identity');
+    }
     final result = await dispatcher(
       PairedResourceRequest(
         body: Map<String, Object?>.from(body),

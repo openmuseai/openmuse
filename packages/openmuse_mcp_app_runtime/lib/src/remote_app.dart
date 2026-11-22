@@ -93,7 +93,7 @@ final class RemoteMcpApp extends ChangeNotifier
       if (epoch != _epoch) throw StateError('APP_SESSION_REVOKED');
       if (utf8.encode(jsonEncode(result)).length > 12 * 1024 * 1024)
         throw StateError('APP_RESULT_TOO_LARGE');
-      onRequestCompleted?.call('resources/read',null,false);
+      onRequestCompleted?.call('resources/read', null, false);
       return result;
     }
     final client = await _connect();
@@ -303,7 +303,7 @@ final class RemoteMcpApp extends ChangeNotifier
     final owner = _owner, epoch = _epoch;
     _check(owner);
     if (forwardRequest case final forward?) {
-      if(agent)throw StateError('APP_AGENT_FORWARD_UNAVAILABLE');
+      if (agent) throw StateError('APP_AGENT_FORWARD_UNAVAILABLE');
       if (!const {
         'tools/list',
         'tools/call',
@@ -316,7 +316,7 @@ final class RemoteMcpApp extends ChangeNotifier
       if (epoch != _epoch) throw StateError('APP_SESSION_REVOKED');
       if (utf8.encode(jsonEncode(result)).length > 12 * 1024 * 1024)
         throw StateError('APP_RESULT_TOO_LARGE');
-      onRequestCompleted?.call(method,params['name'] as String?,agent);
+      onRequestCompleted?.call(method, params['name'] as String?, agent);
       return result;
     }
     final client = await _connect();
