@@ -496,10 +496,13 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     });
   }
 
-  Future<void> _promptBindDesktop() async {
+  Future<void> _promptBindDesktop({bool reselect = false}) async {
     final localeStrings = stringsOf(context);
 
-    if (!mounted || widget.pairedDesktop?.snapshot.connection != null) return;
+    if (!mounted ||
+        (!reselect && widget.pairedDesktop?.snapshot.connection != null)) {
+      return;
+    }
     unawaited(
       widget.pairedDesktop?.directory?.refresh() ?? Future<void>.value(),
     );
@@ -545,7 +548,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
             );
             return;
           }
-          final connected = await widget.pairedDesktop?.connectDevice(device);
+          final connected = await widget.pairedDesktop?.connectDevice(device, force: reselect);
           final connection = widget.pairedDesktop?.snapshot.connection;
           if (connected == true && connection != null && mounted) {
             final deviceId = 'paired.${connection.deviceRef}';
@@ -871,7 +874,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     final localeStrings = stringsOf(context);
 
     if (widget.pairedDesktop?.directory != null) {
-      await _promptBindDesktop();
+      await _promptBindDesktop(reselect: true);
       return;
     }
     final picked = await showModalBottomSheet<String>(
