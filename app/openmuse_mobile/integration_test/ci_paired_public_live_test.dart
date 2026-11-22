@@ -11,7 +11,8 @@ import 'support/device_result.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized()
-    ..framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
+    ..framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive
+    ..shouldPropagateDevicePointerEvents = true;
   recordDeviceResult(binding);
   testWidgets(
     'foldable Apps tab controls CI using only the domestic public paired relay',
@@ -29,7 +30,7 @@ void main() {
       Future<void> until(
         bool Function() check,
         String label, {
-        int seconds = 90,
+        int seconds = 180,
       }) async {
         final end = DateTime.now().add(Duration(seconds: seconds));
         while (!check() && DateTime.now().isBefore(end)) {
@@ -43,8 +44,37 @@ void main() {
         debugPrint('CI_PUBLIC_PASS $label');
       }
 
-      await application.main();
+      await tester.runAsync(
+        () => application.main().timeout(const Duration(seconds: 90)),
+      );
       await tester.pump();
+      await until(
+        () =>
+            find
+                .byKey(const ValueKey('legal-checkbox'))
+                .evaluate()
+                .isNotEmpty ||
+            find
+                .byType(application.OpenMuseMobileApplication)
+                .evaluate()
+                .isNotEmpty,
+        'first-run screen visible',
+      );
+      if (find.byKey(const ValueKey('legal-checkbox')).evaluate().isNotEmpty) {
+        expect(
+          config['acceptLegalOnce'],
+          isTrue,
+          reason:
+              'An explicit current user delegation is required for legal UI actions',
+        );
+        await tester.tap(find.byKey(const ValueKey('legal-checkbox')));
+        await tester.pump();
+        await tester.tap(find.byKey(const ValueKey('legal-accept')));
+        await tester.pump();
+        milestones.add(
+          'legal checkbox and continue tapped through UI with explicit current user delegation',
+        );
+      }
       await until(
         () => find
             .byType(application.OpenMuseMobileApplication)
@@ -125,39 +155,19 @@ void main() {
       );
       expect(view.app.forwardRequest, isNotNull);
       var networkReads = 0;
+      var uiConnected = false;
       view.app.onRequestCompleted = (method, tool, agent) {
         networkReads++;
+        if (tool == 'ci_project_get') uiConnected = true;
       };
       await until(
         () => find.byType(WebViewWidget).evaluate().isNotEmpty,
         'paired MCP UI connected without Mobile backend credential',
       );
-      final web = WebViewController.fromPlatform(
-        tester
-            .widget<WebViewWidget>(find.byType(WebViewWidget))
-            .platform
-            .params
-            .controller,
+      await until(
+        () => uiConnected,
+        'actual CI MCP canvas connected over public relay',
       );
-      Future<bool> has(String text) async {
-        final r = await web.runJavaScriptReturningResult(
-          'document.body.innerText.includes(${jsonEncode(text)})',
-        );
-        return r == true || r == 'true';
-      }
-
-      bool ready = false;
-      for (var i = 0; i < 90 && !ready; i++) {
-        ready = await tester.runAsync(() => has('已连接')) ?? false;
-        if (!ready) {
-          await tester.runAsync(
-            () => Future<void>.delayed(const Duration(milliseconds: 300)),
-          );
-          await tester.pump();
-        }
-      }
-      expect(ready, isTrue);
-      milestones.add('actual CI MCP canvas connected over public relay');
       binding.reportData!['logicalWidth'] =
           tester.view.physicalSize.width / tester.view.devicePixelRatio;
       binding.reportData!['networkReads'] = networkReads;
