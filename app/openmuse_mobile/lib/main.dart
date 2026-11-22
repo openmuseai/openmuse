@@ -434,6 +434,27 @@ final class OpenMuseMobileApplicationState
   late final OpenMuseDshMobileAgent _agent;
   late final MobileResourceExtensions _extensions;
   String? _extensionIdentity, _extensionGrant;
+  final _pairedMcpApps=<String,RemoteMcpApp>{};
+  Future<void> _pairedMcpSync=Future.value();
+  Future<void> _syncPairedMcpApps(){
+    return _pairedMcpSync=_pairedMcpSync.then((_)async{
+      for(final app in _pairedMcpApps.values){await app.closeSession();await _plugins.uninstall(app.id);}
+      _pairedMcpApps.clear();
+      final connection=widget.pairedDesktopPlugin.controller.snapshot.connection;
+      if(!mounted||connection==null)return;
+      final account=widget.authenticationPlugin.authentication.snapshot.identity?.subject;
+      if(account==null)return;
+      final apps=await loadPairedMcpApps(origin:Uri.parse(connection.session.origin),grant:connection.grantRef,
+        scope:()=>widget.authenticationPlugin.authentication.snapshot.identity?.subject??'signed-out-local',
+        sessionCurrent:()=>mounted&&widget.pairedDesktopPlugin.controller.snapshot.connection?.grantRef==connection.grantRef);
+      if(!mounted||widget.pairedDesktopPlugin.controller.snapshot.connection?.grantRef!=connection.grantRef)return;
+      for(final app in apps){
+        final existing=_plugins.plugin(app.id);
+        if(existing!=null){if(existing is! RemoteMcpApp)continue;await existing.closeSession();await _plugins.uninstall(app.id);}
+        _pairedMcpApps[app.id]=app;_plugins.install(app);await _plugins.activate(app.id);
+      }
+    }).catchError((Object error){debugPrint('Paired Apps unavailable: ${error.runtimeType}');});
+  }
   void _extensionScopeChanged() {
     final identity =
         widget.authenticationPlugin.authentication.snapshot.identity?.subject;
@@ -448,6 +469,7 @@ final class OpenMuseMobileApplicationState
       _extensionIdentity = identity;
       _extensionGrant = grant;
       unawaited(_extensions.clear());
+      unawaited(_syncPairedMcpApps());
     }
   }
 
@@ -565,6 +587,7 @@ final class OpenMuseMobileApplicationState
       _extensionScopeChanged,
     );
     widget.pairedDesktopPlugin.controller.addListener(_extensionScopeChanged);
+    unawaited(_syncPairedMcpApps());
     final speech = widget.speechInputPlugin;
     final market = widget.mobileMarketPlugin;
     if (speech != null) _plugins.install(speech);

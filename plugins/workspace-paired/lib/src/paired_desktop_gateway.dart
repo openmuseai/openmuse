@@ -230,6 +230,7 @@ final class PairedDesktopGateway {
     this.workspaceMirrorResource,
     this.workspaceMirrorAction,
     this.pluginMarket,
+    this.mcpApps,
     this.fallbackOnPortConflict = false,
     this.scheduledTasks,
     this.resources,
@@ -256,6 +257,7 @@ final class PairedDesktopGateway {
   final WorkspaceMirrorReader? workspaceMirror;
   final WorkspaceMirrorResourceReader? workspaceMirrorResource;
   final PairedPluginMarketDispatcher? pluginMarket;
+  PairedResourceDispatcher? mcpApps;
   final bool fallbackOnPortConflict;
   final PairedScheduledTaskDispatcher? scheduledTasks;
   final PairedResourceDispatcher? resources;
@@ -421,6 +423,10 @@ final class PairedDesktopGateway {
       if (request.method == 'POST' &&
           request.uri.path == '/openmuse/remote-surface/v1') {
         await _remoteSurface(request);
+        return;
+      }
+      if (request.uri.path == '/openmuse/mcp-apps/v1') {
+        await _mcpApps(request);
         return;
       }
       if (request.uri.path == '/openmuse/plugin-market/v1') {
@@ -724,6 +730,84 @@ final class PairedDesktopGateway {
         workspaceRef: grant.workspaceRef,
       ),
     );
+    _json(request.response, HttpStatus.ok, result);
+  }
+
+  Future<void> _mcpApps(HttpRequest request) async {
+    final grant = _grantFromCookie(request.cookies), dispatcher = mcpApps;
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant invalid',
+      );
+    }
+    if (request.method != 'POST')
+      throw const _GatewayFailure(
+        HttpStatus.methodNotAllowed,
+        'METHOD_NOT_ALLOWED',
+        'POST required',
+      );
+    if (dispatcher == null)
+      throw const _GatewayFailure(
+        HttpStatus.serviceUnavailable,
+        'APPS_UNAVAILABLE',
+        'Desktop Apps unavailable',
+      );
+    final bytes = await request.fold<List<int>>([], (value, chunk) {
+      if (value.length + chunk.length > 2 * 1024 * 1024)
+        throw const _GatewayFailure(
+          HttpStatus.requestEntityTooLarge,
+          'REQUEST_TOO_LARGE',
+          'App request too large',
+        );
+      value.addAll(chunk);
+      return value;
+    });
+    final body = jsonDecode(utf8.decode(bytes));
+    if (body is! Map ||
+        body['method'] is! String ||
+        !const {
+          'apps/list',
+          'tools/list',
+          'tools/call',
+          'resources/list',
+          'resources/read',
+          'data/read',
+        }.contains(body['method']) ||
+        body.keys.any((k) => !{'method', 'appId', 'params'}.contains(k)) ||
+        body['params'] != null && body['params'] is! Map) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'APP_REQUEST_INVALID',
+        'Invalid App request',
+      );
+    }
+    final result = await dispatcher(
+      PairedResourceRequest(
+        body: Map<String, Object?>.from(body),
+        accountRef: grant.accountRef,
+        deviceRef: grant.deviceRef,
+        workspaceRef: grant.workspaceRef,
+        expiresAtMs: grant.expiresAtMs,
+      ),
+    );
+    if (_grantFromCookie(request.cookies) != grant ||
+        currentAccountRef() != grant.accountRef ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch)
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant expired',
+      );
+    if (utf8.encode(jsonEncode(result)).length > 12 * 1024 * 1024)
+      throw const _GatewayFailure(
+        HttpStatus.requestEntityTooLarge,
+        'APP_RESULT_TOO_LARGE',
+        'App result too large',
+      );
     _json(request.response, HttpStatus.ok, result);
   }
 

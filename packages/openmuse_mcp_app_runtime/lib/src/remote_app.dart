@@ -24,8 +24,43 @@ final class RemoteMcpApp extends ChangeNotifier
     this.html,
     this.scope,
     this.readSecret,
-    this.writeSecret,
-  );
+    this.writeSecret, {
+    this.forwardRequest,
+  });
+  final Future<Map<String, Object?>> Function(String, Map<String, Object?>)?
+  forwardRequest;
+  bool _forwardRevoked = false;
+
+  /// An installed App delegated by an authenticated paired Desktop. No backend
+  /// credential or endpoint is copied to Mobile. UI is pinned for this grant.
+  static RemoteMcpApp paired({
+    required Map<String, dynamic> definition,
+    required String Function() scope,
+    required Future<Map<String, Object?>> Function(String, Map<String, Object?>)
+    request,
+  }) {
+    final html = definition['html'];
+    if (html is! String ||
+        utf8.encode(html).length > 8 * 1024 * 1024 ||
+        sha256.convert(utf8.encode(html)).toString() !=
+            definition['uiSha256'] ||
+        definition['id'] is! String ||
+        !RegExp(r'^[a-zA-Z0-9._-]+$').hasMatch(definition['id']) ||
+        definition['title'] is! String ||
+        definition['uiResourceUri'] is! String ||
+        !definition['uiResourceUri'].startsWith('ui://'))
+      throw const FormatException('Invalid paired App');
+    return RemoteMcpApp._(
+      {...definition, 'owner': sha256.convert(utf8.encode(scope())).toString()},
+      Directory.systemTemp,
+      html,
+      scope,
+      (_) async => null,
+      (_, __) async {},
+      forwardRequest: request,
+    );
+  }
+
   final Map<String, dynamic> definition;
   final Directory directory;
   final String html;
@@ -52,6 +87,15 @@ final class RemoteMcpApp extends ChangeNotifier
     if (uri.startsWith('ui:')) throw StateError('APP_RESOURCE_UNDECLARED');
     final owner = _owner, epoch = _epoch;
     _check(owner);
+    if (forwardRequest case final forward?) {
+      final result = await forward('data/read', {'uri': uri});
+      _check(owner);
+      if (epoch != _epoch) throw StateError('APP_SESSION_REVOKED');
+      if (utf8.encode(jsonEncode(result)).length > 12 * 1024 * 1024)
+        throw StateError('APP_RESULT_TOO_LARGE');
+      onRequestCompleted?.call('resources/read',null,false);
+      return result;
+    }
     final client = await _connect();
     _check(owner);
     final declared = await client.listResources();
@@ -133,7 +177,8 @@ final class RemoteMcpApp extends ChangeNotifier
   }
 
   void _check(String owner) {
-    if (_owner != owner ||
+    if (_forwardRevoked ||
+        _owner != owner ||
         (definition['owner'] != null && definition['owner'] != owner)) {
       throw StateError('APP_ACCOUNT_SCOPE_REVOKED');
     }
@@ -257,6 +302,23 @@ final class RemoteMcpApp extends ChangeNotifier
   }) async {
     final owner = _owner, epoch = _epoch;
     _check(owner);
+    if (forwardRequest case final forward?) {
+      if(agent)throw StateError('APP_AGENT_FORWARD_UNAVAILABLE');
+      if (!const {
+        'tools/list',
+        'tools/call',
+        'resources/list',
+        'resources/read',
+      }.contains(method))
+        throw StateError('APP_METHOD_UNAVAILABLE');
+      final result = await forward(method, params);
+      _check(owner);
+      if (epoch != _epoch) throw StateError('APP_SESSION_REVOKED');
+      if (utf8.encode(jsonEncode(result)).length > 12 * 1024 * 1024)
+        throw StateError('APP_RESULT_TOO_LARGE');
+      onRequestCompleted?.call(method,params['name'] as String?,agent);
+      return result;
+    }
     final client = await _connect();
     _check(owner);
     Object? result;
@@ -315,6 +377,7 @@ final class RemoteMcpApp extends ChangeNotifier
   }
 
   Future<void> closeSession() async {
+    if (forwardRequest != null) _forwardRevoked = true;
     _epoch++;
     notifyListeners();
     final client = _client;

@@ -1189,6 +1189,18 @@ Future<Widget> bootOpenMuseHost({
         )
       : <RemoteMcpApp>[];
   final appRouter = RemoteMcpAppsRouter(remoteApps);
+  pairedGateway.mcpApps = (request) async {
+    if(request.accountRef!=readyAccount.value){throw StateError('APP_ACCOUNT_SCOPE_REVOKED');}
+    final body=request.body;
+    if(body['method']=='apps/list')return {'apps':[
+      for(final app in remoteApps){'id':app.id,'title':app.title,'version':app.descriptor.version,
+        'uiResourceUri':app.uiUri,'uiSha256':app.definition['uiSha256'],'html':app.html}
+    ]};
+    final app=remoteApps.singleWhere((app)=>app.id==body['appId']);
+    final params=Map<String,Object?>.from(body['params'] as Map? ?? {});
+    if(body['method']=='data/read')return app.readDataResource(params['uri'] as String);
+    return app.request(body['method'] as String,params);
+  };
   resourceAgents.appToolCall = appRouter.call;
   for (final app in remoteApps) {
     registry.install(app);
