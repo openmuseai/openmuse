@@ -7,6 +7,8 @@ import 'package:muse_resource_center/muse_resource_center.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'src/syntax.dart';
 import 'src/navigation.dart';
+import 'src/review_view.dart';
+import 'src/review_document.dart';
 export 'src/syntax.dart'
     show
         viewerCodeLanguage,
@@ -60,6 +62,16 @@ final class _OpenMuseFileViewerBodyState extends State<OpenMuseFileViewerBody> {
         return const Center(child: CircularProgressIndicator());
       }
       final bytes = snapshot.data!;
+      if (widget.mediaType == 'application/vnd.openmuse.review-viewer+json' ||
+          widget.resourceName.toLowerCase().endsWith('.omreview')) {
+        try {
+          final contents = utf8.decode(bytes);
+          ViewerReviewDocument(contents);
+          return OpenMuseReviewBody(contents: contents);
+        } catch (_) {
+          return const Center(child: Text('无法读取审阅快照，格式或大小不受支持。'));
+        }
+      }
       final extension = widget.resourceName.split('.').last.toLowerCase();
       if (const {'md', 'markdown', 'mdown'}.contains(extension)) {
         return OpenMuseMarkdownBody(

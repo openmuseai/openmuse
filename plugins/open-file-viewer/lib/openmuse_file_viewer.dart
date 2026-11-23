@@ -33,12 +33,14 @@ final class OpenMuseFileViewerPlugin
       OpenMuseEditorContribution(
         id: 'viewer.markdown',
         mediaTypes: {'text/markdown'},
-        extensions: {'md', 'markdown', 'mdown'},
+        extensions: {
+          'omreview','md', 'markdown', 'mdown'},
         priority: 20,
       ),
       OpenMuseEditorContribution(
         id: 'viewer.text',
         mediaTypes: {
+          'application/vnd.openmuse.review-viewer+json',
           'text/*',
           'application/json',
           'application/xml',
