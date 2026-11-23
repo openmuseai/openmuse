@@ -1,3 +1,5 @@
+import 'package:crypto/crypto.dart';
+import 'src/host/version_capability.dart';
 import 'dart:async';
 import 'package:openmuse_mcp_app_runtime/openmuse_mcp_app_runtime.dart';
 import 'src/host/layout/plugin_panel.dart';
@@ -1188,6 +1190,17 @@ Future<Widget> bootOpenMuseHost({
           writeSecret: FlutterSecureValueStore.macOsCompatible().write,
         )
       : <RemoteMcpApp>[];
+  for (final app in remoteApps) {
+    final capabilities = (app.definition['hostCapabilities'] as List? ?? const []).cast<String>();
+    if (capabilities.contains('versions.read')) {
+      final provider = HostVersionCapability(controller,
+        resources: (app.definition['hostResources'] as List? ?? const []).cast<String>(),
+        writable: capabilities.contains('versions.write'),
+        authorized: () => readyAccount.value != null && app.definition['owner'] == sha256.convert(utf8.encode(readyAccount.value!)).toString());
+      app.hostTools = provider.tools;
+      app.callHostTool = provider.call;
+    }
+  }
   final appRouter = RemoteMcpAppsRouter(remoteApps);
   pairedGateway.mcpApps = (request) async {
     if(request.accountRef!=readyAccount.value){throw StateError('APP_ACCOUNT_SCOPE_REVOKED');}

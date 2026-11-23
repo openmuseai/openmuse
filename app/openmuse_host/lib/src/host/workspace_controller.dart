@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/widgets.dart';
@@ -175,6 +176,7 @@ final class LocalVersionSnapshot {
     required this.resourcePath,
     required this.createdAt,
     required this.byteLength,
+    this.eventId,
   });
 
   factory LocalVersionSnapshot.fromJson(Map<String, Object?> value) =>
@@ -183,12 +185,15 @@ final class LocalVersionSnapshot {
         resourcePath: value['resourcePath']! as String,
         createdAt: DateTime.parse(value['createdAt']! as String),
         byteLength: value['byteLength']! as int,
+        eventId: value['eventId'] as String?,
       );
 
   final String id;
   final String resourcePath;
   final DateTime createdAt;
   final int byteLength;
+  final String? eventId;
+  String get versionId => eventId ?? id;
   String get shortId => id.substring(0, 8);
 
   Map<String, Object?> toJson() => {
@@ -196,6 +201,7 @@ final class LocalVersionSnapshot {
     'resourcePath': resourcePath,
     'createdAt': createdAt.toUtc().toIso8601String(),
     'byteLength': byteLength,
+    if (eventId != null) 'eventId': eventId,
   };
 }
 
@@ -207,54 +213,107 @@ final class LocalVersionStore {
   final Directory root;
   final Map<String, List<LocalVersionSnapshot>> _index = {};
   bool _loaded = false;
+  Future<void>? _loading;
+  Future<void> _tail = Future.value();
+
+  Future<T> _serial<T>(Future<T> Function() action) {
+    final next = _tail.then((_) => action());
+    _tail = next.then<void>((_) {}, onError: (Object e, StackTrace st) {});
+    return next;
+  }
 
   Future<void> load() async {
     if (_loaded) return;
-    _loaded = true;
-    final file = File(p.join(root.path, 'index.json'));
-    if (!await file.exists()) return;
-    final decoded = jsonDecode(await file.readAsString());
-    if (decoded is! Map<String, dynamic>) return;
-    for (final entry in decoded.entries) {
-      final values = entry.value;
-      if (values is! List) continue;
-      _index[entry.key] = values
-          .whereType<Map>()
-          .map((value) => LocalVersionSnapshot.fromJson(value.cast()))
-          .toList();
+    if (_loading != null) return _loading;
+    _loading = _load();
+    try {
+      await _loading;
+    } finally {
+      _loading = null;
     }
   }
 
-  Future<LocalVersionSnapshot> capture(OpenMuseResource resource) async {
-    await load();
-    final path = resource.uri.toFilePath();
-    final bytes = await File(path).readAsBytes();
-    final id = sha256.convert(bytes).toString();
-    final snapshots = _index.putIfAbsent(path, () => []);
-    for (final snapshot in snapshots) {
-      if (snapshot.id == id) return snapshot;
+  Future<void> _load() async {
+    final file = File(p.join(root.path, 'index.json'));
+    if (!await file.exists()) {
+      _loaded = true;
+      return;
     }
-    await Directory(p.join(root.path, 'blobs')).create(recursive: true);
-    final blob = File(p.join(root.path, 'blobs', id));
-    if (!await blob.exists()) await blob.writeAsBytes(bytes, flush: true);
-    final snapshot = LocalVersionSnapshot(
-      id: id,
-      resourcePath: path,
-      createdAt: DateTime.now(),
-      byteLength: bytes.length,
-    );
-    snapshots.insert(0, snapshot);
-    await _save();
-    return snapshot;
+    final decoded = jsonDecode(await file.readAsString());
+    if (decoded is! Map<String, dynamic>)
+      throw const FormatException('Invalid version index');
+    final parsed = <String, List<LocalVersionSnapshot>>{};
+    for (final entry in decoded.entries) {
+      if (entry.value is! List)
+        throw const FormatException('Invalid version index');
+      parsed[entry.key] = (entry.value as List).map((value) {
+        final snapshot = LocalVersionSnapshot.fromJson(
+          Map<String, Object?>.from(value as Map),
+        );
+        if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(snapshot.id) ||
+            snapshot.resourcePath != entry.key ||
+            snapshot.byteLength < 0) {
+          throw const FormatException('Invalid version entry');
+        }
+        return snapshot;
+      }).toList();
+    }
+    _index.addAll(parsed);
+    _loaded = true;
   }
+
+  Future<LocalVersionSnapshot> capture(OpenMuseResource resource) =>
+      _serial(() async {
+        await load();
+        final path = resource.uri.toFilePath();
+        final bytes = await File(path).readAsBytes();
+        final id = sha256.convert(bytes).toString();
+        final snapshots = _index.putIfAbsent(path, () => []);
+        // A -> B -> A is three history events but only two content blobs.
+        if (snapshots.isNotEmpty && snapshots.first.id == id)
+          return snapshots.first;
+        await Directory(p.join(root.path, 'blobs')).create(recursive: true);
+        final blob = File(p.join(root.path, 'blobs', id));
+        if (!await blob.exists()) await blob.writeAsBytes(bytes, flush: true);
+        final snapshot = LocalVersionSnapshot(
+          id: id,
+          resourcePath: path,
+          createdAt: DateTime.now(),
+          byteLength: bytes.length,
+          eventId: base64Url
+              .encode(List.generate(18, (_) => Random.secure().nextInt(256)))
+              .replaceAll('=', ''),
+        );
+        snapshots.insert(0, snapshot);
+        try {
+          await _save();
+        } catch (_) {
+          snapshots.remove(snapshot);
+          rethrow;
+        }
+        return snapshot;
+      });
 
   Future<List<LocalVersionSnapshot>> list(OpenMuseResource resource) async {
+    await _tail;
     await load();
     return List.unmodifiable(_index[resource.uri.toFilePath()] ?? const []);
   }
 
-  Future<String> read(LocalVersionSnapshot snapshot) =>
-      File(p.join(root.path, 'blobs', snapshot.id)).readAsString();
+  Future<List<int>> readBytes(LocalVersionSnapshot snapshot) async {
+    if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(snapshot.id))
+      throw StateError('VERSION_ID_INVALID');
+    final bytes = await File(
+      p.join(root.path, 'blobs', snapshot.id),
+    ).readAsBytes();
+    if (bytes.length != snapshot.byteLength ||
+        sha256.convert(bytes).toString() != snapshot.id)
+      throw StateError('VERSION_INTEGRITY_FAILED');
+    return bytes;
+  }
+
+  Future<String> read(LocalVersionSnapshot snapshot) async =>
+      utf8.decode(await readBytes(snapshot));
 
   Future<void> _save() async {
     await root.create(recursive: true);
@@ -265,7 +324,6 @@ final class LocalVersionStore {
     final target = File(p.join(root.path, 'index.json'));
     final temporary = File('${target.path}.tmp');
     await temporary.writeAsString(jsonEncode(value), flush: true);
-    if (await target.exists()) await target.delete();
     await temporary.rename(target.path);
   }
 }
@@ -909,14 +967,32 @@ final class LocalWorkspaceController extends ChangeNotifier {
   }
 
   Future<LocalVersionSnapshot> captureVersion(OpenMuseResource resource) async {
+    final store = _versionStore;
     await flushBeforeDiskRead?.call(resource);
-    final snapshot = await _versionStore.capture(resource);
+    if (!identical(store, _versionStore))
+      throw StateError('VERSION_ACCOUNT_REVOKED');
+    final snapshot = await store.capture(resource);
+    if (!identical(store, _versionStore))
+      throw StateError('VERSION_ACCOUNT_REVOKED');
     notifyListeners();
     return snapshot;
   }
 
   Future<List<LocalVersionSnapshot>> versions(OpenMuseResource resource) =>
       _versionStore.list(resource);
+
+  Future<List<int>> readVersionBytes(
+    OpenMuseResource resource,
+    String versionId,
+  ) async {
+    final store = _versionStore;
+    final snapshots = await store.list(resource);
+    final snapshot = snapshots
+        .where((s) => s.versionId == versionId)
+        .firstOrNull;
+    if (snapshot == null) throw StateError('VERSION_NOT_FOUND');
+    return store.readBytes(snapshot);
+  }
 
   Future<void> openDiff(
     OpenMuseResource resource,

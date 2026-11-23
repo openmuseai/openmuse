@@ -76,6 +76,12 @@ final class RemoteMcpApp extends ChangeNotifier
 
   /// Host auditing hook. No arguments, results or credentials are included.
   void Function(String method, String? tool, bool agent)? onRequestCompleted;
+
+  /// Host-owned, explicitly granted public capabilities. Paired clients call
+  /// the same owner-scoped route; no backend credential leaves Desktop.
+  List<Map<String, Object?>> hostTools = const [];
+  Future<Map<String, Object?>> Function(String, Map<String, Object?>)?
+  callHostTool;
   String get id => definition['id'] as String;
   String get title => definition['title'] as String;
   @override
@@ -255,6 +261,9 @@ final class RemoteMcpApp extends ChangeNotifier
           .timeout(const Duration(seconds: 20));
       _check(owner);
       final tools = (await client.listTools()).tools;
+      if (tools.any((t) => t.name.startsWith('host_versions_'))) {
+        throw StateError('APP_RESERVED_TOOL_NAMESPACE');
+      }
       if (!tools.any(
         (t) =>
             (t.toJson()['_meta'] as Map?)?['ui'] is Map &&
@@ -325,13 +334,20 @@ final class RemoteMcpApp extends ChangeNotifier
     switch (method) {
       case 'tools/list':
         result = {
-          'tools': _tools
-              .where((t) => _visible(t, agent))
-              .map((t) => t.toJson())
-              .toList(),
+          'tools': [
+            ..._tools.where((t) => _visible(t, agent)).map((t) => t.toJson()),
+            ...hostTools,
+          ],
         };
       case 'tools/call':
         final name = params['name'];
+        if (hostTools.any((t) => t['name'] == name)) {
+          final arguments = Map<String, Object?>.from(
+            params['arguments'] as Map? ?? {},
+          );
+          result = await callHostTool!(name as String, arguments);
+          break;
+        }
         final tool = _tools.singleWhere(
           (t) => t.name == name,
           orElse: () => throw StateError('APP_TOOL_UNDECLARED'),
