@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:muse_collab_contract/muse_collab_contract.dart';
 
@@ -36,6 +37,9 @@ final class CollaboratorsButton extends StatelessWidget {
     required this.selfUid,
     required this.selfSessionId,
     this.buttonKey,
+    this.compact = false,
+    this.onPositionSelected,
+    this.canSelectPosition,
   });
   final Listenable listenable;
   final List<CollaborationPerson> Function() people;
@@ -43,6 +47,17 @@ final class CollaboratorsButton extends StatelessWidget {
   final String? Function() selfUid;
   final String selfSessionId;
   final Key? buttonKey;
+  final Future<void> Function(CollaborationPerson)? onPositionSelected;
+  final bool Function(CollaborationPerson)? canSelectPosition;
+
+  bool _selectable(CollaborationPerson person) =>
+      onPositionSelected != null &&
+      connected() &&
+      person.sessionId != selfSessionId &&
+      (canSelectPosition?.call(person) ?? false);
+
+  /// Retains the complete roster behind a count-only entry in narrow chrome.
+  final bool compact;
   _Roster roster() {
     final uid = selfUid(), known = connected() && uid != null;
     final values = [
@@ -97,7 +112,7 @@ final class CollaboratorsButton extends StatelessWidget {
       size: radius == 13 ? 16 : 24,
     ),
   );
-  Widget memberTile(_Member member) {
+  Widget memberTile(BuildContext context, _Member member) {
     final count = member.positions.length;
     if (count == 1)
       return ListTile(
@@ -105,6 +120,15 @@ final class CollaboratorsButton extends StatelessWidget {
         leading: avatar(member),
         title: Text(member.name),
         subtitle: Text(member.positions.single.location ?? '在线'),
+        trailing: _selectable(member.positions.single)
+            ? const Tooltip(
+                message: '定位在线位置',
+                child: Icon(Icons.my_location_outlined),
+              )
+            : null,
+        onTap: _selectable(member.positions.single)
+            ? () => Navigator.of(context).pop(member.positions.single)
+            : null,
       );
     return ExpansionTile(
       key: ValueKey('collaboration.member.${member.uid}'),
@@ -123,6 +147,15 @@ final class CollaboratorsButton extends StatelessWidget {
                   : '在线位置 ${i + 1}',
             ),
             subtitle: Text(member.positions[i].location ?? '在线'),
+            trailing: _selectable(member.positions[i])
+                ? const Tooltip(
+                    message: '定位在线位置',
+                    child: Icon(Icons.my_location_outlined),
+                  )
+                : null,
+            onTap: _selectable(member.positions[i])
+                ? () => Navigator.of(context).pop(member.positions[i])
+                : null,
           ),
       ],
     );
@@ -133,67 +166,125 @@ final class CollaboratorsButton extends StatelessWidget {
     listenable: listenable,
     builder: (context, _) {
       final current = roster();
-      return Semantics(
-        label: '在线协作',
-        child: TextButton(
-          key: buttonKey,
-          onPressed: () => showModalBottomSheet<void>(
-            context: context,
-            showDragHandle: true,
-            builder: (_) => SafeArea(
-              child: ListenableBuilder(
-                listenable: listenable,
-                builder: (context, _) {
-                  final latest = roster();
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const ListTile(title: Text('在线协作者')),
-                        Flexible(
-                          child: ListView(
-                            shrinkWrap: true,
-                            children: [
-                              if (latest.invalid)
-                                const ListTile(title: Text('在线名单暂不可用'))
-                              else ...[
-                                if (!latest.knownSelf && connected())
-                                  const ListTile(title: Text('身份尚未确认，在线人数待确认')),
-                                for (final member in latest.members)
-                                  memberTile(member),
-                                if (latest.members.isEmpty)
-                                  const ListTile(title: Text('暂无其他在线协作者')),
+      // This entry and its sheet are editor accessories. Desktop pointer taps
+      // must not dismiss the original input or clear its selection.
+      return TextFieldTapRegion(
+        child: Semantics(
+          label: '在线协作',
+          child: TextButton(
+            key: buttonKey,
+            onPressed: () async {
+              final selected = await showModalBottomSheet<CollaborationPerson>(
+                context: context,
+                // Web relies on the original modal blur/refocus cycle to
+                // republish the DOM input buffer. Native editors must retain
+                // input focus because losing it clears their local selection.
+                requestFocus: kIsWeb ? null : false,
+                showDragHandle: true,
+                isScrollControlled: !kIsWeb,
+                builder: (sheetContext) => Padding(
+                  // Native input remains focused: place the whole roster above
+                  // its keyboard, including when that inset changes in flight.
+                  padding: EdgeInsets.only(
+                    bottom: kIsWeb
+                        ? 0
+                        : MediaQuery.viewInsetsOf(sheetContext).bottom,
+                  ),
+                  child: TextFieldTapRegion(
+                    child: SafeArea(
+                      child: ListenableBuilder(
+                        listenable: listenable,
+                        builder: (context, _) {
+                          final latest = roster();
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const ListTile(title: Text('在线协作者')),
+                                Flexible(
+                                  child: ListView(
+                                    shrinkWrap: true,
+                                    children: [
+                                      if (latest.invalid)
+                                        const ListTile(title: Text('在线名单暂不可用'))
+                                      else ...[
+                                        if (!latest.knownSelf && connected())
+                                          const ListTile(
+                                            title: Text('身份尚未确认，在线人数待确认'),
+                                          ),
+                                        for (final member in latest.members)
+                                          memberTile(context, member),
+                                        if (latest.members.isEmpty)
+                                          const ListTile(
+                                            title: Text('暂无其他在线协作者'),
+                                          ),
+                                      ],
+                                      if (!connected())
+                                        const ListTile(
+                                          title: Text('正在重新连接，本机修改仍保留'),
+                                        ),
+                                    ],
+                                  ),
+                                ),
                               ],
-                              if (!connected())
-                                const ListTile(title: Text('正在重新连接，本机修改仍保留')),
-                            ],
-                          ),
-                        ),
-                      ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  );
-                },
-              ),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final member in current.members.take(3))
-                Padding(
-                  padding: const EdgeInsets.only(right: 3),
-                  child: avatar(member, radius: 13),
+                  ),
                 ),
-              if (current.members.isEmpty)
-                const Icon(Icons.group_outlined, size: 20),
-              const SizedBox(width: 4),
-              Text(
-                current.knownSelf && !current.invalid
-                    ? '${current.members.length} 人'
-                    : '在线协作',
-              ),
-            ],
+              );
+              if (!context.mounted || selected == null) return;
+              // Re-read the roster after dismissal. The domain callback resolves
+              // the current position; this shared widget never stores an anchor.
+              final currentPosition = roster().members
+                  .expand((member) => member.positions)
+                  .where(
+                    (person) =>
+                        person.uid == selected.uid &&
+                        person.sessionId == selected.sessionId,
+                  )
+                  .firstOrNull;
+              if (currentPosition == null || !_selectable(currentPosition)) {
+                ScaffoldMessenger.maybeOf(
+                  context,
+                )?.showSnackBar(const SnackBar(content: Text('该在线位置暂不可用')));
+                return;
+              }
+              await onPositionSelected!(currentPosition);
+            },
+            child: compact
+                ? Text(
+                    current.knownSelf && !current.invalid
+                        ? '${current.members.length} 人'
+                        : '在线协作',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final member in current.members.take(3))
+                        Padding(
+                          padding: const EdgeInsets.only(right: 3),
+                          child: avatar(member, radius: 13),
+                        ),
+                      if (current.members.isEmpty)
+                        const Icon(Icons.group_outlined, size: 20),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          current.knownSelf && !current.invalid
+                              ? '${current.members.length} 人'
+                              : '在线协作',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ),
       );
