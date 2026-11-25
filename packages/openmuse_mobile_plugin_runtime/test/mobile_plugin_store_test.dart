@@ -7,6 +7,23 @@ import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.da
 
 void main() {
   test(
+    'oversized legacy metadata stays unchanged and orphan directories remain visible',
+    () async {
+      final directory = await Directory.systemTemp.createTemp('legacy-budget-');
+      addTearDown(() => directory.delete(recursive: true));
+      final state = File('${directory.path}/state.json');
+      final bytes = List<int>.filled(1024 * 1024 + 1, 65);
+      await state.writeAsBytes(bytes);
+      await Directory('${directory.path}/com.example.retained').create();
+      final store = MobilePluginStore(directory, allowDownloadedPlugins: false);
+      await store.restore();
+      expect(store.hasUnreadableLegacyState, isTrue);
+      expect(store.quarantinedPluginIds, contains('com.example.retained'));
+      expect(store.installedBundles, isEmpty);
+      expect(await state.readAsBytes(), bytes);
+    },
+  );
+  test(
     'bundled release preserves but never restores downloaded software',
     () async {
       final directory = await Directory.systemTemp.createTemp(
@@ -31,13 +48,99 @@ void main() {
       );
       await release.restore();
       expect(release.installedBundles, isEmpty);
+      expect(release.quarantinedPluginIds, contains(entry.id));
+      final artifact = File(
+        '${directory.path}/${entry.id}/${entry.version}.json',
+      );
+      expect(await artifact.readAsBytes(), bytes);
       await expectLater(release.install(entry, bytes), throwsStateError);
       expect(await state.readAsString(), previous);
+      expect(await artifact.readAsBytes(), bytes);
       final restored = MobilePluginStore(directory);
       await restored.restore();
       expect(restored.isInstalled(entry.id), isTrue);
     },
   );
+
+  test(
+    'legacy records and orphan directories stay quarantined across restores',
+    () async {
+      final directory = await Directory.systemTemp.createTemp('mobile-legacy-');
+      addTearDown(() => directory.delete(recursive: true));
+      final plugin = Directory('${directory.path}/com.openmuse.pptx');
+      await plugin.create();
+      final orphan = Directory('${directory.path}/com.example.orphan');
+      await orphan.create();
+      final files = <File, List<int>>{
+        File('${directory.path}/state.json'): utf8.encode(
+          jsonEncode({
+            'installed': {
+              'com.openmuse.pptx': {
+                'version': 'legacy',
+                'entrypoint': 'index.html',
+              },
+              'com.example.missing': 'old-record',
+              '../outside': {'version': '1.0.0'},
+            },
+            'disabled': ['com.openmuse.pptx'],
+            'unknownLegacyField': true,
+          }),
+        ),
+        File('${plugin.path}/index.html'): utf8.encode(
+          '<script>legacy()</script>',
+        ),
+        File('${plugin.path}/user-deck.pptx'): [0, 1, 255, 42],
+        File('${directory.path}/user-notes.txt'): utf8.encode('用户内容'),
+        File('${orphan.path}/document.json'): utf8.encode('{"user":"data"}'),
+      };
+      for (final file in files.entries) {
+        await file.key.writeAsBytes(file.value);
+      }
+      final store = MobilePluginStore(directory, allowDownloadedPlugins: false);
+      var notifications = 0;
+      store.addListener(() => notifications++);
+      for (var attempt = 0; attempt < 2; attempt++) {
+        await store.restore();
+        expect(store.quarantinedPluginIds, {
+          'com.openmuse.pptx',
+          'com.example.missing',
+          'com.example.orphan',
+        });
+        expect(store.hasUnreadableLegacyState, isFalse);
+        expect(store.installedBundles, isEmpty);
+        expect(store.installed('com.openmuse.pptx'), isNull);
+        expect(store.isEnabled('com.openmuse.pptx'), isFalse);
+        await expectLater(
+          store.setEnabled('com.openmuse.pptx', true),
+          throwsStateError,
+        );
+        await store.uninstall('com.openmuse.pptx');
+        for (final file in files.entries) {
+          expect(await file.key.readAsBytes(), file.value);
+        }
+      }
+      expect(notifications, 2);
+      expect(await orphan.exists(), isTrue);
+      expect(await plugin.exists(), isTrue);
+    },
+  );
+
+  test('damaged and old state formats do not block bundled startup', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'mobile-old-state-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final state = File('${directory.path}/state.json');
+    final store = MobilePluginStore(directory, allowDownloadedPlugins: false);
+    for (final raw in ['{broken', '[]', '{"installed": []}']) {
+      await state.writeAsString(raw);
+      await store.restore();
+      await store.restore();
+      expect(store.hasUnreadableLegacyState, isTrue);
+      expect(store.installedBundles, isEmpty);
+      expect(await state.readAsString(), raw);
+    }
+  });
 
   test('install, disable and restore only verified Mobile bundle', () async {
     final directory = await Directory.systemTemp.createTemp(

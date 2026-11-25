@@ -440,6 +440,8 @@ final class OpenMuseStrings {
   String htmlTotal() => format("html.total");
   String htmlWorkspace() => format("html.workspace");
   String htmlWorkspaceFiles() => format("html.workspace_files");
+  String legacyPluginsRetained() => format("legacy_plugins.retained");
+  String legacyPluginsUnreadable() => format("legacy_plugins.unreadable");
   String marketA2uiPage() => format("market.a2uiPage");
   String marketA2uiState() => format("market.a2uiState");
   String marketBuiltInDisabled() => format("market.builtInDisabled");

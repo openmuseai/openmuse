@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "namespace": "legacy_plugins",
+  "sourceRevision": 3,
+  "messages": {
+    "legacy_plugins.unreadable": "Legacy plugin records could not be read. This version will not run legacy plugins; original directories and user files are retained.",
+    "legacy_plugins.retained": "Downloaded legacy plugins are quarantined and unavailable in this version. Installation records, directories and user files are retained."
+  }
+}

@@ -1,4 +1,5 @@
 import 'host/bundled_mcp_packages.dart';
+import 'legacy_plugin_notice.dart';
 import 'package:openmuse_task_notifications/openmuse_task_notifications.dart';
 import 'package:openmuse_mcp_app_runtime/openmuse_mcp_app_runtime.dart';
 import 'package:openmuse_smart_document_plugins/openmuse_smart_document_plugins.dart';
@@ -944,7 +945,10 @@ final class OpenMuseMobileApplicationState
           child: MobileResourceExtensionLayer(
             controller: _extensions,
             child: OpenMuseRuntimeNotice(
-              child: child ?? const SizedBox.shrink(),
+              child: LegacyPluginNotice(
+                store: widget.mobileMarketPlugin?.store,
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
         ),
