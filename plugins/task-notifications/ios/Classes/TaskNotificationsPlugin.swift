@@ -17,6 +17,10 @@ public final class TaskNotificationsPlugin: NSObject, FlutterPlugin, UNUserNotif
     plugin.previousDelegate = center.delegate
     center.delegate = plugin
   }
+  deinit {
+    let center = UNUserNotificationCenter.current()
+    if center.delegate === self { center.delegate = previousDelegate }
+  }
   private func status(_ reply: @escaping (String) -> Void) {
     UNUserNotificationCenter.current().getNotificationSettings { settings in
       let state: String
@@ -82,8 +86,13 @@ public final class TaskNotificationsPlugin: NSObject, FlutterPlugin, UNUserNotif
   }
   public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
     if response.notification.request.identifier.hasPrefix(prefix) {
-      activated = true; channel.invokeMethod("activated", arguments: nil)
-      completionHandler()
+      DispatchQueue.main.async {
+        if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+          self.activated = true
+          self.channel.invokeMethod("activated", arguments: nil)
+        }
+        completionHandler()
+      }
     } else if let previous = previousDelegate, previous.responds(to: #selector(userNotificationCenter(_:didReceive:withCompletionHandler:))) {
       previous.userNotificationCenter?(center, didReceive: response, withCompletionHandler: completionHandler)
     } else { completionHandler() }

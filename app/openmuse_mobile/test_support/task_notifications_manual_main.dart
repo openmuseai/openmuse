@@ -31,7 +31,10 @@ class _NativeFixtureState extends State<_NativeFixture> {
   void initState() {
     super.initState();
     widget.notifications.onOpenTasks = () {
-      if (mounted) setState(() => opened++);
+      if (mounted) {
+        setState(() => opened++);
+        debugPrint('NOTIFICATION_MANUAL_QA: activation $opened');
+      }
     };
   }
 
@@ -45,7 +48,7 @@ class _NativeFixtureState extends State<_NativeFixture> {
     sessionId: 'synthetic-qa',
     sequence: ++sequence,
     succeeded: succeeded,
-    strings: OpenMuseStrings.fallback,
+    strings: stringsOf(context),
   );
   @override
   Widget build(BuildContext context) => Scaffold(
