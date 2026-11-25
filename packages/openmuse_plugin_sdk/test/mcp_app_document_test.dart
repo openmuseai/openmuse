@@ -4,6 +4,35 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_plugin_sdk/src/mcp_app_document.dart';
 
 void main() {
+  test('browser printing is opt-in and only relays the mounted View', () async {
+    for (final enabled in [false, true]) {
+      final html = buildMcpAppHostDocument(
+        appHtml: '<p>Independent view</p>',
+        arguments: {},
+        platform: 'mobile',
+        browserPrintAvailable: enabled,
+        nativeSend: 'nativeMessages.push(message)',
+      );
+      final script =
+          '''
+const vm=require('node:vm'),assert=require('node:assert/strict'),sent=[],nativeMessages=[],listeners=[];
+const contentWindow={postMessage:m=>sent.push(m)},frame={contentWindow};
+const window={addEventListener:(t,fn)=>listeners.push(fn),removeEventListener:()=>{}};
+vm.runInNewContext(${jsonEncode(html)}.match(/<script>([\\s\\S]*?)<\\/script>/)[1],{window,document:{getElementById:()=>frame},TextDecoder,Uint8Array,atob,innerWidth:691,innerHeight:660,nativeMessages});
+(async()=>{
+ const deliver=m=>listeners[0]({source:contentWindow,data:m});
+ await deliver({jsonrpc:'2.0',id:1,method:'ui/initialize',params:{}});
+ assert.equal(!!sent[0].result.hostCapabilities.experimental?.['io.openmuse/browser-print'],$enabled);
+ const request={jsonrpc:'2.0',id:2,method:'io.openmuse/browser-print',params:{html:'<p>Own page</p>',widthMils:8270,heightMils:11690}};
+ await listeners[0]({source:{},data:request});assert.equal(nativeMessages.length,0);
+ await deliver(request);assert.equal(nativeMessages.length,$enabled?1:0);
+ if(!$enabled)assert.equal(sent.at(-1).error.code,-32601);
+})().catch(e=>{console.error(e);process.exitCode=1});
+''';
+      final result = await Process.run('node', ['-e', script]);
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+    }
+  });
   test(
     'document change context remains available without enabling Agent messages',
     () async {

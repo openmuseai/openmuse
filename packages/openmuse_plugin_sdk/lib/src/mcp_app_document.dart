@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'mcp_browser_permissions.dart';
 
 /// An MCP Apps host document. The View receives only standard MCP Apps JSON-RPC
 /// over postMessage; the native callback belongs to the Host's outer frame.
@@ -31,10 +32,31 @@ String buildMcpAppHostDocument({
   bool resourceLinksAvailable = false,
   List<McpAppExtensionDocument> extensions = const [],
   bool serverAvailable = false,
+  bool browserPrintAvailable = false,
+  McpBrowserPermissions browserPermissions = const McpBrowserPermissions(),
+  String? hostOrigin,
   String nativeSend =
       'window.webkit.messageHandlers.mcpApp.postMessage(message)',
 }) {
   assert(appHtml != null || appUrl != null);
+  if (browserPermissions.needsOrigin) {
+    final view = appUrl == null ? null : Uri.tryParse(appUrl);
+    final host = hostOrigin == null ? null : Uri.tryParse(hostOrigin);
+    if (appHtml != null ||
+        view == null ||
+        host == null ||
+        view.scheme != 'https' ||
+        host.scheme != 'https' ||
+        view.userInfo.isNotEmpty ||
+        host.userInfo.isNotEmpty ||
+        view.host.isEmpty ||
+        host.host.isEmpty ||
+        view.origin == host.origin) {
+      throw ArgumentError(
+        'Browser permissions require a dedicated HTTPS View origin distinct from Host',
+      );
+    }
+  }
   final contextAvailable = agentAvailable || modelContextAvailable;
   final extensionData = jsonEncode([
     for (final e in extensions)
@@ -56,12 +78,14 @@ String buildMcpAppHostDocument({
   final hostContext = jsonEncode({
     'theme': theme,
     ...presentation,
+    if (browserPermissions.needsOrigin)
+      'permissions': browserPermissions.toJson(),
     if (locale != null) 'locale': locale,
   }).replaceAll('<', r'\u003c');
   return '''<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>html,body,iframe{width:100%;height:100%;margin:0;border:0;overflow:hidden}iframe{display:block}</style>
-</head><body><iframe id="view" sandbox="allow-scripts allow-downloads"></iframe>
+</head><body><iframe id="view" sandbox="allow-scripts allow-downloads${browserPermissions.needsOrigin ? ' allow-same-origin' : ''}"${browserPermissions.needsOrigin ? ' allow="${browserPermissions.allow}"' : ''}></iframe>
 <script>
 const frame=document.getElementById('view');
 const inputPromise=$inputUrl===null?Promise.resolve($input):fetch($inputUrl).then(response=>{if(!response.ok)throw Error('Host input unavailable');return response.json()});
@@ -127,7 +151,7 @@ window.addEventListener('message',async event=>{
  if(!message||message.jsonrpc!=='2.0')return;
  if(message.method==='ui/initialize'){
    appCapabilities=message.params?.appCapabilities??{};
-   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{},...($resourceLinksAvailable?{openLinks:{}}:{}),...($serverAvailable?{serverTools:{},serverResources:{}}:{}),...($agentAvailable?{message:{text:{}}}:{}),...($contextAvailable?{updateModelContext:{text:{}}}:{})},hostContext:{...currentContext,platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
+   send({jsonrpc:'2.0',id:message.id,result:{protocolVersion:'2026-01-26',hostInfo:{name:'OpenMuse',version:'1.0.0'},hostCapabilities:{downloadFile:{},...($browserPrintAvailable?{experimental:{'io.openmuse/browser-print':{}}}:{}),...($resourceLinksAvailable?{openLinks:{}}:{}),...($serverAvailable?{serverTools:{},serverResources:{}}:{}),...($agentAvailable?{message:{text:{}}}:{}),...($contextAvailable?{updateModelContext:{text:{}}}:{})},hostContext:{...currentContext,platform:$hostPlatform,displayMode:'inline',containerDimensions:{width:innerWidth,height:innerHeight}}}});
  }else if(message.method==='ui/notifications/initialized'){
    if(initialized)return;initialized=true;
    send({jsonrpc:'2.0',method:'ui/notifications/tool-input',params:{arguments:await inputPromise}});
@@ -136,6 +160,8 @@ window.addEventListener('message',async event=>{
  }else if(message.method==='ping'){
    send({jsonrpc:'2.0',id:message.id,result:{}});
  }else if(message.method==='ui/download-file'){
+   $nativeSend;
+ }else if($browserPrintAvailable&&message.method==='io.openmuse/browser-print'){
    $nativeSend;
  }else if($resourceLinksAvailable&&message.method==='ui/open-link'){
    $nativeSend;

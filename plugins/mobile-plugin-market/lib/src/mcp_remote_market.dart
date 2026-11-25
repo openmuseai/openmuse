@@ -92,17 +92,23 @@ final class RemoteMcpMarket {
     this.receiptFile, {
     this.nativeMediaTypes = const {},
     Map<String, String>? allowedPackages,
+    Map<String, String> allowedRemoteServers = const {},
   }) : allowedPackages = allowedPackages == null
            ? null
-           : Map.unmodifiable(allowedPackages);
+           : Map.unmodifiable(allowedPackages),
+       allowedRemoteServers = Map.unmodifiable(allowedRemoteServers);
   final Uri origin;
   final File receiptFile;
 
   /// Immutable name@version -> digest pins supplied by the installed app.
   /// A pinned release accepts local HTML from these packages only.
   final Map<String, String>? allowedPackages;
+  final Map<String, String> allowedRemoteServers;
   bool _permits(RemoteMcpEntry entry) =>
       allowedPackages == null ||
+      (entry.endpoint != null &&
+          allowedRemoteServers['${entry.name}@${entry.version}'] ==
+              entry.endpoint.toString()) ||
       (entry.endpoint == null &&
           entry.packageSha256 != null &&
           allowedPackages!['${entry.name}@${entry.version}'] ==
@@ -232,6 +238,27 @@ final class RemoteMcpMarket {
     if (entry.packageSha256 == null) return null;
     final file = File('${packageDirectory(entry).path}/mcp-app.html');
     return await file.exists() ? file.readAsString() : null;
+  }
+
+  File get _browserPermissionsCache =>
+      File('${receiptFile.parent.path}/mcp-browser-permissions.json');
+  Future<Map<String, dynamic>> _browserPermissionRecords() async {
+    final file = _browserPermissionsCache;
+    if (!await file.exists()) return {};
+    if (await file.length() > 1024 * 1024)
+      throw const FormatException('UI permission cache budget');
+    return Map<String, dynamic>.from(
+      jsonDecode(await file.readAsString()) as Map,
+    );
+  }
+
+  Future<McpBrowserPermissions> mcpAppBrowserPermissions(
+    RemoteMcpEntry entry,
+  ) async {
+    _requirePermitted(entry);
+    return McpBrowserPermissions.fromJson(
+      (await _browserPermissionRecords())['${entry.name}@${entry.version}:${entry.packageSha256}'],
+    );
   }
 
   bool hasOfflineUi(RemoteMcpEntry entry) =>
@@ -397,7 +424,10 @@ final class RemoteMcpMarket {
 
   Future<Set<String>> installed() async => (await _allReceipts())
       .where(
-        (key) => allowedPackages == null || allowedPackages!.containsKey(key),
+        (key) =>
+            allowedPackages == null ||
+            allowedPackages!.containsKey(key) ||
+            allowedRemoteServers.containsKey(key),
       )
       .toSet();
 
@@ -503,6 +533,7 @@ final class RemoteMcpMarket {
     final contents = (data['resources'] as List).whereType<Map>();
     final types = <String>{};
     String? app;
+    var browserPermissions = const McpBrowserPermissions();
     for (final tool in tools) {
       final properties = (tool['inputSchema'] as Map?)?['properties'];
       final inputTypes = properties is Map
@@ -531,12 +562,29 @@ final class RemoteMcpMarket {
       if (app != null && app != text)
         throw const FormatException('Ambiguous offline UI');
       app = text;
+      final meta = resource['_meta'];
+      final resourceUi = meta is Map ? meta['ui'] : null;
+      final requested = McpBrowserPermissions.fromJson(
+        resourceUi is Map ? resourceUi['permissions'] : null,
+      );
+      browserPermissions = McpBrowserPermissions(
+        microphone: browserPermissions.microphone || requested.microphone,
+        clipboardWrite:
+            browserPermissions.clipboardWrite || requested.clipboardWrite,
+      );
       types.addAll(inputTypes);
     }
     if (app != null)
       await File(
         '${directory.path}/mcp-app.html',
       ).writeAsString(restrictMcpAppDocument(app), flush: true);
+    final permissions = await _browserPermissionRecords();
+    permissions['${entry.name}@${entry.version}:${entry.packageSha256}'] =
+        browserPermissions.toJson();
+    await _browserPermissionsCache.writeAsString(
+      jsonEncode(permissions),
+      flush: true,
+    );
     final cached = await _capabilities();
     cached['${entry.name}@${entry.version}'] = types.toList()..sort();
     await _capabilityCache.writeAsString(jsonEncode(cached), flush: true);
@@ -747,6 +795,7 @@ final class RemoteMcpMarketPage extends StatefulWidget {
     this.pickFile,
     this.nativeMediaTypes = const {},
     this.allowedPackages,
+    this.allowedRemoteServers = const {},
     this.openNativeFile,
     this.embedded = false,
     this.query = '',
@@ -763,6 +812,7 @@ final class RemoteMcpMarketPage extends StatefulWidget {
   final Future<File?> Function()? pickFile;
   final Map<String, Set<String>> nativeMediaTypes;
   final Map<String, String>? allowedPackages;
+  final Map<String, String> allowedRemoteServers;
   final Future<void> Function(BuildContext, RemoteMcpEntry, File)?
   openNativeFile;
   @override
@@ -813,6 +863,7 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
             File('${directory!.path}/mcp-remote-installations.json'),
         nativeMediaTypes: widget.nativeMediaTypes,
         allowedPackages: widget.allowedPackages,
+        allowedRemoteServers: widget.allowedRemoteServers,
       );
       final catalog = await source.list();
       final receipts = await source.installed();
@@ -950,6 +1001,9 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
           }
         }
         final html = await market!.mcpAppDocument(entry);
+        final browserPermissions = await market!.mcpAppBrowserPermissions(
+          entry,
+        );
         if (Platform.isIOS && html == null) {
           throw const FormatException(
             'Reviewed offline MCP App is unavailable',
@@ -977,6 +1031,7 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
                 title: entry.title,
                 digest: entry.packageSha256!.toLowerCase(),
                 appHtml: html,
+                browserPermissions: browserPermissions,
                 fileBytes: bytes,
                 fileName: selected?.uri.pathSegments.last,
                 mediaType: selected == null ? null : selectedMediaType,
@@ -1345,11 +1400,13 @@ final class RemoteMcpOfflineView extends StatefulWidget {
     this.fileBytes,
     this.filePath,
     this.forwardDownloads = false,
+    this.microphoneRequested = false,
     this.onCreated,
     this.onClosed,
   });
   final String digest;
   final bool forwardDownloads;
+  final bool microphoneRequested;
   final String? hostDocument, fileName, mediaType, filePath;
   final Uint8List? fileBytes;
   final ValueChanged<RemoteMcpViewConnection>? onCreated, onClosed;
@@ -1400,6 +1457,7 @@ final class _RemoteMcpOfflineViewState extends State<RemoteMcpOfflineView> {
           creationParams: {
             'digest': widget.digest,
             'forwardDownloads': widget.forwardDownloads,
+            'microphoneRequested': widget.microphoneRequested,
             if (widget.hostDocument != null) 'html': widget.hostDocument,
             if (widget.filePath != null) 'filePath': widget.filePath,
             if (widget.fileName != null) 'fileName': widget.fileName,
@@ -1420,6 +1478,7 @@ final class RemoteMcpOfflineAppPage extends StatefulWidget {
     this.mediaType,
     this.fileBytes,
     this.appHtml,
+    this.browserPermissions = const McpBrowserPermissions(),
     this.filePath,
     this.onSave,
     this.onCreated,
@@ -1428,6 +1487,7 @@ final class RemoteMcpOfflineAppPage extends StatefulWidget {
   final String title, digest;
   final String? fileName, mediaType, appHtml, filePath;
   final Uint8List? fileBytes;
+  final McpBrowserPermissions browserPermissions;
   final Future<void> Function(Uint8List)? onSave;
   final ValueChanged<RemoteMcpViewConnection>? onCreated, onClosed;
   @override
@@ -1497,44 +1557,54 @@ final class _RemoteMcpOfflineAppPageState
             ),
         ],
       ),
-      body: Platform.isIOS && widget.appHtml != null
-          ? _IosOfflineMcpAppView(
-              title: widget.title,
-              appHtml: widget.appHtml!,
-              fileName: widget.fileName,
-              fileBytes: widget.fileBytes,
-              filePath: widget.filePath,
-              forwardDownloads: widget.onSave != null,
-              resourceToolsAvailable: _host != null || widget.onCreated != null,
-              onCreated: _created,
-              onClosed: _closed,
-            )
-          : RemoteMcpOfflineView(
-              digest: digest,
-              hostDocument: widget.appHtml == null
-                  ? null
-                  : buildMcpAppHostDocument(
-                      appUrl:
-                          'https://p${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io/editor/mcp-app.html',
-                      argumentsUrl:
-                          'https://p${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io/host/arguments.json',
-                      arguments: const {},
-                      platform: 'mobile',
-                      presentation: mcpAppPresentation(context),
-                      theme: Theme.of(context).brightness.name,
-                      resourceToolsAvailable:
-                          _host != null || widget.onCreated != null,
-                      nativeSend:
-                          'window.McpHost.postMessage(JSON.stringify(message))',
-                    ),
-              fileName: widget.fileName,
-              mediaType: widget.mediaType,
-              fileBytes: widget.fileBytes,
-              filePath: widget.filePath,
-              forwardDownloads: widget.onSave != null,
-              onCreated: _created,
-              onClosed: _closed,
-            ),
+      body: SafeArea(
+        top: false,
+        child: Platform.isIOS && widget.appHtml != null
+            ? _IosOfflineMcpAppView(
+                title: widget.title,
+                appHtml: widget.appHtml!,
+                fileName: widget.fileName,
+                mediaType: widget.mediaType,
+                fileBytes: widget.fileBytes,
+                filePath: widget.filePath,
+                forwardDownloads: widget.onSave != null,
+                resourceToolsAvailable:
+                    _host != null || widget.onCreated != null,
+                onCreated: _created,
+                onClosed: _closed,
+              )
+            : RemoteMcpOfflineView(
+                digest: digest,
+                hostDocument: widget.appHtml == null
+                    ? null
+                    : buildMcpAppHostDocument(
+                        appUrl:
+                            'https://${widget.browserPermissions.needsOrigin ? 'v' : 'p'}${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io/editor/mcp-app.html',
+                        hostOrigin:
+                            'https://p${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io',
+                        browserPermissions: widget.browserPermissions,
+                        browserPrintAvailable: Platform.isAndroid,
+                        argumentsUrl:
+                            'https://p${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io/host/arguments.json',
+                        arguments: const {},
+                        platform: 'mobile',
+                        presentation: mcpAppPresentation(context),
+                        theme: Theme.of(context).brightness.name,
+                        resourceToolsAvailable:
+                            _host != null || widget.onCreated != null,
+                        nativeSend:
+                            'window.McpHost.postMessage(JSON.stringify(message))',
+                      ),
+                fileName: widget.fileName,
+                mediaType: widget.mediaType,
+                fileBytes: widget.fileBytes,
+                filePath: widget.filePath,
+                forwardDownloads: widget.onSave != null,
+                microphoneRequested: widget.browserPermissions.microphone,
+                onCreated: _created,
+                onClosed: _closed,
+              ),
+      ),
     );
   }
 }
@@ -1547,6 +1617,7 @@ final class _IosOfflineMcpAppView extends StatefulWidget {
     required this.title,
     required this.appHtml,
     this.fileName,
+    this.mediaType,
     this.fileBytes,
     this.filePath,
     this.forwardDownloads = false,
@@ -1556,7 +1627,7 @@ final class _IosOfflineMcpAppView extends StatefulWidget {
   });
 
   final String title, appHtml;
-  final String? fileName, filePath;
+  final String? fileName, filePath, mediaType;
   final Uint8List? fileBytes;
   final bool resourceToolsAvailable;
   final bool forwardDownloads;
@@ -1668,7 +1739,13 @@ final class _IosOfflineMcpAppViewState extends State<_IosOfflineMcpAppView> {
     } on Object {
       return;
     }
-    if (request['method'] != 'ui/download-file' || widget.forwardDownloads) {
+    if (request['method'] != 'ui/download-file' ||
+        widget.forwardDownloads &&
+            isOriginalMcpDownload(
+              Map<String, Object?>.from(request),
+              widget.fileName,
+              widget.mediaType,
+            )) {
       await _connection.handleMessage(request);
       return;
     }
@@ -1687,9 +1764,19 @@ final class _IosOfflineMcpAppViewState extends State<_IosOfflineMcpAppView> {
       if (name.isEmpty || name.length > 200 || name.contains('\\')) {
         throw const FormatException('Invalid export name');
       }
-      final destination = widget.filePath == null
-          ? File('${(await getApplicationDocumentsDirectory()).path}/$name')
-          : File(widget.filePath!);
+      final original =
+          widget.filePath != null &&
+          isOriginalMcpDownload(
+            Map<String, Object?>.from(request),
+            widget.fileName,
+            widget.mediaType,
+          );
+      final directory = await Directory(
+        '${(await getApplicationDocumentsDirectory()).path}/Exports',
+      ).create(recursive: true);
+      final destination = original
+          ? File(widget.filePath!)
+          : File('${(await directory.createTemp('view-')).path}/$name');
       await destination.parent.create(recursive: true);
       final staging = File('${destination.path}.saving');
       await staging.writeAsBytes(bytes, flush: true);

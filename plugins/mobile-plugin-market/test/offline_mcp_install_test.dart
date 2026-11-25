@@ -7,6 +7,56 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_mobile_plugin_market/openmuse_mobile_plugin_market.dart';
 
 void main() {
+  test('remote review pins match name, version and endpoint exactly', () async {
+    final directory = await Directory.systemTemp.createTemp('mcp-remote-pins-');
+    addTearDown(() => directory.delete(recursive: true));
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(() => server.close(force: true));
+    final origin = Uri.parse('http://127.0.0.1:${server.port}');
+    Map<String, dynamic> record(String name, String version, String endpoint) =>
+        {
+          'server': {
+            'name': name,
+            'version': version,
+            'remotes': [
+              {'type': 'streamable-http', 'url': endpoint},
+            ],
+          },
+        };
+    server.listen((request) async {
+      request.response.write(
+        jsonEncode({
+          'servers': [
+            record('example/ci', '1', '$origin/mcp'),
+            record('example/ci', '2', '$origin/mcp'),
+            record('example/ci', '1', '$origin/other'),
+          ],
+          'metadata': {},
+        }),
+      );
+      await request.response.close();
+    });
+    final pins = {'example/ci@1': '$origin/mcp'};
+    final market = RemoteMcpMarket(
+      origin,
+      File('${directory.path}/receipts.json'),
+      allowedPackages: const {},
+      allowedRemoteServers: pins,
+    );
+    pins['example/ci@2'] = '$origin/mcp';
+    final entries = await market.list();
+    expect(entries.length, 1);
+    expect(entries.single.version, '1');
+    expect(entries.single.endpoint.toString(), '$origin/mcp');
+    await market.receiptFile.writeAsString(
+      jsonEncode(['example/ci@1', 'example/ci@2']),
+    );
+    expect(
+      await market.installed(),
+      {'example/ci@1'},
+      reason: 'A trusted remote remains installed after a market refresh',
+    );
+  });
   test(
     'launch pins filter discovery, restore and direct entry points',
     () async {
