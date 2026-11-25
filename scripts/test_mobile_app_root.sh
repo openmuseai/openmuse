@@ -13,6 +13,9 @@ export GRADLE_USER_HOME="$gradle_home"
 "$repo_root/scripts/build_office_viewers_mobile_artifacts.sh"
 "$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
 
+# The HTML localization contract runs the locked DOM runtime through Node.
+(cd services/config-control && npm ci --ignore-scripts)
+
 (cd packages/openmuse_host_shell && flutter analyze && flutter test)
 (cd app/openmuse_mobile && flutter analyze && flutter test && flutter build apk --debug && flutter build ios --debug --no-codesign)
 (cd app/openmuse_host && flutter analyze && flutter test)
