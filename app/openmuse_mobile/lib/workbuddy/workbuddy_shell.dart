@@ -2059,8 +2059,9 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                                   widget.resources!.draft.attach(record);
                                   controller.selectTab(WbTab.tasks);
                                 } on Object catch (error) {
-                                  if (mounted)
+                                  if (mounted) {
                                     showResourceError(context, error);
+                                  }
                                 }
                               },
                             ),

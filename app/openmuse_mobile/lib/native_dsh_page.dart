@@ -596,8 +596,9 @@ final class _NativeDshPageState extends State<NativeDshPage> {
                 ),
             onOpenPresentedFile: (seq, index, action) async {
               final locate = ResourceLinkRouting.maybeOf(context)?.locate;
-              if (locate == null)
+              if (locate == null) {
                 throw const ResourceFailure('SOURCE_UNAVAILABLE');
+              }
               if (action == 'reveal') {
                 await conversation.client.openPresentedFile(
                   sessionId: conversation.store.snapshot.sessionId!,
