@@ -1,2 +1,3 @@
-"NSMicrophoneUsageDescription" = "OpenMuse 使用麦克风将语音转换为可编辑文字。语音识别在此设备上运行。";
-"NSLocalNetworkUsageDescription" = "OpenMuse 连接你已配对的电脑，以访问获得授权的工作区和资源。";
+"CFBundleDisplayName" = "Office Harness";
+"NSMicrophoneUsageDescription" = "Office Harness 在你选择语音输入或在文档中录音时使用麦克风。语音输入识别在此设备上运行。";
+"NSLocalNetworkUsageDescription" = "Office Harness 连接你已配对的电脑，以访问获得授权的工作区和资源。";

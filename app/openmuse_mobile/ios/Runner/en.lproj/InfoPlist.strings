@@ -1,3 +1,4 @@
-"NSMicrophoneUsageDescription" = "OpenMuse uses the microphone to turn speech into editable text. Speech recognition runs on this device.";
+"CFBundleDisplayName" = "Office Harness";
+"NSMicrophoneUsageDescription" = "Office Harness uses the microphone when you choose voice input or record audio in a document. Voice input recognition runs on this device.";
 
-"NSLocalNetworkUsageDescription" = "OpenMuse connects to your paired computer to access authorized workspaces and resources.";
+"NSLocalNetworkUsageDescription" = "Office Harness connects to your paired computer to access authorized workspaces and resources.";
