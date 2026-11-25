@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-11-25T16:57:46.780418+00:00",
+  "build": 112502,
+  "version": "1.0.3",
+  "packageId": "com.openmuseai.mobile",
+  "device": "OPPO PKM110 Android 16 / API 36",
+  "method": "adb install -r exact signed store candidate; no app-data wipe",
+  "result": "Success; dumpsys versionCode=112502 versionName=1.0.3 minSdk=24 targetSdk=36",
+  "logSha256": "781a31c82430c97897af612ece5e0ca2205e301cb5ff121ce2660541ea5182c7",
+  "scope": "Installation only; 112501 functional acceptance is retained separately and not automatically inherited"
+}

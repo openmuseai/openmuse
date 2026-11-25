@@ -2,16 +2,20 @@
   "id": "05-build",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "Both signed technical candidates successfully built from fixed clean source; final release freeze not complete.",
+  "summary": "Both signed 112502 store candidates built from the same clean cca0a9d1 source. Final MR merges/tags and source freeze still pending.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-build.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-build-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build-112502.json"
   ],
   "exceptions": [
     "Final MR merges/tags and source freeze pending"
   ],
   "evidenceDigests": {
     "ios-appstore-build.json": "026cf461e0c4fea9dbf84e8bdefdeb3fc18ad54a80d8a771498674a7620eb536",
-    "cn-build.json": "294bdec0a9b568a47b4d2038ffddc31500b67e7c622eac4c9df64b6f9a35ed62"
+    "cn-build.json": "294bdec0a9b568a47b4d2038ffddc31500b67e7c622eac4c9df64b6f9a35ed62",
+    "ios-appstore-build-112502.json": "68220f5874963bf07d9150c1b949c38cc9afba789e55792108da65fa7b16b25d",
+    "cn-build-112502.json": "0b04d4787613f0e5bd6d6356ab6ac9a3104db77c89f328e9f7c6cc63d1091f64"
   }
 }

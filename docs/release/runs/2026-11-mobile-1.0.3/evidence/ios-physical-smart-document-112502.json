@@ -1,0 +1,85 @@
+{
+  "checkedAt": "2026-11-25T16:57:46.780418+00:00",
+  "schema": "openmuse.physical-acceptance/1",
+  "build": 112502,
+  "version": "1.0.3",
+  "bundleId": "com.openmuseai.mobile",
+  "device": {
+    "model": "iPhone 12 Pro Max",
+    "os": "iOS 26.6.2",
+    "viewportPoints": [
+      428,
+      926
+    ]
+  },
+  "channel": "TestFlight update of existing production App; verified independently with devicectl",
+  "automation": "User-authorized XCUITest, separate signed runner targeting installed App; production App not re-signed",
+  "results": [
+    {
+      "case": "TC-D12",
+      "result": "pass",
+      "scope": "Current Chinese guide read/edit header visible near top, title minY 66.5pt; keyboard visible without extra blank region",
+      "limitation": "Screenshot state has no global notice; active notice 0/24/59 inset geometry covered by the separate widget tests"
+    },
+    {
+      "case": "smart-document-save-reopen",
+      "result": "pass",
+      "steps": [
+        "Open bundled native guide",
+        "Append qaiphonesave using visible system keyboard keys in final blank paragraph",
+        "Tap 完成",
+        "Return to Recent",
+        "Reopen same document",
+        "Scroll to final paragraph and independently read marker"
+      ],
+      "marker": "qaiphonesave"
+    },
+    {
+      "case": "presentation-load",
+      "result": "pass",
+      "scope": "Normal Recent route opens actual bundled 4-slide PPTX with original toolbar/canvas"
+    },
+    {
+      "case": "presentation-touch-edit-save-reopen",
+      "result": "not-complete",
+      "observation": "Touch selects text box, text-edit overlay/keyboard entry not yet verified"
+    },
+    {
+      "case": "production-task-result-notification",
+      "result": "not-run"
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "materials/releases/1.0.3/ios/title-after-112502.png",
+      "sha256": "b8d099f2fbef42734258e09233f733f10f0e690c93be4d433fb9351c654fe636"
+    },
+    {
+      "path": "materials/releases/1.0.3/ios/smart-document-save-reopen-112502.png",
+      "sha256": "a85e3cfa961e7e2419c5e90108f6978b02b76c9e2ae2794680b6a30126e728b5"
+    },
+    {
+      "path": "materials/releases/1.0.3/ios/pptx-loaded-112502.png",
+      "sha256": "c7747f11f337e62a5edb5fcb10806135d332ae3688e96cf17fc1d150092b03a7"
+    }
+  ],
+  "logs": [
+    {
+      "path": "/tmp/muse103-ios-update112502.log",
+      "sha256": "c817a06f5b367f6e4da2911c6e623ec186405add85bd4231ccb568f059639493"
+    },
+    {
+      "path": "/tmp/muse103-ios-guide112502.log",
+      "sha256": "588f28cbc85e0da897d0378081f9a8396268711210dcd76e31c77655d52215b2"
+    },
+    {
+      "path": "/tmp/muse103-ios-guide-save112502-attempt2.log",
+      "sha256": "e251e5708aaa135ca5624a08d3005275e2f10e5f4ba4eaa6c2572eba5102615b"
+    },
+    {
+      "path": "/tmp/muse103-ios-guide-reopen112502-attempt2.log",
+      "sha256": "a5906a220b0c01f0a5ec93b19584d059f83ee5c642123d6123d3a34ede6c7de9"
+    }
+  ],
+  "attemptHistory": "Initial typeText event could not find Flutter hidden-input focus. Visible system keys successfully appended marker. Intermediate assertions about lazy offscreen save/marker elements failed; final close/reopen + scroll + visible marker assertion passed. Previous attempts retained locally; no failed assertion counted as a pass."
+}

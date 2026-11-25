@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-11-25T16:57:46.780418+00:00",
+  "applicationId": "861413",
+  "appId": "106172424",
+  "packageId": "com.openmuseai.mobile",
+  "build": 112502,
+  "version": "1.0.3",
+  "sha256": "8feb02a72c2843afb4711b2c03c15ad27f68dbcb1bba12c6f37034e349622bdf",
+  "upload": "Uploaded and parsed by vivo; UI shows versionCode 112502, 64-bit, 253.05M",
+  "saveAction": "Draft persisted: independent browser refresh shows versionCode112502 and selected qualification type 其他类",
+  "reviewSubmitted": false,
+  "publiclyReleased": false,
+  "remaining": [
+    "Office category persistence",
+    "Age rating and publication settings",
+    "Current screenshots and working review account",
+    "Final functional regression and source freeze"
+  ],
+  "industryAssessment": {
+    "selected": "其他分类 → 其他类",
+    "savedAfterRefresh": true,
+    "additionalQualificationUploadFields": 0,
+    "scope": "Current ordinary office-client form choice; not a platform approval or blanket legal exemption"
+  }
+}

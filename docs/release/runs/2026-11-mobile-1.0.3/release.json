@@ -12,13 +12,12 @@
   "sourceFrozen": false,
   "sourceRevisions": {
     "Muse-Client-ios": {
-      "commit": "16941c572cc3abdd25d1d0f67769f9ebbbccdeeb",
+      "commit": "cca0a9d1d169d80d3ad61d0602b5ea5103198ed0",
       "dirty": false
     },
     "Muse-Client-android": {
-      "commit": "c3bb1f4e51df3e0930c571cc02eefcc7f72e8332",
-      "dirty": false,
-      "deltaFromIos": "Android-only permission strings and public signature certificate; functional plugin source unchanged"
+      "commit": "cca0a9d1d169d80d3ad61d0602b5ea5103198ed0",
+      "dirty": false
     },
     "Muse-Plugin-Ecosystem": {
       "commit": "30852cad4de5ad8990d4e9530ee495723f7b3c51",
@@ -180,48 +179,48 @@
   "artifacts": [
     {
       "lane": "ios-cn",
-      "path": "dist/mobile/1.0.3-112501/ios-appstore/OpenMuse-ios-appstore-1.0.3-112501.ipa",
-      "sha256": "387f57a7b46871db28ca7e4ff64c654ecc598087655683c9e2461ba4f4d68b97",
-      "buildRecord": "dist/mobile/1.0.3-112501/ios-appstore/release.json"
+      "path": "dist/mobile/1.0.3-112502/ios-appstore/OpenMuse-ios-appstore-1.0.3-112502.ipa",
+      "sha256": "a88ddd1fa84d5967d5052703546103acc0fba92474c6713abe826b30dae49c91",
+      "buildRecord": "dist/mobile/1.0.3-112502/ios-appstore/release.json"
     },
     {
       "lane": "ios-us",
-      "path": "dist/mobile/1.0.3-112501/ios-appstore/OpenMuse-ios-appstore-1.0.3-112501.ipa",
-      "sha256": "387f57a7b46871db28ca7e4ff64c654ecc598087655683c9e2461ba4f4d68b97",
-      "buildRecord": "dist/mobile/1.0.3-112501/ios-appstore/release.json"
+      "path": "dist/mobile/1.0.3-112502/ios-appstore/OpenMuse-ios-appstore-1.0.3-112502.ipa",
+      "sha256": "a88ddd1fa84d5967d5052703546103acc0fba92474c6713abe826b30dae49c91",
+      "buildRecord": "dist/mobile/1.0.3-112502/ios-appstore/release.json"
     },
     {
       "lane": "android-cn",
-      "path": "dist/mobile/1.0.3-112501/cn/OpenMuse-cn-1.0.3-112501.apk",
-      "sha256": "c9bd0af1a023e91dfa1058a8509b79bd7ea96660f5d9dfdc8eab09415d206f42",
-      "buildRecord": "dist/mobile/1.0.3-112501/cn/release.json"
+      "path": "dist/mobile/1.0.3-112502/cn/OpenMuse-cn-1.0.3-112502.apk",
+      "sha256": "8feb02a72c2843afb4711b2c03c15ad27f68dbcb1bba12c6f37034e349622bdf",
+      "buildRecord": "dist/mobile/1.0.3-112502/cn/release.json"
     }
   ],
   "stores": {
     "android-cn": {
       "channel": "vivo",
-      "status": "vivo draft1.0.3(112501) uploaded/saved and verified after refresh; not submitted for review",
-      "build": 112501,
+      "status": "Draft112502 uploaded/parsed, saved and independently verified after refresh; qualification type other-category saved without additional upload fields; not submitted",
+      "build": 112502,
       "releaseMode": "undecided",
       "reviewSubmitted": false,
       "reviewApproved": false,
-      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-draft.json"
+      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-upload-112502.json"
     },
     "ios-cn": {
-      "status": "processed and ready for internal testing; existing OpenMuseIOS group; not submitted for review",
-      "build": 112501,
+      "status": "Processed, internal group available, physical TestFlight installation verified; not submitted",
+      "build": 112502,
       "releaseMode": "manual",
       "reviewSubmitted": false,
       "reviewApproved": false,
-      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload.json"
+      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload-112502.json"
     },
     "ios-us": {
-      "status": "processed and ready for internal testing; existing OpenMuseIOS group; not submitted for review",
-      "build": 112501,
+      "status": "Processed, internal group available, physical TestFlight installation verified; not submitted",
+      "build": 112502,
       "releaseMode": "manual",
       "reviewSubmitted": false,
       "reviewApproved": false,
-      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload.json"
+      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload-112502.json"
     }
   },
   "scope": {
@@ -246,5 +245,9 @@
     ],
     "releaseMode": "manual coordinated release planned"
   },
-  "sourceFreezeScope": "Candidates built from fixed clean commits. Final functional MR merges/tags and core production/device acceptance are still open."
+  "sourceFreezeScope": "Candidates built from fixed clean commits. Final functional MR merges/tags and core production/device acceptance are still open.",
+  "candidateHistory": [
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-112501-history.json"
+  ],
+  "updatedAt": "2026-11-25T16:57:46.780418+00:00"
 }

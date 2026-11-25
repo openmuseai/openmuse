@@ -2,20 +2,26 @@
   "id": "06-binary",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "Final signature/payload/permission/ELF checks pass; signed production runtime publications verified.",
+  "summary": "112502 signatures/permissions/closure checks passed; actual packaged CN/US signed public configurations and restored cache verified. 301 APK +423 IPA entries pattern-scanned; Tika MIME-rule false positive reviewed.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-public-runtime.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-public-runtime.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-package-pattern-review.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/genoffice-advisory-disposition.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/genoffice-advisory-disposition.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-public-runtime-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-public-runtime-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/binary-pattern-review-112502.json"
   ],
   "exceptions": [
-    "Full production/physical install-upgrade and final dataflow acceptance pending"
+    "Full production task and final dataflow acceptance pending"
   ],
   "evidenceDigests": {
     "ios-public-runtime.json": "f487405779c23f6e0058f59bb5e0ad12eddcf2e24f333d4528ed7c88647243ac",
     "android-public-runtime.json": "85ed62d6acd61786d09044e009ab4d49b48c8b9d2bd40fc6e46f3809a9f933ff",
     "android-package-pattern-review.json": "09f7d9571495821f2e40ed7fa68f0e1d2858d7cd4df679c62d098ecf74cd033d",
-    "genoffice-advisory-disposition.json": "739e57872cdb95d73f5dc0038fa8015aa73cabc8c704a4a451bc3af169c7ecb7"
+    "genoffice-advisory-disposition.json": "739e57872cdb95d73f5dc0038fa8015aa73cabc8c704a4a451bc3af169c7ecb7",
+    "ios-public-runtime-112502.json": "00f7aa7a89adcd36c071e8971da39843b221994c8333d99e7790878075962c69",
+    "android-public-runtime-112502.json": "e92eb1d124dc412ee255070edcd3c0608e5bab65a1845bc5619728175354f611",
+    "binary-pattern-review-112502.json": "312de3cdf44d648d4c326604eb97148d3aabc7aac435a493142965ce002c9691"
   }
 }
