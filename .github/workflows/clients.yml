@@ -52,7 +52,7 @@ jobs:
 
   mobile:
     name: Mobile
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 180
     env:
       FLUTTER_VERSION: "3.44.2"

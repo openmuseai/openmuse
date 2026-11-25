@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 /// Size is a preference. The Mobile Host owns the final grid constraints.

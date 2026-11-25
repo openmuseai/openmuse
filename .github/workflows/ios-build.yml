@@ -42,7 +42,7 @@ env:
 jobs:
   ios:
     name: iOS arm64 release (unsigned)
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 180
 
     steps:
