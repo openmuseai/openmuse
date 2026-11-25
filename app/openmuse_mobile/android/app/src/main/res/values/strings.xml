@@ -1,3 +1,6 @@
 <resources>
     <string name="open_file">Open file</string>
+    <string name="plugin_microphone_title">Plugin microphone access</string>
+    <string name="plugin_microphone_message">Allow the current installed plugin to record audio? Audio will be available to this plugin. Use its recording controls to stop.</string>
+    <string name="plugin_microphone_allow">Continue</string>
 </resources>
