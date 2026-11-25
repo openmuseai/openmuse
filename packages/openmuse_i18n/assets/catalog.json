@@ -13514,6 +13514,53 @@
           "member": "TaskNotificationsSettings"
         }
       ]
+    },
+    "privacy.gateway": {
+      "namespace": "privacy",
+      "parameters": [
+        "gateway"
+      ],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Gateway: {gateway}",
+        "zh-Hans": "网关：{gateway}"
+      },
+      "sources": [
+        {
+          "file": "app/openmuse_mobile/lib/native_dsh_page.dart",
+          "member": "_approveSharing"
+        }
+      ]
+    },
+    "privacy.send_scope": {
+      "namespace": "privacy",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Scope: input text, conversation history and system context; tools may read workspace resources, documents and attachments. The gateway configures the model provider; its downstream address cannot be verified here. Approval applies to this send only; you can cancel.",
+        "zh-Hans": "发送范围：输入文字、会话历史、系统上下文；工具可能读取工作区、文档和附件。模型服务商由网关配置；此处无法验证其下游地址。仅授权本次发送，可取消。"
+      },
+      "sources": [
+        {
+          "file": "app/openmuse_mobile/lib/native_dsh_page.dart",
+          "member": "_approveSharing"
+        }
+      ]
+    },
+    "privacy.attachment_unverified": {
+      "namespace": "privacy",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Attachments were not sent: upload recipients and consent cannot be verified. Keep the draft, or remove attachments to send text.",
+        "zh-Hans": "附件尚未发送：无法验证上传接收方和授权。请保留草稿，或移除附件后发送文字。"
+      },
+      "sources": [
+        {
+          "file": "app/openmuse_mobile/lib/workbuddy/workbuddy_shell.dart",
+          "member": "_sendMessage"
+        }
+      ]
     }
   }
 }

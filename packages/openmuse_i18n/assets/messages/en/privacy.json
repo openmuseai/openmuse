@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "namespace": "privacy",
+  "sourceRevision": 3,
+  "messages": {
+    "privacy.gateway": "Gateway: {gateway}",
+    "privacy.send_scope": "Scope: input text, conversation history and system context; tools may read workspace resources, documents and attachments. The gateway configures the model provider; its downstream address cannot be verified here. Approval applies to this send only; you can cancel.",
+    "privacy.attachment_unverified": "Attachments were not sent: upload recipients and consent cannot be verified. Keep the draft, or remove attachments to send text."
+  }
+}

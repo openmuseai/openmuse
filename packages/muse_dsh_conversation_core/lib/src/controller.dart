@@ -38,6 +38,11 @@ final class DshConversationController {
   Future<void>? _followTask;
   Future<void>? _reconcileTask;
   int _requestSequence = 0;
+  int _consentGeneration = 0;
+
+  /// Invalidates approvals still being reviewed. Already accepted server work
+  /// must be cancelled separately; this cannot recall transmitted data.
+  void revokeSendApproval() => _consentGeneration++;
 
   Future<void> start(String sessionId, {bool running = false}) async {
     if (_sessionId != null) throw StateError('conversation already started');
@@ -119,7 +124,8 @@ final class DshConversationController {
     final normalized = text.trim();
     if (sessionId == null || normalized.isEmpty) return;
     final recipient = store.snapshot;
-    if (approveSend != null &&
+    final consentGeneration = _consentGeneration;
+    if (approveSend == null ||
         !await client.trace.measure(
           'prompt.approval',
           (_) => approveSend!(recipient, normalized),
@@ -127,6 +133,7 @@ final class DshConversationController {
       throw const DshSendDeclined();
     }
     if (_closed ||
+        consentGeneration != _consentGeneration ||
         store.snapshot.sessionId != sessionId ||
         store.snapshot.provider != recipient.provider ||
         store.snapshot.model != recipient.model) {

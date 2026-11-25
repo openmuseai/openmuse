@@ -1166,6 +1166,11 @@ final class OpenMuseStrings {
       format("office.unable_to_safely_open_this_docx_file.d2dd2cd6");
   String officeXlsxReadOnlyCompatibilityView9db253b8() =>
       format("office.xlsx_read_only_compatibility_view.9db253b8");
+  String privacyAttachmentUnverified() =>
+      format("privacy.attachment_unverified");
+  String privacyGateway({required Object? gateway}) =>
+      format("privacy.gateway", {"gateway": gateway});
+  String privacySendScope() => format("privacy.send_scope");
   String resourcecenterAddToChat() => format("resourcecenter.addToChat");
   String resourcecenterAlreadyAttached() =>
       format("resourcecenter.alreadyAttached");

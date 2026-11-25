@@ -222,8 +222,9 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
       if (!mounted) return;
       final transport = _dshConnection;
       if (transport == null ||
-          !_sessionHandle.isBoundToClient(transport.client))
+          !_sessionHandle.isBoundToClient(transport.client)) {
         return;
+      }
       _syncNotificationScope();
       unawaited(
         _notifications?.observe(
@@ -1234,27 +1235,18 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     }
     if (connection != null) {
       final targetDeviceRef = connection.deviceRef;
-      final intendedWorkspace = controller.selectedWorkspaceId,
-          intendedTask = controller.openTaskId;
-      String prompt = text;
+      final prompt = text;
       if (widget.resources?.draft.isEmpty == false) {
-        try {
-          prompt = await widget.resources!.preparePrompt(
-            text,
-            key: resourceOperationKey('prompt'),
-            expectedPeer: targetDeviceRef,
-          );
-        } on Object catch (error) {
-          if (mounted) showResourceError(context, error);
-          return;
-        }
-        if (!mounted) return;
-        if (controller.selectedDeviceId != 'paired.$targetDeviceRef' ||
-            controller.selectedWorkspaceId != intendedWorkspace ||
-            controller.openTaskId != intendedTask) {
-          showResourceError(context, const ResourceFailure('STALE_GENERATION'));
-          return;
-        }
+        // Attachment preparation can upload before native send consent.
+        // Keep the draft until that transport has a verifiable consent gate.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              stringsOf(context).format('privacy.attachment_unverified'),
+            ),
+          ),
+        );
+        return;
       }
       final task = controller.openTask;
       if (task != null && task.id.startsWith('dsh.session.')) {
