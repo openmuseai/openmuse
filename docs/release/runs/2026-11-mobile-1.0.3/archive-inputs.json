@@ -7,6 +7,12 @@
       "reviewedForSecrets": true
     },
     {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-physical-smart-document.json",
+      "target": "evidence/android-physical-smart-document.json",
+      "sha256": "ce43659a3a946ca3fdaec8f08766e6a7af5862364918469277d1013030dfe59c",
+      "reviewedForSecrets": true
+    },
+    {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-public-runtime.json",
       "target": "evidence/android-public-runtime.json",
       "sha256": "85ed62d6acd61786d09044e009ab4d49b48c8b9d2bd40fc6e46f3809a9f933ff",
@@ -69,19 +75,19 @@
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/validation-summary.json",
       "target": "evidence/validation-summary.json",
-      "sha256": "8fb5e9a6ccdbc4ba268314f7b69015f48200912c93423333ed991949c8a45280",
+      "sha256": "186a35886ec103edcca0b231719d01dafde5dc68fad906d078a68863d90bd1bd",
       "reviewedForSecrets": true
     },
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-draft.json",
       "target": "evidence/vivo-draft.json",
-      "sha256": "d94c1864851e333025556d969969c1136ee9eec1b64c9cd1bc71a9257c12c496",
+      "sha256": "f8805dad02ca91dd3fbe3e99a01ce89fa763fbaec2613489b8e54e183aa1dadd",
       "reviewedForSecrets": true
     },
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/release.json",
       "target": "release.json",
-      "sha256": "c6154acef6f5369b4b7a9eee5fe460d967065f3065e86f9679c21a13241959ec",
+      "sha256": "6a4ac2cc13517047aff04c9ed3c5067d55c89e4a638c5ae348bc8cddc0d06122",
       "reviewedForSecrets": true
     },
     {
@@ -105,7 +111,7 @@
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/04-tests.json",
       "target": "stages/04-tests.json",
-      "sha256": "612ff11d101fdb90fe09a2d7496b39be7c575de55cbea92eb987f3ef25217bd4",
+      "sha256": "47775ec1ba2a11007049483198fe2bd796012c82825083d7ec8a1ee8c0e2d857",
       "reviewedForSecrets": true
     },
     {
@@ -123,13 +129,13 @@
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/07-materials.json",
       "target": "stages/07-materials.json",
-      "sha256": "2de2c7851bcebaffb5c6cda88ca57a9deee13ccc5fd0e083785b626644763b41",
+      "sha256": "b3ad7a1498b21cf2e17e219700659384fd95cd737ae49e3325c6283cf8802d2e",
       "reviewedForSecrets": true
     },
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/08-upload.json",
       "target": "stages/08-upload.json",
-      "sha256": "ac044b511b80b34607a5f8dc3957ce306a8f93022048c3ddea901aca055e8142",
+      "sha256": "fd7738a4adf4ea7576366778ce924205c6ced5a1ffa9811afa9630e4ade8a92c",
       "reviewedForSecrets": true
     },
     {

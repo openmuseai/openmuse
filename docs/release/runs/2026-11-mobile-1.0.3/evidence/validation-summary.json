@@ -35,10 +35,10 @@
     }
   ],
   "notExecutedCore": [
-    "Full production SmartDocument edit/save/reopen and upgrade/sync",
-    "Full production PPTX edit/save/reopen",
+    "Full production SmartDocument upgrade/sync and original-byte comparison",
+    "Independently verified production PPTX editing/save/reopen",
     "Production paired Desktop task success/failure notification",
-    "Physical iPhone and Android final candidate acceptance",
+    "Physical iPhone final candidate acceptance",
     "Final store downloads and online observation"
   ],
   "retainedFailures": [
@@ -47,5 +47,17 @@
     "Android post-build certificate verification initially blocked; public cert archived in c3bb1f4e",
     "Physical Android click attempts failed; not overwritten by emulator pass"
   ],
-  "formalRelease": false
+  "formalRelease": false,
+  "physicalAndroid": {
+    "model": "OPPO PKM110",
+    "os": "Android16/API36",
+    "productionArtifactBuild": 112501,
+    "smartDocumentEditExitReopen": "pass",
+    "marker": "QA103-OID-20261125",
+    "oldGuideStillListed": true,
+    "oldGuideOriginalBytes": "not-verified-on-device",
+    "pptxLoad": "pass",
+    "pptxEditSaveReopen": "user-reported-change; marker not independently observed after reopen, not verified",
+    "taskNotificationsProduction": "not-run"
+  }
 }

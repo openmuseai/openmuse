@@ -200,7 +200,7 @@
   "stores": {
     "android-cn": {
       "channel": "vivo",
-      "status": "1.0.3 candidate built; copyright saved in old draft; new APK not yet uploaded",
+      "status": "vivo draft1.0.3(112501) uploaded/saved and verified after refresh; not submitted for review",
       "build": 112501,
       "releaseMode": "undecided",
       "reviewSubmitted": false,
@@ -208,7 +208,7 @@
       "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-draft.json"
     },
     "ios-cn": {
-      "status": "delivered-to-Apple-processing; not submitted for review",
+      "status": "processed and ready for internal testing; existing OpenMuseIOS group; not submitted for review",
       "build": 112501,
       "releaseMode": "manual",
       "reviewSubmitted": false,
@@ -216,7 +216,7 @@
       "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload.json"
     },
     "ios-us": {
-      "status": "delivered-to-Apple-processing; not submitted for review",
+      "status": "processed and ready for internal testing; existing OpenMuseIOS group; not submitted for review",
       "build": 112501,
       "releaseMode": "manual",
       "reviewSubmitted": false,

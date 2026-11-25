@@ -1,16 +1,35 @@
 {
+  "schema": "openmuse.vivo-draft-receipt/2",
+  "checkedAt": "2026-11-25T13:02:22.725526+00:00",
   "appId": "106172424",
   "consoleRecordId": "861413",
-  "appName": "OpenMuse",
   "packageId": "com.openmuseai.mobile",
-  "copyright": "Original signed electronic copyright certificate uploaded, Save success, retained after refresh",
-  "newApk": "1.0.3(112501) built but not yet uploaded",
-  "draftVersionStill": "1.0.1(20)",
-  "submitted": false,
+  "version": "1.0.3",
+  "build": 112501,
+  "apkSha256": "c9bd0af1a023e91dfa1058a8509b79bd7ea96660f5d9dfdc8eab09415d206f42",
+  "observed": [
+    "APK upload reached100percent and platform parsed1.0.3/112501",
+    "Save success; refresh retained new APK/version and1.0.3 descriptions",
+    "Original electronic copyright attachment retained",
+    "Draft notes describe actual local SmartDocument/PPTX/notification and consent paths without added self-configured model architecture"
+  ],
+  "classification": {
+    "intended": "效率办公 / 办公工具",
+    "persistence": "Selection appeared in UI but did not persist after refresh; remains unset, not recorded as saved",
+    "specialIndustry": "Agent previously selected AI service/providingAI synthesis to inspect conditional requirements. This was not a platform applicability determination. Unsaved choice withdrawn via reload; refreshed draft shows neutral 评估 button and no selected AI tag.",
+    "userDecision": "User considers industry qualifications/safety assessment inapplicable; continue ordinary office-client preparation and reassess applicability against actual functions/platform rules. Do not treat conditional seven-item list as an established release blocker.",
+    "sources": [
+      "https://dev.vivo.com.cn/documentCenter/doc/90",
+      "https://dev.vivo.com.cn/documentCenter/doc/562"
+    ],
+    "verifiedRules": "Security assessment guide targets services with public-opinion attributes or social-mobilization capability. Special qualifications separately list AI-synthesis service and AI-content dissemination. No automatic exemption determination made."
+  },
+  "submittedForReview": false,
   "pending": [
-    "newAPK",
-    "candidate screenshots",
-    "category/publish selection",
-    "industry-assessment fields"
+    "final candidate screenshots",
+    "main category persistence",
+    "release timing",
+    "review account/production acceptance",
+    "applicability determination if actual platform requires qualifications"
   ]
 }

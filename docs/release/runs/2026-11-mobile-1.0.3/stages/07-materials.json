@@ -2,7 +2,7 @@
   "id": "07-materials",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "Brand/localized draft and CN/US availability saved; vivo copyright retained.",
+  "summary": "New vivo1.0.3 APK, descriptions and copyright retained after refresh. Main office-category persistence/screenshots still open. Conditional AI qualification list was agent-selected, not a platform applicability ruling; choice withdrawn; ordinary office-client preparation continues.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-store-draft.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-draft.json"
@@ -12,6 +12,6 @@
   ],
   "evidenceDigests": {
     "apple-store-draft.json": "012deb4c85ff01436c8bb2fc206e4f4ac4a144042834123e1ec83862b70371ec",
-    "vivo-draft.json": "d94c1864851e333025556d969969c1136ee9eec1b64c9cd1bc71a9257c12c496"
+    "vivo-draft.json": "f8805dad02ca91dd3fbe3e99a01ce89fa763fbaec2613489b8e54e183aa1dadd"
   }
 }

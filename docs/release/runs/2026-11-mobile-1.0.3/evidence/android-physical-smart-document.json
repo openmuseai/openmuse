@@ -1,0 +1,42 @@
+{
+  "schema": "openmuse.device-acceptance/1",
+  "checkedAt": "2026-11-25T12:44:42.818845+00:00",
+  "device": {
+    "model": "OPPO PKM110",
+    "os": "Android16/API36",
+    "physical": true
+  },
+  "artifact": {
+    "package": "com.openmuseai.mobile",
+    "version": "1.0.3",
+    "build": 112501,
+    "sha256": "c9bd0af1a023e91dfa1058a8509b79bd7ea96660f5d9dfdc8eab09415d206f42",
+    "source": "c3bb1f4e51df3e0930c571cc02eefcc7f72e8332"
+  },
+  "installation": "In-place update from1.0.2(112104), adb install-r Success; correct production package launched via flutter run--release--use-application-binary; activity identity independently confirmed.",
+  "observations": [
+    "Existing account/service region retained; actual auth verification logged200/businesscode0 without exposing credentials",
+    "New native Smart Document .musedoc guide appears in Recent; old .sydoc guide and PPTX remain",
+    "Opened native SmartDocument editor from normal resource list",
+    "Entered editing with real IME, appended unique text at end",
+    "Exited to resource list; reopened document through normal route, entered editing and observed exact persisted marker QA103-OID-20261125"
+  ],
+  "result": {
+    "smartDocumentLocalEditExitReopen": "pass",
+    "oldGuideStillListed": "pass",
+    "oldGuideOriginalBytes": "not-verified-on-physical-device",
+    "cloudSync": "not-run",
+    "pptx": "in-progress",
+    "notifications": "not-run"
+  },
+  "inputMethod": "Mirroring mouse input did not activate controls. Keyboard navigation through CUA worked; initial rapid text entry dropped characters, so exact observed marker is recorded rather than claiming the initially intended string. No phone security protections changed.",
+  "log": {
+    "path": "/tmp/muse103-physical-android-production-run.log",
+    "sha256AtCapture": "a2935bd9470e07f9832f7f52bf30af493c88ba185c55c3a38b87467eb4e4fbc6"
+  },
+  "limits": [
+    "Real production signed APK local document path only; not cloud/paired Desktop acceptance",
+    "Old home-screen shortcut points to separate prior smartdocacceptance package; its earlier observations excluded",
+    "UI screenshot observations available in this chat; no raw device filesystem inspection or private content export"
+  ]
+}

@@ -2,7 +2,7 @@
   "id": "08-upload",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "Early TestFlight build delivery observed; this does not pass formal upload stage or authorize review.",
+  "summary": "Apple build processed/ready for internal testing and vivo1.0.3 APK saved as draft; formal stage prerequisites and end-to-end/channel installs remain open.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload.json"
   ],
