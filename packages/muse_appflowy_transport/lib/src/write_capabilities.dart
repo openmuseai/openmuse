@@ -1,3 +1,5 @@
+import 'package:muse_original_sync/muse_original_sync.dart';
+
 /// A point-in-time description of the original Cloud object, not a write permit.
 /// Every write still goes through original server authorization and lifecycle checks.
 final class AppFlowyWriteCapabilities {
@@ -12,6 +14,7 @@ final class AppFlowyWriteCapabilities {
     required this.maxBatchBytes,
     required this.maxBatchObjects,
     List<String> snapshotValidationProfiles = const [],
+    this.durableSync,
   }) : snapshotValidationProfiles = List.unmodifiable(
          snapshotValidationProfiles,
        );
@@ -19,6 +22,7 @@ final class AppFlowyWriteCapabilities {
   final String workspaceId, objectId;
   final int collabType;
   final bool canWrite;
+  final OriginalSyncCapability? durableSync;
 
   /// Server-reported integration qualification, independent of write authority.
   /// The transport does not interpret content kinds or imply full feature parity.

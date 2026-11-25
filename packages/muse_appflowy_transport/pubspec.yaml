@@ -5,6 +5,8 @@ publish_to: none
 environment:
   sdk: ^3.12.2
 dependencies:
+  muse_original_sync:
+    path: ../muse_original_sync
   muse_collab_contract:
     path: ../muse_collab_contract
   http: ^1.2.0
