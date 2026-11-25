@@ -38,6 +38,7 @@ final class MobileMyPage extends StatefulWidget {
     this.onPlugins,
     this.registryProviders,
     this.speechModels,
+    this.onNotifications,
   });
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeMode;
@@ -51,6 +52,7 @@ final class MobileMyPage extends StatefulWidget {
   final VoidCallback? onPlugins;
   final McpRegistryProviders? registryProviders;
   final SpeechModelManager? speechModels;
+  final VoidCallback? onNotifications;
   @override
   State<MobileMyPage> createState() => _MobileMyPageState();
 }
@@ -140,6 +142,18 @@ final class _MobileMyPageState extends State<MobileMyPage> {
             ],
           ),
           _SectionCaption(s.mobilePreferences()),
+          if (widget.onNotifications != null)
+            SettingsGroup(
+              children: [
+                SettingsRow(
+                  key: const ValueKey('my-notifications'),
+                  icon: Icons.notifications_none,
+                  title: s.format('notifications.title'),
+                  subtitle: s.format('notifications.description'),
+                  onTap: widget.onNotifications,
+                ),
+              ],
+            ),
           SettingsGroup(
             children: [
               Padding(
@@ -285,8 +299,7 @@ final class _MobileMyPageState extends State<MobileMyPage> {
   );
 }
 
-String _version(PackageInfo? info) =>
-    info == null ? '—' : 'V${info.version}';
+String _version(PackageInfo? info) => info == null ? '—' : 'V${info.version}';
 
 final class SettingsGroup extends StatelessWidget {
   const SettingsGroup({super.key, required this.children});

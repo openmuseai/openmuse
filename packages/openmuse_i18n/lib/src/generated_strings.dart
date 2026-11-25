@@ -1129,6 +1129,23 @@ final class OpenMuseStrings {
       format("mobile.your_session_has_expired_sign_in_again_and.9fd9856b");
   String mobileYourToolsAtAGlance9f2e8073() =>
       format("mobile.your_tools_at_a_glance.9f2e8073");
+  String notificationsCancel() => format("notifications.cancel");
+  String notificationsCompleted() => format("notifications.completed");
+  String notificationsContinue() => format("notifications.continue");
+  String notificationsDenied() => format("notifications.denied");
+  String notificationsDescription() => format("notifications.description");
+  String notificationsError() => format("notifications.error");
+  String notificationsExplanation() => format("notifications.explanation");
+  String notificationsFailed() => format("notifications.failed");
+  String notificationsGranted() => format("notifications.granted");
+  String notificationsNotDetermined() => format("notifications.notDetermined");
+  String notificationsOpenResult() => format("notifications.open_result");
+  String notificationsOpenSettings() => format("notifications.open_settings");
+  String notificationsResults() => format("notifications.results");
+  String notificationsRetry() => format("notifications.retry");
+  String notificationsSystem() => format("notifications.system");
+  String notificationsTitle() => format("notifications.title");
+  String notificationsUnavailable() => format("notifications.unavailable");
   String officeParagraphE6bbad92({required Object? value1}) =>
       format("office.paragraph.e6bbad92", {"value1": value1});
   String officePdfReadOnlyTextView213a26ed() =>

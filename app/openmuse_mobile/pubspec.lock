@@ -1135,6 +1135,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  openmuse_task_notifications:
+    dependency: "direct main"
+    description:
+      path: "../../plugins/task-notifications"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_workspace_paired:
     dependency: "direct main"
     description:

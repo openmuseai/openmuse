@@ -14,25 +14,35 @@ import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 final class NativeDshSessionHandle extends ChangeNotifier {
   DshConversationController? _conversation;
   StreamSubscription<void>? _changes;
+  StreamSubscription<DshTaskOutcome>? _taskChanges;
+  void Function(DshTaskOutcome)? onTaskOutcome;
   DshNativeSessionOptions? _options;
 
   DshConversationSnapshot? get snapshot => _conversation?.store.snapshot;
   DshNativeSessionOptions? get options => _options;
   bool get ready => _conversation != null;
+  bool isBoundToClient(DshNativeGatewayClient client) =>
+      identical(_conversation?.client, client);
 
   void attach(
     DshConversationController conversation,
     DshNativeSessionOptions? options,
   ) {
     _changes?.cancel();
+    _taskChanges?.cancel();
     _conversation = conversation;
     _options = options;
     _changes = conversation.store.changes.listen((_) => notifyListeners());
+    _taskChanges = conversation.store.taskOutcomes.listen(
+      (event) => onTaskOutcome?.call(event),
+    );
     notifyListeners();
   }
 
   void detach(DshConversationController conversation) {
     if (!identical(_conversation, conversation)) return;
+    _taskChanges?.cancel();
+    _taskChanges = null;
     _changes?.cancel();
     _changes = null;
     _conversation = null;
@@ -75,6 +85,8 @@ final class NativeDshSessionHandle extends ChangeNotifier {
 
   @override
   void dispose() {
+    _taskChanges?.cancel();
+    onTaskOutcome = null;
     _changes?.cancel();
     super.dispose();
   }

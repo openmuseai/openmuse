@@ -13259,6 +13259,261 @@
           "member": "embedRetry"
         }
       ]
+    },
+    "notifications.title": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Notifications",
+        "zh-Hans": "通知"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.results": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Task result reminders",
+        "zh-Hans": "任务结果提醒"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.description": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Notify me when a task completes or fails",
+        "zh-Hans": "完成或失败时提醒我"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.explanation": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Reminders contain no document content. The app must be running and receiving task results; results may not arrive after the app is closed.",
+        "zh-Hans": "提醒不包含文档内容。App 需要保持运行并收到任务结果；关闭 App 后可能无法收到提醒。"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.cancel": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Cancel",
+        "zh-Hans": "取消"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.continue": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Continue",
+        "zh-Hans": "继续"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.system": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "System notifications",
+        "zh-Hans": "系统通知"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.notDetermined": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Not enabled",
+        "zh-Hans": "尚未开启"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.granted": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Allowed",
+        "zh-Hans": "已允许"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.denied": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Notifications are off. You can allow them in system settings.",
+        "zh-Hans": "通知已关闭，可在系统设置中开启。"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.unavailable": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Notification settings are unavailable",
+        "zh-Hans": "暂时无法读取通知设置"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.open_settings": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Open system settings",
+        "zh-Hans": "前往系统设置"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.retry": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Retry",
+        "zh-Hans": "重试"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.completed": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Task completed",
+        "zh-Hans": "任务已完成"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.failed": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Task failed",
+        "zh-Hans": "任务未完成"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.open_result": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Open the app to view the result",
+        "zh-Hans": "打开 App 查看结果"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
+    },
+    "notifications.error": {
+      "namespace": "notifications",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "Unable to update notification settings. Try again.",
+        "zh-Hans": "无法更新通知设置，请重试。"
+      },
+      "sources": [
+        {
+          "file": "plugins/task-notifications/lib/openmuse_task_notifications.dart",
+          "member": "TaskNotificationsSettings"
+        }
+      ]
     }
   }
 }

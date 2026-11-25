@@ -1,3 +1,4 @@
+import 'package:openmuse_task_notifications/openmuse_task_notifications.dart';
 import 'package:openmuse_mcp_app_runtime/openmuse_mcp_app_runtime.dart';
 import 'package:openmuse_smart_document_plugins/openmuse_smart_document_plugins.dart';
 import 'dart:async';
@@ -434,6 +435,15 @@ final class OpenMuseMobileApplicationState
   );
   final _fileViewer = OpenMuseFileViewerPlugin();
   late final List<OpenMusePlugin> _compiledClientPlugins = [
+    OpenMuseTaskNotifications(
+      readPreference: () => const FlutterSecureValueStore().read(
+        'openmuse.local-task-notifications.enabled',
+      ),
+      writePreference: (value) => const FlutterSecureValueStore().write(
+        'openmuse.local-task-notifications.enabled',
+        value,
+      ),
+    ),
     OpenMuseResourceNotesPlugin(),
     ...createNativeSmartDocumentPlugins(cloudDocuments: widget.smartDocuments),
     _fileViewer,
