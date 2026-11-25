@@ -4,6 +4,7 @@
 A technical exclusion check; passing does not certify copyright ownership.
 """
 import argparse
+import hashlib
 import json
 import io
 import zlib
@@ -37,15 +38,50 @@ CONTENT = re.compile(FORBIDDEN.pattern.encode('ascii'), re.I)
 MAX_EXPANDED = 512 * 1024 * 1024
 
 
-def inspect_payload(name, data, depth=0, budget=None):
+def load_profile(name):
+    if name is None:
+        return None
+    if name != 'mobile-1.0.3':
+        raise ValueError('Unknown mobile closure profile')
+    path = Path(__file__).resolve().parents[2] / 'config/release/mobile-1.0.3-closure.json'
+    value = json.loads(path.read_text())
+    if (value.get('schema') != 'openmuse.mobile-closure/1'
+            or value.get('version') != '1.0.3'
+            or value.get('allowedImplementationInPinnedArtifacts') != 'genoffice'
+            or value.get('allowedHostIdentifiers') != ['io.openmuse/genoffice-pptx']
+            or value.get('allowedLiteralsInPinnedArtifacts') != ['aiOfficeTabs']
+            or set(value.get('bundledArtifacts', {})) != {'flutter_assets/assets/bundled/slides-0.9.6.mcpb'}
+            or any(not re.fullmatch('[a-f0-9]{64}', v) for v in value['bundledArtifacts'].values())):
+        raise ValueError('Invalid mobile closure profile')
+    return value
+
+
+def forbidden_matches(data, profile=None, approved_bundle=False):
+    normalized = data.replace(b'\x00', b'')
+    if profile:
+        for identifier in profile['allowedHostIdentifiers']:
+            normalized = normalized.replace(identifier.encode('ascii'), b'')
+        if approved_bundle:
+            for literal in profile['allowedLiteralsInPinnedArtifacts']:
+                normalized = normalized.replace(literal.encode('ascii'), b'')
+    return sorted({m.group().decode('ascii').lower() for m in CONTENT.finditer(normalized)
+                   if not (approved_bundle and m.group().lower() == b'genoffice')})
+
+
+def inspect_payload(name, data, depth=0, budget=None, profile=None, approved_bundle=False):
     budget = budget if budget is not None else [MAX_EXPANDED]
     budget[0] -= len(data)
     if budget[0] < 0 or depth > 5:
         raise ValueError('Payload inspection budget exceeded: ' + name)
     bad = []
+    if profile:
+        for suffix, digest in profile['bundledArtifacts'].items():
+            if name == suffix or name.endswith('/' + suffix):
+                if hashlib.sha256(data).hexdigest() != digest:
+                    return [name + ': reviewed bundled artifact SHA-256 mismatch']
+                approved_bundle = True
     # UTF-16 strings appear in Android XML/DEX resources and native metadata.
-    normalized = data.replace(b'\x00', b'')
-    matches = sorted({m.group().decode('ascii').lower() for m in CONTENT.finditer(normalized)})
+    matches = forbidden_matches(data, profile, approved_bundle)
     if matches:
         bad.append(name + ': ' + ', '.join(matches))
     if data.startswith(b'PK\x03\x04'):
@@ -56,38 +92,41 @@ def inspect_payload(name, data, depth=0, budget=None):
                 if item.file_size > budget[0]:
                     raise ValueError('Nested payload too large: ' + name)
                 child = name + '!/' + item.filename
-                if FORBIDDEN.search(item.filename):
+                if forbidden_matches(item.filename.encode(), profile, approved_bundle):
                     bad.append(child)
-                bad.extend(inspect_payload(child, nested.read(item), depth + 1, budget))
+                bad.extend(inspect_payload(child, nested.read(item), depth + 1, budget, profile, approved_bundle))
     elif data.startswith(b'\x1f\x8b') or name.endswith('NOTICES.Z'):
         # Limit decompression before allocating an unbounded notices payload.
         inflater = zlib.decompressobj(16 + zlib.MAX_WBITS if data.startswith(b'\x1f\x8b') else zlib.MAX_WBITS)
         expanded = inflater.decompress(data, max(1, budget[0] + 1))
         if not inflater.eof:
             raise ValueError('Compressed payload incomplete or too large: ' + name)
-        bad.extend(inspect_payload(name + '!/expanded', expanded, depth + 1, budget))
+        bad.extend(inspect_payload(name + '!/expanded', expanded, depth + 1, budget, profile, approved_bundle))
     return bad
 
 
-def verify(path):
+def verify(path, profile=None):
+    artifact_names = None
     if path.name == 'package_config.json':
         names = {p['name'] for p in json.loads(path.read_text())['packages']}
         bad = sorted(name for name in names if name in FORBIDDEN_PACKAGES or FORBIDDEN.search(name))
     elif path.is_dir():
-        bad = [str(p.relative_to(path)) for p in path.rglob('*') if p.is_file() and FORBIDDEN.search(str(p.relative_to(path)))]
+        artifact_names = [str(p.relative_to(path)) for p in path.rglob('*') if p.is_file()]
+        bad = [str(p.relative_to(path)) for p in path.rglob('*') if p.is_file() and forbidden_matches(str(p.relative_to(path)).encode(), profile)]
         for file in path.rglob('*'):
             if file.is_file():
-                bad.extend(inspect_payload(str(file.relative_to(path)), file.read_bytes()))
+                bad.extend(inspect_payload(str(file.relative_to(path)), file.read_bytes(), profile=profile))
         executable = path / 'Runner'
         if executable.exists():
             symbols = subprocess.check_output(['nm', '-gU', str(executable)], text=True)
-            bad.extend(line for line in symbols.splitlines() if FORBIDDEN.search(line))
+            bad.extend(line for line in symbols.splitlines() if forbidden_matches(line.encode(), profile))
     else:
         with zipfile.ZipFile(path) as archive:
-            bad = [name for name in archive.namelist() if FORBIDDEN.search(name)]
+            artifact_names = archive.namelist()
+            bad = [name for name in archive.namelist() if forbidden_matches(name.encode(), profile)]
             for item in archive.infolist():
                 if not item.is_dir():
-                    bad.extend(inspect_payload(item.filename, archive.read(item)))
+                    bad.extend(inspect_payload(item.filename, archive.read(item), profile=profile))
             manifests = [name for name in archive.namelist()
                          if name == 'AndroidManifest.xml' or name.endswith('/manifest/AndroidManifest.xml')]
             if path.suffix in {'.apk', '.aab'} and not manifests:
@@ -120,6 +159,10 @@ def verify(path):
                     raise SystemExit('Native PT_LOAD alignment is below 16 KiB: ' + name)
                 native_count += 1
             print(f'Android ELF load-segment alignment: PASS ({native_count} arm64 libraries)')
+    if profile and artifact_names is not None:
+        for suffix in profile['bundledArtifacts']:
+            if sum(name == suffix or name.endswith('/' + suffix) for name in artifact_names) != 1:
+                bad.append('Missing or duplicate reviewed bundled artifact: ' + suffix)
     if bad:
         raise SystemExit('Excluded implementations or identifiers in mobile release:\n' + '\n'.join(bad))
     print(f'Mobile dependency and payload closure: PASS ({path})')
@@ -128,4 +171,6 @@ def verify(path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('artifact', type=Path)
-    verify(parser.parse_args().artifact)
+    parser.add_argument('--profile', choices=['mobile-1.0.3'])
+    args = parser.parse_args()
+    verify(args.artifact, load_profile(args.profile))

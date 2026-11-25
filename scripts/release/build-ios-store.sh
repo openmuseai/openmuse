@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Archive an iOS candidate with explicit language and filing policy for US or China.
+# Archive an iOS candidate with explicit storefront and regional service policy.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 version=''
 build_number=''
-market='us'
+market=''
 allow_dirty=false
 skip_tests=false
 while [[ $# -gt 0 ]]; do
@@ -24,10 +24,16 @@ done
 [[ "$build_number" =~ ^[1-9][0-9]*$ ]] || {
   echo 'Set a positive, increasing build number.' >&2; exit 2;
 }
-[[ "$market" == us || "$market" == cn ]] || { echo 'Use --market us or --market cn.' >&2; exit 2; }
+if [[ -z "$market" ]]; then
+  market=us
+  if [[ "$version" == 1.0.3 ]]; then market=appstore; fi
+fi
+[[ "$market" == us || "$market" == cn || "$market" == appstore ]] || { echo 'Use --market us, cn or appstore (CN and US).' >&2; exit 2; }
 deployment_profile=global-us
 if [[ "$market" == cn ]]; then deployment_profile=china; fi
 cd "$repo_root"
+closure_args=()
+if [[ "$version" == 1.0.3 ]]; then closure_args+=(--profile mobile-1.0.3); fi
 python3 "$repo_root/scripts/release/verify-welcome-guide.py"
 dirty=false
 if [[ -n "$(git status --porcelain)" ]]; then dirty=true; fi
@@ -45,11 +51,17 @@ security find-identity -v -p codesigning | grep -q "$identity" || {
 }
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-bash "$repo_root/scripts/release/prepare-runtime-config.sh" "$deployment_profile" "$tmp/runtime-defines.json"
+if [[ "$market" == appstore ]]; then
+  OPENMUSE_RELEASE_MARKET=custom \
+  OPENMUSE_RELEASE_CONFIG_FILE="$repo_root/packages/openmuse_runtime_config/assets/releases/ios-app-store.json" \
+    bash "$repo_root/scripts/release/prepare-runtime-config.sh" "$deployment_profile" "$tmp/runtime-defines.json"
+else
+  bash "$repo_root/scripts/release/prepare-runtime-config.sh" "$deployment_profile" "$tmp/runtime-defines.json"
+fi
 runtime_validation_args=("$tmp/runtime-defines.json" --report "$tmp/runtime-input-report.json")
 if [[ "$allow_dirty" == true ]]; then runtime_validation_args+=(--allow-incomplete); fi
 python3 "$repo_root/scripts/release/verify-runtime-input.py" "${runtime_validation_args[@]}"
-python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$repo_root/app/openmuse_mobile/.dart_tool/package_config.json"
+python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$repo_root/app/openmuse_mobile/.dart_tool/package_config.json" "${closure_args[@]}"
 security cms -D -i "$profile" >"$tmp/profile.plist"
 python3 - "$tmp/profile.plist" "$profile_name" "$team" <<'PY'
 import plistlib, sys
@@ -96,7 +108,7 @@ unzip -q "$source_ipa" -d "$tmp/ipa"
 app="$tmp/ipa/Payload/Runner.app"
 [[ -d "$app" ]] || { echo 'IPA is missing Runner.app.' >&2; exit 1; }
 python3 "$repo_root/scripts/release/verify-ios-bundle.py" "$app"
-python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$app"
+python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$app" "${closure_args[@]}"
 codesign --verify --deep --strict "$app"
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Info.plist")" == com.openmuseai.mobile ]] || {
   echo 'Exported IPA has an unexpected Bundle ID.' >&2; exit 1;
@@ -129,7 +141,7 @@ mkdir -p "$output_dir"
 cp "${tmp}/runtime-input-report.json" "$output_dir/runtime-input-report.json"
 artifact="$output_dir/OpenMuse-ios-${market}-${version}-${build_number}.ipa"
 cp "$source_ipa" "$artifact"
-python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$artifact"
+python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$artifact" "${closure_args[@]}"
 cp "$tmp/codesign.txt" "$output_dir/signature-report.txt"
 python3 - "$artifact" "$output_dir/release.json" "$version" "$build_number" "$identity" "$dirty" "$skip_tests" "${OPENMUSE_APP_FILING_NUMBER:-}" "$market" "$tmp/runtime-defines.json" <<'PY'
 import hashlib, json, pathlib, subprocess, sys
@@ -140,10 +152,11 @@ language = release.get('defaultLocale', snapshot['localization']['defaultLocale'
 service_regions = [region['id'] for region in release['regions'] if region['available']]
 storefronts = [{'us': 'US', 'cn': 'CN'}[region] for region in service_regions
               if region in {'us', 'cn'}]
-filing = snapshot.get('regulatory', {}).get('appFilingNumber', '')
+china_snapshot = next((region['bundle']['snapshot'] for region in release['regions'] if region['available'] and region['id'] == 'cn'), None)
+filing = china_snapshot.get('regulatory', {}).get('appFilingNumber', '') if china_snapshot else ''
 runtime_report = json.loads(pathlib.Path(output).with_name('runtime-input-report.json').read_text())
 record = {
-    'status': 'internal-test-only' if not runtime_report['productionInputsComplete'] or dirty == 'true' or skipped == 'true' or (market == 'cn' and not filing) else 'store-candidate',
+    'status': 'internal-test-only' if not runtime_report['productionInputsComplete'] or dirty == 'true' or skipped == 'true' or ('cn' in service_regions and not filing) else 'store-candidate',
     'lane': f'ios-{market}',
     'defaultLanguage': language,
     'targetStorefronts': storefronts,

@@ -1,3 +1,4 @@
+import 'host/bundled_mcp_packages.dart';
 import 'package:openmuse_task_notifications/openmuse_task_notifications.dart';
 import 'package:openmuse_mcp_app_runtime/openmuse_mcp_app_runtime.dart';
 import 'package:openmuse_smart_document_plugins/openmuse_smart_document_plugins.dart';
@@ -197,7 +198,7 @@ Future<Widget> bootOpenMuseMobile(
   );
   await mobileMarketStore.restore();
   const marketSource = BundledMobileMarketSource(officialRelease: true);
-  // Store builds expose the generic connector without bundled Office engines.
+  // Store builds use the fixed, reviewed application composition.
   final launchPolicy = mcpReviewPolicy(
     debugBuild: kDebugMode,
     packagesJson: const String.fromEnvironment(
@@ -205,6 +206,14 @@ Future<Widget> bootOpenMuseMobile(
     ),
     remotesJson: const String.fromEnvironment(
       'OPENMUSE_MCP_REMOTE_PINS', defaultValue: '{}',
+    ),
+  );
+  await installBundledMcpPackages(
+    RemoteMcpMarket(
+      runtimeConfig.serviceUri(ServiceId.pluginRegistry),
+      File('${support.path}/mcp-remote-installations.json'),
+      allowedPackages: launchPolicy.packages,
+      allowedRemoteServers: launchPolicy.remotes,
     ),
   );
   final mobileMarketPlugin = OpenMuseMobilePluginMarket(

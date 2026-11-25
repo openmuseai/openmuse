@@ -60,6 +60,8 @@ if [[ "$lane" == play && ! -x "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyze
 fi
 
 cd "$repo_root"
+closure_args=()
+if [[ "$version" == 1.0.3 ]]; then closure_args+=(--profile mobile-1.0.3); fi
 python3 "$repo_root/scripts/release/verify-welcome-guide.py"
 dirty=false
 if [[ -n "$(git status --porcelain)" ]]; then dirty=true; fi
@@ -93,14 +95,14 @@ bash "$repo_root/scripts/release/prepare-runtime-config.sh" "$deployment_profile
 runtime_validation_args=("$runtime_tmp/runtime-defines.json" --report "$runtime_tmp/runtime-input-report.json")
 if [[ "$allow_dirty" == true ]]; then runtime_validation_args+=(--allow-incomplete); fi
 python3 "$repo_root/scripts/release/verify-runtime-input.py" "${runtime_validation_args[@]}"
-python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$repo_root/app/openmuse_mobile/.dart_tool/package_config.json"
+python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$repo_root/app/openmuse_mobile/.dart_tool/package_config.json" "${closure_args[@]}"
 
 (cd app/openmuse_mobile && "$repo_root/scripts/filing/with-android-release-signing.sh" \
   flutter build "$kind" --release --target lib/main.dart --target-platform android-arm64 \
   --build-name "$version" --build-number "$build_number" \
   "--dart-define=OPENMUSE_DISTRIBUTION_CHANNEL=android-$lane" \
   "--dart-define-from-file=$runtime_tmp/runtime-defines.json")
-python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$source_artifact"
+python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$source_artifact" "${closure_args[@]}"
 [[ -s "$source_artifact" ]] || { echo "Missing $source_artifact" >&2; exit 1; }
 
 if [[ "$lane" == cn ]]; then

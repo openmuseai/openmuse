@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'bundled_mcp_packages.dart';
 
 /// Internal full-client builds may add exact candidate pins. Store builds
 /// continue to use their fixed release closure and ignore these overrides.
@@ -7,7 +8,7 @@ import 'dart:convert';
   String packagesJson = '{}',
   String remotesJson = '{}',
 }) {
-  if (!debugBuild) return (packages: const {}, remotes: const {});
+  if (!debugBuild) return (packages: bundledMcpPackagePins, remotes: const {});
   Map<String, String> parse(String raw, bool remote) {
     final value = jsonDecode(raw);
     if (value is! Map) throw const FormatException('Invalid MCP pins');
@@ -38,7 +39,10 @@ import 'dart:convert';
   }
 
   return (
-    packages: parse(packagesJson, false),
+    packages: Map.unmodifiable({
+      ...bundledMcpPackagePins,
+      ...parse(packagesJson, false),
+    }),
     remotes: parse(remotesJson, true),
   );
 }
