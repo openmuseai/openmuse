@@ -32,5 +32,9 @@ scheme = Xcodeproj::XCScheme.new
 scheme.add_build_target(target)
 scheme.add_test_target(target)
 scheme.test_action.build_configuration = 'Debug'
+if ARGV[1] == 'private-auth'
+  # Authentication runs do not retain automatic screenshots or recordings.
+  scheme.test_action.xml_element.attributes['systemAttachmentLifetime'] = 'keepNever'
+end
 scheme.save_as(project.path, 'OfficeHarnessAcceptance', true)
 puts project.path

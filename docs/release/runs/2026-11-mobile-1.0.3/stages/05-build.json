@@ -2,12 +2,14 @@
   "id": "05-build",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "Both signed 112502 store candidates built from the same clean cca0a9d1 source. Final MR merges/tags and source freeze still pending.",
+  "summary": "Both signed112503 candidates built from the same clean51ba72a7 source and a6814bc0 Ecosystem.123 Mobile tests and analyzer pass; functional merges/tags and source freeze remain pending.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-build.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-build-112502.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build-112502.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-build-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build-112503.json"
   ],
   "exceptions": [
     "Final MR merges/tags and source freeze pending"

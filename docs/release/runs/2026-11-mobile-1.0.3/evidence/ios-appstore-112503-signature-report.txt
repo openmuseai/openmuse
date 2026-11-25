@@ -1,0 +1,13 @@
+Executable=/private/var/folders/gg/dzp5f_5n7rqbyyn9s0sd58z80000gn/T/tmp.Asu5HhivGt/ipa/Payload/Runner.app/Runner
+Identifier=com.openmuseai.mobile
+Format=app bundle with Mach-O thin (arm64)
+CodeDirectory v=20400 size=6009 flags=0x0(none) hashes=177+7 location=embedded
+Signature size=4876
+Authority=Apple Distribution: Dongguan Chengxuan Electronic Science & Technology Co., Ltd (SDPXS943DW)
+Authority=Apple Worldwide Developer Relations Certification Authority
+Authority=Apple Root CA
+Signed Time=Nov 26, 2026 at 1:38:11 AM
+Info.plist entries=37
+TeamIdentifier=SDPXS943DW
+Sealed Resources version=2 rules=10 files=391
+Internal requirements count=1 size=232

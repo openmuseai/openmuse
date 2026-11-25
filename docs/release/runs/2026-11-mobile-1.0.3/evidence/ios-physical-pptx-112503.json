@@ -1,0 +1,76 @@
+{
+  "checkedAt": "2026-11-25T18:41:44.064309+00:00",
+  "version": "1.0.3",
+  "build": 112503,
+  "appId": "com.openmuseai.mobile",
+  "device": "iPhone12ProMax / iOS26.6.2",
+  "source": "51ba72a725dabfda1e503ed4f7ffb8a75f83e510",
+  "installedChannel": "TestFlight; independently verified with USB devicectl",
+  "pluginSource": "5df9dc172131e053f2910c8de57f381d6fab52b6",
+  "mcpbSha256": "6ad77f3f678adc30782f58b4001ee277a79cd111d3b56d420a31459850ea75da",
+  "passed": [
+    "Normal Recent resource route loads4-slide bundled deck",
+    "First touch selects subtitle",
+    "Second separated touch mounts original text editor and OS keyboard",
+    "Actual text input insertsqa103iospptx",
+    "Done hides keyboard and rendered canvas shows edited text"
+  ],
+  "failed": [
+    "Toolbar undo does not remove marker on physical device",
+    "Save touch does not reach saved-state assertion, including repeated consecutive touch",
+    "After closing and reopening same resource, actual subtitle text is original and marker absent"
+  ],
+  "severity": "P1: core editing persistence / undo acceptance blocked",
+  "notRun": [
+    "Physical Android final PPTX acceptance",
+    "Complete visual/device/region matrix"
+  ],
+  "browserBoundary": "Chromium and WebKit touch/blur/keyboard-viewport emulation pass on identical packaged HTML, but do not close the physical failure",
+  "diagnosticOnly": "A separate synthetic-document event/standard-download tracing entry point is being prepared; never count it as a store candidate",
+  "logs": {
+    "loaded": {
+      "path": "/tmp/muse103-ios-pptx112503-loaded.log",
+      "sha256": "8f24835f6d83a972a4bbb15ce61ec0ff72f0f8ed75800551c6eedd5df21ad6ba"
+    },
+    "selected": {
+      "path": "/tmp/muse103-ios-pptx112503-selected.log",
+      "sha256": "385fdf9a616b22f2d875aaba56caddce5086acbfd8183b916053f189d204c4ce"
+    },
+    "focus": {
+      "path": "/tmp/muse103-ios-pptx112503-focus.log",
+      "sha256": "7d62eb48f19e0aca36e3b4a6e1dbd9ae69b1716a9a5b66aa998cfc608846b788"
+    },
+    "typed": {
+      "path": "/tmp/muse103-ios-pptx112503-typed.log",
+      "sha256": "e45cee86c40a5f8a52701f74ab1a73ba1bb43c8198d81d3c06b898a2e526d847"
+    },
+    "committed": {
+      "path": "/tmp/muse103-ios-pptx112503-committed.log",
+      "sha256": "70b8567c925f184d4e2aba3f04c8b03d37f0ed98a37cd6c4006c777142d7b390"
+    },
+    "undo-redo": {
+      "path": "/tmp/muse103-ios-pptx112503-undo-redo.log",
+      "sha256": "1a04176693d6893488fc7aaa87bb86c5488d955e2733883b9dfe59fdb8911519"
+    },
+    "undo-inspection": {
+      "path": "/tmp/muse103-ios-pptx112503-undo-inspection.log",
+      "sha256": "4e338b5931c0fca299fdbb8f1f0de548db01cc51123aef1edb367421be8c8d0b"
+    },
+    "save": {
+      "path": "/tmp/muse103-ios-pptx112503-save.log",
+      "sha256": "34a0634013a479ac28b9343717559c1d1e4b6732f08fac34449d346788598432"
+    },
+    "save-second-touch": {
+      "path": "/tmp/muse103-ios-pptx112503-save-second-touch.log",
+      "sha256": "7900972b36acb36e9bb69e54da9960b0aa09da9e080bb490219e39dfd8337498"
+    },
+    "close-barrier": {
+      "path": "/tmp/muse103-ios-pptx112503-close-barrier.log",
+      "sha256": "14cb476b2ebc9b5ce2103733c9248375b6e9d465e4f31c86d9dc4c8adfafd55e"
+    },
+    "reopen": {
+      "path": "/tmp/muse103-ios-pptx112503-reopen.log",
+      "sha256": "77914b656423de83df167a9a31e1519019b96975f9787b442cb053fe9692edbd"
+    }
+  }
+}

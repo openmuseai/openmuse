@@ -1,0 +1,34 @@
+{
+  "solution": {
+    "kind": "smartdoc",
+    "name": "架构、协议、数据与实施方案",
+    "documentId": "fd6456f8-ada9-4726-a9ed-ff51522431a3",
+    "revision": 4,
+    "sha256": "e5e3da026c8745bce2d2a722aa95dc7f6ed058f278d24776c0d3179f3216f621",
+    "workflowId": "4553a151652d40422f29b37af47eb2bb"
+  },
+  "implementation": {
+    "kind": "smartdoc",
+    "name": "实现功能与研发验证",
+    "documentId": "3bec492e-f072-43c2-9dc8-86233b219e5b",
+    "revision": 6,
+    "sha256": "26c46a4464a67ac8b066417431f8a2f266cfb901b98df370c8be33d2052c63fe",
+    "workflowId": "4553a151652d40422f29b37af47eb2bb"
+  },
+  "cases": {
+    "kind": "smartdoc",
+    "name": "功能测试用例与覆盖矩阵",
+    "documentId": "c64a126d-5139-47b9-b6b0-f745c59c1c6f",
+    "revision": 5,
+    "sha256": "85f5db6589a9593217f65e903222ff35f250add9c4f8bcd1fca0cd298d0f40a5",
+    "workflowId": "4553a151652d40422f29b37af47eb2bb"
+  },
+  "releasePlan": {
+    "kind": "smartdoc",
+    "name": "候选包、上架材料与渠道计划",
+    "documentId": "38a5c4d0-e0b6-4e80-a77c-6bf467bfbb9e",
+    "revision": 15,
+    "sha256": "fdcfaf98c0e3a2aa945fac0798921549b9a664f8541d13d832c6de08630221bd",
+    "workflowId": "caefd37668c815627bf6914430fbae09"
+  }
+}

@@ -2,7 +2,7 @@
   "id": "06-binary",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "112502 signatures/permissions/closure checks passed; actual packaged CN/US signed public configurations and restored cache verified. 301 APK +423 IPA entries pattern-scanned; Tika MIME-rule false positive reviewed.",
+  "summary": "112503 signature/permissions/closure checks and actual packaged CN/US signed public config/cache restore pass. Bounded scans of301 APK+423 IPA entries have no unresolved findings; Tika rule false-positive disposition is scoped.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-public-runtime.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-public-runtime.json",
@@ -10,7 +10,14 @@
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/genoffice-advisory-disposition.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-public-runtime-112502.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-public-runtime-112502.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/binary-pattern-review-112502.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/binary-pattern-review-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-public-runtime-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-public-runtime-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/binary-pattern-review-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-112503-signature-report.txt",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-112503-runtime-input-report.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-112503-signature-report.txt",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-112503-runtime-input-report.json"
   ],
   "exceptions": [
     "Full production task and final dataflow acceptance pending"

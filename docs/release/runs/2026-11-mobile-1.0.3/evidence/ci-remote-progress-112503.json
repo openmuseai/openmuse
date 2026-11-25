@@ -1,0 +1,55 @@
+{
+  "checkedAt": "2026-11-25T18:23:59.104453+00:00",
+  "checkedSource": "5526cf813238d1ca1f3e37c3c91e230acaa32b62",
+  "status": "partial; full CI is not green",
+  "passed": [
+    {
+      "name": "Release pipeline records",
+      "run": 45666639942
+    },
+    {
+      "name": "Runtime configuration",
+      "run": 45666639939
+    },
+    {
+      "name": "Web",
+      "job": 139390453788
+    }
+  ],
+  "inProgress": [
+    {
+      "name": "Mobile",
+      "run": 45666639951,
+      "job": 139390453368,
+      "step": "Test and build"
+    }
+  ],
+  "failures": [
+    {
+      "name": "macos desktop-gates",
+      "job": 139390454360,
+      "reason": "Host pubspec path ../../../ioffice/koffice/pdf/rebuild/pdf-flutter-app/third_party/pdfium_dart not checked out on runner"
+    },
+    {
+      "name": "windows desktop-gates",
+      "job": 139390454979,
+      "reason": "Same pre-existing pdfium_dart path dependency unavailable"
+    },
+    {
+      "name": "Linux build",
+      "run": 45666640049,
+      "reason": "Legacy Desktop distribution still references missing openmuse_siyuan_client/assets/runtime.zip; final remote log pending fresh audit"
+    }
+  ],
+  "baselineComparison": {
+    "beforeRelease": "8f75902767b31f8327fae26887c77f0c54b58578",
+    "current": "5526cf813238d1ca1f3e37c3c91e230acaa32b62",
+    "iofficePathDeclarations": "Identical on both committed revisions; original dirty Host pubspec preserved"
+  },
+  "integration": {
+    "baselineMR": "https://github.com/openmuseai/openmuse/pull/4",
+    "priorCommittedBaseline": "205 commits / 1635 files ahead of main",
+    "userScopeDecision": "pending; no merge performed"
+  },
+  "scope": "Known failures are recorded; no checks removed, waived or marked green"
+}

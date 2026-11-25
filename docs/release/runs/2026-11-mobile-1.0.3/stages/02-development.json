@@ -2,10 +2,11 @@
   "id": "02-development",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "Fixed clean candidates and 4 draft functional/composition MRs;15 migration MR/tags already verified.",
+  "summary": "112503 fixed clean source and updated draft MRs; historical baseline MR#4 concrete with scope decision pending.15 migration MR/tags verified; functional merges/formal release tags remain open.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/repository-mrs.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/plugin-sources.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/plugin-sources.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ci-remote-progress-112503.json"
   ],
   "exceptions": [
     "Final functional merges and App1.0.3 release tags pending"

@@ -2,12 +2,18 @@
   "id": "04-tests",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "Physical iPhone 112502 title and native guide append/save/exit/reopen pass; PPTX loads/selects, touch editing/persistence and production task notifications remain open.",
+  "summary": "112503 physical iPhone channel upgrade preserves account/notification permission and PPTX touch enters actual keyboard input. P1 FAIL: undo and save/reopen persistence. Formal feature/release approval blocked; browser/WebKit touch tests do not substitute.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/validation-summary.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-physical-smart-document.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-physical-smart-document-112502.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-physical-install-112502.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-physical-install-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-physical-notification-permission-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/genoffice-touch-097-validation.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/native-document-pins-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ci-remote-progress-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-upgrade-state-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-physical-pptx-112503.json"
   ],
   "exceptions": [
     "Core unexecuted cases block submission"

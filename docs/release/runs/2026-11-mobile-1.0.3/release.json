@@ -12,15 +12,15 @@
   "sourceFrozen": false,
   "sourceRevisions": {
     "Muse-Client-ios": {
-      "commit": "cca0a9d1d169d80d3ad61d0602b5ea5103198ed0",
+      "commit": "51ba72a725dabfda1e503ed4f7ffb8a75f83e510",
       "dirty": false
     },
     "Muse-Client-android": {
-      "commit": "cca0a9d1d169d80d3ad61d0602b5ea5103198ed0",
+      "commit": "51ba72a725dabfda1e503ed4f7ffb8a75f83e510",
       "dirty": false
     },
     "Muse-Plugin-Ecosystem": {
-      "commit": "30852cad4de5ad8990d4e9530ee495723f7b3c51",
+      "commit": "a6814bc0f011bb8a466edf15788767f5fcc61fb2",
       "dirty": false,
       "plugins": [
         {
@@ -88,7 +88,7 @@
           "path": "plugins/genoffice-pptx",
           "repository": "openmuseai/muse-plugin-genoffice-pptx",
           "url": "https://github.com/openmuseai/muse-plugin-genoffice-pptx.git",
-          "commit": "d1bd524b00cf2dc9bd36eb5baf270492e37dc99c",
+          "commit": "5df9dc172131e053f2910c8de57f381d6fab52b6",
           "migrationTag": "migration/2026-11-25",
           "migrationMerge": "d4e61ef264767b8c79266dbea4537fe34a396c1a",
           "sourceCandidate": true
@@ -179,21 +179,21 @@
   "artifacts": [
     {
       "lane": "ios-cn",
-      "path": "dist/mobile/1.0.3-112502/ios-appstore/OpenMuse-ios-appstore-1.0.3-112502.ipa",
-      "sha256": "a88ddd1fa84d5967d5052703546103acc0fba92474c6713abe826b30dae49c91",
-      "buildRecord": "dist/mobile/1.0.3-112502/ios-appstore/release.json"
+      "path": "dist/mobile/1.0.3-112503/ios-appstore/OpenMuse-ios-appstore-1.0.3-112503.ipa",
+      "sha256": "69354224b9bacd0b4d389fae3567f325d4630e6419adc411692dae7f9e24ec7a",
+      "buildRecord": "dist/mobile/1.0.3-112503/ios-appstore/release.json"
     },
     {
       "lane": "ios-us",
-      "path": "dist/mobile/1.0.3-112502/ios-appstore/OpenMuse-ios-appstore-1.0.3-112502.ipa",
-      "sha256": "a88ddd1fa84d5967d5052703546103acc0fba92474c6713abe826b30dae49c91",
-      "buildRecord": "dist/mobile/1.0.3-112502/ios-appstore/release.json"
+      "path": "dist/mobile/1.0.3-112503/ios-appstore/OpenMuse-ios-appstore-1.0.3-112503.ipa",
+      "sha256": "69354224b9bacd0b4d389fae3567f325d4630e6419adc411692dae7f9e24ec7a",
+      "buildRecord": "dist/mobile/1.0.3-112503/ios-appstore/release.json"
     },
     {
       "lane": "android-cn",
-      "path": "dist/mobile/1.0.3-112502/cn/OpenMuse-cn-1.0.3-112502.apk",
-      "sha256": "8feb02a72c2843afb4711b2c03c15ad27f68dbcb1bba12c6f37034e349622bdf",
-      "buildRecord": "dist/mobile/1.0.3-112502/cn/release.json"
+      "path": "dist/mobile/1.0.3-112503/cn/OpenMuse-cn-1.0.3-112503.apk",
+      "sha256": "2fb4422b9dd483a6424608c0b642d8f5871f43a772e426474374a442fd8eb251",
+      "buildRecord": "dist/mobile/1.0.3-112503/cn/release.json"
     }
   ],
   "stores": {
@@ -204,23 +204,26 @@
       "releaseMode": "undecided",
       "reviewSubmitted": false,
       "reviewApproved": false,
-      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-upload-112502.json"
+      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-upload-112502.json",
+      "pendingCandidateBuild": 112503
     },
     "ios-cn": {
-      "status": "Processed, internal group available, physical TestFlight installation verified; not submitted",
-      "build": 112502,
+      "status": "Processed, available in existing TestFlight group, physical production installation verified; not submitted",
+      "build": 112503,
       "releaseMode": "manual",
       "reviewSubmitted": false,
       "reviewApproved": false,
-      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload-112502.json"
+      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-channel-progress-112503.json",
+      "pendingCandidateBuild": 112503
     },
     "ios-us": {
-      "status": "Processed, internal group available, physical TestFlight installation verified; not submitted",
-      "build": 112502,
+      "status": "Processed, available in existing TestFlight group, physical production installation verified; not submitted",
+      "build": 112503,
       "releaseMode": "manual",
       "reviewSubmitted": false,
       "reviewApproved": false,
-      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload-112502.json"
+      "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-channel-progress-112503.json",
+      "pendingCandidateBuild": 112503
     }
   },
   "scope": {
@@ -247,7 +250,8 @@
   },
   "sourceFreezeScope": "Candidates built from fixed clean commits. Final functional MR merges/tags and core production/device acceptance are still open.",
   "candidateHistory": [
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-112501-history.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-112501-history.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-112502-history.json"
   ],
-  "updatedAt": "2026-11-25T16:57:46.780418+00:00"
+  "updatedAt": "2026-11-25T18:24:51.608054+00:00"
 }

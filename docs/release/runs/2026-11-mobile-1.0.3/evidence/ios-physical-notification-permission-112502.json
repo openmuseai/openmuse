@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-11-25T18:20:51.631975+00:00",
+  "version": "1.0.3",
+  "build": 112502,
+  "device": "iPhone 12 Pro Max / iOS 26.6.2",
+  "appId": "com.openmuseai.mobile",
+  "method": "User-authorized XCUITest controls the already-installed TestFlight production App; runner does not replace or re-sign it",
+  "passed": [
+    "In-app rationale cancellation leaves preference off and does not present system prompt",
+    "Continuing rationale presents real Office Harness OS notification prompt",
+    "Deny returns to App with system-denied text and own Settings recovery button",
+    "Recovery button opens Office Harness own notification Settings",
+    "Observed visual OS switch changes 0 to 1",
+    "Returning App refreshes status to 已允许, keeps preference on and removes recovery button"
+  ],
+  "failedAttemptsPreserved": [
+    "First Settings-row center tap left system value 0; failed assertion retained. Second attempt targeted observed visual control and waited for asynchronous state."
+  ],
+  "notRun": [
+    "Real paired task success/failure notifications",
+    "Click notification result route",
+    "Final 112503 permission regression",
+    "Full account/region/network matrix"
+  ],
+  "scope": "Permission recovery only; not task delivery or release approval",
+  "logs": {
+    "systemDenial": {
+      "file": "/tmp/muse103-ios-notification-denied112502.log",
+      "sha256": "bd92a8f272fad35ba793e176c5b0eed4563f567ea19c8048707681863e0fe8be"
+    },
+    "ownSettingsRoute": {
+      "file": "/tmp/muse103-ios-own-notification-settings112502.log",
+      "sha256": "7faddbf4ec0bfd169a03d6cc0ad1a88787b17b44f6ffd0ea8f0096206a6a1811"
+    },
+    "systemRestorationAttempt1": {
+      "file": "/tmp/muse103-ios-restored-notification112502.log",
+      "sha256": "e7b7d468f0451aba02d1a5e98cbc7a842d4da5b35a6eaa56a3c1065165f29f5d"
+    },
+    "systemRestorationAttempt2": {
+      "file": "/tmp/muse103-ios-restored-notification112502-attempt2.log",
+      "sha256": "30e5804a158f223c3af1b1995a701f627000f187c90dc1a6ab1c08970b44509c"
+    },
+    "appGrantedAndTaskPage": {
+      "file": "/tmp/muse103-ios-notification-granted112502.log",
+      "sha256": "56579f21d62f277e7ac83ad00bf19a4047dc32bdd19146472c71b41cff99558d"
+    },
+    "rationaleCancellationAndSystemPrompt": {
+      "file": "/tmp/muse103-ios-notification-cancel-and-prompt112502.log",
+      "sha256": "f7b51055263a0ae15398f545cf69d34b33aa0d0d73f2210e026d764b8fb0dfba"
+    }
+  }
+}

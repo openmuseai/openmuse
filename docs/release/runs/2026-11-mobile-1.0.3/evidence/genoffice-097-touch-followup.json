@@ -1,0 +1,171 @@
+{
+  "schema": "openmuse.plugin-touch-validation/1",
+  "checkedAt": "2026-11-25T17:22:17.244051+00:00",
+  "pluginVersion": "0.9.7",
+  "sourceBase": "d1bd524b00cf2dc9bd36eb5baf270492e37dc99c",
+  "change": "Selected editable text mounts and focuses original editor synchronously during an explicit touch gesture; retains existing double-tap and desktop mouse paths",
+  "packageSha256": "6ad77f3f678adc30782f58b4001ee277a79cd111d3b56d420a31459850ea75da",
+  "webAndServerHtmlIdentical": true,
+  "nodeTests": {
+    "passed": 13,
+    "failed": 0
+  },
+  "red": {
+    "command": "node scripts/verify_mobile_text.mjs <bundled OpenMuse introduction> <out>",
+    "result": "Before adapter fix, selected text second touch did not expose .slide-text-editor within 5s",
+    "logSha256": "70d2ae3845701ac739465e126017f8ea045048301ed3e6b882279668e00939c4"
+  },
+  "packagedMobileTouch": {
+    "uiSha256": "b77afda50e10b92b799342700454f7f8909c971fb05c57377991983c236109cf",
+    "sampleSha256": "724bd205af82db614c30d06be1a484e0f3498bc49c051c2b451efe6dc563b8da",
+    "viewport": [
+      428,
+      789
+    ],
+    "hasTouch": true,
+    "selectedTextTapFocus": true,
+    "textEdited": true,
+    "undoRedo": true,
+    "savedOOXMLContainsMarker": true,
+    "reopenedContainsMarker": true,
+    "scope": "Chromium touch emulation; physical iOS/Android acceptance remains separate"
+  },
+  "packagedStandardMcpApps": {
+    "sample": "Sample_ppt.pptx",
+    "sampleSha256": "d712b4672db3634457e1c3ee3d9d8485a0cfa3298edcacffbc4fb568c1b36afb",
+    "uiSha256": "b77afda50e10b92b799342700454f7f8909c971fb05c57377991983c236109cf",
+    "slides": 23,
+    "renderedPages": 23,
+    "textEditSavedAndReopened": true,
+    "viewToolsDiscovered": true,
+    "agentEditSaved": true,
+    "staleRevisionRejected": true,
+    "agentEditUndoable": true,
+    "standardAgentMessage": true,
+    "genSparkPanelRemoved": true,
+    "protocol": "MCP Apps",
+    "pages": [
+      {
+        "page": 1
+      },
+      {
+        "page": 2
+      },
+      {
+        "page": 3
+      },
+      {
+        "page": 4
+      },
+      {
+        "page": 5
+      },
+      {
+        "page": 6
+      },
+      {
+        "page": 7
+      },
+      {
+        "page": 8
+      },
+      {
+        "page": 9
+      },
+      {
+        "page": 10
+      },
+      {
+        "page": 11
+      },
+      {
+        "page": 12
+      },
+      {
+        "page": 13
+      },
+      {
+        "page": 14
+      },
+      {
+        "page": 15
+      },
+      {
+        "page": 16
+      },
+      {
+        "page": 17
+      },
+      {
+        "page": 18
+      },
+      {
+        "page": 19
+      },
+      {
+        "page": 20
+      },
+      {
+        "page": 21
+      },
+      {
+        "page": 22
+      },
+      {
+        "page": 23
+      }
+    ]
+  },
+  "remaining": [
+    "Resolve physical iOS undo and save/reopen failure",
+    "Physical Android final candidate acceptance",
+    "Complete production release regression"
+  ],
+  "scope": "Browser touch emulation and actual packaged bytes are verified; physical mobile keyboard/permissions remain separate",
+  "followUpCheckedAt": "2026-11-25T18:42:25.451842+00:00",
+  "followUp": {
+    "chromiumRealTouchToolbar": {
+      "uiSha256": "b77afda50e10b92b799342700454f7f8909c971fb05c57377991983c236109cf",
+      "sampleSha256": "724bd205af82db614c30d06be1a484e0f3498bc49c051c2b451efe6dc563b8da",
+      "viewport": [
+        428,
+        789
+      ],
+      "hasTouch": true,
+      "selectedTextTapFocus": true,
+      "textEdited": true,
+      "undoRedo": true,
+      "savedOOXMLContainsMarker": true,
+      "reopenedContainsMarker": true,
+      "scope": "Chromium touch emulation; physical iOS/Android acceptance remains separate"
+    },
+    "webkitBlurAndKeyboardResize": {
+      "uiSha256": "b77afda50e10b92b799342700454f7f8909c971fb05c57377991983c236109cf",
+      "sampleSha256": "724bd205af82db614c30d06be1a484e0f3498bc49c051c2b451efe6dc563b8da",
+      "browserEngine": "webkit",
+      "commitMethod": "blur",
+      "keyboardResize": true,
+      "viewport": [
+        428,
+        789
+      ],
+      "hasTouch": true,
+      "toolbarActivation": "touch",
+      "selectedTextTapFocus": true,
+      "textEdited": true,
+      "undoRedo": true,
+      "savedOOXMLContainsMarker": true,
+      "reopenedContainsMarker": true,
+      "scope": "webkit touch emulation; physical iOS/Android acceptance remains separate"
+    },
+    "physicalIPhone112503": {
+      "touchFocusAndTyping": "passed",
+      "undo": "failed: marker remained after actual toolbar touch",
+      "saveReopen": "failed: original subtitle read after closing and reopening same resource",
+      "severity": "P1; prevents App release acceptance",
+      "fixedClientSource": "51ba72a725dabfda1e503ed4f7ffb8a75f83e510",
+      "installedVia": "TestFlight; devicectl independently verified112503"
+    },
+    "note": "The earlier browser script used mouse click for toolbar actions. Follow-up uses actual touch .tap and includes a WebKit engine. Neither passing browser result closes the physical failure."
+  }
+}
