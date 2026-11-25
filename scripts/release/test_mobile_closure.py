@@ -44,7 +44,7 @@ class MobileClosureTests(unittest.TestCase):
 
 
 class Mobile103ClosureTests(unittest.TestCase):
-    suffix = 'flutter_assets/assets/bundled/slides-0.9.6.mcpb'
+    suffix = 'flutter_assets/assets/bundled/slides-0.9.7.mcpb'
 
     def bundle(self, content=b'GenOffice; Apache-2.0'):
         buffer = io.BytesIO()

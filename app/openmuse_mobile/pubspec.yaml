@@ -133,7 +133,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/brand.png
-    - assets/bundled/slides-0.9.6.mcpb
+    - assets/bundled/slides-0.9.7.mcpb
 
   # To add assets to your application, add an assets section, like this:
   # assets:
