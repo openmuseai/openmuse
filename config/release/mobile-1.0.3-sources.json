@@ -4,9 +4,9 @@
   "layout": "Muse-Client and Muse-Plugin-Ecosystem are sibling checkouts; plugin source is composed at the 15 locked Git submodule paths.",
   "ecosystem": {
     "repository": "openmuseai/Muse-Plugin-EcoSystem",
-    "commit": "52bf3dc48807de0ba25c1fa9f6d4a245b1eef704",
+    "commit": "0bcea975ea17393751a34d92367474c42b923542",
     "lock": "config/plugin-sources.lock.json",
-    "lockSha256": "afbafda34a905038b4561256938d643ca3ef61a44ba3e021eaa65a44f20e9cbc"
+    "lockSha256": "3355e194df3eb7727a99207ed3efa0ce5e92559894685e9619c184147968f8e9"
   },
   "bundledSlides": {
     "asset": "app/openmuse_mobile/assets/bundled/slides-0.9.6.mcpb",
