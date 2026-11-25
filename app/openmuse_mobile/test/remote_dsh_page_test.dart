@@ -1,8 +1,31 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_mobile/remote_dsh_page.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 
 void main() {
+  testWidgets('unverified web entry never creates a WebView', (tester) async {
+    // No WebView platform is installed: constructing a controller would fail.
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: RemoteDshPage(
+          session: DshSessionDescriptor(
+            sessionRef: 's',
+            origin: 'https://example.com',
+            path: '/u/s/',
+            generation: 1,
+          ),
+          workspaceTitle: 'Workspace',
+        ),
+      ),
+    );
+    expect(find.byKey(const ValueKey('remote-dsh.webview')), findsNothing);
+    expect(
+      find.textContaining('recipients and send consent cannot be verified'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
   test('resolves an HTTPS session URL without exposing another origin', () {
     const session = DshSessionDescriptor(
       sessionRef: 'session-1',

@@ -6,6 +6,7 @@
   "messages": {
     "privacy.gateway": "Gateway: {gateway}",
     "privacy.send_scope": "Scope: input text, conversation history and system context; tools may read workspace resources, documents and attachments. The gateway configures the model provider; its downstream address cannot be verified here. Approval applies to this send only; you can cancel.",
-    "privacy.attachment_unverified": "Attachments were not sent: upload recipients and consent cannot be verified. Keep the draft, or remove attachments to send text."
+    "privacy.attachment_unverified": "Attachments were not sent: upload recipients and consent cannot be verified. Keep the draft, or remove attachments to send text.",
+    "privacy.remote_unverified": "The remote web assistant is unavailable because recipients and send consent cannot be verified. Return to the task list and reconnect to the native conversation."
   }
 }

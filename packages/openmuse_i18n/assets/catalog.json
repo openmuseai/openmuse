@@ -13561,6 +13561,21 @@
           "member": "_sendMessage"
         }
       ]
+    },
+    "privacy.remote_unverified": {
+      "namespace": "privacy",
+      "parameters": [],
+      "sourceRevision": 1,
+      "messages": {
+        "en": "The remote web assistant is unavailable because recipients and send consent cannot be verified. Return to the task list and reconnect to the native conversation.",
+        "zh-Hans": "远程网页助手暂不可用：无法验证接收方和发送授权。请返回任务列表，重新连接原生对话。"
+      },
+      "sources": [
+        {
+          "file": "app/openmuse_mobile/lib/remote_dsh_page.dart",
+          "member": "RemoteDshPage"
+        }
+      ]
     }
   }
 }

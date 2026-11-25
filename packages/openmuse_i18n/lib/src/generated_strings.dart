@@ -1170,6 +1170,7 @@ final class OpenMuseStrings {
       format("privacy.attachment_unverified");
   String privacyGateway({required Object? gateway}) =>
       format("privacy.gateway", {"gateway": gateway});
+  String privacyRemoteUnverified() => format("privacy.remote_unverified");
   String privacySendScope() => format("privacy.send_scope");
   String resourcecenterAddToChat() => format("resourcecenter.addToChat");
   String resourcecenterAlreadyAttached() =>
