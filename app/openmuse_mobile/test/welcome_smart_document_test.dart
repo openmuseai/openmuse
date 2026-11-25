@@ -79,8 +79,9 @@ void main() {
                   : 'https://us.openmuseai.com/en/privacy/',
             ),
           );
-          if (region == 'cn')
+          if (region == 'cn') {
             expect(projection, isNot(contains('us.openmuseai.com')));
+          }
           const marker = 'Native guide persistence QA · 中文🙂';
           await owner.insertParagraph(marker);
           await owner.flush();
