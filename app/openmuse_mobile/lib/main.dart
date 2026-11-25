@@ -9,6 +9,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:openmuse_dsh_mobile_agent/openmuse_dsh_mobile_agent.dart';
 import 'host/mobile_resource_extensions.dart';
+import 'host/mcp_release_policy.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -196,11 +197,20 @@ Future<Widget> bootOpenMuseMobile(
   await mobileMarketStore.restore();
   const marketSource = BundledMobileMarketSource(officialRelease: true);
   // Store builds expose the generic connector without bundled Office engines.
-  const launchPackages = <String, String>{};
+  final launchPolicy = mcpReviewPolicy(
+    debugBuild: kDebugMode,
+    packagesJson: const String.fromEnvironment(
+      'OPENMUSE_MCP_PACKAGE_PINS', defaultValue: '{}',
+    ),
+    remotesJson: const String.fromEnvironment(
+      'OPENMUSE_MCP_REMOTE_PINS', defaultValue: '{}',
+    ),
+  );
   final mobileMarketPlugin = OpenMuseMobilePluginMarket(
     mobileMarketStore,
     source: marketSource,
-    allowedMcpPackages: launchPackages,
+    allowedMcpPackages: launchPolicy.packages,
+    allowedMcpRemoteServers: launchPolicy.remotes,
     registryProviders: await () async {
       const registryOverride = String.fromEnvironment(
         'OPENMUSE_MCP_REGISTRY_URL',
@@ -740,6 +750,8 @@ final class OpenMuseMobileApplicationState
       provider,
       File('${support.path}/mcp-remote-installations.json'),
       allowedPackages: widget.mobileMarketPlugin?.allowedMcpPackages,
+      allowedRemoteServers:
+          widget.mobileMarketPlugin?.allowedMcpRemoteServers ?? const {},
     );
   }
 
@@ -847,6 +859,7 @@ final class OpenMuseMobileApplicationState
     }
     reportStep((localeStrings.mobilePreparingTheLocalEditor139ca003()));
     final appHtml = await market.mcpAppDocument(editor);
+    final browserPermissions = await market.mcpAppBrowserPermissions(editor);
     if (!mounted) return false;
     reportStep((localeStrings.mobileOpeningTheLocalEditor59b2af8c()));
     await _navigatorKey.currentState?.push<void>(
@@ -860,6 +873,7 @@ final class OpenMuseMobileApplicationState
           fileBytes: bytes,
           onSave: onSave,
           appHtml: appHtml,
+          browserPermissions: browserPermissions,
         ),
       ),
     );
@@ -1262,8 +1276,9 @@ final class _WorkBuddyHostState extends State<_WorkBuddyHost>
   Widget build(BuildContext context) => ResourceLinkRouting(
     locate: (locator) async {
       final center = _resources;
-      if (center != null)
+      if (center != null) {
         await openResourceLocator(context, center.controller, locator);
+      }
     },
     open: (uri) async {
       final center = _resources;

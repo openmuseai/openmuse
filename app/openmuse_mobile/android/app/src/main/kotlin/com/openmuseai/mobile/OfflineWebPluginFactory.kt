@@ -8,6 +8,9 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.WebChromeClient
+import android.webkit.ValueCallback
+import android.webkit.PermissionRequest
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
@@ -25,7 +28,7 @@ import android.util.Base64OutputStream
 import org.json.JSONObject
 
 /** Serves verified installed web resources from app-private storage to an in-app WebView. */
-internal class OfflineWebPluginFactory(private val appContext: Context, private val messenger: BinaryMessenger) :
+internal class OfflineWebPluginFactory(private val appContext: Context, private val messenger: BinaryMessenger, private val filePicker: OfflineWebFilePicker, private val microphone: OfflineWebMicrophone, private val printer: OfflineWebPrint) :
     PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
         val html = (args as? Map<*, *>)?.get("html") as? String
@@ -40,7 +43,10 @@ internal class OfflineWebPluginFactory(private val appContext: Context, private 
         val fileBytes = params?.get("fileBytes") as? ByteArray
         require(fileBytes == null || (fileName != null && mediaType != null && fileBytes.size <= 64 * 1024 * 1024))
         val domain = "p${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io"
+        val editorDomain = "v${digest.substring(0, 32)}.p${digest.substring(32)}.plugins.openmuse.io"
         val hostRoot = File(appContext.cacheDir, "mcp-host/$viewId").apply { mkdirs() }
+        val downloadLock = Any()
+        val exportTargets = mutableMapOf<String, File>()
         if (html != null) {
             File(hostRoot, "index.html").writeText(html)
             FileOutputStream(File(hostRoot, "arguments.json")).use { output ->
@@ -66,6 +72,14 @@ internal class OfflineWebPluginFactory(private val appContext: Context, private 
                 WebResourceResponse(mimeType(file), null, FileInputStream(file))
             })
             .build()
+        // Dedicated View origin has only verified editor resources. It never
+        // serves Host arguments or receives the native bridge injection.
+        val editorLoader = WebViewAssetLoader.Builder().setDomain(editorDomain)
+            .addPathHandler("/editor/", WebViewAssetLoader.PathHandler { path ->
+                val file = File(root, path).canonicalFile
+                if (!file.path.startsWith(root.path + File.separator) || !file.isFile) return@PathHandler null
+                WebResourceResponse(mimeType(file), null, FileInputStream(file))
+            }).build()
         if ((appContext.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
             WebView.setWebContentsDebuggingEnabled(true)
         }
@@ -74,8 +88,18 @@ internal class OfflineWebPluginFactory(private val appContext: Context, private 
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.settings.allowFileAccess = false
-        webView.settings.allowContentAccess = false
+        // File inputs need the user's content:// grant. The request gate below
+        // admits only the exact selection for this View; no library permission.
+        webView.settings.allowContentAccess = true
         webView.settings.setSupportMultipleWindows(false)
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean =
+                filePicker.open(view, callback, params)
+            override fun onPermissionRequest(request: PermissionRequest) {
+                webView.post { microphone.open(webView, request, editorDomain, html != null && params?.get("microphoneRequested") == true) }
+            }
+            override fun onPermissionRequestCanceled(request: PermissionRequest) { microphone.canceled(request) }
+        }
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView, url: String) {
                 if (html != null || fileBytes == null || fileName == null || mediaType == null) return
@@ -90,14 +114,19 @@ internal class OfflineWebPluginFactory(private val appContext: Context, private 
                 view.evaluateJavascript(script, null)
             }
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
-                request.url.host != domain || request.url.scheme != "https"
+                request.url.scheme != "https" || (request.url.host != domain &&
+                    (request.isForMainFrame || request.url.host != editorDomain || !request.url.path.orEmpty().startsWith("/editor/")))
 
             override fun shouldInterceptRequest(
                 view: WebView,
                 request: WebResourceRequest,
-            ): WebResourceResponse {
+            ): WebResourceResponse? {
+                if (filePicker.permitsContent(view, request.url)) return super.shouldInterceptRequest(view, request)
                 if (request.url.host == domain && request.url.scheme == "https") {
                     loader.shouldInterceptRequest(request.url)?.let { return it }
+                }
+                if (request.url.host == editorDomain && request.url.scheme == "https") {
+                    editorLoader.shouldInterceptRequest(request.url)?.let { return it }
                 }
                 return WebResourceResponse("text/plain", "UTF-8", 403, "Blocked", emptyMap(),
                     "Blocked".byteInputStream())
@@ -121,7 +150,22 @@ internal class OfflineWebPluginFactory(private val appContext: Context, private 
                 val raw = message.data ?: return@addWebMessageListener
                 if (raw.length > 96 * 1024 * 1024) return@addWebMessageListener
                 val incoming = try { JSONObject(raw) } catch (_: Exception) { return@addWebMessageListener }
-                if (incoming.optString("method") != "ui/download-file" || params?.get("forwardDownloads") == true) {
+                if (incoming.optString("method") == "io.openmuse/browser-print") {
+                    val response = JSONObject().put("jsonrpc", "2.0").put("id", incoming.opt("id"))
+                    val reply: (Boolean) -> Unit = { ok ->
+                        if (ok) response.put("result", JSONObject().put("dialogOpened", true))
+                        else response.put("error", JSONObject().put("code", -32603).put("message", "System print dialog unavailable"))
+                        view.post { view.evaluateJavascript("window.__mcpHostReceive($response)", null) }
+                    }
+                    try {
+                        val input = incoming.getJSONObject("params")
+                        printer.open(view, input.getString("html"), input.optString("title", "Document"), input.getInt("widthMils"), input.getInt("heightMils"), reply)
+                    } catch (_: Exception) { reply(false) }
+                    return@addWebMessageListener
+                }
+                val resource = incoming.optJSONObject("params")?.optJSONArray("contents")?.let { if (it.length() == 1) it.optJSONObject(0)?.optJSONObject("resource") else null }
+                val isOriginal = resource?.let { DownloadIdentity.matches(Uri.parse(it.optString("uri")).lastPathSegment ?: "", it.optString("mimeType"), fileName, mediaType) } == true
+                if (incoming.optString("method") != "ui/download-file" || params?.get("forwardDownloads") == true && isOriginal) {
                     channel.invokeMethod("message", raw)
                     return@addWebMessageListener
                 }
@@ -140,12 +184,30 @@ internal class OfflineWebPluginFactory(private val appContext: Context, private 
                         val grantedPath = params?.get("filePath") as? String
                         val name = Uri.parse(resource.getString("uri")).lastPathSegment ?: "Export"
                         require(!name.contains('/') && !name.contains('\\') && name.length <= 200)
-                        val destination = if (grantedPath != null) File(grantedPath)
-                            else File(appContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), name)
-                        destination.parentFile?.mkdirs()
-                        val temporary = File(destination.parentFile, destination.name + ".saving")
-                        temporary.writeBytes(bytes)
-                        require(temporary.renameTo(destination))
+                        val mime = resource.optString("mimeType", "application/octet-stream")
+                        synchronized(downloadLock) {
+                            if (!DownloadIdentity.mayReplace(name, mime, fileName, mediaType, grantedPath) && SharedBrowserExport.save(appContext, name, mime, bytes)) {
+                                return@synchronized
+                            }
+                            val destination = if (DownloadIdentity.mayReplace(name, mime, fileName, mediaType, grantedPath)) File(grantedPath!!)
+                                else exportTargets.getOrPut("$name\u0000$mime") {
+                                    val directory = File(appContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "Exports").apply { mkdirs() }
+                                    var candidate = File(directory, name)
+                                    var suffix = 1
+                                    while (!candidate.createNewFile()) {
+                                        val stem = File(name).nameWithoutExtension
+                                        val extension = File(name).extension.let { if (it.isEmpty()) "" else ".$it" }
+                                        candidate = File(directory, "$stem (${suffix++})$extension")
+                                    }
+                                    candidate
+                                }
+                            destination.parentFile?.mkdirs()
+                            val temporary = File(destination.parentFile, destination.name + ".saving-" + java.util.UUID.randomUUID())
+                            try {
+                                temporary.writeBytes(bytes)
+                                require(temporary.renameTo(destination))
+                            } finally { temporary.delete() }
+                        }
                         response.put("result", JSONObject())
                     } catch (error: Exception) {
                         response.put("error", JSONObject().put("code", -32603).put("message", "Unable to save the authorized resource"))
@@ -157,7 +219,7 @@ internal class OfflineWebPluginFactory(private val appContext: Context, private 
         } else webView.loadUrl("https://$domain/editor/index.html")
         return object : PlatformView {
             override fun getView(): View = webView
-            override fun dispose() { channel.setMethodCallHandler(null); webView.destroy(); hostRoot.deleteRecursively() }
+            override fun dispose() { printer.cancel(webView); microphone.cancel(webView); filePicker.cancel(webView); channel.setMethodCallHandler(null); webView.destroy(); hostRoot.deleteRecursively() }
         }
     }
 

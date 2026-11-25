@@ -21,6 +21,9 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 
 class MainActivity : FlutterActivity() {
+    private val offlineFilePicker by lazy { OfflineWebFilePicker(this) }
+    private val offlineMicrophone by lazy { OfflineWebMicrophone(this) }
+    private val offlinePrinter by lazy { OfflineWebPrint(this) }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -51,11 +54,27 @@ class MainActivity : FlutterActivity() {
             }
         flutterEngine.platformViewsController.registry.registerViewFactory(
             "io.openmuse/offline_web_plugin",
-            OfflineWebPluginFactory(applicationContext, flutterEngine.dartExecutor.binaryMessenger),
+            OfflineWebPluginFactory(applicationContext, flutterEngine.dartExecutor.binaryMessenger, offlineFilePicker, offlineMicrophone, offlinePrinter),
         )
     }
 
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (!offlineFilePicker.receive(requestCode, resultCode, data)) {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
+    override fun onDestroy() {
+        offlinePrinter.close()
+        offlineMicrophone.close()
+        offlineFilePicker.close()
+        super.onDestroy()
+    }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (!offlineMicrophone.receive(requestCode, grantResults)) super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+    override fun onStop() { offlineMicrophone.close(); super.onStop() }
 }
 
 private class DeviceKeyStoreBridge(context: Context) {

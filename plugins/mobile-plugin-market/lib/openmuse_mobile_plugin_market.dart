@@ -35,6 +35,7 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
     this.registryProviders,
     this.nativeMediaTypes = const {},
     this.allowedMcpPackages,
+    this.allowedMcpRemoteServers = const {},
     this.openNativeFile,
   });
   late final builtInPreferences = MobileBuiltInPreferences(
@@ -46,6 +47,7 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
   final McpRegistryProviders? registryProviders;
   final Map<String, Set<String>> nativeMediaTypes;
   final Map<String, String>? allowedMcpPackages;
+  final Map<String, String> allowedMcpRemoteServers;
   final Future<void> Function(BuildContext, RemoteMcpEntry, File)?
   openNativeFile;
 
@@ -84,6 +86,7 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
           registryProviders: registryProviders,
           nativeMediaTypes: nativeMediaTypes,
           allowedMcpPackages: allowedMcpPackages,
+          allowedMcpRemoteServers: allowedMcpRemoteServers,
           openNativeFile: openNativeFile,
         )
       : null;
@@ -113,6 +116,7 @@ final class OpenMuseMobilePluginMarket implements OpenMusePlugin {
     registryProviders: registryProviders,
     nativeMediaTypes: nativeMediaTypes,
     allowedMcpPackages: allowedMcpPackages,
+    allowedMcpRemoteServers: allowedMcpRemoteServers,
     openNativeFile: openNativeFile,
   );
 }
@@ -224,6 +228,7 @@ final class MobileMarketPage extends StatefulWidget {
     this.registryProviders,
     this.nativeMediaTypes = const {},
     this.allowedMcpPackages,
+    this.allowedMcpRemoteServers = const {},
     this.openNativeFile,
   });
   final MobilePluginStore store;
@@ -241,6 +246,7 @@ final class MobileMarketPage extends StatefulWidget {
   final McpRegistryProviders? registryProviders;
   final Map<String, Set<String>> nativeMediaTypes;
   final Map<String, String>? allowedMcpPackages;
+  final Map<String, String> allowedMcpRemoteServers;
   final Future<void> Function(BuildContext, RemoteMcpEntry, File)?
   openNativeFile;
 
@@ -500,6 +506,7 @@ final class _MobileMarketPageState extends State<MobileMarketPage> {
                   providers: widget.registryProviders,
                   nativeMediaTypes: widget.nativeMediaTypes,
                   allowedPackages: widget.allowedMcpPackages,
+                  allowedRemoteServers: widget.allowedMcpRemoteServers,
                   openNativeFile: widget.openNativeFile,
                   embedded: true,
                   query: query,
