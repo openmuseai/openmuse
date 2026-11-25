@@ -1,5 +1,9 @@
 name: desktop-gates
 
+defaults:
+  run:
+    working-directory: Muse-Client
+
 on:
   # Dispatchable so a release can start the desktop gate on demand; the
   # releasable packages are windows-build.yml and macos-build.yml.
@@ -18,9 +22,16 @@ jobs:
       PYTHONUTF8: "1"
       PYTHONIOENCODING: "utf-8"
     steps:
+      - name: Enable long Windows source paths
+        if: runner.os == 'Windows'
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        run: git config --global core.longpaths true
       - uses: actions/checkout@v4
+        with:
+          path: Muse-Client
       - name: Compose pinned plugin sources
-        uses: ./.github/actions/checkout-plugin-sources
+        uses: ./Muse-Client/.github/actions/checkout-plugin-sources
         with:
           token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - uses: subosito/flutter-action@v2
@@ -34,7 +45,7 @@ jobs:
         with:
           node-version: 22.19.0
           cache: npm
-          cache-dependency-path: third_party/dsh/package-lock.json
+          cache-dependency-path: Muse-Client/third_party/dsh/package-lock.json
       - name: Bootstrap
         run: ./scripts/ci/bootstrap-macos.sh --expected-flutter-version "${{ env.FLUTTER_VERSION }}"
       - name: Build, test and package
@@ -43,9 +54,9 @@ jobs:
         with:
           name: OpenMuse-macos-unsigned
           path: |
-            dist/OpenMuse-macos.zip
-            dist/SHA256SUMS.txt
-            dist/build-info.txt
+            Muse-Client/dist/OpenMuse-macos.zip
+            Muse-Client/dist/SHA256SUMS.txt
+            Muse-Client/dist/build-info.txt
           if-no-files-found: error
 
   # Same script as .github/workflows/windows-build.yml, so the gate and the
@@ -59,9 +70,16 @@ jobs:
       PYTHONIOENCODING: "utf-8"
       HELIX_DISABLE_AUTO_GRAMMAR_BUILD: "1"
     steps:
+      - name: Enable long Windows source paths
+        if: runner.os == 'Windows'
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        run: git config --global core.longpaths true
       - uses: actions/checkout@v4
+        with:
+          path: Muse-Client
       - name: Compose pinned plugin sources
-        uses: ./.github/actions/checkout-plugin-sources
+        uses: ./Muse-Client/.github/actions/checkout-plugin-sources
         with:
           token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - uses: subosito/flutter-action@v2
@@ -74,12 +92,12 @@ jobs:
         with:
           node-version: 22.19.0
           cache: npm
-          cache-dependency-path: third_party/dsh/package-lock.json
+          cache-dependency-path: Muse-Client/third_party/dsh/package-lock.json
       - name: Restore Helix cargo cache
         uses: actions/cache@v4
         with:
-          path: third_party/helix/target
-          key: win-helix-${{ hashFiles('third_party/helix/Cargo.lock') }}
+          path: Muse-Client/third_party/helix/target
+          key: win-helix-${{ hashFiles('Muse-Client/third_party/helix/Cargo.lock') }}
       - name: Bootstrap
         shell: pwsh
         run: pwsh scripts/ci/bootstrap-windows.ps1 -ExpectedFlutterVersion '${{ env.FLUTTER_VERSION }}'
@@ -90,7 +108,7 @@ jobs:
         with:
           name: OpenMuse-windows-unsigned
           path: |
-            dist/OpenMuse-windows-x64.zip
-            dist/SHA256SUMS.txt
-            dist/build-info.txt
+            Muse-Client/dist/OpenMuse-windows-x64.zip
+            Muse-Client/dist/SHA256SUMS.txt
+            Muse-Client/dist/build-info.txt
           if-no-files-found: error

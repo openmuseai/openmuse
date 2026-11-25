@@ -3,6 +3,10 @@ name: clients
 # Browser and mobile packages. Desktop macOS and Windows stay in
 # desktop-gates.yml so a client failure does not cancel those builds.
 
+defaults:
+  run:
+    working-directory: Muse-Client
+
 on:
   # Dispatchable so a release can start the client gate on demand; the
   # releasable web and mobile packages are web-build.yml, android-build.yml and
@@ -20,8 +24,10 @@ jobs:
       FLUTTER_VERSION: "3.44.2"
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: Muse-Client
       - name: Compose pinned plugin sources
-        uses: ./.github/actions/checkout-plugin-sources
+        uses: ./Muse-Client/.github/actions/checkout-plugin-sources
         with:
           token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - uses: subosito/flutter-action@v2
@@ -31,7 +37,7 @@ jobs:
           cache: true
       - run: flutter config --enable-web
       - name: Test and build
-        working-directory: app/openmuse_web
+        working-directory: Muse-Client/app/openmuse_web
         run: |
           flutter pub get
           flutter analyze
@@ -41,7 +47,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: OpenMuse-web
-          path: app/openmuse_web/build/web
+          path: Muse-Client/app/openmuse_web/build/web
           if-no-files-found: error
 
   mobile:
@@ -52,8 +58,10 @@ jobs:
       FLUTTER_VERSION: "3.44.2"
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: Muse-Client
       - name: Compose pinned plugin sources
-        uses: ./.github/actions/checkout-plugin-sources
+        uses: ./Muse-Client/.github/actions/checkout-plugin-sources
         with:
           token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - uses: subosito/flutter-action@v2
@@ -77,5 +85,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: OpenMuse-mobile-debug
-          path: app/openmuse_mobile/build/app/outputs/flutter-apk/app-debug.apk
+          path: Muse-Client/app/openmuse_mobile/build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error

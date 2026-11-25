@@ -18,13 +18,16 @@ test('provisioning generates a private signer and a validated public bundle with
   const generated=run('keygen','--directory',directory,'--kid','fixture');
   assert.equal(generated.status,0,generated.stderr);
   assert.equal(statSync(key).mode & 0o777,0o600);
-  const privateBytes=readFileSync(key),publicKeys=JSON.parse(readFileSync(pub));
+  const privateBytes=readFileSync(key),publicBytesBefore=readFileSync(pub),publicKeys=JSON.parse(publicBytesBefore);
+  const deploymentBytes=readFileSync(deployment),existingKeys=JSON.parse(deploymentBytes).bootstrap.publicKeys;
   assert.equal(publicKeys.fixture,createPublicKey(privateBytes).export({format:'jwk'}).x);
   const args=['--input',deployment,'--output',output,'--scope','fixture','--origin','https://config.example.test','--public-keys',pub];
   const prepared=run('prepare-bundle',...args);
   assert.equal(prepared.status,0,prepared.stderr);
   const publicBytes=readFileSync(output),bundle=JSON.parse(publicBytes);
-  assert.deepEqual(bundle.bootstrap.publicKeys,publicKeys);
+  assert.deepEqual(bundle.bootstrap.publicKeys,{...existingKeys,...publicKeys});
+  assert.deepEqual(readFileSync(deployment),deploymentBytes);
+  assert.deepEqual(readFileSync(pub),publicBytesBefore);
   assert.deepEqual(bundle.bootstrap.discoveryUrls,['https://config.example.test/v1/runtime/scopes/fixture/active.jws']);
   assert(bundle.bootstrap.allowedResourceOrigins.includes('https://config.example.test'));
   assert.equal(bundle.bootstrap.cohortRouting,true);

@@ -1,5 +1,9 @@
 name: Runtime configuration
 
+defaults:
+  run:
+    working-directory: Muse-Client
+
 on:
   push:
   pull_request:
@@ -11,17 +15,19 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: Muse-Client
       - name: Verify source composition guard boundaries
         run: python3 scripts/ci/test_verify_plugin_sources.py
       - name: Compose pinned plugin sources
-        uses: ./.github/actions/checkout-plugin-sources
+        uses: ./Muse-Client/.github/actions/checkout-plugin-sources
         with:
           token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
           cache: npm
-          cache-dependency-path: services/config-control/package-lock.json
+          cache-dependency-path: Muse-Client/services/config-control/package-lock.json
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -34,14 +40,14 @@ jobs:
       - name: Reject new business hardcoding
         run: python3 scripts/ci/check_globalization.py
       - name: Verify control plane and immutable publishing
-        working-directory: services/config-control
+        working-directory: Muse-Client/services/config-control
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npm test
       - name: Check generated message contracts
         run: python3 scripts/generate_i18n.py --check
       - name: Verify SDK and deployment compiler
-        working-directory: packages/openmuse_runtime_config
+        working-directory: Muse-Client/packages/openmuse_runtime_config
         run: |
           flutter pub get
           flutter analyze
@@ -52,13 +58,13 @@ jobs:
           flutter test --platform chrome test/runtime_config_browser_test.dart --dart-define-from-file=/tmp/openmuse-deployment-defines.json
           flutter test --platform chrome test/config_transport_browser_test.dart
       - name: Verify runtime language integration and publisher interoperability
-        working-directory: packages/openmuse_i18n
+        working-directory: Muse-Client/packages/openmuse_i18n
         run: |
           flutter pub get
           flutter analyze
           flutter test
       - name: Verify browser storage and session adapters
-        working-directory: app/openmuse_web
+        working-directory: Muse-Client/app/openmuse_web
         run: |
           flutter pub get
           flutter analyze

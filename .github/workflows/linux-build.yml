@@ -1,4 +1,8 @@
 name: Linux build
+defaults:
+  run:
+    working-directory: Muse-Client
+
 on:
   workflow_dispatch:
   push:
@@ -45,16 +49,18 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: Muse-Client
       - name: Compose pinned plugin sources
-        uses: ./.github/actions/checkout-plugin-sources
+        uses: ./Muse-Client/.github/actions/checkout-plugin-sources
         with:
           token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - name: Prepare Debian 12 builder
         run: docker build --build-arg DEBIAN_MIRROR=http://deb.debian.org/debian -f app/openmuse_linux/tool/Dockerfile -t openmuse-linux-builder .
       - name: Build, test and package
         run: |
-          docker run --rm --shm-size=1g \
-            -v "$PWD:/workspace" \
+          docker run --rm --shm-size=1g --workdir /Muse-Client \
+            -v "$PWD:/Muse-Client" \
             -v "$PWD/../Muse-Plugin-Ecosystem:/Muse-Plugin-Ecosystem" \
             -v openmuse-linux-pub:/root/.pub-cache \
             -v openmuse-linux-cargo-registry:/root/.cargo/registry \
@@ -63,6 +69,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: OpenMuse-linux-${{ matrix.arch }}-${{ matrix.region }}-${{ github.sha }}
-          path: app/openmuse_linux/build/dist/${{ matrix.arch }}/${{ matrix.region }}/
+          path: Muse-Client/app/openmuse_linux/build/dist/${{ matrix.arch }}/${{ matrix.region }}/
           if-no-files-found: error
           retention-days: 14

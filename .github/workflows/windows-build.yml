@@ -10,6 +10,10 @@ name: Windows build
 # whose outputs are present, and records what it reused in build-info.txt. See
 # docs/windows-incremental-build.md.
 
+defaults:
+  run:
+    working-directory: Muse-Client
+
 on:
   workflow_dispatch:
     inputs:
@@ -61,13 +65,19 @@ jobs:
     timeout-minutes: 120
 
     steps:
+      - name: Enable long Windows source paths
+        if: runner.os == 'Windows'
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        run: git config --global core.longpaths true
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          path: Muse-Client
           fetch-depth: 0
 
       - name: Compose pinned plugin sources
-        uses: ./.github/actions/checkout-plugin-sources
+        uses: ./Muse-Client/.github/actions/checkout-plugin-sources
         with:
           token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - name: Rust toolchain
@@ -85,7 +95,7 @@ jobs:
         with:
           node-version: 22.19.0
           cache: npm
-          cache-dependency-path: third_party/dsh/package-lock.json
+          cache-dependency-path: Muse-Client/third_party/dsh/package-lock.json
 
       - name: Bootstrap
         shell: pwsh
@@ -110,9 +120,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
-            target
-            third_party/helix/target
-            .muse-domain-cache/rust.json
+            Muse-Client/target
+            Muse-Client/third_party/helix/target
+            Muse-Client/.muse-domain-cache/rust.json
           key: win-rust-${{ steps.domains.outputs.rust }}
 
       - name: Restore flutter cache
@@ -120,8 +130,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
-            app/openmuse_host/build/windows
-            .muse-domain-cache/flutter.json
+            Muse-Client/app/openmuse_host/build/windows
+            Muse-Client/.muse-domain-cache/flutter.json
           key: win-flutter-${{ steps.domains.outputs.flutter }}
 
       - name: Build
@@ -145,9 +155,9 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
-            target
-            third_party/helix/target
-            .muse-domain-cache/rust.json
+            Muse-Client/target
+            Muse-Client/third_party/helix/target
+            Muse-Client/.muse-domain-cache/rust.json
           key: win-rust-${{ steps.domains.outputs.rust }}
 
       - name: Save flutter cache
@@ -155,8 +165,8 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
-            app/openmuse_host/build/windows
-            .muse-domain-cache/flutter.json
+            Muse-Client/app/openmuse_host/build/windows
+            Muse-Client/.muse-domain-cache/flutter.json
           key: win-flutter-${{ steps.domains.outputs.flutter }}
 
       - name: Upload archives
@@ -164,9 +174,9 @@ jobs:
         with:
           name: OpenMuse-windows-${{ github.sha }}
           path: |
-            dist/*.zip
-            dist/SHA256SUMS.txt
-            dist/build-info.txt
+            Muse-Client/dist/*.zip
+            Muse-Client/dist/SHA256SUMS.txt
+            Muse-Client/dist/build-info.txt
           if-no-files-found: error
           retention-days: ${{ fromJSON(inputs.retention_days || '14') }}
 

@@ -4,6 +4,10 @@ name: macOS build
 # desktop-gates.yml runs. This file checks the repository out, installs the
 # toolchain, calls that script, and uploads dist/.
 
+defaults:
+  run:
+    working-directory: Muse-Client
+
 on:
   workflow_dispatch:
     inputs:
@@ -57,9 +61,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          path: Muse-Client
 
       - name: Compose pinned plugin sources
-        uses: ./.github/actions/checkout-plugin-sources
+        uses: ./Muse-Client/.github/actions/checkout-plugin-sources
         with:
           token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - name: Rust toolchain
@@ -82,7 +88,7 @@ jobs:
         with:
           node-version: 22.19.0
           cache: npm
-          cache-dependency-path: third_party/dsh/package-lock.json
+          cache-dependency-path: Muse-Client/third_party/dsh/package-lock.json
 
       # The desktop packaging already runs flutter clean on every build
       # (OPENMUSE_CLEAN_BUILD defaults to 1), so the cargo target cache is the
@@ -92,6 +98,7 @@ jobs:
         if: ${{ !(inputs.force_rebuild || github.ref_type == 'tag') }}
         uses: Swatinem/rust-cache@v2
         with:
+          workspaces: Muse-Client -> target
           cache-on-failure: true
 
       - name: Bootstrap
@@ -113,9 +120,9 @@ jobs:
         with:
           name: OpenMuse-macos-${{ github.sha }}
           path: |
-            dist/*.zip
-            dist/SHA256SUMS.txt
-            dist/build-info.txt
+            Muse-Client/dist/*.zip
+            Muse-Client/dist/SHA256SUMS.txt
+            Muse-Client/dist/build-info.txt
           if-no-files-found: error
           retention-days: ${{ fromJSON(inputs.retention_days || '14') }}
 
