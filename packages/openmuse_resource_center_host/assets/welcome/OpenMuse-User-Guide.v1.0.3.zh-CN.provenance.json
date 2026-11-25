@@ -1,0 +1,20 @@
+{
+  "source": "OpenMuse-User-Guide.v1.0.3.zh-CN.md",
+  "sourceSha256": "b904f8d1c899c5e207c06f0ed9c21462b5b0c1850889f5bf1ec67eb704b5a2e2",
+  "sha256": "3cd640daeb070b495619371cab060c3d1df03e05d61271fa587bcb6399e9f32d",
+  "generator": "smart_document/rust/examples/portable_document.rs",
+  "generatorSha256": "5e8e04bf48bab338ee49429e7f64a74ddcd14127a0544b27ac895590add852e1",
+  "collabRevision": "e59260e524f33104b0ddcd6bb8f6218cad0f7e18",
+  "nativeVerification": {
+    "blockKinds": {
+      "code": 3,
+      "heading": 17,
+      "page": 1,
+      "paragraph": 18
+    },
+    "objectId": "3c366ce3-5a0a-4f8e-9b61-09a22c38ea02",
+    "originalCoreReopen": true,
+    "profile": "muse.smart-document/phase1",
+    "sourceLinks": 20
+  }
+}

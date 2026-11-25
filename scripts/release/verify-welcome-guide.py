@@ -5,6 +5,10 @@ import json
 from pathlib import Path, PurePosixPath
 import re
 import zipfile
+import argparse
+import base64
+import subprocess
+import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 BASE = ROOT / 'packages/openmuse_resource_center_host/assets/welcome'
@@ -58,6 +62,53 @@ def verify(china=False):
     print(f'{stem} PASS: {len(images)} embedded screenshots, {len(links)} real hyperlinks, 15 sections.')
 
 
+def verify_smart_document():
+    plugin = ROOT.parent / 'Muse-Plugin-Ecosystem/plugins/markdown'
+    generator = plugin / 'smart_document/rust/examples/portable_document.rs'
+    host = subprocess.check_output(['rustc', '-vV'], text=True)
+    host = re.search(r'^host: ([a-zA-Z0-9_-]+)$', host, re.M).group(1)
+    for locale in ['en', 'zh-CN']:
+        stem = 'OpenMuse-User-Guide.v1.0.3.' + locale
+        source = BASE / (stem + '.md')
+        document = BASE / (stem + '.musedoc')
+        provenance = json.loads((BASE / (stem + '.provenance.json')).read_text())
+        markdown = source.read_text()
+        assert hashlib.sha256(source.read_bytes()).hexdigest() == provenance['sourceSha256']
+        assert hashlib.sha256(document.read_bytes()).hexdigest() == provenance['sha256']
+        assert hashlib.sha256(generator.read_bytes()).hexdigest() == provenance['generatorSha256']
+        value = json.loads(document.read_bytes())
+        assert set(value) == {'profile', 'objectId', 'docState'}
+        assert value['profile'] == 'muse.smart-document/phase1'
+        uuid.UUID(value['objectId'])
+        assert 100 < len(base64.b64decode(value['docState'], validate=True)) < 8 * 1024 * 1024
+        assert len(re.findall(r'^## ', markdown, re.M)) >= 15
+        assert markdown.count('```text') >= 3
+        links = re.findall(r'(?<!!)\[[^\]]*\]\(([^)]+)\)', markdown)
+        assert len(links) >= 15 and all(link.startswith('https://') for link in links)
+        assert not re.findall(r'!\[[^\]]*\]\(([^)]+)\)', markdown), 'Guide must not depend on remote illustrations'
+        if locale == 'zh-CN':
+            assert re.search('[\u4e00-\u9fff]', markdown)
+            assert all('us.openmuseai.com' not in link for link in links)
+        else:
+            assert not re.search('[\u4e00-\u9fff]', markdown)
+        result = subprocess.run([
+            'cargo', 'run', '--quiet', '--locked', '--release', '--target', host,
+            '--manifest-path', str(plugin / 'smart_document/rust/Cargo.toml'),
+            '--example', 'portable_document', '--', 'verify', str(document), str(source),
+        ], check=True, text=True, capture_output=True, timeout=300)
+        native = json.loads(result.stdout.strip().splitlines()[-1])
+        assert native['originalCoreReopen'] and native['sourceLinks'] == len(links)
+        assert native['blockKinds']['heading'] >= 15 and native['blockKinds']['code'] >= 3
+        print(stem + ' PASS: real Smart Document core reopen, source links, sections and text diagrams')
+
+
 if __name__ == '__main__':
-    verify()
-    verify(china=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--profile', choices=['legacy', 'smart-document'], default='legacy')
+    args = parser.parse_args()
+    if args.profile == 'smart-document':
+        verify_smart_document()
+    else:
+        # Keep historical native-archive verification available for old releases.
+        verify()
+        verify(china=True)

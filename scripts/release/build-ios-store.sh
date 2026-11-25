@@ -34,7 +34,9 @@ if [[ "$market" == cn ]]; then deployment_profile=china; fi
 cd "$repo_root"
 closure_args=()
 if [[ "$version" == 1.0.3 ]]; then closure_args+=(--profile mobile-1.0.3); fi
-python3 "$repo_root/scripts/release/verify-welcome-guide.py"
+guide_args=()
+if [[ "$version" == 1.0.3 ]]; then guide_args+=(--profile smart-document); fi
+python3 "$repo_root/scripts/release/verify-welcome-guide.py" "${guide_args[@]}"
 dirty=false
 if [[ -n "$(git status --porcelain)" ]]; then dirty=true; fi
 if [[ "$dirty" == true && "$allow_dirty" != true ]]; then
