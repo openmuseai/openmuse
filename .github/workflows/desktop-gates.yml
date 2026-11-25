@@ -26,7 +26,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         working-directory: ${{ github.workspace }}
-        run: git config --global core.longpaths true
+        run: |
+          git config --global core.longpaths true
+          git config --global core.autocrlf false
       - uses: actions/checkout@v4
         with:
           path: Muse-Client
@@ -74,7 +76,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         working-directory: ${{ github.workspace }}
-        run: git config --global core.longpaths true
+        run: |
+          git config --global core.longpaths true
+          git config --global core.autocrlf false
       - uses: actions/checkout@v4
         with:
           path: Muse-Client
