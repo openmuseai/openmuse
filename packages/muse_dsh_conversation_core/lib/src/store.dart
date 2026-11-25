@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
+import 'task_outcome.dart';
+
+export 'task_outcome.dart';
 
 enum DshConnectionPhase { idle, connecting, live, reconnecting, failed, closed }
 
@@ -87,6 +90,8 @@ final class DshConversationSnapshot {
 }
 
 final class DshConversationStore {
+  final _taskOutcomes = StreamController<DshTaskOutcome>.broadcast(sync: true);
+  Stream<DshTaskOutcome> get taskOutcomes => _taskOutcomes.stream;
   final StreamController<void> _changes = StreamController<void>.broadcast(
     sync: true,
   );
@@ -226,13 +231,33 @@ final class DshConversationStore {
         );
       case DshEventFrame():
         final event = frame.event;
+        final freshEvent = event.seq > _cursor;
+        final newOutcome = freshEvent && _running && event.type == 'turn/end';
         _journal[event.seq] = event;
         if (event.seq > _cursor) _cursor = event.seq;
-        if (event.type == 'turn/start') _running = true;
-        if (event.type == 'turn/end') _running = false;
+        if (freshEvent && event.type == 'turn/start') _running = true;
+        if (freshEvent && event.type == 'turn/end') _running = false;
         _applyPresentationEvent(event);
         _retireObservedPrompt(event);
         _scanCompatibility([event]);
+        if (newOutcome && _sessionId != null) {
+          final sessionId = _sessionId!;
+          final reason = event.data['reason'];
+          final result = switch (reason is Map ? reason['kind'] : null) {
+            'completed' => DshTaskResult.completed,
+            'error' => DshTaskResult.failed,
+            _ => null,
+          };
+          if (result != null) {
+            _taskOutcomes.add(
+              DshTaskOutcome(
+                sessionId: sessionId,
+                sequence: event.seq,
+                result: result,
+              ),
+            );
+          }
+        }
         print(
           'OpenMuse store: event ${event.type}@${event.seq} '
           'pending=${_pending.length}',
@@ -277,6 +302,7 @@ final class DshConversationStore {
   }
 
   Future<void> dispose() async {
+    await _taskOutcomes.close();
     await _changes.close();
   }
 

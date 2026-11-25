@@ -1,0 +1,23 @@
+{
+  "id": "05-build",
+  "status": "partial",
+  "owner": "Codex / Muse-CI",
+  "summary": "Both signed112503 candidates built from the same clean51ba72a7 source and a6814bc0 Ecosystem.123 Mobile tests and analyzer pass; functional merges/tags and source freeze remain pending.",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-build.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-build-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-build-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build-112503.json"
+  ],
+  "exceptions": [
+    "Final MR merges/tags and source freeze pending"
+  ],
+  "evidenceDigests": {
+    "ios-appstore-build.json": "026cf461e0c4fea9dbf84e8bdefdeb3fc18ad54a80d8a771498674a7620eb536",
+    "cn-build.json": "294bdec0a9b568a47b4d2038ffddc31500b67e7c622eac4c9df64b6f9a35ed62",
+    "ios-appstore-build-112502.json": "68220f5874963bf07d9150c1b949c38cc9afba789e55792108da65fa7b16b25d",
+    "cn-build-112502.json": "0b04d4787613f0e5bd6d6356ab6ac9a3104db77c89f328e9f7c6cc63d1091f64"
+  }
+}

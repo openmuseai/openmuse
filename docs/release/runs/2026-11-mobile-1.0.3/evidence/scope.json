@@ -1,0 +1,16 @@
+{
+  "version": "1.0.3",
+  "build": 112501,
+  "userDecisions": [
+    "Native Smart Documents replace former note editor",
+    "Fixed genOffice mobile editing integration",
+    "Opt-in local in-process success/failure task reminders; no push",
+    "Necessary release-blocking fixes",
+    "AppStore Office Harness only mainland China and US, coordinate manual release",
+    "vivo OpenMuse / com.openmuseai.mobile",
+    "Split only Ecosystem15 plugins; independent source repositories/MRs/tags",
+    "Doubao corresponding filing materials only; no new model restriction or additional self-configured architecture review note"
+  ],
+  "ciProjectId": "caefd37668c815627bf6914430fbae09",
+  "ciUrl": "http://127.0.0.1:4180/?project=caefd37668c815627bf6914430fbae09"
+}

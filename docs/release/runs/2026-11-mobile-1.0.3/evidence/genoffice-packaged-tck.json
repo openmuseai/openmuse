@@ -1,0 +1,54 @@
+{
+  "schema": "openmuse.genoffice.packaged-tck/1",
+  "date": "2026-11-25",
+  "status": "passed",
+  "sourceCommit": "d1bd524b00cf2dc9bd36eb5baf270492e37dc99c",
+  "bundleSha256": "cc1af2c2986c25b87eb5dbf75a4e9155e4bbfd9af6b7fc5f141650cd192dc1f3",
+  "extractedEntries": [
+    "web/index.html",
+    "server/web/index.html"
+  ],
+  "entriesByteEqual": true,
+  "runner": "scripts/verify_web.mjs",
+  "environment": "Independent standard MCP Apps host; separate headless Chromium",
+  "command": "MCP_APP_HTML=<extracted bundled web/index.html> node scripts/verify_web.mjs <tracked docs/meterails/Sample_ppt.pptx> <output>",
+  "result": {
+    "sample": "Sample_ppt.pptx",
+    "sampleSha256": "d712b4672db3634457e1c3ee3d9d8485a0cfa3298edcacffbc4fb568c1b36afb",
+    "uiSha256": "86ce31e58208e2286b9b2a496476b5956383fff78276833c9669a40e2ea7a6de",
+    "slides": 23,
+    "renderedPages": 23,
+    "textEditSavedAndReopened": true,
+    "viewToolsDiscovered": true,
+    "agentEditSaved": true,
+    "staleRevisionRejected": true,
+    "agentEditUndoable": true,
+    "standardAgentMessage": true,
+    "genSparkPanelRemoved": true,
+    "protocol": "MCP Apps"
+  },
+  "scope": [
+    "23-page rendering",
+    "real text overlay edit, standard download, saved OOXML content and reopened render tree",
+    "Agent edit/save, stale revision rejection and undo",
+    "standard ui/message",
+    "412x820 viewport visual inspection"
+  ],
+  "limitations": [
+    "Text editing was driven at desktop viewport; mobile viewport rendering was inspected after the edit.",
+    "This independent Host does not establish production Flutter WebView touch/keyboard or physical phone save/reopen acceptance.",
+    "Physical production Android PPTX persistence and iPhone acceptance remain unverified."
+  ],
+  "screenshots": [
+    {
+      "file": "/Users/mac/src/openmuse-io/Muse-Client/materials/releases/1.0.3/genoffice/packaged-tck/desktop-editor.png",
+      "sha256": "51600f5292a3f238acc93bd548f73fa1736500945bc1b240729013e64a8eeb2e",
+      "repositoryPublished": false
+    },
+    {
+      "file": "/Users/mac/src/openmuse-io/Muse-Client/materials/releases/1.0.3/genoffice/packaged-tck/mobile-editor.png",
+      "sha256": "57df167636b85525726d0696f4d86c6287953ac589c272f1e613ae8f29910421",
+      "repositoryPublished": false
+    }
+  ]
+}

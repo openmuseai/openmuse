@@ -822,6 +822,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  muse_original_sync:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_original_sync"
+      relative: true
+    source: path
+    version: "0.1.0"
   muse_remote_surface_contract:
     dependency: transitive
     description:
@@ -1132,6 +1139,13 @@ packages:
     dependency: "direct main"
     description:
       path: "../../plugins/speech-input"
+      relative: true
+    source: path
+    version: "0.1.0"
+  openmuse_task_notifications:
+    dependency: "direct main"
+    description:
+      path: "../../plugins/task-notifications"
       relative: true
     source: path
     version: "0.1.0"

@@ -1,0 +1,35 @@
+{
+  "schema": "openmuse.store-draft-receipt/1",
+  "recordedAt": "2026-11-25T10:35:32.293015+00:00",
+  "appId": "6827192902",
+  "version": "1.0.3",
+  "displayName": "Office Harness",
+  "storefronts": [
+    "CN",
+    "US"
+  ],
+  "storefrontState": {
+    "CN": "App 发布时供应",
+    "US": "App 发布时供应"
+  },
+  "verifiedAfterRefresh": true,
+  "localizationsSaved": [
+    "en-US",
+    "zh-Hans"
+  ],
+  "releaseMode": "manual",
+  "reviewNotes": "Updated actual 1.0.3 functional paths, native .musedoc sample, PPTX editor, optional local notifications and per-send AI consent. No self-configured model architecture added.",
+  "supportUrlChecks": {
+    "https://cn.openmuseai.com/zh/support/": 200,
+    "https://us.openmuseai.com/en/support/": 200,
+    "https://openmuseai.com/zh": 200,
+    "https://openmuseai.com/en": 200
+  },
+  "pending": [
+    "Replace old rejected build 16 with processed 112501 after final acceptance",
+    "Refresh screenshots from candidate actual UI",
+    "Verify private review account and online Desktop",
+    "Submit review after QA; AIGC verification pending"
+  ],
+  "limits": "Draft metadata and future storefront configuration only; not reviewed or released."
+}

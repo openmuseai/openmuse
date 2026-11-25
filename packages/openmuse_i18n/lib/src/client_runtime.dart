@@ -385,7 +385,15 @@ final class OpenMuseRuntimeNotice extends StatelessWidget {
             ),
           ),
         ),
-        Expanded(child: child),
+        // The notice owns the status-bar inset. Its sibling navigator must
+        // start directly below it, including routes with their own AppBar.
+        Expanded(
+          child: MediaQuery.removePadding(
+            context: context,
+            removeTop: true,
+            child: child,
+          ),
+        ),
       ],
     );
   }

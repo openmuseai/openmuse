@@ -5,6 +5,45 @@ import 'package:muse_dsh_conversation_core/muse_dsh_conversation_core.dart';
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
 
 void main() {
+  for (final revoke in [false, true]) {
+    test(
+      revoke
+          ? 'revocation during review makes no request'
+          : 'missing consent makes no request',
+      () async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        var requests = 0;
+        server.listen((r) async {
+          requests++;
+          await r.response.close();
+        });
+        final store = DshConversationStore()..connecting('review');
+        late DshConversationController controller;
+        controller = DshConversationController(
+          client: DshNativeGatewayClient(
+            origin: Uri.parse('http://127.0.0.1:${server.port}'),
+            bootstrapPath: '',
+            allowInsecureLoopback: true,
+          ),
+          store: store,
+          approveSend: revoke
+              ? (_, text) async {
+                  controller.revokeSendApproval();
+                  return true;
+                }
+              : null,
+        );
+        await expectLater(
+          controller.send('private'),
+          revoke ? throwsStateError : throwsA(isA<DshSendDeclined>()),
+        );
+        expect(requests, 0);
+        expect(store.hasPendingPrompts, isFalse);
+        await controller.dispose();
+        await server.close(force: true);
+      },
+    );
+  }
   test(
     'declining AI sharing sends no prompt and creates no pending message',
     () async {

@@ -160,7 +160,7 @@ void main() {
         center.hub.access('test'),
       )).entries;
       final guide = entries
-          .singleWhere((e) => e.name == 'OpenMuse 国内版使用指南.sydoc')
+          .singleWhere((e) => e.name == 'OpenMuse 智能文档使用指南.musedoc')
           .resource!;
       final content = await center.documents.read(
         guide.identity.resource,
@@ -170,7 +170,7 @@ void main() {
       expect(
         content.bytes,
         await File(
-          'assets/welcome/OpenMuse-User-Guide.zh-CN.sydoc',
+          'assets/welcome/OpenMuse-User-Guide.v1.0.3.zh-CN.musedoc',
         ).readAsBytes(),
       );
       await center.seedWelcome(region: 'cn');
@@ -190,7 +190,7 @@ void main() {
       name: 'OpenMuse User Guide.sydoc',
       mediaType: 'application/vnd.openmuse.siyuan.document+zip',
       bytes: await File('test/fixtures/legacy-guide.sydoc').readAsBytes(),
-      idempotencyKey: 'welcome-v1-OpenMuse-User-Guide.sydoc',
+      idempotencyKey: 'legacy-guide-fixture',
       access: center.hub.access('test'),
     );
     await File(
@@ -199,40 +199,50 @@ void main() {
     return record;
   }
 
+  Future<List<ResourceRecord>> records() async => (await center.documents.list(
+    'root',
+    center.hub.access('test'),
+  )).entries.map((e) => e.resource!).toList();
+  Future<List<int>> bytes(ResourceRecord r, {ResourceVersion? version}) async =>
+      (await center.documents.read(
+        r.identity.resource,
+        version,
+        center.hub.access('test'),
+      )).bytes;
+
   test(
-    'illustrated guide upgrades only a pristine starter and keeps history',
+    'native format upgrade retains pristine old identity, bytes and history',
     () async {
       final original = await oldGuide();
+      final source = await bytes(original);
       await center.seedWelcome();
-      final current = await center.documents.describe(
+      await center.seedWelcome();
+      final old = await center.documents.describe(
         original.identity.resource,
         center.hub.access('test'),
       );
-      expect(current.identity, original.identity);
-      expect(current.version, isNot(original.version));
+      expect(old.version, original.version);
+      expect(await bytes(old), source);
+      expect(await bytes(old, version: original.version), source);
+      final all = await records();
+      expect(all, hasLength(2));
+      final current = all.singleWhere((r) => r.name.endsWith('.musedoc'));
+      expect(current.identity, isNot(old.identity));
+      expect(current.mediaType, 'application/vnd.openmuse.smart-document+json');
       expect(
-        (await center.documents.read(
-          original.identity.resource,
-          original.version,
-          center.hub.access('test'),
-        )).bytes,
-        await File('test/fixtures/legacy-guide.sydoc').readAsBytes(),
-      );
-      await center.seedWelcome();
-      expect(
-        (await center.documents.list(
-          'root',
-          center.hub.access('test'),
-        )).entries,
-        hasLength(1),
+        await bytes(current),
+        await File(
+          'assets/welcome/OpenMuse-User-Guide.v1.0.3.en.musedoc',
+        ).readAsBytes(),
       );
     },
   );
 
   test(
-    'personal guide edits survive while the new edition is offered once',
+    'personal old-format edits survive with original historical version',
     () async {
       final original = await oldGuide();
+      final oldBytes = await bytes(original);
       final edited = await center.documents.commit(
         original.identity.resource,
         original.version,
@@ -242,74 +252,67 @@ void main() {
       );
       await center.seedWelcome();
       await center.seedWelcome();
-      expect(
-        (await center.documents.describe(
-          original.identity.resource,
-          center.hub.access('test'),
-        )).version,
-        edited.version,
-      );
-      expect(
-        (await center.documents.read(
-          original.identity.resource,
-          null,
-          center.hub.access('test'),
-        )).bytes,
-        [1, 2, 3],
-      );
-      final entries = (await center.documents.list(
-        'root',
+      final current = await center.documents.describe(
+        original.identity.resource,
         center.hub.access('test'),
-      )).entries;
-      expect(entries, hasLength(2));
-      expect(
-        entries.map((e) => e.name),
-        contains('OpenMuse User Guide — 2026-11.sydoc'),
       );
+      expect(current.version, edited.version);
+      expect(await bytes(current), [1, 2, 3]);
+      expect(await bytes(current, version: original.version), oldBytes);
+      expect(await records(), hasLength(2));
     },
   );
 
   test(
-    'missing starter is not recreated in an already seeded account',
+    'missing starter is not resurrected in an already seeded account',
     () async {
       await File(
         '${center.root.path}/welcome-v1.json',
       ).writeAsString('{"version":1}');
       await center.seedWelcome();
-      await center.seedWelcome();
-      expect(
-        (await center.documents.list(
-          'root',
-          center.hub.access('test'),
-        )).entries,
-        isEmpty,
-      );
+      await center.seedWelcome(region: 'cn');
+      expect(await records(), isEmpty);
     },
   );
 
   test(
-    'interrupted old seed is resumed without overwriting its resource',
+    'renamed old guide is retained without adding an unsolicited new guide',
     () async {
       final original = await oldGuide();
+      final renamed = await center.controller.rename(
+        original,
+        'My original archive.sydoc',
+      );
+      await center.seedWelcome();
+      await center.seedWelcome(region: 'cn');
+      final all = await records();
+      expect(all, hasLength(1));
+      expect(all.single.identity, renamed.identity);
+      expect(all.single.name, 'My original archive.sydoc');
+    },
+  );
+
+  test(
+    'interrupted seed resumes with distinct native guide and no overwrite',
+    () async {
+      final original = await oldGuide();
+      final source = await bytes(original);
       await File('${center.root.path}/welcome-v1.json').delete();
       await center.seedWelcome();
-      final entries = (await center.documents.list(
-        'root',
-        center.hub.access('test'),
-      )).entries;
-      expect(entries, hasLength(2));
-      expect(
-        entries.where((e) => e.resource?.identity == original.identity),
-        hasLength(1),
-      );
+      await center.seedWelcome();
+      final all = await records();
+      expect(all, hasLength(3));
+      expect(all.where((r) => r.identity == original.identity), hasLength(1));
+      expect(await bytes(original), source);
+      expect(all.where((r) => r.name.endsWith('.musedoc')), hasLength(1));
     },
   );
 
   test(
-    'China upgrade retains an edited guide and offers the domestic guide once',
+    'China upgrade adds correct native guide while preserving old edits',
     () async {
       final original = await oldGuide();
-      await center.documents.commit(
+      final edited = await center.documents.commit(
         original.identity.resource,
         original.version,
         [1, 2, 3],
@@ -318,66 +321,67 @@ void main() {
       );
       await center.seedWelcome(region: 'cn');
       await center.seedWelcome(region: 'cn');
-      expect(
-        (await center.documents.read(
-          original.identity.resource,
-          null,
-          center.hub.access('test'),
-        )).bytes,
-        [1, 2, 3],
+      final all = await records();
+      expect(all, hasLength(2));
+      final current = all.singleWhere(
+        (r) => r.name == 'OpenMuse 智能文档使用指南.musedoc',
       );
-      final entries = (await center.documents.list(
-        'root',
-        center.hub.access('test'),
-      )).entries;
-      expect(entries, hasLength(2));
-      expect(entries.map((e) => e.name), contains('OpenMuse 国内版使用指南.sydoc'));
-    },
-  );
-
-  test(
-    'China upgrade replaces only pristine English guide and preserves history',
-    () async {
-      final original = await oldGuide();
-      await center.seedWelcome();
-      await center.seedWelcome(region: 'cn');
+      expect(current.identity, isNot(original.identity));
+      expect(current.mediaType, 'application/vnd.openmuse.smart-document+json');
       expect(
-        (await center.documents.read(
-          original.identity.resource,
-          null,
-          center.hub.access('test'),
-        )).bytes,
+        await bytes(current),
         await File(
-          'assets/welcome/OpenMuse-User-Guide.zh-CN.sydoc',
+          'assets/welcome/OpenMuse-User-Guide.v1.0.3.zh-CN.musedoc',
         ).readAsBytes(),
       );
-      expect(
-        (await center.documents.read(
-          original.identity.resource,
-          original.version,
-          center.hub.access('test'),
-        )).bytes,
-        await File('test/fixtures/legacy-guide.sydoc').readAsBytes(),
+      final old = await center.documents.describe(
+        original.identity.resource,
+        center.hub.access('test'),
       );
+      expect(old.version, edited.version);
+      expect(await bytes(old), [1, 2, 3]);
     },
   );
 
   test(
-    'China upgrade does not resurrect a deleted or renamed starter',
+    'each regional edition is added at most once without rewriting another guide',
     () async {
-      await File(
-        '${center.root.path}/welcome-v1.json',
-      ).writeAsString('{"version":1}');
+      final original = await oldGuide();
+      final source = await bytes(original);
+      await center.seedWelcome();
       await center.seedWelcome(region: 'cn');
-      expect(
-        (await center.documents.list(
-          'root',
-          center.hub.access('test'),
-        )).entries,
-        isEmpty,
-      );
+      await center.seedWelcome();
+      await center.seedWelcome(region: 'cn');
+      final all = await records();
+      expect(all, hasLength(3));
+      expect(await bytes(original), source);
+      expect(all.where((r) => r.name.endsWith('.musedoc')), hasLength(2));
     },
   );
+
+  test('renaming the native starter remains effective on reseeding', () async {
+    await center.seedWelcome();
+    final guide = (await records()).singleWhere(
+      (r) => r.name.endsWith('.musedoc'),
+    );
+    final source = await bytes(guide);
+    final renamed = await center.controller.rename(
+      guide,
+      'My smart document.musedoc',
+    );
+    await center.seedWelcome();
+    final all = await records();
+    expect(all, hasLength(2));
+    expect(
+      all.where((r) => r.name == 'OpenMuse Smart Document Guide.musedoc'),
+      isEmpty,
+    );
+    expect(
+      all.singleWhere((r) => r.identity == renamed.identity).name,
+      'My smart document.musedoc',
+    );
+    expect(await bytes(renamed), source);
+  });
 
   Widget host({
     double scale = 1,

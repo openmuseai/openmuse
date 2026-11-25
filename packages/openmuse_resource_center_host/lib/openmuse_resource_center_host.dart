@@ -244,13 +244,12 @@ final class NativeResourceCenter {
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       ),
       (
-        china ? 'OpenMuse 国内版使用指南.sydoc' : 'OpenMuse User Guide.sydoc',
-        china ? 'OpenMuse-User-Guide.zh-CN.sydoc' : 'OpenMuse-User-Guide.sydoc',
-        'application/vnd.openmuse.siyuan.document+zip',
+        _guideName(china),
+        _guideAsset(china),
+        'application/vnd.openmuse.smart-document+json',
       ),
     ]) {
-      // A crash may have created a sample before writing the scope marker.
-      // Never replay a create with new bytes over an existing starter resource.
+      // Resume an interrupted seed without overwriting an existing resource.
       if ((await _rootResources()).any((r) => r.name == sample.$1)) continue;
       final data = await rootBundle.load(
         'packages/openmuse_resource_center_host/assets/welcome/${sample.$2}',
@@ -263,12 +262,18 @@ final class NativeResourceCenter {
         idempotencyKey: 'welcome-v1-${sample.$2}',
         access: hub.access('welcome-seed'),
       );
-      // The product explicitly places starter resources in Home Recent.
       await hub.recordOpened(record, 'welcome');
     }
     await marker.writeAsString('{"version":1}', flush: true);
     await _upgradeWelcomeGuide(china: china);
   }
+
+  static String _guideName(bool china) => china
+      ? 'OpenMuse 智能文档使用指南.musedoc'
+      : 'OpenMuse Smart Document Guide.musedoc';
+  static String _guideAsset(bool china) => china
+      ? 'OpenMuse-User-Guide.v1.0.3.zh-CN.musedoc'
+      : 'OpenMuse-User-Guide.v1.0.3.en.musedoc';
 
   Future<List<ResourceRecord>> _rootResources() async {
     final result = <ResourceRecord>[];
@@ -289,68 +294,38 @@ final class NativeResourceCenter {
   }
 
   Future<void> _upgradeWelcomeGuide({required bool china}) async {
-    final edition = china ? '2026-11-06-cn' : '2026-11-03-illustrated';
+    final edition = china
+        ? '1.0.3-cn-smart-document'
+        : '1.0.3-en-smart-document';
     final marker = File('${root.path}/welcome-guide-$edition.json');
     if (await marker.exists()) return;
-    final pristineDigests = {
-      if (china)
-        '346d58fb16f4e734438da60eb087b70ab00367d13db01aaa3a7e7c45ac346922',
-      '2a3c34022420c3a2a626cd33bab4868d5280393c1fe5d54d59d231b60de67170',
-      'c135995a41eb5c5141158bf120b59c7dcc8200266939845588cb4fda8f7f652d',
-    };
-    final guides = (await _rootResources())
-        .where(
-          (r) =>
-              r.name == 'OpenMuse User Guide.sydoc' ||
-              (china && r.name == 'OpenMuse 国内版使用指南.sydoc'),
-        )
-        .toList();
-    // Missing/renamed resources express user intent; do not resurrect them.
-    if (guides.length == 1) {
-      final guide = guides.single;
+    final resources = await _rootResources();
+    final name = _guideName(china);
+    final hasPreviousGuide = resources.any(
+      (r) => const {
+        'OpenMuse User Guide.sydoc',
+        'OpenMuse User Guide — 2026-11.sydoc',
+        'OpenMuse 国内版使用指南.sydoc',
+        'OpenMuse Smart Document Guide.musedoc',
+        'OpenMuse 智能文档使用指南.musedoc',
+      }.contains(r.name),
+    );
+    // A missing or renamed guide expresses user intent. Never resurrect it.
+    if (!resources.any((r) => r.name == name) && hasPreviousGuide) {
       final data = await rootBundle.load(
-        china
-            ? 'packages/openmuse_resource_center_host/assets/welcome/OpenMuse-User-Guide.zh-CN.sydoc'
-            : 'packages/openmuse_resource_center_host/assets/welcome/OpenMuse-User-Guide.sydoc',
+        'packages/openmuse_resource_center_host/assets/welcome/${_guideAsset(china)}',
       );
-      final bytes = data.buffer.asUint8List(
-        data.offsetInBytes,
-        data.lengthInBytes,
+      final record = await documents.create(
+        parentRef: 'root',
+        name: name,
+        mediaType: 'application/vnd.openmuse.smart-document+json',
+        bytes: data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+        idempotencyKey: 'welcome-guide-$edition',
+        access: hub.access('welcome-seed'),
       );
-      final digest = resourceDigest(bytes);
-      if (pristineDigests.contains(guide.version.digest)) {
-        try {
-          final updated = await documents.commit(
-            guide.identity.resource,
-            guide.version,
-            bytes,
-            'welcome-guide-$edition-${guide.identity.resource}',
-            hub.access('welcome-seed'),
-          );
-          await hub.recordOpened(updated, 'welcome');
-        } on ResourceFailure catch (error) {
-          // A concurrent edit wins. Retry next launch against the latest head.
-          if (error.code == 'REVISION_CONFLICT') return;
-          rethrow;
-        }
-      } else if (guide.version.digest != digest) {
-        // An edited guide is personal content. Offer the new edition separately.
-        final name = china
-            ? 'OpenMuse 国内版使用指南.sydoc'
-            : 'OpenMuse User Guide — 2026-11.sydoc';
-        if (!(await _rootResources()).any((r) => r.name == name)) {
-          final updated = await documents.create(
-            parentRef: 'root',
-            name: name,
-            mediaType: 'application/vnd.openmuse.siyuan.document+zip',
-            bytes: bytes,
-            idempotencyKey: 'welcome-guide-$edition',
-            access: hub.access('welcome-seed'),
-          );
-          await hub.recordOpened(updated, 'welcome');
-        }
-      }
+      await hub.recordOpened(record, 'welcome');
     }
+    // Old-format resources, their edits and history are never rewritten.
     await marker.writeAsString('{"edition":"$edition"}', flush: true);
   }
 

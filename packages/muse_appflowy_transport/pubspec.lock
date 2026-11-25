@@ -192,6 +192,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  muse_original_sync:
+    dependency: "direct main"
+    description:
+      path: "../muse_original_sync"
+      relative: true
+    source: path
+    version: "0.1.0"
   node_preamble:
     dependency: transitive
     description:

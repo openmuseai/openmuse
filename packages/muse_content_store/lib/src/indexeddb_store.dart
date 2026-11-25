@@ -6,7 +6,7 @@ import '../snapshot_store.dart';
 
 /// A successful write means the IndexedDB transaction completed, not just put().
 /// Browser eviction/power-loss durability is a separate capability and is not promised.
-final class IndexedDbSnapshotStore implements SnapshotStore {
+final class IndexedDbSnapshotStore implements RemovableSnapshotStore {
   IndexedDbSnapshotStore({
     required this.namespace,
     required this.objectId,
@@ -67,7 +67,21 @@ final class IndexedDbSnapshotStore implements SnapshotStore {
   }
 
   @override
-  Future<void> write(Map<String, dynamic> snapshot) async {
+  Future<void> write(Map<String, dynamic> snapshot) => _change(
+    (store) => store.put(jsonEncode(snapshot).toJS, objectId.toJS),
+    'BROWSER_STORAGE_WRITE_FAILED',
+  );
+
+  @override
+  Future<void> remove() => _change(
+    (store) => store.delete(objectId.toJS),
+    'BROWSER_STORAGE_REMOVE_FAILED',
+  );
+
+  Future<void> _change(
+    void Function(web.IDBObjectStore) change,
+    String failureCode,
+  ) async {
     final db = await _open();
     try {
       final done = Completer<void>();
@@ -77,16 +91,12 @@ final class IndexedDbSnapshotStore implements SnapshotStore {
       }).toJS;
       void fail(web.Event _) {
         if (!done.isCompleted)
-          done.completeError(
-            const SnapshotStoreFailure('BROWSER_STORAGE_WRITE_FAILED'),
-          );
+          done.completeError(SnapshotStoreFailure(failureCode));
       }
 
       transaction.onerror = fail.toJS;
       transaction.onabort = fail.toJS;
-      transaction
-          .objectStore('snapshots')
-          .put(jsonEncode(snapshot).toJS, objectId.toJS);
+      change(transaction.objectStore('snapshots'));
       await done.future;
     } finally {
       db.close();

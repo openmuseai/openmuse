@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "namespace": "notifications",
+  "sourceRevision": 3,
+  "messages": {
+    "notifications.title": "Notifications",
+    "notifications.results": "Task result reminders",
+    "notifications.description": "Notify me when a task completes or fails",
+    "notifications.explanation": "Reminders contain no document content. The app must be running and receiving task results; results may not arrive after the app is closed.",
+    "notifications.cancel": "Cancel",
+    "notifications.continue": "Continue",
+    "notifications.system": "System notifications",
+    "notifications.notDetermined": "Not enabled",
+    "notifications.granted": "Allowed",
+    "notifications.denied": "Notifications are off. You can allow them in system settings.",
+    "notifications.unavailable": "Notification settings are unavailable",
+    "notifications.open_settings": "Open system settings",
+    "notifications.retry": "Retry",
+    "notifications.completed": "Task completed",
+    "notifications.failed": "Task failed",
+    "notifications.open_result": "Open the app to view the result",
+    "notifications.error": "Unable to update notification settings. Try again."
+  }
+}

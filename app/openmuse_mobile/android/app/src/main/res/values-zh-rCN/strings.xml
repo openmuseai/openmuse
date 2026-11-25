@@ -1,3 +1,6 @@
 <resources>
     <string name="open_file">打开文件</string>
+    <string name="plugin_microphone_title">插件麦克风授权</string>
+    <string name="plugin_microphone_message">是否允许当前已安装的插件录音？录音将交给此插件处理。可通过插件的录制控件停止。</string>
+    <string name="plugin_microphone_allow">继续</string>
 </resources>

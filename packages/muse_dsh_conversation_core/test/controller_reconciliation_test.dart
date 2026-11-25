@@ -213,12 +213,18 @@ void main() {
         bootstrapPath: '',
         allowInsecureLoopback: true,
       );
+      final approvedPrompts = <String>[];
       final controller = DshConversationController(
         client: client,
+        approveSend: (recipient, prompt) async {
+          approvedPrompts.add(prompt);
+          return true; // Explicit approval for this test send only.
+        },
         reconciliationInterval: const Duration(milliseconds: 20),
       );
       await controller.start('s-1');
       await controller.send('hello');
+      expect(approvedPrompts, ['hello']);
 
       await _until(() {
         final snapshot = controller.store.snapshot;

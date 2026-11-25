@@ -1,0 +1,22 @@
+{
+  "schema": "openmuse.mobile-closure/1",
+  "version": "1.0.3",
+  "bundledArtifacts": {
+    "flutter_assets/assets/bundled/slides-0.9.7.mcpb": "6ad77f3f678adc30782f58b4001ee277a79cd111d3b56d420a31459850ea75da"
+  },
+  "allowedHostIdentifiers": [
+    "io.openmuse/genoffice-pptx"
+  ],
+  "allowedImplementationInPinnedArtifacts": "genoffice",
+  "sourceRepository": "https://github.com/openmuseai/muse-plugin-genoffice-pptx",
+  "sourceCommit": "5df9dc172131e053f2910c8de57f381d6fab52b6",
+  "status": "candidate; final platform and security disposition pending",
+  "allowedLiteralsInPinnedArtifacts": [
+    "aiOfficeTabs"
+  ],
+  "recognitionNotes": {
+    "aiOfficeTabs": "Exact window bridge key in pinned GenOffice upstream packages/ui/src/popover-dismiss.ts (onChromePressed subscription), not an ioffice implementation. Exception applies only inside the exact reviewed artifact; original source and notices remain intact.",
+    "sourceFile": "vendor/genoffice/packages/ui/src/popover-dismiss.ts",
+    "sourceSha256": "637580b5dcc01ffdd72641aa0772a6fd2182eff2a371edbc3b46212d8a8aa441"
+  }
+}

@@ -5,9 +5,18 @@ import '../snapshot_store.dart';
 /// Same-filesystem staging + file fsync + atomic rename. Concurrent writers use
 /// distinct staging files, so replacement cannot interleave or steal a temp file.
 /// The owning session still serializes semantic revisions/CAS; last rename wins.
-final class FileSnapshotStore implements SnapshotStore {
+final class FileSnapshotStore implements RemovableSnapshotStore {
   FileSnapshotStore(this.file);
   final File file;
+  @override
+  Future<void> remove() async {
+    try {
+      await file.delete();
+    } on FileSystemException catch (error) {
+      if (error.osError?.errorCode != 2) rethrow;
+    }
+  }
+
   @override
   Future<Map<String, dynamic>?> read() async {
     if (!await file.exists()) return null;

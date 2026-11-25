@@ -14,25 +14,35 @@ import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 final class NativeDshSessionHandle extends ChangeNotifier {
   DshConversationController? _conversation;
   StreamSubscription<void>? _changes;
+  StreamSubscription<DshTaskOutcome>? _taskChanges;
+  void Function(DshTaskOutcome)? onTaskOutcome;
   DshNativeSessionOptions? _options;
 
   DshConversationSnapshot? get snapshot => _conversation?.store.snapshot;
   DshNativeSessionOptions? get options => _options;
   bool get ready => _conversation != null;
+  bool isBoundToClient(DshNativeGatewayClient client) =>
+      identical(_conversation?.client, client);
 
   void attach(
     DshConversationController conversation,
     DshNativeSessionOptions? options,
   ) {
     _changes?.cancel();
+    _taskChanges?.cancel();
     _conversation = conversation;
     _options = options;
     _changes = conversation.store.changes.listen((_) => notifyListeners());
+    _taskChanges = conversation.store.taskOutcomes.listen(
+      (event) => onTaskOutcome?.call(event),
+    );
     notifyListeners();
   }
 
   void detach(DshConversationController conversation) {
     if (!identical(_conversation, conversation)) return;
+    _taskChanges?.cancel();
+    _taskChanges = null;
     _changes?.cancel();
     _changes = null;
     _conversation = null;
@@ -75,6 +85,8 @@ final class NativeDshSessionHandle extends ChangeNotifier {
 
   @override
   void dispose() {
+    _taskChanges?.cancel();
+    onTaskOutcome = null;
     _changes?.cancel();
     super.dispose();
   }
@@ -364,7 +376,6 @@ final class _NativeDshPageState extends State<NativeDshPage> {
     }
   }
 
-  final _approvedRecipients = <String>{};
   Future<bool> _approveSharing(
     DshConversationSnapshot snapshot,
     String text,
@@ -377,6 +388,14 @@ final class _NativeDshPageState extends State<NativeDshPage> {
       // Unknown recipients never inherit an earlier sharing decision.
     }
     if (!mounted) return false;
+    final gateway = _conversation?.client.origin;
+    final gatewayOrigin =
+        gateway != null &&
+            {'http', 'https'}.contains(gateway.scheme) &&
+            gateway.host.isNotEmpty &&
+            gateway.userInfo.isEmpty
+        ? gateway.origin
+        : null;
     final provider = snapshot.provider ?? options?.defaultModel.provider;
     final model = snapshot.model ?? options?.defaultModel.model;
     final matches =
@@ -384,7 +403,14 @@ final class _NativeDshPageState extends State<NativeDshPage> {
             .where((value) => value.provider == provider && value.id == model)
             .toList() ??
         [];
-    if (provider == null || model == null || matches.length != 1) {
+    if (gatewayOrigin == null ||
+        provider == null ||
+        provider.trim().isEmpty ||
+        model == null ||
+        model.trim().isEmpty ||
+        matches.length != 1 ||
+        matches.single.providerName.trim().isEmpty ||
+        matches.single.name.trim().isEmpty) {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
@@ -400,9 +426,6 @@ final class _NativeDshPageState extends State<NativeDshPage> {
       );
       return false;
     }
-    final key =
-        '${widget.session.origin}${widget.session.path}|$provider|$model';
-    if (_approvedRecipients.contains(key)) return true;
     final accepted = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -419,6 +442,10 @@ final class _NativeDshPageState extends State<NativeDshPage> {
                   model: matches.single.name,
                 ),
               ),
+              Text(
+                strings.format('privacy.gateway', {'gateway': gatewayOrigin}),
+              ),
+              Text(strings.format('privacy.send_scope')),
               const SizedBox(height: 16),
               SelectableText(
                 text.length > 500 ? '${text.substring(0, 500)}…' : text,
@@ -439,8 +466,7 @@ final class _NativeDshPageState extends State<NativeDshPage> {
         ],
       ),
     );
-    if (accepted == true && mounted) _approvedRecipients.add(key);
-    return accepted == true;
+    return accepted == true && mounted;
   }
 
   Future<void> _loadOptions(
@@ -570,8 +596,9 @@ final class _NativeDshPageState extends State<NativeDshPage> {
                 ),
             onOpenPresentedFile: (seq, index, action) async {
               final locate = ResourceLinkRouting.maybeOf(context)?.locate;
-              if (locate == null)
+              if (locate == null) {
                 throw const ResourceFailure('SOURCE_UNAVAILABLE');
+              }
               if (action == 'reveal') {
                 await conversation.client.openPresentedFile(
                   sessionId: conversation.store.snapshot.sessionId!,

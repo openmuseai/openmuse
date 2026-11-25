@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "locale": "zh-Hans",
+  "namespace": "notifications",
+  "sourceRevision": 3,
+  "messages": {
+    "notifications.title": "通知",
+    "notifications.results": "任务结果提醒",
+    "notifications.description": "完成或失败时提醒我",
+    "notifications.explanation": "提醒不包含文档内容。App 需要保持运行并收到任务结果；关闭 App 后可能无法收到提醒。",
+    "notifications.cancel": "取消",
+    "notifications.continue": "继续",
+    "notifications.system": "系统通知",
+    "notifications.notDetermined": "尚未开启",
+    "notifications.granted": "已允许",
+    "notifications.denied": "通知已关闭，可在系统设置中开启。",
+    "notifications.unavailable": "暂时无法读取通知设置",
+    "notifications.open_settings": "前往系统设置",
+    "notifications.retry": "重试",
+    "notifications.completed": "任务已完成",
+    "notifications.failed": "任务未完成",
+    "notifications.open_result": "打开 App 查看结果",
+    "notifications.error": "无法更新通知设置，请重试。"
+  }
+}

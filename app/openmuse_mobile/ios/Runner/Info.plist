@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>OpenMuse AI</string>
+	<string>Office Harness</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>OpenMuse</string>
+	<string>Office Harness</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -29,9 +29,9 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>OpenMuse uses the microphone to turn speech into editable text. Speech recognition runs on this device.</string>
+	<string>Office Harness uses the microphone when you choose voice input or record audio in a document. Voice input recognition runs on this device.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>OpenMuse accesses your photo library when you choose images to add to notes or presentation slides.</string>
+	<string>Office Harness accesses only the images you choose to add to your documents.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -69,7 +69,7 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>OpenMuse connects to your paired computer to access authorized workspaces and resources.</string>
+	<string>Office Harness connects to your paired computer to access authorized workspaces and resources.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

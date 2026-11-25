@@ -1,0 +1,29 @@
+{
+  "status": "store-candidate",
+  "lane": "ios-appstore",
+  "defaultLanguage": "en",
+  "targetStorefronts": [
+    "CN",
+    "US"
+  ],
+  "serviceRegions": [
+    "cn",
+    "us"
+  ],
+  "showChinaFiling": true,
+  "artifact": "OpenMuse-ios-appstore-1.0.3-112502.ipa",
+  "sha256": "a88ddd1fa84d5967d5052703546103acc0fba92474c6713abe826b30dae49c91",
+  "commit": "cca0a9d1d169d80d3ad61d0602b5ea5103198ed0",
+  "dirtySource": false,
+  "runtimeProductionInputsComplete": true,
+  "onlineSignedPublicationVerified": false,
+  "testsPassed": true,
+  "englishDistributionTestsPassed": true,
+  "appFilingNumber": "粤ICP备2024331713号-5A",
+  "bundleId": "com.openmuseai.mobile",
+  "versionName": "1.0.3",
+  "buildNumber": 112502,
+  "filingCertificateSha1": "12c7ff3a2a764f0442a08b9fe77ec056b81841f6",
+  "teamId": "SDPXS943DW",
+  "remainingGates": "See app/openmuse_mobile/release_materials/09-国内海外上架流水线.zh-CN.md G0-G6"
+}

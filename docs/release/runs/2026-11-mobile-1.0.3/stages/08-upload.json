@@ -1,0 +1,20 @@
+{
+  "id": "08-upload",
+  "status": "partial",
+  "owner": "Codex / Muse-CI",
+  "summary": "Apple112503 processed and physically installed via TestFlight, independently verified by devicectl. Transporter final receipt not observed separately. vivo112502 saved/refreshed;113 replacement started, save unverified. No review submission.",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-upload-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-channel-progress-112503.json"
+  ],
+  "exceptions": [
+    "Upstream prerequisites, current screenshots/review account, final source freeze and core regression not complete"
+  ],
+  "evidenceDigests": {
+    "apple-upload.json": "b20f1ef17cae13e49a64ff146cee3592f1a48b3eea2f8a05a3de51a256324a4a",
+    "apple-upload-112502.json": "607247c2f6fa44b75095c7553043dfbcc741c435d5c2a001a4392f69a90aba73",
+    "vivo-upload-112502.json": "d00796383da2c15a4f1de673df1d0f97a0fcabcfbb21eff41fc326cb045bae20"
+  }
+}

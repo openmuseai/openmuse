@@ -254,6 +254,13 @@ final class MobilePluginStore extends ChangeNotifier {
   final Map<String, String> _digests = {};
   final Set<String> _disabled = {};
 
+  final Set<String> _quarantined = {};
+
+  /// Retained legacy identities, never loaded as executable bundles.
+  Set<String> get quarantinedPluginIds => Set.unmodifiable(_quarantined);
+  bool get hasUnreadableLegacyState => _hasUnreadableLegacyState;
+  bool _hasUnreadableLegacyState = false;
+
   bool isInstalled(String id) => _installed.containsKey(id);
   bool isEnabled(String id) => isInstalled(id) && !_disabled.contains(id);
   MobilePluginBundle? installed(String id) => _installed[id];
@@ -261,9 +268,21 @@ final class MobilePluginStore extends ChangeNotifier {
 
   Future<void> restore() async {
     await directory.create(recursive: true);
-    if (!allowDownloadedPlugins) return;
+    _installed.clear();
+    _digests.clear();
+    _disabled.clear();
+    _quarantined.clear();
+    _hasUnreadableLegacyState = false;
+    if (!allowDownloadedPlugins) {
+      await _inventoryLegacyPlugins();
+      notifyListeners();
+      return;
+    }
     final state = File(path.join(directory.path, 'state.json'));
-    if (!await state.exists()) return;
+    if (!await state.exists()) {
+      notifyListeners();
+      return;
+    }
     final decoded = jsonDecode(await state.readAsString()) as Map;
     _disabled.addAll((decoded['disabled'] as List? ?? []).cast<String>());
     final records = Map<String, Object?>.from(
@@ -296,6 +315,43 @@ final class MobilePluginStore extends ChangeNotifier {
       }
     }
     notifyListeners();
+  }
+
+  // Inventory metadata only: old formats and artifacts are not parsed, moved,
+  // rewritten or removed. Directory entries cover orphaned installations too.
+  Future<void> _inventoryLegacyPlugins() async {
+    final state = File(path.join(directory.path, 'state.json'));
+    try {
+      if (await state.exists()) {
+        if (await state.length() > 1024 * 1024) {
+          throw const FormatException('Legacy plugin metadata exceeds budget');
+        }
+        final decoded = jsonDecode(await state.readAsString());
+        if (decoded is Map && decoded['installed'] is Map) {
+          for (final id in (decoded['installed'] as Map).keys) {
+            if (id is String && _safeId(id)) _quarantined.add(id);
+          }
+        } else {
+          _hasUnreadableLegacyState = true;
+        }
+      }
+    } on Object {
+      // A damaged/older record must not prevent application startup.
+      _hasUnreadableLegacyState = true;
+    }
+    try {
+      var inspected = 0;
+      await for (final entry in directory.list(followLinks: false)) {
+        if (++inspected > 1024) {
+          _hasUnreadableLegacyState = true;
+          break;
+        }
+        final id = path.basename(entry.path);
+        if (entry is Directory && _safeId(id)) _quarantined.add(id);
+      }
+    } on FileSystemException {
+      _hasUnreadableLegacyState = true;
+    }
   }
 
   Future<void> install(MobileMarketEntry entry, List<int> bytes) async {

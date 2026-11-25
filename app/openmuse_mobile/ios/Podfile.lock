@@ -52,6 +52,8 @@ PODS:
     - Flutter
   - openmuse_resource_clipboard (0.1.0):
     - Flutter
+  - openmuse_task_notifications (0.1.0):
+    - Flutter
   - package_info_plus (0.4.5):
     - Flutter
   - record_ios (2.0.0):
@@ -82,6 +84,7 @@ DEPENDENCIES:
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
   - keyboard_height_plugin (from `.symlinks/plugins/keyboard_height_plugin/ios`)
   - openmuse_resource_clipboard (from `.symlinks/plugins/openmuse_resource_clipboard/ios`)
+  - openmuse_task_notifications (from `.symlinks/plugins/openmuse_task_notifications/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - record_ios (from `.symlinks/plugins/record_ios/ios`)
   - sherpa_onnx_ios (from `.symlinks/plugins/sherpa_onnx_ios/ios`)
@@ -117,6 +120,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/keyboard_height_plugin/ios"
   openmuse_resource_clipboard:
     :path: ".symlinks/plugins/openmuse_resource_clipboard/ios"
+  openmuse_task_notifications:
+    :path: ".symlinks/plugins/openmuse_task_notifications/ios"
   package_info_plus:
     :path: ".symlinks/plugins/package_info_plus/ios"
   record_ios:
@@ -143,6 +148,7 @@ SPEC CHECKSUMS:
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
   keyboard_height_plugin: ef70a8181b29f27670e9e2450814ca6b6dc05b05
   openmuse_resource_clipboard: e5febd7fa3d4d05687b3d5763b87bc1ca08ebc76
+  openmuse_task_notifications: 9b467f4dd0cb30194fe57f4bbcbfdb7740e6e68b
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   record_ios: 390a30c7caaf8b5d0fb1cb1d2fd5064b48b4520c
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf

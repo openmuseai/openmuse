@@ -1,4 +1,4 @@
-=== OpenMuse (Window) 2026-10-06 10:15 PM.png === (2560x1584)
+=== OpenMuse (Window) 2026-10-06 10-15 PM.png === (2560x1584)
 [0.065,0.013] OpenMuse
 [0.032,0.056] OpenMuse
 [0.132,0.056] 章
@@ -37,7 +37,7 @@
 [0.055,0.958] 插件
 [0.126,0.958] 回收站
 
-=== OpenMuse (Window) 2026-10-06 10:18 PM.png === (3024x1898)
+=== OpenMuse (Window) 2026-10-06 10-18 PM.png === (3024x1898)
 [0.026,0.013] OpenMuse
 [0.241,0.014] D build_douyin_vid...
 [0.352,0.014] D make_douyin_sli..
@@ -111,7 +111,7 @@
 [0.071,0.965] 丸 插件
 [0.190,0.965] 回收站
 
-=== OpenMuse (Window) 2026-10-06 10:19 PM.png === (3024x1898)
+=== OpenMuse (Window) 2026-10-06 10-19 PM.png === (3024x1898)
 [0.026,0.013] OpenMuse
 [0.241,0.014] D build_douyin_vid...
 [0.352,0.014] D make_douyin_sli...
@@ -214,7 +214,7 @@
 [0.874,0.977] 18.2K tok ...
 [0.956,0.975] ◎ 1%
 
-=== openmuseai:openmuse (Window) 2026-10-06 10:22 PM.png === (3024x1646)
+=== openmuseai-openmuse (Window) 2026-10-06 10-22 PM.png === (3024x1646)
 [0.105,0.018] 下载记录
 [0.222,0.016] ×
 [0.260,0.019] openmuseai/openmuse

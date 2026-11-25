@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-11-25T16:57:46.780418+00:00",
+  "build": 112502,
+  "version": "1.0.3",
+  "appId": "6827192902",
+  "displayName": "Office Harness",
+  "buildId": "19bc1c19-3a59-46c0-a810-e5fdea793b21",
+  "sha256": "a88ddd1fa84d5967d5052703546103acc0fba92474c6713abe826b30dae49c91",
+  "upload": "Transporter delivery succeeded",
+  "processing": "Complete; independently observed in App Store Connect",
+  "internalGroup": "OpenMuseIOS",
+  "internalTesters": 1,
+  "testFlightInstalledOnPhysicalDevice": true,
+  "reviewSubmitted": false,
+  "reviewApproved": false,
+  "publiclyReleased": false,
+  "distributionDraftBuild": "Old build 16 still requires replacement",
+  "warnings": [
+    {
+      "code": 90725,
+      "summary": "SDK 26.5 accepted now; Apple warns iOS 27 SDK/Xcode 27 required from April 2027"
+    }
+  ]
+}

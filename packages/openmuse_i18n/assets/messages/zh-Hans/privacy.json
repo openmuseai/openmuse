@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "locale": "zh-Hans",
+  "namespace": "privacy",
+  "sourceRevision": 3,
+  "messages": {
+    "privacy.gateway": "网关：{gateway}",
+    "privacy.send_scope": "发送范围：输入文字、会话历史、系统上下文；工具可能读取工作区、文档和附件。模型服务商由网关配置；此处无法验证其下游地址。仅授权本次发送，可取消。",
+    "privacy.attachment_unverified": "附件尚未发送：无法验证上传接收方和授权。请保留草稿，或移除附件后发送文字。",
+    "privacy.remote_unverified": "远程网页助手暂不可用：无法验证接收方和发送授权。请返回任务列表，重新连接原生对话。"
+  }
+}

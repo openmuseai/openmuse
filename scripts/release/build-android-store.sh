@@ -60,7 +60,11 @@ if [[ "$lane" == play && ! -x "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyze
 fi
 
 cd "$repo_root"
-python3 "$repo_root/scripts/release/verify-welcome-guide.py"
+closure_args=()
+if [[ "$version" == 1.0.3 ]]; then closure_args+=(--profile mobile-1.0.3); fi
+guide_args=()
+if [[ "$version" == 1.0.3 ]]; then guide_args+=(--profile smart-document); fi
+python3 "$repo_root/scripts/release/verify-welcome-guide.py" "${guide_args[@]}"
 dirty=false
 if [[ -n "$(git status --porcelain)" ]]; then dirty=true; fi
 if [[ "$dirty" == true && "$allow_dirty" != true ]]; then
@@ -68,10 +72,17 @@ if [[ "$dirty" == true && "$allow_dirty" != true ]]; then
   exit 2
 fi
 
+# Rebuild the app-owned asset manifest after changes in dependency assets.
+# A formal 1.0.3 candidate must not inherit cached files from a previous package.
+if [[ "$version" == 1.0.3 ]]; then
+  (cd app/openmuse_mobile && flutter clean && flutter pub get)
+fi
 OPENMUSE_PAIRED_PLATFORMS=android "$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
 
 (cd app/openmuse_mobile && flutter analyze)
 if [[ "$skip_tests" != true ]]; then
+  # Flutter's HTML contract tests use this repository's locked DOM test runtime.
+  (cd services/config-control && npm ci --ignore-scripts)
   (cd app/openmuse_mobile && flutter test)
 fi
 
@@ -93,14 +104,14 @@ bash "$repo_root/scripts/release/prepare-runtime-config.sh" "$deployment_profile
 runtime_validation_args=("$runtime_tmp/runtime-defines.json" --report "$runtime_tmp/runtime-input-report.json")
 if [[ "$allow_dirty" == true ]]; then runtime_validation_args+=(--allow-incomplete); fi
 python3 "$repo_root/scripts/release/verify-runtime-input.py" "${runtime_validation_args[@]}"
-python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$repo_root/app/openmuse_mobile/.dart_tool/package_config.json"
+python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$repo_root/app/openmuse_mobile/.dart_tool/package_config.json" "${closure_args[@]}"
 
 (cd app/openmuse_mobile && "$repo_root/scripts/filing/with-android-release-signing.sh" \
   flutter build "$kind" --release --target lib/main.dart --target-platform android-arm64 \
   --build-name "$version" --build-number "$build_number" \
   "--dart-define=OPENMUSE_DISTRIBUTION_CHANNEL=android-$lane" \
   "--dart-define-from-file=$runtime_tmp/runtime-defines.json")
-python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$source_artifact"
+python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$source_artifact" "${closure_args[@]}"
 [[ -s "$source_artifact" ]] || { echo "Missing $source_artifact" >&2; exit 1; }
 
 if [[ "$lane" == cn ]]; then

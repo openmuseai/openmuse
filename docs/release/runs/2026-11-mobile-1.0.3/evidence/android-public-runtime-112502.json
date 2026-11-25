@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-25T16:25:51.923480Z",
+  "passed": true,
+  "regions": [
+    {
+      "region": "cn",
+      "releaseId": "cn-official-1",
+      "sequence": 1,
+      "expiresAt": "2027-02-03T15:10:15.831Z",
+      "signatureAndInstalledTrustVerified": true,
+      "cacheRestorationVerified": true
+    }
+  ],
+  "build": 112502,
+  "input": "Extracted from actual signed final package",
+  "configSha256": "1e683dd36ea276e8896fffaa356fc208b72bfae9c089e0210cf61586c605bf5c"
+}

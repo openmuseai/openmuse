@@ -6,7 +6,7 @@ on:
       run_directory:
         description: Repository-relative release run directory
         type: string
-        default: docs/release/runs/2026-11-overseas
+        default: ""
   pull_request:
     paths:
       - config/release/**
@@ -47,11 +47,25 @@ jobs:
     needs: archive-tests
     runs-on: ubuntu-latest
     env:
-      RELEASE_RUN: ${{ inputs.run_directory || 'docs/release/runs/2026-11-overseas' }}
+      RELEASE_RUN: ${{ inputs.run_directory }}
     steps:
       - uses: actions/checkout@v4
       - name: Validate run and show separate node states
         run: |
-          python3 scripts/release/pipeline.py check --run "$RELEASE_RUN" --metadata-only
-          python3 scripts/release/pipeline.py plan --run "$RELEASE_RUN"
+          python3 - <<'PY_RUNS'
+          import os
+          from pathlib import Path
+          import subprocess
+          selected = os.environ.get('RELEASE_RUN', '')
+          runs = [Path(selected)] if selected else sorted(
+              path.parent for path in Path('docs/release/runs').glob('*/release.json')
+          )
+          if not runs:
+              raise SystemExit('No committed release runs found; specify run_directory.')
+          for run in runs:
+              subprocess.run(['python3', 'scripts/release/pipeline.py', 'check',
+                              '--run', str(run), '--metadata-only'], check=True)
+              subprocess.run(['python3', 'scripts/release/pipeline.py', 'plan',
+                              '--run', str(run)], check=True)
+          PY_RUNS
 

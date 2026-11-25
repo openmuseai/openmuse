@@ -1,0 +1,31 @@
+{
+  "schema": "openmuse.ios.channel-install-receipt/1",
+  "date": "2026-11-25",
+  "device": {
+    "model": "iPhone 12 Pro Max",
+    "os": "26.6.2"
+  },
+  "bundleId": "com.openmuseai.mobile",
+  "displayName": "Office Harness",
+  "version": "1.0.3",
+  "build": "112501",
+  "installation": "User accepted the internal TestFlight invitation and reports installation; independently read the installed bundle identity through USB devicectl.",
+  "observedScreen": "Actual foreground app first-run service region selector with China/United States, independent language picker and TestFlight return link.",
+  "screenshot": {
+    "path": "/Users/mac/src/openmuse-io/Muse-Client/materials/releases/1.0.3/ios/physical-candidate-region-selection.png",
+    "sha256": "808c45e2014f744e4414be4d84d26010073575705fd6097cb692175472627634",
+    "capture": "Xcode Devices Take Screenshot through CUA over USB"
+  },
+  "result": "installation-and-first-run-verified",
+  "remaining": [
+    "User login and production home",
+    "Native Smart Document edit/save/reopen",
+    "Production PPTX touch/keyboard/edit/undo/redo/save/reopen",
+    "Production task completion/failure notification and activation",
+    "Region/account/network and lifecycle matrix"
+  ],
+  "limitations": [
+    "Installed version/build identity does not imply binary byte equality after Apple channel processing.",
+    "iPhone Mirroring remains blocked by iCloud sync; USB screenshot works."
+  ]
+}

@@ -10,6 +10,10 @@ name: iOS build
 # TestFlight; a store release needs those credentials supplied through secrets,
 # and then an .ipa.
 
+defaults:
+  run:
+    working-directory: Muse-Client
+
 on:
   workflow_dispatch:
     inputs:
@@ -38,13 +42,19 @@ env:
 jobs:
   ios:
     name: iOS arm64 release (unsigned)
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 180
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          path: Muse-Client
 
+      - name: Compose pinned plugin sources
+        uses: ./Muse-Client/.github/actions/checkout-plugin-sources
+        with:
+          token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - name: Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -60,6 +70,7 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
+          workspaces: Muse-Client -> target
           cache-on-failure: true
 
       - name: Build
@@ -75,10 +86,10 @@ jobs:
         with:
           name: OpenMuse-ios-${{ github.sha }}
           path: |
-            dist/OpenMuse-iOS-unsigned.app.zip
-            dist/SHA256SUMS.txt
-            dist/build-info.txt
-            dist/ios-gate-report.md
+            Muse-Client/dist/OpenMuse-iOS-unsigned.app.zip
+            Muse-Client/dist/SHA256SUMS.txt
+            Muse-Client/dist/build-info.txt
+            Muse-Client/dist/ios-gate-report.md
           if-no-files-found: error
           retention-days: ${{ fromJSON(inputs.retention_days || '14') }}
 

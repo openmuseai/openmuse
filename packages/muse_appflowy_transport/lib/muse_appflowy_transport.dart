@@ -4,12 +4,18 @@ import 'package:http/http.dart' as http;
 import 'package:muse_collab_contract/muse_collab_contract.dart';
 import 'src/write_capabilities.dart';
 import 'src/model_contract.dart';
+import 'package:muse_original_sync/muse_original_sync.dart';
+import 'src/original_sync_http_contract.dart';
+export 'package:muse_original_sync/muse_original_sync.dart';
 export 'package:muse_collab_contract/muse_collab_contract.dart';
 export 'src/write_capabilities.dart';
 export 'src/model_contract.dart';
 
 final class AppFlowyObjectTransport
-    implements CollaborationProvider, CollaborationObjectScope {
+    implements
+        CollaborationProvider,
+        CollaborationObjectScope,
+        OriginalDurableSyncProvider {
   AppFlowyObjectTransport({
     required this.origin,
     required this.binding,
@@ -63,15 +69,31 @@ final class AppFlowyObjectTransport
     String route, {
     Object? body,
     bool binary = false,
+    Map<String, String> extraHeaders = const {},
+    int maxResponseBytes = _limit,
   }) async {
     try {
-      return await _requestOnce(method, route, body: body, binary: binary);
+      return await _requestOnce(
+        method,
+        route,
+        body: body,
+        binary: binary,
+        extraHeaders: extraHeaders,
+        maxResponseBytes: maxResponseBytes,
+      );
     } on http.ClientException {
       // A suspended/native-busy client may miss the server keep-alive FIN.
       // Only an idempotent GET can be retried, once, with fresh authorization.
       // Never replay writes whose application/durability may be ambiguous.
       if (method != 'GET' || _closed) rethrow;
-      return _requestOnce(method, route, body: body, binary: binary);
+      return _requestOnce(
+        method,
+        route,
+        body: body,
+        binary: binary,
+        extraHeaders: extraHeaders,
+        maxResponseBytes: maxResponseBytes,
+      );
     }
   }
 
@@ -80,6 +102,8 @@ final class AppFlowyObjectTransport
     String route, {
     Object? body,
     bool binary = false,
+    Map<String, String> extraHeaders = const {},
+    int maxResponseBytes = _limit,
   }) async {
     if (_closed) throw const AppFlowyTransportFailure('SESSION_CLOSED');
     checkAuthority?.call();
@@ -90,7 +114,9 @@ final class AppFlowyObjectTransport
       'Device-Id': deviceId,
       'client-version': '0.16.5',
       'Content-Type': binary ? 'application/octet-stream' : 'application/json',
+      ...extraHeaders,
     });
+    if (_closed) throw const AppFlowyTransportFailure('SESSION_CLOSED');
     checkAuthority?.call();
     if (body is List<int>) {
       request.bodyBytes = body;
@@ -104,10 +130,11 @@ final class AppFlowyObjectTransport
     await for (final chunk in response.stream.timeout(
       const Duration(seconds: 20),
     )) {
-      if (bytes.length + chunk.length > _limit)
+      if (bytes.length + chunk.length > maxResponseBytes)
         throw const AppFlowyTransportFailure('QUOTA_EXCEEDED');
       bytes.add(chunk);
     }
+    if (_closed) throw const AppFlowyTransportFailure('SESSION_CLOSED');
     checkAuthority?.call();
     return http.Response.bytes(
       bytes.takeBytes(),
@@ -230,6 +257,11 @@ final class AppFlowyObjectTransport
       objectId: objectId,
       collabType: collabType,
       canWrite: data['canWrite'] as bool,
+      durableSync: _durableCapability(
+        data['durableSync'],
+        objectId,
+        data['canWrite'] as bool,
+      ),
       snapshotValidationProfiles: snapshotProfiles.cast<String>(),
       qualifiedEditing: data['qualifiedEditing'] as bool,
       maxFullSyncBytes: data['maxFullSyncBytes'] as int,
@@ -364,6 +396,104 @@ final class AppFlowyObjectTransport
     }
     // Full-sync is an accepted exchange, not a durable-write acknowledgement.
     return response.bodyBytes;
+  }
+
+  OriginalSyncCapability? _durableCapability(
+    Object? data,
+    String objectId,
+    bool canWrite,
+  ) {
+    try {
+      return parseOriginalSyncCapability(
+        data,
+        origin: origin.origin,
+        workspaceId: workspaceId.toLowerCase(),
+        objectId: objectId.toLowerCase(),
+        collabType: collabType,
+        canWrite: canWrite,
+      );
+    } on FormatException {
+      throw const AppFlowyTransportFailure('INVALID_CAPABILITIES');
+    }
+  }
+
+  @override
+  Future<OriginalSyncCapability?> readOriginalSyncCapability(
+    String objectId,
+  ) async => (await readWriteCapabilities(objectId))?.durableSync;
+
+  Uri _originalEndpoint(PendingOriginalSync operation, {bool lookup = false}) {
+    final scope = operation.scope;
+    _object(scope.objectId);
+    if (scope.origin != origin.origin ||
+        scope.workspaceId != workspaceId.toLowerCase() ||
+        scope.collabType != collabType) {
+      throw const AppFlowyTransportFailure('COLLABORATION_OBJECT_MISMATCH');
+    }
+    return origin
+        .resolve(
+          '/api/workspace/v1/${scope.workspaceId}/collab/${scope.objectId}/'
+          '${lookup ? 'sync-receipt/${operation.operationId}' : 'durable-sync'}',
+        )
+        .replace(
+          queryParameters: {
+            'collab_type': '$collabType',
+            'generation': scope.generation,
+            'model_profile': scope.modelProfile,
+            'epoch': scope.epoch,
+            if (lookup) 'request_sha256': operation.requestSha256,
+          },
+        );
+  }
+
+  static const _durableResponseLimit =
+      ((50 * 1024 * 1024 + 2) ~/ 3) * 4 + 65536;
+  @override
+  Future<OriginalDurableExchangeResult> exchangeOriginal(
+    PendingOriginalSync operation,
+  ) async {
+    final endpoint = _originalEndpoint(operation);
+    final response = await _request(
+      'POST',
+      '${endpoint.path}?${endpoint.query}',
+      body: operation.request,
+      binary: true,
+      maxResponseBytes: _durableResponseLimit,
+      extraHeaders: {
+        'X-OpenMuse-Sync-Operation': operation.operationId,
+        'X-OpenMuse-Sync-Digest': operation.requestSha256,
+        'X-OpenMuse-Sync-Principal': operation.scope.principalId,
+      },
+    );
+    try {
+      return parseOriginalDurableExchange(
+        _data(response),
+        responseUri: endpoint,
+        operation: operation,
+      );
+    } on FormatException {
+      throw const AppFlowyTransportFailure('INVALID_DURABLE_SYNC_RESPONSE');
+    }
+  }
+
+  @override
+  Future<CommittedOriginalSyncReceipt?> readOriginalSyncReceipt(
+    PendingOriginalSync operation,
+  ) async {
+    final endpoint = _originalEndpoint(operation, lookup: true);
+    final response = await _request(
+      'GET',
+      '${endpoint.path}?${endpoint.query}',
+    );
+    try {
+      return parseOriginalReceiptLookup(
+        _data(response),
+        responseUri: endpoint,
+        operation: operation,
+      );
+    } on FormatException {
+      throw const AppFlowyTransportFailure('INVALID_DURABLE_SYNC_RESPONSE');
+    }
   }
 
   @override

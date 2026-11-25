@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-25T17:41:59.340002Z",
+  "passed": true,
+  "regions": [
+    {
+      "region": "cn",
+      "releaseId": "cn-official-1",
+      "sequence": 1,
+      "expiresAt": "2027-02-03T15:10:15.831Z",
+      "signatureAndInstalledTrustVerified": true,
+      "cacheRestorationVerified": true
+    }
+  ],
+  "build": 112503,
+  "artifactSha256": "2fb4422b9dd483a6424608c0b642d8f5871f43a772e426474374a442fd8eb251",
+  "configSource": "Extracted from the exact signed distribution archive, not a source template"
+}

@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-11-25T17:41:28.278485Z",
+  "passed": true,
+  "regions": [
+    {
+      "region": "cn",
+      "releaseId": "cn-official-1",
+      "sequence": 1,
+      "expiresAt": "2027-02-03T15:10:15.831Z",
+      "signatureAndInstalledTrustVerified": true,
+      "cacheRestorationVerified": true
+    },
+    {
+      "region": "us",
+      "releaseId": "us-official-1",
+      "sequence": 1,
+      "expiresAt": "2027-01-31T14:28:29.925Z",
+      "signatureAndInstalledTrustVerified": true,
+      "cacheRestorationVerified": true
+    }
+  ],
+  "build": 112503,
+  "artifactSha256": "69354224b9bacd0b4d389fae3567f325d4630e6419adc411692dae7f9e24ec7a",
+  "configSource": "Extracted from the exact signed distribution archive, not a source template"
+}

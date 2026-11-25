@@ -600,10 +600,27 @@ final class RemoteMcpMarket {
     if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(expected)) {
       throw const FormatException('Invalid MCPB SHA-256');
     }
-    if (packageUri.scheme != 'https' &&
+    final localAsset =
+        bundledArtifact != null &&
+        packageUri.scheme == 'asset' &&
+        !packageUri.hasAuthority &&
+        !packageUri.hasQuery &&
+        !packageUri.hasFragment &&
+        packageUri.path.startsWith('/assets/') &&
+        !packageUri.pathSegments.any(
+          (part) =>
+              part.isEmpty ||
+              part == '.' ||
+              part == '..' ||
+              part.contains('\\'),
+        );
+    if (!localAsset &&
+        packageUri.scheme != 'https' &&
         !(packageUri.scheme == 'http' &&
             {'localhost', '127.0.0.1'}.contains(packageUri.host))) {
-      throw const FormatException('MCPB download requires HTTPS');
+      throw const FormatException(
+        'MCPB requires HTTPS or explicit bundled asset bytes',
+      );
     }
     final http = HttpClient()..connectionTimeout = const Duration(seconds: 15);
     try {
@@ -1248,6 +1265,7 @@ final class _RemoteMcpMarketPageState extends State<RemoteMcpMarketPage> {
         );
 
   bool sourceDelisted(RemoteMcpEntry entry) =>
+      entry.packageUri?.scheme != 'asset' &&
       market?.catalogFresh == true &&
       !(market?.activeVersions.contains('${entry.name}@${entry.version}') ??
           true);

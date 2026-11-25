@@ -1,0 +1,52 @@
+[
+  {
+    "repo": "openmuseai/openmuse",
+    "number": 3,
+    "updated": "2026-11-25T18:23:59.104453+00:00",
+    "draft": true,
+    "head": "5526cf813238d1ca1f3e37c3c91e230acaa32b62",
+    "url": "https://github.com/openmuseai/openmuse/pull/3"
+  },
+  {
+    "repo": "openmuseai/muse-plugin-markdown",
+    "number": 2,
+    "updated": "2026-11-25T18:23:59.104453+00:00",
+    "draft": true,
+    "head": "e584cd73e83439cafffd38d1e077c949dd5f4f4d",
+    "url": "https://github.com/openmuseai/muse-plugin-markdown/pull/2"
+  },
+  {
+    "repo": "openmuseai/muse-plugin-genoffice-pptx",
+    "number": 2,
+    "updated": "2026-11-25T18:23:59.104453+00:00",
+    "draft": true,
+    "head": "5df9dc172131e053f2910c8de57f381d6fab52b6",
+    "url": "https://github.com/openmuseai/muse-plugin-genoffice-pptx/pull/2"
+  },
+  {
+    "repo": "openmuseai/Muse-Plugin-EcoSystem",
+    "number": 1,
+    "updated": "2026-11-25T18:23:59.104453+00:00",
+    "draft": true,
+    "head": "a6814bc0f011bb8a466edf15788767f5fcc61fb2",
+    "url": "https://github.com/openmuseai/Muse-Plugin-EcoSystem/pull/1"
+  },
+  {
+    "repo": "openmuseai/openmuse",
+    "number": 2,
+    "draft": true,
+    "head": "8f75902767b31f8327fae26887c77f0c54b58578",
+    "base": "codex/review-base/mobile-pptx-20261125",
+    "url": "https://github.com/openmuseai/openmuse/pull/2",
+    "updated": "2026-11-25T18:23:59.104453+00:00"
+  },
+  {
+    "repo": "openmuseai/openmuse",
+    "number": 4,
+    "draft": true,
+    "head": "df95e2d3f608b740ff5fb37720875896ce241c9e",
+    "base": "main",
+    "url": "https://github.com/openmuseai/openmuse/pull/4",
+    "updated": "2026-11-25T18:23:59.104453+00:00"
+  }
+]

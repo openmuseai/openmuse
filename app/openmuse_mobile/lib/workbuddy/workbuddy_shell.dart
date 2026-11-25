@@ -1,4 +1,6 @@
 import '../mobile_plugins/mobile_apps_page.dart';
+import 'package:muse_dsh_conversation_core/muse_dsh_conversation_core.dart';
+import 'package:openmuse_task_notifications/openmuse_task_notifications.dart';
 import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart';
 import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
 import 'dart:async';
@@ -142,6 +144,35 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   StreamSubscription<SpeechEvent>? _speechEvents;
   SpeechDraftBuffer? _speechDraft;
   final NativeDshSessionHandle _sessionHandle = NativeDshSessionHandle();
+  OpenMuseTaskNotifications? get _notifications {
+    final plugin = widget.pluginRegistry?.plugin(
+      'com.openmuse.task-notifications',
+    );
+    return plugin is OpenMuseTaskNotifications ? plugin : null;
+  }
+
+  String? _notificationScope;
+  String? _notificationRegion;
+  void _notificationActivation() {
+    if (mounted && widget.authentication?.snapshot.identity != null) {
+      unawaited(controller.selectTab(WbTab.tasks));
+    }
+  }
+
+  void _syncNotificationScope() {
+    final subject = widget.authentication?.snapshot.identity?.subject;
+    final connection = widget.pairedDesktop?.snapshot.connection;
+    final grant = connection?.accountRef == subject
+        ? connection?.grantRef
+        : null;
+    final scope =
+        subject == null || grant == null || _notificationRegion == null
+        ? null
+        : jsonEncode([_notificationRegion, subject, grant]);
+    _notificationScope = scope;
+    _notifications?.setScope(scope);
+  }
+
   final List<String> _recentNativeSessionIds = [];
   String? _nativeConnectionKey;
   MobileDshConnection? _dshConnection;
@@ -187,6 +218,23 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     _syncDevices();
     _syncPluginContexts();
     _sessionHandle.addListener(_syncSession);
+    _sessionHandle.onTaskOutcome = (event) {
+      if (!mounted) return;
+      final transport = _dshConnection;
+      if (transport == null ||
+          !_sessionHandle.isBoundToClient(transport.client)) {
+        return;
+      }
+      _syncNotificationScope();
+      unawaited(
+        _notifications?.observe(
+          sessionId: event.sessionId,
+          sequence: event.sequence,
+          succeeded: event.result == DshTaskResult.completed,
+          strings: stringsOf(context),
+        ),
+      );
+    };
     unawaited(_loadCloud());
     if (widget.debugSpeechSource != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -232,6 +280,15 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final notificationConfigScope = RuntimeConfigScope.maybeOf(
+      context,
+    )?.json['scope'];
+    _notificationRegion = notificationConfigScope is Map
+        ? notificationConfigScope['dataRegion'] as String?
+        : null;
+    _notifications?.onOpenTasks = _notificationActivation;
+    _syncNotificationScope();
+    unawaited(_notifications?.consumeActivation());
     final speech = widget.speechRecognition;
     if (_speechModels == null && speech is OpenMuseSpeechInputPlugin) {
       _speechModels = SpeechModelManager(
@@ -270,6 +327,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(_notifications?.refreshAuthorization());
       _appForeground = true;
       unawaited(_restoreDesktopConnection());
     } else if (state == AppLifecycleState.paused ||
@@ -306,6 +364,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     if (firstResolvedState) _initialAuthResolved = true;
     final becameSignedIn = identity != null && !controller.signedIn;
     controller.setAccount(signedIn: identity != null, name: identity?.email);
+    _syncNotificationScope();
     if (identity == null) {
       _desktopBindOffered = false;
       _desktopBindAttempts = 0;
@@ -585,6 +644,7 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
   }
 
   void _syncDevices() {
+    _syncNotificationScope();
     final paired = widget.pairedDesktop;
     if (paired == null) return;
     final connection = paired.snapshot.connection;
@@ -809,6 +869,11 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
 
   @override
   void dispose() {
+    final notifications = _notifications;
+    notifications?.clearScope(_notificationScope);
+    if (notifications?.onOpenTasks == _notificationActivation) {
+      notifications?.onOpenTasks = null;
+    }
     WidgetsBinding.instance.removeObserver(this);
     _dshConnection?.close();
     _recentMessages?.dispose();
@@ -1170,27 +1235,18 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
     }
     if (connection != null) {
       final targetDeviceRef = connection.deviceRef;
-      final intendedWorkspace = controller.selectedWorkspaceId,
-          intendedTask = controller.openTaskId;
-      String prompt = text;
+      final prompt = text;
       if (widget.resources?.draft.isEmpty == false) {
-        try {
-          prompt = await widget.resources!.preparePrompt(
-            text,
-            key: resourceOperationKey('prompt'),
-            expectedPeer: targetDeviceRef,
-          );
-        } on Object catch (error) {
-          if (mounted) showResourceError(context, error);
-          return;
-        }
-        if (!mounted) return;
-        if (controller.selectedDeviceId != 'paired.$targetDeviceRef' ||
-            controller.selectedWorkspaceId != intendedWorkspace ||
-            controller.openTaskId != intendedTask) {
-          showResourceError(context, const ResourceFailure('STALE_GENERATION'));
-          return;
-        }
+        // Attachment preparation can upload before native send consent.
+        // Keep the draft until that transport has a verifiable consent gate.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              stringsOf(context).format('privacy.attachment_unverified'),
+            ),
+          ),
+        );
+        return;
       }
       final task = controller.openTask;
       if (task != null && task.id.startsWith('dsh.session.')) {
@@ -2003,8 +2059,9 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                                   widget.resources!.draft.attach(record);
                                   controller.selectTab(WbTab.tasks);
                                 } on Object catch (error) {
-                                  if (mounted)
+                                  if (mounted) {
                                     showResourceError(context, error);
+                                  }
                                 }
                               },
                             ),
@@ -2047,6 +2104,15 @@ final class _WorkBuddyShellState extends State<WorkBuddyShell>
                                 unawaited(_openMobileMarket(initialMine: true)),
                           ),
                     minePage: MobileMyPage(
+                      onNotifications: _notifications == null
+                          ? null
+                          : () => Navigator.of(context).push<void>(
+                              MaterialPageRoute(
+                                builder: (_) => TaskNotificationsSettings(
+                                  notifications: _notifications!,
+                                ),
+                              ),
+                            ),
                       themeMode: widget.themeMode,
                       onThemeMode: widget.onThemeMode ?? (_) {},
                       workspaces: controller.workspacesFor(
@@ -4160,11 +4226,12 @@ final class _MobileLoginRouteState extends State<_MobileLoginRoute> {
 }
 
 Future<void> openDesktopSetupGuide(BuildContext context) async {
+  final locale = stringsOf(context).locale.startsWith('zh') ? 'zh-CN' : 'en';
   final guide = await rootBundle.loadString(
-    'packages/openmuse_resource_center_host/assets/welcome/OpenMuse-User-Guide.md',
+    'packages/openmuse_resource_center_host/assets/welcome/OpenMuse-User-Guide.v1.0.3.$locale.md',
   );
-  final start = guide.indexOf('## 8. How to connect a Desktop');
-  final end = guide.indexOf('\n## 9.', start < 0 ? 0 : start);
+  final start = guide.indexOf('## 9.');
+  final end = guide.indexOf('\n## 10.', start < 0 ? 0 : start);
   final section = start >= 0 && end > start
       ? guide.substring(start, end)
       : guide;

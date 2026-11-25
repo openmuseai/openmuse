@@ -1,0 +1,16 @@
+{
+  "build": 112503,
+  "fromBuild": 112502,
+  "passed": [
+    "TestFlight own App update reaches Open",
+    "USB devicectl exact bundle com.openmuseai.mobile reports112503",
+    "Existing account remains signed in",
+    "App notification preference remains on",
+    "System permission remains granted and recovery button absent"
+  ],
+  "logSha256": "936153bb9995eeb6510ea5745e37d7ab955251fec1461a89cccd04b98de1f311",
+  "notRun": [
+    "Real task notification delivery",
+    "Full region/account matrix"
+  ]
+}

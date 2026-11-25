@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-11-25T18:24:51.608054+00:00",
+  "build": 112503,
+  "apple": {
+    "action": "Transporter Deliver clicked",
+    "lastObserved": "Physical TestFlight displayed1.0.3(112503), update completed, devicectl independently confirms production bundleVersion112503",
+    "deliveryReceiptVerified": false,
+    "processedVerified": true,
+    "testFlightInstalled": true,
+    "reviewSubmitted": false,
+    "independentInstallation": {
+      "name": "Office Harness",
+      "bundleId": "com.openmuseai.mobile",
+      "version": "1.0.3",
+      "build": 112503
+    },
+    "evidence": {
+      "channelAvailableLogSha256": "b43c111cbdd68b936e2da67bc0bf5513c0310a6415811240365b89c7e9e36a7f",
+      "installLogSha256": "3ad24a37dc4ff6430552dd407a89bfaeb65158c45fe3a4d7800eaf93e0a797a5"
+    }
+  },
+  "vivo": {
+    "action": "Replace file and select exact signed APK",
+    "parseAndSaveIndependentlyVerified": false,
+    "reviewSubmitted": false
+  },
+  "androidPhysical": {
+    "install": "adb install -r completed successfully; dumpsys verified versionCode112503",
+    "pptxAcceptance": "pending"
+  },
+  "blocker": "Mac locked: vivo113 save and Apple formal distribution build choice still need UI verification. USB iPhone acceptance continues.",
+  "previous112502Receipts": "Preserved separately, including Apple processing/physical installation and vivo independently refreshed draft"
+}

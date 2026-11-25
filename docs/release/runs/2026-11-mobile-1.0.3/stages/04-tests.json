@@ -1,0 +1,27 @@
+{
+  "id": "04-tests",
+  "status": "partial",
+  "owner": "Codex / Muse-CI",
+  "summary": "112503 physical iPhone channel upgrade preserves account/notification permission and PPTX touch enters actual keyboard input. P1 FAIL: undo and save/reopen persistence. Formal feature/release approval blocked; browser/WebKit touch tests do not substitute.",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/validation-summary.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-physical-smart-document.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-physical-smart-document-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-physical-install-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-physical-notification-permission-112502.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/genoffice-touch-097-validation.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/native-document-pins-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ci-remote-progress-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-upgrade-state-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-physical-pptx-112503.json"
+  ],
+  "exceptions": [
+    "Core unexecuted cases block submission"
+  ],
+  "evidenceDigests": {
+    "validation-summary.json": "186a35886ec103edcca0b231719d01dafde5dc68fad906d078a68863d90bd1bd",
+    "android-physical-smart-document.json": "ce43659a3a946ca3fdaec8f08766e6a7af5862364918469277d1013030dfe59c",
+    "ios-physical-smart-document-112502.json": "9328011d30742fba9659e3000fb11b49358e80342d506b42dc9c20a6f04ea2eb",
+    "android-physical-install-112502.json": "2666403f799a9fa552b5277bd2656c90a308e766859ff547f8c28d0c9fa96e4d"
+  }
+}

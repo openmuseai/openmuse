@@ -1,0 +1,29 @@
+{
+  "build": "112502",
+  "version": "1.0.3",
+  "checkedAt": "2026-11-25T16:44:46.891440+00:00",
+  "scope": "All decompressed non-directory entries; bounded credential/private-key patterns only, not a comprehensive secret audit",
+  "artifacts": [
+    {
+      "file": "OpenMuse-cn-1.0.3-112502.apk",
+      "sha256": "8feb02a72c2843afb4711b2c03c15ad27f68dbcb1bba12c6f37034e349622bdf",
+      "entriesChecked": 301,
+      "findings": [
+        {
+          "entry": "org/apache/tika/mime/tika-mimetypes.xml",
+          "pattern": "private-key-pem",
+          "disposition": "false-positive",
+          "reason": "Apache Tika MIME signature XML contains only BEGIN header string match rules at offset 0; no private-key payload or END delimiter. XML parsed and inspected.",
+          "entrySha256": "e3f15ef4358674f773bfdbde2468684bccab76975479d6be7870a1702c0f99a4"
+        }
+      ]
+    },
+    {
+      "file": "OpenMuse-ios-appstore-1.0.3-112502.ipa",
+      "sha256": "a88ddd1fa84d5967d5052703546103acc0fba92474c6713abe826b30dae49c91",
+      "entriesChecked": 423,
+      "findings": []
+    }
+  ],
+  "unresolvedFindings": 0
+}

@@ -9,6 +9,10 @@ name: Web build
 # always regenerates it first: a stale committed bundle must never be published
 # as a release.
 
+defaults:
+  run:
+    working-directory: Muse-Client
+
 on:
   workflow_dispatch:
     inputs:
@@ -52,7 +56,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          path: Muse-Client
 
+      - name: Compose pinned plugin sources
+        uses: ./Muse-Client/.github/actions/checkout-plugin-sources
+        with:
+          token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - name: Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -68,7 +78,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: web/dsh-pane/package-lock.json
+          cache-dependency-path: Muse-Client/web/dsh-pane/package-lock.json
 
       - name: Installation boundary test
         run: python3 scripts/release/test_prepare_web_config.py
@@ -89,9 +99,9 @@ jobs:
         with:
           name: OpenMuse-web-${{ matrix.region }}-${{ github.sha }}
           path: |
-            dist/web/${{ matrix.region }}/OpenMuse-web.zip
-            dist/web/${{ matrix.region }}/SHA256SUMS.txt
-            dist/web/${{ matrix.region }}/build-info.txt
+            Muse-Client/dist/web/${{ matrix.region }}/OpenMuse-web.zip
+            Muse-Client/dist/web/${{ matrix.region }}/SHA256SUMS.txt
+            Muse-Client/dist/web/${{ matrix.region }}/build-info.txt
           if-no-files-found: error
           retention-days: ${{ fromJSON(inputs.retention_days || '14') }}
 

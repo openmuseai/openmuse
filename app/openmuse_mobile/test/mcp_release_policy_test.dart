@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/host/mcp_release_policy.dart';
+import 'package:openmuse_mobile/host/mcp_release_policy.dart';
+import 'package:openmuse_mobile/host/bundled_mcp_packages.dart';
 
 void main() {
   test('store builds ignore internal review overrides', () {
@@ -8,7 +9,8 @@ void main() {
       packagesJson: 'invalid',
       remotesJson: 'invalid',
     );
-    expect(policy.packages, isEmpty);
+    expect(policy.packages, bundledMcpPackagePins);
+    expect(policy.packages.keys, hasLength(1));
     expect(policy.remotes, isEmpty);
   });
   test('internal full-client review requires exact immutable pins', () {

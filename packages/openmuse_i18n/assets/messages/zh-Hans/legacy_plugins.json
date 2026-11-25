@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "locale": "zh-Hans",
+  "namespace": "legacy_plugins",
+  "sourceRevision": 3,
+  "messages": {
+    "legacy_plugins.unreadable": "旧版插件记录无法识别；此版本不会运行旧插件，原目录和用户文件已保留。",
+    "legacy_plugins.retained": "旧版下载插件已隔离，此版本无法使用；原安装记录、目录和用户文件已保留。"
+  }
+}

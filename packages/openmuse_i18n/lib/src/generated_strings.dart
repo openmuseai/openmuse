@@ -440,6 +440,8 @@ final class OpenMuseStrings {
   String htmlTotal() => format("html.total");
   String htmlWorkspace() => format("html.workspace");
   String htmlWorkspaceFiles() => format("html.workspace_files");
+  String legacyPluginsRetained() => format("legacy_plugins.retained");
+  String legacyPluginsUnreadable() => format("legacy_plugins.unreadable");
   String marketA2uiPage() => format("market.a2uiPage");
   String marketA2uiState() => format("market.a2uiState");
   String marketBuiltInDisabled() => format("market.builtInDisabled");
@@ -1129,6 +1131,23 @@ final class OpenMuseStrings {
       format("mobile.your_session_has_expired_sign_in_again_and.9fd9856b");
   String mobileYourToolsAtAGlance9f2e8073() =>
       format("mobile.your_tools_at_a_glance.9f2e8073");
+  String notificationsCancel() => format("notifications.cancel");
+  String notificationsCompleted() => format("notifications.completed");
+  String notificationsContinue() => format("notifications.continue");
+  String notificationsDenied() => format("notifications.denied");
+  String notificationsDescription() => format("notifications.description");
+  String notificationsError() => format("notifications.error");
+  String notificationsExplanation() => format("notifications.explanation");
+  String notificationsFailed() => format("notifications.failed");
+  String notificationsGranted() => format("notifications.granted");
+  String notificationsNotDetermined() => format("notifications.notDetermined");
+  String notificationsOpenResult() => format("notifications.open_result");
+  String notificationsOpenSettings() => format("notifications.open_settings");
+  String notificationsResults() => format("notifications.results");
+  String notificationsRetry() => format("notifications.retry");
+  String notificationsSystem() => format("notifications.system");
+  String notificationsTitle() => format("notifications.title");
+  String notificationsUnavailable() => format("notifications.unavailable");
   String officeParagraphE6bbad92({required Object? value1}) =>
       format("office.paragraph.e6bbad92", {"value1": value1});
   String officePdfReadOnlyTextView213a26ed() =>
@@ -1149,6 +1168,12 @@ final class OpenMuseStrings {
       format("office.unable_to_safely_open_this_docx_file.d2dd2cd6");
   String officeXlsxReadOnlyCompatibilityView9db253b8() =>
       format("office.xlsx_read_only_compatibility_view.9db253b8");
+  String privacyAttachmentUnverified() =>
+      format("privacy.attachment_unverified");
+  String privacyGateway({required Object? gateway}) =>
+      format("privacy.gateway", {"gateway": gateway});
+  String privacyRemoteUnverified() => format("privacy.remote_unverified");
+  String privacySendScope() => format("privacy.send_scope");
   String resourcecenterAddToChat() => format("resourcecenter.addToChat");
   String resourcecenterAlreadyAttached() =>
       format("resourcecenter.alreadyAttached");

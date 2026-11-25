@@ -64,7 +64,7 @@ void main() {
               'sync': v.controller.syncState.name,
             };
             debugPrint(
-              'CI_SMARTDOC_REALTIME ' + jsonEncode(report['realtimeState']),
+              'CI_SMARTDOC_REALTIME ${jsonEncode(report['realtimeState'])}',
             );
           }
           report['visibleTextAtFailure'] = find
@@ -85,10 +85,10 @@ void main() {
               .toSet()
               .toList();
           debugPrint(
-            'CI_SMARTDOC_WIDGETS ' + jsonEncode(report['nativeWidgetTypes']),
+            'CI_SMARTDOC_WIDGETS ${jsonEncode(report['nativeWidgetTypes'])}',
           );
           debugPrint(
-            'CI_SMARTDOC_VISIBLE ' + jsonEncode(report['visibleTextAtFailure']),
+            'CI_SMARTDOC_VISIBLE ${jsonEncode(report['visibleTextAtFailure'])}',
           );
         }
         expect(ready(), isTrue, reason: step);
@@ -175,7 +175,7 @@ void main() {
         });
       });
       final uri = doc!['resourceUri'] as String;
-      if (const bool.fromEnvironment('CI_NATIVE_SOCKET_PROBE'))
+      if (const bool.fromEnvironment('CI_NATIVE_SOCKET_PROBE')) {
         await tester.runAsync(() async {
           final cloud = (doc!['document'] as Map)['cloud'] as Map;
           final token = await host.authenticationPlugin.authentication
@@ -213,13 +213,16 @@ void main() {
           } finally {
             try {
               await socket?.close().timeout(const Duration(seconds: 2));
-            } on Object {}
+            } on Object {
+              // Closing a diagnostic socket cannot change the acceptance result.
+            }
             client.close(force: true);
           }
           debugPrint(
-            'CI_NATIVE_SOCKET_PROBE ' + jsonEncode(report['nativeSocketProbe']),
+            'CI_NATIVE_SOCKET_PROBE ${jsonEncode(report['nativeSocketProbe'])}',
           );
         });
+      }
       final reference = ResourceReference.fromUri(uri);
       expect(
         reference.identity.scope,

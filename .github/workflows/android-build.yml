@@ -9,6 +9,10 @@ name: Android build
 # is an internal distribution artifact. A Play Store release needs the real
 # upload keystore supplied through repository secrets.
 
+defaults:
+  run:
+    working-directory: Muse-Client
+
 on:
   workflow_dispatch:
     inputs:
@@ -44,7 +48,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          path: Muse-Client
 
+      - name: Compose pinned plugin sources
+        uses: ./Muse-Client/.github/actions/checkout-plugin-sources
+        with:
+          token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - name: Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -83,6 +93,7 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
+          workspaces: Muse-Client -> target
           cache-on-failure: true
 
       - name: Build
@@ -98,10 +109,10 @@ jobs:
         with:
           name: OpenMuse-android-${{ github.sha }}
           path: |
-            dist/OpenMuse-Android-arm64.apk
-            dist/SHA256SUMS.txt
-            dist/build-info.txt
-            dist/android-apksigner-report.txt
+            Muse-Client/dist/OpenMuse-Android-arm64.apk
+            Muse-Client/dist/SHA256SUMS.txt
+            Muse-Client/dist/build-info.txt
+            Muse-Client/dist/android-apksigner-report.txt
           if-no-files-found: error
           retention-days: ${{ fromJSON(inputs.retention_days || '14') }}
 

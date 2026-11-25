@@ -1,0 +1,13 @@
+{
+  "id": "01-scope",
+  "status": "passed",
+  "owner": "Codex / Muse-CI",
+  "summary": "User-defined1.0.3 scope, only requested three targets and 15 Ecosystem extraction fixed.",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/scope.json"
+  ],
+  "exceptions": [],
+  "evidenceDigests": {
+    "scope.json": "7e9155816b1b19b6fe3188dc18e13e0fd17fe4933d9a602dddc5844f237d5166"
+  }
+}

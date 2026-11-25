@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-11-25T10:45:20.993463Z",
+  "passed": true,
+  "regions": [
+    {
+      "region": "cn",
+      "releaseId": "cn-official-1",
+      "sequence": 1,
+      "expiresAt": "2027-02-03T15:10:15.831Z",
+      "signatureAndInstalledTrustVerified": true,
+      "cacheRestorationVerified": true
+    }
+  ]
+}

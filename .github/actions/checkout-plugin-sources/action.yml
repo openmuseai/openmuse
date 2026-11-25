@@ -1,0 +1,51 @@
+name: Checkout fixed plugin sources
+description: Compose the exact private Ecosystem sources beside the Client checkout.
+inputs:
+  token:
+    description: Contents-read token scoped to the Ecosystem and its 15 plugin repositories.
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Support long Windows plugin paths
+      if: runner.os == 'Windows'
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        git config --global core.longpaths true
+        git config --global core.autocrlf false
+    - name: Read the pinned source identity
+      id: pin
+      shell: bash
+      working-directory: ${{ github.workspace }}/Muse-Client
+      env:
+        SOURCE_TOKEN: ${{ inputs.token }}
+      run: |
+        python3 - <<'PY'
+        import json
+        import os
+        from pathlib import Path
+        if not os.environ.get('SOURCE_TOKEN'):
+            raise SystemExit('MUSE_PLUGIN_READ_TOKEN is required with Contents:read access to the Ecosystem and its 15 private plugin repositories.')
+        pin = json.loads(Path('config/release/mobile-1.0.3-sources.json').read_text())['ecosystem']
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+            out.write('repository=' + pin['repository'] + '\n')
+            out.write('commit=' + pin['commit'] + '\n')
+        PY
+    - name: Checkout immutable Ecosystem and gitlinks
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ steps.pin.outputs.repository }}
+        ref: ${{ steps.pin.outputs.commit }}
+        token: ${{ inputs.token }}
+        path: Muse-Plugin-Ecosystem
+        submodules: recursive
+        persist-credentials: false
+    - name: Verify the canonical sibling composition
+      shell: bash
+      working-directory: ${{ github.workspace }}/Muse-Client
+      run: |
+        python3 scripts/ci/verify_plugin_sources.py --ecosystem ../Muse-Plugin-Ecosystem
