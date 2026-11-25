@@ -1,0 +1,70 @@
+--- a/relay_server.py
++++ b/relay_server.py
+@@ -391,6 +391,9 @@
+             if _is_event_stream(headers):
+                 await _write_event_stream(writer, stream, status, headers)
+                 return
++            if request.path == "/openmuse/workspace-mirror/resource/v1":
++                await _write_resource_stream(writer, stream, status, headers)
++                return
+             chunks = bytearray()
+             while True:
+                 item = await asyncio.wait_for(stream.queue.get(), 120)
+@@ -777,6 +780,57 @@
+             writer.write(b"0\r\n\r\n")
+             await writer.drain()
+             return
++
++
++async def _write_resource_stream(
++    writer: asyncio.StreamWriter,
++    stream: Stream,
++    status: int,
++    headers: list[tuple[str, str]],
++) -> None:
++    """Forward authorized workspace bytes immediately, with a bounded body.
++
++    Do not send a successful terminator for timeout/truncation: HTTP clients must
++    reject an incomplete transfer instead of passing a partial file to a plugin.
++    """
++    blocked = {"content-length", "transfer-encoding", "connection"}
++    length = _header(headers, "content-length")
++    total = int(length) if length.isdecimal() else None
++    limit = 64 * 1024 * 1024
++    if total is not None and total > limit:
++        _write_json(writer, 502, "UPSTREAM_TOO_LARGE", "Desktop 文件超过 64 MiB。")
++        return
++    lines = [f"HTTP/1.1 {status} Response", "Connection: close", "X-Accel-Buffering: no"]
++    lines.append(f"Content-Length: {total}" if total is not None else "Transfer-Encoding: chunked")
++    lines.extend(f"{key}: {value}" for key, value in headers if key.lower() not in blocked)
++    writer.write(("\r\n".join(lines) + "\r\n\r\n").encode())
++    await writer.drain()
++    received = 0
++    try:
++        while True:
++            item = await asyncio.wait_for(stream.queue.get(), 45)
++            kind = item.get("type")
++            if kind == "http.response.chunk":
++                data = base64.b64decode(item.get("data") or "", validate=True)
++                received += len(data)
++                if received > limit or (total is not None and received > total):
++                    raise ValueError("workspace response exceeds length")
++                if data:
++                    writer.write(data if total is not None else f"{len(data):X}\r\n".encode() + data + b"\r\n")
++                    await writer.drain()
++            elif kind == "http.response.end":
++                if total is not None and received != total:
++                    raise ValueError("workspace response truncated")
++                if total is None:
++                    writer.write(b"0\r\n\r\n")
++                    await writer.drain()
++                return
++            else:
++                raise ValueError("workspace upstream failed")
++    except (asyncio.TimeoutError, ValueError, ConnectionError):
++        logger.warning("workspace_resource_stream_interrupted bytes=%d", received)
++    finally:
++        writer.close()
+ 
+ 
+ def _write_json(writer: asyncio.StreamWriter, status: int, code: str, message: str) -> None:

@@ -6,6 +6,9 @@ import 'package:path/path.dart' as p;
 import 'plugin_command_registry.dart';
 import 'plugin_cli_broker.dart';
 import 'plugin_package.dart';
+import 'plugin_market.dart';
+import 'mcp_market.dart';
+import 'mcp_bin_registry.dart';
 import 'workspace_mount_store.dart';
 
 const openMuseDataDirectoryName = 'com.openmuseai.office/OpenMuse';
@@ -18,12 +21,14 @@ Future<int> runOpenMuseCli(List<String> args) async {
       stdout.writeln(_openMuseUsage);
       return args.isEmpty ? 64 : 0;
     }
+    final separator = args.contains('mcp-bin') ? args.indexOf('--') : -1;
+    final hostArgs = separator < 0 ? args : args.sublist(0, separator);
     final dataDir = Directory(
-      _optional(args, '--data-dir') ?? _defaultDataDir(),
+      _optional(hostArgs, '--data-dir') ?? _defaultDataDir(),
     );
     final clean = <String>[];
     for (var index = 0; index < args.length; index++) {
-      if (args[index] == '--data-dir') {
+      if ((separator < 0 || index < separator) && args[index] == '--data-dir') {
         if (++index >= args.length) {
           throw const FormatException('缺少 --data-dir');
         }
@@ -35,6 +40,32 @@ Future<int> runOpenMuseCli(List<String> args) async {
     if (clean.first == 'list') clean.replaceRange(0, 1, ['plugin', 'list']);
     if (clean.first == 'commands') {
       clean.replaceRange(0, 1, ['plugin', 'commands']);
+    }
+    if (clean.first == 'mcp-bin') {
+      if (clean.length < 4 || clean[3] != '--') {
+        throw const FormatException('mcp-bin <plugin-id> <bin> -- [args]');
+      }
+      final runtime = resolveMarketDshRuntime(
+        executablePath: Platform.resolvedExecutable,
+        environment: Platform.environment,
+      );
+      final market = McpRegistryMarket(
+        origin: Uri(),
+        installRoot: Directory(p.join(dataDir.path, 'mcpb')),
+        nodeExecutable: runtime.nodeExecutable,
+      );
+      final script = await verifiedMcpBin(market, clean[1], clean[2]);
+      final child = await Process.start(
+        runtime.nodeExecutable,
+        [script.path, ...clean.sublist(4)],
+        mode: ProcessStartMode.inheritStdio,
+        workingDirectory: Directory.current.path,
+      );
+      return child.exitCode;
+    }
+    if (clean.first == 'market') {
+      await _market(clean.sublist(1));
+      return 0;
     }
     if (clean.first == 'plugin') {
       if (clean.length < 2) throw const FormatException('缺少 plugin 子命令');
@@ -110,9 +141,11 @@ Future<int> runOpenMuseCli(List<String> args) async {
     if (command == null) {
       throw FormatException('命令未安装或不可用：$identity ${discovery.errors}');
     }
-    final brokerUrl = Platform.environment['OPENMUSE_CLI_BROKER_URL'] ??
+    final brokerUrl =
+        Platform.environment['OPENMUSE_CLI_BROKER_URL'] ??
         Platform.environment['DSH_OPENMUSE_CLI_BROKER_URL'];
-    final brokerToken = Platform.environment['OPENMUSE_CLI_BROKER_TOKEN'] ??
+    final brokerToken =
+        Platform.environment['OPENMUSE_CLI_BROKER_TOKEN'] ??
         Platform.environment['DSH_OPENMUSE_CLI_BROKER_TOKEN'];
     if (brokerUrl != null && brokerToken != null) {
       return invokeBrokeredCliCommand(
@@ -131,6 +164,9 @@ Future<int> runOpenMuseCli(List<String> args) async {
 
 const _openMuseUsage = '''
 用法:
+  openmuse market list [--json]
+  openmuse market plan <id> [--profile <name>] [--dsh-home <目录>] [--dsh-cli <bin.js>] [--node <node>] [--json]
+  openmuse market install <id> [同上选项]
   openmuse plugin install --catalog <catalog.json> --workspace <绝对路径> --plugin <id> [--data-dir <目录>]
   openmuse plugin uninstall --plugin <id> [--data-dir <目录>]
   openmuse plugin list | commands [--data-dir <目录>]
@@ -138,6 +174,72 @@ const _openMuseUsage = '''
   openmuse <group> <namespace> <command> [命令参数] [--data-dir <目录>]
 示例: openmuse plugin commands --json
 ''';
+
+Future<void> _market(List<String> args) async {
+  if (args.isEmpty) throw const FormatException('缺少 market 子命令');
+  if (args.first == 'list') {
+    if (args.contains('--json')) {
+      stdout.writeln(
+        jsonEncode({
+          'schema': 'openmuse.market/v1',
+          'plugins': builtInMarketPlugins
+              .map((entry) => entry.toJson())
+              .toList(),
+        }),
+      );
+    } else {
+      for (final entry in builtInMarketPlugins) {
+        stdout.writeln(
+          '${entry.id}\t${entry.version}\t${entry.ecosystem}\t${entry.name}',
+        );
+      }
+    }
+    return;
+  }
+  if (args.first != 'plan' && args.first != 'install') {
+    throw FormatException('未知 market 子命令：${args.first}');
+  }
+  if (args.length < 2 || args[1].startsWith('--')) {
+    throw const FormatException('缺少市场插件 ID');
+  }
+  final plugin = builtInMarketPlugins
+      .where((entry) => entry.id == args[1])
+      .firstOrNull;
+  if (plugin == null) throw FormatException('市场中没有 ${args[1]}');
+  final runtime = resolveMarketDshRuntime(
+    executablePath: Platform.resolvedExecutable,
+    environment: Platform.environment,
+  );
+  final cli = _optional(args, '--dsh-cli') ?? runtime.cliPath;
+  if (cli == null) {
+    throw const FormatException(
+      '找不到 DSH CLI，请设置 OPENMUSE_DSH_CLI 或传入 --dsh-cli',
+    );
+  }
+  final userHome =
+      Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+  final dshHome =
+      _optional(args, '--dsh-home') ??
+      Platform.environment['DSH_HOME'] ??
+      (userHome == null ? null : p.join(userHome, '.dsh'));
+  if (dshHome == null) throw const FormatException('找不到 DSH_HOME');
+  final installer = DshMarketInstaller(
+    dshHome: Directory(dshHome),
+    profile: _optional(args, '--profile') ?? 'web',
+    cliPath: cli,
+    nodeExecutable: _optional(args, '--node') ?? runtime.nodeExecutable,
+  );
+  final result = args.first == 'plan'
+      ? await installer.plan(plugin)
+      : await installer.install(plugin);
+  if (args.contains('--json')) {
+    stdout.writeln(jsonEncode(result));
+  } else {
+    stdout.writeln(
+      '${plugin.name} ${plugin.version}: ${result['action']} (${result['profile']})',
+    );
+  }
+}
 
 /// Legacy entry point for generic plugin installation.
 Future<int> runPluginCli(List<String> args) async {

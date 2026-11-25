@@ -41,6 +41,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.19.1"
+  crypto:
+    dependency: transitive
+    description:
+      name: crypto
+      sha256: e3626ae6270383c9e3a549f34c9e4cd26c09ae6a9adaab2bf4737a00340efdc4
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.0.8"
   fake_async:
     dependency: transitive
     description:
@@ -123,6 +131,34 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.18.0"
+  muse_dsh_conversation_protocol:
+    dependency: "direct main"
+    description:
+      path: "../../packages/muse_dsh_conversation_protocol"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_resource_center:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_resource_center"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_resource_contract:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_resource_contract"
+      relative: true
+    source: path
+    version: "0.1.0"
+  muse_resource_embed:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_resource_embed"
+      relative: true
+    source: path
+    version: "0.1.0"
   openmuse_mobile_core:
     dependency: "direct main"
     description:

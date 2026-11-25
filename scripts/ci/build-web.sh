@@ -20,19 +20,19 @@ repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$repo_root"
 
 profile=release
-base_href=/
+base_href=
+region=us
 skip_tests=false
 force_rebuild=false
 
 usage() {
   cat >&2 <<'USAGE'
-usage: scripts/ci/build-web.sh [--profile release|debug] [--base-href PATH]
+usage: scripts/ci/build-web.sh [--profile release|debug] [--region cn|us] [--base-href PATH]
                                [--skip-tests] [--force-rebuild]
 
   --profile        Flutter build profile (default release)
-  --base-href      Base href of the deployed host. Production
-                   app.openmuseai.com serves / (the default); the local dev
-                   edge in web/dev-edge.mjs serves /app/.
+  --region        cn or us (default us); installs a fixed-region configuration
+  --base-href      Must match the region profile: cn /, us /app/.
   --skip-tests     Skip flutter analyze and flutter test
   --force-rebuild  Ignore every cache: flutter clean, drop node_modules/build
 USAGE
@@ -41,6 +41,7 @@ USAGE
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --profile) profile="${2:-}"; shift 2 ;;
+    --region) region="${2:-}"; shift 2 ;;
     --base-href) base_href="${2:-}"; shift 2 ;;
     --skip-tests) skip_tests=true; shift ;;
     --force-rebuild) force_rebuild=true; shift ;;
@@ -53,6 +54,11 @@ case "$profile" in
   release|debug) ;;
   *) echo "--profile must be release or debug" >&2; exit 2 ;;
 esac
+
+case "$region" in cn|us) ;; *) echo '--region must be cn or us' >&2; exit 2 ;; esac
+expected_base="$(python3 -c 'import json,sys; print(json.load(open("config/web-deployments.json"))["regions"][sys.argv[1]]["baseHref"])' "$region")"
+[[ -n "$base_href" ]] || base_href="$expected_base"
+[[ "$base_href" == "$expected_base" ]] || { echo 'Base href differs from selected region deployment' >&2; exit 2; }
 
 # The host is deployed under a path prefix, so the base href must be anchored on
 # both sides ("/" or "/app/"); a bare "app" would resolve against the document.
@@ -77,6 +83,11 @@ sha256() {
 
 step() { printf '\n==> %s\n' "$1"; }
 
+step 'Fixed-region installation'
+artifact_dir="$repo_root/dist/web/$region"
+web_defines="$artifact_dir/defines.json"
+python3 scripts/release/prepare-web-config.py --region "$region" --output "$web_defines"
+
 step 'DSH pane bundle'
 (
   cd web/dsh-pane
@@ -99,7 +110,7 @@ step 'Flutter web host'
     flutter analyze
     flutter test
   fi
-  flutter build web "--$profile" --base-href "$base_href"
+  flutter build web "--$profile" --base-href "$base_href" --dart-define-from-file="$web_defines" --no-web-resources-cdn
 )
 
 out='app/openmuse_web/build/web'
@@ -124,21 +135,21 @@ if ! git diff --quiet --ignore-cr-at-eol -- app/openmuse_web/web/dsh-pane.js app
 fi
 
 step 'package'
-mkdir -p dist
-rm -f dist/OpenMuse-web.zip
+mkdir -p "$artifact_dir"
+rm -f "$artifact_dir/OpenMuse-web.zip"
 (
   cd "$out"
-  zip -q -r -X "$repo_root/dist/OpenMuse-web.zip" .
+  zip -q -r -X "$artifact_dir/OpenMuse-web.zip" .
 )
 # The host is served from the archive root, so index.html has to be there and
 # not inside a subdirectory. -Z1 lists one entry per line and tr strips the CR
 # that the Windows unzip appends, so the match is exact on every platform.
-unzip -Z1 dist/OpenMuse-web.zip | tr -d '\r' | grep -qx 'index.html' || {
+unzip -Z1 "$artifact_dir/OpenMuse-web.zip" | tr -d '\r' | grep -qx 'index.html' || {
   echo 'index.html is not at the root of the archive' >&2
   exit 1
 }
-digest="$(sha256 dist/OpenMuse-web.zip)"
-printf '%s  %s\n' "$digest" 'OpenMuse-web.zip' >dist/SHA256SUMS.txt
+digest="$(sha256 "$artifact_dir/OpenMuse-web.zip")"
+printf '%s  %s\n' "$digest" 'OpenMuse-web.zip' >"$artifact_dir/SHA256SUMS.txt"
 
 {
   echo 'product: OpenMuse'
@@ -147,10 +158,11 @@ printf '%s  %s\n' "$digest" 'OpenMuse-web.zip' >dist/SHA256SUMS.txt
   echo "builtAt: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "flutter: $(flutter --version | head -1)"
   echo "baseHref: $base_href"
+  echo "dataRegion: $region"
   echo 'domains: web=build'
   echo "archive: OpenMuse-web.zip sha256=$digest"
-} >dist/build-info.txt
+} >"$artifact_dir/build-info.txt"
 
 printf '\nweb build complete\n'
-printf '    dist/OpenMuse-web.zip  %s MB  sha256 %s\n' \
-  "$(awk "BEGIN { printf \"%.2f\", $(wc -c <dist/OpenMuse-web.zip) / 1048576 }")" "$digest"
+printf '    %s/OpenMuse-web.zip  %s MB  sha256 %s\n' "$artifact_dir" \
+  "$(awk "BEGIN { printf \"%.2f\", $(wc -c <"$artifact_dir/OpenMuse-web.zip") / 1048576 }")" "$digest"

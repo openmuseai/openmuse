@@ -25,7 +25,7 @@ void main() {
   test('accepts only the pinned DSH native protocol', () {
     final hello = DshGatewayHello.fromJson({
       'protocolVersion': 1,
-      'dshVersion': '0.1.7-rc.1',
+      'dshVersion': '0.2.0-rc.2',
       'capabilities': ['session.follow'],
       'compatibility': {
         'nativeConversationCompatible': true,

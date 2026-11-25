@@ -1,0 +1,22 @@
+name: openmuse_app_update
+description: Shared release feed and update prompts for OpenMuse applications.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  openmuse_i18n:
+    path: ../openmuse_i18n
+  openmuse_runtime_config:
+    path: ../openmuse_runtime_config
+  flutter:
+    sdk: flutter
+  pub_semver: ^2.2.0
+  package_info_plus: ^9.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

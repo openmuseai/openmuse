@@ -1,3 +1,7 @@
+import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart'
+    show ConnectionTrace;
+import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart'
+    show isPrivateNativeTransportHost;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -12,6 +16,75 @@ typedef RemoteMediaReader =
     Future<RemoteMediaSlice> Function(RemoteMediaQuery query);
 typedef WorkspaceMirrorReader =
     Future<Map<String, Object?>> Function(WorkspaceMirrorQuery query);
+typedef WorkspaceMirrorWriter =
+    Future<Map<String, Object?>> Function(WorkspaceMirrorAction action);
+
+typedef PairedResourceDispatcher =
+    Future<Map<String, Object?>> Function(PairedResourceRequest request);
+
+final class PairedResourceRequest {
+  const PairedResourceRequest({
+    required this.body,
+    required this.accountRef,
+    required this.deviceRef,
+    required this.workspaceRef,
+    required this.expiresAtMs,
+  });
+  final Map<String, Object?> body;
+  final String accountRef, deviceRef, workspaceRef;
+  final int expiresAtMs;
+}
+
+final class WorkspaceMirrorAction {
+  const WorkspaceMirrorAction({
+    required this.operation,
+    required this.accountRef,
+    required this.workspaceRef,
+    this.nodeRef,
+    this.name,
+  });
+  final String operation;
+  final String accountRef;
+  final String workspaceRef;
+  final String? nodeRef;
+  final String? name;
+}
+
+typedef PairedPluginMarketDispatcher =
+    Future<Map<String, Object?>> Function(PairedPluginMarketRequest request);
+typedef PairedScheduledTaskDispatcher =
+    Future<Map<String, Object?>> Function(PairedScheduledTaskRequest request);
+
+final class PairedScheduledTaskRequest {
+  const PairedScheduledTaskRequest({
+    required this.operation,
+    required this.accountRef,
+    this.id,
+    this.workspaceId,
+    this.message,
+    this.dueAt,
+  });
+  final String operation;
+  final String accountRef;
+  final String? id;
+  final String? workspaceId;
+  final String? message;
+  final DateTime? dueAt;
+}
+
+final class PairedPluginMarketRequest {
+  const PairedPluginMarketRequest({
+    required this.operation,
+    required this.accountRef,
+    this.pluginId,
+    this.options = const {},
+  });
+  final String operation;
+  final String accountRef;
+  final String? pluginId;
+  final Map<String, Object?> options;
+}
+
 typedef WorkspaceMirrorResourceReader =
     Future<WorkspaceMirrorResource> Function(
       WorkspaceMirrorResourceQuery query,
@@ -44,6 +117,7 @@ final class WorkspaceMirrorQuery {
     required this.workspaceRef,
     this.mountRef,
     this.parentRef,
+    this.searchText,
     this.cursor,
     this.limit = 100,
   });
@@ -54,6 +128,7 @@ final class WorkspaceMirrorQuery {
   final String workspaceRef;
   final String? mountRef;
   final String? parentRef;
+  final String? searchText;
   final String? cursor;
   final int limit;
 }
@@ -153,6 +228,12 @@ final class PairedDesktopGateway {
     this.remoteMedia,
     this.workspaceMirror,
     this.workspaceMirrorResource,
+    this.workspaceMirrorAction,
+    this.pluginMarket,
+    this.mcpApps,
+    this.fallbackOnPortConflict = false,
+    this.scheduledTasks,
+    this.resources,
     String? fixedPairingCode,
   }) : _fixedPairingCode = fixedPairingCode;
 
@@ -172,8 +253,14 @@ final class PairedDesktopGateway {
   final String? nativeApiToken;
   final RemoteSurfaceDispatcher? remoteSurface;
   final RemoteMediaReader? remoteMedia;
+  final WorkspaceMirrorWriter? workspaceMirrorAction;
   final WorkspaceMirrorReader? workspaceMirror;
   final WorkspaceMirrorResourceReader? workspaceMirrorResource;
+  final PairedPluginMarketDispatcher? pluginMarket;
+  PairedResourceDispatcher? mcpApps;
+  final bool fallbackOnPortConflict;
+  final PairedScheduledTaskDispatcher? scheduledTasks;
+  final PairedResourceDispatcher? resources;
   final String? _fixedPairingCode;
   final Random _random = Random.secure();
   final Map<String, _DesktopGrant> _grants = {};
@@ -203,6 +290,7 @@ final class PairedDesktopGateway {
         grant == null ||
         promptAt == null ||
         DateTime.now().difference(promptAt) > const Duration(minutes: 10) ||
+        grant.accountRef != currentAccountRef() ||
         grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
       return false;
     }
@@ -214,10 +302,21 @@ final class PairedDesktopGateway {
   Future<void> start() async {
     if (_server != null) return;
     try {
-      final server = await HttpServer.bind(
-        bindAddress ?? InternetAddress.loopbackIPv4,
-        port,
-      );
+      final address = bindAddress ?? InternetAddress.loopbackIPv4;
+      HttpServer server;
+      try {
+        server = await HttpServer.bind(address, port);
+      } on SocketException catch (error) {
+        // Multiple normal/QA installations may coexist. Only loopback listeners
+        // explicitly opted in may choose a free port, which origin advertises.
+        if (!fallbackOnPortConflict ||
+            !address.isLoopback ||
+            !({48, 98, 10048}.contains(error.osError?.errorCode) ||
+                (error.osError?.message.contains('The shared flag to bind()') ??
+                    false)))
+          rethrow;
+        server = await HttpServer.bind(address, 0);
+      }
       _server = server;
       lastError = null;
       unawaited(_serve(server));
@@ -238,6 +337,9 @@ final class PairedDesktopGateway {
     final server = _server;
     if (server == null) {
       throw StateError('Paired Desktop gateway is not running.');
+    }
+    if (currentAccountRef() != accountRef) {
+      throw StateError('Desktop account does not match operator grant.');
     }
     final grantRef = _randomHex(32);
     _grants[grantRef] = _DesktopGrant(
@@ -286,7 +388,23 @@ final class PairedDesktopGateway {
   }
 
   Future<void> _handle(HttpRequest request) async {
+    // A mobile user may background/close a live follow stream at any time.
+    // Observe the response's independent completion future as well as writes.
+    unawaited(
+      request.response.done.then<void>(
+        (_) {},
+        onError: (Object error, StackTrace stack) {
+          if (error is! HttpException && error is! SocketException) {
+            Error.throwWithStackTrace(error, stack);
+          }
+        },
+      ),
+    );
     try {
+      if (request.uri.path == '/openmuse/resource-center/v1') {
+        await _resources(request);
+        return;
+      }
       if (request.method == 'POST' && request.uri.path == '/v1/pair/open') {
         await _open(request, requirePairingCode: true);
         return;
@@ -305,6 +423,22 @@ final class PairedDesktopGateway {
       if (request.method == 'POST' &&
           request.uri.path == '/openmuse/remote-surface/v1') {
         await _remoteSurface(request);
+        return;
+      }
+      if (request.uri.path == '/openmuse/mcp-apps/v1') {
+        await _mcpApps(request);
+        return;
+      }
+      if (request.uri.path == '/openmuse/plugin-market/v1') {
+        await _pluginMarket(request);
+        return;
+      }
+      if (request.uri.path == '/openmuse/scheduled-tasks/v1') {
+        await _scheduledTasks(request);
+        return;
+      }
+      if (request.uri.path == '/openmuse/workspace-mirror/action/v1') {
+        await _workspaceMirrorAction(request);
         return;
       }
       if (request.method == 'GET' &&
@@ -420,7 +554,13 @@ final class PairedDesktopGateway {
         'Desktop 尚未登录。',
       );
     }
-    final mobileAccountRef = await validateToken(authorization.substring(7));
+    final trace = ConnectionTrace.fromTraceparent(
+      request.headers.value('traceparent'),
+    );
+    final mobileAccountRef = await trace.measure(
+      'desktop.auth_validate',
+      (_) => validateToken(authorization.substring(7)),
+    );
     if (mobileAccountRef != desktopAccountRef) {
       throw const _GatewayFailure(
         HttpStatus.forbidden,
@@ -428,7 +568,10 @@ final class PairedDesktopGateway {
         'Mobile 与 Desktop 必须登录同一个账号。',
       );
     }
-    final upstream = await dshEndpoint();
+    final upstream = await trace.measure(
+      'desktop.dsh_ready',
+      (_) => dshEndpoint(),
+    );
     if (!_isLoopbackHttp(upstream)) {
       throw const _GatewayFailure(
         HttpStatus.badGateway,
@@ -477,6 +620,58 @@ final class PairedDesktopGateway {
     _changed();
   }
 
+  Future<void> _resources(HttpRequest request) async {
+    if (request.method != 'POST') {
+      _json(request.response, HttpStatus.methodNotAllowed, {
+        'error': 'METHOD_NOT_ALLOWED',
+      });
+      return;
+    }
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      _json(request.response, HttpStatus.unauthorized, {'error': 'DENIED'});
+      return;
+    }
+    final dispatcher = resources;
+    if (dispatcher == null) {
+      _json(request.response, HttpStatus.serviceUnavailable, {
+        'error': 'RESOURCE_CENTER_UNAVAILABLE',
+      });
+      return;
+    }
+    final bytes = <int>[];
+    await for (final chunk in request.timeout(const Duration(seconds: 30))) {
+      if (bytes.length + chunk.length > 24 * 1024 * 1024) {
+        _json(request.response, HttpStatus.requestEntityTooLarge, {
+          'error': 'TRANSFER_TOO_LARGE',
+        });
+        return;
+      }
+      bytes.addAll(chunk);
+    }
+    Map<String, Object?> body;
+    try {
+      body = Map<String, Object?>.from(jsonDecode(utf8.decode(bytes)) as Map);
+    } on Object {
+      _json(request.response, HttpStatus.badRequest, {
+        'error': 'INVALID_REQUEST',
+      });
+      return;
+    }
+    final result = await dispatcher(
+      PairedResourceRequest(
+        body: body,
+        accountRef: grant.accountRef,
+        deviceRef: grant.deviceRef,
+        workspaceRef: grant.workspaceRef,
+        expiresAtMs: grant.expiresAtMs,
+      ),
+    );
+    _json(request.response, HttpStatus.ok, result);
+  }
+
   Future<void> _remoteSurface(HttpRequest request) async {
     final dispatcher = remoteSurface;
     if (dispatcher == null) {
@@ -488,7 +683,8 @@ final class PairedDesktopGateway {
     }
     final grant = _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
@@ -537,6 +733,337 @@ final class PairedDesktopGateway {
     _json(request.response, HttpStatus.ok, result);
   }
 
+  Future<void> _mcpApps(HttpRequest request) async {
+    final grant = _grantFromCookie(request.cookies), dispatcher = mcpApps;
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant invalid',
+      );
+    }
+    if (request.method != 'POST')
+      throw const _GatewayFailure(
+        HttpStatus.methodNotAllowed,
+        'METHOD_NOT_ALLOWED',
+        'POST required',
+      );
+    if (dispatcher == null)
+      throw const _GatewayFailure(
+        HttpStatus.serviceUnavailable,
+        'APPS_UNAVAILABLE',
+        'Desktop Apps unavailable',
+      );
+    final bytes = await request.fold<List<int>>([], (value, chunk) {
+      if (value.length + chunk.length > 2 * 1024 * 1024)
+        throw const _GatewayFailure(
+          HttpStatus.requestEntityTooLarge,
+          'REQUEST_TOO_LARGE',
+          'App request too large',
+        );
+      value.addAll(chunk);
+      return value;
+    });
+    final body = jsonDecode(utf8.decode(bytes));
+    if (body is! Map ||
+        body['method'] is! String ||
+        !const {
+          'apps/list',
+          'tools/list',
+          'tools/call',
+          'resources/list',
+          'resources/read',
+          'data/read',
+        }.contains(body['method']) ||
+        body.keys.any((k) => !{'method', 'appId', 'params'}.contains(k)) ||
+        body['params'] != null && body['params'] is! Map) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'APP_REQUEST_INVALID',
+        'Invalid App request',
+      );
+    }
+    if(body['method']!='apps/list'&&(body['appId'] is! String||!RegExp(r'^[a-zA-Z0-9._-]{1,128}$').hasMatch(body['appId'] as String))){
+      throw const _GatewayFailure(HttpStatus.badRequest,'APP_REQUEST_INVALID','Invalid App identity');
+    }
+    final result = await dispatcher(
+      PairedResourceRequest(
+        body: Map<String, Object?>.from(body),
+        accountRef: grant.accountRef,
+        deviceRef: grant.deviceRef,
+        workspaceRef: grant.workspaceRef,
+        expiresAtMs: grant.expiresAtMs,
+      ),
+    );
+    if (_grantFromCookie(request.cookies) != grant ||
+        currentAccountRef() != grant.accountRef ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch)
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant expired',
+      );
+    if (utf8.encode(jsonEncode(result)).length > 12 * 1024 * 1024)
+      throw const _GatewayFailure(
+        HttpStatus.requestEntityTooLarge,
+        'APP_RESULT_TOO_LARGE',
+        'App result too large',
+      );
+    _json(request.response, HttpStatus.ok, result);
+  }
+
+  Future<void> _pluginMarket(HttpRequest request) async {
+    final dispatcher = pluginMarket;
+    if (dispatcher == null) {
+      throw const _GatewayFailure(
+        HttpStatus.serviceUnavailable,
+        'PLUGIN_MARKET_UNAVAILABLE',
+        'Desktop 插件市场未启用。',
+      );
+    }
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant 无效或已过期。',
+      );
+    }
+    if (request.method != 'POST') {
+      throw const _GatewayFailure(
+        HttpStatus.methodNotAllowed,
+        'METHOD_NOT_ALLOWED',
+        '仅支持 POST。',
+      );
+    }
+    final bytes = await request.fold<List<int>>(<int>[], (value, chunk) {
+      if (value.length + chunk.length > 65536) {
+        throw const _GatewayFailure(
+          HttpStatus.requestEntityTooLarge,
+          'REQUEST_TOO_LARGE',
+          '插件市场请求过大。',
+        );
+      }
+      value.addAll(chunk);
+      return value;
+    });
+    final decoded = jsonDecode(utf8.decode(bytes));
+    if (decoded is! Map ||
+        decoded['operation'] is! String ||
+        !const {
+          'list',
+          'plan',
+          'install',
+          'enable',
+          'disable',
+          'configure',
+          'detect',
+          'uninstall',
+        }.contains(decoded['operation']) ||
+        decoded.keys.any(
+          (key) => !{'operation', 'pluginId', 'options'}.contains(key),
+        ) ||
+        (decoded['options'] != null && decoded['options'] is! Map) ||
+        ({'configure', 'detect', 'uninstall'}.contains(decoded['operation']) &&
+            !(decoded['pluginId'] is String &&
+                (decoded['pluginId'] as String).startsWith(
+                  'com.openmuse.code-navigation',
+                ))) ||
+        (decoded['operation'] == 'list'
+            ? decoded['pluginId'] != null
+            : decoded['pluginId'] is! String ||
+                  (decoded['pluginId'] as String).isEmpty)) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'MARKET_REQUEST_INVALID',
+        '插件市场请求无效。',
+      );
+    }
+    final result = await dispatcher(
+      PairedPluginMarketRequest(
+        operation: decoded['operation'] as String,
+        accountRef: grant.accountRef,
+        pluginId: decoded['pluginId'] as String?,
+        options: Map<String, Object?>.from(
+          decoded['options'] as Map? ?? const {},
+        ),
+      ),
+    );
+    if (_grantFromCookie(request.cookies) != grant ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Desktop 登录或授权已变化。',
+      );
+    }
+    _json(request.response, HttpStatus.ok, result);
+  }
+
+  Future<void> _scheduledTasks(HttpRequest request) async {
+    final dispatcher = scheduledTasks;
+    if (dispatcher == null) {
+      throw const _GatewayFailure(
+        HttpStatus.serviceUnavailable,
+        'SCHEDULE_UNAVAILABLE',
+        'Desktop 定时任务未启用。',
+      );
+    }
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      throw const _GatewayFailure(
+        HttpStatus.unauthorized,
+        'GRANT_REQUIRED',
+        'Paired Desktop grant 无效或已过期。',
+      );
+    }
+    if (request.method != 'POST') {
+      throw const _GatewayFailure(
+        HttpStatus.methodNotAllowed,
+        'METHOD_NOT_ALLOWED',
+        '仅支持 POST。',
+      );
+    }
+    final bytes = await request.fold<List<int>>(<int>[], (out, chunk) {
+      if (out.length + chunk.length > 8192) {
+        throw const _GatewayFailure(
+          HttpStatus.requestEntityTooLarge,
+          'REQUEST_TOO_LARGE',
+          '定时任务请求过大。',
+        );
+      }
+      return out..addAll(chunk);
+    });
+    final raw = jsonDecode(utf8.decode(bytes));
+    if (raw is! Map ||
+        !const {'list', 'create', 'cancel'}.contains(raw['operation'])) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'SCHEDULE_REQUEST_INVALID',
+        '定时任务请求无效。',
+      );
+    }
+    final operation = raw['operation'] as String;
+    DateTime? dueAt;
+    if (operation == 'create') {
+      final due = raw['dueAt'];
+      if (raw['workspaceId'] is! String ||
+          raw['message'] is! String ||
+          due is! String ||
+          (dueAt = DateTime.tryParse(due)) == null) {
+        throw const _GatewayFailure(
+          HttpStatus.badRequest,
+          'SCHEDULE_REQUEST_INVALID',
+          '定时任务请求无效。',
+        );
+      }
+    }
+    if (operation == 'cancel' && raw['id'] is! String) {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'SCHEDULE_REQUEST_INVALID',
+        '定时任务请求无效。',
+      );
+    }
+    try {
+      final result = await dispatcher(
+        PairedScheduledTaskRequest(
+          operation: operation,
+          accountRef: grant.accountRef,
+          id: raw['id'] as String?,
+          workspaceId: raw['workspaceId'] as String?,
+          message: raw['message'] as String?,
+          dueAt: dueAt,
+        ),
+      );
+      _json(request.response, HttpStatus.ok, result);
+    } on FormatException {
+      throw const _GatewayFailure(
+        HttpStatus.badRequest,
+        'SCHEDULE_REQUEST_INVALID',
+        '定时任务请求无效。',
+      );
+    }
+  }
+
+  Future<void> _workspaceMirrorAction(HttpRequest request) async {
+    final writer = workspaceMirrorAction;
+    final grant = _grantFromCookie(request.cookies);
+    if (grant == null ||
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
+      throw const _GatewayFailure(401, 'GRANT_REQUIRED', '连接授权已失效，请重连。');
+    }
+    // JSON-only mutations cannot be submitted by a cross-site HTML form.
+    if (request.method != 'POST' ||
+        request.headers.contentType?.mimeType != 'application/json') {
+      throw const _GatewayFailure(415, 'JSON_REQUIRED', '仅支持 JSON POST。');
+    }
+    if (request.headers.value('sec-fetch-site') == 'cross-site') {
+      throw const _GatewayFailure(403, 'ORIGIN_INVALID', '请求来源无效。');
+    }
+    if (writer == null) {
+      throw const _GatewayFailure(
+        503,
+        'WORKSPACE_ACTION_UNAVAILABLE',
+        '请更新 Desktop 客户端。',
+      );
+    }
+    try {
+      final bytes = await request.fold<List<int>>([], (out, chunk) {
+        if (out.length + chunk.length > 8192) throw const FormatException();
+        return out..addAll(chunk);
+      });
+      final body = jsonDecode(utf8.decode(bytes));
+      if (body is! Map<String, dynamic> ||
+          body['workspaceRef'] != grant.workspaceRef ||
+          !const {
+            'add-workspace',
+            'mount',
+            'unmount',
+            'new-file',
+            'new-folder',
+            'rename',
+            'trash',
+            'restore',
+          }.contains(body['operation']) ||
+          (body['name'] != null &&
+              (body['name'] is! String ||
+                  (body['name'] as String).length > 4096)) ||
+          (body['nodeRef'] != null && body['nodeRef'] is! String))
+        throw const FormatException();
+      final result = await writer(
+        WorkspaceMirrorAction(
+          operation: body['operation'] as String,
+          accountRef: grant.accountRef,
+          workspaceRef: grant.workspaceRef,
+          nodeRef: body['nodeRef'] as String?,
+          name: body['name'] as String?,
+        ),
+      );
+      _json(request.response, 200, result);
+    } on FormatException {
+      throw const _GatewayFailure(
+        400,
+        'WORKSPACE_ACTION_INVALID',
+        '名称或目录引用无效。',
+      );
+    } on FileSystemException {
+      throw const _GatewayFailure(
+        409,
+        'WORKSPACE_ACTION_FAILED',
+        '操作失败：目标已存在、目录不存在或没有权限。',
+      );
+    }
+  }
+
   Future<void> _workspaceMirror(HttpRequest request) async {
     final reader = workspaceMirror;
     if (reader == null) {
@@ -548,7 +1075,8 @@ final class PairedDesktopGateway {
     }
     final grant = _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
@@ -558,11 +1086,16 @@ final class PairedDesktopGateway {
     final query = request.uri.queryParameters;
     final operation = query['operation'];
     final limit = int.tryParse(query['limit'] ?? '100');
-    if ((operation != 'mounts' && operation != 'children') ||
+    if ((operation != 'mounts' &&
+            operation != 'children' &&
+            operation != 'search') ||
         query['workspaceRef'] != grant.workspaceRef ||
         limit == null ||
         limit < 1 ||
         limit > 200 ||
+        (operation == 'search' &&
+            (query['q']?.trim().isNotEmpty != true ||
+                query['q']!.length > 120)) ||
         (operation == 'children' &&
             (query['mountRef']?.isNotEmpty != true ||
                 query['parentRef']?.isNotEmpty != true))) {
@@ -581,6 +1114,7 @@ final class PairedDesktopGateway {
           workspaceRef: grant.workspaceRef,
           mountRef: query['mountRef'],
           parentRef: query['parentRef'],
+          searchText: query['q'],
           cursor: query['cursor'],
           limit: limit,
         ),
@@ -606,7 +1140,8 @@ final class PairedDesktopGateway {
     }
     final grant = _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
@@ -651,7 +1186,8 @@ final class PairedDesktopGateway {
   _DesktopGrant _requireInteractionGrant(HttpRequest request) {
     final grant = _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
@@ -750,7 +1286,8 @@ final class PairedDesktopGateway {
     }
     final grant = _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
@@ -823,11 +1360,19 @@ final class PairedDesktopGateway {
     final initial = _grantFromInitialPath(request.uri.path);
     final grant = initial ?? _grantFromCookie(request.cookies);
     if (grant == null ||
-        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch) {
+        grant.expiresAtMs <= DateTime.now().millisecondsSinceEpoch ||
+        currentAccountRef() != grant.accountRef) {
       throw const _GatewayFailure(
         HttpStatus.unauthorized,
         'GRANT_REQUIRED',
         'Paired Desktop grant 无效或已过期。',
+      );
+    }
+    if (request.uri.path.startsWith('/openmuse-native/v1/code-navigation/')) {
+      throw const _GatewayFailure(
+        HttpStatus.forbidden,
+        'MANAGEMENT_PROXY_DENIED',
+        '请通过已授权的插件市场管理接口操作。',
       );
     }
     final upstreamUri = initial == null
@@ -840,15 +1385,24 @@ final class PairedDesktopGateway {
       await _proxyWebSocket(request, grant, upstreamUri);
       return;
     }
+    final span =
+        ConnectionTrace.fromTraceparent(
+          request.headers.value('traceparent'),
+        ).start(
+          'desktop.gateway.${initial == null ? ConnectionTrace.route(request.uri.path) : 'bootstrap'}',
+        );
+    var complete = false;
     final client = HttpClient()
       ..connectionTimeout = const Duration(seconds: 10);
     try {
       final outbound = await client.openUrl(request.method, upstreamUri);
+      span.mark('connected');
       // DSH's bootstrap URL answers with a one-time 303 + auth cookie. The
       // browser, not this stateless proxy client, must follow that redirect so
       // the cookie is installed on the paired origin.
       outbound.followRedirects = false;
       _copyRequestHeaders(request, outbound, upstreamUri: upstreamUri);
+      outbound.headers.set('traceparent', span.traceparent);
       // Android WebView may keep an empty GET request stream open while the
       // response is pending. Waiting for that stream before close() deadlocks
       // the bootstrap navigation through adb reverse.
@@ -872,6 +1426,7 @@ final class PairedDesktopGateway {
         await outbound.addStream(request);
       }
       final upstreamResponse = await outbound.close();
+      span.mark('headers', status: upstreamResponse.statusCode);
       request.response.statusCode = upstreamResponse.statusCode;
       // Dart otherwise holds the first 8KB until the upstream ends or the
       // buffer fills. A DSH follow snapshot is often smaller than that and
@@ -904,15 +1459,25 @@ final class PairedDesktopGateway {
         'type=${upstreamResponse.headers.value(HttpHeaders.contentTypeHeader)} '
         'stream=$eventStream',
       );
-      await request.response.addStream(
-        _tapProxyBody(
-          label: label,
-          eventStream: eventStream,
-          source: upstreamResponse,
-        ),
-      );
+      // Await cancellation of the upstream iterator before force-closing its
+      // client. IOSink.addStream can finish while an async* cancellation is
+      // still unwinding, leaving the upstream SSE socket error unobserved.
+      var bytes = 0;
+      await for (final chunk in _tapProxyBody(
+        label: label,
+        eventStream: eventStream,
+        source: upstreamResponse,
+      )) {
+        if (bytes == 0) span.mark('first_chunk', bytes: chunk.length);
+        bytes += chunk.length;
+        request.response.add(chunk);
+        await request.response.flush();
+      }
       await request.response.close();
+      span.mark('body', bytes: bytes);
+      complete = true;
     } finally {
+      span.end(ok: complete);
       client.close(force: true);
     }
   }
@@ -953,12 +1518,16 @@ final class PairedDesktopGateway {
   _DesktopGrant? _grantFromInitialPath(String path) {
     final segments = Uri(path: path).pathSegments;
     if (segments.length != 2 || segments.first != 'u') return null;
-    return _grants[segments.last];
+    final grant = _grants[segments.last];
+    return grant?.accountRef == currentAccountRef() ? grant : null;
   }
 
   _DesktopGrant? _grantFromCookie(List<Cookie> cookies) {
     for (final cookie in cookies) {
-      if (cookie.name == 'OpenMuse-Paired') return _grants[cookie.value];
+      if (cookie.name == 'OpenMuse-Paired') {
+        final grant = _grants[cookie.value];
+        return grant?.accountRef == currentAccountRef() ? grant : null;
+      }
     }
     return null;
   }
@@ -1015,7 +1584,10 @@ final class PairedDesktopGateway {
   String _proxyLabel(HttpRequest request) {
     final sessionId = request.uri.queryParameters['sessionId'];
     final query = sessionId == null ? '' : '?sessionId=$sessionId';
-    return '${request.method} ${request.uri.path}$query';
+    final path = request.uri.path.startsWith('/u/')
+        ? '/u/<redacted>'
+        : request.uri.path;
+    return '${request.method} $path$query';
   }
 
   Stream<List<int>> _tapProxyBody({
@@ -1211,21 +1783,11 @@ final class PairedDesktopGateway {
     if (bound == null || bound.isLoopback) return '127.0.0.1';
     try {
       final candidate = Uri.parse('http://$hostHeader').host;
-      if (_isPrivateIpv4(candidate)) return candidate;
+      if (isPrivateNativeTransportHost(candidate)) return candidate;
     } on FormatException {
       // An untrusted Host header never widens the paired transport origin.
     }
     return '127.0.0.1';
-  }
-
-  bool _isPrivateIpv4(String host) {
-    final parts = host.split('.').map(int.tryParse).toList(growable: false);
-    if (parts.length != 4 || parts.any((value) => value == null)) return false;
-    final first = parts[0]!;
-    final second = parts[1]!;
-    return first == 10 ||
-        (first == 192 && second == 168) ||
-        (first == 172 && second >= 16 && second <= 31);
   }
 
   void _changed() => onChanged?.call();

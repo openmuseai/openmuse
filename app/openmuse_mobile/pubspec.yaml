@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.0+9
 
 environment:
   sdk: ^3.12.2
@@ -28,6 +28,24 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  openmuse_mcp_app_runtime:
+    path: ../../packages/openmuse_mcp_app_runtime
+  openmuse_smart_document_plugins:
+    path: ../../distribution/openmuse_smart_document_plugins
+  openmuse_file_viewer:
+    path: ../../plugins/open-file-viewer
+  openmuse_resource_center_host:
+    path: ../../packages/openmuse_resource_center_host
+  openmuse_resource_notes:
+    path: ../../plugins/resource-notes
+  crypto: ^3.0.6
+  openmuse_i18n:
+    path: ../../packages/openmuse_i18n
+  openmuse_runtime_config:
+    path: ../../packages/openmuse_runtime_config
+  file_picker: ^10.3.10
+  openmuse_dsh_mobile_agent:
+    path: ../../plugins/dsh-mobile-agent
   flutter:
     sdk: flutter
   muse_dsh_conversation_core:
@@ -46,16 +64,22 @@ dependencies:
     path: ../../plugins/cloud-workspace
   openmuse_host_shell:
     path: ../../packages/openmuse_host_shell
+  openmuse_app_update:
+    path: ../../packages/openmuse_app_update
   openmuse_mobile_core:
     path: ../../packages/openmuse_mobile_core
+  openmuse_mobile_plugin_runtime:
+    path: ../../packages/openmuse_mobile_plugin_runtime
+  openmuse_mobile_plugin_market:
+    path: ../../plugins/mobile-plugin-market
+  openmuse_market_ui:
+    path: ../../packages/openmuse_market_ui
+  openmuse_registry_provider:
+    path: ../../packages/openmuse_registry_provider
   openmuse_mobile_cloud:
     path: ../../packages/openmuse_mobile_cloud
-  openmuse_office_docx:
-    path: ../../packages/openmuse_office_docx
   openmuse_office_flutter:
     path: ../../packages/openmuse_office_flutter
-  openmuse_office_viewers:
-    path: ../../packages/openmuse_office_viewers
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
   openmuse_remote_workbench:
@@ -65,13 +89,26 @@ dependencies:
   openmuse_workspace_paired:
     path: ../../plugins/workspace-paired
   path_provider: ^2.1.5
+  package_info_plus: ^9.0.1
+  url_launcher: ^6.3.3
+  flutter_markdown_plus: 1.0.12
   webview_flutter: ^4.13.0
 
 dev_dependencies:
+  openmuse_appflowy_editor:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/vendor/openmuse_appflowy_editor
+  openmuse_smart_document:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/flutter
+  openmuse_resource_clipboard:
+    path: ../../packages/openmuse_resource_clipboard
+  archive: ^4.0.7
+  flutter_localizations:
+    sdk: flutter
   flutter_test:
     sdk: flutter
   integration_test:
     sdk: flutter
+  pub_semver: ^2.2.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -85,6 +122,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  config:
+    enable-swift-package-manager: false
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

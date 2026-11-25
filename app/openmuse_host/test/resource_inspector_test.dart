@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_host/src/host/resource_inspector.dart';
@@ -7,6 +8,19 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_helix_plugin/openmuse_helix_plugin.dart';
 
 void main() {
+  test(
+    'XLSX ZIP bytes retain the spreadsheet media type for editor routing',
+    () {
+      expect(
+        identifyLocalMediaType(
+          Uint8List.fromList([0x50, 0x4b, 0x03, 0x04]),
+          'book.xlsx',
+        ),
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+    },
+  );
+
   test(
     'unknown textual suffix routes to Helix after byte inspection',
     () async {
@@ -45,10 +59,7 @@ void main() {
         0x69, 0x73, 0x6f, 0x6d, 0x00, 0x00, 0x00, 0x00,
       ]);
     final resource = await inspectLocalResource(
-      OpenMuseResource(
-        uri: file.uri,
-        displayName: 'openmuse-vs-dsh-20s.mp4',
-      ),
+      OpenMuseResource(uri: file.uri, displayName: 'openmuse-vs-dsh-20s.mp4'),
     );
     expect(resource.mediaType, 'video/mp4');
     expect(

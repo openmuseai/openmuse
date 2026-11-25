@@ -265,6 +265,86 @@ void main() {
     expect(store.snapshot.permissionPreset, 'workspace-write');
     expect(store.snapshot.turnCount, 1);
   });
+
+  test(
+    'presented files attach to the closing assistant instead of an incompatible card',
+    () {
+      final store = DshConversationStore();
+      store.apply(
+        DshEventFrame(
+          _event('deliverables/presented', 4, {
+            'turn': 1,
+            'callId': 'present-1',
+            'files': [
+              {'path': 'scripts/smoke.sh', 'description': '冒烟脚本（旧说明）'},
+              {'path': 'docs/product-distribution.md', 'description': '分发说明'},
+            ],
+          }),
+        ),
+      );
+      store.apply(
+        DshEventFrame(
+          _event('assistant/message', 6, {
+            'turn': 1,
+            'message': {
+              'content': [
+                {'type': 'text', 'text': '已把两个文件作为交付物放出。'},
+              ],
+            },
+          }),
+        ),
+      );
+      expect(
+        store.snapshot.rows.map((row) => row.kind),
+        isNot(contains(DshConversationRowKind.incompatible)),
+      );
+      final assistant = store.snapshot.rows.single;
+      final presented = assistant.nativeContext['presented'] as List;
+      expect(presented, hasLength(2));
+      expect(presented.first['name'], 'smoke.sh');
+      expect(presented.first['index'], 0);
+      expect(presented.first['seq'], 4);
+    },
+  );
+
+  test('todo and goal events use their official cards', () {
+    final store = DshConversationStore();
+    store.apply(
+      DshEventFrame(
+        _event('todo/write', 2, {
+          'todos': [
+            {'content': '改标签', 'status': 'in_progress'},
+            {'content': '改标签', 'status': 'pending'},
+            {'content': '核对脚本', 'status': 'completed'},
+          ],
+        }),
+      ),
+    );
+    store.apply(
+      DshEventFrame(
+        _event('goal/change', 3, {
+          'operation': 'create',
+          'goal': {'objective': '对齐独立域名', 'phase': 'active'},
+        }),
+      ),
+    );
+    store.apply(
+      DshEventFrame(
+        _event('goal/change', 4, {
+          'operation': 'clear',
+          'cleared': {'id': 'g-1', 'revision': 1},
+        }),
+      ),
+    );
+    expect(store.snapshot.rows.map((row) => row.nativeKey), [
+      'todo/write',
+      'goal/change',
+    ]);
+    expect(
+      (store.snapshot.rows.first.nativeContext['todos'] as List),
+      hasLength(2),
+    );
+  });
 }
 
 DshWireEvent _realEvent(

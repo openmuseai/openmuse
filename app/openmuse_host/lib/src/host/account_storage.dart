@@ -22,6 +22,7 @@ final class HostAccountStorage {
   String get mountsPath => p.join(root, 'workspace-mounts-v1.json');
   String get versionsPath => p.join(root, 'versions-v1');
   String get pluginInteractionsPath => p.join(root, 'plugin-interactions');
+  String get scheduledTasksPath => p.join(root, 'scheduled-tasks-v1.json');
 
   String get dshHome {
     final configured = Platform.environment['MUSE_DSH_HOME'];

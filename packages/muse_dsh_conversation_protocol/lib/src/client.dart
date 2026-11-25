@@ -1,3 +1,5 @@
+import 'network_policy.dart';
+import 'connection_trace.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -23,11 +25,15 @@ final class DshNativeGatewayClient {
     this.requestTimeout = const Duration(seconds: 20),
     Map<String, String> headers = const {},
     HttpClient? client,
-  }) : headers = Map.unmodifiable(headers),
+    ConnectionTrace? trace,
+  }) : trace = trace ?? ConnectionTrace(),
+       headers = Map.unmodifiable(headers),
        _client = client ?? HttpClient() {
     _client.connectionTimeout = requestTimeout;
+    _client.idleTimeout = const Duration(minutes: 2);
   }
 
+  final ConnectionTrace trace;
   final Uri origin;
   final String bootstrapPath;
   final bool allowInsecureLoopback;
@@ -38,14 +44,27 @@ final class DshNativeGatewayClient {
   final Map<String, Cookie> _cookies = {};
   bool _bootstrapped = false;
 
-  Future<DshGatewayHello> initialize() async {
+  Future<DshGatewayHello>? _initialization;
+
+  Future<DshGatewayHello> initialize() =>
+      _initialization ??= _initialize().catchError((Object error) {
+        _initialization = null;
+        throw error;
+      });
+
+  Future<DshGatewayHello> _initialize() async {
     _validateOrigin();
     await _bootstrap();
     final value = await _jsonRequest('GET', '/openmuse-native/v1/hello');
     return DshGatewayHello.fromJson(value);
   }
 
-  Future<List<DshNativeSessionSummary>> listSessions() async {
+  Future<List<DshNativeSessionSummary>>? _sessionsRequest;
+
+  Future<List<DshNativeSessionSummary>> listSessions() => _sessionsRequest ??=
+      _listSessions().whenComplete(() => _sessionsRequest = null);
+
+  Future<List<DshNativeSessionSummary>> _listSessions() async {
     final value = await _jsonRequest('GET', '/openmuse-native/v1/sessions');
     final items = value['items'];
     if (items is! List) throw const FormatException('sessions.items missing');
@@ -93,44 +112,58 @@ final class DshNativeGatewayClient {
   );
 
   Stream<DshFollowFrame> follow(String sessionId) async* {
-    final uri = origin
-        .resolve('/openmuse-native/v1/session/follow')
-        .replace(queryParameters: {'sessionId': sessionId});
-    final request = await _client.getUrl(uri).timeout(requestTimeout);
-    _applyHeaders(request);
-    final response = await request.close().timeout(requestTimeout);
-    _rememberCookies(response.cookies);
-    if (response.statusCode != HttpStatus.ok) {
-      throw DshNativeGatewayException(
-        await _failureMessage(response),
-        statusCode: response.statusCode,
-      );
-    }
-    String? eventName;
-    final data = StringBuffer();
-    await for (final line
-        in response.transform(utf8.decoder).transform(const LineSplitter())) {
-      if (line.isEmpty) {
-        if (data.isNotEmpty) {
-          final decoded = jsonDecode(data.toString());
-          if (eventName == 'error') {
-            final value = jsonMap(decoded, 'SSE error');
-            throw DshNativeGatewayException(
-              value['detail'] as String? ?? 'DSH follow failed',
+    final span = trace.start('dsh.follow_first_frame');
+    try {
+      final uri = origin
+          .resolve('/openmuse-native/v1/session/follow')
+          .replace(queryParameters: {'sessionId': sessionId});
+      final request = await _client.getUrl(uri).timeout(requestTimeout);
+      _applyHeaders(request, span: span);
+      span.mark('connected');
+      final response = await request.close().timeout(requestTimeout);
+      span.mark('headers', status: response.statusCode);
+      _rememberCookies(response.cookies);
+      if (response.statusCode != HttpStatus.ok) {
+        throw DshNativeGatewayException(
+          await _failureMessage(response),
+          statusCode: response.statusCode,
+        );
+      }
+      String? eventName;
+      final data = StringBuffer();
+      await for (final line
+          in response
+              .transform(utf8.decoder)
+              .transform(const LineSplitter())
+              .timeout(const Duration(seconds: 45))) {
+        if (line.isEmpty) {
+          if (data.isNotEmpty) {
+            final decoded = jsonDecode(data.toString());
+            if (eventName == 'error') {
+              final value = jsonMap(decoded, 'SSE error');
+              throw DshNativeGatewayException(
+                value['detail'] as String? ?? 'DSH follow failed',
+              );
+            }
+            final frame = DshFollowFrame.fromJson(
+              jsonMap(decoded, 'SSE frame'),
             );
+            span.end();
+            yield frame;
           }
-          yield DshFollowFrame.fromJson(jsonMap(decoded, 'SSE frame'));
+          eventName = null;
+          data.clear();
+          continue;
         }
-        eventName = null;
-        data.clear();
-        continue;
+        if (line.startsWith('event:')) {
+          eventName = line.substring(6).trim();
+        } else if (line.startsWith('data:')) {
+          if (data.isNotEmpty) data.write('\n');
+          data.write(line.substring(5).trimLeft());
+        }
       }
-      if (line.startsWith('event:')) {
-        eventName = line.substring(6).trim();
-      } else if (line.startsWith('data:')) {
-        if (data.isNotEmpty) data.write('\n');
-        data.write(line.substring(5).trimLeft());
-      }
+    } finally {
+      span.end(ok: false);
     }
   }
 
@@ -291,43 +324,70 @@ final class DshNativeGatewayClient {
     }
   }
 
+  /// Asks Desktop to open a file declared by `deliverables/presented`.
+  ///
+  /// The server re-reads the event at [seq] and uses [index] in that event's
+  /// original `files` array. [action] is `open` or `reveal`.
+  Future<void> openPresentedFile({
+    required String sessionId,
+    required int seq,
+    required int index,
+    String action = 'open',
+  }) async {
+    final value = await _jsonRequest(
+      'POST',
+      '/openmuse-native/v1/session/presented/open',
+      body: {
+        'sessionId': sessionId,
+        'seq': seq,
+        'index': index,
+        'action': action,
+      },
+    );
+    if (value['opened'] != true) {
+      throw const DshNativeGatewayException('Desktop did not open the file');
+    }
+  }
+
   void close() => _client.close(force: true);
 
   Future<void> _bootstrap() async {
     if (_bootstrapped || bootstrapPath.isEmpty) return;
-    var target = origin.resolve(bootstrapPath);
-    for (var redirect = 0; redirect < 4; redirect++) {
-      final request = await _client.getUrl(target).timeout(requestTimeout);
-      request.followRedirects = false;
-      _applyHeaders(request);
-      final response = await request.close().timeout(requestTimeout);
-      _rememberCookies(response.cookies);
-      await response.drain<void>();
-      if (!response.isRedirect) {
-        if (response.statusCode >= 400) {
-          throw DshNativeGatewayException(
-            'DSH bootstrap failed (${response.statusCode})',
-            statusCode: response.statusCode,
+    return trace.measure('dsh.bootstrap', (span) async {
+      var target = origin.resolve(bootstrapPath);
+      for (var redirect = 0; redirect < 4; redirect++) {
+        final request = await _client.getUrl(target).timeout(requestTimeout);
+        request.followRedirects = false;
+        _applyHeaders(request, span: span);
+        final response = await request.close().timeout(requestTimeout);
+        _rememberCookies(response.cookies);
+        await response.drain<void>();
+        if (!response.isRedirect) {
+          if (response.statusCode >= 400) {
+            throw DshNativeGatewayException(
+              'DSH bootstrap failed (${response.statusCode})',
+              statusCode: response.statusCode,
+            );
+          }
+          _bootstrapped = true;
+          return;
+        }
+        final location = response.headers.value(HttpHeaders.locationHeader);
+        if (location == null) {
+          throw const DshNativeGatewayException(
+            'DSH bootstrap redirect has no location',
           );
         }
-        _bootstrapped = true;
-        return;
+        final next = target.resolve(location);
+        if (!_sameOrigin(next, origin)) {
+          throw const DshNativeGatewayException(
+            'DSH bootstrap attempted a cross-origin redirect',
+          );
+        }
+        target = next;
       }
-      final location = response.headers.value(HttpHeaders.locationHeader);
-      if (location == null) {
-        throw const DshNativeGatewayException(
-          'DSH bootstrap redirect has no location',
-        );
-      }
-      final next = target.resolve(location);
-      if (!_sameOrigin(next, origin)) {
-        throw const DshNativeGatewayException(
-          'DSH bootstrap attempted a cross-origin redirect',
-        );
-      }
-      target = next;
-    }
-    throw const DshNativeGatewayException('Too many DSH bootstrap redirects');
+      throw const DshNativeGatewayException('Too many DSH bootstrap redirects');
+    });
   }
 
   Future<JsonMap> _jsonRequest(
@@ -335,35 +395,43 @@ final class DshNativeGatewayClient {
     String path, {
     JsonMap? body,
   }) async {
-    final request = await _client
-        .openUrl(method, origin.resolve(path))
-        .timeout(requestTimeout);
-    _applyHeaders(request);
-    if (body != null) {
-      request.headers.contentType = ContentType.json;
-      request.add(utf8.encode(jsonEncode(body)));
-    }
-    final response = await request.close().timeout(requestTimeout);
-    _rememberCookies(response.cookies);
-    final bytes = await response
-        .fold<List<int>>(<int>[], (value, chunk) => value..addAll(chunk))
-        .timeout(requestTimeout);
-    final decoded = bytes.isEmpty
-        ? <String, Object?>{}
-        : jsonDecode(utf8.decode(bytes));
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      final value = decoded is Map ? decoded.cast<String, Object?>() : null;
-      throw DshNativeGatewayException(
-        value?['detail'] as String? ??
-            value?['error'] as String? ??
-            'DSH request failed (${response.statusCode})',
-        statusCode: response.statusCode,
-      );
-    }
-    return jsonMap(decoded, 'response');
+    return trace.measure('http.${ConnectionTrace.route(path)}', (span) async {
+      final request = await _client
+          .openUrl(method, origin.resolve(path))
+          .timeout(requestTimeout);
+      _applyHeaders(request, span: span);
+      span.mark('connected');
+      if (body != null) {
+        request.headers.contentType = ContentType.json;
+        request.add(utf8.encode(jsonEncode(body)));
+      }
+      final response = await request.close().timeout(requestTimeout);
+      span.mark('headers', status: response.statusCode);
+      _rememberCookies(response.cookies);
+      final bytes = await response
+          .fold<List<int>>(<int>[], (value, chunk) => value..addAll(chunk))
+          .timeout(requestTimeout);
+      span.mark('body', bytes: bytes.length);
+      final decoded = bytes.isEmpty
+          ? <String, Object?>{}
+          : jsonDecode(utf8.decode(bytes));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        final value = decoded is Map ? decoded.cast<String, Object?>() : null;
+        throw DshNativeGatewayException(
+          value?['detail'] as String? ??
+              value?['error'] as String? ??
+              'DSH request failed (${response.statusCode})',
+          statusCode: response.statusCode,
+        );
+      }
+      final result = jsonMap(decoded, 'response');
+      span.mark('decoded');
+      return result;
+    });
   }
 
-  void _applyHeaders(HttpClientRequest request) {
+  void _applyHeaders(HttpClientRequest request, {ConnectionSpan? span}) {
+    if (span != null) request.headers.set('traceparent', span.traceparent);
     for (final entry in headers.entries) {
       request.headers.set(entry.key, entry.value);
     }
@@ -402,7 +470,7 @@ final class DshNativeGatewayClient {
         (origin.scheme == 'http' && allowInsecureLoopback && loopback) ||
         (origin.scheme == 'http' &&
             allowInsecurePrivateNetworkForTesting &&
-            _isPrivateIpv4(origin.host));
+            isPrivateNativeTransportHost(origin.host));
     if (!safe || origin.userInfo.isNotEmpty) {
       throw const DshNativeGatewayException('Unsafe DSH origin');
     }
@@ -412,12 +480,4 @@ final class DshNativeGatewayClient {
       first.scheme == second.scheme &&
       first.host == second.host &&
       first.port == second.port;
-
-  bool _isPrivateIpv4(String host) {
-    final parts = host.split('.').map(int.tryParse).toList(growable: false);
-    if (parts.length != 4 || parts.any((part) => part == null)) return false;
-    return parts[0] == 10 ||
-        (parts[0] == 192 && parts[1] == 168) ||
-        (parts[0] == 172 && parts[1]! >= 16 && parts[1]! <= 31);
-  }
 }

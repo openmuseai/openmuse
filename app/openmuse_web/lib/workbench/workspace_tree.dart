@@ -8,12 +8,14 @@ final class WorkspaceMirrorTree extends StatelessWidget {
     required this.onFileSelected,
     this.disconnectedView,
     this.onRetry,
+    this.onContextMenu,
   });
 
   final WorkspaceMirrorController controller;
   final ValueChanged<WorkspaceMirrorNode> onFileSelected;
   final Widget? disconnectedView;
   final VoidCallback? onRetry;
+  final void Function(WorkspaceMirrorNode, Offset)? onContextMenu;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -55,6 +57,8 @@ final class WorkspaceMirrorTree extends StatelessWidget {
         isMount: depth == 0,
         loading: node.loading,
         extension: node.name.split('.').last,
+        onSecondaryTapDown: (details) =>
+            onContextMenu?.call(node, details.globalPosition),
         onTap: () {
           if (node.isDirectory) {
             if (node.expanded) {

@@ -19,8 +19,9 @@ final class GoTrueClientConfig {
   static Uri _validateOrigin(Uri value, bool allowInsecureLoopback) {
     final segments = value.pathSegments.where((item) => item.isNotEmpty);
     final safePrefix =
-        segments.every((item) => RegExp(r'^[A-Za-z0-9._-]+$').hasMatch(item)) &&
-        segments.length <= 4 &&
+        segments.every(
+          (item) => RegExp(r'^[A-Za-z0-9._~-]+$').hasMatch(item),
+        ) &&
         !value.path.contains('..');
     if (!value.hasScheme ||
         value.host.isEmpty ||
@@ -55,15 +56,20 @@ final class GoTrueClientConfig {
 final class GoTrueHttpClient implements GoTrueAuthProvider {
   GoTrueHttpClient({
     required GoTrueClientConfig config,
+    this.networkGuard,
     AuthHttpClientFactory? clientFactory,
     DateTime Function()? clock,
+    Duration requestTimeout = const Duration(seconds: 20),
   }) : _origin = config.origin,
        _clientFactory = clientFactory ?? HttpClient.new,
-       _clock = clock ?? DateTime.now;
+       _clock = clock ?? DateTime.now,
+       _requestTimeout = requestTimeout;
 
   final Uri _origin;
+  final void Function()? networkGuard;
   final AuthHttpClientFactory _clientFactory;
   final DateTime Function() _clock;
+  final Duration _requestTimeout;
 
   @override
   Future<GoTrueSignUpResult> signUp(String email, String password) async {
@@ -196,6 +202,9 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
     await _jsonRequest(
       'POST',
       '/logout',
+      // GoTrue defaults to global revocation. Signing out of this client must
+      // keep the user's paired desktops and other devices signed in.
+      query: {'scope': 'local'},
       accessToken: accessToken,
       acceptEmpty: true,
     );
@@ -226,6 +235,7 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
     bool acceptEmpty = false,
     bool invalidCredentialsOnUnauthorized = false,
   }) async {
+    checkAuthNetwork(networkGuard);
     final client = _clientFactory();
     client.connectionTimeout = const Duration(seconds: 15);
     try {
@@ -234,7 +244,11 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
         path: '${_origin.path}$suffix',
         queryParameters: query,
       );
-      final request = await client.openUrl(method, uri);
+      final request = await client
+          .openUrl(method, uri)
+          .timeout(_requestTimeout);
+      checkAuthNetwork(networkGuard);
+      request.followRedirects = false;
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       if (accessToken != null) {
         request.headers.set(
@@ -246,8 +260,11 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
         request.headers.contentType = ContentType.json;
         request.write(jsonEncode(body));
       }
-      final response = await request.close();
-      final responseText = await utf8.decoder.bind(response).join();
+      final response = await request.close().timeout(_requestTimeout);
+      final responseText = await utf8.decoder
+          .bind(response)
+          .join()
+          .timeout(_requestTimeout);
       debugPrint(
         'OpenMuse auth: $method $path status=${response.statusCode} bytes=${responseText.length}',
       );
@@ -261,7 +278,10 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
         String? errorCode;
         try {
           final errorBody = jsonDecode(responseText);
-          if (errorBody is Map) errorCode = errorBody['error_code']?.toString();
+          if (errorBody is Map) {
+            errorCode = (errorBody['error_code'] ?? errorBody['error'])
+                ?.toString();
+          }
         } on FormatException {
           // Server response text is never shown to the user or logged.
         }
@@ -288,7 +308,9 @@ final class GoTrueHttpClient implements GoTrueAuthProvider {
           );
         }
         if (invalidCredentialsOnUnauthorized &&
-            (response.statusCode == 400 || response.statusCode == 401)) {
+            (response.statusCode == 400 || response.statusCode == 401) &&
+            (errorCode == 'invalid_credentials' ||
+                errorCode == 'invalid_grant')) {
           throw const AuthFailure.invalidCredentials();
         }
         throw AuthFailure(

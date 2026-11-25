@@ -1,3 +1,5 @@
+import 'mobile_build_locale.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -211,10 +213,12 @@ class _PairedPluginInteractionLayerState
                       key: const ValueKey('paired-plugin-interaction-status'),
                     ),
                     if (interaction.state == 'qr_ready')
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.only(top: 12),
                         child: Text(
-                          '可将二维码截图，在目标 App 的扫一扫中从相册选择。',
+                          (stringsOf(
+                            context,
+                          ).mobileSaveAScreenshotOfThisQrCodeAndSeleEa55dc9f()),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -222,7 +226,9 @@ class _PairedPluginInteractionLayerState
                     TextButton(
                       onPressed: () =>
                           setState(() => _dismissedId = interaction.id),
-                      child: const Text('暂时关闭'),
+                      child: Text(
+                        (stringsOf(context).mobileCloseForNowFbbecc2d()),
+                      ),
                     ),
                   ],
                 ),

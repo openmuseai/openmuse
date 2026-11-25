@@ -1,0 +1,46 @@
+00:00 +0: loading /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_app_test.dart
+00:00 +0: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_apps_center_test.dart: four destinations preserve Tasks draft and independent discovery search; reselect returns overview
+00:00 +0: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: README.md opens through the compiled viewer and cleans its copy
+WorkspaceOpen plugin=com.openmuse.open-file-viewer
+00:00 +1: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_apps_center_test.dart: four destinations preserve Tasks draft and independent discovery search; reselect returns overview
+00:00 +1: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+WorkspaceOpen plugin=com.openmuse.open-file-viewer
+00:00 +1: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_app_test.dart: Mobile startup shows a newer store release before work
+Installed plugin capability refresh unavailable
+00:00 +2: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_app_test.dart: Mobile startup shows a newer store release before work
+00:00 +3: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +3: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_app_test.dart: mobile distribution loads the GoTrue login plugin by default
+Installed plugin capability refresh unavailable
+00:01 +4: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +5: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +6: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +7: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +8: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +9: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +10: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +11: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +12: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +13: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +14: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +15: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +16: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +17: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +18: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +19: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:01 +20: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:02 +21: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:02 +22: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:02 +23: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: main.dart opens through the compiled viewer and cleans its copy
+00:02 +24: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_apps_center_test.dart: apps header and edit controls fit 390.0 en at large text
+00:02 +24: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: config.json opens through the compiled viewer and cleans its copy
+WorkspaceOpen plugin=com.openmuse.open-file-viewer
+00:02 +25: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: config.json opens through the compiled viewer and cleans its copy
+00:02 +26: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: config.json opens through the compiled viewer and cleans its copy
+00:02 +27: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_apps_center_test.dart: apps header and edit controls fit 430.0 en at large text
+00:02 +27: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: Makefile opens through the compiled viewer and cleans its copy
+WorkspaceOpen plugin=com.openmuse.open-file-viewer
+00:02 +28: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: Makefile opens through the compiled viewer and cleans its copy
+00:02 +29: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: Makefile opens through the compiled viewer and cleans its copy
+00:02 +30: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: Makefile opens through the compiled viewer and cleans its copy
+00:02 +31: /Users/mac/src/openmuse-io/Muse-Client/app/openmuse_mobile/test/mobile_file_viewer_test.dart: Makefile opens through the compiled viewer and cleans its copy
+00:02 +32: All tests passed!

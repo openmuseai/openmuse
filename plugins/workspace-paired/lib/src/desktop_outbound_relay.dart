@@ -1,3 +1,5 @@
+import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart'
+    show ConnectionTrace;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -15,15 +17,18 @@ final class DesktopOutboundRelay {
     required this.deviceId,
     required this.localGateway,
     required this.publicOrigin,
+    this.requestTimeout = const Duration(seconds: 15),
     Random? random,
   }) : _random = random ?? Random();
 
+  final Duration requestTimeout;
   final Uri attachUri;
   final Future<String?> Function() accessToken;
   final String deviceId;
   final Uri? Function() localGateway;
   final Uri publicOrigin;
   final Random _random;
+  final ConnectionTrace _connectionTrace = ConnectionTrace();
   DesktopRelayPhase _phase = DesktopRelayPhase.idle;
   void Function()? onChanged;
   bool _started = false;
@@ -52,7 +57,23 @@ final class DesktopOutboundRelay {
   Future<void> _loop() async {
     var failures = 0;
     while (!_stopped) {
-      final token = await accessToken();
+      String? token;
+      try {
+        token = await _connectionTrace.measure(
+          'desktop.relay_token',
+          (_) => accessToken().timeout(requestTimeout),
+        );
+      } catch (error, stack) {
+        // A refresh failure must not terminate this unawaited loop. The user
+        // may sign in again without restarting the desktop application.
+        if (_stopped) return;
+        stderr.writeln('OpenMuse desktop relay authentication: $error');
+        stderr.writeln(stack);
+        failures = min(failures + 1, 6);
+        _setPhase(DesktopRelayPhase.reconnecting);
+        await Future<void>.delayed(_delay(failures - 1));
+        continue;
+      }
       if (_stopped) return;
       if (token == null || token.isEmpty) {
         _setPhase(DesktopRelayPhase.idle);
@@ -92,19 +113,44 @@ final class DesktopOutboundRelay {
   }
 
   Future<void> _session(String token, void Function() onReady) async {
-    final socket = await WebSocket.connect(
+    final handshake = _connectionTrace.start('desktop.relay_attach');
+    final pending = WebSocket.connect(
       attachUri.toString(),
       headers: {HttpHeaders.authorizationHeader: 'Bearer $token'},
     );
+    final socket = await pending
+        .timeout(
+          requestTimeout,
+          onTimeout: () {
+            unawaited(
+              pending
+                  .then((lateSocket) => lateSocket.close())
+                  .catchError((Object _) {}),
+            );
+            handshake.end(ok: false);
+            throw TimeoutException('Relay handshake timed out');
+          },
+        )
+        .catchError((Object error) {
+          handshake.end(ok: false);
+          throw error;
+        });
+    handshake.mark('connected');
+    if (_stopped) {
+      handshake.end(ok: false);
+      await socket.close();
+      return;
+    }
+    socket.pingInterval = const Duration(seconds: 15);
     _socket = socket;
+    final helloDeadline = Timer(
+      requestTimeout,
+      () => unawaited(socket.close()),
+    );
     final upstreams = <int, WebSocket>{};
     try {
       socket.add(
-        jsonEncode({
-          'type': 'hello',
-          'protocol': 1,
-          'deviceId': deviceId,
-        }),
+        jsonEncode({'type': 'hello', 'protocol': 1, 'deviceId': deviceId}),
       );
       await for (final message in socket) {
         if (_stopped) return;
@@ -114,6 +160,8 @@ final class DesktopOutboundRelay {
         final frame = decoded.cast<String, Object?>();
         switch (frame['type']) {
           case 'hello-ok':
+            helloDeadline.cancel();
+            handshake.end();
             onReady();
           case 'ping':
             socket.add(jsonEncode({'type': 'pong', 'id': frame['id']}));
@@ -136,6 +184,8 @@ final class DesktopOutboundRelay {
         }
       }
     } finally {
+      helloDeadline.cancel();
+      handshake.end(ok: false);
       for (final upstream in upstreams.values) {
         unawaited(upstream.close());
       }
@@ -153,7 +203,11 @@ final class DesktopOutboundRelay {
         rawPath is! String ||
         !rawPath.startsWith('/') ||
         rawPath.contains('..')) {
-      _send(socket, {'type': 'error', 'id': id, 'code': 'UPSTREAM_UNAVAILABLE'});
+      _send(socket, {
+        'type': 'error',
+        'id': id,
+        'code': 'UPSTREAM_UNAVAILABLE',
+      });
       return;
     }
     final parsed = Uri.parse('http://127.0.0.1$rawPath');
@@ -161,6 +215,14 @@ final class DesktopOutboundRelay {
       path: parsed.path,
       query: parsed.hasQuery ? parsed.query : null,
     );
+    String? parent;
+    for (final header in _headerPairs(frame['headers'])) {
+      if (header.$1.toLowerCase() == 'traceparent') parent = header.$2;
+    }
+    final span = ConnectionTrace.fromTraceparent(
+      parent,
+    ).start('desktop.relay.${ConnectionTrace.route(rawPath)}');
+    var complete = false;
     final client = HttpClient()
       ..connectionTimeout = const Duration(seconds: 20);
     _httpClients[id] = client;
@@ -169,6 +231,7 @@ final class DesktopOutboundRelay {
           ? frame['method']! as String
           : 'GET';
       final request = await client.openUrl(method, target);
+      span.mark('connected');
       request.followRedirects = false;
       request.headers.set(
         'x-openmuse-paired-public-origin',
@@ -184,15 +247,19 @@ final class DesktopOutboundRelay {
         }
         request.headers.add(header.$1, header.$2);
       }
+      request.headers.set('traceparent', span.traceparent);
       final body = frame['body'];
       if (body is String && body.isNotEmpty) {
         request.add(base64Decode(body));
       }
       final response = await request.close();
+      span.mark('headers', status: response.statusCode);
       final headers = <List<String>>[];
       response.headers.forEach((name, values) {
         final lower = name.toLowerCase();
-        if (lower == 'content-length' ||
+        if ((lower == 'content-length' &&
+                response.compressionState ==
+                    HttpClientResponseCompressionState.decompressed) ||
             lower == 'transfer-encoding' ||
             lower == 'content-encoding') {
           return;
@@ -221,6 +288,7 @@ final class DesktopOutboundRelay {
       await for (final chunk in response) {
         bytes += chunk.length;
         chunks += 1;
+        if (chunks == 1) span.mark('first_chunk', bytes: chunk.length);
         if (eventStream || chunks == 1 || chunks % 20 == 0) {
           stderr.writeln(
             'OpenMuse relay: $rawPath chunk#$chunks bytes=${chunk.length} total=$bytes',
@@ -237,12 +305,17 @@ final class DesktopOutboundRelay {
           offset = end;
         }
       }
-      stderr.writeln('OpenMuse relay: $rawPath end chunks=$chunks bytes=$bytes');
+      stderr.writeln(
+        'OpenMuse relay: $rawPath end chunks=$chunks bytes=$bytes',
+      );
+      span.mark('body', bytes: bytes);
+      complete = true;
       _send(socket, {'type': 'http.response.end', 'id': id});
     } catch (error) {
       stderr.writeln('OpenMuse desktop relay http: $error');
       _send(socket, {'type': 'error', 'id': id, 'code': 'UPSTREAM_FAILED'});
     } finally {
+      span.end(ok: complete);
       _httpClients.remove(id);
       client.close(force: true);
     }
@@ -260,7 +333,11 @@ final class DesktopOutboundRelay {
         gateway == null ||
         rawPath is! String ||
         !rawPath.startsWith('/')) {
-      _send(socket, {'type': 'error', 'id': id, 'code': 'UPSTREAM_UNAVAILABLE'});
+      _send(socket, {
+        'type': 'error',
+        'id': id,
+        'code': 'UPSTREAM_UNAVAILABLE',
+      });
       return;
     }
     final parsed = Uri.parse('http://127.0.0.1$rawPath');

@@ -262,7 +262,7 @@ def fig1():
         d, 34,
         "图 1 · 定位对比：一个是宿主，一个是内核",
         "两者不是同类竞品。OpenMuse 拥有资源、权限与窗口；DSH 拥有智能体循环与工具执行。"
-        "证据：Muse-Client/README.md、docs/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md、"
+        "证据：Muse-Client/README.md、docs/architecture/PLUGIN-HOST-DSH-ARCHITECTURE.zh-CN.md、"
         "/tmp 解包闭包 package.json。",
     )
 

@@ -99,6 +99,7 @@ enum AuthFailureKind {
   accountExists,
   weakPassword,
   rateLimited,
+  sessionStorage,
 }
 
 final class AuthFailure implements Exception {
@@ -138,6 +139,7 @@ final class AuthFailure implements Exception {
     AuthFailureKind.accountExists => 'account_exists',
     AuthFailureKind.weakPassword => 'weak_password',
     AuthFailureKind.rateLimited => 'rate_limited',
+    AuthFailureKind.sessionStorage => 'session_storage',
   };
 
   @override
@@ -150,4 +152,16 @@ final class GoTrueSettings {
 
   final bool emailEnabled;
   final Set<String> providers;
+}
+
+/// Map runtime policy failures to a stable auth code without dropping a session.
+void checkAuthNetwork(void Function()? guard) {
+  try {
+    guard?.call();
+  } catch (_) {
+    throw const AuthFailure(
+      AuthFailureKind.invalidConfiguration,
+      'The network configuration is unavailable. Refresh configuration to reconnect.',
+    );
+  }
 }

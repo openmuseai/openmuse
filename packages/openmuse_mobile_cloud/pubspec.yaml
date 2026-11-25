@@ -5,6 +5,8 @@ publish_to: none
 environment:
   sdk: ^3.12.2
 dependencies:
+  http: ^1.6.0
+  uuid: 4.6.0
   openmuse_mobile_core:
     path: ../openmuse_mobile_core
 dev_dependencies:

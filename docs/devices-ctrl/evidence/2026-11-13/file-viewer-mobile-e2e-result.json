@@ -1,0 +1,21 @@
+{
+  "market": "china",
+  "realDesktop": true,
+  "realResourceRpc": true,
+  "nativeTreeSitter": true,
+  "unicodeFileName": true,
+  "lineNavigation": 2,
+  "keywordAndStringColorsVerified": true,
+  "documentLink": true,
+  "chainedDocumentLink": true,
+  "fileActions": "UI taps and visible content/color assertions",
+  "driverExitCode": 0,
+  "driverResult": "All tests passed",
+  "testBuild": 111320,
+  "normalBuild": 111321,
+  "platform": "Android 34 arm64 emulator",
+  "physicalDeviceUiAccepted": false,
+  "desktopUiAccepted": true,
+  "mobileHighlightAlsoObservedViaCua": true,
+  "mobileChainedReturnAlsoObservedViaCua": true
+}

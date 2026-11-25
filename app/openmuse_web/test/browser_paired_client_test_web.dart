@@ -9,6 +9,44 @@ import 'package:openmuse_web/workbench/browser_paired_client.dart';
 
 void main() {
   test(
+    'configured Cloud gateway prefix is used without rebinding the paired origin',
+    () async {
+      final store = MemoryAuthSessionStore();
+      await store.write(
+        GoTrueSession(
+          accessToken: 'scoped-access',
+          refreshToken: 'scoped-refresh',
+          expiresAt: DateTime.now().add(const Duration(hours: 1)),
+          user: const GoTrueUser(id: 'scoped-user', email: 'test@example.test'),
+        ),
+      );
+      final auth = GoTrueAuthenticationController(
+        provider: BrowserGoTrueProvider(
+          origin: Uri.parse('https://auth.example.test'),
+        ),
+        store: store,
+      );
+      await auth.restore();
+      final client = BrowserPairedClient(
+        authentication: auth,
+        origin: Uri.parse('https://web.example.test'),
+        cloudOrigin: Uri.parse('https://web.example.test/cloud'),
+        client: MockClient((request) async {
+          expect(
+            request.url.toString(),
+            'https://web.example.test/cloud/api/muse/devices',
+          );
+          expect(request.headers['authorization'], 'Bearer scoped-access');
+          return http.Response('{"code":0,"data":[]}', 200);
+        }),
+      );
+      expect(await client.listDesktops(), isEmpty);
+      expect(client.origin, Uri.parse('https://web.example.test'));
+      client.close();
+      auth.dispose();
+    },
+  );
+  test(
     'authenticated device discovery creates a scoped Desktop grant',
     () async {
       final store = MemoryAuthSessionStore();
@@ -37,6 +75,10 @@ void main() {
         authentication: auth,
         origin: Uri.parse('https://web.example.test'),
         client: MockClient((request) async {
+          if (request.url.path.startsWith('/u/')) {
+            expect(request.headers['authorization'], isNull);
+            return http.Response('<html></html>', 200);
+          }
           expect(request.headers['authorization'], 'Bearer access-fixture');
           if (request.url.path == '/api/muse/devices') {
             return http.Response(
@@ -84,7 +126,7 @@ void main() {
       final connection = await client.connect(desktops.single);
       expect(connection.desktopRef, 'desktop.fixture');
       expect(connection.workspaceRef, 'openmuse.local.default');
-      expect(connection.bootstrapPath, '/u/${'a' * 64}');
+      expect(connection.bootstrapPath, '/openmuse/dsh/');
     },
   );
 }

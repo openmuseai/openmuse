@@ -128,6 +128,8 @@ migrate_working_dir/
 *.pyc
 
 # --- Local credentials (never commit) ----------------------------------------
+/materials/licenses/
+/.env.apple-review.local
 /chelsea-muse
 /chelsea-muse.pub
 id_rsa
@@ -138,3 +140,9 @@ id_rsa.pub
 .DS_Store
 ._*
 *.log
+
+# Optional language plugin artifacts are restored from the reviewed archives.
+/third_party/dsh/navigation-artifacts/
+# Local test login data.
+/.account
+!/third_party/node/v22.22.2/*.tar.gz

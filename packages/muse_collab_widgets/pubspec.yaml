@@ -1,0 +1,15 @@
+name: muse_collab_widgets
+description: Shared resource-neutral collaboration presence widgets.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  muse_collab_contract:
+    path: ../muse_collab_contract
+  flutter:
+    sdk: flutter
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

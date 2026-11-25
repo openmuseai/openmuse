@@ -1,0 +1,16 @@
+name: muse_attachment_source
+description: Bounded file selection and explicit save destinations over existing platform IO.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  file_selector: 1.1.0
+  mime: 2.1.0
+  muse_asset_contract:
+    path: ../muse_asset_contract
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

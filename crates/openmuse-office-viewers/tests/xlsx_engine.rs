@@ -43,7 +43,7 @@ fn package(extra_relationship: &str, worksheet: &str, unsafe_path: bool) -> Vec<
 
 fn valid_xlsx() -> Vec<u8> {
     package(
-        r#"<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>"#,
+        r#"<Relationships><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLink" TargetMode="External" Target="https://example.test/book.xlsx"/><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>"#,
         r#"<worksheet><sheetData><row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1"><v>42</v></c><c r="C1" t="inlineStr"><is><t>Inline</t></is></c></row><row r="2"><c r="B2" t="s"><v>1</v></c></row></sheetData></worksheet>"#,
         false,
     )
@@ -63,7 +63,7 @@ fn xlsx_is_bounded_view_only_and_preserves_sparse_rows() {
 #[test]
 fn external_relationships_paths_and_doctypes_fail_closed() {
     let external = package(
-        r#"<Relationships><Relationship Id="rId1" TargetMode = "External" Target="https://example.test"/></Relationships>"#,
+        r#"<Relationships><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" TargetMode = "External" Target="https://example.test"/></Relationships>"#,
         r#"<worksheet><sheetData/></worksheet>"#,
         false,
     );
@@ -73,7 +73,7 @@ fn external_relationships_paths_and_doctypes_fail_closed() {
     );
     assert_eq!(
         inspect_xlsx(&package(
-            r#"<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>"#,
+            r#"<Relationships><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>"#,
             r#"<worksheet><sheetData/></worksheet>"#,
             true,
         )),
@@ -81,7 +81,7 @@ fn external_relationships_paths_and_doctypes_fail_closed() {
     );
     assert_eq!(
         inspect_xlsx(&package(
-            r#"<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>"#,
+            r#"<Relationships><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>"#,
             r#"<!DOCTYPE x [<!ENTITY y "z">]><worksheet/>"#,
             false,
         )),

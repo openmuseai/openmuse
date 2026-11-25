@@ -1,0 +1,49 @@
+{
+  "checkedAt": "2026-11-17",
+  "checks": [
+    {
+      "command": "python3 scripts/release/test_mobile_closure.py",
+      "exitCode": 0,
+      "output": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.002s\n\nOK\n"
+    },
+    {
+      "command": "python3 scripts/release/verify-mobile-closure.py app/openmuse_mobile/.dart_tool/package_config.json",
+      "exitCode": 0,
+      "output": "Mobile dependency and payload closure: PASS (app/openmuse_mobile/.dart_tool/package_config.json)\n"
+    },
+    {
+      "command": "python3 scripts/release/pipeline.py check --run docs/release/runs/2026-11-mobile-isolation",
+      "exitCode": 0,
+      "output": "Record structure/evidence: PASS (2026-11-mobile-isolation; planned)\nArtifact hashes: PASS\nThis is a record check; unfinished stages are not approved.\n"
+    },
+    {
+      "command": "bash -n scripts/release/build-ios-store.sh scripts/release/build-android-store.sh",
+      "exitCode": 0,
+      "output": ""
+    },
+    {
+      "command": "python3 scripts/release/test_pipeline.py",
+      "result": "12 tests passed"
+    },
+    {
+      "command": "flutter test test/mobile_app_test.dart test/mobile_apps_center_test.dart test/mobile_file_viewer_test.dart",
+      "result": "32 tests passed",
+      "evidence": "docs/release/runs/2026-11-mobile-isolation/evidence/mobile-regression.txt"
+    },
+    {
+      "command": "flutter analyze --no-fatal-infos",
+      "result": "exit 0, no errors or warnings; 3 existing curly_braces_in_flow_control_structures infos remain; default flutter analyze fails on infos"
+    },
+    {
+      "command": "pod install",
+      "result": "exit 0; stale SiYuan pod removed; CocoaPods reported existing custom base configuration warning, iOS build not verified"
+    },
+    {
+      "command": "pipeline.py check --gate 09-submit",
+      "result": "expected blocked: unfinished stages, source not frozen, no final artifacts"
+    }
+  ],
+  "fullMobileSuiteRun": false,
+  "signedArtifactsBuilt": false,
+  "copyrightReviewPassed": false
+}

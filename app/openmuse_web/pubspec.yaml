@@ -5,6 +5,20 @@ publish_to: none
 environment:
   sdk: ^3.12.2
 dependencies:
+  openmuse_i18n:
+    path: ../../packages/openmuse_i18n
+  openmuse_runtime_config:
+    path: ../../packages/openmuse_runtime_config
+  openmuse_smart_document:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/flutter
+  openmuse_smart_document_plugins:
+    path: ../../distribution/openmuse_smart_document_plugins
+  openmuse_mobile_cloud:
+    path: ../../packages/openmuse_mobile_cloud
+  openmuse_cloud_workspace_plugin:
+    path: ../../plugins/cloud-workspace
+  openmuse_resource_center:
+    path: ../../packages/openmuse_resource_center
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8

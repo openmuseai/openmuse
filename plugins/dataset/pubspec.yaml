@@ -1,0 +1,18 @@
+name: openmuse_dataset_plugin
+description: Independent AppFlowy Dataset/Row resource handler using the public Muse SDK.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+  openmuse_dataset:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/dataset/flutter
+  uuid: ^4.5.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

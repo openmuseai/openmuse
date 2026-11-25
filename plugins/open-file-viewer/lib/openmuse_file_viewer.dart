@@ -10,7 +10,11 @@ import 'package:openmuse_file_viewer_flutter/openmuse_file_viewer_flutter.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 final class OpenMuseFileViewerPlugin
-    implements OpenMusePlugin, OpenMuseEditorBannerContributor {
+    implements
+        OpenMusePlugin,
+        OpenMuseEditorBannerContributor,
+        OpenMuseResourceHandlerContributor {
+  OpenMusePluginContext? _host;
   @override
   final descriptor = const OpenMusePluginDescriptor(
     id: 'com.openmuse.open-file-viewer',
@@ -18,7 +22,9 @@ final class OpenMuseFileViewerPlugin
     version: '0.1.0',
     runtime: OpenMusePluginRuntime.webView,
     activationEvents: [
+      'onStartup',
       'onFileType:markdown',
+      'onFileType:text',
       'onFileType:image',
       'onFileType:pdf',
     ],
@@ -27,13 +33,87 @@ final class OpenMuseFileViewerPlugin
       OpenMuseEditorContribution(
         id: 'viewer.markdown',
         mediaTypes: {'text/markdown'},
-        extensions: {'md', 'markdown', 'mdown'},
+        extensions: {
+          'omreview','md', 'markdown', 'mdown'},
         priority: 20,
       ),
       OpenMuseEditorContribution(
         id: 'viewer.text',
-        mediaTypes: {'text/plain'},
-        extensions: {'txt', 'log'},
+        mediaTypes: {
+          'application/vnd.openmuse.review-viewer+json',
+          'text/*',
+          'application/json',
+          'application/xml',
+          'application/javascript',
+          'application/x-javascript',
+          'application/x-yaml',
+          'application/toml',
+        },
+        extensions: {
+          'txt',
+          'log',
+          'json',
+          'jsonl',
+          'yaml',
+          'yml',
+          'toml',
+          'xml',
+          'csv',
+          'tsv',
+          'ini',
+          'cfg',
+          'conf',
+          'properties',
+          'env',
+          'dart',
+          'py',
+          'pyi',
+          'js',
+          'jsx',
+          'mjs',
+          'cjs',
+          'ts',
+          'tsx',
+          'html',
+          'htm',
+          'css',
+          'scss',
+          'sass',
+          'less',
+          'vue',
+          'svelte',
+          'java',
+          'kt',
+          'kts',
+          'swift',
+          'm',
+          'mm',
+          'h',
+          'hpp',
+          'c',
+          'cc',
+          'cpp',
+          'cs',
+          'rs',
+          'go',
+          'rb',
+          'php',
+          'sh',
+          'bash',
+          'zsh',
+          'fish',
+          'ps1',
+          'bat',
+          'sql',
+          'graphql',
+          'proto',
+          'gradle',
+          'cmake',
+          'make',
+          'dockerfile',
+          'gitignore',
+          'lock',
+        },
         priority: 20,
       ),
       OpenMuseEditorContribution(
@@ -64,10 +144,117 @@ final class OpenMuseFileViewerPlugin
   );
 
   @override
-  Future<void> activate(OpenMusePluginContext context) async {}
+  List<ResourceHandlerSpec> get resourceHandlers => [
+    ResourceHandlerSpec(
+      id: 'viewer.preview',
+      title: 'Open File Viewer',
+      mediaTypes: {
+        ...descriptor.editors[0].mediaTypes,
+        ...descriptor.editors[1].mediaTypes,
+        'image/png',
+        'image/jpeg',
+        'image/gif',
+        'image/webp',
+      },
+      extensions: {
+        ...descriptor.editors[0].extensions,
+        ...descriptor.editors[1].extensions,
+        'png',
+        'jpg',
+        'jpeg',
+        'gif',
+        'webp',
+      },
+      // A view intent defaults to the native read-only preview. Explicit user
+      // handler preferences still win, and edit intents are declined below.
+      priority: 60,
+    ),
+  ];
+  @override
+  Future<bool> probeResource(
+    ResourceRecord record,
+    ResourceOpenIntent intent,
+  ) async =>
+      intent == ResourceOpenIntent.view &&
+      resourceHandlers.single.accepts(record);
+  @override
+  Widget buildResourceEditor(
+    BuildContext context,
+    String handlerId,
+    ResourceEditorSession session,
+  ) => OpenMuseFileViewerBody(
+    key: ValueKey((session.record.identity, session.record.version)),
+    resourceName: session.record.name,
+    mediaType: session.record.mediaType,
+    initialLine: session.initialLine,
+    navigateCode: session.navigateCode == null
+        ? null
+        : (operation, line, character) => session.navigateCode!(
+            ResourceCodeRequest(
+              operation,
+              version: session.record.version,
+              line: line,
+              character: character,
+            ),
+          ),
+    openCodeTarget: session.openCodeTarget,
+    onOpenLink: (target) async {
+      await session.openResourceLink?.call(target);
+    },
+    readBytes: () async => Uint8List.fromList(session.bytes),
+  );
+
+  bool canPreviewText(OpenMuseResource resource) =>
+      descriptor.editors[0].accepts(resource) ||
+      descriptor.editors[0].extensions.contains(resource.extension) ||
+      descriptor.editors[1].accepts(resource) ||
+      descriptor.editors[1].extensions.contains(resource.extension) ||
+      {
+        'makefile',
+        'dockerfile',
+        'license',
+        'notice',
+      }.contains(p.basename(resource.uri.path).toLowerCase());
 
   @override
-  Future<void> deactivate() async {}
+  Future<void> activate(OpenMusePluginContext context) async {
+    _host = context;
+  }
+
+  @override
+  Future<void> deactivate() async {
+    _host = null;
+  }
+
+  Future<void> _openLocalLink(
+    BuildContext context,
+    OpenMuseResource base,
+    String target,
+  ) async {
+    try {
+      if (target.startsWith('openmuse-resource://v1/')) {
+        await ResourceLinkRouting.maybeOf(context)?.open(target);
+        return;
+      }
+      final uri = Uri.parse(target);
+      if ((uri.hasScheme && uri.scheme != 'file') ||
+          uri.hasAuthority && uri.host.isNotEmpty && uri.host != 'localhost' ||
+          _host == null) {
+        throw const FormatException('Unsupported file link');
+      }
+      // This legacy editor receives a local Host-granted file handle. Its Host
+      // command revalidates the workspace; remote resources use session links.
+      await _host!.executeHostCommand('workspace.openResource', {
+        'path': uri.scheme == 'file' ? uri.toFilePath() : uri.path,
+        'cwd': p.dirname(base.uri.toFilePath()),
+      });
+    } on Object {
+      if (context.mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('无法打开文件链接。')));
+    }
+  }
 
   @override
   Widget buildEditor(BuildContext context, OpenMuseResource resource) {
@@ -75,11 +262,16 @@ final class OpenMuseFileViewerPlugin
       return const _ViewerMessage('Viewer 仅接受 Host 授权后的本地文件句柄。');
     }
     final path = resource.uri.toFilePath();
-    if (descriptor.editors.first.accepts(resource)) {
-      return OpenMuseMarkdownPreview(key: ValueKey(path), path: path);
+    if (descriptor.editors.first.accepts(resource) ||
+        descriptor.editors.first.extensions.contains(resource.extension)) {
+      return OpenMuseMarkdownPreview(
+        key: ValueKey(path),
+        path: path,
+        onOpenLink: (target) => _openLocalLink(context, resource, target),
+      );
     }
-    if (descriptor.editors[1].accepts(resource)) {
-      return _LocalTextPreview(key: ValueKey(path), path: path, title: '日志输出');
+    if (canPreviewText(resource)) {
+      return _LocalTextPreview(key: ValueKey(path), path: path, title: '文本或代码');
     }
     if (!descriptor.editors
         .skip(2)
@@ -146,8 +338,14 @@ final class OpenMuseFileViewerPlugin
 }
 
 final class OpenMuseMarkdownPreview extends StatefulWidget {
-  const OpenMuseMarkdownPreview({super.key, required this.path, this.contents});
+  const OpenMuseMarkdownPreview({
+    super.key,
+    required this.path,
+    this.contents,
+    this.onOpenLink,
+  });
   final String path;
+  final Future<void> Function(String target)? onOpenLink;
   @visibleForTesting
   final Future<String>? contents;
 
@@ -167,7 +365,10 @@ final class _MarkdownPreviewState extends State<OpenMuseMarkdownPreview> {
         return _ViewerMessage('无法读取 Markdown：${snapshot.error}');
       if (!snapshot.hasData)
         return const Center(child: CircularProgressIndicator());
-      return OpenMuseMarkdownBody(contents: snapshot.data!);
+      return OpenMuseMarkdownBody(
+        contents: snapshot.data!,
+        onOpenLink: widget.onOpenLink,
+      );
     },
   );
 }
@@ -215,7 +416,10 @@ final class _LocalTextPreview extends StatelessWidget {
       if (!snapshot.hasData) {
         return const Center(child: CircularProgressIndicator());
       }
-      return OpenMuseTextBody(contents: snapshot.data!);
+      final language = viewerCodeLanguage(path);
+      return language == null
+          ? OpenMuseTextBody(contents: snapshot.data!)
+          : OpenMuseCodeBody(contents: snapshot.data!, language: language);
     },
   );
 }

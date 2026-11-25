@@ -18,7 +18,7 @@ typedef WorkbenchPaneMenuBuilder =
     );
 
 /// Shared Desktop/Web surface placement and divider interaction.
-final class WorkbenchCanvas extends StatelessWidget {
+final class WorkbenchCanvas extends StatefulWidget {
   const WorkbenchCanvas({
     super.key,
     required this.controller,
@@ -26,7 +26,8 @@ final class WorkbenchCanvas extends StatelessWidget {
     this.overlayMenuBuilder,
     this.onPaneFocus,
     this.hiddenPaneIds = const {},
-    this.gutter = 6,
+    this.retainedInstanceRefs = const {},
+    this.gutter = 1,
     this.onSizeChanged,
   });
 
@@ -35,28 +36,57 @@ final class WorkbenchCanvas extends StatelessWidget {
   final WorkbenchPaneMenuBuilder? overlayMenuBuilder;
   final void Function(String paneId, SurfaceBinding binding)? onPaneFocus;
   final Set<String> hiddenPaneIds;
+
+  /// Keep selected hidden surfaces mounted without focus, semantics or ticking.
+  /// Resource lifetime and checkpoint policy remain with the caller.
+  final Set<String> retainedInstanceRefs;
   final double gutter;
   final ValueChanged<Size>? onSizeChanged;
 
   @override
+  State<WorkbenchCanvas> createState() => _WorkbenchCanvasState();
+}
+
+final class _WorkbenchCanvasState extends State<WorkbenchCanvas> {
+  final _lastVisibleRects = <String, Rect>{};
+  @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: controller,
+    listenable: widget.controller,
     builder: (context, _) => LayoutBuilder(
       builder: (context, constraints) {
-        onSizeChanged?.call(constraints.biggest);
-        final snapshot = controller.snapshot;
-        final root = _withoutPanes(snapshot.root, hiddenPaneIds);
-        if (root == null) {
-          return const Center(child: Text('没有可见窗格。请重置布局。'));
-        }
+        widget.onSizeChanged?.call(constraints.biggest);
+        final snapshot = widget.controller.snapshot;
+        final root = _withoutPanes(snapshot.root, widget.hiddenPaneIds);
         final geometry = const WorkbenchLayoutSolver().solve(
-          root,
+          root ?? snapshot.root,
           constraints.biggest,
-          gutter: gutter,
+          gutter: widget.gutter,
         );
+        final fullGeometry = const WorkbenchLayoutSolver().solve(
+          snapshot.root,
+          constraints.biggest,
+          gutter: widget.gutter,
+        );
+        final visibleRects = root == null
+            ? <String, Rect>{}
+            : geometry.paneRects;
+        _lastVisibleRects.removeWhere(
+          (instance, _) =>
+              !snapshot.bindings.values.any((b) => b.instanceRef == instance),
+        );
+        for (final entry in snapshot.bindings.entries) {
+          final rect = visibleRects[entry.key];
+          if (rect != null) _lastVisibleRects[entry.value.instanceRef] = rect;
+        }
         final bindings =
             snapshot.bindings.entries
-                .where((entry) => geometry.paneRects.containsKey(entry.key))
+                .where(
+                  (entry) =>
+                      visibleRects.containsKey(entry.key) ||
+                      widget.retainedInstanceRefs.contains(
+                        entry.value.instanceRef,
+                      ),
+                )
                 .toList()
               ..sort(
                 (a, b) => a.value.instanceRef.compareTo(b.value.instanceRef),
@@ -67,70 +97,83 @@ final class WorkbenchCanvas extends StatelessWidget {
             const Positioned.fill(
               child: ColoredBox(color: OpenMuseTokens.canvas),
             ),
-            for (final entry in geometry.paneRects.entries)
+            if (root == null) const Center(child: Text('没有可见窗格。请重置布局。')),
+            for (final entry in visibleRects.entries)
               Positioned.fromRect(
                 key: ValueKey('pane-background:${entry.key}'),
                 rect: entry.value,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
-                    border: Border.all(
-                      color: snapshot.focusedPaneId == entry.key
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).dividerColor,
-                    ),
                   ),
                 ),
               ),
             for (final entry in bindings)
               Positioned.fromRect(
                 key: ValueKey(entry.value.instanceRef),
-                rect: geometry.paneRects[entry.key]!,
-                child: Listener(
-                  behavior: HitTestBehavior.translucent,
-                  onPointerDown: (_) {
-                    controller.focus(entry.key);
-                    onPaneFocus?.call(entry.key, entry.value);
-                  },
-                  child: paneBuilder(context, entry.key, entry.value),
+                rect:
+                    visibleRects[entry.key] ??
+                    _lastVisibleRects[entry.value.instanceRef] ??
+                    fullGeometry.paneRects[entry.key]!,
+                child: Offstage(
+                  offstage: !visibleRects.containsKey(entry.key),
+                  child: TickerMode(
+                    enabled: visibleRects.containsKey(entry.key),
+                    child: ExcludeFocus(
+                      excluding: !visibleRects.containsKey(entry.key),
+                      child: Listener(
+                        behavior: HitTestBehavior.translucent,
+                        onPointerDown: (_) {
+                          widget.controller.focus(entry.key);
+                          widget.onPaneFocus?.call(entry.key, entry.value);
+                        },
+                        child: widget.paneBuilder(
+                          context,
+                          entry.key,
+                          entry.value,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            for (final entry in geometry.paneRects.entries)
+            for (final entry in visibleRects.entries)
               if (snapshot.bindingFor(entry.key) == null)
                 Positioned.fromRect(
                   key: ValueKey('empty-pane:${entry.key}'),
                   rect: entry.value,
-                  child: paneBuilder(context, entry.key, null),
+                  child: widget.paneBuilder(context, entry.key, null),
                 ),
-            for (final divider in geometry.dividers)
-              Positioned.fromRect(
-                key: ValueKey('layout-divider:${divider.path.join('.')}'),
-                rect: divider.rect,
-                child: OpenMusePaneResizer(
-                  axis: divider.axis,
-                  onDelta: (delta) {
-                    final extent = divider.axis == Axis.horizontal
-                        ? divider.containerRect.width - gutter
-                        : divider.containerRect.height - gutter;
-                    if (extent <= 0) return;
-                    final current = controller.ratioBetween(
-                      divider.leadingPaneId,
-                      divider.trailingPaneId,
-                    );
-                    controller.resizeBetween(
-                      divider.leadingPaneId,
-                      divider.trailingPaneId,
-                      (current + delta / extent).clamp(
-                        minSplitRatio,
-                        maxSplitRatio,
-                      ),
-                    );
-                  },
+            if (root != null)
+              for (final divider in geometry.dividers)
+                Positioned.fromRect(
+                  key: ValueKey('layout-divider:${divider.path.join('.')}'),
+                  rect: _dividerHitRect(divider.rect, divider.axis),
+                  child: OpenMusePaneResizer(
+                    axis: divider.axis,
+                    onDelta: (delta) {
+                      final extent = divider.axis == Axis.horizontal
+                          ? divider.containerRect.width - widget.gutter
+                          : divider.containerRect.height - widget.gutter;
+                      if (extent <= 0) return;
+                      final current = widget.controller.ratioBetween(
+                        divider.leadingPaneId,
+                        divider.trailingPaneId,
+                      );
+                      widget.controller.resizeBetween(
+                        divider.leadingPaneId,
+                        divider.trailingPaneId,
+                        (current + delta / extent).clamp(
+                          minSplitRatio,
+                          maxSplitRatio,
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            if (overlayMenuBuilder != null)
-              for (final entry in geometry.paneRects.entries)
-                if (overlayMenuBuilder!(
+            if (widget.overlayMenuBuilder != null)
+              for (final entry in visibleRects.entries)
+                if (widget.overlayMenuBuilder!(
                       context,
                       entry.key,
                       snapshot.bindingFor(entry.key),
@@ -150,6 +193,10 @@ final class WorkbenchCanvas extends StatelessWidget {
     ),
   );
 }
+
+Rect _dividerHitRect(Rect rect, Axis axis) => axis == Axis.horizontal
+    ? Rect.fromLTRB(rect.left - 3, rect.top, rect.right + 3, rect.bottom)
+    : Rect.fromLTRB(rect.left, rect.top - 3, rect.right, rect.bottom + 3);
 
 LayoutNode? _withoutPanes(LayoutNode node, Set<String> hidden) {
   switch (node) {
@@ -231,11 +278,21 @@ final class _OpenMusePaneResizerState extends State<OpenMusePaneResizer> {
       },
       child: Container(
         key: const Key('pane-resizer'),
-        width: widget.axis == Axis.horizontal ? 6 : null,
-        height: widget.axis == Axis.vertical ? 6 : null,
-        color: _hovered || _dragging
-            ? OpenMuseTokens.cyan.withValues(alpha: 0.65)
-            : Theme.of(context).dividerColor.withValues(alpha: 0.5),
+        color: Colors.transparent,
+        alignment: Alignment.center,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: _hovered || _dragging
+                ? OpenMuseTokens.cyan.withValues(alpha: 0.7)
+                : (Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0x2EFFFFFF)
+                      : const Color(0x14000000)),
+          ),
+          child: SizedBox(
+            width: widget.axis == Axis.horizontal ? 1 : double.infinity,
+            height: widget.axis == Axis.vertical ? 1 : double.infinity,
+          ),
+        ),
       ),
     ),
   );

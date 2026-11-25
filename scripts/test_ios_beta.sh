@@ -6,9 +6,7 @@ evidence_dir="$repo_root/target/ios-beta"
 rm -rf "$evidence_dir"
 mkdir -p "$evidence_dir"
 
-OPENMUSE_DOCX_PLATFORMS=ios "$repo_root/scripts/build_office_docx_mobile_artifacts.sh"
 OPENMUSE_PAIRED_PLATFORMS=ios "$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
-OPENMUSE_VIEWERS_PLATFORMS=ios "$repo_root/scripts/build_office_viewers_mobile_artifacts.sh"
 
 (cd "$repo_root/app/openmuse_mobile" && flutter analyze && flutter test && flutter build ios --release --no-codesign)
 
@@ -25,7 +23,7 @@ plutil -lint \
 bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Info.plist")"
 version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Info.plist")"
 build="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$app/Info.plist")"
-if [[ "$bundle_id" != "io.openmuse.mobile" ]]; then
+if [[ "$bundle_id" != "com.openmuseai.mobile" ]]; then
   echo "Unexpected iOS bundle identifier: $bundle_id" >&2
   exit 1
 fi
@@ -41,22 +39,18 @@ if find "$app" -type f | grep -Eiq '(^|/)(node|helix|dsh-closure|sandbox-worker)
   echo "iOS bundle contains downloadable/native execution runtime" >&2
   exit 1
 fi
-nm -gU "$app/Runner" | grep -q '_openmuse_docx_abi_version'
-nm -gU "$app/Runner" | grep -q '_openmuse_docx_inspect'
-nm -gU "$app/Runner" | grep -q '_openmuse_paired_abi_version'
-nm -gU "$app/Runner" | grep -q '_openmuse_paired_device_public'
-nm -gU "$app/Runner" | grep -q '_openmuse_paired_issue_offer'
-nm -gU "$app/Runner" | grep -q '_openmuse_paired_buffer_free'
-nm -gU "$app/Runner" | grep -q '_openmuse_paired_begin_handshake'
-nm -gU "$app/Runner" | grep -q '_openmuse_paired_confirm_handshake'
-nm -gU "$app/Runner" | grep -q '_openmuse_paired_channel_seal'
-nm -gU "$app/Runner" | grep -q '_openmuse_paired_channel_open'
-nm -gU "$app/Runner" | grep -q '_openmuse_paired_native_handle_close'
-nm -gU "$app/Runner" | grep -q '_openmuse_office_viewers_abi_version'
-nm -gU "$app/Runner" | grep -q '_openmuse_xlsx_inspect'
-nm -gU "$app/Runner" | grep -q '_openmuse_pptx_inspect'
-nm -gU "$app/Runner" | grep -q '_openmuse_pdf_inspect'
-nm -gU "$app/Runner" | grep -q '_openmuse_office_viewer_buffer_free'
+native_symbols="$(nm -gU "$app/Runner")"
+grep -q '_openmuse_paired_abi_version' <<<"$native_symbols"
+grep -q '_openmuse_paired_device_public' <<<"$native_symbols"
+grep -q '_openmuse_paired_issue_offer' <<<"$native_symbols"
+grep -q '_openmuse_paired_buffer_free' <<<"$native_symbols"
+grep -q '_openmuse_paired_begin_handshake' <<<"$native_symbols"
+grep -q '_openmuse_paired_confirm_handshake' <<<"$native_symbols"
+grep -q '_openmuse_paired_channel_seal' <<<"$native_symbols"
+grep -q '_openmuse_paired_channel_open' <<<"$native_symbols"
+grep -q '_openmuse_paired_native_handle_close' <<<"$native_symbols"
+
+python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$app"
 
 if codesign --verify --deep --strict "$app" 2>"$evidence_dir/codesign.txt"; then
   echo "The no-codesign artifact unexpectedly has a valid signature" >&2

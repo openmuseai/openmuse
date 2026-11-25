@@ -19,18 +19,21 @@ repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$repo_root"
 
 force_rebuild=false
+skip_tests=false
 
 usage() {
   cat >&2 <<'USAGE'
-usage: scripts/ci/build-android.sh [--force-rebuild]
+usage: scripts/ci/build-android.sh [--force-rebuild] [--skip-tests]
 
   --force-rebuild  Drop the mobile build outputs and the Gradle cache first
+  --skip-tests     Skip flutter test; flutter analyze still runs
 USAGE
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --force-rebuild) force_rebuild=true; shift ;;
+    --skip-tests) skip_tests=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown argument: $1" >&2; usage; exit 2 ;;
   esac
@@ -79,7 +82,11 @@ if [[ "$force_rebuild" == true ]]; then
 fi
 
 step 'Android release gate'
-"$repo_root/scripts/build_android_alpha.sh"
+gate_args=()
+if [[ "$skip_tests" == true ]]; then
+  gate_args+=(--skip-tests)
+fi
+"$repo_root/scripts/build_android_alpha.sh" "${gate_args[@]}"
 
 apk="$repo_root/target/android-alpha/OpenMuse-Android-Alpha-arm64.apk"
 [[ -f "$apk" ]] || { echo "the Android gate did not produce $apk" >&2; exit 1; }

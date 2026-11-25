@@ -1,0 +1,199 @@
+{
+  "schema": 1,
+  "startedDate": "2026-11-15",
+  "completedDate": "2026-11-16",
+  "timezone": "Asia/Shanghai",
+  "scope": "Normal domestic Desktop and physical OPPO UI; resource-owner Dart navigation, not full product/performance release qualification",
+  "account": {
+    "sameRequestedDomesticAccountVisiblyVerified": true,
+    "existingSessionsRestored": true,
+    "credentialsInEvidence": false
+  },
+  "desktop": {
+    "version": "1.0.1",
+    "build": 111502,
+    "normalRelease": true,
+    "codesignDeepStrictVerified": true,
+    "bridgeVersion": "0.1.24",
+    "uiEvidence": "Native CUA observations in task; no Desktop PNG artifact saved",
+    "finalObservation": "Service disabled before Mac locked; normal Desktop process remains running"
+  },
+  "mobile": {
+    "package": "com.openmuseai.mobile",
+    "version": "1.0.1",
+    "versionCode": 111501,
+    "deviceModel": "OPPO PLP110",
+    "androidVersion": 16,
+    "physicalDevice": true,
+    "debuggable": false,
+    "domesticRuntimeConfig": true,
+    "sameReleaseSignature": true,
+    "normalReleaseKeptInstalled": true,
+    "dataCleared": false,
+    "testEntryInstalled": false,
+    "automation": "ADB input/UIAutomator explicitly authorized by user",
+    "builtApkSha256": "63b8e428a5509be701f43277a5b47f6d0114a3aabb8920571a8f49d09a0dea88"
+  },
+  "checks": [
+    {
+      "scenario": "Markdown relative file link / Chinese file name",
+      "desktop": "pass: README → 导航示例.dart",
+      "oppo": "pass: README → 导航示例.dart"
+    },
+    {
+      "scenario": "Imported file from actual code glyph",
+      "desktop": "not separately recorded",
+      "oppo": "pass: 服务定义.dart, line 1 column 1"
+    },
+    {
+      "scenario": "Function definition from actual greeting call",
+      "desktop": "pass: 服务定义.dart, line 1 column 8, DEFINITION_OWNER_OK",
+      "oppo": "pass: 服务定义.dart, line 1 column 8, DEFINITION_OWNER_OK"
+    },
+    {
+      "scenario": "Method definition from actual service.greet call",
+      "desktop": "pass: 服务定义.dart, line 4 column 10, METHOD_OWNER_OK",
+      "oppo": "pass: 服务定义.dart, line 4 column 10, METHOD_OWNER_OK"
+    },
+    {
+      "scenario": "Back to source after function and method navigation",
+      "desktop": "pass: source route retained",
+      "oppo": "pass: source route and original highlighted line 4 retained"
+    },
+    {
+      "scenario": "Document → document → README chain",
+      "desktop": "not separately repeated in this acceptance",
+      "oppo": "pass: guide marker and in-document return link"
+    },
+    {
+      "scenario": "Explicit line 120 link with native Tree-sitter colors",
+      "desktop": "not separately repeated in this acceptance",
+      "oppo": "pass: line 120 visible at viewport top with highlight"
+    },
+    {
+      "scenario": "Workspace opt-in then disable/release",
+      "desktop": "pass: default off and disabled state observed",
+      "oppo": "pass: default off, explicit enable, queries, close-and-release, disabled state observed"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "function_result.png",
+      "sha256": "d18780d069ac10baf661090676d70961a69a066135b4fa45136f61e8799a0013",
+      "width": 2248,
+      "height": 2480,
+      "capture": "unmodified ADB physical display screenshot"
+    },
+    {
+      "file": "function_definition.png",
+      "sha256": "c10f67a515abf9bf44c49a3927b51e9247526872699ebac162688d8f9aa12076",
+      "width": 2248,
+      "height": 2480,
+      "capture": "unmodified ADB physical display screenshot"
+    },
+    {
+      "file": "function_return.png",
+      "sha256": "01c670116d0fca30afe0c7ba694a0d0733540a26fafc591e04f91505e99c708c",
+      "width": 2248,
+      "height": 2480,
+      "capture": "unmodified ADB physical display screenshot"
+    },
+    {
+      "file": "method_result.png",
+      "sha256": "f2fb8365df55b8c94d6ad8bdd98c69e536b52b1ff3bd2e900e2196fbb067b6b3",
+      "width": 2248,
+      "height": 2480,
+      "capture": "unmodified ADB physical display screenshot"
+    },
+    {
+      "file": "method_definition.png",
+      "sha256": "0f0cb07e5c2739343db3839ec0e86926da53fb27200b7032061c1fd7cb93a2f7",
+      "width": 2248,
+      "height": 2480,
+      "capture": "unmodified ADB physical display screenshot"
+    },
+    {
+      "file": "method_return.png",
+      "sha256": "48a0d27404913baf19c6d02cd2b31a9c8ac9ce90002c1e081d5c0c40b27e37f2",
+      "width": 2248,
+      "height": 2480,
+      "capture": "unmodified ADB physical display screenshot"
+    },
+    {
+      "file": "import_result.png",
+      "sha256": "78a841d912c793f3a36d3e175d17c06af7204792caed98fbdbf39d9b268dd8d6",
+      "width": 2248,
+      "height": 2480,
+      "capture": "unmodified ADB physical display screenshot"
+    },
+    {
+      "file": "guide_final.png",
+      "sha256": "8866543f82392d6583a735787053f1523e6363e7945d8d422ccdedb2c6c0eb82",
+      "width": 2248,
+      "height": 2480,
+      "capture": "unmodified ADB physical display screenshot"
+    },
+    {
+      "file": "line120_final.png",
+      "sha256": "4fece98774487c81d78ea1e0b9c3f9174c899b20d566e23772c5559043437d53",
+      "width": 2248,
+      "height": 2480,
+      "capture": "unmodified ADB physical display screenshot"
+    },
+    {
+      "file": "disabled.png",
+      "sha256": "75346914a895a2a724e127c3fdf4a839ea0309c135c62af44482ab0e718125af",
+      "width": 2248,
+      "height": 2480,
+      "capture": "unmodified ADB physical display screenshot"
+    },
+    {
+      "file": "readme_exit.png",
+      "sha256": "27cafe893d30258a2be511d4607f9a2a912cba22f58beb0931647edc091f6d06",
+      "width": 2248,
+      "height": 2480,
+      "capture": "unmodified ADB physical display screenshot"
+    }
+  ],
+  "tests": {
+    "sharedViewer": {
+      "passed": 7,
+      "failed": 0
+    },
+    "resourceNavigationRpcAndRelativeLinks": {
+      "passed": 3,
+      "failed": 0
+    },
+    "dshBridgePortable": {
+      "passed": 23,
+      "failed": 0
+    },
+    "realDartOwnerAdapter": {
+      "passed": 1,
+      "failed": 0
+    }
+  },
+  "releaseIntegrity": {
+    "packagedRuntimeMatchesSource": true,
+    "lockfileTarballSha512Verified": true
+  },
+  "finalResourceState": {
+    "workspaceCodeNavigation": "disabled",
+    "ownedDartLanguageServiceProcessesAfterRelease": 0,
+    "treeSitterIndependentOfService": true
+  },
+  "trace": {
+    "ownerHttpInstrumentation": "resource.owner.navigation: ready/response/decoded/total and traceparent header",
+    "releaseConsoleTraceEnabled": false,
+    "endToEndTraceParentCorrelationComplete": false,
+    "mobileTouchToPreviewLatencyMeasured": false
+  },
+  "notQualified": [
+    "Large workspace 30+ cold/hot samples and end-to-end P95",
+    "RSS/CPU goals and Windows cleanup",
+    "Non-DSH resource-owner execution adapters",
+    "Symbol outline / code snippet preview / exact column-range highlight",
+    "Single cross-device trace chain",
+    "Plugin-center full settings and language installation UI"
+  ]
+}

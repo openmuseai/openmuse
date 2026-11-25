@@ -1,3 +1,4 @@
+import 'support/localized_test_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_mobile/docx_editor_screen.dart';
@@ -9,7 +10,7 @@ void main() {
   ) async {
     final commits = _Commits();
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: DocxEditorScreen(
           title: 'Document.docx',
           handle: _handle,
@@ -36,7 +37,7 @@ void main() {
 
   testWidgets('view-only DOCX has no save entry', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: DocxEditorScreen(
           title: 'Complex.docx',
           handle: _handle,

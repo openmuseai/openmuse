@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>OpenMuse · Home 资源中心 / 设计审核稿</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="review-header"><a class="brand" href="./index.html"><img src="assets/openmuse-icon.png" class="brand-app-icon" alt="" width="25" height="25">OpenMuse</a><div>PRODUCT DESIGN <span class="header-divider">/</span> 2026.11.01</div><span class="draft-tag">待审核 · 未实施</span></header>
+  <main class="review-layout">
+    <aside class="brief">
+      <p class="eyebrow">MOBILE / RESOURCE CENTER</p>
+      <h1>首页，<br>资源的起点。</h1>
+      <p class="intro">找回刚才打开的内容，浏览本机与电脑工作区，把同一个资源带进下一段对话。</p>
+      <div class="review-options"><div class="option-label">外观 / Appearance</div><div class="seg-control" id="theme-controls"><button data-theme="light" aria-pressed="true">浅色</button><button data-theme="dark" aria-pressed="false">深色</button></div><div class="option-label">语言 / Language</div><div class="seg-control" id="language-controls"><button data-lang="zh" aria-pressed="true">中文</button><button data-lang="en" aria-pressed="false">English</button></div></div>
+      <nav class="scenario-nav" aria-label="设计场景">
+        <button data-scene="recent" class="active"><span>01</span> 最近 · 跨来源列表</button>
+        <button data-scene="local"><span>02</span> 本机 · 授权资源</button>
+        <button data-scene="remote"><span>03</span> 远程 · 工作区层级</button>
+        <button data-scene="create"><span>04</span> 新建 · 插件贡献</button>
+        <button data-scene="menu"><span>05</span> 长按 · 资源菜单</button>
+        <button data-scene="chat"><span>06</span> 对话 · 资源引用</button>
+      </nav>
+      <div class="doc-links"><a href="PRODUCT.zh-CN.md">产品范围与交互稿 <span>↗</span></a><a href="FRAMEWORK-MAPPING.zh-CN.md">框架现状与协议提议 <span>↗</span></a></div>
+    </aside>
+    <section class="device-stage" aria-label="移动端可交互原型"><div class="device-shell"><div class="phone" id="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><div class="status-icons"><svg viewBox="0 0 20 14"><path d="M2 5c4.6-4 11.4-4 16 0M5 8c2.9-2.5 7.1-2.5 10 0M8 11c1.2-1 2.8-1 4 0"/></svg><svg viewBox="0 0 27 14"><rect x="1" y="2" width="21" height="10" rx="3"/><path d="M25 5v4"/><rect x="3" y="4" width="17" height="6" rx="1" class="battery-fill"/></svg></div></div><div class="app" id="app"></div><div id="overlay-root"></div><div id="toast-root" aria-live="polite"></div><div class="home-indicator" aria-hidden="true"></div></div></div><p class="stage-caption">可点击、长按、重命名、复制与粘贴 · 所有数据仅用于设计演示</p></section>
+    <aside class="review-notes">
+      <div class="note-heading"><span class="tiny-line"></span>审核重点</div>
+      <h2 id="scene-title">一个列表，接住所有来源。</h2><p id="scene-note">最近按成功打开时间排序。名称下明确显示来源和逻辑位置，不让用户猜文件在哪里。</p>
+      <div class="flow-note"><span>核心路径</span><p id="flow-copy">找到资源 → 本机插件打开 → 回到最近</p></div>
+      <div class="sandbox-controls"><h3>演示能力变化</h3><label><input id="notes-plugin" type="checkbox" checked><span>安装笔记插件<small>开关会改变打开方式与新建类型</small></span></label><label><input id="pc-online" type="checkbox" checked><span>电脑在线<small>关闭后可检查离线与恢复</small></span></label><label class="state-label" for="list-state">列表状态</label><select id="list-state"><option value="ready">有内容</option><option value="loading">加载骨架</option><option value="empty">首次为空</option><option value="error">加载失败</option></select><button id="reset-demo" class="reset-button">重置演示数据</button></div>
+      <div class="scope-note"><h3>边界清楚，才容易实现。</h3><p>资源身份和授权沿用框架；最近索引、剪贴板 Broker、创建贡献是拟新增能力。原型不读取真实文件、账号、系统剪贴板或模型。</p></div>
+      <p class="keyboard-note">Tab 键可访问控件 · Esc 关闭面板<br>窄屏可直接使用手机样式预览</p>
+    </aside>
+  </main>
+  <script src="fixtures.js"></script>
+  <script src="prototype.js"></script>
+</body>
+</html>

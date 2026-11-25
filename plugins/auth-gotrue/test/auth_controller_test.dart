@@ -264,7 +264,7 @@ void main() {
     await controller.restore();
 
     expect(controller.snapshot.phase, OpenMuseAuthenticationPhase.failure);
-    expect(controller.snapshot.failureCode, 'invalid_response');
+    expect(controller.snapshot.failureCode, 'session_storage');
   });
 
   test('local sign-out succeeds even if remote logout fails', () async {
@@ -318,6 +318,20 @@ void main() {
       OpenMuseAuthenticationPhase.authenticated,
     );
     expect(await controller.accessToken(), 'access-one');
+  });
+
+  test('Mobile requires a verified durable session before sign-in succeeds', () async {
+    final controller = GoTrueAuthenticationController(
+      provider: _FakeProvider(signInResult: session()),
+      store: _ThrowingWriteStore(),
+      clock: () => now,
+      requirePersistedSession: true,
+    );
+
+    await controller.signInWithPassword('muse@example.com', 'secret');
+
+    expect(controller.snapshot.phase, OpenMuseAuthenticationPhase.failure);
+    expect(controller.snapshot.failureCode, 'session_storage');
   });
 
   test(

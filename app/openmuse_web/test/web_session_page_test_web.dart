@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -33,7 +34,17 @@ void main() {
     final auth = GoTrueAuthenticationController(
       provider: BrowserGoTrueProvider(
         origin: Uri.parse('https://auth.example.test/gotrue'),
-        client: MockClient((_) async => throw StateError('unexpected')),
+        client: MockClient(
+          (_) async => http.Response(
+            jsonEncode({
+              'access_token': 'fixture-renewed',
+              'refresh_token': 'fixture-refresh',
+              'expires_in': 3600,
+              'user': {'id': 'fixture-user', 'email': 'person@example.test'},
+            }),
+            200,
+          ),
+        ),
       ),
       store: store,
     );

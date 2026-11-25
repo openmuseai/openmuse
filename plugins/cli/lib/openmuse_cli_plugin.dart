@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pty/flutter_pty.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
@@ -11,6 +12,24 @@ import 'package:xterm/src/ui/input_map.dart' show keyToTerminalKey;
 
 final class OpenMuseCliPlugin implements OpenMusePlugin {
   String _workingDirectory = Directory.current.path;
+  OpenMusePluginContext? _context;
+  Future<void> releaseEnvironment(Map<String, String> environment) async {
+    if (environment['MCP_HOST_TOKEN'] case final String token) {
+      await _context?.executeHostCommand('terminal.session.release', {
+        'token': token,
+      });
+    }
+  }
+
+  Future<Map<String, String>> sessionEnvironment(String directory) async {
+    final context = _context;
+    if (context == null) throw StateError('终端插件尚未激活');
+    final result = await context.executeHostCommand('terminal.session.create', {
+      'directory': directory,
+    });
+    if (result is! Map) throw StateError('Host 未提供 Workspace 终端会话');
+    return Map<String, String>.from(result);
+  }
 
   @override
   OpenMusePluginDescriptor get descriptor => const OpenMusePluginDescriptor(
@@ -30,6 +49,7 @@ final class OpenMuseCliPlugin implements OpenMusePlugin {
 
   @override
   Future<void> activate(OpenMusePluginContext context) async {
+    _context = context;
     try {
       final snapshot = await context.executeHostCommand(
         'workspace.snapshot',
@@ -54,7 +74,11 @@ final class OpenMuseCliPlugin implements OpenMusePlugin {
   @override
   Widget? buildPanel(BuildContext context, String panelId) =>
       panelId == 'cli.console'
-      ? OpenMuseCliConsole(workingDirectory: _workingDirectory)
+      ? OpenMuseCliConsole(
+          workingDirectory: _workingDirectory,
+          environmentProvider: sessionEnvironment,
+          environmentDisposer: releaseEnvironment,
+        )
       : null;
 }
 
@@ -97,11 +121,16 @@ final class OpenMuseCliConsole extends StatefulWidget {
     required this.workingDirectory,
     this.controller,
     this.onMinimize,
+    this.environmentProvider,
+    this.environmentDisposer,
   });
 
   final String workingDirectory;
   final OpenMuseCliController? controller;
+  final Future<void> Function(Map<String, String>)? environmentDisposer;
   final VoidCallback? onMinimize;
+  final Future<Map<String, String>> Function(String directory)?
+  environmentProvider;
 
   @override
   State<OpenMuseCliConsole> createState() => _OpenMuseCliConsoleState();
@@ -122,15 +151,24 @@ final class OpenMuseCliController extends ChangeNotifier {
 }
 
 final class _ConsoleSession {
-  _ConsoleSession(this.profile, this.pty) : terminal = Terminal(maxLines: 5000);
+  _ConsoleSession(this.profile, this.pty, {this.onClose})
+    : terminal = Terminal(maxLines: 5000);
 
   final OpenMuseShellProfile profile;
   final Pty pty;
   final Terminal terminal;
   StreamSubscription<String>? output;
   int? exitCode;
+  final Future<void> Function()? onClose;
+  bool _released = false;
+  void release() {
+    if (_released) return;
+    _released = true;
+    unawaited(onClose?.call() ?? Future.value());
+  }
 
   void close() {
+    release();
     output?.cancel();
     pty.kill();
   }
@@ -173,9 +211,25 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
     super.dispose();
   }
 
-  void _start([String? directory]) {
+  Future<void> _start([String? directory]) async {
+    Map<String, String>? pendingEnvironment;
     try {
       final environment = Map<String, String>.of(Platform.environment);
+      final additions =
+          await widget.environmentProvider?.call(
+            directory ?? widget.workingDirectory,
+          ) ??
+          <String, String>{};
+      pendingEnvironment = additions;
+      environment.addAll(additions);
+      if (additions['MCP_BIN_PATH'] case final String path) {
+        environment['PATH'] =
+            '$path${Platform.isWindows ? ';' : ':'}${environment['PATH'] ?? ''}';
+      }
+      if (!mounted) {
+        await widget.environmentDisposer?.call(additions);
+        return;
+      }
       final cliBin = environment['OPENMUSE_CLI_BIN'] ?? _bundledCliBin();
       if (cliBin != null && File(cliBin).existsSync()) {
         environment['PATH'] =
@@ -189,7 +243,13 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
         rows: 24,
         columns: 100,
       );
-      final session = _ConsoleSession(_profile, pty);
+      final session = _ConsoleSession(
+        _profile,
+        pty,
+        onClose: () =>
+            widget.environmentDisposer?.call(additions) ?? Future.value(),
+      );
+      pendingEnvironment = null;
       session.terminal.onOutput = (data) => pty.write(utf8.encode(data));
       session.terminal.onResize = (columns, rows, _, _) =>
           pty.resize(rows, columns);
@@ -199,6 +259,7 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
       unawaited(
         pty.exitCode.then((code) {
           session.exitCode = code;
+          session.release();
           if (mounted) setState(() {});
         }),
       );
@@ -208,7 +269,10 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
         _error = null;
       });
     } on Object catch (error) {
-      setState(() => _error = error.toString());
+      if (pendingEnvironment != null) {
+        await widget.environmentDisposer?.call(pendingEnvironment);
+      }
+      if (mounted) setState(() => _error = error.toString());
     }
   }
 
@@ -241,7 +305,7 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  _cliText('终端', 'TERMINAL'),
+                  stringsOf(context).cliTerminal(),
                   style: const TextStyle(
                     color: Color(0xffdedede),
                     fontSize: 11,
@@ -260,21 +324,21 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
                 ),
               if (_sessions.isNotEmpty)
                 IconButton(
-                  tooltip: _cliText('关闭终端', 'Close Terminal'),
+                  tooltip: stringsOf(context).cliCloseTerminal(),
                   icon: const Icon(Icons.close, size: 16),
                   onPressed: () => _close(_selected),
                 ),
               const Spacer(),
               IconButton(
                 key: const ValueKey('cli-new-terminal'),
-                tooltip: _cliText('新建终端', 'New Terminal'),
+                tooltip: stringsOf(context).cliNewTerminal(),
                 icon: const Icon(Icons.add, size: 18),
                 onPressed: () => _start(),
               ),
               if (widget.onMinimize != null)
                 IconButton(
                   key: const ValueKey('cli-bottom-collapse'),
-                  tooltip: _cliText('最小化终端', 'Minimize Terminal'),
+                  tooltip: stringsOf(context).cliMinimizeTerminal(),
                   icon: const Icon(Icons.keyboard_arrow_down, size: 18),
                   onPressed: widget.onMinimize,
                 ),
@@ -294,7 +358,7 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
                   child: TextButton.icon(
                     onPressed: () => _start(),
                     icon: const Icon(Icons.add),
-                    label: Text(_cliText('新建终端', 'New Terminal')),
+                    label: Text(stringsOf(context).cliNewTerminal()),
                   ),
                 )
               : IndexedStack(
@@ -312,11 +376,6 @@ final class _OpenMuseCliConsoleState extends State<OpenMuseCliConsole> {
     ),
   );
 }
-
-String _cliText(String zh, String en) =>
-    WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'zh'
-    ? zh
-    : en;
 
 final class OpenMuseCliTerminalView extends StatefulWidget {
   const OpenMuseCliTerminalView({
@@ -476,6 +535,11 @@ const _cliTerminalTheme = TerminalTheme(
 );
 
 String? _bundledCliBin() {
+  if (Platform.isLinux) {
+    final directory = File(Platform.resolvedExecutable).parent.path;
+    final candidate = File('$directory/openmuse/cli/bin/openmuse');
+    return candidate.existsSync() ? candidate.path : null;
+  }
   if (!Platform.isMacOS) return null;
   final contents = File(Platform.resolvedExecutable).parent.parent;
   final candidate = File(

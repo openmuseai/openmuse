@@ -1,41 +1,152 @@
+import 'package:crypto/crypto.dart';
+import 'src/host/version_capability.dart';
 import 'dart:async';
+import 'package:openmuse_mcp_app_runtime/openmuse_mcp_app_runtime.dart';
+import 'src/host/layout/plugin_panel.dart';
+import 'package:openmuse_resource_center_host/openmuse_resource_center_host.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:appflowy_editor_native_plugin/appflowy_editor_native_plugin.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:openmuse_app_update/openmuse_app_update.dart';
+import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
+import 'package:openmuse_runtime_config/openmuse_runtime_config_io.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_builtin_plugins/openmuse_builtin_plugins.dart';
 import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
 import 'package:muse_remote_surface_core/muse_remote_surface_core.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'package:openmuse_registry_provider/openmuse_registry_provider.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'src/host/design_system.dart';
+import 'src/host/distribution_channel.dart';
 import 'src/host/account_storage.dart';
+import 'src/host/account_deletion.dart';
 import 'src/host/endpoint_config.dart';
 import 'src/host/layout/layout.dart';
 import 'src/host/layout/surface_mutation_guard.dart';
 import 'src/host/local_settings.dart';
 import 'src/host/openmuse_app.dart';
 import 'src/host/plugin_distribution.dart';
+import 'src/host/mcp_file_plugin.dart';
+import 'src/host/mcp_resource_extensions.dart';
+import 'src/host/mcp_market.dart';
+import 'src/host/mcp_installed_app.dart';
+import 'src/host/mcp_terminal_service.dart';
+import 'src/host/mcp_capability_gateway.dart';
+import 'src/host/mcp_bin_registry.dart';
 import 'src/host/plugin_cli_broker.dart';
+import 'src/host/plugin_market.dart';
+import 'src/host/code_navigation_market.dart';
 import 'src/host/workspace_controller.dart';
 import 'src/host/workspace_mirror_service.dart';
+import 'src/host/word_product_plugin.dart';
+import 'src/host/pdf_product_plugin.dart';
+import 'src/host/pdf_generated_document_port.dart';
+import 'src/host/spreadsheet_product_plugin.dart';
+import 'src/host/scheduled_task_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Paint immediately. Waiting on workspace/plugin boot before runApp leaves
   // Finder-launched windows blank while Dart is still in main().
-  runApp(const OpenMuseLaunchApp());
+  runApp(
+    OpenMuseRegionBootstrap(
+      requiresLegalConsent: !macAppStoreDistribution,
+      store: (release) async {
+        final support = await getApplicationSupportDirectory();
+        return FileConfigStore(
+          File('${support.path}/region-${release.id}.json'),
+        );
+      },
+      boot: (bundle, language) =>
+          bootOpenMuseHost(installation: bundle, initialLanguage: language),
+    ),
+  );
 }
 
-Future<Widget> bootOpenMuseHost() async {
-  final support = await getApplicationSupportDirectory();
+Future<Widget> bootOpenMuseHost({
+  DeploymentBundle? installation,
+  String? initialLanguage,
+}) async {
+  final deploymentBundle = installation ?? await loadDeploymentBundle();
+  var runtimeConfig = deploymentBundle.snapshot;
+  if (runtimeConfig.serviceUri(ServiceId.cloud).host == 'cn.openmuseai.com') {
+    installServiceDnsFallback(
+      origins: {runtimeConfig.serviceUri(ServiceId.cloud), runtimeConfig.serviceUri(ServiceId.auth)},
+      resolver: Uri.parse('https://dns.alidns.com/resolve'),
+    );
+  }
+  void bootPhase(String phase) => debugPrint('OpenMuse boot: $phase');
+  final supportOverride = kDebugMode
+      ? Platform.environment['OPENMUSE_E2E_SUPPORT_DIR']
+      : null;
+  final support = supportOverride == null
+      ? await getApplicationSupportDirectory()
+      : Directory(supportOverride);
+  bootPhase('support ${support.path}');
+  await support.create(recursive: true);
+  final localeStore = FileConfigStore(
+    File(
+      p.join(
+        support.path,
+        'OpenMuse',
+        'locale-${runtimeConfig.storageIdentity}.json',
+      ),
+    ),
+  );
+  final localeController = OpenMuseUiLocale(
+    defaultTag: runtimeConfig.defaultLocale,
+    enabledLocales: runtimeConfig.enabledLocales,
+    aliases: runtimeConfig.localeAliases,
+    systemLocales: WidgetsBinding.instance.platformDispatcher.locales.map(
+      (v) => v.toLanguageTag(),
+    ),
+    preferences: CallbackLocalePreferences(
+      readValue: localeStore.read,
+      writeValue: localeStore.commit,
+    ),
+  );
+  await localeController.restore();
+  if (initialLanguage != null) {
+    localeController.selectTag(initialLanguage);
+    await localeController.saved;
+  }
+  final package = await PackageInfo.fromPlatform();
+  final runtime = OpenMuseClientRuntime(
+    bundle: deploymentBundle,
+    transport: createConfigTransport(),
+    store: FileConfigStore(
+      File('${support.path}/runtime-${runtimeConfig.storageIdentity}.json'),
+    ),
+    build: int.tryParse(package.buildNumber) ?? 0,
+    locale: localeController,
+  );
+  await runtime.bootstrap();
+  runtimeConfig = runtime.networkExpired
+      ? runtime.client.current
+      : runtime.network;
+  runtime.start();
+  bootPhase('updates');
+  OpenMuseUpdateController? updates;
+  try {
+    updates = await bootOpenMuseUpdates(
+      config: runtimeConfig,
+    ).timeout(const Duration(seconds: 15));
+    updates?.startPolling(const Duration(minutes: 5));
+  } catch (error) {
+    // A release-feed failure never blocks an offline workspace.
+    debugPrint('App update check unavailable: $error');
+  }
+
   var accountStorage = HostAccountStorage(
     supportPath: support.path,
     subject: localAnonymousUserId,
@@ -50,8 +161,10 @@ Future<Widget> bootOpenMuseHost() async {
     fallback: _layoutFallback(settings),
   );
   final layoutController = WorkbenchLayoutController(await layoutStore.load());
+  bootPhase('layout loaded');
   final mountStore = WorkspaceMountStore(File(accountStorage.mountsPath));
   final savedMounts = await mountStore.load();
+  bootPhase('mounts loaded');
   // Application Support is always accessible at launch. External project
   // mounts are restored separately and scanned after the first frame, since
   // macOS Documents/iCloud/FileProvider may block directory enumeration.
@@ -64,16 +177,488 @@ Future<Widget> bootOpenMuseHost() async {
     mountStore: mountStore,
     additionalMountPaths: savedMounts,
   );
+  Future<void> openGeneratedPdfDocument(String path) =>
+      openGeneratedPdfInWorkspace(controller, path);
   unawaited(
     controller.initialize().catchError((Object error) {
       debugPrint('Workspace scan deferred/failed: $error');
     }),
   );
-  final registry = OpenMusePluginRegistry(
+  late final OpenMusePluginRegistry registry;
+  final resourceAgents = ResourceAgentBroker();
+  await resourceAgents.start();
+  bootPhase('resource agent started');
+  controller.addListener(() {
+    resourceAgents.activeUri = controller
+        .activeTabFor(controller.focusedEditorGroupId)
+        ?.resource
+        .uri
+        .toString();
+  });
+  resourceAgents.sendAgentMessage = (content) async {
+    for (final descriptor in registry.descriptors) {
+      final plugin = registry.plugin(descriptor.id);
+      if (plugin is OpenMuseAgentContributor) {
+        await registry.ensureActive(plugin!);
+        await (plugin as OpenMuseAgentContributor).sendAgentMessage(content);
+        return;
+      }
+    }
+    throw StateError('No Agent plugin installed');
+  };
+  const registryOverride = String.fromEnvironment('OPENMUSE_MCP_REGISTRY_URL');
+  final mcpRegistryUrl = registryOverride.isNotEmpty
+      ? registryOverride
+      : (kDebugMode
+                ? Platform.environment['OPENMUSE_MCP_REGISTRY_URL']
+                : null) ??
+            runtimeConfig.serviceUri(ServiceId.pluginRegistry).toString();
+  final providers = McpRegistryProviders(
+    file: File(p.join(support.path, 'OpenMuse', 'mcp-registries.json')),
+    defaultOrigin: mcpRegistryUrl.isEmpty ? null : Uri.parse(mcpRegistryUrl),
+  );
+  await providers.load();
+  final mcpInstallRoot = Directory(p.join(support.path, 'OpenMuse', 'mcpb'));
+  final marketNode = resolveMarketDshRuntime(
+    executablePath: Platform.resolvedExecutable,
+    environment: Platform.environment,
+  ).nodeExecutable;
+  McpRegistryMarket makeMarket(Uri origin) => McpRegistryMarket(
+    origin: origin,
+    installRoot: mcpInstallRoot,
+    nodeExecutable: marketNode,
+  );
+  McpRegistryMarket? selectedMarket() =>
+      providers.selected == null ? null : makeMarket(providers.selected!);
+  final receiptMarket = makeMarket(Uri());
+  final bundledWordRoot = Directory(
+    p.normalize(
+      p.join(
+        p.dirname(Platform.resolvedExecutable),
+        '../Resources/openmuse/word-product',
+      ),
+    ),
+  );
+  final bundledWordIdentity = File(
+    p.join(bundledWordRoot.path, 'identity.json'),
+  );
+  final bundledWordKey = File(p.join(bundledWordRoot.path, 'public.pem'));
+  final bundledPdfRoot = Directory(
+    p.normalize(
+      p.join(
+        p.dirname(Platform.resolvedExecutable),
+        '../Resources/openmuse/pdf-product',
+      ),
+    ),
+  );
+  final bundledPdfIdentity = File(p.join(bundledPdfRoot.path, 'identity.json'));
+  final bundledPdfKey = File(p.join(bundledPdfRoot.path, 'public.pem'));
+  final bundledSpreadsheetRoot = Directory(
+    p.normalize(
+      p.join(
+        p.dirname(Platform.resolvedExecutable),
+        '../Resources/openmuse/spreadsheet-product',
+      ),
+    ),
+  );
+  final bundledSpreadsheetIdentity = File(
+    p.join(bundledSpreadsheetRoot.path, 'identity.json'),
+  );
+  final bundledSpreadsheetKey = File(
+    p.join(bundledSpreadsheetRoot.path, 'public.pem'),
+  );
+  final bundledPptxRoot = Directory(
+    p.normalize(
+      p.join(
+        p.dirname(Platform.resolvedExecutable),
+        '../Resources/openmuse/genoffice-pptx',
+      ),
+    ),
+  );
+  final bundledPptxBundle = File(
+    p.join(bundledPptxRoot.path, 'genoffice-pptx.mcpb'),
+  );
+  final bundledPptxIdentity = File(
+    p.join(bundledPptxRoot.path, 'identity.json'),
+  );
+  final mcpNavigatorKey = GlobalKey<NavigatorState>();
+  final mcpApps = McpAppsEnvironment(
+    market: receiptMarket,
+    nodeExecutable: marketNode,
+    scope: () => accountStorage.subject,
+    navigatorKey: mcpNavigatorKey,
+    workspaceDirectory: () => controller.activeMountPath,
+    selectedMarket: selectedMarket,
+  );
+  final resourceExtensions = McpResourceExtensions(
+    market: receiptMarket,
+    nodeExecutable: marketNode,
+  );
+  mcpApps.onDevelopmentBundle = (caller, entry, directory, valid) =>
+      resourceExtensions.addDevelopment(
+        caller,
+        entry,
+        McpBundleRuntime(
+          bundleDirectory: directory,
+          nodeExecutable: marketNode,
+        ),
+        valid,
+      );
+  mcpApps.onDevelopmentClosed = resourceExtensions.removeDevelopment;
+  Future<void> registerMcp(McpMarketEntry entry) async {
+    if (macAppStoreDistribution) {
+      final bundled =
+          jsonDecode(await bundledPptxIdentity.readAsString()) as Map;
+      if (entry.name != 'io.openmuse/genoffice-pptx' ||
+          entry.sha256 != bundled['sha256'] ||
+          entry.version != bundled['version']) {
+        throw UnsupportedError(
+          'Only the fixed bundled app is available in this distribution',
+        );
+      }
+    }
+    final existing = registry.plugin(entry.name);
+    if (existing?.descriptor.version == entry.version) return;
+    if (entry.name == wordProductId) {
+      final keyPath =
+          (kDebugMode ? Platform.environment['WORD_STACK_PUBLIC_KEY'] : null) ??
+          Platform.environment['OPENMUSE_WORD_PRODUCT_PUBLIC_KEY'] ??
+          (await bundledWordKey.exists() ? bundledWordKey.path : null);
+      final bundledIdentity = await bundledWordIdentity.exists()
+          ? jsonDecode(await bundledWordIdentity.readAsString()) as Map
+          : null;
+      final keyId =
+          (kDebugMode ? Platform.environment['WORD_STACK_KEY_ID'] : null) ??
+          Platform.environment['OPENMUSE_WORD_PRODUCT_KEY_ID'] ??
+          bundledIdentity?['keyId'] as String?;
+      if (keyPath == null || keyId == null) {
+        debugPrint('Word product trust key unavailable; editor not registered');
+        return;
+      }
+      final word = await OpenMuseWordProductPlugin.load(
+        entry: entry,
+        installedDirectory: receiptMarket.directoryFor(entry),
+        trustedPublicKeyPem: await File(keyPath).readAsString(),
+        expectedKeyId: keyId,
+      );
+      if (existing != null) await registry.uninstall(entry.name);
+      registry.install(word);
+      return;
+    }
+    if (entry.name == pdfProductId) {
+      final keyPath =
+          Platform.environment['OPENMUSE_PDF_PRODUCT_PUBLIC_KEY'] ??
+          (await bundledPdfKey.exists() ? bundledPdfKey.path : null);
+      final identity = await bundledPdfIdentity.exists()
+          ? jsonDecode(await bundledPdfIdentity.readAsString()) as Map
+          : null;
+      final keyId =
+          Platform.environment['OPENMUSE_PDF_PRODUCT_KEY_ID'] ??
+          identity?['keyId'] as String?;
+      if (keyPath == null || keyId == null) {
+        debugPrint('PDF product trust key unavailable; editor not registered');
+        return;
+      }
+      final pdf = await OpenMusePdfProductPlugin.load(
+        entry: entry,
+        installedDirectory: receiptMarket.directoryFor(entry),
+        trustedPublicKeyPem: await File(keyPath).readAsString(),
+        expectedKeyId: keyId,
+        settings: settings,
+        openGeneratedDocument: openGeneratedPdfDocument,
+      );
+      if (existing != null) await registry.uninstall(entry.name);
+      registry.install(pdf);
+      await registry.activate(pdf.descriptor.id);
+      return;
+    }
+    if (entry.name == spreadsheetProductId) {
+      final keyPath =
+          Platform.environment['OPENMUSE_SPREADSHEET_PRODUCT_PUBLIC_KEY'] ??
+          (await bundledSpreadsheetKey.exists()
+              ? bundledSpreadsheetKey.path
+              : null);
+      final identity = await bundledSpreadsheetIdentity.exists()
+          ? jsonDecode(await bundledSpreadsheetIdentity.readAsString()) as Map
+          : null;
+      final keyId =
+          Platform.environment['OPENMUSE_SPREADSHEET_PRODUCT_KEY_ID'] ??
+          identity?['keyId'] as String?;
+      if (keyPath == null || keyId == null) {
+        debugPrint(
+          'Spreadsheet product trust key unavailable; editor not registered',
+        );
+        return;
+      }
+      final spreadsheet = await OpenMuseSpreadsheetProductPlugin.load(
+        entry: entry,
+        installedDirectory: receiptMarket.directoryFor(entry),
+        trustedPublicKeyPem: await File(keyPath).readAsString(),
+        expectedKeyId: keyId,
+      );
+      if (existing != null) await registry.uninstall(entry.name);
+      registry.install(spreadsheet);
+      return;
+    }
+    final node = resolveMarketDshRuntime(
+      executablePath: Platform.resolvedExecutable,
+      environment: Platform.environment,
+    ).nodeExecutable;
+    final runtime = McpBundleRuntime(
+      bundleDirectory: macAppStoreDistribution
+          ? Directory(p.join(bundledPptxRoot.path, 'runtime'))
+          : receiptMarket.directoryFor(entry),
+      nodeExecutable: node,
+    );
+    final plugin = await discoverMcpFilePlugin(
+      entry: entry,
+      runtime: runtime,
+      agentBroker: macAppStoreDistribution ? null : resourceAgents,
+      extensions: macAppStoreDistribution ? null : resourceExtensions,
+      contributors: () => [
+        for (final descriptor in registry.descriptors)
+          if (registry.plugin(descriptor.id)
+              case final OpenMuseToolContributor plugin)
+            (id: descriptor.id, plugin: plugin),
+      ],
+      approve: mcpApps.approve,
+    );
+    if (plugin != null) {
+      if (existing != null) await registry.uninstall(entry.name);
+      registry.install(plugin);
+      await registry.activate(plugin.descriptor.id);
+    }
+  }
+
+  final mcpBinDirectory = Directory(
+    p.join(support.path, 'OpenMuse', 'mcp-bin'),
+  );
+  final cliLauncher = p.normalize(
+    p.join(
+      p.dirname(Platform.resolvedExecutable),
+      '../Resources/openmuse/cli/bin/openmuse',
+    ),
+  );
+  Future<void> refreshBins() async {
+    await refreshMcpBinShims(receiptMarket, mcpBinDirectory, cliLauncher);
+  }
+
+  mcpApps.onInstalled = (entry) async {
+    resourceExtensions.invalidate();
+    await registerMcp(entry);
+    await refreshBins();
+    // A marketplace app may expose a no-argument MCP Apps entry. Open that
+    // reviewed surface after installation so its own onboarding can run.
+    final runtime = McpBundleRuntime(
+      bundleDirectory: receiptMarket.directoryFor(entry),
+      nodeExecutable: marketNode,
+    );
+    final tools = await runtime.tools();
+    final launchable = tools.any((tool) {
+      final schema = tool['inputSchema'];
+      return tool['uiResourceUri'] is String &&
+          (schema is! Map ||
+              schema['required'] is! List ||
+              (schema['required'] as List).isEmpty);
+    });
+    if (launchable) {
+      final navigator = mcpNavigatorKey.currentState;
+      if (navigator != null) {
+        unawaited(
+          navigator.push<void>(
+            MaterialPageRoute(
+              builder: (_) => Scaffold(
+                appBar: AppBar(title: Text(entry.title)),
+                body: McpInstalledApp(
+                  pluginId: entry.name,
+                  environment: mcpApps,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+  };
+  final terminalMcp = McpTerminalService(
+    onRevoke: mcpApps.closeCaller,
+    scope: () => accountStorage.subject,
+    tools: [
+      ...McpAppsEnvironment.workspaceTools,
+      ...McpCapabilityGateway.tools.where(
+        (t) => {
+          'host_describe',
+          'capabilities_list',
+          'development_open_bundle',
+          'development_read_resource',
+        }.contains(t['name']),
+      ),
+    ],
+    call: (caller, root, name, args) async {
+      switch (name) {
+        case 'host_describe':
+          return mcpApps.identity;
+        case 'capabilities_list':
+          final installed = await mcpApps.providers();
+          try {
+            return {'providers': installed.map((p) => p.toJson()).toList()};
+          } finally {
+            for (final p in installed) {
+              await p.close?.call();
+            }
+          }
+        case 'development_open_bundle':
+          return mcpApps.openDevelopment(caller, args);
+        case 'development_read_resource':
+          return mcpApps.readDevelopment(caller, args);
+        default:
+          return mcpApps.workspaceCall(name, args, root);
+      }
+    },
+  );
+  if (!macAppStoreDistribution) {
+    await terminalMcp.start();
+    await refreshBins();
+  }
+
+  late final CodeNavigationMarket navigationMarket;
+  Future<Map<String, Object?>> runMarketAction(
+    String operation,
+    String id, {
+    Map<String, Object?> options = const {},
+  }) async {
+    if (macAppStoreDistribution) {
+      throw UnsupportedError(
+        'External plugin actions are unavailable in this distribution',
+      );
+    }
+    if (operation == 'install' &&
+        !runtime.presentation.isEnabled(AppFeature.pluginMarket)) {
+      throw StateError('Plugin installation is currently disabled');
+    }
+    if (id == 'com.openmuse.code-navigation' ||
+        id.startsWith('com.openmuse.code-navigation.')) {
+      return navigationMarket.request(operation, id, options: options);
+    }
+    final mcpMarket = selectedMarket();
+    List<McpMarketEntry> listed = [];
+    if (mcpMarket != null) {
+      try {
+        listed = await mcpMarket.list();
+      } on Object {
+        if (operation == 'install') rethrow;
+      }
+      final matches = listed.where((entry) => entry.name == id);
+      if (matches.isNotEmpty) {
+        final entry = matches.first;
+        if (operation == 'plan') return mcpMarket.plan(entry);
+        if (operation == 'install') {
+          final installed = await mcpMarket.install(entry);
+          await registerMcp(entry);
+          await refreshBins();
+          return installed;
+        }
+        if (operation == 'open') {
+          final installed = await mcpMarket.installedEntries();
+          if (!installed.any(
+            (item) => item.name == entry.name && item.version == entry.version,
+          )) {
+            throw StateError('请先安装此 MCP 插件');
+          }
+          final uri = await McpBundleRuntime(
+            bundleDirectory: mcpMarket.directoryFor(entry),
+            nodeExecutable: mcpMarket.nodeExecutable,
+          ).openUi();
+          if (uri == null) throw StateError('插件没有可打开的 MCP App');
+          return {'uri': uri.toString()};
+        }
+        throw UnsupportedError('MCPB enable/disable is not available');
+      }
+    }
+    if (operation == 'plan' || operation == 'open') {
+      final installed = (await receiptMarket.installedEntries()).where(
+        (entry) => entry.name == id,
+      );
+      if (installed.isNotEmpty) {
+        final entry = installed.first;
+        final localMarket = makeMarket(Uri.parse(entry.packageUri.origin));
+        if (operation == 'plan') {
+          return {...await localMarket.plan(entry), 'listed': false};
+        }
+        final uri = await McpBundleRuntime(
+          bundleDirectory: localMarket.directoryFor(entry),
+          nodeExecutable: localMarket.nodeExecutable,
+        ).openUi();
+        if (uri == null) throw StateError('插件没有可打开的 MCP App');
+        return {'uri': uri.toString()};
+      }
+    }
+    final entries = builtInMarketPlugins.where((entry) => entry.id == id);
+    if (entries.isEmpty) throw const FormatException('市场中没有该插件');
+    final marketRuntime = resolveMarketDshRuntime(
+      executablePath: Platform.resolvedExecutable,
+      environment: Platform.environment,
+    );
+    final cli = marketRuntime.cliPath;
+    if (cli == null) throw StateError('未找到 DSH CLI');
+    final installer = DshMarketInstaller(
+      dshHome: Directory(accountStorage.dshHome),
+      profile: 'web',
+      cliPath: cli,
+      nodeExecutable: marketRuntime.nodeExecutable,
+    );
+    return switch (operation) {
+      'plan' => installer.plan(entries.single),
+      'install' => installer.install(entries.single),
+      'enable' => installer.setEnabled(entries.single, true),
+      'disable' => installer.setEnabled(entries.single, false),
+      _ => throw const FormatException('无效市场操作'),
+    };
+  }
+
+  registry = OpenMusePluginRegistry(
     context: OpenMusePluginContext(
+      localizations: OpenMusePluginLocalizationAdapter(localeController),
+      configuration: OpenMusePluginConfigurationAdapter(runtime),
       hostChanges: controller,
       executeHostCommand: (command, arguments) async {
+        if (!hostCommandAllowed(command)) {
+          throw UnsupportedError(
+            'This command is unavailable in this distribution',
+          );
+        }
         switch (command) {
+          case 'terminal.session.release':
+            await terminalMcp.revoke((arguments as Map)['token'] as String);
+            return null;
+          case 'terminal.session.create':
+            final directory = (arguments as Map)['directory'] as String;
+            final root = await Directory(directory).resolveSymbolicLinks();
+            final roots = [
+              controller.rootPath,
+              ...controller.mounts.map((m) => m.path),
+            ];
+            final authorized = await Future.wait(
+              roots.map((r) async {
+                try {
+                  final real = await Directory(r).resolveSymbolicLinks();
+                  return root == real || p.isWithin(real, root);
+                } on FileSystemException {
+                  return false;
+                }
+              }),
+            );
+            if (!authorized.any((v) => v)) {
+              throw StateError('Terminal workspace not authorized');
+            }
+            await refreshBins();
+            return {
+              ...terminalMcp.issue(root),
+              'MCP_BIN_PATH': mcpBinDirectory.path,
+              'MCP_REGISTRY_URL':
+                  providers.selected?.toString() ??
+                  runtimeConfig.serviceUri(ServiceId.pluginRegistry).toString(),
+            };
           case 'workspace.snapshot':
             return {
               'workspaceRef': 'openmuse.local.default',
@@ -154,6 +739,61 @@ Future<Widget> bootOpenMuseHost() async {
               settings: settings,
             );
             return receipt.toJson();
+          case 'plugin.market.list':
+            final market = selectedMarket();
+            var catalogAvailable = market != null;
+            List<McpMarketEntry> listed = [];
+            if (market != null) {
+              try {
+                listed = await market.list();
+              } on Object {
+                catalogAvailable = false;
+              }
+            }
+            final names = listed.map((entry) => entry.name).toSet();
+            return [
+              ...await navigationMarket.list(),
+              for (final entry in builtInMarketPlugins) entry.toJson(),
+              for (final entry in listed)
+                {...entry.toMarketCard(), 'listed': true},
+              for (final entry in await receiptMarket.installedEntries())
+                if (!names.contains(entry.name))
+                  {
+                    ...entry.toMarketCard(),
+                    'listed': catalogAvailable ? false : null,
+                  },
+            ];
+          case 'plugin.market.providers':
+            return {
+              'selected': providers.selected?.toString(),
+              'providers': [
+                for (final uri in providers.origins) uri.toString(),
+              ],
+            };
+          case 'plugin.market.selectProvider':
+            if (arguments is! String) {
+              throw const FormatException('无效市场地址');
+            }
+            await providers.select(arguments);
+            return providers.selected?.toString();
+          case 'plugin.market.plan':
+          case 'plugin.market.install':
+          case 'plugin.market.open':
+          case 'plugin.market.enable':
+          case 'plugin.market.disable':
+          case 'plugin.market.configure':
+          case 'plugin.market.detect':
+          case 'plugin.market.uninstall':
+            if (arguments is! Map || arguments['id'] is! String) {
+              throw const FormatException('无效市场插件 ID');
+            }
+            return runMarketAction(
+              command.substring('plugin.market.'.length),
+              arguments['id'] as String,
+              options: Map<String, Object?>.from(
+                arguments['options'] as Map? ?? const {},
+              ),
+            );
           case 'settings.plugin.read':
             if (arguments is! String) throw const FormatException('无效插件 ID');
             return settings.pluginValues(arguments);
@@ -175,22 +815,26 @@ Future<Widget> bootOpenMuseHost() async {
     ),
   );
   // Every host, port and loopback address comes from one configuration object.
-  final endpoints = HostEndpointConfig.fromEnvironment();
+  final endpoints = HostEndpointConfig.fromEnvironment(config: runtimeConfig);
   final authSessionStore = SecureAuthSessionStore(
+    key: runtimeConfig.authSessionStorageKey,
     values: FlutterSecureValueStore.macOsCompatible(
       accountName: endpoints.authKeychainAccount,
     ),
   );
   final goTrueClient = GoTrueHttpClient(
+    networkGuard: runtime.checkNetwork,
     config: GoTrueClientConfig(
       origin: endpoints.gotrueOrigin,
       allowInsecureLoopback: endpoints.allowInsecureLoopback,
     ),
   );
   final authenticationController = GoTrueAuthenticationController(
+    networkGuard: runtime.checkNetwork,
     provider: goTrueClient,
     store: authSessionStore,
     bootstrapper: AppFlowyAccountBootstrapper(
+      networkGuard: runtime.checkNetwork,
       cloudOrigin: endpoints.cloudOrigin,
       allowInsecureLoopback: endpoints.allowInsecureLoopback,
     ),
@@ -205,31 +849,83 @@ Future<Widget> bootOpenMuseHost() async {
   }
   final authenticationPlugin = OpenMuseGoTruePlugin(
     authentication: authenticationController,
+    onDeleteAccount: () async {
+      runtime.checkNetwork();
+      final token = await authenticationController.accessToken(
+        forceRefresh: true,
+      );
+      await deleteHostAccount(
+        origin: endpoints.cloudOrigin,
+        token: token ?? '',
+      );
+      await authenticationController.signOut();
+    },
     cloudLabel: endpoints.cloudOrigin.toString(),
     allowAnonymous: true,
+    termsUri: runtimeConfig.linkUri(LinkId.terms),
+    privacyUri: runtimeConfig.linkUri(LinkId.privacy),
   );
   final desktopDeviceId = await _persistentDesktopDeviceId(settings);
   settings.setAccountSubject(localAnonymousUserId);
   final desktopDisplayName = Platform.localHostname.isEmpty
       ? 'OpenMuse Desktop'
       : Platform.localHostname;
+  late final AppFlowyDocumentWorkspace cloudDocuments;
   final cloudWorkspacePlugin = OpenMuseCloudWorkspacePlugin(
     authentication: authenticationController,
     cloudOrigin: endpoints.cloudOrigin,
     deviceId: desktopDeviceId,
     allowInsecureLoopback: endpoints.allowInsecureLoopback,
+    onOpenDocument: (page) => cloudDocuments.openDocument(page),
+    onOpenDatabase: (page) => cloudDocuments.databases.openDatabase(page),
+  );
+  cloudDocuments = AppFlowyDocumentWorkspace(
+    authentication: authenticationController,
+    service: cloudWorkspacePlugin.service,
+    browserBaseUri:
+        runtimeConfig.documentBrowserUri ??
+        deploymentBundle.snapshot.documentBrowserUri,
   );
   final cliBroker = PluginCliBroker(
     installRoot: Directory(p.join(support.path, 'OpenMuse', 'plugins')),
   );
   await cliBroker.start();
+  bootPhase('cli broker started');
   final dshSupervisor = DshSidecarSupervisor(
     environment: {
       ...Platform.environment,
       'DSH_HOME': accountStorage.dshHome,
+      'OPENMUSE_RESOURCE_MCP_URL': resourceAgents.endpoint.toString(),
+      'OPENMUSE_RESOURCE_MCP_TOKEN': resourceAgents.token,
       'OPENMUSE_CLI_BROKER_URL': cliBroker.origin.toString(),
       'OPENMUSE_CLI_BROKER_TOKEN': cliBroker.token,
     },
+  );
+  navigationMarket = CodeNavigationMarket(
+    account: () => readyAccount.value,
+    ready: dshSupervisor.ensureStarted,
+    endpoint: () => dshSupervisor.endpoint,
+    token: () => dshSupervisor.bridgeToken,
+  );
+  Future<void> executeScheduledPrompt(
+    String workspaceId,
+    String requestId,
+    String message,
+  ) async {
+    await dshSupervisor.ensureStarted();
+    await DshScheduledPromptExecutor(
+      endpoint: () async {
+        final endpoint = dshSupervisor.endpoint;
+        if (endpoint == null) throw StateError('DSH endpoint unavailable');
+        return endpoint;
+      },
+      bridgeToken: dshSupervisor.bridgeToken,
+    )(workspaceId, requestId, message);
+  }
+
+  var scheduledTasks = DesktopScheduledTaskService(
+    storeFile: File(accountStorage.scheduledTasksPath),
+    executor: executeScheduledPrompt,
   );
   Future<void> scopeTransition = Future.value();
   String? requestedSubject;
@@ -242,7 +938,9 @@ Future<Widget> bootOpenMuseHost() async {
       final hadAccount = requestedSubject != null;
       requestedSubject = null;
       readyAccount.value = null;
+      scheduledTasks.dispose();
       if (hadAccount) {
+        resourceAgents.clear();
         scopeTransition = scopeTransition
             .then((_) => dshSupervisor.stop())
             .catchError((Object error) {
@@ -272,6 +970,12 @@ Future<Widget> bootOpenMuseHost() async {
             dshSupervisor.environment['DSH_HOME'] = next.dshHome;
             accountStorage = next;
           }
+          scheduledTasks.dispose();
+          scheduledTasks = DesktopScheduledTaskService(
+            storeFile: File(accountStorage.scheduledTasksPath),
+            executor: executeScheduledPrompt,
+          );
+          await scheduledTasks.restore();
           if (requestedSubject == subject) readyAccount.value = subject;
         })
         .catchError((Object error) {
@@ -288,9 +992,84 @@ Future<Widget> bootOpenMuseHost() async {
     workspaceRef: 'openmuse.local.default',
     desktopDeviceRef: desktopDeviceId,
   );
+  final resourceCenter = ValueNotifier<NativeResourceCenter?>(null);
+  Future<void> resourceTransition = Future.value();
+  int resourceEpoch = 0;
+  void syncResourceAccount() {
+    final epoch = ++resourceEpoch,
+        scope = readyAccount.value ?? 'signed-out-local';
+    final previous = resourceCenter.value;
+    resourceCenter.value = null;
+    resourceTransition = resourceTransition
+        .catchError((Object _) {})
+        .then((_) async {
+          await previous?.close();
+          if (epoch != resourceEpoch) return;
+          final center = await NativeResourceCenter.open(
+            seedWelcomeResources: true,
+            scope: scope,
+            deviceRef: desktopDeviceId,
+            deviceLabel: Platform.localHostname,
+            registry: registry,
+            workspace: 'openmuse.local.default',
+            workspaceLabel: 'Workspace',
+            storageRoot: Directory('${support.path}/resource-center'),
+          );
+          if (epoch != resourceEpoch) {
+            await center.close();
+            return;
+          }
+          await center.mountDirectories({
+            for (final mount in controller.mounts) mount.path: mount.name,
+          });
+          cloudDocuments.attach(center.controller);
+          resourceCenter.value = center;
+        })
+        .catchError((Object error) {
+          debugPrint('Resource center unavailable: ${error.runtimeType}');
+        });
+  }
+
+  readyAccount.addListener(syncResourceAccount);
+  syncResourceAccount();
+  controller.addListener(() {
+    final center = resourceCenter.value;
+    if (center == null) return;
+    unawaited(
+      center
+          .mountDirectories({
+            for (final mount in controller.mounts) mount.path: mount.name,
+          })
+          .catchError((Object error) {
+            debugPrint('Resource mounts unavailable: ${error.runtimeType}');
+          }),
+    );
+  });
   final workspaceMirrorService = DesktopWorkspaceMirrorService(controller);
   final pairedGateway = PairedDesktopGateway(
     currentAccountRef: () => readyAccount.value,
+    resources: (request) async {
+      await resourceTransition;
+      final center = resourceCenter.value;
+      if (center == null || center.hub.scope != request.accountRef) {
+        return {'error': 'DENIED'};
+      }
+      try {
+        return await center.rpc.dispatch(
+          request.body,
+          ResourcePeer(
+            scope: request.accountRef,
+            deviceRef: request.deviceRef,
+            workspaceRef: request.workspaceRef,
+            expiresAtMs: request.expiresAtMs,
+          ),
+        );
+      } on ResourceFailure catch (error) {
+        return {'error': error.code};
+      } on Object {
+        return {'error': 'INVALID_REQUEST'};
+      }
+    },
     validateToken: (token) async {
       final user = await goTrueClient.currentUser(token);
       return user.id;
@@ -304,7 +1083,47 @@ Future<Widget> bootOpenMuseHost() async {
     workspaceRef: 'openmuse.local.default',
     workspaceTitle: 'Project Workspace',
     workspaceMirror: workspaceMirrorService.handle,
+    workspaceMirrorAction: workspaceMirrorService.act,
     workspaceMirrorResource: workspaceMirrorService.readResource,
+    scheduledTasks: (request) async {
+      if (request.accountRef != readyAccount.value) {
+        throw StateError('Desktop 登录状态已变化');
+      }
+      return switch (request.operation) {
+        'list' => {'tasks': scheduledTasks.list()},
+        'create' => {
+          'task': await scheduledTasks.create(
+            workspaceId: request.workspaceId!,
+            message: request.message!,
+            dueAt: request.dueAt!,
+          ),
+        },
+        'cancel' => (() async {
+          await scheduledTasks.cancel(request.id!);
+          return <String, Object?>{'cancelled': true};
+        })(),
+        _ => throw const FormatException('无效定时任务操作'),
+      };
+    },
+    fallbackOnPortConflict: true,
+    pluginMarket: (request) async {
+      if (request.accountRef != readyAccount.value) {
+        throw StateError('Desktop 登录状态已变化');
+      }
+      if (request.operation == 'list') {
+        return {
+          'plugins': [
+            ...await navigationMarket.list(),
+            for (final entry in builtInMarketPlugins) entry.toJson(),
+          ],
+        };
+      }
+      return runMarketAction(
+        request.operation,
+        request.pluginId!,
+        options: request.options,
+      );
+    },
     nativeApiToken: dshSupervisor.bridgeToken,
     deviceRef: desktopDeviceId,
     deviceName: desktopDisplayName,
@@ -360,11 +1179,81 @@ Future<Widget> bootOpenMuseHost() async {
     directory: deviceDirectory,
     relay: relay,
   );
+  // Developer-installed reviewed Apps are separate from production pins.
+  final remoteApps = kDebugMode
+      ? await RemoteMcpApp.load(
+          directory: Directory(
+            p.join(support.path, 'OpenMuse', 'remote-mcp-apps'),
+          ),
+          scope: () => readyAccount.value ?? 'signed-out-local',
+          readSecret: FlutterSecureValueStore.macOsCompatible().read,
+          writeSecret: FlutterSecureValueStore.macOsCompatible().write,
+        )
+      : <RemoteMcpApp>[];
+  for (final app in remoteApps) {
+    final capabilities = (app.definition['hostCapabilities'] as List? ?? const []).cast<String>();
+    if (capabilities.contains('versions.read')) {
+      final provider = HostVersionCapability(controller,
+        resources: (app.definition['hostResources'] as List? ?? const []).cast<String>(),
+        writable: capabilities.contains('versions.write'),
+        authorized: () => readyAccount.value != null && app.definition['owner'] == sha256.convert(utf8.encode(readyAccount.value!)).toString());
+      app.hostTools = provider.tools;
+      app.callHostTool = provider.call;
+    }
+  }
+  final appRouter = RemoteMcpAppsRouter(remoteApps);
+  pairedGateway.mcpApps = (request) async {
+    if(request.accountRef!=readyAccount.value){throw StateError('APP_ACCOUNT_SCOPE_REVOKED');}
+    final body=request.body;
+    if(body['method']=='apps/list')return {'apps':[
+      for(final app in remoteApps){'id':app.id,'title':app.title,'version':app.descriptor.version,
+        'uiResourceUri':app.uiUri,'uiSha256':app.definition['uiSha256'],'html':app.html}
+    ]};
+    final app=remoteApps.singleWhere((app)=>app.id==body['appId']);
+    final params=Map<String,Object?>.from(body['params'] as Map? ?? {});
+    if(body['method']=='data/read')return app.readDataResource(params['uri'] as String);
+    return app.request(body['method'] as String,params);
+  };
+  resourceAgents.appToolCall = appRouter.call;
+  for (final app in remoteApps) {
+    registry.install(app);
+    await registry.activate(app.descriptor.id);
+    app.onOpen = () {
+      final agentPanels = {
+        for (final d in registry.descriptors)
+          if (registry.plugin(d.id) is OpenMuseAgentContributor)
+            for (final panel in d.panels) 'plugin.panel:${panel.id}',
+      };
+      final agentPane = layoutController.snapshot.bindings.entries
+          .where((entry) => agentPanels.contains(entry.value.surfaceRef))
+          .firstOrNull
+          ?.key;
+      revealPluginPanel(
+        layoutController,
+        OpenMusePanelCandidate(
+          plugin: app,
+          panel: app.descriptor.panels.single,
+        ),
+        right: true,
+        besidePaneId: agentPane,
+      );
+    };
+  }
+  readyAccount.addListener(() {
+    for (final app in remoteApps) {
+      unawaited(app.closeSession());
+    }
+  });
   registry.install(authenticationPlugin);
   registry.install(cloudWorkspacePlugin);
-  registry.install(pairedDesktopPlugin);
+  if (!macAppStoreDistribution) registry.install(pairedDesktopPlugin);
   for (final plugin in createOpenMuseBuiltInPlugins(
+    cloudDocuments: cloudDocuments,
     dshSupervisor: dshSupervisor,
+    nativeMcpEditorBuilder: (pluginId) =>
+        pluginId == 'io.openmuse/appflowy-editor'
+        ? const AppFlowyMarkdownEditor()
+        : McpInstalledApp(pluginId: pluginId, environment: mcpApps),
     routeInteraction: (interaction) async {
       try {
         final image = await File(interaction.imagePath).readAsBytes();
@@ -394,7 +1283,196 @@ Future<Widget> bootOpenMuseHost() async {
       }
     },
   )) {
+    if (macAppStoreDistribution &&
+        const {
+          'com.openmuse.cli',
+          'com.openmuse.plugin-market',
+        }.contains(plugin.descriptor.id)) {
+      continue;
+    }
     registry.install(plugin);
+    if (plugin.descriptor.activationEvents.contains('onStartup') &&
+        (plugin is OpenMuseResourceHandlerContributor ||
+            plugin is OpenMuseResourceCreatorContributor ||
+            plugin is OpenMuseResourceContextContributor)) {
+      try {
+        await registry.activate(plugin.descriptor.id);
+      } on Object catch (error) {
+        debugPrint(
+          'Resource plugin startup failed: ${plugin.descriptor.id} (${error.runtimeType})',
+        );
+      }
+    }
+  }
+  bootPhase('reading installed plugins');
+  McpMarketEntry? fixedBundledPptx;
+  if (await bundledPptxBundle.exists() && await bundledPptxIdentity.exists()) {
+    try {
+      final identity =
+          jsonDecode(await bundledPptxIdentity.readAsString()) as Map;
+      final digest = identity['sha256'] as String;
+      final entry = McpMarketEntry(
+        name: 'io.openmuse/genoffice-pptx',
+        title: 'GenOffice PPTX',
+        description: 'Bundled GenOffice PPTX MCP Apps editor',
+        version: identity['version'] as String,
+        packageUri: runtimeConfig.servicePath(ServiceId.pluginRegistry, [
+          'packages',
+          '$digest.mcpb',
+        ]),
+        sha256: digest,
+      );
+      fixedBundledPptx = entry;
+      if (!macAppStoreDistribution) {
+        await receiptMarket.install(
+          entry,
+          bundleBytes: await bundledPptxBundle.readAsBytes(),
+        );
+      }
+    } catch (error) {
+      debugPrint('Bundled PPTX registration failed: $error');
+    }
+  }
+  final installedMcpEntries = macAppStoreDistribution
+      ? [?fixedBundledPptx]
+      : await receiptMarket.installedEntries();
+  // The native Word editor must be available for a restored DOCX tab. Other
+  // MCP servers are probed after the Host has painted its first frame: an
+  // unresponsive installed plugin must never hold the entire window on the
+  // launch spinner.
+  for (final entry in installedMcpEntries.where(
+    (entry) =>
+        entry.name == wordProductId ||
+        entry.name == pdfProductId ||
+        entry.name == spreadsheetProductId ||
+        entry.name == 'io.openmuse/genoffice-pptx',
+  )) {
+    try {
+      await registerMcp(entry);
+    } catch (error) {
+      debugPrint('Word product registration failed: $error');
+    }
+  }
+  if (registry.plugin(wordProductId) == null &&
+      await bundledWordIdentity.exists() &&
+      await bundledWordKey.exists()) {
+    try {
+      final identity =
+          jsonDecode(await bundledWordIdentity.readAsString()) as Map;
+      registry.install(
+        await OpenMuseWordProductPlugin.loadBundled(
+          bundleFile: File(p.join(bundledWordRoot.path, 'word.mcpb')),
+          trustedPublicKeyPem: await bundledWordKey.readAsString(),
+          expectedKeyId: identity['keyId'] as String,
+          expectedVersion: identity['version'] as String,
+        ),
+      );
+    } catch (error) {
+      debugPrint('Bundled Word product registration failed: $error');
+    }
+  }
+  if (registry.plugin(pdfProductId) == null &&
+      await bundledPdfIdentity.exists() &&
+      await bundledPdfKey.exists()) {
+    try {
+      final identity =
+          jsonDecode(await bundledPdfIdentity.readAsString()) as Map;
+      final pdf = await OpenMusePdfProductPlugin.loadBundled(
+        bundleFile: File(p.join(bundledPdfRoot.path, 'pdf.mcpb')),
+        trustedPublicKeyPem: await bundledPdfKey.readAsString(),
+        expectedKeyId: identity['keyId'] as String,
+        expectedVersion: identity['version'] as String,
+        settings: settings,
+        openGeneratedDocument: openGeneratedPdfDocument,
+      );
+      registry.install(pdf);
+      await registry.activate(pdf.descriptor.id);
+    } catch (error) {
+      debugPrint('Bundled PDF product registration failed: $error');
+    }
+  }
+  if (registry.plugin(spreadsheetProductId) == null &&
+      await bundledSpreadsheetIdentity.exists() &&
+      await bundledSpreadsheetKey.exists()) {
+    try {
+      final identity =
+          jsonDecode(await bundledSpreadsheetIdentity.readAsString()) as Map;
+      registry.install(
+        await OpenMuseSpreadsheetProductPlugin.loadBundled(
+          bundleFile: File(
+            p.join(bundledSpreadsheetRoot.path, 'spreadsheet.mcpb'),
+          ),
+          trustedPublicKeyPem: await bundledSpreadsheetKey.readAsString(),
+          expectedKeyId: identity['keyId'] as String,
+          expectedVersion: identity['version'] as String,
+        ),
+      );
+    } catch (error) {
+      debugPrint('Bundled Spreadsheet product registration failed: $error');
+    }
+  }
+  unawaited(
+    Future<void>(() async {
+      for (final entry in installedMcpEntries.where(
+        (entry) =>
+            entry.name != wordProductId &&
+            entry.name != pdfProductId &&
+            entry.name != spreadsheetProductId,
+      )) {
+        try {
+          await registerMcp(entry).timeout(const Duration(seconds: 10));
+        } catch (error) {
+          debugPrint('MCPB activation deferred for ${entry.name}: $error');
+        }
+      }
+    }),
+  );
+  final wordE2eDocument = kDebugMode && supportOverride != null
+      ? Platform.environment['OPENMUSE_E2E_OPEN_DOCX']
+      : null;
+  if (wordE2eDocument != null) {
+    final document = File(wordE2eDocument).absolute;
+    if (await document.exists() && registry.plugin(wordProductId) != null) {
+      controller.openResource(
+        OpenMuseResource(
+          uri: document.uri,
+          displayName: p.basename(document.path),
+          mediaType: wordDocxMediaType,
+        ),
+      );
+    }
+  }
+  final pdfE2eDocument = kDebugMode && supportOverride != null
+      ? Platform.environment['OPENMUSE_E2E_OPEN_PDF']
+      : null;
+  if (pdfE2eDocument != null) {
+    final document = File(pdfE2eDocument).absolute;
+    if (await document.exists() && registry.plugin(pdfProductId) != null) {
+      controller.openResource(
+        OpenMuseResource(
+          uri: document.uri,
+          displayName: p.basename(document.path),
+          mediaType: 'application/pdf',
+        ),
+      );
+    }
+  }
+  final spreadsheetE2eDocument = kDebugMode && supportOverride != null
+      ? Platform.environment['OPENMUSE_E2E_OPEN_XLSX']
+      : null;
+  if (spreadsheetE2eDocument != null) {
+    final document = File(spreadsheetE2eDocument).absolute;
+    if (await document.exists() &&
+        registry.plugin(spreadsheetProductId) != null) {
+      controller.openResource(
+        OpenMuseResource(
+          uri: document.uri,
+          displayName: p.basename(document.path),
+          mediaType:
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ),
+      );
+    }
   }
   unawaited(() async {
     try {
@@ -405,7 +1483,9 @@ Future<Widget> bootOpenMuseHost() async {
   }());
   unawaited(() async {
     try {
-      await registry.activate(pairedDesktopPlugin.descriptor.id);
+      if (!macAppStoreDistribution) {
+        await registry.activate(pairedDesktopPlugin.descriptor.id);
+      }
     } catch (error) {
       debugPrint('Paired Desktop plugin activation failed: $error');
     }
@@ -424,6 +1504,15 @@ Future<Widget> bootOpenMuseHost() async {
       debugPrint('DSH plugin activate deferred: $error');
     }
   }());
+  unawaited(() async {
+    try {
+      if (!macAppStoreDistribution) {
+        await registry.activate('com.openmuse.plugin-market');
+      }
+    } catch (error) {
+      debugPrint('Plugin market activation failed: $error');
+    }
+  }());
   controller.flushBeforeDiskRead = (resource) async {
     for (final descriptor in registry.descriptors) {
       final plugin = registry.plugin(descriptor.id);
@@ -434,15 +1523,22 @@ Future<Widget> bootOpenMuseHost() async {
       }
     }
   };
-  return OpenMuseHostApp(
-    registry: registry,
-    workspace: controller,
-    settings: settings,
-    layoutController: layoutController,
-    layoutStore: layoutStore,
-    mutationGuards: SurfaceMutationGuards(),
-    authentication: authenticationPlugin,
-    readyAccount: readyAccount,
+  return OpenMuseRuntimeHost(
+    runtime: runtime,
+    child: OpenMuseHostApp(
+      localeController: localeController,
+      navigatorKey: mcpNavigatorKey,
+      updates: updates,
+      registry: registry,
+      workspace: controller,
+      settings: settings,
+      layoutController: layoutController,
+      layoutStore: layoutStore,
+      mutationGuards: SurfaceMutationGuards(),
+      authentication: authenticationPlugin,
+      readyAccount: readyAccount,
+      resources: resourceCenter,
+    ),
   );
 }
 
@@ -453,12 +1549,10 @@ WorkbenchLayoutSnapshot _layoutFallback(OpenMuseLocalSettings settings) {
       .toDouble();
   final remaining = assumedWindowWidth * (1 - sidebarRatio);
   final assistant = settings.assistantWidth ?? 420;
-  final editorRatio = ((remaining - assistant) / remaining)
-      .clamp(0.45, 0.82)
-      .toDouble();
+  final agentRatio = (assistant / remaining).clamp(0.32, 0.7).toDouble();
   return createDefaultWorkbenchLayout(
     sidebarRatio: sidebarRatio,
-    editorRatio: editorRatio,
+    agentRatio: agentRatio,
   );
 }
 
@@ -523,10 +1617,17 @@ final class _OpenMuseLaunchAppState extends State<OpenMuseLaunchApp> {
       localizationsDelegates: OpenMuseAuthLocalizations.localizationsDelegates,
       supportedLocales: OpenMuseAuthLocalizations.supportedLocales,
       home: Scaffold(
-        backgroundColor: OpenMuseTokens.canvas,
+        backgroundColor: Colors.white,
         body: Center(
           child: _error == null
-              ? const CircularProgressIndicator(strokeWidth: 2)
+              ? const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(strokeWidth: 2),
+                    SizedBox(height: 20),
+                    Text('OpenMuse 正在启动…'),
+                  ],
+                )
               : Padding(
                   padding: const EdgeInsets.all(24),
                   child: Text(

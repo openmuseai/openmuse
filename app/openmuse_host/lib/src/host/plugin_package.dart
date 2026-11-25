@@ -8,7 +8,7 @@ import 'package:crypto/crypto.dart';
 import 'package:openmuse_plugin_sdk/manifest.dart';
 import 'package:path/path.dart' as p;
 
-import 'endpoint_config.dart';
+import 'host_loopback.dart';
 
 const distributedPackageLimit = 32 * 1024 * 1024;
 
@@ -417,10 +417,7 @@ Map<String, List<int>> _payload(
 }
 
 List<int> _fileBytes(ArchiveFile entry) {
-  final content = entry.content;
-  if (content is Uint8List) return content;
-  if (content is List<int>) return content;
-  throw FormatException('无法读取 ${entry.name}');
+  return entry.content;
 }
 
 File _within(Directory root, String relative) {
@@ -456,9 +453,9 @@ Future<List<int>> _get(HttpClient client, Uri uri, int maxBytes) async {
 bool _allowed(Uri uri) {
   if (uri.scheme == 'https' && uri.host.isNotEmpty) return true;
   // Plain `http` stays restricted to the loopback hosts defined once in
-  // [HostEndpointConfig]; the set must never gain a non-loopback name.
+  // [hostLoopbackHosts]; the set must never gain a non-loopback name.
   if (uri.scheme == 'http' &&
-      HostEndpointConfig.loopbackHosts.contains(uri.host)) {
+      hostLoopbackHosts.contains(uri.host)) {
     return true;
   }
   return false;

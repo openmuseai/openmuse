@@ -1,3 +1,5 @@
+import 'mobile_build_locale.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -5,6 +7,7 @@ import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.da
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 import 'native_dsh_page.dart';
+import 'mobile_dsh_connection.dart';
 import 'plugin_interaction_remote.dart';
 
 /// Native Mobile information architecture for one paired Desktop.
@@ -27,6 +30,10 @@ final class NativeDesktopShell extends StatefulWidget {
 
 final class _NativeDesktopShellState extends State<NativeDesktopShell> {
   DshNativeGatewayClient? _catalog;
+  late final _messages = MobileDshRecentMessages(
+    '${widget.connection.accountRef}|${widget.connection.deviceRef}',
+  );
+  late final _transport = MobileDshConnection(widget.connection, _messages);
   Timer? _refreshTimer;
   List<DshNativeWorkspaceSummary> _workspaces = const [];
   List<DshNativeSessionSummary> _sessions = const [];
@@ -40,37 +47,29 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
   String? _lastCatalogLog;
 
   @override
-  void initState() {
-    super.initState();
-    unawaited(_initialize());
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_catalog == null) unawaited(_initialize());
   }
 
-  DshNativeGatewayClient _newClient() => DshNativeGatewayClient(
-    origin: Uri.parse(widget.connection.session.origin),
-    bootstrapPath: widget.connection.session.path,
-    allowInsecureLoopback: widget.connection.session.allowInsecureLoopback,
-    allowInsecurePrivateNetworkForTesting:
-        widget.connection.session.allowInsecurePrivateNetworkForTesting,
-  );
-
   Future<void> _initialize() async {
-    final client = _newClient();
+    final localeStrings = stringsOf(context);
+
+    final client = _transport.client;
     _catalog = client;
     try {
       final hello = await client.initialize();
       if (!hello.supported ||
           !hello.capabilities.contains('workspaces.list') ||
           !hello.capabilities.contains('session.create')) {
-        throw const DshNativeGatewayException(
-          'Desktop DSH 尚未提供完整的原生 workspace/session 协议。',
+        throw DshNativeGatewayException(
+          (localeStrings.mobileDesktopDoesNotYetSupportTheComplete8ad183cf()),
         );
       }
-      final negotiation = await client.negotiate(
-        DshNativeCapabilities.standard(),
-      );
+      final negotiation = await _transport.prepare();
       if (negotiation.requiresWebFallback) {
-        throw const DshNativeGatewayException(
-          '当前 Desktop 插件要求使用 Web 对话面，无法安全降级为原生布局。',
+        throw DshNativeGatewayException(
+          (localeStrings.mobileThisDesktopPluginRequiresItsWebConve49ea4be8()),
         );
       }
       await _refreshCatalog(selectActive: true);
@@ -257,7 +256,8 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
-    _catalog?.close();
+    _transport.close();
+    _messages.dispose();
     super.dispose();
   }
 
@@ -286,13 +286,14 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
             Text(
               _sessionId == null
                   ? (workspace?.title ?? widget.connection.deviceName)
-                  : (_session(_sessionId!)?.title ?? '新对话'),
+                  : (_session(_sessionId!)?.title ??
+                        (stringsOf(context).mobileNewConversationBcec2f30())),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
             Text(
-              '${widget.connection.deviceName} · ${workspace?.title ?? '选择 Workspace'}',
+              '${widget.connection.deviceName} · ${workspace?.title ?? (stringsOf(context).mobileChooseAWorkspace49d3d398())}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall,
@@ -303,8 +304,10 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
           IconButton(
             key: const ValueKey('native-follow-desktop'),
             tooltip: _followDesktopActivity
-                ? '正在跟随 Desktop 活动'
-                : '恢复跟随 Desktop 活动',
+                ? (stringsOf(context).mobileFollowingDesktopActivity15d954b3())
+                : (stringsOf(
+                    context,
+                  ).mobileResumeFollowingDesktopActivity5eeb7004()),
             onPressed: () {
               setState(() => _followDesktopActivity = true);
               unawaited(_refreshCatalog(selectActive: true));
@@ -315,7 +318,7 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
           ),
           IconButton(
             key: const ValueKey('native-new-session'),
-            tooltip: '新建对话',
+            tooltip: (stringsOf(context).mobileNewConversation4e67ed63()),
             onPressed: _workspaceId == null || _creating
                 ? null
                 : _createSession,
@@ -341,7 +344,8 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
     if (_loading) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }
-    if (_failure case final failure?) {
+    if (_failure != null && _sessions.isEmpty) {
+      final failure = _failure!;
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(28),
@@ -355,7 +359,9 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
               FilledButton.icon(
                 onPressed: () => _refreshCatalog(),
                 icon: const Icon(Icons.refresh),
-                label: const Text('重新同步 Desktop'),
+                label: Text(
+                  (stringsOf(context).mobileSyncDesktopAgainFd673371()),
+                ),
               ),
             ],
           ),
@@ -363,7 +369,13 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
       );
     }
     if (workspace == null) {
-      return const Center(child: Text('Desktop 当前没有可用的 Workspace'));
+      return Center(
+        child: Text(
+          (stringsOf(
+            context,
+          ).mobileNoWorkspacesAreAvailableOnDesktopAb22cd6e()),
+        ),
+      );
     }
     final sessionId = _sessionId;
     if (sessionId == null) {
@@ -372,13 +384,19 @@ final class _NativeDesktopShellState extends State<NativeDesktopShell> {
           key: const ValueKey('native-empty-create'),
           onPressed: _createSession,
           icon: const Icon(Icons.add),
-          label: Text('在 ${workspace.title} 中新建对话'),
+          label: Text(
+            (stringsOf(
+              context,
+            ).mobileNewConversationIn6c1f1a27(value1: workspace.title)),
+          ),
         ),
       );
     }
     return NativeDshPage(
       key: ValueKey('native-session-$sessionId'),
       session: widget.connection.session,
+      connection: _transport,
+      knownSession: _session(sessionId),
       workspaceTitle: workspace.title,
       requestedSessionId: sessionId,
       embedded: true,
@@ -421,9 +439,11 @@ final class _CatalogDrawer extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.desktop_windows_outlined),
               title: Text(deviceName),
-              subtitle: const Text('Desktop · 实时连接'),
+              subtitle: Text(
+                (stringsOf(context).mobileDesktopConnectedLiveF96eebdd()),
+              ),
               trailing: IconButton(
-                tooltip: '刷新',
+                tooltip: (stringsOf(context).mobileRefresh20ada9a3()),
                 onPressed: onRefresh,
                 icon: const Icon(Icons.refresh),
               ),
@@ -438,7 +458,9 @@ final class _CatalogDrawer extends StatelessWidget {
                       ? null
                       : onCreate,
                   icon: const Icon(Icons.add_comment_outlined),
-                  label: const Text('新建对话'),
+                  label: Text(
+                    (stringsOf(context).mobileNewConversation4e67ed63()),
+                  ),
                 ),
               ),
             ),
@@ -455,7 +477,11 @@ final class _CatalogDrawer extends StatelessWidget {
                       selected: workspace.workspaceId == selectedWorkspaceId,
                       leading: const Icon(Icons.folder_outlined),
                       title: Text(workspace.title),
-                      subtitle: Text('${workspace.sessionIds.length} 个对话'),
+                      subtitle: Text(
+                        (stringsOf(context).mobileConversations03595e53(
+                          value1: workspace.sessionIds.length,
+                        )),
+                      ),
                       onTap: () => onWorkspace(workspace.workspaceId),
                     ),
                     for (final id in workspace.sessionIds)
@@ -474,7 +500,14 @@ final class _CatalogDrawer extends StatelessWidget {
                             size: 18,
                           ),
                           title: Text(
-                            session.title ?? (session.blank ? '新对话' : '历史对话'),
+                            session.title ??
+                                (session.blank
+                                    ? (stringsOf(
+                                        context,
+                                      ).mobileNewConversationBcec2f30())
+                                    : (stringsOf(
+                                        context,
+                                      ).mobilePreviousConversation196d79ba())),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

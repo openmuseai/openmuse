@@ -4,8 +4,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+dependencies {
+    implementation("androidx.webkit:webkit:1.14.0")
+}
+
 android {
-    namespace = "io.openmuse.openmuse_mobile"
+    namespace = "com.openmuseai.mobile"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,8 +19,8 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "io.openmuse.openmuse_mobile"
+        applicationId = "com.openmuseai.mobile"
+        manifestPlaceholders["openmuseAppLabel"] = "OpenMuse"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -26,11 +30,18 @@ android {
         ndk { abiFilters += "arm64-v8a" }
     }
 
-    sourceSets.getByName("main").jniLibs.srcDirs(
-        rootProject.file("../../../target/office-docx/android"),
+    sourceSets.getByName("main").jniLibs.setSrcDirs(listOf(
         rootProject.file("../../../target/paired-relay/android"),
-        rootProject.file("../../../target/office-viewers/android"),
-    )
+    ))
+
+    // OpenMuse's paired bridge currently ships only arm64. Some
+    // dependencies bundle extra 32-bit/x86 libraries; leaving those in the
+    // package advertises ABIs that cannot launch the complete application.
+    packaging {
+        jniLibs {
+            excludes += setOf("**/armeabi-v7a/**", "**/x86_64/**", "**/x86/**")
+        }
+    }
 
     val releaseKeystore = providers.environmentVariable("OPENMUSE_ANDROID_KEYSTORE").orNull
     if (releaseKeystore != null) {
@@ -45,24 +56,17 @@ android {
     buildTypes {
         debug {
             providers.environmentVariable("OPENMUSE_ANDROID_DEBUG_APPLICATION_ID_SUFFIX")
-                .orNull?.let { applicationIdSuffix = it }
+                .orNull?.let {
+                    applicationIdSuffix = it
+                    if (it == ".acceptance") manifestPlaceholders["openmuseAppLabel"] = "OpenMuse QA"
+                }
         }
         release {
+            providers.environmentVariable("OPENMUSE_ANDROID_RELEASE_APPLICATION_ID_SUFFIX")
+                .orNull?.let { applicationIdSuffix = it }
             signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
-        }
-    }
-}
-
-val verifyOpenMuseDocxNative by tasks.registering {
-    val library = rootProject.file(
-        "../../../target/office-docx/android/arm64-v8a/libopenmuse_office_docx.so",
-    )
-    inputs.file(library)
-    doLast {
-        check(library.isFile) {
-            "Missing DOCX native engine. Run scripts/build_office_docx_mobile_artifacts.sh"
         }
     }
 }
@@ -79,23 +83,9 @@ val verifyOpenMusePairedNative by tasks.registering {
     }
 }
 
-val verifyOpenMuseOfficeViewersNative by tasks.registering {
-    val library = rootProject.file(
-        "../../../target/office-viewers/android/arm64-v8a/libopenmuse_office_viewers.so",
-    )
-    inputs.file(library)
-    doLast {
-        check(library.isFile) {
-            "Missing Office viewers engine. Run scripts/build_office_viewers_mobile_artifacts.sh"
-        }
-    }
-}
-
 tasks.named("preBuild").configure {
     dependsOn(
-        verifyOpenMuseDocxNative,
         verifyOpenMusePairedNative,
-        verifyOpenMuseOfficeViewersNative,
     )
 }
 

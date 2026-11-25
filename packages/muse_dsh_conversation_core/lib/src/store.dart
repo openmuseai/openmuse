@@ -133,6 +133,47 @@ final class DshConversationStore {
     permissionPreset: _permissionPreset,
   );
 
+  int? get oldestSeq =>
+      _journal.isEmpty ? null : _journal.keys.reduce((a, b) => a < b ? a : b);
+
+  /// A bounded local view, never an authority for Desktop state.
+  DshSnapshotFrame cachePage({int maxRecords = 120}) {
+    final records = _journal.values.toList()
+      ..sort((a, b) => a.seq.compareTo(b.seq));
+    final start = records.length > maxRecords ? records.length - maxRecords : 0;
+    return DshSnapshotFrame(
+      header: {'id': _sessionId},
+      cursor: _cursor,
+      records: List.unmodifiable(records.skip(start)),
+      hasMore: _hasMore || start > 0,
+      projections: {
+        'values': {
+          'title': _title,
+          'agentPreset': _agentPreset,
+          'modelSelection': {
+            'next': {
+              'provider': _provider,
+              'model': _model,
+              'reasoningEffort': _reasoningEffort,
+            },
+          },
+          'permissions': {'currentValue': _permissionPreset},
+        },
+      },
+    );
+  }
+
+  void prepend(DshSnapshotFrame page) {
+    if (page.header['id'] != _sessionId) return;
+    final before = oldestSeq;
+    for (final event in page.records) {
+      if (before == null || event.seq < before)
+        _journal.putIfAbsent(event.seq, () => event);
+    }
+    _hasMore = page.hasMore;
+    _publish();
+  }
+
   void connecting(String sessionId, {bool reconnecting = false}) {
     _sessionId = sessionId;
     _phase = reconnecting
@@ -149,13 +190,25 @@ final class DshConversationStore {
         // newer journal with an older recovery snapshot.
         if (frame.cursor < _cursor) return;
         _sessionId = frame.header['id'] as String? ?? _sessionId;
-        _journal
-          ..clear()
-          ..addEntries(
-            frame.records.map((event) => MapEntry(event.seq, event)),
-          );
+        final oldest = oldestSeq;
+        final incomingOldest = frame.records.isEmpty
+            ? null
+            : frame.records.first.seq;
+        final retainedHistory =
+            oldest != null &&
+            incomingOldest != null &&
+            oldest < incomingOldest &&
+            incomingOldest <= _cursor + 1;
+        if (retainedHistory) {
+          _journal.removeWhere((seq, _) => seq >= incomingOldest);
+        } else {
+          _journal.clear();
+        }
+        _journal.addEntries(
+          frame.records.map((event) => MapEntry(event.seq, event)),
+        );
         _cursor = frame.cursor;
-        _hasMore = frame.hasMore;
+        if (!retainedHistory) _hasMore = frame.hasMore;
         _live.clear();
         _applyProjections(frame.projections);
         for (final event in frame.records) {
@@ -338,6 +391,7 @@ final class DshConversationStore {
     final rows = <DshConversationRow>[];
     final toolCalls = <String, JsonMap>{};
     final completedToolCalls = <String>{};
+    final presentedByAssistant = _presentedByClosingAssistant(events);
     for (final event in events.where((event) => event.type == 'tool/call')) {
       final callId = event.data['callId'];
       if (callId is String) toolCalls[callId] = event.data;
@@ -353,7 +407,11 @@ final class DshConversationStore {
           completedToolCalls.contains(event.data['callId'])) {
         continue;
       }
-      final row = _rowOf(event, toolCalls);
+      final row = _rowOf(
+        event,
+        toolCalls,
+        presented: presentedByAssistant[event.seq] ?? const [],
+      );
       if (row != null) rows.add(row);
     }
     rows.addAll(
@@ -386,8 +444,9 @@ final class DshConversationStore {
 
   DshConversationRow? _rowOf(
     DshWireEvent event,
-    Map<String, JsonMap> toolCalls,
-  ) {
+    Map<String, JsonMap> toolCalls, {
+    List<JsonMap> presented = const [],
+  }) {
     switch (event.type) {
       case 'user/message':
         final source = event.data['source'];
@@ -411,6 +470,9 @@ final class DshConversationStore {
           ),
           time: event.time,
           seq: event.seq,
+          nativeContext: presented.isEmpty
+              ? const {}
+              : {'presented': presented},
         );
       case 'tool/call':
         final name = event.data['name'] as String? ?? 'Tool';
@@ -476,6 +538,36 @@ final class DshConversationStore {
           text: event.data['reason']?.toString() ?? '正在重试模型请求',
           time: event.time,
           seq: event.seq,
+        );
+      case 'deliverables/presented':
+        // File cards belong on the closing assistant, matching the official
+        // turn tail. The event itself is not a separate transcript row.
+        return null;
+      case 'todo/write':
+        final todos = _todoItems(event.data['todos']);
+        if (todos.isEmpty) return null;
+        return DshConversationRow(
+          key: 'event:${event.seq}',
+          kind: DshConversationRowKind.artifact,
+          title: '任务',
+          text: todos.map((item) => item['content']).join('\n'),
+          time: event.time,
+          seq: event.seq,
+          nativeKey: 'todo/write',
+          nativeContext: {'todos': todos},
+        );
+      case 'goal/change':
+        final goal = _goalSnapshot(event.data);
+        if (goal == null) return null;
+        return DshConversationRow(
+          key: 'event:${event.seq}',
+          kind: DshConversationRowKind.artifact,
+          title: goal['label'] as String? ?? '目标',
+          text: goal['objective'] as String? ?? '',
+          time: event.time,
+          seq: event.seq,
+          nativeKey: 'goal/change',
+          nativeContext: {'goal': goal},
         );
       case 'workspace/changes':
         final turn = event.data['turn'];
@@ -556,14 +648,156 @@ final class DshConversationStore {
       'web_search' => '搜索网络',
       'web_fetch' => '读取网页',
       'ask_user_question' => '提问',
+      'present' => '交付文件',
       _ => null,
     };
+    if (name == 'present') {
+      final status = failed
+          ? '交付失败'
+          : completed
+          ? '已交付'
+          : '正在交付';
+      return '交付文件 · $status';
+    }
     if (action == null) {
       if (failed) return '$name 失败';
       return completed ? '$name 完成' : name;
     }
     if (failed) return '$action失败';
     return completed ? '已$action' : '正在$action';
+  }
+
+  /// Official turn tail: the latest declaration of each path presented before
+  /// the closing assistant of that turn.
+  Map<int, List<JsonMap>> _presentedByClosingAssistant(
+    List<DshWireEvent> events,
+  ) {
+    final filesByTurn = <int, List<_PresentedFile>>{};
+    final closingSeq = <int, int>{};
+    int? turn;
+    for (final event in events) {
+      final eventTurn = event.data['turn'];
+      if (eventTurn is int && eventTurn >= 1) turn = eventTurn;
+      final bucket = turn ?? 0;
+      if (event.type == 'deliverables/presented') {
+        filesByTurn
+            .putIfAbsent(bucket, () => [])
+            .addAll(_presentedFiles(event));
+      }
+      if (event.type == 'assistant/message') {
+        closingSeq[bucket] = event.seq;
+      }
+    }
+    final attached = <int, List<JsonMap>>{};
+    for (final entry in closingSeq.entries) {
+      final files = _dedupePresented(
+        filesByTurn[entry.key] ?? const [],
+        beforeSeq: entry.value,
+      );
+      if (files.isNotEmpty) attached[entry.value] = files;
+    }
+    return attached;
+  }
+
+  List<_PresentedFile> _presentedFiles(DshWireEvent event) {
+    final values = event.data['files'];
+    if (values is! List) return const [];
+    final files = <_PresentedFile>[];
+    for (var index = 0; index < values.length; index++) {
+      final value = values[index];
+      if (value is! Map) continue;
+      final path = value['path'];
+      final description = value['description'];
+      if (path is! String || path.trim().isEmpty) continue;
+      if (description != null && description is! String) continue;
+      final slash = path.lastIndexOf('/');
+      final backslash = path.lastIndexOf('\\');
+      final cut = slash > backslash ? slash : backslash;
+      files.add(
+        _PresentedFile(
+          seq: event.seq,
+          index: index,
+          path: path,
+          name: cut == -1 ? path : path.substring(cut + 1),
+          description: description is String ? description : null,
+        ),
+      );
+    }
+    return files;
+  }
+
+  List<JsonMap> _dedupePresented(
+    List<_PresentedFile> files, {
+    required int beforeSeq,
+  }) {
+    final order = <String>[];
+    final latest = <String, _PresentedFile>{};
+    for (final file in files) {
+      if (file.seq >= beforeSeq) continue;
+      if (!latest.containsKey(file.path)) order.add(file.path);
+      latest[file.path] = file;
+    }
+    return [
+      for (final path in order)
+        {
+          'seq': latest[path]!.seq,
+          'index': latest[path]!.index,
+          'path': latest[path]!.path,
+          'name': latest[path]!.name,
+          if (latest[path]!.description != null)
+            'description': latest[path]!.description,
+        },
+    ];
+  }
+
+  List<JsonMap> _todoItems(Object? value) {
+    if (value is! List) return const [];
+    final items = <JsonMap>[];
+    final seen = <String>{};
+    for (final raw in value) {
+      if (raw is! Map) continue;
+      final content = raw['content'];
+      final status = raw['status'];
+      if (content is! String ||
+          content.trim().isEmpty ||
+          seen.contains(content)) {
+        continue;
+      }
+      if (status != 'pending' &&
+          status != 'in_progress' &&
+          status != 'completed') {
+        continue;
+      }
+      seen.add(content);
+      items.add({'content': content, 'status': status});
+    }
+    return items;
+  }
+
+  JsonMap? _goalSnapshot(JsonMap data) {
+    if (data['operation'] == 'clear') return null;
+    final goal = data['goal'];
+    if (goal is! Map) return null;
+    final objective = goal['objective'];
+    final phase = goal['phase'];
+    if (objective is! String || objective.trim().isEmpty) return null;
+    if (phase == 'complete') return null;
+    final label = switch (phase) {
+      'paused' => '已暂停的目标',
+      'blocked' => '受阻的目标',
+      'active' => '进行中的目标',
+      _ => null,
+    };
+    if (label == null) return null;
+    final blocked = goal['blockedReason'];
+    final blockedMessage = blocked is Map ? blocked['message'] : null;
+    return {
+      'label': label,
+      'phase': phase,
+      'objective': objective.trim(),
+      if (blockedMessage is String && blockedMessage.isNotEmpty)
+        'blockedMessage': blockedMessage,
+    };
   }
 
   bool _isSurfaceEvent(DshWireEvent event) => const {
@@ -577,6 +811,22 @@ final class DshConversationStore {
   void _publish() {
     if (!_changes.isClosed) _changes.add(null);
   }
+}
+
+final class _PresentedFile {
+  const _PresentedFile({
+    required this.seq,
+    required this.index,
+    required this.path,
+    required this.name,
+    this.description,
+  });
+
+  final int seq;
+  final int index;
+  final String path;
+  final String name;
+  final String? description;
 }
 
 final class _PendingPrompt {
@@ -625,4 +875,7 @@ const _knownEvents = <String>{
   'command/done',
   'model/selection',
   'llm/retry',
+  'deliverables/presented',
+  'todo/write',
+  'goal/change',
 };

@@ -1,12 +1,15 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'src/dsh_panel.dart';
+import 'src/dsh_resource_source.dart';
+import 'src/dsh_generation.dart';
 import 'src/dsh_sidecar.dart';
 import 'src/dsh_workspace_binding.dart';
 import 'src/dsh_workspace_sync.dart';
@@ -20,7 +23,10 @@ final class OpenMuseDshPlugin
     implements
         OpenMusePlugin,
         OpenMuseSettingsContributor,
-        OpenMusePluginLogContributor {
+        OpenMusePluginLogContributor,
+        OpenMuseAgentContributor,
+        OpenMuseToolContributor,
+        OpenMuseResourceSourceContributor {
   OpenMuseDshPlugin({
     DshSidecarSupervisor? supervisor,
     Future<bool> Function(PluginInteraction)? routeInteraction,
@@ -33,9 +39,106 @@ final class OpenMuseDshPlugin
   DshWorkspaceSynchronizer? _workspaceSync;
   OpenMusePluginContext? _context;
   final ValueNotifier<String?> _activeMount = ValueNotifier(null);
-  final ValueNotifier<PluginInteraction?> _desktopInteraction = ValueNotifier(null);
+  final ValueNotifier<PluginInteraction?> _desktopInteraction = ValueNotifier(
+    null,
+  );
+  DshGeneration? _generation;
+  @override
+  List<Map<String, Object?>> get contributedTools => DshGeneration.tools;
+  @override
+  Future<Map<String, Object?>> callContributedTool(
+    String caller,
+    String name,
+    Map<String, Object?> arguments,
+  ) {
+    final supervisor = _supervisor;
+    if (supervisor == null) throw StateError('AGENT_NOT_ACTIVE');
+    supervisor.requireAiSharing();
+    _generation ??= DshGeneration(
+      endpoint: () => supervisor.endpoint,
+      token: supervisor.bridgeToken,
+      mount: () => _activeMount.value,
+      ready: supervisor.ensureStarted,
+      openSession: (id) => supervisor.requestedSession.value = id,
+    );
+    return _generation!.call(caller, name, arguments);
+  }
+
+  @override
+  Future<void> disposeToolCaller(String caller) async {
+    await _generation?.disposeCaller(caller);
+  }
+
+  @override
+  List<ResourceProvider> createResourceSources(ResourceSourceContext context) =>
+      [
+        DshResourceSource(
+          context,
+          endpoint: () => _supervisor?.endpoint,
+          token: () => _supervisor?.bridgeToken ?? '',
+          ready: () async {
+            await _supervisor?.ensureStarted();
+          },
+          enabled: () => _context != null && _supervisor != null,
+        ),
+      ];
+
   String? _pluginInteractionDir;
   PluginInteractionListener? _interactionListener;
+
+  @override
+  Future<void> sendAgentMessage(List<Map<String, Object?>> content) async {
+    final supervisor = _supervisor;
+    final mount = _activeMount.value;
+    if (supervisor == null || mount == null)
+      throw StateError('Agent workspace unavailable');
+    supervisor.requireAiSharing();
+    await supervisor.ensureStarted();
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
+    try {
+      Future<Map<String, Object?>> post(
+        String path,
+        Map<String, Object?> body,
+      ) async {
+        final request = await client.postUrl(
+          supervisor.endpoint!.resolve(path),
+        );
+        request.headers
+          ..contentType = ContentType.json
+          ..set('x-openmuse-bridge-token', supervisor.bridgeToken);
+        request.write(jsonEncode(body));
+        final response = await request.close().timeout(
+          const Duration(seconds: 30),
+        );
+        final value = jsonDecode(await utf8.decoder.bind(response).join());
+        if (response.statusCode != 200 || value is! Map)
+          throw StateError('DSH rejected Agent message');
+        return Map<String, Object?>.from(value);
+      }
+
+      final catalog = await post('/openmuse-bridge/workspaces', {
+        'mounts': [mount],
+      });
+      final workspace = (catalog['items'] as List).whereType<Map>().firstWhere(
+        (item) => item['path'] == mount,
+      );
+      final created = await post('/openmuse-native/v1/session/create', {
+        'workspaceId': workspace['workspaceId'],
+      });
+      final session = created['sessionId'];
+      if (session is! String)
+        throw const FormatException('Invalid DSH session');
+      supervisor.requestedSession.value = session;
+      await post('/openmuse-native/v1/session/prompt', {
+        'sessionId': session,
+        'requestId': 'resource-${DateTime.now().microsecondsSinceEpoch}',
+        'mode': 'queue',
+        'content': content,
+      });
+    } finally {
+      client.close(force: true);
+    }
+  }
 
   @override
   Future<String> readLog() async {
@@ -106,7 +209,9 @@ final class OpenMuseDshPlugin
       _pluginInteractionDir = snapshot['pluginInteractionDir'] as String;
     }
     if (_pluginInteractionDir case final directory?) {
-      _interactionListener = PluginInteractionListener(directory, (interaction) {
+      _interactionListener = PluginInteractionListener(directory, (
+        interaction,
+      ) {
         unawaited(() async {
           try {
             if (await _routeInteraction?.call(interaction) == true) return;
@@ -149,6 +254,8 @@ final class OpenMuseDshPlugin
 
   @override
   Future<void> deactivate() async {
+    await _generation?.close();
+    _generation = null;
     _interactionListener?.stop();
     _interactionListener = null;
     _desktopInteraction.value = null;
@@ -214,6 +321,12 @@ final class OpenMuseDshPlugin
           Text('状态：${supervisor.state.name}'),
           Text('运行时：${supervisor.cliPath == null ? '未配置' : '已配置'}'),
           const Text('模型供应商与模型可在 DSH 启动后设置；启动不要求 DeepSeek API Key。'),
+          if (DshSidecarSupervisor.requiresAiSharingConsent &&
+              supervisor.aiSharingAllowed)
+            TextButton(
+              onPressed: () => unawaited(supervisor.revokeAiSharing()),
+              child: const Text('Disable AI sharing / 停用 AI 共享'),
+            ),
           const SizedBox(height: 8),
           Text(
             '运行时路径由 OPENMUSE_DSH_CLI 配置；工作区绑定自动同步。',

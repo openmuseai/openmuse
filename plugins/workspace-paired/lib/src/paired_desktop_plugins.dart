@@ -11,11 +11,7 @@ import 'paired_desktop_models.dart';
 
 final class OpenMusePairedDesktopHostPlugin
     implements OpenMusePlugin, OpenMuseSettingsContributor {
-  OpenMusePairedDesktopHostPlugin(
-    this.gateway, {
-    this.directory,
-    this.relay,
-  }) {
+  OpenMusePairedDesktopHostPlugin(this.gateway, {this.directory, this.relay}) {
     gateway.onChanged = _changes.changed;
     directory?.addListener(_changes.changed);
     final outbound = relay;
@@ -190,6 +186,8 @@ final class PairedDesktopMobileController extends ChangeNotifier {
   final bool allowInsecureLoopback;
   final bool allowInsecurePrivateNetworkForTesting;
   PairedDesktopMobileSnapshot _snapshot = const PairedDesktopMobileSnapshot();
+  Future<bool>? _pendingConnection;
+  String? _pendingDeviceRef;
   PairedDesktopMobileSnapshot get snapshot => _snapshot;
 
   List<AccountDevice> get devices => directory?.snapshot.devices ?? const [];
@@ -208,6 +206,10 @@ final class PairedDesktopMobileController extends ChangeNotifier {
   }
 
   Future<bool> connectDevice(AccountDevice device, {bool force = false}) async {
+    final pending = _pendingConnection;
+    if (pending != null) {
+      return _pendingDeviceRef == device.deviceRef ? pending : false;
+    }
     if (!device.online) {
       _publish(
         const PairedDesktopMobileSnapshot(
@@ -242,9 +244,16 @@ final class PairedDesktopMobileController extends ChangeNotifier {
       allowInsecurePrivateNetworkForTesting:
           allowInsecurePrivateNetworkForTesting,
     );
+    final operation = _connectWithClient(client, device.deviceRef);
+    _pendingDeviceRef = device.deviceRef;
+    _pendingConnection = operation;
     try {
-      return await _connectWithClient(client, device.deviceRef);
+      return await operation;
     } finally {
+      if (identical(_pendingConnection, operation)) {
+        _pendingConnection = null;
+        _pendingDeviceRef = null;
+      }
       client.close();
     }
   }

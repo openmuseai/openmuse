@@ -1,10 +1,11 @@
-enum OpenMuseUiRuntimeKind { none, flutter, webView }
+enum OpenMuseUiRuntimeKind { none, flutter, webView, a2ui }
 
 enum OpenMuseExecutionConnectorKind {
   none,
   hostProcess,
   remoteDsh,
   sandboxProvider,
+  quickjs,
 }
 
 enum OpenMuseTargetOs { macos, windows, linux, android, ios, web }
@@ -21,6 +22,7 @@ enum OpenMuseArtifactKind {
   nativeExecutable,
   runtimeClosure,
   sandboxWorker,
+  jsBundle,
 }
 
 enum OpenMusePresentationSurface {
@@ -1112,6 +1114,7 @@ String _uiRuntimeWire(OpenMuseUiRuntimeKind value) => switch (value) {
   OpenMuseUiRuntimeKind.none => 'none',
   OpenMuseUiRuntimeKind.flutter => 'flutter',
   OpenMuseUiRuntimeKind.webView => 'web-view',
+  OpenMuseUiRuntimeKind.a2ui => 'a2ui',
 };
 
 String _executionConnectorWire(OpenMuseExecutionConnectorKind value) =>
@@ -1120,6 +1123,7 @@ String _executionConnectorWire(OpenMuseExecutionConnectorKind value) =>
       OpenMuseExecutionConnectorKind.hostProcess => 'host-process',
       OpenMuseExecutionConnectorKind.remoteDsh => 'remote-dsh',
       OpenMuseExecutionConnectorKind.sandboxProvider => 'sandbox-provider',
+      OpenMuseExecutionConnectorKind.quickjs => 'quickjs',
     };
 
 String _targetOsWire(OpenMuseTargetOs value) => value.name;
@@ -1134,6 +1138,7 @@ String _artifactKindWire(OpenMuseArtifactKind value) => switch (value) {
   OpenMuseArtifactKind.nativeExecutable => 'native-executable',
   OpenMuseArtifactKind.runtimeClosure => 'runtime-closure',
   OpenMuseArtifactKind.sandboxWorker => 'sandbox-worker',
+  OpenMuseArtifactKind.jsBundle => 'js-bundle',
 };
 
 String _presentationSurfaceWire(OpenMusePresentationSurface value) =>

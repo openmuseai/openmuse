@@ -1,0 +1,31 @@
+{
+  "name": "@openmuse/code-navigation-service",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "description": "Opt-in resource-owner code navigation runtime, independent of DSH and Flutter.",
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./lib/service.js",
+    "./stdio": "./lib/stdio.js"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:language": "node --test test/language/*.test.js"
+  },
+  "dependencies": {
+    "vscode-jsonrpc": "8.2.1"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "typescript-language-server": "6.1.0"
+  },
+  "files": [
+    "lib",
+    "README.zh-CN.md",
+    "THIRD_PARTY_NOTICES.txt"
+  ]
+}

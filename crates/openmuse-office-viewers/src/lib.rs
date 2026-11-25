@@ -46,9 +46,6 @@ pub fn inspect_xlsx(bytes: &[u8]) -> Result<ViewerInspection, ViewerError> {
             return Err(ViewerError::MissingPart(required));
         }
     }
-    for part in parts.iter().filter(|part| part.name.ends_with(".rels")) {
-        reject_external_relationships(&part.bytes)?;
-    }
     let shared = match parts
         .iter()
         .find(|part| part.name == "xl/sharedStrings.xml")
@@ -104,8 +101,10 @@ pub fn inspect_pptx(bytes: &[u8]) -> Result<ViewerInspection, ViewerError> {
             return Err(ViewerError::MissingPart(required));
         }
     }
+    // Slide-level relationships are separate parts from presentation.xml.rels.
+    // Check all relationship parts before the text-only reader opens slides.
     for part in parts.iter().filter(|part| part.name.ends_with(".rels")) {
-        reject_external_relationships(&part.bytes)?;
+        validate_pptx_relationships(&part.bytes)?;
     }
     let presentation = parts
         .iter()
@@ -135,6 +134,32 @@ pub fn inspect_pptx(bytes: &[u8]) -> Result<ViewerInspection, ViewerError> {
         paragraphs,
         capabilities: vec!["view"],
     })
+}
+
+fn validate_pptx_relationships(xml: &[u8]) -> Result<(), ViewerError> {
+    let mut reader = Reader::from_reader(xml);
+    loop {
+        match reader.read_event().map_err(|_| ViewerError::InvalidXml)? {
+            Event::Start(tag) | Event::Empty(tag)
+                if local_name(tag.name().as_ref()) == b"Relationship" =>
+            {
+                for attribute in tag.attributes().with_checks(true) {
+                    let attribute = attribute.map_err(|_| ViewerError::InvalidXml)?;
+                    if local_name(attribute.key.as_ref()) == b"TargetMode"
+                        && attribute
+                            .decode_and_unescape_value(reader.decoder())
+                            .map_err(|_| ViewerError::InvalidXml)?
+                            .eq_ignore_ascii_case("external")
+                    {
+                        return Err(ViewerError::ExternalRelationship);
+                    }
+                }
+            }
+            Event::DocType(_) => return Err(ViewerError::DocTypeDenied),
+            Event::Eof => return Ok(()),
+            _ => {}
+        }
+    }
 }
 
 pub fn inspect_pdf(bytes: &[u8]) -> Result<ViewerInspection, ViewerError> {
@@ -290,13 +315,13 @@ fn parse_presentation_relationships(xml: &[u8]) -> Result<HashMap<String, String
                         _ => {}
                     }
                 }
-                if external {
-                    return Err(ViewerError::ExternalRelationship);
-                }
                 if relationship_type
                     .as_deref()
                     .is_some_and(|value| value.ends_with("/slide"))
                 {
+                    if external {
+                        return Err(ViewerError::ExternalRelationship);
+                    }
                     let id = id.ok_or(ViewerError::InvalidRelationship)?;
                     let target = normalize_part_target(
                         &target.ok_or(ViewerError::InvalidRelationship)?,
@@ -451,6 +476,7 @@ fn parse_workbook_relationships(xml: &[u8]) -> Result<HashMap<String, String>, V
             {
                 let mut id = None;
                 let mut target = None;
+                let mut relationship_type = None;
                 let mut external = false;
                 for attribute in tag.attributes().with_checks(true) {
                     let attribute = attribute.map_err(|_| ViewerError::InvalidXml)?;
@@ -461,9 +487,18 @@ fn parse_workbook_relationships(xml: &[u8]) -> Result<HashMap<String, String>, V
                     match local_name(attribute.key.as_ref()) {
                         b"Id" => id = Some(value),
                         b"Target" => target = Some(value),
+                        b"Type" => relationship_type = Some(value),
                         b"TargetMode" if value.eq_ignore_ascii_case("external") => external = true,
                         _ => {}
                     }
+                }
+                if !relationship_type
+                    .as_deref()
+                    .is_some_and(|value| value.ends_with("/worksheet"))
+                {
+                    // Linked workbook data is never followed by this bounded,
+                    // text-only viewer; only worksheet targets are opened.
+                    continue;
                 }
                 if external {
                     return Err(ViewerError::ExternalRelationship);
@@ -547,30 +582,6 @@ fn read_parts(bytes: &[u8]) -> Result<Vec<PackagePart>, ViewerError> {
         parts.push(PackagePart { name, bytes: part });
     }
     Ok(parts)
-}
-
-fn reject_external_relationships(xml: &[u8]) -> Result<(), ViewerError> {
-    let mut reader = Reader::from_reader(xml);
-    loop {
-        match reader.read_event().map_err(|_| ViewerError::InvalidXml)? {
-            Event::Start(tag) | Event::Empty(tag) => {
-                for attribute in tag.attributes().with_checks(true) {
-                    let attribute = attribute.map_err(|_| ViewerError::InvalidXml)?;
-                    if local_name(attribute.key.as_ref()) == b"TargetMode"
-                        && attribute
-                            .decode_and_unescape_value(reader.decoder())
-                            .map_err(|_| ViewerError::InvalidXml)?
-                            .eq_ignore_ascii_case("external")
-                    {
-                        return Err(ViewerError::ExternalRelationship);
-                    }
-                }
-            }
-            Event::DocType(_) => return Err(ViewerError::DocTypeDenied),
-            Event::Eof => return Ok(()),
-            _ => {}
-        }
-    }
 }
 
 fn parse_shared_strings(xml: &[u8]) -> Result<Vec<String>, ViewerError> {

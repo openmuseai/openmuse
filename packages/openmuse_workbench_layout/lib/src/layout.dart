@@ -1059,8 +1059,8 @@ abstract interface class LayoutSnapshotWriter {
 }
 
 WorkbenchLayoutSnapshot createDefaultWorkbenchLayout({
-  double sidebarRatio = 0.22,
-  double editorRatio = 0.72,
+  double sidebarRatio = 0.2,
+  double agentRatio = 0.46,
 }) => WorkbenchLayoutSnapshot(
   root: SplitNode(
     axis: Axis.horizontal,
@@ -1068,14 +1068,9 @@ WorkbenchLayoutSnapshot createDefaultWorkbenchLayout({
     first: PaneNode(paneId: 'workspace', minWidth: 232),
     second: SplitNode(
       axis: Axis.horizontal,
-      ratio: editorRatio,
-      first: PaneNode(paneId: 'editor', minWidth: 280),
-      second: SplitNode(
-        axis: Axis.vertical,
-        ratio: 0.62,
-        first: PaneNode(paneId: 'dsh', minWidth: 220),
-        second: PaneNode(paneId: 'cloud-workspace', minWidth: 220),
-      ),
+      ratio: agentRatio,
+      first: PaneNode(paneId: 'dsh', minWidth: 280),
+      second: PaneNode(paneId: 'editor', minWidth: 280),
     ),
   ),
   bindings: {
@@ -1097,14 +1092,8 @@ WorkbenchLayoutSnapshot createDefaultWorkbenchLayout({
       instanceRef: 'surface.dsh',
       mobility: SurfaceMobility.snapshotRestore,
     ),
-    'cloud-workspace': SurfaceBinding(
-      bindingId: 'binding.cloud-workspace',
-      surfaceRef: 'plugin.panel:cloud.workspace',
-      instanceRef: 'surface.cloud-workspace',
-      mobility: SurfaceMobility.snapshotRestore,
-    ),
   },
-  focusedPaneId: 'editor',
+  focusedPaneId: 'dsh',
 );
 
 abstract final class WorkbenchLayoutDefaults {

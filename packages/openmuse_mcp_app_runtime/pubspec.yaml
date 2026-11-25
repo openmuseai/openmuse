@@ -1,0 +1,17 @@
+name: openmuse_mcp_app_runtime
+description: Shared account-scoped remote MCP Apps for Desktop and Mobile.
+publish_to: none
+version: 0.1.0
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  openmuse_plugin_sdk:
+    path: ../openmuse_plugin_sdk
+  mcp_dart: ^2.4.3
+  crypto: ^3.0.6
+  webview_flutter: ^4.13.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

@@ -22,15 +22,20 @@ void main() {
         request.response.write(jsonEncode({'items': const <Map<String, String>>[]}));
         await request.response.close();
       });
-      var active = '/tmp/openmuse-two';
+      final root = await Directory.systemTemp.createTemp('dsh-workspace-sync-');
+      addTearDown(() => root.delete(recursive: true));
+      final one = await Directory('${root.path}/one').create();
+      final two = await Directory('${root.path}/two').create();
+      var active = two.path;
       final context = OpenMusePluginContext(
         executeHostCommand: (command, _) async {
           expect(command, 'workspace.snapshot');
           return {
             'activeMountPath': active,
             'mounts': [
-              {'path': '/tmp/openmuse-one'},
-              {'path': '/tmp/openmuse-two'},
+              {'path': one.path},
+              {'path': two.path},
+              {'path': '${root.path}/no-longer-exists'},
             ],
           };
         },
@@ -42,10 +47,10 @@ void main() {
       );
       await sync.sync();
       expect(calls, hasLength(1));
-      expect(calls.single, ['/tmp/openmuse-one', '/tmp/openmuse-two']);
+      expect(calls.single, [one.path, two.path]);
       await sync.sync();
       expect(calls, hasLength(1));
-      active = '/tmp/openmuse-one';
+      active = one.path;
       await sync.sync();
       expect(calls, hasLength(1));
     },

@@ -3,7 +3,7 @@
 import { createServer, request as httpRequest } from 'node:http'
 import { request as httpsRequest } from 'node:https'
 import { createReadStream } from 'node:fs'
-import { stat } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { dirname, extname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -13,14 +13,45 @@ const upstreamText = process.env.OPENMUSE_DSH_ORIGIN
 if (!upstreamText) throw new Error('Set OPENMUSE_DSH_ORIGIN to the local DSH web origin')
 const upstream = new URL(upstreamText)
 const productionE2e = process.env.OPENMUSE_E2E_PRODUCTION === '1'
-const productionRelay = new URL('https://openmuseai.com:8443')
-const productionCloud = new URL('https://openmuseai.com')
+const deploymentProfile = process.env.OPENMUSE_DEPLOYMENT_PROFILE ?? 'default'
+if (!/^[a-z0-9][a-z0-9_-]*$/.test(deploymentProfile)) throw new Error('Invalid deployment profile')
+const deploymentFile = process.env.OPENMUSE_DEPLOYMENT_BUNDLE ?? resolve(
+  repoRoot, 'packages/openmuse_runtime_config/assets/deployments', `${deploymentProfile}.json`,
+)
+const installed = JSON.parse(await readFile(deploymentFile, 'utf8'))
+if (installed.snapshot?.schemaVersion !== 1) throw new Error('Unsupported deployment schema')
+function installedService(name) {
+  const value = installed.snapshot.deployment.services[name]?.baseUrl
+  if (value === undefined) return null
+  const url = new URL(value)
+  if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash ||
+      !installed.bootstrap.allowedServiceOrigins[name]?.includes(url.origin)) {
+    throw new Error(`Untrusted deployment service: ${name}`)
+  }
+  return url
+}
+const productionRelay = installedService('relay')
+function qaOrigin(name) {
+  const text = process.env[name]
+  if (!text) return null
+  const value = new URL(text)
+  if (productionE2e || value.protocol !== 'http:' ||
+      !['127.0.0.1', 'localhost', '[::1]'].includes(value.hostname) ||
+      value.username || value.password || value.search || value.hash || value.pathname !== '/') {
+    throw new Error(`${name} requires a local QA HTTP origin`)
+  }
+  return value
+}
+const productionCloud = qaOrigin('OPENMUSE_QA_CLOUD_ORIGIN') ?? installedService('cloud')
+const productionAuth = qaOrigin('OPENMUSE_QA_AUTH_ORIGIN') ?? installedService('auth')
+if (!productionAuth) throw new Error('Deployment must configure auth')
+if (!productionCloud) throw new Error('Deployment must configure cloud')
 const localGateway = new URL(process.env.OPENMUSE_PAIRED_GATEWAY_ORIGIN ?? 'http://127.0.0.1:13180')
 if (localGateway.protocol !== 'http:' || !['127.0.0.1', 'localhost', '[::1]'].includes(localGateway.hostname)) {
   throw new Error('The local paired gateway must be a loopback HTTP origin')
 }
 if (productionE2e) {
-  if (upstream.origin !== productionRelay.origin) throw new Error('Production E2E relay origin mismatch')
+  if (!productionRelay || upstream.origin !== productionRelay.origin) throw new Error('Production E2E relay origin mismatch')
 } else if (upstream.protocol !== 'http:' || !['127.0.0.1', 'localhost', '[::1]'].includes(upstream.hostname)) {
   throw new Error('The dev edge accepts only a loopback HTTP DSH origin')
 }
@@ -43,15 +74,20 @@ const types = {
 }
 
 function dshTarget(url) {
-  const destination = url.pathname.startsWith('/gotrue/') ||
-    url.pathname.startsWith('/api/muse/devices')
-    ? productionCloud
-    : !productionE2e && !url.pathname.startsWith('/dsh/')
-      ? localGateway : upstream
+  const isAuth = url.pathname.startsWith('/gotrue/')
+  const isCloud = url.pathname.startsWith('/api/') || url.pathname.startsWith('/ws/')
+  const destination = isAuth ? productionAuth
+    : isCloud ? productionCloud
+      : !productionE2e && !url.pathname.startsWith('/dsh/')
+        ? localGateway : upstream
   const target = new URL(destination.origin)
-  target.pathname = !productionE2e && url.pathname.startsWith('/dsh/')
-    ? url.pathname.slice('/dsh'.length)
-    : url.pathname
+  target.pathname = isAuth
+    ? `${destination.pathname.replace(/\/$/, '')}${url.pathname.slice('/gotrue'.length)}`
+    : isCloud
+      ? `${destination.pathname.replace(/\/$/, '')}${url.pathname}`
+      : !productionE2e && url.pathname.startsWith('/dsh/')
+        ? url.pathname.slice('/dsh'.length)
+        : url.pathname
   target.search = url.search
   return target
 }

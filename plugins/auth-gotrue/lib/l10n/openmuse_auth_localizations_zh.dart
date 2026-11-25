@@ -73,7 +73,7 @@ class OpenMuseAuthLocalizationsZh extends OpenMuseAuthLocalizations {
 
   @override
   String recoveryCodeSent(String email) {
-    return '请输入发送至 $email 的密码重置验证码。';
+    return '如果 $email 已注册，请在收件箱或垃圾邮件中查找密码重置验证码。';
   }
 
   @override

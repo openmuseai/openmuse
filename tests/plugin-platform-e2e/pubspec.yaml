@@ -1,0 +1,20 @@
+name: openmuse_plugin_platform_e2e
+description: Isolated Mobile/Desktop plugin-domain acceptance harness.
+publish_to: none
+version: 0.1.0
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  openmuse_mobile:
+    path: ../../app/openmuse_mobile
+  openmuse_host:
+    path: ../../app/openmuse_host
+  openmuse_workspace_paired:
+    path: ../../plugins/workspace-paired
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true

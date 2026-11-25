@@ -1,0 +1,53 @@
+name: openmuse_mobile_office_lab
+publish_to: none
+version: 0.1.0
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  openmuse_mobile:
+    path: ../openmuse_mobile
+  openmuse_i18n:
+    path: ../../packages/openmuse_i18n
+  openmuse_mobile_core:
+    path: ../../packages/openmuse_mobile_core
+  file_picker: ^10.3.10
+  path_provider: ^2.1.5
+  openmuse_office_docx:
+    path: ../../packages/openmuse_office_docx
+  openmuse_office_viewers:
+    path: ../../packages/openmuse_office_viewers
+  openmuse_word_product:
+    path: ../../packages/openmuse_word_product
+  openmuse_pdf_product:
+    path: ../../packages/openmuse_pdf_product
+  openmuse_spreadsheet_product:
+    path: ../../packages/openmuse_spreadsheet_product
+  spreadsheet_editor:
+    path: ../../../ioffice/samples/libs/spreadsheet/spreadsheet_editor
+  pdf_rebuild_flutter:
+    path: ../../../ioffice/koffice/pdf/rebuild/pdf-flutter-app
+  word_editor:
+    path: ../../../ioffice/samples/libs/word/word_editor
+  word_render:
+    path: ../../../ioffice/samples/libs/word/word_render
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+dependency_overrides:
+  word_render:
+    path: ../../../ioffice/samples/libs/word/word_render
+  pdfrx:
+    path: ../../../ioffice/koffice/pdf/rebuild/pdf-flutter-app/third_party/pdfrx
+  pdfium_dart:
+    path: ../../../ioffice/koffice/pdf/rebuild/pdf-flutter-app/third_party/pdfium_dart
+
+flutter:
+  uses-material-design: true
+  assets:
+    - ../openmuse_mobile/assets/word_product/
+    - ../openmuse_mobile/assets/pdf_product/
+    - ../openmuse_mobile/assets/spreadsheet_product/

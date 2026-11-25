@@ -7,6 +7,10 @@ environment:
   sdk: ^3.12.2
 
 dependencies:
+  openmuse_smart_document_plugins:
+    path: ../openmuse_smart_document_plugins
+  openmuse_client_plugins:
+    path: ../openmuse_client_plugins
   openmuse_cli_plugin:
     path: ../../plugins/cli
   openmuse_dsh_plugin:
@@ -19,3 +23,5 @@ dependencies:
     path: ../../plugins/native-text-gate
   openmuse_plugin_sdk:
     path: ../../packages/openmuse_plugin_sdk
+  openmuse_plugin_market:
+    path: ../../plugins/plugin-market

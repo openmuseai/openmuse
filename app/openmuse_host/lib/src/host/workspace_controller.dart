@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:path/path.dart' as p;
 
@@ -75,23 +76,78 @@ final class WorkspaceDiff {
   final String after;
 }
 
+enum ResourceCloseDecision { keepEditing, discard, preservePrivate }
+
+final class WorkspaceResourceSession {
+  WorkspaceResourceSession({
+    required this.session,
+    required this.builder,
+    required this.confirmClose,
+    this.chooseClose,
+    this.onRecoveryFailed,
+    this.supportsSharedPresentations = false,
+  });
+  static int _nextPresentation = 0;
+  final String presentationId = 'resource-presentation:${_nextPresentation++}';
+  final bool supportsSharedPresentations;
+  final ResourceEditorSession session;
+  final WidgetBuilder builder;
+  final Future<bool> Function() confirmClose;
+  final Future<ResourceCloseDecision> Function()? chooseClose;
+  final VoidCallback? onRecoveryFailed;
+  Future<bool> resolveFailedClose() async {
+    final decision = chooseClose == null
+        ? (await confirmClose()
+              ? ResourceCloseDecision.discard
+              : ResourceCloseDecision.keepEditing)
+        : await chooseClose!();
+    switch (decision) {
+      case ResourceCloseDecision.keepEditing:
+        session.cancelClosePreparation();
+        return false;
+      case ResourceCloseDecision.discard:
+        session.discardChangesForClose();
+        return true;
+      case ResourceCloseDecision.preservePrivate:
+        final ready = await session.prepareToClose(privateRecoveryOnly: true);
+        if (ready && await session.finalizeToClose()) return true;
+        onRecoveryFailed?.call();
+        return false;
+    }
+  }
+
+  final closed = Completer<void>();
+  bool confirming = false;
+  Future<bool>? closeRequest;
+  void finish() {
+    if (!closed.isCompleted) closed.complete();
+  }
+}
+
 final class WorkspaceTab {
-  WorkspaceTab.resource(this.resource, {this.preferredEditorId})
-    : id = resource.uri.toString(),
-      title = resource.displayName,
-      kind = WorkspaceTabKind.resource,
-      diff = null;
+  WorkspaceTab.resource(
+    this.resource, {
+    this.preferredEditorId,
+    String? presentationId,
+  }) : id = presentationId ?? resource.uri.toString(),
+       _title = resource.displayName,
+       kind = WorkspaceTabKind.resource,
+       diff = null;
 
   WorkspaceTab.diff(WorkspaceDiff value)
     : id = 'diff:${value.resource.uri}:${value.comparisonId}',
-      title =
+      _title =
           '${value.resource.displayName}-${value.snapshot.shortId}↔${value.afterLabel}',
       kind = WorkspaceTabKind.diff,
       resource = value.resource,
       diff = value;
 
+  WorkspaceResourceSession? resourceSession;
   final String id;
-  final String title;
+  final String _title;
+  String get title => kind == WorkspaceTabKind.resource
+      ? resourceSession?.session.record.name ?? _title
+      : _title;
   final WorkspaceTabKind kind;
   OpenMuseResource resource;
   final WorkspaceDiff? diff;
@@ -120,6 +176,7 @@ final class LocalVersionSnapshot {
     required this.resourcePath,
     required this.createdAt,
     required this.byteLength,
+    this.eventId,
   });
 
   factory LocalVersionSnapshot.fromJson(Map<String, Object?> value) =>
@@ -128,12 +185,15 @@ final class LocalVersionSnapshot {
         resourcePath: value['resourcePath']! as String,
         createdAt: DateTime.parse(value['createdAt']! as String),
         byteLength: value['byteLength']! as int,
+        eventId: value['eventId'] as String?,
       );
 
   final String id;
   final String resourcePath;
   final DateTime createdAt;
   final int byteLength;
+  final String? eventId;
+  String get versionId => eventId ?? id;
   String get shortId => id.substring(0, 8);
 
   Map<String, Object?> toJson() => {
@@ -141,6 +201,7 @@ final class LocalVersionSnapshot {
     'resourcePath': resourcePath,
     'createdAt': createdAt.toUtc().toIso8601String(),
     'byteLength': byteLength,
+    if (eventId != null) 'eventId': eventId,
   };
 }
 
@@ -152,54 +213,107 @@ final class LocalVersionStore {
   final Directory root;
   final Map<String, List<LocalVersionSnapshot>> _index = {};
   bool _loaded = false;
+  Future<void>? _loading;
+  Future<void> _tail = Future.value();
+
+  Future<T> _serial<T>(Future<T> Function() action) {
+    final next = _tail.then((_) => action());
+    _tail = next.then<void>((_) {}, onError: (Object e, StackTrace st) {});
+    return next;
+  }
 
   Future<void> load() async {
     if (_loaded) return;
-    _loaded = true;
-    final file = File(p.join(root.path, 'index.json'));
-    if (!await file.exists()) return;
-    final decoded = jsonDecode(await file.readAsString());
-    if (decoded is! Map<String, dynamic>) return;
-    for (final entry in decoded.entries) {
-      final values = entry.value;
-      if (values is! List) continue;
-      _index[entry.key] = values
-          .whereType<Map>()
-          .map((value) => LocalVersionSnapshot.fromJson(value.cast()))
-          .toList();
+    if (_loading != null) return _loading;
+    _loading = _load();
+    try {
+      await _loading;
+    } finally {
+      _loading = null;
     }
   }
 
-  Future<LocalVersionSnapshot> capture(OpenMuseResource resource) async {
-    await load();
-    final path = resource.uri.toFilePath();
-    final bytes = await File(path).readAsBytes();
-    final id = sha256.convert(bytes).toString();
-    final snapshots = _index.putIfAbsent(path, () => []);
-    for (final snapshot in snapshots) {
-      if (snapshot.id == id) return snapshot;
+  Future<void> _load() async {
+    final file = File(p.join(root.path, 'index.json'));
+    if (!await file.exists()) {
+      _loaded = true;
+      return;
     }
-    await Directory(p.join(root.path, 'blobs')).create(recursive: true);
-    final blob = File(p.join(root.path, 'blobs', id));
-    if (!await blob.exists()) await blob.writeAsBytes(bytes, flush: true);
-    final snapshot = LocalVersionSnapshot(
-      id: id,
-      resourcePath: path,
-      createdAt: DateTime.now(),
-      byteLength: bytes.length,
-    );
-    snapshots.insert(0, snapshot);
-    await _save();
-    return snapshot;
+    final decoded = jsonDecode(await file.readAsString());
+    if (decoded is! Map<String, dynamic>)
+      throw const FormatException('Invalid version index');
+    final parsed = <String, List<LocalVersionSnapshot>>{};
+    for (final entry in decoded.entries) {
+      if (entry.value is! List)
+        throw const FormatException('Invalid version index');
+      parsed[entry.key] = (entry.value as List).map((value) {
+        final snapshot = LocalVersionSnapshot.fromJson(
+          Map<String, Object?>.from(value as Map),
+        );
+        if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(snapshot.id) ||
+            snapshot.resourcePath != entry.key ||
+            snapshot.byteLength < 0) {
+          throw const FormatException('Invalid version entry');
+        }
+        return snapshot;
+      }).toList();
+    }
+    _index.addAll(parsed);
+    _loaded = true;
   }
+
+  Future<LocalVersionSnapshot> capture(OpenMuseResource resource) =>
+      _serial(() async {
+        await load();
+        final path = resource.uri.toFilePath();
+        final bytes = await File(path).readAsBytes();
+        final id = sha256.convert(bytes).toString();
+        final snapshots = _index.putIfAbsent(path, () => []);
+        // A -> B -> A is three history events but only two content blobs.
+        if (snapshots.isNotEmpty && snapshots.first.id == id)
+          return snapshots.first;
+        await Directory(p.join(root.path, 'blobs')).create(recursive: true);
+        final blob = File(p.join(root.path, 'blobs', id));
+        if (!await blob.exists()) await blob.writeAsBytes(bytes, flush: true);
+        final snapshot = LocalVersionSnapshot(
+          id: id,
+          resourcePath: path,
+          createdAt: DateTime.now(),
+          byteLength: bytes.length,
+          eventId: base64Url
+              .encode(List.generate(18, (_) => Random.secure().nextInt(256)))
+              .replaceAll('=', ''),
+        );
+        snapshots.insert(0, snapshot);
+        try {
+          await _save();
+        } catch (_) {
+          snapshots.remove(snapshot);
+          rethrow;
+        }
+        return snapshot;
+      });
 
   Future<List<LocalVersionSnapshot>> list(OpenMuseResource resource) async {
+    await _tail;
     await load();
     return List.unmodifiable(_index[resource.uri.toFilePath()] ?? const []);
   }
 
-  Future<String> read(LocalVersionSnapshot snapshot) =>
-      File(p.join(root.path, 'blobs', snapshot.id)).readAsString();
+  Future<List<int>> readBytes(LocalVersionSnapshot snapshot) async {
+    if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(snapshot.id))
+      throw StateError('VERSION_ID_INVALID');
+    final bytes = await File(
+      p.join(root.path, 'blobs', snapshot.id),
+    ).readAsBytes();
+    if (bytes.length != snapshot.byteLength ||
+        sha256.convert(bytes).toString() != snapshot.id)
+      throw StateError('VERSION_INTEGRITY_FAILED');
+    return bytes;
+  }
+
+  Future<String> read(LocalVersionSnapshot snapshot) async =>
+      utf8.decode(await readBytes(snapshot));
 
   Future<void> _save() async {
     await root.create(recursive: true);
@@ -210,7 +324,6 @@ final class LocalVersionStore {
     final target = File(p.join(root.path, 'index.json'));
     final temporary = File('${target.path}.tmp');
     await temporary.writeAsString(jsonEncode(value), flush: true);
-    if (await target.exists()) await target.delete();
     await temporary.rename(target.path);
   }
 }
@@ -363,6 +476,11 @@ final class LocalWorkspaceController extends ChangeNotifier {
 
   void removeEditorGroup(String groupId) {
     if (groupId == primaryEditorGroupId || _editorGroups.length == 1) return;
+    // Live resource leases must pass the same close barrier as individual tabs.
+    if (_editorGroups[groupId]?._tabs.any((t) => t.resourceSession != null) ==
+        true) {
+      return;
+    }
     if (_editorGroups.remove(groupId) == null) return;
     if (_focusedEditorGroupId == groupId) {
       _focusedEditorGroupId = primaryEditorGroupId;
@@ -377,15 +495,23 @@ final class LocalWorkspaceController extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool Function(OpenMuseResource)? interceptResourceOpen;
+
   void openResource(
     OpenMuseResource resource, {
     String? editorId,
     String? groupId,
   }) {
+    if (editorId == null && interceptResourceOpen?.call(resource) == true) {
+      return;
+    }
     final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
-    final path = resource.uri.toFilePath();
+    final path = resource.uri.isScheme('file')
+        ? resource.uri.toFilePath()
+        : null;
     for (final mount in _mounts) {
-      if (mount.path == path || p.isWithin(mount.path, path)) {
+      if (path != null &&
+          (mount.path == path || p.isWithin(mount.path, path))) {
         _activeMountPath = mount.path;
         break;
       }
@@ -409,6 +535,62 @@ final class LocalWorkspaceController extends ChangeNotifier {
     group._activeTab = tab;
     _focusedEditorGroupId = group.id;
     notifyListeners();
+  }
+
+  Future<void> openResourceSession(
+    OpenMuseResource resource,
+    WorkspaceResourceSession binding,
+  ) {
+    // Contributors explicitly opt into independent presentations of one shared
+    // content owner. All other handlers retain the existing owner-focus rule.
+    // Version/account isolation is already encoded in the resource URI.
+    for (final candidate in _editorGroups.values) {
+      final matches = candidate._tabs.where(
+        (t) => t.resource.uri == resource.uri && t.resourceSession != null,
+      );
+      final existing = matches.where((tab) {
+        final current = tab.resourceSession!.session;
+        final next = binding.session;
+        return current.isPresentationActive &&
+            current.ownershipScope == next.ownershipScope &&
+            identical(current.lifetime, next.lifetime) &&
+            current.allowEditing == next.allowEditing &&
+            current.opened.fromSnapshot == next.opened.fromSnapshot;
+      }).firstOrNull;
+      if (existing != null &&
+          (candidate.id == _focusedEditorGroupId ||
+              !binding.supportsSharedPresentations ||
+              !existing.resourceSession!.supportsSharedPresentations)) {
+        candidate._activeTab = existing;
+        _focusedEditorGroupId = candidate.id;
+        notifyListeners();
+        return existing.resourceSession!.closed.future;
+      }
+      if (existing == null &&
+          matches.any(
+            (tab) =>
+                tab.resourceSession!.session.isPresentationActive &&
+                (!binding.supportsSharedPresentations ||
+                    !tab.resourceSession!.supportsSharedPresentations),
+          )) {
+        throw const ResourceFailure('RESOURCE_PRESENTATION_POLICY_CONFLICT');
+      }
+    }
+    final group = _requireEditorGroup(_focusedEditorGroupId);
+    final tab = WorkspaceTab.resource(
+      resource,
+      presentationId: binding.presentationId,
+    )..resourceSession = binding;
+    group._tabs.add(tab);
+    group._activeTab = tab;
+    binding.session.addListener(notifyListeners);
+    unawaited(
+      binding.closed.future.then(
+        (_) => binding.session.removeListener(notifyListeners),
+      ),
+    );
+    notifyListeners();
+    return binding.closed.future;
   }
 
   Future<OpenMuseResource> inspectResource(OpenMuseResource resource) =>
@@ -448,11 +630,55 @@ final class LocalWorkspaceController extends ChangeNotifier {
   }
 
   void closeTab(WorkspaceTab tab, {String? groupId}) {
-    if (tab.pinned) return;
+    unawaited(requestCloseTab(tab, groupId: groupId));
+  }
+
+  /// One application close path for tab, batch and pane actions. Fallible
+  /// checkpoint/release work runs while the original surface is still mounted.
+  Future<bool> requestCloseTab(WorkspaceTab tab, {String? groupId}) {
+    if (tab.pinned) return Future.value(false);
     final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
+    if (!group._tabs.contains(tab)) return Future.value(true);
+    final binding = tab.resourceSession;
+    if (binding == null) {
+      _removeClosedTab(group, tab);
+      return Future.value(true);
+    }
+    return binding.closeRequest ??= (() async {
+      binding.confirming = true;
+      try {
+        if ((binding.session.closeParticipant != null ||
+                binding.session.flushPendingChanges != null ||
+                binding.session.releaseForClose != null) &&
+            (!binding.session.closePrepared ||
+                (binding.session.releaseForClose != null &&
+                    !binding.session.closeFinalized))) {
+          var saved =
+              binding.session.closePrepared ||
+              await binding.session.prepareToClose();
+          if (saved) saved = await binding.session.finalizeToClose();
+          if (_disposed) return false;
+          if (!saved) {
+            if (!await binding.resolveFailedClose() || _disposed) return false;
+          }
+        }
+        if (binding.session.dirty && !binding.session.closeFinalized) {
+          if (!await binding.resolveFailedClose() || _disposed) return false;
+        }
+        if (_disposed) return false;
+        _removeClosedTab(group, tab);
+        return true;
+      } finally {
+        binding.confirming = false;
+      }
+    })().whenComplete(() => binding.closeRequest = null);
+  }
+
+  void _removeClosedTab(WorkspaceEditorGroup group, WorkspaceTab tab) {
     final index = group._tabs.indexOf(tab);
     if (index < 0) return;
     group._tabs.removeAt(index);
+    tab.resourceSession?.finish();
     if (identical(group._activeTab, tab)) {
       group._activeTab = group._tabs.isEmpty
           ? null
@@ -461,11 +687,26 @@ final class LocalWorkspaceController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> closeEditorGroup(String groupId) async {
+    final group = _requireEditorGroup(groupId);
+    for (final tab in group._tabs.toList()) {
+      if (!await requestCloseTab(tab, groupId: groupId)) return false;
+    }
+    if (group._tabs.isNotEmpty) return false;
+    if (groupId == primaryEditorGroupId) return true;
+    removeEditorGroup(groupId);
+    return !_editorGroups.containsKey(groupId);
+  }
+
   void closeOtherTabs(WorkspaceTab tab, {String? groupId}) {
     final group = _requireEditorGroup(groupId ?? _focusedEditorGroupId);
-    group._tabs.removeWhere(
-      (candidate) => !identical(candidate, tab) && !candidate.pinned,
-    );
+    for (final candidate in group._tabs.toList()) {
+      if (!identical(candidate, tab) &&
+          !candidate.pinned &&
+          candidate.resourceSession?.session.dirty != true) {
+        closeTab(candidate, groupId: group.id);
+      }
+    }
     group._activeTab = tab;
     _focusedEditorGroupId = group.id;
     notifyListeners();
@@ -726,14 +967,32 @@ final class LocalWorkspaceController extends ChangeNotifier {
   }
 
   Future<LocalVersionSnapshot> captureVersion(OpenMuseResource resource) async {
+    final store = _versionStore;
     await flushBeforeDiskRead?.call(resource);
-    final snapshot = await _versionStore.capture(resource);
+    if (!identical(store, _versionStore))
+      throw StateError('VERSION_ACCOUNT_REVOKED');
+    final snapshot = await store.capture(resource);
+    if (!identical(store, _versionStore))
+      throw StateError('VERSION_ACCOUNT_REVOKED');
     notifyListeners();
     return snapshot;
   }
 
   Future<List<LocalVersionSnapshot>> versions(OpenMuseResource resource) =>
       _versionStore.list(resource);
+
+  Future<List<int>> readVersionBytes(
+    OpenMuseResource resource,
+    String versionId,
+  ) async {
+    final store = _versionStore;
+    final snapshots = await store.list(resource);
+    final snapshot = snapshots
+        .where((s) => s.versionId == versionId)
+        .firstOrNull;
+    if (snapshot == null) throw StateError('VERSION_NOT_FOUND');
+    return store.readBytes(snapshot);
+  }
 
   Future<void> openDiff(
     OpenMuseResource resource,
@@ -871,6 +1130,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
     for (final group in _editorGroups.values) {
       for (var index = 0; index < group._tabs.length; index++) {
         final tab = group._tabs[index];
+        if (!tab.resource.uri.isScheme('file')) continue;
         final path = tab.resource.uri.toFilePath();
         if (path != oldPath && !p.isWithin(oldPath, path)) continue;
         if (tab.kind == WorkspaceTabKind.diff) {
@@ -901,6 +1161,7 @@ final class LocalWorkspaceController extends ChangeNotifier {
   void _removeTabsWithin(String path) {
     for (final group in _editorGroups.values) {
       group._tabs.removeWhere((tab) {
+        if (!tab.resource.uri.isScheme('file')) return false;
         final resourcePath = tab.resource.uri.toFilePath();
         return resourcePath == path || p.isWithin(path, resourcePath);
       });
@@ -968,6 +1229,13 @@ final class LocalWorkspaceController extends ChangeNotifier {
       unawaited(watcher.cancel());
     }
     _watchers.clear();
+    for (final group in _editorGroups.values) {
+      for (final tab in group._tabs) {
+        final binding = tab.resourceSession;
+        binding?.session.removeListener(notifyListeners);
+        binding?.finish();
+      }
+    }
     super.dispose();
   }
 }

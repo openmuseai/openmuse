@@ -1,0 +1,22 @@
+{
+  "name": "@openmuse/config-control",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "dev": "node --watch src/dev.mjs",
+    "keygen": "node src/keygen.mjs",
+    "prepare-bundle": "node src/prepare-bundle.mjs"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "linkedom": "^0.18.14"
+  }
+}

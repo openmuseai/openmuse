@@ -1,0 +1,644 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'controller.dart';
+import 'strings.dart';
+
+String resourceErrorText(BuildContext context, Object error) {
+  final s = ResourceCenterStrings(context);
+  final code = error is ResourceFailure ? error.code : '';
+  return switch (code) {
+    'SOURCE_UNAVAILABLE' || 'REQUEST_EXPIRED' => s.sourceUnavailable,
+    'VERSION_UNAVAILABLE' || 'VERSION_MISMATCH' => s.versionUnavailable,
+    'DENIED' => s.denied,
+    'CONTEXT_UNAVAILABLE' => s.strings.resourcecenterContextUnavailable(),
+    'CONTEXT_TOO_LARGE' => s.strings.resourcecenterContextTooLarge(),
+    'RESOURCE_CENTER_UNAVAILABLE' => s.strings.resourcecenterPeerUpgrade(),
+    'EXPIRED' || 'STALE_GENERATION' => s.expired,
+    'READ_ONLY' || 'RESOURCE_PRESENTATION_POLICY_CONFLICT' => s.sourceReadOnly,
+    'NAME_CONFLICT' => s.nameConflict,
+    'INVALID_NAME' => s.invalidName,
+    'EXTENSION_REQUIRED' => s.keepExtension,
+    'INVALID_URL' => s.invalidUrl,
+    'CREATOR_UNAVAILABLE' => s.creatorUnavailable,
+    'METADATA_CONFLICT' ||
+    'REVISION_CONFLICT' ||
+    'IDEMPOTENCY_CONFLICT' => s.conflict,
+    'TRANSFER_TOO_LARGE' ||
+    'RESOURCE_TOO_LARGE' ||
+    'RESPONSE_TOO_LARGE' => s.tooLarge,
+    'DIGEST_MISMATCH' => s.integrityFailure,
+    'RESOURCE_DEPENDENCY_CYCLE' => s.strings.resourcecenterEmbedCycle(),
+    'RESOURCE_EMBED_DEPTH_EXCEEDED' => s.strings.resourcecenterEmbedDepth(),
+    'EMBED_RESOURCE_MISMATCH' => s.strings.resourcecenterEmbedMismatch(),
+    'INVALID_REFERENCE' ||
+    'INVALID_ENVELOPE' ||
+    'UNSUPPORTED_PROTOCOL' => s.invalidReference,
+    _ => s.failed,
+  };
+}
+
+void showResourceError(BuildContext context, Object error) {
+  if (context.mounted)
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(resourceErrorText(context, error)),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+}
+
+/// Resolve through the resource owner; even one result is not auto-selected
+/// when a bounded search was truncated (uniqueness has not been established).
+Future<bool> openResourceLocator(
+  BuildContext context,
+  ResourceCenterController controller,
+  ResourceLocator locator,
+) async {
+  try {
+    final result = await controller.hub.locate(
+      locator,
+      controller.hub.access('resource-locator'),
+    );
+    return _openLocatedResource(context, controller, result);
+  } on Object catch (error) {
+    if (context.mounted) showResourceError(context, error);
+    return false;
+  }
+}
+
+Future<bool> openResourceLink(
+  BuildContext context,
+  ResourceCenterController controller,
+  ResourceReference base,
+  String target, {
+  String? preferredHandlerKey,
+}) async {
+  try {
+    if (target.startsWith('openmuse-resource://v1/')) {
+      return openResourcePage(
+        context,
+        controller,
+        ResourceReference.fromUri(target),
+        readOnly: true,
+        preferredHandlerKey: preferredHandlerKey,
+      );
+    }
+    final result = await controller.hub.locateRelative(
+      base,
+      target,
+      controller.hub.access('resource-document-link'),
+    );
+    return _openLocatedResource(
+      context,
+      controller,
+      result,
+      preferredHandlerKey: preferredHandlerKey,
+    );
+  } on Object catch (error) {
+    if (context.mounted) showResourceError(context, error);
+    return false;
+  }
+}
+
+Future<bool> _openLocatedResource(
+  BuildContext context,
+  ResourceCenterController controller,
+  ResourceLocatorResult result, {
+  String? preferredHandlerKey,
+}) async {
+  try {
+    if (!context.mounted) return false;
+    if (result.matches.isEmpty) throw const ResourceFailure('NOT_FOUND');
+    ResourceLocatorMatch? selected;
+    if (result.matches.length == 1 && !result.truncated) {
+      selected = result.matches.single;
+    } else {
+      selected = await showModalBottomSheet<ResourceLocatorMatch>(
+        context: context,
+        useSafeArea: true,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (sheet) => SizedBox(
+          height: MediaQuery.sizeOf(sheet).height * .65,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  result.truncated
+                      ? '${ResourceCenterStrings(sheet).open} · ${ResourceCenterStrings(sheet).search}'
+                      : ResourceCenterStrings(sheet).open,
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  children: [
+                    for (final match in result.matches)
+                      ListTile(
+                        key: ValueKey('resource-locator-${match.label}'),
+                        leading: const Icon(Icons.insert_drive_file_outlined),
+                        title: Text(match.label),
+                        onTap: () => Navigator.pop(sheet, match),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (selected == null || !context.mounted) return false;
+    return openResourcePage(
+      context,
+      controller,
+      selected.reference,
+      readOnly: true,
+      initialLine: result.line,
+      initialColumn: result.column,
+      preferredHandlerKey: preferredHandlerKey,
+    );
+  } on Object catch (error) {
+    if (context.mounted) showResourceError(context, error);
+    return false;
+  }
+}
+
+/// Shared entry for list rows, pasted references and conversation cards.
+Future<bool> openResourcePage(
+  BuildContext context,
+  ResourceCenterController controller,
+  ResourceReference reference, {
+  bool chooseHandler = false,
+  bool readOnly = false,
+  int? initialLine,
+  int? initialColumn,
+  String? preferredHandlerKey,
+  bool stackNavigation = false,
+}) async {
+  final navigator = Navigator.of(context);
+  bool cancelled = false;
+  late DialogRoute<void> progress;
+  progress = DialogRoute<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialog) {
+      final s = ResourceCenterStrings(dialog);
+      return PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: Text(s.open),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const LinearProgressIndicator(),
+              const SizedBox(height: 18),
+              Text(s.loading),
+            ],
+          ),
+          actions: [
+            TextButton(
+              key: const ValueKey('resource-open-cancel'),
+              onPressed: () {
+                cancelled = true;
+                navigator.removeRoute(progress);
+              },
+              child: Text(s.cancel),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+  unawaited(navigator.push(progress));
+  void dismiss() {
+    if (navigator.mounted && progress.isActive) navigator.removeRoute(progress);
+  }
+
+  try {
+    final opened = await controller.resolve(reference);
+    if (cancelled || !context.mounted) {
+      dismiss();
+      return false;
+    }
+    final choices = await controller.handlers(opened.content.record);
+    if (cancelled || !context.mounted) {
+      dismiss();
+      return false;
+    }
+    dismiss();
+    final record = opened.content.record, s = ResourceCenterStrings(context);
+    final preferred = controller.hub.defaultHandler(
+      controller.preferenceKey(record),
+    );
+    ResourceHandlerChoice? choice = defaultResourceHandler(
+      choices,
+      preferredKey: preferredHandlerKey ?? preferred,
+      chooseHandler: chooseHandler,
+    );
+    if (choices.isEmpty) {
+      if (await controller.canOpenLegacy?.call(record) == true &&
+          context.mounted) {
+        final success =
+            await controller.openLegacy?.call(record, opened.content.bytes) ??
+            false;
+        if (success) await controller.opened(record, 'legacy');
+        return success;
+      }
+      if (context.mounted)
+        await showDialog<void>(
+          context: context,
+          builder: (dialog) => AlertDialog(
+            title: Text(s.openWith),
+            content: Text(s.noHandler),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialog),
+                child: Text(s.close),
+              ),
+            ],
+          ),
+        );
+      return false;
+    }
+    if (choice == null) {
+      if (!context.mounted) return false;
+      choice = await showModalBottomSheet<ResourceHandlerChoice>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        builder: (sheet) => _HandlerSheet(
+          controller: controller,
+          record: record,
+          choices: choices,
+        ),
+      );
+    }
+    if (choice == null || !context.mounted) return false;
+    if (controller.registry.stateOf(choice.plugin.descriptor.id) !=
+        OpenMusePluginState.active) {
+      throw const ResourceFailure('HANDLER_UNAVAILABLE');
+    }
+    final selected = choice;
+    final session = controller.createEditorSession(
+      opened,
+      selected,
+      readOnly: readOnly,
+    );
+    session.initialLine = initialLine;
+    session.initialColumn = initialColumn;
+    session.navigateCode = (request) async {
+      if (!session.isPresentationActive)
+        throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
+      return controller.hub.codeNavigation(
+        session.opened.reference,
+        request,
+        controller.hub.access('resource-code-navigation'),
+      );
+    };
+    session.openCodeTarget = (target) async {
+      if (!session.isPresentationActive || !context.mounted) return false;
+      return openResourcePage(
+        context,
+        controller,
+        target.reference,
+        readOnly: true,
+        initialLine: target.line + 1,
+        initialColumn: target.character + 1,
+        preferredHandlerKey: selected.key,
+        stackNavigation: true,
+      );
+    };
+    session.openResourceLink = (target) async {
+      if (!session.isPresentationActive || !context.mounted) return false;
+      return openResourceLink(
+        context,
+        controller,
+        session.opened.reference,
+        target,
+        preferredHandlerKey: selected.key,
+      );
+    };
+    session.openLinkedContent = (name, content) async {
+      final materialize = controller.materializeLinkedContent;
+      if (materialize == null || !context.mounted) return false;
+      final linked = await materialize(session.record, name, content);
+      if (!context.mounted) return false;
+      if ((await controller.handlers(linked)).isEmpty &&
+          await controller.canOpenLegacy?.call(linked) != true)
+        return false;
+      if (!context.mounted) return false;
+      return openResourcePage(context, controller, linked.reference(pin: true));
+    };
+    try {
+      final present = stackNavigation ? null : controller.presentEditor;
+      if (present != null) {
+        await present(ResourceEditorPresentation(selected, session));
+      } else {
+        await navigator.push(
+          MaterialPageRoute<void>(
+            settings: const RouteSettings(name: openMuseResourceRouteName),
+            builder: (_) => _ResourceEditorPage(
+              controller: controller,
+              choice: selected,
+              session: session,
+            ),
+          ),
+        );
+      }
+    } finally {
+      session.dispose();
+    }
+    return true;
+  } on Object catch (error) {
+    dismiss();
+    if (!cancelled && context.mounted) {
+      final strings = ResourceCenterStrings(context);
+      await showDialog<void>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          title: Text(strings.open),
+          content: Text(resourceErrorText(dialog, error)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialog),
+              child: Text(strings.close),
+            ),
+          ],
+        ),
+      );
+    }
+    return false;
+  }
+}
+
+/// Present an authorized plugin editor; its caller owns the session lifetime.
+Future<void> presentResourceEditor(
+  BuildContext context,
+  ResourceCenterController controller,
+  ResourceEditorPresentation presentation, {
+  String? routeName,
+}) => Navigator.of(context).push<void>(
+  MaterialPageRoute<void>(
+    settings: RouteSettings(name: routeName ?? openMuseResourceRouteName),
+    builder: (_) => _ResourceEditorPage(
+      controller: controller,
+      choice: presentation.choice,
+      session: presentation.session,
+    ),
+  ),
+);
+
+final class _HandlerSheet extends StatefulWidget {
+  const _HandlerSheet({
+    required this.controller,
+    required this.record,
+    required this.choices,
+  });
+  final ResourceCenterController controller;
+  final ResourceRecord record;
+  final List<ResourceHandlerChoice> choices;
+  @override
+  State<_HandlerSheet> createState() => _HandlerSheetState();
+}
+
+final class _HandlerSheetState extends State<_HandlerSheet> {
+  late ResourceHandlerChoice selected = widget.choices.first;
+  bool remember = false;
+  @override
+  Widget build(BuildContext context) {
+    final s = ResourceCenterStrings(context), c = Theme.of(context).colorScheme;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        4,
+        20,
+        20 + MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(s.openWith, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 14),
+            Text(
+              widget.record.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            for (final choice in widget.choices)
+              ListTile(
+                key: ValueKey('resource-handler-${choice.key}'),
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.description_outlined, color: c.primary),
+                title: Text(choice.spec.title),
+                subtitle: Text(choice.plugin.descriptor.name),
+                trailing: choice.key == selected.key
+                    ? Icon(Icons.check_rounded, color: c.primary)
+                    : null,
+                onTap: () => setState(() => selected = choice),
+              ),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              title: Text(
+                s.defaultHandler,
+                style: const TextStyle(fontSize: 13),
+              ),
+              value: remember,
+              onChanged: (value) => setState(() => remember = value ?? false),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                key: const ValueKey('resource-handler-open'),
+                onPressed: () async {
+                  if (remember)
+                    await widget.controller.hub.setDefault(
+                      widget.controller.preferenceKey(widget.record),
+                      selected.key,
+                    );
+                  if (context.mounted) Navigator.pop(context, selected);
+                },
+                child: Text(s.open),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _ResourceEditorPage extends StatefulWidget {
+  const _ResourceEditorPage({
+    required this.controller,
+    required this.choice,
+    required this.session,
+  });
+  final ResourceCenterController controller;
+  final ResourceHandlerChoice choice;
+  final ResourceEditorSession session;
+  @override
+  State<_ResourceEditorPage> createState() => _ResourceEditorPageState();
+}
+
+final class _ResourceEditorPageState extends State<_ResourceEditorPage> {
+  ResourceCenterController get controller => widget.controller;
+  ResourceHandlerChoice get choice => widget.choice;
+  ResourceEditorSession get session => widget.session;
+  bool handlingPop = false;
+  @override
+  Widget build(BuildContext context) => ResourceLinkRouting(
+    open: (uri) async {
+      if (!mounted || !session.isActive)
+        throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
+      await openResourcePage(
+        context,
+        controller,
+        ResourceReference.fromUri(uri),
+      );
+    },
+    locate: (locator) async {
+      if (!mounted || !session.isActive)
+        throw const ResourceFailure('RESOURCE_SESSION_CLOSED');
+      await openResourceLocator(context, controller, locator);
+    },
+    child: ListenableBuilder(
+      listenable: session,
+      builder: (context, _) {
+        final s = ResourceCenterStrings(context), record = session.record;
+        return PopScope(
+          canPop:
+              !session.dirty &&
+              (session.flushPendingChanges == null || session.closePrepared),
+          onPopInvokedWithResult: (popped, result) async {
+            if (popped || handlingPop) return;
+            handlingPop = true;
+            try {
+              if (session.flushPendingChanges != null &&
+                  !session.closePrepared) {
+                if (await session.prepareToClose()) {
+                  if (context.mounted) Navigator.pop(context);
+                  return;
+                }
+              }
+              if (!context.mounted || !session.dirty) return;
+              final discard = await showDialog<bool>(
+                context: context,
+                builder: (dialog) => AlertDialog(
+                  title: Text(s.unsaved),
+                  actions: [
+                    TextButton(
+                      key: const ValueKey('resource-keep-editing'),
+                      onPressed: () => Navigator.pop(dialog, false),
+                      child: Text(s.keepEditing),
+                    ),
+                    TextButton(
+                      key: const ValueKey('resource-discard'),
+                      onPressed: () => Navigator.pop(dialog, true),
+                      child: Text(s.discard),
+                    ),
+                  ],
+                ),
+              );
+              if (discard == true && context.mounted) {
+                session.discardChangesForClose();
+                Navigator.pop(context);
+              }
+            } finally {
+              handlingPop = false;
+            }
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              toolbarHeight: 80,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    record.name,
+                    key: const ValueKey('resource-editor-title'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    session.allowEditing
+                        ? record.sourceLabel
+                        : '${record.sourceLabel} · ${s.readOnly}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                if (session.opened.fromSnapshot)
+                  IconButton(
+                    tooltip: s.openOriginal,
+                    icon: const Icon(Icons.source_outlined),
+                    onPressed: () => openResourcePage(
+                      context,
+                      controller,
+                      ResourceReference(
+                        identity: session.opened.reference.identity,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            body: Column(
+              children: [
+                if (session.opened.fromSnapshot)
+                  Material(
+                    color: Theme.of(context).colorScheme.surfaceContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.history, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              session.opened.sourceOffline
+                                  ? s.offlineCopy
+                                  : s.conversationVersion,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                Expanded(
+                  child: ResourceEditorSessionScope(
+                    session: session,
+                    child: choice.contributor.buildResourceEditor(
+                      context,
+                      choice.spec.id,
+                      session,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}

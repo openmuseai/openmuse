@@ -1,0 +1,192 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:openmuse_mobile/main.dart' as application;
+import 'package:openmuse_mcp_app_runtime/openmuse_mcp_app_runtime.dart';
+import 'support/device_result.dart';
+
+void main() {
+  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized()
+    ..framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive
+    ..shouldPropagateDevicePointerEvents = true;
+  recordDeviceResult(binding);
+  testWidgets(
+    'foldable Apps tab controls CI using only the domestic public paired relay',
+    (tester) async {
+      final milestones = <String>[];
+      binding.reportData = {
+        'milestones': milestones,
+        'transport': 'domestic-public-paired-desktop',
+        'publicAcceptancePassed': false,
+      };
+      final support = await getApplicationSupportDirectory(),
+          file = File('${support.path}/ci-e2e-account.json');
+      final config = jsonDecode(await file.readAsString()) as Map;
+      await file.delete();
+      Future<void> until(
+        bool Function() check,
+        String label, {
+        int seconds = 180,
+      }) async {
+        final end = DateTime.now().add(Duration(seconds: seconds));
+        while (!check() && DateTime.now().isBefore(end)) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 200)),
+          );
+          await tester.pump();
+        }
+        expect(check(), isTrue, reason: label);
+        milestones.add(label);
+        debugPrint('CI_PUBLIC_PASS $label');
+      }
+
+      await tester.runAsync(
+        () => application.main().timeout(const Duration(seconds: 90)),
+      );
+      await tester.pump();
+      await until(
+        () =>
+            find
+                .byKey(const ValueKey('legal-checkbox'))
+                .evaluate()
+                .isNotEmpty ||
+            find
+                .byType(application.OpenMuseMobileApplication)
+                .evaluate()
+                .isNotEmpty,
+        'first-run screen visible',
+      );
+      if (find.byKey(const ValueKey('legal-checkbox')).evaluate().isNotEmpty) {
+        expect(
+          config['acceptLegalOnce'],
+          isTrue,
+          reason:
+              'An explicit current user delegation is required for legal UI actions',
+        );
+        await tester.tap(find.byKey(const ValueKey('legal-checkbox')));
+        await tester.pump();
+        await tester.tap(find.byKey(const ValueKey('legal-accept')));
+        await tester.pump();
+        milestones.add(
+          'legal checkbox and continue tapped through UI with explicit current user delegation',
+        );
+      }
+      await until(
+        () => find
+            .byType(application.OpenMuseMobileApplication)
+            .evaluate()
+            .isNotEmpty,
+        'ordinary Mobile application started',
+      );
+      final host = tester.widget<application.OpenMuseMobileApplication>(
+        find.byType(application.OpenMuseMobileApplication),
+      );
+      expect(
+        host.remoteApps,
+        isEmpty,
+        reason:
+            'A direct loopback developer installation must not satisfy this test',
+      );
+      await tester.runAsync(
+        () => host.authenticationPlugin.authentication.signInWithPassword(
+          config['email'] as String,
+          config['password'] as String,
+        ),
+      );
+      await until(
+        () =>
+            host.authenticationPlugin.authentication.snapshot.identity != null,
+        'China production account authenticated with exact password',
+      );
+      final paired = host.pairedDesktopPlugin;
+      await tester.runAsync(() => paired.directory!.refresh());
+      await until(
+        () => paired.controller.devices.any(
+          (d) => d.deviceRef == config['desktopDeviceRef'],
+        ),
+        'same-account Desktop discovered through production directory',
+      );
+      final device = paired.controller.devices.singleWhere(
+        (d) => d.deviceRef == config['desktopDeviceRef'],
+      );
+      expect(
+        await tester.runAsync(() => paired.controller.connectDevice(device)),
+        isTrue,
+      );
+      final connection = paired.controller.snapshot.connection!;
+      final origin = Uri.parse(connection.session.origin);
+      expect(origin.scheme, 'https');
+      expect(origin.host, 'cn.openmuseai.com');
+      milestones.add('paired grant uses domestic HTTPS production relay');
+      final state = tester.state<application.OpenMuseMobileApplicationState>(
+        find.byType(application.OpenMuseMobileApplication),
+      );
+      await until(
+        () => state.installedPluginIds.contains('io.openmuse.muse-ci'),
+        'Desktop-delegated CI installed into ordinary Mobile plugin registry',
+      );
+      // Dismiss the first sign-in pairing sheet if it remains above the shell.
+      final barrier = find.byType(ModalBarrier).hitTestable();
+      if (barrier.evaluate().isNotEmpty) {
+        await tester.tapAt(const Offset(5, 80));
+        await tester.pump();
+      }
+      final apps = find.byKey(const ValueKey('wb-tab-应用')).evaluate().isNotEmpty
+          ? find.byKey(const ValueKey('wb-tab-应用'))
+          : find.byKey(const ValueKey('wb-tab-Apps'));
+      await tester.tap(apps);
+      await tester.pump();
+      final card = find.byKey(
+        const ValueKey('workbench-card-io.openmuse.muse-ci'),
+      );
+      // Embedded workbench cards can extend behind the shell's bottom bar.
+      // Scroll the actual list until the card's center can receive a gesture.
+      for (
+        var attempt = 0;
+        attempt < 4 && card.hitTestable().evaluate().isEmpty;
+        attempt++
+      ) {
+        await tester.drag(
+          find.byKey(const PageStorageKey('apps-overview-scroll')),
+          const Offset(0, -280),
+        );
+        await tester.pump();
+      }
+      expect(card.hitTestable(), findsOneWidget);
+      await tester.tap(card.hitTestable());
+      await tester.pump();
+      await until(
+        () => find.byType(RemoteMcpAppView).evaluate().isNotEmpty,
+        'Apps tab card opened full CI plugin',
+      );
+      final view = tester.widget<RemoteMcpAppView>(
+        find.byType(RemoteMcpAppView),
+      );
+      expect(view.app.forwardRequest, isNotNull);
+      var networkReads = 0;
+      var uiConnected = false;
+      view.app.onRequestCompleted = (method, tool, agent) {
+        networkReads++;
+        if (tool == 'ci_project_get') uiConnected = true;
+      };
+      await until(
+        () => find.byType(WebViewWidget).evaluate().isNotEmpty,
+        'paired MCP UI connected without Mobile backend credential',
+      );
+      await until(
+        () => uiConnected,
+        'actual CI MCP canvas connected over public relay',
+      );
+      binding.reportData!['logicalWidth'] =
+          tester.view.physicalSize.width / tester.view.devicePixelRatio;
+      binding.reportData!['networkReads'] = networkReads;
+      binding.reportData!['entryAcceptancePassed'] = true;
+      // Full node/artifact/Diff acceptance is deliberately separate from entry.
+      // Do not mark publicAcceptancePassed until all those actions are recorded.
+    },
+  );
+}

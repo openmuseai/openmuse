@@ -77,7 +77,7 @@
   "createAccountTitle": "Create your account",
   "signUpCodeSent": "Enter the verification code sent to {email} to confirm your account.",
   "@signUpCodeSent": {"placeholders": {"email": {"type": "String"}}},
-  "recoveryCodeSent": "Enter the recovery code sent to {email}.",
+  "recoveryCodeSent": "If an account exists for {email}, check your inbox or spam folder for a recovery code.",
   "@recoveryCodeSent": {"placeholders": {"email": {"type": "String"}}},
   "resendCode": "Resend code",
   "resendCodeCountdown": "Resend code in {seconds}s",

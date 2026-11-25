@@ -191,11 +191,13 @@ final class OpenMuseSidebarFooterAction extends StatelessWidget {
     required this.icon,
     required this.label,
     this.onTap,
+    this.unread = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
+  final bool unread;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -208,7 +210,25 @@ final class OpenMuseSidebarFooterAction extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 15, color: OpenMuseTokens.textMuted),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(icon, size: 15, color: OpenMuseTokens.textMuted),
+                if (unread)
+                  const Positioned(
+                    right: -3,
+                    top: -3,
+                    child: DecoratedBox(
+                      key: ValueKey('notification-unread-dot'),
+                      decoration: BoxDecoration(
+                        color: Color(0xffe34141),
+                        shape: BoxShape.circle,
+                      ),
+                      child: SizedBox(width: 7, height: 7),
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(width: 6),
             Text(
               label,
@@ -237,6 +257,9 @@ final class OpenMuseWorkspaceSidebar extends StatelessWidget {
     this.onAddWorkspace,
     this.onPlugins,
     this.onTrash,
+    this.onNotifications,
+    this.hasUnreadNotifications = false,
+    this.footerNotice,
   });
 
   final bool projectExpanded;
@@ -249,6 +272,9 @@ final class OpenMuseWorkspaceSidebar extends StatelessWidget {
   final VoidCallback? onAddWorkspace;
   final VoidCallback? onPlugins;
   final VoidCallback? onTrash;
+  final VoidCallback? onNotifications;
+  final bool hasUnreadNotifications;
+  final Widget? footerNotice;
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -344,6 +370,10 @@ final class OpenMuseWorkspaceSidebar extends StatelessWidget {
             ),
             const SizedBox(height: 7),
             Expanded(child: projectExpanded ? tree : const SizedBox.shrink()),
+            if (footerNotice case final notice?) ...[
+              notice,
+              const SizedBox(height: 8),
+            ],
             const Divider(height: 18),
             Row(
               children: [
@@ -356,9 +386,11 @@ final class OpenMuseWorkspaceSidebar extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 OpenMuseSidebarFooterAction(
-                  icon: Icons.delete_outline,
-                  label: '回收站',
-                  onTap: onTrash,
+                  key: const ValueKey('notifications-footer'),
+                  icon: Icons.notifications_none,
+                  label: '通知',
+                  unread: hasUnreadNotifications,
+                  onTap: onNotifications,
                 ),
               ],
             ),
@@ -511,7 +543,13 @@ final class OpenMuseEditorTabStrip extends StatelessWidget {
       color: Theme.of(context).brightness == Brightness.dark
           ? const Color(0xff202228)
           : const Color(0xfff7f8fb),
-      border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
+      border: Border(
+        bottom: BorderSide(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0x24FFFFFF)
+              : const Color(0x14000000),
+        ),
+      ),
     ),
     child: Row(
       children: [
@@ -596,13 +634,17 @@ final class _OpenMuseEditorTabState extends State<_OpenMuseEditorTab> {
             onTap: widget.onActivate,
             child: Container(
               constraints: BoxConstraints(
-                minWidth: tab.pinned ? 54 : (active ? 128 : 88),
-                maxWidth: tab.pinned ? 54 : 168,
+                minWidth: tab.pinned ? 48 : (active ? 108 : 76),
+                maxWidth: tab.pinned ? 48 : 148,
               ),
               padding: EdgeInsets.only(left: active ? 14 : 10, right: 4),
               decoration: BoxDecoration(
                 border: Border(
-                  right: BorderSide(color: Theme.of(context).dividerColor),
+                  right: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0x24FFFFFF)
+                        : const Color(0x14000000),
+                  ),
                 ),
               ),
               child: Row(

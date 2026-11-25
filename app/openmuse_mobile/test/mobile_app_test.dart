@@ -1,14 +1,84 @@
+import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openmuse_app_update/openmuse_app_update.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
 import 'package:openmuse_mobile/main.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
+import 'package:openmuse_mobile_plugin_runtime/openmuse_mobile_plugin_runtime.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
+import 'package:pub_semver/pub_semver.dart';
+
+final _pptxFixture = File(
+  'test_assets/genoffice_standard_business.pptx',
+).readAsBytesSync();
 
 void main() {
+  testWidgets('Mobile startup shows a newer store release before work', (
+    tester,
+  ) async {
+    final authentication = _FakeAuthenticationController();
+    final updates = OpenMuseUpdateController(
+      feed: OpenMuseUpdateFeed(
+        origin: Uri.parse('https://openmuseai.com'),
+        channel: 'canary',
+        target: 'ios-arm64',
+        fetchOverride: (_) async => jsonEncode({
+          'schema': 'openmuse.app-update/v1',
+          'channel': 'canary',
+          'target': 'ios-arm64',
+          'version': '0.0.2',
+          'build': 2,
+          'publishedAt': '2026-10-13T00:00:00Z',
+          'downloadUrl': 'https://testflight.apple.com/join/openmuse',
+          'sha256': '',
+          'sizeBytes': 0,
+          'installKind': 'ios-store',
+          'notes': {'zh': '手机端更新说明', 'en': 'Mobile release notes'},
+        }),
+      ),
+      installedVersion: Version.parse('0.0.1'),
+      installedBuild: 1,
+    );
+    await updates.check();
+    await tester.pumpWidget(
+      OpenMuseMobileApplication(
+        updates: updates,
+        authenticationPlugin: OpenMuseGoTruePlugin(
+          authentication: authentication,
+          cloudLabel: 'https://cloud.openmuse.test',
+        ),
+        cloudWorkspacePlugin: OpenMuseCloudWorkspacePlugin(
+          authentication: authentication,
+          cloudOrigin: Uri.parse('https://cloud.openmuse.test'),
+          deviceId: 'mobile-test',
+        ),
+        pairedDesktopPlugin: OpenMusePairedDesktopMobilePlugin(
+          client: PairedDesktopClient(
+            origin: Uri.parse('https://desktop.openmuse.test'),
+            accessToken: authentication.accessToken,
+            deviceRef: 'mobile-test',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('app-update-dialog')), findsOneWidget);
+    expect(find.text('手机端更新说明'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('app-update-later')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('wb-tab-首页')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('wb-tab-任务')));
+    await tester.pumpAndSettle();
+    expect(find.text('OpenMuse，与你一起创造'), findsOneWidget);
+  });
+
   testWidgets('mobile distribution loads the GoTrue login plugin by default', (
     tester,
   ) async {
@@ -44,26 +114,38 @@ void main() {
       application.installedPluginIds,
       contains('com.openmuse.remote-workbench'),
     );
+    expect(find.byKey(const ValueKey('wb-tab-首页')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('wb-tab-任务')));
+    await tester.pumpAndSettle();
     expect(find.text('OpenMuse，与你一起创造'), findsOneWidget);
     expect(find.text('发消息'), findsOneWidget);
     expect(find.text('Welcome to OpenMuse'), findsNothing);
     expect(find.text('请登录以访问 Cloud Workspace'), findsNothing);
+    expect(application.installedPluginIds, isNot(contains('io.openmuse.siyuan')));
+    expect(
+      application.installedPluginIds,
+      containsAll(['io.openmuse.smart-document', 'io.openmuse.dataset']),
+    );
+    expect(
+      application.installedPluginIds,
+      contains('com.openmuse.open-file-viewer'),
+    );
+    await tester.tap(find.byKey(const ValueKey('wb-tab-应用')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('workbench-card-io.openmuse.siyuan')),
+      findsNothing,
+    );
+    expect(find.textContaining('插件预览不可用'), findsNothing);
   });
 
-  test('physical-device defaults never point authentication at loopback', () {
-    expect(
-      MobileEndpointConfig.defaultGoTrueOrigin,
-      'https://openmuseai.com/gotrue',
-    );
-    expect(MobileEndpointConfig.defaultCloudOrigin, 'https://openmuseai.com');
-    expect(
-      Uri.parse(MobileEndpointConfig.defaultGoTrueOrigin).isScheme('https'),
-      isTrue,
-    );
-    expect(
-      Uri.parse(MobileEndpointConfig.defaultGoTrueOrigin).host,
-      isNot(anyOf('127.0.0.1', 'localhost')),
-    );
+  test('physical-device defaults come from a validated deployment', () async {
+    final config = (await loadDeploymentBundle()).snapshot;
+    final endpoints = MobileEndpointConfig.fromEnvironment(config: config);
+    expect(endpoints.gotrueOrigin, config.serviceUri(ServiceId.auth));
+    expect(endpoints.cloudOrigin, config.serviceUri(ServiceId.cloud));
+    expect(endpoints.gotrueOrigin.scheme, 'https');
+    expect(endpoints.gotrueOrigin.host, isNot(anyOf('127.0.0.1', 'localhost')));
   });
 
   test('DOCX capability is advertised only when an engine is injected', () {
@@ -119,7 +201,7 @@ void main() {
       'online': true,
     });
     await tester.pumpWidget(
-      MaterialApp(
+      _localizedApp(
         home: PairedDesktopConnectScreen(
           controller: controller,
           initialDevice: device,
@@ -152,9 +234,7 @@ void main() {
       ),
     );
     await tester.pumpWidget(
-      const MaterialApp(
-        home: PairedDesktopWorkspaceScreen(connection: connection),
-      ),
+      _localizedApp(home: PairedDesktopWorkspaceScreen(connection: connection)),
     );
 
     await tester.pump();
@@ -284,9 +364,46 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Deck.pptx'));
     await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('office-view-only')), findsOneWidget);
     expect(find.text('PPTX · 只读兼容视图'), findsOneWidget);
-    expect(find.textContaining('Slide 1'), findsOneWidget);
+    expect(find.textContaining('Slide 1\tHello'), findsOneWidget);
     expect(find.byIcon(Icons.save), findsNothing);
+  });
+
+  testWidgets('store catalog excludes PPTX engine and keeps route unavailable', (
+    tester,
+  ) async {
+    final directory = (await tester.runAsync(
+      () => Directory.systemTemp.createTemp('pptx-gate-test-'),
+    ))!;
+    addTearDown(() => directory.delete(recursive: true));
+    final store = MobilePluginStore(directory);
+    const source = BundledMobileMarketSource();
+    final entries = (await tester.runAsync(source.list))!;
+    expect(entries.map((entry) => entry.id), isNot(contains('com.openmuse.pptx')));
+    final service = _FakeCloudService(pptx: true);
+    final engine = MultiFormatOfficeEngine({
+      OfficeFormat.slides: _FakeSlidesEngine(),
+    });
+    await tester.pumpWidget(
+      OpenMuseHostShell(
+        composition: mobileComposition(
+          session: const MobileAccountSession.authenticated('Test Account'),
+          cloudService: service,
+          dshConnector: service,
+          resources: service,
+          resourceCatalog: service,
+          officeEngine: engine,
+          pluginStore: store,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cloud Project'));
+    await tester.pumpAndSettle();
+    final resource = find.byKey(const ValueKey('resource-resource:pptx'));
+    expect(tester.widget<ListTile>(resource).enabled, isFalse);
+    expect(find.byKey(const ValueKey('office-view-only')), findsNothing);
   });
 
   testWidgets(
@@ -492,11 +609,11 @@ final class _FakeCloudService
         writable: false,
       ),
     if (pptx)
-      const CloudResourceRecord(
+      CloudResourceRecord(
         resourceRef: 'resource:pptx',
         title: 'Deck.pptx',
         revision: 'pptx-r1',
-        size: 3,
+        size: _pptxFixture.length,
         mediaType:
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         writable: false,
@@ -539,7 +656,7 @@ final class _FakeCloudService
     audience: audience,
     generation: generation,
     expiresAtMs: DateTime.now().millisecondsSinceEpoch + 60000,
-    size: 3,
+    size: resourceRef == 'resource:pptx' ? _pptxFixture.length : 3,
     mediaType: switch (resourceRef) {
       'resource:xlsx' =>
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -567,7 +684,10 @@ final class _FakeCloudService
 
   @override
   Future<List<int>> read(ResourceHandle handle, int start, int endExclusive) =>
-      Future.value(const [1, 2, 3].sublist(start, endExclusive));
+      Future.value(
+        (handle.resourceRef == 'resource:pptx' ? _pptxFixture : const [1, 2, 3])
+            .sublist(start, endExclusive),
+      );
 
   @override
   Future<OfficeResourceCommitReceipt> commit({
@@ -584,3 +704,10 @@ final class _FakeCloudService
     generation: generation,
   );
 }
+
+Widget _localizedApp({required Widget home}) => OpenMuseLocaleScope(
+  controller: OpenMuseLocaleController(
+    initialTag: OpenMuseCatalog.builtIn.fallbackLocale,
+  ),
+  child: MaterialApp(home: home),
+);

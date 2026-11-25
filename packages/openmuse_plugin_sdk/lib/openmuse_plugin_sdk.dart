@@ -5,15 +5,42 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'src/authentication.dart';
+import 'src/localization.dart';
+import 'src/resource_capabilities.dart';
+export 'src/localization.dart';
 
 export 'src/manifest_v2.dart';
+export 'src/mcp_app_document.dart';
+export 'src/resource_agent_broker.dart';
+export 'src/resource_extension_session.dart';
 export 'src/authentication.dart';
+export 'src/mobile_workbench.dart';
+export 'src/resource_capabilities.dart';
+export 'src/resource_session_owners.dart';
 
-enum OpenMusePluginRuntime { builtIn, nativeProcess, webView }
+enum OpenMusePluginRuntime { builtIn, nativeProcess, webView, quickJs }
 
 enum OpenMusePluginState { installed, activating, active, deactivating, failed }
 
-enum OpenMuseSurfaceRegion { editor, rightSidebar, bottomPanel }
+enum OpenMuseSurfaceRegion { editor, rightSidebar, bottomPanel, dialog }
+
+/// Agent implementations consume standard MCP content blocks. Resource business
+/// schemas stay in the resource plugin; the Host selects an installed provider.
+abstract interface class OpenMuseAgentContributor {
+  Future<void> sendAgentMessage(List<Map<String, Object?>> content);
+}
+
+/// In-process adapters expose ordinary MCP tool definitions/results. Business
+/// operations and private transport adapters remain in the contributing plugin.
+abstract interface class OpenMuseToolContributor {
+  List<Map<String, Object?>> get contributedTools;
+  Future<Map<String, Object?>> callContributedTool(
+    String caller,
+    String name,
+    Map<String, Object?> arguments,
+  );
+  Future<void> disposeToolCaller(String caller);
+}
 
 @immutable
 final class OpenMuseResource {
@@ -21,11 +48,13 @@ final class OpenMuseResource {
     required this.uri,
     required this.displayName,
     this.mediaType,
+    this.reference,
   });
 
   final Uri uri;
   final String displayName;
   final String? mediaType;
+  final ResourceReference? reference;
 
   String get extension {
     final segment = uri.pathSegments.isEmpty ? '' : uri.pathSegments.last;
@@ -136,6 +165,8 @@ final class OpenMusePluginContext {
   const OpenMusePluginContext({
     required this.executeHostCommand,
     this.hostChanges,
+    this.localizations,
+    this.configuration,
   });
 
   final Future<Object?> Function(String command, Object? arguments)
@@ -143,6 +174,8 @@ final class OpenMusePluginContext {
 
   /// Invalidates read-only Host snapshots; plugins re-query through commands.
   final Listenable? hostChanges;
+  final OpenMusePluginLocalizations? localizations;
+  final OpenMusePluginConfiguration? configuration;
 }
 
 /// Host chrome that a panel can place on its own toolbar instead of a

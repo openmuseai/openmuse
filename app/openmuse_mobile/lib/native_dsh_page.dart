@@ -1,3 +1,8 @@
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'mobile_build_locale.dart';
+import 'mobile_dsh_connection.dart';
+import 'ai_content_reporting.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -5,8 +10,6 @@ import 'package:muse_dsh_conversation_core/muse_dsh_conversation_core.dart';
 import 'package:muse_dsh_conversation_flutter/muse_dsh_conversation_flutter.dart';
 import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
-
-import 'remote_dsh_page.dart';
 
 final class NativeDshSessionHandle extends ChangeNotifier {
   DshConversationController? _conversation;
@@ -110,11 +113,14 @@ final class NativeDshPage extends StatefulWidget {
     required this.session,
     required this.workspaceTitle,
     this.requestedSessionId,
+    this.connection,
+    this.knownSession,
     this.active = true,
     this.embedded = false,
     this.showComposer = true,
     this.handle,
     this.initialPrompt,
+    this.onInitialPromptDeclined,
     this.onInitialPromptConsumed,
     this.onConnectionFailure,
   });
@@ -122,11 +128,14 @@ final class NativeDshPage extends StatefulWidget {
   final DshSessionDescriptor session;
   final String workspaceTitle;
   final String? requestedSessionId;
+  final MobileDshConnection? connection;
+  final DshNativeSessionSummary? knownSession;
   final bool active;
   final bool embedded;
   final bool showComposer;
   final NativeDshSessionHandle? handle;
   final String? initialPrompt;
+  final ValueChanged<String>? onInitialPromptDeclined;
   final VoidCallback? onInitialPromptConsumed;
   final VoidCallback? onConnectionFailure;
 
@@ -136,6 +145,10 @@ final class NativeDshPage extends StatefulWidget {
 
 final class _NativeDshPageState extends State<NativeDshPage> {
   DshNativeGatewayClient? _client;
+  DshConversationStore? _cachedStore;
+  ConnectionSpan? _firstTranscript;
+  StreamSubscription<void>? _cacheChanges;
+  Timer? _cacheTimer;
   DshConversationController? _conversation;
   DshNativeNegotiation? _negotiation;
   DshNativeSessionOptions? _options;
@@ -144,15 +157,62 @@ final class _NativeDshPageState extends State<NativeDshPage> {
   bool _started = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     if (widget.active) _ensureOpen();
   }
 
   void _ensureOpen() {
     if (_started) return;
     _started = true;
+    _firstTranscript ??= widget.connection?.client.trace.start(
+      'mobile.transcript_first_frame',
+    );
+    unawaited(_restoreCached());
     unawaited(_openWithRetry());
+  }
+
+  void _transcriptVisible() {
+    final span = _firstTranscript;
+    if (span == null) return;
+    _firstTranscript = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      span.end(ok: mounted);
+    });
+  }
+
+  Future<void> _restoreCached() async {
+    final messages = widget.connection?.messages;
+    final id = widget.requestedSessionId;
+    if (messages == null || id == null) return;
+    final restore = widget.connection!.client.trace.start(
+      'mobile.cache_restore',
+    );
+    await messages.ready;
+    if (!mounted || _conversation != null) {
+      restore.end(ok: false);
+      return;
+    }
+    final page = messages.read(id);
+    restore.mark('lookup', reused: page != null);
+    if (page == null) {
+      restore.end();
+      return;
+    }
+    final store = DshConversationStore()..apply(page);
+    store.connecting(id, reconnecting: true);
+    setState(() => _cachedStore = store);
+    if (store.snapshot.rows.isNotEmpty) _transcriptVisible();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      restore.end(ok: mounted);
+    });
+  }
+
+  void _reportAuthorizationFailure(Object error) {
+    if (error is DshNativeGatewayException &&
+        (error.statusCode == 401 || error.statusCode == 403)) {
+      widget.onConnectionFailure?.call();
+    }
   }
 
   @override
@@ -165,7 +225,7 @@ final class _NativeDshPageState extends State<NativeDshPage> {
       if (widget.active) {
         conversation.resume();
       } else {
-        conversation.pause();
+        conversation.idle();
       }
     }
     if (oldWidget.handle != widget.handle) {
@@ -175,6 +235,8 @@ final class _NativeDshPageState extends State<NativeDshPage> {
   }
 
   Future<void> _openWithRetry() async {
+    final localeStrings = stringsOf(context);
+
     var attempt = 0;
     while (mounted) {
       if (!widget.active) {
@@ -185,12 +247,15 @@ final class _NativeDshPageState extends State<NativeDshPage> {
         await _open();
         return;
       } catch (error) {
-        _client?.close();
+        if (widget.connection == null) _client?.close();
         _client = null;
         if (!mounted) return;
         debugPrint('OpenMuse native DSH open: attempt=$attempt error=$error');
-        setState(() => _failure = 'Desktop 连接暂时不可用，正在自动重试…');
-        widget.onConnectionFailure?.call();
+        setState(
+          () => _failure = (localeStrings
+              .mobileDesktopIsUnavailableRetryingAutomaticaC2b4ac01()),
+        );
+        _reportAuthorizationFailure(error);
         final seconds = 1 << attempt.clamp(0, 3);
         attempt++;
         await Future<void>.delayed(Duration(seconds: seconds));
@@ -199,23 +264,29 @@ final class _NativeDshPageState extends State<NativeDshPage> {
   }
 
   Future<void> _open() async {
-    final client = DshNativeGatewayClient(
-      origin: Uri.parse(widget.session.origin),
-      bootstrapPath: widget.session.path,
-      allowInsecureLoopback: widget.session.allowInsecureLoopback,
-      allowInsecurePrivateNetworkForTesting:
-          widget.session.allowInsecurePrivateNetworkForTesting,
-    );
+    final client =
+        widget.connection?.client ??
+        DshNativeGatewayClient(
+          origin: Uri.parse(widget.session.origin),
+          bootstrapPath: widget.session.path,
+          allowInsecureLoopback: widget.session.allowInsecureLoopback,
+          allowInsecurePrivateNetworkForTesting:
+              widget.session.allowInsecurePrivateNetworkForTesting,
+        );
     _client = client;
     final hello = await client.initialize();
     if (!hello.contractSupported) {
-      client.close();
+      if (widget.connection == null) client.close();
       _useWebFallback();
       return;
     }
     final values = await Future.wait<Object>([
-      client.negotiate(DshNativeCapabilities.standard()),
-      client.listSessions(),
+      widget.connection?.prepare() ??
+          client.negotiate(DshNativeCapabilities.standard()),
+      widget.knownSession != null &&
+              widget.knownSession!.sessionId == widget.requestedSessionId
+          ? Future.value([widget.knownSession!])
+          : client.listSessions(),
     ]);
     final negotiation = values[0] as DshNativeNegotiation;
     final sessions = values[1] as List<DshNativeSessionSummary>;
@@ -225,7 +296,7 @@ final class _NativeDshPageState extends State<NativeDshPage> {
       requestedSessionId: widget.requestedSessionId,
     );
     if (selected == null) {
-      client.close();
+      if (widget.connection == null) client.close();
       debugPrint(
         'OpenMuse native DSH: session ${widget.requestedSessionId} '
         'is absent from Desktop catalog',
@@ -235,10 +306,22 @@ final class _NativeDshPageState extends State<NativeDshPage> {
     }
     final conversation = DshConversationController(
       client: client,
-      onConnectionFailure: (_) => widget.onConnectionFailure?.call(),
+      ownsClient: widget.connection == null,
+      onConnectionFailure: _reportAuthorizationFailure,
+      approveSend: _approveSharing,
     );
+    final messages = widget.connection?.messages;
+    if (messages != null) {
+      await messages.ready;
+      final cached = messages.read(selected.sessionId);
+      if (cached != null) conversation.store.apply(cached);
+    }
+    if (!mounted) {
+      await conversation.dispose();
+      return;
+    }
     await conversation.start(selected.sessionId, running: selected.running);
-    if (!widget.active) conversation.pause();
+    if (!widget.active) conversation.idle();
     if (!mounted) {
       await conversation.dispose();
       return;
@@ -248,6 +331,23 @@ final class _NativeDshPageState extends State<NativeDshPage> {
       _negotiation = negotiation;
       _failure = null;
     });
+    if (messages != null) {
+      _cacheChanges = conversation.store.changes.listen((_) {
+        if (_firstTranscript != null &&
+            conversation.store.snapshot.rows.isNotEmpty) {
+          _transcriptVisible();
+        }
+        _cacheTimer ??= Timer(const Duration(milliseconds: 500), () {
+          _cacheTimer = null;
+          messages.put(selected.sessionId, conversation.store.cachePage());
+        });
+      });
+    }
+    if (conversation.store.snapshot.rows.isNotEmpty) _transcriptVisible();
+    final visible = client.trace.start('mobile.conversation_bound');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      visible.end(ok: mounted);
+    });
     widget.handle?.attach(conversation, null);
     unawaited(_loadOptions(conversation, selected.sessionId));
     final initialPrompt = widget.initialPrompt?.trim();
@@ -256,9 +356,91 @@ final class _NativeDshPageState extends State<NativeDshPage> {
         await conversation.send(initialPrompt);
         widget.onInitialPromptConsumed?.call();
       } catch (error) {
+        if (error is DshSendDeclined) {
+          widget.onInitialPromptDeclined?.call(initialPrompt);
+        }
         debugPrint('OpenMuse native DSH prompt: $error');
       }
     }
+  }
+
+  final _approvedRecipients = <String>{};
+  Future<bool> _approveSharing(
+    DshConversationSnapshot snapshot,
+    String text,
+  ) async {
+    final strings = stringsOf(context);
+    DshNativeSessionOptions? options;
+    try {
+      options = await _client?.sessionOptions(snapshot.sessionId!);
+    } on Object {
+      // Unknown recipients never inherit an earlier sharing decision.
+    }
+    if (!mounted) return false;
+    final provider = snapshot.provider ?? options?.defaultModel.provider;
+    final model = snapshot.model ?? options?.defaultModel.model;
+    final matches =
+        options?.models
+            .where((value) => value.provider == provider && value.id == model)
+            .toList() ??
+        [];
+    if (provider == null || model == null || matches.length != 1) {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(strings.commonAiSharingTitle()),
+          content: Text(strings.commonAiSharingUnknown()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(strings.commonAiSharingCancel()),
+            ),
+          ],
+        ),
+      );
+      return false;
+    }
+    final key =
+        '${widget.session.origin}${widget.session.path}|$provider|$model';
+    if (_approvedRecipients.contains(key)) return true;
+    final accepted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text(strings.commonAiSharingTitle()),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                strings.commonAiSharingBody(
+                  provider: matches.single.providerName,
+                  model: matches.single.name,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SelectableText(
+                text.length > 500 ? '${text.substring(0, 500)}…' : text,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(strings.commonAiSharingCancel()),
+          ),
+          FilledButton(
+            key: const ValueKey('ai-sharing-allow'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(strings.commonAiSharingAllow()),
+          ),
+        ],
+      ),
+    );
+    if (accepted == true && mounted) _approvedRecipients.add(key);
+    return accepted == true;
   }
 
   Future<void> _loadOptions(
@@ -285,33 +467,62 @@ final class _NativeDshPageState extends State<NativeDshPage> {
 
   @override
   void dispose() {
+    _firstTranscript?.end(ok: false);
+    _cacheTimer?.cancel();
+    unawaited(_cacheChanges?.cancel());
     final conversation = _conversation;
     if (conversation != null) {
+      widget.connection?.messages.put(
+        widget.requestedSessionId ?? conversation.store.snapshot.sessionId!,
+        conversation.store.cachePage(),
+      );
       widget.handle?.detach(conversation);
       unawaited(conversation.dispose());
     } else {
-      _client?.close();
+      if (widget.connection == null) _client?.close();
     }
+    unawaited(_cachedStore?.dispose());
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final reports = AiContentReportScope.maybeOf(context);
     if (_webFallback) {
-      return RemoteDshPage(
-        session: widget.session,
-        workspaceTitle: widget.workspaceTitle,
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(stringsOf(context).commonDesktopUpdateNeeded()),
+        ),
       );
     }
     final conversation = _conversation;
-    final content = conversation == null
+    final content = conversation == null && _cachedStore != null
+        ? DshConversationSurface(
+            store: _cachedStore!,
+            onSend: (text, {mode = 'queue'}) async {},
+            onCancel: () async {},
+            onFallbackRequested: _useWebFallback,
+            showHeader: !widget.embedded,
+            showComposer: false,
+          )
+        : conversation == null
         ? Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (widget.initialPrompt case final prompt?) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(prompt),
+                  ),
+                ],
                 const CircularProgressIndicator.adaptive(),
                 const SizedBox(height: 12),
-                Text(_failure ?? '正在连接 Desktop DSH…'),
+                Text(
+                  _failure ??
+                      (stringsOf(context).mobileConnectingToDesktop46ee792f()),
+                ),
               ],
             ),
           )
@@ -320,7 +531,21 @@ final class _NativeDshPageState extends State<NativeDshPage> {
             nativeContributions: _negotiation?.contributions ?? const [],
             compatibilityPlugins: _negotiation?.plugins ?? const [],
             onSend: conversation.send,
+            onLoadOlder: conversation.loadOlder,
             onCancel: conversation.cancel,
+            onReportResponse: reports == null
+                ? null
+                : (row) => unawaited(
+                    showAiContentReport(
+                      context: context,
+                      client: reports,
+                      response: row.text.isEmpty
+                          ? stringsOf(context).commonAiReportAttachments()
+                          : row.text,
+                      provider: conversation.store.snapshot.provider ?? '',
+                      model: conversation.store.snapshot.model ?? '',
+                    ),
+                  ),
             onFallbackRequested: _useWebFallback,
             onQuestionAnswer: (answers) => conversation.client.answerQuestion(
               sessionId: conversation.store.snapshot.sessionId!,
@@ -343,6 +568,31 @@ final class _NativeDshPageState extends State<NativeDshPage> {
                   seq: seq,
                   index: index,
                 ),
+            onOpenPresentedFile: (seq, index, action) async {
+              final locate = ResourceLinkRouting.maybeOf(context)?.locate;
+              if (locate == null)
+                throw const ResourceFailure('SOURCE_UNAVAILABLE');
+              if (action == 'reveal') {
+                await conversation.client.openPresentedFile(
+                  sessionId: conversation.store.snapshot.sessionId!,
+                  seq: seq,
+                  index: index,
+                  action: action,
+                );
+              } else {
+                await locate(
+                  ResourceLocator(
+                    owner: 'dsh',
+                    kind: 'presented',
+                    context: {
+                      'sessionId': conversation.store.snapshot.sessionId!,
+                      'seq': seq,
+                      'index': index,
+                    },
+                  ),
+                );
+              }
+            },
             showHeader: !widget.embedded,
             showComposer: widget.showComposer,
           );

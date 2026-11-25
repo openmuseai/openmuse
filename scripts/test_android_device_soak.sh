@@ -3,7 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 apk="${OPENMUSE_ANDROID_APK:-$repo_root/target/android-alpha/OpenMuse-Android-Alpha-arm64.apk}"
-package="io.openmuse.openmuse_mobile"
+package="com.openmuseai.mobile"
 activity="$package/.MainActivity"
 background_cycles="${OPENMUSE_BACKGROUND_CYCLES:-50}"
 rotation_cycles="${OPENMUSE_ROTATION_CYCLES:-100}"

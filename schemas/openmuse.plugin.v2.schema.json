@@ -62,7 +62,7 @@
       "additionalProperties": false,
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["none", "flutter", "web-view"] },
+        "kind": { "enum": ["none", "flutter", "web-view", "a2ui"] },
         "entrypoint": { "type": "string", "minLength": 1 }
       },
       "allOf": [
@@ -77,7 +77,7 @@
       "additionalProperties": false,
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["none", "host-process", "remote-dsh", "sandbox-provider"] },
+        "kind": { "enum": ["none", "host-process", "remote-dsh", "sandbox-provider", "quickjs"] },
         "protocol": { "type": "string", "minLength": 1 }
       },
       "allOf": [
@@ -161,7 +161,7 @@
       "required": ["id", "kind", "target", "digest", "license", "abi"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
-        "kind": { "enum": ["host-bundle", "web-bundle", "native-executable", "runtime-closure", "sandbox-worker"] },
+        "kind": { "enum": ["host-bundle", "web-bundle", "native-executable", "runtime-closure", "sandbox-worker", "js-bundle"] },
         "target": { "$ref": "#/$defs/target" },
         "digest": { "$ref": "#/$defs/digest" },
         "signature": { "$ref": "#/$defs/signature" },

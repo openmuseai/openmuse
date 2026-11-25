@@ -1,0 +1,12 @@
+{
+  "source": "OpenMuse-User-Guide.zh-CN.md",
+  "sha256": "04a9fb892ff0999161e22101c0038ed8e8213319b0ef3ed279a006117144562e",
+  "embeddedImages": {
+    "openmuse-guide-4ee27df66ee7be02.png": "4ee27df66ee7be02ff69fdf62fbd7be6feb0a3d68d7ad47b32081167c868d9f3",
+    "openmuse-guide-3ccc21f49a84bb0c.png": "3ccc21f49a84bb0ce2c37e27f4ee0489166c45a56dc2466a82b8548e61312ac5",
+    "openmuse-guide-c943fccf9314f2e4.png": "c943fccf9314f2e4b7086808472da7965ac78ca79603df62eb79373e957bfcd3"
+  },
+  "imageNodes": 3,
+  "linkNodes": 15,
+  "engine": "shipped native Notes Markdown importer and SY exporter"
+}

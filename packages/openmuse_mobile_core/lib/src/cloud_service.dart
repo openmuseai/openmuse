@@ -83,7 +83,8 @@ enum CloudServiceErrorCode {
 }
 
 final class CloudServiceException implements Exception {
-  const CloudServiceException(this.code, this.message);
+  const CloudServiceException(this.code, this.message, {this.httpStatus});
+  final int? httpStatus;
   final CloudServiceErrorCode code;
   final String message;
   @override

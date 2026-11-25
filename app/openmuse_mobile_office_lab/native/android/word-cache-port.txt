@@ -1,0 +1,7 @@
+Register this optional cache-directory channel only in a Word laboratory host:
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "docx_mvp_render/platform")
+            .setMethodCallHandler { call, result ->
+                if (call.method == "cacheDir") result.success(cacheDir.absolutePath)
+                else result.notImplemented()
+            }

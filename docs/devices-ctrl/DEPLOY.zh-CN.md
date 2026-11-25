@@ -1,5 +1,8 @@
 # 公网设备目录与 Desktop 转发：部署指南
 
+> 当前国内拓扑、实现边界与空闲断线修复见 [当前多端设备协同](CURRENT-MULTI-DEVICE-SYNC.zh-CN.md)（2026-11-09）。
+
+
 > 日期：2026-10-01
 >
 > 协议见 [DESKTOP-OUTBOUND-RELAY.zh-CN.md](DESKTOP-OUTBOUND-RELAY.zh-CN.md)。

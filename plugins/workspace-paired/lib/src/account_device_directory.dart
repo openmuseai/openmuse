@@ -1,3 +1,5 @@
+import 'package:muse_dsh_conversation_protocol/muse_dsh_conversation_protocol.dart'
+    show ConnectionTrace;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -47,7 +49,10 @@ final class AccountDevice {
         lastSeenAt is! num ||
         online is! bool ||
         (transportOrigin != null && transportOrigin is! String)) {
-      throw const FormatException('invalid account device');
+      throw const AccountDeviceDirectoryFailure(
+        'INVALID_RESPONSE',
+        '设备信息响应无效。',
+      );
     }
     return AccountDevice(
       deviceRef: deviceRef,
@@ -126,11 +131,14 @@ final class AccountDeviceDirectoryClient {
     this.allowInsecureLoopback = false,
     this.requestTimeout = const Duration(seconds: 15),
     HttpClient? client,
-  }) : _client = client ?? HttpClient() {
+    ConnectionTrace? trace,
+  }) : trace = trace ?? ConnectionTrace(),
+       _client = client ?? HttpClient() {
     _validateOrigin();
     _client.connectionTimeout = requestTimeout;
   }
 
+  final ConnectionTrace trace;
   final Uri cloudOrigin;
   final AccountDeviceAccessTokenProvider accessToken;
   final AccountDeviceAccessTokenProvider? refreshAccessToken;
@@ -169,8 +177,29 @@ final class AccountDeviceDirectoryClient {
         .toList(growable: false);
   }
 
-  Future<WebSocket> connectEvents() async {
-    final token = await _currentAccessToken();
+  Future<WebSocket> connectEvents() =>
+      trace.measure('control.events_connect', (_) => _connectEventsWithTrace());
+
+  Future<WebSocket> _connectEventsWithTrace() async {
+    try {
+      return await _connectEvents(
+        await _currentAccessToken(),
+        retryOn401: true,
+      );
+    } on AccountDeviceDirectoryFailure {
+      rethrow;
+    } on Object {
+      throw const AccountDeviceDirectoryFailure(
+        'EVENT_STREAM_UNAVAILABLE',
+        '设备实时通道暂时不可用。',
+      );
+    }
+  }
+
+  Future<WebSocket> _connectEvents(
+    String? token, {
+    required bool retryOn401,
+  }) async {
     if (token == null || token.isEmpty) {
       throw const AccountDeviceDirectoryFailure('SIGNED_OUT', '请先登录账号。');
     }
@@ -182,10 +211,37 @@ final class AccountDeviceDirectoryClient {
       fragment: null,
     );
     try {
-      return await WebSocket.connect(
+      final pending = WebSocket.connect(
         uri.toString(),
         headers: {HttpHeaders.authorizationHeader: 'Bearer $token'},
-      ).timeout(requestTimeout, onTimeout: _timeout);
+      );
+      final socket = await pending.timeout(
+        requestTimeout,
+        onTimeout: () {
+          unawaited(
+            pending
+                .then((lateSocket) => lateSocket.close())
+                .catchError((Object _) {}),
+          );
+          return _timeout();
+        },
+      );
+      socket.pingInterval = const Duration(seconds: 15);
+      return socket;
+    } on WebSocketException catch (error) {
+      if (error.httpStatusCode == 401 &&
+          retryOn401 &&
+          refreshAccessToken != null) {
+        final fresh = await refreshAccessToken!().timeout(
+          requestTimeout,
+          onTimeout: _timeout,
+        );
+        return _connectEvents(fresh, retryOn401: false);
+      }
+      throw const AccountDeviceDirectoryFailure(
+        'EVENT_STREAM_UNAVAILABLE',
+        '设备实时通道暂时不可用。',
+      );
     } on AccountDeviceDirectoryFailure {
       rethrow;
     } on Object {
@@ -208,22 +264,40 @@ final class AccountDeviceDirectoryClient {
     String path, {
     Map<String, Object?>? body,
   }) async {
-    final token = await _currentAccessToken();
-    if (token == null || token.isEmpty) {
-      throw const AccountDeviceDirectoryFailure('SIGNED_OUT', '请先登录账号。');
-    }
-    return _envelopeWithToken(
-      method,
-      path,
-      token,
-      body: body,
-      retryOn401: true,
-    );
+    final route = path == '/api/muse/devices'
+        ? (method == 'GET' ? 'list' : 'register')
+        : path == '/api/muse/devices/heartbeat'
+        ? 'heartbeat'
+        : 'other';
+    return trace.measure('control.$route', (_) async {
+      final token = await _currentAccessToken();
+      if (token == null || token.isEmpty) {
+        throw const AccountDeviceDirectoryFailure('SIGNED_OUT', '请先登录账号。');
+      }
+      try {
+        return await _envelopeWithToken(
+          method,
+          path,
+          token,
+          body: body,
+          retryOn401: true,
+        );
+      } on AccountDeviceDirectoryFailure {
+        rethrow;
+      } on Object {
+        // Socket/TLS/HTTP failures must enter the controller's retry path too.
+        // Otherwise a dropped connection leaves the last loading snapshot stuck.
+        throw const AccountDeviceDirectoryFailure(
+          'UNAVAILABLE',
+          '设备连接已中断，正在重试。',
+        );
+      }
+    });
   }
 
   Future<String?> _currentAccessToken() async {
     try {
-      return await accessToken();
+      return await accessToken().timeout(requestTimeout, onTimeout: _timeout);
     } on Object {
       throw const AccountDeviceDirectoryFailure(
         'AUTH_REFRESH_FAILED',
@@ -264,7 +338,10 @@ final class AccountDeviceDirectoryClient {
       );
       String? freshToken;
       try {
-        freshToken = await refreshAccessToken!();
+        freshToken = await refreshAccessToken!().timeout(
+          requestTimeout,
+          onTimeout: _timeout,
+        );
       } on Object {
         throw const AccountDeviceDirectoryFailure(
           'AUTH_REFRESH_FAILED',
@@ -381,6 +458,7 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
   bool _active = false;
   bool _operationInFlight = false;
   int _identityGeneration = 0;
+  int? _eventConnectingGeneration;
   String? _subject;
   int _consecutiveFailures = 0;
   final Random _jitter = Random();
@@ -398,15 +476,16 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
   }
 
   void _authenticationChanged() {
-    _identityGeneration++;
     final subject = authentication.snapshot.isAuthenticated
         ? authentication.snapshot.identity?.subject
         : null;
-    if (_subject != subject) {
-      _subject = subject;
-      _stopTransports();
-      _publish(const AccountDeviceDirectorySnapshot());
-    }
+    // Token refreshes keep the same account and must not tear down presence
+    // or restart registration while Desktop reconnection is in progress.
+    if (_subject == subject) return;
+    _identityGeneration++;
+    _subject = subject;
+    _stopTransports();
+    _publish(const AccountDeviceDirectorySnapshot());
     if (!authentication.snapshot.isAuthenticated) {
       return;
     }
@@ -461,6 +540,11 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
   Future<void> reconcile() async {
     if (!_active || !authentication.snapshot.isAuthenticated) return;
     _retry?.cancel();
+    final oldEvents = _events;
+    _events = null;
+    unawaited(_eventSubscription?.cancel());
+    _eventSubscription = null;
+    unawaited(oldEvents?.close());
     await _registerAndRefresh(_identityGeneration);
   }
 
@@ -480,8 +564,6 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
       await client.register(registration());
       final devices = await client.list();
       if (!_isCurrent(generation)) return;
-      _consecutiveFailures = 0;
-      _retry?.cancel();
       _publish(
         AccountDeviceDirectorySnapshot(
           registered: true,
@@ -523,14 +605,17 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
         await client.heartbeat(registration().deviceRef);
         final devices = await client.list();
         if (!_isCurrent(generation)) return;
-        _consecutiveFailures = 0;
         _publish(
           AccountDeviceDirectorySnapshot(
             registered: true,
-            realtimeConnected: _snapshot.realtimeConnected,
+            realtimeConnected: _events != null,
+            reconnecting: _events == null,
             devices: devices,
           ),
         );
+        if (_events == null && _retry?.isActive != true) {
+          unawaited(_connectEventStream(generation));
+        }
       } on AccountDeviceDirectoryFailure catch (error) {
         if (!_isCurrent(generation)) return;
         _publish(
@@ -550,7 +635,11 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
   }
 
   Future<void> _connectEventStream(int generation) async {
-    if (!_isCurrent(generation) || _events != null) return;
+    if (!_isCurrent(generation) ||
+        _events != null ||
+        _eventConnectingGeneration == generation)
+      return;
+    _eventConnectingGeneration = generation;
     try {
       final socket = await client.connectEvents();
       if (!_isCurrent(generation)) {
@@ -559,6 +648,7 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
       }
       _events = socket;
       _consecutiveFailures = 0;
+      _retry?.cancel();
       _publish(
         AccountDeviceDirectorySnapshot(
           registered: _snapshot.registered,
@@ -568,8 +658,12 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
       );
       _eventSubscription = socket.listen(
         (_) => unawaited(refresh()),
-        onError: (_) => _eventStreamEnded(generation),
-        onDone: () => _eventStreamEnded(generation),
+        onError: (_) {
+          if (identical(_events, socket)) _eventStreamEnded(generation);
+        },
+        onDone: () {
+          if (identical(_events, socket)) _eventStreamEnded(generation);
+        },
         cancelOnError: true,
       );
     } on AccountDeviceDirectoryFailure catch (error) {
@@ -583,12 +677,17 @@ final class AccountDeviceDirectoryController extends ChangeNotifier {
         ),
       );
       _scheduleRetry(generation, eventsOnly: true);
+    } finally {
+      if (_eventConnectingGeneration == generation)
+        _eventConnectingGeneration = null;
     }
   }
 
   void _eventStreamEnded(int generation) {
+    final socket = _events;
     _eventSubscription = null;
     _events = null;
+    unawaited(socket?.close());
     if (!_isCurrent(generation)) return;
     _publish(
       AccountDeviceDirectorySnapshot(

@@ -1,0 +1,30 @@
+name: openmuse_resource_center_host
+description: Shared native Host bootstrap for the multi-platform resource framework.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  file_picker: ^10.3.10
+  path_provider: ^2.1.5
+  mime: ^2.0.0
+  muse_resource_center_io:
+    path: ../muse_resource_center_io
+  openmuse_resource_center:
+    path: ../openmuse_resource_center
+  openmuse_plugin_sdk:
+    path: ../openmuse_plugin_sdk
+dev_dependencies:
+  openmuse_resource_notes:
+    path: ../../plugins/resource-notes
+  openmuse_i18n:
+    path: ../openmuse_i18n
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  assets:
+    - assets/welcome/

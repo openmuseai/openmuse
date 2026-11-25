@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenMuse trusted installed release",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "market",
+    "defaultLocale",
+    "selection",
+    "regions"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,95}$"
+    },
+    "market": {
+      "enum": [
+        "china",
+        "overseas",
+        "custom"
+      ]
+    },
+    "defaultLocale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "selection": {
+      "enum": [
+        "fixed",
+        "required"
+      ]
+    },
+    "fixedRegion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "regions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "labels",
+          "available"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,31}$"
+          },
+          "labels": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "bundle": {
+            "$ref": "deployment-bundle.schema.json"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "available": {
+                  "const": true
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "bundle"
+              ]
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "bundle"
+                ]
+              }
+            }
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "selection": {
+            "const": "fixed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "fixedRegion"
+        ]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

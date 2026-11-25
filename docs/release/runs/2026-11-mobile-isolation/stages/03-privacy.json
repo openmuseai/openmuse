@@ -1,0 +1,11 @@
+{
+  "id": "03-privacy",
+  "status": "in_progress",
+  "owner": "",
+  "summary": "开始核对 AI 数据流、真实接收方、事前同意、撤回及政策与商店数据申报；未作通过结论",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-isolation/REVIEW-RECOVERY.zh-CN.md",
+    "docs/release/runs/2026-11-mobile-isolation/evidence/apple-build16-rejection.json"
+  ],
+  "exceptions": []
+}

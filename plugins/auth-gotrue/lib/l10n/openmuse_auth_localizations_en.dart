@@ -73,7 +73,7 @@ class OpenMuseAuthLocalizationsEn extends OpenMuseAuthLocalizations {
 
   @override
   String recoveryCodeSent(String email) {
-    return 'Enter the recovery code sent to $email.';
+    return 'If an account exists for $email, check your inbox or spam folder for a recovery code.';
   }
 
   @override

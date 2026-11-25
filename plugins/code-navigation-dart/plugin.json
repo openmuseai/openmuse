@@ -1,0 +1,10 @@
+{
+  "id": "com.openmuse.code-navigation.dart",
+  "version": "0.1.0",
+  "license": "AGPL-3.0-only",
+  "kind": "language-profile",
+  "languageIds": ["dart"],
+  "extensions": [".dart"],
+  "requires": ["com.openmuse.code-navigation"],
+  "serverSource": "host-installed-dart-sdk"
+}

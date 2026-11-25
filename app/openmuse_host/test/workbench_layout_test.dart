@@ -61,16 +61,11 @@ void main() {
       );
     });
 
-    test('default factory creates local and cloud runtime panes', () {
+    test('default factory creates workspace, agent, and editor panes', () {
       final snapshot = WorkbenchLayoutDefaults.threePane();
 
-      expect(snapshot.paneIds, {
-        'workspace',
-        'editor',
-        'dsh',
-        'cloud-workspace',
-      });
-      expect(snapshot.focusedPaneId, 'editor');
+      expect(snapshot.paneIds, {'workspace', 'editor', 'dsh'});
+      expect(snapshot.focusedPaneId, 'dsh');
       expect(
         snapshot.bindingFor('editor')?.surfaceRef,
         'host.editorGroup:editor.primary',

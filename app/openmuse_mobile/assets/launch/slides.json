@@ -1,0 +1,15 @@
+{
+  "server": {
+    "name": "io.openmuse/genoffice-pptx",
+    "title": "OpenMuse Slides",
+    "version": "0.8.2",
+    "description": "Edit PPTX presentations locally in OpenMuse.",
+    "packages": [
+      {
+        "registryType": "mcpb",
+        "identifier": "https://us.openmuseai.com/packages/71ce1fb3ee0e8687db58603ae125e8100fa89d26ab42d9ba577f2485b3c49789.mcpb",
+        "fileSha256": "71ce1fb3ee0e8687db58603ae125e8100fa89d26ab42d9ba577f2485b3c49789"
+      }
+    ]
+  }
+}

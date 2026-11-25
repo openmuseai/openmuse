@@ -1,0 +1,13 @@
+10-20 21:05:11.216 13373 13373 I flutter : WorkspaceOpen step=连接 Desktop elapsedMs=0
+10-20 21:05:11.342 13373 13373 I flutter : WorkspaceOpen step=等待 Desktop 读取文件 elapsedMs=126
+10-20 21:05:11.501 13373 13373 I flutter : WorkspaceOpen step=接收 Desktop 文件 elapsedMs=285
+10-20 21:05:26.638 13373 13373 I flutter : WorkspaceOpen step=匹配已安装插件 elapsedMs=15422
+10-20 21:05:26.663 13373 13373 I flutter : WorkspaceOpen step=准备本地编辑器 elapsedMs=15447
+10-20 21:05:26.830 13373 13373 I flutter : WorkspaceOpen step=启动本地编辑器 elapsedMs=15614
+10-20 21:06:13.119 13373 13373 I flutter : WorkspaceOpen step=准备打开文件 elapsedMs=0
+10-20 21:06:13.120 13373 13373 I flutter : WorkspaceOpen step=连接 Desktop elapsedMs=0
+10-20 21:06:13.303 13373 13373 I flutter : WorkspaceOpen step=等待 Desktop 读取文件 elapsedMs=184
+10-20 21:06:13.458 13373 13373 I flutter : WorkspaceOpen step=接收 Desktop 文件 elapsedMs=338
+10-20 21:06:28.564 13373 13373 I flutter : WorkspaceOpen step=匹配已安装插件 elapsedMs=15444
+10-20 21:06:28.612 13373 13373 I flutter : WorkspaceOpen step=准备本地编辑器 elapsedMs=15492
+10-20 21:06:28.797 13373 13373 I flutter : WorkspaceOpen step=启动本地编辑器 elapsedMs=15677

@@ -1,0 +1,40 @@
+{
+  "color": [
+    {
+      "name": "onboarding_background",
+      "value": "#191C21"
+    },
+    {
+      "name": "onboarding_surface",
+      "value": "#242830"
+    },
+    {
+      "name": "onboarding_text",
+      "value": "#EDF0F5"
+    },
+    {
+      "name": "onboarding_secondary",
+      "value": "#AAB2C0"
+    },
+    {
+      "name": "onboarding_primary",
+      "value": "#8FAFF5"
+    },
+    {
+      "name": "onboarding_border",
+      "value": "#3A414D"
+    },
+    {
+      "name": "onboarding_disabled",
+      "value": "#3A414D"
+    },
+    {
+      "name": "onboarding_error",
+      "value": "#FFB4AB"
+    },
+    {
+      "name": "onboarding_on_primary",
+      "value": "#142544"
+    }
+  ]
+}

@@ -50,6 +50,26 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('legal links open the privacy policy and terms', (tester) async {
+    final opened = <Uri>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: OpenMuseLoginScreen(
+          authentication: _FakeController(),
+          termsUri: Uri.parse('https://openmuseai.com/terms'),
+          privacyUri: Uri.parse('https://openmuseai.com/privacy'),
+          onOpenLegalUri: opened.add,
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('auth.terms')));
+    await tester.tap(find.byKey(const ValueKey('auth.privacy')));
+    await tester.pump();
+
+    expect(opened.map((uri) => uri.path).toList(), ['/terms', '/privacy']);
+  });
+
   testWidgets('anonymous mode skips the login form', (tester) async {
     var anonymous = 0;
     await tester.pumpWidget(
@@ -262,6 +282,12 @@ void main() {
     await tester.tap(find.text('Forgot password?'));
     await tester.pump();
     expect(controller.recoveryRequests, 1);
+    expect(
+      find.text(
+        'If an account exists for muse@example.com, check your inbox or spam folder for a recovery code.',
+      ),
+      findsOneWidget,
+    );
     await tester.enterText(
       find.byKey(const ValueKey('auth.passcode')),
       '123456',

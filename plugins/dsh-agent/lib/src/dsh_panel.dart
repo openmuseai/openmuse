@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +34,9 @@ final class _DshPanelState extends State<DshPanel> {
   void initState() {
     super.initState();
     widget.desktopInteraction.addListener(_presentDesktopInteraction);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _presentDesktopInteraction());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _presentDesktopInteraction(),
+    );
     Future<void>.microtask(_start);
   }
 
@@ -45,7 +46,9 @@ final class _DshPanelState extends State<DshPanel> {
     if (oldWidget.desktopInteraction != widget.desktopInteraction) {
       oldWidget.desktopInteraction.removeListener(_presentDesktopInteraction);
       widget.desktopInteraction.addListener(_presentDesktopInteraction);
-      WidgetsBinding.instance.addPostFrameCallback((_) => _presentDesktopInteraction());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _presentDesktopInteraction(),
+      );
     }
   }
 
@@ -77,38 +80,63 @@ final class _DshPanelState extends State<DshPanel> {
             Column(
               children: [
                 Expanded(
-                  child: _PanelBody(
-                    supervisor: widget.supervisor,
-                    activeMountPath: widget.activeMount.value,
-                    onActivateWorkspace: widget.onActivateWorkspace,
-                    onOpenResource: widget.onOpenResource,
-                    reloadToken: _reloadToken,
-                  ),
+                  child: !widget.supervisor.aiSharingAllowed
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  Localizations.localeOf(
+                                            context,
+                                          ).languageCode ==
+                                          'zh'
+                                      ? 'AI 数据共享'
+                                      : 'AI data sharing',
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  Localizations.localeOf(
+                                            context,
+                                          ).languageCode ==
+                                          'zh'
+                                      ? '你发送的消息、附件，以及要求助手使用的文件内容，会传给 DeepSeek 或你配置的其他模型供应商，并受该供应商的条款和保留政策约束。请仅使用你愿意分享的内容。无需启用 AI 也可以使用本地文档功能。'
+                                      : 'Your messages, attachments and file content you ask the assistant to use are sent to DeepSeek or the other model provider you configure. The provider’s terms and retention policies apply. Only share content you intend to send. Local document features remain available without AI.',
+                                ),
+                                const SizedBox(height: 20),
+                                FilledButton(
+                                  key: const ValueKey('allow-ai-sharing'),
+                                  onPressed: () {
+                                    widget.supervisor.allowAiSharing();
+                                    unawaited(_start());
+                                  },
+                                  child: Text(
+                                    Localizations.localeOf(
+                                              context,
+                                            ).languageCode ==
+                                            'zh'
+                                        ? '允许 AI 共享'
+                                        : 'Allow AI sharing',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : _PanelBody(
+                          supervisor: widget.supervisor,
+                          activeMountPath: widget.activeMount.value,
+                          onActivateWorkspace: widget.onActivateWorkspace,
+                          onOpenResource: widget.onOpenResource,
+                          reloadToken: _reloadToken,
+                        ),
                 ),
               ],
             ),
-            if (!Platform.isWindows)
-              Positioned(
-                top: 8,
-                left: 210,
-                child: IconButton(
-                  key: const Key('dsh-reload'),
-                  tooltip: '刷新 DSH 面板',
-                  onPressed: () => setState(() => _reloadToken++),
-                  icon: Icon(
-                    Icons.refresh,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    size: 16,
-                  ),
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 36,
-                    minHeight: 36,
-                  ),
-                ),
-              ),
-            if (paneMenu != null) Positioned(top: 8, right: 6, child: paneMenu),
+            if (paneMenu != null) Positioned(top: 4, right: 4, child: paneMenu),
           ],
         ),
       ),
@@ -148,6 +176,7 @@ final class _PanelBody extends StatelessWidget {
         onActivateWorkspace: onActivateWorkspace,
         onOpenResource: onOpenResource,
         reloadToken: reloadToken,
+        requestedSession: supervisor.requestedSession,
       );
     }
     if (supervisor.state == DshSidecarState.starting ||

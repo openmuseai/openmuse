@@ -17,7 +17,9 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
 
   func create(withViewIdentifier viewId: Int64, arguments args: Any?) -> NSView {
     let configuration = WKWebViewConfiguration()
-    configuration.websiteDataStore = .default()
+    // Cookie scope excludes ports. A shared localhost jar accumulates a cookie
+    // for every DSH ephemeral port until Node rejects its header with HTTP 431.
+    configuration.websiteDataStore = .nonPersistent()
     guard
       let values = args as? [String: Any],
       let raw = values["url"] as? String,
@@ -40,9 +42,24 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
     configuration.userContentController.add(handler, name: "MuseHostResource")
     configuration.userContentController.add(workspaceHandler, name: "MuseHostWorkspace")
     configuration.userContentController.add(clipboardHandler, name: "MuseHostClipboard")
+    configuration.userContentController.add(DshPageDiagnostics(), name: "MuseHostDiagnostics")
+    if let script=values["resourceReferenceScript"] as? String,script.utf8.count<65536 {
+      configuration.userContentController.addUserScript(WKUserScript(source:script,injectionTime:.atDocumentEnd,forMainFrameOnly:true))
+    }
+    configuration.userContentController.addUserScript(WKUserScript(source: """
+      window.addEventListener('error', event => window.webkit.messageHandlers.MuseHostDiagnostics.postMessage(String(event.message)));
+      window.addEventListener('unhandledrejection', event => window.webkit.messageHandlers.MuseHostDiagnostics.postMessage(String(event.reason)));
+      """, injectionTime: .atDocumentStart, forMainFrameOnly: true))
     configuration.userContentController.addUserScript(WKUserScript(
       source: """
       window.MuseHostResource = { postMessage: function(raw) { window.webkit.messageHandlers.MuseHostResource.postMessage(raw); } };
+      document.addEventListener('click', function(event) {
+        const link=event.target?.closest?.('a[href]');
+        const uri=link?.getAttribute('href');
+        if(!uri?.startsWith('openmuse-resource://v1/'))return;
+        event.preventDefault();event.stopImmediatePropagation();
+        window.MuseHostResource.postMessage(JSON.stringify({type:'resource.reference.open',uri:uri}));
+      },true);
       window.MuseHostWorkspace = { postMessage: function(raw) { window.webkit.messageHandlers.MuseHostWorkspace.postMessage(raw); } };
       window.MuseHostClipboard = { postMessage: function(raw) { window.webkit.messageHandlers.MuseHostClipboard.postMessage(raw); } };
       window.addEventListener('keydown', function(event) {
@@ -73,9 +90,18 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
       ))
     }
     let webView = WKWebView(frame: .zero, configuration: configuration)
-    webView.setValue(false, forKey: "drawsBackground")
+    webView.setValue(true, forKey: "drawsBackground")
+    let navigation = DshNavigation(channel: channel)
+    webView.navigationDelegate = navigation
+    let host = DshWebHostView(webView: webView, navigation: navigation)
     channel.setMethodCallHandler { [weak webView] call, result in
       switch call.method {
+      case "openSession":
+        guard let sessionId = call.arguments as? String,
+              let data = try? JSONSerialization.data(withJSONObject: [sessionId]),
+              let json = String(data: data, encoding: .utf8) else { result(FlutterMethodNotImplemented); return }
+        webView?.evaluateJavaScript("window.__OpenMuseDesiredSession = \(json)[0]; window.OpenMuseDshWorkspace?.openSession(window.__OpenMuseDesiredSession);")
+        result(nil)
       case "reload":
         webView?.reload()
         result(nil)
@@ -92,8 +118,8 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
         result(FlutterMethodNotImplemented)
       }
     }
-    webView.load(URLRequest(url: url))
-    return webView
+    navigation.loadAuthenticated(url, into: webView)
+    return host
   }
 
   func createArgsCodec() -> (FlutterMessageCodec & NSObjectProtocol)? {
@@ -101,8 +127,119 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
   }
 }
 
+/// Flutter sets the platform view's frame. WKWebView does not follow that
+/// frame on its own, so a zero-size first layout stays blank.
+final class DshWebHostView: NSView {
+  let webView: WKWebView
+  let navigation: DshNavigation
+
+  init(webView: WKWebView, navigation: DshNavigation) {
+    self.webView = webView
+    self.navigation = navigation
+    super.init(frame: .zero)
+    autoresizesSubviews = true
+    addSubview(webView)
+    webView.autoresizingMask = [.width, .height]
+  }
+
+  required init?(coder: NSCoder) { nil }
+
+  override func setFrameSize(_ newSize: NSSize) {
+    super.setFrameSize(newSize)
+    webView.frame = bounds
+  }
+
+  override func layout() {
+    super.layout()
+    webView.frame = bounds
+  }
+}
+
+final class DshNavigation: NSObject, WKNavigationDelegate, URLSessionTaskDelegate {
+  let channel: FlutterMethodChannel
+  var bootstrapOrigin: URL?
+  init(channel: FlutterMethodChannel) { self.channel = channel }
+  func loadAuthenticated(_ url: URL, into webView: WKWebView) {
+    // Exchange DSH's one-process launch URL with a cookie-aware HTTP session,
+    // then install the authenticated HttpOnly cookie before loading the clean
+    // URL in WebKit. Never render the empty token-exchange redirect as a page.
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.timeoutIntervalForRequest = 15
+    bootstrapOrigin = url
+    let session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
+    session.dataTask(with: url) { [weak self, weak webView] data, response, error in
+      guard let self = self else { session.invalidateAndCancel(); return }
+      guard error == nil, let http = response as? HTTPURLResponse,
+            http.statusCode == 200, http.url?.host == url.host,
+            http.url?.port == url.port,
+            let data = data, !data.isEmpty else {
+        DispatchQueue.main.async { self.channel.invokeMethod("failed", arguments: "DSH 认证页面加载失败，请重试。") }
+        session.invalidateAndCancel()
+        return
+      }
+      let cookies = session.configuration.httpCookieStorage?.cookies ?? []
+      DispatchQueue.main.async {
+        guard let webView = webView else { session.invalidateAndCancel(); return }
+        let group = DispatchGroup()
+        for cookie in cookies {
+          group.enter()
+          webView.configuration.websiteDataStore.httpCookieStore.setCookie(cookie) { group.leave() }
+        }
+        group.notify(queue: .main) {
+          var clean = URLComponents(url: url, resolvingAgainstBaseURL: false)!
+          clean.query = nil
+          webView.load(URLRequest(url: clean.url!))
+          session.finishTasksAndInvalidate()
+        }
+      }
+    }.resume()
+  }
+  func urlSession(_ session: URLSession, task: URLSessionTask,
+                  willPerformHTTPRedirection response: HTTPURLResponse,
+                  newRequest request: URLRequest,
+                  completionHandler: @escaping (URLRequest?) -> Void) {
+    let next = request.url
+    completionHandler(next?.scheme == bootstrapOrigin?.scheme && next?.host == bootstrapOrigin?.host && next?.port == bootstrapOrigin?.port ? request : nil)
+  }
+  func webView(_ webView: WKWebView, decidePolicyFor response: WKNavigationResponse,
+               decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+    if response.isForMainFrame, let http = response.response as? HTTPURLResponse {
+      NSLog("DSH WebView HTTP %ld", http.statusCode)
+      if http.statusCode >= 400 {
+        channel.invokeMethod("failed", arguments: "DSH 页面加载失败：HTTP \(http.statusCode)")
+        decisionHandler(.cancel)
+        return
+      }
+    }
+    decisionHandler(.allow)
+  }
+  func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    let value = error as NSError
+    if value.domain == NSURLErrorDomain && value.code == NSURLErrorCancelled { return }
+    NSLog("DSH WebView navigation failed: %@ %ld", value.domain, value.code)
+    channel.invokeMethod("failed", arguments: "DSH 页面加载失败：\(value.domain) \(value.code)")
+  }
+  func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    NSLog("DSH WebView loaded; bounds %.0f x %.0f", webView.bounds.width, webView.bounds.height)
+    webView.evaluateJavaScript("JSON.stringify({ready:document.readyState,textLength:document.body?.innerText.length,rootChildren:document.getElementById('root')?.children.length})") { value, _ in
+      NSLog("DSH WebView DOM: %@", String(describing: value))
+    }
+  }
+  func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+    channel.invokeMethod("failed", arguments: "DSH 页面进程已退出，请重新加载。")
+  }
+}
+
+private final class DshPageDiagnostics: NSObject, WKScriptMessageHandler {
+  func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+    guard message.frameInfo.isMainFrame, let text = message.body as? String else { return }
+    let safe = text.replacingOccurrences(of: "token=[^&\\s]+", with: "token=<redacted>", options: .regularExpression)
+    NSLog("DSH WebView JavaScript: %@", String(safe.prefix(500)))
+  }
+}
+
 /// Embedded Host chrome: DSH's icon rail is always a top strip, matching the
-/// macOS / latest DSH layout. Class hashes are pinned to DSH 0.1.7-rc.1/rc.2
+/// macOS / latest DSH layout. Class hashes are checked against DSH 0.2.0-rc.2
 /// and must stay in sync with plugins/dsh-agent/windows/openmuse_dsh_plugin.cpp.
 private enum DshCompactSidebarStyle {
   static let userScript = """

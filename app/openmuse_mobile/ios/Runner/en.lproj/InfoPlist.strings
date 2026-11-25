@@ -1,0 +1,3 @@
+"NSMicrophoneUsageDescription" = "OpenMuse uses the microphone to turn speech into editable text. Speech recognition runs on this device.";
+
+"NSLocalNetworkUsageDescription" = "OpenMuse connects to your paired computer to access authorized workspaces and resources.";

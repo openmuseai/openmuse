@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-17",
+  "checks": [
+    {
+      "name": "mobile",
+      "command": [
+        "flutter",
+        "test",
+        "test/mobile_app_test.dart",
+        "test/mobile_apps_center_test.dart",
+        "test/mobile_file_viewer_test.dart"
+      ],
+      "cwd": "app/openmuse_mobile",
+      "exitCode": 0
+    },
+    {
+      "name": "send-consent",
+      "command": [
+        "dart",
+        "test",
+        "test/send_consent_test.dart"
+      ],
+      "cwd": "packages/muse_dsh_conversation_core",
+      "exitCode": 0
+    },
+    {
+      "name": "resource-sdk",
+      "command": [
+        "flutter",
+        "test",
+        "test/resource_close_barrier_test.dart",
+        "test/resource_close_tree_test.dart",
+        "test/resource_session_lifetime_test.dart"
+      ],
+      "cwd": "packages/openmuse_plugin_sdk",
+      "exitCode": 0
+    }
+  ],
+  "otherPassedTests": {
+    "mobile-closure": 6,
+    "release-pipeline": 12,
+    "config-signing": 2
+  },
+  "finalSignedBuildVerified": false,
+  "liveStoreQueried": false
+}

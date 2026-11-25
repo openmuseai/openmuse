@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'resource_reference_bridge.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// Counts modal Host routes. WebView2 is parented above Flutter, so modal
@@ -15,6 +18,8 @@ final class DshNativeOverlay {
 }
 
 final class DshPopupRouteObserver extends NavigatorObserver {
+  /// A navigator owns its observer; separate Host contexts cannot share one.
+  DshPopupRouteObserver();
   DshPopupRouteObserver._();
 
   static final instance = DshPopupRouteObserver._();
@@ -50,7 +55,26 @@ final class DshPopupRouteObserver extends NavigatorObserver {
   }
 
   bool _coversDsh(Route<dynamic>? route) =>
-      route is PopupRoute && route.barrierColor != null;
+      (route is PopupRoute && route.barrierColor != null) ||
+      route?.settings.name == openMuseResourceRouteName;
+}
+
+Future<bool> _openCanonicalResource(BuildContext context, Object? raw) async {
+  final value = raw is String ? jsonDecode(raw) : raw;
+  if (value is Map && value['type'] == 'resource.locator.open') {
+    final router = ResourceLinkRouting.maybeOf(context)?.locate;
+    if (router == null) throw const ResourceFailure('SOURCE_UNAVAILABLE');
+    await router(ResourceLocator.fromJson(value['locator']));
+    return true;
+  }
+  if (value is! Map || value['type'] != 'resource.reference.open') return false;
+  final uri = value['uri'];
+  if (uri is! String) throw const FormatException('Invalid resource reference');
+  ResourceReference.fromUri(uri);
+  final router = ResourceLinkRouting.maybeOf(context);
+  if (router == null) throw const ResourceFailure('SOURCE_UNAVAILABLE');
+  await router.open(uri);
+  return true;
 }
 
 final class DshResourceOpenMessage {
@@ -108,6 +132,7 @@ final class DshWebView extends StatefulWidget {
     required this.onActivateWorkspace,
     required this.onOpenResource,
     required this.reloadToken,
+    this.requestedSession,
   });
 
   final Uri url;
@@ -115,6 +140,7 @@ final class DshWebView extends StatefulWidget {
   final Future<void> Function(String path) onActivateWorkspace;
   final Future<void> Function(DshResourceOpenMessage request) onOpenResource;
   final int reloadToken;
+  final ValueListenable<String?>? requestedSession;
 
   @override
   State<DshWebView> createState() => _DshWebViewState();
@@ -122,6 +148,18 @@ final class DshWebView extends StatefulWidget {
 
 final class _DshWebViewState extends State<DshWebView> {
   MethodChannel? _channel;
+  String? _loadError;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.requestedSession?.addListener(_openRequestedSession);
+  }
+
+  void _openRequestedSession() {
+    final id = widget.requestedSession?.value;
+    if (id != null) _channel?.invokeMethod<void>('openSession', id);
+  }
 
   @override
   void didUpdateWidget(DshWebView oldWidget) {
@@ -137,6 +175,7 @@ final class _DshWebViewState extends State<DshWebView> {
 
   @override
   void dispose() {
+    widget.requestedSession?.removeListener(_openRequestedSession);
     _channel?.setMethodCallHandler(null);
     super.dispose();
   }
@@ -144,10 +183,14 @@ final class _DshWebViewState extends State<DshWebView> {
   void _created(int viewId) {
     final channel = MethodChannel('com.openmuse.dsh/webview/$viewId');
     _channel = channel;
+    _openRequestedSession();
     channel.setMethodCallHandler((call) async {
       try {
         switch (call.method) {
+          case 'failed':
+            if (mounted) setState(() => _loadError = '${call.arguments}');
           case 'resourceOpen':
+            if (await _openCanonicalResource(context, call.arguments)) return;
             final request = DshResourceOpenMessage.parse(call.arguments);
             await widget.onOpenResource(request);
           case 'workspaceActivate':
@@ -166,13 +209,30 @@ final class _DshWebViewState extends State<DshWebView> {
 
   @override
   Widget build(BuildContext context) {
-    if (Platform.isWindows) {
+    if (_loadError != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_loadError!),
+            TextButton(
+              onPressed: () {
+                setState(() => _loadError = null);
+              },
+              child: const Text('重新加载 Agent'),
+            ),
+          ],
+        ),
+      );
+    }
+    if (Platform.isWindows || Platform.isLinux) {
       return _WindowsDshSlot(
         url: widget.url,
         activeMountPath: widget.activeMountPath,
         onActivateWorkspace: widget.onActivateWorkspace,
         onOpenResource: widget.onOpenResource,
         reloadToken: widget.reloadToken,
+        requestedSession: widget.requestedSession,
       );
     }
     if (!Platform.isMacOS) {
@@ -192,6 +252,8 @@ final class _DshWebViewState extends State<DshWebView> {
         viewType: 'com.openmuse.dsh/webview',
         creationParams: {
           'url': widget.url.toString(),
+          if (ResourceLinkRouting.maybeOf(context) != null)
+            'resourceReferenceScript': openMuseResourceReferenceScript,
           if (widget.activeMountPath != null)
             'activeMountPath': widget.activeMountPath,
         },
@@ -209,6 +271,7 @@ final class _WindowsDshSlot extends StatefulWidget {
     required this.onActivateWorkspace,
     required this.onOpenResource,
     required this.reloadToken,
+    this.requestedSession,
   });
 
   final Uri url;
@@ -216,6 +279,7 @@ final class _WindowsDshSlot extends StatefulWidget {
   final Future<void> Function(String path) onActivateWorkspace;
   final Future<void> Function(DshResourceOpenMessage request) onOpenResource;
   final int reloadToken;
+  final ValueListenable<String?>? requestedSession;
 
   @override
   State<_WindowsDshSlot> createState() => _WindowsDshSlotState();
@@ -232,12 +296,17 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
     WidgetsBinding.instance.addObserver(this);
     DshNativeOverlay.popupRoutes.addListener(_onHostOverlay);
     channel.setMethodCallHandler(_onNativeCall);
+    widget.requestedSession?.addListener(_scheduleBounds);
     _scheduleBounds();
   }
 
   @override
   void didUpdateWidget(covariant _WindowsDshSlot oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.requestedSession != widget.requestedSession) {
+      oldWidget.requestedSession?.removeListener(_scheduleBounds);
+      widget.requestedSession?.addListener(_scheduleBounds);
+    }
     if (oldWidget.reloadToken != widget.reloadToken) {
       channel.invokeMethod<void>('reload');
       if (_error != null) setState(() => _error = null);
@@ -252,6 +321,7 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     DshNativeOverlay.popupRoutes.removeListener(_onHostOverlay);
+    widget.requestedSession?.removeListener(_scheduleBounds);
     channel.setMethodCallHandler(null);
     channel.invokeMethod<void>('hide');
     super.dispose();
@@ -268,6 +338,7 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
   Future<void> _onNativeCall(MethodCall call) async {
     if (call.method == 'resourceOpen') {
       try {
+        if (await _openCanonicalResource(context, call.arguments)) return;
         final request = DshResourceOpenMessage.parse(call.arguments);
         await widget.onOpenResource(request);
       } catch (error) {
@@ -286,6 +357,7 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
       return;
     }
     if (call.method == 'failed' && mounted) {
+      await channel.invokeMethod<void>('hide');
       setState(() => _error = '${call.arguments}');
     }
   }
@@ -297,7 +369,19 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: SelectableText(_error!, textAlign: TextAlign.center),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SelectableText(_error!, textAlign: TextAlign.center),
+              TextButton(
+                onPressed: () async {
+                  await channel.invokeMethod<void>('reload');
+                  if (mounted) setState(() => _error = null);
+                },
+                child: const Text('重新加载 Agent'),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -323,7 +407,10 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
         return;
       }
       final origin = box.localToGlobal(Offset.zero);
-      final ratio = MediaQuery.devicePixelRatioOf(context);
+      // GTK coordinates are logical pixels; WebView2 expects physical pixels.
+      final ratio = Platform.isLinux
+          ? 1.0
+          : MediaQuery.devicePixelRatioOf(context);
       try {
         await channel.invokeMethod<void>('show', {
           'x': origin.dx * ratio,
@@ -331,7 +418,11 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
           'width': box.size.width * ratio,
           'height': box.size.height * ratio,
           'url': widget.url.toString(),
+          if (ResourceLinkRouting.maybeOf(context) != null)
+            'resourceReferenceScript': openMuseResourceReferenceScript,
           if (widget.activeMountPath != null) 'mount': widget.activeMountPath,
+          if (Platform.isLinux && widget.requestedSession?.value != null)
+            'session': widget.requestedSession!.value,
         });
       } on PlatformException catch (error) {
         if (!mounted || _error != null) return;

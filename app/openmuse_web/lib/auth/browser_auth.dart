@@ -7,11 +7,12 @@ import 'package:web/web.dart' as web;
 
 /// GoTrue is shared with the native apps; only the HTTP and storage ports differ.
 final class BrowserGoTrueProvider implements GoTrueAuthProvider {
-  BrowserGoTrueProvider({Uri? origin, http.Client? client})
+  BrowserGoTrueProvider({Uri? origin, http.Client? client, this.networkGuard})
     : origin = origin ?? Uri.base.resolve('/gotrue'),
       _client = client ?? BrowserClient();
 
   final Uri origin;
+  final void Function()? networkGuard;
   final http.Client _client;
 
   Future<Map<String, Object?>> _request(
@@ -22,6 +23,7 @@ final class BrowserGoTrueProvider implements GoTrueAuthProvider {
     String? token,
     bool emptyOk = false,
   }) async {
+    checkAuthNetwork(networkGuard);
     final loopback = {'localhost', '127.0.0.1', '::1'}.contains(origin.host);
     if (origin.host.isEmpty ||
         (origin.scheme != 'https' && !(loopback && origin.scheme == 'http'))) {
@@ -118,8 +120,13 @@ final class BrowserGoTrueProvider implements GoTrueAuthProvider {
       GoTrueUser.fromJson(await _request('GET', '/user', token: accessToken));
 
   @override
-  Future<void> logout(String accessToken) async =>
-      _request('POST', '/logout', token: accessToken, emptyOk: true);
+  Future<void> logout(String accessToken) async => _request(
+    'POST',
+    '/logout',
+    query: {'scope': 'local'},
+    token: accessToken,
+    emptyOk: true,
+  );
 
   @override
   Future<GoTrueSettings> settings() async {
@@ -209,9 +216,10 @@ final class BrowserGoTrueProvider implements GoTrueAuthProvider {
 
 /// Per-tab persistence avoids carrying credentials in URLs or layout storage.
 final class BrowserAuthSessionStore implements AuthSessionStore {
-  const BrowserAuthSessionStore();
+  const BrowserAuthSessionStore({String? key})
+    : _key = key ?? 'openmuse.auth.session.v1';
 
-  static const _key = 'openmuse.auth.session.v1';
+  final String _key;
 
   @override
   Future<GoTrueSession?> read() async {
@@ -232,4 +240,14 @@ final class BrowserAuthSessionStore implements AuthSessionStore {
 
   @override
   Future<void> delete() async => web.window.sessionStorage.removeItem(_key);
+}
+
+final class BrowserLocalePreferences implements LocalePreferences {
+  const BrowserLocalePreferences(this.key);
+  final String key;
+  @override
+  Future<String?> read() async => web.window.localStorage.getItem(key);
+  @override
+  Future<void> write(String value) async =>
+      web.window.localStorage.setItem(key, value);
 }

@@ -1,0 +1,20 @@
+name: openmuse_smart_document_plugin
+description: Experimental AppFlowy-backed smart document resource plugin, phase one.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  openmuse_plugin_sdk:
+    path: ../../packages/openmuse_plugin_sdk
+  openmuse_smart_document:
+    path: ../../../Muse-Plugin-Ecosystem/plugins/markdown/smart_document/flutter
+  crypto: ^3.0.6
+  path_provider: ^2.1.5
+  uuid: ^4.5.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

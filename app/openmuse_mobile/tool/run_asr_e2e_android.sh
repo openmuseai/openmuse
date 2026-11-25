@@ -5,7 +5,7 @@ model_dir="${OPENMUSE_ASR_MODEL_DIR:?Set OPENMUSE_ASR_MODEL_DIR to the extracted
 audio_file="${OPENMUSE_ASR_TEST_AUDIO:?Set OPENMUSE_ASR_TEST_AUDIO to a mono PCM WAV fixture}"
 device_serial="${ANDROID_SERIAL:-}"
 
-app_id="io.openmuse.openmuse_mobile"
+app_id="com.openmuseai.mobile"
 device_model_dir="/data/user/0/${app_id}/files/speech-model"
 device_audio_dir="/data/user/0/${app_id}/files/speech-test"
 apk_path="build/app/outputs/flutter-apk/app-debug.apk"

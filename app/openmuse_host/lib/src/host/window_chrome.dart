@@ -10,7 +10,24 @@ final class OpenMuseWindowChrome {
 
   static const channel = MethodChannel('com.openmuse.host/window');
   static final maximized = ValueNotifier(false);
+  static final fullScreen = ValueNotifier(false);
   static bool _bound = false;
+  static bool _macBound = false;
+
+  /// macOS fullscreen hides the traffic lights, so the title buttons drop the
+  /// inset that otherwise clears them.
+  static void ensureMacFullScreen() {
+    if (_macBound || kIsWeb || !Platform.isMacOS) return;
+    _macBound = true;
+    channel.setMethodCallHandler((call) async {
+      if (call.method == 'fullscreen') {
+        fullScreen.value = call.arguments == true;
+      }
+    });
+    channel.invokeMethod<bool>('queryFullscreen').then((value) {
+      if (value != null) fullScreen.value = value;
+    }, onError: (_) {});
+  }
 
   static void ensureBound() {
     if (_bound || kIsWeb || !Platform.isWindows) return;
@@ -18,8 +35,7 @@ final class OpenMuseWindowChrome {
     channel.setMethodCallHandler((call) async {
       if (call.method == 'state') {
         final arguments = call.arguments;
-        maximized.value =
-            arguments is Map && arguments['maximized'] == true;
+        maximized.value = arguments is Map && arguments['maximized'] == true;
       }
     });
     channel.invokeMapMethod<String, dynamic>('query').then((state) {
@@ -28,7 +44,7 @@ final class OpenMuseWindowChrome {
   }
 
   static Future<void> startDrag() async {
-    if (!Platform.isWindows) return;
+    if (!Platform.isWindows && !Platform.isMacOS) return;
     try {
       await channel.invokeMethod<void>('startDrag');
     } on MissingPluginException {

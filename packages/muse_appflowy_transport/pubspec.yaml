@@ -1,0 +1,12 @@
+name: muse_appflowy_transport
+description: Content-independent original AppFlowy Cloud state transport.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  muse_collab_contract:
+    path: ../muse_collab_contract
+  http: ^1.2.0
+dev_dependencies:
+  test: ^1.25.0

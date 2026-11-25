@@ -10,9 +10,9 @@ npm ci
 npm run build
 cd ../../app/openmuse_web
 flutter pub get
-# Production host is https://app.openmuseai.com/ . The local edge still uses /app/.
-flutter build web --release --base-href /
-# flutter build web --release --base-href /app/
+# From Muse-Client root, use the fixed-region release pipeline:
+# scripts/ci/build-web.sh --region us    # https://us.openmuseai.com/app/
+# scripts/ci/build-web.sh --region cn    # https://app.openmuseai.com/
 ```
 
 For local integration, start a DSH Web server on loopback, then from the repository root run:
@@ -27,4 +27,18 @@ The browser discovers same-account online Desktop devices after login and reques
 
 Run browser-only adapter tests with `flutter test --platform chrome test/browser_adapters_test.dart`; ordinary `flutter test` runs the VM-safe workbench tests.
 
-The shared Flutter File Viewer displays authorized Markdown, text and images through the paired resource endpoint. PDF/video, Range and the production Web pairing Edge remain pending. The Office route factory in `lib/office_routes.dart` accepts an authorized resource handle and Engine ports; the browser Office Engine adapter remains pending. See the [UI and interaction acceptance matrix](../../docs/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md) for passed and remaining gates.
+The shared Flutter File Viewer displays authorized Markdown, text and images through the paired resource endpoint. PDF/video, Range and the production Web pairing Edge remain pending. The Office route factory in `lib/office_routes.dart` accepts an authorized resource handle and Engine ports; the browser Office Engine adapter remains pending. See the [UI and interaction acceptance matrix](../../docs/platforms/web/WEB-DESKTOP-WORKBENCH-UI-ACCEPTANCE.zh-CN.md) for passed and remaining gates.
+
+## SmartDocument collaboration and browser links
+
+Cloud workspaces use the same SmartDocument plugin composition, original Doc0 identity, membership checks and collaboration transport as Mobile and Desktop. Browser storage and WASM loading are platform adapters. Opening a cloud document does not require an online paired Desktop.
+
+`#/documents/{workspaceUuid}/{viewUuid}` opens an explicitly shared document in an anonymous, read-only session. The reader fetches current original document content every two seconds, including referenced private images; it does not create a writer or persist an offline copy. Revoking the original publication removes the visible document after the next read. The explicit Edit action uses the `/edit` suffix, runs the installed region, consent and sign-in gates, preserves the target across reloads, and opens the original resource only when that account has permission.
+
+Mobile/Desktop browser links use the installed runtime configuration's `web.documentBaseUrl`; URLs contain document identity only. For local QA, the edge supports `OPENMUSE_QA_CLOUD_ORIGIN`, `OPENMUSE_QA_AUTH_ORIGIN` and `OPENMUSE_WEB_PORT`. Native debug builds can set `OPENMUSE_DOCUMENT_WEB_BASE`. These loopback overrides are for local integration; this work does not deploy the production Web Edge.
+
+## Regional releases
+
+Production builds require validated `OPENMUSE_WEB_DATA_REGION`, `OPENMUSE_WEB_ORIGIN`, `OPENMUSE_WEB_BASE_PATH` and `OPENMUSE_RELEASE_JSON` inputs. `scripts/release/prepare-web-config.py` compiles these from the installed release and `config/web-deployments.json`. The build script and Web CI prepare them automatically; direct release builds without them fail closed before creating auth adapters. `OPENMUSE_WEB_RELEASE_FILE` selects a provisioned trusted release. The release pipeline stores each region under `dist/web/cn/` or `dist/web/us/` and packages Flutter Web engine resources locally.
+
+`?lang=` selects an enabled UI language only. `?region=` cannot override the installed service boundary. Browser origin, mount, fixed region and separate storage identities are checked before authentication. Login displays the installed region label. Language changes update Flutter text and HTML language/direction together. The portal uses its own region selection to navigate to the matching regional host; it never transfers a login session across regions.

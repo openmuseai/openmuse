@@ -1,6 +1,7 @@
 import { AppWebEntry } from '@deepseek-ai/dsh-client-web'
 
 import { rewriteEmbeddedMarketRequest } from './market-fetch.js'
+import { ownsPairedHost } from './transport-policy.js'
 
 let bootstrap
 let bootstrapPath
@@ -44,10 +45,10 @@ async function installStyle() {
 }
 
 async function installDshBootstrap(path) {
-  if (bootstrap && bootstrapPath === path) return bootstrap
+  if (path === '/dsh/' && bootstrap && bootstrapPath === path) return bootstrap
   bootstrapPath = path
   bootstrap = (async () => {
-    if (path !== '/dsh/' && !/^\/u\/[a-fA-F0-9]{64}$/.test(path)) {
+    if (path !== '/dsh/' && path !== '/openmuse/dsh/' && !/^\/u\/[a-fA-F0-9]{64}$/.test(path)) {
       throw new Error('DSH 会话路径无效。')
     }
     const response = await fetch(path, { credentials: 'include' })
@@ -125,6 +126,7 @@ async function installDshBootstrap(path) {
     installMarketFetchRewrite()
     globalThis.__DSH_TRANSPORT__ = {
       ...globalThis.__DSH_TRANSPORT__,
+      ownsHost: ownsPairedHost(path, documentUrl, location.origin),
       fetch: (input, init) => nativeFetch(sameOriginAsset(input, '接口'), {
         ...init,
         credentials: 'include',

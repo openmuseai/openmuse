@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "OpenMuse 产品架构：Host、插件与 DSH",
+    "locale": "zh-CN",
+    "output": ".archify/architecture-openmuse-product-20261012-115000/openmuse-product.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:openmuseai/openmuse.git",
+      "revision": "a4e7b9a5cfd0c3d66a0a4d5d1aee00652b18a5b0",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Web 工作台",
+      "sublabel": "浏览器同页挂载 DSH",
+      "pos": [40, 70],
+      "size": [160, 80],
+      "sources": [
+        { "path": "app/openmuse_web/lib/workbench/web_workbench_page.dart", "line": 13, "end_line": 20, "label": "WebWorkbenchPage" },
+        { "path": "app/openmuse_web/lib/workbench/web_workbench_page.dart", "line": 306, "end_line": 315, "label": "dsh.agent 面板槽" }
+      ]
+    },
+    {
+      "id": "mobile",
+      "type": "frontend",
+      "label": "手机 App",
+      "sublabel": "WorkBuddy 远程工作台",
+      "pos": [640, 70],
+      "size": [160, 80],
+      "sources": [
+        { "path": "app/openmuse_mobile/lib/main.dart", "line": 92, "end_line": 97, "label": "runApp 装配插件集合" },
+        { "path": "app/openmuse_mobile/lib/main.dart", "line": 649, "end_line": 656, "label": "配对桌面" }
+      ]
+    },
+    {
+      "id": "relay",
+      "type": "cloud",
+      "label": "公网中继",
+      "sublabel": "WebSocket · 桌面出站附着",
+      "pos": [320, 66],
+      "size": [176, 84],
+      "sources": [
+        { "path": "plugins/workspace-paired/lib/src/desktop_outbound_relay.dart", "line": 8, "end_line": 24, "label": "出站 WebSocket 到公网中继" },
+        { "path": "plugins/workspace-paired/lib/src/desktop_outbound_relay.dart", "line": 94, "end_line": 99, "label": "Bearer 令牌附着" }
+      ]
+    },
+    {
+      "id": "desktop",
+      "type": "frontend",
+      "label": "OpenMuse 桌面 Host",
+      "sublabel": "三区 Workbench Shell",
+      "pos": [320, 400],
+      "size": [196, 94],
+      "sources": [
+        { "path": "app/openmuse_host/lib/main.dart", "line": 222, "end_line": 231, "label": "Host 启动 Broker 与 DSH sidecar" },
+        { "path": "app/openmuse_host/lib/src/host/openmuse_app.dart", "line": 49, "end_line": 56, "label": "OpenMuseWorkbench" },
+        { "path": "packages/openmuse_workbench_layout/lib/src/workbench_ui.dart", "line": 227, "end_line": 232, "label": "工作区侧栏" }
+      ]
+    },
+    {
+      "id": "workspace",
+      "type": "backend",
+      "label": "Workspace Authority",
+      "sublabel": "resourceRef · revision",
+      "pos": [40, 404],
+      "size": [178, 86],
+      "sources": [
+        { "path": "app/openmuse_host/lib/src/host/workspace_controller.dart", "line": 218, "end_line": 220, "label": "Host 持有资源权威" },
+        { "path": "app/openmuse_host/lib/main.dart", "line": 58, "end_line": 68, "label": "挂载目录与扫描" }
+      ]
+    },
+    {
+      "id": "files",
+      "type": "database",
+      "label": "本地工作区文件",
+      "sublabel": "Blob 与版本历史",
+      "pos": [40, 640],
+      "size": [178, 86],
+      "sources": [
+        { "path": "app/openmuse_host/lib/src/host/workspace_controller.dart", "line": 176, "end_line": 184, "label": "内容寻址 Blob 读写" },
+        { "path": "app/openmuse_host/lib/src/host/workspace_controller.dart", "line": 296, "end_line": 299, "label": "目录与版本加载" }
+      ]
+    },
+    {
+      "id": "registry",
+      "type": "backend",
+      "label": "插件注册表",
+      "sublabel": "activate · deactivate",
+      "pos": [600, 404],
+      "size": [178, 86],
+      "sources": [
+        { "path": "packages/openmuse_plugin_sdk/lib/openmuse_plugin_sdk.dart", "line": 247, "end_line": 255, "label": "OpenMusePluginRegistry" },
+        { "path": "packages/openmuse_plugin_sdk/lib/openmuse_plugin_sdk.dart", "line": 294, "end_line": 302, "label": "并发激活合并" }
+      ]
+    },
+    {
+      "id": "helix",
+      "type": "backend",
+      "label": "Helix 编辑器插件",
+      "sublabel": "PTY · 复用进程池",
+      "pos": [1020, 220],
+      "size": [178, 86],
+      "sources": [
+        { "path": "plugins/helix/lib/src/helix_runtime.dart", "line": 19, "end_line": 24, "label": "HelixRuntimePool" },
+        { "path": "plugins/helix/lib/src/helix_runtime.dart", "line": 288, "end_line": 300, "label": "复用会话开文档" },
+        { "path": "plugins/helix/lib/src/helix_pty.dart", "line": 25, "end_line": 34, "label": "PTY 启动" }
+      ]
+    },
+    {
+      "id": "viewer",
+      "type": "backend",
+      "label": "文件查看器插件",
+      "sublabel": "只读预览 · webView",
+      "pos": [1020, 404],
+      "size": [178, 86],
+      "sources": [
+        { "path": "plugins/open-file-viewer/lib/openmuse_file_viewer.dart", "line": 13, "end_line": 30, "label": "webView runtime 与权限" },
+        { "path": "plugins/open-file-viewer/lib/openmuse_file_viewer.dart", "line": 74, "end_line": 80, "label": "只接受 Host 授权句柄" }
+      ]
+    },
+    {
+      "id": "dshpanel",
+      "type": "backend",
+      "label": "DSH Agent 插件",
+      "sublabel": "right-sidebar 面板",
+      "pos": [1020, 588],
+      "size": [178, 86],
+      "sources": [
+        { "path": "plugins/dsh-agent/openmuse.plugin.json", "line": 1, "end_line": 22, "label": "面板贡献与权限清单" },
+        { "path": "plugins/dsh-agent/lib/src/dsh_panel.dart", "line": 12, "end_line": 19, "label": "DshPanel" }
+      ]
+    },
+    {
+      "id": "dshexe",
+      "type": "external",
+      "label": "DSH sidecar",
+      "sublabel": "node CLI · 127.0.0.1:0",
+      "pos": [1020, 780],
+      "size": [178, 86],
+      "sources": [
+        { "path": "plugins/dsh-agent/lib/src/dsh_sidecar.dart", "line": 108, "end_line": 118, "label": "启动 DSH 子进程" },
+        { "path": "plugins/dsh-agent/lib/src/dsh_sidecar.dart", "line": 363, "end_line": 375, "label": "随机 loopback 端口" }
+      ]
+    },
+    {
+      "id": "broker",
+      "type": "security",
+      "label": "CLI Broker",
+      "sublabel": "loopback · Bearer 令牌",
+      "pos": [1320, 780],
+      "size": [186, 86],
+      "sources": [
+        { "path": "app/openmuse_host/lib/src/host/plugin_cli_broker.dart", "line": 8, "end_line": 20, "label": "窄 loopback 执行缝" },
+        { "path": "app/openmuse_host/lib/src/host/plugin_command_registry.dart", "line": 151, "end_line": 160, "label": "校验摘要后执行入口" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "本机 · 桌面设备（Host 与插件同机）",
+      "wraps": ["desktop", "workspace", "files", "registry", "helix", "viewer", "dshpanel", "dshexe", "broker"],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    { "id": "web-relay", "from": "web", "to": "relay", "label": "远程请求" },
+    { "id": "mobile-relay", "from": "mobile", "to": "relay", "label": "配对设备" },
+    { "id": "relay-desktop", "from": "relay", "to": "desktop", "label": "出站 WebSocket" },
+    { "id": "desktop-workspace", "from": "desktop", "to": "workspace", "label": "resourceRef" },
+    { "id": "workspace-files", "from": "workspace", "to": "files", "label": "Blob 与版本" },
+    { "id": "desktop-registry", "from": "desktop", "to": "registry", "label": "选中贡献" },
+    { "id": "registry-helix", "from": "registry", "to": "helix", "label": "激活编辑器" },
+    { "id": "registry-viewer", "from": "registry", "to": "viewer", "label": "激活查看器" },
+    { "id": "registry-dsh", "from": "registry", "to": "dshpanel", "label": "激活面板" },
+    { "id": "dsh-sidecar", "from": "dshpanel", "to": "dshexe", "label": "启动 sidecar" },
+    { "id": "sidecar-broker", "from": "dshexe", "to": "broker", "label": "HTTP 调用" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "三区工作台",
+      "items": [
+        "左栏 Workspace 资源树，中区编辑器 PluginSlot，右栏 Right PanelSlot 由 DSH 占据",
+        "桌面、Web、手机共用同一套布局模型与 Host 侧区域定义"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "插件生命周期",
+      "items": [
+        "Manifest 声明 runtime、权限与 contributions，按 activation events 激活和停用",
+        "Host 不依赖 Helix / DSH / Viewer 实现包；装配层 createOpenMuseBuiltInPlugins 决定首发集合"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "能力与权限边界",
+      "items": [
+        "插件之间不直接调用；跨插件能力经 Host 中介并带超时与取消",
+        "DSH 只能调用窄命令（workspace.snapshot / openResource），CLI 只走 loopback Broker + Bearer 令牌"
+      ]
+    }
+  ]
+}

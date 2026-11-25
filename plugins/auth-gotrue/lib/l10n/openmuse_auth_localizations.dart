@@ -218,7 +218,7 @@ abstract class OpenMuseAuthLocalizations {
   /// No description provided for @recoveryCodeSent.
   ///
   /// In en, this message translates to:
-  /// **'Enter the recovery code sent to {email}.'**
+  /// **'If an account exists for {email}, check your inbox or spam folder for a recovery code.'**
   String recoveryCodeSent(String email);
 
   /// No description provided for @resendCode.

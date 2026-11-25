@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'endpoint_config.dart';
+import 'host_loopback.dart';
 import 'plugin_command_registry.dart';
 
 /// Narrow loopback execution seam for DSH. The agent can invoke only a CLI
@@ -22,7 +22,7 @@ final class PluginCliBroker {
     // comes from the shared endpoint config rather than a second literal.
     return Uri(
       scheme: 'http',
-      host: HostEndpointConfig.loopbackHostIpv4,
+      host: hostLoopbackIpv4,
       port: server.port,
     );
   }

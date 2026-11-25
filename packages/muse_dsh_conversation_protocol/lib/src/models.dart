@@ -40,7 +40,7 @@ final class DshGatewayHello {
   });
 
   static const supportedProtocolVersion = 1;
-  static const supportedDshVersion = '0.1.7-rc.1';
+  static const supportedDshVersion = '0.2.0-rc.2';
 
   final int protocolVersion;
   final String dshVersion;

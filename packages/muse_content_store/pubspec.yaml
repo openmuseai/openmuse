@@ -1,0 +1,11 @@
+name: muse_content_store
+description: Content-neutral atomic snapshot persistence ports and platform adapters.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  path: ^1.9.1
+  web: 1.1.1
+dev_dependencies:
+  test: ^1.25.0

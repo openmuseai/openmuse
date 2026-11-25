@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -7,8 +8,10 @@ import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 import 'package:path/path.dart' as p;
 
 import 'workspace_controller.dart';
+import 'resource_inspector.dart';
+import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
-/// Desktop-owned, read-only directory authority for an authorized pair.
+/// Desktop-owned directory authority for an authorized pair.
 /// References are random handles; browser responses never contain local paths.
 final class DesktopWorkspaceMirrorService {
   DesktopWorkspaceMirrorService(this.workspace);
@@ -17,6 +20,137 @@ final class DesktopWorkspaceMirrorService {
   final Random _random = Random.secure();
   final Map<String, _MirrorPath> _paths = {};
   final Map<String, String> _refsByPath = {};
+
+  Future<Map<String, Object?>> act(WorkspaceMirrorAction action) async {
+    if (action.operation == 'add-workspace') {
+      final input = action.name?.trim() ?? '';
+      if (input.isEmpty) throw const FormatException();
+      String target;
+      if (p.isAbsolute(input)) {
+        target = input;
+      } else {
+        _validateName(input);
+        target = p.join(p.dirname(workspace.rootPath), 'Workspaces', input);
+        await Directory(target).create(recursive: true);
+      }
+      await workspace.addWorkspace(target);
+      return {'ok': true};
+    }
+    final ref = _paths[action.nodeRef];
+    if (ref == null || !workspace.mounts.any((m) => m.path == ref.mountPath)) {
+      throw const FormatException();
+    }
+    final type = await FileSystemEntity.type(ref.path, followLinks: false);
+    if (type != FileSystemEntityType.file &&
+        type != FileSystemEntityType.directory) {
+      throw const FormatException();
+    }
+    final resolved = type == FileSystemEntityType.directory
+        ? await Directory(ref.path).resolveSymbolicLinks()
+        : await File(ref.path).resolveSymbolicLinks();
+    if (!_inside(ref.mountPath, resolved)) throw const FormatException();
+    if (action.operation == 'mount') {
+      if (type != FileSystemEntityType.directory) throw const FormatException();
+      await workspace.addWorkspace(ref.path);
+    } else if (action.operation == 'unmount') {
+      if (ref.path != ref.mountPath || workspace.mounts.length < 2) {
+        throw const FormatException();
+      }
+      await workspace.removeWorkspace(
+        workspace.mounts.firstWhere((m) => m.path == ref.path),
+      );
+    } else {
+      final entry = await _entry(ref);
+      if (action.operation == 'new-file' || action.operation == 'new-folder') {
+        _validateName(action.name ?? '');
+        await workspace.createEntry(
+          entry,
+          action.name!,
+          directory: action.operation == 'new-folder',
+        );
+      } else {
+        if (ref.path == ref.mountPath) throw const FormatException();
+        if (ref.path == p.join(ref.mountPath, '.openmuse-trash')) {
+          throw const FormatException();
+        }
+        if (action.operation == 'restore') {
+          if (p.dirname(ref.path) != p.join(ref.mountPath, '.openmuse-trash')) {
+            throw const FormatException();
+          }
+          final match = RegExp(r'^\d+-(.+)$').firstMatch(p.basename(ref.path));
+          if (match == null) throw const FormatException();
+          _validateName(match.group(1)!);
+          final target = p.join(ref.mountPath, match.group(1)!);
+          if (await FileSystemEntity.type(target, followLinks: false) !=
+              FileSystemEntityType.notFound) {
+            throw const FileSystemException('目标已存在');
+          }
+          if (entry.isDirectory) {
+            await Directory(ref.path).rename(target);
+          } else {
+            await File(ref.path).rename(target);
+          }
+          await workspace.refreshDirectory(
+            workspace.mounts.firstWhere((m) => m.path == ref.mountPath).root,
+          );
+        } else if (action.operation == 'rename') {
+          _validateName(action.name ?? '');
+          await workspace.renameEntry(entry, action.name!);
+        } else if (action.operation == 'trash') {
+          // Recoverable through the normal workspace tree, never permanent delete.
+          final trashPath = p.join(ref.mountPath, '.openmuse-trash');
+          if (_inside(trashPath, ref.path)) throw const FormatException();
+          if (await FileSystemEntity.type(trashPath, followLinks: false) ==
+              FileSystemEntityType.link) {
+            throw const FormatException();
+          }
+          await Directory(trashPath).create();
+          final target = p.join(
+            trashPath,
+            '${DateTime.now().microsecondsSinceEpoch}-${p.basename(ref.path)}',
+          );
+          if (entry.isDirectory) {
+            await Directory(ref.path).rename(target);
+          } else {
+            await File(ref.path).rename(target);
+          }
+          await workspace.refreshDirectory(
+            workspace.mounts.firstWhere((m) => m.path == ref.mountPath).root,
+          );
+        } else {
+          throw const FormatException();
+        }
+      }
+    }
+    return {'ok': true};
+  }
+
+  void _validateName(String name) {
+    if (name.trim().isEmpty ||
+        name != name.trim() ||
+        name == '.' ||
+        name == '..' ||
+        name.contains('/') ||
+        name.contains('\\') ||
+        name.contains('\x00')) {
+      throw const FormatException();
+    }
+  }
+
+  Future<WorkspaceEntry> _entry(_MirrorPath ref) async {
+    var entry = workspace.mounts
+        .firstWhere((m) => m.path == ref.mountPath)
+        .root;
+    if (ref.path == ref.mountPath) return entry;
+    for (final part in p.split(p.relative(ref.path, from: ref.mountPath))) {
+      await workspace.refreshDirectory(entry);
+      entry = entry.children.firstWhere(
+        (e) => e.name == part,
+        orElse: () => throw const FormatException(),
+      );
+    }
+    return entry;
+  }
 
   Future<Map<String, Object?>> handle(WorkspaceMirrorQuery query) async {
     if (query.operation == 'mounts') {
@@ -31,6 +165,7 @@ final class DesktopWorkspaceMirrorService {
         ],
       };
     }
+    if (query.operation == 'search') return _search(query);
     if (query.operation != 'children') throw const FormatException();
     final mount = _paths[query.mountRef];
     final parent = _paths[query.parentRef];
@@ -81,12 +216,71 @@ final class DesktopWorkspaceMirrorService {
             'nodeRef': _ref(mount.path, entry.path),
             'name': entry.name,
             'isDirectory': entry.directory,
+            'canRestore':
+                p.dirname(entry.path) == p.join(mount.path, '.openmuse-trash'),
             if (!entry.directory) 'resourceRef': _ref(mount.path, entry.path),
           },
       ],
       'nextCursor': end < entries.length
           ? base64Url.encode(utf8.encode('${query.parentRef}:$end'))
           : null,
+    };
+  }
+
+  /// Bounded filename search. Results contain opaque references only, and
+  /// symlinks are never followed or exposed as navigable nodes.
+  Future<Map<String, Object?>> _search(WorkspaceMirrorQuery query) async {
+    final needle = query.searchText?.trim().toLowerCase();
+    if (needle == null || needle.isEmpty || needle.length > 120) {
+      throw const FormatException();
+    }
+    final found = <Map<String, Object?>>[];
+    var visited = 0;
+    for (final mount in workspace.mounts) {
+      final root = mount.path;
+      final mountRef = _ref(root, root);
+      final queue = Queue<Directory>()..add(Directory(root));
+      while (queue.isNotEmpty && visited < 2500 && found.length < query.limit) {
+        final parent = queue.removeFirst();
+        await for (final entity in parent.list(followLinks: false)) {
+          if (++visited > 2500 || found.length >= query.limit) break;
+          final normalized = p.normalize(p.absolute(entity.path));
+          final type = await FileSystemEntity.type(
+            normalized,
+            followLinks: false,
+          );
+          if (!_inside(root, normalized) ||
+              type == FileSystemEntityType.link ||
+              (type != FileSystemEntityType.directory &&
+                  type != FileSystemEntityType.file)) {
+            continue;
+          }
+          final name = p.basename(normalized);
+          final directory = type == FileSystemEntityType.directory;
+          if (directory &&
+              !const {
+                '.git',
+                'node_modules',
+                '.dart_tool',
+                'build',
+              }.contains(name)) {
+            queue.add(Directory(normalized));
+          }
+          if (!name.toLowerCase().contains(needle)) continue;
+          found.add({
+            'mountRef': mountRef,
+            'nodeRef': _ref(root, normalized),
+            'name': name,
+            'isDirectory': directory,
+            if (!directory) 'resourceRef': _ref(root, normalized),
+          });
+        }
+      }
+      if (visited > 2500 || found.length >= query.limit) break;
+    }
+    return {
+      'entries': found,
+      'truncated': visited > 2500 || found.length >= query.limit,
     };
   }
 
@@ -104,23 +298,13 @@ final class DesktopWorkspaceMirrorService {
     final resolved = await File(resource.path).resolveSymbolicLinks();
     if (!_inside(resource.mountPath, resolved)) throw const FormatException();
     final file = File(resource.path);
-    if (await file.length() > 16 * 1024 * 1024) throw const FormatException();
-    final extension = p.extension(resource.path).toLowerCase();
-    final mediaType = switch (extension) {
-      '.md' || '.markdown' || '.mdown' => 'text/markdown; charset=utf-8',
-      '.txt' || '.log' => 'text/plain; charset=utf-8',
-      '.json' => 'application/json',
-      '.png' => 'image/png',
-      '.jpg' || '.jpeg' => 'image/jpeg',
-      '.gif' => 'image/gif',
-      '.webp' => 'image/webp',
-      '.svg' => 'image/svg+xml',
-      '.pdf' => 'application/pdf',
-      _ => 'application/octet-stream',
-    };
+    if (await file.length() > 64 * 1024 * 1024) throw const FormatException();
+    final inspected = await inspectLocalResource(
+      OpenMuseResource(uri: file.uri, displayName: p.basename(file.path)),
+    );
     return WorkspaceMirrorResource(
       bytes: Uint8List.fromList(await file.readAsBytes()),
-      mediaType: mediaType,
+      mediaType: inspected.mediaType ?? 'application/octet-stream',
     );
   }
 

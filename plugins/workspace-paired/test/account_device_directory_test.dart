@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,6 +8,31 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_workspace_paired/openmuse_workspace_paired.dart';
 
 void main() {
+  test(
+    'a dropped HTTP connection becomes a retryable directory failure',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((request) async {
+        final socket = await request.response.detachSocket(writeHeaders: false);
+        socket.destroy();
+      });
+      final client = AccountDeviceDirectoryClient(
+        cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+        accessToken: () async => 'access',
+        allowInsecureLoopback: true,
+      );
+      try {
+        await expectLater(
+          client.list(),
+          throwsA(isA<AccountDeviceDirectoryFailure>()),
+        );
+      } finally {
+        client.close();
+        await server.close(force: true);
+      }
+    },
+  );
+
   test('register and list use the authenticated account device API', () async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     final requests = <String>[];
@@ -309,6 +335,78 @@ void main() {
     await server.close(force: true);
   });
 
+  test('concurrent opens for one Desktop share the same connection', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    final requested = Completer<void>();
+    final release = Completer<void>();
+    var opens = 0;
+    server.listen((request) async {
+      opens++;
+      if (!requested.isCompleted) requested.complete();
+      await release.future;
+      request.response.headers.contentType = ContentType.json;
+      request.response.write(
+        jsonEncode({
+          'accountRef': 'account.1',
+          'deviceRef': 'desktop.1',
+          'deviceName': 'MacBook Pro',
+          'workspaceRef': 'workspace.1',
+          'workspaceTitle': 'Workspace',
+          'grantRef': 'grant.1',
+          'expiresAtMs': DateTime.now()
+              .add(const Duration(minutes: 30))
+              .millisecondsSinceEpoch,
+          'session': {
+            'sessionRef': 'paired-dsh:grant.1',
+            'origin': 'http://127.0.0.1:${server.port}',
+            'path': '/u/grant.1',
+            'generation': 1,
+            'allowInsecureLoopback': true,
+          },
+        }),
+      );
+      await request.response.close();
+    });
+    final auth = _Authentication(authenticated: true);
+    final directory = AccountDeviceDirectoryController(
+      authentication: auth,
+      client: AccountDeviceDirectoryClient(
+        cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+        accessToken: auth.accessToken,
+        allowInsecureLoopback: true,
+      ),
+      registration: () => const AccountDeviceRegistration(
+        deviceRef: 'mobile.1',
+        displayName: 'Phone',
+        platform: 'android',
+        kind: AccountDeviceKind.mobile,
+      ),
+    );
+    final controller = PairedDesktopMobileController.discovered(
+      directory: directory,
+      accessToken: auth.accessToken,
+      requesterDeviceRef: 'mobile.1',
+      allowInsecureLoopback: true,
+      allowInsecurePrivateNetworkForTesting: false,
+    );
+    final device = AccountDevice.fromJson({
+      ..._deviceJson(online: true),
+      'transportOrigin': 'http://127.0.0.1:${server.port}',
+    });
+
+    final first = controller.connectDevice(device, force: true);
+    await requested.future;
+    final second = controller.connectDevice(device, force: true);
+    release.complete();
+    expect(await first, isTrue);
+    expect(await second, isTrue);
+    expect(opens, 1);
+
+    controller.dispose();
+    directory.dispose();
+    await server.close(force: true);
+  });
+
   test(
     'failed initial registration retries and recovers without relogin',
     () async {
@@ -424,6 +522,124 @@ void main() {
       expect(registrations, 1);
       controller.dispose();
       await server.close(force: true);
+    },
+  );
+
+  test(
+    'closed event channel reconnects while REST heartbeats stay healthy',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final peers = <WebSocket>[];
+      server.listen((request) async {
+        if (request.uri.path.endsWith('/events')) {
+          final socket = await WebSocketTransformer.upgrade(request);
+          peers.add(socket);
+          socket.listen((_) {});
+          return;
+        }
+        await request.drain<void>();
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          jsonEncode({
+            'code': 0,
+            'data': request.method == 'GET'
+                ? [_deviceJson(online: true)]
+                : _deviceJson(online: true),
+          }),
+        );
+        await request.response.close();
+      });
+      final auth = _Authentication(authenticated: true);
+      final controller = AccountDeviceDirectoryController(
+        authentication: auth,
+        client: AccountDeviceDirectoryClient(
+          cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+          accessToken: auth.accessToken,
+          allowInsecureLoopback: true,
+        ),
+        registration: () => const AccountDeviceRegistration(
+          deviceRef: 'mobile.1',
+          displayName: 'Phone',
+          platform: 'android',
+          kind: AccountDeviceKind.mobile,
+        ),
+        heartbeatInterval: const Duration(milliseconds: 10),
+        maxReconnectDelay: const Duration(milliseconds: 40),
+      );
+      try {
+        await controller.activate();
+        for (
+          var i = 0;
+          i < 100 && !controller.snapshot.realtimeConnected;
+          i++
+        ) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+        expect(peers, hasLength(1));
+        await peers.first.close();
+        for (
+          var i = 0;
+          i < 100 &&
+              (peers.length < 2 || !controller.snapshot.realtimeConnected);
+          i++
+        ) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+        expect(peers, hasLength(2));
+        expect(controller.snapshot.registered, isTrue);
+        expect(controller.snapshot.realtimeConnected, isTrue);
+        expect(controller.snapshot.reconnecting, isFalse);
+      } finally {
+        controller.dispose();
+        for (final socket in peers) {
+          await socket.close();
+        }
+        await server.close(force: true);
+      }
+    },
+  );
+
+  test(
+    'event handshake refreshes rejected token once and enables liveness probe',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final peers = <WebSocket>[];
+      var attempts = 0;
+      var refreshes = 0;
+      server.listen((request) async {
+        attempts++;
+        if (request.headers.value(HttpHeaders.authorizationHeader) ==
+            'Bearer stale') {
+          request.response.statusCode = 401;
+          await request.response.close();
+        } else {
+          final socket = await WebSocketTransformer.upgrade(request);
+          peers.add(socket);
+          socket.listen((_) {});
+        }
+      });
+      final client = AccountDeviceDirectoryClient(
+        cloudOrigin: Uri.parse('http://127.0.0.1:${server.port}'),
+        accessToken: () async => 'stale',
+        refreshAccessToken: () async {
+          refreshes++;
+          return 'fresh';
+        },
+        allowInsecureLoopback: true,
+      );
+      try {
+        final socket = await client.connectEvents();
+        expect(attempts, 2);
+        expect(refreshes, 1);
+        expect(socket.pingInterval, const Duration(seconds: 15));
+        await socket.close();
+      } finally {
+        for (final socket in peers) {
+          await socket.close();
+        }
+        client.close();
+        await server.close(force: true);
+      }
     },
   );
 

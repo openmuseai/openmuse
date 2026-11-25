@@ -36,14 +36,20 @@ final class BrowserPairedClient {
   BrowserPairedClient({
     required this.authentication,
     Uri? origin,
+    Uri? cloudOrigin,
     http.Client? client,
   }) : origin =
+           origin ??
+           (Uri.base.origin.isEmpty ? Uri.base : Uri.parse(Uri.base.origin)),
+       cloudOrigin =
+           cloudOrigin ??
            origin ??
            (Uri.base.origin.isEmpty ? Uri.base : Uri.parse(Uri.base.origin)),
        _client = client ?? (BrowserClient()..withCredentials = true);
 
   final GoTrueAuthenticationController authentication;
   final Uri origin;
+  final Uri cloudOrigin;
   final http.Client _client;
   final String requesterRef = _newRequesterRef();
 
@@ -53,7 +59,11 @@ final class BrowserPairedClient {
   }
 
   Future<List<BrowserDesktopDevice>> listDesktops() async {
-    final response = await _request('GET', '/api/muse/devices');
+    final response = await _request(
+      'GET',
+      '/api/muse/devices',
+      base: cloudOrigin,
+    );
     final body = _json(response);
     if (body['code'] != 0 || body['data'] is! List) {
       throw const FormatException('设备目录响应无效');
@@ -97,10 +107,16 @@ final class BrowserPairedClient {
         !RegExp(r'^/u/[a-fA-F0-9]{64}$').hasMatch(session['path'] as String)) {
       throw const FormatException('Desktop 配对响应无效');
     }
+    final bootstrap = await _client
+        .get(origin.resolve(session['path'] as String))
+        .timeout(const Duration(seconds: 45));
+    if (bootstrap.statusCode != 200) {
+      throw const BrowserPairedFailure('Desktop 会话初始化失败，请重连。');
+    }
     return BrowserPairedConnection(
       desktopRef: desktop.ref,
       workspaceRef: body['workspaceRef'] as String,
-      bootstrapPath: session['path'] as String,
+      bootstrapPath: '/openmuse/dsh/',
     );
   }
 
@@ -108,14 +124,15 @@ final class BrowserPairedClient {
     String method,
     String path, {
     Map<String, Object?>? body,
+    Uri? base,
   }) async {
     var token = await authentication.accessToken();
     if (token == null) throw const AuthFailure.sessionExpired();
-    var response = await _send(method, path, token, body);
+    var response = await _send(base ?? origin, method, path, token, body);
     if (response.statusCode == 401) {
       token = await authentication.accessToken(forceRefresh: true);
       if (token == null) throw const AuthFailure.sessionExpired();
-      response = await _send(method, path, token, body);
+      response = await _send(base ?? origin, method, path, token, body);
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final error = _tryJson(response);
@@ -132,12 +149,15 @@ final class BrowserPairedClient {
   }
 
   Future<http.Response> _send(
+    Uri base,
     String method,
     String path,
     String token,
     Map<String, Object?>? body,
   ) {
-    final request = http.Request(method, origin.resolve(path))
+    final prefix = base.path.replaceFirst(RegExp(r'/+$'), '');
+    final suffix = path.replaceFirst(RegExp(r'^/+'), '');
+    final request = http.Request(method, base.replace(path: '$prefix/$suffix'))
       ..followRedirects = false
       ..headers.addAll({
         'Accept': 'application/json',

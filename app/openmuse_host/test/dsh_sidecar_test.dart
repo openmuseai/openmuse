@@ -5,6 +5,17 @@ import 'package:openmuse_dsh_plugin/openmuse_dsh_plugin.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
+  test('only the authenticated Web readiness announcement is accepted', () {
+    expect(parseDshReadyEndpoint('model hint: http://127.0.0.1:1234'), isNull);
+    expect(parseDshReadyEndpoint('dsh web: http://127.0.0.1:1234/'), isNull);
+    expect(
+      parseDshReadyEndpoint(
+        'dsh web: http://127.0.0.1:1234/?token=fixture',
+      )?.queryParameters['token'],
+      'fixture',
+    );
+  });
+
   test('JavaScript CLI is launched through node without a shell', () {
     final command = dshCommand('/tmp/dsh/lib/bin.js', ['--version']);
     expect(command.executable, 'node');
@@ -125,27 +136,30 @@ void main() {
     ]);
   });
 
-  test('bundled model and market patches are applied before web app arguments', () {
-    final command = dshWebCommand(
-      '/bundle/node_modules/@deepseek-ai/dsh/lib/bin.js',
-      patchPaths: const [
-        '/bundle/node_modules/dsh-model-capabilities/openmuse.patch.yml',
-        '/bundle/node_modules/dshmarket/openmuse.patch.yml',
-      ],
-    );
-    expect(
-      command.arguments,
-      containsAllInOrder([
-        'web',
-        '--patch',
-        '/bundle/node_modules/dsh-model-capabilities/openmuse.patch.yml',
-        '--patch',
-        '/bundle/node_modules/dshmarket/openmuse.patch.yml',
-        '--host',
-        '127.0.0.1',
-      ]),
-    );
-  });
+  test(
+    'bundled model and market patches are applied before web app arguments',
+    () {
+      final command = dshWebCommand(
+        '/bundle/node_modules/@deepseek-ai/dsh/lib/bin.js',
+        patchPaths: const [
+          '/bundle/node_modules/dsh-model-capabilities/openmuse.patch.yml',
+          '/bundle/node_modules/dshmarket/openmuse.patch.yml',
+        ],
+      );
+      expect(
+        command.arguments,
+        containsAllInOrder([
+          'web',
+          '--patch',
+          '/bundle/node_modules/dsh-model-capabilities/openmuse.patch.yml',
+          '--patch',
+          '/bundle/node_modules/dshmarket/openmuse.patch.yml',
+          '--host',
+          '127.0.0.1',
+        ]),
+      );
+    },
+  );
 
   test(
     'missing runtime is configuration state, not missing model key',
@@ -168,6 +182,33 @@ void main() {
     );
     expect(supervisor.state, DshSidecarState.failed);
     supervisor.dispose();
+  });
+
+  test('readiness verifies the launch-token cookie exchange', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    server.listen((request) async {
+      if (request.uri.queryParameters['token'] == 'fixture') {
+        request.response.statusCode = 302;
+        request.response.cookies.add(Cookie('dsh-auth-test', 'verified'));
+        request.response.headers.set('location', '/');
+      } else {
+        request.response.statusCode =
+            request.cookies.any(
+              (c) => c.name == 'dsh-auth-test' && c.value == 'verified',
+            )
+            ? 200
+            : 401;
+      }
+      await request.response.close();
+    });
+    try {
+      await waitForHttp(
+        Uri.parse('http://127.0.0.1:${server.port}/?token=fixture'),
+        const Duration(seconds: 2),
+      );
+    } finally {
+      await server.close(force: true);
+    }
   });
 
   test('readiness probe accepts a local HTTP endpoint', () async {

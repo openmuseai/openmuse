@@ -1,0 +1,21 @@
+00:00 +0: loading /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_barrier_test.dart
+00:00 +0: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_session_lifetime_test.dart: checkpoint completion distinguishes ended authority from provider failures
+00:00 +1: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_session_lifetime_test.dart: an ended checkpoint never invokes its resource provider
+00:00 +2: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_session_lifetime_test.dart: owner retention outlives one presentation but never its account authority
+00:00 +3: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_session_lifetime_test.dart: authority ending during a provider commit does not publish a stale checkpoint
+00:00 +4: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_session_lifetime_test.dart: child checkpoint failure blocks parent close and later child edits invalidate readiness
+00:00 +5: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_barrier_test.dart: overlapping checkpoint holds preserve private recovery on final resume and reset that intent for the next pause
+00:00 +6: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_barrier_test.dart: final release follows dependent save barriers and remains retryable
+00:00 +7: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: placement restoration visits only active nonfinalized presentations and never invokes save or release ports
+00:00 +8: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: placement restoration visits only active nonfinalized presentations and never invokes save or release ports
+00:00 +9: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: placement restoration visits only active nonfinalized presentations and never invokes save or release ports
+00:00 +10: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: private recovery freezes the whole tree, skips resource checkpoints and preserves unsaved resource versions
+00:00 +11: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: a private preparation failure restores every owner and autosave hold
+00:00 +12: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: mixed unsupported descendants cannot silently fall back to resource saves for private close
+00:00 +13: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: a readiness invalidation cancels every held owner before returning a failed finalization
+00:00 +14: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: all owners freeze before any checkpoint; two child surfaces prepare and finalize only one owner
+00:00 +15: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: a later child checkpoint failure cancels every frozen owner and allows a complete same-session retry
+00:00 +16: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: a child that attaches during a checkpoint cancels the stale tree and is included on retry
+00:00 +17: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: overlapping trees use the same owner order and cancellation releases a waiting close
+00:00 +18: /Users/mac/src/openmuse-io/Muse-Client/packages/openmuse_plugin_sdk/test/resource_close_tree_test.dart: editable descendants without a preparation port cannot be treated as a frozen close tree
+00:00 +19: All tests passed!

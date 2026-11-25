@@ -1,0 +1,10 @@
+{
+  "package": "duskmoon_highlight",
+  "version": "2.2.11",
+  "source": "https://github.com/duskmoon-dev/flutter-duskmoon-ui",
+  "sourceNoticeSha256": {
+    "LICENSE": "8b86e69e06e5dfbbefe8b2a8a094dbfafa07bdae3b0c7d3700bb41fd61acc1a1",
+    "THIRD_PARTY_NOTICES": "5a249705b4b55b1cc0a085f65707a99e602b7cf68f403745c3ee947c7c564f34",
+    "THIRD_PARTY_LICENSES": "5cc31b471fa412f185fd99b1ed2815cbb02254cefe3a783235bba5ae49cc760f"
+  }
+}

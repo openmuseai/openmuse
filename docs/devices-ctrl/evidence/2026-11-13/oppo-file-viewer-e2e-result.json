@@ -1,0 +1,70 @@
+{
+  "verifiedAt": "2026-11-13T19:21:24.311425+08:00",
+  "environment": "china",
+  "device": {
+    "manufacturer": "OPPO",
+    "model": "PLP110",
+    "android": 16,
+    "physical": true
+  },
+  "versionName": "1.0.1",
+  "versionCode": 111321,
+  "normalRelease": true,
+  "testEntryInstalled": false,
+  "accountVerifiedSameRequestedAccount": true,
+  "realDesktop": true,
+  "realResourceRpc": true,
+  "uiMethod": "ADB input and UIAutomator, explicitly authorized by user; screenshots also visually observed",
+  "passed": true,
+  "checks": {
+    "conversationToMarkdown": true,
+    "markdownToUnicodeSource": true,
+    "unicodeNames": [
+      "示例.dart",
+      "定位示例.dart"
+    ],
+    "treeSitterReadyLabel": "Tree-sitter · dart",
+    "colorsVisuallyVerified": [
+      "keyword",
+      "string",
+      "comment",
+      "function",
+      "number"
+    ],
+    "line2Highlighted": true,
+    "line120AutoScrolledToFirstVisibleRow": true,
+    "line120Highlighted": true,
+    "line120Marker": "LINE_120_OWNER_OK",
+    "manualScrollBeforeLine120": false,
+    "documentLinkMarker": "DOCUMENT_LINK_OWNER_OK",
+    "chainedReturnToReadme": true
+  },
+  "screenshots": [
+    {
+      "file": "oppo-tree-sitter.png",
+      "sha256": "759ead1a6040adcaee89ca0826f05b6d4ce40dd8a871d1695139d98536d3cae4",
+      "transformed": false
+    },
+    {
+      "file": "oppo-line120.png",
+      "sha256": "d1b2facae718ac4b83cfe129c7ea72d84f3d02d5b497b24d12f59a325dd0672c",
+      "transformed": false
+    },
+    {
+      "file": "oppo-document-link.png",
+      "sha256": "b860f5f96d58d763d5b8b9adb28976696b4bb982357cf9ae22f2778dc4647180",
+      "transformed": false
+    },
+    {
+      "file": "oppo-readme-return.png",
+      "sha256": "68bb5dab8a73678164ff24caeb4562a3fef57e4d91d7c2b4ec3762aa59548fe9",
+      "transformed": false
+    }
+  ],
+  "productCodeChangedThisRun": false,
+  "notes": [
+    "No application functional defect found in the requested scenarios.",
+    "Mirror click delivery was unreliable; it was not counted as an application defect.",
+    "No reinstall, test APK, root, data clearing or credential reset used in this run."
+  ]
+}

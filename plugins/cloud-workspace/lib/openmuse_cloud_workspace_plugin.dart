@@ -1,11 +1,34 @@
 library openmuse_cloud_workspace_plugin;
 
+import 'package:openmuse_i18n/openmuse_i18n.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:openmuse_mobile_cloud/openmuse_mobile_cloud.dart';
 import 'package:openmuse_mobile_core/openmuse_mobile_core.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
+import 'src/workspace_access_dialog.dart';
+import 'src/workspace_invitations_dialog.dart';
+import 'src/workspace_invite_code_join_dialog.dart';
+export 'src/workspace_invite_code_join_controller.dart';
+export 'src/workspace_invite_code_join_dialog.dart';
+export 'src/workspace_invite_code_controller.dart';
+export 'src/workspace_invite_code_panel.dart';
+export 'src/workspace_invitations_dialog.dart';
+export 'src/workspace_invitations_controller.dart';
+import 'src/workspace_pages.dart';
+export 'src/workspace_access_controller.dart';
+export 'src/owner_invitations_controller.dart';
+export 'src/owner_invitations_panel.dart';
+export 'src/workspace_access_dialog.dart';
+export 'src/workspace_pages.dart';
+export 'src/workspace_catalog_controller.dart';
+export 'src/document_creation_controller.dart';
+export 'src/document_creation_dialog.dart';
+export 'src/page_rename_controller.dart';
+export 'src/page_rename_dialog.dart';
+export 'src/document_browser_link_dialog.dart';
 
 /// The account-scoped Cloud Workspace domain plugin.
 ///
@@ -13,13 +36,16 @@ import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 /// this plugin consumes only its short-lived token capability. DSH is exposed
 /// through [DshRuntimeConnector], so local and remote runtimes differ at the
 /// transport boundary rather than in Host workspace semantics.
-final class OpenMuseCloudWorkspacePlugin implements OpenMusePlugin {
+final class OpenMuseCloudWorkspacePlugin
+    implements OpenMusePlugin, OpenMuseWorkspaceActionsContributor {
   OpenMuseCloudWorkspacePlugin({
     required this.authentication,
     required Uri cloudOrigin,
     required String deviceId,
     bool allowInsecureLoopback = false,
     AppFlowyCloudWorkspaceService? service,
+    this.onOpenDocument,
+    this.onOpenDatabase,
   }) : service =
            service ??
            AppFlowyCloudWorkspaceService(
@@ -27,16 +53,23 @@ final class OpenMuseCloudWorkspacePlugin implements OpenMusePlugin {
              accessToken: authentication.accessToken,
              refreshAccessToken: () =>
                  authentication.accessToken(forceRefresh: true),
+             accountSubject: () => authentication.snapshot.isAuthenticated
+                 ? authentication.snapshot.identity?.subject
+                 : null,
              deviceId: deviceId,
              allowHttpForTesting: allowInsecureLoopback,
            );
 
   final OpenMuseAuthenticationController authentication;
   final AppFlowyCloudWorkspaceService service;
+  final OpenCloudDocument? onOpenDocument;
+  final OpenCloudDatabase? onOpenDatabase;
   late final CloudWorkspacePluginController controller =
       CloudWorkspacePluginController(
         authentication: authentication,
         service: service,
+        onOpenDocument: onOpenDocument,
+        onOpenDatabase: onOpenDatabase,
       );
 
   @override
@@ -77,6 +110,28 @@ final class OpenMuseCloudWorkspacePlugin implements OpenMusePlugin {
       panelId == 'cloud.workspace'
       ? CloudWorkspacePluginPanel(controller: controller)
       : null;
+
+  @override
+  List<Widget> buildWorkspaceActions(BuildContext context) => [
+    TextButton.icon(
+      key: const ValueKey('cloud-workspace.open'),
+      icon: const Icon(Icons.group_outlined, size: 18),
+      label: Text(
+        Localizations.localeOf(context).languageCode == 'zh'
+            ? '协作工作区'
+            : 'Shared workspaces',
+      ),
+      onPressed: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          settings: const RouteSettings(name: 'openmuse.cloud-workspaces'),
+          builder: (_) => Scaffold(
+            appBar: AppBar(title: Text(stringsOf(context).cloudTitle())),
+            body: CloudWorkspacePluginPanel(controller: controller),
+          ),
+        ),
+      ),
+    ),
+  ];
 }
 
 @immutable
@@ -87,6 +142,7 @@ final class CloudWorkspacePluginSnapshot {
     this.sessions = const [],
     this.openingWorkspaceRef,
     this.failureMessage,
+    this.failureCode,
   });
 
   final bool loading;
@@ -94,6 +150,7 @@ final class CloudWorkspacePluginSnapshot {
   final List<DshSessionSummary> sessions;
   final String? openingWorkspaceRef;
   final String? failureMessage;
+  final String? failureCode;
 
   DshSessionSummary? sessionFor(String workspaceRef) {
     for (final session in sessions) {
@@ -110,13 +167,33 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
   CloudWorkspacePluginController({
     required this.authentication,
     required this.service,
+    this.onOpenDocument,
+    this.onOpenDatabase,
   });
 
   final OpenMuseAuthenticationController authentication;
   final AppFlowyCloudWorkspaceService service;
+  final OpenCloudDocument? onOpenDocument;
+  final OpenCloudDatabase? onOpenDatabase;
+  Future<void> openPage(AppFlowyWorkspacePage page) async {
+    switch (page) {
+      case AppFlowyDocumentPage():
+        if (onOpenDocument == null)
+          throw StateError('document handler unavailable');
+        await onOpenDocument!(page);
+      case AppFlowyDatabasePage():
+        if (onOpenDatabase == null)
+          throw StateError('database handler unavailable');
+        await onOpenDatabase!(page);
+      default:
+        throw StateError('view handler unavailable');
+    }
+  }
+
   CloudWorkspacePluginSnapshot _snapshot = const CloudWorkspacePluginSnapshot();
   String? _subject;
   bool _disposed = false;
+  int _generation = 0;
 
   CloudWorkspacePluginSnapshot get snapshot => _snapshot;
 
@@ -131,6 +208,8 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
         ? authentication.snapshot.identity?.subject
         : null;
     if (_subject != subject) {
+      service.invalidateAccountOperations();
+      _generation++;
       _subject = subject;
       _publish(const CloudWorkspacePluginSnapshot());
     }
@@ -143,8 +222,9 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
   Future<void> refresh() async {
     if (!authentication.snapshot.isAuthenticated || _snapshot.loading) return;
     final subject = authentication.snapshot.identity?.subject;
+    final generation = _generation;
     final token = await authentication.accessToken();
-    if (subject != _subject) return;
+    if (subject != _subject || generation != _generation || _disposed) return;
     if (token == null || token.isEmpty) {
       _publish(const CloudWorkspacePluginSnapshot());
       return;
@@ -165,7 +245,7 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
         // DSH session presence is optional catalog enrichment. Keep the
         // account's workspaces usable while the execution pool recovers.
       }
-      if (subject != _subject) return;
+      if (subject != _subject || generation != _generation || _disposed) return;
       _publish(
         CloudWorkspacePluginSnapshot(
           workspaces: workspaces,
@@ -173,12 +253,12 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
         ),
       );
     } catch (_) {
-      if (subject != _subject) return;
+      if (subject != _subject || generation != _generation || _disposed) return;
       _publish(
         CloudWorkspacePluginSnapshot(
           workspaces: _snapshot.workspaces,
           sessions: _snapshot.sessions,
-          failureMessage: 'Cloud Workspace 暂时不可用，请稍后重试。',
+          failureCode: 'CLOUD_UNAVAILABLE',
         ),
       );
     }
@@ -187,6 +267,7 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
   Future<DshSessionDescriptor?> openWorkspace(String workspaceRef) async {
     if (_snapshot.openingWorkspaceRef != null) return null;
     final subject = _subject;
+    final generation = _generation;
     _publish(
       CloudWorkspacePluginSnapshot(
         workspaces: _snapshot.workspaces,
@@ -196,16 +277,18 @@ final class CloudWorkspacePluginController extends ChangeNotifier {
     );
     try {
       final descriptor = await service.open(workspaceRef, 0);
-      if (subject != _subject) return null;
+      if (subject != _subject || generation != _generation || _disposed)
+        return null;
       await refresh();
       return descriptor;
     } catch (_) {
-      if (subject != _subject) return null;
+      if (subject != _subject || generation != _generation || _disposed)
+        return null;
       _publish(
         CloudWorkspacePluginSnapshot(
           workspaces: _snapshot.workspaces,
           sessions: _snapshot.sessions,
-          failureMessage: '无法连接 Remote DSH，请检查 Workspace 与服务状态。',
+          failureCode: 'DSH_UNAVAILABLE',
         ),
       );
       return null;
@@ -244,15 +327,52 @@ final class CloudWorkspacePluginPanel extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 6, 6),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'CLOUD WORKSPACES',
+                    stringsOf(context).cloudTitle(),
                     style: TextStyle(fontSize: 11, letterSpacing: 0.8),
                   ),
                 ),
                 IconButton(
+                  key: const ValueKey('cloud-workspace.join-code'),
+                  tooltip: Localizations.localeOf(context).languageCode == 'zh'
+                      ? '输入邀请码加入'
+                      : 'Join with code',
+                  iconSize: 18,
+                  constraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 44,
+                  ),
+                  visualDensity: VisualDensity.standard,
+                  icon: const Icon(Icons.group_add_outlined),
+                  onPressed: !controller.authentication.snapshot.isAuthenticated
+                      ? null
+                      : () => showWorkspaceInviteCodeJoinDialog(
+                          context,
+                          authentication: controller.authentication,
+                          service: controller.service,
+                          onJoined: controller.refresh,
+                        ),
+                ),
+                IconButton(
+                  key: const ValueKey('cloud-workspace.invitations'),
+                  tooltip: Localizations.localeOf(context).languageCode == 'zh'
+                      ? '群组邀请'
+                      : 'Workspace invitations',
+                  iconSize: 18,
+                  icon: const Icon(Icons.mail_outline),
+                  onPressed: !controller.authentication.snapshot.isAuthenticated
+                      ? null
+                      : () => showWorkspaceInvitationsDialog(
+                          context,
+                          authentication: controller.authentication,
+                          service: controller.service,
+                          onJoined: controller.refresh,
+                        ),
+                ),
+                IconButton(
                   key: const ValueKey('cloud-workspace.refresh'),
-                  tooltip: '刷新',
+                  tooltip: stringsOf(context).cloudRefresh(),
                   iconSize: 17,
                   onPressed: snapshot.loading ? null : controller.refresh,
                   icon: const Icon(Icons.refresh),
@@ -261,14 +381,17 @@ final class CloudWorkspacePluginPanel extends StatelessWidget {
             ),
           ),
           if (snapshot.loading) const LinearProgressIndicator(minHeight: 2),
-          if (snapshot.failureMessage case final message?)
+          if (snapshot.failureCode != null || snapshot.failureMessage != null)
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(message, style: const TextStyle(fontSize: 12)),
+              child: Text(switch (snapshot.failureCode) {
+                'DSH_UNAVAILABLE' => stringsOf(context).cloudDshUnavailable(),
+                _ => stringsOf(context).cloudUnavailable(),
+              }, style: const TextStyle(fontSize: 12)),
             ),
           Expanded(
             child: snapshot.workspaces.isEmpty && !snapshot.loading
-                ? const Center(child: Text('没有可用的 Cloud Workspace'))
+                ? Center(child: Text(stringsOf(context).cloudEmpty()))
                 : ListView.builder(
                     itemCount: snapshot.workspaces.length,
                     itemBuilder: (context, index) {
@@ -291,10 +414,28 @@ final class CloudWorkspacePluginPanel extends StatelessWidget {
                           size: 19,
                         ),
                         title: Text(workspace.title),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            settings: const RouteSettings(
+                              name: 'openmuse.cloud-pages',
+                            ),
+                            builder: (_) => CloudWorkspacePages(
+                              authentication: controller.authentication,
+                              service: controller.service,
+                              workspaceId: workspace.workspaceRef,
+                              title: workspace.title,
+                              onOpen: controller.openPage,
+                              supportsDocumentCreation:
+                                  controller.onOpenDocument != null,
+                            ),
+                          ),
+                        ),
                         subtitle: Text(
                           session == null
-                              ? 'Cloud Workspace'
-                              : 'Remote DSH 运行中 · ${session.attachedDeviceCount} 设备',
+                              ? stringsOf(context).cloudWorkspace()
+                              : stringsOf(context).cloudRunning(
+                                  devices: session.attachedDeviceCount,
+                                ),
                         ),
                         trailing: opening
                             ? const SizedBox.square(
@@ -303,11 +444,43 @@ final class CloudWorkspacePluginPanel extends StatelessWidget {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : TextButton(
-                                onPressed: () => controller.openWorkspace(
-                                  workspace.workspaceRef,
-                                ),
-                                child: Text(session == null ? '连接' : '复用'),
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    key: ValueKey(
+                                      'cloud-workspace.members.${workspace.workspaceRef}',
+                                    ),
+                                    tooltip:
+                                        Localizations.localeOf(
+                                              context,
+                                            ).languageCode ==
+                                            'zh'
+                                        ? '群组成员'
+                                        : 'Workspace members',
+                                    icon: const Icon(
+                                      Icons.group_outlined,
+                                      size: 18,
+                                    ),
+                                    onPressed: () => showWorkspaceAccessDialog(
+                                      context,
+                                      authentication: controller.authentication,
+                                      service: controller.service,
+                                      workspaceId: workspace.workspaceRef,
+                                      title: workspace.title,
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => controller.openWorkspace(
+                                      workspace.workspaceRef,
+                                    ),
+                                    child: Text(
+                                      session == null
+                                          ? stringsOf(context).cloudConnect()
+                                          : stringsOf(context).cloudReuse(),
+                                    ),
+                                  ),
+                                ],
                               ),
                       );
                     },

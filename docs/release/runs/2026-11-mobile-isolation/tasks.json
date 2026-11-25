@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "2026-11-mobile-isolation",
+  "tasks": [
+    {
+      "id": "R01",
+      "stage": "01 范围",
+      "acceptance": "决定采用独立名称，或提交合法分发权利的书面证据；新名称需检索同名与相似品牌；不能假定当前 OpenMuse 名称已获接受",
+      "ownerRole": "产品与品牌负责人",
+      "statusDescription": "待决策",
+      "status": "pending"
+    },
+    {
+      "id": "R02",
+      "stage": "02 开发",
+      "acceptance": "依据 R01 同步 iOS 显示名、App 内标题、图标、启动页、欢迎文档、元数据、截图与支持页面；保留必要上游许可，Bundle ID 的变更另行评估",
+      "ownerRole": "客户端与设计",
+      "statusDescription": "待 R01",
+      "status": "pending"
+    },
+    {
+      "id": "R03",
+      "stage": "03 隐私",
+      "acceptance": "列出所有 AI 数据路径：输入文字、历史、系统上下文、文档和附件、工作区资源、工具调用及日志；逐项登记网关、模型服务商、实际接收方与用途",
+      "ownerRole": "客户端与服务端",
+      "statusDescription": "待办",
+      "status": "pending"
+    },
+    {
+      "id": "R04",
+      "stage": "02 开发",
+      "acceptance": "检查所有发送入口是否在联网发送或进入发送队列前经过授权；涵盖原生对话、Workbuddy、WebView、Desktop 中转、重试与插件调用",
+      "ownerRole": "客户端与插件研发",
+      "statusDescription": "已有部分授权实现，覆盖审计待办",
+      "status": "pending"
+    },
+    {
+      "id": "R05",
+      "stage": "02 开发",
+      "acceptance": "授权界面列出真实接收方与将发送的数据类别；未知接收方阻断；取消不发送；切换 provider、网关、账号或范围后重新授权；支持撤回",
+      "ownerRole": "客户端研发",
+      "statusDescription": "现有原生实现和核心测试通过，范围及撤回待验",
+      "status": "pending"
+    },
+    {
+      "id": "R06",
+      "stage": "03 隐私",
+      "acceptance": "同步中英文隐私政策、App Privacy 问卷、SDK/数据清单和支持页面；第三方保护承诺需有事实和条款依据，不虚构不留存或不训练声明",
+      "ownerRole": "产品与隐私负责人",
+      "statusDescription": "待办",
+      "status": "pending"
+    },
+    {
+      "id": "R07",
+      "stage": "02 开发",
+      "acceptance": "完成 M02 至 M09 的依赖隔离、旧标识、升级迁移、SmartDocument 来源及许可证审查",
+      "ownerRole": "文档与客户端研发",
+      "statusDescription": "部分完成，沿用主待办",
+      "status": "pending"
+    },
+    {
+      "id": "R08",
+      "stage": "04 测试",
+      "acceptance": "录制全新安装的首次 AI 发送、拒绝、切换接收方、资源附加、撤回、退出登录和升级路径；断言未经许可时模型及工具端无数据请求；补 iPhone 17 Pro Max 场景",
+      "ownerRole": "测试",
+      "statusDescription": "待真机验收",
+      "status": "pending"
+    },
+    {
+      "id": "R09",
+      "stage": "05 构建",
+      "acceptance": "核对各渠道已使用构建号，冻结跨仓库源码、工具链和依赖；正式签名构建，不复用 build 16 的二进制或旧缓存",
+      "ownerRole": "构建与发布",
+      "statusDescription": "待办",
+      "status": "pending"
+    },
+    {
+      "id": "R10",
+      "stage": "06 二进制",
+      "acceptance": "对最终 IPA/AAB/APK 检查被排除包名、字符串、NOTICES、原生库和嵌套资源；从分发包验证名称、授权界面、权限及行为",
+      "ownerRole": "构建与测试",
+      "statusDescription": "待正式包",
+      "status": "pending"
+    },
+    {
+      "id": "R11",
+      "stage": "07 物料",
+      "acceptance": "编写逐条对应 4.1 和 5.1 的英文审核说明，提供实际修改、授权触发路径、演示账号与可重复步骤；附所需权利材料，更新真实功能截图",
+      "ownerRole": "产品与发布",
+      "statusDescription": "待整改完成",
+      "status": "pending"
+    },
+    {
+      "id": "R12",
+      "stage": "08 至 10",
+      "acceptance": "所有前置阶段通过后上传新 build，完成 TestFlight 安装验证，再正式回复与重新提审；登记新 submission/build ID 与实际状态",
+      "ownerRole": "发布负责人",
+      "statusDescription": "待前置阶段",
+      "status": "pending"
+    }
+  ],
+  "inheritedIsolationTasks": "README.zh-CN.md#待办与验收",
+  "note": "Task status does not automatically approve a pipeline stage"
+}

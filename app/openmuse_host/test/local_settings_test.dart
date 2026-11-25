@@ -35,6 +35,7 @@ void main() {
       await settings.setThemeMode(ThemeMode.dark);
       settings.setPaneWidth(sidebar: 310, assistant: 520);
       await settings.setAssistantVisible(false);
+      await settings.setGeneratedOutputDirectory('${root.path}/exports');
       await settings.setDefaultEditor('SH', 'helix.editor');
       await settings.updatePluginValues('com.openmuse.helix', {
         'theme': 'openmuse_dark',
@@ -47,6 +48,7 @@ void main() {
       expect(restored.sidebarWidth, 310);
       expect(restored.assistantWidth, 520);
       expect(restored.assistantVisible, isFalse);
+      expect(restored.generatedOutputDirectory, '${root.path}/exports');
       expect(restored.defaultEditorFor('sh'), 'helix.editor');
       expect(restored.pluginValues('com.openmuse.helix')['enableLsp'], false);
       expect(restored.pluginValues('com.openmuse.dsh-agent'), isEmpty);
@@ -65,6 +67,7 @@ void main() {
           'themeMode': 'unknown',
           'sidebarWidth': 9999,
           'assistantWidth': -1,
+          'generatedOutputDirectory': '../relative-output',
         }),
       );
       final settings = OpenMuseLocalSettings(file: file);
@@ -72,6 +75,11 @@ void main() {
       expect(settings.themeMode, ThemeMode.system);
       expect(settings.sidebarWidth, isNull);
       expect(settings.assistantWidth, isNull);
+      expect(settings.generatedOutputDirectory, isNull);
+      await expectLater(
+        settings.setGeneratedOutputDirectory('../relative-output'),
+        throwsArgumentError,
+      );
 
       await file.writeAsString('{broken');
       await OpenMuseLocalSettings(file: file).load();

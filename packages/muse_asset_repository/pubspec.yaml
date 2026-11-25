@@ -1,0 +1,15 @@
+name: muse_asset_repository
+description: Existing private Cloud and cache asset repository implementations for Muse content domains.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  muse_content_store:
+    path: ../muse_content_store
+  muse_asset_contract:
+    path: ../muse_asset_contract
+  crypto: ^3.0.6
+  http: ^1.2.0
+dev_dependencies:
+  test: ^1.25.0

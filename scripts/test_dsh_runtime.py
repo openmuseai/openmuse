@@ -65,6 +65,9 @@ def main() -> None:
             if endpoint is None:
                 raise RuntimeError(f"DSH did not start: {diagnostics[-6:]}")
             client = urllib.request.build_opener(
+                # This smoke server is always our own loopback process. macOS
+                # system proxy settings may otherwise route it to a gateway.
+                urllib.request.ProxyHandler({}),
                 urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
             )
             with client.open(endpoint, timeout=10) as response:
@@ -108,7 +111,7 @@ def main() -> None:
             )
             with client.open(native_hello, timeout=10) as response:
                 hello = json.load(response)
-                if hello.get("protocolVersion") != 1 or hello.get("dshVersion") != "0.1.7-rc.1":
+                if hello.get("protocolVersion") != 1 or hello.get("dshVersion") != "0.2.0-rc.2":
                     raise RuntimeError("DSH Native Gateway handshake mismatch")
             native_negotiate = urllib.request.Request(
                 base + "/openmuse-native/v1/negotiate",
@@ -137,7 +140,7 @@ def main() -> None:
                     raise RuntimeError("model plugin settings route failed") from error
             else:
                 raise RuntimeError("model plugin accepted an unknown provider")
-            print("DSH 0.1.7-rc.1 no-key web + default model plugin: passed")
+            print("DSH 0.2.0-rc.2 no-key web + default model plugin: passed")
         finally:
             process.terminate()
             try:

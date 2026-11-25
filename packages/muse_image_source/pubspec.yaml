@@ -1,0 +1,17 @@
+name: muse_image_source
+description: Existing user-initiated image selection and immutable header/pixel/decoder validation.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.12.2
+dependencies:
+  flutter:
+    sdk: flutter
+  muse_asset_contract:
+    path: ../muse_asset_contract
+  file_picker: '>=8.3.7 <11.0.0'
+  mime: 2.1.0
+  image: 4.12.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
