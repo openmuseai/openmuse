@@ -66,6 +66,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Compose pinned plugin sources
+        uses: ./.github/actions/checkout-plugin-sources
+        with:
+          token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - name: Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 

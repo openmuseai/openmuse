@@ -2,6 +2,17 @@
   "schemaVersion": 1,
   "findings": [
     {
+      "file": "app/openmuse_host/lib/main.dart",
+      "rule": "absolute-url",
+      "value": "https://dns.alidns.com/resolve",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
       "file": "app/openmuse_host/lib/src/host/mcp_installed_app.dart",
       "rule": "absolute-url",
       "value": "http://127.0.0.1",
@@ -18,6 +29,28 @@
       "classification": "protocol",
       "owner": "client-platform",
       "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "app/openmuse_host/lib/src/host/store_home.dart",
+      "rule": "absolute-url",
+      "value": "https://us.openmuseai.com/en/guide/",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "app/openmuse_host/lib/src/host/store_home.dart",
+      "rule": "absolute-url",
+      "value": "https://us.openmuseai.com/en/privacy/",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
     },
     {
       "file": "app/openmuse_linux/lib/src/host/mcp_installed_app.dart",
@@ -47,6 +80,17 @@
       "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
     },
     {
+      "file": "app/openmuse_mobile/lib/main.dart",
+      "rule": "absolute-url",
+      "value": "https://dns.alidns.com/resolve",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
       "file": "app/openmuse_resource_lab/lib/main.dart",
       "rule": "locale-literal",
       "value": "en",
@@ -63,6 +107,17 @@
       "classification": "protocol",
       "owner": "client-platform",
       "reason": "Non-shipping resource acceptance harness supported-locale fixture; no service-region selection. Reviewed 2026-11-03."
+    },
+    {
+      "file": "app/openmuse_web/lib/workbench/document_link_page.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
     },
     {
       "file": "packages/muse_remote_surface_core/lib/src/web_guard.dart",
@@ -92,6 +147,28 @@
       "reason": "Material localization bridge for the fixed Chinese domestic legal documents; no remote endpoint or business region branch. Reviewed 2026-11-03."
     },
     {
+      "file": "packages/openmuse_mcp_app_runtime/lib/src/remote_app.dart",
+      "rule": "absolute-url",
+      "value": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "packages/openmuse_mcp_app_runtime/lib/src/remote_app_view.dart",
+      "rule": "absolute-url",
+      "value": "https://mcp-app.invalid/",
+      "count": 1,
+      "classification": "protocol",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
       "file": "packages/openmuse_mobile_plugin_runtime/market_sources/pptx.js",
       "rule": "absolute-url",
       "value": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
@@ -117,6 +194,138 @@
       "classification": "protocol",
       "owner": "client-platform",
       "reason": "Local transport, virtual origin, or protocol identifier; keep under code review."
+    },
+    {
+      "file": "plugins/auth-gotrue/lib/src/auth_plugin.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 2,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "plugins/cloud-workspace/lib/openmuse_cloud_workspace_plugin.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 4,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "plugins/cloud-workspace/lib/src/document_browser_link_dialog.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "plugins/cloud-workspace/lib/src/document_creation_dialog.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "plugins/cloud-workspace/lib/src/owner_invitations_panel.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "plugins/cloud-workspace/lib/src/page_rename_dialog.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "plugins/cloud-workspace/lib/src/workspace_access_dialog.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "plugins/cloud-workspace/lib/src/workspace_invitations_dialog.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "plugins/cloud-workspace/lib/src/workspace_invite_code_join_dialog.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "plugins/cloud-workspace/lib/src/workspace_invite_code_panel.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "plugins/cloud-workspace/lib/src/workspace_pages.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 1,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
+    },
+    {
+      "file": "plugins/dsh-agent/lib/src/dsh_panel.dart",
+      "rule": "locale-branch",
+      "value": "zh",
+      "count": 3,
+      "classification": "migration",
+      "owner": "client-platform",
+      "reason": "Reviewed existing migration debt from pre-1.0.3 source 8f75902767b31f8327fae26887c77f0c54b58578; exact occurrence count unchanged. This records inherited literals, not a claim of completed globalization.",
+      "reviewedAt": "2026-11-25",
+      "sourceBaseline": "8f75902767b31f8327fae26887c77f0c54b58578"
     },
     {
       "file": "plugins/dsh-agent/lib/src/resource_reference_bridge.dart",

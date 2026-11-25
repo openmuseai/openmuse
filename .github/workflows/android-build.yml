@@ -45,6 +45,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Compose pinned plugin sources
+        uses: ./.github/actions/checkout-plugin-sources
+        with:
+          token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - name: Flutter
         uses: subosito/flutter-action@v2
         with:

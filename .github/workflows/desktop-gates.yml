@@ -19,6 +19,10 @@ jobs:
       PYTHONIOENCODING: "utf-8"
     steps:
       - uses: actions/checkout@v4
+      - name: Compose pinned plugin sources
+        uses: ./.github/actions/checkout-plugin-sources
+        with:
+          token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -56,6 +60,10 @@ jobs:
       HELIX_DISABLE_AUTO_GRAMMAR_BUILD: "1"
     steps:
       - uses: actions/checkout@v4
+      - name: Compose pinned plugin sources
+        uses: ./.github/actions/checkout-plugin-sources
+        with:
+          token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
