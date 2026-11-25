@@ -28,5 +28,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/welcome/OpenMuse-Introduction.pptx
+    - assets/welcome/OpenMuse-User-Guide.v1.0.3.en.md
+    - assets/welcome/OpenMuse-User-Guide.v1.0.3.zh-CN.md
     - assets/welcome/OpenMuse-User-Guide.v1.0.3.en.musedoc
     - assets/welcome/OpenMuse-User-Guide.v1.0.3.zh-CN.musedoc

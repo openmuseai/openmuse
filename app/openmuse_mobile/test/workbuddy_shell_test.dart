@@ -127,9 +127,9 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 100)),
       );
       await tester.pumpAndSettle();
-      expect(find.textContaining('How to connect a Desktop'), findsOneWidget);
+      expect(find.textContaining('连接电脑运行任务'), findsOneWidget);
       expect(
-        find.textContaining('Keep Desktop online', findRichText: true),
+        find.textContaining('保持电脑和 Desktop 应用运行', findRichText: true),
         findsOneWidget,
       );
       await tester.tap(find.byType(BackButton));

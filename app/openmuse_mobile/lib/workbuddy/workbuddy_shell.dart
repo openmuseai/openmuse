@@ -4226,11 +4226,12 @@ final class _MobileLoginRouteState extends State<_MobileLoginRoute> {
 }
 
 Future<void> openDesktopSetupGuide(BuildContext context) async {
+  final locale = stringsOf(context).locale.startsWith('zh') ? 'zh-CN' : 'en';
   final guide = await rootBundle.loadString(
-    'packages/openmuse_resource_center_host/assets/welcome/OpenMuse-User-Guide.md',
+    'packages/openmuse_resource_center_host/assets/welcome/OpenMuse-User-Guide.v1.0.3.$locale.md',
   );
-  final start = guide.indexOf('## 8. How to connect a Desktop');
-  final end = guide.indexOf('\n## 9.', start < 0 ? 0 : start);
+  final start = guide.indexOf('## 9.');
+  final end = guide.indexOf('\n## 10.', start < 0 ? 0 : start);
   final section = start >= 0 && end > start
       ? guide.substring(start, end)
       : guide;

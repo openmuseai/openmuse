@@ -222,7 +222,7 @@ Future<void> _liveAccount(
     final mirror = MobileWorkspaceMirrorClient(paired.snapshot.connection!);
     try {
       expect((await mirror.mounts())['mounts'] as List, isNotEmpty);
-      const marker = 'OpenMuse-User-Guide.md';
+      const marker = 'OpenMuse-User-Guide.v1.0.3.en.md';
       final found = (await mirror.search(marker))['entries'] as List;
       final entry = found.cast<Map>().singleWhere((e) => e['name'] == marker);
       final file = await mirror.readResource(entry['resourceRef'] as String);

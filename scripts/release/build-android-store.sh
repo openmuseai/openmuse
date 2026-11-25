@@ -72,6 +72,11 @@ if [[ "$dirty" == true && "$allow_dirty" != true ]]; then
   exit 2
 fi
 
+# Rebuild the app-owned asset manifest after changes in dependency assets.
+# A formal 1.0.3 candidate must not inherit cached files from a previous package.
+if [[ "$version" == 1.0.3 ]]; then
+  (cd app/openmuse_mobile && flutter clean && flutter pub get)
+fi
 OPENMUSE_PAIRED_PLATFORMS=android "$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
 
 (cd app/openmuse_mobile && flutter analyze)

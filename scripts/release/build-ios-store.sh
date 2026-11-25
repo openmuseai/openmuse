@@ -63,6 +63,11 @@ fi
 runtime_validation_args=("$tmp/runtime-defines.json" --report "$tmp/runtime-input-report.json")
 if [[ "$allow_dirty" == true ]]; then runtime_validation_args+=(--allow-incomplete); fi
 python3 "$repo_root/scripts/release/verify-runtime-input.py" "${runtime_validation_args[@]}"
+# Rebuild the app-owned asset manifest after changes in dependency assets.
+# A formal 1.0.3 candidate must not inherit cached files from a previous package.
+if [[ "$version" == 1.0.3 ]]; then
+  (cd app/openmuse_mobile && flutter clean && flutter pub get)
+fi
 python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$repo_root/app/openmuse_mobile/.dart_tool/package_config.json" "${closure_args[@]}"
 security cms -D -i "$profile" >"$tmp/profile.plist"
 python3 - "$tmp/profile.plist" "$profile_name" "$team" <<'PY'
