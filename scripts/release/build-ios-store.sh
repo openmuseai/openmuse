@@ -76,6 +76,8 @@ PY
 OPENMUSE_PAIRED_PLATFORMS=ios "$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
 (cd app/openmuse_mobile && flutter analyze)
 if [[ "$skip_tests" != true ]]; then
+  # Flutter's HTML contract tests use this repository's locked DOM test runtime.
+  (cd services/config-control && npm ci --ignore-scripts)
   (cd app/openmuse_mobile && flutter test)
 fi
 

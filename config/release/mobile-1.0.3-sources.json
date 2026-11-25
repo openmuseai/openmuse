@@ -1,0 +1,26 @@
+{
+  "schema": "openmuse.mobile-source-composition/1",
+  "version": "1.0.3",
+  "layout": "Muse-Client and Muse-Plugin-Ecosystem are sibling checkouts; plugin source is composed at the 15 locked Git submodule paths.",
+  "ecosystem": {
+    "repository": "openmuseai/Muse-Plugin-EcoSystem",
+    "commit": "52bf3dc48807de0ba25c1fa9f6d4a245b1eef704",
+    "lock": "config/plugin-sources.lock.json",
+    "lockSha256": "afbafda34a905038b4561256938d643ca3ef61a44ba3e021eaa65a44f20e9cbc"
+  },
+  "bundledSlides": {
+    "asset": "app/openmuse_mobile/assets/bundled/slides-0.9.6.mcpb",
+    "sha256": "cc1af2c2986c25b87eb5dbf75a4e9155e4bbfd9af6b7fc5f141650cd192dc1f3",
+    "repository": "openmuseai/muse-plugin-genoffice-pptx",
+    "sourceCommit": "d1bd524b00cf2dc9bd36eb5baf270492e37dc99c",
+    "upstreamCommit": "1e643ac74416dbff8a3e75e283bd88b0c1cba5f9"
+  },
+  "appStoreRuntime": {
+    "file": "packages/openmuse_runtime_config/assets/releases/ios-app-store.json",
+    "sha256": "2023398c5288bebedad0610f58aba4a9c251c4009a02e345ab8c7b570166284f",
+    "storefronts": [
+      "CN",
+      "US"
+    ]
+  }
+}
