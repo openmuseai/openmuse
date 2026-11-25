@@ -1,0 +1,17 @@
+{
+  "id": "07-materials",
+  "status": "partial",
+  "owner": "Codex / Muse-CI",
+  "summary": "Brand/localized draft and CN/US availability saved; vivo copyright retained.",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-store-draft.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-draft.json"
+  ],
+  "exceptions": [
+    "Candidate screenshots, review account and remaining vivo fields pending"
+  ],
+  "evidenceDigests": {
+    "apple-store-draft.json": "012deb4c85ff01436c8bb2fc206e4f4ac4a144042834123e1ec83862b70371ec",
+    "vivo-draft.json": "d94c1864851e333025556d969969c1136ee9eec1b64c9cd1bc71a9257c12c496"
+  }
+}

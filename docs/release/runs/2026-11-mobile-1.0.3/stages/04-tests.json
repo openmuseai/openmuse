@@ -1,0 +1,15 @@
+{
+  "id": "04-tests",
+  "status": "partial",
+  "owner": "Codex / Muse-CI",
+  "summary": "123Mobile plus component tests and native simulator adapter checks; production/physical core cases remain open.",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/validation-summary.json"
+  ],
+  "exceptions": [
+    "Core unexecuted cases block submission"
+  ],
+  "evidenceDigests": {
+    "validation-summary.json": "8fb5e9a6ccdbc4ba268314f7b69015f48200912c93423333ed991949c8a45280"
+  }
+}

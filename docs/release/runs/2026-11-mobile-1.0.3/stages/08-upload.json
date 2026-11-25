@@ -1,0 +1,17 @@
+{
+  "id": "08-upload",
+  "status": "partial",
+  "owner": "Codex / Muse-CI",
+  "summary": "Early TestFlight build delivery observed; this does not pass formal upload stage or authorize review.",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload.json"
+  ],
+  "exceptions": [
+    "Apple processing/latest state check and TestFlight install pending",
+    "vivo1.0.3 APK upload pending",
+    "Upstream stage prerequisites not complete"
+  ],
+  "evidenceDigests": {
+    "apple-upload.json": "b20f1ef17cae13e49a64ff146cee3592f1a48b3eea2f8a05a3de51a256324a4a"
+  }
+}

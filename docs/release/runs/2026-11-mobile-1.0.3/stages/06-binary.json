@@ -1,0 +1,21 @@
+{
+  "id": "06-binary",
+  "status": "partial",
+  "owner": "Codex / Muse-CI",
+  "summary": "Final signature/payload/permission/ELF checks pass; signed production runtime publications verified.",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-public-runtime.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-public-runtime.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-package-pattern-review.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/genoffice-advisory-disposition.json"
+  ],
+  "exceptions": [
+    "Full production/physical install-upgrade and final dataflow acceptance pending"
+  ],
+  "evidenceDigests": {
+    "ios-public-runtime.json": "f487405779c23f6e0058f59bb5e0ad12eddcf2e24f333d4528ed7c88647243ac",
+    "android-public-runtime.json": "85ed62d6acd61786d09044e009ab4d49b48c8b9d2bd40fc6e46f3809a9f933ff",
+    "android-package-pattern-review.json": "09f7d9571495821f2e40ed7fa68f0e1d2858d7cd4df679c62d098ecf74cd033d",
+    "genoffice-advisory-disposition.json": "739e57872cdb95d73f5dc0038fa8015aa73cabc8c704a4a451bc3af169c7ecb7"
+  }
+}

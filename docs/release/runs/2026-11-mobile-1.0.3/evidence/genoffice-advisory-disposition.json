@@ -1,0 +1,26 @@
+{
+  "schema": "openmuse.advisory-disposition/1",
+  "date": "2026-11-25T10:42:29.016589+00:00",
+  "advisory": "GHSA-rmxm-3fg6-px4f",
+  "primarySource": "https://github.com/honojs/node-server/security/advisories/GHSA-rmxm-3fg6-px4f",
+  "sourceReadDate": "2026-11-25",
+  "lockedAndInstalledVersion": "1.19.19",
+  "upstreamAffected1x": ">=1.19.10 <1.19.19",
+  "upstreamPatched1x": "1.19.19",
+  "npmAuditRecordedRange": ">=1.19.10 <2.1.3",
+  "disposition": "Locked 1.19.19 is listed as patched by the upstream author. npm audit recorded a broader range that includes this backport; retain discrepancy rather than claim zero audit findings.",
+  "artifact": {
+    "path": "/Users/mac/src/openmuse-io/Muse-Release-1.0.3/Muse-Client/app/openmuse_mobile/assets/bundled/slides-0.9.6.mcpb",
+    "sha256": "cc1af2c2986c25b87eb5dbf75a4e9155e4bbfd9af6b7fc5f141650cd192dc1f3",
+    "serverSha256": "7775508a41d68c45560898ded8a49945708cee9bd40dac4f05eef064541d49f7",
+    "serverMarkers": {
+      "@hono/node-server": 0,
+      "serveStatic": 0,
+      "serve-static": 0,
+      "toNodeHandler": 0,
+      "StdioServerTransport": 5
+    }
+  },
+  "sourceReachability": "src/http_server.ts only handles /mcp via toNodeHandler and does not import serveStatic; shipped server/index.mjs is stdio and contains no Hono/serveStatic markers. This is a scoped source/artifact review, not a general security certification.",
+  "remaining": "Development dependency audit findings remain separately recorded; no production zero-vulnerability claim."
+}

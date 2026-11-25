@@ -1,0 +1,17 @@
+{
+  "id": "02-development",
+  "status": "partial",
+  "owner": "Codex / Muse-CI",
+  "summary": "Fixed clean candidates and 4 draft functional/composition MRs;15 migration MR/tags already verified.",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/repository-mrs.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/plugin-sources.json"
+  ],
+  "exceptions": [
+    "Final functional merges and App1.0.3 release tags pending"
+  ],
+  "evidenceDigests": {
+    "repository-mrs.json": "1390274f550beea4d1902ef0e479b4a46213d6770244964fc6bca07c957b6ce7",
+    "plugin-sources.json": "cbf3aebf100e07ff225a55b64459f31977406c2505a9be2880c473faec4db287"
+  }
+}

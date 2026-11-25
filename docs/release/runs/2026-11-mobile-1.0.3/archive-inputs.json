@@ -1,0 +1,160 @@
+{
+  "files": [
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-package-pattern-review.json",
+      "target": "evidence/android-package-pattern-review.json",
+      "sha256": "09f7d9571495821f2e40ed7fa68f0e1d2858d7cd4df679c62d098ecf74cd033d",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-public-runtime.json",
+      "target": "evidence/android-public-runtime.json",
+      "sha256": "85ed62d6acd61786d09044e009ab4d49b48c8b9d2bd40fc6e46f3809a9f933ff",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-store-draft.json",
+      "target": "evidence/apple-store-draft.json",
+      "sha256": "012deb4c85ff01436c8bb2fc206e4f4ac4a144042834123e1ec83862b70371ec",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-upload.json",
+      "target": "evidence/apple-upload.json",
+      "sha256": "b20f1ef17cae13e49a64ff146cee3592f1a48b3eea2f8a05a3de51a256324a4a",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build.json",
+      "target": "evidence/cn-build.json",
+      "sha256": "294bdec0a9b568a47b4d2038ffddc31500b67e7c622eac4c9df64b6f9a35ed62",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/genoffice-advisory-disposition.json",
+      "target": "evidence/genoffice-advisory-disposition.json",
+      "sha256": "739e57872cdb95d73f5dc0038fa8015aa73cabc8c704a4a451bc3af169c7ecb7",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-build.json",
+      "target": "evidence/ios-appstore-build.json",
+      "sha256": "026cf461e0c4fea9dbf84e8bdefdeb3fc18ad54a80d8a771498674a7620eb536",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-public-runtime.json",
+      "target": "evidence/ios-public-runtime.json",
+      "sha256": "f487405779c23f6e0058f59bb5e0ad12eddcf2e24f333d4528ed7c88647243ac",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/plugin-sources.json",
+      "target": "evidence/plugin-sources.json",
+      "sha256": "cbf3aebf100e07ff225a55b64459f31977406c2505a9be2880c473faec4db287",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/repository-mrs.json",
+      "target": "evidence/repository-mrs.json",
+      "sha256": "1390274f550beea4d1902ef0e479b4a46213d6770244964fc6bca07c957b6ce7",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/scope.json",
+      "target": "evidence/scope.json",
+      "sha256": "7e9155816b1b19b6fe3188dc18e13e0fd17fe4933d9a602dddc5844f237d5166",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/validation-summary.json",
+      "target": "evidence/validation-summary.json",
+      "sha256": "8fb5e9a6ccdbc4ba268314f7b69015f48200912c93423333ed991949c8a45280",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-draft.json",
+      "target": "evidence/vivo-draft.json",
+      "sha256": "d94c1864851e333025556d969969c1136ee9eec1b64c9cd1bc71a9257c12c496",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/release.json",
+      "target": "release.json",
+      "sha256": "c6154acef6f5369b4b7a9eee5fe460d967065f3065e86f9679c21a13241959ec",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/01-scope.json",
+      "target": "stages/01-scope.json",
+      "sha256": "d1a83c13ad5e75f45cc56c84e66be7bec7abbd97c5a2d803287b16cd05495c6b",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/02-development.json",
+      "target": "stages/02-development.json",
+      "sha256": "4d4ec3f88cf01bcd71cd50a54f2645bbee926c7ceba6e74eaac2656434a56e25",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/03-privacy.json",
+      "target": "stages/03-privacy.json",
+      "sha256": "e38dcb0f8d89717e7184aa13ae2bfb598335f5fd0791330f84b1f38dc7dae548",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/04-tests.json",
+      "target": "stages/04-tests.json",
+      "sha256": "612ff11d101fdb90fe09a2d7496b39be7c575de55cbea92eb987f3ef25217bd4",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/05-build.json",
+      "target": "stages/05-build.json",
+      "sha256": "10d5b4165082ab25a46d3ecc60b4607bd7a56ca98145d27eded14068a1175fda",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/06-binary.json",
+      "target": "stages/06-binary.json",
+      "sha256": "cd40efd213e5226380c96639567c88731796a1b9d48e7eef5dd95764a465330d",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/07-materials.json",
+      "target": "stages/07-materials.json",
+      "sha256": "2de2c7851bcebaffb5c6cda88ca57a9deee13ccc5fd0e083785b626644763b41",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/08-upload.json",
+      "target": "stages/08-upload.json",
+      "sha256": "ac044b511b80b34607a5f8dc3957ce306a8f93022048c3ddea901aca055e8142",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/09-submit.json",
+      "target": "stages/09-submit.json",
+      "sha256": "ccdf2a0b06510728c8d16739b7482819dfd91f2507e681c609b0f4df591a9f1c",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/10-review.json",
+      "target": "stages/10-review.json",
+      "sha256": "fde0ed299315bdd9d06644918e9d04692340523b3c9cdd4c4fe46ebe299d956c",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/11-publish.json",
+      "target": "stages/11-publish.json",
+      "sha256": "3dba66f5356263a1e5fb171a52177130abef2c9d6cb348934c9850af141aff78",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/12-archive.json",
+      "target": "stages/12-archive.json",
+      "sha256": "ef20ef1ea622322cbadde286fa5df359ac0629b43082b74927021ee93d816a23",
+      "reviewedForSecrets": true
+    }
+  ]
+}

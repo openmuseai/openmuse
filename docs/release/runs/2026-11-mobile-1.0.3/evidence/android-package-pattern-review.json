@@ -1,0 +1,14 @@
+{
+  "schema": "openmuse.package-secret-pattern-review/1",
+  "checkedAt": "2026-11-25T10:46:02.468534+00:00",
+  "artifactSha256": "c9bd0af1a023e91dfa1058a8509b79bd7ea96660f5d9dfdc8eab09415d206f42",
+  "entriesChecked": 301,
+  "patterns": [
+    "github-classic",
+    "github-fine-grained",
+    "aws-key-id",
+    "private-key-pem"
+  ],
+  "findings": [],
+  "limits": "Scoped token/private-key pattern check only, not a guarantee of absence of all secret formats or a replacement for dataflow review."
+}

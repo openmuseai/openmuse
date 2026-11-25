@@ -1,0 +1,24 @@
+{
+  "schema": "openmuse.store-upload-receipt/1",
+  "recordedAt": "2026-11-25T10:31:59.773809+00:00",
+  "channel": "appstore",
+  "appId": "6827192902",
+  "name": "Office Harness",
+  "version": "1.0.3",
+  "build": "112501",
+  "ipaSha256": "387f57a7b46871db28ca7e4ff64c654ecc598087655683c9e2461ba4f4d68b97",
+  "clientRevision": "16941c572cc3abdd25d1d0f67769f9ebbbccdeeb",
+  "observedUI": {
+    "application": "Transporter",
+    "status": "DELIVERED WITH WARNING",
+    "deliveredAtLocal": "2026-11-25 18:30 Asia/Shanghai",
+    "processing": "THE APP IS PROCESSING",
+    "warningCode": 90725,
+    "warning": "Built with iOS 26.5 SDK; starting April 2027 Apple requires iOS 27 SDK / Xcode 27 or later"
+  },
+  "limits": [
+    "Upload only; not App Review submission, approval, storefront availability, or release",
+    "No raw delivery log attached; macOS denied filesystem access to Transporter Group Container",
+    "Mainland AIGC pending verification; final device/feature acceptance remains open"
+  ]
+}

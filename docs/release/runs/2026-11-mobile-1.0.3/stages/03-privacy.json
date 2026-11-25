@@ -1,0 +1,17 @@
+{
+  "id": "03-privacy",
+  "status": "partial",
+  "owner": "Codex / Muse-CI",
+  "summary": "Per-send consent and scoped notification implementation/component checks; mainland Doubao filing pending Apple verification.",
+  "evidence": [
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/validation-summary.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-store-draft.json"
+  ],
+  "exceptions": [
+    "Full final App network/region/account dataflow and platform AIGC verification pending"
+  ],
+  "evidenceDigests": {
+    "validation-summary.json": "8fb5e9a6ccdbc4ba268314f7b69015f48200912c93423333ed991949c8a45280",
+    "apple-store-draft.json": "012deb4c85ff01436c8bb2fc206e4f4ac4a144042834123e1ec83862b70371ec"
+  }
+}

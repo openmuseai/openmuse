@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-11-25T10:48:03.493837+00:00",
+  "passed": {
+    "mobile": 123,
+    "resourceHost": 28,
+    "notificationPlugin": 12,
+    "notificationCore": 15,
+    "smartDocumentComponent": 229,
+    "smartDocumentComponentSkipped": 7,
+    "dataset": 257,
+    "genOfficeIndependentNode": 13
+  },
+  "nativeAdapters": {
+    "ios": "simulator permission denial/recovery, success/failure banners, click activation1",
+    "android": "API34 emulator permission allow, success click1/failure click2, scoped cleanup preserves system notification"
+  },
+  "publicRuntime": "Extracted final package public trust bundles verified current CN/US HTTPS signatures and cache restoration using actual production verifier/build112501. This does not certify full App dataflow or online tasks.",
+  "androidInstall": "Final signed APK installed on own API34 emulator; initial package absent, install Success; UI launch pending Mac unlock",
+  "logs": [
+    {
+      "path": "/tmp/muse103-formal-ios-build4.log",
+      "sha256": "08bb184f920be52764ff2f00dd8722228b99f013910bbba34b82e46c1cacab33"
+    },
+    {
+      "path": "/tmp/muse103-formal-android-build5.log",
+      "sha256": "6c46ae421f12f8fc1850e8b78b6525083e770e1545486e221b0d639620ed0d36"
+    },
+    {
+      "path": "/tmp/muse103-native-qa-android-run2.log",
+      "sha256": "74e428a5c5e3e8b0be9f7aeb58004d2f824c71b565b686602a2cb52325b65f2b"
+    },
+    {
+      "path": "/tmp/muse103-smart-document-component-tests.log",
+      "sha256": "de692bcc4358c69089a031f6ddc86ff66f632c281189a5c3bae513d7c496627d"
+    }
+  ],
+  "notExecutedCore": [
+    "Full production SmartDocument edit/save/reopen and upgrade/sync",
+    "Full production PPTX edit/save/reopen",
+    "Production paired Desktop task success/failure notification",
+    "Physical iPhone and Android final candidate acceptance",
+    "Final store downloads and online observation"
+  ],
+  "retainedFailures": [
+    "First signed iOS candidate rejected by closure due old guide payload",
+    "Android initial build failed missing microphone resource strings; fixed in f6baffd0",
+    "Android post-build certificate verification initially blocked; public cert archived in c3bb1f4e",
+    "Physical Android click attempts failed; not overwritten by emulator pass"
+  ],
+  "formalRelease": false
+}
