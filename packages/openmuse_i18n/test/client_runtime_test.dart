@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openmuse_i18n/openmuse_i18n.dart';
 import 'package:openmuse_runtime_config/openmuse_runtime_config.dart';
@@ -13,6 +14,109 @@ void main() {
     if (result.exitCode != 0) throw StateError('${result.stderr}');
     fixture = jsonDecode(result.stdout as String) as Map<String, dynamic>;
   });
+  for (final topInset in [0.0, 24.0, 59.0]) {
+    testWidgets(
+      'runtime banner consumes top inset $topInset once above a document route',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(428, 926);
+        tester.view.padding = FakeViewPadding(top: topInset, bottom: 34);
+        tester.view.viewPadding = FakeViewPadding(top: topInset, bottom: 34);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetPadding);
+        addTearDown(tester.view.resetViewPadding);
+        addTearDown(tester.view.resetViewInsets);
+        final locale = OpenMuseLocaleController();
+        final runtime = OpenMuseClientRuntime(
+          bundle: DeploymentBundle.parse(jsonEncode(fixture['bundle'])),
+          transport: _Transport(),
+          store: MemoryConfigStore(),
+          build: 1,
+          locale: locale,
+          clock: () => DateTime.parse(fixture['now'] as String),
+        );
+        final navigator = GlobalKey<NavigatorState>();
+        Widget app() => OpenMuseRuntimeHost(
+          runtime: runtime,
+          disposeRuntime: false,
+          child: MaterialApp(
+            navigatorKey: navigator,
+            builder: (_, child) => OpenMuseRuntimeNotice(child: child!),
+            home: const Scaffold(body: Text('home')),
+          ),
+        );
+        await tester.pumpWidget(app());
+        navigator.currentState!.push<void>(
+          MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Document')),
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    const Text('editor toolbar'),
+                    const Expanded(child: TextField()),
+                    const Text(
+                      'editor footer',
+                      key: ValueKey('document-bottom'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          tester.getSize(find.byType(AppBar)).height,
+          closeTo(kToolbarHeight + topInset, 0.1),
+        );
+
+        runtime.pendingRestart = runtime.presentation;
+        await tester.pumpWidget(app());
+        await tester.pumpAndSettle();
+        expect(find.text('Document'), findsOneWidget);
+        expect(
+          tester.getSize(find.byType(AppBar)).height,
+          closeTo(kToolbarHeight, 0.1),
+          reason:
+              'The title must follow the banner without a second status-bar gap',
+        );
+        expect(
+          tester.getTopLeft(find.text('editor toolbar')).dy,
+          closeTo(tester.getBottomLeft(find.byType(AppBar)).dy, 0.1),
+        );
+        expect(
+          tester
+              .getBottomLeft(find.byKey(const ValueKey('document-bottom')))
+              .dy,
+          closeTo(926 - 34, 0.1),
+        );
+
+        tester.view.padding = FakeViewPadding(top: topInset);
+        tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .getBottomLeft(find.byKey(const ValueKey('document-bottom')))
+              .dy,
+          closeTo(926 - 300, 0.1),
+        );
+
+        runtime.pendingRestart = null;
+        await tester.pumpWidget(app());
+        await tester.pumpAndSettle();
+        expect(find.text('Document'), findsOneWidget);
+        expect(
+          tester.getSize(find.byType(AppBar)).height,
+          closeTo(kToolbarHeight + topInset, 0.1),
+        );
+        await tester.pumpWidget(const SizedBox());
+        runtime.dispose();
+        locale.dispose();
+      },
+    );
+  }
   test(
     'Node and Dart compile all registered ICU messages to the same bounded AST',
     () {

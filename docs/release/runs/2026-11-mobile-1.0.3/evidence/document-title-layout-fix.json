@@ -1,0 +1,57 @@
+{
+  "schema": "openmuse.document-title-layout-fix/1",
+  "date": "2026-11-25",
+  "requirement": "REQ-103-02",
+  "userRequest": "编辑没有问题，但是顶部空了一大块，请把文档名顶部对齐",
+  "observedCandidate": "iOS TestFlight 1.0.3 (112501)",
+  "beforeScreenshot": {
+    "path": "/Users/mac/src/openmuse-io/Muse-Client/materials/releases/1.0.3/ios/title-gap-before-112501.png",
+    "sha256": "f4ab2aef6224b7d709950f98e0de31a0564250c3ba8c6cdee6bc6049700e9d4d"
+  },
+  "cause": "The global runtime notice consumes the system top safe area, but its sibling navigator inherits the same top padding and adds it to each route AppBar. The legacy upgrade notice has the same ownership issue.",
+  "fix": "Consume only the top MediaQuery padding for content below an active notice. Without a notice, retain the page original safe area. Preserve bottom padding and keyboard avoidance.",
+  "tests": {
+    "before": "24/59 inset cases measured AppBar heights 80/115 instead of 56.",
+    "after": "0/24/59 inset cases pass: standard 56 toolbar below notice, original top inset restored when notice hides, document route retained, footer above bottom safe area and keyboard.",
+    "sharedI18nSuite": {
+      "passed": 32
+    },
+    "legacyNotice": {
+      "passed": 2,
+      "widths": [
+        320,
+        691
+      ],
+      "textScale": 2
+    },
+    "i18nAnalysis": "No issues found"
+  },
+  "scope": "Client host layout only; no document data or plugin schema change.",
+  "remaining": [
+    "New clean signed 112502 iOS/Android builds",
+    "Simulator and physical visual confirmation of the new candidates",
+    "Full production task and remaining release regression"
+  ],
+  "logs": [
+    {
+      "path": "/tmp/muse103-title-safe-area-red.log",
+      "sha256": "7d2651049b46eb13ba304189cae019c4ab281be76fc1d34be2665f08bfdbad22"
+    },
+    {
+      "path": "/tmp/muse103-title-safe-area-green.log",
+      "sha256": "52d1622681c788d94d304ba659b423a9505497471a99abd6069fa27b1d5dea55"
+    },
+    {
+      "path": "/tmp/muse103-title-i18n-suite.log",
+      "sha256": "45c2b3603ca6ada232f22432f59a7dc595952de227ec9721822d9596cc6e7760"
+    },
+    {
+      "path": "/tmp/muse103-title-i18n-analysis.log",
+      "sha256": "3d1b8e5f21c3a232381c958c2022d476bb93f386ca5eb05448d071bf05ea33e7"
+    },
+    {
+      "path": "/tmp/muse103-title-legacy-notice-green.log",
+      "sha256": "c4a81c7e29eddf93568e43e937d2d18600200e4a0f1f32b7ce8db3718762b28c"
+    }
+  ]
+}

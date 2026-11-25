@@ -42,7 +42,14 @@ final class LegacyPluginNotice extends StatelessWidget {
                 ),
               ),
             ),
-            Expanded(child: child),
+            // The banner already keeps its contents below the status bar.
+            Expanded(
+              child: MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                child: child,
+              ),
+            ),
           ],
         );
       },

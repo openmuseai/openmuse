@@ -11,8 +11,12 @@ void main() {
       (tester) async {
         tester.view.physicalSize = Size(width, 800);
         tester.view.devicePixelRatio = 1;
+        tester.view.padding = const FakeViewPadding(top: 59, bottom: 34);
+        tester.view.viewPadding = const FakeViewPadding(top: 59, bottom: 34);
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetPadding);
+        addTearDown(tester.view.resetViewPadding);
         final directory = (await tester.runAsync(
           () => Directory.systemTemp.createTemp('legacy-notice-'),
         ))!;
@@ -32,8 +36,9 @@ void main() {
             ),
             home: LegacyPluginNotice(
               store: store,
-              child: const Scaffold(
-                body: Center(child: Text('Workspace retained')),
+              child: Scaffold(
+                appBar: AppBar(title: const Text('Document')),
+                body: const Center(child: Text('Workspace retained')),
               ),
             ),
           ),
@@ -54,6 +59,11 @@ void main() {
           findsOneWidget,
         );
         expect(find.text('Workspace retained'), findsOneWidget);
+        expect(
+          tester.getSize(find.byType(AppBar)).height,
+          closeTo(kToolbarHeight, 0.1),
+          reason: 'The upgrade banner already protects the system top inset',
+        );
         expect(
           find.textContaining(
             'original directories and user files are retained',
