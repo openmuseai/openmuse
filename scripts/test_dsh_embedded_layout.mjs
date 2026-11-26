@@ -4,13 +4,14 @@ import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {runInNewContext} from 'node:vm';
+import {fileURLToPath} from 'node:url';
 const dir=new URL('../third_party/dsh/',import.meta.url);
 const sha=b=>createHash('sha256').update(b).digest('hex');
 function loadOwner(name, presentation = 'navigation') {
   const receipt=JSON.parse(readFileSync(new URL('patches/layout-embedded-v2.json',dir))).find(r=>r.upstream.includes('ui-'+name+'@'));
   const archive=new URL('tarballs/'+receipt.file,dir);
   assert.equal(sha(readFileSync(archive)),receipt.sha256);
-  let source=execFileSync('tar',['-xOf',archive.pathname,'package/lib/client.js'],{encoding:'utf8'});
+  let source=execFileSync('tar',['-xOf',fileURLToPath(archive),'package/lib/client.js'],{encoding:'utf8'});
   assert.equal(sha(source),receipt.patchedClientSha256);
   assert.equal(sha(readFileSync(new URL('node_modules/@deepseek-ai/dsh-client-ui-'+name+'/lib/client.js',dir))),receipt.patchedClientSha256);
   source=source.replace('exports.apply = apply;',`exports.testComponent = ${name==='sidebar'?'SidebarRoot':name==='layout'?'AppFrame':'SettingsRoot'};exports.apply = apply;`);

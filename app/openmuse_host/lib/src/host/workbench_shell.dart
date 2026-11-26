@@ -222,6 +222,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     _ensureWorkspaceRegion();
     _ensureAgentRegion();
     _ensureEditorGroups();
+    _adoptWorkspaceFocus();
     _lastActiveTab = widget.workspace.activeTab;
     _narrowWorkspace = _lastActiveTab != null || _activeWorkspacePaneId != null;
     _activeWorkspaceInstanceRef = _layout.snapshot
@@ -529,9 +530,22 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
 
   void _layoutChanged() {
     _ensureEditorGroups();
+    _adoptWorkspaceFocus();
+    final store = widget.layoutStore;
+    if (store == null) return;
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(milliseconds: 350), _persistLayout);
+  }
+
+  void _adoptWorkspaceFocus() {
     final focused = _layout.snapshot.focusedPaneId;
+    final surface = focused == null
+        ? null
+        : _layout.snapshot.bindingFor(focused)?.surfaceRef;
     if (focused != null &&
         !_isAgentPane(_layout.snapshot, focused) &&
+        surface != 'host.workspaceExplorer' &&
+        !_explorerPanelRefs.contains(surface) &&
         !_isPrimaryWorkspacePane(_layout.snapshot, focused)) {
       _activeWorkspacePaneId = focused;
       _activeWorkspaceInstanceRef = _layout.snapshot
@@ -540,10 +554,6 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
       if (!_isEditorPane(_layout.snapshot, focused)) _activePage = null;
       _narrowWorkspace = true;
     }
-    final store = widget.layoutStore;
-    if (store == null) return;
-    _saveDebounce?.cancel();
-    _saveDebounce = Timer(const Duration(milliseconds: 350), _persistLayout);
   }
 
   void _persistLayout() {
