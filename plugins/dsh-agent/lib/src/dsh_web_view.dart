@@ -150,6 +150,19 @@ final class DshWebView extends StatefulWidget {
 final class _DshWebViewState extends State<DshWebView> {
   MethodChannel? _channel;
   String? _loadError;
+  String _appearance = 'light';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final appearance = Theme.of(context).brightness == Brightness.dark
+        ? 'dark'
+        : 'light';
+    if (_appearance == appearance) return;
+    _appearance = appearance;
+    if (Platform.isMacOS)
+      _channel?.invokeMethod<void>('setAppearance', appearance);
+  }
 
   @override
   void initState() {
@@ -253,6 +266,7 @@ final class _DshWebViewState extends State<DshWebView> {
         viewType: 'com.openmuse.dsh/webview',
         creationParams: {
           'url': widget.url.toString(),
+          'appearance': _appearance,
           if (ResourceLinkRouting.maybeOf(context) != null)
             'resourceReferenceScript': openMuseResourceReferenceScript,
           if (widget.activeMountPath != null)
@@ -365,8 +379,10 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
 
   @override
   Widget build(BuildContext context) {
-    if(!TickerMode.of(context)){
-      WidgetsBinding.instance.addPostFrameCallback((_){if(mounted)channel.invokeMethod<void>('hide');});
+    if (!TickerMode.of(context)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) channel.invokeMethod<void>('hide');
+      });
       return const SizedBox.expand();
     }
     _scheduleBounds();
@@ -403,7 +419,11 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
 
   void _scheduleBounds() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted || _error != null || DshNativeOverlay.obscured || !TickerMode.of(context)) return;
+      if (!mounted ||
+          _error != null ||
+          DshNativeOverlay.obscured ||
+          !TickerMode.of(context))
+        return;
       final box = context.findRenderObject() as RenderBox?;
       if (box == null ||
           !box.hasSize ||

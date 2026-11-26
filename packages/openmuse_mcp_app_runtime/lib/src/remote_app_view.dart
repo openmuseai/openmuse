@@ -26,12 +26,38 @@ class _RemoteMcpAppViewState extends State<RemoteMcpAppView> {
   MethodChannel? _channel;
   WebViewController? _web;
   String? _document, _failure;
+  String _theme = 'light', _locale = 'en';
   late final String _scope = widget.app.scope();
   @override
   void initState() {
     super.initState();
     widget.app.addListener(_scopeChanged);
     _start();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final theme = Theme.of(context).brightness == Brightness.dark
+        ? 'dark'
+        : 'light';
+    final locale =
+        Localizations.maybeLocaleOf(context)?.toLanguageTag() ?? 'en';
+    if (theme == _theme && locale == _locale) return;
+    _theme = theme;
+    _locale = locale;
+    _sendHostMessage({
+      '_hostContext': {'theme': theme, 'locale': locale},
+    });
+  }
+
+  void _sendHostMessage(Map<String, Object?> message) {
+    if (_channel != null)
+      unawaited(_channel!.invokeMethod<void>('message', message));
+    if (_web != null)
+      unawaited(
+        _web!.runJavaScript('window.__mcpHostReceive(${jsonEncode(message)})'),
+      );
   }
 
   Map<String, Object?> get _arguments => {
@@ -46,12 +72,7 @@ class _RemoteMcpAppViewState extends State<RemoteMcpAppView> {
       'method': 'ui/notifications/tool-input',
       'params': {'arguments': _arguments},
     };
-    if (_channel != null)
-      unawaited(_channel!.invokeMethod<void>('message', message));
-    if (_web != null)
-      unawaited(
-        _web!.runJavaScript('window.__mcpHostReceive(${jsonEncode(message)})'),
-      );
+    _sendHostMessage(message);
   }
 
   void _scopeChanged() {
@@ -78,6 +99,8 @@ class _RemoteMcpAppViewState extends State<RemoteMcpAppView> {
         appHtml: widget.app.html,
         arguments: _arguments,
         platform: Platform.isMacOS ? 'desktop' : 'mobile',
+        theme: _theme,
+        locale: _locale,
         serverAvailable: true,
         resourceLinksAvailable: ResourceLinkRouting.maybeOf(context) != null,
         nativeSend: Platform.isMacOS

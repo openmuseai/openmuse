@@ -90,12 +90,16 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
       ))
     }
     let webView = WKWebView(frame: .zero, configuration: configuration)
+    webView.appearance = NSAppearance(named: values["appearance"] as? String == "dark" ? .darkAqua : .aqua)
     webView.setValue(true, forKey: "drawsBackground")
     let navigation = DshNavigation(channel: channel)
     webView.navigationDelegate = navigation
     let host = DshWebHostView(webView: webView, navigation: navigation)
     channel.setMethodCallHandler { [weak webView] call, result in
       switch call.method {
+      case "setAppearance":
+        webView?.appearance = NSAppearance(named: call.arguments as? String == "dark" ? .darkAqua : .aqua)
+        result(nil)
       case "openSession":
         guard let sessionId = call.arguments as? String,
               let data = try? JSONSerialization.data(withJSONObject: [sessionId]),

@@ -59,6 +59,9 @@ final class OpenMuseWorkbench extends StatefulWidget {
 
 final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   static const _menuChannel = MethodChannel('com.openmuse.host/menu');
+  static const _navigationMenuChannel = MethodChannel(
+    'com.openmuse.host/navigation',
+  );
 
   bool get _macNativeChrome =>
       Platform.isMacOS &&
@@ -233,6 +236,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     _removeLegacyMarketPane();
     if (_macNativeChrome) {
       _menuChannel.setMethodCallHandler(_onMacMenu);
+      _navigationMenuChannel.setMethodCallHandler(_onMacMenu);
       _publishMacView(_view);
     }
   }
@@ -252,6 +256,7 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
     widget.resources?.controller.presentEditor = null;
     widget.workspace.interceptResourceOpen = null;
     if (_macNativeChrome) _menuChannel.setMethodCallHandler(null);
+    if (_macNativeChrome) _navigationMenuChannel.setMethodCallHandler(null);
     final shouldFlush = _saveDebounce?.isActive ?? false;
     _saveDebounce?.cancel();
     if (shouldFlush) _persistLayout();
@@ -1233,6 +1238,12 @@ final class _OpenMuseWorkbenchState extends State<OpenMuseWorkbench> {
   Future<void> _onMacMenu(MethodCall call) async {
     if (!mounted) return;
     switch (call.method) {
+      case 'toggleSidebar':
+        _navigation.toggle();
+      case 'showExplorer':
+        if (_navigation.selected != 'explorer') {
+          _navigation.select('explorer');
+        }
       case 'settings':
         _openLocalSettings(context);
       case 'terminal':
