@@ -1,5 +1,5 @@
 // Run the complete Host suite with explicit, digest-pinned local product inputs.
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -34,6 +34,17 @@ for (const input of config.inputs) {
 }
 const inherited = new Set(['HOME', 'PATH', 'TMPDIR', 'USER', 'LOGNAME', 'LANG', 'LC_ALL', 'SHELL']);
 const environment = { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => inherited.has(key))), ...config.environment };
+// Run owner/bridge contracts as well as the complete configured Host suite.
+const repository = fileURLToPath(new URL('../', import.meta.url));
+const bridgeTests = (await readdir(new URL('../third_party/dsh/plugins/openmuse-dsh-bridge/test/', import.meta.url)))
+  .filter(name => name.endsWith('.test.js')).map(name => 'third_party/dsh/plugins/openmuse-dsh-bridge/test/' + name);
+const contracts = spawn(process.execPath, ['--test', 'scripts/test_dsh_embedded_layout.mjs', ...bridgeTests], {
+  cwd: repository, env: environment, stdio: 'inherit',
+});
+const contractCode = await new Promise((resolve, reject) => {
+  contracts.on('error', reject); contracts.on('exit', resolve);
+});
+if (contractCode !== 0) process.exit(contractCode ?? 1);
 const child = spawn(option('--flutter') ?? 'flutter', ['test', '--no-pub', '--reporter', 'expanded'], {
   cwd: fileURLToPath(new URL('../app/openmuse_host/', import.meta.url)), env: environment, stdio: 'inherit',
 });

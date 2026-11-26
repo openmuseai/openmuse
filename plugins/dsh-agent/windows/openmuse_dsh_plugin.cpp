@@ -177,23 +177,6 @@ std::wstring JsonEscape(const std::wstring& value) {
   return out;
 }
 
-struct ChromeChildSearch {
-  HWND parent;
-  HWND found;
-};
-
-BOOL CALLBACK FindDirectChromeChild(HWND hwnd, LPARAM param) {
-  auto* search = reinterpret_cast<ChromeChildSearch*>(param);
-  if (::GetParent(hwnd) != search->parent) return TRUE;
-  wchar_t cls[64] = {};
-  ::GetClassNameW(hwnd, cls, 64);
-  if (wcsncmp(cls, L"Chrome_WidgetWin", 16) == 0) {
-    search->found = hwnd;
-    return FALSE;
-  }
-  return TRUE;
-}
-
 }  // namespace
 
 class DshView : public std::enable_shared_from_this<DshView> {
@@ -202,11 +185,13 @@ class DshView : public std::enable_shared_from_this<DshView> {
   // child windows. The WebView has to be a sibling of that view, parented
   // to the top-level frame, and kept above it.
   DshView(flutter::MethodChannel<flutter::EncodableValue>* channel,
-          HWND flutter_view)
+          HWND flutter_view, bool navigation)
       : channel_(channel),
         flutter_window_(flutter_view),
-        parent_(::GetAncestor(flutter_view, GA_ROOT)) {
+        parent_(::GetAncestor(flutter_view, GA_ROOT)), navigation_(navigation) {
     if (parent_ == nullptr) parent_ = flutter_view;
+    host_window_ = ::CreateWindowExW(0, L"STATIC", L"", WS_CHILD | WS_CLIPSIBLINGS,
+        0, 0, 1, 1, parent_, nullptr, ::GetModuleHandleW(nullptr), nullptr);
   }
 
   // Empty string means the view was accepted. Synchronous failures are
@@ -273,6 +258,15 @@ class DshView : public std::enable_shared_from_this<DshView> {
     }
   }
 
+  void SelectPanel(const std::wstring& encoded) {
+    if (desired_panel_ == encoded) return;
+    desired_panel_ = encoded;
+    if (webview_) {
+      const auto script = L"window.__OpenMuseDesiredPanel=" + encoded + L";window.OpenMuseDshWorkspace?.selectPanel(window.__OpenMuseDesiredPanel);";
+      webview_->ExecuteScript(script.c_str(), nullptr);
+    }
+  }
+
   void Close() {
     closed_ = true;
     if (controller_) {
@@ -281,6 +275,7 @@ class DshView : public std::enable_shared_from_this<DshView> {
     }
     webview_ = nullptr;
     environment_ = nullptr;
+    if (host_window_) { ::DestroyWindow(host_window_); host_window_ = nullptr; }
   }
 
  private:
@@ -317,13 +312,13 @@ class DshView : public std::enable_shared_from_this<DshView> {
   }
 
   void CreateController() {
-    if (!environment_ || parent_ == nullptr) {
+    if (!environment_ || host_window_ == nullptr) {
       Fail("无法创建 DSH WebView2");
       return;
     }
     const auto weak = weak_from_this();
     const HRESULT hr = environment_->CreateCoreWebView2Controller(
-        parent_,
+        host_window_,
         Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
             [weak](HRESULT result,
                    ICoreWebView2Controller* controller) -> HRESULT {
@@ -414,7 +409,7 @@ class DshView : public std::enable_shared_from_this<DshView> {
     if (too_long || payload.empty() || channel_ == nullptr) return;
     if (payload.find("clipboard.write") != std::string::npos) return;
     const char* method = "resourceOpen";
-    if (payload.find("\"workspace.activate\"") != std::string::npos) {
+    if (payload.find("\"workspace.activate\"") != std::string::npos || payload.find("\"navigation.activate\"") != std::string::npos) {
       method = "workspaceActivate";
     }
     channel_->InvokeMethod(
@@ -462,26 +457,22 @@ class DshView : public std::enable_shared_from_this<DshView> {
       ::MapWindowPoints(flutter_window_, parent_,
                         reinterpret_cast<POINT*>(&mapped), 2);
     }
-    controller_->put_Bounds(mapped);
+    ::SetWindowPos(host_window_, HWND_TOP, mapped.left, mapped.top,
+        mapped.right - mapped.left, mapped.bottom - mapped.top,
+        SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    RECT local{0, 0, mapped.right-mapped.left, mapped.bottom-mapped.top};
+    controller_->put_Bounds(local);
     RaiseAboveFlutter();
   }
 
   void RaiseAboveFlutter() {
-    if (parent_ == nullptr || hidden_) return;
-    ChromeChildSearch search{parent_, nullptr};
-    ::EnumChildWindows(parent_, FindDirectChromeChild,
-                       reinterpret_cast<LPARAM>(&search));
-    if (search.found == nullptr) return;
-    ::SetWindowPos(search.found, HWND_TOP, 0, 0, 0, 0,
-                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    if (!host_window_ || hidden_) return;
+    ::SetWindowPos(host_window_, HWND_TOP, 0, 0, 0, 0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
   }
 
   void HideChromeWindow() {
-    if (parent_ == nullptr) return;
-    ChromeChildSearch search{parent_, nullptr};
-    ::EnumChildWindows(parent_, FindDirectChromeChild,
-                       reinterpret_cast<LPARAM>(&search));
-    if (search.found != nullptr) ::ShowWindow(search.found, SW_HIDE);
+    if (host_window_) ::ShowWindow(host_window_, SW_HIDE);
   }
 
   void PushWorkspace() {
@@ -499,6 +490,8 @@ class DshView : public std::enable_shared_from_this<DshView> {
     std::wstring script = kBridgeScript;
     script += resource_reference_script_;
     script += kCompactSidebarScript;
+    script += navigation_ ? L"window.__OpenMuseDshPresentation='navigation';" : L"window.__OpenMuseDshPresentation='conversation';";
+    if (!desired_panel_.empty()) script += L"window.__OpenMuseDesiredPanel=" + desired_panel_ + L";";
     if (!desired_session_.empty()) script += L"window.__OpenMuseDesiredSession=\"" + JsonEscape(desired_session_) + L"\";";
     if (!desired_workspace_.empty()) {
       script += L"window.__OpenMuseDesiredWorkspace=\"" +
@@ -518,6 +511,9 @@ class DshView : public std::enable_shared_from_this<DshView> {
   flutter::MethodChannel<flutter::EncodableValue>* channel_;
   HWND flutter_window_;
   HWND parent_;
+  HWND host_window_ = nullptr;
+  bool navigation_;
+  std::wstring desired_panel_;
   std::wstring desired_workspace_;
   std::wstring desired_session_;
   ComPtr<ICoreWebView2Environment> environment_;
@@ -541,13 +537,14 @@ void OpenMuseDshWebViewPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows* registrar) {
   auto plugin = std::make_unique<OpenMuseDshWebViewPlugin>(registrar);
   registrar->AddPlugin(std::move(plugin));
+  registrar->AddPlugin(std::make_unique<OpenMuseDshWebViewPlugin>(registrar, true));
 }
 
 OpenMuseDshWebViewPlugin::OpenMuseDshWebViewPlugin(
-    flutter::PluginRegistrarWindows* registrar)
-    : registrar_(registrar) {
+    flutter::PluginRegistrarWindows* registrar, bool navigation)
+    : registrar_(registrar), navigation_(navigation) {
   channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-      registrar->messenger(), "com.openmuse.dsh/webview",
+      registrar->messenger(), navigation_ ? "com.openmuse.dsh/webview/navigation" : "com.openmuse.dsh/webview",
       &flutter::StandardMethodCodec::GetInstance());
   channel_->SetMethodCallHandler([this](const auto& call, auto result) {
     HandleMethodCall(call, std::move(result));
@@ -565,6 +562,12 @@ OpenMuseDshWebViewPlugin::~OpenMuseDshWebViewPlugin() {
 void OpenMuseDshWebViewPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue>& call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  if (call.method_name() == "dispose") {
+    if (view_) view_->Close();
+    view_.reset();
+    result->Success();
+    return;
+  }
   if (call.method_name() == "hide") {
     if (view_) view_->Hide();
     result->Success();
@@ -610,7 +613,7 @@ void OpenMuseDshWebViewPlugin::HandleMethodCall(
     return;
   }
   if (!view_) {
-    view_ = std::make_shared<DshView>(channel_.get(), parent);
+    view_ = std::make_shared<DshView>(channel_.get(), parent, navigation_);
   }
   const auto resource_script=arguments->find(flutter::EncodableValue("resourceReferenceScript"));
   if(resource_script!=arguments->end()) {
@@ -638,6 +641,12 @@ void OpenMuseDshWebViewPlugin::HandleMethodCall(
     if (const auto* id = std::get_if<std::string>(&session->second)) {
       if (!id->empty() && id->size() <= 256) view_->OpenSession(Utf16FromUtf8(*id));
     }
+  }
+  const auto panel = arguments->find(flutter::EncodableValue("panel"));
+  if (panel != arguments->end()) {
+    const auto* id = std::get_if<std::string>(&panel->second);
+    if (id == nullptr || id->size() <= 256)
+      view_->SelectPanel(id ? L"\"" + JsonEscape(Utf16FromUtf8(*id)) + L"\"" : L"null");
   }
   const std::string error = view_->Show(bounds, Utf16FromUtf8(*url));
   if (!error.empty()) {

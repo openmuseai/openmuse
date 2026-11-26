@@ -28,6 +28,7 @@ void main() {
       addTearDown(navigation.dispose);
       addTearDown(layout.dispose);
       int mounts = 0, disposed = 0;
+      int sidebarMounts = 0, sidebarDisposals = 0;
       bool workspace = false;
       final text = TextEditingController();
       addTearDown(text.dispose);
@@ -48,7 +49,11 @@ void main() {
                     id: 'ci',
                     title: 'Muse-CI',
                     icon: 'ci',
-                    sidebar: (_) => const Text('CI project catalog'),
+                    sidebar: (_) => _Probe(
+                      onMount: () => sidebarMounts++,
+                      onDispose: () => sidebarDisposals++,
+                      child: const Text('CI project catalog'),
+                    ),
                   ),
                 ],
                 explorer: const Text('Real Explorer slot'),
@@ -98,6 +103,22 @@ void main() {
       expect(find.text('CI project catalog'), findsOneWidget);
       expect(find.text('Session catalog'), findsNothing);
       expect(tester.getTopLeft(agent).dx, before);
+      await tester.tap(find.byKey(const ValueKey('activity-explorer')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('activity-ci')));
+      await tester.pump();
+      for (var i = 0; i < 5; i++) {
+        await tester.tap(find.byKey(const ValueKey('activity-ci')));
+        await tester.pump();
+        await tester.tap(find.byKey(const ValueKey('activity-ci')));
+        await tester.pump();
+      }
+      expect(
+        sidebarMounts,
+        1,
+        reason: 'Toggling must not initialize plugin UI again',
+      );
+      expect(sidebarDisposals, 0);
       await tester.tap(find.byKey(const ValueKey('activity-ci')));
       await tester.pump();
       expect(find.byKey(const ValueKey('desktop-sidebar')), findsNothing);

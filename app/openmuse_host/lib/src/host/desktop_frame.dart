@@ -257,76 +257,80 @@ final class DesktopFrame extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (visible)
-                            SizedBox(
-                              key: const ValueKey('desktop-sidebar'),
-                              width: width,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    right: BorderSide(
-                                      color: theme.dividerColor,
+                          Offstage(
+                            offstage: !visible,
+                            child: TickerMode(
+                              enabled: visible,
+                              child: SizedBox(
+                                key: const ValueKey('desktop-sidebar'),
+                                width: width,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      right: BorderSide(
+                                        color: theme.dividerColor,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                child: Material(
-                                  color: side,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      SizedBox(
-                                        height: 38,
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  navigation.selected ==
-                                                          'explorer'
-                                                      ? 'Explorer'
-                                                      : selected!.title,
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w600,
+                                  child: Material(
+                                    color: side,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        SizedBox(
+                                          height: 38,
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    navigation.selected ==
+                                                            'explorer'
+                                                        ? 'Explorer'
+                                                        : selected?.title ??
+                                                              'Explorer',
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                              if (selected?.onOpenWorkspace !=
-                                                  null)
-                                                IconButton(
-                                                  tooltip: _zh(context)
-                                                      ? '打开工作区'
-                                                      : 'Open workspace',
-                                                  icon: const DesktopIcon(
-                                                    'arrowout',
-                                                    size: 16,
+                                                if (selected?.onOpenWorkspace !=
+                                                    null)
+                                                  IconButton(
+                                                    tooltip: _zh(context)
+                                                        ? '打开工作区'
+                                                        : 'Open workspace',
+                                                    icon: const DesktopIcon(
+                                                      'arrowout',
+                                                      size: 16,
+                                                    ),
+                                                    onPressed: selected!
+                                                        .onOpenWorkspace,
                                                   ),
-                                                  onPressed:
-                                                      selected!.onOpenWorkspace,
-                                                ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      Expanded(
-                                        child: navigation.selected == 'explorer'
-                                            ? explorer
-                                            : KeyedSubtree(
-                                                key: ValueKey(selected!.id),
-                                                child: Builder(
-                                                  builder: selected.sidebar,
-                                                ),
-                                              ),
-                                      ),
-                                    ],
+                                        Expanded(
+                                          child: _DesktopSidebarDeck(
+                                            selected: navigation.selected,
+                                            explorer: explorer,
+                                            items: items,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
+                          ),
                           Expanded(child: content),
                         ],
                       ),
@@ -446,6 +450,54 @@ final class DesktopFrame extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Retain only visited contributors. Hiding/switching never reboots a plugin UI;
+/// uninstalling removes its keyed subtree and releases its resources.
+final class _DesktopSidebarDeck extends StatefulWidget {
+  const _DesktopSidebarDeck({
+    required this.selected,
+    required this.explorer,
+    required this.items,
+  });
+  final String? selected;
+  final Widget explorer;
+  final List<OpenMuseNavigationItem> items;
+  @override
+  State<_DesktopSidebarDeck> createState() => _DesktopSidebarDeckState();
+}
+
+final class _DesktopSidebarDeckState extends State<_DesktopSidebarDeck> {
+  final Set<String> _visited = {};
+  @override
+  Widget build(BuildContext context) {
+    final available = {'explorer', ...widget.items.map((item) => item.id)};
+    _visited.removeWhere((id) => !available.contains(id));
+    if (widget.selected != null && available.contains(widget.selected))
+      _visited.add(widget.selected!);
+    final ids = _visited.toList();
+    return Stack(
+      children: [
+        for (final id in ids)
+          Positioned.fill(
+            key: ValueKey(id),
+            child: Offstage(
+              offstage: id != widget.selected,
+              child: TickerMode(
+                enabled: id == widget.selected,
+                child: id == 'explorer'
+                    ? widget.explorer
+                    : Builder(
+                        builder: widget.items
+                            .firstWhere((item) => item.id == id)
+                            .sidebar,
+                      ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -7,13 +7,17 @@
     "@openmuse/dsh-workspace-runtime": "file:tarballs/openmuse-dsh-workspace-runtime-0.1.1.tgz",
     "dsh-model-capabilities": "file:tarballs/dsh-model-capabilities-0.5.0-openmuse.4.tgz",
     "dshmarket": "file:tarballs/dshmarket-1.66.9.tgz",
-    "openmuse-dsh-bridge": "file:tarballs/openmuse-dsh-bridge-0.1.27.tgz",
+    "openmuse-dsh-bridge": "file:tarballs/openmuse-dsh-bridge-0.1.29.tgz",
     "pnpm": "10.34.1",
     "@openmuse/code-navigation-service": "file:tarballs/openmuse-code-navigation-service-0.1.1.tgz",
     "@openmuse/code-navigation-manager": "file:tarballs/openmuse-code-navigation-manager-0.1.2.tgz",
-    "@deepseek-ai/dsh-client-ui-layout": "file:tarballs/deepseek-ai-dsh-client-ui-layout-0.2.0-rc.2-openmuse.1.tgz"
+    "@deepseek-ai/dsh-client-ui-layout": "file:tarballs/deepseek-ai-dsh-client-ui-layout-0.2.0-rc.2-openmuse.3.tgz",
+    "@deepseek-ai/dsh-client-ui-sidebar": "file:tarballs/deepseek-ai-dsh-client-ui-sidebar-0.2.0-rc.2-openmuse.1.tgz",
+    "@deepseek-ai/dsh-client-ui-settings-general": "file:tarballs/deepseek-ai-dsh-client-ui-settings-general-0.2.0-rc.2-openmuse.1.tgz"
   },
   "overrides": {
-    "@deepseek-ai/dsh-client-ui-layout": "$@deepseek-ai/dsh-client-ui-layout"
+    "@deepseek-ai/dsh-client-ui-layout": "$@deepseek-ai/dsh-client-ui-layout",
+    "@deepseek-ai/dsh-client-ui-sidebar": "$@deepseek-ai/dsh-client-ui-sidebar",
+    "@deepseek-ai/dsh-client-ui-settings-general": "$@deepseek-ai/dsh-client-ui-settings-general"
   }
 }

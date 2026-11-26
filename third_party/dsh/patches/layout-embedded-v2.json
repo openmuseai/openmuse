@@ -1,0 +1,111 @@
+[
+  {
+    "schema": "openmuse.vendor-patch/2",
+    "upstream": "@deepseek-ai/dsh-client-ui-layout@0.2.0-rc.2",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+      "directory": "packages/client/ui-layout"
+    },
+    "license": "MIT",
+    "upstreamArchiveSha256": "403c3ee38c258c121752ab0ba6f7ab980958517d7af982967864a6963037fdfb",
+    "sourceClientSha256": "587d109681891295aed5bf0a4b1ca7c005113124be5b043246f09fccce47f492",
+    "patchedClientSha256": "9bd7f0acf379a74acd3f45ebb3eaee24a18d65339c0d1f50690f07b1483c2691",
+    "patches": [
+      [
+        "const sidebarCollapsed = narrow ? !layoutInfo.narrowExpanded : layoutInfo.sidebar === 0;",
+        "const hostNavigation = window.__OpenMuseHostNavigation === 1;\nconst hostSidebar = hostNavigation && window.__OpenMuseDshPresentation === \"navigation\";\nconst sidebarCollapsed = hostNavigation || (narrow ? !layoutInfo.narrowExpanded : layoutInfo.sidebar === 0);"
+      ],
+      [
+        "const collapsedWidth = darwin || document.documentElement.hasAttribute(\"data-windows-titlebar\") ? 0 : 56;",
+        "const collapsedWidth = hostNavigation || darwin || document.documentElement.hasAttribute(\"data-windows-titlebar\") ? 0 : 56;"
+      ],
+      [
+        "() => renderSlot(\"sidebar\", {\n\t\t\t\tcollapsed: sidebarCollapsed,\n\t\t\t\twidth: cols.sidebar",
+        "() => hostNavigation && !hostSidebar ? null : renderSlot(\"sidebar\", {\ncollapsed: hostSidebar ? false : sidebarCollapsed,\nwidth: hostSidebar ? viewport : cols.sidebar"
+      ],
+      [
+        "\t\t\t\tcols.sidebar\n\t\t\t]);",
+        "\t\t\t\tcols.sidebar, viewport\n\t\t\t]);"
+      ],
+      [
+        "const leadingMounted = darwin && sidebarCollapsed;",
+        "const toolbar = (0, react.useMemo)(() => hostNavigation && !hostSidebar ? renderSlot(\"sidebar\", {collapsed:true,width:viewport,toolbar:true}) : null, [renderSlot,viewport]);\nconst leadingMounted = !hostNavigation && darwin && sidebarCollapsed;\nif (hostSidebar) return (0,react_jsx_runtime.jsxs)(\"div\",{ref:frameRef,style:{height:\"100%\",width:\"100%\",position:\"relative\",overflow:\"hidden\"},\"data-openmuse-dsh-navigation\":true,children:[sidebar,overlays]});"
+      ],
+      [
+        "(0, react_jsx_runtime.jsx)(CenterColumn, { children: main })",
+        "(0, react_jsx_runtime.jsx)(CenterColumn, { children: (0,react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment,{children:[toolbar,main]}) })"
+      ]
+    ],
+    "file": "deepseek-ai-dsh-client-ui-layout-0.2.0-rc.2-openmuse.3.tgz",
+    "sha256": "a0f14d618a84e1088a5a80ef4d93dfb7aee261f6e7b2a837d2216d51bdff8afc",
+    "flags": [
+      "window.__OpenMuseHostNavigation === 1",
+      "window.__OpenMuseDshPresentation === \"navigation\""
+    ],
+    "default": "Unchanged standalone DSH",
+    "architecture": "ADR-07 / AC-13–14"
+  },
+  {
+    "schema": "openmuse.vendor-patch/2",
+    "upstream": "@deepseek-ai/dsh-client-ui-sidebar@0.2.0-rc.2",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+      "directory": "packages/client/ui-sidebar"
+    },
+    "license": "MIT",
+    "upstreamArchiveSha256": "5476ce59f5bbcfee3bee5930ea5db2bc671b2b77bd0ffa51c94d48e5330e4e7a",
+    "sourceClientSha256": "88d7e6d2f65350a62f1d97d0ce9be34643c73e9825243ae9307dae55094896a2",
+    "patchedClientSha256": "c6f82034586bff804b9ea7cd9a7aa9cfa675d1d78eb647b0b6281d7558c639b0",
+    "patches": [
+      [
+        "function SidebarRoot({ collapsed, width,",
+        "function SidebarRoot({ toolbar = false, collapsed, width,"
+      ],
+      [
+        "const toggle = (0, react_jsx_runtime.jsx)",
+        "if (toolbar) return (0, react_jsx_runtime.jsxs)(\"div\", {\n  \"data-openmuse-dsh-toolbar\": true,\n  style: {display:\"flex\",alignItems:\"center\",gap:8,height:44,minHeight:44,padding:\"4px 38px 4px 10px\",boxSizing:\"border-box\",borderBottom:\".5px solid var(--dsw-alias-border-l3)\",overflowX:\"auto\"},\n  children: [\n    (0, react_jsx_runtime.jsx)(\"div\", {style:{display:\"flex\",flexShrink:0},children:renderSlot(\"sidebar.settings\",{wide:false})}),\n    renderSlot(\"sidebar.brand.mark\",{size:24},{fallback:(0,react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.FishLogo,{size:24})}),\n    (0,react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip,{label:t(\"session.new.label\"),children:(0,react_jsx_runtime.jsx)(\"button\",{type:\"button\",className:SidebarRoot_module_css_default.iconButton,\"aria-label\":t(\"session.new.label\"),onClick:()=>startSession(),children:(0,react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconNewChatOutlineRegular,{size:18})})}),\n    ...panels.map(({id,label})=>(0,react_jsx_runtime.jsx)(PanelRow,{id,label,wide:false,usePanelInfo,selectPanel,renderSlot},id)),\n    (0,react_jsx_runtime.jsx)(\"div\",{style:{display:\"flex\",flexShrink:0},children:renderSlot(\"sidebar.footer.action\",{wide:false})})\n  ]\n});\nconst toggle = window.__OpenMuseHostNavigation === 1 ? null : (0, react_jsx_runtime.jsx)"
+      ],
+      [
+        "darwinDesktop && (0, react_jsx_runtime.jsx)(\"div\", {",
+        "darwinDesktop && window.__OpenMuseHostNavigation !== 1 && (0, react_jsx_runtime.jsx)(\"div\", {"
+      ]
+    ],
+    "file": "deepseek-ai-dsh-client-ui-sidebar-0.2.0-rc.2-openmuse.1.tgz",
+    "sha256": "428a6370fe6dc4025633817b41e543abeb3a6995ce970955f6471e56760aceff",
+    "flags": [
+      "window.__OpenMuseHostNavigation === 1",
+      "window.__OpenMuseDshPresentation === \"navigation\""
+    ],
+    "default": "Unchanged standalone DSH",
+    "architecture": "ADR-07 / AC-13–14"
+  },
+  {
+    "schema": "openmuse.vendor-patch/2",
+    "upstream": "@deepseek-ai/dsh-client-ui-settings-general@0.2.0-rc.2",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+      "directory": "packages/client/ui-settings-general"
+    },
+    "license": "MIT",
+    "upstreamArchiveSha256": "77408b888afbc88226ebd9337ab209c434c784a89e5360ec5f22ea9ae2db439b",
+    "sourceClientSha256": "e91fd0db8ffea4646a5ec4aaceb6ddaa62ff727e0f698ef75858a4a18df30460",
+    "patchedClientSha256": "187f13e922936bd365115aff7392f0e7e38f854cbebe78318f32f09e37344dc6",
+    "patches": [
+      [
+        "const onboardingActive = useSessions((state) => {",
+        "const onboardingActive = useSessions((state) => {\nif (window.__OpenMuseHostNavigation === 1 && window.__OpenMuseDshPresentation === \"navigation\") return false;"
+      ]
+    ],
+    "file": "deepseek-ai-dsh-client-ui-settings-general-0.2.0-rc.2-openmuse.1.tgz",
+    "sha256": "9cff68676086a2cbd2ca6cfd9641891f4fe17808e43721a98dcb125d5122166e",
+    "flags": [
+      "window.__OpenMuseHostNavigation === 1",
+      "window.__OpenMuseDshPresentation === \"navigation\""
+    ],
+    "default": "Unchanged standalone DSH",
+    "architecture": "ADR-07 / AC-13–14"
+  }
+]

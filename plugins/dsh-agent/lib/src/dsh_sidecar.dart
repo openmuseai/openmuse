@@ -46,6 +46,16 @@ final class DshSidecarSupervisor extends ChangeNotifier {
   final List<String> logTail = [];
   Directory? _resourcePatchDirectory;
   final ValueNotifier<String?> requestedSession = ValueNotifier(null);
+  final ValueNotifier<String?> requestedPanel = ValueNotifier(null);
+  void selectNavigation(String kind, String? id) {
+    if (!aiSharingAllowed) return;
+    if (kind == 'session' && id != null) {
+      requestedPanel.value = null;
+      requestedSession.value = id;
+    } else if (kind == 'panel') {
+      requestedPanel.value = id;
+    }
+  }
 
   String? get cliPath => resolveDshRuntime(
     executablePath: Platform.resolvedExecutable,

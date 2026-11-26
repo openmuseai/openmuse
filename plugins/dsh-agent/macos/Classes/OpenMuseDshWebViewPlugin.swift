@@ -10,6 +10,9 @@ public final class OpenMuseDshWebViewPlugin: NSObject, FlutterPlugin {
 
 final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
   private let messenger: FlutterBinaryMessenger
+  // Share the same DSH origin's cookies/preferences between its two seats.
+  // Separate ports still have isolated jars (cookies do not scope by port).
+  private var dataStores: [String: WKWebsiteDataStore] = [:]
 
   init(messenger: FlutterBinaryMessenger) {
     self.messenger = messenger
@@ -19,7 +22,6 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
     let configuration = WKWebViewConfiguration()
     // Cookie scope excludes ports. A shared localhost jar accumulates a cookie
     // for every DSH ephemeral port until Node rejects its header with HTTP 431.
-    configuration.websiteDataStore = .nonPersistent()
     guard
       let values = args as? [String: Any],
       let raw = values["url"] as? String,
@@ -32,6 +34,11 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
       webView.loadHTMLString("<p>Invalid DSH loopback URL</p>", baseURL: nil)
       return webView
     }
+    let store = dataStores[raw] ?? WKWebsiteDataStore.nonPersistent()
+    // A new authenticated sidecar launch has a fresh bootstrap URL. Drop the
+    // previous cache entry; existing views retain their own configuration.
+    dataStores = [raw: store]
+    configuration.websiteDataStore = store
     let channel = FlutterMethodChannel(
       name: "com.openmuse.dsh/webview/\(viewId)",
       binaryMessenger: messenger
@@ -80,6 +87,11 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
       injectionTime: .atDocumentStart,
       forMainFrameOnly: true
     ))
+    configuration.userContentController.addUserScript(WKUserScript(
+      source: "window.__OpenMuseDshPresentation = \(values["presentation"] as? String == "navigation" ? "\"navigation\"" : "\"conversation\"");",
+      injectionTime: .atDocumentStart,
+      forMainFrameOnly: true
+    ))
     if let path = values["activeMountPath"] as? String,
        let data = try? JSONSerialization.data(withJSONObject: [path]),
        let json = String(data: data, encoding: .utf8) {
@@ -97,6 +109,13 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
     let host = DshWebHostView(webView: webView, navigation: navigation)
     channel.setMethodCallHandler { [weak webView] call, result in
       switch call.method {
+      case "selectPanel":
+        let panel = call.arguments as? String
+        guard panel == nil || panel!.utf8.count <= 256,
+              let data = try? JSONSerialization.data(withJSONObject: [panel as Any? ?? NSNull()]),
+              let json = String(data: data, encoding: .utf8) else { result(FlutterMethodNotImplemented); return }
+        webView?.evaluateJavaScript("window.__OpenMuseDesiredPanel = \(json)[0]; window.OpenMuseDshWorkspace?.selectPanel(window.__OpenMuseDesiredPanel);")
+        result(nil)
       case "setAppearance":
         webView?.appearance = NSAppearance(named: call.arguments as? String == "dark" ? .darkAqua : .aqua)
         result(nil)

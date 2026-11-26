@@ -27,7 +27,7 @@ test('DSH file-address click goes to Host, non-file resources remain in DSH', as
   const window = {
     __ModuleLoader__: { load: (value) => { module = value.factory(); } },
     MuseHostResource: { postMessage: (value) => messages.push(JSON.parse(value)) },
-    MuseHostWorkspace: { postMessage: (value) => workspaceMessages.push(JSON.parse(value)) },
+    MuseHostWorkspace: { postMessage: (value) => { const message=JSON.parse(value); if(message.type==='workspace.activate')workspaceMessages.push(message); } },
     MuseHostClipboard: { postMessage: (value) => clipboardMessages.push(JSON.parse(value)) },
     getSelection: () => ({ toString: () => selection }),
     addEventListener: (name, handler) => events.set(name, handler),
@@ -100,4 +100,18 @@ test('DSH file-address click goes to Host, non-file resources remain in DSH', as
     stopImmediatePropagation: () => {},
   });
   assert.equal(prevented, false, 'editing inputs must retain their native copy behavior');
+});
+
+test('original sidebar selection synchronizes UI only, suppresses Host echoes and releases subscriptions', async () => {
+  let module, selected, disposed=false;const messages=[],effects=[];
+  const window={__OpenMuseDshPresentation:'navigation',__ModuleLoader__:{load(v){module=v.factory();}},MuseHostWorkspace:{postMessage(raw){messages.push(JSON.parse(raw));}}};
+  const ctx={sidebarRight:{openResource(){}},sessions:{refresh:async()=>{},list:{getSnapshot:()=>({byId:{s1:{cwd:'/w'}}})}},uiWorkspace:{mainReference:undefined,selection:{subscribe(fn){selected=fn;return()=>{disposed=true;};}},openWorkspace(){},openSession(id){this.mainReference={sessionId:id};selected?.();}},layout:{selectPanel(){}},workspaces:{list:{getSnapshot:()=>({items:[]}),subscribe:()=>()=>{}}},effect(fn){effects.push(fn());}};
+  runInNewContext(readFileSync(new URL('../lib/client.js',import.meta.url),'utf8'),{window,document:{}});module.apply(ctx);
+  ctx.uiWorkspace.openSession('s1');
+  assert.ok(messages.some(v=>v.type==='navigation.activate'&&v.kind==='session'&&v.sessionId==='s1'));
+  ctx.layout.selectPanel('settings');
+  assert.deepEqual(messages.at(-1),{type:'navigation.activate',kind:'panel',panelId:'settings'});
+  const count=messages.length;await window.OpenMuseDshWorkspace.openSession('s2');window.OpenMuseDshWorkspace.selectPanel(null);
+  assert.equal(messages.length,count,'Host projection must not echo a second selection or prompt');
+  effects.reverse().forEach(fn=>fn?.());assert.equal(disposed,true);
 });
