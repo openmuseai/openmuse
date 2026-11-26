@@ -1,0 +1,204 @@
+{
+  "recordedAt": "2026-11-26T09:09:23.852Z",
+  "sources": [
+    {
+      "name": "Desktop",
+      "directory": "/Users/mac/src/openmuse-io/Muse-Desktop-Layout",
+      "branch": "muse/desktop-plugin-layout",
+      "base": "b35524337d3c878403ac8d090abf385b423ff0e5",
+      "head": "4eb4a78bdcdbf08ea9cffa18103122c7ccb04b90"
+    },
+    {
+      "name": "Muse-CI",
+      "directory": "/Users/mac/src/openmuse-io/Muse-CI-Desktop-Layout",
+      "branch": "muse/desktop-ci-sidebar",
+      "base": "f156d540d1273000d901d73e387cc44d66069c42",
+      "head": "1432e08595f9f60a118febd225d7855b138205ec"
+    },
+    {
+      "name": "Repository Review",
+      "directory": "/Users/mac/src/openmuse-io/Muse-Repository-Review",
+      "branch": "muse/desktop-navigation",
+      "base": "151e73aaab1a13a977c3b4b233fb6903c76177f3",
+      "head": "757ef4c28027863a4e4b4342205417658f310ea3"
+    }
+  ],
+  "logs": [
+    {
+      "name": "完整配置回归",
+      "file": "/tmp/desktop-first-open-final-regression.log",
+      "result": "28 Node contracts + 183 Flutter pass / 5 baseline skip",
+      "exitCode": 0,
+      "sha256": "e912223c6fd7cd1ec512c4e6aa2d7f1c9a7c6ce7cae5157eb96858e943872486",
+      "finishedAt": "2026-11-26T09:07:45.481Z"
+    },
+    {
+      "name": "原组件契约",
+      "file": "/tmp/desktop-dsh-owner-tests.log",
+      "result": "4 pass",
+      "exitCode": 0,
+      "sha256": "82ed983455e9fbd31dc17fae57bef1e701939df564423c74b8d4f6398131143b",
+      "finishedAt": "2026-11-26T07:57:48.380Z"
+    },
+    {
+      "name": "切栏与授权回归",
+      "file": "/tmp/desktop-dsh-retention-test.log",
+      "result": "8 pass",
+      "exitCode": 0,
+      "sha256": "eb46cdc22dcfb5122aac21de42d5fd3510958b42e40774410d5256cdb975d481",
+      "finishedAt": "2026-11-26T07:55:09.197Z"
+    },
+    {
+      "name": "CI完整检查",
+      "file": "/tmp/desktop-ci-final-check-v2.log",
+      "result": "39 plugin + 2 project-view tests + tsc + build pass",
+      "exitCode": 0,
+      "sha256": "d69fabe4f849ca11dd584f6457ff25f3c6102a71324065ede5575c0f9d00d268",
+      "finishedAt": "2026-11-26T08:57:27.849Z"
+    },
+    {
+      "name": "Review完整检查",
+      "file": "/tmp/desktop-review-theme-final-check.log",
+      "result": "15 tests + tsc + build pass",
+      "exitCode": 0,
+      "sha256": "59134d58bcf8fd70d51755cc1e8318dbea2214f7444afd77c710a6b909813349",
+      "finishedAt": "2026-11-26T07:37:03.540Z"
+    },
+    {
+      "name": "最终HEAD macOS构建",
+      "file": "/tmp/desktop-first-open-final-build.log",
+      "result": "debug app built; signed isolated QA launched",
+      "exitCode": 0,
+      "sha256": "5678e769fcaf020699346dbd4fe1248874887cf87100491b395505fdb5b64288",
+      "finishedAt": "2026-11-26T09:08:30.217Z"
+    }
+  ],
+  "native": {
+    "executedAt": "2026-11-26T08:01:42.474Z",
+    "platform": "macOS native signed QA",
+    "cycles": 5,
+    "promptCount": 0,
+    "queryRetained": true,
+    "draftRetained": true,
+    "explorerRoundTrip": true,
+    "modelSendClicked": false,
+    "narrowWindowWidth": 720,
+    "narrowSegmentDraftRetained": true,
+    "desktopCiProjectAndVersionLoaded": true,
+    "ciProjectProjection": {
+      "projectId": "6b4a278c761e1f2e5640b574cfc78fd8",
+      "sourceBytes": 23498486,
+      "viewBytes": 1630092,
+      "sourceUnchanged": true,
+      "allInputContentOmitted": true
+    },
+    "finalInlineDocumentVisual": "PASS: final client 21d7be37; actual Desktop draft-desktop-layout architecture SmartDoc opened directly from plugin sidebar in right workspace; Agent Chinese/English pasted draft retained; no tab workaround",
+    "restoredFocusedPluginWorkspace": true,
+    "finalVerificationAt": "2026-11-26T09:09:23.852Z",
+    "firstOpenAndFiveCycles": {
+      "verifiedAt": "2026-11-26T09:07:19.199Z",
+      "bridgeVersion": "0.1.30",
+      "firstOpenDraftRetained": true,
+      "cycles": [
+        {
+          "cycle": 1,
+          "draft": true,
+          "query": true,
+          "apiKeyPrompt": false
+        },
+        {
+          "cycle": 2,
+          "draft": true,
+          "query": true,
+          "apiKeyPrompt": false
+        },
+        {
+          "cycle": 3,
+          "draft": true,
+          "query": true,
+          "apiKeyPrompt": false
+        },
+        {
+          "cycle": 4,
+          "draft": true,
+          "query": true,
+          "apiKeyPrompt": false
+        },
+        {
+          "cycle": 5,
+          "draft": true,
+          "query": true,
+          "apiKeyPrompt": false
+        }
+      ],
+      "modelSendClicked": false
+    }
+  },
+  "screenshot": {
+    "path": "/tmp/openmuse-desktop-layout-e2e/evidence/10-dsh-five-toggles-retained.png",
+    "sha256": "47689f358978e8148ec4a7fe9ebb8a6f084fd189b9e3ffd7495b1f8ab78ae48c"
+  },
+  "design": {
+    "approvedR5": "5c4ca47ed417144f1a1434d027fab7c19e5be1467b68c23574a6694cc18bba9f",
+    "correction": {
+      "recordedAt": "2026-11-26T07:41:24.886Z",
+      "pins": [
+        {
+          "id": "cc575250-b839-4bfc-b1f5-fa1e2165ac31",
+          "revision": 6,
+          "sha256": "85c6f0ea74844f86cf3eaf9a969740ad200799c3ce82bdec0daae69f92cdc33a"
+        },
+        {
+          "id": "d20ccd54-f6fd-41c7-99de-7be180eeb374",
+          "revision": 5,
+          "sha256": "8fb9b8875f0f28a57a3f8f5cf7ff64a08d7efc2bedf662208a5264a245eedc43"
+        },
+        {
+          "id": "c70bedc5-1fbc-45bc-8a20-cc61a5668f0a",
+          "revision": 4,
+          "sha256": "cf9a4452cf838e28de727d39920907ec4c2eee80192d42703479759666df0a13"
+        }
+      ],
+      "asset": {
+        "kind": "attachment",
+        "name": "A-03 · DSH原Sidebar与顶部配置栏迁位.html",
+        "sha256": "a61bbe4821103a4f5b2fd65c3390f42bf30c84dfab85586cdd8ef30fa5e1e038",
+        "size": 1353,
+        "type": "text/html"
+      }
+    }
+  },
+  "closedDefects": [
+    "DSH扁平简化列表已替换为原SidebarRoot+workspace插件",
+    "恢复原顶部设置/品牌/新建/插件贡献，移除内层toggle",
+    "侧栏在切栏时重新初始化：visited keyed deck保留实例；原生连续5次无API key弹窗，搜索与草稿保留",
+    "Review/CI明确使用Host theme和locale，切换不重载iframe",
+    "既有全量测试缺输入与account ABA断言已按真实契约修复，固定输入全套183 pass",
+    "CI原生项目选择被实时重绘打断：聚焦select期间保留DOM，新增回归通过",
+    "CI历史输入内联造成16MB响应：复用原元数据投影降到3.8MB，源数据摘要未改变，不放宽Host预算",
+    "Desktop文档明确使用既有本地SmartDoc reader，不自动连接云端；单测验证只调用文档读取",
+    "恢复布局初始已聚焦插件未呈现：初始化采纳持久化焦点，Widget幂等reveal和原生重启/文档打开通过",
+    "CI run.documentReferences.pin含完整历史正文：复用元数据投影，当前23.5MB源数据降为1.6MB视图，历史正文不变、按需可读，回归通过",
+    "恢复布局初始已聚焦插件未呈现：初始化采纳持久化焦点，Widget幂等reveal和原生重启/文档打开通过",
+    "CI run.documentReferences.pin含完整历史正文：复用元数据投影，当前23.5MB源数据降为1.6MB视图，历史正文不变、按需可读，回归通过",
+    "首次打开侧栏时历史选择覆盖未发送草稿：navigation只发布原侧栏真实交互的选择，初始化恢复不得投影至主区；0.1.30原生首次打开+连续5轮全部保持草稿/搜索，无API key提示，主动选会话仍同步。"
+  ],
+  "limitations": [
+    "Windows/Linux原生编译和设备验证未执行",
+    "触屏44px和延迟分位数未实测",
+    "真实已授权共享目录数据集未提供；空态原生与插件消费者权限/路由契约已验",
+    "未发送模型消息；未用真实模型完成任务",
+    "真实IME组合过程未测；原生中文/英文粘贴保留通过，不能替代IME结论",
+    "真实IME组合过程未测；原生中文/英文粘贴保留通过，不能替代IME结论"
+  ],
+  "status": "Mac native feature scope verified; ready for stacked draft MR review; not release approval",
+  "finalScreenshot": {
+    "path": "/tmp/openmuse-desktop-layout-e2e/evidence/15-first-open-and-five-toggles.png",
+    "sha256": "67baad3becb8dc8ae092aee26e99d8ca251ac99258dad89c7c08ad52630597f2"
+  },
+  "previousInlineScreenshot": {
+    "path": "/tmp/openmuse-desktop-layout-e2e/evidence/14-final-focus-and-inline-architecture.png",
+    "sha256": "abc93d24b39afaab64592d6ff2895bdbf44c555852fcea3c323426294324214e"
+  },
+  "scope": "Raw runtime evidence at implementation commit 4eb4a78b; canonical reports and platform limitations remain in Muse-CI. Screenshot14 used unchanged native Flutter code at21d7be37; screenshot15 used bridge0.1.30 at4eb4a78b."
+}
