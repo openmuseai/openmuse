@@ -149,119 +149,8 @@ constexpr wchar_t kBridgeScript[] =
     L"{type:'clipboard.write',text:selected}));"
     L"event.preventDefault();event.stopImmediatePropagation();},true);";
 
-// Keep in sync with OpenMuseDshWebViewPlugin.swift DshCompactSidebarStyle.
-// The embedded DSH icon rail is always a top strip. Class hashes are pinned
-// against DSH 0.2.0-rc.2.
-constexpr wchar_t kCompactSidebarScript[] =
-    LR"JS((function() {
-    const STYLE_ID = 'openmuse-dsh-compact-sidebar';
-    const CSS = `
-      .pI_x6G_frame[data-sidebar-collapsed] {
-        grid-template-rows: 52px minmax(0,1fr) !important;
-        grid-template-columns: minmax(0,1fr) 0 0 !important;
-      }
-      .pI_x6G_frame[data-sidebar-collapsed]:not([data-rightbar-collapsed]) {
-        grid-template-columns: minmax(0,1fr) 0 minmax(0,45vw) !important;
-      }
-      .pI_x6G_frame[data-sidebar-collapsed] .pI_x6G_sidebarCol {
-        grid-area: 1/1/2/-1 !important;
-        border-right: none !important;
-        border-bottom: .5px solid var(--dsw-alias-border-l3,#ececf0);
-        min-height: 52px; max-height: 52px; overflow: hidden;
-      }
-      .pI_x6G_frame[data-sidebar-collapsed] .pI_x6G_centerCol {
-        grid-area: 2/1/3/2 !important;
-      }
-      .pI_x6G_frame[data-sidebar-collapsed] .pI_x6G_rightbarCol {
-        grid-area: 2/3/3/4 !important;
-      }
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_root {
-        flex-direction: row !important; align-items: center !important;
-        padding: 8px 40px 8px 10px !important; height: 52px !important;
-        max-height: 52px !important; gap: 4px; width: 100%;
-      }
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_topStrip,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_regionArea,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_brandName,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_fallbackBrandName,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_localBuildBrand,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_newSessionLabel {
-        display: none !important;
-      }
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_logoRow,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_newSession {
-        margin: 0 !important; height: 36px !important; width: 36px !important;
-      }
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_panelList,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_footArea,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_footerActions,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_settingsArea {
-        flex-direction: row !important; margin: 0 !important;
-        width: auto !important; gap: 4px !important;
-      }
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_footArea {
-        align-items: center !important; order: -1;
-      }
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_railIn .hHd-Xa_iconButton,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_railIn .hHd-Xa_newSession,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_railIn .hHd-Xa_panelList,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_railIn .hHd-Xa_regionArea,
-      .pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_railIn .hHd-Xa_footArea {
-        animation: none !important; transform: none !important;
-      }
-      #openmuse-dsh-reload {
-        flex: none; display: inline-flex; align-items: center;
-        justify-content: center; width: 36px; height: 36px;
-        margin: 0; padding: 0; border: none; border-radius: 50%;
-        background: transparent; color: inherit; cursor: pointer;
-      }
-      #openmuse-dsh-reload:hover {
-        background: var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.06));
-      }
-    `;
-    function ensureStyle() {
-      let style = document.getElementById(STYLE_ID);
-      if (!style) {
-        style = document.createElement('style');
-        style.id = STYLE_ID;
-        (document.head || document.documentElement).appendChild(style);
-      }
-      if (style.textContent !== CSS) style.textContent = CSS;
-    }
-    function ensureReload() {
-      if (document.getElementById('openmuse-dsh-reload')) return;
-      const root = document.querySelector('.hHd-Xa_root');
-      if (!root) return;
-      const btn = document.createElement('button');
-      btn.id = 'openmuse-dsh-reload';
-      btn.type = 'button';
-      btn.title = '刷新 DSH 面板';
-      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
-      btn.addEventListener('click', function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        location.reload();
-      });
-      const list = document.querySelector('.hHd-Xa_panelList');
-      if (list && list.parentNode) {
-        list.parentNode.insertBefore(btn, list.nextSibling);
-      } else {
-        root.appendChild(btn);
-      }
-    }
-    let scheduled = false;
-    function tick() {
-      if (scheduled) return;
-      scheduled = true;
-      requestAnimationFrame(function() {
-        scheduled = false;
-        ensureStyle();
-        ensureReload();
-      });
-    }
-    tick();
-    new MutationObserver(tick).observe(document.documentElement, {childList:true, subtree:true, attributes:true});
-  })();)JS";
+// Protocol v1: the pinned layout owner removes its own internal navigation.
+constexpr wchar_t kCompactSidebarScript[] = L"window.__OpenMuseHostNavigation = 1;";
 
 std::wstring JsonEscape(const std::wstring& value) {
   std::wstring out;
@@ -372,6 +261,16 @@ class DshView : public std::enable_shared_from_this<DshView> {
     if (path.empty() || path == desired_workspace_) return;
     desired_workspace_ = path;
     PushWorkspace();
+  }
+
+  void OpenSession(const std::wstring& id) {
+    if (id.empty() || id == desired_session_) return;
+    desired_session_ = id;
+    if (webview_) {
+      const auto script = L"window.__OpenMuseDesiredSession=\"" + JsonEscape(id) +
+        L"\";if(window.OpenMuseDshWorkspace)window.OpenMuseDshWorkspace.openSession(window.__OpenMuseDesiredSession);";
+      webview_->ExecuteScript(script.c_str(), nullptr);
+    }
   }
 
   void Close() {
@@ -600,6 +499,7 @@ class DshView : public std::enable_shared_from_this<DshView> {
     std::wstring script = kBridgeScript;
     script += resource_reference_script_;
     script += kCompactSidebarScript;
+    if (!desired_session_.empty()) script += L"window.__OpenMuseDesiredSession=\"" + JsonEscape(desired_session_) + L"\";";
     if (!desired_workspace_.empty()) {
       script += L"window.__OpenMuseDesiredWorkspace=\"" +
                 JsonEscape(desired_workspace_) + L"\";";
@@ -619,6 +519,7 @@ class DshView : public std::enable_shared_from_this<DshView> {
   HWND flutter_window_;
   HWND parent_;
   std::wstring desired_workspace_;
+  std::wstring desired_session_;
   ComPtr<ICoreWebView2Environment> environment_;
   ComPtr<ICoreWebView2Controller> controller_;
   ComPtr<ICoreWebView2> webview_;
@@ -730,6 +631,12 @@ void OpenMuseDshWebViewPlugin::HandleMethodCall(
   if (mount != arguments->end()) {
     if (const auto* path = std::get_if<std::string>(&mount->second)) {
       if (!path->empty()) view_->ActivateWorkspace(Utf16FromUtf8(*path));
+    }
+  }
+  const auto session = arguments->find(flutter::EncodableValue("session"));
+  if (session != arguments->end()) {
+    if (const auto* id = std::get_if<std::string>(&session->second)) {
+      if (!id->empty() && id->size() <= 256) view_->OpenSession(Utf16FromUtf8(*id));
     }
   }
   const std::string error = view_->Show(bounds, Utf16FromUtf8(*url));

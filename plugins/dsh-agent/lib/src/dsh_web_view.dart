@@ -56,7 +56,8 @@ final class DshPopupRouteObserver extends NavigatorObserver {
 
   bool _coversDsh(Route<dynamic>? route) =>
       (route is PopupRoute && route.barrierColor != null) ||
-      route?.settings.name == openMuseResourceRouteName;
+      route?.settings.name == openMuseResourceRouteName ||
+      route?.settings.name == 'openmuse.plugin-market';
 }
 
 Future<bool> _openCanonicalResource(BuildContext context, Object? raw) async {
@@ -364,6 +365,10 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
 
   @override
   Widget build(BuildContext context) {
+    if(!TickerMode.of(context)){
+      WidgetsBinding.instance.addPostFrameCallback((_){if(mounted)channel.invokeMethod<void>('hide');});
+      return const SizedBox.expand();
+    }
     _scheduleBounds();
     if (_error != null) {
       return Center(
@@ -398,7 +403,7 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
 
   void _scheduleBounds() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted || _error != null || DshNativeOverlay.obscured) return;
+      if (!mounted || _error != null || DshNativeOverlay.obscured || !TickerMode.of(context)) return;
       final box = context.findRenderObject() as RenderBox?;
       if (box == null ||
           !box.hasSize ||
@@ -421,7 +426,7 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
           if (ResourceLinkRouting.maybeOf(context) != null)
             'resourceReferenceScript': openMuseResourceReferenceScript,
           if (widget.activeMountPath != null) 'mount': widget.activeMountPath,
-          if (Platform.isLinux && widget.requestedSession?.value != null)
+          if (widget.requestedSession?.value != null)
             'session': widget.requestedSession!.value,
         });
       } on PlatformException catch (error) {

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'src/dsh_panel.dart';
+import 'src/dsh_navigation.dart';
 import 'src/dsh_resource_source.dart';
 import 'src/dsh_generation.dart';
 import 'src/dsh_sidecar.dart';
@@ -26,7 +27,8 @@ final class OpenMuseDshPlugin
         OpenMusePluginLogContributor,
         OpenMuseAgentContributor,
         OpenMuseToolContributor,
-        OpenMuseResourceSourceContributor {
+        OpenMuseResourceSourceContributor,
+        OpenMuseNavigationContributor {
   OpenMuseDshPlugin({
     DshSidecarSupervisor? supervisor,
     Future<bool> Function(PluginInteraction)? routeInteraction,
@@ -272,6 +274,29 @@ final class OpenMuseDshPlugin
   @override
   Widget buildEditor(BuildContext context, OpenMuseResource resource) =>
       throw UnsupportedError('DSH contributes a panel, not an editor');
+
+  @override
+  List<OpenMuseNavigationItem> get navigationItems => [
+    OpenMuseNavigationItem(
+      id: 'dsh.sessions',
+      order: 10,
+      title: 'Agent',
+      icon: 'agent',
+      sidebar: (context) {
+        final supervisor = _supervisor;
+        return supervisor == null
+            ? const SizedBox.shrink()
+            : DshNavigation(
+                supervisor: supervisor,
+                activeMount: _activeMount,
+                resolveWorkspace: (path) async {
+                  await _workspaceSync?.sync();
+                  return _workspaceSync?.workspaceIdForPath(path);
+                },
+              );
+      },
+    ),
+  ];
 
   @override
   Widget? buildPanel(BuildContext context, String panelId) {

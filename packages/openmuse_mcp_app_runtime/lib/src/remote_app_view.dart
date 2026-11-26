@@ -11,8 +11,13 @@ import 'resource_link.dart';
 import 'mcp_resource_source.dart';
 
 class RemoteMcpAppView extends StatefulWidget {
-  const RemoteMcpAppView({super.key, required this.app});
+  const RemoteMcpAppView({
+    super.key,
+    required this.app,
+    this.presentation = 'workspace',
+  });
   final RemoteMcpApp app;
+  final String presentation;
   @override
   State<RemoteMcpAppView> createState() => _RemoteMcpAppViewState();
 }
@@ -29,7 +34,32 @@ class _RemoteMcpAppViewState extends State<RemoteMcpAppView> {
     _start();
   }
 
+  Map<String, Object?> get _arguments => {
+    '_openmuse': {
+      'presentation': widget.presentation,
+      'navigation': widget.app.navigationState,
+    },
+  };
+  void _sendNavigation() {
+    final message = {
+      'jsonrpc': '2.0',
+      'method': 'ui/notifications/tool-input',
+      'params': {'arguments': _arguments},
+    };
+    if (_channel != null)
+      unawaited(_channel!.invokeMethod<void>('message', message));
+    if (_web != null)
+      unawaited(
+        _web!.runJavaScript('window.__mcpHostReceive(${jsonEncode(message)})'),
+      );
+  }
+
   void _scopeChanged() {
+    if (mounted && widget.app.scope() == _scope) {
+      _sendNavigation();
+      return;
+    }
+
     if (mounted && widget.app.scope() != _scope) {
       _channel?.setMethodCallHandler(null);
       _web = null;
@@ -46,7 +76,7 @@ class _RemoteMcpAppViewState extends State<RemoteMcpAppView> {
       if (!mounted || widget.app.scope() != _scope) return;
       final document = buildMcpAppHostDocument(
         appHtml: widget.app.html,
-        arguments: const {},
+        arguments: _arguments,
         platform: Platform.isMacOS ? 'desktop' : 'mobile',
         serverAvailable: true,
         resourceLinksAvailable: ResourceLinkRouting.maybeOf(context) != null,

@@ -36,6 +36,7 @@ Future<void> showOpenMuseSettings(
   OpenMuseLocalSettings settings,
   OpenMusePluginRegistry registry, {
   OpenMusePluginWorkspaceChoice? onPluginWorkspace,
+  int initialSection = 1,
 }) => showDialog<void>(
   context: context,
   barrierColor: OpenMuseTokens.scrim,
@@ -43,6 +44,7 @@ Future<void> showOpenMuseSettings(
     settings: settings,
     registry: registry,
     onPluginWorkspace: onPluginWorkspace,
+    initialSection: initialSection,
   ),
 );
 
@@ -51,8 +53,10 @@ final class _SettingsDialog extends StatefulWidget {
     required this.settings,
     required this.registry,
     this.onPluginWorkspace,
+    this.initialSection = 1,
   });
 
+  final int initialSection;
   final OpenMuseLocalSettings settings;
   final OpenMusePluginRegistry registry;
   final OpenMusePluginWorkspaceChoice? onPluginWorkspace;
@@ -62,7 +66,7 @@ final class _SettingsDialog extends StatefulWidget {
 }
 
 final class _SettingsDialogState extends State<_SettingsDialog> {
-  int selected = 1;
+  late int selected = widget.initialSection.clamp(0, 5);
 
   static const sections = <(IconData, String)>[
     (Icons.account_circle_outlined, '账号与设备'),

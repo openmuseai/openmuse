@@ -18,6 +18,8 @@ final class DshWorkspaceSynchronizer {
   final String bridgeToken;
   Future<void> _pending = Future<void>.value();
   String? _fingerprint;
+  Map<String, String> _workspaceIds = const {};
+  String? workspaceIdForPath(String path) => _workspaceIds[path];
 
   Future<void> sync() {
     _pending = _pending.catchError((Object _) {}).then((_) => _syncNow());
@@ -69,6 +71,13 @@ final class DshWorkspaceSynchronizer {
           body['items'] is! List) {
         throw StateError('DSH 工作区同步失败：HTTP ${response.statusCode} $body');
       }
+      _workspaceIds = {
+        for (final item in (body['items'] as List).whereType<Map>())
+          if (item['path'] is String &&
+              mounts.contains(item['path']) &&
+              item['workspaceId'] is String)
+            item['path'] as String: item['workspaceId'] as String,
+      };
       _fingerprint = fingerprint;
     } finally {
       client.close(force: true);

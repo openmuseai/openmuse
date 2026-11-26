@@ -414,8 +414,12 @@ final class OpenMuseWorkspaceRow extends StatelessWidget {
     this.selected = false,
     this.loading = false,
     this.extension = '',
+    this.rowHeight,
+    this.selectionColor,
   });
 
+  final double? rowHeight;
+  final Color? selectionColor;
   final String name;
   final bool isDirectory;
   final bool expanded;
@@ -441,9 +445,10 @@ final class OpenMuseWorkspaceRow extends StatelessWidget {
     padding: EdgeInsets.only(bottom: isMount ? 0 : 1),
     child: Material(
       color: selected
-          ? (Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xff383c47)
-                : OpenMuseTokens.sidebarSelected)
+          ? selectionColor ??
+                (Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xff383c47)
+                    : OpenMuseTokens.sidebarSelected)
           : Colors.transparent,
       borderRadius: BorderRadius.circular(6),
       child: InkWell(
@@ -451,7 +456,7 @@ final class OpenMuseWorkspaceRow extends StatelessWidget {
         onTap: onTap,
         onSecondaryTapDown: onSecondaryTapDown,
         child: SizedBox(
-          height: isMount ? OpenMuseTokens.itemHeight : 30,
+          height: rowHeight ?? (isMount ? OpenMuseTokens.itemHeight : 30),
           child: Row(
             children: [
               SizedBox(width: isMount ? 0 : 4 + depth * 12),

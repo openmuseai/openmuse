@@ -58,34 +58,31 @@ void main() {
   });
 
   testWidgets(
-    'selecting a resource closes narrow navigation and preserves the desktop hidden preference',
+    'opening a file keeps the in-flow Explorer expanded at narrow widths',
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(430, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
-      workspace.toggleSidebar();
       await tester.pumpWidget(
         OpenMuseHostApp(registry: registry, workspace: workspace),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('title-sidebar-toggle')));
-      await tester.pumpAndSettle();
       await tester.tap(find.text('README.md').first);
       await tester.pumpAndSettle();
+      expect(workspace.activeTab?.resource.displayName, 'README.md');
+      expect(find.byKey(const ValueKey('desktop-sidebar')), findsOneWidget);
       expect(
         find.byKey(const ValueKey('workspace-navigation-drawer')),
         findsNothing,
       );
-      expect(workspace.activeTab?.resource.displayName, 'README.md');
-      expect(workspace.sidebarVisible, isFalse);
       await tester.binding.setSurfaceSize(const Size(1400, 900));
       await tester.pumpAndSettle();
-      expect(workspace.sidebarVisible, isFalse);
+      expect(find.byKey(const ValueKey('desktop-sidebar')), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
 
   testWidgets(
-    'narrow navigation overlays and resizing retains the dirty editor and desktop preference',
+    'narrow navigation pushes content and resizing retains the dirty editor',
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(1400, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -115,39 +112,54 @@ void main() {
       );
       await tester.pumpAndSettle();
       final state = tester.state(
-        find.byKey(const ValueKey('responsive-editor')),
+        find.byKey(const ValueKey('responsive-editor'), skipOffstage: false),
       );
       for (final width in [430.0, 320.0]) {
         await tester.binding.setSurfaceSize(Size(width, 900));
         await tester.pumpAndSettle();
-        expect(
-          tester.getSize(find.byKey(const ValueKey('responsive-editor'))).width,
-          greaterThan(width - 40),
-        );
-        await tester.tap(find.byKey(const ValueKey('title-sidebar-toggle')));
+        final expanded = tester
+            .getTopLeft(
+              find.byKey(
+                const ValueKey('responsive-editor'),
+                skipOffstage: false,
+              ),
+            )
+            .dx;
+        expect(expanded, 288);
+        await tester.tap(find.byKey(const ValueKey('activity-explorer')));
         await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('desktop-sidebar')), findsNothing);
         expect(
-          find.byKey(const ValueKey('workspace-navigation-drawer')),
-          findsOneWidget,
+          tester
+              .getTopLeft(
+                find.byKey(
+                  const ValueKey('responsive-editor'),
+                  skipOffstage: false,
+                ),
+              )
+              .dx,
+          56,
         );
-        expect(workspace.sidebarVisible, isTrue);
-        final scaffold = tester.state<ScaffoldState>(
-          find.byType(Scaffold).first,
-        );
-        expect(scaffold.isDrawerOpen, isTrue);
-        scaffold.closeDrawer();
-        await tester.pumpAndSettle();
         expect(
-          tester.state(find.byKey(const ValueKey('responsive-editor'))),
+          tester.state(
+            find.byKey(
+              const ValueKey('responsive-editor'),
+              skipOffstage: false,
+            ),
+          ),
           same(state),
         );
+        await tester.tap(find.byKey(const ValueKey('activity-explorer')));
+        await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
       }
       await tester.binding.setSurfaceSize(const Size(1400, 900));
       await tester.pumpAndSettle();
       expect(workspace.sidebarVisible, isTrue);
       expect(
-        tester.state(find.byKey(const ValueKey('responsive-editor'))),
+        tester.state(
+          find.byKey(const ValueKey('responsive-editor'), skipOffstage: false),
+        ),
         same(state),
       );
       expect(created, 1);
@@ -223,10 +235,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       final firstState = tester.state(
-            find.byKey(const ValueKey('layout-first')),
+            find.byKey(const ValueKey('layout-first'), skipOffstage: false),
           ),
           secondState = tester.state(
-            find.byKey(const ValueKey('layout-second')),
+            find.byKey(const ValueKey('layout-second'), skipOffstage: false),
           );
       await _showIdeView(tester);
       await _showAgentView(tester);
@@ -236,11 +248,15 @@ void main() {
       await tester.tap(find.text('重置默认布局'));
       await tester.pumpAndSettle();
       expect(
-        tester.state(find.byKey(const ValueKey('layout-first'))),
+        tester.state(
+          find.byKey(const ValueKey('layout-first'), skipOffstage: false),
+        ),
         same(firstState),
       );
       expect(
-        tester.state(find.byKey(const ValueKey('layout-second'))),
+        tester.state(
+          find.byKey(const ValueKey('layout-second'), skipOffstage: false),
+        ),
         same(secondState),
       );
       expect(created, 2);
@@ -256,11 +272,15 @@ void main() {
       );
       await _showAgentView(tester);
       expect(
-        tester.state(find.byKey(const ValueKey('layout-first'))),
+        tester.state(
+          find.byKey(const ValueKey('layout-first'), skipOffstage: false),
+        ),
         same(firstState),
       );
       expect(
-        tester.state(find.byKey(const ValueKey('layout-second'))),
+        tester.state(
+          find.byKey(const ValueKey('layout-second'), skipOffstage: false),
+        ),
         same(secondState),
       );
       expect(checkpoints, 1);
@@ -331,13 +351,16 @@ void main() {
       );
       await tester.pumpAndSettle();
       final firstState = tester.state(
-        find.byKey(const ValueKey('existing-editor')),
+        find.byKey(const ValueKey('existing-editor'), skipOffstage: false),
       );
       expect(created, 1);
-      expect(find.byKey(const ValueKey('recovered-editor')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('recovered-editor'), skipOffstage: false),
+        findsNothing,
+      );
       await _showIdeView(tester);
       final recoveredState = tester.state(
-        find.byKey(const ValueKey('recovered-editor')),
+        find.byKey(const ValueKey('recovered-editor'), skipOffstage: false),
       );
       for (final group in [resourceGroup, fileGroup]) {
         expect(
@@ -349,10 +372,12 @@ void main() {
       }
       expect(
         layout.snapshot.bindingFor(layout.snapshot.focusedPaneId!)!.surfaceRef,
-        'host.editorGroup:${resourceGroup.id}',
+        'host.editorGroup:${LocalWorkspaceController.primaryEditorGroupId}',
       );
       expect(
-        tester.state(find.byKey(const ValueKey('existing-editor'))),
+        tester.state(
+          find.byKey(const ValueKey('existing-editor'), skipOffstage: false),
+        ),
         same(firstState),
       );
       final resetPane = layout.snapshot.bindings.entries
@@ -360,6 +385,8 @@ void main() {
             (e) => e.value.surfaceRef == 'host.editorGroup:${resourceGroup.id}',
           )
           .key;
+      layout.focus(resetPane);
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(ValueKey('pane-menu-button:$resetPane')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('重置默认布局'));
@@ -367,11 +394,15 @@ void main() {
       await _showAgentView(tester);
       await _showIdeView(tester);
       expect(
-        tester.state(find.byKey(const ValueKey('existing-editor'))),
+        tester.state(
+          find.byKey(const ValueKey('existing-editor'), skipOffstage: false),
+        ),
         same(firstState),
       );
       expect(
-        tester.state(find.byKey(const ValueKey('recovered-editor'))),
+        tester.state(
+          find.byKey(const ValueKey('recovered-editor'), skipOffstage: false),
+        ),
         same(recoveredState),
       );
       expect(workspace.tabsFor(resourceGroup.id), [sourceTab]);
@@ -388,7 +419,9 @@ void main() {
       expect(checkpoints, 1);
       expect(disposed, 0);
       expect(
-        tester.state(find.byKey(const ValueKey('recovered-editor'))),
+        tester.state(
+          find.byKey(const ValueKey('recovered-editor'), skipOffstage: false),
+        ),
         same(recoveredState),
       );
       await tester.pumpWidget(const SizedBox.shrink());
@@ -425,7 +458,8 @@ void main() {
       await tester.pumpAndSettle();
       final original = layout.snapshot;
       await _showIdeView(tester);
-      expect(layout.snapshot, same(original));
+      expect(layout.snapshot.root, same(original.root));
+      expect(layout.snapshot.bindings, original.bindings);
       expect(find.text('当前页面无法安全调整布局，已保留原视图。'), findsOneWidget);
       for (final id in groups) {
         expect(workspace.tabsFor(id), [tabs[id]]);
@@ -542,7 +576,7 @@ void main() {
   );
 
   testWidgets(
-    'Home hides the native DSH overlay until the resource route closes',
+    'Home opens in the workspace while the native Agent remains visible',
     (tester) async {
       late NativeResourceCenter center;
       await tester.runAsync(() async {
@@ -568,11 +602,13 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(DshNativeOverlay.obscured, isFalse);
-      await tester.tap(find.byKey(const ValueKey('desktop-resource-center')));
+      await tester.tap(find.byKey(const ValueKey('activity-home')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('打开工作区'));
       await tester.pumpAndSettle();
       expect(find.byType(ResourceCenterView), findsOneWidget);
-      expect(DshNativeOverlay.obscured, isTrue);
-      await tester.tap(find.byType(BackButton));
+      expect(DshNativeOverlay.obscured, isFalse);
+      await tester.tap(find.byKey(const ValueKey('activity-explorer')));
       await tester.pumpAndSettle();
       expect(DshNativeOverlay.obscured, isFalse);
       await tester.pumpWidget(const SizedBox.shrink());
@@ -586,7 +622,9 @@ void main() {
       OpenMuseHostApp(registry: registry, workspace: workspace),
     );
 
-    await tester.tap(find.text('搜索'));
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
     await tester.pumpAndSettle();
     expect(find.text('本地资源'), findsOneWidget);
 
@@ -683,7 +721,7 @@ void main() {
     desktopUpdate.releaseSha256 = null;
     desktopUpdate.progress.value = 0.44;
     await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('notifications-footer')));
+    await tester.tap(find.byKey(const ValueKey('activity-notifications')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('notifications-dialog')), findsOneWidget);
     expect(
@@ -696,7 +734,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('app-update-dismiss')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('app-update-footer')), findsNothing);
-    expect(find.byKey(const ValueKey('notifications-footer')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('activity-notifications')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('plugin entry opens the full market page and sidebar', (
@@ -762,7 +803,7 @@ void main() {
         layoutController: layout,
       ),
     );
-    await tester.tap(find.text('插件').first);
+    await tester.tap(find.byKey(const ValueKey('activity-market')));
     await tester.pumpAndSettle();
     expect(find.byType(Dialog), findsNothing);
     expect(
@@ -831,7 +872,7 @@ void main() {
     await tester.tap(find.byTooltip('关闭插件市场'));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('plugin-market-catalog')), findsNothing);
-    await tester.tap(find.text('插件').first);
+    await tester.tap(find.byKey(const ValueKey('activity-market')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('plugin-market-catalog')), findsOneWidget);
   });
@@ -866,7 +907,7 @@ void main() {
         ),
       );
       for (var attempt = 0; attempt < 2; attempt++) {
-        await tester.tap(find.text('插件').first);
+        await tester.tap(find.byKey(const ValueKey('activity-market')));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('plugin-market-tab-1')));
         await tester.pumpAndSettle();
@@ -918,9 +959,9 @@ void main() {
     await tester.pumpWidget(
       OpenMuseHostApp(registry: registry, workspace: workspace),
     );
-    await tester.tap(find.byKey(const ValueKey('title-sidebar-toggle')));
+    await tester.tap(find.byKey(const ValueKey('activity-explorer')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('插件').first);
+    await tester.tap(find.byKey(const ValueKey('activity-market')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('desktop-market-page')), findsOneWidget);
     expect(find.byKey(const ValueKey('plugin-market-search')), findsOneWidget);
@@ -969,7 +1010,7 @@ void main() {
       OpenMuseHostApp(registry: registry, workspace: workspace),
     );
 
-    final settingsButton = find.byKey(const ValueKey('title-settings'));
+    final settingsButton = find.byKey(const ValueKey('activity-settings'));
     expect(settingsButton, findsOneWidget);
     await tester.tap(settingsButton);
     await tester.pumpAndSettle();
@@ -977,7 +1018,7 @@ void main() {
     expect(find.text('Appearance'), findsOneWidget);
     expect(find.text('工作区'), findsWidgets);
     expect(find.text('插件'), findsWidgets);
-    expect(find.text('Agent'), findsOneWidget);
+    expect(find.text('Agent'), findsWidgets);
     expect(find.text('账号'), findsNothing);
     expect(find.text('云服务'), findsNothing);
     expect(find.text('协作'), findsNothing);
@@ -1002,11 +1043,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('cli-bottom-panel')), findsNothing);
       if (Platform.isWindows) {
-        expect(
-          find.byKey(const ValueKey('title-sidebar-toggle')),
-          findsOneWidget,
-        );
-        expect(find.byKey(const ValueKey('title-settings')), findsOneWidget);
+        expect(find.byKey(const ValueKey('activity-explorer')), findsOneWidget);
+        expect(find.byKey(const ValueKey('activity-settings')), findsOneWidget);
         expect(find.byKey(const ValueKey('title-terminal')), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey('title-terminal')));
         await tester.pump();
@@ -1055,7 +1093,7 @@ void main() {
         settings: settings,
       ),
     );
-    await tester.tap(find.byKey(const ValueKey('title-settings')));
+    await tester.tap(find.byKey(const ValueKey('activity-settings')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Dark'));
     await tester.pumpAndSettle();
@@ -1066,27 +1104,37 @@ void main() {
     );
   });
 
-  testWidgets('workspace divider changes width through pointer drag', (
-    tester,
-  ) async {
-    final settings = OpenMuseLocalSettings();
-    final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
-    await tester.pumpWidget(
-      OpenMuseHostApp(
-        registry: registry,
-        workspace: workspace,
-        settings: settings,
-        layoutController: layout,
-      ),
-    );
-    final divider = find.byKey(const Key('pane-resizer')).first;
-    final start = tester.getCenter(divider);
-    final gesture = await tester.startGesture(start);
-    await gesture.moveBy(const Offset(42, 0));
-    await tester.pump();
-    await gesture.up();
-    expect((layout.snapshot.root as SplitNode).ratio, greaterThan(0.22));
-  });
+  testWidgets(
+    'Agent divider resizes its fixed leading region and preserves Explorer width',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1440, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final settings = OpenMuseLocalSettings();
+      final layout = WorkbenchLayoutController(createDefaultWorkbenchLayout());
+      await tester.pumpWidget(
+        OpenMuseHostApp(
+          registry: registry,
+          workspace: workspace,
+          settings: settings,
+          layoutController: layout,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final side = tester.getRect(
+        find.byKey(const ValueKey('desktop-sidebar')),
+      );
+      await tester.drag(
+        find.byKey(const ValueKey('agent-workspace-divider')),
+        const Offset(42, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(settings.assistantWidth, greaterThan(400));
+      expect(
+        tester.getRect(find.byKey(const ValueKey('desktop-sidebar'))),
+        side,
+      );
+    },
+  );
 
   testWidgets('Project Workspace section can collapse independently', (
     tester,
@@ -1098,7 +1146,7 @@ void main() {
     // assumption that yields the whole path on Windows.
     final label = p.basename(root.path);
     expect(find.text(label), findsOneWidget);
-    await tester.tap(find.byKey(const Key('project-workspace-toggle')));
+    await tester.tap(find.byKey(const Key('explorer-project-section')));
     await tester.pump();
     expect(workspace.projectSectionExpanded, isFalse);
     expect(find.text(label), findsNothing);
@@ -1149,7 +1197,7 @@ void main() {
     expect(plugin.created, 1);
     expect(plugin.disposed, 0);
     final after = tester.getTopLeft(find.byKey(const Key('surface-probe')));
-    expect(after.dx, greaterThan(before.dx));
+    expect(after.dx, before.dx);
   });
 
   testWidgets('layout mutations are persisted after the debounce', (
@@ -1253,7 +1301,7 @@ void main() {
 
     expect(find.byKey(const Key('pane-menu-button:workspace')), findsNothing);
     expect(find.byKey(const Key('pane-menu-button:editor')), findsOneWidget);
-    expect(find.byKey(const Key('pane-menu-button:dsh')), findsOneWidget);
+    expect(find.byKey(const Key('pane-menu-button:dsh')), findsNothing);
 
     final menu = tester.getRect(
       find.byKey(const Key('pane-menu-button:editor')),
@@ -1333,6 +1381,8 @@ void main() {
       'plugin.panel:test.panel',
     );
 
+    await tester.tap(find.text('README.md').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pane-menu-button:editor')));
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('绑定/交换 Stateful Panel'));
@@ -1445,27 +1495,30 @@ void main() {
 }
 
 Future<void> _showAgentView(WidgetTester tester) async {
-  await tester.tap(find.byKey(const ValueKey('title-view')));
-  await tester.pumpAndSettle();
-  await tester.tap(
-    find.ancestor(
-      of: find.text('Agent 视图'),
-      matching: find.byType(PopupMenuItem<String>),
-    ),
-  );
-  await tester.pumpAndSettle();
+  final segment = find.byKey(const ValueKey('desktop-segment-agent'));
+  if (segment.evaluate().isNotEmpty) {
+    await tester.tap(segment);
+    await tester.pumpAndSettle();
+  }
 }
 
 Future<void> _showIdeView(WidgetTester tester) async {
-  await tester.tap(find.byKey(const ValueKey('title-view')));
-  await tester.pumpAndSettle();
-  await tester.tap(
-    find.ancestor(
-      of: find.text('IDE 视图'),
-      matching: find.byType(PopupMenuItem<String>),
-    ),
+  final segment = find.byKey(const ValueKey('desktop-segment-workspace'));
+  if (segment.evaluate().isNotEmpty) {
+    await tester.tap(segment);
+    await tester.pumpAndSettle();
+  }
+  final menus = find.byWidgetPredicate(
+    (w) =>
+        w.key is ValueKey<String> &&
+        (w.key as ValueKey<String>).value.startsWith('pane-menu-button:'),
   );
-  await tester.pumpAndSettle();
+  if (menus.evaluate().isNotEmpty) {
+    await tester.tap(menus.first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('重置默认布局'));
+    await tester.pumpAndSettle();
+  }
 }
 
 final class _SignedOutAuthenticationController extends ChangeNotifier

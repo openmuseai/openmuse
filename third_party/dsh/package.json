@@ -10,6 +10,10 @@
     "openmuse-dsh-bridge": "file:tarballs/openmuse-dsh-bridge-0.1.27.tgz",
     "pnpm": "10.34.1",
     "@openmuse/code-navigation-service": "file:tarballs/openmuse-code-navigation-service-0.1.1.tgz",
-    "@openmuse/code-navigation-manager": "file:tarballs/openmuse-code-navigation-manager-0.1.2.tgz"
+    "@openmuse/code-navigation-manager": "file:tarballs/openmuse-code-navigation-manager-0.1.2.tgz",
+    "@deepseek-ai/dsh-client-ui-layout": "file:tarballs/deepseek-ai-dsh-client-ui-layout-0.2.0-rc.2-openmuse.1.tgz"
+  },
+  "overrides": {
+    "@deepseek-ai/dsh-client-ui-layout": "$@deepseek-ai/dsh-client-ui-layout"
   }
 }

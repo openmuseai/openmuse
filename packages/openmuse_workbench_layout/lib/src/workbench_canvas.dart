@@ -29,6 +29,9 @@ final class WorkbenchCanvas extends StatefulWidget {
     this.retainedInstanceRefs = const {},
     this.gutter = 1,
     this.onSizeChanged,
+    this.pinnedPaneId,
+    this.pinnedPaneWidth = 400,
+    this.onPinnedWidthChanged,
   });
 
   final WorkbenchLayoutController controller;
@@ -42,6 +45,11 @@ final class WorkbenchCanvas extends StatefulWidget {
   final Set<String> retainedInstanceRefs;
   final double gutter;
   final ValueChanged<Size>? onSizeChanged;
+
+  /// A stable leading surface; other panes retain their own split tree.
+  final String? pinnedPaneId;
+  final double pinnedPaneWidth;
+  final ValueChanged<double>? onPinnedWidthChanged;
 
   @override
   State<WorkbenchCanvas> createState() => _WorkbenchCanvasState();
@@ -57,9 +65,11 @@ final class _WorkbenchCanvasState extends State<WorkbenchCanvas> {
         widget.onSizeChanged?.call(constraints.biggest);
         final snapshot = widget.controller.snapshot;
         final root = _withoutPanes(snapshot.root, widget.hiddenPaneIds);
-        final geometry = const WorkbenchLayoutSolver().solve(
+        final geometry = solvePinnedWorkbenchLayout(
           root ?? snapshot.root,
           constraints.biggest,
+          pinnedPaneId: widget.pinnedPaneId,
+          pinnedPaneWidth: widget.pinnedPaneWidth,
           gutter: widget.gutter,
         );
         final fullGeometry = const WorkbenchLayoutSolver().solve(
@@ -171,6 +181,21 @@ final class _WorkbenchCanvasState extends State<WorkbenchCanvas> {
                     },
                   ),
                 ),
+            if (visibleRects[widget.pinnedPaneId] case final pinned?
+                when widget.onPinnedWidthChanged != null)
+              Positioned(
+                key: const ValueKey('agent-workspace-divider'),
+                left: pinned.right - 3,
+                top: pinned.top,
+                width: 6,
+                height: pinned.height,
+                child: OpenMusePaneResizer(
+                  axis: Axis.horizontal,
+                  onDelta: (delta) => widget.onPinnedWidthChanged!(
+                    widget.pinnedPaneWidth + delta,
+                  ),
+                ),
+              ),
             if (widget.overlayMenuBuilder != null)
               for (final entry in visibleRects.entries)
                 if (widget.overlayMenuBuilder!(
@@ -296,4 +321,59 @@ final class _OpenMusePaneResizerState extends State<OpenMusePaneResizer> {
       ),
     ),
   );
+}
+
+/// Keep a leading pane at a stable width while solving the remaining region.
+/// No binding, surface identity or resource state is changed by this projection.
+WorkbenchLayoutGeometry solvePinnedWorkbenchLayout(
+  LayoutNode root,
+  Size size, {
+  String? pinnedPaneId,
+  double pinnedPaneWidth = 400,
+  double gutter = 1,
+}) {
+  final solver = const WorkbenchLayoutSolver();
+  LayoutNode? remove(LayoutNode node) => switch (node) {
+    PaneNode(:final paneId) => paneId == pinnedPaneId ? null : node,
+    SplitNode(:final first, :final second) => combine(
+      node,
+      remove(first),
+      remove(second),
+    ),
+  };
+  if (pinnedPaneId == null) return solver.solve(root, size, gutter: gutter);
+  final original = solver.solve(root, size, gutter: gutter);
+  if (!original.paneRects.containsKey(pinnedPaneId)) return original;
+  final remainder = remove(root);
+  if (remainder == null) return original;
+  final width = pinnedPaneWidth.clamp(0.0, size.width);
+  final offset = Offset((width + gutter).clamp(0.0, size.width), 0);
+  final geometry = solver.solve(
+    remainder,
+    Size((size.width - offset.dx).clamp(0.0, size.width), size.height),
+    gutter: gutter,
+  );
+  return WorkbenchLayoutGeometry(
+    paneRects: {
+      pinnedPaneId: Rect.fromLTWH(0, 0, width, size.height),
+      for (final e in geometry.paneRects.entries) e.key: e.value.shift(offset),
+    },
+    dividers: [
+      for (final d in geometry.dividers)
+        LayoutDivider(
+          path: d.path,
+          axis: d.axis,
+          rect: d.rect.shift(offset),
+          containerRect: d.containerRect.shift(offset),
+          leadingPaneId: d.leadingPaneId,
+          trailingPaneId: d.trailingPaneId,
+        ),
+    ],
+  );
+}
+
+LayoutNode? combine(SplitNode node, LayoutNode? first, LayoutNode? second) {
+  if (first == null) return second;
+  if (second == null) return first;
+  return node.copyWith(first: first, second: second);
 }
