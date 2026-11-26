@@ -1,0 +1,8 @@
+{
+  "name": "openmuse-desktop-checks",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "desktop:check": "node scripts/desktop_feature_check.mjs"
+  }
+}

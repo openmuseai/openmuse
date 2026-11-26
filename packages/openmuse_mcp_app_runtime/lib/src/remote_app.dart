@@ -15,6 +15,7 @@ final class RemoteMcpApp extends ChangeNotifier
     implements
         OpenMusePlugin,
         OpenMuseWorkspaceActionsContributor,
+        OpenMuseNavigationContributor,
         OpenMuseMobileWorkbenchContributor,
         OpenMuseMobileNativeDetailContributor,
         OpenMuseResourceSourceContributor {
@@ -73,6 +74,52 @@ final class RemoteMcpApp extends ChangeNotifier
   String? _connectedScope;
   List<Tool> _tools = [];
   VoidCallback? onOpen;
+  Map<String, Object?> _navigationState = const {};
+  String? _navigationOwner;
+  Map<String, Object?> get navigationState =>
+      _navigationOwner == _owner ? _navigationState : const {};
+
+  /// UI-only, account-scoped selection projection, never a server capability.
+  void selectNavigation(Map<String, Object?> value) {
+    _check(_owner);
+    if (value.length > 12 ||
+        value.entries.any(
+          (e) =>
+              !RegExp(r'^[a-zA-Z][a-zA-Z0-9_]{0,39}$').hasMatch(e.key) ||
+              !(e.value == null ||
+                  e.value is bool ||
+                  e.value is num ||
+                  e.value is String && (e.value as String).length <= 2048),
+        ) ||
+        utf8.encode(jsonEncode(value)).length > 4096)
+      throw StateError('APP_NAVIGATION_INVALID');
+    if (jsonEncode(value) == jsonEncode(_navigationState)) return;
+    _navigationState = Map.unmodifiable(value);
+    _navigationOwner = _owner;
+    notifyListeners();
+    onOpen?.call();
+  }
+
+  @override
+  List<OpenMuseNavigationItem> get navigationItems => [
+    OpenMuseNavigationItem(
+      id: id,
+      title: title,
+      icon: definition['navigationIcon'] as String? ?? 'plugin',
+      sidebar: (context) => definition['desktopNavigation'] == 1
+          ? RemoteMcpAppView(app: this, presentation: 'navigation')
+          : ListView(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.open_in_new, size: 16),
+                  title: Text(title),
+                  onTap: onOpen,
+                ),
+              ],
+            ),
+      onOpenWorkspace: onOpen,
+    ),
+  ];
 
   /// Host auditing hook. No arguments, results or credentials are included.
   void Function(String method, String? tool, bool agent)? onRequestCompleted;
@@ -261,7 +308,11 @@ final class RemoteMcpApp extends ChangeNotifier
           .timeout(const Duration(seconds: 20));
       _check(owner);
       final tools = (await client.listTools()).tools;
-      if (tools.any((t) => t.name.startsWith('host_versions_'))) {
+      if (tools.any(
+        (t) =>
+            t.name.startsWith('host_versions_') ||
+            t.name == 'openmuse_navigation_select',
+      )) {
         throw StateError('APP_RESERVED_TOOL_NAMESPACE');
       }
       if (!tools.any(
@@ -327,6 +378,18 @@ final class RemoteMcpApp extends ChangeNotifier
         throw StateError('APP_RESULT_TOO_LARGE');
       onRequestCompleted?.call(method, params['name'] as String?, agent);
       return result;
+    }
+    if (method == 'tools/call' &&
+        params['name'] == 'openmuse_navigation_select') {
+      if (agent || definition['desktopNavigation'] != 1)
+        throw StateError('APP_TOOL_NOT_VISIBLE');
+      selectNavigation(
+        Map<String, Object?>.from(params['arguments'] as Map? ?? {}),
+      );
+      return {
+        'content': <Object?>[],
+        'structuredContent': {'selected': true},
+      };
     }
     final client = await _connect();
     _check(owner);
@@ -395,6 +458,8 @@ final class RemoteMcpApp extends ChangeNotifier
   Future<void> closeSession() async {
     if (forwardRequest != null) _forwardRevoked = true;
     _epoch++;
+    _navigationState = const {};
+    _navigationOwner = null;
     notifyListeners();
     final client = _client;
     _client = null;

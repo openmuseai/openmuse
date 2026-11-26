@@ -91,6 +91,8 @@ const frame=document.getElementById('view');
 const inputPromise=$inputUrl===null?Promise.resolve($input):fetch($inputUrl).then(response=>{if(!response.ok)throw Error('Host input unavailable');return response.json()});
 let initialized=false;
 let currentContext=$hostContext;
+const applyColorScheme=()=>{const theme=currentContext.theme==='dark'?'dark':'light';document.documentElement.style.colorScheme=theme;frame.style.colorScheme=theme;};
+applyColorScheme();
 let appCapabilities={};
 const send=message=>frame.contentWindow.postMessage(message,'*');
 const extensionFrames=new Map();
@@ -102,6 +104,7 @@ function mountExtensions(specs){
 window.__mcpHostReceive=message=>{
  if(message._hostContext){
   currentContext={...currentContext,...message._hostContext};
+  applyColorScheme();
   const notification={jsonrpc:'2.0',method:'ui/notifications/host-context-changed',params:currentContext};
   if(initialized)send(notification);
   for(const entry of extensionFrames.values())if(entry.initialized)entry.frame.contentWindow.postMessage(notification,'*');

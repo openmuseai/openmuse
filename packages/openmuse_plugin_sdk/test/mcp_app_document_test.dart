@@ -16,9 +16,9 @@ void main() {
       final script =
           '''
 const vm=require('node:vm'),assert=require('node:assert/strict'),sent=[],nativeMessages=[],listeners=[];
-const contentWindow={postMessage:m=>sent.push(m)},frame={contentWindow};
+const contentWindow={postMessage:m=>sent.push(m)},frame={contentWindow,style:{}};
 const window={addEventListener:(t,fn)=>listeners.push(fn),removeEventListener:()=>{}};
-vm.runInNewContext(${jsonEncode(html)}.match(/<script>([\\s\\S]*?)<\\/script>/)[1],{window,document:{getElementById:()=>frame},TextDecoder,Uint8Array,atob,innerWidth:691,innerHeight:660,nativeMessages});
+vm.runInNewContext(${jsonEncode(html)}.match(/<script>([\\s\\S]*?)<\\/script>/)[1],{window,document:{documentElement:{style:{}},getElementById:()=>frame},TextDecoder,Uint8Array,atob,innerWidth:691,innerHeight:660,nativeMessages});
 (async()=>{
  const deliver=m=>listeners[0]({source:contentWindow,data:m});
  await deliver({jsonrpc:'2.0',id:1,method:'ui/initialize',params:{}});
@@ -48,9 +48,9 @@ vm.runInNewContext(${jsonEncode(html)}.match(/<script>([\\s\\S]*?)<\\/script>/)[
 const vm=require('node:vm'),assert=require('node:assert/strict');
 const html=${jsonEncode(html)},sent=[],nativeMessages=[],listeners=[];
 const contentWindow={postMessage:message=>sent.push(message)};
-const frame={contentWindow};
+const frame={contentWindow,style:{}};
 const window={addEventListener:(type,callback)=>listeners.push(callback),removeEventListener:()=>{}};
-const context={window,document:{getElementById:()=>frame},TextDecoder,Uint8Array,atob,innerWidth:1000,innerHeight:700,nativeMessages};
+const context={window,document:{documentElement:{style:{}},getElementById:()=>frame},TextDecoder,Uint8Array,atob,innerWidth:1000,innerHeight:700,nativeMessages};
 vm.runInNewContext(html.match(/<script>([\\s\\S]*?)<\\/script>/)[1],context);
 const deliver=message=>listeners[0]({source:contentWindow,data:message});
 (async()=>{
@@ -95,9 +95,9 @@ const deliver=message=>listeners[0]({source:contentWindow,data:message});
 const vm=require('node:vm'),assert=require('node:assert/strict');
 const html=${jsonEncode(html)},sent=[],nativeMessages=[],listeners=[];
 const contentWindow={postMessage:message=>sent.push(message)};
-let mounts=0;const frame={contentWindow,set srcdoc(value){mounts++}};
+let mounts=0;const frame={contentWindow,style:{},set srcdoc(value){mounts++}};
 const window={addEventListener:(type,callback)=>listeners.push(callback),removeEventListener:()=>{}};
-const context={window,document:{getElementById:()=>frame},TextDecoder,Uint8Array,atob,innerWidth:1000,innerHeight:700,nativeMessages};
+const context={window,document:{documentElement:{style:{}},getElementById:()=>frame},TextDecoder,Uint8Array,atob,innerWidth:1000,innerHeight:700,nativeMessages};
 vm.runInNewContext(html.match(/<script>([\\s\\S]*?)<\\/script>/)[1],context);
 window.__mcpHostReceive({_hostContext:{locale:'fr'}});
 assert.equal(sent.length,0);
@@ -113,6 +113,7 @@ const deliver=message=>listeners[0]({source:contentWindow,data:message});
  window.__mcpHostReceive({_hostContext:{locale:'de',theme:'dark'}});
  assert.equal(sent.at(-1).method,'ui/notifications/host-context-changed');
  assert.equal(sent.at(-1).params.locale,'de');assert.equal(mounts,1);
+ assert.equal(context.document.documentElement.style.colorScheme,'dark');assert.equal(frame.style.colorScheme,'dark');
  await listeners[0]({source:{},data:{jsonrpc:'2.0',id:9,method:'ui/initialize'}});
  assert.notEqual(sent.at(-1).id,9);
 })().catch(error=>{console.error(error);process.exitCode=1});

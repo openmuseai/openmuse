@@ -37,7 +37,10 @@ export 'src/document_browser_link_dialog.dart';
 /// through [DshRuntimeConnector], so local and remote runtimes differ at the
 /// transport boundary rather than in Host workspace semantics.
 final class OpenMuseCloudWorkspacePlugin
-    implements OpenMusePlugin, OpenMuseWorkspaceActionsContributor {
+    implements
+        OpenMusePlugin,
+        OpenMuseWorkspaceActionsContributor,
+        OpenMuseExplorerContributor {
   OpenMuseCloudWorkspacePlugin({
     required this.authentication,
     required Uri cloudOrigin,
@@ -110,6 +113,10 @@ final class OpenMuseCloudWorkspacePlugin
       panelId == 'cloud.workspace'
       ? CloudWorkspacePluginPanel(controller: controller)
       : null;
+
+  @override
+  Widget buildExplorerSection(BuildContext context) =>
+      _CloudExplorer(controller: controller);
 
   @override
   List<Widget> buildWorkspaceActions(BuildContext context) => [
@@ -486,6 +493,109 @@ final class CloudWorkspacePluginPanel extends StatelessWidget {
                     },
                   ),
           ),
+        ],
+      );
+    },
+  );
+}
+
+/// Compact Explorer projection. The cloud controller remains the authorization
+/// and directory authority; this view neither caches tokens nor grants access.
+final class _CloudExplorer extends StatelessWidget {
+  const _CloudExplorer({required this.controller});
+  final CloudWorkspacePluginController controller;
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: controller,
+    builder: (context, _) {
+      final zh = Localizations.localeOf(context).languageCode == 'zh';
+      final state = controller.snapshot;
+      return ExpansionTile(
+        key: const PageStorageKey('explorer-shared-workspaces'),
+        initiallyExpanded: true,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+        dense: true,
+        title: Text(
+          zh ? '共享工作区' : 'SHARED WORKSPACES',
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            letterSpacing: .5,
+          ),
+        ),
+        children: [
+          if (state.loading) const LinearProgressIndicator(minHeight: 2),
+          if (!controller.authentication.snapshot.isAuthenticated)
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                zh ? '登录后查看共享工作区' : 'Sign in to view shared workspaces',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          if (state.failureCode != null || state.failureMessage != null)
+            ListTile(
+              dense: true,
+              title: Text(zh ? '共享工作区暂不可用' : 'Shared workspaces unavailable'),
+              trailing: IconButton(
+                tooltip: zh ? '重试' : 'Retry',
+                icon: const Icon(Icons.refresh, size: 16),
+                onPressed: controller.refresh,
+              ),
+            ),
+          for (final workspace in state.workspaces)
+            ListTile(
+              key: ValueKey('explorer-shared.${workspace.workspaceRef}'),
+              dense: true,
+              contentPadding: const EdgeInsets.only(left: 20, right: 8),
+              minLeadingWidth: 18,
+              leading: const Icon(Icons.folder_shared_outlined, size: 16),
+              title: Text(
+                workspace.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12),
+              ),
+              onTap: () {
+                final page = OpenMuseWorkspacePage(
+                  id: workspace.workspaceRef,
+                  title: workspace.title,
+                  builder: (_) => CloudWorkspacePages(
+                    authentication: controller.authentication,
+                    service: controller.service,
+                    workspaceId: workspace.workspaceRef,
+                    title: workspace.title,
+                    onOpen: controller.openPage,
+                    supportsDocumentCreation: controller.onOpenDocument != null,
+                  ),
+                );
+                final routing = OpenMuseWorkspaceRouting.maybeOf(context);
+                if (routing != null) {
+                  routing.open(page);
+                } else {
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute<void>(builder: page.builder));
+                }
+              },
+            ),
+          if (controller.authentication.snapshot.isAuthenticated &&
+              state.workspaces.isEmpty &&
+              !state.loading &&
+              state.failureCode == null)
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                zh ? '暂无共享工作区' : 'No shared workspaces',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          if (controller.authentication.snapshot.isAuthenticated)
+            TextButton.icon(
+              onPressed: controller.refresh,
+              icon: const Icon(Icons.refresh, size: 14),
+              label: Text(zh ? '刷新工作区' : 'Refresh workspaces'),
+            ),
         ],
       );
     },

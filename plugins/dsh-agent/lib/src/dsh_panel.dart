@@ -177,6 +177,8 @@ final class _PanelBody extends StatelessWidget {
         onOpenResource: onOpenResource,
         reloadToken: reloadToken,
         requestedSession: supervisor.requestedSession,
+        requestedPanel: supervisor.requestedPanel,
+        onNavigation: supervisor.selectNavigation,
       );
     }
     if (supervisor.state == DshSidecarState.starting ||

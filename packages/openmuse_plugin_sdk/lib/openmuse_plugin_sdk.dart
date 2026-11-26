@@ -8,6 +8,7 @@ import 'src/authentication.dart';
 import 'src/localization.dart';
 import 'src/resource_capabilities.dart';
 export 'src/localization.dart';
+export 'src/desktop_navigation.dart';
 
 export 'src/manifest_v2.dart';
 export 'src/mcp_app_document.dart';

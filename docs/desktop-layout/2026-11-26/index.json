@@ -1,0 +1,77 @@
+{
+  "schema": "openmuse.review-inputs/1",
+  "workflowId": "6b4a278c761e1f2e5640b574cfc78fd8",
+  "exportedAt": "2026-11-26T08:39:31.593Z",
+  "nativeDocuments": true,
+  "status": "design-and-development-inputs",
+  "entries": [
+    {
+      "name": "architecture-before-implementation.sydoc",
+      "purpose": "初次实现前已发布架构",
+      "workflowId": "6b4a278c761e1f2e5640b574cfc78fd8",
+      "documentId": "d20ccd54-f6fd-41c7-99de-7be180eeb374",
+      "revision": 4,
+      "sha256": "fa29c3469ad64630d39a5e307e5f0f0b73b9e01625ea7aa06fb0559ccbf807e6"
+    },
+    {
+      "name": "development-before-implementation.sydoc",
+      "purpose": "初次实现前已发布开发文档",
+      "workflowId": "6b4a278c761e1f2e5640b574cfc78fd8",
+      "documentId": "c70bedc5-1fbc-45bc-8a20-cc61a5668f0a",
+      "revision": 2,
+      "sha256": "fdb24aaa94f8e66ef40935cab5fd0b5e8dbd1394ac58078975f5815ec84da061"
+    },
+    {
+      "name": "architecture-dsh-correction-before-code.sydoc",
+      "purpose": "用户DSH修正后编码前ADR-07",
+      "workflowId": "6b4a278c761e1f2e5640b574cfc78fd8",
+      "documentId": "d20ccd54-f6fd-41c7-99de-7be180eeb374",
+      "revision": 5,
+      "sha256": "8fb9b8875f0f28a57a3f8f5cf7ff64a08d7efc2bedf662208a5264a245eedc43"
+    },
+    {
+      "name": "development-dsh-correction-before-code.sydoc",
+      "purpose": "用户DSH修正后编码前实施计划",
+      "workflowId": "6b4a278c761e1f2e5640b574cfc78fd8",
+      "documentId": "c70bedc5-1fbc-45bc-8a20-cc61a5668f0a",
+      "revision": 4,
+      "sha256": "cf9a4452cf838e28de727d39920907ec4c2eee80192d42703479759666df0a13"
+    },
+    {
+      "name": "approved-experience-and-dsh-correction.sydoc",
+      "purpose": "已批准r5与用户DSH修正合同",
+      "workflowId": "6b4a278c761e1f2e5640b574cfc78fd8",
+      "documentId": "cc575250-b839-4bfc-b1f5-fa1e2165ac31",
+      "revision": 6,
+      "sha256": "85c6f0ea74844f86cf3eaf9a969740ad200799c3ce82bdec0daae69f92cdc33a"
+    },
+    {
+      "name": "approved-r5.html",
+      "purpose": "已批准视觉交互源，原型不是运行截图",
+      "sha256": "5c4ca47ed417144f1a1434d027fab7c19e5be1467b68c23574a6694cc18bba9f"
+    }
+  ],
+  "notes": "Fixed native inputs exported from Muse-CI. Runtime test reports and MR receipts remain in the canonical version workflow; this design prototype is not a product screenshot.",
+  "runtimeEvidence": {
+    "implementationCommit": "4eb4a78bdcdbf08ea9cffa18103122c7ccb04b90",
+    "purpose": "Actual macOS runtime bytes and raw execution evidence; distinct from approved HTML design input.",
+    "items": [
+      {
+        "name": "evidence/architecture-inline-dark.png",
+        "sha256": "abc93d24b39afaab64592d6ff2895bdbf44c555852fcea3c323426294324214e"
+      },
+      {
+        "name": "evidence/dsh-first-open-five-toggles-light.png",
+        "sha256": "67baad3becb8dc8ae092aee26e99d8ca251ac99258dad89c7c08ad52630597f2"
+      },
+      {
+        "name": "evidence/dsh-first-open-retention.json",
+        "sha256": "981b6713efd7ba58a2640c41545c257ab65045ee97f5bd07b286d5454131165b"
+      },
+      {
+        "name": "evidence/execution-inputs.json",
+        "sha256": "db7d594ab34217fc3f28a281b8946f6d8fe7ae30e6a5a06c029dcf27d8a3f8a8"
+      }
+    ]
+  }
+}

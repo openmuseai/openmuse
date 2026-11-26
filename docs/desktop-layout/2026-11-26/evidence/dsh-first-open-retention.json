@@ -1,0 +1,38 @@
+{
+  "verifiedAt": "2026-11-26T09:07:19.199Z",
+  "bridgeVersion": "0.1.30",
+  "firstOpenDraftRetained": true,
+  "cycles": [
+    {
+      "cycle": 1,
+      "draft": true,
+      "query": true,
+      "apiKeyPrompt": false
+    },
+    {
+      "cycle": 2,
+      "draft": true,
+      "query": true,
+      "apiKeyPrompt": false
+    },
+    {
+      "cycle": 3,
+      "draft": true,
+      "query": true,
+      "apiKeyPrompt": false
+    },
+    {
+      "cycle": 4,
+      "draft": true,
+      "query": true,
+      "apiKeyPrompt": false
+    },
+    {
+      "cycle": 5,
+      "draft": true,
+      "query": true,
+      "apiKeyPrompt": false
+    }
+  ],
+  "modelSendClicked": false
+}

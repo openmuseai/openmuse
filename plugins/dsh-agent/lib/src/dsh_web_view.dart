@@ -56,7 +56,8 @@ final class DshPopupRouteObserver extends NavigatorObserver {
 
   bool _coversDsh(Route<dynamic>? route) =>
       (route is PopupRoute && route.barrierColor != null) ||
-      route?.settings.name == openMuseResourceRouteName;
+      route?.settings.name == openMuseResourceRouteName ||
+      route?.settings.name == 'openmuse.plugin-market';
 }
 
 Future<bool> _openCanonicalResource(BuildContext context, Object? raw) async {
@@ -124,6 +125,22 @@ String parseDshWorkspaceActivation(Object? raw) {
   return value['path'] as String;
 }
 
+/// UI-only selection from the authenticated DSH view; never an Agent command.
+({String kind, String? id}) parseDshNavigationActivation(Object? raw) {
+  final value = raw is String ? jsonDecode(raw) : raw;
+  if (value is! Map || value['type'] != 'navigation.activate') {
+    throw const FormatException('Invalid DSH navigation');
+  }
+  final kind = value['kind'];
+  final id = value[kind == 'session' ? 'sessionId' : 'panelId'];
+  if ((kind != 'session' && kind != 'panel') ||
+      (id != null && (id is! String || id.isEmpty || id.length > 256)) ||
+      (kind == 'session' && id == null)) {
+    throw const FormatException('Invalid DSH navigation target');
+  }
+  return (kind: kind as String, id: id as String?);
+}
+
 final class DshWebView extends StatefulWidget {
   const DshWebView({
     super.key,
@@ -133,6 +150,9 @@ final class DshWebView extends StatefulWidget {
     required this.onOpenResource,
     required this.reloadToken,
     this.requestedSession,
+    this.requestedPanel,
+    this.onNavigation,
+    this.presentation = 'conversation',
   });
 
   final Uri url;
@@ -141,6 +161,9 @@ final class DshWebView extends StatefulWidget {
   final Future<void> Function(DshResourceOpenMessage request) onOpenResource;
   final int reloadToken;
   final ValueListenable<String?>? requestedSession;
+  final ValueListenable<String?>? requestedPanel;
+  final void Function(String kind, String? id)? onNavigation;
+  final String presentation;
 
   @override
   State<DshWebView> createState() => _DshWebViewState();
@@ -149,11 +172,25 @@ final class DshWebView extends StatefulWidget {
 final class _DshWebViewState extends State<DshWebView> {
   MethodChannel? _channel;
   String? _loadError;
+  String _appearance = 'light';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final appearance = Theme.of(context).brightness == Brightness.dark
+        ? 'dark'
+        : 'light';
+    if (_appearance == appearance) return;
+    _appearance = appearance;
+    if (Platform.isMacOS)
+      _channel?.invokeMethod<void>('setAppearance', appearance);
+  }
 
   @override
   void initState() {
     super.initState();
     widget.requestedSession?.addListener(_openRequestedSession);
+    widget.requestedPanel?.addListener(_openRequestedPanel);
   }
 
   void _openRequestedSession() {
@@ -164,6 +201,14 @@ final class _DshWebViewState extends State<DshWebView> {
   @override
   void didUpdateWidget(DshWebView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.requestedSession != widget.requestedSession) {
+      oldWidget.requestedSession?.removeListener(_openRequestedSession);
+      widget.requestedSession?.addListener(_openRequestedSession);
+    }
+    if (oldWidget.requestedPanel != widget.requestedPanel) {
+      oldWidget.requestedPanel?.removeListener(_openRequestedPanel);
+      widget.requestedPanel?.addListener(_openRequestedPanel);
+    }
     if (oldWidget.reloadToken != widget.reloadToken) {
       _channel?.invokeMethod<void>('reload');
     }
@@ -176,6 +221,7 @@ final class _DshWebViewState extends State<DshWebView> {
   @override
   void dispose() {
     widget.requestedSession?.removeListener(_openRequestedSession);
+    widget.requestedPanel?.removeListener(_openRequestedPanel);
     _channel?.setMethodCallHandler(null);
     super.dispose();
   }
@@ -194,6 +240,14 @@ final class _DshWebViewState extends State<DshWebView> {
             final request = DshResourceOpenMessage.parse(call.arguments);
             await widget.onOpenResource(request);
           case 'workspaceActivate':
+            final raw = call.arguments is String
+                ? jsonDecode(call.arguments)
+                : call.arguments;
+            if (raw is Map && raw['type'] == 'navigation.activate') {
+              final target = parseDshNavigationActivation(raw);
+              widget.onNavigation?.call(target.kind, target.id);
+              return;
+            }
             await widget.onActivateWorkspace(
               parseDshWorkspaceActivation(call.arguments),
             );
@@ -205,6 +259,10 @@ final class _DshWebViewState extends State<DshWebView> {
     if (widget.activeMountPath != null) {
       channel.invokeMethod<void>('activateWorkspace', widget.activeMountPath);
     }
+  }
+
+  void _openRequestedPanel() {
+    _channel?.invokeMethod<void>('selectPanel', widget.requestedPanel?.value);
   }
 
   @override
@@ -233,6 +291,9 @@ final class _DshWebViewState extends State<DshWebView> {
         onOpenResource: widget.onOpenResource,
         reloadToken: widget.reloadToken,
         requestedSession: widget.requestedSession,
+        requestedPanel: widget.requestedPanel,
+        onNavigation: widget.onNavigation,
+        presentation: widget.presentation,
       );
     }
     if (!Platform.isMacOS) {
@@ -252,6 +313,8 @@ final class _DshWebViewState extends State<DshWebView> {
         viewType: 'com.openmuse.dsh/webview',
         creationParams: {
           'url': widget.url.toString(),
+          'appearance': _appearance,
+          'presentation': widget.presentation,
           if (ResourceLinkRouting.maybeOf(context) != null)
             'resourceReferenceScript': openMuseResourceReferenceScript,
           if (widget.activeMountPath != null)
@@ -272,6 +335,9 @@ final class _WindowsDshSlot extends StatefulWidget {
     required this.onOpenResource,
     required this.reloadToken,
     this.requestedSession,
+    this.requestedPanel,
+    this.onNavigation,
+    required this.presentation,
   });
 
   final Uri url;
@@ -280,6 +346,9 @@ final class _WindowsDshSlot extends StatefulWidget {
   final Future<void> Function(DshResourceOpenMessage request) onOpenResource;
   final int reloadToken;
   final ValueListenable<String?>? requestedSession;
+  final ValueListenable<String?>? requestedPanel;
+  final void Function(String kind, String? id)? onNavigation;
+  final String presentation;
 
   @override
   State<_WindowsDshSlot> createState() => _WindowsDshSlotState();
@@ -287,16 +356,22 @@ final class _WindowsDshSlot extends StatefulWidget {
 
 final class _WindowsDshSlotState extends State<_WindowsDshSlot>
     with WidgetsBindingObserver {
-  static const channel = MethodChannel('com.openmuse.dsh/webview');
+  late final MethodChannel channel;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    channel = MethodChannel(
+      widget.presentation == 'navigation'
+          ? 'com.openmuse.dsh/webview/navigation'
+          : 'com.openmuse.dsh/webview',
+    );
     WidgetsBinding.instance.addObserver(this);
     DshNativeOverlay.popupRoutes.addListener(_onHostOverlay);
     channel.setMethodCallHandler(_onNativeCall);
     widget.requestedSession?.addListener(_scheduleBounds);
+    widget.requestedPanel?.addListener(_scheduleBounds);
     _scheduleBounds();
   }
 
@@ -306,6 +381,10 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
     if (oldWidget.requestedSession != widget.requestedSession) {
       oldWidget.requestedSession?.removeListener(_scheduleBounds);
       widget.requestedSession?.addListener(_scheduleBounds);
+    }
+    if (oldWidget.requestedPanel != widget.requestedPanel) {
+      oldWidget.requestedPanel?.removeListener(_scheduleBounds);
+      widget.requestedPanel?.addListener(_scheduleBounds);
     }
     if (oldWidget.reloadToken != widget.reloadToken) {
       channel.invokeMethod<void>('reload');
@@ -322,8 +401,9 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
     WidgetsBinding.instance.removeObserver(this);
     DshNativeOverlay.popupRoutes.removeListener(_onHostOverlay);
     widget.requestedSession?.removeListener(_scheduleBounds);
+    widget.requestedPanel?.removeListener(_scheduleBounds);
     channel.setMethodCallHandler(null);
-    channel.invokeMethod<void>('hide');
+    channel.invokeMethod<void>('dispose');
     super.dispose();
   }
 
@@ -348,6 +428,14 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
     }
     if (call.method == 'workspaceActivate') {
       try {
+        final raw = call.arguments is String
+            ? jsonDecode(call.arguments)
+            : call.arguments;
+        if (raw is Map && raw['type'] == 'navigation.activate') {
+          final target = parseDshNavigationActivation(raw);
+          widget.onNavigation?.call(target.kind, target.id);
+          return;
+        }
         await widget.onActivateWorkspace(
           parseDshWorkspaceActivation(call.arguments),
         );
@@ -364,6 +452,12 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
 
   @override
   Widget build(BuildContext context) {
+    if (!TickerMode.of(context)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) channel.invokeMethod<void>('hide');
+      });
+      return const SizedBox.expand();
+    }
     _scheduleBounds();
     if (_error != null) {
       return Center(
@@ -398,7 +492,11 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
 
   void _scheduleBounds() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted || _error != null || DshNativeOverlay.obscured) return;
+      if (!mounted ||
+          _error != null ||
+          DshNativeOverlay.obscured ||
+          !TickerMode.of(context))
+        return;
       final box = context.findRenderObject() as RenderBox?;
       if (box == null ||
           !box.hasSize ||
@@ -418,10 +516,11 @@ final class _WindowsDshSlotState extends State<_WindowsDshSlot>
           'width': box.size.width * ratio,
           'height': box.size.height * ratio,
           'url': widget.url.toString(),
+          'panel': widget.requestedPanel?.value,
           if (ResourceLinkRouting.maybeOf(context) != null)
             'resourceReferenceScript': openMuseResourceReferenceScript,
           if (widget.activeMountPath != null) 'mount': widget.activeMountPath,
-          if (Platform.isLinux && widget.requestedSession?.value != null)
+          if (widget.requestedSession?.value != null)
             'session': widget.requestedSession!.value,
         });
       } on PlatformException catch (error) {

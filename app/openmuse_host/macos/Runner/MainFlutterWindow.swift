@@ -4,6 +4,49 @@ import FlutterMacOS
 class MainFlutterWindow: NSWindow {
   private var scopedWorkspaceURLs: [String: URL] = [:]
   private let bookmarksKey = "OpenMuseWorkspaceBookmarks"
+  private var navigationChannel: FlutterMethodChannel?
+
+  override func becomeKey() {
+    super.becomeKey()
+    installNavigationMenu()
+  }
+
+  override func performKeyEquivalent(with event: NSEvent) -> Bool {
+    let flags = event.modifierFlags.intersection([.command, .shift, .control, .option])
+    let key = event.charactersIgnoringModifiers?.lowercased()
+    if flags == .command && key == "b" {
+      toggleWorkbenchSidebar(nil)
+      return true
+    }
+    if flags == [.command, .shift] && key == "e" {
+      showExplorer(nil)
+      return true
+    }
+    return super.performKeyEquivalent(with: event)
+  }
+
+  @objc private func toggleWorkbenchSidebar(_ sender: Any?) {
+    navigationChannel?.invokeMethod("toggleSidebar", arguments: nil)
+  }
+
+  @objc private func showExplorer(_ sender: Any?) {
+    navigationChannel?.invokeMethod("showExplorer", arguments: nil)
+  }
+
+  private func installNavigationMenu() {
+    guard let menu = NSApp.mainMenu?.items.first(where: {
+      ["View", "视图"].contains($0.title)
+    })?.submenu, menu.item(withTag: 41001) == nil else { return }
+    let toggle = NSMenuItem(title: "Toggle Sidebar", action: #selector(toggleWorkbenchSidebar(_:)), keyEquivalent: "b")
+    toggle.keyEquivalentModifierMask = [.command]
+    toggle.tag = 41001
+    toggle.target = self
+    menu.insertItem(toggle, at: 0)
+    let explorer = NSMenuItem(title: "Explorer", action: #selector(showExplorer(_:)), keyEquivalent: "e")
+    explorer.keyEquivalentModifierMask = [.command, .shift]
+    explorer.target = self
+    menu.insertItem(explorer, at: 1)
+  }
 
   private func restoreWorkspaceBookmarks() {
     let stored = UserDefaults.standard.dictionary(forKey: bookmarksKey) ?? [:]
@@ -53,7 +96,7 @@ class MainFlutterWindow: NSWindow {
     let windowFrame = self.frame
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
-    self.minSize = NSSize(width: 1100, height: 650)
+    self.minSize = NSSize(width: 640, height: 520)
     self.titleVisibility = .hidden
     self.titlebarAppearsTransparent = true
     self.styleMask.insert(.fullSizeContentView)
@@ -67,6 +110,11 @@ class MainFlutterWindow: NSWindow {
     }
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+    navigationChannel = FlutterMethodChannel(
+      name: "com.openmuse.host/navigation",
+      binaryMessenger: flutterViewController.engine.binaryMessenger
+    )
+    DispatchQueue.main.async { [weak self] in self?.installNavigationMenu() }
     flutterViewController.registrar(forPlugin: "OpenMuseMcpAppWebView")
       .register(McpAppWebViewFactory(messenger: flutterViewController.engine.binaryMessenger), withId: "com.openmuse.mcp/app-view")
 

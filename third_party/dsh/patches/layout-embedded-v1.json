@@ -1,0 +1,34 @@
+{
+  "schema": "openmuse.vendor-patch/1",
+  "upstream": "@deepseek-ai/dsh-client-ui-layout@0.2.0-rc.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/client/ui-layout"
+  },
+  "license": "MIT",
+  "upstreamArchiveSha256": "403c3ee38c258c121752ab0ba6f7ab980958517d7af982967864a6963037fdfb",
+  "sourceClientSha256": "587d109681891295aed5bf0a4b1ca7c005113124be5b043246f09fccce47f492",
+  "patchedClientSha256": "a4b4d11bf71dce207fe99e0306d8dd042ed9db1df539388c02beeb534c1eaf51",
+  "patches": [
+    [
+      "const sidebarCollapsed = narrow ? !layoutInfo.narrowExpanded : layoutInfo.sidebar === 0;",
+      "const hostNavigation = window.__OpenMuseHostNavigation === 1;\n\t\t\tconst sidebarCollapsed = hostNavigation || (narrow ? !layoutInfo.narrowExpanded : layoutInfo.sidebar === 0);"
+    ],
+    [
+      "const collapsedWidth = darwin || document.documentElement.hasAttribute(\"data-windows-titlebar\") ? 0 : 56;",
+      "const collapsedWidth = hostNavigation || darwin || document.documentElement.hasAttribute(\"data-windows-titlebar\") ? 0 : 56;"
+    ],
+    [
+      "() => renderSlot(\"sidebar\", {",
+      "() => hostNavigation ? null : renderSlot(\"sidebar\", {"
+    ],
+    [
+      "const leadingMounted = darwin && sidebarCollapsed;",
+      "const leadingMounted = !hostNavigation && darwin && sidebarCollapsed;"
+    ]
+  ],
+  "flag": "window.__OpenMuseHostNavigation === 1",
+  "default": "Unchanged standalone DSH",
+  "architecture": "A-01 / ADR-04"
+}

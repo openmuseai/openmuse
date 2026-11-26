@@ -34,12 +34,12 @@ std::string json_string(const std::string& text) {
 
 class DshWebView {
  public:
-  DshWebView(FlView* view, GtkOverlay* overlay)
-      : flutter_view_(GTK_WIDGET(view)), overlay_(overlay) {
+  DshWebView(FlView* view, GtkOverlay* overlay, bool navigation = false)
+      : flutter_view_(GTK_WIDGET(view)), overlay_(overlay), navigation_(navigation) {
     g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
     channel_ = fl_method_channel_new(
         fl_engine_get_binary_messenger(fl_view_get_engine(view)),
-        "com.openmuse.dsh/webview", FL_METHOD_CODEC(codec));
+        navigation_ ? "com.openmuse.dsh/webview/navigation" : "com.openmuse.dsh/webview", FL_METHOD_CODEC(codec));
     fl_method_channel_set_method_call_handler(channel_, on_method, this, nullptr);
   }
 
@@ -92,6 +92,8 @@ class DshWebView {
           self->push_state();
         }
       }
+      if (const char* panel = string_arg(args, "panel")) self->panel(json_string(panel));
+      else self->panel("null");
       gtk_widget_set_margin_start(GTK_WIDGET(self->webview_), static_cast<int>(x));
       gtk_widget_set_margin_top(GTK_WIDGET(self->webview_), static_cast<int>(y));
       gtk_widget_set_size_request(GTK_WIDGET(self->webview_), static_cast<int>(width), static_cast<int>(height));
@@ -104,6 +106,8 @@ class DshWebView {
       gtk_widget_grab_focus(self->flutter_view_);
     } else if (g_str_equal(method, "reload")) {
       if (self->webview_) webkit_web_view_reload(self->webview_);
+    } else if (g_str_equal(method, "dispose")) {
+      if (self->webview_) { gtk_widget_destroy(GTK_WIDGET(self->webview_)); self->webview_ = nullptr; self->url_.clear(); }
     } else if (g_str_equal(method, "activateWorkspace") || g_str_equal(method, "openSession")) {
       if (fl_value_get_type(args) != FL_VALUE_TYPE_STRING) {
         fl_method_call_respond_error(call, "invalid-arguments", "Expected a string", nullptr, nullptr);
@@ -129,6 +133,12 @@ class DshWebView {
     if (path == mount_) return;
     mount_ = path;
     push_state();
+  }
+
+  void panel(const std::string& encoded) {
+    if (encoded == panel_) return;
+    panel_ = encoded;
+    evaluate("window.__OpenMuseDesiredPanel=" + panel_ + ";window.OpenMuseDshWorkspace?.selectPanel(window.__OpenMuseDesiredPanel);");
   }
 
   void push_state() {
@@ -190,7 +200,7 @@ class DshWebView {
       return;
     }
     const char* method = (g_str_equal(kind, "resource.open") || g_str_equal(kind,"resource.reference.open")) ? "resourceOpen" :
-                         g_str_equal(kind, "workspace.activate") ? "workspaceActivate" : nullptr;
+                         (g_str_equal(kind, "workspace.activate") || g_str_equal(kind,"navigation.activate")) ? "workspaceActivate" : nullptr;
     if (!method) return;
     g_autoptr(FlValue) payload = fl_value_new_string(raw);
     fl_method_channel_invoke_method(self->channel_, method, payload, nullptr, nullptr, nullptr);
@@ -207,7 +217,8 @@ class DshWebView {
       for (const name of ['MuseHostResource','MuseHostWorkspace','MuseHostClipboard']) {
         window[name] = {postMessage: raw => window.webkit.messageHandlers.openmuse.postMessage(String(raw))};
       }
-    )JS" + std::string("window.__OpenMuseDesiredWorkspace=") + json_string(mount_) + ";";
+    )JS" + std::string("window.__OpenMuseHostNavigation=1;window.__OpenMuseDshPresentation=") +
+      json_string(navigation_ ? "navigation" : "conversation") + ";window.__OpenMuseDesiredWorkspace=" + json_string(mount_) + ";";
     WebKitUserScript* injected = webkit_user_script_new(script.c_str(),
         WEBKIT_USER_CONTENT_INJECT_TOP_FRAME, WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START, nullptr, nullptr);
     webkit_user_content_manager_add_script(manager, injected);
@@ -249,10 +260,14 @@ class DshWebView {
   std::string resource_reference_script_;
   std::string mount_;
   std::string session_;
+  std::string panel_;
+  bool navigation_;
 };
 }  // namespace
 
 void openmuse_dsh_webview_register(FlView* view, GtkOverlay* overlay) {
+  g_object_set_data_full(G_OBJECT(overlay), "openmuse-dsh-navigation",
+      new DshWebView(view, overlay, true), [](gpointer data) { delete static_cast<DshWebView*>(data); });
   g_object_set_data_full(G_OBJECT(overlay), "openmuse-dsh",
       new DshWebView(view, overlay), [](gpointer data) { delete static_cast<DshWebView*>(data); });
 }

@@ -11,7 +11,7 @@ class DshView;
 class OpenMuseDshWebViewPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows* registrar);
-  explicit OpenMuseDshWebViewPlugin(flutter::PluginRegistrarWindows* registrar);
+  explicit OpenMuseDshWebViewPlugin(flutter::PluginRegistrarWindows* registrar, bool navigation = false);
   ~OpenMuseDshWebViewPlugin() override;
 
  private:
@@ -22,6 +22,7 @@ class OpenMuseDshWebViewPlugin : public flutter::Plugin {
   flutter::PluginRegistrarWindows* registrar_;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
   std::shared_ptr<DshView> view_;
+  bool navigation_;
 };
 
 #endif

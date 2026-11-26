@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 
 import 'src/dsh_panel.dart';
+import 'src/dsh_navigation.dart';
+import 'src/dsh_web_view.dart';
 import 'src/dsh_resource_source.dart';
 import 'src/dsh_generation.dart';
 import 'src/dsh_sidecar.dart';
@@ -26,7 +28,8 @@ final class OpenMuseDshPlugin
         OpenMusePluginLogContributor,
         OpenMuseAgentContributor,
         OpenMuseToolContributor,
-        OpenMuseResourceSourceContributor {
+        OpenMuseResourceSourceContributor,
+        OpenMuseNavigationContributor {
   OpenMuseDshPlugin({
     DshSidecarSupervisor? supervisor,
     Future<bool> Function(PluginInteraction)? routeInteraction,
@@ -274,6 +277,27 @@ final class OpenMuseDshPlugin
       throw UnsupportedError('DSH contributes a panel, not an editor');
 
   @override
+  List<OpenMuseNavigationItem> get navigationItems => [
+    OpenMuseNavigationItem(
+      id: 'dsh.sessions',
+      order: 10,
+      title: 'Agent',
+      icon: 'agent',
+      sidebar: (context) {
+        final supervisor = _supervisor;
+        return supervisor == null
+            ? const SizedBox.shrink()
+            : DshNavigation(
+                supervisor: supervisor,
+                activeMount: _activeMount,
+                onActivateWorkspace: _activateWorkspace,
+                onOpenResource: _openResource,
+              );
+      },
+    ),
+  ];
+
+  @override
   Widget? buildPanel(BuildContext context, String panelId) {
     if (panelId != 'dsh.agent') return null;
     final supervisor = _supervisor;
@@ -284,21 +308,25 @@ final class OpenMuseDshPlugin
       supervisor: supervisor,
       desktopInteraction: _desktopInteraction,
       activeMount: _activeMount,
-      onActivateWorkspace: (path) async {
-        _activeMount.value = path;
-        await _binding?.publish();
-        await _context?.executeHostCommand('workspace.activateMount', {
-          'path': path,
-        });
-      },
-      onOpenResource: (request) async {
-        await _context?.executeHostCommand('workspace.openResource', {
-          'path': request.path,
-          'cwd': request.cwd,
-          if (request.line != null) 'line': request.line,
-        });
-      },
+      onActivateWorkspace: _activateWorkspace,
+      onOpenResource: _openResource,
     );
+  }
+
+  Future<void> _activateWorkspace(String path) async {
+    _activeMount.value = path;
+    await _binding?.publish();
+    await _context?.executeHostCommand('workspace.activateMount', {
+      'path': path,
+    });
+  }
+
+  Future<void> _openResource(DshResourceOpenMessage request) async {
+    await _context?.executeHostCommand('workspace.openResource', {
+      'path': request.path,
+      'cwd': request.cwd,
+      if (request.line != null) 'line': request.line,
+    });
   }
 
   @override

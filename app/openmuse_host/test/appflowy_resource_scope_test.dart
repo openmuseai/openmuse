@@ -197,7 +197,17 @@ void main() {
       auth.switchTo('alice');
       expect(center.editorLifetime.active, isFalse);
       expect(provider.available, isFalse);
-      await expectLater(center.resolve(ref()), denied);
+      // A retired owner rejects before authorization or any remote request.
+      await expectLater(
+        center.resolve(ref()),
+        throwsA(
+          isA<ResourceFailure>().having(
+            (e) => e.code,
+            'code',
+            'RESOURCE_SESSION_CLOSED',
+          ),
+        ),
+      );
       expect(requests, count);
     },
   );

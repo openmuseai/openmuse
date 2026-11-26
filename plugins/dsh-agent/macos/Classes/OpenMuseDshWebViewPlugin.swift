@@ -10,6 +10,9 @@ public final class OpenMuseDshWebViewPlugin: NSObject, FlutterPlugin {
 
 final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
   private let messenger: FlutterBinaryMessenger
+  // Share the same DSH origin's cookies/preferences between its two seats.
+  // Separate ports still have isolated jars (cookies do not scope by port).
+  private var dataStores: [String: WKWebsiteDataStore] = [:]
 
   init(messenger: FlutterBinaryMessenger) {
     self.messenger = messenger
@@ -19,7 +22,6 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
     let configuration = WKWebViewConfiguration()
     // Cookie scope excludes ports. A shared localhost jar accumulates a cookie
     // for every DSH ephemeral port until Node rejects its header with HTTP 431.
-    configuration.websiteDataStore = .nonPersistent()
     guard
       let values = args as? [String: Any],
       let raw = values["url"] as? String,
@@ -32,6 +34,11 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
       webView.loadHTMLString("<p>Invalid DSH loopback URL</p>", baseURL: nil)
       return webView
     }
+    let store = dataStores[raw] ?? WKWebsiteDataStore.nonPersistent()
+    // A new authenticated sidecar launch has a fresh bootstrap URL. Drop the
+    // previous cache entry; existing views retain their own configuration.
+    dataStores = [raw: store]
+    configuration.websiteDataStore = store
     let channel = FlutterMethodChannel(
       name: "com.openmuse.dsh/webview/\(viewId)",
       binaryMessenger: messenger
@@ -80,6 +87,11 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
       injectionTime: .atDocumentStart,
       forMainFrameOnly: true
     ))
+    configuration.userContentController.addUserScript(WKUserScript(
+      source: "window.__OpenMuseDshPresentation = \(values["presentation"] as? String == "navigation" ? "\"navigation\"" : "\"conversation\"");",
+      injectionTime: .atDocumentStart,
+      forMainFrameOnly: true
+    ))
     if let path = values["activeMountPath"] as? String,
        let data = try? JSONSerialization.data(withJSONObject: [path]),
        let json = String(data: data, encoding: .utf8) {
@@ -90,12 +102,23 @@ final class DshWebViewFactory: NSObject, FlutterPlatformViewFactory {
       ))
     }
     let webView = WKWebView(frame: .zero, configuration: configuration)
+    webView.appearance = NSAppearance(named: values["appearance"] as? String == "dark" ? .darkAqua : .aqua)
     webView.setValue(true, forKey: "drawsBackground")
     let navigation = DshNavigation(channel: channel)
     webView.navigationDelegate = navigation
     let host = DshWebHostView(webView: webView, navigation: navigation)
     channel.setMethodCallHandler { [weak webView] call, result in
       switch call.method {
+      case "selectPanel":
+        let panel = call.arguments as? String
+        guard panel == nil || panel!.utf8.count <= 256,
+              let data = try? JSONSerialization.data(withJSONObject: [panel as Any? ?? NSNull()]),
+              let json = String(data: data, encoding: .utf8) else { result(FlutterMethodNotImplemented); return }
+        webView?.evaluateJavaScript("window.__OpenMuseDesiredPanel = \(json)[0]; window.OpenMuseDshWorkspace?.selectPanel(window.__OpenMuseDesiredPanel);")
+        result(nil)
+      case "setAppearance":
+        webView?.appearance = NSAppearance(named: call.arguments as? String == "dark" ? .darkAqua : .aqua)
+        result(nil)
       case "openSession":
         guard let sessionId = call.arguments as? String,
               let data = try? JSONSerialization.data(withJSONObject: [sessionId]),
@@ -238,59 +261,10 @@ private final class DshPageDiagnostics: NSObject, WKScriptMessageHandler {
   }
 }
 
-/// Embedded Host chrome: DSH's icon rail is always a top strip, matching the
-/// macOS / latest DSH layout. Class hashes are checked against DSH 0.2.0-rc.2
-/// and must stay in sync with plugins/dsh-agent/windows/openmuse_dsh_plugin.cpp.
+/// Embedded navigation v1 is implemented by the pinned DSH layout owner.
+/// Keep the flag in sync with the Windows adapter; no private DOM CSS.
 private enum DshCompactSidebarStyle {
-  static let userScript = """
-  (function() {
-    const STYLE_ID = 'openmuse-dsh-compact-sidebar';
-    const CSS = '.pI_x6G_frame[data-sidebar-collapsed]{grid-template-rows:52px minmax(0,1fr)!important;grid-template-columns:minmax(0,1fr) 0 0!important}.pI_x6G_frame[data-sidebar-collapsed]:not([data-rightbar-collapsed]){grid-template-columns:minmax(0,1fr) 0 minmax(0,45vw)!important}.pI_x6G_frame[data-sidebar-collapsed] .pI_x6G_sidebarCol{grid-area:1/1/2/-1!important;border-right:none!important;border-bottom:0.5px solid var(--dsw-alias-border-l3,#ececf0);min-height:52px;max-height:52px;overflow:hidden}.pI_x6G_frame[data-sidebar-collapsed] .pI_x6G_centerCol{grid-area:2/1/3/2!important}.pI_x6G_frame[data-sidebar-collapsed] .pI_x6G_rightbarCol{grid-area:2/3/3/4!important}.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_root{flex-direction:row!important;align-items:center!important;padding:8px 40px 8px 10px!important;height:52px!important;max-height:52px!important;gap:4px;width:100%}.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_topStrip,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_regionArea,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_brandName,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_fallbackBrandName,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_localBuildBrand,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_newSessionLabel{display:none!important}.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_logoRow,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_newSession{margin:0!important;height:36px!important;width:36px!important}.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_panelList,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_footArea,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_footerActions,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_settingsArea{flex-direction:row!important;margin:0!important;width:auto!important;gap:4px!important}.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_footArea{align-items:center!important;order:-1}.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_railIn .hHd-Xa_iconButton,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_railIn .hHd-Xa_newSession,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_railIn .hHd-Xa_panelList,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_railIn .hHd-Xa_regionArea,.pI_x6G_frame[data-sidebar-collapsed] .hHd-Xa_railIn .hHd-Xa_footArea{animation:none!important;transform:none!important}#openmuse-dsh-reload{flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin:0;padding:0;border:none;border-radius:50%;background:transparent;color:inherit;cursor:pointer}#openmuse-dsh-reload:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.06))}';
-    function ensureStyle() {
-      let style = document.getElementById(STYLE_ID);
-      if (!style) {
-        style = document.createElement('style');
-        style.id = STYLE_ID;
-        (document.head || document.documentElement).appendChild(style);
-      }
-      if (style.textContent !== CSS) style.textContent = CSS;
-    }
-    function ensureReload() {
-      if (!/Win/i.test(navigator.platform || navigator.userAgent || '')) return;
-      if (document.getElementById('openmuse-dsh-reload')) return;
-      const root = document.querySelector('.hHd-Xa_root');
-      if (!root) return;
-      const btn = document.createElement('button');
-      btn.id = 'openmuse-dsh-reload';
-      btn.type = 'button';
-      btn.title = '刷新 DSH 面板';
-      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
-      btn.addEventListener('click', function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        location.reload();
-      });
-      const list = document.querySelector('.hHd-Xa_panelList');
-      if (list && list.parentNode) {
-        list.parentNode.insertBefore(btn, list.nextSibling);
-      } else {
-        root.appendChild(btn);
-      }
-    }
-    let scheduled = false;
-    function tick() {
-      if (scheduled) return;
-      scheduled = true;
-      requestAnimationFrame(function() {
-        scheduled = false;
-        ensureStyle();
-        ensureReload();
-      });
-    }
-    tick();
-    new MutationObserver(tick).observe(document.documentElement, {childList:true, subtree:true, attributes:true});
-  })();
-  """
+  static let userScript = "window.__OpenMuseHostNavigation = 1;"
 }
 
 private final class DshClipboardMessageHandler: NSObject, WKScriptMessageHandler {
