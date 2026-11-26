@@ -120,14 +120,26 @@ window.__ModuleLoader__.load({
       const originalOpenWorkspace = ui.openWorkspace;
       const originalOpenSession = ui.openSession;
       let receivingHostNavigation = false;
+      // A newly mounted navigation seat restores its own historical selection.
+      // Only an interaction inside that seat may replace the conversation seat.
+      let navigationIntent = false;
+      const isNavigation = window.__OpenMuseDshPresentation === 'navigation';
+      const onNavigationIntent = event => { if (event.isTrusted) navigationIntent = true; };
+      if (isNavigation) {
+        window.addEventListener?.('pointerdown', onNavigationIntent, true);
+        window.addEventListener?.('keydown', onNavigationIntent, true);
+      }
+      const mayPublish = () => !receivingHostNavigation && (!isNavigation || navigationIntent);
       function publishSelection() {
-        if (receivingHostNavigation) return;
+        if (!mayPublish()) return;
         const sessionId = ui.mainReference?.sessionId;
         if (typeof sessionId === 'string' && sessionId.length <= 256)
           window.MuseHostWorkspace?.postMessage(JSON.stringify({type:'navigation.activate',kind:'session',sessionId}));
       }
       function publishActiveSession() {
+        if (!mayPublish()) return;
         publishSelection();
+        navigationIntent = false;
         const sessionId = ui.mainReference?.sessionId;
         const cwd = ctx.sessions.list.getSnapshot().byId[sessionId]?.cwd;
         if (typeof cwd !== 'string' || !cwd || !window.MuseHostWorkspace) return;
@@ -178,13 +190,15 @@ window.__ModuleLoader__.load({
       window.OpenMuseDshWorkspace = bridgeApi;
       if (Object.prototype.hasOwnProperty.call(window, '__OpenMuseDesiredPanel'))
         bridgeApi.selectPanel(window.__OpenMuseDesiredPanel);
-      const unsubscribeSelection = ui.selection?.subscribe(publishSelection);
+      const unsubscribeSelection = ui.selection?.subscribe(publishActiveSession);
       const layout = ctx.layout;
       const originalSelectPanel = layout?.selectPanel;
       if (layout && originalSelectPanel) layout.selectPanel = function(id) {
         const result = originalSelectPanel.call(this, id);
-        if (!receivingHostNavigation && window.__OpenMuseDshPresentation === 'navigation')
+        if (isNavigation && mayPublish()) {
+          navigationIntent = false;
           window.MuseHostWorkspace?.postMessage(JSON.stringify({type:'navigation.activate',kind:'panel',panelId:id}));
+        }
         return result;
       };
       if (typeof window.__OpenMuseDesiredSession === 'string') void bridgeApi.openSession(window.__OpenMuseDesiredSession);
@@ -195,6 +209,10 @@ window.__ModuleLoader__.load({
         ui.openSession = originalOpenSession;
         unsubscribe();
         unsubscribeSelection?.();
+        if (isNavigation) {
+          window.removeEventListener?.('pointerdown', onNavigationIntent, true);
+          window.removeEventListener?.('keydown', onNavigationIntent, true);
+        }
         if (layout && originalSelectPanel) layout.selectPanel = originalSelectPanel;
         if (window.OpenMuseDshWorkspace === bridgeApi) delete window.OpenMuseDshWorkspace;
       }, 'openmuse-dsh-bridge: workspace activation');
