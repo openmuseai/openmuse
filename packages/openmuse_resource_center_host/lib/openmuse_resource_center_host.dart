@@ -11,6 +11,7 @@ import 'package:muse_resource_center_io/muse_resource_center_io.dart';
 import 'package:openmuse_plugin_sdk/openmuse_plugin_sdk.dart';
 import 'package:openmuse_resource_center/openmuse_resource_center.dart';
 
+export 'src/directory_capability.dart';
 export 'package:muse_resource_center_io/muse_resource_center_io.dart';
 export 'package:openmuse_resource_center/openmuse_resource_center.dart';
 

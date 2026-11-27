@@ -61,6 +61,37 @@ void main() {
           },
           'content': [],
         };
+        app.hostTools = [
+          ...app.hostTools,
+          {
+            'name': 'host_directory_sources',
+            'description': 'Scoped Home directories',
+            'inputSchema': {
+              'type': 'object',
+              'properties': {},
+              'additionalProperties': false,
+            },
+            '_meta': {
+              'ui': {
+                'visibility': ['app'],
+              },
+            },
+          },
+        ];
+        final agentTools = await app.request('tools/list', {}, agent: true);
+        expect(
+          (agentTools['tools'] as List).any(
+            (t) => t['name'] == 'host_directory_sources',
+          ),
+          false,
+        );
+        await expectLater(
+          app.request('tools/call', {
+            'name': 'host_directory_sources',
+            'arguments': {},
+          }, agent: true),
+          throwsStateError,
+        );
         final tools = await app.request('tools/list', {});
         expect(
           (tools['tools'] as List).any(
@@ -88,6 +119,28 @@ void main() {
           'arguments': {},
         });
         expect(source['isError'], isNot(true));
+        final opened = await app.request('tools/call', {
+          'name': 'review_open',
+          'arguments': {
+            'schema': 'openmuse.repository-review/1',
+            'title': 'Native nested schema interoperability',
+            'source': {'kind': 'versions', 'provider': 'Host integration test'},
+            'files': [
+              {
+                'path': 'product.md',
+                'status': 'modified',
+                'before': '旧产品稿',
+                'after': '新产品稿',
+              },
+            ],
+          },
+        });
+        expect(opened['isError'], isNot(true));
+        expect(
+          (opened['structuredContent'] as Map)['digest'],
+          matches(RegExp(r'^[a-f0-9]{64}$')),
+        );
+
         final waiting = Completer<Map<String, Object?>>();
         app.callHostTool = (name, args) => waiting.future;
         final pending = app.request('tools/call', {

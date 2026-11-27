@@ -1201,6 +1201,24 @@ Future<Widget> bootOpenMuseHost({
       app.callHostTool = provider.call;
     }
   }
+  // Generic Home directory capability, scoped by the installed App's grant.
+  for (final app in remoteApps) {
+    final capabilities = app.definition['hostCapabilities'] as List? ?? const [];
+    if (!capabilities.contains('directories.read')) continue;
+    final directories = HostDirectoryCapability(
+      hub: () => resourceCenter.value?.hub,
+      sourceKeys: (app.definition['hostDirectorySources'] as List? ?? const []).cast<String>().toSet(),
+      bindings: [for (final b in app.definition['hostRepositoryBindings'] as List? ?? const [])
+        HostRepositoryBinding(sourceKey: b['sourceKey'] as String,
+          nodeRef: b['nodeRef'] as String, repositoryId: b['repositoryId'] as String)],
+      authorized: () => readyAccount.value != null &&
+        app.definition['owner'] == sha256.convert(utf8.encode(readyAccount.value!)).toString(),
+    );
+    final previous = app.callHostTool;
+    app.hostTools = [...app.hostTools, ...directories.tools];
+    app.callHostTool = (name, args) => HostDirectoryCapability.names.contains(name)
+      ? directories.call(name, args) : previous!(name, args);
+  }
   final appRouter = RemoteMcpAppsRouter(remoteApps);
   pairedGateway.mcpApps = (request) async {
     if(request.accountRef!=readyAccount.value){throw StateError('APP_ACCOUNT_SCOPE_REVOKED');}
