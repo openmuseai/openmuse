@@ -1,0 +1,70 @@
+{
+  "schema": "openmuse.huawei-consent-verification/1",
+  "checkedOn": "2026-11-28",
+  "sourceHead": "6331e72b341af844b0ee08efc4f890c78aade5a0",
+  "rejection": {
+    "source": "User-provided review report; not independently re-opened in console",
+    "applicationName": "OpenMuse",
+    "packageId": "com.openmuseai.mobile",
+    "version": "1.0.1",
+    "submittedAt": "2026-11-06 11:33:52 Asia/Shanghai",
+    "reportGeneratedAt": "2026-11-11 20:05:22 Asia/Shanghai",
+    "environment": "Wi-Fi, HUAWEI P60 Pro, HarmonyOS 3.1.0, Chinese",
+    "issue": "隐私政策未以明示同意方式征得同意",
+    "remediationRequested": "空白复选框由用户自愿明确勾选，或弹窗提供拒绝选项",
+    "status": "open until exact new signed Android package first-launch/decline/network verification and channel review",
+    "ruleUrl": "https://developer.huawei.com/consumer/cn/doc/doccenter-submission/50104#section599875815368"
+  },
+  "implementation": {
+    "existing": true,
+    "changedRuntimeCode": false,
+    "findings": [
+      "复选框初始值false，未勾选时接受按钮不可操作",
+      "可点击拒绝，清除勾选，不记录接受且不调用业务boot",
+      "同意记录持久化成功之后才进入业务boot；保存失败保留错误和重试",
+      "正式Mobile入口使用默认requiresLegalConsent=true；Mac App Store的单独跳过规则不适用于Mobile"
+    ],
+    "sourceFiles": [
+      {
+        "path": "packages/openmuse_i18n/lib/src/region_bootstrap.dart",
+        "sha256": "4a623446f9ff8dbdfc29547816109da9560c60e13c35ca4d44374085f8dcdc28"
+      },
+      {
+        "path": "packages/openmuse_i18n/lib/src/legal_consent_page.dart",
+        "sha256": "162fceaa2a06c87ea4b308bbf44a2a3b2b079ccf469520ad7094ca739741bc8d"
+      },
+      {
+        "path": "packages/openmuse_runtime_config/lib/src/release.dart",
+        "sha256": "fe110521af4cb9761ae3f25047c37c863f96b92931d18f536f85ba7f1db6e26d"
+      },
+      {
+        "path": "packages/openmuse_i18n/test/region_bootstrap_test.dart",
+        "sha256": "5fad4df0a0fed16b4c53e7c5df29970300183c667ffd8d6c6c330e21d353ea12"
+      },
+      {
+        "path": "packages/openmuse_i18n/test/legal_consent_page_test.dart",
+        "sha256": "a37b49ba766c2372d0dc922de7ce0a76c1e240a83dcb180979f4f47213379a92"
+      }
+    ]
+  },
+  "execution": {
+    "command": "flutter test test/region_bootstrap_test.dart test/legal_consent_page_test.dart --reporter expanded",
+    "directory": "packages/openmuse_i18n",
+    "exitCode": 0,
+    "passed": 16,
+    "logSha256": "6121c83675f59166fd623525041fac604be5eaa84d4b6fe60b9a081c70dcc269",
+    "addedCase": "fixed mainland release never treats an old region choice or decline as consent",
+    "coverage": [
+      "固定中国区安装配置恢复旧地区记录时仍需明示接受",
+      "拒绝及重新启动后不自动接受、不进入业务boot",
+      "主动勾选并接受后记录同意再进入业务boot",
+      "既有中美语言、短屏/大字/深浅色、同意写入失败/重试覆盖"
+    ]
+  },
+  "limits": [
+    "组件/启动边界测试不是最终APK真机、网络流量或华为审核通过",
+    "尚未核对112503以外的最终修复包；112503存在独立PPTX P1失败",
+    "未向华为发送整改回复或提交应用"
+  ],
+  "formalRelease": false
+}
