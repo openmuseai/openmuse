@@ -16,7 +16,8 @@
     "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build-112503.json",
     "filingIndependentlyQueried": false,
     "certificateSha256": "7e6cefb279eeb3f73890c35ecb8e941bb7630c8a6adda9a010d1d9d997ef22c4",
-    "filingAndCopyrightNameMatch": "must verify against actual certificate and each console"
+    "filingAndCopyrightNameMatch": "must verify against actual certificate and each console",
+    "copyrightNameAndPackageVisuallyVerified": true
   },
   "publicLinks": {
     "privacy": "https://openmuseai.com/zh/privacy",
@@ -79,5 +80,7 @@
     "按实际行为回答AI/行业资质条件项；豆包材料仅适用于豆包",
     "审核专用账号、演示数据和后端可达性",
     "发布方式及审核/上架状态回执"
-  ]
+  ],
+  "localOriginalMaterialRoot": "/Users/mac/src/openmuse-io/Muse-Client",
+  "materialVisualReview": "docs/release/runs/2026-11-mobile-1.0.3/evidence/domestic-pdf-review-20261128.json"
 }

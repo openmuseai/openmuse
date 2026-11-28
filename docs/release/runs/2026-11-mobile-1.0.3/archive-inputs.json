@@ -165,7 +165,7 @@
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/release.json",
       "target": "release.json",
-      "sha256": "81f2de98ffd53c304e0b616111afb6e6d53ab624d60ef0c6824b64205d74400d",
+      "sha256": "e41581a898cbd77c162aee8ba1a09a5824e8ea5de496af865be6e344d797e827",
       "reviewedForSecrets": true
     },
     {
@@ -177,7 +177,7 @@
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/02-development.json",
       "target": "stages/02-development.json",
-      "sha256": "83752d09339c78dc62d8b68dff1ca02796eac25ebe8332b5fcce7163f6c872ed",
+      "sha256": "80bfec4b55c170313fe4c747c42ae04d61d01b4959dc4e3fd361dd773c1adff0",
       "reviewedForSecrets": true
     },
     {
@@ -189,25 +189,25 @@
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/04-tests.json",
       "target": "stages/04-tests.json",
-      "sha256": "bd1e83b8a6b150463e2abc3a3dd4be2a8a878410dd406a58b12efcc6eb49a5f6",
+      "sha256": "b51a970523f23de3d43679126e85f14ca189bd927111235c06162c2bd7ab1162",
       "reviewedForSecrets": true
     },
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/05-build.json",
       "target": "stages/05-build.json",
-      "sha256": "1020d42eaa534da239e7d58ae627c3ed2cd74feee2687024d827f1c766c6e24e",
+      "sha256": "81008c7b627873fff8e9d17c5fa68830a80c3868274789896dbf8910f7d8c46a",
       "reviewedForSecrets": true
     },
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/06-binary.json",
       "target": "stages/06-binary.json",
-      "sha256": "dbd8a0bca0d7cecd91e305bc3d727d3b98d6900235773e4acbca304547aebb82",
+      "sha256": "8c0a58add9042ab9b097795c9e851fc60d2853ce51a098a37447afb722a6c723",
       "reviewedForSecrets": true
     },
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/07-materials.json",
       "target": "stages/07-materials.json",
-      "sha256": "b3ad7a1498b21cf2e17e219700659384fd95cd737ae49e3325c6283cf8802d2e",
+      "sha256": "86ed3430720afbb37bb5b2ee67b194492b0075af6e30d818399346ff2c4620a9",
       "reviewedForSecrets": true
     },
     {
@@ -363,7 +363,7 @@
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/domestic-materials-20261128.json",
       "target": "evidence/domestic-materials-20261128.json",
-      "sha256": "d8b73bbe12d620bf7a4f359344677356fefd535c13528ce704b838e8d4a389ec",
+      "sha256": "a1b674213242d1ec95660a4c74b3198d8a5b30a21d98840ca376b4cf8488c610",
       "reviewedForSecrets": true
     },
     {
@@ -382,6 +382,72 @@
       "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/domestic-channel-mr-20261128.json",
       "target": "evidence/domestic-channel-mr-20261128.json",
       "sha256": "156af3d156e2fa86f3fa6b32179e1dc5263d534e0c76036eeefcbd08369d4e66",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build-112504.json",
+      "target": "evidence/cn-build-112504.json",
+      "sha256": "b7abda12f6898de1be08803947d459802c53b1247b4122df44790635ed6bf8ff",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-112504-signature-report.txt",
+      "target": "evidence/cn-112504-signature-report.txt",
+      "sha256": "4b246d2a1fb7385de3f0c6f2bfa5ed37abd9c31ace95b56501872ba1881cfa48",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-112504-runtime-input-report.json",
+      "target": "evidence/cn-112504-runtime-input-report.json",
+      "sha256": "582a12b61cf1ca748836c106394be5154ce33cf6afb69130cc8b6cbd0deec7d0",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-binary-preflight-112504.json",
+      "target": "evidence/android-binary-preflight-112504.json",
+      "sha256": "2c46f26275635410ae1ef89c67b36e456a72bbf3aa816c10c0067705f834fd46",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-physical-install-112504.json",
+      "target": "evidence/android-physical-install-112504.json",
+      "sha256": "b648a669ac0f28b9390d75fe800a0e525c8b5596410e1aed15e3534b20c8ca3e",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/repository-candidates-112504.json",
+      "target": "evidence/repository-candidates-112504.json",
+      "sha256": "ed2e6939aa8d5bbefb673b304db5c488b1481d6c154eb88b1ffa84aec784a801",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/domestic-pdf-review-20261128.json",
+      "target": "evidence/domestic-pdf-review-20261128.json",
+      "sha256": "b4953393f99ceee44aa6442990773ee3a7c4aabf61050388fffe3dac06bbf32c",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-progress-112504.json",
+      "target": "evidence/candidate-progress-112504.json",
+      "sha256": "84bb637c61794d406ec49c473a7840939d266de63eeb4274778af0583e513474",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/genoffice-touch-098-validation.json",
+      "target": "evidence/genoffice-touch-098-validation.json",
+      "sha256": "0a782a01ca03e5b1281277788c4889204c5beec009953d05ae54a6f7aed5602b",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-112503-history.json",
+      "target": "evidence/candidate-112503-history.json",
+      "sha256": "2f9dc7c828c1865b310e3f76868e2af65f7678f8c44fd20e463b048b214cf000",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/native-document-pins-112504.json",
+      "target": "evidence/native-document-pins-112504.json",
+      "sha256": "7be0ec7ba8ffbc4a36483d8674cfc6bed12c5032f46b643062b1b5f2318298ae",
       "reviewedForSecrets": true
     }
   ]

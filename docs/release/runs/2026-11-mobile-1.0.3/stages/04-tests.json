@@ -2,7 +2,7 @@
   "id": "04-tests",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "112503 physical iPhone channel upgrade preserves account/notification permission and PPTX touch enters actual keyboard input. P1 FAIL: undo and save/reopen persistence. Formal feature/release approval blocked; browser/WebKit touch tests do not substitute.",
+  "summary": "Android112504 analyzer and123Mobile tests passed; plugin14tests, two engines23pageTCK and touch persistence passed. Exact signedAPK installed on physicalOPPO. Actual production UI save/reopen, privacy/refusal/network and task notifications pending; iOS112503 P1 remains open.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/validation-summary.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-physical-smart-document.json",
@@ -13,7 +13,11 @@
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/native-document-pins-112503.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ci-remote-progress-112503.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-upgrade-state-112503.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-physical-pptx-112503.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-physical-pptx-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-progress-112504.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-physical-install-112504.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/huawei-consent-20261128.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/native-document-pins-112504.json"
   ],
   "exceptions": [
     "Core unexecuted cases block submission"
@@ -22,6 +26,10 @@
     "validation-summary.json": "186a35886ec103edcca0b231719d01dafde5dc68fad906d078a68863d90bd1bd",
     "android-physical-smart-document.json": "ce43659a3a946ca3fdaec8f08766e6a7af5862364918469277d1013030dfe59c",
     "ios-physical-smart-document-112502.json": "9328011d30742fba9659e3000fb11b49358e80342d506b42dc9c20a6f04ea2eb",
-    "android-physical-install-112502.json": "2666403f799a9fa552b5277bd2656c90a308e766859ff547f8c28d0c9fa96e4d"
+    "android-physical-install-112502.json": "2666403f799a9fa552b5277bd2656c90a308e766859ff547f8c28d0c9fa96e4d",
+    "candidate-progress-112504.json": "84bb637c61794d406ec49c473a7840939d266de63eeb4274778af0583e513474",
+    "android-physical-install-112504.json": "b648a669ac0f28b9390d75fe800a0e525c8b5596410e1aed15e3534b20c8ca3e",
+    "huawei-consent-20261128.json": "9f82eddbc5986d9f81adb072120e97fe06bdd9e1f2a0334c476ccd751060d3d4",
+    "native-document-pins-112504.json": "7be0ec7ba8ffbc4a36483d8674cfc6bed12c5032f46b643062b1b5f2318298ae"
   }
 }

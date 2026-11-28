@@ -1,0 +1,17 @@
+{
+  "status": "store-candidate",
+  "lane": "cn",
+  "artifact": "OpenMuse-cn-1.0.3-112504.apk",
+  "sha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201",
+  "commit": "15c7a2ff892cc527dd3215be99a489deb912a67b",
+  "dirtySource": false,
+  "runtimeProductionInputsComplete": true,
+  "onlineSignedPublicationVerified": false,
+  "testsPassed": true,
+  "appFilingNumber": "粤ICP备2024331713号-5A",
+  "packageId": "com.openmuseai.mobile",
+  "versionName": "1.0.3",
+  "versionCode": 112504,
+  "uploadCertificateSha256": "7e6cefb279eeb3f73890c35ecb8e941bb7630c8a6adda9a010d1d9d997ef22c4",
+  "remainingGates": "See app/openmuse_mobile/release_materials/09-国内海外上架流水线.zh-CN.md G0-G6"
+}

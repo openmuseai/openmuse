@@ -2,17 +2,21 @@
   "id": "02-development",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "112503 fixed clean source and updated draft MRs; historical baseline MR#4 concrete with scope decision pending.15 migration MR/tags verified; functional merges/formal release tags remain open.",
+  "summary": "Android candidate source15c7a2ff and genOffice0.9.8 fixed, pushed and tracked by MR#8/pluginMR#2/EcosystemMR#1. RC tags published; final MR merges and source freeze pending.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/repository-mrs.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/plugin-sources.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ci-remote-progress-112503.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ci-remote-progress-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/repository-candidates-112504.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/genoffice-touch-098-validation.json"
   ],
   "exceptions": [
     "Final functional merges and App1.0.3 release tags pending"
   ],
   "evidenceDigests": {
     "repository-mrs.json": "1390274f550beea4d1902ef0e479b4a46213d6770244964fc6bca07c957b6ce7",
-    "plugin-sources.json": "cbf3aebf100e07ff225a55b64459f31977406c2505a9be2880c473faec4db287"
+    "plugin-sources.json": "cbf3aebf100e07ff225a55b64459f31977406c2505a9be2880c473faec4db287",
+    "repository-candidates-112504.json": "ed2e6939aa8d5bbefb673b304db5c488b1481d6c154eb88b1ffa84aec784a801",
+    "genoffice-touch-098-validation.json": "0a782a01ca03e5b1281277788c4889204c5beec009953d05ae54a6f7aed5602b"
   }
 }

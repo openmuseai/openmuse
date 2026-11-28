@@ -2,7 +2,7 @@
   "id": "06-binary",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "112503 signature/permissions/closure checks and actual packaged CN/US signed public config/cache restore pass. Bounded scans of301 APK+423 IPA entries have no unresolved findings; Tika rule false-positive disposition is scoped.",
+  "summary": "Android112504 signature and exact new plugin asset verified; all12native libraries andAPK16KB alignment pass; POST_NOTIFICATIONS present; bounded credential-pattern checks clear. Full production/dataflow and exact114public-config online/cache verification pending.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-public-runtime.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-public-runtime.json",
@@ -17,7 +17,10 @@
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-112503-signature-report.txt",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-112503-runtime-input-report.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-112503-signature-report.txt",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-112503-runtime-input-report.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-appstore-112503-runtime-input-report.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-binary-preflight-112504.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-112504-signature-report.txt",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-112504-runtime-input-report.json"
   ],
   "exceptions": [
     "Full production task and final dataflow acceptance pending"
@@ -29,6 +32,9 @@
     "genoffice-advisory-disposition.json": "739e57872cdb95d73f5dc0038fa8015aa73cabc8c704a4a451bc3af169c7ecb7",
     "ios-public-runtime-112502.json": "00f7aa7a89adcd36c071e8971da39843b221994c8333d99e7790878075962c69",
     "android-public-runtime-112502.json": "e92eb1d124dc412ee255070edcd3c0608e5bab65a1845bc5619728175354f611",
-    "binary-pattern-review-112502.json": "312de3cdf44d648d4c326604eb97148d3aabc7aac435a493142965ce002c9691"
+    "binary-pattern-review-112502.json": "312de3cdf44d648d4c326604eb97148d3aabc7aac435a493142965ce002c9691",
+    "android-binary-preflight-112504.json": "2c46f26275635410ae1ef89c67b36e456a72bbf3aa816c10c0067705f834fd46",
+    "cn-112504-signature-report.txt": "4b246d2a1fb7385de3f0c6f2bfa5ed37abd9c31ace95b56501872ba1881cfa48",
+    "cn-112504-runtime-input-report.json": "582a12b61cf1ca748836c106394be5154ce33cf6afb69130cc8b6cbd0deec7d0"
   }
 }

@@ -2,16 +2,20 @@
   "id": "07-materials",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "New vivo1.0.3 APK, descriptions and copyright retained after refresh. Main office-category persistence/screenshots still open. Conditional AI qualification list was agent-selected, not a platform applicability ruling; choice withdrawn; ordinary office-client preparation continues.",
+  "summary": "Four domestic channels prepared. Copyright original2pages and Doubao5-page submission visually checked without modifying signed originals; each platform acceptance, current screenshots and dedicated review-account verification pending.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-store-draft.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-draft.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-draft.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/domestic-pdf-review-20261128.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/domestic-materials-20261128.json"
   ],
   "exceptions": [
     "Candidate screenshots, review account and remaining vivo fields pending"
   ],
   "evidenceDigests": {
     "apple-store-draft.json": "012deb4c85ff01436c8bb2fc206e4f4ac4a144042834123e1ec83862b70371ec",
-    "vivo-draft.json": "f8805dad02ca91dd3fbe3e99a01ce89fa763fbaec2613489b8e54e183aa1dadd"
+    "vivo-draft.json": "f8805dad02ca91dd3fbe3e99a01ce89fa763fbaec2613489b8e54e183aa1dadd",
+    "domestic-pdf-review-20261128.json": "b4953393f99ceee44aa6442990773ee3a7c4aabf61050388fffe3dac06bbf32c",
+    "domestic-materials-20261128.json": "a1b674213242d1ec95660a4c74b3198d8a5b30a21d98840ca376b4cf8488c610"
   }
 }

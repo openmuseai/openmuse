@@ -1,0 +1,18 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v3.2 scheme (APK Signature Scheme v3.2): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+V2 Signer: certificate DN: CN=OpenMuse Android Release, OU=Mobile, O=东莞市成宣电子科技有限公司, L=东莞, ST=广东, C=CN
+V2 Signer: certificate SHA-256 digest: 7e6cefb279eeb3f73890c35ecb8e941bb7630c8a6adda9a010d1d9d997ef22c4
+V2 Signer: certificate SHA-1 digest: 40488474924cdc0d50055c28fcb2df0760f1f2d8
+V2 Signer: certificate MD5 digest: 28b84f070b519d0ca878ba69df666b51
+V2 Signer: key algorithm: RSA
+V2 Signer: key size (bits): 4096
+V2 Signer: public key SHA-256 digest: be238eb3d43720343102fc773a883b682b979900f8dcb7196ee12be536e9a34b
+V2 Signer: public key SHA-1 digest: ce14853f33cd0b24fec20bdc511aebe2257b1f57
+V2 Signer: public key MD5 digest: 4b3255c82124245cada9a784e38762a4

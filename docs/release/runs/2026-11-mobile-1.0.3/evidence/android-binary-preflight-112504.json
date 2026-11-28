@@ -1,0 +1,77 @@
+{
+  "schema": "openmuse.android-binary-preflight/1",
+  "checkedOn": "2026-11-28",
+  "version": "1.0.3",
+  "build": 112504,
+  "source": "15c7a2ff892cc527dd3215be99a489deb912a67b",
+  "apkSha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201",
+  "signedCertificateSha256": "7e6cefb279eeb3f73890c35ecb8e941bb7630c8a6adda9a010d1d9d997ef22c4",
+  "artifactBytes": 265344106,
+  "bundledGenOffice": "0.9.8",
+  "bundledPackageSha256": "d4d5fc69e39d94f110c584de87c4e3aa968d45d315f2e79c9daeea6c163d9432",
+  "oldPackageShipped": false,
+  "zip16KAlignment": true,
+  "nativeLibraries": [
+    {
+      "path": "lib/arm64-v8a/libapp.so",
+      "minimumLoadAlignment": 65536
+    },
+    {
+      "path": "lib/arm64-v8a/libdartjni.so",
+      "minimumLoadAlignment": 16384
+    },
+    {
+      "path": "lib/arm64-v8a/libduskmoon_tree_sitter.so",
+      "minimumLoadAlignment": 16384
+    },
+    {
+      "path": "lib/arm64-v8a/libfjs.so",
+      "minimumLoadAlignment": 16384
+    },
+    {
+      "path": "lib/arm64-v8a/libflutter.so",
+      "minimumLoadAlignment": 65536
+    },
+    {
+      "path": "lib/arm64-v8a/libmuse_appflowy_realtime.so",
+      "minimumLoadAlignment": 16384
+    },
+    {
+      "path": "lib/arm64-v8a/libmuse_dataset_core.so",
+      "minimumLoadAlignment": 16384
+    },
+    {
+      "path": "lib/arm64-v8a/libmuse_smart_document.so",
+      "minimumLoadAlignment": 16384
+    },
+    {
+      "path": "lib/arm64-v8a/libonnxruntime.so",
+      "minimumLoadAlignment": 16384
+    },
+    {
+      "path": "lib/arm64-v8a/libopenmuse_paired_relay.so",
+      "minimumLoadAlignment": 16384
+    },
+    {
+      "path": "lib/arm64-v8a/libsherpa-onnx-c-api.so",
+      "minimumLoadAlignment": 16384
+    },
+    {
+      "path": "lib/arm64-v8a/libsherpa-onnx-cxx-api.so",
+      "minimumLoadAlignment": 16384
+    }
+  ],
+  "permissions": [
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.WAKE_LOCK",
+    "android.permission.MODIFY_AUDIO_SETTINGS",
+    "com.openmuseai.mobile.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+    "android.permission.RECORD_AUDIO",
+    "android.permission.POST_NOTIFICATIONS"
+  ],
+  "boundedCredentialPatternMatches": [],
+  "credentialScanScope": "APK top-level entries up to128MiB; selected GitHub and complete PEM block patterns only, not a complete privacy/security audit",
+  "formalRelease": false,
+  "productionDeviceFunctionalAcceptance": "pending"
+}
