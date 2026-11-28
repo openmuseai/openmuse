@@ -68,6 +68,9 @@ jobs:
       - name: Build, test and package
         run: |
           docker run --rm --shm-size=1g --workdir /Muse-Client \
+            -e GIT_CONFIG_COUNT=1 \
+            -e GIT_CONFIG_KEY_0=safe.directory \
+            -e GIT_CONFIG_VALUE_0=/Muse-Client \
             -v "$PWD:/Muse-Client" \
             -v "$PWD/../Muse-Plugin-Ecosystem:/Muse-Plugin-Ecosystem" \
             -v openmuse-linux-pub:/root/.pub-cache \

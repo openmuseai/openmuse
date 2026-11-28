@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -90,6 +91,7 @@ Future<void> _walkPairedWorkbench(WidgetTester tester) async {
     grantRef: connection.grantRef,
     httpClient: http,
   );
+  final mediaReads = <Future<Uint8List?>>[];
   final controller = RemoteWorkbenchController(
     transport: transport,
     context: const RemoteConnectionContext(
@@ -100,7 +102,11 @@ Future<void> _walkPairedWorkbench(WidgetTester tester) async {
       permissions: {},
     ),
     notice: acceptanceLabNotice,
-    loadMedia: transport.readMedia,
+    loadMedia: (handle) {
+      final read = transport.readMedia(handle);
+      mediaReads.add(read);
+      return read;
+    },
   );
   addTearDown(controller.dispose);
   addTearDown(desktop.controller.dispose);
@@ -134,6 +140,10 @@ Future<void> _walkPairedWorkbench(WidgetTester tester) async {
   );
   await tester.pumpAndSettle();
   expect(find.text('封面'), findsOneWidget);
+  // Settled frames do not imply that loopback HTTP I/O has completed.
+  expect(mediaReads, isNotEmpty);
+  await Future.wait(mediaReads).timeout(const Duration(seconds: 10));
+  await tester.pumpAndSettle();
   expect(find.textContaining('已读取'), findsWidgets);
   expect(find.byType(Image), findsWidgets);
 
