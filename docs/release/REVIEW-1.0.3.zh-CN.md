@@ -18,6 +18,7 @@ python3 scripts/ci/prepare_plugin_assets.py
 ```
 
 Web 构建前生成 realtime、document、dataset 三组真实 WASM 和加载器，不用空目录绕过 Flutter 资产检查。
+Web 锁文件统一使用 `https://pub.dev`；构建脚本固定该 hosted 源并严格核对版本和包摘要，避免构建机默认镜像差异触发重新解析。
 Linux 另外需要 runtime：按 markdown 插件 `upstream.json` 中的仓库及 SHA 检出 SiYuan 到 `plugins/markdown/vendors/siyuan`，安装 Node 24.16.0 和 pnpm 12.6.0，再运行：
 
 ```sh
@@ -38,7 +39,7 @@ python3 scripts/release/test_prepare_web_config.py
 ./scripts/ci/build-web.sh --region us --force-rebuild
 ```
 
-两次构建都重新生成 DSH 源码，执行前端测试、Flutter analyze/test，再生成地区固定的发布 ZIP、SHA256SUMS 与 build-info。
+两次构建都重新生成 DSH 源码，执行前端测试、Flutter analyze/test、Chrome 浏览器适配器测试，再生成地区固定的发布 ZIP、SHA256SUMS 与 build-info。
 cn 使用 `/`，us 使用 `/app/`；浏览器验证应使用对应 base path 和固定服务地区，登录/配对走同账号真实 Desktop。
 Review Web UI 与 Desktop 使用相同插件提交：检查仓库先行的来源层级、分支/MR/commit、文件树、上一/下一文件、字号、@@ 展开和上下收起、行号输入及行内意见。开发浏览器适配器与正式配对宿主的验收结果分别记录。
 

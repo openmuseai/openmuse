@@ -4,6 +4,13 @@ import 'package:openmuse_resource_center/openmuse_resource_center.dart';
 import 'package:openmuse_cloud_workspace_plugin/openmuse_cloud_workspace_plugin.dart';
 import 'package:openmuse_smart_document_plugins/browser.dart';
 
+typedef BrowserCloudDocumentsOpener =
+    Future<BrowserCloudDocuments> Function({
+      required OpenMuseAuthenticationController authentication,
+      required Uri origin,
+      required Future<void> Function(ResourceEditorPresentation) presentEditor,
+    });
+
 /// Browser platform composition; the same plugins own content, authority and
 /// editor lifetimes as Mobile/Desktop. No Desktop pairing grant is required.
 final class BrowserCloudDocuments {

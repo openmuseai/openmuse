@@ -15,6 +15,8 @@ set -euo pipefail
 # hand flutter a --base-href of "C:/Program Files/Git/". Scoped to this script
 # so it cannot leak into the caller's environment; other shells ignore it.
 export MSYS_NO_PATHCONV=1
+# Match the canonical hosted source stored in the release lockfile on every OS.
+export PUB_HOSTED_URL=https://pub.dev
 
 repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$repo_root"
@@ -109,6 +111,7 @@ step 'Flutter web host'
   if [[ "$skip_tests" == false ]]; then
     flutter analyze
     flutter test
+    flutter test --platform chrome test/browser_adapters_test.dart
   fi
   flutter build web "--$profile" --base-href "$base_href" --dart-define-from-file="$web_defines" --no-web-resources-cdn
 )
@@ -144,7 +147,9 @@ rm -f "$artifact_dir/OpenMuse-web.zip"
 # The host is served from the archive root, so index.html has to be there and
 # not inside a subdirectory. -Z1 lists one entry per line and tr strips the CR
 # that the Windows unzip appends, so the match is exact on every platform.
-unzip -Z1 "$artifact_dir/OpenMuse-web.zip" | tr -d '\r' | grep -qx 'index.html' || {
+# Read the complete listing: grep -q can close the pipe early and make unzip
+# fail with SIGPIPE under pipefail even when index.html is at the archive root.
+unzip -Z1 "$artifact_dir/OpenMuse-web.zip" | tr -d '\r' | grep -x 'index.html' >/dev/null || {
   echo 'index.html is not at the root of the archive' >&2
   exit 1
 }

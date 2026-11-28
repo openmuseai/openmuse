@@ -22,6 +22,7 @@ jobs:
     timeout-minutes: 45
     env:
       FLUTTER_VERSION: "3.44.2"
+      PUB_HOSTED_URL: https://pub.dev
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,6 +49,7 @@ jobs:
           flutter pub get --enforce-lockfile
           flutter analyze
           flutter test
+          flutter test --platform chrome test/browser_adapters_test.dart
           python3 ../../scripts/release/prepare-web-config.py --region us --output "$RUNNER_TEMP/web-us.defines.json"
           flutter build web --release --base-href /app/ --dart-define-from-file="$RUNNER_TEMP/web-us.defines.json" --no-web-resources-cdn
       - uses: actions/upload-artifact@v4
