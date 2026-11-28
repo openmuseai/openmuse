@@ -304,6 +304,14 @@ final class RemoteMcpApp extends ChangeNotifier
         (visibility is List && visibility.contains(agent ? 'model' : 'app'));
   }
 
+  bool _visibleHostTool(Map<String, Object?> tool, bool agent) {
+    final meta = tool['_meta'];
+    final ui = meta is Map ? meta['ui'] : null;
+    final visibility = ui is Map ? ui['visibility'] : null;
+    return visibility == null ||
+        (visibility is List && visibility.contains(agent ? 'model' : 'app'));
+  }
+
   Future<Map<String, Object?>> request(
     String method,
     Map<String, Object?> params, {
@@ -336,12 +344,15 @@ final class RemoteMcpApp extends ChangeNotifier
         result = {
           'tools': [
             ..._tools.where((t) => _visible(t, agent)).map((t) => t.toJson()),
-            ...hostTools,
+            ...hostTools.where((tool) => _visibleHostTool(tool, agent)),
           ],
         };
       case 'tools/call':
         final name = params['name'];
         if (hostTools.any((t) => t['name'] == name)) {
+          final tool = hostTools.singleWhere((t) => t['name'] == name);
+          if (!_visibleHostTool(tool, agent))
+            throw StateError('APP_TOOL_NOT_VISIBLE');
           final arguments = Map<String, Object?>.from(
             params['arguments'] as Map? ?? {},
           );

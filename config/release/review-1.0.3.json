@@ -1,0 +1,22 @@
+{
+  "schema": "openmuse.review-release/1",
+  "tag": "v1.0.3-review.3",
+  "supersedes": "v1.0.3-review.2",
+  "channel": "github-prerelease",
+  "client": {"repository": "openmuseai/openmuse", "mergeRequest": 6},
+  "reviewPlugin": {
+    "repository": "openmuseai/muse-gitreview",
+    "commit": "6735bb1e99c332e174afaa453bcfac347d82af9e",
+    "mergeRequest": 2,
+    "packageVersion": "0.2.0"
+  },
+  "pluginComposition": "config/release/mobile-1.0.3-sources.json",
+  "web": {
+    "regions": ["cn", "us"],
+    "workflow": ".github/workflows/web-build.yml",
+    "validationScope": ["Shared Review MCP App UI", "Paired browser workspace"],
+    "directMcpAppNavigation": "Not included; awaiting scope clarification for the generic Web host adapter."
+  },
+  "deferred": ["Desktop Word/PDF/Spreadsheet engine sources are not published in the locked composition; their builds remain blocked."],
+  "publicationRule": "Publish only verified artifacts of the tagged Client commit and the fixed Review plugin commit; retain all failed platform checks in the release report."
+}

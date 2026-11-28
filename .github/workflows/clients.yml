@@ -22,6 +22,7 @@ jobs:
     timeout-minutes: 45
     env:
       FLUTTER_VERSION: "3.44.2"
+      PUB_HOSTED_URL: https://pub.dev
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,12 +37,19 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
       - run: flutter config --enable-web
+      - name: Asset and source boundary tests
+        run: |
+          python3 scripts/ci/test_verify_plugin_sources.py
+          python3 scripts/ci/test_prepare_plugin_assets.py
+      - name: Generate pinned browser cores
+        uses: ./Muse-Client/.github/actions/prepare-plugin-assets
       - name: Test and build
         working-directory: Muse-Client/app/openmuse_web
         run: |
-          flutter pub get
+          flutter pub get --enforce-lockfile
           flutter analyze
           flutter test
+          flutter test --platform chrome test/browser_adapters_test.dart
           python3 ../../scripts/release/prepare-web-config.py --region us --output "$RUNNER_TEMP/web-us.defines.json"
           flutter build web --release --base-href /app/ --dart-define-from-file="$RUNNER_TEMP/web-us.defines.json" --no-web-resources-cdn
       - uses: actions/upload-artifact@v4
@@ -80,6 +88,11 @@ jobs:
           echo "ANDROID_NDK_HOME=$ndk" >> "$GITHUB_ENV"
       - name: cargo-ndk
         run: cargo install cargo-ndk --version 4.1.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.16.0'
+      - name: Generate pinned Flutter assets
+        uses: ./Muse-Client/.github/actions/prepare-plugin-assets
       - name: Test and build
         run: ./scripts/test_mobile_app_root.sh
       - uses: actions/upload-artifact@v4

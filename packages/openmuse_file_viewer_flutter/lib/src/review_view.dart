@@ -18,7 +18,7 @@ final class _OpenMuseReviewBodyState extends State<OpenMuseReviewBody> {
   final scroll = ScrollController();
   int index = 0, initialLine = 1, changeIndex = 0;
   String mode = 'diff';
-  bool split = false;
+  bool split = false, treeVisible = true;
   List<List<TextSpan>>? oldColors, newColors;
   Map<String, dynamic> get file => document.files[index];
   @override
@@ -88,7 +88,7 @@ final class _OpenMuseReviewBodyState extends State<OpenMuseReviewBody> {
                     TargetPlatform.iOS,
                   }.contains(Theme.of(context).platform)
               ? 44
-              : 30,
+              : 32,
           child: InkWell(
             key: ValueKey('review-tree-${row.path}'),
             onTap: () {
@@ -156,33 +156,44 @@ final class _OpenMuseReviewBodyState extends State<OpenMuseReviewBody> {
     if (document.files.isEmpty) return const Center(child: Text('没有变更文件'));
     return LayoutBuilder(
       builder: (context, bounds) {
-        final wide = bounds.maxWidth >= 600;
+        final wide = bounds.maxWidth >= 768;
         return Row(
           children: [
-            if (wide) SizedBox(width: 228, child: _tree()),
-            if (wide) const VerticalDivider(width: 1),
+            if (wide && treeVisible) ...[
+              SizedBox(width: 256, child: _tree()),
+              const VerticalDivider(width: 1),
+            ],
             Expanded(
               child: Column(
                 children: [
                   Material(
                     color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: SizedBox(
+                      height: 44,
                       child: Row(
                         children: [
-                          if (!wide)
-                            IconButton(
-                              tooltip: '变更文件树',
-                              icon: const Icon(Icons.account_tree_outlined),
-                              onPressed: () => showModalBottomSheet<void>(
-                                context: context,
-                                isScrollControlled: true,
-                                builder: (_) => SizedBox(
-                                  height: bounds.maxHeight * .8,
-                                  child: _tree(drawer: true),
-                                ),
-                              ),
+                          IconButton(
+                            key: const ValueKey('review-sidebar-toggle'),
+                            tooltip: wide && treeVisible ? '收起文件树' : '展开文件树',
+                            icon: const Icon(
+                              Icons.view_sidebar_outlined,
+                              size: 18,
                             ),
+                            onPressed: () {
+                              if (wide) {
+                                setState(() => treeVisible = !treeVisible);
+                              } else {
+                                showModalBottomSheet<void>(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder: (_) => SizedBox(
+                                    height: bounds.maxHeight * .8,
+                                    child: _tree(drawer: true),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                           Expanded(
                             child: Text(
                               file['path'],
@@ -190,7 +201,7 @@ final class _OpenMuseReviewBodyState extends State<OpenMuseReviewBody> {
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -198,64 +209,59 @@ final class _OpenMuseReviewBodyState extends State<OpenMuseReviewBody> {
                             '+${file['additions']} −${file['deletions']}',
                             style: const TextStyle(fontSize: 12),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 44,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          for (final entry in [
-                            ('diff', '变更'),
-                            ('before', '原文件'),
-                            ('after', '新文件'),
-                          ])
-                            TextButton(
-                              onPressed: () => setState(() {
-                                mode = entry.$1;
-                                initialLine = 1;
-                              }),
-                              child: Text(
-                                entry.$2,
-                                style: TextStyle(
-                                  fontWeight: mode == entry.$1
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                          PopupMenuButton<String>(
+                            key: const ValueKey('review-file-menu'),
+                            tooltip: '当前文件操作',
+                            icon: const Icon(Icons.more_horiz, size: 20),
+                            onSelected: (value) {
+                              if (value == 'previous') {
+                                _jumpChange(-1);
+                                return;
+                              }
+                              if (value == 'next') {
+                                _jumpChange(1);
+                                return;
+                              }
+                              if (value == 'jump') {
+                                _jump();
+                                return;
+                              }
+                              if (value == 'search') {
+                                _search();
+                                return;
+                              }
+                              setState(() {
+                                if (value == 'unified' || value == 'split') {
+                                  mode = 'diff';
+                                  split = value == 'split';
+                                } else {
+                                  mode = value;
+                                  initialLine = 1;
+                                }
+                              });
+                            },
+                            itemBuilder: (_) => [
+                              for (final item in [
+                                ('unified', '统一对比'),
+                                ('split', '并排对比'),
+                                ('before', '原文件'),
+                                ('after', '新文件'),
+                                ('previous', '上一处变更'),
+                                ('next', '下一处变更'),
+                                ('jump', '跳转行'),
+                                ('search', '查找代码'),
+                              ])
+                                PopupMenuItem(
+                                  value: item.$1,
+                                  child: Text(item.$2),
                                 ),
-                              ),
-                            ),
-                          if (mode == 'diff')
-                            IconButton(
-                              tooltip: split ? '统一对比' : '并排对比',
-                              onPressed: () => setState(() => split = !split),
-                              icon: const Icon(Icons.view_column_outlined),
-                            ),
-                          IconButton(
-                            tooltip: '上一处变更',
-                            onPressed: () => _jumpChange(-1),
-                            icon: const Icon(Icons.arrow_upward, size: 19),
-                          ),
-                          IconButton(
-                            tooltip: '下一处变更',
-                            onPressed: () => _jumpChange(1),
-                            icon: const Icon(Icons.arrow_downward, size: 19),
-                          ),
-                          TextButton(
-                            onPressed: _jump,
-                            child: const Text('跳转行'),
-                          ),
-                          TextButton(
-                            onPressed: _search,
-                            child: const Text('查找代码'),
+                            ],
                           ),
                         ],
                       ),
                     ),
                   ),
-                  if (document.incomplete || file['partial'] == true)
+                  if (document.incomplete)
                     const Padding(
                       padding: EdgeInsets.all(6),
                       child: Text(

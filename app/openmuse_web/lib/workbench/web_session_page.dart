@@ -18,12 +18,14 @@ final class WebSessionPage extends StatefulWidget {
     this.pairedClient,
     this.config,
     this.initialDocument,
+    this.openCloudDocuments = BrowserCloudDocuments.open,
   });
 
   final GoTrueAuthenticationController authentication;
   final BrowserPairedClient? pairedClient;
   final RuntimeConfig? config;
   final ({String workspaceId, String viewId})? initialDocument;
+  final BrowserCloudDocumentsOpener openCloudDocuments;
 
   @override
   State<WebSessionPage> createState() => _WebSessionPageState();
@@ -64,7 +66,7 @@ final class _WebSessionPageState extends State<WebSessionPage> {
       final previous = _documents;
       _documents = null;
       await previous?.close();
-      final value = await BrowserCloudDocuments.open(
+      final value = await widget.openCloudDocuments(
         authentication: widget.authentication,
         origin:
             widget.config?.webServiceUri(ServiceId.cloud, Uri.base) ??

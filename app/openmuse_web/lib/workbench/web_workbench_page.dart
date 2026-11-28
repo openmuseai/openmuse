@@ -266,30 +266,24 @@ final class _WebWorkbenchPageState extends State<WebWorkbenchPage> {
             setState(() => _projectExpanded = !_projectExpanded),
         onToggleSidebar: () =>
             setState(() => _sidebarVisible = !_sidebarVisible),
-        tree: widget.workspaceStatus == null
-            ? WorkspaceMirrorTree(
+        tree: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (widget.workspaceActions.isNotEmpty)
+              Wrap(children: widget.workspaceActions),
+            if (widget.workspaceStatus != null) widget.workspaceStatus!,
+            Expanded(
+              child: WorkspaceMirrorTree(
                 controller: _mirror,
                 disconnectedView: widget.disconnectedWorkspace,
                 onRetry: widget.onReconnect ?? _connectMirror,
                 onFileSelected: _openFile,
                 onContextMenu: (node, position) =>
                     unawaited(_treeMenu(node, position)),
-              )
-            : Column(
-                children: [
-                  widget.workspaceStatus!,
-                  Expanded(
-                    child: WorkspaceMirrorTree(
-                      controller: _mirror,
-                      disconnectedView: widget.disconnectedWorkspace,
-                      onRetry: widget.onReconnect ?? _connectMirror,
-                      onFileSelected: _openFile,
-                      onContextMenu: (node, position) =>
-                          unawaited(_treeMenu(node, position)),
-                    ),
-                  ),
-                ],
               ),
+            ),
+          ],
+        ),
       );
     }
     if (ref?.startsWith('host.editorGroup:') == true) {
@@ -608,13 +602,6 @@ final class _WebWorkbenchPageState extends State<WebWorkbenchPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: widget.workspaceActions.isEmpty
-        ? null
-        : AppBar(
-            title: const Text('OpenMuse'),
-            toolbarHeight: 48,
-            actions: widget.workspaceActions,
-          ),
     body: WorkbenchCanvas(
       controller: _layout,
       hiddenPaneIds: _sidebarVisible ? const {} : const {'workspace'},

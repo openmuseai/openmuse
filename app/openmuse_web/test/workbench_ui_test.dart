@@ -20,8 +20,19 @@ void main() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
     });
+    var workspaceActionInvoked = false;
     await tester.pumpWidget(
-      MaterialApp(theme: buildOpenMuseTheme(), home: const WebWorkbenchPage()),
+      MaterialApp(
+        theme: buildOpenMuseTheme(),
+        home: WebWorkbenchPage(
+          workspaceActions: [
+            TextButton(
+              onPressed: () => workspaceActionInvoked = true,
+              child: const Text('Workspace action'),
+            ),
+          ],
+        ),
+      ),
     );
     expect(find.text('OpenMuse'), findsOneWidget);
     expect(find.text('Project Workspace'), findsOneWidget);
@@ -29,6 +40,16 @@ void main() {
     expect(find.text('从工作区开始'), findsOneWidget);
     expect(find.text('Open File Viewer'), findsNothing);
     expect(find.byType(AppBar), findsNothing);
+    final workspaceAction = find.text('Workspace action');
+    expect(
+      find.ancestor(
+        of: workspaceAction,
+        matching: find.byType(OpenMuseWorkspaceSidebar),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(workspaceAction);
+    expect(workspaceActionInvoked, isTrue);
     expect(find.byKey(const Key('pane-resizer')), findsWidgets);
 
     await tester.tap(find.byKey(const Key('pane-menu-button:editor')));

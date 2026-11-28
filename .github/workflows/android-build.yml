@@ -62,6 +62,12 @@ jobs:
           channel: stable
           cache: true
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.16.0'
+      - name: Generate pinned Flutter assets
+        uses: ./Muse-Client/.github/actions/prepare-plugin-assets
+
       - name: Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:

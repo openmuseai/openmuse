@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:openmuse_auth_gotrue/openmuse_auth_gotrue_web.dart';
 import 'package:openmuse_host_shell/openmuse_host_shell.dart';
+import 'package:openmuse_resource_center/openmuse_resource_center.dart';
 import 'package:openmuse_web/auth/browser_auth.dart';
 import 'package:openmuse_web/workbench/browser_paired_client.dart';
 import 'package:openmuse_web/workbench/web_session_page.dart';
@@ -57,11 +58,22 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildOpenMuseTheme(),
-        home: WebSessionPage(authentication: auth, pairedClient: paired),
+        home: WebSessionPage(
+          authentication: auth,
+          pairedClient: paired,
+          openCloudDocuments:
+              ({
+                required authentication,
+                required origin,
+                required presentEditor,
+              }) async => throw const ResourceFailure('SOURCE_UNAVAILABLE'),
+        ),
       ),
     );
     await tester.pumpAndSettle();
     expect(find.text('OpenMuse'), findsOneWidget);
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.text('重试协作文档'), findsOneWidget);
     expect(find.text('Blank page'), findsOneWidget);
     expect(find.text('刷新并重连'), findsOneWidget);
     expect(find.text('连接 Desktop 后使用 DSH'), findsOneWidget);

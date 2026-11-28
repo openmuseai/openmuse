@@ -32,6 +32,7 @@ export OPENMUSE_ANDROID_STORE_PASSWORD="openmuse-alpha"
 export OPENMUSE_ANDROID_KEY_ALIAS="openmuse-alpha"
 export OPENMUSE_ANDROID_KEY_PASSWORD="openmuse-alpha"
 if [[ "$skip_tests" -eq 0 ]]; then
+  (cd "$repo_root/services/config-control" && npm ci --ignore-scripts --no-audit --no-fund)
   (cd "$repo_root/app/openmuse_mobile" && flutter analyze && flutter test)
 else
   (cd "$repo_root/app/openmuse_mobile" && flutter analyze)
@@ -73,6 +74,11 @@ paired_symbols="$(nm -D "$artifact_check_dir/libopenmuse_paired_relay.so")"
 for symbol in abi_version device_public issue_offer begin_handshake confirm_handshake channel_seal channel_open native_handle_close; do
   grep -q "openmuse_paired_$symbol" <<<"$paired_symbols"
 done
-python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$apk"
+# Use the same version-scoped, digest-checked plugin closure as store builds.
+# The default closure intentionally excludes Slides and is for older releases.
+version="$(sed -n 's/^version: \([^+ ]*\).*/\1/p' "$repo_root/app/openmuse_mobile/pubspec.yaml")"
+closure_args=()
+if [[ "$version" == 1.0.3 ]]; then closure_args+=(--profile mobile-1.0.3); fi
+python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$apk" "${closure_args[@]}"
 cp "$apk" "$alpha_dir/OpenMuse-Android-Alpha-arm64.apk"
 shasum -a 256 "$alpha_dir/OpenMuse-Android-Alpha-arm64.apk" > "$alpha_dir/artifact.sha256"

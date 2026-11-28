@@ -1,0 +1,59 @@
+name: Generate pinned plugin assets
+description: Build real WASM loaders and optional SiYuan runtime before Flutter bundles assets.
+inputs:
+  runtime:
+    description: Also compile and catalog the Desktop SiYuan web runtime.
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+    - name: Install matching WASM bindings
+      shell: bash
+      run: cargo install --locked --version 0.2.128 wasm-bindgen-cli
+    - name: Read immutable SiYuan identity
+      if: inputs.runtime == 'true'
+      id: upstream
+      shell: bash
+      working-directory: ${{ github.workspace }}/Muse-Plugin-Ecosystem/plugins/markdown
+      run: |
+        python3 - <<'PY'
+        import json, os
+        pin = json.load(open('upstream.json'))
+        if pin['repository'] != 'https://github.com/siyuan-note/siyuan':
+            raise SystemExit('Unrecognized runtime source')
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+            out.write('commit=' + pin['commit'] + '\n')
+        PY
+    - name: Checkout fixed runtime upstream
+      if: inputs.runtime == 'true'
+      uses: actions/checkout@v4
+      with:
+        repository: siyuan-note/siyuan
+        ref: ${{ steps.upstream.outputs.commit }}
+        path: Muse-Plugin-Ecosystem/plugins/markdown/vendors/siyuan
+        persist-credentials: false
+    - uses: actions/setup-node@v4
+      if: inputs.runtime == 'true'
+      with:
+        node-version: '24.16.0'
+    - name: Install pinned upstream package manager
+      if: inputs.runtime == 'true'
+      shell: bash
+      run: npm install --global pnpm@12.6.0
+    - name: Generate and verify asset closure
+      shell: bash
+      working-directory: ${{ github.workspace }}/Muse-Client
+      env:
+        BUILD_RUNTIME: ${{ inputs.runtime }}
+      run: |
+        args=()
+        if [ "$BUILD_RUNTIME" = true ]; then args+=(--runtime); fi
+        python3 scripts/ci/prepare_plugin_assets.py "${args[@]}"
+    - uses: actions/upload-artifact@v4
+      with:
+        name: plugin-assets-${{ github.job }}-${{ strategy.job-index || 0 }}-${{ github.sha }}
+        path: Muse-Client/dist/plugin-assets.json
+        if-no-files-found: error
