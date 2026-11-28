@@ -36,6 +36,12 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
       - run: flutter config --enable-web
+      - name: Asset and source boundary tests
+        run: |
+          python3 scripts/ci/test_verify_plugin_sources.py
+          python3 scripts/ci/test_prepare_plugin_assets.py
+      - name: Generate pinned browser cores
+        uses: ./Muse-Client/.github/actions/prepare-plugin-assets
       - name: Test and build
         working-directory: Muse-Client/app/openmuse_web
         run: |

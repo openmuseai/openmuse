@@ -14,6 +14,8 @@ on:
       - 'third_party/**'
       - 'scripts/build_dsh_closure.py'
       - '.github/workflows/linux-build.yml'
+      - '.github/actions/prepare-plugin-assets/**'
+      - 'scripts/ci/prepare_plugin_assets.py'
   pull_request:
     paths:
       - 'app/openmuse_linux/**'
@@ -22,6 +24,8 @@ on:
       - 'distribution/**'
       - 'third_party/**'
       - '.github/workflows/linux-build.yml'
+      - '.github/actions/prepare-plugin-assets/**'
+      - 'scripts/ci/prepare_plugin_assets.py'
 permissions:
   contents: read
 concurrency:
@@ -57,6 +61,10 @@ jobs:
           token: ${{ secrets.MUSE_PLUGIN_READ_TOKEN }}
       - name: Prepare Debian 12 builder
         run: docker build --build-arg DEBIAN_MIRROR=http://deb.debian.org/debian -f app/openmuse_linux/tool/Dockerfile -t openmuse-linux-builder .
+      - name: Generate pinned browser cores and runtime
+        uses: ./Muse-Client/.github/actions/prepare-plugin-assets
+        with:
+          runtime: 'true'
       - name: Build, test and package
         run: |
           docker run --rm --shm-size=1g --workdir /Muse-Client \

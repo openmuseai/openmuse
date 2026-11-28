@@ -83,6 +83,9 @@ jobs:
       - name: Installation boundary test
         run: python3 scripts/release/test_prepare_web_config.py
 
+      - name: Generate pinned browser cores
+        uses: ./Muse-Client/.github/actions/prepare-plugin-assets
+
       - name: Build
         run: |
           args=(--region "${{ matrix.region }}")
@@ -102,6 +105,7 @@ jobs:
             Muse-Client/dist/web/${{ matrix.region }}/OpenMuse-web.zip
             Muse-Client/dist/web/${{ matrix.region }}/SHA256SUMS.txt
             Muse-Client/dist/web/${{ matrix.region }}/build-info.txt
+            Muse-Client/dist/plugin-assets.json
           if-no-files-found: error
           retention-days: ${{ fromJSON(inputs.retention_days || '14') }}
 
