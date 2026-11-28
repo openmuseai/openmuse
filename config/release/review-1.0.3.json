@@ -1,7 +1,7 @@
 {
   "schema": "openmuse.review-release/1",
-  "tag": "v1.0.3-review.2",
-  "supersedes": "v1.0.3-review.1",
+  "tag": "v1.0.3-review.3",
+  "supersedes": "v1.0.3-review.2",
   "channel": "github-prerelease",
   "client": {"repository": "openmuseai/openmuse", "mergeRequest": 6},
   "reviewPlugin": {

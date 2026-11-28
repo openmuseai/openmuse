@@ -51,7 +51,9 @@ grep -q '_openmuse_paired_channel_seal' <<<"$native_symbols"
 grep -q '_openmuse_paired_channel_open' <<<"$native_symbols"
 grep -q '_openmuse_paired_native_handle_close' <<<"$native_symbols"
 
-python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$app"
+closure_args=()
+if [[ "$version" == 1.0.3 ]]; then closure_args+=(--profile mobile-1.0.3); fi
+python3 "$repo_root/scripts/release/verify-mobile-closure.py" "$app" "${closure_args[@]}"
 
 if codesign --verify --deep --strict "$app" 2>"$evidence_dir/codesign.txt"; then
   echo "The no-codesign artifact unexpectedly has a valid signature" >&2

@@ -1,7 +1,7 @@
 # Review 1.0.3 预发布构建指引
 
-固定入口：`config/release/review-1.0.3.json`，GitHub tag `v1.0.3-review.2`。
-初始候选 `v1.0.3-review.1` 保留原 SHA 与失败回执；第二候选补齐移动测试依赖、真实媒体读取等待和 Linux 容器打包配置，不移动旧 tag。
+固定入口：`config/release/review-1.0.3.json`，GitHub tag `v1.0.3-review.3`。
+前两次候选保留原 SHA 与失败回执；第二候选补齐移动测试依赖、真实媒体读取等待和 Linux 容器打包配置。第三候选修正内部 Android/iOS 构建遗漏的版本闭包配置，不移动旧 tag。
 Client MR #6 与 Review 插件 MR #2 分别保留，tag 固定客户端提交，配置另行固定插件的完整 SHA。
 这是 GitHub 预发布候选。Desktop Word/PDF/Spreadsheet 引擎来源按用户要求延期，相关平台失败如实保留；不代表已完成全端正式发行或商店提交。
 
@@ -31,6 +31,7 @@ python3 scripts/ci/prepare_plugin_assets.py --runtime --verify-only
 生成资产摘要写到 `dist/plugin-assets.json`，GitHub Actions 归档该文件。
 
 Mobile 的 Android/iOS 发布门禁安装 `services/config-control` 的锁定 npm 测试依赖（包括 linkedom），使用 Node 24.16.0；普通客户端门禁复用同一依赖。真实 loopback 媒体测试显式等待 HTTP Future，保留原有内容、图片和授权断言。
+内部 APK / 未签名 iOS 包与商店脚本一样，只对 1.0.3 使用现有 `mobile-1.0.3` 闭包配置：验证 Slides 包的精确 SHA、检查嵌套内容和原始 notices，其他引擎仍拒绝，插件改字节就失败。未修改扫描器和既有例外配置。
 Linux 容器仅信任经过外部固定源码校验的 `/Muse-Client` 挂载目录，供打包记录源码 SHA；不设置通配信任目录。runtime 配置编译器也固定 pub.dev 并严格校验锁文件。
 
 ## Web 验证和构建
