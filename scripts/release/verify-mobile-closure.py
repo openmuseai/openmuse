@@ -50,7 +50,7 @@ def load_profile(name):
             or value.get('allowedImplementationInPinnedArtifacts') != 'genoffice'
             or value.get('allowedHostIdentifiers') != ['io.openmuse/genoffice-pptx']
             or value.get('allowedLiteralsInPinnedArtifacts') != ['aiOfficeTabs']
-            or set(value.get('bundledArtifacts', {})) != {'flutter_assets/assets/bundled/slides-0.9.7.mcpb'}
+            or set(value.get('bundledArtifacts', {})) != {'flutter_assets/assets/bundled/slides-0.9.8.mcpb'}
             or any(not re.fullmatch('[a-f0-9]{64}', v) for v in value['bundledArtifacts'].values())):
         raise ValueError('Invalid mobile closure profile')
     return value

@@ -16,7 +16,7 @@
       "dirty": false
     },
     "Muse-Client-android": {
-      "commit": "51ba72a725dabfda1e503ed4f7ffb8a75f83e510",
+      "commit": "15c7a2ff892cc527dd3215be99a489deb912a67b",
       "dirty": false
     },
     "Muse-Plugin-Ecosystem": {
@@ -173,6 +173,163 @@
           "migrationMerge": "251256d303041956a4b2cdd3792c0954b256e974",
           "sourceCandidate": false
         }
+      ],
+      "scopeNote": "HistoricaliOS112503 composition; Android112504 uses Muse-Plugin-Ecosystem-android."
+    },
+    "Muse-Plugin-Ecosystem-android": {
+      "commit": "eec5b3ace2e6cbb4325216296bc18633488d4150",
+      "dirty": false,
+      "plugins": [
+        {
+          "name": "appflowy-editor",
+          "path": "plugins/appflowy-editor",
+          "repository": "openmuseai/muse-plugin-appflowy-editor",
+          "url": "https://github.com/openmuseai/muse-plugin-appflowy-editor.git",
+          "commit": "eb5daba57855b56acea7aa5dce03557c44fa4b3c",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "eb5daba57855b56acea7aa5dce03557c44fa4b3c",
+          "sourceCandidate": false
+        },
+        {
+          "name": "browser",
+          "path": "plugins/browser",
+          "repository": "openmuseai/muse-plugin-browser",
+          "url": "https://github.com/openmuseai/muse-plugin-browser.git",
+          "commit": "d330d590e0f50d8e3a91fa15bbc58095ab18cedc",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "d330d590e0f50d8e3a91fa15bbc58095ab18cedc",
+          "sourceCandidate": false
+        },
+        {
+          "name": "developer-kit",
+          "path": "plugins/developer-kit",
+          "repository": "openmuseai/muse-plugin-developer-kit",
+          "url": "https://github.com/openmuseai/muse-plugin-developer-kit.git",
+          "commit": "b9fb6fce35f61c010a3febf13e30a0bd33101c81",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "b9fb6fce35f61c010a3febf13e30a0bd33101c81",
+          "sourceCandidate": false
+        },
+        {
+          "name": "document-explainer",
+          "path": "plugins/document-explainer",
+          "repository": "openmuseai/muse-plugin-document-explainer",
+          "url": "https://github.com/openmuseai/muse-plugin-document-explainer.git",
+          "commit": "fbb0d9ef2cce80a14df283614ae7621252128412",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "fbb0d9ef2cce80a14df283614ae7621252128412",
+          "sourceCandidate": false
+        },
+        {
+          "name": "easel",
+          "path": "plugins/easel",
+          "repository": "openmuseai/muse-plugin-easel",
+          "url": "https://github.com/openmuseai/muse-plugin-easel.git",
+          "commit": "64aaeb669d6514fab09aeaa63f6057a7323a608b",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "64aaeb669d6514fab09aeaa63f6057a7323a608b",
+          "sourceCandidate": false
+        },
+        {
+          "name": "explainer",
+          "path": "plugins/explainer",
+          "repository": "openmuseai/muse-plugin-explainer",
+          "url": "https://github.com/openmuseai/muse-plugin-explainer.git",
+          "commit": "d2a97f5dd59d6367a6e8f2b1a3e66eafcc31f645",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "d2a97f5dd59d6367a6e8f2b1a3e66eafcc31f645",
+          "sourceCandidate": false
+        },
+        {
+          "name": "genoffice-pptx",
+          "path": "plugins/genoffice-pptx",
+          "repository": "openmuseai/muse-plugin-genoffice-pptx",
+          "url": "https://github.com/openmuseai/muse-plugin-genoffice-pptx.git",
+          "commit": "30186977bbd901dca4de039d907e1ddc05de119d",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "d4e61ef264767b8c79266dbea4537fe34a396c1a",
+          "sourceCandidate": true
+        },
+        {
+          "name": "markdown",
+          "path": "plugins/markdown",
+          "repository": "openmuseai/muse-plugin-markdown",
+          "url": "https://github.com/openmuseai/muse-plugin-markdown.git",
+          "commit": "e584cd73e83439cafffd38d1e077c949dd5f4f4d",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "1ea3d17942bbaa7e64a8a4f0c62e900e19e07089",
+          "sourceCandidate": true
+        },
+        {
+          "name": "muse-ci",
+          "path": "plugins/muse-ci",
+          "repository": "openmuseai/muse-plugin-muse-ci",
+          "url": "https://github.com/openmuseai/muse-plugin-muse-ci.git",
+          "commit": "ecf39c87fadf631663fb2f52aa3515c1e50cf743",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "ecf39c87fadf631663fb2f52aa3515c1e50cf743",
+          "sourceCandidate": false
+        },
+        {
+          "name": "pdf-product",
+          "path": "plugins/pdf-product",
+          "repository": "openmuseai/muse-plugin-pdf-product",
+          "url": "https://github.com/openmuseai/muse-plugin-pdf-product.git",
+          "commit": "8c526aa3ac85c02f888928fd46ea5bc574511445",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "8c526aa3ac85c02f888928fd46ea5bc574511445",
+          "sourceCandidate": false
+        },
+        {
+          "name": "pdf-reader",
+          "path": "plugins/pdf-reader",
+          "repository": "openmuseai/muse-plugin-pdf-reader",
+          "url": "https://github.com/openmuseai/muse-plugin-pdf-reader.git",
+          "commit": "fdb6f10ab2641bf54c2735d182b107d2ad109f57",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "fdb6f10ab2641bf54c2735d182b107d2ad109f57",
+          "sourceCandidate": false
+        },
+        {
+          "name": "repository-review",
+          "path": "plugins/repository-review",
+          "repository": "openmuseai/muse-plugin-repository-review",
+          "url": "https://github.com/openmuseai/muse-plugin-repository-review.git",
+          "commit": "843f63f589ffaea4243afd90e481d01a6892d7f7",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "843f63f589ffaea4243afd90e481d01a6892d7f7",
+          "sourceCandidate": false
+        },
+        {
+          "name": "spreadsheet",
+          "path": "plugins/spreadsheet",
+          "repository": "openmuseai/muse-plugin-spreadsheet",
+          "url": "https://github.com/openmuseai/muse-plugin-spreadsheet.git",
+          "commit": "a3caf806da109553d264fc19175ddb8da3735994",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "a3caf806da109553d264fc19175ddb8da3735994",
+          "sourceCandidate": false
+        },
+        {
+          "name": "spreadsheet-product",
+          "path": "plugins/spreadsheet-product",
+          "repository": "openmuseai/muse-plugin-spreadsheet-product",
+          "url": "https://github.com/openmuseai/muse-plugin-spreadsheet-product.git",
+          "commit": "f3ae5c5e6042b11948be5d2a1de44bd096dd4671",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "f3ae5c5e6042b11948be5d2a1de44bd096dd4671",
+          "sourceCandidate": false
+        },
+        {
+          "name": "word",
+          "path": "plugins/word",
+          "repository": "openmuseai/muse-plugin-word",
+          "url": "https://github.com/openmuseai/muse-plugin-word.git",
+          "commit": "251256d303041956a4b2cdd3792c0954b256e974",
+          "migrationTag": "migration/2026-11-25",
+          "migrationMerge": "251256d303041956a4b2cdd3792c0954b256e974",
+          "sourceCandidate": false
+        }
       ]
     }
   },
@@ -191,9 +348,9 @@
     },
     {
       "lane": "android-cn",
-      "path": "dist/mobile/1.0.3-112503/cn/OpenMuse-cn-1.0.3-112503.apk",
-      "sha256": "2fb4422b9dd483a6424608c0b642d8f5871f43a772e426474374a442fd8eb251",
-      "buildRecord": "dist/mobile/1.0.3-112503/cn/release.json"
+      "path": "dist/mobile/1.0.3-112504/cn/OpenMuse-cn-1.0.3-112504.apk",
+      "sha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201",
+      "buildRecord": "dist/mobile/1.0.3-112504/cn/release.json"
     }
   ],
   "stores": {
@@ -205,7 +362,7 @@
       "reviewSubmitted": false,
       "reviewApproved": false,
       "receipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-upload-112502.json",
-      "pendingCandidateBuild": 112503
+      "pendingCandidateBuild": 112504
     },
     "ios-cn": {
       "status": "Processed, available in existing TestFlight group, physical production installation verified; not submitted",
@@ -253,10 +410,11 @@
     "changeEvidence": "docs/release/runs/2026-11-mobile-1.0.3/evidence/domestic-expansion-20261128.json",
     "reviewStatus": "changed scope pending revalidation; native input revisions updated"
   },
-  "sourceFreezeScope": "Candidates built from fixed clean commits. Final functional MR merges/tags and core production/device acceptance are still open.",
+  "sourceFreezeScope": "Android112504 built from clean15c7a2ff + eec5b3ac/genOffice30186977 with RC tags; iOS112503 retains original51ba72a7 composition. Functional acceptance, MR merges and final source freeze are pending.",
   "candidateHistory": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-112501-history.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-112502-history.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-112502-history.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-112503-history.json"
   ],
   "updatedAt": "2026-11-25T18:24:51.608054+00:00",
   "channelPlans": [
@@ -270,21 +428,24 @@
       "consoleObservedThisTurn": false,
       "uploadedThisTurn": false,
       "reviewSubmitted": false,
-      "publiclyReleased": false
+      "publiclyReleased": false,
+      "targetBuild": 112504
     },
     {
       "id": "xiaomi",
       "consoleObservedThisTurn": false,
       "uploadedThisTurn": false,
       "reviewSubmitted": false,
-      "publiclyReleased": false
+      "publiclyReleased": false,
+      "targetBuild": 112504
     },
     {
       "id": "oppo",
       "consoleObservedThisTurn": false,
       "uploadedThisTurn": false,
       "reviewSubmitted": false,
-      "publiclyReleased": false
+      "publiclyReleased": false,
+      "targetBuild": 112504
     },
     {
       "id": "vivo",
@@ -294,7 +455,27 @@
       "pendingUnverifiedDraftBuild": 112503,
       "uploadedThisTurn": false,
       "reviewSubmitted": false,
-      "publiclyReleased": false
+      "publiclyReleased": false,
+      "targetBuild": 112504
     }
-  ]
+  ],
+  "platformCandidates": {
+    "android": {
+      "build": 112504,
+      "client": "15c7a2ff892cc527dd3215be99a489deb912a67b",
+      "ecosystem": "eec5b3ace2e6cbb4325216296bc18633488d4150",
+      "genOffice": "30186977bbd901dca4de039d907e1ddc05de119d",
+      "packageSha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201",
+      "physicalInstallVerified": true,
+      "functionalAcceptance": "pending"
+    },
+    "ios": {
+      "build": 112503,
+      "client": "51ba72a725dabfda1e503ed4f7ffb8a75f83e510",
+      "ecosystem": "a6814bc0f011bb8a466edf15788767f5fcc61fb2",
+      "genOffice": "5df9dc172131e053f2910c8de57f381d6fab52b6",
+      "functionalAcceptance": "P1failure preserved"
+    }
+  },
+  "updatedOn": "2026-11-28"
 }

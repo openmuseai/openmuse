@@ -1,0 +1,23 @@
+{
+  "schema": "openmuse.android-production-install/1",
+  "checkedOn": "2026-11-28",
+  "packageId": "com.openmuseai.mobile",
+  "device": {
+    "serial": "3B65BB01B4H00000",
+    "model": "PKM110",
+    "android": "16",
+    "sdk": "36"
+  },
+  "previousVersionCode": 112503,
+  "versionName": "1.0.3",
+  "versionCode": 112504,
+  "installCommand": "adb install -r",
+  "installExitCode": 0,
+  "installedBaseApkSha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201",
+  "candidateSha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201",
+  "byteIdentical": true,
+  "dataClearOrUninstallPerformed": false,
+  "userLoginAndPreferences": "not independently inspected after upgrade",
+  "functionalAcceptance": "pending",
+  "formalRelease": false
+}

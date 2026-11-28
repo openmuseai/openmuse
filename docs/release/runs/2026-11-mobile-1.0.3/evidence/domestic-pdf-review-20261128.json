@@ -1,0 +1,49 @@
+{
+  "schema": "openmuse.domestic-material-visual-review/1",
+  "checkedOn": "2026-11-28",
+  "materialOriginalRoot": "/Users/mac/src/openmuse-io/Muse-Client",
+  "originalBytesUnchanged": true,
+  "copyright": {
+    "path": "materials/licenses/app_licenses/R20260000217113.pdf",
+    "sha256": "36f4b0fee43e98d5230cd7088fd98b8591a939d50e18b0959021feff07dd96cc",
+    "pagesReviewed": [
+      1,
+      2
+    ],
+    "applicationName": "OpenMuse",
+    "packageId": "com.openmuseai.mobile",
+    "certificateId": "R20260000217113",
+    "softwareCopyrightCertificateId": "软著认000620527号",
+    "authenticationId": "2026SA0213393",
+    "certificateVersion": "V1.0.1",
+    "issuedOn": "2026-11-20",
+    "company": "东莞市成宣电子科技有限公司",
+    "sameApplicationIdentityAsAndroidCandidate": true,
+    "versionRelationship": "Retain originalV1.0.1 certificate; verify each platform accepts it for the1.0.3 upgrade. Never edit digitally signed originals."
+  },
+  "doubao": {
+    "path": "materials/AIGC_LINCES/submission/Doubao-Algorithm-Filing-and-Usage-Agreement.pdf",
+    "sha256": "dbc7fe6c4f3310702ad96295ad4c1ad7fda5fd6ae1bfdd646d4224910b12d5fa",
+    "pagesReviewed": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "filingName": "豆包企业版大模型算法",
+    "filingNumber": "网信算备110108823483901230065号",
+    "useStatement": "Partner products for app-market qualification review; actual agreement and integration govern.",
+    "contractCompany": "东莞市成宣电子科技有限公司",
+    "serviceOrderCounterparty": "北京火山引擎科技有限公司",
+    "orderSignedOn": "2025-03-13",
+    "evidenceScope": "Existing Doubao filing and service-order material only; no claim covering other models or blanket exemption."
+  },
+  "rendering": "Native macOS PDFKit rendered both copyright pages with readable Chinese. Initial fallback renderer omitted some glyphs; originals were not changed. Doubao reviewed across its complete5-page submission copy.",
+  "notVerified": [
+    "Live issuer authenticity service / full cryptographic signature validation",
+    "Account-specific platform acceptance of qualifications",
+    "Current service-account status or all future model usage"
+  ],
+  "formalRelease": false
+}

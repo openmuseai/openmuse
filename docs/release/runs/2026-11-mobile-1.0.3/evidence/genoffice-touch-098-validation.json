@@ -1,0 +1,506 @@
+{
+  "schema": "openmuse.plugin-touch-validation/1",
+  "checkedAt": "2026-11-25T19:27:21.119692+00:00",
+  "pluginVersion": "0.9.8",
+  "sourceBase": "658989c4ab3d689a2833fa6a14f9c65a16e40a20",
+  "change": "Completed touch tap on the three original quick-access buttons invokes existing handlers once when iOS omits compatibility mouse/click; drag/cancel/disabled do not activate; mouse/keyboard retain native paths",
+  "packageSha256": "d4d5fc69e39d94f110c584de87c4e3aa968d45d315f2e79c9daeea6c163d9432",
+  "uiSha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+  "webAndServerHtmlIdentical": true,
+  "nodeTests": {
+    "passed": 14,
+    "failed": 0,
+    "logSha256": "70a763b4617c451353ee7f1634d8666a50a6b0756798a54b5c639de0495be371"
+  },
+  "negativeControl": "Original mouse handlers do not execute when touchstart cancels mouse compatibility; the controlled fixture passes only after the adapter is installed",
+  "standardTck": {
+    "chromium": {
+      "sample": "Sample_ppt.pptx",
+      "sampleSha256": "d712b4672db3634457e1c3ee3d9d8485a0cfa3298edcacffbc4fb568c1b36afb",
+      "uiSha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+      "slides": 23,
+      "renderedPages": 23,
+      "textEditSavedAndReopened": true,
+      "viewToolsDiscovered": true,
+      "agentEditSaved": true,
+      "staleRevisionRejected": true,
+      "agentEditUndoable": true,
+      "standardAgentMessage": true,
+      "genSparkPanelRemoved": true,
+      "protocol": "MCP Apps",
+      "pages": [
+        {
+          "page": 1
+        },
+        {
+          "page": 2
+        },
+        {
+          "page": 3
+        },
+        {
+          "page": 4
+        },
+        {
+          "page": 5
+        },
+        {
+          "page": 6
+        },
+        {
+          "page": 7
+        },
+        {
+          "page": 8
+        },
+        {
+          "page": 9
+        },
+        {
+          "page": 10
+        },
+        {
+          "page": 11
+        },
+        {
+          "page": 12
+        },
+        {
+          "page": 13
+        },
+        {
+          "page": 14
+        },
+        {
+          "page": 15
+        },
+        {
+          "page": 16
+        },
+        {
+          "page": 17
+        },
+        {
+          "page": 18
+        },
+        {
+          "page": 19
+        },
+        {
+          "page": 20
+        },
+        {
+          "page": 21
+        },
+        {
+          "page": 22
+        },
+        {
+          "page": 23
+        }
+      ]
+    },
+    "webkit": {
+      "browserEngine": "webkit",
+      "sample": "Sample_ppt.pptx",
+      "sampleSha256": "d712b4672db3634457e1c3ee3d9d8485a0cfa3298edcacffbc4fb568c1b36afb",
+      "uiSha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+      "slides": 23,
+      "renderedPages": 23,
+      "textEditSavedAndReopened": true,
+      "viewToolsDiscovered": true,
+      "agentEditSaved": true,
+      "staleRevisionRejected": true,
+      "agentEditUndoable": true,
+      "standardAgentMessage": true,
+      "genSparkPanelRemoved": true,
+      "protocol": "MCP Apps",
+      "pages": [
+        {
+          "page": 1
+        },
+        {
+          "page": 2
+        },
+        {
+          "page": 3
+        },
+        {
+          "page": 4
+        },
+        {
+          "page": 5
+        },
+        {
+          "page": 6
+        },
+        {
+          "page": 7
+        },
+        {
+          "page": 8
+        },
+        {
+          "page": 9
+        },
+        {
+          "page": 10
+        },
+        {
+          "page": 11
+        },
+        {
+          "page": 12
+        },
+        {
+          "page": 13
+        },
+        {
+          "page": 14
+        },
+        {
+          "page": 15
+        },
+        {
+          "page": 16
+        },
+        {
+          "page": 17
+        },
+        {
+          "page": 18
+        },
+        {
+          "page": 19
+        },
+        {
+          "page": 20
+        },
+        {
+          "page": 21
+        },
+        {
+          "page": 22
+        },
+        {
+          "page": 23
+        }
+      ]
+    }
+  },
+  "mobileTouch": {
+    "chromium": {
+      "uiSha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+      "sampleSha256": "724bd205af82db614c30d06be1a484e0f3498bc49c051c2b451efe6dc563b8da",
+      "browserEngine": "chromium",
+      "commitMethod": "blur",
+      "keyboardResize": true,
+      "viewport": [
+        428,
+        789
+      ],
+      "hasTouch": true,
+      "toolbarActivation": "touch",
+      "selectedTextTapFocus": true,
+      "textEdited": true,
+      "undoRedo": true,
+      "savedOOXMLContainsMarker": true,
+      "reopenedContainsMarker": true,
+      "scope": "chromium touch emulation; physical iOS/Android acceptance remains separate"
+    },
+    "webkit": {
+      "uiSha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+      "sampleSha256": "724bd205af82db614c30d06be1a484e0f3498bc49c051c2b451efe6dc563b8da",
+      "browserEngine": "webkit",
+      "commitMethod": "blur",
+      "keyboardResize": true,
+      "viewport": [
+        428,
+        789
+      ],
+      "hasTouch": true,
+      "toolbarActivation": "touch",
+      "selectedTextTapFocus": true,
+      "textEdited": true,
+      "undoRedo": true,
+      "savedOOXMLContainsMarker": true,
+      "reopenedContainsMarker": true,
+      "scope": "webkit touch emulation; physical iOS/Android acceptance remains separate"
+    }
+  },
+  "physicalIPhoneDiagnostic": {
+    "bundleId": "com.openmuseai.qa.pptxdiagnostic",
+    "device": "iPhone12ProMax / iOS26.6.2",
+    "uiSource": "Exact HTML extracted from this0.9.8 MCPB; injected trace records button event kinds only",
+    "testCasesPassed": 7,
+    "actualKeyboardInput": true,
+    "undoRemovesMarker": true,
+    "redoRestoresMarker": true,
+    "standardDownloadMessage": true,
+    "downloadByteCount": 28872,
+    "hostAcknowledgementAndSavedState": true,
+    "logSha256": "60f15160bd6e3c6dc8512dbb1573b62162b722e8738724c52ef69b8c370a0cbe",
+    "eventsSha256": "c41ba3475d44f3c010e394ec9144d6f2e8403a7e36f5aaf885c3c93bdda5fe87",
+    "boundary": "Synthetic diagnostic sink only; production App resource persistence not tested by this fixture"
+  },
+  "remaining": [
+    "Rebuild and install new signed App candidate",
+    "Production resource save/exit/reopen on iOS and Android",
+    "Complete release/account/region/permission/visual regression"
+  ],
+  "scope": "Independent plugin code, packaged browser interoperability and physical input/RPC diagnosis; not final App release approval",
+  "reverification20261128": {
+    "date": "2026-11-28",
+    "nodeTestsPassed": 14,
+    "nodeLogSha256": "21d79a0968c46f7c0b2bd08ee65e2def018ac4588b5796ebe5fab46bf8f9b62f",
+    "sequentialBuilds": [
+      {
+        "run": 0,
+        "sha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+        "bytes": 16097257,
+        "strict": 250
+      },
+      {
+        "run": 1,
+        "sha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+        "bytes": 16097257,
+        "strict": 250
+      },
+      {
+        "run": 2,
+        "sha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+        "bytes": 16097257,
+        "strict": 250
+      },
+      {
+        "run": 3,
+        "sha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+        "bytes": 16097257,
+        "strict": 250
+      }
+    ],
+    "packagePayloadMatchesFreshBuild": {
+      "server": true,
+      "webAndServerHtml": true,
+      "offlineDescriptor": true,
+      "globalization": true
+    },
+    "standardTck": {
+      "chromium": {
+        "browserEngine": "chromium",
+        "sample": "Sample_ppt.pptx",
+        "sampleSha256": "d712b4672db3634457e1c3ee3d9d8485a0cfa3298edcacffbc4fb568c1b36afb",
+        "uiSha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+        "slides": 23,
+        "renderedPages": 23,
+        "textEditSavedAndReopened": true,
+        "viewToolsDiscovered": true,
+        "agentEditSaved": true,
+        "staleRevisionRejected": true,
+        "agentEditUndoable": true,
+        "standardAgentMessage": true,
+        "genSparkPanelRemoved": true,
+        "protocol": "MCP Apps",
+        "pages": [
+          {
+            "page": 1
+          },
+          {
+            "page": 2
+          },
+          {
+            "page": 3
+          },
+          {
+            "page": 4
+          },
+          {
+            "page": 5
+          },
+          {
+            "page": 6
+          },
+          {
+            "page": 7
+          },
+          {
+            "page": 8
+          },
+          {
+            "page": 9
+          },
+          {
+            "page": 10
+          },
+          {
+            "page": 11
+          },
+          {
+            "page": 12
+          },
+          {
+            "page": 13
+          },
+          {
+            "page": 14
+          },
+          {
+            "page": 15
+          },
+          {
+            "page": 16
+          },
+          {
+            "page": 17
+          },
+          {
+            "page": 18
+          },
+          {
+            "page": 19
+          },
+          {
+            "page": 20
+          },
+          {
+            "page": 21
+          },
+          {
+            "page": 22
+          },
+          {
+            "page": 23
+          }
+        ]
+      },
+      "webkit": {
+        "browserEngine": "webkit",
+        "sample": "Sample_ppt.pptx",
+        "sampleSha256": "d712b4672db3634457e1c3ee3d9d8485a0cfa3298edcacffbc4fb568c1b36afb",
+        "uiSha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+        "slides": 23,
+        "renderedPages": 23,
+        "textEditSavedAndReopened": true,
+        "viewToolsDiscovered": true,
+        "agentEditSaved": true,
+        "staleRevisionRejected": true,
+        "agentEditUndoable": true,
+        "standardAgentMessage": true,
+        "genSparkPanelRemoved": true,
+        "protocol": "MCP Apps",
+        "pages": [
+          {
+            "page": 1
+          },
+          {
+            "page": 2
+          },
+          {
+            "page": 3
+          },
+          {
+            "page": 4
+          },
+          {
+            "page": 5
+          },
+          {
+            "page": 6
+          },
+          {
+            "page": 7
+          },
+          {
+            "page": 8
+          },
+          {
+            "page": 9
+          },
+          {
+            "page": 10
+          },
+          {
+            "page": 11
+          },
+          {
+            "page": 12
+          },
+          {
+            "page": 13
+          },
+          {
+            "page": 14
+          },
+          {
+            "page": 15
+          },
+          {
+            "page": 16
+          },
+          {
+            "page": 17
+          },
+          {
+            "page": 18
+          },
+          {
+            "page": 19
+          },
+          {
+            "page": 20
+          },
+          {
+            "page": 21
+          },
+          {
+            "page": 22
+          },
+          {
+            "page": 23
+          }
+        ]
+      }
+    },
+    "touch": {
+      "chromium": {
+        "uiSha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+        "sampleSha256": "724bd205af82db614c30d06be1a484e0f3498bc49c051c2b451efe6dc563b8da",
+        "browserEngine": "chromium",
+        "commitMethod": "blur",
+        "keyboardResize": true,
+        "viewport": [
+          428,
+          789
+        ],
+        "hasTouch": true,
+        "toolbarActivation": "touch",
+        "selectedTextTapFocus": true,
+        "textEdited": true,
+        "undoRedo": true,
+        "savedOOXMLContainsMarker": true,
+        "reopenedContainsMarker": true,
+        "scope": "chromium touch emulation; physical iOS/Android acceptance remains separate"
+      },
+      "webkit": {
+        "uiSha256": "7b2472cedf1c51d43789fcb5d90ee54ed8542fa9ccf805d16ad64898a70b437c",
+        "sampleSha256": "724bd205af82db614c30d06be1a484e0f3498bc49c051c2b451efe6dc563b8da",
+        "browserEngine": "webkit",
+        "commitMethod": "blur",
+        "keyboardResize": true,
+        "viewport": [
+          428,
+          789
+        ],
+        "hasTouch": true,
+        "toolbarActivation": "touch",
+        "selectedTextTapFocus": true,
+        "textEdited": true,
+        "undoRedo": true,
+        "savedOOXMLContainsMarker": true,
+        "reopenedContainsMarker": true,
+        "scope": "webkit touch emulation; physical iOS/Android acceptance remains separate"
+      }
+    },
+    "priorStrictDirectiveDifference": "Earlier build observation differed by three strict directives; cause not established. Not reproduced in these four sequential builds. Exact package bytes are fixed and re-tested; no claim of universal reproducibility."
+  }
+}

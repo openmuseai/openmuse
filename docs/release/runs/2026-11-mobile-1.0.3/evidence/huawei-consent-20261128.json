@@ -61,10 +61,25 @@
       "既有中美语言、短屏/大字/深浅色、同意写入失败/重试覆盖"
     ]
   },
-  "limits": [
+  "formalRelease": false,
+  "finalCandidateVerification": {
+    "build": 112504,
+    "exactSignedApkUi": "passed on disposable AOSP34arm64",
+    "checkboxInitiallyUnchecked": true,
+    "acceptDisabledUntilChecked": true,
+    "declineAndRestartGate": "passed",
+    "boundedAppUidTrafficBeforeConsent": "no delta observed over10s gate/3s refusal, positive traffic after acceptance",
+    "evidence": "android-production-ui-112504.json",
+    "huaweiReviewResult": "not_submitted"
+  },
+  "historicalComponentTestLimits": [
     "组件/启动边界测试不是最终APK真机、网络流量或华为审核通过",
     "尚未核对112503以外的最终修复包；112503存在独立PPTX P1失败",
     "未向华为发送整改回复或提交应用"
   ],
-  "formalRelease": false
+  "limits": [
+    "Same signed112504 fresh-install consent UI and bounded UID traffic now verified; see finalCandidateVerification",
+    "No physical Huawei/HarmonyOS3.1 test or Huawei review approval yet",
+    "Full account/region/SDK traffic matrix unexecuted; iOS112503 PPTX P1 remains open"
+  ]
 }

@@ -1,0 +1,43 @@
+{
+  "schema": "openmuse.android-candidate-progress/1",
+  "checkedOn": "2026-11-28",
+  "build": 112504,
+  "version": "1.0.3",
+  "clientSource": "15c7a2ff892cc527dd3215be99a489deb912a67b",
+  "pluginCommit": "30186977bbd901dca4de039d907e1ddc05de119d",
+  "ecosystemCommit": "eec5b3ace2e6cbb4325216296bc18633488d4150",
+  "lockSha256": "c28287d9b79377aa2f9920369e68b192fd0761b21adfc1481e1f8b5696b35365",
+  "mcpbSha256": "d4d5fc69e39d94f110c584de87c4e3aa968d45d315f2e79c9daeea6c163d9432",
+  "artifactSha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201",
+  "staticAnalysis": "passed",
+  "mobileTestsPassed": 123,
+  "pluginTestsPassed": 14,
+  "pluginStandardTck": "Chromium andWebKit23pages each; exact packagedUI",
+  "pluginTouchTck": "Both engines touch/blur/keyboard resize/undo/redo/export/reopen passed",
+  "closureTestsPassed": 15,
+  "pluginSourcesVerified": 15,
+  "physicalUpgradeInstalled": true,
+  "physicalInstalledApkMatchesCandidate": true,
+  "productionFunctionalAcceptance": "partial",
+  "iosCandidateRetained": 112503,
+  "originalIosP1": "open; not superseded by plugin/browser or Android installation checks",
+  "storeUploadsThisRun": 0,
+  "submissionsThisRun": 0,
+  "sourceMergedAndFrozen": false,
+  "formalRelease": false,
+  "productionUiPassed": [
+    "PPTX actual input/touch undo/redo/save/exit/reopen",
+    "PPTX process restart retains saved marker",
+    "SmartDoc create/edit/save/reopen/process restart",
+    "CN fresh-install unchecked consent/refusal/restart gate",
+    "bounded preconsent UID traffic with accepted positive control",
+    "notification rationale/cancel/OS deny/settings recovery/optout/restart"
+  ],
+  "productionUiRemaining": [
+    "real paired-task success/failure notifications and activation/content inspection",
+    "full account/region/privacy/visual matrix",
+    "iOS112503 open P1"
+  ],
+  "remoteCi": "not green; Mobile debug Android/iOS built, Host missing tracked ioffice/pdfium_dart source; same Host failure on macOS andWindows",
+  "remoteCiEvidence": "ci-remote-progress-112504.json"
+}

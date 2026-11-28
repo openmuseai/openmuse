@@ -3,16 +3,16 @@ import 'package:openmuse_mobile_plugin_market/openmuse_mobile_plugin_market.dart
 
 /// Installed application composition, independent of any remote catalog.
 const bundledMcpPackagePins = {
-  'io.openmuse/genoffice-pptx@0.9.7':
-      '6ad77f3f678adc30782f58b4001ee277a79cd111d3b56d420a31459850ea75da',
+  'io.openmuse/genoffice-pptx@0.9.8':
+      'd4d5fc69e39d94f110c584de87c4e3aa968d45d315f2e79c9daeea6c163d9432',
 };
-const bundledSlidesAsset = 'assets/bundled/slides-0.9.7.mcpb';
+const bundledSlidesAsset = 'assets/bundled/slides-0.9.8.mcpb';
 final bundledSlidesEntry = RemoteMcpEntry.fromRecord({
   'server': {
     'name': 'io.openmuse/genoffice-pptx',
     'title': 'Slides',
     'description': 'Presentations',
-    'version': '0.9.7',
+    'version': '0.9.8',
     'packages': [
       {
         'registryType': 'mcpb',

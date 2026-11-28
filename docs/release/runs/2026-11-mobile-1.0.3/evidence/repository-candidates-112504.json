@@ -1,0 +1,65 @@
+{
+  "schema": "openmuse.candidate-repositories/1",
+  "observedOn": "2026-11-28",
+  "mrs": [
+    {
+      "repository": "openmuseai/muse-plugin-genoffice-pptx",
+      "url": "https://github.com/openmuseai/muse-plugin-genoffice-pptx/pull/2",
+      "number": 2,
+      "head": "30186977bbd901dca4de039d907e1ddc05de119d",
+      "draft": true
+    },
+    {
+      "repository": "openmuseai/Muse-Plugin-EcoSystem",
+      "url": "https://github.com/openmuseai/Muse-Plugin-EcoSystem/pull/1",
+      "number": 1,
+      "head": "eec5b3ace2e6cbb4325216296bc18633488d4150",
+      "draft": true
+    },
+    {
+      "repository": "openmuseai/openmuse",
+      "url": "https://github.com/openmuseai/openmuse/pull/8",
+      "number": 8,
+      "head": "15c7a2ff892cc527dd3215be99a489deb912a67b",
+      "draft": true
+    }
+  ],
+  "tags": [
+    {
+      "tag": "v0.9.8-rc.1",
+      "commit": "30186977bbd901dca4de039d907e1ddc05de119d",
+      "kind": "release-candidate",
+      "formalRelease": false,
+      "pushSucceeded": true,
+      "repository": "openmuseai/muse-plugin-genoffice-pptx",
+      "remoteTagObject": "07868ecb5d2231799f14e2e887ec0e23d15e0fcb",
+      "remotePeeledCommit": "30186977bbd901dca4de039d907e1ddc05de119d",
+      "independentlyVerified": true
+    },
+    {
+      "tag": "mobile-1.0.3-112504-rc.1",
+      "commit": "eec5b3ace2e6cbb4325216296bc18633488d4150",
+      "kind": "release-candidate",
+      "formalRelease": false,
+      "pushSucceeded": true,
+      "repository": "openmuseai/Muse-Plugin-EcoSystem",
+      "remoteTagObject": "f5a993f93689deb17945254503c106da64571e32",
+      "remotePeeledCommit": "eec5b3ace2e6cbb4325216296bc18633488d4150",
+      "independentlyVerified": true
+    },
+    {
+      "tag": "mobile-1.0.3-112504-rc.1",
+      "commit": "15c7a2ff892cc527dd3215be99a489deb912a67b",
+      "kind": "release-candidate",
+      "formalRelease": false,
+      "pushSucceeded": true,
+      "repository": "openmuseai/openmuse",
+      "remoteTagObject": "241d4e466dcca89350d7cfe3c512a33d4edfe0ad",
+      "remotePeeledCommit": "15c7a2ff892cc527dd3215be99a489deb912a67b",
+      "independentlyVerified": true
+    }
+  ],
+  "merged": false,
+  "formalRelease": false,
+  "scope": "RC tags pin candidate source, not stable release approval"
+}

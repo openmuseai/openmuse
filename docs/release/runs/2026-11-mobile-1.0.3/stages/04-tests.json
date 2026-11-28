@@ -2,7 +2,7 @@
   "id": "04-tests",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "112503 physical iPhone channel upgrade preserves account/notification permission and PPTX touch enters actual keyboard input. P1 FAIL: undo and save/reopen persistence. Formal feature/release approval blocked; browser/WebKit touch tests do not substitute.",
+  "summary": "Android112504 signed production App: physical PPTX input/touch undo/redo/save/exit/reopen and process restart passed; SmartDoc create/edit/save/reopen/restart passed. Fresh CN consent/refusal and bounded preconsent UID traffic passed. Physical notification permission/cancel/denial/settings-recovery/optout/restart passed. Real paired tasks blocked by disconnected Desktop/Mac lock. iOS112503 P1 remains open; full matrices unexecuted.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/validation-summary.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-physical-smart-document.json",
@@ -13,15 +13,36 @@
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/native-document-pins-112503.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ci-remote-progress-112503.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-upgrade-state-112503.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-physical-pptx-112503.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ios-physical-pptx-112503.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-progress-112504.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-physical-install-112504.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/huawei-consent-20261128.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/native-document-pins-112504.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-production-ui-112504.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/native-document-pins-android-ui-112504.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/ci-remote-progress-112504.json"
   ],
   "exceptions": [
-    "Core unexecuted cases block submission"
+    "Core unexecuted cases block submission",
+    "Remote full CI failed: unversioned sibling ioffice/pdfium_dart dependency unavailable on runner"
   ],
   "evidenceDigests": {
     "validation-summary.json": "186a35886ec103edcca0b231719d01dafde5dc68fad906d078a68863d90bd1bd",
     "android-physical-smart-document.json": "ce43659a3a946ca3fdaec8f08766e6a7af5862364918469277d1013030dfe59c",
     "ios-physical-smart-document-112502.json": "9328011d30742fba9659e3000fb11b49358e80342d506b42dc9c20a6f04ea2eb",
-    "android-physical-install-112502.json": "2666403f799a9fa552b5277bd2656c90a308e766859ff547f8c28d0c9fa96e4d"
+    "android-physical-install-112502.json": "2666403f799a9fa552b5277bd2656c90a308e766859ff547f8c28d0c9fa96e4d",
+    "candidate-progress-112504.json": "14f3af23be556036a56ed252206a03ea6490bccaceb1ce802f662878d192aa2d",
+    "android-physical-install-112504.json": "b648a669ac0f28b9390d75fe800a0e525c8b5596410e1aed15e3534b20c8ca3e",
+    "huawei-consent-20261128.json": "20c5c2214d82138a23633b62f42baf6c543dd409d94c030b35a04d7a41ddfdec",
+    "native-document-pins-112504.json": "7be0ec7ba8ffbc4a36483d8674cfc6bed12c5032f46b643062b1b5f2318298ae",
+    "ios-physical-notification-permission-112502.json": "866962f1aefdb2dd8ab978a7189d8b363c3678d8ab92477040b1bc4243ec1198",
+    "genoffice-touch-097-validation.json": "78ae338202c8744a0195ebf9543d15439c5adad7e7a9c51ae2eb1c18ee5c3a66",
+    "native-document-pins-112503.json": "c4d70d0310ad1f95e0eea054f95f3fa8e1b18a653fbaec3a7b770e5aa2cca14d",
+    "ci-remote-progress-112503.json": "c80c507ff42df7777706153f524899bc4d49aca573ae891f294c8daa6a7f66c9",
+    "ios-upgrade-state-112503.json": "ae4709e0f00334582759c27b8ed1beee75292e706c626c125e2ef1eb1f2fd166",
+    "ios-physical-pptx-112503.json": "de31649e3b952cd2cc07ed2e3b016f05ace8d64ee4f312e17d3e1e8a20332f6b",
+    "android-production-ui-112504.json": "3c932b4fdaa55d9561a6b035e02abe713fccf5e9a3109c1b5b9ea92b4b5baf37",
+    "native-document-pins-android-ui-112504.json": "e0af14304f9dcc23c46c649a9f8bb010fe212e57537044c1ca3dfc0229d30cdb",
+    "ci-remote-progress-112504.json": "fe1013f9be399f36cf44129526876f12eceb0e01737e00c1fb732dcf48268dc0"
   }
 }

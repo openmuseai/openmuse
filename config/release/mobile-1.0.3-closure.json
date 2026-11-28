@@ -2,14 +2,14 @@
   "schema": "openmuse.mobile-closure/1",
   "version": "1.0.3",
   "bundledArtifacts": {
-    "flutter_assets/assets/bundled/slides-0.9.7.mcpb": "6ad77f3f678adc30782f58b4001ee277a79cd111d3b56d420a31459850ea75da"
+    "flutter_assets/assets/bundled/slides-0.9.8.mcpb": "d4d5fc69e39d94f110c584de87c4e3aa968d45d315f2e79c9daeea6c163d9432"
   },
   "allowedHostIdentifiers": [
     "io.openmuse/genoffice-pptx"
   ],
   "allowedImplementationInPinnedArtifacts": "genoffice",
   "sourceRepository": "https://github.com/openmuseai/muse-plugin-genoffice-pptx",
-  "sourceCommit": "5df9dc172131e053f2910c8de57f381d6fab52b6",
+  "sourceCommit": "30186977bbd901dca4de039d907e1ddc05de119d",
   "status": "candidate; final platform and security disposition pending",
   "allowedLiteralsInPinnedArtifacts": [
     "aiOfficeTabs"
