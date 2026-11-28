@@ -1,0 +1,15 @@
+{
+  "schema": "openmuse.android-explicit-consent-ui/1",
+  "checkedOn": "2026-11-28",
+  "build": 112504,
+  "packageId": "com.openmuseai.mobile",
+  "environment": "Fresh AOSP Android34 arm64 emulator; exact signed candidate APK",
+  "checkboxInitiallyUnchecked": true,
+  "acceptDisabledUntilChecked": true,
+  "voluntaryCheckEnablesAccept": true,
+  "declineClearsCheckAndKeepsGate": true,
+  "restartAfterDeclineStillRequiresConsent": true,
+  "passed": true,
+  "limits": "UI consent and restart behavior only; network observation and subsequent acceptance tested separately.",
+  "artifactSha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201"
+}

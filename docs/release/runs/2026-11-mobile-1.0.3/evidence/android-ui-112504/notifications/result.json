@@ -1,0 +1,22 @@
+{
+  "schema": "openmuse.android-notification-settings/1",
+  "build": 112504,
+  "device": "OPPO PKM110 / Android16",
+  "rationaleCancelKeepsDisabled": true,
+  "explicitRationaleBeforeSystemPrompt": true,
+  "actualSystemPromptObserved": true,
+  "systemDenialHandled": true,
+  "systemSettingsRecovery": true,
+  "resumeRefreshesAuthorization": true,
+  "inAppOptoutWorks": true,
+  "inAppReenableWorks": true,
+  "enabledPreferenceSurvivesProcessRestart": true,
+  "permissionFlowPassed": true,
+  "realTaskSuccessNotification": "not-run",
+  "realTaskFailureNotification": "not-run",
+  "contentFreeNotificationInspection": "not-run",
+  "technology": "User-authorized UIAutomator2; permission changed through visible system UI, no pm grant",
+  "driverCorrection": "XML encoded newline must be parsed or matched via native selector; one pre-final raw-string assertion was invalid, actual authorization UI had refreshed correctly.",
+  "checkedOn": "2026-11-28",
+  "artifactSha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201"
+}

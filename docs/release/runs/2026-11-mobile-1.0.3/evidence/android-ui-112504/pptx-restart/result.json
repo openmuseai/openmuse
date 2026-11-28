@@ -1,0 +1,15 @@
+{
+  "schema": "openmuse.android-pptx-persistence-verification/1",
+  "checkedOn": "2026-11-28",
+  "packageId": "com.openmuseai.mobile",
+  "version": "1.0.3",
+  "build": 112504,
+  "marker": "QA103-A112504B",
+  "readBeforeRestart": true,
+  "actualResourceAfterProcessRestart": "Documents on your phone, computer and the web. QA103-A112504B",
+  "retainedAfterProcessRestart": true,
+  "passed": true,
+  "elapsedSeconds": 38.8,
+  "boundary": "UIAutomator2 native actions/accessibility on exact production APK; after real save and close from roundtrip-e. No hidden model writes or app-data clearing.",
+  "artifactSha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201"
+}

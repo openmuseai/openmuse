@@ -2,16 +2,20 @@
   "id": "03-privacy",
   "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "Per-send consent and scoped notification implementation/component checks; mainland Doubao filing pending Apple verification.",
+  "summary": "Exact signed112504 fresh CN legal gate requires voluntary unchecked consent, supports refusal and retains gate after restart. No observed App UID byte/packet delta over bounded10s gate and3s refusal, positive control after consent. Physical notification denial/settings recovery/optout verified. Full dataflow/account/region and platform AIGC verification remain pending.",
   "evidence": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/validation-summary.json",
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-store-draft.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/apple-store-draft.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-production-ui-112504.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/native-document-pins-android-ui-112504.json"
   ],
   "exceptions": [
     "Full final App network/region/account dataflow and platform AIGC verification pending"
   ],
   "evidenceDigests": {
-    "validation-summary.json": "8fb5e9a6ccdbc4ba268314f7b69015f48200912c93423333ed991949c8a45280",
-    "apple-store-draft.json": "012deb4c85ff01436c8bb2fc206e4f4ac4a144042834123e1ec83862b70371ec"
+    "validation-summary.json": "186a35886ec103edcca0b231719d01dafde5dc68fad906d078a68863d90bd1bd",
+    "apple-store-draft.json": "012deb4c85ff01436c8bb2fc206e4f4ac4a144042834123e1ec83862b70371ec",
+    "android-production-ui-112504.json": "3c932b4fdaa55d9561a6b035e02abe713fccf5e9a3109c1b5b9ea92b4b5baf37",
+    "native-document-pins-android-ui-112504.json": "e0af14304f9dcc23c46c649a9f8bb010fe212e57537044c1ca3dfc0229d30cdb"
   }
 }

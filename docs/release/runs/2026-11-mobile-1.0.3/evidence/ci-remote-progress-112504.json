@@ -1,0 +1,121 @@
+{
+  "schema": "openmuse.remote-ci-audit/1",
+  "checkedOn": "2026-11-28",
+  "checkedCommit": "60fddcf7d25aa6cef6e1f5983a12b6a17c21a51f",
+  "mr": "https://github.com/openmuseai/openmuse/pull/8",
+  "draft": true,
+  "status": "not green",
+  "checks": [
+    {
+      "name": "03 Run receipts and evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101284215/job/140846392298"
+    },
+    {
+      "name": "02 Archive and gate boundary tests",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101284215/job/140845871553"
+    },
+    {
+      "name": "01 Flow definition",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101284215/job/140844066819"
+    },
+    {
+      "name": "contract-and-sdk",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101284189/job/140844066633"
+    },
+    {
+      "name": "Web",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101284166/job/140844066622"
+    },
+    {
+      "name": "macos",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101284171/job/140844066602"
+    },
+    {
+      "name": "windows",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101284171/job/140844066481"
+    },
+    {
+      "name": "Mobile",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101284166/job/140844066397"
+    },
+    {
+      "name": "Web",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101279063/job/140844051169"
+    },
+    {
+      "name": "windows",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101279083/job/140844051125"
+    },
+    {
+      "name": "macos",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101279083/job/140844050897"
+    },
+    {
+      "name": "Mobile",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101279063/job/140844050746"
+    },
+    {
+      "name": "contract-and-sdk",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101279038/job/140844050322"
+    }
+  ],
+  "jobs": [
+    {
+      "job": 140844066397,
+      "name": "Mobile",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101284166/job/140844066397",
+      "conclusion": "failure",
+      "privateLogSha256": "f76b9052717002f73c7ad901d40ed7e62684b5ca69bc50c1818a84a94ad51173",
+      "failure": "Host dependency pdfium_dart path ../../../ioffice/koffice/pdf/rebuild/pdf-flutter-app/third_party/pdfium_dart absent on runner",
+      "mobileBuildsBeforeHostFailure": {
+        "androidArm64Debug": "built",
+        "iosDeviceDebugUnsigned": "built",
+        "productionOrDeviceAcceptance": false
+      }
+    },
+    {
+      "job": 140844066602,
+      "name": "macos",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101284171/job/140844066602",
+      "conclusion": "failure",
+      "privateLogSha256": "fa98e4533d0c1d910e5f5c51457917d7ef5e27e90777aea4e4f935296f597683",
+      "failure": "Host dependency pdfium_dart path ../../../ioffice/koffice/pdf/rebuild/pdf-flutter-app/third_party/pdfium_dart absent on runner"
+    },
+    {
+      "job": 140844066481,
+      "name": "windows",
+      "url": "https://github.com/openmuseai/openmuse/actions/runs/46101284171/job/140844066481",
+      "conclusion": "failure",
+      "privateLogSha256": "8e81126029f3b163f0a074f04bd4a63557c5042f2c2470a96ddaa047c7eb46fb",
+      "failure": "Host dependency pdfium_dart path ../../../ioffice/koffice/pdf/rebuild/pdf-flutter-app/third_party/pdfium_dart absent on runner"
+    }
+  ],
+  "dependencyDiagnosis": "Host and product wrappers import local unversioned sibling ioffice Flutter sources. No git repository/remote found at existing ioffice directory, and none of the16 pinned Ecosystem/plugin repositories provides these Flutter packages. Existing baseline dependency is not fixed by substituting an unrelated registry PDF package or deleting checks.",
+  "scope": "Remote debug compilation is not the signed112504 store artifact or iOS production/device acceptance. No check was disabled, waived or marked green. Raw logs kept private; only hashes and failure summaries included."
+}

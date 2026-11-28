@@ -18,11 +18,26 @@
   "pluginSourcesVerified": 15,
   "physicalUpgradeInstalled": true,
   "physicalInstalledApkMatchesCandidate": true,
-  "productionFunctionalAcceptance": "pending",
+  "productionFunctionalAcceptance": "partial",
   "iosCandidateRetained": 112503,
   "originalIosP1": "open; not superseded by plugin/browser or Android installation checks",
   "storeUploadsThisRun": 0,
   "submissionsThisRun": 0,
   "sourceMergedAndFrozen": false,
-  "formalRelease": false
+  "formalRelease": false,
+  "productionUiPassed": [
+    "PPTX actual input/touch undo/redo/save/exit/reopen",
+    "PPTX process restart retains saved marker",
+    "SmartDoc create/edit/save/reopen/process restart",
+    "CN fresh-install unchecked consent/refusal/restart gate",
+    "bounded preconsent UID traffic with accepted positive control",
+    "notification rationale/cancel/OS deny/settings recovery/optout/restart"
+  ],
+  "productionUiRemaining": [
+    "real paired-task success/failure notifications and activation/content inspection",
+    "full account/region/privacy/visual matrix",
+    "iOS112503 open P1"
+  ],
+  "remoteCi": "not green; Mobile debug Android/iOS built, Host missing tracked ioffice/pdfium_dart source; same Host failure on macOS andWindows",
+  "remoteCiEvidence": "ci-remote-progress-112504.json"
 }

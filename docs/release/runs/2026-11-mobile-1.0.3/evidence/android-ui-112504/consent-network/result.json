@@ -1,0 +1,38 @@
+{
+  "schema": "openmuse.android-consent-network-observation/1",
+  "checkedOn": "2026-11-28",
+  "version": "1.0.3",
+  "build": 112504,
+  "environment": "Fresh disposable AOSP34arm64; exact signed productionAPK",
+  "packageId": "com.openmuseai.mobile",
+  "uid": 10141,
+  "baseline": {
+    "rxBytes": 95031,
+    "txBytes": 15587,
+    "rxPackets": 158,
+    "txPackets": 174
+  },
+  "behindGateAfter10Seconds": {
+    "rxBytes": 95031,
+    "txBytes": 15587,
+    "rxPackets": 158,
+    "txPackets": 174
+  },
+  "afterDecline": {
+    "rxBytes": 95031,
+    "txBytes": 15587,
+    "rxPackets": 158,
+    "txPackets": 174
+  },
+  "afterAcceptAndHome": {
+    "rxBytes": 105361,
+    "txBytes": 18347,
+    "rxPackets": 183,
+    "txPackets": 205
+  },
+  "noObservedAppUidTrafficBeforeConsent": true,
+  "positiveAppUidTrafficAfterConsent": true,
+  "passed": true,
+  "scope": "Android UID network accounting in bounded intervals plus actual legal/home UI; not a complete packet capture or all-SDK/privacy certification. Only disposable emulator data reset; physical phone data preserved.",
+  "artifactSha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201"
+}

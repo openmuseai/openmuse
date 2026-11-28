@@ -1,0 +1,21 @@
+{
+  "schema": "openmuse.android-smartdoc-acceptance/1",
+  "version": "1.0.3",
+  "build": 112504,
+  "device": "OPPO PKM110 / Android16",
+  "technology": "UIAutomator2 3.7.1",
+  "document": "QA103-Android112504.musedoc",
+  "marker": "QA103-SMARTDOC-112504",
+  "createdNewLocalQaDocument": true,
+  "uiEditAndDoneSave": true,
+  "reopenRetainsMarker": true,
+  "processRestartRetainsMarker": true,
+  "passed": true,
+  "titleVisualReview": {
+    "status": "passed-on-observed-Android-layout",
+    "observation": "Toolbar title begins directly below the system status area; no duplicate top safe-area gap observed. Body title remains within its intended document header. Portrait Chinese light-theme only; other visual matrix unexecuted."
+  },
+  "scope": "Own isolated QA document, UI input only; physical App data not cleared",
+  "checkedOn": "2026-11-28",
+  "artifactSha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201"
+}

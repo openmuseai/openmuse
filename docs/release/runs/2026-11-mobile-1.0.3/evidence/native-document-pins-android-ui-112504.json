@@ -1,0 +1,58 @@
+{
+  "schema": "openmuse.native-ui-evidence-pins/1",
+  "checkedOn": "2026-11-28",
+  "build": 112504,
+  "documents": [
+    {
+      "projectId": "caefd37668c815627bf6914430fbae09",
+      "documentId": "38a5c4d0-e0b6-4e80-a77c-6bf467bfbb9e",
+      "revision": 20,
+      "sha256": "d2c6b54118617721509fc39645ae207e0f4562e8d43f844e8f28f6ee212178d1",
+      "publishedRevision": 20
+    },
+    {
+      "projectId": "caefd37668c815627bf6914430fbae09",
+      "documentId": "f5a7b842-8100-458f-a8f6-94e2ece37b43",
+      "revision": 5,
+      "sha256": "53f19bb6cf88bbf36f8721e996cf4e6f7e11e5ad4ee2c9aa76746ae0234be72d",
+      "publishedRevision": 5
+    },
+    {
+      "projectId": "af969c195e2e0fe4abe2b602935fd19d",
+      "documentId": "2d0bee7e-e1a6-4554-8979-de664953c9c2",
+      "revision": 3,
+      "sha256": "45b494cb44f5cbf3357874b4af407306b36e9cc74b56be8d1d3a18057fc27bf7",
+      "publishedRevision": 3
+    },
+    {
+      "projectId": "df7dc1028e39d0de5a30072961572064",
+      "documentId": "babce348-4623-4b88-ac42-d7bad83139ec",
+      "revision": 3,
+      "sha256": "3f1b189e2051170f61d8851f7071dbd6cfc176bee7053fe41487a05e5d37bbe2",
+      "publishedRevision": 3
+    },
+    {
+      "projectId": "4553a151652d40422f29b37af47eb2bb",
+      "documentId": "1e5c58df-beac-4dbb-ba56-b477a98e5e4d",
+      "revision": 5,
+      "sha256": "3e46513d5fc546b91af14b9a74ccceffa0a213a35dcff73a72278efa2fee56cd",
+      "publishedRevision": 5
+    },
+    {
+      "projectId": "5648d571158be1c2a19cb854cd2874ae",
+      "documentId": "5a822183-f71b-4118-8232-3c94b08bca82",
+      "revision": 4,
+      "sha256": "cc834dd8948369fafe88658e4d9d86ab884cb633371ce32de62ee912f3d867ca",
+      "publishedRevision": 4
+    },
+    {
+      "projectId": "00bc5d3a128f55efcf4dade7d7076a33",
+      "documentId": "166ef0d9-f07f-483a-8d52-5551cf0cae2a",
+      "revision": 5,
+      "sha256": "bc21e8f5be6457faa8c3fe64c8726cc1ab7cd7be2b8f27fc73148b71f871a393",
+      "publishedRevision": 5
+    }
+  ],
+  "formalRelease": false,
+  "realTaskNotifications": "blocked"
+}

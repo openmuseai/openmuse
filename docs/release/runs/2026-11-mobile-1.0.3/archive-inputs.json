@@ -177,19 +177,19 @@
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/02-development.json",
       "target": "stages/02-development.json",
-      "sha256": "80bfec4b55c170313fe4c747c42ae04d61d01b4959dc4e3fd361dd773c1adff0",
+      "sha256": "bc4b44b8bf63c4bcce69c61c421fb89ffaf7903c935781fa0f7704d06ff8d5fd",
       "reviewedForSecrets": true
     },
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/03-privacy.json",
       "target": "stages/03-privacy.json",
-      "sha256": "e38dcb0f8d89717e7184aa13ae2bfb598335f5fd0791330f84b1f38dc7dae548",
+      "sha256": "9efd1c8fb69481d8518d93a42592d64582443cc19fe715418706056a36d7e6ec",
       "reviewedForSecrets": true
     },
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/stages/04-tests.json",
       "target": "stages/04-tests.json",
-      "sha256": "b51a970523f23de3d43679126e85f14ca189bd927111235c06162c2bd7ab1162",
+      "sha256": "7a36664fe8ae5f024ddae4f7a3dd0b1dca3d2e1555445c47c65cf18691ce0fc9",
       "reviewedForSecrets": true
     },
     {
@@ -369,7 +369,7 @@
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/huawei-consent-20261128.json",
       "target": "evidence/huawei-consent-20261128.json",
-      "sha256": "9f82eddbc5986d9f81adb072120e97fe06bdd9e1f2a0334c476ccd751060d3d4",
+      "sha256": "20c5c2214d82138a23633b62f42baf6c543dd409d94c030b35a04d7a41ddfdec",
       "reviewedForSecrets": true
     },
     {
@@ -429,7 +429,7 @@
     {
       "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-progress-112504.json",
       "target": "evidence/candidate-progress-112504.json",
-      "sha256": "84bb637c61794d406ec49c473a7840939d266de63eeb4274778af0583e513474",
+      "sha256": "14f3af23be556036a56ed252206a03ea6490bccaceb1ce802f662878d192aa2d",
       "reviewedForSecrets": true
     },
     {
@@ -449,6 +449,336 @@
       "target": "evidence/native-document-pins-112504.json",
       "sha256": "7be0ec7ba8ffbc4a36483d8674cfc6bed12c5032f46b643062b1b5f2318298ae",
       "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent/01-unchecked.png",
+      "target": "evidence/android-ui-112504/consent/01-unchecked.png",
+      "sha256": "1595e152072c90119c09f8bbf2642e62141b486501c97a0b7781d2eb3fbc965f",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent/01-unchecked.xml",
+      "target": "evidence/android-ui-112504/consent/01-unchecked.xml",
+      "sha256": "3ff8ec7b7a3d19d0690df0e936ad92fdcad128d2a06c677770bac7cb819b139b",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent/02-voluntary-check.png",
+      "target": "evidence/android-ui-112504/consent/02-voluntary-check.png",
+      "sha256": "6a2d2dc63f4ca90602b62f8dadc27393c193c01648e714047394481a4185ce9c",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent/02-voluntary-check.xml",
+      "target": "evidence/android-ui-112504/consent/02-voluntary-check.xml",
+      "sha256": "48a4e440661301e6759df03954ec48e55bcda678722679430d4f4742ba02e9be",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent/03-declined.png",
+      "target": "evidence/android-ui-112504/consent/03-declined.png",
+      "sha256": "81b6263c29f949aceeaa42d3bf92c0bf90488f99141d5f8be4cc8a5df7ee3208",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent/03-declined.xml",
+      "target": "evidence/android-ui-112504/consent/03-declined.xml",
+      "sha256": "3ff8ec7b7a3d19d0690df0e936ad92fdcad128d2a06c677770bac7cb819b139b",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent/04-restart-after-decline.png",
+      "target": "evidence/android-ui-112504/consent/04-restart-after-decline.png",
+      "sha256": "ed409f453d675190255a7f81651634c249ff00ac9bb00227f2dcb12557449d4c",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent/04-restart-after-decline.xml",
+      "target": "evidence/android-ui-112504/consent/04-restart-after-decline.xml",
+      "sha256": "5aedbd7342cb7c2e751dc775ba342e4368a0e8beedb9932e3525178d17accb1e",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent/result.json",
+      "target": "evidence/android-ui-112504/consent/result.json",
+      "sha256": "eedbe9f799f51599cafe8dabf1cc274878dbe39d49ae5a13431f5cc0c6cdc881",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent-network/01-before-consent.png",
+      "target": "evidence/android-ui-112504/consent-network/01-before-consent.png",
+      "sha256": "3fb7cf43baf003ba8f114925222bd1dc264c91b67e630c9f1decc12b4c5e1e2d",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent-network/01-before-consent.xml",
+      "target": "evidence/android-ui-112504/consent-network/01-before-consent.xml",
+      "sha256": "3279bb58a80936cd74b60a79a31f16736e0409adde37650257a83ec05eb6e099",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent-network/02-declined.png",
+      "target": "evidence/android-ui-112504/consent-network/02-declined.png",
+      "sha256": "0570749ffdefc1ba5aed648c461cf1d3e2340853e2419da7572d8c228a50a6be",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent-network/02-declined.xml",
+      "target": "evidence/android-ui-112504/consent-network/02-declined.xml",
+      "sha256": "a7388b198cff6e76a403ef3ed552b5d13a4a2209a4ac2a80d5bb893ff78e0866",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/consent-network/result.json",
+      "target": "evidence/android-ui-112504/consent-network/result.json",
+      "sha256": "b279b986a9634a788c7a9b9f6ce1c94fb0e0ffd51668f34974c7e36c55d25e7d",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/01-opt-in-rationale.png",
+      "target": "evidence/android-ui-112504/notifications/01-opt-in-rationale.png",
+      "sha256": "103894eec6d3e9f5ec0ef4a8bb283037b14e28cc0018f905deb6aac1183fc540",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/01-opt-in-rationale.xml",
+      "target": "evidence/android-ui-112504/notifications/01-opt-in-rationale.xml",
+      "sha256": "8f167891b5bdbddc29bd3ea092745da08dc7fdb213a3f75e186d60044f5f7217",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/02-system-prompt.png",
+      "target": "evidence/android-ui-112504/notifications/02-system-prompt.png",
+      "sha256": "92214e657427cb1c786fad733bf64bdb8e4a6c423e4630795126b9237aecfc35",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/02-system-prompt.xml",
+      "target": "evidence/android-ui-112504/notifications/02-system-prompt.xml",
+      "sha256": "0f082fddcd3027bcf0507672eec74d51272c54c72b7f817a00230b139cb3b2c7",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/03-denied.png",
+      "target": "evidence/android-ui-112504/notifications/03-denied.png",
+      "sha256": "1476522c026bfb445071f313d4141a6f288c47cc91de31a90ab41ab302a2c881",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/03-denied.xml",
+      "target": "evidence/android-ui-112504/notifications/03-denied.xml",
+      "sha256": "95c23bafaf28d99ed794838650d87d5a52959a06e52d12aac1823ae8790064f6",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/05-system-granted.png",
+      "target": "evidence/android-ui-112504/notifications/05-system-granted.png",
+      "sha256": "1323e0849818cd29912fed91af64fafab81d93ad586dd6360844dd6b9d51cdc9",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/05-system-granted.xml",
+      "target": "evidence/android-ui-112504/notifications/05-system-granted.xml",
+      "sha256": "5d99f200c849fe203f45e7f1252bf1e9a1917c1418ac1926bf3ab49cf4646bf6",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/06-app-refreshed.png",
+      "target": "evidence/android-ui-112504/notifications/06-app-refreshed.png",
+      "sha256": "07fad0948fe82f8be93b4e0657b37faf791f8ae07169104f97f51f39b59d46cb",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/06-app-refreshed.xml",
+      "target": "evidence/android-ui-112504/notifications/06-app-refreshed.xml",
+      "sha256": "f5e82a21c4b86828102136e88aa836ab74b6bf425f2d2e771ee17d51fc622039",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/07-optout.png",
+      "target": "evidence/android-ui-112504/notifications/07-optout.png",
+      "sha256": "8aa252c59e504dcf66a8bec335716cec324e37d77c2987b8f978d2967b9aa548",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/07-optout.xml",
+      "target": "evidence/android-ui-112504/notifications/07-optout.xml",
+      "sha256": "317f2ff96dbdf8fe61a1993e2e812065f11dfad7e00c2f80f5fa142c7f9b5241",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/09-restart-persisted.png",
+      "target": "evidence/android-ui-112504/notifications/09-restart-persisted.png",
+      "sha256": "76d0679ec2c1bc012acda3e11e54962cd3bb1b0a85e1193f41c095fdd91e715a",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/09-restart-persisted.xml",
+      "target": "evidence/android-ui-112504/notifications/09-restart-persisted.xml",
+      "sha256": "b37b06cf9e0dc3388d1ec0fa272486868493b8bd3bdac4a81d4eddcf27570e21",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/notifications/result.json",
+      "target": "evidence/android-ui-112504/notifications/result.json",
+      "sha256": "30bc8d2c6e1586dece85f73a673677a090a226b7b686a6e9b39b5a69595ef853",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx/01-typed.png",
+      "target": "evidence/android-ui-112504/pptx/01-typed.png",
+      "sha256": "675519f03f35333aeb604fdc12fc43b4a5cb0f8c0d068e2c911172b733bd00b8",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx/01-typed.xml",
+      "target": "evidence/android-ui-112504/pptx/01-typed.xml",
+      "sha256": "861fbf98ff4bd2167b71270d45a456d6eab3e099f17b5f1cc7a479f7b10d05b3",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx/03-undone.png",
+      "target": "evidence/android-ui-112504/pptx/03-undone.png",
+      "sha256": "69c7fe80d91bd7a10e3f9fb3e7e1b00e4d056ef1599d66604282e1618cba848f",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx/03-undone.xml",
+      "target": "evidence/android-ui-112504/pptx/03-undone.xml",
+      "sha256": "fb730dd74129b7c27f67abd2b17a29e3639c5c4ff7534916a79b3e83c2a4f255",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx/04-redone.png",
+      "target": "evidence/android-ui-112504/pptx/04-redone.png",
+      "sha256": "64bf8590ce14298ca3dc44f62e0de61b1d9513b4ae01b70883d286be1eb77adb",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx/04-redone.xml",
+      "target": "evidence/android-ui-112504/pptx/04-redone.xml",
+      "sha256": "93a598d66bf236ea503c474061a1454b37bbccc111a58e11fb27d274bdd80987",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx/05-saved.png",
+      "target": "evidence/android-ui-112504/pptx/05-saved.png",
+      "sha256": "bfb4c93bf6c868bbd17a9c4dd9d397edc8eb388ee415dbb6e7d671ad9dbe0ee0",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx/05-saved.xml",
+      "target": "evidence/android-ui-112504/pptx/05-saved.xml",
+      "sha256": "5e47abe4ef305df1afbf65190d106bc17fbc691b95a76cde886511e0592a6756",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx/07-reopened.png",
+      "target": "evidence/android-ui-112504/pptx/07-reopened.png",
+      "sha256": "0b39b028b2c5c669f5dd6a29468587bca1d4b1602c972e9e4dc9e945cce4d506",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx/07-reopened.xml",
+      "target": "evidence/android-ui-112504/pptx/07-reopened.xml",
+      "sha256": "9afb5ed6ace532cc61d40224ac823ffb93ec6620df83c8d3ff28291dfac1b9d9",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx/result.json",
+      "target": "evidence/android-ui-112504/pptx/result.json",
+      "sha256": "a0a4f024d6f373f5f5b8c6a5b4e0440984abc2a8b65980c1f17383a713ec2c55",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx-restart/actual-resource-after-process-restart.png",
+      "target": "evidence/android-ui-112504/pptx-restart/actual-resource-after-process-restart.png",
+      "sha256": "17a8ad57fe494a1f59809638e76a10bd3387571cda9ea807ac619fd0e77dd826",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx-restart/actual-resource-after-process-restart.xml",
+      "target": "evidence/android-ui-112504/pptx-restart/actual-resource-after-process-restart.xml",
+      "sha256": "097c1623f37ba960bd110ddda9d3f9c8caaec692edbd9ba17e1f14d719eff374",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/pptx-restart/result.json",
+      "target": "evidence/android-ui-112504/pptx-restart/result.json",
+      "sha256": "b9d6f5e8559d8886615b6bc9f38b9124c1399f1f0275fc0aba1334848ef7c9e1",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/smartdoc/01-saved.png",
+      "target": "evidence/android-ui-112504/smartdoc/01-saved.png",
+      "sha256": "1cf657f8caea38ac40d93473f493fd42ede2e907786826536ae7f82595875fb9",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/smartdoc/01-saved.xml",
+      "target": "evidence/android-ui-112504/smartdoc/01-saved.xml",
+      "sha256": "f13f2fb49320bd8dcca12ad5a7c6e548e83cc408cd9f00411d53cc19058ccc6d",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/smartdoc/02-reopened.png",
+      "target": "evidence/android-ui-112504/smartdoc/02-reopened.png",
+      "sha256": "e5bfd13ff8d6cc153629798800b35dc357d3f62ac85801748f28019636872402",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/smartdoc/02-reopened.xml",
+      "target": "evidence/android-ui-112504/smartdoc/02-reopened.xml",
+      "sha256": "1fd7240e0eb55625339e940d350b078d4614c6760d6a33a20c937dfee8077801",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/smartdoc/03-process-restart-reopened.png",
+      "target": "evidence/android-ui-112504/smartdoc/03-process-restart-reopened.png",
+      "sha256": "d2ff59b51f092fa483dc1387ddfac7ecf88b41722ea414e901401c6b63705173",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/smartdoc/03-process-restart-reopened.xml",
+      "target": "evidence/android-ui-112504/smartdoc/03-process-restart-reopened.xml",
+      "sha256": "93f1dadb39f103fb3ee878c622dfc8b11951059c1a716532e7f2f50151b5bab7",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-ui-112504/smartdoc/result.json",
+      "target": "evidence/android-ui-112504/smartdoc/result.json",
+      "sha256": "a58f88a96835fd87d1cc47dbd2578019c12e68d2f456360e3c7529f6f6170c47",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/android-production-ui-112504.json",
+      "target": "evidence/android-production-ui-112504.json",
+      "sha256": "3c932b4fdaa55d9561a6b035e02abe713fccf5e9a3109c1b5b9ea92b4b5baf37",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "tools/android_device_acceptance/disposable_consent_network.py",
+      "target": "tools/android_device_acceptance/disposable_consent_network.py",
+      "sha256": "6ceb602859204e1ea8653b63fae8839079d43c800b96256bac107c27868a2ae2",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "tools/android_device_acceptance/pptx_roundtrip.py",
+      "target": "tools/android_device_acceptance/pptx_roundtrip.py",
+      "sha256": "c8cd75084f163bd8318811d9e5497274cf694a39b04712f65c41278fd2d4d248",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/native-document-pins-android-ui-112504.json",
+      "target": "evidence/native-document-pins-android-ui-112504.json",
+      "sha256": "e0af14304f9dcc23c46c649a9f8bb010fe212e57537044c1ca3dfc0229d30cdb",
+      "reviewedForSecrets": true
+    },
+    {
+      "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/ci-remote-progress-112504.json",
+      "target": "evidence/ci-remote-progress-112504.json",
+      "reviewedForSecrets": true,
+      "sha256": "fe1013f9be399f36cf44129526876f12eceb0e01737e00c1fb732dcf48268dc0"
     }
   ]
 }

@@ -1,0 +1,21 @@
+{
+  "schema": "openmuse.android-production-pptx-acceptance/1",
+  "version": "1.0.3",
+  "build": 112504,
+  "packageId": "com.openmuseai.mobile",
+  "device": "OPPO PKM110 / Android16",
+  "technology": "UIAutomator2 3.7.1, explicitly authorized by user",
+  "marker": "QA103-A112504C",
+  "originalSubtitle": "Documents on your phone, computer and the web. QA103-A112504B",
+  "undoSubtitle": "Documents on your phone, computer and the web. QA103-A112504B",
+  "redoSubtitle": "Documents on your phone, computer and the web. QA103-A112504B QA103-A112504C",
+  "reopenedSubtitle": "Documents on your phone, computer and the web. QA103-A112504B QA103-A112504C",
+  "actualEditText": true,
+  "touchUndoRedo": true,
+  "actualResourceSaveExitReopen": true,
+  "passed": true,
+  "elapsedSeconds": 45.05,
+  "scope": "Real signed production App and its Recent resource, no app-data clearing or hidden JavaScript model updates",
+  "checkedOn": "2026-11-28",
+  "artifactSha256": "d815b488061f6f064c1a38681a0f1722dae6cd5a6adc86ae565df87749583201"
+}
