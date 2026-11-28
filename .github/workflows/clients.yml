@@ -45,7 +45,7 @@ jobs:
       - name: Test and build
         working-directory: Muse-Client/app/openmuse_web
         run: |
-          flutter pub get
+          flutter pub get --enforce-lockfile
           flutter analyze
           flutter test
           python3 ../../scripts/release/prepare-web-config.py --region us --output "$RUNNER_TEMP/web-us.defines.json"

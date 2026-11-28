@@ -642,6 +642,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  muse_original_sync:
+    dependency: transitive
+    description:
+      path: "../../packages/muse_original_sync"
+      relative: true
+    source: path
+    version: "0.1.0"
   muse_resource_center:
     dependency: transitive
     description:

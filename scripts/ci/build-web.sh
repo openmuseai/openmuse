@@ -105,7 +105,7 @@ step 'Flutter web host'
 (
   cd app/openmuse_web
   if [[ "$force_rebuild" == true ]]; then flutter clean; fi
-  flutter pub get
+  flutter pub get --enforce-lockfile
   if [[ "$skip_tests" == false ]]; then
     flutter analyze
     flutter test
