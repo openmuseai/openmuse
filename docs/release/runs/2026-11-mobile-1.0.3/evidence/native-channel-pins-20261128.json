@@ -1,0 +1,60 @@
+{
+  "schema": "openmuse.native-channel-impact-pins/1",
+  "checkedOn": "2026-11-28",
+  "requestDocumentId": "affd9d5b-37dc-401d-99b6-c25bd9ab2cbc",
+  "impactDocumentId": "858a6082-2949-4c74-8c25-58124051b029",
+  "visualSha256": "f7e6f1142c4b33a52e8e6f89d431e6a4c577e7ee8e3ed9a6b85333527f79a681",
+  "documents": [
+    {
+      "projectId": "caefd37668c815627bf6914430fbae09",
+      "documentId": "858a6082-2949-4c74-8c25-58124051b029",
+      "revision": 2,
+      "sha256": "aea8e532f5069401d9895dbcef86692ca07c2bcd892a46f0ba427d97a9ac1efc",
+      "published": true,
+      "releaseApproved": false
+    },
+    {
+      "projectId": "caefd37668c815627bf6914430fbae09",
+      "documentId": "d0595137-6f2a-4804-8ed6-9268dbde18e1",
+      "revision": 5,
+      "sha256": "c539c18c34a36781ac03e36fb248d6d2275814051c4a3b669f947d867c15adf4",
+      "published": true,
+      "releaseApproved": false
+    },
+    {
+      "projectId": "caefd37668c815627bf6914430fbae09",
+      "documentId": "6efe0b1e-760c-44da-a8f1-8d271500c0e2",
+      "revision": 5,
+      "sha256": "55ec262c2de3e1dc69a003e41f108e97ca93ec568e4457fc0f5fe0cc1de4ea05",
+      "published": true,
+      "releaseApproved": false
+    },
+    {
+      "projectId": "caefd37668c815627bf6914430fbae09",
+      "documentId": "1eed3088-d003-4d31-b639-fe54bf9de8d1",
+      "revision": 4,
+      "sha256": "3d152c88799d59c87cf69df419e3abc9410f3a8c2e498fb754055b93ac8c5e64",
+      "published": true,
+      "releaseApproved": false
+    },
+    {
+      "projectId": "caefd37668c815627bf6914430fbae09",
+      "documentId": "e52464ed-19ee-4b4d-9782-12392baab53c",
+      "revision": 5,
+      "sha256": "d91ae7ad8c324d100d176211ce69df0321fd00aae20e338bffee775ef5c62e30",
+      "published": true,
+      "releaseApproved": false
+    },
+    {
+      "projectId": "caefd37668c815627bf6914430fbae09",
+      "documentId": "38a5c4d0-e0b6-4e80-a77c-6bf467bfbb9e",
+      "revision": 16,
+      "sha256": "dc8cdd218939f6d15cdb672b2c3f327b486eec15cbaf6794f6ba511cf6b085f9",
+      "published": true,
+      "releaseApproved": false
+    }
+  ],
+  "formalRelease": false,
+  "gateRunsStarted": false,
+  "priorAttemptsPreserved": true
+}

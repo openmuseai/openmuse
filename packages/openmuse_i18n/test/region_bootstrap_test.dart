@@ -44,6 +44,53 @@ void main() {
     ).readAsStringSync(),
   );
   testWidgets(
+    'fixed mainland release never treats an old region choice or decline as consent',
+    (tester) async {
+      final installed = release('china');
+      final saved = MemoryConfigStore();
+      final selection = RegionSelection(installed, saved);
+      final region = await selection.choose('cn');
+      var boots = 0;
+      Widget app() => OpenMuseRegionBootstrap(
+        loadRelease: () async => installed,
+        store: (_) async => saved,
+        boot: (_, _) async {
+          boots++;
+          return const MaterialApp(home: Text('mainland business boot'));
+        },
+      );
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      final checkbox = find.byKey(const ValueKey('legal-checkbox'));
+      final accept = find.byKey(const ValueKey('legal-accept'));
+      expect(find.text('隐私政策'), findsOneWidget);
+      expect(tester.widget<CheckboxListTile>(checkbox).value, isFalse);
+      expect(tester.widget<FilledButton>(accept).onPressed, isNull);
+      expect(boots, 0);
+      await tester.tap(checkbox);
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('legal-decline')));
+      await tester.pumpAndSettle();
+      expect(tester.widget<CheckboxListTile>(checkbox).value, isFalse);
+      expect(tester.widget<FilledButton>(accept).onPressed, isNull);
+      expect(await selection.hasAcceptedLegal(region), isFalse);
+      expect(boots, 0);
+      // Restarting after refusal must still stop before business boot.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      expect(tester.widget<CheckboxListTile>(checkbox).value, isFalse);
+      expect(boots, 0);
+      await tester.tap(checkbox);
+      await tester.pump();
+      await tester.tap(accept);
+      await tester.pumpAndSettle();
+      expect(await selection.hasAcceptedLegal(region), isTrue);
+      expect(boots, 1);
+      expect(find.text('mainland business boot'), findsOneWidget);
+    },
+  );
+  testWidgets(
     'Store launch resolves region without a license page or fabricated agreement',
     (tester) async {
       final installed = release('overseas');

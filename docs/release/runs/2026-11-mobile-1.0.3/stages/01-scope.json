@@ -1,13 +1,15 @@
 {
   "id": "01-scope",
-  "status": "passed",
+  "status": "partial",
   "owner": "Codex / Muse-CI",
-  "summary": "User-defined1.0.3 scope, only requested three targets and 15 Ecosystem extraction fixed.",
+  "summary": "Domestic scope expanded to Huawei Android, Xiaomi, OPPO and vivo; App Store CN/US retained. Updated native inputs require revalidation; old three-target approval is historical.",
   "evidence": [
-    "docs/release/runs/2026-11-mobile-1.0.3/evidence/scope.json"
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/scope.json",
+    "docs/release/runs/2026-11-mobile-1.0.3/evidence/domestic-expansion-20261128.json"
   ],
   "exceptions": [],
   "evidenceDigests": {
-    "scope.json": "7e9155816b1b19b6fe3188dc18e13e0fd17fe4933d9a602dddc5844f237d5166"
+    "scope.json": "7e9155816b1b19b6fe3188dc18e13e0fd17fe4933d9a602dddc5844f237d5166",
+    "domestic-expansion-20261128.json": "408486da776795cfdf3fb0be903cf48878ebf8138daf1ccf0594237dda55bdb9"
   }
 }

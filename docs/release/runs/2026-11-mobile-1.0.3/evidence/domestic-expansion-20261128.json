@@ -1,0 +1,76 @@
+{
+  "schema": "openmuse.domestic-channel-expansion/1",
+  "requestedOn": "2026-11-28",
+  "requestDocumentId": "affd9d5b-37dc-401d-99b6-c25bd9ab2cbc",
+  "confirmedChannels": [
+    "huawei",
+    "xiaomi",
+    "oppo",
+    "vivo"
+  ],
+  "preservedStorefronts": [
+    "appstore-cn",
+    "appstore-us"
+  ],
+  "excluded": [
+    "harmony-native",
+    "google-play"
+  ],
+  "state": "preparation; no new uploads or submissions",
+  "sourceHead": "6331e72b341af844b0ee08efc4f890c78aade5a0",
+  "candidateSource": "51ba72a725dabfda1e503ed4f7ffb8a75f83e510",
+  "sourceFrozen": false,
+  "priorScopeEvidence": "docs/release/runs/2026-11-mobile-1.0.3/evidence/scope.json",
+  "materials": "docs/release/runs/2026-11-mobile-1.0.3/evidence/domestic-materials-20261128.json",
+  "huaweiRejection": "docs/release/runs/2026-11-mobile-1.0.3/evidence/huawei-consent-20261128.json",
+  "nativeDocuments": "docs/release/runs/2026-11-mobile-1.0.3/evidence/native-channel-pins-20261128.json",
+  "blockers": [
+    "112503 iPhone PPTX undo/save/reopen P1 remains open",
+    "New signed Android candidate privacy consent, refusal, pre-consent network and final device acceptance pending",
+    "Computer Use stopped for current Chrome URL; no retry or alternate access to restricted URL",
+    "Account-specific fields, screenshot specs, review accounts, current highest build and privacy detection not verified"
+  ],
+  "agreements": {
+    "userBlanketAuthorization": true,
+    "clickedThisTurn": false,
+    "restriction": "Computer Use requires action-time confirmation for a legally binding agreement; blanket authorization cannot satisfy that rule"
+  },
+  "channels": [
+    {
+      "id": "huawei",
+      "existingApplication": {
+        "packageId": "com.openmuseai.mobile",
+        "version": "1.0.1",
+        "rejectionSource": "user-provided"
+      },
+      "consoleObservedThisTurn": false,
+      "uploadedThisTurn": false,
+      "reviewSubmitted": false,
+      "publiclyReleased": false
+    },
+    {
+      "id": "xiaomi",
+      "consoleObservedThisTurn": false,
+      "uploadedThisTurn": false,
+      "reviewSubmitted": false,
+      "publiclyReleased": false
+    },
+    {
+      "id": "oppo",
+      "consoleObservedThisTurn": false,
+      "uploadedThisTurn": false,
+      "reviewSubmitted": false,
+      "publiclyReleased": false
+    },
+    {
+      "id": "vivo",
+      "consoleObservedThisTurn": false,
+      "priorVerifiedDraftBuild": 112502,
+      "priorReceipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-upload-112502.json",
+      "pendingUnverifiedDraftBuild": 112503,
+      "uploadedThisTurn": false,
+      "reviewSubmitted": false,
+      "publiclyReleased": false
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schema": "openmuse.domestic-channel-materials/1",
+  "checkedOn": "2026-11-28",
+  "status": "prepared-for-verification",
+  "channels": [
+    "huawei",
+    "xiaomi",
+    "oppo",
+    "vivo"
+  ],
+  "identity": {
+    "applicationName": "OpenMuse",
+    "packageId": "com.openmuseai.mobile",
+    "version": "1.0.3",
+    "appFilingNumber": "粤ICP备2024331713号-5A",
+    "source": "docs/release/runs/2026-11-mobile-1.0.3/evidence/cn-build-112503.json",
+    "filingIndependentlyQueried": false,
+    "certificateSha256": "7e6cefb279eeb3f73890c35ecb8e941bb7630c8a6adda9a010d1d9d997ef22c4",
+    "filingAndCopyrightNameMatch": "must verify against actual certificate and each console"
+  },
+  "publicLinks": {
+    "privacy": "https://openmuseai.com/zh/privacy",
+    "terms": "https://openmuseai.com/zh/terms",
+    "support": "https://openmuseai.com/zh/support",
+    "accountDeletion": "https://openmuseai.com/zh/account-deletion",
+    "currentAvailability": "not verified: public web checks timed out or were inaccessible; do not claim links passed"
+  },
+  "materials": [
+    {
+      "path": "materials/licenses/app_licenses/R20260000217113.pdf",
+      "bytes": 835948,
+      "sha256": "36f4b0fee43e98d5230cd7088fd98b8591a939d50e18b0959021feff07dd96cc"
+    },
+    {
+      "path": "materials/AIGC_LINCES/submission/Doubao-Algorithm-Filing-and-Usage-Agreement.pdf",
+      "bytes": 5395723,
+      "sha256": "dbc7fe6c4f3310702ad96295ad4c1ad7fda5fd6ae1bfdd646d4224910b12d5fa",
+      "scope": "豆包备案及使用协议，不表述为覆盖其他模型"
+    },
+    {
+      "path": "app/openmuse_mobile/release_materials/assets/app-icon-1024.png",
+      "bytes": 525102,
+      "sha256": "0206190d231f9c3e1f5032eb48c26269b2810deee326765e8ebce452703d760b"
+    }
+  ],
+  "storeCopy": {
+    "status": "draft; final feature claims require new signed candidate acceptance",
+    "shortDescription": "智能文档与移动演示文稿工作空间",
+    "description": "OpenMuse 提供智能文档和移动工作空间入口。你可以创建、查看和编辑智能文档，打开演示文稿，在支持的场景中编辑并保存；也可以连接同账号的已配对桌面工作空间继续处理任务。可选的任务结果提醒在 App 保持运行并收到完成或失败结果时触发。部分功能需要账号、网络或已配对桌面。",
+    "whatsNew": "1.0.3：以智能文档替换原文档入口，更新 genOffice 移动编辑体验，增加可选的任务完成或失败本地提醒，并修复相关显示与稳定性问题。",
+    "reviewAccount": "Use a dedicated review account; .account supplied for private testing is not authorized for disclosure to stores"
+  },
+  "officialChecks": [
+    {
+      "channel": "huawei",
+      "url": "https://developer.huawei.com.cn/consumer/cn/appgallery/",
+      "finding": "官方Android发布入口说明上传APK，完善基本/分发信息后提交；账号内具体要求尚未读取。"
+    },
+    {
+      "channel": "xiaomi",
+      "url": "https://dev.mi.com/xiaomihyperos/documentation/detail?pId=1796",
+      "finding": "版权证明可为APP电子版权认证证书；核对主体、Android应用、应用名及APP备案名的一致性。"
+    },
+    {
+      "channel": "oppo",
+      "url": "https://open.oppomobile.com/new/developmentDoc/info?id=10035",
+      "finding": "官方发布指南检索摘要确认创建应用/包名和审核测试说明；正文需要JavaScript，未完整读取，字段/规格待控制台核验。"
+    },
+    {
+      "channel": "huawei",
+      "url": "https://developer.huawei.com/consumer/cn/doc/doccenter-submission/50104#section599875815368",
+      "finding": "用户拒审报告指向7.5；公开页面返回长文导航，未定位相应条款，不声称已独立核验条款全文。"
+    }
+  ],
+  "fieldsRequiringConsoleVerification": [
+    "既有应用ID、现有最大版本号/构建号及上传包解析",
+    "应用名/安装显示名/APP备案/电子版权/主体/签名匹配",
+    "当前截图尺寸/张数、图标规格、平台隐私检测",
+    "按实际行为回答AI/行业资质条件项；豆包材料仅适用于豆包",
+    "审核专用账号、演示数据和后端可达性",
+    "发布方式及审核/上架状态回执"
+  ]
+}

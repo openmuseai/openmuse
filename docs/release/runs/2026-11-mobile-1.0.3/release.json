@@ -229,16 +229,19 @@
   "scope": {
     "selectedChannels": [
       "vivo",
+      "huawei",
+      "xiaomi",
+      "oppo",
       "appstore-cn",
       "appstore-us"
     ],
     "androidMarkets": [
-      "vivo"
-    ],
-    "excludedChannels": [
       "huawei",
       "xiaomi",
       "oppo",
+      "vivo"
+    ],
+    "excludedChannels": [
       "harmony",
       "google-play"
     ],
@@ -246,12 +249,52 @@
       "CN",
       "US"
     ],
-    "releaseMode": "manual coordinated release planned"
+    "releaseMode": "manual coordinated release planned",
+    "changeEvidence": "docs/release/runs/2026-11-mobile-1.0.3/evidence/domestic-expansion-20261128.json",
+    "reviewStatus": "changed scope pending revalidation; native input revisions updated"
   },
   "sourceFreezeScope": "Candidates built from fixed clean commits. Final functional MR merges/tags and core production/device acceptance are still open.",
   "candidateHistory": [
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-112501-history.json",
     "docs/release/runs/2026-11-mobile-1.0.3/evidence/candidate-112502-history.json"
   ],
-  "updatedAt": "2026-11-25T18:24:51.608054+00:00"
+  "updatedAt": "2026-11-25T18:24:51.608054+00:00",
+  "channelPlans": [
+    {
+      "id": "huawei",
+      "existingApplication": {
+        "packageId": "com.openmuseai.mobile",
+        "version": "1.0.1",
+        "rejectionSource": "user-provided"
+      },
+      "consoleObservedThisTurn": false,
+      "uploadedThisTurn": false,
+      "reviewSubmitted": false,
+      "publiclyReleased": false
+    },
+    {
+      "id": "xiaomi",
+      "consoleObservedThisTurn": false,
+      "uploadedThisTurn": false,
+      "reviewSubmitted": false,
+      "publiclyReleased": false
+    },
+    {
+      "id": "oppo",
+      "consoleObservedThisTurn": false,
+      "uploadedThisTurn": false,
+      "reviewSubmitted": false,
+      "publiclyReleased": false
+    },
+    {
+      "id": "vivo",
+      "consoleObservedThisTurn": false,
+      "priorVerifiedDraftBuild": 112502,
+      "priorReceipt": "docs/release/runs/2026-11-mobile-1.0.3/evidence/vivo-upload-112502.json",
+      "pendingUnverifiedDraftBuild": 112503,
+      "uploadedThisTurn": false,
+      "reviewSubmitted": false,
+      "publiclyReleased": false
+    }
+  ]
 }
