@@ -32,6 +32,7 @@ export OPENMUSE_ANDROID_STORE_PASSWORD="openmuse-alpha"
 export OPENMUSE_ANDROID_KEY_ALIAS="openmuse-alpha"
 export OPENMUSE_ANDROID_KEY_PASSWORD="openmuse-alpha"
 if [[ "$skip_tests" -eq 0 ]]; then
+  (cd "$repo_root/services/config-control" && npm ci --ignore-scripts --no-audit --no-fund)
   (cd "$repo_root/app/openmuse_mobile" && flutter analyze && flutter test)
 else
   (cd "$repo_root/app/openmuse_mobile" && flutter analyze)

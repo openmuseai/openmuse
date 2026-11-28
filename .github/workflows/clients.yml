@@ -88,6 +88,11 @@ jobs:
           echo "ANDROID_NDK_HOME=$ndk" >> "$GITHUB_ENV"
       - name: cargo-ndk
         run: cargo install cargo-ndk --version 4.1.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.16.0'
+      - name: Generate pinned Flutter assets
+        uses: ./Muse-Client/.github/actions/prepare-plugin-assets
       - name: Test and build
         run: ./scripts/test_mobile_app_root.sh
       - uses: actions/upload-artifact@v4

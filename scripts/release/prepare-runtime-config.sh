@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Produce one validated, reviewable public deployment input for a release.
 set -euo pipefail
+export PUB_HOSTED_URL=https://pub.dev
 repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 deployment_profile="${1:?deployment profile required}"
 output="${2:?output path required}"

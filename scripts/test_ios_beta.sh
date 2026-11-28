@@ -8,6 +8,7 @@ mkdir -p "$evidence_dir"
 
 OPENMUSE_PAIRED_PLATFORMS=ios "$repo_root/scripts/build_paired_relay_mobile_artifacts.sh"
 
+(cd "$repo_root/services/config-control" && npm ci --ignore-scripts --no-audit --no-fund)
 (cd "$repo_root/app/openmuse_mobile" && flutter analyze && flutter test && flutter build ios --release --no-codesign)
 
 app="$repo_root/app/openmuse_mobile/build/ios/iphoneos/Runner.app"
